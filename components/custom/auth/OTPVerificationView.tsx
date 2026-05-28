@@ -1,0 +1,144 @@
+import MeraLogo from '@/components/custom/MeraLogo';
+import { Box } from '@/components/ui/box';
+import { HStack } from '@/components/ui/hstack';
+import { Input, InputField } from '@/components/ui/input';
+import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { authClient } from '@/lib/auth-client';
+import logger from '@/lib/logger';
+import { setSetting } from '@/lib/database/services/setting-service';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+interface OTPVerificationViewProps {
+    email: string;
+    onVerificationSuccess?: () => void;
+    onBack?: () => void;
+}
+
+const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVerificationSuccess, onBack }) => {
+    const [otp, setOTP] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const hasSubmittedRef = useRef(false);
+    const { t } = useTranslation();
+
+    const handleVerifyOTP = async () => {
+        setErrorMessage('');
+
+        if (!otp || otp.length < 6) {
+            setErrorMessage(t('auth.invalidOtp'));
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { data, error } = await authClient.signIn.emailOtp({
+                email,
+                otp,
+            });
+            if (error) {
+                setErrorMessage(error.message || t('auth.invalidOtpServer'));
+            } else if (data?.user) {
+                // Remember the email for the "previous user" view on the login
+                // screen if the session is ever cleared / the user lands back
+                // on /login (transient connectivity, expired cookie, etc.).
+                setSetting('cached_user_email', email).catch(() => {});
+                onVerificationSuccess?.();
+            } else {
+                setErrorMessage(t('auth.invalidOtpServer'));
+            }
+        } catch (error: any) {
+            logger.captureException(error, { tags: { feature: 'otp', method: 'verify' } });
+            setErrorMessage(error.message || t('auth.otpError'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Auto-submit when 6 digits are entered
+    useEffect(() => {
+        if (/^\d{6}$/.test(otp) && !hasSubmittedRef.current) {
+            hasSubmittedRef.current = true;
+            handleVerifyOTP();
+        } else if (otp.length < 6) {
+            hasSubmittedRef.current = false;
+        }
+        // Auto-submit reacts only to otp; handleVerifyOTP is excluded (re-created
+        // each render) and the ref guard prevents duplicate submissions.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [otp]);
+
+    return (
+        <Box className="flex-1 bg-background-0">
+            {/* Back Button */}
+            {onBack && (
+                <Box className="absolute top-16 left-5 z-10">
+                    <Pressable
+                        onPress={onBack}
+                        className="rounded-full bg-gray-900 p-3 shadow-hard-2"
+                    >
+                        <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                    </Pressable>
+                </Box>
+            )}
+            {/* Content */}
+            <Box className="flex-1 justify-center px-5">
+                {/* Logo */}
+                <Box className="items-center mb-4">
+                    <MeraLogo size={120} />
+                </Box>
+
+                <Text size="md" className="text-center mb-2 text-typography-500">
+                    {t('auth.sentTo')} <Text size="md" className="font-bold">{email}</Text>
+                </Text>
+
+                <Box className="mb-8">
+                    <HStack className="items-center" space="md">
+                        <Box className="flex-1">
+                            <Input size="lg">
+                                <InputField
+                                    placeholder={t('auth.otpPlaceholder')}
+                                    value={otp}
+                                    onChangeText={(text) => {
+                                        setOTP(text);
+                                        setErrorMessage('');
+                                    }}
+                                    keyboardType="number-pad"
+                                    maxLength={6}
+                                    autoCapitalize="none"
+                                />
+                            </Input>
+                        </Box>
+                        <Pressable
+                            onPress={handleVerifyOTP}
+                            disabled={loading || otp.length < 6}
+                            className={`w-14 h-14 rounded-full items-center justify-center ${otp.length === 6 && !loading ? 'bg-primary-500' : 'bg-gray-700'
+                                }`}
+                        >
+                            {loading ? (
+                                <Spinner size="small" color="white" />
+                            ) : (
+                                <MaterialIcons
+                                    name="check"
+                                    size={28}
+                                    color={otp.length === 6 ? '#ffffff' : '#6B7280'}
+                                />
+                            )}
+                        </Pressable>
+                    </HStack>
+                    {errorMessage ? (
+                        <Text size="sm" className="text-error-500 mt-2">
+                            {errorMessage}
+                        </Text>
+                    ) : null}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+export default OTPVerificationView;
+

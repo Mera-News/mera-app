@@ -1,0 +1,81 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# Google Play service account key (sensitive)
+google-play-service-account.json
+
+# Firebase Android config (forkers supply their own — see google-services.json.example)
+google-services.json
+
+# Generic credential & key patterns (belt-and-suspenders)
+*.keystore
+service-account*.json
+*-service-account.json
+*service-account*.json
+firebase-adminsdk-*.json
+gcp-*.json
+GoogleService-Info.plist
+*.cer
+*.der
+
+# AI coding assistant local settings (contain local paths — never commit)
+.claude/
+.cursor/
+
+# Test coverage output
+coverage/
+*.lcov
+
+# Logs (npm-debug.* already covered above; add general *.log)
+*.log
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+# generated native folders
+/ios
+/android
+
+*.ipa
+
+# dev-only: on-device prompt dumps (see dumpPromptsForDev in submitInferenceJob)
+prompt-dumps/
+
+# open-source readiness audit specs (internal, do not publish)
+open-source-readiness/

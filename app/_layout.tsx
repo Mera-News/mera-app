@@ -1,0 +1,208 @@
+// Initialise Sentry FIRST so background TaskManager wakes (which run JS
+// without rendering the React tree) still report errors. Must be before any
+// import that may throw or use logger.
+import '@/lib/sentry-init';
+// Polyfill crypto.getRandomValues — must precede any @noble/* crypto usage
+import 'react-native-get-random-values';
+import { ApolloProvider } from '@apollo/client/react';
+import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
+import { Stack, useNavigationContainerRef } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import client from '../lib/apollo-client';
+
+import ErrorBoundary from '@/components/custom/ErrorBoundary';
+import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
+import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
+import ToastInitializer from '@/components/custom/ToastInitializer';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import '@/global.css';
+import database from '@/lib/database';
+import { hydrateAllStores } from '@/lib/database/hydrate-stores';
+import { refreshProcessingMetadata } from '@/lib/services/refreshProcessingMetadata';
+import { useUserStore } from '@/lib/stores/user-store';
+import { applyLanguage } from '@/lib/i18n';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import logger from '@/lib/logger';
+import { handleInitialNotification, setupNotifications } from '@/lib/notification-service';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { purgeAllBaseModels } from '@/lib/mera-protocol-toolkit';
+import { Directory, Paths } from 'expo-file-system';
+import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
+import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
+import { initNetworkListener } from '@/lib/stores/network-store';
+import {
+  defineInferenceTask,
+  ensureSilentPushTaskRegistered,
+} from '@/lib/background/inference-task';
+import * as Sentry from '@sentry/react-native';
+import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
+
+// Register the inference TaskManager task at module load so the
+// expo-notifications silent-push wake (phase-1-done / phase-2-done from the
+// inference gateway) can resolve the task name on cold start. The task is
+// response-unpacking only; fresh cycles are kicked off in the foreground.
+defineInferenceTask();
+
+export default Sentry.wrap(function RootLayout() {
+  const navigationRef = useNavigationContainerRef();
+
+  // Use Zustand store for navigation readiness (accessible globally)
+  const isNavigationReady = useIsNavigationReady();
+  const setNavigationReady = useAppStateStore((state) => state.setNavigationReady);
+  const setAppInitialized = useAppStateStore((state) => state.setAppInitialized);
+
+  useModelLifecycle();
+
+  // Track when navigation is ready
+  useEffect(() => {
+    if (navigationRef?.isReady()) {
+      setNavigationReady(true);
+    }
+  }, [navigationRef, setNavigationReady]);
+
+  // Set up notification listeners + wire silent-push task wakes. Push-token
+  // registration happens during onboarding (explicit consent), not at boot.
+  useEffect(() => {
+    setupNotifications();
+    void ensureSilentPushTaskRegistered();
+  }, []);
+
+  // Set up network connectivity listener
+  useEffect(() => {
+    initNetworkListener();
+  }, []);
+
+  // Hydrate Zustand stores from WatermelonDB on app start. Fire-and-forget —
+  // nothing here blocks the first paint of the For You feed. The cluster
+  // suggestion query inside hydrateAllStores() pushes cached rows into the
+  // For You store as soon as it resolves, and the screen subscribes
+  // reactively.
+  useEffect(() => {
+    // Purge on-device prompt dumps unless the dev flag is on.
+    // Mirrors DUMP_QUERIES_ENABLED in submitInferenceJob — when the flag
+    // is off, flipping it is assumed to mean "I'm done debugging", so
+    // the next cold start sweeps the accumulated .md files.
+    if (!DUMP_QUERIES_ENABLED) {
+      try {
+        const dumpsDir = new Directory(Paths.document, 'prompt-dumps');
+        if (dumpsDir.exists) dumpsDir.delete();
+      } catch (err) {
+        logger.captureException(err, {
+          tags: { component: 'RootLayout', method: 'purge-prompt-dumps' },
+        });
+      }
+    }
+
+    // Mark the app initialised immediately so the route tree settles into
+    // the feed without waiting for any DB work.
+    setAppInitialized(true);
+
+    // Kick off store hydration in the background. The For You suggestion
+    // query inside is fired ahead of everything else and updates the store
+    // the instant it resolves — the screen re-renders with cached rows
+    // without the rest of hydration needing to complete.
+    hydrateAllStores()
+      .then(() => {
+        // Post-hydration tasks that need hydrated store state.
+        applyLanguage(useAppLanguageStore.getState().appLanguage);
+
+        // If the user is on cloud processing, the downloaded base-model
+        // GGUF (~3 GB) shouldn't squat on disk. Wipe the `mera-models/`
+        // cache and reset the store's model-state so the UI reflects
+        // reality. Safe to call on cold start — no llama context can be
+        // loaded yet.
+        const meraStore = useMeraProtocolStore.getState();
+        if (meraStore.processingMode !== ProcessingMode.OnDevice) {
+          purgeAllBaseModels()
+            .then(() => {
+              if (meraStore.modelState !== 'not_downloaded') {
+                meraStore.setModelState('not_downloaded');
+                meraStore.setDownloadProgress(0);
+              }
+            })
+            .catch((err) =>
+              logger.captureException(err, {
+                tags: { component: 'RootLayout', method: 'purge-disabled-models' },
+              }),
+            );
+        }
+
+        // Fetch fresh server-side processing metadata on every app start,
+        // independent of the syncFeed id-set throttle. Server caches the
+        // system-wide article count for 30 min, so this is cheap.
+        const personaId = useUserStore.getState().userPersona?._id;
+        if (personaId) {
+          void refreshProcessingMetadata(personaId);
+        }
+      })
+      .catch((error) =>
+        logger.captureException(error, {
+          tags: { component: 'RootLayout', method: 'bootstrap' },
+        }),
+      );
+  }, [setAppInitialized]);
+
+  // Handle notifications that launched the app (when app was not running)
+  // Must wait for navigation to be ready before navigating
+  useEffect(() => {
+    if (isNavigationReady) {
+      handleInitialNotification();
+    }
+  }, [isNavigationReady]);
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+        <GluestackUIProvider mode="dark">
+          <ToastInitializer />
+          <OTAUpdatePrompt />
+          <ErrorBoundary
+            level="screen"
+            FallbackComponent={FullScreenErrorFallback}
+          >
+            <DatabaseProvider database={database}>
+              <ApolloProvider client={client}>
+                <StatusBar style="light" backgroundColor="#000000" />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: '#000000' },
+                    animation: 'slide_from_right',
+                  }}
+                >
+                  <Stack.Screen
+                    name="index"
+                    options={{
+                      headerShown: false,
+                      animation: 'fade'
+                    }}
+                  />
+                  <Stack.Screen
+                    name="login"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_left'
+                    }}
+                  />
+                  <Stack.Screen
+                    name="logged-in"
+                    options={{
+                      headerShown: false,
+                    }}
+                  />
+                </Stack>
+              </ApolloProvider>
+            </DatabaseProvider>
+          </ErrorBoundary>
+        </GluestackUIProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
+  );
+});

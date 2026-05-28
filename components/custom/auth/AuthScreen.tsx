@@ -1,0 +1,282 @@
+import MeraLogo from '@/components/custom/MeraLogo';
+import LanguageSelector from '@/components/custom/auth/LanguageSelector';
+import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
+import PreviousUserView from '@/components/custom/auth/PreviousUserView';
+import { getSetting } from '@/lib/database/services/setting-service';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Input, InputField } from '@/components/ui/input';
+import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { sendOTP } from '@/lib/auth-client';
+import { PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
+import logger from '@/lib/logger';
+import { getAppVersionLabel } from '@/lib/version';
+import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import validator from 'validator';
+
+interface EmailInputViewProps {
+    onOTPSent: (email: string) => void;
+}
+
+const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent }) => {
+    const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(false);
+    const toast = useToast();
+    const insets = useSafeAreaInsets();
+    const { t } = useTranslation();
+
+    const handlePrivacyPolicyPress = async () => {
+        await openInAppBrowser(PRIVACY_URL);
+    };
+
+    const handleTermsOfServicePress = async () => {
+        await openInAppBrowser(TERMS_URL);
+    };
+
+    const handleSendOTP = async () => {
+        if (!email || !validator.isEmail(email)) {
+            toast.show({
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast action="error" variant="solid">
+                        <ToastTitle>{t('auth.invalidEmailTitle')}</ToastTitle>
+                        <ToastDescription>{t('auth.invalidEmailDescription')}</ToastDescription>
+                    </Toast>
+                ),
+            });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const result = await sendOTP(email);
+
+            if (result.success) {
+                toast.show({
+                    placement: 'top',
+                    render: ({ id }) => (
+                        <Toast action="success" variant="solid">
+                            <ToastTitle>{t('auth.codeSentTitle')}</ToastTitle>
+                            <ToastDescription>{t('auth.codeSentDescription')}</ToastDescription>
+                        </Toast>
+                    ),
+                });
+                onOTPSent(email);
+            } else {
+                toast.show({
+                    placement: 'top',
+                    render: ({ id }) => (
+                        <Toast action="error" variant="solid">
+                            <ToastTitle>{t('auth.failedToSendTitle')}</ToastTitle>
+                            <ToastDescription>{result.error || t('common.tryAgain')}</ToastDescription>
+                        </Toast>
+                    ),
+                });
+            }
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { screen: 'AuthScreen', method: 'handleSendOTP' },
+            });
+            toast.show({
+                placement: 'top',
+                render: ({ id }) => (
+                    <Toast action="error" variant="solid">
+                        <ToastTitle>{t('common.error')}</ToastTitle>
+                        <ToastDescription>{t('auth.networkError')}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Box className="flex-1 px-5 bg-background-0">
+            {/* Main content centered */}
+            <Box className="flex-1 justify-center">
+                {/* Logo */}
+                <Box className="items-center mb-8">
+                    <MeraLogo size={150} />
+                </Box>
+
+                <Box className="mb-8">
+                    <HStack className="items-center" space="md">
+                        <Box className="flex-1">
+                            <Input size="lg">
+                                <InputField
+                                    placeholder={t('auth.emailPlaceholder')}
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                            </Input>
+                        </Box>
+                        <Pressable
+                            onPress={handleSendOTP}
+                            disabled={loading || !email || !validator.isEmail(email)}
+                            className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-gray-700'
+                                }`}
+                        >
+                            {loading ? (
+                                <Spinner size="small" color="white" />
+                            ) : (
+                                <MaterialIcons
+                                    name="arrow-forward"
+                                    size={28}
+                                    color="#000000"
+                                />
+                            )}
+                        </Pressable>
+                    </HStack>
+                </Box>
+
+                {/* Language Selector */}
+                <LanguageSelector />
+            </Box>
+
+            {/* Privacy Policy & Terms of Service Buttons at bottom */}
+            <Box className="items-center" style={{ paddingBottom: insets.bottom + 32 }}>
+                <HStack space="md" className="items-center">
+                    <Button
+                        variant="link"
+                        action="secondary"
+                        size="sm"
+                        onPress={handlePrivacyPolicyPress}
+                    >
+                        <ButtonText className="text-gray-400">
+                            {t('auth.privacyPolicy')}
+                        </ButtonText>
+                    </Button>
+                    <Text className="text-gray-500">·</Text>
+                    <Button
+                        variant="link"
+                        action="secondary"
+                        size="sm"
+                        onPress={handleTermsOfServicePress}
+                    >
+                        <ButtonText className="text-gray-400">
+                            {t('auth.termsOfService')}
+                        </ButtonText>
+                    </Button>
+                </HStack>
+                <Text size="xs" className="text-gray-500 mt-1">
+                    {getAppVersionLabel()}
+                </Text>
+            </Box>
+        </Box>
+    );
+};
+
+interface AuthScreenProps {
+    onLoginSuccess?: () => void;
+}
+
+type ViewMode = 'loading' | 'previous' | 'email' | 'otp';
+
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+    const [currentView, setCurrentView] = useState<ViewMode>('loading');
+    const [pendingEmail, setPendingEmail] = useState<string>('');
+    const [cachedEmail, setCachedEmail] = useState<string | null>(null);
+    const [cachedUserId, setCachedUserId] = useState<string | null>(null);
+
+    // On mount, check whether a previous user is remembered on this device.
+    // We only need both the email and the user id present — they're written
+    // at OTP-verify and post-auth-routing respectively, and both are cleared
+    // on logout / "Login with other user".
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const [email, userId] = await Promise.all([
+                    getSetting('cached_user_email'),
+                    getSetting('cached_user_id'),
+                ]);
+                if (cancelled) return;
+                if (email && userId) {
+                    setCachedEmail(email);
+                    setCachedUserId(userId);
+                    setCurrentView('previous');
+                } else {
+                    setCurrentView('email');
+                }
+            } catch {
+                if (!cancelled) setCurrentView('email');
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handleOTPSent = (email: string) => {
+        setPendingEmail(email);
+        setCurrentView('otp');
+    };
+
+    const handleVerificationSuccess = () => {
+        setPendingEmail('');
+        onLoginSuccess?.();
+    };
+
+    const handleBackToEmail = () => {
+        setPendingEmail('');
+        setCurrentView('email');
+    };
+
+    const handleUseDifferentUser = () => {
+        setCachedEmail(null);
+        setCachedUserId(null);
+        setCurrentView('email');
+    };
+
+    if (currentView === 'loading') {
+        return (
+            <Box className="flex-1 bg-background-0 justify-center items-center">
+                <Spinner size="large" />
+            </Box>
+        );
+    }
+
+    if (currentView === 'previous' && cachedEmail && cachedUserId) {
+        return (
+            <Box className="flex-1 bg-background-0">
+                <PreviousUserView
+                    email={cachedEmail}
+                    userId={cachedUserId}
+                    onUseDifferentUser={handleUseDifferentUser}
+                />
+            </Box>
+        );
+    }
+
+    if (currentView === 'otp' && pendingEmail) {
+        return (
+            <Box className="flex-1 bg-background-0">
+                <OTPVerificationView
+                    email={pendingEmail}
+                    onVerificationSuccess={handleVerificationSuccess}
+                    onBack={handleBackToEmail}
+                />
+            </Box>
+        );
+    }
+
+    return (
+        <Box className="flex-1 bg-background-0">
+            <EmailInputView onOTPSent={handleOTPSent} />
+        </Box>
+    );
+};
+
+export default AuthScreen;

@@ -1,0 +1,97 @@
+{
+  "expo": {
+    "name": "Mera",
+    "slug": "meraapp",
+    "version": "1.1.10",
+    "orientation": "portrait",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/109fbed6-1099-4da9-bdb7-1e51363c1709"
+    },
+    "icon": "./assets/icons/adaptive-icon.png",
+    "scheme": "meraapp",
+    "userInterfaceStyle": "automatic",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.mera.news",
+      "icon": "./assets/icons/ios-dark.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIUserInterfaceStyle": "Dark",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.mera.news",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-icon-light.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icons/ios-dark.png",
+          "color": "#ffffff",
+          "sounds": []
+        }
+      ],
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "mera-app",
+          "organization": "mera-app"
+        }
+      ],
+      "expo-localization",
+      "expo-background-task",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# Hermes\n-keep class com.facebook.hermes.unicode.** { *; }\n-keep class com.facebook.jni.** { *; }\n\n# React Native bridge / turbomodules / UI manager\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.facebook.react.bridge.** { *; }\n-keep class com.facebook.react.uimanager.** { *; }\n-keepclassmembers class * { @com.facebook.react.bridge.ReactMethod *; }\n-keepclassmembers class * { @com.facebook.react.uimanager.annotations.ReactProp *; }\n\n# Expo Modules Core (reflection-based module loading)\n-keep class expo.modules.** { *; }\n\n# WatermelonDB (JSI + bridge)\n-keep class com.nozbe.watermelondb.** { *; }\n\n# llama.rn (JSI bindings)\n-keep class com.rnllama.** { *; }\n\n# onnxruntime\n-keep class ai.onnxruntime.** { *; }\n\n# OkHttp / OkIO\n-dontwarn okhttp3.**\n-dontwarn okio.**\n\n# Kotlin metadata required by Expo modules at runtime\n-keep class kotlin.Metadata { *; }\n-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod"
+          }
+        }
+      ],
+      "./plugins/withMlKit16kb"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "owner": "perspient",
+    "extra": {
+      "eas": {
+        "projectId": "109fbed6-1099-4da9-bdb7-1e51363c1709"
+      }
+    }
+  }
+}

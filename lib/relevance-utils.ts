@@ -1,0 +1,67 @@
+export interface RelevanceColors {
+    backgroundColor: string;
+    borderColor: string;
+    textColor: string;
+    label: string;
+}
+
+// Shared reason box styling - lighter grey background with bold white text
+export const reasonBoxColors = {
+    backgroundColor: '#374151', // Lighter grey than card background
+    textColor: '#FFFFFF'
+};
+
+export const getRelevanceLabel = (relevance: number): string => {
+    if (relevance > 1.0) return 'Emergency Priority Articles';
+    if (relevance >= 0.77) return 'High Priority Articles';
+    if (relevance >= 0.53) return 'Medium Priority Articles';
+    if (relevance > 0.3) return 'Low Priority Articles';
+    return 'Irrelevant Articles';
+};
+
+export const getRelevanceColors = (relevance: number): RelevanceColors => {
+    if (relevance < 0) {
+        return {
+            backgroundColor: '#1F2937',
+            borderColor: '#9CA3AF',
+            textColor: '#9CA3AF',
+            label: 'Unprocessed'
+        };
+    }
+    if (relevance > 1.0) {
+        return {
+            backgroundColor: '#F3E5F5',
+            borderColor: '#6A1B9A',
+            textColor: '#6A1B9A',
+            label: 'Emergency'
+        };
+    } else if (relevance >= 0.77) {
+        return {
+            backgroundColor: '#FFEBEE',
+            borderColor: '#C62828',
+            textColor: '#C62828',
+            label: 'High'
+        };
+    } else if (relevance >= 0.53) {
+        return {
+            backgroundColor: '#FFF3E0',
+            borderColor: '#E65100',
+            textColor: '#E65100',
+            label: 'Med'
+        };
+    } else if (relevance > 0.3) {
+        return {
+            backgroundColor: '#FFFDE7',
+            borderColor: '#F57F17',
+            textColor: '#F57F17',
+            label: 'Low'
+        };
+    } else {
+        return {
+            backgroundColor: '#F5F5F5',
+            borderColor: '#616161',
+            textColor: '#616161',
+            label: 'Irrelevant'
+        };
+    }
+};

@@ -1,0 +1,7 @@
+lib/generated/
+dist/
+ios/
+android/
+coverage/
+node_modules/
+*.md

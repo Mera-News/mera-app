@@ -1,0 +1,627 @@
+// Shared Tool Handlers — Used by both on-device LLM and cloud inference chat paths.
+// Extracted from on-device-chat-agent.ts so both paths share identical tool execution logic.
+
+import {
+  addFact,
+  deleteFact,
+  getFacts,
+  getFactTopicLinks,
+  replaceFactTopicLinks,
+  resolveTopicIdsForFact,
+  updateFact,
+  getCoveredAttributeKeys,
+  getQuestionnaireLevel,
+  setQuestionnaireLevel,
+} from '../database/services/fact-service';
+import { getSetting, setSetting } from '../database/services/setting-service';
+import { AccountService } from '../account-service';
+import { useChatPopupStore } from '../stores/chat-popup-store';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import { ProcessingMode } from '../generated/graphql-types';
+import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
+import { inferenceQueue } from '../inference/InferenceQueue';
+import { useUserStore } from '../stores/user-store';
+import { getAttributeKeysForLevel, TOTAL_LEVELS, buildAttributeTextToIdMap } from '../mera-protocol/questionnaire-data';
+import { cloudBatchComplete, type BatchCompletionResult } from '../llm/cloudComplete';
+import {
+  buildCloudBatchCallsForFact,
+  buildSwapBatchCallForFact,
+  filterDecoysAgainstReal,
+  mergeRealOutputsForFact,
+  parseSwapOutput,
+} from '../mera-protocol/topic-generation-service';
+import { submitTopicsToServer } from '../mera-protocol/interest-submission-service';
+import { insertNoisyTopics } from '../database/services/noisy-user-topic-service';
+import type { BatchCall } from '../llm/types';
+import logger from '../logger';
+
+export const MAX_FACT_LENGTH = 200;
+
+/** Resolves userId from Zustand store (warm) or WatermelonDB (cold). */
+async function getStoredUserId(): Promise<string | null> {
+  let userId = useUserStore.getState().userId;
+  if (!userId) {
+    userId = await getSetting('cached_user_id');
+  }
+  return userId;
+}
+
+/** A fact entry from the LLM — either a plain string (legacy) or object with questionnaire metadata. */
+type FactEntry = string | {
+  statement: string;
+  questionnaire_level?: number;
+  questionnaire_level_category?: string;
+  questionnaire_attribute?: string;
+};
+
+function normalizeFactEntry(entry: FactEntry): {
+  statement: string;
+  questionnaire?: {
+    level?: number;
+    levelCategory?: string;
+    attribute?: string;
+  };
+} {
+  if (typeof entry === 'string') {
+    return { statement: entry };
+  }
+  return {
+    statement: entry.statement ?? '',
+    questionnaire: (entry.questionnaire_level || entry.questionnaire_level_category || entry.questionnaire_attribute)
+      ? {
+          level: entry.questionnaire_level,
+          levelCategory: entry.questionnaire_level_category,
+          attribute: entry.questionnaire_attribute,
+        }
+      : undefined,
+  };
+}
+
+/** Saves extracted facts to local DB, immediately generates topics and submits to server. */
+export async function handleSaveExtractedFacts(
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const facts = args.extracted_user_information as FactEntry[] | undefined;
+
+  let factsSaved = 0;
+  const savedFactEntries: Array<{ id: string; statement: string }> = [];
+
+  if (Array.isArray(facts) && facts.length > 0) {
+    // Load existing facts for dedup — local LLMs often re-emit known facts
+    const existingFacts = await getFacts();
+    const normalizeStatement = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
+    const existingStatements = new Set(existingFacts.map(f => normalizeStatement(f.statement)));
+
+    for (const factEntry of facts) {
+      const { statement, questionnaire } = normalizeFactEntry(factEntry);
+      const trimmed = statement.trim();
+      if (!trimmed) continue;
+      if (trimmed.length > MAX_FACT_LENGTH) {
+        logger.warn('Rejected fact exceeding max length', {
+          length: trimmed.length,
+          preview: trimmed.substring(0, 80),
+        });
+        continue;
+      }
+
+      // Skip meta-conversational facts (LLM hallucinating actions as facts)
+      const lower = trimmed.toLowerCase();
+      if (/^user\s+(is|wants?|asked?|greeted|said|requested)\b/.test(lower) ||
+          /\b(setting up|update|updating|set up)\s+(persona|profile|preferences)\b/.test(lower)) {
+        logger.debug('Rejected meta-conversational fact', { statement: trimmed });
+        continue;
+      }
+
+      // Skip duplicate facts
+      if (existingStatements.has(normalizeStatement(trimmed))) {
+        continue;
+      }
+
+      // Save fact locally (Rule #1: facts never leave the device)
+      const savedFact = await addFact(trimmed, undefined, questionnaire);
+      factsSaved++;
+      savedFactEntries.push({ id: savedFact.id, statement: trimmed });
+    }
+
+    // Notify once after all facts are saved (avoids WatermelonDB cache race from per-fact notifications)
+    useChatPopupStore.getState().notifyFactMutation();
+
+    // Generate topics for all new facts
+    if (savedFactEntries.length > 0) {
+      const useCloud =
+        useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
+
+      if (useCloud) {
+        // Cloud path: single batch call for all facts
+        batchGenerateTopics(savedFactEntries).catch((err: unknown) =>
+          logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) }),
+        );
+      } else {
+        // Local path: enqueue individual jobs for sequential llama.rn access
+        for (const entry of savedFactEntries) {
+          hasPendingJob('topic_gen', 'factId', entry.id).then((exists) => {
+            if (!exists) {
+              enqueueJob('topic_gen', {
+                factId: entry.id,
+                factStatement: entry.statement,
+                useCloud: false,
+              }).then(() => inferenceQueue.notify());
+            }
+          }).catch((err: unknown) => logger.warn('Failed to enqueue topic gen', { error: String(err) }));
+        }
+      }
+    }
+  }
+
+  return {
+    success: true,
+    factsSaved,
+  };
+}
+
+/**
+ * Batch-generates real + noisy topics for all facts in ONE cloud API call.
+ * Each fact contributes up to 3 BatchCall entries (fact-only + combo + noise);
+ * the full 3N-entry batch goes out in a single request. After the response,
+ * real and noisy texts ride a single SubmitUserTopics mutation; the response
+ * is partitioned by text-match against the per-fact noisy set.
+ */
+async function batchGenerateTopics(
+  factEntries: Array<{ id: string; statement: string }>,
+): Promise<void> {
+  logger.debug('[topic-gen-batch] starting', { factCount: factEntries.length });
+
+  const allFacts = await getFacts();
+  const attrTextToId = buildAttributeTextToIdMap();
+  const userOwnLocationIds = new Set(['q1_location', 'q4_neighborhood']);
+  const userLocation = allFacts.find((f) => {
+    if (!f.questionnaireAttribute) return false;
+    const attrId = attrTextToId.get(f.questionnaireAttribute);
+    return attrId !== undefined && userOwnLocationIds.has(attrId);
+  });
+
+  const injectNoise = useMeraProtocolStore.getState().injectNoise;
+
+  // Stage 1: real-topic batch. fact-only (always) + combo (when other facts
+  // exist). Decoy is a separate second-stage batch over the merged real
+  // topics — see Stage 2 below.
+  const realCalls: BatchCall[] = [];
+  for (const entry of factEntries) {
+    const otherFacts = allFacts
+      .filter((f) => f.id !== entry.id && f.id !== userLocation?.id)
+      .map((f) => f.statement);
+    realCalls.push(
+      ...buildCloudBatchCallsForFact(
+        {
+          factStatement: entry.statement,
+          userLocation: userLocation?.statement ?? null,
+          otherFacts,
+        },
+        entry.id,
+      ),
+    );
+  }
+
+  logger.debug('[topic-gen-batch] stage1 calling batch-infer', {
+    callCount: realCalls.length,
+    factCount: factEntries.length,
+    injectNoise,
+  });
+  let realResults: BatchCompletionResult[];
+  try {
+    realResults = await cloudBatchComplete(realCalls);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.warn('[topic-gen-batch] stage1 cloud batch threw', { error: errMsg });
+    for (const entry of factEntries) {
+      await updateFact(entry.id, { metadata: { topicGenError: [errMsg] } });
+    }
+    useChatPopupStore.getState().notifyFactMutation();
+    return;
+  }
+  logger.debug('[topic-gen-batch] stage1 response', {
+    resultCount: realResults.length,
+  });
+
+  // Re-key stage-1 results into per-fact (factOnly, combo) buckets.
+  type RealBucket = {
+    factOnly: string | null;
+    combo: string | null;
+    halfErrors: string[];
+  };
+  const realOutputsByFactId = new Map<string, RealBucket>();
+  for (const result of realResults) {
+    const sep = result.id.lastIndexOf(':');
+    if (sep === -1) {
+      logger.warn('[topic-gen-batch] unexpected result id', { id: result.id });
+      continue;
+    }
+    const factId = result.id.slice(0, sep);
+    const half = result.id.slice(sep + 1) as 'factOnly' | 'combo';
+    const bucket: RealBucket = realOutputsByFactId.get(factId) ?? {
+      factOnly: null,
+      combo: null,
+      halfErrors: [],
+    };
+    if (result.error) {
+      bucket.halfErrors.push(`${half}: ${result.error}`);
+      logger.warn('[topic-gen-batch] half failed', { factId, half, error: result.error });
+    } else {
+      bucket[half] = result.output;
+      logger.debug('[topic-gen-batch] half output', { factId, half, output: result.output });
+    }
+    realOutputsByFactId.set(factId, bucket);
+  }
+
+  // Merge real topics per fact.
+  const realByFactId = new Map<string, string[]>();
+  for (const entry of factEntries) {
+    const bucket = realOutputsByFactId.get(entry.id);
+    if (!bucket) {
+      await updateFact(entry.id, {
+        metadata: { topicGenError: ['No topic-gen result returned'] },
+      });
+      continue;
+    }
+    const real = mergeRealOutputsForFact(bucket.factOnly, bucket.combo, entry.statement);
+    if (real.length === 0) {
+      const errMsg =
+        bucket.halfErrors.length > 0
+          ? bucket.halfErrors.join('; ')
+          : 'Topic generation returned no usable topics';
+      logger.warn('[topic-gen-batch] no topics parsed', { factId: entry.id });
+      await updateFact(entry.id, { metadata: { topicGenError: [errMsg] } });
+      continue;
+    }
+    await updateFact(entry.id, { metadata: { topics: real } });
+    realByFactId.set(entry.id, real);
+  }
+
+  // Stage 2: entity-swap decoy batch over merged real topics. One call per
+  // fact that produced real topics.
+  const noisyByFactId = new Map<string, string[]>();
+  const noisyDecoyFactByFactId = new Map<string, string | null>();
+  if (injectNoise && realByFactId.size > 0) {
+    const swapCalls: BatchCall[] = [];
+    for (const [factId, real] of realByFactId.entries()) {
+      const entry = factEntries.find((e) => e.id === factId);
+      if (!entry) continue;
+      swapCalls.push(buildSwapBatchCallForFact(entry.statement, real, entry.id));
+    }
+    logger.debug('[topic-gen-batch] stage2 swap batch', { callCount: swapCalls.length });
+    let swapResults: BatchCompletionResult[] = [];
+    try {
+      swapResults = await cloudBatchComplete(swapCalls);
+    } catch (err) {
+      logger.warn('[topic-gen-batch] stage2 swap batch threw', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    for (const result of swapResults) {
+      const sep = result.id.lastIndexOf(':');
+      if (sep === -1) continue;
+      const factId = result.id.slice(0, sep);
+      const real = realByFactId.get(factId) ?? [];
+      if (result.error) {
+        logger.warn('[topic-gen-batch] swap failed', { factId, error: result.error });
+        continue;
+      }
+      const parsed = parseSwapOutput(result.output, real.length);
+      const noisy = filterDecoysAgainstReal(parsed.topics, real);
+      noisyByFactId.set(factId, noisy);
+      noisyDecoyFactByFactId.set(factId, parsed.decoyFact);
+      logger.debug('[topic-gen-batch] swap output', {
+        factId,
+        decoyFact: parsed.decoyFact,
+        noisyCount: noisy.length,
+      });
+    }
+  }
+
+  // Build the flat submission payload now that we know real + noisy per fact.
+  const allTopicsForSubmission: Array<{ text: string; sourceFactLocalId: string }> = [];
+  for (const entry of factEntries) {
+    const real = realByFactId.get(entry.id);
+    if (!real) continue;
+    for (const text of real) {
+      allTopicsForSubmission.push({ text, sourceFactLocalId: entry.id });
+    }
+    for (const text of noisyByFactId.get(entry.id) ?? []) {
+      allTopicsForSubmission.push({ text, sourceFactLocalId: entry.id });
+    }
+  }
+
+  const userId = await getStoredUserId();
+
+  if (allTopicsForSubmission.length > 0 && userId) {
+    try {
+      const submitted = await submitTopicsToServer(userId, allTopicsForSubmission);
+      logger.debug('[topic-gen-batch] submitted topics', {
+        count: allTopicsForSubmission.length,
+      });
+
+      // Partition response per fact, then per (real vs noisy) by text match
+      // against `noisyByFactId`. A topicId that comes back for BOTH a real
+      // and a noisy entry (server-side semantic dedup) is treated as real so
+      // we never accidentally tag a useful cluster as noise.
+      const linksByFactId = new Map<
+        string,
+        { serverTopicId: string; topicText: string }[]
+      >();
+      const realIdsByFactId = new Map<string, Set<string>>();
+      const noisyByFactAndId = new Map<string, Map<string, { text: string }>>();
+      for (const entry of submitted) {
+        if (!entry.topicId) continue;
+        const noisySet = new Set(
+          (noisyByFactId.get(entry.sourceFactLocalId) ?? []).map((t) =>
+            t.toLowerCase().trim(),
+          ),
+        );
+        const isNoise = noisySet.has(entry.text.toLowerCase().trim());
+        if (isNoise) {
+          const bucket =
+            noisyByFactAndId.get(entry.sourceFactLocalId) ??
+            new Map<string, { text: string }>();
+          if (!bucket.has(entry.topicId)) bucket.set(entry.topicId, { text: entry.text });
+          noisyByFactAndId.set(entry.sourceFactLocalId, bucket);
+          continue;
+        }
+        const realIds =
+          realIdsByFactId.get(entry.sourceFactLocalId) ?? new Set<string>();
+        if (realIds.has(entry.topicId)) continue;
+        realIds.add(entry.topicId);
+        realIdsByFactId.set(entry.sourceFactLocalId, realIds);
+        const bucket = linksByFactId.get(entry.sourceFactLocalId) ?? [];
+        bucket.push({ serverTopicId: entry.topicId, topicText: entry.text });
+        linksByFactId.set(entry.sourceFactLocalId, bucket);
+      }
+
+      for (const entry of factEntries) {
+        const links = linksByFactId.get(entry.id) ?? [];
+        await replaceFactTopicLinks(entry.id, links);
+        await updateFact(entry.id, {
+          metadata: { topics: links.map((l) => l.topicText) },
+        });
+      }
+
+      // Persist noisy topic ids per fact, skipping any that ALSO came back as
+      // real (collision against an existing real topic).
+      const personaId = useUserStore.getState().userPersona?._id ?? userId;
+      const noisyInserts: {
+        serverTopicId: string;
+        factId: string;
+        newsTopicText: string;
+        parentTopicText: string;
+      }[] = [];
+      for (const entry of factEntries) {
+        const byTopicId = noisyByFactAndId.get(entry.id);
+        if (!byTopicId) continue;
+        const realIds = realIdsByFactId.get(entry.id) ?? new Set<string>();
+        // Decoy persona-fact the noise prompt invented in Step A — persist it
+        // so the persona-tab debug switch can show what fake user spawned the
+        // batch. Fall back to the real fact statement when the model omitted
+        // the decoy_fact field.
+        const decoyFact =
+          noisyDecoyFactByFactId.get(entry.id) ?? entry.statement;
+        for (const [topicId, e] of byTopicId.entries()) {
+          if (realIds.has(topicId)) continue;
+          noisyInserts.push({
+            serverTopicId: topicId,
+            factId: entry.id,
+            newsTopicText: e.text,
+            parentTopicText: decoyFact,
+          });
+        }
+      }
+      if (noisyInserts.length > 0) {
+        await insertNoisyTopics(personaId, noisyInserts);
+      }
+
+      await useUserStore.getState().fetchUserPersona(userId, true);
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logger.error('[topic-gen-batch] submission/link-persist failed', err, {
+        factIds: factEntries.map((e) => e.id),
+      });
+      for (const entry of factEntries) {
+        await updateFact(entry.id, {
+          metadata: { topicGenError: [errMsg || 'Failed to link topics'] },
+        }).catch((updateErr) =>
+          logger.error(
+            '[topic-gen-batch] failed to persist topicGenError',
+            updateErr,
+            { factId: entry.id },
+          ),
+        );
+      }
+    }
+  }
+
+  useChatPopupStore.getState().notifyFactMutation();
+  logger.debug('[topic-gen-batch] done');
+}
+
+/** Updates user language config immediately on the server (settings, not PII). */
+export async function handleUpdateUserConfig(
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const languageCodes = args.language_codes as string[] | undefined;
+
+  if (!Array.isArray(languageCodes)) {
+    return { success: true, message: 'No config fields provided' };
+  }
+
+  const config = { language_codes: languageCodes };
+
+  // Immediate fire-and-forget server update
+  const userId = await getStoredUserId();
+  if (userId) {
+    AccountService.updateUserConfig(userId, config)
+      .catch(err => logger.warn('[updateUserConfig] Server update failed', { error: String(err) }));
+  } else {
+    logger.warn('[updateUserConfig] No userId available — skipping server update');
+  }
+
+  return {
+    success: true,
+    language_codes: config.language_codes,
+  };
+}
+
+/**
+ * Deletes facts from local DB by their local IDs.
+ * Supports fallback matching by statement text — the small on-device LLM
+ * sometimes provides the fact text instead of the UUID from [brackets].
+ */
+export async function handleDeleteUserFacts(
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const factIds = args.fact_ids as string[] | undefined;
+
+  if (!Array.isArray(factIds) || factIds.length === 0) {
+    return { error: 'fact_ids must be a non-empty array' };
+  }
+
+  // Load all facts and topics for resolution
+  const allFacts = await getFacts();
+  const factsByAttrMap = new Map(
+    allFacts
+      .filter(f => f.questionnaireAttribute)
+      .map(f => [f.questionnaireAttribute!.toLowerCase().trim(), f]),
+  );
+  const factsByIdMap = new Map(allFacts.map(f => [f.id, f]));
+  const factsByTextMap = new Map(allFacts.map(f => [f.statement.toLowerCase().trim(), f]));
+  const userTopics = useUserStore.getState().userPersona?.userTopics ?? [];
+
+  // Phase 1: resolve all facts to delete (no mutation yet)
+  const factsToDelete: typeof allFacts = [];
+  const seenIds = new Set<string>();
+  for (const rawId of factIds) {
+    const trimmed = rawId.trim().replace(/^\[|\]$/g, '');
+    const fact =
+      factsByAttrMap.get(trimmed.toLowerCase())
+      ?? factsByIdMap.get(trimmed)
+      ?? factsByTextMap.get(trimmed.toLowerCase());
+
+    if (!fact) {
+      logger.warn('[deleteUserFacts] Fact not found', { input: trimmed });
+      continue;
+    }
+    if (!seenIds.has(fact.id)) {
+      seenIds.add(fact.id);
+      factsToDelete.push(fact);
+    }
+  }
+
+  if (factsToDelete.length === 0) {
+    return { success: true, deletedCount: 0 };
+  }
+
+  // Phase 2: compute which topic IDs would become exclusive (no surviving fact
+  // shares them) — do this BEFORE deleting so the server can be notified first.
+  const deletingFactIds = new Set(factsToDelete.map(f => f.id));
+  const allTopicIdsForDeleting = new Set<string>();
+  for (const fact of factsToDelete) {
+    const links = await getFactTopicLinks(fact.id);
+    for (const id of resolveTopicIdsForFact(fact, links, userTopics)) {
+      allTopicIdsForDeleting.add(id);
+    }
+  }
+
+  const allLinks = await getFactTopicLinks();
+  const survivingTopicIds = new Set<string>();
+  for (const f of allFacts) {
+    if (deletingFactIds.has(f.id)) continue;
+    const fLinks = allLinks.filter(l => l.factId === f.id);
+    for (const id of resolveTopicIdsForFact(f, fLinks, userTopics)) {
+      survivingTopicIds.add(id);
+    }
+  }
+  const exclusiveIds = [...allTopicIdsForDeleting].filter(id => !survivingTopicIds.has(id));
+
+  // Phase 3: await server withdrawal BEFORE touching local state.
+  if (exclusiveIds.length > 0) {
+    const userId = await getStoredUserId();
+    if (!userId) {
+      logger.warn('[deleteUserFacts] No userId available — aborting (keeping local facts intact)');
+      return { error: 'No userId available for server topic withdrawal' };
+    }
+    try {
+      await AccountService.withdrawUserTopics(userId, exclusiveIds);
+    } catch (err) {
+      logger.warn('[deleteUserFacts] Server withdrawal failed — keeping local facts intact', { error: String(err) });
+      return { error: 'Server topic withdrawal failed. Please try again.' };
+    }
+  }
+
+  // Phase 4: server confirmed — now delete locally.
+  let deletedCount = 0;
+  for (const fact of factsToDelete) {
+    await deleteFact(fact.id);
+    deletedCount++;
+  }
+  useChatPopupStore.getState().notifyFactMutation();
+
+  return { success: true, deletedCount };
+}
+
+/** Advances questionnaire to the next level. */
+export async function handleAdvanceQuestionnaireLevel(): Promise<Record<string, unknown>> {
+  const currentLevel = await getQuestionnaireLevel();
+  if (currentLevel >= TOTAL_LEVELS) {
+    return {
+      success: true,
+      level: currentLevel,
+      message: 'Already at the final level. All questionnaire topics have been covered.',
+    };
+  }
+
+  // Prevent advancing if no facts gathered for the current level
+  const coveredAttributes = await getCoveredAttributeKeys();
+  const currentKeys = getAttributeKeysForLevel(currentLevel);
+  const anyCovered = currentKeys.some((key) => coveredAttributes.has(key));
+  if (!anyCovered) {
+    return {
+      success: false,
+      level: currentLevel,
+      message: 'Cannot advance — no facts gathered for current level yet.',
+    };
+  }
+
+  const nextLevel = currentLevel + 1;
+  await setQuestionnaireLevel(nextLevel);
+
+  return {
+    success: true,
+    previousLevel: currentLevel,
+    level: nextLevel,
+    totalLevels: TOTAL_LEVELS,
+    message: `Advanced to level ${nextLevel} of ${TOTAL_LEVELS}. The next set of topics will be loaded in the next response.`,
+  };
+}
+
+/** Tracks warning count locally. Blocks chat if warnings reach 3. */
+export async function handleIssueWarning(
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const reason = (args.reason as string) ?? 'No reason provided';
+  const currentCount = parseInt(await getSetting('llm_warning_count') ?? '0', 10);
+  const newCount = currentCount + 1;
+  await setSetting('llm_warning_count', String(newCount));
+
+  logger.warn('[issueWarning] Warning issued', { reason, warningCount: newCount });
+
+  if (newCount >= 3) {
+    return {
+      blocked: true,
+      warningCount: newCount,
+      message: 'User has been blocked due to repeated warnings.',
+    };
+  }
+
+  return {
+    blocked: false,
+    warningCount: newCount,
+    message: `Warning ${newCount}/3 issued: ${reason}`,
+  };
+}

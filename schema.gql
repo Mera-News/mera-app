@@ -1,0 +1,441 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+# This is a committed snapshot of the reference backend's GraphQL schema and
+# doubles as the contract a forker's backend must satisfy. If your backend's
+# schema differs, replace this file with your server's generated schema.gql,
+# then run `npm run codegen` to regenerate lib/generated/graphql-types.ts.
+# ------------------------------------------------------
+
+"""Status of article processing through the pipeline"""
+enum ArticleProcessingStatus {
+  AGGREGATION_ENQUEUED
+  AGGREGATION_FAILED
+  AGGREGATION_SUCCESSFUL
+  DETECT_LANGUAGE_ENQUEUED
+  DETECT_LANGUAGE_FAILED
+  DETECT_LANGUAGE_SUCCESSFUL
+  EMBEDDING_ENQUEUED
+  EMBEDDING_FAILED
+  EMBEDDING_SUCCESSFUL
+  PENDING
+  TRANSLATION_ENQUEUED
+  TRANSLATION_FAILED
+  TRANSLATION_SKIPPED
+  TRANSLATION_SUCCESS
+}
+
+type ArticleSuggestionWithMetadata {
+  _id: ID!
+  articleId: ID!
+  article_url: String
+  clusterIds: [ID!]!
+  country_code: String
+  createdAt: DateTime!
+  description_en: String
+  firstPubDate: DateTime!
+  image_url: String
+  language_code: String
+  publication_name: String
+  title_en: String!
+  userTopicIds: [ID!]!
+}
+
+type ArticleSummary {
+  _id: ID!
+  article_url: String
+  country_code: String
+  description_en: String
+  image_url: String
+  language_code: String
+  pubDate: DateTime!
+  publication_name: String
+  title_en: String!
+}
+
+type ArticlesForPublicationSourceResponse {
+  articles: [NewsArticle!]!
+  pageInfo: CursorPageInfo!
+}
+
+type ClusterArticlesConnection {
+  articles: [NewsArticle!]!
+  pageInfo: CursorPageInfo!
+}
+
+"""Cursor-based pagination metadata"""
+type CursorPageInfo {
+  """Cursor pointing to the last item in the current page"""
+  endCursor: String
+
+  """Whether there are more items after the current page"""
+  hasNextPage: Boolean!
+
+  """Number of items requested"""
+  pageSize: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DeleteAllArticleSuggestionsResponse {
+  removedCount: Int!
+  success: Boolean!
+}
+
+type DeleteAllUserTopicsResponse {
+  removedCount: Int!
+  success: Boolean!
+}
+
+input DeleteExpoPushTokenInput {
+  userId: ID!
+}
+
+type EmbeddingSearchResponse {
+  query: String!
+  results: [EmbeddingSearchResult!]!
+  totalResults: Float!
+}
+
+type EmbeddingSearchResult {
+  article: NewsArticle!
+  score: Float!
+}
+
+type Mutation {
+  advanceOnboardingStage(stage: OnboardingStage!, userId: ID!): UserPersona!
+  deleteAllArticleSuggestions(userId: ID!): DeleteAllArticleSuggestionsResponse!
+  deleteAllUserTopics(userId: ID!): DeleteAllUserTopicsResponse!
+  deleteExpoPushToken(input: DeleteExpoPushTokenInput!): UserPersona!
+  refreshSuggestionsForUser(userId: ID!): RefreshSuggestionsResponse!
+  submitUserTopics(input: SubmitUserTopicsInput!): SubmitUserTopicsResponse!
+  updateExpoPushToken(input: UpdateExpoPushTokenInput!): UserPersona!
+  updateNotificationWindow(input: UpdateNotificationWindowInput!): UserPersona!
+  updateNotificationsEnabled(input: UpdateNotificationsEnabledInput!): UserPersona!
+  updateProcessingMode(input: UpdateProcessingModeInput!): UserPersona!
+  updateUserConfig(input: UpdateUserConfigInput!): UserPersona!
+  withdrawUserTopics(input: WithdrawUserTopicsInput!): WithdrawUserTopicsResponse!
+}
+
+type NewsArticle {
+  _id: ID!
+  article_url: String!
+  clusterConfidence: Float
+  createdAt: DateTime!
+  creator: String
+  description: String!
+  description_en_internal_only: String
+  fetchPublicationId: ID
+  image_url: String
+  original_language_code: String
+  processingStatus: ArticleProcessingStatus
+  pubDate: DateTime!
+  publicationSource: PublicationSource
+  publicationSourceId: ID!
+  source_uri: String!
+  title: String!
+  title_en_internal_only: String
+  type: String!
+  updatedAt: DateTime!
+}
+
+type NewsCluster {
+  _id: ID!
+  articles(
+    """Cursor to fetch articles after"""
+    after: String
+
+    """Number of articles to fetch (max 10)"""
+    first: Int = 10
+  ): ClusterArticlesConnection!
+  createdAt: DateTime!
+  topicConfidence: Float
+  updatedAt: DateTime!
+}
+
+type NewsClustersResponse {
+  newsClusters: [NewsCluster!]!
+  pageInfo: CursorPageInfo!
+}
+
+type NewsPublisher {
+  _id: ID!
+  country_code: String!
+  country_name: String
+  createdAt: DateTime!
+  is_active: Boolean!
+  name: String!
+  publicationSources: [PublicationSource!]!
+  updatedAt: DateTime!
+  website_url: String
+}
+
+type NewsPublishersResponse {
+  newsPublishers: [NewsPublisher!]!
+  pageInfo: CursorPageInfo!
+}
+
+"""
+Monotonic onboarding progress marker. Values: NOTIFICATIONS, PROCESSING_MODE, PERSONA_CHAT, FINISHED. The user resumes at this stage on app launch; only FINISHED skips the wizard.
+"""
+enum OnboardingStage {
+  FINISHED
+  NOTIFICATIONS
+  PERSONA_CHAT
+  PROCESSING_MODE
+}
+
+"""
+Which inference backend handles Mera Protocol work for this user. ON_DEVICE runs fully offline on the user device; CLOUD uses end-to-end encrypted inference.
+"""
+enum ProcessingMode {
+  CLOUD
+  ON_DEVICE
+}
+
+type PublicationSource {
+  _id: ID!
+  category: String!
+  country_code: String!
+  country_name: String
+  createdAt: DateTime!
+  detected_language_code: String
+  feed_language_code: String
+  feed_url: String!
+  is_active: Boolean!
+  newsPublisherId: ID
+  publication_name: String!
+  publication_url: String
+  type: String!
+  updatedAt: DateTime!
+}
+
+type PublicationSourcesForPublisherResponse {
+  publicationSources: [PublicationSource!]!
+}
+
+type PublicationSourcesResponse {
+  pageInfo: CursorPageInfo!
+  publicationSources: [PublicationSource!]!
+}
+
+type Query {
+  allCountries: [String!]!
+
+  """
+  Fetch a single article by ID. Returns null if not found (e.g. TTL’d out).
+  """
+  articleById(id: ID!): NewsArticle
+  articlesForPublicationSource(
+    """Cursor to fetch items after"""
+    after: String
+
+    """Number of items to fetch"""
+    first: Int = 20
+    publicationSourceId: ID!
+  ): ArticlesForPublicationSourceResponse!
+  newsClusterForUser(clusterId: ID!): NewsCluster!
+  newsClusters(
+    """Cursor to fetch items after"""
+    after: String
+    countryCodes: [String!]
+
+    """Number of items to fetch"""
+    first: Int = 20
+    userTopicId: ID
+  ): NewsClustersResponse!
+  newsPublishers(
+    """Cursor to fetch items after"""
+    after: String
+    countryCode: String
+
+    """Number of items to fetch"""
+    first: Int = 20
+  ): NewsPublishersResponse!
+  publicationSources(
+    """Cursor to fetch items after"""
+    after: String
+    category: String
+    countryCode: String
+
+    """Number of items to fetch"""
+    first: Int = 20
+    languageCode: String
+  ): PublicationSourcesResponse! @deprecated(reason: "Use newsPublishers and publicationSourcesForNewsPublisher queries instead")
+  publicationSourcesForNewsPublisher(publisherId: ID!): PublicationSourcesForPublisherResponse!
+  relatedArticles(articleId: ID!): [ArticleSummary!]!
+
+  """Vector search using cosine similarity (scores 0–1)."""
+  searchArticlesVector(
+    """Only include articles published within this many hours (e.g. 48)"""
+    cutoffHours: Int
+
+    """Max results to return"""
+    limit: Int = 10
+
+    """Minimum cosine similarity score (0–1)"""
+    minScore: Float = 0
+
+    """Which embedding index to search: DATA_RETRIEVAL or TEXT_MATCHING"""
+    mode: VectorSearchMode = DATA_RETRIEVAL
+
+    """Number of candidates for vector search pre-filter"""
+    numCandidates: Int = 5000
+
+    """Search text"""
+    query: String!
+  ): EmbeddingSearchResponse!
+
+  """Vector search on user topics using cosine similarity (scores 0–1)."""
+  searchTopicsVector(
+    """Max results to return"""
+    limit: Int = 10
+
+    """Minimum cosine similarity score (0–1)"""
+    minScore: Float = 0
+
+    """Number of candidates for vector search pre-filter"""
+    numCandidates: Int = 5000
+
+    """Search text"""
+    query: String!
+  ): TopicSearchResponse!
+  serverProcessingMetadataForUser(userPersonaId: ID!): ServerProcessingMetadataForUserResponse!
+  siblingArticleSuggestions(clusterId: ID!, excludeArticleId: ID, userPersonaId: ID!): [ArticleSuggestionWithMetadata!]!
+  unscoredArticleSuggestionByIds(ids: [ID!]!, userPersonaId: ID!): [ArticleSuggestionWithMetadata!]!
+  unscoredArticleSuggestionIds(userPersonaId: ID!): [ID!]!
+  userPersonaByUserId(userId: ID!): UserPersona
+}
+
+type RefreshSuggestionsResponse {
+  message: String!
+  success: Boolean!
+}
+
+type ServerProcessingMetadataForUserResponse {
+  """
+  Count of this persona's article suggestions in the last 24 hours (always fresh)
+  """
+  articleSuggestionCountForUser: Int!
+
+  """
+  Total number of articles created system-wide in the last 24 hours (cached 30 min)
+  """
+  totalArticlesToday: Int!
+}
+
+input SubmitUserTopicItemInput {
+  sourceFactLocalId: String!
+  text: String!
+}
+
+input SubmitUserTopicsInput {
+  topics: [SubmitUserTopicItemInput!]!
+  userId: ID!
+}
+
+type SubmitUserTopicsResponse {
+  message: String!
+  success: Boolean!
+  topics: [SubmittedUserTopic!]!
+}
+
+type SubmittedUserTopic {
+  sourceFactLocalId: String!
+  status: String!
+  text: String!
+  topicId: ID
+}
+
+type TopicSearchResponse {
+  query: String!
+  results: [TopicSearchResult!]!
+  totalResults: Float!
+}
+
+type TopicSearchResult {
+  score: Float!
+  topic: UserTopic!
+}
+
+input UpdateExpoPushTokenInput {
+  expoPushToken: String!
+  userId: ID!
+}
+
+input UpdateNotificationWindowInput {
+  preferredNotificationWindow: [Int!]!
+  userId: ID!
+}
+
+input UpdateNotificationsEnabledInput {
+  enabled: Boolean!
+  userId: ID!
+}
+
+input UpdateProcessingModeInput {
+  mode: ProcessingMode!
+  userId: ID!
+}
+
+input UpdateUserConfigInput {
+  language_codes: [String!]
+  userId: ID!
+}
+
+type UserPersona {
+  _id: ID!
+  blockedByLlm: Boolean!
+  blockedByLlmReason: String
+  createdAt: DateTime!
+  expoPushToken: String
+  language_codes: [String!]
+  lastNotifiedAt: DateTime
+  lastSuccessfulCompletedAt: DateTime
+  llmWarningCount: Int!
+  notificationsEnabled: Boolean!
+  onboardingStage: OnboardingStage!
+  preferredNotificationWindow: [Int!]!
+  processingMode: ProcessingMode!
+  updatedAt: DateTime!
+  userId: String!
+  userTopics: [UserTopic!]
+}
+
+type UserTopic {
+  _id: ID!
+  article_count: Int!
+  cluster_count: Int!
+  createdAt: DateTime!
+  is_canonical: Boolean!
+  news_topic_text: String!
+  updatedAt: DateTime!
+}
+
+"""
+Which embedding index to use for vector search. DATA_RETRIEVAL uses asymmetric retrieval embeddings (query→article). TEXT_MATCHING uses symmetric text-matching embeddings (article→article clustering).
+"""
+enum VectorSearchMode {
+  """
+  Asymmetric search: query embedding (retrieval.query) vs article embedding (retrieval.passage). Best for user-facing search.
+  """
+  DATA_RETRIEVAL
+
+  """
+  Symmetric search: text-matching embeddings. Best for finding similar/duplicate articles (clustering).
+  """
+  TEXT_MATCHING
+}
+
+input WithdrawUserTopicsInput {
+  topicIds: [ID!]!
+  userId: ID!
+}
+
+type WithdrawUserTopicsResponse {
+  removedCount: Int!
+  success: Boolean!
+}

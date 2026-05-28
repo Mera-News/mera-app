@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an idea or enhancement for the Mera app
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For larger features, please open this issue for discussion **before**
+        building a PR — see [CONTRIBUTING.md](../CONTRIBUTING.md). Note that
+        features requiring backend changes may not be accepted, since the
+        backend lives in a separate private repository.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem would this feature solve? What is the use case?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe what you would like to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: backend
+    attributes:
+      label: Backend impact
+      options:
+        - label: This feature can be implemented in the app alone (no backend/API changes)
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

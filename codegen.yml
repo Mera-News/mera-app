@@ -1,0 +1,8 @@
+# Reads ./schema.gql (a snapshot of the reference backend's schema). To target
+# your own backend, replace ./schema.gql with your server's generated schema,
+# then run `npm run codegen`.
+schema: ./schema.gql
+generates:
+  ./lib/generated/graphql-types.ts:
+    plugins:
+      - typescript

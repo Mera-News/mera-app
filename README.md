@@ -1,0 +1,122 @@
+# Mera — On-Device Personalized News
+
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE.md)
+[![Platform: iOS & Android](https://img.shields.io/badge/Platform-iOS%20%26%20Android-lightgrey)]()
+[![Source Available](https://img.shields.io/badge/Source-Available%20(not%20OSI%20open%20source)-orange)]()
+
+## What is Mera?
+
+Mera is a personalized news app for iOS and Android that scores article relevance entirely on-device using a local LLM (Qwen3 4B via llama.rn — the "Mera Protocol"). News is fetched and personalized in real time against a BYO backend; no user reading history leaves the device unless you opt into the cloud scoring fallback. The app is source-available under the PolyForm Noncommercial License 1.0.0 — you may run, study, and fork it for non-commercial purposes; commercial use requires a separate agreement with Mera News B.V.
+
+## Screenshots
+
+_Screenshots coming soon._
+
+## Architecture Overview
+
+Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key layers:
+
+- **Apollo Client** (GraphQL, no-cache policy) fetches article suggestion IDs and content from a NestJS backend.
+- **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
+- **On-device LLM** — llama.rn running Qwen3 4B scores relevance and generates personalization reasons without a network call (Mera Protocol). A cloud scoring path (inference gateway) is available as a fallback.
+- **E2EE cloud inference** — XChaCha20-Poly1305 + X25519 ECDH over a NEAR AI Cloud v2 attestation-verified gateway.
+- **Better Auth** with email OTP handles authentication; tokens are stored in expo-secure-store.
+- **BYO backend** — all three required service endpoints are configured via environment variables; no Mera infrastructure is required to run the app.
+
+## Prerequisites
+
+- **Node.js 20+**, npm 10+
+- **Expo CLI**: `npm install -g expo-cli`
+- **EAS CLI**: `npm install -g eas-cli`
+- **iOS**: Xcode 16+, CocoaPods
+- **Android**: Android Studio with SDK 34+
+- A running backend that satisfies the Backend Requirements below
+
+## Quick Start
+
+1. **Clone and install:**
+   ```bash
+   git clone <your-fork-url> mera-app
+   cd mera-app
+   npm install
+   ```
+
+2. **Copy the env template and fill in your endpoints:**
+   ```bash
+   cp .env.example .env
+   # Edit .env — the three EXPO_PUBLIC_* endpoint vars are required;
+   # the app hard-crashes at launch if any are missing.
+   ```
+
+3. **Supply your Firebase `google-services.json`:**
+   The file committed in this repo belongs to Mera News B.V. and will not work for your fork. Create a Firebase Android app in your own Firebase project, download its `google-services.json`, and place it at both the repo root and `android/app/google-services.json`. See `google-services.example.json` for the expected JSON shape.
+
+4. **Start the dev server:**
+   ```bash
+   npx expo start
+   ```
+
+## Backend Requirements (BYO Backend)
+
+This is an **app-only release**. You must supply your own backend. The app reads three required endpoint variables at launch from your `.env` (see `.env.example` for the full template):
+
+| Variable | Description | Required |
+|---|---|---|
+| `EXPO_PUBLIC_AUTH_ENDPOINT` | Base URL of the Better Auth service. Must expose `/api/auth/` routes including OTP and JWKS (`/api/auth/jwks`). | Yes — hard crash if absent |
+| `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` | Base URL of the NestJS GraphQL API. Apollo appends `/graphql`. | Yes — hard crash if absent |
+| `EXPO_PUBLIC_INFERENCE_ENDPOINT` | Base URL of the inference gateway. Must expose: `/v1/inference/jobs`, `/v1/chat/completions`, `/v1/chat/completions/batch`, `/api/attestation/report` (NEAR AI Cloud v2 attestation contract for E2EE cloud inference). | Yes — hard crash if absent |
+
+Additionally, the following external service dependencies must be configured before the app is fully functional. See the Required-Config Inventory in `open-source-readiness/04-infra-coupling-and-config.md` for the complete variable and service table:
+
+- **Expo / EAS project** — run `eas init` to bind to your own EAS project, or set `EXPO_OWNER`/`EAS_PROJECT_ID` in `.env`.
+- **Firebase (Android push notifications)** — supply your own `google-services.json` matching your app package name.
+- **iOS push notifications** — register your own bundle ID for push and regenerate `/ios` via `expo prebuild --clean`.
+- **Google Play submit** — supply your own GCP service-account key at `google-play-service-account.json`.
+- **Sentry (optional)** — set `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in `.env`. The app runs without these; error reporting is a no-op.
+
+**GraphQL schema:** `schema.gql` in this repo is a snapshot of the reference backend's schema and doubles as the contract your backend must satisfy. If your backend's schema diverges, export your server's `schema.gql` into the repo root, then run `npm run codegen` to regenerate `lib/generated/graphql-types.ts`.
+
+## Configuring for Your Own Fork
+
+Before distributing a fork publicly you must rebrand the app. `TRADEMARK.md` prohibits using the "Mera" name in any fork. The minimum required changes are:
+
+- **App name, slug, and scheme** — set `APP_NAME`, `APP_SLUG`, `APP_SCHEME` in `.env` (via `app.config.js`) or edit `app.json` directly. The name must not contain "Mera".
+- **Bundle ID / application ID** — set `APP_BUNDLE_ID` and `APP_PACKAGE` in `.env`, then run `npx expo prebuild --clean` to regenerate the native `/ios` and `/android` directories with your identifiers.
+- **Privacy Policy and Terms of Service URLs** — set `EXPO_PUBLIC_PRIVACY_URL` and `EXPO_PUBLIC_TERMS_URL` in `.env`; these are centralized in `lib/config/branding.ts`.
+- **Contact/support email** — set `EXPO_PUBLIC_SUPPORT_EMAIL` in `.env`; this replaces `contact@mera.news` in all 20 locale files and source components.
+- **Firebase project** — supply your own `google-services.json` for your Android app package.
+
+See `TRADEMARK.md` for the full trademark policy and `open-source-readiness/04-infra-coupling-and-config.md` for the complete Identity/Branding Replacements table.
+
+After changing native identity variables, run:
+```bash
+npx expo prebuild --clean
+```
+This regenerates `/ios` and `/android` from your updated `app.json`/`app.config.js` — the single correct way to retarget all native copies of the bundle ID, name, scheme, and Sentry properties at once.
+
+## Development
+
+```bash
+npm run lint              # ESLint
+npm run codegen           # Regenerate GraphQL types from schema.gql
+npm test                  # Jest (passWithNoTests)
+npx expo start            # Dev server
+eas build --profile development   # EAS development build
+```
+
+EAS updates (OTA, JS/TS/styling/GraphQL changes only):
+```bash
+eas update --branch production --message "description"
+```
+Native builds are required for native dependency changes, SDK version bumps, `app.json` native config, or new native modules.
+
+## License & Trademark
+
+**This project is NOT open source in the OSI sense.** It is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). You may use, study, and fork it for non-commercial purposes. Commercial use requires a separate written agreement with Mera News B.V.
+
+`"private": true` in `package.json` is intentional — it prevents accidental `npm publish` but does not restrict source distribution under the PolyForm Noncommercial License.
+
+See [TRADEMARK.md](TRADEMARK.md) for trademark restrictions. Forks must remove all Mera branding before public distribution.
+
+For licensing inquiries: legal@meranews.app
+For security vulnerabilities: see [SECURITY.md](SECURITY.md)

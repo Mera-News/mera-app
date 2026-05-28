@@ -1,0 +1,56 @@
+// Hydrates all Zustand stores from WatermelonDB on app startup.
+//
+// Fire-and-forget. The For You suggestion query goes first so it absorbs the
+// WatermelonDB open + migration cost rather than queueing behind 5 unrelated
+// stores — the For You screen subscribes to the store and re-renders the
+// instant the suggestions set() lands. Everything else hydrates in parallel
+// in the background; database-store.ready flips once all of it (including
+// the metadata pass and the fact-topic backfill) has finished, which is
+// still the gate for syncFeed.
+
+import { backfillFactTopicLinks } from './services/fact-topic-backfill';
+import { pruneStaleVisits } from './services/publication-visit-service';
+import { useDatabaseStore } from '../stores/database-store';
+import logger from '../logger';
+
+export function hydrateAllStores(): Promise<void> {
+  // Dynamic imports to avoid circular dependencies
+  const { useForYouStore } = require('../stores/for-you-store');
+  const { useUserStore } = require('../stores/user-store');
+  const { useMeraProtocolStore } = require('../stores/mera-protocol-store');
+  const { useOnboardingStore } = require('../stores/onboarding-store');
+  const { useAppLanguageStore } = require('../stores/app-language-store');
+  const { useAppStateStore } = require('../stores/app-state-store');
+  const { useForYouPrefsStore } = require('../stores/for-you-prefs-store');
+
+  // Paint-critical: load cached article_suggestions and push them to the
+  // store first. No metadata, no expired-cleanup, no other-store gating.
+  // Not awaited (first-paint design). Defense-in-depth catch so any leak
+  // past the store's internal try/catch still reaches Sentry.
+  useForYouStore
+    .getState()
+    .hydrateSuggestionsFromDb()
+    .catch((err: unknown) => {
+      logger.captureException(err, {
+        tags: { module: 'hydrate-stores', step: 'paint-critical-hydrate' },
+      });
+    });
+
+  // Everything else, in parallel, in the background. Returned promise
+  // resolves once full hydration + backfill is done — callers who need
+  // hydrated state (e.g. processingMode, userPersona) can chain on this,
+  // but no caller should block first paint on it.
+  return Promise.all([
+    useForYouStore.getState().hydrateMetadataFromDb(),
+    useUserStore.getState().hydrateFromDb(),
+    useMeraProtocolStore.getState().hydrateFromDb(),
+    useOnboardingStore.getState().hydrateFromDb(),
+    useAppLanguageStore.getState().hydrateFromDb(),
+    useAppStateStore.getState().hydrateFromDb(),
+    useForYouPrefsStore.getState().hydrate(),
+  ])
+    .then(() => backfillFactTopicLinks().catch(() => {}))
+    .then(() => pruneStaleVisits().catch(() => {}))
+    .finally(() => useDatabaseStore.getState().setReady(true))
+    .then(() => undefined);
+}
