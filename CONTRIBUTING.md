@@ -16,7 +16,7 @@ This project is governed by the [PolyForm Noncommercial License 1.0.0](LICENSE.m
 - Accessibility improvements
 - Documentation fixes
 
-For larger feature PRs, **open an issue for discussion before building**. This avoids wasted effort if the feature does not fit the project roadmap or would require backend changes in the private `mera-server` repository.
+For larger feature PRs, **open an issue for discussion before building**. This avoids wasted effort if the feature does not fit the project roadmap or would require changes to the auth/GraphQL backend (the reference `mera-server`), which is not published. Note that the **inference gateway is open-source** at [Mera-News/mera-inference-gateway](https://github.com/Mera-News/mera-inference-gateway), so work involving the cloud-inference path or the E2EE/attestation contract can be developed and tested end-to-end against your own deployment of it.
 
 ## What We Do Not Accept
 
@@ -28,7 +28,7 @@ For larger feature PRs, **open an issue for discussion before building**. This a
 
 ## Development Setup
 
-See the [README Quick Start](README.md#quick-start) for setup instructions. Note that this app requires a BYO backend — see [Backend Requirements](README.md#backend-requirements-byo-backend).
+See the [README Quick Start](README.md#quick-start) for setup instructions. This app requires a BYO backend — see [Backend Requirements](README.md#backend-requirements-byo-backend). For the cloud-inference path you can stand up the open-source [mera-inference-gateway](https://github.com/Mera-News/mera-inference-gateway) and point `EXPO_PUBLIC_INFERENCE_ENDPOINT` at it; the auth and GraphQL services must still be supplied by you.
 
 ## Code Style
 

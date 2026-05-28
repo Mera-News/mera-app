@@ -19,7 +19,7 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 - **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
 - **Inference (on-device or confidential cloud)** — Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
 - **Mera Protocol** — the privacy ruleset enforced across both paths: no personal data leaves the device in readable form, and inference is performed only locally or inside an attested, encrypted environment. An optional noise-injection mode adds decoy topics to further obfuscate intent.
-- **E2EE cloud inference (TEE)** — when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 attestation-verified gateway, so inference runs inside a verified trusted execution environment that the operator cannot inspect.
+- **E2EE cloud inference (TEE)** — when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 attestation-verified gateway, so inference runs inside a verified trusted execution environment that the operator cannot inspect. The gateway is open-source: [Mera-News/mera-inference-gateway](https://github.com/Mera-News/mera-inference-gateway).
 - **Better Auth** with email OTP handles authentication; tokens are stored in expo-secure-store.
 - **BYO backend** — all three required service endpoints are configured via environment variables; no Mera infrastructure is required to run the app.
 
@@ -58,13 +58,15 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 
 ## Backend Requirements (BYO Backend)
 
-This is an **app-only release**. You must supply your own backend. The app reads three required endpoint variables at launch from your `.env` (see `.env.example` for the full template):
+You must supply your own backend. The app reads three required endpoint variables at launch from your `.env` (see `.env.example` for the full template):
 
 | Variable | Description | Required |
 |---|---|---|
 | `EXPO_PUBLIC_AUTH_ENDPOINT` | Base URL of the Better Auth service. Must expose `/api/auth/` routes including OTP and JWKS (`/api/auth/jwks`). | Yes — hard crash if absent |
 | `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` | Base URL of the NestJS GraphQL API. Apollo appends `/graphql`. | Yes — hard crash if absent |
 | `EXPO_PUBLIC_INFERENCE_ENDPOINT` | Base URL of the inference gateway. Must expose: `/v1/inference/jobs`, `/v1/chat/completions`, `/v1/chat/completions/batch`, `/api/attestation/report` (NEAR AI Cloud v2 attestation contract for E2EE cloud inference). | Yes — hard crash if absent |
+
+> **The inference gateway is open-source.** You can run or modify it to provide the cloud-inference path (and to experiment with the E2EE / attestation contract) instead of building one from scratch: **[Mera-News/mera-inference-gateway](https://github.com/Mera-News/mera-inference-gateway)**. Point `EXPO_PUBLIC_INFERENCE_ENDPOINT` at your own deployment of it. The auth and GraphQL services (the reference `mera-server`) are **not** published — you must supply your own that satisfies the contracts above.
 
 Additionally, the following external service dependencies must be configured before the app is fully functional. See the Required-Config Inventory in `open-source-readiness/04-infra-coupling-and-config.md` for the complete variable and service table:
 
