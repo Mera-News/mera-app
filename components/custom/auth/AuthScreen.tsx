@@ -12,7 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_LABEL, WEBSITE_URL } from '@/lib/config/branding';
+import { GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
@@ -183,9 +183,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent }) => {
                         <FontAwesome name="github" size={20} color="#9ca3af" />
                     </Pressable>
                     <Pressable onPress={handleWebsitePress} hitSlop={8}>
-                        <Text size="sm" className="text-gray-400">
-                            {WEBSITE_LABEL}
-                        </Text>
+                        <MaterialIcons name="language" size={22} color="#9ca3af" />
                     </Pressable>
                 </HStack>
                 <Text size="xs" className="text-gray-500 mt-1">

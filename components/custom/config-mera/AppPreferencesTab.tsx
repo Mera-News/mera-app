@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_LABEL, WEBSITE_URL } from '@/lib/config/branding';
+import { GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
@@ -180,9 +180,7 @@ const AppPreferencesTab: React.FC = () => {
                             <FontAwesome name="github" size={22} color="#9ca3af" />
                         </Pressable>
                         <Pressable onPress={() => openInAppBrowser(WEBSITE_URL)} hitSlop={8}>
-                            <Text size="sm" className="text-gray-400">
-                                {WEBSITE_LABEL}
-                            </Text>
+                            <MaterialIcons name="language" size={24} color="#9ca3af" />
                         </Pressable>
                     </HStack>
                     {maskedEmail && (

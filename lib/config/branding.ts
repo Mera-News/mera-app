@@ -11,6 +11,3 @@ export const WEBSITE_URL =
   process.env.EXPO_PUBLIC_WEBSITE_URL || 'https://mera.news';
 export const GITHUB_URL =
   process.env.EXPO_PUBLIC_GITHUB_URL || 'https://github.com/Mera-News/mera-app';
-
-// Display label for the website link (protocol/trailing-slash stripped).
-export const WEBSITE_LABEL = WEBSITE_URL.replace(/^https?:\/\//, '').replace(/\/+$/, '');
