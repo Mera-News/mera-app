@@ -2,15 +2,16 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
+import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL } from '@/lib/config/branding';
+import { GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_LABEL, WEBSITE_URL } from '@/lib/config/branding';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { Linking } from 'react-native';
@@ -174,6 +175,16 @@ const AppPreferencesTab: React.FC = () => {
                     {preferenceOptions.map(renderOption)}
                 </VStack>
                 <Box className="items-center py-4">
+                    <HStack space="lg" className="items-center mb-3">
+                        <Pressable onPress={() => openInAppBrowser(GITHUB_URL)} hitSlop={8}>
+                            <FontAwesome name="github" size={22} color="#9ca3af" />
+                        </Pressable>
+                        <Pressable onPress={() => openInAppBrowser(WEBSITE_URL)} hitSlop={8}>
+                            <Text size="sm" className="text-gray-400">
+                                {WEBSITE_LABEL}
+                            </Text>
+                        </Pressable>
+                    </HStack>
                     {maskedEmail && (
                         <Text size="xs" className="text-gray-500 mb-1">
                             User: {maskedEmail}

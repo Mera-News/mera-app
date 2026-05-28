@@ -1,4 +1,7 @@
-# Mera — On-Device Personalized News
+# Mera — Privacy-First Personalized News
+
+[![App Store](https://img.shields.io/badge/App%20Store-Download-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/nl/app/mera-news/id6754119677)
+[![Google Play](https://img.shields.io/badge/Google%20Play-Download-414141?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.mera.news)
 
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE.md)
 [![Platform: iOS & Android](https://img.shields.io/badge/Platform-iOS%20%26%20Android-lightgrey)]()
@@ -6,11 +9,7 @@
 
 ## What is Mera?
 
-Mera is a personalized news app for iOS and Android that scores article relevance entirely on-device using a local LLM (Qwen3 4B via llama.rn — the "Mera Protocol"). News is fetched and personalized in real time against a BYO backend; no user reading history leaves the device unless you opt into the cloud scoring fallback. The app is source-available under the PolyForm Noncommercial License 1.0.0 — you may run, study, and fork it for non-commercial purposes; commercial use requires a separate agreement with Mera News B.V.
-
-## Screenshots
-
-_Screenshots coming soon._
+Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE** — a hardware-encrypted, attestation-verified enclave — with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: no personal data leaves the device in readable form, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against a BYO backend. The app is source-available under the PolyForm Noncommercial License 1.0.0 — you may run, study, and fork it for non-commercial purposes; commercial use requires a separate agreement with Mera News B.V.
 
 ## Architecture Overview
 
@@ -18,8 +17,9 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 
 - **Apollo Client** (GraphQL, no-cache policy) fetches article suggestion IDs and content from a NestJS backend.
 - **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
-- **On-device LLM** — llama.rn running Qwen3 4B scores relevance and generates personalization reasons without a network call (Mera Protocol). A cloud scoring path (inference gateway) is available as a fallback.
-- **E2EE cloud inference** — XChaCha20-Poly1305 + X25519 ECDH over a NEAR AI Cloud v2 attestation-verified gateway.
+- **Inference (on-device or confidential cloud)** — Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
+- **Mera Protocol** — the privacy ruleset enforced across both paths: no personal data leaves the device in readable form, and inference is performed only locally or inside an attested, encrypted environment. An optional noise-injection mode adds decoy topics to further obfuscate intent.
+- **E2EE cloud inference (TEE)** — when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 attestation-verified gateway, so inference runs inside a verified trusted execution environment that the operator cannot inspect.
 - **Better Auth** with email OTP handles authentication; tokens are stored in expo-secure-store.
 - **BYO backend** — all three required service endpoints are configured via environment variables; no Mera infrastructure is required to run the app.
 
@@ -99,7 +99,8 @@ This regenerates `/ios` and `/android` from your updated `app.json`/`app.config.
 ```bash
 npm run lint              # ESLint
 npm run codegen           # Regenerate GraphQL types from schema.gql
-npm test                  # Jest (passWithNoTests)
+npm test                  # Jest unit tests
+npm run test:coverage     # Jest with coverage thresholds (CI gate)
 npx expo start            # Dev server
 eas build --profile development   # EAS development build
 ```
