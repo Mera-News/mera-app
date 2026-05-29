@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Selamat datang kembali",
             "subtitle": "Kami tidak dapat memuat akun Anda saat ini. Coba lagi, atau masuk sebagai pengguna lain.",
-            "retryLogin": "Coba masuk lagi",
+            "retryLogin": "Coba masuk lagi lewat email",
             "useDifferentUser": "Masuk dengan pengguna lain",
             "retryFailed": "Tidak dapat terhubung ke server. Periksa koneksi Anda dan coba lagi.",
             "switchBody": "Mengganti pengguna akan menghapus semua data pengguna ini di perangkat ini secara permanen. Tindakan ini tidak dapat dibatalkan.",

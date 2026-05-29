@@ -5,7 +5,7 @@ import { Input, InputField } from '@/components/ui/input';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { authClient } from '@/lib/auth-client';
+import { authClient, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,8 +22,40 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
     const [otp, setOTP] = useState('');
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [resendLoading, setResendLoading] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendMessage, setResendMessage] = useState('');
     const hasSubmittedRef = useRef(false);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return;
+        const timer = setInterval(() => setResendCooldown((s) => s - 1), 1000);
+        return () => clearInterval(timer);
+    }, [resendCooldown]);
+
+    const handleResendOTP = async () => {
+        if (resendCooldown > 0 || resendLoading) return;
+        setResendLoading(true);
+        setResendMessage('');
+        setErrorMessage('');
+        try {
+            const result = await sendOTP(email);
+            if (result.success) {
+                setOTP('');
+                hasSubmittedRef.current = false;
+                setResendCooldown(30);
+                setResendMessage(t('auth.resendSuccess'));
+            } else {
+                setErrorMessage(result.error || t('common.tryAgain'));
+            }
+        } catch (error: any) {
+            logger.captureException(error, { tags: { feature: 'otp', method: 'resend' } });
+            setErrorMessage(error.message || t('common.tryAgain'));
+        } finally {
+            setResendLoading(false);
+        }
+    };
 
     const handleVerifyOTP = async () => {
         setErrorMessage('');
@@ -134,6 +166,29 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                             {errorMessage}
                         </Text>
                     ) : null}
+                    {resendMessage && !errorMessage ? (
+                        <Text size="sm" className="text-success-500 mt-2">
+                            {resendMessage}
+                        </Text>
+                    ) : null}
+                    <HStack className="items-center justify-center mt-4" space="xs">
+                        {resendLoading ? (
+                            <Spinner size="small" color="#6B7280" />
+                        ) : resendCooldown > 0 ? (
+                            <Text size="sm" className="text-typography-500">
+                                {t('auth.resendIn', { seconds: resendCooldown })}
+                            </Text>
+                        ) : (
+                            <Pressable
+                                onPress={handleResendOTP}
+                                className="border border-primary-400 rounded-lg px-4 py-2"
+                            >
+                                <Text size="sm" className="text-primary-400">
+                                    {t('auth.resendCode')}
+                                </Text>
+                            </Pressable>
+                        )}
+                    </HStack>
                 </Box>
             </Box>
         </Box>

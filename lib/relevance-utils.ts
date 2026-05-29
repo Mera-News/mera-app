@@ -19,6 +19,16 @@ export const getRelevanceLabel = (relevance: number): string => {
     return 'Irrelevant Articles';
 };
 
+const DISPLAY_SECTION_LABELS: Record<string, string> = {
+    'Emergency Priority Articles': 'Major impact',
+    'High Priority Articles': 'Major impact',
+    'Medium Priority Articles': 'Notable impact',
+    'Low Priority Articles': 'Good to know',
+};
+
+export const getDisplaySectionLabel = (label: string): string =>
+    DISPLAY_SECTION_LABELS[label] ?? label;
+
 export const getRelevanceColors = (relevance: number): RelevanceColors => {
     if (relevance < 0) {
         return {

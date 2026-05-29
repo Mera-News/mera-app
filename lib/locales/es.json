@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Bienvenido de nuevo",
             "subtitle": "No pudimos cargar tu cuenta en este momento. Inténtalo de nuevo o inicia sesión con un usuario diferente.",
-            "retryLogin": "Reintentar inicio de sesión",
+            "retryLogin": "Reintentar inicio de sesión por correo",
             "useDifferentUser": "Iniciar sesión con otro usuario",
             "retryFailed": "No se pudo conectar al servidor. Verifica tu conexión e inténtalo de nuevo.",
             "switchBody": "Cambiar de usuario eliminará permanentemente todos los datos de este usuario en este dispositivo. Esta acción no se puede deshacer.",

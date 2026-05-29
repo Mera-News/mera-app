@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Tekrar hoş geldin",
             "subtitle": "Hesabın şu an yüklenemedi. Tekrar deneyebilir ya da farklı bir kullanıcıyla giriş yapabilirsin.",
-            "retryLogin": "Girişi tekrar dene",
+            "retryLogin": "E-posta ile girişi tekrar dene",
             "useDifferentUser": "Farklı bir kullanıcıyla giriş yap",
             "retryFailed": "Sunucuya ulaşılamıyor. Bağlantını kontrol edip tekrar dene.",
             "switchBody": "Kullanıcı değiştirmek, bu kullanıcının bu cihazdaki tüm verilerini kalıcı olarak siler. Bu işlem geri alınamaz.",

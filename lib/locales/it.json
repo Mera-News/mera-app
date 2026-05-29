@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Bentornato",
             "subtitle": "Non è stato possibile caricare il tuo account al momento. Riprova o accedi come un altro utente.",
-            "retryLogin": "Riprova ad accedere",
+            "retryLogin": "Riprova ad accedere via email",
             "useDifferentUser": "Accedi con un altro utente",
             "retryFailed": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
             "switchBody": "Cambiare utente eliminerà definitivamente tutti i dati di questo utente su questo dispositivo. Questa operazione non può essere annullata.",

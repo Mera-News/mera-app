@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Bem-vindo de volta",
             "subtitle": "Não conseguimos carregar sua conta agora. Tente novamente ou entre com outro usuário.",
-            "retryLogin": "Tentar novamente",
+            "retryLogin": "Tentar novamente por e-mail",
             "useDifferentUser": "Entrar com outro usuário",
             "retryFailed": "Não foi possível alcançar o servidor. Verifique sua conexão e tente novamente.",
             "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Essa ação não pode ser desfeita.",

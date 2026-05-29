@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Welkom terug",
             "subtitle": "We konden je account niet laden. Probeer het opnieuw of log in als een andere gebruiker.",
-            "retryLogin": "Opnieuw inloggen",
+            "retryLogin": "Opnieuw inloggen via e-mail",
             "useDifferentUser": "Inloggen als andere gebruiker",
             "retryFailed": "Kan de server niet bereiken. Controleer je verbinding en probeer het opnieuw.",
             "switchBody": "Van gebruiker wisselen verwijdert permanent alle gegevens van deze gebruiker op dit apparaat. Dit kan niet ongedaan worden gemaakt.",

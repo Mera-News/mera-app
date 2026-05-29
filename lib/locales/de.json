@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Willkommen zurück",
             "subtitle": "Dein Konto konnte gerade nicht geladen werden. Versuche es erneut oder melde dich mit einem anderen Konto an.",
-            "retryLogin": "Erneut anmelden",
+            "retryLogin": "Erneut per E-Mail anmelden",
             "useDifferentUser": "Mit anderem Konto anmelden",
             "retryFailed": "Der Server war nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.",
             "switchBody": "Beim Wechsel des Nutzers werden alle Daten dieses Nutzers auf diesem Gerät dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden.",

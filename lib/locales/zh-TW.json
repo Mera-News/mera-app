@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "歡迎回來",
             "subtitle": "我們暫時無法載入您的帳號。請再試一次，或以其他使用者身份登入。",
-            "retryLogin": "重新登入",
+            "retryLogin": "以電子郵件重新登入",
             "useDifferentUser": "使用其他帳號登入",
             "retryFailed": "無法連線至伺服器。請檢查網路後再試。",
             "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料，此操作無法復原。",

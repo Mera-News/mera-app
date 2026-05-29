@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "欢迎回来",
             "subtitle": "我们暂时无法加载您的账户，请重试，或使用其他用户登录。",
-            "retryLogin": "重新登录",
+            "retryLogin": "通过邮件重新登录",
             "useDifferentUser": "使用其他账户登录",
             "retryFailed": "无法连接服务器，请检查网络后重试。",
             "switchBody": "切换用户将永久删除此设备上该用户的所有数据，此操作无法撤销。",

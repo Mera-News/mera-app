@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
-import { getRelevanceColors } from '@/lib/relevance-utils';
+import { getDisplaySectionLabel, getRelevanceColors } from '@/lib/relevance-utils';
 import React from 'react';
 
 interface PriorityLabelCardProps {
@@ -20,7 +20,7 @@ const PriorityLabelCard: React.FC<PriorityLabelCardProps> = ({ label, relevance 
                 }}
                 size="lg"
             >
-                {label}
+                {getDisplaySectionLabel(label)}
             </Text>
         </Card>
     );

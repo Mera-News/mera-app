@@ -10,6 +10,7 @@ import OnDeviceProcessingBanner from '@/components/custom/for-you/OnDeviceProces
 import { StackedCards } from '@/components/custom/for-you/StackedCards';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import SectionNavigator, { SectionItem } from '@/components/custom/for-you/SectionNavigator';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -19,7 +20,7 @@ import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
-import { getRelevanceLabel } from '@/lib/relevance-utils';
+import { getDisplaySectionLabel, getRelevanceLabel } from '@/lib/relevance-utils';
 import { ForYouSuggestion, useForYouStore } from '@/lib/stores/for-you-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useForYouPrefsStore } from '@/lib/stores/for-you-prefs-store';
@@ -50,7 +51,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Notifications from 'expo-notifications';
-import { AppState, AppStateStatus, FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View } from 'react-native';
+import { AppState, AppStateStatus, FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View, ViewToken } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut, runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -63,6 +64,7 @@ type StackedSuggestionItem = { type: 'stacked-suggestion'; data: ForYouSuggestio
 type ForYouListItem = PriorityLabelItem | SuggestionItem | StackedSuggestionItem;
 
 const openConfigPanel = () => router.push('/logged-in/config-panel');
+
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<ForYouListItem>);
 
@@ -218,6 +220,8 @@ const MeraNewsScreen: React.FC = () => {
 
     const flatListRef = useRef<FlatList<ForYouListItem>>(null);
     const loadingRef = useRef(false);
+    const [activeSection, setActiveSection] = useState<string | null>(null);
+    const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
 
     // Initial load — fetch if store is empty (first visit or after logout).
     useEffect(() => {
@@ -403,6 +407,20 @@ const MeraNewsScreen: React.FC = () => {
 
         return items;
     }, [suggestions, recent24hOnly]);
+
+    const availableSections = useMemo((): SectionItem[] => {
+        const seen = new Set<string>();
+        const result: SectionItem[] = [];
+        for (const item of listData) {
+            if (item.type !== 'priority-label') continue;
+            const shortLabel = getDisplaySectionLabel(item.label);
+            if (!seen.has(shortLabel)) {
+                seen.add(shortLabel);
+                result.push({ label: item.label, shortLabel });
+            }
+        }
+        return result;
+    }, [listData]);
 
     // Hide the onboarding waiting card once the first scored, relevant card is ready.
     useEffect(() => {
@@ -594,6 +612,38 @@ const MeraNewsScreen: React.FC = () => {
         flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
     }, []);
 
+    const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+        if (viewableItems.length === 0) return;
+        const firstLabel = viewableItems.find((vi) => vi.item?.type === 'priority-label');
+        if (firstLabel) {
+            setActiveSection(getDisplaySectionLabel((firstLabel.item as PriorityLabelItem).label));
+            return;
+        }
+        const firstIdx = viewableItems[0]?.index ?? 0;
+        for (let i = firstIdx - 1; i >= 0; i--) {
+            if (listData[i]?.type === 'priority-label') {
+                setActiveSection(getDisplaySectionLabel((listData[i] as PriorityLabelItem).label));
+                return;
+            }
+        }
+    }, [listData]);
+
+    const scrollToSection = useCallback((shortLabel: string) => {
+        const index = listData.findIndex(
+            (item) => item.type === 'priority-label' && getDisplaySectionLabel(item.label) === shortLabel,
+        );
+        if (index !== -1) {
+            flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
+        }
+    }, [listData]);
+
+    const onScrollToIndexFailed = useCallback((info: { index: number; averageItemLength: number }) => {
+        flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
+        setTimeout(() => {
+            flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+        }, 100);
+    }, []);
+
     return (
         <Box className="flex-1 bg-black">
             <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
@@ -707,6 +757,15 @@ const MeraNewsScreen: React.FC = () => {
                         />
                     )}
                 </Box>
+                {availableSections.length > 0 && (
+                    <Box className="mt-2 mb-1">
+                        <SectionNavigator
+                            sections={availableSections}
+                            activeSection={activeSection}
+                            onSelect={scrollToSection}
+                        />
+                    </Box>
+                )}
                 {!isConnected && (
                     <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
                         <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
@@ -731,6 +790,9 @@ const MeraNewsScreen: React.FC = () => {
                     minIndexForVisible: 0,
                     autoscrollToTopThreshold: 10,
                 }}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig.current}
+                onScrollToIndexFailed={onScrollToIndexFailed}
             />
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
 

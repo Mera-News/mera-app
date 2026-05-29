@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Bon retour",
             "subtitle": "Nous n'avons pas pu charger votre compte pour le moment. Réessayez, ou connectez-vous avec un autre utilisateur.",
-            "retryLogin": "Réessayer la connexion",
+            "retryLogin": "Réessayer la connexion par email",
             "useDifferentUser": "Se connecter avec un autre utilisateur",
             "retryFailed": "Impossible d'atteindre le serveur. Vérifiez votre connexion et réessayez.",
             "switchBody": "Le changement d'utilisateur supprimera définitivement toutes les données de cet utilisateur sur cet appareil. Cette action est irréversible.",

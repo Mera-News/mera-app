@@ -24,10 +24,11 @@ import validator from 'validator';
 
 interface EmailInputViewProps {
     onOTPSent: (email: string) => void;
+    initialEmail?: string;
 }
 
-const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent }) => {
-    const [email, setEmail] = useState('');
+const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail }) => {
+    const [email, setEmail] = useState(initialEmail ?? '');
     const [loading, setLoading] = useState(false);
     const toast = useToast();
     const insets = useSafeAreaInsets();
@@ -246,7 +247,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     };
 
     const handleBackToEmail = () => {
-        setPendingEmail('');
         setCurrentView('email');
     };
 
@@ -271,6 +271,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     email={cachedEmail}
                     userId={cachedUserId}
                     onUseDifferentUser={handleUseDifferentUser}
+                    onOTPSent={handleOTPSent}
                 />
             </Box>
         );
@@ -290,7 +291,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     return (
         <Box className="flex-1 bg-background-0">
-            <EmailInputView onOTPSent={handleOTPSent} />
+            <EmailInputView onOTPSent={handleOTPSent} initialEmail={pendingEmail} />
         </Box>
     );
 };

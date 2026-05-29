@@ -4,13 +4,12 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import { AccountService } from '@/lib/account-service';
-import { clearAuthStorage } from '@/lib/auth-client';
+import { clearAuthStorage, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { clearAllStores } from '@/lib/stores';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +22,8 @@ interface PreviousUserViewProps {
      * data has been wiped. Parent should re-render the email-input flow.
      */
     onUseDifferentUser: () => void;
+    /** Called with the email after an OTP is successfully dispatched. */
+    onOTPSent: (email: string) => void;
 }
 
 /**
@@ -36,9 +37,11 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
     email,
     userId,
     onUseDifferentUser,
+    onOTPSent,
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const toast = useToast();
 
     const [isRetrying, setIsRetrying] = useState(false);
     const [isSwitching, setIsSwitching] = useState(false);
@@ -51,18 +54,27 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
         setRetryError('');
         setIsRetrying(true);
         try {
-            const persona = await AccountService.getUserPersona(userId);
-            if (!persona) {
-                setRetryError(t('auth.previousUser.retryFailed'));
-                return;
+            const result = await sendOTP(email);
+            if (result.success) {
+                toast.show({
+                    placement: 'top',
+                    render: () => (
+                        <Toast action="success" variant="solid">
+                            <ToastTitle>{t('auth.codeSentTitle')}</ToastTitle>
+                            <ToastDescription>{t('auth.codeSentDescription')}</ToastDescription>
+                        </Toast>
+                    ),
+                });
+                onOTPSent(email);
+            } else {
+                setRetryError(result.error || t('auth.previousUser.retryFailed'));
             }
-            router.replace('/logged-in');
         } catch (err) {
             logger.captureException(err, {
                 tags: { component: 'PreviousUserView', method: 'handleRetry' },
                 extra: { userId },
             });
-            setRetryError(t('auth.previousUser.retryFailed'));
+            setRetryError(t('auth.networkError'));
         } finally {
             setIsRetrying(false);
         }

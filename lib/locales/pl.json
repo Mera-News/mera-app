@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Witaj z powrotem",
             "subtitle": "Nie udało się załadować twojego konta. Spróbuj ponownie lub zaloguj się jako inny użytkownik.",
-            "retryLogin": "Ponów logowanie",
+            "retryLogin": "Ponów logowanie przez email",
             "useDifferentUser": "Zaloguj się jako inny użytkownik",
             "retryFailed": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
             "switchBody": "Zmiana użytkownika spowoduje trwałe usunięcie wszystkich danych tego użytkownika z tego urządzenia. Tej operacji nie można cofnąć.",

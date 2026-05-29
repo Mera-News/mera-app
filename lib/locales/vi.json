@@ -32,7 +32,7 @@
         "previousUser": {
             "title": "Chào mừng trở lại",
             "subtitle": "Chúng tôi không thể tải tài khoản của bạn lúc này. Hãy thử lại hoặc đăng nhập bằng tài khoản khác.",
-            "retryLogin": "Thử đăng nhập lại",
+            "retryLogin": "Thử đăng nhập lại qua email",
             "useDifferentUser": "Đăng nhập bằng tài khoản khác",
             "retryFailed": "Không thể kết nối đến máy chủ. Kiểm tra kết nối và thử lại.",
             "switchBody": "Chuyển tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu của người dùng này trên thiết bị. Hành động này không thể hoàn tác.",
