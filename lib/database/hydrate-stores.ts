@@ -49,8 +49,20 @@ export function hydrateAllStores(): Promise<void> {
     useAppStateStore.getState().hydrateFromDb(),
     useForYouPrefsStore.getState().hydrate(),
   ])
-    .then(() => backfillFactTopicLinks().catch(() => {}))
-    .then(() => pruneStaleVisits().catch(() => {}))
+    .then(() =>
+      backfillFactTopicLinks().catch((err: unknown) => {
+        logger.captureException(err, {
+          tags: { module: 'hydrate-stores', step: 'backfill-fact-topic-links' },
+        });
+      }),
+    )
+    .then(() =>
+      pruneStaleVisits().catch((err: unknown) => {
+        logger.captureException(err, {
+          tags: { module: 'hydrate-stores', step: 'prune-stale-visits' },
+        });
+      }),
+    )
     .finally(() => useDatabaseStore.getState().setReady(true))
     .then(() => undefined);
 }

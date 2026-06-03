@@ -243,7 +243,11 @@ const MeraNewsScreen: React.FC = () => {
             .then((facts) => {
                 if (!cancelled && facts.length > 0) setShowOnboardingWait(true);
             })
-            .catch(() => { /* best-effort */ });
+            .catch((err: unknown) => {
+                logger.captureException(err, {
+                    tags: { screen: 'ForYouScreen', step: 'get-facts-onboarding' },
+                });
+            });
         return () => { cancelled = true; };
     }, [fromOnboarding]);
 

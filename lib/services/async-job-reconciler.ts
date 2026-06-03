@@ -120,7 +120,12 @@ async function reconcileAsyncJobResultsInner(
   const age = Date.now() - pending.submittedAt;
   if (age > STALE_AFTER_MS) {
     logger.warn(`${TAG} job ${effectiveId} stale (${Math.round(age / 1000)}s)`);
-    await clearPendingAsyncJob().catch(() => {});
+    await clearPendingAsyncJob().catch((err: unknown) => {
+      logger.captureException(err, {
+        tags: { service: 'async-job-reconciler', step: 'clear-stale-job' },
+        extra: { requestId: effectiveId },
+      });
+    });
     await clearCapabilityToken();
     await setCycleState('idle');
     useForYouStore.getState().setAsyncJobPhase('idle');
@@ -174,7 +179,12 @@ async function reconcileAsyncJobResultsInner(
     }
     if (res === 'not-found') {
       logger.warn(`${TAG} fetchResults → not-found requestId=${effectiveId}`);
-      await clearPendingAsyncJob().catch(() => {});
+      await clearPendingAsyncJob().catch((err: unknown) => {
+        logger.captureException(err, {
+          tags: { service: 'async-job-reconciler', step: 'clear-not-found-job' },
+          extra: { requestId: effectiveId },
+        });
+      });
       await clearCapabilityToken();
       await setCycleState('idle');
       useForYouStore.getState().setAsyncJobPhase('idle');

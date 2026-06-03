@@ -117,23 +117,48 @@ export async function getPendingAsyncJob(): Promise<PendingAsyncJob | null> {
     // (the secret is per-cycle and disposable — a lost key costs one re-score,
     // never user data). New rows have an empty `clientPrivKeyHex` in the JSON.
     if (parsed.clientPrivKeyHex) {
-      await deleteSetting(PENDING_JOB_KEY).catch(() => {});
+      await deleteSetting(PENDING_JOB_KEY).catch((err: unknown) => {
+        logger.captureException(err, {
+          tags: { service: 'async-job-service', step: 'clear-legacy-job-setting' },
+        });
+      });
       await secureStore
         .deleteItemAsync(PENDING_JOB_PRIVKEY_KEY)
-        .catch(() => {});
+        .catch((err: unknown) => {
+          logger.captureException(err, {
+            tags: { service: 'async-job-service', step: 'clear-legacy-privkey' },
+          });
+        });
       return null;
     }
 
-    const privKeyHex = await secureStore
-      .getItemAsync(PENDING_JOB_PRIVKEY_KEY)
-      .catch(() => null);
+    let privKeyHex: string | null;
+    try {
+      privKeyHex = await secureStore.getItemAsync(PENDING_JOB_PRIVKEY_KEY);
+    } catch (err) {
+      // Transient keychain error (e.g. locked device on background wake) —
+      // distinct from "key not found". Don't clear the pending job row; the
+      // next foreground wake will retry once the keychain is accessible again.
+      logger.captureException(err, {
+        tags: { service: 'async-job-service', step: 'read-privkey' },
+      });
+      return null;
+    }
     if (!privKeyHex) {
       // Secret missing (partial write / OS eviction) — the pending job is
       // unrecoverable. Clear both stores and re-submit on the next cycle.
-      await deleteSetting(PENDING_JOB_KEY).catch(() => {});
+      await deleteSetting(PENDING_JOB_KEY).catch((err: unknown) => {
+        logger.captureException(err, {
+          tags: { service: 'async-job-service', step: 'clear-orphaned-job-setting' },
+        });
+      });
       await secureStore
         .deleteItemAsync(PENDING_JOB_PRIVKEY_KEY)
-        .catch(() => {});
+        .catch((err: unknown) => {
+          logger.captureException(err, {
+            tags: { service: 'async-job-service', step: 'clear-orphaned-privkey' },
+          });
+        });
       return null;
     }
     parsed.clientPrivKeyHex = privKeyHex;
@@ -142,8 +167,16 @@ export async function getPendingAsyncJob(): Promise<PendingAsyncJob | null> {
     logger.captureException(err, {
       tags: { service: 'async-job-service', method: 'getPendingAsyncJob' },
     });
-    await deleteSetting(PENDING_JOB_KEY).catch(() => {});
-    await secureStore.deleteItemAsync(PENDING_JOB_PRIVKEY_KEY).catch(() => {});
+    await deleteSetting(PENDING_JOB_KEY).catch((err: unknown) => {
+      logger.captureException(err, {
+        tags: { service: 'async-job-service', step: 'clear-corrupted-job-setting' },
+      });
+    });
+    await secureStore.deleteItemAsync(PENDING_JOB_PRIVKEY_KEY).catch((err: unknown) => {
+      logger.captureException(err, {
+        tags: { service: 'async-job-service', step: 'clear-corrupted-privkey' },
+      });
+    });
     return null;
   }
 }
@@ -216,7 +249,11 @@ export async function clearPendingAsyncJob(
   await deleteSetting(PENDING_JOB_KEY);
   // Delete the secret companion explicitly so it never outlives the cycle —
   // after the split it is no longer implicitly cleared with the settings row.
-  await secureStore.deleteItemAsync(PENDING_JOB_PRIVKEY_KEY).catch(() => {});
+  await secureStore.deleteItemAsync(PENDING_JOB_PRIVKEY_KEY).catch((err: unknown) => {
+    logger.captureException(err, {
+      tags: { service: 'async-job-service', step: 'clear-privkey' },
+    });
+  });
 }
 
 export async function getLastNudgeAt(): Promise<number | null> {
