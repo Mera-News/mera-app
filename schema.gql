@@ -1,11 +1,6 @@
 # ------------------------------------------------------
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
-# This is a committed snapshot of the reference backend's GraphQL schema and
-# doubles as the contract a forker's backend must satisfy. If your backend's
-# schema differs, replace this file with your server's generated schema.gql,
-# then run `npm run codegen` to regenerate lib/generated/graphql-types.ts.
-# ------------------------------------------------------
 
 """Status of article processing through the pipeline"""
 enum ArticleProcessingStatus {
@@ -53,9 +48,27 @@ type ArticleSummary {
   title_en: String!
 }
 
+type ArticleIdsForTopicsResponse {
+  results: [TopicArticleIdsResult!]!
+}
+
 type ArticlesForPublicationSourceResponse {
   articles: [NewsArticle!]!
   pageInfo: CursorPageInfo!
+}
+
+"""Article summary with cluster membership — used by Flow v2 hydration"""
+type ArticleWithClusters {
+  _id: ID!
+  article_url: String
+  clusterIds: [ID!]!
+  country_code: String
+  description_en: String
+  image_url: String
+  language_code: String
+  publication_name: String
+  pubDate: DateTime!
+  title_en: String!
 }
 
 type ClusterArticlesConnection {
@@ -92,6 +105,19 @@ type DeleteAllUserTopicsResponse {
 
 input DeleteExpoPushTokenInput {
   userId: ID!
+}
+
+input TopicPaginationInput {
+  """articleId of the last item on the previous page; omit for first page"""
+  afterCursor: String
+  topicText: String!
+}
+
+type TopicArticleIdsResult {
+  articleIds: [ID!]!
+  hasNextPage: Boolean!
+  nextCursor: String
+  topicText: String!
 }
 
 type EmbeddingSearchResponse {
@@ -229,6 +255,7 @@ type Query {
   Fetch a single article by ID. Returns null if not found (e.g. TTL’d out).
   """
   articleById(id: ID!): NewsArticle
+  articleIdsForTopics(limitPerTopic: Int = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
   articlesForPublicationSource(
     """Cursor to fetch items after"""
     after: String
@@ -237,6 +264,7 @@ type Query {
     first: Int = 20
     publicationSourceId: ID!
   ): ArticlesForPublicationSourceResponse!
+  articlesForTopicsByIds(articleIds: [ID!]!): [ArticleWithClusters!]!
   newsClusterForUser(clusterId: ID!): NewsCluster!
   newsClusters(
     """Cursor to fetch items after"""

@@ -1,14 +1,17 @@
 import { gql } from '@apollo/client';
 import client from './apollo-client';
 import {
+    ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
     ArticleSuggestionWithMetadata,
     ArticleSummary,
+    ArticleWithClusters,
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
     RefreshSuggestionsResponse,
     ServerProcessingMetadataForUserResponse,
+    TopicPaginationInput,
 } from './generated/graphql-types';
 import logger from './logger';
 
@@ -269,6 +272,43 @@ const GET_RELATED_ARTICLES = gql`
   }
 `;
 
+// [Flow v2] GraphQL Query: per-topic article IDs with cursor-based pagination.
+// The server checks Redis (30 min TTL) first; on miss it runs a vector search
+// with a hardcoded 24h cutoff. The app diffs the returned IDs against its
+// local DB and only fetches missing full records via articlesForTopicsByIds.
+const GET_ARTICLE_IDS_FOR_TOPICS = gql`
+  query GetArticleIdsForTopics($topics: [TopicPaginationInput!]!, $limitPerTopic: Int) {
+    articleIdsForTopics(topics: $topics, limitPerTopic: $limitPerTopic) {
+      results {
+        topicText
+        articleIds
+        hasNextPage
+        nextCursor
+      }
+    }
+  }
+`;
+
+// [Flow v2] GraphQL Query: hydrate full article records for IDs the app
+// doesn't already have locally. Returns ArticleWithClusters which includes
+// clusterIds for the For-You feed's stacking logic.
+const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
+  query GetArticlesForTopicsByIds($articleIds: [ID!]!) {
+    articlesForTopicsByIds(articleIds: $articleIds) {
+      _id
+      clusterIds
+      title_en
+      description_en
+      article_url
+      image_url
+      country_code
+      publication_name
+      language_code
+      pubDate
+    }
+  }
+`;
+
 // GraphQL Mutation for refreshing suggestions for a user
 const CREATE_SUGGESTIONS_FOR_USER = gql`
   mutation RefreshSuggestionsForUser($userId: ID!) {
@@ -281,13 +321,17 @@ const CREATE_SUGGESTIONS_FOR_USER = gql`
 
 // Use generated GraphQL types
 export type {
+    ArticleIdsForTopicsResponse,
     ArticleSuggestionWithMetadata,
     ArticleSummary,
+    ArticleWithClusters,
     CursorPageInfo,
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
     ServerProcessingMetadataForUserResponse,
+    TopicArticleIdsResult,
+    TopicPaginationInput,
 } from './generated/graphql-types';
 
 export interface CreateSuggestionsResponse {
@@ -443,6 +487,96 @@ export class ArticleService {
             throw error;
         }
     }
+
+    // ─── Flow v2 ─────────────────────────────────────────────────────────────
+
+    /**
+     * [Flow v2] Fetch the set of article IDs matching each topic text.
+     * Server checks a 30-min Redis cache first; on miss it runs vector search
+     * against the last 24 hours of articles. Each topic result carries its own
+     * cursor so the caller can request additional pages per topic independently.
+     */
+    static async getArticleIdsForTopics(
+        topics: TopicPaginationInput[],
+        opts?: { limitPerTopic?: number },
+    ): Promise<ArticleIdsForTopicsResponse> {
+        try {
+            const { data } = await client.query<{
+                articleIdsForTopics: ArticleIdsForTopicsResponse;
+            }>({
+                query: GET_ARTICLE_IDS_FOR_TOPICS,
+                variables: { topics, limitPerTopic: opts?.limitPerTopic ?? 20 },
+                fetchPolicy: 'no-cache',
+            });
+            return data?.articleIdsForTopics ?? { results: [] };
+        } catch (error) {
+            logger.error('[ArticleService] getArticleIdsForTopics FAILED', error);
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getArticleIdsForTopics' },
+                extra: { topicCount: topics.length },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * [Flow v2] Fetch full article records for a set of IDs. Mirrors the
+     * existing `getUnscoredArticleSuggestionsByIds` hydration pattern but
+     * returns `ArticleWithClusters` which includes `clusterIds` for feed
+     * stacking. Chunk size matches the server's max-50 limit.
+     */
+    static async getArticlesForTopicsByIds(
+        articleIds: string[],
+        onProgress?: (completed: number, total: number) => void,
+    ): Promise<ArticleWithClusters[]> {
+        if (articleIds.length === 0) return [];
+
+        const CHUNK = 50;
+        const CONCURRENCY = 5;
+        const batches: string[][] = [];
+        for (let i = 0; i < articleIds.length; i += CHUNK) {
+            batches.push(articleIds.slice(i, i + CHUNK));
+        }
+        const results: ArticleWithClusters[] = [];
+        let completedIds = 0;
+        onProgress?.(0, articleIds.length);
+
+        try {
+            let nextIndex = 0;
+            const workers = Array.from(
+                { length: Math.min(CONCURRENCY, batches.length) },
+                async () => {
+                    while (true) {
+                        const idx = nextIndex++;
+                        if (idx >= batches.length) return;
+                        const batch = batches[idx];
+                        const { data } = await client.query<{
+                            articlesForTopicsByIds: ArticleWithClusters[];
+                        }>({
+                            query: GET_ARTICLES_FOR_TOPICS_BY_IDS,
+                            variables: { articleIds: batch },
+                            fetchPolicy: 'no-cache',
+                        });
+                        const rows = data?.articlesForTopicsByIds ?? [];
+                        if (rows.length) results.push(...rows);
+                        completedIds += batch.length;
+                        onProgress?.(completedIds, articleIds.length);
+                    }
+                },
+            );
+            await Promise.all(workers);
+            return results;
+        } catch (error) {
+            logger.error('[ArticleService] getArticlesForTopicsByIds FAILED', error);
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getArticlesForTopicsByIds' },
+                extra: { idCount: articleIds.length },
+            });
+            throw error;
+        }
+    }
+
+    // ─── End Flow v2 ─────────────────────────────────────────────────────────
 
     /**
      * Fetch live sibling articles for a given article via the server's

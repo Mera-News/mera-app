@@ -10,7 +10,7 @@ import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import type FactModel from '../models/Fact';
 import type FactTopicLinkModel from '../models/FactTopicLink';
 import type SyncedSuggestionIdModel from '../models/SyncedSuggestionId';
-import type { ArticleSuggestionWithMetadata } from '../../generated/graphql-types';
+import type { ArticleSuggestionWithMetadata, ArticleWithClusters } from '../../generated/graphql-types';
 import type { ForYouSuggestion } from '../../stores/for-you-store';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getNoisyTopicIds } from './noisy-user-topic-service';
@@ -196,24 +196,23 @@ export async function persistAndLinkNewSuggestions(
   if (fetched.length === 0)
     return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount: 0 };
 
-  // Noise removal — the final Mera-Protocol layer. A suggestion whose
-  // userTopicIds are ENTIRELY in the noisy set never reached the user via a
-  // real topic; drop it before persistence so every downstream consumer
-  // (scoring, store, detail screen) is implicitly noise-free.
-  const noisyIds = await getNoisyTopicIds();
+  // DEPRECATED: Noise injection — see deprecate-article-suggestion-flow.md
+  // Noise removal is bypassed while evaluating Flow v2. The noisy-topic
+  // concept may be removed entirely once v2 is validated.
+  // const noisyIds = await getNoisyTopicIds();
+  // let noisyDiscardedCount = 0;
+  // if (noisyIds.size > 0) {
+  //   fetched = fetched.filter((s) => {
+  //     const topicIds = s.userTopicIds ?? [];
+  //     if (topicIds.length === 0) return true;
+  //     const allNoise = topicIds.every((id) => noisyIds.has(id));
+  //     if (allNoise) { noisyDiscardedCount++; return false; }
+  //     return true;
+  //   });
+  // }
+  // if (fetched.length === 0)
+  //   return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount };
   let noisyDiscardedCount = 0;
-  if (noisyIds.size > 0) {
-    fetched = fetched.filter((s) => {
-      const topicIds = s.userTopicIds ?? [];
-      if (topicIds.length === 0) return true;
-      const allNoise = topicIds.every((id) => noisyIds.has(id));
-      if (allNoise) {
-        noisyDiscardedCount++;
-        return false;
-      }
-      return true;
-    });
-  }
   if (fetched.length === 0)
     return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount };
 
@@ -539,6 +538,122 @@ async function resolveFactIdsForSuggestions(
     result.set(link.serverTopicId, bucket);
   }
 
+  return result;
+}
+
+// --- Flow v2: persist ArticleWithClusters rows (keyed by articleId) ---
+
+/**
+ * [Flow v2] Persist articles returned by the stateless `articlesForTopicsByIds`
+ * query. WMDB row id == articleId (no server-side suggestion document). Facts
+ * are linked via `fact_topic_links.topic_text` using the topic texts that
+ * matched each article (supplied by the caller from the `articleIdsForTopics`
+ * response).
+ */
+export async function persistAndLinkV2Suggestions(
+  fetched: ArticleWithClusters[],
+  articleToTopicTexts: Map<string, string[]>,
+): Promise<{ insertedCount: number; linkedCount: number }> {
+  if (fetched.length === 0) return { insertedCount: 0, linkedCount: 0 };
+
+  const existingRows = await articleSuggestionsCol
+    .query(Q.where('id', Q.oneOf(fetched.map((a) => a._id))))
+    .fetch();
+  const existingById = new Map(existingRows.map((r) => [r.id, r]));
+  const toInsert = fetched.filter((a) => !existingById.has(a._id));
+
+  const clusterIdsRefreshes: { row: ArticleSuggestionModel; nextJson: string }[] = [];
+  for (const a of fetched) {
+    const row = existingById.get(a._id);
+    if (!row) continue;
+    const nextJson = canonicalClusterIdsJson(a.clusterIds ?? []);
+    const currentJson = canonicalClusterIdsJson(parseClusterIds(row.clusterIdsJson));
+    if (currentJson !== nextJson) clusterIdsRefreshes.push({ row, nextJson });
+  }
+
+  if (toInsert.length === 0 && clusterIdsRefreshes.length === 0) {
+    return { insertedCount: 0, linkedCount: 0 };
+  }
+
+  const allTopicTexts = Array.from(
+    new Set(toInsert.flatMap((a) => articleToTopicTexts.get(a._id) ?? [])),
+  );
+  const factsByTopicText = await resolveFactsByTopicTexts(allTopicTexts);
+
+  let insertedCount = 0;
+  let linkedCount = 0;
+
+  await database.write(async () => {
+    const ops: any[] = [];
+    const now = new Date();
+
+    for (const { row, nextJson } of clusterIdsRefreshes) {
+      ops.push(row.prepareUpdate((r) => { r.clusterIdsJson = nextJson; }));
+    }
+
+    for (const a of toInsert) {
+      const topicTexts = articleToTopicTexts.get(a._id) ?? [];
+      const prepared = articleSuggestionsCol.prepareCreate((r) => {
+        r._raw.id = a._id;
+        r.articleId = a._id;
+        r.clusterIdsJson = canonicalClusterIdsJson(a.clusterIds ?? []);
+        r.relevance = 0;
+        r.reason = '';
+        r.relevanceGenerationCompleted = false;
+        r.reasonGenerationCompleted = false;
+        r.countryCode = a.country_code ?? null;
+        r.languageCode = a.language_code ?? null;
+        r.publicationName = a.publication_name ?? null;
+        r.titleEn = a.title_en ?? null;
+        r.descriptionEn = a.description_en ?? null;
+        r.articleUrl = a.article_url ?? null;
+        r.imageUrl = a.image_url ?? null;
+        r.userTopicIdsJson = JSON.stringify(topicTexts);
+        r.createdAt = now;
+        r.firstPubDate = parseDate(a.pubDate) ?? now;
+      });
+      ops.push(prepared);
+      insertedCount++;
+
+      const linkedFactIds = new Set<string>();
+      for (const topicText of topicTexts) {
+        for (const factId of factsByTopicText.get(topicText) ?? []) {
+          linkedFactIds.add(factId);
+        }
+      }
+      for (const factId of linkedFactIds) {
+        ops.push(
+          articleSuggestionFactsCol.prepareCreate((r) => {
+            r.articleSuggestionId = prepared.id;
+            r.factId = factId;
+            r.createdAt = now;
+          }),
+        );
+        linkedCount++;
+      }
+    }
+
+    if (ops.length > 0) await database.batch(ops);
+  });
+
+  return { insertedCount, linkedCount };
+}
+
+async function resolveFactsByTopicTexts(
+  topicTexts: string[],
+): Promise<Map<string, string[]>> {
+  const result = new Map<string, string[]>();
+  if (topicTexts.length === 0) return result;
+
+  const links = await factTopicLinksCol
+    .query(Q.where('topic_text', Q.oneOf(topicTexts)))
+    .fetch();
+
+  for (const link of links) {
+    const bucket = result.get(link.topicText) ?? [];
+    bucket.push(link.factId);
+    result.set(link.topicText, bucket);
+  }
   return result;
 }
 

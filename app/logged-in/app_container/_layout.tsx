@@ -6,7 +6,7 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 import { recoverCycle } from '@/lib/services/cycle-state-machine';
-import { syncFeed } from '@/lib/services/SuggestionSyncService';
+import { runSync } from '@/lib/services/SuggestionSyncService';
 import { useUserStore } from '@/lib/stores/user-store';
 import logger from '@/lib/logger';
 
@@ -52,7 +52,7 @@ export default function AppLayout() {
             const personaId = useUserStore.getState().userPersona?._id;
             if (!personaId) return;
             try {
-                await syncFeed(personaId);
+                await runSync(personaId);
             } catch (err) {
                 logger.captureException(err, {
                     tags: { service: 'AppLayout', method: 'foregroundSync' },

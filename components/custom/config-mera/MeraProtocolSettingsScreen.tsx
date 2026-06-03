@@ -32,6 +32,7 @@ import {
     useProcessingMode,
     useSelectedModelId,
 } from '@/lib/stores/mera-protocol-store';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { Switch } from '@/components/ui/switch';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -100,6 +101,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const downloadProgress = useDownloadProgress();
     const injectNoise = useInjectNoise();
     const store = useMeraProtocolStore();
+    const [useFlowV2, setUseFlowV2] = useState(false);
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -184,9 +186,18 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         }
     };
 
+    const handleFlowV2Toggle = async (enabled: boolean) => {
+        setUseFlowV2(enabled);
+        await setSetting('use_flow_v2', enabled ? 'true' : 'false');
+    };
+
     const loadSettings = async () => {
         try {
-            const userId = await getCurrentUserId();
+            const [userId, flowV2Raw] = await Promise.all([
+                getCurrentUserId(),
+                getSetting('use_flow_v2'),
+            ]);
+            setUseFlowV2(flowV2Raw === 'true');
             const userPersona = await AccountService.getUserPersona(userId);
             if (userPersona?.processingMode) {
                 store.setProcessingMode(userPersona.processingMode);
@@ -624,7 +635,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </>
             )}
 
-            {/* Noise Injection — final Mera-Protocol layer */}
+            {/* DEPRECATED: Noise Injection — see deprecate-article-suggestion-flow.md
             <Box className="mx-5 mb-6 border-b border-gray-800" />
 
             <Box className="px-5 mb-6">
@@ -644,6 +655,30 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </Text>
                 <Text className="text-amber-400 text-xs leading-4">
                     {t('meraProtocol.injectNoiseBeta')}
+                </Text>
+            </Box>
+            END DEPRECATED */}
+
+            {/* Flow v2 (Beta) — stateless API toggle */}
+            <Box className="mx-5 mb-6 border-b border-gray-800" />
+
+            <Box className="px-5 mb-6">
+                <HStack className="items-center justify-between mb-1">
+                    <Text className="text-white text-lg font-semibold">
+                        Use Flow v2 (Beta)
+                    </Text>
+                    <Switch
+                        value={useFlowV2}
+                        onValueChange={handleFlowV2Toggle}
+                        trackColor={{ false: '#374151', true: '#10b981' }}
+                        thumbColor="#ffffff"
+                    />
+                </HStack>
+                <Text className="text-typography-400 text-sm leading-5 mb-2">
+                    Send your topic texts directly to fetch matching articles. The server caches results for 30 minutes.
+                </Text>
+                <Text className="text-amber-400 text-xs leading-4">
+                    Beta — off by default. Takes effect on next feed refresh.
                 </Text>
             </Box>
 

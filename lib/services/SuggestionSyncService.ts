@@ -14,13 +14,22 @@
 import { ArticleService } from '@/lib/article-service';
 import {
   deleteAgedOutSuggestions,
+  deleteSuggestionsByServerIds,
   deleteExpiredSuggestions,
+  getLocalSuggestionServerIds,
+  getUnscoredSuggestionsWithFacts,
   getUnprocessedSyncedIds,
   loadSuggestions,
   persistAndLinkNewSuggestions,
+  persistAndLinkV2Suggestions,
   persistFeedMetadata,
   replaceSyncedIdSet,
+  saveScoringResult,
 } from '@/lib/database/services/article-suggestion-service';
+import database from '@/lib/database';
+import { Q } from '@nozbe/watermelondb';
+import type UserPersonaModel from '@/lib/database/models/UserPersona';
+import type UserTopicModel from '@/lib/database/models/UserTopic';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { initBaseModel } from '@/lib/mera-protocol-toolkit';
@@ -51,6 +60,22 @@ export interface SyncFeedResult {
  */
 export function isSyncInProgress(): boolean {
   return useDatabaseStore.getState().syncInProgress;
+}
+
+const FLOW_V2_SETTING_KEY = 'use_flow_v2';
+
+/**
+ * Top-level sync dispatcher. Reads the "Use Flow v2" toggle from local
+ * settings and routes to either the stateless Flow v2 path (syncFeedV2) or
+ * the original suggestion-pipeline path (syncFeed).
+ */
+export async function runSync(
+  userPersonaId: string,
+  opts: { force?: boolean } = {},
+): Promise<SyncFeedResult | null> {
+  const useV2 = (await getSetting(FLOW_V2_SETTING_KEY)) === 'true';
+  if (useV2) return syncFeedV2(userPersonaId);
+  return syncFeed(userPersonaId, opts);
 }
 
 const SYNCED_IDS_LAST_FETCHED_KEY = 'synced_ids_last_fetched_at';
@@ -160,17 +185,15 @@ export async function syncFeed(
     );
 
     // 3 + 4. Persist new rows AND link facts in one atomic write.
-    // Surface the noise-removal step in the header progress bar — the persist
-    // call is where the noisy-id filter runs.
     useForYouStore.getState().setSyncStatus('filtering-noise');
     const { insertedCount, linkedCount, noisyDiscardedCount } =
       await persistAndLinkNewSuggestions(fetched);
-    useForYouStore.getState().setNoisyDiscardedCount(noisyDiscardedCount);
-    if (noisyDiscardedCount > 0) {
-      logger.info(
-        `[syncFeed] noise removal discarded ${noisyDiscardedCount} cluster(s)`,
-      );
-    }
+    // DEPRECATED: noise injection UI — see deprecate-article-suggestion-flow.md
+    // useForYouStore.getState().setNoisyDiscardedCount(noisyDiscardedCount);
+    // if (noisyDiscardedCount > 0) {
+    //   logger.info(`[syncFeed] noise removal discarded ${noisyDiscardedCount} cluster(s)`);
+    // }
+    void noisyDiscardedCount;
 
     // 7. Score every unscored row (and sweep-retry any previously-scored
     //    rows whose reason step failed — folded into processAllUnscored).
@@ -206,6 +229,140 @@ export async function syncFeed(
       useUserStore.getState().setUserPersona(null);
     }
 
+    useForYouStore.getState().setSyncStatus('error', msg);
+    return null;
+  } finally {
+    useForYouStore.getState().resetHydrationProgress();
+    deactivateKeepAwake(KEEP_AWAKE_TAG);
+    useDatabaseStore.getState().setSyncInProgress(false);
+  }
+}
+
+/**
+ * [Flow v2] Stateless sync — the app sends its topic texts directly; the
+ * server returns matching article IDs (cached 30 min server-side) and the app
+ * hydrates only the records it doesn't already have locally.
+ *
+ * Mirrors the two-step ID-diff + hydrate pattern of `syncFeed` but without
+ * the `unscoredArticleSuggestionIds` / `synced_suggestion_ids` machinery.
+ * Gated behind the "Use Flow v2" toggle in the Mera Protocol settings screen.
+ */
+export async function syncFeedV2(
+  userPersonaId: string,
+): Promise<SyncFeedResult | null> {
+  const dbState = useDatabaseStore.getState();
+  if (!dbState.ready) {
+    logger.warn('[SuggestionSyncService] database not ready — skipping v2 sync');
+    return null;
+  }
+  if (dbState.syncInProgress) {
+    logger.warn('[SuggestionSyncService] sync already in progress — skipping');
+    return null;
+  }
+  useDatabaseStore.getState().setSyncInProgress(true);
+
+  useForYouStore.getState().setSyncStatus('syncing');
+  await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+
+  try {
+    // Clear stale v1 synced-ids so async-job-reconciler doesn't warn about
+    // 'unprocessed ids' left over from before the v2 switch.
+    await replaceSyncedIdSet([]);
+
+    // 1. Read local topic texts for this persona
+    const topicTexts = await getLocalTopicTextsForPersona(userPersonaId);
+    if (topicTexts.length === 0) {
+      logger.info('[syncFeedV2] no local topics — skipping');
+      useForYouStore.getState().setSyncStatus('idle');
+      return { deletedCount: 0, insertedCount: 0, linkedCount: 0, scoredCount: 0, noisyDiscardedCount: 0 };
+    }
+    logger.info(`[syncFeedV2] syncing ${topicTexts.length} topics`);
+
+    // 2. Fetch article IDs from server (first page per topic, no cursor)
+    const idsResponse = await withRetry(() =>
+      ArticleService.getArticleIdsForTopics(
+        topicTexts.map((text) => ({ topicText: text })),
+        { limitPerTopic: 20 },
+      ),
+    );
+
+    // Build topicText → articleIds and reverse map articleId → topicTexts[]
+    const articleToTopicTexts = new Map<string, string[]>();
+    for (const result of idsResponse.results) {
+      for (const id of result.articleIds) {
+        const existing = articleToTopicTexts.get(id) ?? [];
+        existing.push(result.topicText);
+        articleToTopicTexts.set(id, existing);
+      }
+    }
+    const serverArticleIds = [...articleToTopicTexts.keys()];
+    logger.info(`[syncFeedV2] server returned ${serverArticleIds.length} unique article ids`);
+
+    // 3. Diff: delete stale local rows
+    const localIds = await getLocalSuggestionServerIds();
+    const serverIdSet = new Set(serverArticleIds);
+    const toDeleteIds = localIds.filter((id) => !serverIdSet.has(id));
+    const deletedCount = toDeleteIds.length
+      ? await deleteSuggestionsByServerIds(toDeleteIds)
+      : 0;
+    if (deletedCount > 0) logger.info(`[syncFeedV2] deleted ${deletedCount} stale rows`);
+
+    // 4. Fetch full records for IDs we don't have locally
+    const localIdSet = new Set(localIds);
+    const missingIds = serverArticleIds.filter((id) => !localIdSet.has(id));
+    logger.info(`[syncFeedV2] fetching ${missingIds.length} missing records`);
+
+    const fetched = missingIds.length
+      ? await withRetry(() =>
+          ArticleService.getArticlesForTopicsByIds(
+            missingIds,
+            (completed, total) =>
+              useForYouStore.getState().setHydrationProgress(completed, total),
+          ),
+        )
+      : [];
+    useForYouStore.getState().resetHydrationProgress();
+    logger.info(`[syncFeedV2] received ${fetched.length} full records`);
+
+    // 5. Persist and link facts
+    useForYouStore.getState().setSyncStatus('filtering-noise');
+    const { insertedCount, linkedCount } = await persistAndLinkV2Suggestions(
+      fetched,
+      articleToTopicTexts,
+    );
+
+    // 5b. Pre-score articles the scoring service would permanently skip.
+    // isEligible requires titleEn && descriptionEn && relatedFacts.length > 0.
+    // Articles missing a description or with no linked user facts will never pass
+    // and would accumulate as stuck unscored rows. Mark them relevance=0 now.
+    const ineligibleCount = await markIneligibleV2ArticlesAsScored();
+    if (ineligibleCount > 0) {
+      logger.info(`[syncFeedV2] pre-scored ${ineligibleCount} ineligible articles (no desc/facts)`);
+    }
+
+    // 6. Score every unscored row
+    const scoredCount = await runScoringPass();
+
+    // 7. Refresh store and persist metadata
+    await refreshSuggestionsInStore();
+    const afterStore = useForYouStore.getState();
+    persistFeedMetadata({
+      articleCount: afterStore.articleCount,
+      relevantArticleCount: afterStore.relevantArticleCount,
+      hasGeneratedTopics: afterStore.hasGeneratedTopics,
+    }).catch((err: unknown) =>
+      logger.captureException(err, { tags: { service: 'SuggestionSyncService' } }),
+    );
+
+    useForYouStore.getState().setSyncStatus('idle');
+    useForYouStore.getState().setLastSyncAt(Date.now());
+
+    return { deletedCount, insertedCount, linkedCount, scoredCount, noisyDiscardedCount: 0 };
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'SuggestionSyncService', method: 'syncFeedV2' },
+    });
+    const msg = error instanceof Error ? error.message : String(error);
     useForYouStore.getState().setSyncStatus('error', msg);
     return null;
   } finally {
@@ -336,6 +493,44 @@ function byRelevanceDesc(
   const av = a.relevanceGenerationCompleted ? a.relevance : -Infinity;
   const bv = b.relevanceGenerationCompleted ? b.relevance : -Infinity;
   return bv - av;
+}
+
+/**
+ * After v2 persist, mark articles that the scoring service would permanently
+ * skip (no description or no linked facts) as pre-scored with relevance=0.
+ * Mirrors the isEligible check in scoring-service.ts so they never appear as
+ * stuck unscored candidates.
+ */
+async function markIneligibleV2ArticlesAsScored(): Promise<number> {
+  const candidates = await getUnscoredSuggestionsWithFacts();
+  const ineligible = candidates.filter(
+    (c) => !c.titleEn || !c.descriptionEn || c.relatedFacts.length === 0,
+  );
+  if (ineligible.length === 0) return 0;
+  await Promise.all(
+    ineligible.map((c) =>
+      saveScoringResult(c.id, { relevance: 0, reason: '', reasonSkipped: true }),
+    ),
+  );
+  return ineligible.length;
+}
+
+async function getLocalTopicTextsForPersona(serverPersonaId: string): Promise<string[]> {
+  const personasCol = database.get<UserPersonaModel>('user_personas');
+  const personas = await personasCol
+    .query(Q.where('server_id', serverPersonaId))
+    .fetch();
+  if (personas.length === 0) return [];
+
+  const localPersonaId = personas[0].id;
+  const topicsCol = database.get<UserTopicModel>('user_topics');
+  const topics = await topicsCol
+    .query(Q.where('user_persona_id', localPersonaId))
+    .fetch();
+
+  return topics
+    .map((t) => t.newsTopicText)
+    .filter((text): text is string => typeof text === 'string' && text.length > 0);
 }
 
 async function withRetry<T>(op: () => Promise<T>, maxRetries = 3): Promise<T> {

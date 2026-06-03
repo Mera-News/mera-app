@@ -16,6 +16,11 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+export type ArticleIdsForTopicsResponse = {
+  __typename?: 'ArticleIdsForTopicsResponse';
+  results: Array<TopicArticleIdsResult>;
+};
+
 /** Status of article processing through the pipeline */
 export enum ArticleProcessingStatus {
   AggregationEnqueued = 'AGGREGATION_ENQUEUED',
@@ -55,6 +60,21 @@ export type ArticleSummary = {
   __typename?: 'ArticleSummary';
   _id: Scalars['ID']['output'];
   article_url?: Maybe<Scalars['String']['output']>;
+  country_code?: Maybe<Scalars['String']['output']>;
+  description_en?: Maybe<Scalars['String']['output']>;
+  image_url?: Maybe<Scalars['String']['output']>;
+  language_code?: Maybe<Scalars['String']['output']>;
+  pubDate: Scalars['DateTime']['output'];
+  publication_name?: Maybe<Scalars['String']['output']>;
+  title_en: Scalars['String']['output'];
+};
+
+/** Article summary with cluster membership — used by Flow v2 hydration */
+export type ArticleWithClusters = {
+  __typename?: 'ArticleWithClusters';
+  _id: Scalars['ID']['output'];
+  article_url?: Maybe<Scalars['String']['output']>;
+  clusterIds: Array<Scalars['ID']['output']>;
   country_code?: Maybe<Scalars['String']['output']>;
   description_en?: Maybe<Scalars['String']['output']>;
   image_url?: Maybe<Scalars['String']['output']>;
@@ -304,7 +324,9 @@ export type Query = {
   allCountries: Array<Scalars['String']['output']>;
   /** Fetch a single article by ID. Returns null if not found (e.g. TTL’d out). */
   articleById?: Maybe<NewsArticle>;
+  articleIdsForTopics: ArticleIdsForTopicsResponse;
   articlesForPublicationSource: ArticlesForPublicationSourceResponse;
+  articlesForTopicsByIds: Array<ArticleWithClusters>;
   newsClusterForUser: NewsCluster;
   newsClusters: NewsClustersResponse;
   newsPublishers: NewsPublishersResponse;
@@ -329,10 +351,21 @@ export type QueryArticleByIdArgs = {
 };
 
 
+export type QueryArticleIdsForTopicsArgs = {
+  limitPerTopic?: InputMaybe<Scalars['Int']['input']>;
+  topics: Array<TopicPaginationInput>;
+};
+
+
 export type QueryArticlesForPublicationSourceArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   publicationSourceId: Scalars['ID']['input'];
+};
+
+
+export type QueryArticlesForTopicsByIdsArgs = {
+  articleIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -457,6 +490,20 @@ export type SubmittedUserTopic = {
   status: Scalars['String']['output'];
   text: Scalars['String']['output'];
   topicId?: Maybe<Scalars['ID']['output']>;
+};
+
+export type TopicArticleIdsResult = {
+  __typename?: 'TopicArticleIdsResult';
+  articleIds: Array<Scalars['ID']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  nextCursor?: Maybe<Scalars['String']['output']>;
+  topicText: Scalars['String']['output'];
+};
+
+export type TopicPaginationInput = {
+  /** articleId of the last item on the previous page; omit for first page */
+  afterCursor?: InputMaybe<Scalars['String']['input']>;
+  topicText: Scalars['String']['input'];
 };
 
 export type TopicSearchResponse = {
