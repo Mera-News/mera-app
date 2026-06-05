@@ -39,23 +39,6 @@ export enum ArticleProcessingStatus {
   TranslationSuccess = 'TRANSLATION_SUCCESS'
 }
 
-export type ArticleSuggestionWithMetadata = {
-  __typename?: 'ArticleSuggestionWithMetadata';
-  _id: Scalars['ID']['output'];
-  articleId: Scalars['ID']['output'];
-  article_url?: Maybe<Scalars['String']['output']>;
-  clusterIds: Array<Scalars['ID']['output']>;
-  country_code?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  description_en?: Maybe<Scalars['String']['output']>;
-  firstPubDate: Scalars['DateTime']['output'];
-  image_url?: Maybe<Scalars['String']['output']>;
-  language_code?: Maybe<Scalars['String']['output']>;
-  publication_name?: Maybe<Scalars['String']['output']>;
-  title_en: Scalars['String']['output'];
-  userTopicIds: Array<Scalars['ID']['output']>;
-};
-
 export type ArticleSummary = {
   __typename?: 'ArticleSummary';
   _id: Scalars['ID']['output'];
@@ -107,12 +90,6 @@ export type CursorPageInfo = {
   pageSize: Scalars['Int']['output'];
 };
 
-export type DeleteAllArticleSuggestionsResponse = {
-  __typename?: 'DeleteAllArticleSuggestionsResponse';
-  removedCount: Scalars['Int']['output'];
-  success: Scalars['Boolean']['output'];
-};
-
 export type DeleteAllUserTopicsResponse = {
   __typename?: 'DeleteAllUserTopicsResponse';
   removedCount: Scalars['Int']['output'];
@@ -139,10 +116,8 @@ export type EmbeddingSearchResult = {
 export type Mutation = {
   __typename?: 'Mutation';
   advanceOnboardingStage: UserPersona;
-  deleteAllArticleSuggestions: DeleteAllArticleSuggestionsResponse;
   deleteAllUserTopics: DeleteAllUserTopicsResponse;
   deleteExpoPushToken: UserPersona;
-  refreshSuggestionsForUser: RefreshSuggestionsResponse;
   submitUserTopics: SubmitUserTopicsResponse;
   updateExpoPushToken: UserPersona;
   updateNotificationWindow: UserPersona;
@@ -159,11 +134,6 @@ export type MutationAdvanceOnboardingStageArgs = {
 };
 
 
-export type MutationDeleteAllArticleSuggestionsArgs = {
-  userId: Scalars['ID']['input'];
-};
-
-
 export type MutationDeleteAllUserTopicsArgs = {
   userId: Scalars['ID']['input'];
 };
@@ -171,11 +141,6 @@ export type MutationDeleteAllUserTopicsArgs = {
 
 export type MutationDeleteExpoPushTokenArgs = {
   input: DeleteExpoPushTokenInput;
-};
-
-
-export type MutationRefreshSuggestionsForUserArgs = {
-  userId: Scalars['ID']['input'];
 };
 
 
@@ -338,10 +303,6 @@ export type Query = {
   searchArticlesVector: EmbeddingSearchResponse;
   /** Vector search on user topics using cosine similarity (scores 0–1). */
   searchTopicsVector: TopicSearchResponse;
-  serverProcessingMetadataForUser: ServerProcessingMetadataForUserResponse;
-  siblingArticleSuggestions: Array<ArticleSuggestionWithMetadata>;
-  unscoredArticleSuggestionByIds: Array<ArticleSuggestionWithMetadata>;
-  unscoredArticleSuggestionIds: Array<Scalars['ID']['output']>;
   userPersonaByUserId?: Maybe<UserPersona>;
 };
 
@@ -352,7 +313,7 @@ export type QueryArticleByIdArgs = {
 
 
 export type QueryArticleIdsForTopicsArgs = {
-  limitPerTopic?: InputMaybe<Scalars['Int']['input']>;
+  limitPerTopic?: Scalars['Int']['input'];
   topics: Array<TopicPaginationInput>;
 };
 
@@ -426,45 +387,8 @@ export type QuerySearchTopicsVectorArgs = {
 };
 
 
-export type QueryServerProcessingMetadataForUserArgs = {
-  userPersonaId: Scalars['ID']['input'];
-};
-
-
-export type QuerySiblingArticleSuggestionsArgs = {
-  clusterId: Scalars['ID']['input'];
-  excludeArticleId?: InputMaybe<Scalars['ID']['input']>;
-  userPersonaId: Scalars['ID']['input'];
-};
-
-
-export type QueryUnscoredArticleSuggestionByIdsArgs = {
-  ids: Array<Scalars['ID']['input']>;
-  userPersonaId: Scalars['ID']['input'];
-};
-
-
-export type QueryUnscoredArticleSuggestionIdsArgs = {
-  userPersonaId: Scalars['ID']['input'];
-};
-
-
 export type QueryUserPersonaByUserIdArgs = {
   userId: Scalars['ID']['input'];
-};
-
-export type RefreshSuggestionsResponse = {
-  __typename?: 'RefreshSuggestionsResponse';
-  message: Scalars['String']['output'];
-  success: Scalars['Boolean']['output'];
-};
-
-export type ServerProcessingMetadataForUserResponse = {
-  __typename?: 'ServerProcessingMetadataForUserResponse';
-  /** Count of this persona's article suggestions in the last 24 hours (always fresh) */
-  articleSuggestionCountForUser: Scalars['Int']['output'];
-  /** Total number of articles created system-wide in the last 24 hours (cached 30 min) */
-  totalArticlesToday: Scalars['Int']['output'];
 };
 
 export type SubmitUserTopicItemInput = {

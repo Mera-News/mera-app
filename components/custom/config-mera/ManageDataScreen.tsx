@@ -38,7 +38,6 @@ interface ManageDataScreenProps {
 const FEED_CACHE_TABLES = [
     'article_suggestions',
     'article_suggestion_facts',
-    'synced_suggestion_ids',
     'inference_jobs',
 ];
 
@@ -126,8 +125,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     break;
                 }
                 case 'suggestions': {
-                    if (!userId) throw new Error('No user session');
-                    await AccountService.deleteAllArticleSuggestions(userId);
                     await deleteTables(FEED_CACHE_TABLES);
                     useForYouStore.getState().clearData();
                     break;
@@ -160,7 +157,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     if (!userId) throw new Error('No user session');
                     // Server first — if it fails we abort, leaving local intact (recoverable).
                     await AccountService.deleteAllUserTopics(userId);
-                    await AccountService.deleteAllArticleSuggestions(userId);
                     await clearAllStores();
                     break;
                 }

@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 23,
+  version: 24,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -95,17 +95,6 @@ export default appSchema({
     // the user's 24h window. Decoupled from `article_suggestions` so we can
     // remember "the server still owes us data for this id" even if its
     // hydrated row gets discarded post-scoring (relevance ≤ 0.3) or never
-    // fetched yet. WMDB row id == server _id, same convention as
-    // `article_suggestions`. processed_at is set after a scoring cycle has
-    // handled the id (kept or discarded — either way, don't re-fetch).
-    tableSchema({
-      name: 'synced_suggestion_ids',
-      columns: [
-        { name: 'fetched_at', type: 'number' },
-        { name: 'processed_at', type: 'number', isOptional: true, isIndexed: true },
-      ],
-    }),
-
     // ── User / Persona ────────────────────────────────────────────
 
     tableSchema({

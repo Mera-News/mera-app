@@ -8,8 +8,8 @@ import {
     deleteExpiredSuggestions,
 } from '@/lib/database/services/article-suggestion-service';
 
-/** Article-keyed feed row hydrated from local WatermelonDB. Mirrors the
- *  server's ArticleSuggestionWithMetadata plus client-side scoring fields.
+/** Article-keyed feed row hydrated from local WatermelonDB. Populated by the
+ *  sync service from articlesForTopicsByIds, with client-side scoring fields.
  *
  *  `relevanceGenerationCompleted` flips to true once the scoring pass writes
  *  a relevance value; while false the row hasn't been processed yet
@@ -74,10 +74,9 @@ interface ForYouState {
     // awaiting results. Decouples UI from `isDeviceProcessing` which only
     // covers on-device scoring.
     asyncJobPhase: 'idle' | 'relevance' | 'reasons';
-    /** Cumulative number of synced ids the sweep has finished processing
-     *  (`synced_suggestion_ids WHERE processed_at IS NOT NULL`). 0 when
-     *  `asyncJobPhase === 'idle'`. Monotonic across batches — drives the
-     *  numerator of the "Sifting through X/Y" spinner text. */
+    /** Cumulative number of candidates the sweep has finished processing.
+     *  0 when `asyncJobPhase === 'idle'`. Monotonic across batches — drives
+     *  the numerator of the "Sifting through X/Y" spinner text. */
     asyncJobProcessedCount: number;
     /** Total synced ids in the current server snapshot. Drives the
      *  denominator of the spinner text. 0 when idle. */

@@ -2,6 +2,10 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type ArticleIdsForTopicsResponse {
+  results: [TopicArticleIdsResult!]!
+}
+
 """Status of article processing through the pipeline"""
 enum ArticleProcessingStatus {
   AGGREGATION_ENQUEUED
@@ -20,22 +24,6 @@ enum ArticleProcessingStatus {
   TRANSLATION_SUCCESS
 }
 
-type ArticleSuggestionWithMetadata {
-  _id: ID!
-  articleId: ID!
-  article_url: String
-  clusterIds: [ID!]!
-  country_code: String
-  createdAt: DateTime!
-  description_en: String
-  firstPubDate: DateTime!
-  image_url: String
-  language_code: String
-  publication_name: String
-  title_en: String!
-  userTopicIds: [ID!]!
-}
-
 type ArticleSummary {
   _id: ID!
   article_url: String
@@ -48,15 +36,6 @@ type ArticleSummary {
   title_en: String!
 }
 
-type ArticleIdsForTopicsResponse {
-  results: [TopicArticleIdsResult!]!
-}
-
-type ArticlesForPublicationSourceResponse {
-  articles: [NewsArticle!]!
-  pageInfo: CursorPageInfo!
-}
-
 """Article summary with cluster membership — used by Flow v2 hydration"""
 type ArticleWithClusters {
   _id: ID!
@@ -66,9 +45,14 @@ type ArticleWithClusters {
   description_en: String
   image_url: String
   language_code: String
-  publication_name: String
   pubDate: DateTime!
+  publication_name: String
   title_en: String!
+}
+
+type ArticlesForPublicationSourceResponse {
+  articles: [NewsArticle!]!
+  pageInfo: CursorPageInfo!
 }
 
 type ClusterArticlesConnection {
@@ -93,11 +77,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type DeleteAllArticleSuggestionsResponse {
-  removedCount: Int!
-  success: Boolean!
-}
-
 type DeleteAllUserTopicsResponse {
   removedCount: Int!
   success: Boolean!
@@ -105,19 +84,6 @@ type DeleteAllUserTopicsResponse {
 
 input DeleteExpoPushTokenInput {
   userId: ID!
-}
-
-input TopicPaginationInput {
-  """articleId of the last item on the previous page; omit for first page"""
-  afterCursor: String
-  topicText: String!
-}
-
-type TopicArticleIdsResult {
-  articleIds: [ID!]!
-  hasNextPage: Boolean!
-  nextCursor: String
-  topicText: String!
 }
 
 type EmbeddingSearchResponse {
@@ -133,10 +99,8 @@ type EmbeddingSearchResult {
 
 type Mutation {
   advanceOnboardingStage(stage: OnboardingStage!, userId: ID!): UserPersona!
-  deleteAllArticleSuggestions(userId: ID!): DeleteAllArticleSuggestionsResponse!
   deleteAllUserTopics(userId: ID!): DeleteAllUserTopicsResponse!
   deleteExpoPushToken(input: DeleteExpoPushTokenInput!): UserPersona!
-  refreshSuggestionsForUser(userId: ID!): RefreshSuggestionsResponse!
   submitUserTopics(input: SubmitUserTopicsInput!): SubmitUserTopicsResponse!
   updateExpoPushToken(input: UpdateExpoPushTokenInput!): UserPersona!
   updateNotificationWindow(input: UpdateNotificationWindowInput!): UserPersona!
@@ -255,7 +219,7 @@ type Query {
   Fetch a single article by ID. Returns null if not found (e.g. TTL’d out).
   """
   articleById(id: ID!): NewsArticle
-  articleIdsForTopics(limitPerTopic: Int = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
+  articleIdsForTopics(limitPerTopic: Int! = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
   articlesForPublicationSource(
     """Cursor to fetch items after"""
     after: String
@@ -331,28 +295,7 @@ type Query {
     """Search text"""
     query: String!
   ): TopicSearchResponse!
-  serverProcessingMetadataForUser(userPersonaId: ID!): ServerProcessingMetadataForUserResponse!
-  siblingArticleSuggestions(clusterId: ID!, excludeArticleId: ID, userPersonaId: ID!): [ArticleSuggestionWithMetadata!]!
-  unscoredArticleSuggestionByIds(ids: [ID!]!, userPersonaId: ID!): [ArticleSuggestionWithMetadata!]!
-  unscoredArticleSuggestionIds(userPersonaId: ID!): [ID!]!
   userPersonaByUserId(userId: ID!): UserPersona
-}
-
-type RefreshSuggestionsResponse {
-  message: String!
-  success: Boolean!
-}
-
-type ServerProcessingMetadataForUserResponse {
-  """
-  Count of this persona's article suggestions in the last 24 hours (always fresh)
-  """
-  articleSuggestionCountForUser: Int!
-
-  """
-  Total number of articles created system-wide in the last 24 hours (cached 30 min)
-  """
-  totalArticlesToday: Int!
 }
 
 input SubmitUserTopicItemInput {
@@ -376,6 +319,19 @@ type SubmittedUserTopic {
   status: String!
   text: String!
   topicId: ID
+}
+
+type TopicArticleIdsResult {
+  articleIds: [ID!]!
+  hasNextPage: Boolean!
+  nextCursor: String
+  topicText: String!
+}
+
+input TopicPaginationInput {
+  """articleId of the last item on the previous page; omit for first page"""
+  afterCursor: String
+  topicText: String!
 }
 
 type TopicSearchResponse {

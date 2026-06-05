@@ -3,14 +3,11 @@ import client from './apollo-client';
 import {
     ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
-    ArticleSuggestionWithMetadata,
     ArticleSummary,
     ArticleWithClusters,
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
-    RefreshSuggestionsResponse,
-    ServerProcessingMetadataForUserResponse,
     TopicPaginationInput,
 } from './generated/graphql-types';
 import logger from './logger';
@@ -181,77 +178,9 @@ const GET_NEWS_CLUSTER_FOR_USER = gql`
   }
 `;
 
-// GraphQL Query returning system-wide + per-user processing metadata.
-const GET_SERVER_PROCESSING_METADATA_FOR_USER = gql`
-  query GetServerProcessingMetadataForUser($userPersonaId: ID!) {
-    serverProcessingMetadataForUser(userPersonaId: $userPersonaId) {
-      totalArticlesToday
-      articleSuggestionCountForUser
-    }
-  }
-`;
+// (removed: GET_SERVER_PROCESSING_METADATA_FOR_USER — serverProcessingMetadataForUser no longer exists)
 
-// GraphQL Query returning just the set of unscored ArticleSuggestion IDs the
-// server currently has for the persona (24h window). The client diffs this
-// against its local DB and only fetches missing full records via the by-ids
-// query.
-const GET_UNSCORED_ARTICLE_SUGGESTION_IDS = gql`
-  query GetUnscoredArticleSuggestionIds($userPersonaId: ID!) {
-    unscoredArticleSuggestionIds(userPersonaId: $userPersonaId)
-  }
-`;
-
-// GraphQL Query fetching full ArticleSuggestion records by ID, in batches.
-const GET_UNSCORED_ARTICLE_SUGGESTIONS_BY_IDS = gql`
-  query GetUnscoredArticleSuggestionByIds($userPersonaId: ID!, $ids: [ID!]!) {
-    unscoredArticleSuggestionByIds(userPersonaId: $userPersonaId, ids: $ids) {
-      _id
-      articleId
-      clusterIds
-      title_en
-      description_en
-      article_url
-      image_url
-      country_code
-      publication_name
-      language_code
-      firstPubDate
-      userTopicIds
-      createdAt
-    }
-  }
-`;
-
-// Persona's other ArticleSuggestions sharing `clusterId`, excluding the
-// article currently being viewed. Drives the sibling-suggestions section
-// on the detail screen.
-const GET_SIBLING_ARTICLE_SUGGESTIONS = gql`
-  query GetSiblingArticleSuggestions(
-    $userPersonaId: ID!
-    $clusterId: ID!
-    $excludeArticleId: ID
-  ) {
-    siblingArticleSuggestions(
-      userPersonaId: $userPersonaId
-      clusterId: $clusterId
-      excludeArticleId: $excludeArticleId
-    ) {
-      _id
-      articleId
-      clusterIds
-      title_en
-      description_en
-      article_url
-      image_url
-      country_code
-      publication_name
-      language_code
-      firstPubDate
-      userTopicIds
-      createdAt
-    }
-  }
-`;
+// Placeholder to keep line reference intact
 
 // GraphQL Query fetching the live sibling articles for a given article. Used
 // by the detail screen's "Related articles" section. Returns every sibling in
@@ -309,34 +238,17 @@ const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
   }
 `;
 
-// GraphQL Mutation for refreshing suggestions for a user
-const CREATE_SUGGESTIONS_FOR_USER = gql`
-  mutation RefreshSuggestionsForUser($userId: ID!) {
-    refreshSuggestionsForUser(userId: $userId) {
-      success
-      message
-    }
-  }
-`;
-
 // Use generated GraphQL types
 export type {
     ArticleIdsForTopicsResponse,
-    ArticleSuggestionWithMetadata,
     ArticleSummary,
     ArticleWithClusters,
-    CursorPageInfo,
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
-    ServerProcessingMetadataForUserResponse,
     TopicArticleIdsResult,
     TopicPaginationInput,
 } from './generated/graphql-types';
-
-export interface CreateSuggestionsResponse {
-    refreshSuggestionsForUser: RefreshSuggestionsResponse;
-}
 
 // Article Service Class
 export class ArticleService {
@@ -358,137 +270,6 @@ export class ArticleService {
         const date = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
         return this.getFloorOfHour(date).toISOString();
     }
-
-    /**
-     * Fetch the set of unscored ArticleSuggestion IDs currently held by the
-     * server for the calling user (24h window). The caller diffs these IDs
-     * against the local WatermelonDB to decide what to fetch.
-     */
-    static async getUnscoredArticleSuggestionIds(userPersonaId: string): Promise<string[]> {
-        try {
-            const { data } = await client.query<{
-                unscoredArticleSuggestionIds: string[];
-            }>({
-                query: GET_UNSCORED_ARTICLE_SUGGESTION_IDS,
-                variables: { userPersonaId },
-                fetchPolicy: 'no-cache',
-            });
-
-            return data?.unscoredArticleSuggestionIds ?? [];
-        } catch (error) {
-            logger.error('[ArticleService] getUnscoredArticleSuggestionIds FAILED', error);
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getUnscoredArticleSuggestionIds' },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Fetch system-wide and per-user processing metadata. The
-     * `totalArticlesToday` field is cached on the server for 30 min;
-     * `articleSuggestionCountForUser` is always fresh.
-     */
-    static async getServerProcessingMetadataForUser(
-        userPersonaId: string
-    ): Promise<ServerProcessingMetadataForUserResponse> {
-        try {
-            const { data } = await client.query<{
-                serverProcessingMetadataForUser: ServerProcessingMetadataForUserResponse;
-            }>({
-                query: GET_SERVER_PROCESSING_METADATA_FOR_USER,
-                variables: { userPersonaId },
-                fetchPolicy: 'no-cache',
-            });
-
-            return (
-                data?.serverProcessingMetadataForUser ?? {
-                    totalArticlesToday: 0,
-                    articleSuggestionCountForUser: 0,
-                }
-            );
-        } catch (error) {
-            logger.error('[ArticleService] getServerProcessingMetadataForUser FAILED', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Fetch full ArticleSuggestion records by ID, chunked to respect the
-     * server's MAX_IDS_PER_REQUEST limit.
-     */
-    static async getUnscoredArticleSuggestionsByIds(
-        userPersonaId: string,
-        ids: string[],
-        onProgress?: (completed: number, total: number) => void,
-    ): Promise<ArticleSuggestionWithMetadata[]> {
-        if (ids.length === 0) return [];
-
-        const CHUNK = 50;
-        const CONCURRENCY = 5;
-        const batches: string[][] = [];
-        for (let i = 0; i < ids.length; i += CHUNK) {
-            batches.push(ids.slice(i, i + CHUNK));
-        }
-        const results: ArticleSuggestionWithMetadata[] = [];
-        let completed = 0;
-        let completedIds = 0;
-        const startedAt = Date.now();
-        if (__DEV__) {
-            console.log(
-                `[ArticleService] hydrating ${ids.length} ids in ${batches.length} chunks ` +
-                `(chunk=${CHUNK}, concurrency=${CONCURRENCY})`,
-            );
-        }
-        onProgress?.(0, ids.length);
-
-        try {
-            let nextIndex = 0;
-            const workers = Array.from({ length: Math.min(CONCURRENCY, batches.length) }, async () => {
-                while (true) {
-                    const idx = nextIndex++;
-                    if (idx >= batches.length) return;
-                    const batch = batches[idx];
-                    const t0 = Date.now();
-                    const { data } = await client.query<{
-                        unscoredArticleSuggestionByIds: ArticleSuggestionWithMetadata[];
-                    }>({
-                        query: GET_UNSCORED_ARTICLE_SUGGESTIONS_BY_IDS,
-                        variables: { userPersonaId, ids: batch },
-                        fetchPolicy: 'no-cache',
-                    });
-                    const rows = data?.unscoredArticleSuggestionByIds ?? [];
-                    const got = rows.length;
-                    if (got) results.push(...rows);
-                    completed++;
-                    completedIds += batch.length;
-                    onProgress?.(completedIds, ids.length);
-                    if (__DEV__) {
-                        console.log(
-                            `[ArticleService] chunk ${idx + 1}/${batches.length} ` +
-                            `got=${got} in ${Date.now() - t0}ms (completed=${completed}/${batches.length})`,
-                        );
-                    }
-                }
-            });
-            await Promise.all(workers);
-            if (__DEV__) {
-                console.log(
-                    `[ArticleService] hydrated ${results.length} records in ${Date.now() - startedAt}ms`,
-                );
-            }
-            return results;
-        } catch (error) {
-            logger.error('[ArticleService] getUnscoredArticleSuggestionsByIds FAILED', error);
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getUnscoredArticleSuggestionsByIds' },
-                extra: { idCount: ids.length },
-            });
-            throw error;
-        }
-    }
-
-    // ─── Flow v2 ─────────────────────────────────────────────────────────────
 
     /**
      * [Flow v2] Fetch the set of article IDs matching each topic text.
@@ -520,9 +301,8 @@ export class ArticleService {
     }
 
     /**
-     * [Flow v2] Fetch full article records for a set of IDs. Mirrors the
-     * existing `getUnscoredArticleSuggestionsByIds` hydration pattern but
-     * returns `ArticleWithClusters` which includes `clusterIds` for feed
+     * Fetch full article records for a set of IDs. Returns `ArticleWithClusters`
+     * which includes `clusterIds` for feed
      * stacking. Chunk size matches the server's max-50 limit.
      */
     static async getArticlesForTopicsByIds(
@@ -576,8 +356,6 @@ export class ArticleService {
         }
     }
 
-    // ─── End Flow v2 ─────────────────────────────────────────────────────────
-
     /**
      * Fetch live sibling articles for a given article via the server's
      * cluster-article-link snapshot. Used by the detail screen's "Related
@@ -596,57 +374,6 @@ export class ArticleService {
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getRelatedArticles' },
                 extra: { articleId },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Fetch the persona's other ArticleSuggestions sharing `clusterId`,
-     * excluding the article currently being viewed. Used by the detail
-     * screen to render the user's other personalized cards for the same
-     * story underneath the primary card.
-     */
-    static async getSiblingArticleSuggestions(
-        userPersonaId: string,
-        clusterId: string,
-        excludeArticleId?: string | null,
-    ): Promise<ArticleSuggestionWithMetadata[]> {
-        try {
-            const { data } = await client.query<{
-                siblingArticleSuggestions: ArticleSuggestionWithMetadata[];
-            }>({
-                query: GET_SIBLING_ARTICLE_SUGGESTIONS,
-                variables: { userPersonaId, clusterId, excludeArticleId: excludeArticleId ?? null },
-                fetchPolicy: 'no-cache',
-            });
-            return data?.siblingArticleSuggestions ?? [];
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getSiblingArticleSuggestions' },
-                extra: { userPersonaId, clusterId, excludeArticleId },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Trigger creation of new suggestions for a user
-     */
-    static async createSuggestionsForUser(userId: string): Promise<{ success: boolean; message: string }> {
-        try {
-            const { data } = await client.mutate<CreateSuggestionsResponse>({
-                mutation: CREATE_SUGGESTIONS_FOR_USER,
-                variables: { userId },
-            });
-
-            const result = data?.refreshSuggestionsForUser || { success: false, message: 'Unknown error' };
-
-            return result;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'createSuggestionsForUser' },
-                extra: { userId },
             });
             throw error;
         }

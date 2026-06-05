@@ -11,7 +11,6 @@ import Fact from './models/Fact';
 import FactTopicLink from './models/FactTopicLink';
 import InferenceJob from './models/InferenceJob';
 import Setting from './models/Setting';
-import SyncedSuggestionId from './models/SyncedSuggestionId';
 import UserPersona from './models/UserPersona';
 import UserTopic from './models/UserTopic';
 import NoisyUserTopic from './models/NoisyUserTopic';
@@ -37,7 +36,6 @@ const database = new Database({
     FactTopicLink,
     ArticleSuggestion,
     ArticleSuggestionFact,
-    SyncedSuggestionId,
     UserPersona,
     UserTopic,
     NoisyUserTopic,

@@ -105,15 +105,6 @@ const DELETE_ALL_USER_TOPICS = gql`
   }
 `;
 
-const DELETE_ALL_ARTICLE_SUGGESTIONS = gql`
-  mutation DeleteAllArticleSuggestions($userId: ID!) {
-    deleteAllArticleSuggestions(userId: $userId) {
-      success
-      removedCount
-    }
-  }
-`;
-
 const ADVANCE_ONBOARDING_STAGE = gql`
   mutation AdvanceOnboardingStage($userId: ID!, $stage: OnboardingStage!) {
     advanceOnboardingStage(userId: $userId, stage: $stage) {
@@ -228,13 +219,6 @@ export interface WithdrawUserTopicsResponse {
 
 export interface DeleteAllUserTopicsResponse {
     deleteAllUserTopics: {
-        success: boolean;
-        removedCount: number;
-    };
-}
-
-export interface DeleteAllArticleSuggestionsResponse {
-    deleteAllArticleSuggestions: {
         success: boolean;
         removedCount: number;
     };
@@ -482,33 +466,6 @@ export class AccountService {
         } catch (error) {
             logger.captureException(error, {
                 tags: { service: 'account-service', method: 'deleteAllUserTopics' },
-                extra: { userId },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Delete every ArticleSuggestion on the server for this user.
-     * Suggestions are leaf nodes — no further server-side cascade.
-     */
-    static async deleteAllArticleSuggestions(userId: string): Promise<DeleteAllArticleSuggestionsResponse['deleteAllArticleSuggestions']> {
-        try {
-            const { data, error } = await client.mutate<DeleteAllArticleSuggestionsResponse>({
-                mutation: DELETE_ALL_ARTICLE_SUGGESTIONS,
-                variables: { userId },
-            });
-            if (error) {
-                throw error;
-            }
-            const result = data?.deleteAllArticleSuggestions;
-            if (!result) {
-                throw new Error('Failed to delete all article suggestions - no data returned');
-            }
-            return result;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'account-service', method: 'deleteAllArticleSuggestions' },
                 extra: { userId },
             });
             throw error;

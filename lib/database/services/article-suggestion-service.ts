@@ -9,17 +9,14 @@ import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import type FactModel from '../models/Fact';
 import type FactTopicLinkModel from '../models/FactTopicLink';
-import type SyncedSuggestionIdModel from '../models/SyncedSuggestionId';
-import type { ArticleSuggestionWithMetadata, ArticleWithClusters } from '../../generated/graphql-types';
+import type { ArticleWithClusters } from '../../generated/graphql-types';
 import type { ForYouSuggestion } from '../../stores/for-you-store';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
-import { getNoisyTopicIds } from './noisy-user-topic-service';
 
 const articleSuggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
 const articleSuggestionFactsCol = database.get<ArticleSuggestionFactModel>('article_suggestion_facts');
 const factsCol = database.get<FactModel>('facts');
 const factTopicLinksCol = database.get<FactTopicLinkModel>('fact_topic_links');
-const syncedSuggestionIdsCol = database.get<SyncedSuggestionIdModel>('synced_suggestion_ids');
 
 // --- Read: server ids only ---
 
@@ -188,138 +185,6 @@ export async function deleteSuggestionByServerId(
   return (await deleteSuggestionsByServerIds([serverId])) > 0;
 }
 
-// --- Write: insert new + link facts in one atomic write ---
-
-export async function persistAndLinkNewSuggestions(
-  fetched: ArticleSuggestionWithMetadata[],
-): Promise<{ insertedCount: number; linkedCount: number; noisyDiscardedCount: number }> {
-  if (fetched.length === 0)
-    return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount: 0 };
-
-  // DEPRECATED: Noise injection — see deprecate-article-suggestion-flow.md
-  // Noise removal is bypassed while evaluating Flow v2. The noisy-topic
-  // concept may be removed entirely once v2 is validated.
-  // const noisyIds = await getNoisyTopicIds();
-  // let noisyDiscardedCount = 0;
-  // if (noisyIds.size > 0) {
-  //   fetched = fetched.filter((s) => {
-  //     const topicIds = s.userTopicIds ?? [];
-  //     if (topicIds.length === 0) return true;
-  //     const allNoise = topicIds.every((id) => noisyIds.has(id));
-  //     if (allNoise) { noisyDiscardedCount++; return false; }
-  //     return true;
-  //   });
-  // }
-  // if (fetched.length === 0)
-  //   return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount };
-  let noisyDiscardedCount = 0;
-  if (fetched.length === 0)
-    return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount };
-
-  // Dedupe by `_id` — the server can return the same id across chunks of the
-  // by-ids query, and a single batch with duplicate primary keys trips
-  // SQLite's UNIQUE constraint on article_suggestions.id.
-  const dedupedById = new Map<string, ArticleSuggestionWithMetadata>();
-  for (const s of fetched) {
-    if (!dedupedById.has(s._id)) dedupedById.set(s._id, s);
-  }
-  const uniqueFetched = [...dedupedById.values()];
-
-  // Also skip any ids that already exist locally for the insert path. We
-  // still refresh `clusterIds` on those existing rows below so the For-You
-  // stacked-cards grouping reflects the latest HDBSCAN pass.
-  const existingRows = await articleSuggestionsCol
-    .query(Q.where('id', Q.oneOf(uniqueFetched.map((s) => s._id))))
-    .fetch();
-  const existingById = new Map(existingRows.map((r) => [r.id, r]));
-  const toInsert = uniqueFetched.filter((s) => !existingById.has(s._id));
-
-  // Compute cluster-ids refreshes for already-present rows: only touch rows
-  // where the server's cluster set has actually changed (cuts SQLite writes).
-  // Compare by canonical JSON of a sorted copy.
-  const clusterIdsRefreshes: { row: ArticleSuggestionModel; nextJson: string }[] = [];
-  for (const s of uniqueFetched) {
-    const row = existingById.get(s._id);
-    if (!row) continue;
-    const nextJson = canonicalClusterIdsJson(s.clusterIds ?? []);
-    const currentJson = canonicalClusterIdsJson(parseClusterIds(row.clusterIdsJson));
-    if (currentJson !== nextJson) {
-      clusterIdsRefreshes.push({ row, nextJson });
-    }
-  }
-
-  if (toInsert.length === 0 && clusterIdsRefreshes.length === 0)
-    return { insertedCount: 0, linkedCount: 0, noisyDiscardedCount };
-
-  // Pre-load fact lookups outside the write block: WatermelonDB disallows
-  // .query().fetch() during database.write().
-  const factsByTopicId = await resolveFactIdsForSuggestions(toInsert);
-
-  let insertedCount = 0;
-  let linkedCount = 0;
-
-  await database.write(async () => {
-    const ops: any[] = [];
-    const now = new Date();
-
-    for (const { row, nextJson } of clusterIdsRefreshes) {
-      ops.push(
-        row.prepareUpdate((r) => {
-          r.clusterIdsJson = nextJson;
-        }),
-      );
-    }
-
-    for (const s of toInsert) {
-      const topicIds = s.userTopicIds ?? [];
-      const prepared = articleSuggestionsCol.prepareCreate((r) => {
-        // Seed the WMDB primary key with the server `_id` so they match.
-        r._raw.id = s._id;
-        r.articleId = s.articleId;
-        r.clusterIdsJson = canonicalClusterIdsJson(s.clusterIds ?? []);
-        r.relevance = 0;
-        r.reason = '';
-        r.relevanceGenerationCompleted = false;
-        r.reasonGenerationCompleted = false;
-        r.countryCode = s.country_code ?? null;
-        r.languageCode = s.language_code ?? null;
-        r.publicationName = s.publication_name ?? null;
-        r.titleEn = s.title_en ?? null;
-        r.descriptionEn = s.description_en ?? null;
-        r.articleUrl = s.article_url ?? null;
-        r.imageUrl = s.image_url ?? null;
-        r.userTopicIdsJson = JSON.stringify(topicIds);
-        r.createdAt = parseDate(s.createdAt) ?? now;
-        r.firstPubDate =
-          parseDate(s.firstPubDate) ?? r.createdAt;
-      });
-      ops.push(prepared);
-      insertedCount++;
-
-      const linkedFactIds = new Set<string>();
-      for (const topicId of topicIds) {
-        for (const factId of factsByTopicId.get(topicId) ?? []) {
-          linkedFactIds.add(factId);
-        }
-      }
-      for (const factId of linkedFactIds) {
-        ops.push(
-          articleSuggestionFactsCol.prepareCreate((r) => {
-            r.articleSuggestionId = prepared.id;
-            r.factId = factId;
-            r.createdAt = now;
-          }),
-        );
-        linkedCount++;
-      }
-    }
-
-    if (ops.length > 0) await database.batch(ops);
-  });
-
-  return { insertedCount, linkedCount, noisyDiscardedCount };
-}
-
 // --- Write: score ---
 
 /**
@@ -379,15 +244,13 @@ export async function getSuggestionByServerId(serverId: string): Promise<ForYouS
 // --- Clear / TTL ---
 
 export async function clearSuggestions(): Promise<void> {
-  const [suggestions, links, syncedIds] = await Promise.all([
+  const [suggestions, links] = await Promise.all([
     articleSuggestionsCol.query().fetch(),
     articleSuggestionFactsCol.query().fetch(),
-    syncedSuggestionIdsCol.query().fetch(),
   ]);
 
-  if (suggestions.length === 0 && links.length === 0 && syncedIds.length === 0) {
+  if (suggestions.length === 0 && links.length === 0) {
     await deleteSetting(FEED_META_KEY);
-    await deleteSetting('synced_ids_last_fetched_at');
     return;
   }
 
@@ -395,12 +258,10 @@ export async function clearSuggestions(): Promise<void> {
     await database.batch([
       ...links.map((l) => l.prepareDestroyPermanently()),
       ...suggestions.map((s) => s.prepareDestroyPermanently()),
-      ...syncedIds.map((r) => r.prepareDestroyPermanently()),
     ]);
   });
 
   await deleteSetting(FEED_META_KEY);
-  await deleteSetting('synced_ids_last_fetched_at');
 }
 
 const SUGGESTION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -426,6 +287,10 @@ export async function deleteExpiredSuggestions(): Promise<number> {
   });
 
   return expired.length;
+}
+
+export async function deleteAgedOutSuggestions(): Promise<number> {
+  return 0;
 }
 
 // --- Feed metadata (cold-start counters) ---
@@ -513,32 +378,6 @@ function parseDate(value: unknown): Date | null {
     return isNaN(t) ? null : new Date(t);
   }
   return null;
-}
-
-/**
- * Resolve the set of local fact ids linked to each incoming server topic id
- * via the `fact_topic_links` table.
- */
-async function resolveFactIdsForSuggestions(
-  fetched: ArticleSuggestionWithMetadata[],
-): Promise<Map<string, string[]>> {
-  const result = new Map<string, string[]>();
-
-  const topicIds = [
-    ...new Set(fetched.flatMap((s) => s.userTopicIds ?? [])),
-  ];
-  if (topicIds.length === 0) return result;
-
-  const links = await factTopicLinksCol
-    .query(Q.where('server_topic_id', Q.oneOf(topicIds)))
-    .fetch();
-  for (const link of links) {
-    const bucket = result.get(link.serverTopicId) ?? [];
-    bucket.push(link.factId);
-    result.set(link.serverTopicId, bucket);
-  }
-
-  return result;
 }
 
 // --- Flow v2: persist ArticleWithClusters rows (keyed by articleId) ---
@@ -657,114 +496,20 @@ async function resolveFactsByTopicTexts(
   return result;
 }
 
-// --- synced_suggestion_ids: server's "what's open in the 24h window" set ---
 
-/**
- * Reconcile the local `synced_suggestion_ids` table with the server's current
- * id set.
- */
-export async function replaceSyncedIdSet(serverIds: string[]): Promise<void> {
-  const serverSet = new Set(serverIds);
-  const existing = await syncedSuggestionIdsCol.query().fetch();
-  const existingIds = new Set(existing.map((r) => r.id));
+// --- Stubs for v1 synced_suggestion_ids functions (table removed in v24 migration) ---
+// These are kept as no-ops to avoid breaking async-job-reconciler.ts imports.
 
-  const toDelete = existing.filter((r) => !serverSet.has(r.id));
-  const toInsert = serverIds.filter((id) => !existingIds.has(id));
-
-  if (toDelete.length === 0 && toInsert.length === 0) return;
-
-  const now = Date.now();
-  await database.write(async () => {
-    const ops: any[] = [];
-    for (const row of toDelete) ops.push(row.prepareDestroyPermanently());
-    for (const id of toInsert) {
-      ops.push(
-        syncedSuggestionIdsCol.prepareCreate((r) => {
-          r._raw.id = id;
-          r.fetchedAt = now;
-          r.processedAt = null;
-        }),
-      );
-    }
-    if (ops.length > 0) await database.batch(ops);
-  });
-}
-
-/**
- * Pick the next batch of ids the server says are open AND we don't already
- * have hydrated locally.
- */
-export async function getUnprocessedSyncedIds(limit?: number): Promise<string[]> {
-  const unprocessed = await syncedSuggestionIdsCol
-    .query(Q.where('processed_at', null))
-    .fetch();
-  if (unprocessed.length === 0) return [];
-
-  const haveLocal = new Set(
-    (
-      await articleSuggestionsCol
-        .query(Q.where('id', Q.oneOf(unprocessed.map((r) => r.id))))
-        .fetch()
-    ).map((r) => r.id),
-  );
-
-  const result: string[] = [];
-  for (const row of unprocessed) {
-    if (haveLocal.has(row.id)) continue;
-    result.push(row.id);
-    if (limit !== undefined && result.length >= limit) break;
-  }
-  return result;
-}
-
-export async function markSyncedIdsProcessed(ids: string[]): Promise<void> {
-  if (ids.length === 0) return;
-  const rows = await syncedSuggestionIdsCol
-    .query(Q.where('id', Q.oneOf(ids)))
-    .fetch();
-  const now = Date.now();
-  await database.write(async () => {
-    await database.batch(
-      rows
-        .filter((r) => r.processedAt === null)
-        .map((r) =>
-          r.prepareUpdate((rec) => {
-            rec.processedAt = now;
-          }),
-        ),
-    );
-  });
-}
+export async function markSyncedIdsProcessed(_ids: string[]): Promise<void> {}
 
 export async function countUnprocessedSyncedIds(): Promise<number> {
-  return await syncedSuggestionIdsCol
-    .query(Q.where('processed_at', null))
-    .fetchCount();
+  return 0;
 }
 
 export async function countProcessedSyncedIds(): Promise<number> {
-  return await syncedSuggestionIdsCol
-    .query(Q.where('processed_at', Q.notEq(null)))
-    .fetchCount();
+  return 0;
 }
 
 export async function countTotalSyncedIds(): Promise<number> {
-  return await syncedSuggestionIdsCol.query().fetchCount();
-}
-
-/**
- * Drop `article_suggestions` rows whose id is no longer in
- * `synced_suggestion_ids`.
- */
-export async function deleteAgedOutSuggestions(): Promise<number> {
-  const allLocal = await articleSuggestionsCol.query().fetch();
-  if (allLocal.length === 0) return 0;
-  const syncedIds = new Set(
-    (await syncedSuggestionIdsCol.query().fetch()).map((r) => r.id),
-  );
-  const toDeleteIds = allLocal
-    .filter((r) => !syncedIds.has(r.id))
-    .map((r) => r.id);
-  if (toDeleteIds.length === 0) return 0;
-  return await deleteSuggestionsByServerIds(toDeleteIds);
+  return 0;
 }

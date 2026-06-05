@@ -17,7 +17,7 @@ import {
     getSuggestionByServerId,
 } from '@/lib/database/services/article-suggestion-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
-import type { ArticleSuggestionWithMetadata, ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
+import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -56,10 +56,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         storeSuggestion ?? null,
     );
     const [related, setRelated] = useState<ArticleSummary[]>([]);
-    const [siblingSuggestions, setSiblingSuggestions] = useState<ArticleSuggestionWithMetadata[]>([]);
     const [isLoading, setIsLoading] = useState(!storeSuggestion);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
-    const [isLoadingSiblings, setIsLoadingSiblings] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
@@ -137,36 +135,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // user's other personalized cards for the same story). An article can
     // belong to multiple clusters; we query against the first id in the
     // server-returned array. Skipped when the suggestion has no clusterIds
-    // yet — the next aggregation pass will populate them.
-    useEffect(() => {
-        const clusterId = suggestion?.clusterIds?.[0] ?? null;
-        const articleId = suggestion?.articleId ?? null;
-        if (!clusterId || !articleId) {
-            setSiblingSuggestions([]);
-            return;
-        }
-        const userPersonaId = useUserStore.getState().userPersona?._id;
-        if (!userPersonaId) return;
-        let cancelled = false;
-        setIsLoadingSiblings(true);
-        ArticleService.getSiblingArticleSuggestions(userPersonaId, clusterId, articleId)
-            .then((rows) => {
-                if (!cancelled) setSiblingSuggestions(rows);
-            })
-            .catch((err) => {
-                logger.captureException(err, {
-                    tags: { screen: 'ArticleSuggestionScreen', method: 'getSiblingArticleSuggestions' },
-                    extra: { articleId, clusterId },
-                });
-                // Non-fatal — siblings are supplementary
-            })
-            .finally(() => {
-                if (!cancelled) setIsLoadingSiblings(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [suggestion?.articleId, suggestion?.clusterIds]);
 
     const handleArticleUrlPress = async (url: string | null | undefined) => {
         if (!url) return;
@@ -220,39 +188,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     }
 
     const sourceLanguage = suggestion.language_code ?? null;
-
-    // ArticleSuggestionWithMetadata (server payload) → ArticleSummary shape
-    // that `toNewsArticle` consumes. Sibling suggestions store `firstPubDate`
-    // (a snapshot from when the suggestion was created); live related rows
-    // expose `pubDate`. Map to the latter so both render the same date in
-    // the compact card.
-    const siblingToArticleSummary = (
-        s: ArticleSuggestionWithMetadata,
-    ): ArticleSummary =>
-        ({
-            _id: s.articleId,
-            title_en: s.title_en,
-            description_en: s.description_en ?? null,
-            article_url: s.article_url ?? null,
-            image_url: s.image_url ?? null,
-            country_code: s.country_code ?? null,
-            language_code: s.language_code ?? null,
-            publication_name: s.publication_name ?? null,
-            pubDate:
-                typeof s.firstPubDate === 'string'
-                    ? s.firstPubDate
-                    : new Date(s.firstPubDate).toISOString(),
-        } as ArticleSummary);
-
-    const handleSiblingPress = (siblingId: string) => {
-        router.push({
-            pathname: '/logged-in/suggestion-detail',
-            params: {
-                articleSuggestionId: siblingId,
-                userPersonaId: useUserStore.getState().userPersona?._id ?? '',
-            },
-        });
-    };
 
     // Map ArticleSummary → NewsArticle-shaped object for CompactPublisherNewsCard
     // (the existing card type works against NewsArticle fields).
@@ -352,56 +287,32 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {/* Related Articles — sibling ArticleSuggestions
                             (the user's other personalized cards for this
                             story) render first as compact cards, then the
-                            live cluster siblings from the server below.
-                            Live siblings whose articleId already appears as
-                            a sibling suggestion are deduped out to avoid a
-                            double entry. */}
-                        {(isLoadingSiblings ||
-                            isLoadingRelated ||
-                            siblingSuggestions.length > 0 ||
-                            related.length > 0) && (() => {
-                            const siblingArticleIds = new Set(
-                                siblingSuggestions.map((s) => s.articleId),
-                            );
-                            const dedupedRelated = related.filter(
-                                (a) => !siblingArticleIds.has(a._id),
-                            );
-                            const isLoading = isLoadingSiblings || isLoadingRelated;
-                            return (
-                                <VStack space="md">
-                                    <Heading size="md" className="text-gray-300">
-                                        Related Articles
-                                    </Heading>
-                                    {isLoading &&
-                                    siblingSuggestions.length === 0 &&
-                                    dedupedRelated.length === 0 ? (
-                                        <Box className="items-center justify-center py-4">
-                                            <Spinner size="small" />
-                                        </Box>
-                                    ) : (
-                                        <>
-                                            {siblingSuggestions.map((s) => (
-                                                <CompactPublisherNewsCard
-                                                    key={`sibling-${s._id}`}
-                                                    article={toNewsArticle(siblingToArticleSummary(s))}
-                                                    onPress={() => handleSiblingPress(s._id)}
-                                                />
-                                            ))}
-                                            {dedupedRelated.map((a, index) => (
-                                                <CompactPublisherNewsCard
-                                                    key={a._id || `related-${index}`}
-                                                    article={toNewsArticle(a)}
-                                                    onPress={() => router.push({
-                                                        pathname: '/logged-in/article-detail',
-                                                        params: { articleId: a._id },
-                                                    })}
-                                                />
-                                            ))}
-                                        </>
-                                    )}
-                                </VStack>
-                            );
-                        })()}
+                            live cluster siblings from the server below. */}
+                        {(isLoadingRelated || related.length > 0) && (
+                            <VStack space="md">
+                                <Heading size="md" className="text-gray-300">
+                                    Related Articles
+                                </Heading>
+                                {isLoadingRelated && related.length === 0 ? (
+                                    <Box className="items-center justify-center py-4">
+                                        <Spinner size="small" />
+                                    </Box>
+                                ) : (
+                                    <>
+                                        {related.map((a, index) => (
+                                            <CompactPublisherNewsCard
+                                                key={a._id || `related-${index}`}
+                                                article={toNewsArticle(a)}
+                                                onPress={() => router.push({
+                                                    pathname: '/logged-in/article-detail',
+                                                    params: { articleId: a._id },
+                                                })}
+                                            />
+                                        ))}
+                                    </>
+                                )}
+                            </VStack>
+                        )}
                     </>
                 }
             />

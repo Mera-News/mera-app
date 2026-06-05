@@ -559,5 +559,14 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 24,
+      steps: [
+        // Drop synced_suggestion_ids — v1 article suggestion flow removed.
+        // Article suggestions are now on-device only (ArticleSuggestion model
+        // stays; synced_suggestion_ids was the v1 server-id tracking table).
+        unsafeExecuteSql('DROP TABLE IF EXISTS synced_suggestion_ids;'),
+      ],
+    },
   ],
 });

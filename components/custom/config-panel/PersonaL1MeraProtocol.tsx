@@ -13,8 +13,8 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { AccountService, type UserTopic } from '@/lib/account-service';
-import { ArticleService } from '@/lib/article-service';
 import { PRIVACY_URL } from '@/lib/config/branding';
+import { runSync } from '@/lib/services/SuggestionSyncService';
 import { deleteFact, getFacts, getFactTopicLinks, resolveTopicIdsForFact } from '@/lib/database/services/fact-service';
 import {
     getAllNoisyLinks,
@@ -254,24 +254,18 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
 
     const handleRefreshSuggestions = useCallback(async () => {
         if (isRefreshingSuggestions) return;
+        const personaId = userPersona?._id;
+        if (!personaId) return;
         setIsRefreshingSuggestions(true);
         try {
             await useForYouStore.getState().clearData();
-            const result = await ArticleService.createSuggestionsForUser(userId);
+            await runSync(personaId);
             toast.show({
                 placement: 'top',
                 render: () => (
-                    <Toast action={result.success ? 'success' : 'error'} variant="solid">
-                        <ToastTitle>
-                            {result.success
-                                ? t('configPanel.refreshSuggestionsSuccessTitle')
-                                : t('configPanel.refreshSuggestionsFailedTitle')}
-                        </ToastTitle>
-                        <ToastDescription>
-                            {result.success
-                                ? t('configPanel.refreshSuggestionsSuccessDescription')
-                                : t('configPanel.refreshSuggestionsFailedDescription')}
-                        </ToastDescription>
+                    <Toast action="success" variant="solid">
+                        <ToastTitle>{t('configPanel.refreshSuggestionsSuccessTitle')}</ToastTitle>
+                        <ToastDescription>{t('configPanel.refreshSuggestionsSuccessDescription')}</ToastDescription>
                     </Toast>
                 ),
             });
@@ -288,7 +282,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         } finally {
             setIsRefreshingSuggestions(false);
         }
-    }, [userId, isRefreshingSuggestions, toast, t]);
+    }, [userPersona, isRefreshingSuggestions, toast, t]);
 
     useEffect(() => {
         if (expandMeraChat) {
