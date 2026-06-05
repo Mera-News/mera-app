@@ -7,6 +7,7 @@ import {
     clearSuggestions,
     deleteExpiredSuggestions,
 } from '@/lib/database/services/article-suggestion-service';
+import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 
 /** Article-keyed feed row hydrated from local WatermelonDB. Populated by the
  *  sync service from articlesForTopicsByIds, with client-side scoring fields.
@@ -43,12 +44,15 @@ export type ForYouSuggestion = {
     firstPubDate: string;
 };
 
+/** @deprecated Use syncStatusMessage instead */
 export type SyncStatus =
     | 'idle'
     | 'syncing'
     | 'filtering-noise'
     | 'scoring'
     | 'error';
+
+export type { SyncStatusMessage };
 
 interface ForYouState {
     // Article data
@@ -82,10 +86,9 @@ interface ForYouState {
      *  denominator of the spinner text. 0 when idle. */
     asyncJobTotalCount: number;
 
-    // Sync status — set by SuggestionSyncService, read by UI
-    syncStatus: SyncStatus;
+    // Sync status — set by FeedSyncMachine, read by UI
+    syncStatusMessage: SyncStatusMessage | null;
     lastSyncAt: number | null;
-    lastSyncError: string | null;
 
     // Cumulative number of article_suggestions discarded as pure-noise by the
     // most recent sync pass. Surfaced under the analysed-count line on the
@@ -124,7 +127,7 @@ interface ForYouState {
     clearData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
     hydrateMetadataFromDb: () => Promise<void>;
-    setSyncStatus: (status: SyncStatus, error?: string) => void;
+    setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
     setLastSyncAt: (ts: number) => void;
     setNoisyDiscardedCount: (count: number) => void;
     setHydrationProgress: (completed: number, total: number) => void;
@@ -147,9 +150,8 @@ const initialState = {
     asyncJobPhase: 'idle' as 'idle' | 'relevance' | 'reasons',
     asyncJobProcessedCount: 0,
     asyncJobTotalCount: 0,
-    syncStatus: 'idle' as SyncStatus,
+    syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
-    lastSyncError: null as string | null,
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
@@ -267,10 +269,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setAsyncJobProgress: (processedCount, totalCount) =>
         set({ asyncJobProcessedCount: processedCount, asyncJobTotalCount: totalCount }),
 
-    setSyncStatus: (status, error) => set({
-        syncStatus: status,
-        lastSyncError: error ?? (status === 'error' ? 'Unknown error' : null),
-    }),
+    setSyncStatusMessage: (msg) => set({ syncStatusMessage: msg }),
 
     setLastSyncAt: (ts) => set({ lastSyncAt: ts }),
 

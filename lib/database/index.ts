@@ -10,6 +10,7 @@ import ArticleSuggestionFact from './models/ArticleSuggestionFact';
 import Fact from './models/Fact';
 import FactTopicLink from './models/FactTopicLink';
 import InferenceJob from './models/InferenceJob';
+import SchedulerJob from './models/SchedulerJob';
 import Setting from './models/Setting';
 import UserPersona from './models/UserPersona';
 import UserTopic from './models/UserTopic';
@@ -42,6 +43,7 @@ const database = new Database({
     PublicationVisit,
     Setting,
     InferenceJob,
+    SchedulerJob,
   ],
 });
 

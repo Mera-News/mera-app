@@ -41,6 +41,13 @@ import {
 } from '@/lib/background/inference-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
+// Task registrations — each file calls AppScheduler.register() at module load
+import '@/lib/scheduler/tasks/feed-sync-task';
+import '@/lib/scheduler/tasks/inference-recover-task';
+import '@/lib/scheduler/tasks/apollo-cache-evict-task';
+import '@/lib/scheduler/tasks/push-token-check-task';
+import '@/lib/scheduler/tasks/data-cleanup-task';
 
 // Register the inference TaskManager task at module load so the
 // expo-notifications silent-push wake (phase-1-done / phase-2-done from the
@@ -101,6 +108,11 @@ export default Sentry.wrap(function RootLayout() {
     // Mark the app initialised immediately so the route tree settles into
     // the feed without waiting for any DB work.
     setAppInitialized(true);
+    return () => { AppScheduler.dispose(); };
+
+    // Initialise the scheduler after marking the app ready so tasks that
+    // check db-ready will pass their condition on the first tick.
+    void AppScheduler.init();
 
     // Kick off store hydration in the background. The For You suggestion
     // query inside is fired ahead of everything else and updates the store

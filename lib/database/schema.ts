@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 24,
+  version: 25,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -175,6 +175,23 @@ export default appSchema({
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'pub_date', type: 'number', isOptional: true },
         { name: 'visited_at', type: 'number', isIndexed: true },
+      ],
+    }),
+
+    tableSchema({
+      name: 'scheduler_jobs',
+      columns: [
+        { name: 'task_name', type: 'string', isIndexed: true },
+        { name: 'status', type: 'string', isIndexed: true },
+        { name: 'input_json', type: 'string', isOptional: true },
+        { name: 'error_code', type: 'string', isOptional: true },
+        { name: 'error_message', type: 'string', isOptional: true },
+        { name: 'attempt', type: 'number' },
+        { name: 'max_attempts', type: 'number' },
+        { name: 'scheduled_at', type: 'number' },
+        { name: 'started_at', type: 'number', isOptional: true },
+        { name: 'completed_at', type: 'number', isOptional: true },
+        { name: 'retry_at', type: 'number', isOptional: true },
       ],
     }),
 

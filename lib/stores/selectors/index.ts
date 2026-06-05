@@ -1,6 +1,5 @@
 import { useShallow } from 'zustand/react/shallow';
 import { useForYouStore } from '../for-you-store';
-import type { SyncStatus } from '../for-you-store';
 import { useUserStore } from '../user-store';
 
 /**
@@ -104,15 +103,9 @@ export const useForYouHydrationProgress = () =>
 export const useForYouNoisyDiscardedCount = () =>
     useForYouStore((state) => state.noisyDiscardedCount);
 
-/** Get sync status (reactive, shallow equality) */
-export const useForYouSyncStatus = () =>
-    useForYouStore(
-        useShallow((s) => ({
-            syncStatus: s.syncStatus as SyncStatus,
-            lastSyncAt: s.lastSyncAt,
-            lastSyncError: s.lastSyncError,
-        })),
-    );
+/** Get sync status message (reactive) */
+export const useForYouSyncStatusMessage = () =>
+    useForYouStore((s) => s.syncStatusMessage);
 
 /** Get all ForYouStore actions (non-reactive, stable references) */
 export const getForYouActions = () => {
@@ -128,7 +121,6 @@ export const getForYouActions = () => {
         updateDeviceProgress: state.updateDeviceProgress,
         finishDeviceProcessing: state.finishDeviceProcessing,
         clearData: state.clearData,
-        setSyncStatus: state.setSyncStatus,
         setLastSyncAt: state.setLastSyncAt,
     };
 };

@@ -568,5 +568,26 @@ export default schemaMigrations({
         unsafeExecuteSql('DROP TABLE IF EXISTS synced_suggestion_ids;'),
       ],
     },
+    {
+      toVersion: 25,
+      steps: [
+        createTable({
+          name: 'scheduler_jobs',
+          columns: [
+            { name: 'task_name', type: 'string', isIndexed: true },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'input_json', type: 'string', isOptional: true },
+            { name: 'error_code', type: 'string', isOptional: true },
+            { name: 'error_message', type: 'string', isOptional: true },
+            { name: 'attempt', type: 'number' },
+            { name: 'max_attempts', type: 'number' },
+            { name: 'scheduled_at', type: 'number' },
+            { name: 'started_at', type: 'number', isOptional: true },
+            { name: 'completed_at', type: 'number', isOptional: true },
+            { name: 'retry_at', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

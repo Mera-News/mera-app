@@ -2,6 +2,7 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ArticleCountText from '@/components/custom/ArticleCountText';
 import { ArticleCard } from '@/components/custom/ArticleCard';
 import MeraProtocolProcessingStatus, { ProcessingStage, deriveProcessingStage } from '@/components/custom/MeraProtocolProcessingStatus';
+import { useForYouSyncStatusMessage } from '@/lib/stores/selectors';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import MeraLogo from '@/components/custom/MeraLogo';
@@ -39,7 +40,6 @@ import {
     useForYouNoisyDiscardedCount,
     useForYouPagination,
     useForYouSuggestions,
-    useForYouSyncStatus,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -101,7 +101,7 @@ const MeraNewsScreen: React.FC = () => {
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const asyncJobTotalCount = useForYouAsyncJobTotalCount();
-    const { syncStatus, lastSyncError } = useForYouSyncStatus();
+    const syncStatusMessage = useForYouSyncStatusMessage();
     const { hydrationCompleted, hydrationTotal } = useForYouHydrationProgress();
     const noisyDiscardedCount = useForYouNoisyDiscardedCount();
     const injectNoiseEnabled = useInjectNoise();
@@ -135,8 +135,8 @@ const MeraNewsScreen: React.FC = () => {
     // user gets a satisfying confirmation before the article-count line
     // fades back in.
     const liveStage = useMemo(
-        () => deriveProcessingStage(isOnDeviceProcessing && isDeviceProcessing, asyncJobPhase, syncStatus, hydrationTotal),
-        [isOnDeviceProcessing, isDeviceProcessing, asyncJobPhase, syncStatus, hydrationTotal],
+        () => deriveProcessingStage(isOnDeviceProcessing && isDeviceProcessing, asyncJobPhase, syncStatusMessage, hydrationTotal),
+        [isOnDeviceProcessing, isDeviceProcessing, asyncJobPhase, syncStatusMessage, hydrationTotal],
     );
     const [displayStage, setDisplayStage] = useState<ProcessingStage>(liveStage);
     const prevActiveRef = useRef(false);
@@ -176,7 +176,8 @@ const MeraNewsScreen: React.FC = () => {
     useEffect(() => {
         let scheduledId: string | null = null;
         const onChange = async (next: AppStateStatus) => {
-            const mustStay = displayStageRef.current === 'sending' || displayStageRef.current === 'hydrating';
+            const st = displayStageRef.current;
+            const mustStay = st === 'sending' || st === 'hydrating';
             if ((next === 'background' || next === 'inactive') && mustStay) {
                 try {
                     scheduledId = await Notifications.scheduleNotificationAsync({
@@ -468,7 +469,6 @@ const MeraNewsScreen: React.FC = () => {
                     hasGeneratedTopics: s.hasGeneratedTopics,
                     lastProcessingRunFinishedAt: s.lastProcessingRunFinishedAt,
                     dbReady: d.ready,
-                    syncInProgress: d.syncInProgress,
                     loadingRef: loadingRef.current,
                 },
             });
@@ -724,12 +724,15 @@ const MeraNewsScreen: React.FC = () => {
                         >
                             <MeraProtocolProcessingStatus
                                 stage={displayStage}
+                                syncStatusMessage={syncStatusMessage}
                                 processedCount={deviceProcessedCount}
                                 totalCount={deviceTotalCount}
                                 asyncJobTotalCount={asyncJobTotalCount}
                                 hydrationCompleted={hydrationCompleted}
                                 hydrationTotal={hydrationTotal}
-                                errorMessage={lastSyncError}
+                                errorMessage={syncStatusMessage?.errorCode === 'auth-expired'
+                                    ? undefined
+                                    : null}
                             />
                         </Animated.View>
                     ) : (

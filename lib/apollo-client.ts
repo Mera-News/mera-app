@@ -9,7 +9,6 @@ import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { HttpLink } from '@apollo/client/link/http';
 import { RetryLink } from '@apollo/client/link/retry';
-import { AppState, AppStateStatus } from 'react-native';
 import { router } from 'expo-router';
 import {
     StatusCodes,
@@ -76,12 +75,12 @@ const errorLink = new ErrorLink(({ error, operation }) => {
                 },
             });
 
-            useForYouStore
-                .getState()
-                .setSyncStatus(
-                    'error',
-                    "We couldn't load the latest content. Please try again.",
-                );
+            useForYouStore.getState().setSyncStatusMessage({
+                    state: 'failed',
+                    headlineKey: 'sync.syncFailed',
+                    errorCode: 'unknown',
+                    isRecoverable: false,
+                });
         }
     } else {
         // Handle network errors
@@ -251,33 +250,20 @@ const client = new ApolloClient({
     },
 });
 
-// Listen for app state changes to clear cache when app comes to foreground after TTL
-let appStateSubscription: { remove: () => void } | null = null;
-let appState = AppState.currentState;
-
-const setupAppStateListener = () => {
-    appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-        // Detect transition from background/inactive to active (foreground)
-        if (
-            appState.match(/inactive|background/) &&
-            nextAppState === 'active'
-        ) {
-            const now = Date.now();
-            // If cache is older than TTL, clear it when app comes to foreground
-            if (now - lastCacheClear > CACHE_TTL_MS) {
-                cache.reset().catch((error) => {
-                    logger.captureException(error, {
-                        tags: { source: 'apollo-app-state-listener', type: 'cache-reset' },
-                    });
-                });
-                lastCacheClear = now;
-            }
-        }
-        appState = nextAppState;
-    });
-};
-
-// Set up the listener immediately
-setupAppStateListener();
+/**
+ * Evicts the Apollo InMemoryCache if it has exceeded the TTL.
+ * Called by apollo-cache-evict-task on foreground and on a 10-minute schedule.
+ */
+export function evictExpiredApolloCache(): void {
+    const now = Date.now();
+    if (now - lastCacheClear > CACHE_TTL_MS) {
+        cache.reset().catch((error) => {
+            logger.captureException(error, {
+                tags: { source: 'apollo-cache-evict-task', type: 'cache-reset' },
+            });
+        });
+        lastCacheClear = now;
+    }
+}
 
 export default client;

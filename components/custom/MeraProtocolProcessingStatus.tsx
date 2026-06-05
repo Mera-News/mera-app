@@ -2,6 +2,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
+import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -18,9 +19,11 @@ export type ProcessingStage =
     | 'error';
 
 interface MeraProtocolProcessingStatusProps {
-    stage: ProcessingStage;
-    processedCount: number;
-    totalCount: number;
+    syncStatusMessage?: SyncStatusMessage | null;
+    // Legacy stage props — used when syncStatusMessage is null (async job phases)
+    stage?: ProcessingStage;
+    processedCount?: number;
+    totalCount?: number;
     asyncJobTotalCount?: number;
     hydrationCompleted?: number;
     hydrationTotal?: number;
@@ -29,35 +32,54 @@ interface MeraProtocolProcessingStatusProps {
 
 const HEADLINE_CYCLE_MS = 5000;
 
+/** Maps FeedSyncState to the legacy ProcessingStage used by i18n keys. */
+function syncStateToLegacyStage(
+    message: SyncStatusMessage,
+    isDeviceProcessing: boolean,
+    asyncJobPhase: 'idle' | 'relevance' | 'reasons',
+): ProcessingStage {
+    switch (message.state) {
+        case 'fetching-topic-ids': return 'sending';
+        case 'diffing': return 'noiseRemoval';
+        case 'hydrating': return 'hydrating';
+        case 'persisting': return 'noiseRemoval';
+        case 'scoring':
+            if (asyncJobPhase === 'relevance') return 'cloudRelevance';
+            if (asyncJobPhase === 'reasons') return 'cloudReasons';
+            if (isDeviceProcessing) return 'onDevice';
+            return 'sending';
+        case 'done': return 'done';
+        case 'paused-offline': return 'error';
+        case 'failed': return 'error';
+        default: return 'idle';
+    }
+}
+
+/** Kept for backwards compatibility — ForYouScreen can pass the derived stage
+ *  directly when asyncJobPhase drives the display (after FeedSyncMachine is done). */
 export function deriveProcessingStage(
     isOnDeviceProcessing: boolean,
     asyncJobPhase: 'idle' | 'relevance' | 'reasons',
-    syncStatus: 'idle' | 'syncing' | 'filtering-noise' | 'scoring' | 'error',
+    syncStatusMessage: SyncStatusMessage | null,
     hydrationTotal: number,
 ): ProcessingStage {
-    if (syncStatus === 'error') return 'error';
-    // `hydrating` only when we actually have a download in flight.
-    if ((syncStatus === 'syncing' || syncStatus === 'scoring') && hydrationTotal > 0) {
-        return 'hydrating';
+    if (syncStatusMessage) {
+        if (syncStatusMessage.state === 'failed') return 'error';
+        if (syncStatusMessage.state === 'hydrating' && hydrationTotal > 0) return 'hydrating';
+        if (syncStatusMessage.state === 'persisting') return 'noiseRemoval';
+        return syncStateToLegacyStage(syncStatusMessage, isOnDeviceProcessing, asyncJobPhase);
     }
-    // Explicit noise-removal substate set by SuggestionSyncService around the
-    // persistAndLinkNewSuggestions call.
-    if (syncStatus === 'filtering-noise') return 'noiseRemoval';
-    // Later stages win over the `sending` fallback. During the handoff out of
-    // hydration, syncStatus can briefly stay 'syncing' with hydrationTotal=0
-    // while asyncJobPhase already advanced — without this ordering we'd flap
-    // back to 'sending' and the progress bar would reset.
     if (asyncJobPhase === 'relevance') return 'cloudRelevance';
     if (asyncJobPhase === 'reasons') return 'cloudReasons';
     if (isOnDeviceProcessing) return 'onDevice';
-    if (syncStatus === 'syncing' || syncStatus === 'scoring') return 'sending';
     return 'idle';
 }
 
 const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> = ({
-    stage,
-    processedCount,
-    totalCount,
+    syncStatusMessage,
+    stage: stageProp,
+    processedCount = 0,
+    totalCount = 0,
     asyncJobTotalCount = 0,
     hydrationCompleted = 0,
     hydrationTotal = 0,
@@ -65,9 +87,32 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
 }) => {
     const { t } = useTranslation();
 
-    // Pull stage copy from i18n. `returnObjects` gives us the headlines array
-    // and (optionally) the amber sub-line. Falls back to [] if a translator
-    // forgot a key, so the UI never crashes.
+    // Resolve the effective stage — prefer syncStatusMessage, fall back to stageProp
+    const stage: ProcessingStage = useMemo(() => {
+        if (stageProp !== undefined) return stageProp;
+        if (!syncStatusMessage || syncStatusMessage.state === 'idle') return 'idle';
+        if (syncStatusMessage.state === 'done') return 'done';
+        if (syncStatusMessage.state === 'failed' || syncStatusMessage.state === 'paused-offline') return 'error';
+        if (syncStatusMessage.state === 'hydrating') return 'hydrating';
+        if (syncStatusMessage.state === 'persisting') return 'noiseRemoval';
+        if (syncStatusMessage.state === 'fetching-topic-ids') return 'sending';
+        if (syncStatusMessage.state === 'diffing') return 'noiseRemoval';
+        if (syncStatusMessage.state === 'scoring') return 'sending';
+        return 'idle';
+    }, [stageProp, syncStatusMessage]);
+
+    // Resolve error message — prefer syncStatusMessage.headlineKey for offline/auth
+    const resolvedErrorMessage = useMemo(() => {
+        if (errorMessage) return errorMessage;
+        if (syncStatusMessage?.state === 'paused-offline') return t('sync.waitingForConnection');
+        if (syncStatusMessage?.state === 'failed') {
+            return t(syncStatusMessage.headlineKey, {
+                defaultValue: t('feed.processing.errorFlash'),
+            });
+        }
+        return null;
+    }, [errorMessage, syncStatusMessage, t]);
+
     const stageCopy = useMemo(() => {
         if (stage === 'idle' || stage === 'done' || stage === 'error') return null;
         const headlines = t(`feed.processing.stages.${stage}.headlines`, {
@@ -94,6 +139,9 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
         if (stage === 'hydrating' && hydrationTotal > 0) {
             return `${hydrationCompleted}/${hydrationTotal}`;
         }
+        if (syncStatusMessage?.progress) {
+            return `${syncStatusMessage.progress.current}/${syncStatusMessage.progress.total}`;
+        }
         if (stage === 'cloudRelevance' && asyncJobTotalCount > 0) {
             return `${asyncJobTotalCount}`;
         }
@@ -101,7 +149,7 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
             return `${processedCount}/${totalCount}`;
         }
         return '';
-    }, [stage, hydrationCompleted, hydrationTotal, asyncJobTotalCount, processedCount, totalCount]);
+    }, [stage, hydrationCompleted, hydrationTotal, asyncJobTotalCount, processedCount, totalCount, syncStatusMessage]);
 
     if (stage === 'done') {
         return (
@@ -116,7 +164,7 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
 
     if (stage === 'error') {
         const message =
-            errorMessage ||
+            resolvedErrorMessage ||
             t('feed.processing.errorFlash', {
                 defaultValue: "We couldn't load the latest content. Please try again.",
             });

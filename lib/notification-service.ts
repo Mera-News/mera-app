@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
-import { AppState, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import logger from './logger';
 import { AccountService } from './account-service';
 import { useUserStore } from './stores/user-store';
@@ -285,7 +285,6 @@ export function cleanupNotificationListeners(): void {
 // ---------------------------------------------------------------------------
 
 let pushTokenListener: Notifications.Subscription | null = null;
-let revokeCheckAppStateSub: { remove: () => void } | null = null;
 
 /**
  * Boot-time token registration. Called unconditionally — we need the Expo
@@ -330,30 +329,6 @@ export async function ensurePushTokenRegistered(userId: string): Promise<void> {
             });
         }
 
-        // Re-check permission status on foreground — user may have revoked in
-        // OS settings while we were backgrounded. If so, clear the token server-side.
-        if (!revokeCheckAppStateSub) {
-            revokeCheckAppStateSub = AppState.addEventListener('change', (state) => {
-                if (state !== 'active') return;
-                void (async () => {
-                    try {
-                        const { status } = await Notifications.getPermissionsAsync();
-                        if (status === 'denied') {
-                            const uid = useUserStore.getState().userId;
-                            if (!uid) return;
-                            const cached = useUserStore.getState().userPersona?.expoPushToken;
-                            if (!cached) return;
-                            const updated = await AccountService.deleteExpoPushToken(uid);
-                            useUserStore.getState().setUserPersona(updated);
-                        }
-                    } catch (err) {
-                        logger.captureException(err, {
-                            tags: { service: 'notification-service', method: 'revokeCheck' },
-                        });
-                    }
-                })();
-            });
-        }
     } catch (err) {
         logger.captureException(err, {
             tags: { service: 'notification-service', method: 'ensurePushTokenRegistered' },
@@ -399,6 +374,29 @@ export async function setVisibleNotificationsEnabled(
             extra: { userId, enabled },
         });
         return false;
+    }
+}
+
+/**
+ * Checks if push notification permission was revoked in OS settings while
+ * the app was backgrounded. If so, clears the token server-side.
+ * Called by push-token-check-task on a 1-hour schedule + app-foreground.
+ */
+export async function checkPushTokenRevocation(): Promise<void> {
+    try {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status === 'denied') {
+            const uid = useUserStore.getState().userId;
+            if (!uid) return;
+            const cached = useUserStore.getState().userPersona?.expoPushToken;
+            if (!cached) return;
+            const updated = await AccountService.deleteExpoPushToken(uid);
+            useUserStore.getState().setUserPersona(updated);
+        }
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'notification-service', method: 'checkPushTokenRevocation' },
+        });
     }
 }
 
