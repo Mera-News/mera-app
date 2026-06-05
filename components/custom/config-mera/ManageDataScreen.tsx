@@ -9,6 +9,8 @@ import { VStack } from '@/components/ui/vstack';
 import { AccountService } from '@/lib/account-service';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import database from '@/lib/database';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
+import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import { clearAllStores, useForYouStore } from '@/lib/stores';
 import { useDeleteAccountModal, useUIStore } from '@/lib/stores/ui-store';
@@ -122,11 +124,17 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 case 'feedCache': {
                     await deleteTables(FEED_CACHE_TABLES);
                     useForYouStore.getState().clearData();
+                    if (!useSchedulerStore.getState().isRunning('feed-sync')) {
+                        void AppScheduler.trigger('feed-sync');
+                    }
                     break;
                 }
                 case 'suggestions': {
                     await deleteTables(FEED_CACHE_TABLES);
                     useForYouStore.getState().clearData();
+                    if (!useSchedulerStore.getState().isRunning('feed-sync')) {
+                        void AppScheduler.trigger('feed-sync');
+                    }
                     break;
                 }
                 case 'facts': {

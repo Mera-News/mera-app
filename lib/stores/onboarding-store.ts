@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getSetting, setSetting, deleteSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import logger from '@/lib/logger';
 
 export interface OnboardingPreferences {
     userId: string;
@@ -105,8 +106,8 @@ export const useOnboardingStore = create<OnboardingState>()((set, get) => ({
             set({
                 preferences: state.preferences ?? initialPreferences,
             });
-        } catch {
-            // Hydration failed — keep defaults
+        } catch (err) {
+            logger.warn('[onboarding-store] hydrateFromDb failed', { error: String(err) });
         }
     },
 }));

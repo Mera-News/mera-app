@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getSetting, setSetting, deleteSetting } from '@/lib/database/services/setting-service';
+import logger from '@/lib/logger';
 
 interface AppState {
     // Navigation readiness (used to defer actions until navigation is ready)
@@ -47,8 +48,8 @@ export const useAppStateStore = create<AppState>((set) => ({
         try {
             const userId = await getSetting('last_authenticated_user_id');
             if (userId) set({ lastAuthenticatedUserId: userId });
-        } catch {
-            // Hydration failed — keep default
+        } catch (err) {
+            logger.warn('[app-state-store] hydrateFromDb failed', { error: String(err) });
         }
     },
 }));

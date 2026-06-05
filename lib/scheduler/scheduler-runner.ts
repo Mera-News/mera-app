@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react-native';
 import type { Job, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
+import logger from '@/lib/logger';
 
 function defaultBackoff(attempt: number): number {
   return ([30_000, 60_000, 120_000][attempt - 1] ?? 120_000);
@@ -35,6 +36,7 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
       signal: abortController.signal,
       reportProgress: (p) => useSchedulerStore.getState().updateProgress(job.id, p),
       log: (msg) => {
+        logger.info(`[${definition.name}] ${msg}`);
         try { transaction?.setAttribute?.('last_log', msg); } catch { /* best-effort */ }
       },
     });

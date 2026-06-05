@@ -15,6 +15,7 @@ export type SyncErrorCode =
   | 'auth-expired'
   | 'no-topics-configured'
   | 'storage-error'
+  | 'scoring-unavailable'
   | 'unknown';
 
 export interface SyncStatusMessage {
@@ -25,6 +26,12 @@ export interface SyncStatusMessage {
   errorCode?: SyncErrorCode;
   isRecoverable: boolean;
   retryAt?: number;
+  /** The state the machine was in when it transitioned to 'failed'. Used by
+   *  the progress bar to highlight the specific segment that failed in red. */
+  failedAtState?: FeedSyncState;
+  /** The state the machine was in when it transitioned to 'paused-offline'.
+   *  Used by the progress bar to freeze on the correct segment in amber. */
+  pausedAtState?: FeedSyncState;
 }
 
 export class InvalidTransitionError extends Error {

@@ -6,6 +6,7 @@ import type { Job, TaskCondition, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import * as runner from './scheduler-runner';
+import logger from '@/lib/logger';
 
 class _AppScheduler {
   private tasks = new Map<string, TaskDefinition>();
@@ -49,6 +50,15 @@ class _AppScheduler {
     useSchedulerStore.getState().setStatus('paused');
   }
 
+  /** Called once after all Zustand stores have been hydrated from the DB.
+   *  Treats startup as an app-foreground event so tasks that declare the
+   *  'app-foreground' trigger (e.g. feed-sync, inference-recover) run
+   *  immediately on cold start without waiting for the user to background
+   *  and re-foreground the app. */
+  onStoresHydrated(): void {
+    void this._onForeground();
+  }
+
   private async _tick(): Promise<void> {
     const now = Date.now();
     for (const task of this.tasks.values()) {
@@ -58,6 +68,9 @@ class _AppScheduler {
       const isDue = task.frequency === 0 || (now - lastRun) >= task.frequency;
       if (!isDue) continue;
 
+      // Only tick-drive tasks with no declared triggers. Tasks that rely on
+      // events (app-foreground, network-reconnect) are handled by those
+      // handlers and by onStoresHydrated() on cold start.
       const hasTrigger = !task.triggers || task.triggers.length === 0;
       if (!hasTrigger) continue;
 
@@ -92,7 +105,10 @@ class _AppScheduler {
 
   private _conditionsMet(task: TaskDefinition): boolean {
     for (const cond of task.conditions ?? []) {
-      if (!this._checkCondition(cond)) return false;
+      if (!this._checkCondition(cond)) {
+        logger.info(`[AppScheduler] task=${task.name} blocked by condition type=${cond.type}`);
+        return false;
+      }
     }
     return true;
   }

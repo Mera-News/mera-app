@@ -53,6 +53,10 @@ const logger = {
   ): string {
     const { level = 'info', tags, extra } = options;
 
+    if (__DEV__) {
+      console.info('[Logger]', message, JSON.stringify({ level, tags, extra }, null, 2));
+    }
+
     return Sentry.captureMessage(message, {
       level: level as Sentry.SeverityLevel,
       tags,

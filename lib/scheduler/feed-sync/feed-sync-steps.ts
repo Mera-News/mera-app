@@ -3,12 +3,12 @@
 
 import { ArticleService } from '@/lib/article-service';
 import {
+  batchMarkAsScoredByIds,
   deleteSuggestionsByServerIds,
   deleteExpiredSuggestions,
   getLocalSuggestionServerIds,
   getUnscoredSuggestionsWithFacts,
   persistAndLinkV2Suggestions,
-  saveScoringResult,
 } from '@/lib/database/services/article-suggestion-service';
 import database from '@/lib/database';
 import { Q } from '@nozbe/watermelondb';
@@ -50,6 +50,7 @@ export async function stepFetchTopicIds(
     throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
   ctx.log(`fetching ids for ${topicTexts.length} topics`);
+  logger.info(`[feed-sync-steps] calling getArticleIdsForTopics with ${topicTexts.length} topics`);
 
   const idsResponse = await withRetry(
     () =>
@@ -69,6 +70,7 @@ export async function stepFetchTopicIds(
     }
   }
   const serverArticleIds = [...articleToTopicTexts.keys()];
+  logger.info(`[feed-sync-steps] getArticleIdsForTopics returned ${serverArticleIds.length} article ids`);
   ctx.log(`server returned ${serverArticleIds.length} article ids`);
   return { articleToTopicTexts, serverArticleIds };
 }
@@ -149,15 +151,20 @@ export async function stepScore(ctx: TaskContext): Promise<number> {
 async function getLocalTopicTextsForPersona(serverPersonaId: string): Promise<string[]> {
   const personasCol = database.get<UserPersonaModel>('user_personas');
   const personas = await personasCol.query(Q.where('server_id', serverPersonaId)).fetch();
-  if (personas.length === 0) return [];
+  if (personas.length === 0) {
+    logger.warn(`[feed-sync-steps] no local persona found for serverPersonaId=${serverPersonaId}`);
+    return [];
+  }
 
   const localPersonaId = personas[0].id;
   const topicsCol = database.get<UserTopicModel>('user_topics');
   const topics = await topicsCol.query(Q.where('user_persona_id', localPersonaId)).fetch();
-
-  return topics
+  const texts = topics
     .map((t) => t.newsTopicText)
     .filter((text): text is string => typeof text === 'string' && text.length > 0);
+
+  logger.info(`[feed-sync-steps] found ${texts.length} topic texts for persona ${localPersonaId}`);
+  return texts;
 }
 
 async function markIneligibleArticlesAsScored(): Promise<number> {
@@ -166,11 +173,7 @@ async function markIneligibleArticlesAsScored(): Promise<number> {
     (c) => !c.titleEn || !c.descriptionEn || c.relatedFacts.length === 0,
   );
   if (ineligible.length === 0) return 0;
-  await Promise.all(
-    ineligible.map((c) =>
-      saveScoringResult(c.id, { relevance: 0, reason: '', reasonSkipped: true }),
-    ),
-  );
+  await batchMarkAsScoredByIds(ineligible.map((c) => c.id));
   return ineligible.length;
 }
 

@@ -14,6 +14,9 @@ export interface MultiStepProgressBarProps {
     stageValue: number;
     progressClassName?: string;
     progressFilledClassName?: string;
+    /** Per-segment fill class overrides. Index `i` uses this instead of
+     *  `progressFilledClassName` when provided. */
+    progressFilledClassNames?: string[];
     stageNames?: string[];
     stageTooltips?: (string | undefined)[];
     size?: ProgressSize;
@@ -38,6 +41,7 @@ const MultiStepProgressBar: React.FC<MultiStepProgressBarProps> = ({
     stageValue,
     progressClassName,
     progressFilledClassName,
+    progressFilledClassNames,
     stageNames,
     stageTooltips,
     size = 'xs',
@@ -80,7 +84,7 @@ const MultiStepProgressBar: React.FC<MultiStepProgressBarProps> = ({
                         >
                             <ProgressFilledTrack
                                 testID={`multi-step-progress-fill-${i}`}
-                                className={progressFilledClassName}
+                                className={progressFilledClassNames?.[i] ?? progressFilledClassName}
                             />
                         </Progress>
                     );

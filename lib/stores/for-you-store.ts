@@ -294,14 +294,18 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     },
 
     clearData: async () => {
-        const preservedArticleCount = get().articleCount;
-        set({ ...initialState, articleCount: preservedArticleCount });
+        // Reset all counts to zero — stale article counts from the previous
+        // run are misleading while the DB is empty awaiting the next sync.
+        // hasGeneratedTopics is preserved from the current session state
+        // because clearing the feed cache does not remove the user's interests.
+        const hasGeneratedTopics = get().hasGeneratedTopics;
+        set({ ...initialState, hasGeneratedTopics });
         try {
             await clearSuggestions();
             await persistFeedMetadata({
-                articleCount: preservedArticleCount,
+                articleCount: 0,
                 relevantArticleCount: 0,
-                hasGeneratedTopics: false,
+                hasGeneratedTopics,
                 lastProcessingRunFinishedAt: null,
             });
         } catch (err) {

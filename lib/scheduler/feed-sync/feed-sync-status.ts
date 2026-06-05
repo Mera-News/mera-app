@@ -31,13 +31,18 @@ export function publishSyncStatus(
   useForYouStore.getState().setSyncStatusMessage(makeMessage(state, overrides));
 }
 
-export function publishSyncError(errorCode: SyncErrorCode, retryAt?: number): void {
+export function publishSyncError(
+  errorCode: SyncErrorCode,
+  retryAt?: number,
+  failedAtState?: FeedSyncState,
+): void {
   const headlineMap: Record<SyncErrorCode, string> = {
     offline:               'sync.waitingForConnection',
     'server-unreachable':  'sync.serverUnavailable',
     'auth-expired':        'sync.sessionExpired',
     'no-topics-configured': 'sync.noTopics',
     'storage-error':       'sync.storageFull',
+    'scoring-unavailable': 'sync.syncFailed',
     unknown:               'sync.syncFailed',
   };
 
@@ -47,6 +52,7 @@ export function publishSyncError(errorCode: SyncErrorCode, retryAt?: number): vo
     errorCode,
     isRecoverable: errorCode === 'offline' || errorCode === 'server-unreachable',
     retryAt,
+    failedAtState,
   });
 }
 
@@ -67,6 +73,9 @@ export function classifyError(err: unknown): SyncErrorCode {
     }
     if ((err as { code?: string }).code === 'no-topics-configured') {
       return 'no-topics-configured';
+    }
+    if ((err as { code?: string }).code === 'no-push-token') {
+      return 'scoring-unavailable';
     }
   }
   return 'unknown';

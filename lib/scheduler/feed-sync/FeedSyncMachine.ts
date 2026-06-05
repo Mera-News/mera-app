@@ -15,7 +15,7 @@ const KEEP_AWAKE_TAG = 'mera-feed-sync';
 const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
   idle:                 ['fetching-topic-ids'],
   'fetching-topic-ids': ['diffing', 'paused-offline', 'failed'],
-  diffing:              ['hydrating', 'done', 'failed'],
+  diffing:              ['hydrating', 'scoring', 'done', 'failed'],
   hydrating:            ['persisting', 'paused-offline', 'failed'],
   persisting:           ['scoring', 'failed'],
   scoring:              ['done', 'failed'],
@@ -49,14 +49,15 @@ class FeedSyncMachine {
     }
 
     await feedPersistence.saveMachineSnapshot({ state: 'idle', startedAt: Date.now() });
-    this._transitionTo('idle');
+    this._state = 'idle'; // force reset — bypasses transition guard, valid from any state
 
     this._networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
       const networkState = this._state;
       if (!state.isConnected && NETWORK_DEPENDENT_STATES.includes(networkState)) {
+        const pausedAtState = networkState;
         this._transitionTo('paused-offline');
         this._paused = true;
-        publishSyncStatus('paused-offline');
+        publishSyncStatus('paused-offline', { pausedAtState });
       } else if (state.isConnected && !prev.isConnected && this._state === 'paused-offline') {
         this._paused = false;
         this._resumeCallback?.();
@@ -94,10 +95,28 @@ class FeedSyncMachine {
       const diffResult = await steps.stepDiff(topicResult, ctx);
 
       if (diffResult.missingIds.length === 0 && diffResult.deletedCount === 0) {
-        // Nothing to do — feed is already up to date
+        // No new articles and nothing deleted — but still run scoring in case
+        // articles from a prior run are waiting to be analysed (e.g. when the
+        // previous scoring step failed transiently and left unscoredCount > 0).
+        this._transitionTo('scoring');
+        publishSyncStatus('scoring');
+        await feedPersistence.updateMachineState('scoring');
+
+        if (ctx.signal.aborted) return;
+        await steps.stepScore(ctx);
+
+        await refreshSuggestionsInStoreUnsafe();
         this._transitionTo('done');
         publishSyncStatus('done');
+        useForYouStore.getState().setLastSyncAt(Date.now());
         await feedPersistence.clearMachineSnapshot();
+
+        setTimeout(() => {
+          if (this._state === 'done') {
+            this._transitionTo('idle');
+            publishSyncStatus('idle');
+          }
+        }, 2_000);
         return;
       }
 
@@ -151,9 +170,10 @@ class FeedSyncMachine {
 
     } catch (err) {
       const errorCode = classifyError(err);
+      const failedAtState = this._state; // capture before transition
       const retryAt = undefined; // scheduler handles retry timing
       this._transitionTo('failed');
-      publishSyncError(errorCode, retryAt);
+      publishSyncError(errorCode, retryAt, failedAtState);
       await feedPersistence.saveMachineSnapshot({
         state: 'failed',
         startedAt: Date.now(),

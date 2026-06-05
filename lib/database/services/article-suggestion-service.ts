@@ -214,6 +214,28 @@ export async function saveScoringResult(
 }
 
 /**
+ * Mark multiple articles as ineligible for scoring in a single batched write.
+ * All rows get relevance=0, reasonSkipped=true. Use instead of calling
+ * saveScoringResult in a loop — one database.write instead of N.
+ */
+export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = await Promise.all(ids.map((id) => articleSuggestionsCol.find(id)));
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.relevance = 0;
+          r.reason = '';
+          r.relevanceGenerationCompleted = true;
+          r.reasonGenerationCompleted = true;
+        }),
+      ),
+    );
+  });
+}
+
+/**
  * Updates the reason for an already-scored row.
  */
 export async function saveReason(

@@ -141,8 +141,8 @@ export const useUserStore = create<UserState>()((set, get) => ({
             } else {
                 set({ userId });
             }
-        } catch {
-            // Hydration failed — start with empty state
+        } catch (err) {
+            logger.warn('[user-store] hydrateFromDb failed', { error: String(err) });
         }
     },
 }));

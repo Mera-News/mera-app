@@ -1,106 +1,119 @@
-import { ProcessingStage } from '@/components/custom/MeraProtocolProcessingStatus';
+import type { FeedSyncState, SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 import MultiStepProgressBar from '@/components/custom/MultiStepProgressBar';
-import { Text } from '@/components/ui/text';
-import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useRef, useMemo } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-interface HeaderProgressBarProps {
-    stage: ProcessingStage;
-    hydrationCompleted: number;
-    hydrationTotal: number;
-    deviceProcessedCount: number;
-    deviceTotalCount: number;
-    meraProtocolEnabled: boolean;
-    injectNoiseEnabled?: boolean;
-}
-
-const STAGE_ORDER_FULL: ProcessingStage[] = [
-    'sending',
+// The five stages that map 1-to-1 with FeedSyncState pipeline steps.
+const SYNC_STAGES: FeedSyncState[] = [
+    'fetching-topic-ids',
+    'diffing',
     'hydrating',
-    'noiseRemoval',
-    'cloudRelevance',
-    'cloudReasons',
-    'onDevice',
+    'persisting',
+    'scoring',
 ];
 
+const TRACK = 'bg-lime-100/20 h-[2px]';
+const FILL_OK = 'bg-green-800 h-[2px]';
+const FILL_ERR = 'bg-red-500 h-[2px]';
+const FILL_PAUSE = 'bg-amber-500 h-[2px]';
+
+interface HeaderProgressBarProps {
+    syncStatusMessage: SyncStatusMessage | null;
+    /** True during the 2-second "done" flash after sync completes and
+     *  syncStatusMessage has already been cleared to null. Shows the fully
+     *  green bar during that window. */
+    isDoneFlash?: boolean;
+}
+
 const HeaderProgressBar: React.FC<HeaderProgressBarProps> = ({
-    stage,
-    hydrationCompleted,
-    hydrationTotal,
-    deviceProcessedCount,
-    deviceTotalCount,
-    meraProtocolEnabled,
-    injectNoiseEnabled = false,
+    syncStatusMessage,
+    isDoneFlash = false,
 }) => {
-    const { t } = useTranslation();
+    // Tracks the last active stage so paused-offline can freeze on the
+    // correct segment without requiring a separate store field.
+    const lastActiveRef = useRef<FeedSyncState | null>(null);
 
-    const order = useMemo(() => {
-        let stages = STAGE_ORDER_FULL;
-        if (!meraProtocolEnabled) {
-            stages = stages.filter((s) => s !== 'onDevice');
+    const state = syncStatusMessage?.state ?? 'idle';
+
+    const isActive =
+        state !== 'idle' &&
+        state !== 'done' &&
+        state !== 'failed' &&
+        state !== 'paused-offline';
+    if (isActive) lastActiveRef.current = state;
+
+    const { currentStage, stageValue, fillClassNames } = useMemo(() => {
+        // Done or 2s post-done flash — all segments green
+        if (state === 'done' || isDoneFlash) {
+            return {
+                currentStage: SYNC_STAGES.length,
+                stageValue: 0,
+                fillClassNames: SYNC_STAGES.map(() => FILL_OK),
+            };
         }
-        if (!injectNoiseEnabled) {
-            stages = stages.filter((s) => s !== 'noiseRemoval');
+
+        // Failed — segments before failedAtState are green, failedAtState is red
+        if (state === 'failed') {
+            const failedAt = syncStatusMessage?.failedAtState;
+            const failedIdx = failedAt ? SYNC_STAGES.indexOf(failedAt) : -1;
+            const safeIdx = failedIdx >= 0 ? failedIdx : SYNC_STAGES.length - 1;
+            return {
+                currentStage: safeIdx,
+                stageValue: 100,
+                fillClassNames: SYNC_STAGES.map((_, i) =>
+                    i === safeIdx ? FILL_ERR : FILL_OK,
+                ),
+            };
         }
-        return stages;
-    }, [meraProtocolEnabled, injectNoiseEnabled]);
 
-    if (stage === 'idle') return null;
+        // Paused — freeze on the last active stage in amber
+        if (state === 'paused-offline') {
+            const pausedAt = syncStatusMessage?.pausedAtState ?? lastActiveRef.current;
+            const pausedIdx = pausedAt ? SYNC_STAGES.indexOf(pausedAt) : 0;
+            const safeIdx = Math.max(0, pausedIdx >= 0 ? pausedIdx : 0);
+            return {
+                currentStage: safeIdx,
+                stageValue: 30,
+                fillClassNames: SYNC_STAGES.map((_, i) =>
+                    i === safeIdx ? FILL_PAUSE : FILL_OK,
+                ),
+            };
+        }
 
-    const isError = stage === 'error';
-    const currentStage =
-        stage === 'done' || isError ? order.length : order.indexOf(stage);
+        // Active stage — current segment at partial fill, prior segments full
+        const stageIdx = SYNC_STAGES.indexOf(state as FeedSyncState);
+        if (stageIdx < 0) {
+            return { currentStage: 0, stageValue: 0, fillClassNames: SYNC_STAGES.map(() => FILL_OK) };
+        }
 
-    let stageValue = 0;
-    const currentStageId = order[currentStage];
-    if (currentStageId === 'hydrating' && hydrationTotal > 0) {
-        stageValue = (hydrationCompleted / hydrationTotal) * 100;
-    } else if (currentStageId === 'onDevice' && deviceTotalCount > 0) {
-        stageValue = (deviceProcessedCount / deviceTotalCount) * 100;
-    }
+        let sv = 50;
+        if (state === 'hydrating' && syncStatusMessage?.progress) {
+            const { current, total } = syncStatusMessage.progress;
+            sv = total > 0 ? Math.round((current / total) * 100) : 50;
+        }
 
-    const stageTooltips = order.map((s) => {
-        const text = t(`feed.processing.stages.${s}.tooltip` as never, { defaultValue: '' });
-        return text || undefined;
-    });
+        return {
+            currentStage: stageIdx,
+            stageValue: sv,
+            fillClassNames: SYNC_STAGES.map(() => FILL_OK),
+        };
+    }, [state, syncStatusMessage, isDoneFlash]);
 
-    const labelKey = isError
-        ? 'feed.processing.errorFlash'
-        : stage === 'done'
-            ? 'feed.processing.doneFlash'
-            : `feed.processing.stages.${stage}.shortName`;
+    if (state === 'idle' && !isDoneFlash) return null;
 
     return (
         <View
             pointerEvents="box-none"
-            style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: 0,
-                paddingHorizontal: 0,
-            }}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}
         >
             <MultiStepProgressBar
-                totalStages={order.length}
+                totalStages={SYNC_STAGES.length}
                 currentStage={currentStage}
                 stageValue={stageValue}
-                stageTooltips={stageTooltips}
-                progressClassName={isError ? 'bg-red-900/20 h-[2px]' : 'bg-lime-100/20 h-[2px]'}
-                progressFilledClassName={isError ? 'bg-red-500 h-[2px]' : 'bg-green-800 h-[2px]'}
+                progressClassName={TRACK}
+                progressFilledClassName={FILL_OK}
+                progressFilledClassNames={fillClassNames}
             />
-            <Animated.View
-                key={`label-${stage}`}
-                entering={FadeIn.duration(250)}
-                exiting={FadeOut.duration(250)}
-                style={{ paddingTop: 4 }}
-            >
-                <Text size="xs" className="text-typography-500 leading-4">
-                    {t(labelKey as never, { defaultValue: '' })}
-                </Text>
-            </Animated.View>
         </View>
     );
 };

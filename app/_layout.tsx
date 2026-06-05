@@ -108,7 +108,6 @@ export default Sentry.wrap(function RootLayout() {
     // Mark the app initialised immediately so the route tree settles into
     // the feed without waiting for any DB work.
     setAppInitialized(true);
-    return () => { AppScheduler.dispose(); };
 
     // Initialise the scheduler after marking the app ready so tasks that
     // check db-ready will pass their condition on the first tick.
@@ -151,12 +150,20 @@ export default Sentry.wrap(function RootLayout() {
         if (personaId) {
           void refreshProcessingMetadata(personaId);
         }
+
+        // Treat cold start like an app-foreground event so tasks that
+        // declare 'app-foreground' triggers (feed-sync, inference-recover)
+        // fire immediately without waiting for a background→foreground cycle.
+        // Placed after hydration so the 'authenticated' condition passes.
+        AppScheduler.onStoresHydrated();
       })
       .catch((error) =>
         logger.captureException(error, {
           tags: { component: 'RootLayout', method: 'bootstrap' },
         }),
       );
+
+    return () => { AppScheduler.dispose(); };
   }, [setAppInitialized]);
 
   // Handle notifications that launched the app (when app was not running)

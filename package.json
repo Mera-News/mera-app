@@ -41,6 +41,7 @@
     "expo": "^55.0.24",
     "expo-background-task": "~55.0.18",
     "expo-build-properties": "~55.0.14",
+    "expo-clipboard": "~55.0.13",
     "expo-constants": "~55.0.16",
     "expo-crypto": "~55.0.15",
     "expo-dev-client": "~55.0.34",

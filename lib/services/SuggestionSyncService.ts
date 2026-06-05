@@ -40,13 +40,42 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
     useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
 
   if (!onDevice) {
+    let result: Awaited<ReturnType<typeof runBackgroundCycle>>;
     try {
-      await runBackgroundCycle('scoring-pass');
+      result = await runBackgroundCycle('scoring-pass');
     } catch (err) {
       logger.captureException(err, {
-        tags: { service: 'SuggestionSyncService', method: 'runScoringPass.async' },
+        tags: { service: 'SuggestionSyncService', method: 'runScoringPass.cycle' },
       });
+      throw err; // surface to FeedSyncMachine so the failed stage is recorded
     }
+
+    if (result === 'skipped-no-token') {
+      logger.captureMessage(
+        '[runScoringPass] cloud scoring skipped — no Expo push token on userPersona',
+        {
+          level: 'warning',
+          tags: { service: 'SuggestionSyncService', method: 'runScoringPass' },
+        },
+      );
+      throw Object.assign(
+        new Error('Cloud scoring unavailable: no push token'),
+        { code: 'no-push-token' },
+      );
+    }
+
+    if (result === 'error') {
+      // Transient backend failure (network error, server down, expired endpoint).
+      // Log it but let the sync complete so articles are at least persisted.
+      // inference-recover will attempt scoring again on the next foreground.
+      logger.captureMessage('[runScoringPass] cloud inference cycle returned error — transient, sync will complete', {
+        level: 'warning',
+        tags: { service: 'SuggestionSyncService', method: 'runScoringPass' },
+      });
+      return 0;
+    }
+
+    logger.info(`[runScoringPass] cloud cycle result: ${result}`);
     return 0;
   }
 
@@ -112,11 +141,12 @@ async function refreshSuggestionsInStore(): Promise<void> {
 
   useForYouStore.setState({
     suggestions,
-    relevantArticleCount,
     unscoredCount,
     endCursor: null,
     hasNextPage: true,
   });
+  // setCounts persists articleCount + relevantArticleCount to feed_metadata
+  useForYouStore.getState().setCounts(suggestions.length, relevantArticleCount);
 }
 
 function byRelevanceDesc(

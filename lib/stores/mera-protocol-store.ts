@@ -1,5 +1,6 @@
 import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import logger from '@/lib/logger';
 import { create } from 'zustand';
 
 type ModelStateLabel =
@@ -159,8 +160,8 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
-    } catch {
-      // Hydration failed — keep default
+    } catch (err) {
+      logger.warn('[mera-protocol-store] hydrateFromDb failed', { error: String(err) });
     }
   },
 }));

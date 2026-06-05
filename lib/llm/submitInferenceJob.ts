@@ -66,7 +66,13 @@ export async function submitInferenceJob(): Promise<SubmitStatus> {
   if (candidates.length === 0) return 'skipped-empty';
 
   const token = getCachedExpoPushToken();
-  if (!token) return 'skipped-no-token';
+  if (!token) {
+    logger.captureMessage(`${TAG} no Expo push token on userPersona — cloud scoring cannot proceed`, {
+      level: 'warning',
+      tags: { service: 'submitInferenceJob', result: 'skipped-no-token' },
+    });
+    return 'skipped-no-token';
+  }
 
   const bundle = await buildRelevanceCalls(candidates);
   if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {

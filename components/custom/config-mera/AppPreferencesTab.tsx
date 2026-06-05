@@ -130,6 +130,12 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
         },
         {
+            id: 'observability',
+            title: 'Observability',
+            icon: 'monitor-heart',
+            onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
+        },
+        {
             id: 'logout',
             title: t('preferences.logout'),
             icon: 'logout',

@@ -434,6 +434,23 @@ const MeraNewsScreen: React.FC = () => {
         }
     }, [showOnboardingWait, listData.length]);
 
+    // Clear the watchdog error when a new sync cycle becomes active or when
+    // cloud async scoring starts. Without this, stuckOnEmpty persists while
+    // the progress bar/status text shows active work.
+    useEffect(() => {
+        if (!syncStatusMessage) return;
+        const isActive =
+            syncStatusMessage.state !== 'idle' &&
+            syncStatusMessage.state !== 'failed' &&
+            syncStatusMessage.state !== 'done';
+        if (isActive) setStuckOnEmpty(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [syncStatusMessage?.state]);
+
+    useEffect(() => {
+        if (asyncJobPhase !== 'idle') setStuckOnEmpty(false);
+    }, [asyncJobPhase]);
+
     // Empty-feed watchdog. If the For You screen has been mounted with no
     // renderable cards for 30s — and the user is signed in, hydration has
     // finished, interests are generated, and no user-visible error is shown —
@@ -450,7 +467,8 @@ const MeraNewsScreen: React.FC = () => {
             !!session?.user?.id &&
             dbReady &&
             hasGeneratedInterests &&
-            !errorMessage;
+            !errorMessage &&
+            asyncJobPhase === 'idle'; // cloud scoring in-flight counts as productive work
         if (!shouldArm) return;
 
         const timer = setTimeout(() => {
@@ -480,7 +498,7 @@ const MeraNewsScreen: React.FC = () => {
         // store snapshots read inside are pulled via getState() at fire time, so
         // they are intentionally excluded from the dep array.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length]);
+    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length, asyncJobPhase]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
         const userPersonaId = useUserStore.getState().userPersona?._id || '';
@@ -754,13 +772,8 @@ const MeraNewsScreen: React.FC = () => {
                     )}
                     {showBanner && (
                         <HeaderProgressBar
-                            stage={displayStage}
-                            hydrationCompleted={hydrationCompleted}
-                            hydrationTotal={hydrationTotal}
-                            deviceProcessedCount={deviceProcessedCount}
-                            deviceTotalCount={deviceTotalCount}
-                            meraProtocolEnabled={isOnDeviceProcessing}
-                            injectNoiseEnabled={injectNoiseEnabled}
+                            syncStatusMessage={syncStatusMessage}
+                            isDoneFlash={displayStage === 'done' && !syncStatusMessage}
                         />
                     )}
                 </Box>
