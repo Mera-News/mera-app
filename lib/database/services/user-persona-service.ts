@@ -1,9 +1,9 @@
 // User Persona Service — persists/hydrates UserPersona with topics.
 
-import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type UserPersonaModel from '../models/UserPersona';
 import type UserTopicModel from '../models/UserTopic';
+import type FactTopicLinkModel from '../models/FactTopicLink';
 import type {
   UserPersona,
   UserTopic,
@@ -14,6 +14,7 @@ import logger from '../../logger';
 
 const personasCol = database.get<UserPersonaModel>('user_personas');
 const topicsCol = database.get<UserTopicModel>('user_topics');
+const linksCol = database.get<FactTopicLinkModel>('fact_topic_links');
 
 // --- Persist ---
 
@@ -22,8 +23,10 @@ export async function persistUserPersona(
   persona: UserPersona,
 ): Promise<void> {
   await database.write(async () => {
-    // Delete existing persona data for this user (replace strategy)
-    const existingPersonas = await personasCol.query(Q.where('user_id', userId)).fetch();
+    // Wipe ALL personas, their topics, and their fact_topic_links — only one
+    // user's data should ever live on-device at a time. This prevents orphaned
+    // persona data from accumulating when the server-side user ID changes.
+    const existingPersonas = await personasCol.query().fetch();
     const deleteOps: any[] = [];
 
     for (const p of existingPersonas) {
@@ -31,6 +34,11 @@ export async function persistUserPersona(
       deleteOps.push(...topics.map((t) => t.prepareDestroyPermanently()));
       deleteOps.push(p.prepareDestroyPermanently());
     }
+
+    // Clear all fact_topic_links — backfillFactTopicLinks rebuilds them
+    // correctly for the incoming persona's topics.
+    const existingLinks = await linksCol.query().fetch();
+    deleteOps.push(...existingLinks.map((l) => l.prepareDestroyPermanently()));
 
     if (deleteOps.length > 0) {
       await database.batch(deleteOps);

@@ -645,5 +645,28 @@ export default schemaMigrations({
         ),
       ],
     },
+    {
+      toVersion: 28,
+      steps: [
+        // Purge orphaned personas and topics from accounts other than the
+        // currently logged-in user. Only one user's data should live on-device
+        // at a time; persistUserPersona now enforces this going forward.
+        unsafeExecuteSql(
+          "DELETE FROM user_topics WHERE user_persona_id IN (SELECT id FROM user_personas WHERE user_id != (SELECT value FROM settings WHERE key = 'cached_user_id'));",
+        ),
+        unsafeExecuteSql(
+          "DELETE FROM user_personas WHERE user_id != (SELECT value FROM settings WHERE key = 'cached_user_id');",
+        ),
+        // Remove fact_topic_links that reference topics that no longer exist.
+        // backfillFactTopicLinks rebuilds the correct links on next launch.
+        unsafeExecuteSql(
+          'DELETE FROM fact_topic_links WHERE server_topic_id NOT IN (SELECT server_id FROM user_topics);',
+        ),
+        // Clear the stale failed-sync snapshot so the machine starts fresh.
+        unsafeExecuteSql(
+          "DELETE FROM settings WHERE key = 'feed_sync_machine_state';",
+        ),
+      ],
+    },
   ],
 });
