@@ -133,11 +133,22 @@ export async function markStaleCrashedJobs(): Promise<void> {
 
 export async function pruneOldJobs(olderThanMs = 7 * 24 * 60 * 60 * 1000): Promise<void> {
   const cutoff = Date.now() - olderThanMs;
+  // Retrying jobs whose retry_at is more than STALE_JOB_AGE_MS in the past
+  // are effectively dead — their setTimeout was lost when the app was killed.
+  // pruneOldJobs is the only cleanup path for these since markStaleCrashedJobs
+  // only targets 'running' status.
+  const deadRetryCutoff = Date.now() - STALE_JOB_AGE_MS;
   const rows = await database.get<SchedulerJobModel>('scheduler_jobs')
     .query(
-      Q.and(
-        Q.where('status', Q.oneOf(['completed', 'failed', 'stale', 'cancelled'])),
-        Q.where('scheduled_at', Q.lt(cutoff)),
+      Q.or(
+        Q.and(
+          Q.where('status', Q.oneOf(['completed', 'failed', 'stale', 'cancelled'])),
+          Q.where('scheduled_at', Q.lt(cutoff)),
+        ),
+        Q.and(
+          Q.where('status', 'retrying'),
+          Q.where('retry_at', Q.lt(deadRetryCutoff)),
+        ),
       ),
     )
     .fetch();

@@ -20,8 +20,10 @@ import logger from '@/lib/logger';
 import {
   getCycleState,
   getPendingAsyncJob,
+  setCycleState,
   type InferenceCycleState,
 } from '@/lib/database/services/async-job-service';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import { reconcileAsyncJobResults } from './async-job-reconciler';
 
 const TAG = '[cycle-state-machine]';
@@ -40,6 +42,18 @@ export async function recoverCycle(): Promise<InferenceCycleState> {
   const pending = await getPendingAsyncJob();
 
   if (state === 'idle' && !pending) {
+    return 'idle';
+  }
+
+  // Orphaned state: the cycle was interrupted (app kill, DB reset, migration)
+  // and the pending job was cleared, but the cycle state key wasn't reset.
+  // The reconciler returns 'completed' early when pending is null without
+  // touching cycleState, so without this guard recoverCycle would re-read the
+  // stale state and block new scoring runs indefinitely.
+  if (!pending) {
+    logger.warn(`${TAG} orphaned cycle state=${state} with no pending job — resetting to idle`);
+    await setCycleState('idle');
+    useForYouStore.getState().setAsyncJobPhase('idle');
     return 'idle';
   }
 

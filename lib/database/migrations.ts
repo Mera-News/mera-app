@@ -668,5 +668,24 @@ export default schemaMigrations({
         ),
       ],
     },
+    {
+      toVersion: 29,
+      steps: [
+        // Clear stuck inference cycle state. The reconciler returns early when
+        // there is no pending job without resetting cycleState, so any non-idle
+        // value left here after a DB reset / migration blocks new scoring runs
+        // until recoverCycle detects the orphaned state and self-corrects.
+        // Deleting these settings here ensures existing installs that applied
+        // v28 but never launched after the recoverCycle fix get unblocked.
+        unsafeExecuteSql(
+          "DELETE FROM settings WHERE key IN ('inference_cycle_state', 'inference_cycle_notif_dispatched_for');",
+        ),
+        // Prune retrying scheduler jobs whose setTimeout timers were lost on
+        // app kill. pruneOldJobs skips 'retrying' status, so these accumulate
+        // indefinitely. Deleting them here is safe: the tasks will be
+        // re-triggered on the next scheduler run.
+        unsafeExecuteSql("DELETE FROM scheduler_jobs WHERE status = 'retrying';"),
+      ],
+    },
   ],
 });
