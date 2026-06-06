@@ -629,5 +629,21 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 27,
+      steps: [
+        // Clear ephemeral caches and stale state from the old article
+        // suggestion flow (pre-flow-v2). Preserves user-owned data:
+        // facts, user_personas, user_topics, fact_topic_links, publication_visits.
+        unsafeExecuteSql('DELETE FROM article_suggestions;'),
+        unsafeExecuteSql('DELETE FROM article_suggestion_facts;'),
+        unsafeExecuteSql('DELETE FROM inference_jobs;'),
+        unsafeExecuteSql('DELETE FROM scheduler_jobs;'),
+        // Stale settings from the v1 sync flow and old user-id tracking
+        unsafeExecuteSql(
+          "DELETE FROM settings WHERE key IN ('synced_ids_last_fetched_at', 'feed_sync_machine_state', 'feed_metadata', 'last_authenticated_user_id');",
+        ),
+      ],
+    },
   ],
 });

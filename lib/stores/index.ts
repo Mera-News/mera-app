@@ -77,11 +77,15 @@ export const clearAllStores = async () => {
 };
 
 /**
- * Disabled: previously wiped local data on user-id change. Re-enable via an
- * explicit "switch account" action if multi-account support is added back —
- * the post-auth routing screen runs on every cold start and any race with
- * the async hydration of `lastAuthenticatedUserId` could nuke the feed.
+ * Called on every cold start from logged-in/index.tsx before setting the
+ * active userId. Reads `cached_user_id` directly from the DB (no Zustand
+ * hydration needed, so no race) and wipes all local state when the session
+ * belongs to a different user than the one whose data is on-device.
  */
-export const clearPreviousUserData = async (_newUserId: string): Promise<void> => {
-    // no-op
+export const clearPreviousUserData = async (newUserId: string): Promise<void> => {
+    const { getSetting } = require('../database/services/setting-service');
+    const cachedUserId = await getSetting('cached_user_id');
+    if (cachedUserId && cachedUserId !== newUserId) {
+        await clearAllStores();
+    }
 };

@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 26,
+  version: 27,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
