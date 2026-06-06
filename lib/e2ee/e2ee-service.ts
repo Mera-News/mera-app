@@ -13,6 +13,7 @@ import { randomBytes } from '@noble/ciphers/utils.js';
 
 import { getJwtToken } from '../auth-client';
 import logger from '../logger';
+import { withRetry } from '../utils/retry';
 import { getCachedAttestation, setCachedAttestation } from './e2ee-cache';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 
@@ -89,13 +90,19 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
   const url =
     `${ATTESTATION_API}?model=${encodeURIComponent(model)}&signing_algo=ed25519`;
 
-  let res: Response;
-  try {
-    res = await fetchWithTimeout(url, { headers });
-  } catch {
-    logger.warn(`${TAG} attestation fetch failed, retrying once`);
-    res = await fetchWithTimeout(url, { headers });
-  }
+  const res = await withRetry(
+    async () => {
+      const r = await fetchWithTimeout(url, { headers });
+      if (r.status >= 500) {
+        const body = await r.text().catch(() => '');
+        throw new Error(`NEAR attestation failed (${r.status}): ${body.slice(0, 200)}`);
+      }
+      return r;
+    },
+    undefined,
+    5,
+    TAG,
+  );
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new Error(`NEAR attestation failed (${res.status}): ${body.slice(0, 200)}`);

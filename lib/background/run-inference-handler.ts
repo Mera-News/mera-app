@@ -13,7 +13,10 @@
 import logger from '@/lib/logger';
 import { getPendingAsyncJob } from '@/lib/database/services/async-job-service';
 import { submitInferenceJob } from '@/lib/llm/submitInferenceJob';
-import { reconcileAsyncJobResults } from '@/lib/services/async-job-reconciler';
+import {
+  reconcileAsyncJobResults,
+  submitOrphanedReasonJob,
+} from '@/lib/services/async-job-reconciler';
 import { contextForCycleReason } from '@/lib/llm/execution-context';
 
 export type CycleReason =
@@ -78,7 +81,13 @@ export async function runBackgroundCycle(
         await reconcileAsyncJobResults(context, pending.requestId),
       );
     }
-    return mapSubmit(await submitInferenceJob());
+    const submitResult = await submitInferenceJob();
+    // No new unscored candidates — check for orphaned scored-without-reason rows
+    // (relevance set but reason generation lost due to crash/expiry).
+    if (submitResult === 'skipped-empty') {
+      return mapSubmit(await submitOrphanedReasonJob(context));
+    }
+    return mapSubmit(submitResult);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     // Keychain items written with WhenUnlocked are unreadable from a
@@ -112,7 +121,8 @@ function mapSubmit(
     | 'skipped-pending'
     | 'skipped-empty'
     | 'skipped-no-token'
-    | 'skipped-stale-pending',
+    | 'skipped-stale-pending'
+    | 'error',
 ): RunHandlerResult {
   switch (status) {
     case 'submitted':
@@ -124,6 +134,7 @@ function mapSubmit(
     case 'skipped-pending':
     case 'skipped-stale-pending':
       return 'skipped-pending';
+    case 'error':
     default:
       return 'error';
   }

@@ -94,6 +94,13 @@
       "mustReturnNotificationTitle": "Please return to Mera",
       "mustReturnNotificationBody": "We’re still fetching your news to your phone. Open Mera so we can finish — it only takes a few seconds.",
       "stages": {
+        "fetching": {
+          "headlines": [
+            "Fetching today’s articles onto your phone…",
+            "Mera brings the news to your device — your interests never leave it."
+          ],
+          "amberSubline": "Please keep this screen open."
+        },
         "sending": {
           "shortName": "Asking for today’s news",
           "tooltip": "Mera is preparing your encrypted request on your phone. Please keep the app open for this part.",
@@ -107,10 +114,10 @@
           "shortName": "Fetching to your phone",
           "tooltip": "Today’s articles are being copied to your phone so the next steps can run privately.",
           "headlines": [
-            "Bringing today’s articles onto your phone…",
-            "Most apps send your habits out to figure you out. Mera works the other way — it brings the news in."
+            "Fetching today’s articles onto your phone…",
+            "Mera brings the news to your device — your interests never leave it."
           ],
-          "amberSubline": "Almost there — please stay on this screen."
+          "amberSubline": "Please keep this screen open."
         },
         "noiseRemoval": {
           "shortName": "Removing decoys",
@@ -121,35 +128,36 @@
           ]
         },
         "cloudRelevance": {
-          "shortName": "Reading articles for you",
+          "shortName": "Calculating relevance",
           "tooltip": "An AI in the cloud is reading each article and picking what may matter to you. Your request is encrypted — only your phone holds the key.",
           "headlines": [
-            "An AI in the cloud is now reading each article, one by one, to see which ones matter to you.",
-            "You can leave the app — we’ll send you a notification when it’s ready. This can take a while if there are many articles to read.",
-            "Your request is encrypted on your phone before it leaves — only your phone holds the key to read the answer.",
-            "Your interests travel with the request — encrypted — so the AI can pick what matters.",
-            "The encrypted request is opened only inside a closed, tamper-proof environment called a TEE  that no absolutely one can see into.",
-            "Our own servers only see encrypted blobs they can’t read — and once the answer reaches your phone, they’re deleted."
+            "An AI is reading each article to see which ones matter to you.",
+            "Your request is encrypted — only your phone holds the key."
           ]
         },
         "cloudReasons": {
           "shortName": "Writing notes for you",
           "tooltip": "The AI is writing a short note for each story explaining why it may matter to you. The request stays encrypted.",
           "headlines": [
-            "The AI is now writing a short note for each story — why this one matters to you.",
-            "You can step away — we’ll let you know the moment it’s ready.",
-            "Same encrypted request — only your phone can decrypt the answer."
+            "Writing a short note for each relevant story.",
+            "You can step away — we’ll notify you when it’s ready."
           ]
         },
         "onDevice": {
-          "shortName": "Sorting on your phone",
-          "tooltip": "Your phone is doing the final sorting locally. Nothing leaves the device for this step.",
+          "shortName": "Scoring on your phone",
+          "tooltip": "Your phone is scoring these stories locally. Nothing leaves the device for this step.",
           "headlines": [
-            "Your phone is sorting these stories for you…",
-            "This part happens right here on your device — nothing leaves it, so no encryption is needed.",
-            "Almost done."
+            "Your phone is scoring these stories for you.",
+            "This happens entirely on your device — nothing leaves it."
           ]
         }
+      },
+      "syncToast": {
+        "relevanceTitle": "Calculating relevance",
+        "reasonsTitle": "Writing notes for you",
+        "onDeviceTitle": "Scoring on your phone",
+        "completedTitle": "All done",
+        "completedMessage": "Your feed is ready"
       }
     }
   },

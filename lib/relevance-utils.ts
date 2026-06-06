@@ -24,6 +24,7 @@ const DISPLAY_SECTION_LABELS: Record<string, string> = {
     'High Priority Articles': 'Major impact',
     'Medium Priority Articles': 'Notable impact',
     'Low Priority Articles': 'Good to know',
+    'Unscored Articles': 'Unscored',
 };
 
 export const getDisplaySectionLabel = (label: string): string =>

@@ -5,6 +5,7 @@
 
 import { fetch as expoFetch } from 'expo/fetch';
 import logger from '@/lib/logger';
+import { withRetry } from '@/lib/utils/retry';
 import {
   setCapabilityToken,
   getCapabilityToken,
@@ -299,18 +300,39 @@ export async function sendInferenceRequest(args: {
     authHeader = `Bearer ${cap}`;
   }
 
-  const res = await (expoFetch as unknown as typeof globalThis.fetch)(
-    JOBS_API,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Encoding': 'gzip',
-        Authorization: authHeader,
+  let res: Response;
+  try {
+    res = await withRetry(
+      async () => {
+        const r = await (expoFetch as unknown as typeof globalThis.fetch)(
+          JOBS_API,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Encoding': 'gzip',
+              Authorization: authHeader,
+            },
+            body: gzipped as unknown as BodyInit,
+          },
+        );
+        if (r.status >= 500) {
+          const text = await r.text().catch(() => '');
+          throw new Error(`${TAG} submit failed (${r.status}): ${text.slice(0, 200)}`);
+        }
+        return r;
       },
-      body: gzipped as unknown as BodyInit,
-    },
-  );
+      undefined,
+      4,
+      TAG,
+    );
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'submitInferenceJob', status: 'retry-exhausted' },
+      extra: { url: JOBS_API },
+    });
+    return null;
+  }
 
   if (res.status !== 202) {
     const text = await res.text().catch(() => '');

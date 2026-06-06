@@ -36,7 +36,9 @@ import {
   type PendingAsyncJob,
 } from '@/lib/database/services/async-job-service';
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import {
+  batchMarkReasonSkipped,
   deleteSuggestionsByServerIds,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
@@ -801,6 +803,144 @@ async function discardLowRelevance(
   });
   if (toDiscard.length === 0) return 0;
   return await deleteSuggestionsByServerIds(toDiscard);
+}
+
+/**
+ * Recovery path: submit a reason-generation job for article_suggestion rows
+ * that have relevance scores (phase-1 done) but no reasons (phase-2 lost).
+ *
+ * Called by runBackgroundCycle when submitInferenceJob returns 'skipped-empty'
+ * (no new candidates to score) but orphaned scored-without-reason rows exist.
+ * Uses the stored bucketed relevance values in place of raw pre-bucket scores
+ * since those are not persisted past phase-1 reconciliation.
+ */
+export async function submitOrphanedReasonJob(
+  context: ExecutionContext,
+): Promise<'submitted' | 'skipped-pending' | 'skipped-empty' | 'skipped-no-token' | 'error'> {
+  const pending = await getPendingAsyncJob();
+  if (pending) {
+    logger.info(`${TAG} [orphan-reason] skipped — pending job exists (${pending.requestId})`);
+    return 'skipped-pending';
+  }
+
+  const candidates = await getScoredSuggestionsWithoutReasons();
+  const qualified = candidates.filter(
+    (c) => typeof c.relevance === 'number' && c.relevance > REASON_RELEVANCE_THRESHOLD,
+  );
+  logger.info(
+    `${TAG} [orphan-reason] DB scan: total_orphaned=${candidates.length} qualified_above_threshold=${qualified.length} (threshold=${REASON_RELEVANCE_THRESHOLD})`,
+  );
+  if (qualified.length === 0) return 'skipped-empty';
+
+  const token = useUserStore.getState().userPersona?.expoPushToken ?? null;
+  if (!token) {
+    logger.captureMessage(
+      `${TAG} [orphan-reason] no Expo push token — cannot submit`,
+      { level: 'warning', tags: { service: 'async-job-reconciler', step: 'orphan-reason' } },
+    );
+    return 'skipped-no-token';
+  }
+
+  // Build relevance map from stored (bucketed) values. Raw pre-bucket scores
+  // are not persisted; REASON_MIN_RAW_SCORE=0 means all threshold-passing rows
+  // still qualify.
+  const rawRelevanceMap: Record<string, number> = {};
+  for (const c of qualified) rawRelevanceMap[c.id] = c.relevance!;
+
+  const reasonBundle = await buildReasonCallsForSubset(
+    qualified,
+    rawRelevanceMap,
+    REASON_RELEVANCE_THRESHOLD,
+  );
+
+  // Candidates excluded by isEligible (no title/desc/facts) will never get a
+  // reason — mark them skipped now so they stop showing the loading spinner.
+  const eligibleIds = new Set(reasonBundle.eligibleCandidates.map((c) => c.id));
+  const ineligibleOrphans = qualified.filter((c) => !eligibleIds.has(c.id));
+  if (ineligibleOrphans.length > 0) {
+    logger.info(
+      `${TAG} [orphan-reason] marking ${ineligibleOrphans.length} ineligible orphans as reason-skipped (missing title/desc/facts)`,
+    );
+    await batchMarkReasonSkipped(ineligibleOrphans.map((c) => c.id));
+    const { refreshSuggestionsInStoreUnsafe } = await import('./SuggestionSyncService');
+    await refreshSuggestionsInStoreUnsafe();
+  }
+
+  logger.info(
+    `${TAG} [orphan-reason] bundle: eligible=${reasonBundle.eligibleCandidates.length} calls=${reasonBundle.calls.length} ineligible_skipped=${ineligibleOrphans.length}`,
+  );
+  if (reasonBundle.calls.length === 0) {
+    logger.info(`${TAG} [orphan-reason] 0 eligible calls — all qualified rows ineligible (already marked skipped)`);
+    return 'skipped-empty';
+  }
+
+  logger.info(
+    `${TAG} [orphan-reason] submitting ${reasonBundle.calls.length} calls for ${qualified.length} orphaned rows`,
+  );
+
+  await setCycleState('submitting-reason');
+  const phase2Model = SMALL_MODEL;
+  const ctx = await prepareE2EEContext(phase2Model);
+  const idempotencyKey = `orphan-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+
+  const placeholderRequestId = makePlaceholderRequestId();
+  const placeholder: PendingAsyncJob = {
+    requestId: placeholderRequestId,
+    phase: 'reasons',
+    candidateIds: reasonBundle.eligibleCandidates.map((c) => c.id),
+    callIds: reasonBundle.calls.map((c) => c.id),
+    relevanceMap: rawRelevanceMap,
+    submittedAt: Date.now(),
+    expoPushToken: token,
+    modelCalls: reasonBundle.calls.length,
+    clientPrivKeyHex: bytesToHex(ctx.privateKey),
+    idempotencyKey,
+  };
+
+  try {
+    await setPendingAsyncJob(placeholder, { expectedRequestId: null });
+  } catch (err) {
+    if (err instanceof PendingJobStaleError) {
+      logger.warn(`${TAG} [orphan-reason] CAS lost — concurrent submitter claimed slot`);
+      await setCycleState('idle');
+      return 'skipped-pending';
+    }
+    throw err;
+  }
+
+  const newRequestId = await sendInferenceRequest({
+    bundle: reasonBundle,
+    ctx,
+    token,
+    model: phase2Model,
+    context,
+  });
+
+  if (!newRequestId) {
+    logger.warn(`${TAG} [orphan-reason] submit failed — clearing placeholder`);
+    await clearPendingAsyncJob({ expectedRequestId: placeholderRequestId }).catch(
+      (err: unknown) => {
+        if (!(err instanceof PendingJobStaleError)) throw err;
+      },
+    );
+    await clearCapabilityToken();
+    await setCycleState('idle');
+    useForYouStore.getState().setAsyncJobPhase('idle');
+    return 'error';
+  }
+
+  const job: PendingAsyncJob = {
+    ...placeholder,
+    requestId: newRequestId,
+    submittedAt: Date.now(),
+  };
+  await setPendingAsyncJob(job, { expectedRequestId: placeholderRequestId });
+  await setCycleState('waiting-for-reason');
+  useForYouStore.getState().setAsyncJobPhase('reasons');
+  logger.info(
+    `${TAG} [orphan-reason] submitted requestId=${newRequestId} calls=${reasonBundle.calls.length}`,
+  );
+  return 'submitted';
 }
 
 /**

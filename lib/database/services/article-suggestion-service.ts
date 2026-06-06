@@ -257,6 +257,24 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
 }
 
 /**
+ * Mark already-scored rows as reason-skipped (no eligible facts/title) in one
+ * batched write. Keeps existing relevance; reason stays ''.
+ */
+export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = await Promise.all(ids.map((id) => articleSuggestionsCol.find(id)));
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.reasonGenerationCompleted = true;
+        }),
+      ),
+    );
+  });
+}
+
+/**
  * Updates the reason for an already-scored row.
  */
 export async function saveReason(

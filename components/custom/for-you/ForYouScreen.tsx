@@ -1,13 +1,9 @@
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ArticleCountText from '@/components/custom/ArticleCountText';
 import { ArticleCard } from '@/components/custom/ArticleCard';
-import MeraProtocolProcessingStatus, { ProcessingStage, deriveProcessingStage } from '@/components/custom/MeraProtocolProcessingStatus';
-import { useForYouSyncStatusMessage } from '@/lib/stores/selectors';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import MeraLogo from '@/components/custom/MeraLogo';
-import HeaderProgressBar from '@/components/custom/for-you/HeaderProgressBar';
-import OnDeviceProcessingBanner from '@/components/custom/for-you/OnDeviceProcessingBanner';
 import { StackedCards } from '@/components/custom/for-you/StackedCards';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
@@ -24,23 +20,17 @@ import logger from '@/lib/logger';
 import { getDisplaySectionLabel, getRelevanceLabel } from '@/lib/relevance-utils';
 import { ForYouSuggestion, useForYouStore } from '@/lib/stores/for-you-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
-import { useForYouPrefsStore } from '@/lib/stores/for-you-prefs-store';
-import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
-import { useInjectNoise, useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
     getForYouActions,
     useForYouCounts,
-    useForYouAsyncJobTotalCount,
     useForYouAsyncJobPhase,
-    useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
-    useForYouHydrationProgress,
     useForYouLastProcessingRunFinishedAt,
     useForYouNoisyDiscardedCount,
     useForYouPagination,
     useForYouSuggestions,
-    useForYouUnscoredCount,
+    useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useIsConnected } from '@/lib/stores/network-store';
@@ -97,19 +87,11 @@ const MeraNewsScreen: React.FC = () => {
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
     const { articleCount } = useForYouCounts();
     const { hasNextPage } = useForYouPagination();
-    const unscoredCount = useForYouUnscoredCount();
-    const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
     const asyncJobPhase = useForYouAsyncJobPhase();
-    const asyncJobTotalCount = useForYouAsyncJobTotalCount();
     const syncStatusMessage = useForYouSyncStatusMessage();
-    const { hydrationCompleted, hydrationTotal } = useForYouHydrationProgress();
     const noisyDiscardedCount = useForYouNoisyDiscardedCount();
     const injectNoiseEnabled = useInjectNoise();
-    const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
-    const recent24hOnly = useForYouPrefsStore((s) => s.recent24hOnly);
-    const prefsHydrated = useForYouPrefsStore((s) => s.hydrated);
-    const setRecent24hOnly = useForYouPrefsStore((s) => s.setRecent24hOnly);
     const [nowTick, setNowTick] = useState(() => Date.now());
 
     useEffect(() => {
@@ -130,54 +112,23 @@ const MeraNewsScreen: React.FC = () => {
         return `${diffDay}d ago`;
     }, [lastProcessingRunFinishedAt, nowTick]);
 
-    // Derive the current processing stage from the live store fields, then
-    // hold a "done" flash for 2s after the last active stage clears so the
-    // user gets a satisfying confirmation before the article-count line
-    // fades back in.
-    const liveStage = useMemo(
-        () => deriveProcessingStage(isOnDeviceProcessing && isDeviceProcessing, asyncJobPhase, syncStatusMessage, hydrationTotal),
-        [isOnDeviceProcessing, isDeviceProcessing, asyncJobPhase, syncStatusMessage, hydrationTotal],
-    );
-    const [displayStage, setDisplayStage] = useState<ProcessingStage>(liveStage);
-    const prevActiveRef = useRef(false);
-    const prevWasErrorRef = useRef(false);
-    useEffect(() => {
-        const isLiveActive = liveStage !== 'idle';
-        if (prevActiveRef.current && !isLiveActive) {
-            // Don't flash 'done' if we just left the error state — error
-            // clears when the user retries (or sync restarts), and a green
-            // checkmark right after a red error reads as a false success.
-            if (!prevWasErrorRef.current) {
-                setDisplayStage('done');
-                const id = setTimeout(() => setDisplayStage('idle'), 2000);
-                prevActiveRef.current = false;
-                prevWasErrorRef.current = false;
-                return () => clearTimeout(id);
-            }
-            setDisplayStage('idle');
-            prevActiveRef.current = false;
-            prevWasErrorRef.current = false;
-            return;
-        }
-        setDisplayStage(liveStage);
-        if (isLiveActive) prevActiveRef.current = true;
-        prevWasErrorRef.current = liveStage === 'error';
-    }, [liveStage]);
-    const showStatus = displayStage !== 'idle';
-    const showBanner = showStatus && displayStage !== 'hydrating';
+    // Stage 1 is active only when the sync machine is actually downloading new
+    // articles (hydrating/persisting). If the diff returned nothing, we go
+    // straight from diffing → scoring, so isStage1Active stays false and no
+    // header UI is shown — satisfying the "no UI if no data" requirement.
+    const isStage1Active =
+        syncStatusMessage?.state === 'hydrating' ||
+        syncStatusMessage?.state === 'persisting';
 
-    // When the user backgrounds the app during a stage that can't run in the
-    // background (the device-bound fetch), fire a local notification asking
-    // them to return. Dismiss it once they're back. Read displayStage via a
-    // ref so the AppState listener always sees the latest value without
-    // re-subscribing on every stage change.
-    const displayStageRef = useRef(displayStage);
-    useEffect(() => { displayStageRef.current = displayStage; }, [displayStage]);
+    // When the user backgrounds the app during article hydration, fire a local
+    // notification asking them to return. Dismiss it once they're back.
+    const syncStateRef = useRef(syncStatusMessage?.state);
+    useEffect(() => { syncStateRef.current = syncStatusMessage?.state; }, [syncStatusMessage?.state]);
     useEffect(() => {
         let scheduledId: string | null = null;
         const onChange = async (next: AppStateStatus) => {
-            const st = displayStageRef.current;
-            const mustStay = st === 'sending' || st === 'hydrating';
+            const st = syncStateRef.current;
+            const mustStay = st === 'hydrating' || st === 'persisting';
             if ((next === 'background' || next === 'inactive') && mustStay) {
                 try {
                     scheduledId = await Notifications.scheduleNotificationAsync({
@@ -210,6 +161,23 @@ const MeraNewsScreen: React.FC = () => {
         }
         return { analysedCount: analysed, relevantCount: relevant };
     }, [suggestions]);
+
+    // Stage-1 header cycling text (shown during hydrating/persisting).
+    const stage1Headlines = t('feed.processing.stages.fetching.headlines', {
+        returnObjects: true,
+        defaultValue: [],
+    }) as string[];
+    const stage1AmberSubline = t('feed.processing.stages.fetching.amberSubline', { defaultValue: '' });
+    const [stage1HeadlineIndex, setStage1HeadlineIndex] = useState(0);
+    useEffect(() => {
+        if (!isStage1Active) { setStage1HeadlineIndex(0); return; }
+        if (stage1Headlines.length <= 1) return;
+        const interval = setInterval(
+            () => setStage1HeadlineIndex((i) => (i + 1) % stage1Headlines.length),
+            5000,
+        );
+        return () => clearInterval(interval);
+    }, [isStage1Active, stage1Headlines.length]);
 
     const { setHasGeneratedTopics } = getForYouActions();
 
@@ -334,10 +302,8 @@ const MeraNewsScreen: React.FC = () => {
         const visible = suggestions.filter((s) => {
             if (!s.relevanceGenerationCompleted) return false;
             if (s.relevance <= 0.3) return false;
-            if (recent24hOnly) {
-                const t = pubDateMs(s);
-                if (t === -Infinity || t < cutoffMs) return false;
-            }
+            const t = pubDateMs(s);
+            if (t === -Infinity || t < cutoffMs) return false;
             return true;
         });
 
@@ -410,8 +376,20 @@ const MeraNewsScreen: React.FC = () => {
             }
         }
 
+        // Unscored section — articles that have been fetched but not yet scored.
+        // Sorted by newest-first since relevance isn't known yet.
+        const unscored = suggestions
+            .filter((s) => !s.relevanceGenerationCompleted)
+            .sort((a, b) => pubDateMs(b) - pubDateMs(a));
+        if (unscored.length > 0) {
+            items.push({ type: 'priority-label', label: 'Unscored Articles', relevance: -1 });
+            for (const s of unscored) {
+                items.push({ type: 'suggestion', data: s });
+            }
+        }
+
         return items;
-    }, [suggestions, recent24hOnly]);
+    }, [suggestions]);
 
     const availableSections = useMemo((): SectionItem[] => {
         const seen = new Set<string>();
@@ -426,6 +404,32 @@ const MeraNewsScreen: React.FC = () => {
         }
         return result;
     }, [listData]);
+
+    // Log reason coverage stats whenever suggestions change so we can diagnose
+    // orphaned rows (relevance done, reason missing).
+    useEffect(() => {
+        if (suggestions.length === 0) return;
+        const scored = suggestions.filter((s) => s.relevanceGenerationCompleted);
+        const withReason = scored.filter((s) => s.reasonGenerationCompleted && !!s.reason);
+        const orphaned = scored.filter((s) => !s.reasonGenerationCompleted);
+        const orphanedAboveThreshold = orphaned.filter((s) => s.relevance > 0.3);
+        const orphanedBelowThreshold = orphaned.filter((s) => s.relevance <= 0.3);
+        logger.info(
+            `[ForYou] reason coverage: total=${suggestions.length} scored=${scored.length} withReason=${withReason.length} orphaned=${orphaned.length} (above0.3=${orphanedAboveThreshold.length} below0.3=${orphanedBelowThreshold.length})`,
+        );
+        if (orphanedAboveThreshold.length > 0) {
+            logger.info(
+                `[ForYou] orphaned above-threshold sample (first 3): ${JSON.stringify(
+                    orphanedAboveThreshold.slice(0, 3).map((s) => ({
+                        id: s._id,
+                        relevance: s.relevance,
+                        reason: s.reason ?? null,
+                    })),
+                )}`,
+            );
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [suggestions.length]);
 
     // Hide the onboarding waiting card once the first scored, relevant card is ready.
     useEffect(() => {
@@ -584,20 +588,8 @@ const MeraNewsScreen: React.FC = () => {
             return <NoGeneratedInterestsCard />;
         }
 
-        // Don't claim "all caught up" while unscored candidates are still
-        // sitting in the local DB — scoring is either in-flight on the
-        // backend or recoverable on next tick. The header progress UI
-        // (driven by `showStatus`) communicates the in-flight state.
-        if (unscoredCount > 0) {
-            return (
-                <Box className="items-center justify-center py-20">
-                    <Spinner size="large" />
-                </Box>
-            );
-        }
-
         return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, unscoredCount, stuckOnEmpty]);
+    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty]);
 
     const ListFooterComponent = useCallback(() => {
         if (isLoadingMore) {
@@ -669,10 +661,10 @@ const MeraNewsScreen: React.FC = () => {
     return (
         <Box className="flex-1 bg-black">
             <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
-                {/* Header with For you title and Config FAB */}
+                {/* Header with For you title/logo and Config FAB */}
                 <HStack className="items-center justify-between mb-2">
                     <HStack className="items-center" space="sm">
-                        {showStatus ? (
+                        {isStage1Active ? (
                             <Animated.View
                                 key="header-logo"
                                 entering={FadeIn.duration(250)}
@@ -689,94 +681,53 @@ const MeraNewsScreen: React.FC = () => {
                                 <Heading size="3xl" className="text-white">{t('feed.forYou')}</Heading>
                             </Animated.View>
                         )}
-                        {lastProcessedLabel && (
+                        {isStage1Active ? (
+                            <Text size="sm" className="text-amber-400">
+                                {stage1AmberSubline}
+                            </Text>
+                        ) : lastProcessedLabel ? (
                             <Text size="sm" className="text-gray-400">
                                 {`Updated ${lastProcessedLabel}`}
                             </Text>
-                        )}
+                        ) : null}
                     </HStack>
-                    <HStack className="items-center" space="sm">
-                        <HStack className="items-center" space="xs">
-                            <Tooltip
-                                placement="bottom"
-                                trigger={(triggerProps) => (
-                                    <Pressable {...triggerProps} hitSlop={8}>
-                                        <Text size="xs" className="text-gray-400">24h</Text>
-                                    </Pressable>
-                                )}
-                            >
-                                <TooltipContent className="bg-gray-800 py-1.5 px-3 rounded-md max-w-64">
-                                    <TooltipText className="text-xs text-white">
-                                        Only show articles published within the last 24 hours
-                                    </TooltipText>
-                                </TooltipContent>
-                            </Tooltip>
-                            <Switch
-                                size="sm"
-                                value={prefsHydrated ? recent24hOnly : false}
-                                onValueChange={setRecent24hOnly}
-                                disabled={!prefsHydrated}
-                                trackColor={{ false: '#374151', true: '#7f1d1d' }}
-                                thumbColor={recent24hOnly ? '#fca5a5' : '#9ca3af'}
-                            />
-                        </HStack>
-                        <Pressable
-                            onPress={openConfigPanel}
-                            hitSlop={12}
-                            className="p-3 rounded-full bg-primary-500"
-                        >
-                            <Icon as={SettingsIcon} size="xl" className="text-white" />
-                        </Pressable>
-                    </HStack>
+                    <Pressable
+                        onPress={openConfigPanel}
+                        hitSlop={12}
+                        className="p-3 rounded-full bg-primary-500"
+                    >
+                        <Icon as={SettingsIcon} size="xl" className="text-white" />
+                    </Pressable>
                 </HStack>
-                <OnDeviceProcessingBanner />
-                {/* Fixed-height slot: status and article count cross-fade in
-                    place so the FlatList below never shifts. The thin
-                    progress bar sits at the bottom edge of this slot. */}
-                <Box style={{ minHeight: 76, position: 'relative', overflow: 'hidden', paddingBottom: 22 }} className="justify-center">
-                    {showBanner ? (
-                        <Animated.View
-                            key="status"
-                            entering={FadeIn.duration(250)}
-                            exiting={FadeOut.duration(250)}
-                        >
-                            <MeraProtocolProcessingStatus
-                                stage={displayStage}
-                                syncStatusMessage={syncStatusMessage}
-                                processedCount={deviceProcessedCount}
-                                totalCount={deviceTotalCount}
-                                asyncJobTotalCount={asyncJobTotalCount}
-                                hydrationCompleted={hydrationCompleted}
-                                hydrationTotal={hydrationTotal}
-                                errorMessage={syncStatusMessage?.errorCode === 'auth-expired'
-                                    ? undefined
-                                    : null}
-                            />
-                        </Animated.View>
-                    ) : (
-                        <Animated.View
-                            key="count"
-                            entering={FadeIn.duration(250)}
-                            exiting={FadeOut.duration(250)}
-                        >
-                            <ArticleCountText
-                                articlesProcessed={articleCount}
-                                articlesAnalysed={analysedCount}
-                                articlesImpactful={relevantCount}
-                                articlesNoiseRemoved={noisyDiscardedCount}
-                                injectNoiseEnabled={injectNoiseEnabled}
-                                lastSuccessfulCompletedAt={userPersona?.lastSuccessfulCompletedAt}
-                                isLoading={isMetadataLoading}
-                            />
-                        </Animated.View>
-                    )}
-                    {showBanner && (
-                        <HeaderProgressBar
-                            syncStatusMessage={syncStatusMessage}
-                            isDoneFlash={displayStage === 'done' && !syncStatusMessage}
+
+                {/* Stage-1 cycling text — only shown when hydrating/persisting */}
+                {isStage1Active && stage1Headlines.length > 0 && (
+                    <Animated.View
+                        key={`stage1-${stage1HeadlineIndex}`}
+                        entering={FadeIn.duration(300)}
+                        exiting={FadeOut.duration(300)}
+                        className="mb-2"
+                    >
+                        <Text size="sm" className="text-typography-400 leading-5">
+                            {stage1Headlines[stage1HeadlineIndex] ?? stage1Headlines[0]}
+                        </Text>
+                    </Animated.View>
+                )}
+
+                {/* Article count — shown when not in stage 1 */}
+                {!isStage1Active && (
+                    <Box className="mb-2">
+                        <ArticleCountText
+                            articlesProcessed={articleCount}
+                            articlesAnalysed={analysedCount}
+                            articlesImpactful={relevantCount}
+                            articlesNoiseRemoved={noisyDiscardedCount}
+                            injectNoiseEnabled={injectNoiseEnabled}
+                            lastSuccessfulCompletedAt={userPersona?.lastSuccessfulCompletedAt}
+                            isLoading={isMetadataLoading}
                         />
-                    )}
-                </Box>
+                    </Box>
+                )}
                 {availableSections.length > 0 && (
                     <Box className="mt-2 mb-1">
                         <SectionNavigator

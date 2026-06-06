@@ -18,6 +18,7 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
+import SyncProgressToast from '@/components/custom/SyncProgressToast';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
 import database from '@/lib/database';
@@ -170,6 +171,7 @@ export default Sentry.wrap(function RootLayout() {
         <SafeAreaProvider>
         <GluestackUIProvider mode="dark">
           <ToastInitializer />
+          <SyncProgressToast />
           <OTAUpdatePrompt />
           <ErrorBoundary
             level="screen"

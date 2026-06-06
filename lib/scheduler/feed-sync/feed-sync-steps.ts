@@ -13,6 +13,7 @@ import { Q } from '@nozbe/watermelondb';
 import type UserPersonaModel from '@/lib/database/models/UserPersona';
 import type UserTopicModel from '@/lib/database/models/UserTopic';
 import logger from '@/lib/logger';
+import { withRetry } from '@/lib/utils/retry';
 import type { TaskContext } from '../scheduler-types';
 
 export interface FetchTopicIdsResult {
@@ -162,23 +163,3 @@ async function markIneligibleArticlesAsScored(): Promise<number> {
   return ineligible.length;
 }
 
-async function withRetry<T>(
-  op: () => Promise<T>,
-  signal: AbortSignal,
-  maxRetries = 3,
-): Promise<T> {
-  let delay = 100;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    if (signal.aborted) throw new Error('aborted');
-    try {
-      return await op();
-    } catch (err) {
-      if (signal.aborted) throw new Error('aborted');
-      if (attempt === maxRetries) throw err;
-      logger.warn(`[feed-sync-steps] retry ${attempt + 1}/${maxRetries}`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      delay *= 2;
-    }
-  }
-  throw new Error('[feed-sync-steps] withRetry: unexpected exit');
-}
