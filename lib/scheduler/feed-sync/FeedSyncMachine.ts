@@ -2,6 +2,7 @@ import { useNetworkStore } from '@/lib/stores/network-store';
 import logger from '@/lib/logger';
 import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { ArticleService } from '@/lib/article-service';
 import type { TaskContext } from '../scheduler-types';
 import * as feedPersistence from './feed-sync-persistence';
 import * as steps from './feed-sync-steps';
@@ -84,7 +85,20 @@ class FeedSyncMachine {
       await this._awaitResumeIfPaused();
       if (ctx.signal.aborted) return;
 
-      const topicResult = await steps.stepFetchTopicIds(personaId, ctx);
+      const [topicResult, recentCount] = await Promise.all([
+        steps.stepFetchTopicIds(personaId, ctx),
+        ArticleService.getRecentArticleCount().catch((err) => {
+          logger.captureException(err, { tags: { service: 'FeedSyncMachine', method: 'getRecentArticleCount' } });
+          return 0;
+        }),
+      ]);
+      // Record the server-wide 24h article count now so subsequent
+      // refreshSuggestionsInStore calls (which only know about on-device rows)
+      // don't overwrite it. Falls back to the topic-matched count if the query failed.
+      useForYouStore.getState().setCounts(
+        recentCount || topicResult.serverArticleIds.length,
+        useForYouStore.getState().relevantArticleCount,
+      );
 
       // Step 2: diff
       this._transitionTo('diffing');

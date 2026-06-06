@@ -136,8 +136,11 @@ async function refreshSuggestionsInStore(): Promise<void> {
     endCursor: null,
     hasNextPage: true,
   });
-  // setCounts persists articleCount + relevantArticleCount to feed_metadata
-  useForYouStore.getState().setCounts(suggestions.length, relevantArticleCount);
+  // Preserve the server-provided articleCount set by FeedSyncMachine; only
+  // update relevantArticleCount. Fall back to suggestions.length when there
+  // is no server count yet (e.g. a standalone scoring pass after a fresh wipe).
+  const { articleCount } = useForYouStore.getState();
+  useForYouStore.getState().setCounts(articleCount || suggestions.length, relevantArticleCount);
 }
 
 function byRelevanceDesc(

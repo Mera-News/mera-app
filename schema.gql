@@ -220,6 +220,7 @@ type Query {
   """
   articleById(id: ID!): NewsArticle
   articleIdsForTopics(limitPerTopic: Int! = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
+  recentArticleCount: Int!
   articlesForPublicationSource(
     """Cursor to fetch items after"""
     after: String

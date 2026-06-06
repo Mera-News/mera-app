@@ -201,6 +201,12 @@ const GET_RELATED_ARTICLES = gql`
   }
 `;
 
+const GET_RECENT_ARTICLE_COUNT = gql`
+  query GetRecentArticleCount {
+    recentArticleCount
+  }
+`;
+
 // [Flow v2] GraphQL Query: per-topic article IDs with cursor-based pagination.
 // The server checks Redis (30 min TTL) first; on miss it runs a vector search
 // with a hardcoded 24h cutoff. The app diffs the returned IDs against its
@@ -269,6 +275,21 @@ export class ArticleService {
     static getFlooredDateHoursAgo(hoursAgo: number): string {
         const date = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
         return this.getFloorOfHour(date).toISOString();
+    }
+
+    static async getRecentArticleCount(): Promise<number> {
+        try {
+            const { data } = await client.query<{ recentArticleCount: number }>({
+                query: GET_RECENT_ARTICLE_COUNT,
+                fetchPolicy: 'no-cache',
+            });
+            return data?.recentArticleCount ?? 0;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getRecentArticleCount' },
+            });
+            return 0;
+        }
     }
 
     /**
