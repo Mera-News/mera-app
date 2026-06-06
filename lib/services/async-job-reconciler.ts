@@ -37,13 +37,9 @@ import {
 } from '@/lib/database/services/async-job-service';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import {
-  countProcessedSyncedIds,
-  countTotalSyncedIds,
-  countUnprocessedSyncedIds,
   deleteSuggestionsByServerIds,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
-  markSyncedIdsProcessed,
   saveReason,
   saveScoringResult,
   type ScoringCandidate,
@@ -235,13 +231,7 @@ async function reconcileRelevancePhase(
   // The actual phase-2 submit a few hundred lines below also calls
   // setAsyncJobPhase('reasons', ...) with fresh counts; this is just an
   // earlier UI hint.
-  useForYouStore
-    .getState()
-    .setAsyncJobPhase(
-      'reasons',
-      await countProcessedSyncedIds(),
-      await countTotalSyncedIds(),
-    );
+  useForYouStore.getState().setAsyncJobPhase('reasons');
   const privKey = hexToBytes(pending.clientPrivKeyHex);
   const batchResults: BatchCompletionResult[] = server.results.map((r) =>
     toBatchResult(r, privKey),
@@ -340,7 +330,6 @@ async function reconcileRelevancePhase(
     if (discardedCount > 0) {
       logger.info(`${TAG} discarded ${discardedCount} low-relevance rows`);
     }
-    await markSyncedIdsProcessed(pending.candidateIds);
     await finishCycle();
     return 'completed';
   }
@@ -389,7 +378,6 @@ async function reconcileRelevancePhase(
     if (discardedCount > 0) {
       logger.info(`${TAG} discarded ${discardedCount} low-relevance rows`);
     }
-    await markSyncedIdsProcessed(pending.candidateIds);
     await finishCycle();
     return 'completed';
   }
@@ -458,13 +446,7 @@ async function reconcileRelevancePhase(
   };
   await setPendingAsyncJob(next, { expectedRequestId: placeholderRequestId });
   await setCycleState('waiting-for-reason');
-  useForYouStore
-    .getState()
-    .setAsyncJobPhase(
-      'reasons',
-      await countProcessedSyncedIds(),
-      await countTotalSyncedIds(),
-    );
+  useForYouStore.getState().setAsyncJobPhase('reasons');
   logger.info(
     `${TAG} phase=reasons submitted requestId=${newRequestId} calls=${reasonBundle.calls.length}`,
   );
@@ -602,8 +584,6 @@ async function reconcileReasonPhase(
     // Refresh again so the feed reflects the post-discard state.
     await refreshSuggestionsInStoreUnsafe();
   }
-  await markSyncedIdsProcessed(pending.candidateIds);
-
   await finishCycle();
 
   return 'completed';
@@ -829,12 +809,6 @@ async function discardLowRelevance(
  * time we reach here there is nothing left to chain.
  */
 async function finishCycle(): Promise<void> {
-  const remaining = await countUnprocessedSyncedIds();
-  if (remaining > 0) {
-    logger.warn(
-      `${TAG} cycle ended with ${remaining} unprocessed ids — likely a race with a fresh sync; next trigger will pick them up`,
-    );
-  }
   await setCycleState('idle');
   useForYouStore.getState().setAsyncJobPhase('idle');
   useForYouStore.getState().markProcessingRunFinished();

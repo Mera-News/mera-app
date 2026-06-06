@@ -5,7 +5,6 @@ import {
     persistFeedMetadata,
     loadFeedMetadata,
     clearSuggestions,
-    deleteExpiredSuggestions,
 } from '@/lib/database/services/article-suggestion-service';
 import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 
@@ -90,11 +89,6 @@ interface ForYouState {
     syncStatusMessage: SyncStatusMessage | null;
     lastSyncAt: number | null;
 
-    // Cumulative number of article_suggestions discarded as pure-noise by the
-    // most recent sync pass. Surfaced under the analysed-count line on the
-    // ForYou header when the inject-noise setting is on.
-    noisyDiscardedCount: number;
-
     // Hydration progress — number of article-suggestion records fetched from
     // the server during a syncFeed pass. Drives a progress bar in the For You
     // header for users with large id sets (a 2000-id hydration takes 30+ s).
@@ -129,10 +123,11 @@ interface ForYouState {
     hydrateMetadataFromDb: () => Promise<void>;
     setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
     setLastSyncAt: (ts: number) => void;
-    setNoisyDiscardedCount: (count: number) => void;
     setHydrationProgress: (completed: number, total: number) => void;
     resetHydrationProgress: () => void;
     markProcessingRunFinished: () => void;
+    feedNeedsRefresh: boolean;
+    setFeedNeedsRefresh: (val: boolean) => void;
 }
 
 const initialState = {
@@ -155,7 +150,7 @@ const initialState = {
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
-    noisyDiscardedCount: 0,
+    feedNeedsRefresh: false,
 };
 
 export const useForYouStore = create<ForYouState>()((set, get) => ({
@@ -273,8 +268,6 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
     setLastSyncAt: (ts) => set({ lastSyncAt: ts }),
 
-    setNoisyDiscardedCount: (count) => set({ noisyDiscardedCount: count }),
-
     setHydrationProgress: (completed, total) =>
         set({ hydrationCompleted: completed, hydrationTotal: total }),
 
@@ -292,6 +285,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             lastProcessingRunFinishedAt: ts,
         }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
     },
+
+    setFeedNeedsRefresh: (val) => set({ feedNeedsRefresh: val }),
 
     clearData: async () => {
         // Reset all counts to zero — stale article counts from the previous
@@ -332,22 +327,14 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
     hydrateMetadataFromDb: async () => {
         try {
-            await deleteExpiredSuggestions();
-
             const { getPendingAsyncJob } = await import(
                 '@/lib/database/services/async-job-service'
             );
-            const { countProcessedSyncedIds, countTotalSyncedIds } = await import(
-                '@/lib/database/services/article-suggestion-service'
-            );
 
-            const [meta, pendingJob, processedSyncedCount, totalSyncedCount] =
-                await Promise.all([
-                    loadFeedMetadata(),
-                    getPendingAsyncJob(),
-                    countProcessedSyncedIds(),
-                    countTotalSyncedIds(),
-                ]);
+            const [meta, pendingJob] = await Promise.all([
+                loadFeedMetadata(),
+                getPendingAsyncJob(),
+            ]);
 
             const current = get().suggestions;
             const impactfulCount = current.filter(
@@ -364,8 +351,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                         ? 'relevance'
                         : 'reasons'
                     : 'idle',
-                asyncJobProcessedCount: pendingJob ? processedSyncedCount : 0,
-                asyncJobTotalCount: pendingJob ? totalSyncedCount : 0,
+                asyncJobProcessedCount: 0,
+                asyncJobTotalCount: 0,
             });
         } catch (err) {
             // Metadata hydration failed — leave defaults in place, but surface the error.

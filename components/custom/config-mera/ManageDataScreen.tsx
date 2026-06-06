@@ -50,7 +50,6 @@ const FACTS_TABLES = [
     'facts',
     'fact_topic_links',
     'user_topics',
-    'noisy_user_topics',
 ];
 
 const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
@@ -151,7 +150,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     await AccountService.deleteAllUserTopics(userId);
                     await deleteTables([
                         'user_topics',
-                        'noisy_user_topics',
                         ...FEED_CACHE_TABLES,
                     ]);
                     useForYouStore.getState().clearData();

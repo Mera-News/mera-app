@@ -14,7 +14,6 @@ import SchedulerJob from './models/SchedulerJob';
 import Setting from './models/Setting';
 import UserPersona from './models/UserPersona';
 import UserTopic from './models/UserTopic';
-import NoisyUserTopic from './models/NoisyUserTopic';
 import PublicationVisit from './models/PublicationVisit';
 
 const adapter = new SQLiteAdapter({
@@ -39,7 +38,6 @@ const database = new Database({
     ArticleSuggestionFact,
     UserPersona,
     UserTopic,
-    NoisyUserTopic,
     PublicationVisit,
     Setting,
     InferenceJob,

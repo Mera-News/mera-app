@@ -589,5 +589,45 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 26,
+      steps: [
+        // Drop noisy_user_topics — noise injection removed entirely.
+        unsafeExecuteSql('DROP TABLE IF EXISTS noisy_user_topics;'),
+        // Rename user_topic_ids_json → matched_topic_texts_json in article_suggestions.
+        // article_suggestions is ephemeral; drop-and-recreate per established pattern.
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestion_facts;'),
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestions;'),
+        createTable({
+          name: 'article_suggestions',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'cluster_ids_json', type: 'string', isOptional: true },
+            { name: 'relevance', type: 'number' },
+            { name: 'reason', type: 'string' },
+            { name: 'relevance_generation_completed', type: 'boolean' },
+            { name: 'reason_generation_completed', type: 'boolean' },
+            { name: 'country_code', type: 'string', isOptional: true },
+            { name: 'language_code', type: 'string', isOptional: true },
+            { name: 'publication_name', type: 'string', isOptional: true },
+            { name: 'title_en', type: 'string', isOptional: true },
+            { name: 'description_en', type: 'string', isOptional: true },
+            { name: 'article_url', type: 'string', isOptional: true },
+            { name: 'image_url', type: 'string', isOptional: true },
+            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'first_pub_date', type: 'number' },
+          ],
+        }),
+        createTable({
+          name: 'article_suggestion_facts',
+          columns: [
+            { name: 'article_suggestion_id', type: 'string', isIndexed: true },
+            { name: 'fact_id', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });

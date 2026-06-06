@@ -14,18 +14,13 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import { AccountService, type UserTopic } from '@/lib/account-service';
 import { PRIVACY_URL } from '@/lib/config/branding';
-import { runSync } from '@/lib/services/SuggestionSyncService';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { deleteFact, getFacts, getFactTopicLinks, resolveTopicIdsForFact } from '@/lib/database/services/fact-service';
-import {
-    getAllNoisyLinks,
-    getNoisyTopicIdsForFact,
-} from '@/lib/database/services/noisy-user-topic-service';
 import logger from '@/lib/logger';
 import type { Fact, FactTopicLink } from '@/lib/mera-protocol-toolkit/types';
 import { useChatPopupIsExpanded, useChatPopupStore, useChatPopupFactMutationVersion } from '@/lib/stores/chat-popup-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
-import { useInjectNoise, useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
-import { Switch } from '@/components/ui/switch';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useTopicSyncIsSyncing, useTopicSyncProgress } from '@/lib/stores/topic-sync-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -34,7 +29,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, Keyboard, Pressable as RNPressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Animated, Dimensions, Keyboard, Pressable as RNPressable, RefreshControl, ScrollView, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -51,15 +46,12 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [refreshing, setRefreshing] = useState(false);
     const [localFacts, setLocalFacts] = useState<Fact[]>([]);
     const [allLinks, setAllLinks] = useState<FactTopicLink[]>([]);
-    const [noisyLinks, setNoisyLinks] = useState<
-        { factId: string; serverTopicId: string; newsTopicText: string }[]
-    >([]);
-    const [showNoise, setShowNoise] = useState(false);
-    const injectNoiseEnabled = useInjectNoise();
     const [expandedFactIds, setExpandedFactIds] = useState<Set<string>>(new Set());
     const [factToDelete, setFactToDelete] = useState<Fact | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
+    const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
+    const glowAnim = useRef(new Animated.Value(0.3)).current;
     const isChatExpanded = useChatPopupIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const insets = useSafeAreaInsets();
@@ -72,10 +64,9 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const factMutationVersion = useChatPopupFactMutationVersion();
 
     const loadLocalFacts = useCallback(async () => {
-        const [facts, links, noisy] = await Promise.all([
+        const [facts, links] = await Promise.all([
             getFacts(),
             getFactTopicLinks(),
-            getAllNoisyLinks(),
         ]);
 
         if (!isInitialLoadRef.current) {
@@ -91,7 +82,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
 
         setLocalFacts(facts);
         setAllLinks(links);
-        setNoisyLinks(noisy);
         return facts;
     }, []);
 
@@ -112,8 +102,25 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         if (factMutationVersion > 0 && userId) {
             loadLocalFacts();
             fetchUserPersona(userId, true);
+            useForYouStore.getState().setFeedNeedsRefresh(true);
         }
     }, [factMutationVersion, loadLocalFacts, fetchUserPersona, userId]);
+
+    useEffect(() => {
+        if (feedNeedsRefresh) {
+            const animation = Animated.loop(
+                Animated.sequence([
+                    Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+                    Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+                ])
+            );
+            animation.start();
+            return () => animation.stop();
+        } else {
+            glowAnim.stopAnimation();
+            glowAnim.setValue(0);
+        }
+    }, [feedNeedsRefresh, glowAnim]);
 
     const closeChat = useCallback(() => {
         useChatPopupStore.getState().collapse();
@@ -136,26 +143,13 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         });
     }, []);
 
-    const noisyIdsByFactId = useMemo(() => {
-        const map = new Map<string, Set<string>>();
-        for (const link of noisyLinks) {
-            const set = map.get(link.factId) ?? new Set<string>();
-            set.add(link.serverTopicId);
-            map.set(link.factId, set);
-        }
-        return map;
-    }, [noisyLinks]);
-
     const getTopicsForFact = useCallback(
-        (fact: Fact): { real: UserTopic[]; noisy: UserTopic[] } => {
+        (fact: Fact): UserTopic[] => {
             const realIds = resolveTopicIdsForFact(fact, allLinks, interests);
             const realIdSet = new Set(realIds);
-            const real = interests.filter((i) => realIdSet.has(i._id));
-            const noisyIds = noisyIdsByFactId.get(fact.id) ?? new Set<string>();
-            const noisy = interests.filter((i) => noisyIds.has(i._id) && !realIdSet.has(i._id));
-            return { real, noisy };
+            return interests.filter((i) => realIdSet.has(i._id));
         },
-        [allLinks, interests, noisyIdsByFactId],
+        [allLinks, interests],
     );
 
     const handleDeletePress = useCallback((fact: Fact) => {
@@ -166,16 +160,9 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         if (!factToDelete) return;
         setIsDeleting(true);
         try {
-            // Resolve which server-side topic IDs belong to this fact (real +
-            // noisy). Noisy topics share the same lifecycle as real topics —
-            // include them in the withdrawal so we don't leave decoys orphaned
-            // on the server.
+            // Resolve which server-side topic IDs belong to this fact.
             const links = await getFactTopicLinks(factToDelete.id);
-            const noisyIds = await getNoisyTopicIdsForFact(factToDelete.id);
-            const factTopicIds = [
-                ...resolveTopicIdsForFact(factToDelete, links, interests),
-                ...noisyIds,
-            ];
+            const factTopicIds = resolveTopicIdsForFact(factToDelete, links, interests);
 
             // Determine which topics would become exclusive to this fact if deleted
             // (compute WITHOUT deleting — we only delete locally after the server confirms)
@@ -189,13 +176,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                     const fLinks = allExistingLinks.filter(l => l.factId === f.id);
                     for (const id of resolveTopicIdsForFact(f, fLinks, interests)) {
                         survivingTopicIds.add(id);
-                    }
-                }
-                // Noisy topics from OTHER facts also survive — guard against
-                // a topicId that's noisy under both fact A and fact B.
-                for (const link of noisyLinks) {
-                    if (link.factId !== factToDelete.id) {
-                        survivingTopicIds.add(link.serverTopicId);
                     }
                 }
                 exclusiveIds = factTopicIds.filter(id => !survivingTopicIds.has(id));
@@ -221,6 +201,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
             setFactToDelete(null);
             loadLocalFacts();
             fetchUserPersona(userId, true);
+            useForYouStore.getState().setFeedNeedsRefresh(true);
             toast.show({
                 placement: 'top',
                 render: () => (
@@ -246,7 +227,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         } finally {
             setIsDeleting(false);
         }
-    }, [factToDelete, interests, noisyLinks, userId, loadLocalFacts, fetchUserPersona, toast, t]);
+    }, [factToDelete, interests, userId, loadLocalFacts, fetchUserPersona, toast, t]);
 
     const handleDeleteCancel = useCallback(() => {
         setFactToDelete(null);
@@ -257,9 +238,10 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         const personaId = userPersona?._id;
         if (!personaId) return;
         setIsRefreshingSuggestions(true);
+        useForYouStore.getState().setFeedNeedsRefresh(false);
         try {
             await useForYouStore.getState().clearData();
-            await runSync(personaId);
+            await AppScheduler.trigger('feed-sync');
             toast.show({
                 placement: 'top',
                 render: () => (
@@ -332,7 +314,23 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                         </HStack>
                     </Box>
 
-                    <Box className="mx-4 mb-3">
+                    <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
+                        {feedNeedsRefresh && !isRefreshingSuggestions && (
+                            <Animated.View
+                                pointerEvents="none"
+                                style={{
+                                    position: 'absolute',
+                                    top: -3,
+                                    left: -3,
+                                    right: -3,
+                                    bottom: -3,
+                                    borderRadius: 12,
+                                    borderWidth: 2,
+                                    borderColor: '#60a5fa',
+                                    opacity: glowAnim,
+                                }}
+                            />
+                        )}
                         <Button
                             variant="outline"
                             action="primary"
@@ -352,7 +350,17 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                 </HStack>
                             )}
                         </Button>
-                    </Box>
+                    </View>
+                    {feedNeedsRefresh && !isRefreshingSuggestions && (
+                        <Box className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
+                            <HStack space="xs" className="items-start">
+                                <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
+                                <Text size="xs" className="text-blue-300 flex-1">
+                                    {t('configPanel.personaUpdatedRefreshHint')}
+                                </Text>
+                            </HStack>
+                        </Box>
+                    )}
 
                     {isSyncing && (
                         <Box className="px-4 py-2">
@@ -385,35 +393,14 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                 />
                             }
                         >
-                            {/* Facts heading + (debug) Noise switch */}
+                            {/* Facts heading */}
                             <HStack className="mx-4 mb-2 items-center justify-between">
                                 <Text size="sm" className="text-gray-400 font-medium">{t('configPanel.factsHeading')}</Text>
-                                {injectNoiseEnabled && (
-                                    <HStack space="xs" className="items-center">
-                                        <Text size="xs" className="text-red-400">
-                                            {t('configPanel.noiseSwitchLabel')}
-                                        </Text>
-                                        <Switch
-                                            size="sm"
-                                            value={showNoise}
-                                            onValueChange={setShowNoise}
-                                            trackColor={{ false: '#374151', true: '#7f1d1d' }}
-                                            thumbColor={showNoise ? '#fca5a5' : '#9ca3af'}
-                                        />
-                                    </HStack>
-                                )}
                             </HStack>
 
                             {/* Fact accordions */}
                             {localFacts.map((fact) => {
-                                const { real: realFactTopics, noisy: noisyFactTopics } = getTopicsForFact(fact);
-                                const displayedTopics: { topic: UserTopic; isNoisy: boolean }[] = [
-                                    ...realFactTopics.map((t) => ({ topic: t, isNoisy: false })),
-                                    ...(showNoise
-                                        ? noisyFactTopics.map((t) => ({ topic: t, isNoisy: true }))
-                                        : []),
-                                ];
-                                const factTopics = realFactTopics; // settled-check is driven by REAL topics only
+                                const factTopics = getTopicsForFact(fact);
                                 const expectedTopicCount = fact.metadata?.topics?.length ?? 0;
                                 const topicGenError = fact.metadata?.topicGenError?.[0];
                                 // Keep the spinner visible until topic-gen produced topics AND
@@ -482,39 +469,29 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                                         </Text>
                                                     </Box>
                                                 ) : (
-                                                    displayedTopics.map(({ topic, isNoisy }, tIdx) => {
-                                                        const isLast = tIdx === displayedTopics.length - 1;
-                                                        const rowClass = isNoisy
-                                                            ? `px-4 py-3 bg-red-950/30${isLast ? '' : ' border-b border-red-900/60'}`
-                                                            : `px-4 py-3${isLast ? '' : ' border-b border-gray-800'}`;
+                                                    factTopics.map((topic, tIdx) => {
+                                                        const isLast = tIdx === factTopics.length - 1;
                                                         return (
                                                             <Pressable
-                                                                key={`${isNoisy ? 'n' : 'r'}-${topic._id}`}
+                                                                key={topic._id}
                                                                 onPress={() => handleInterestPress(topic)}
-                                                                className={rowClass}
+                                                                className={`px-4 py-3${isLast ? '' : ' border-b border-gray-800'}`}
                                                             >
                                                                 <HStack className="items-center justify-between">
                                                                     <VStack className="flex-1 mr-3" space="xs">
-                                                                        <HStack space="xs" className="items-center">
-                                                                            <TranslatableDynamic
-                                                                                text={topic.news_topic_text}
-                                                                                size="sm"
-                                                                                className={isNoisy ? 'text-red-300' : 'text-white'}
-                                                                            />
-                                                                            {isNoisy && (
-                                                                                <Text size="xs" className="text-red-400">
-                                                                                    {t('configPanel.noiseBadge')}
-                                                                                </Text>
-                                                                            )}
-                                                                        </HStack>
-                                                                        <Text size="xs" className={isNoisy ? 'text-red-500' : 'text-gray-500'}>
+                                                                        <TranslatableDynamic
+                                                                            text={topic.news_topic_text}
+                                                                            size="sm"
+                                                                            className="text-white"
+                                                                        />
+                                                                        <Text size="xs" className="text-gray-500">
                                                                             {t('configPanel.clusterCount', { count: topic.cluster_count })}
                                                                         </Text>
                                                                     </VStack>
                                                                     <MaterialIcons
                                                                         name="chevron-right"
                                                                         size={18}
-                                                                        color={isNoisy ? '#fca5a5' : '#999999'}
+                                                                        color="#999999"
                                                                     />
                                                                 </HStack>
                                                             </Pressable>

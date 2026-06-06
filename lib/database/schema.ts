@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 25,
+  version: 26,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -76,7 +76,7 @@ export default appSchema({
         { name: 'description_en', type: 'string', isOptional: true },
         { name: 'article_url', type: 'string', isOptional: true },
         { name: 'image_url', type: 'string', isOptional: true },
-        { name: 'user_topic_ids_json', type: 'string', isOptional: true },
+        { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
       ],
@@ -127,18 +127,6 @@ export default appSchema({
         { name: 'is_canonical', type: 'boolean' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
-      ],
-    }),
-
-    tableSchema({
-      name: 'noisy_user_topics',
-      columns: [
-        { name: 'server_id', type: 'string', isIndexed: true },
-        { name: 'user_persona_id', type: 'string', isIndexed: true },
-        { name: 'fact_id', type: 'string', isIndexed: true, isOptional: true },
-        { name: 'news_topic_text', type: 'string' },
-        { name: 'parent_topic_text', type: 'string', isOptional: true },
-        { name: 'created_at', type: 'number' },
       ],
     }),
 

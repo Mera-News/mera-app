@@ -14,18 +14,9 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useOnDeviceBannerStore } from '@/lib/stores/on-device-banner-store';
-import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 const KEEP_AWAKE_TAG = 'mera-scoring-pass';
-
-/**
- * Manual trigger passthrough — delegates to AppScheduler.
- * Called from pull-to-refresh, boot tasks, and other manual triggers.
- */
-export async function runSync(_userPersonaId?: string): Promise<void> {
-  await AppScheduler.trigger('feed-sync');
-}
 
 /**
  * Score every currently unscored article_suggestion row.

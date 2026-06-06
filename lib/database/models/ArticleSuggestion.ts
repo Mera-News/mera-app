@@ -36,7 +36,7 @@ export default class ArticleSuggestion extends Model {
   @field('description_en') descriptionEn!: string | null;
   @field('article_url') articleUrl!: string | null;
   @field('image_url') imageUrl!: string | null;
-  @field('user_topic_ids_json') userTopicIdsJson!: string | null;
+  @field('matched_topic_texts_json') matchedTopicTextsJson!: string | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
 

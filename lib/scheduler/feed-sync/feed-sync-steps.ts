@@ -5,7 +5,6 @@ import { ArticleService } from '@/lib/article-service';
 import {
   batchMarkAsScoredByIds,
   deleteSuggestionsByServerIds,
-  deleteExpiredSuggestions,
   getLocalSuggestionServerIds,
   getUnscoredSuggestionsWithFacts,
   persistAndLinkV2Suggestions,
@@ -86,11 +85,9 @@ export async function stepDiff(
   const serverIdSet = new Set(serverArticleIds);
   const toDeleteIds = localIds.filter((id) => !serverIdSet.has(id));
 
-  const deletedStale = toDeleteIds.length
+  const deletedCount = toDeleteIds.length
     ? await deleteSuggestionsByServerIds(toDeleteIds)
     : 0;
-  const deletedExpired = await deleteExpiredSuggestions();
-  const deletedCount = deletedStale + deletedExpired;
   if (deletedCount > 0) {
     ctx.log(`deleted ${deletedCount} stale rows`);
   }

@@ -384,7 +384,8 @@
     "refreshSuggestionsSuccessTitle": "Suggestions Refreshed",
     "refreshSuggestionsSuccessDescription": "New personalized suggestions are being generated.",
     "refreshSuggestionsFailedTitle": "Refresh Failed",
-    "refreshSuggestionsFailedDescription": "Could not refresh suggestions. Please try again."
+    "refreshSuggestionsFailedDescription": "Could not refresh suggestions. Please try again.",
+    "personaUpdatedRefreshHint": "I see you've updated your persona, would you like me to regenerate your feed?"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",

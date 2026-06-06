@@ -406,7 +406,7 @@ export async function* cloudChatStream(
     messages,
     stream: false, // E2EE requires complete response for decryption
     model,
-    chat_template_kwargs: { enable_thinking: false },
+    chat_template_kwargs: { enable_thinking: true },
   };
   if (request.tools && request.tools.length > 0) {
     body.tools = request.tools;

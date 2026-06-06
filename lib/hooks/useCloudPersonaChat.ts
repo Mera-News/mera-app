@@ -130,7 +130,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const stream = cloudChatStream({
           messages: [{ role: 'system', content: systemPrompt }, ...windowed],
           tools,
-          toolChoice: 'auto',
+          toolChoice: 'required',
           model: BIG_MODEL,
         });
 

@@ -22,8 +22,6 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
 import database from '@/lib/database';
 import { hydrateAllStores } from '@/lib/database/hydrate-stores';
-import { refreshProcessingMetadata } from '@/lib/services/refreshProcessingMetadata';
-import { useUserStore } from '@/lib/stores/user-store';
 import { applyLanguage } from '@/lib/i18n';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import logger from '@/lib/logger';
@@ -141,14 +139,6 @@ export default Sentry.wrap(function RootLayout() {
                 tags: { component: 'RootLayout', method: 'purge-disabled-models' },
               }),
             );
-        }
-
-        // Fetch fresh server-side processing metadata on every app start,
-        // independent of the syncFeed id-set throttle. Server caches the
-        // system-wide article count for 30 min, so this is cheap.
-        const personaId = useUserStore.getState().userPersona?._id;
-        if (personaId) {
-          void refreshProcessingMetadata(personaId);
         }
 
         // Treat cold start like an app-foreground event so tasks that

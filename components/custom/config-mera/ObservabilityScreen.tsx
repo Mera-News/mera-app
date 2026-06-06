@@ -39,7 +39,6 @@ const COUNT_TABLES = [
     'facts',
     'fact_topic_links',
     'user_topics',
-    'noisy_user_topics',
     'user_personas',
 ] as const;
 
@@ -217,7 +216,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         articleCount,
         relevantArticleCount,
         unscoredCount,
-        noisyDiscardedCount,
         asyncJobPhase,
         lastSyncAt,
         syncStatusMessage,
@@ -226,7 +224,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
             articleCount: s.articleCount,
             relevantArticleCount: s.relevantArticleCount,
             unscoredCount: s.unscoredCount,
-            noisyDiscardedCount: s.noisyDiscardedCount,
             asyncJobPhase: s.asyncJobPhase,
             lastSyncAt: s.lastSyncAt,
             syncStatusMessage: s.syncStatusMessage,
@@ -282,7 +279,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 articleCount,
                 relevantArticleCount,
                 unscoredCount,
-                noisyDiscardedCount,
                 asyncJobPhase,
                 lastSyncAt,
                 syncState: syncStatusMessage?.state ?? 'idle',
@@ -309,7 +305,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         setTimeout(() => setCopied(false), 1500);
     }, [
         taskCurrentStatus, taskLastRun, dbStats, schedulerStatus, runningCount, failedCount,
-        pendingCount, articleCount, relevantArticleCount, unscoredCount, noisyDiscardedCount,
+        pendingCount, articleCount, relevantArticleCount, unscoredCount,
         asyncJobPhase, lastSyncAt, syncStatusMessage, processingMode, modelState,
         downloadProgress, isProcessing, isConnected, dbReady, userId,
     ]);
@@ -422,7 +418,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 <Row label="articleCount" value={String(articleCount)} />
                 <Row label="relevantArticleCount" value={String(relevantArticleCount)} />
                 <Row label="unscoredCount" value={String(unscoredCount)} />
-                <Row label="noisyDiscardedCount" value={String(noisyDiscardedCount)} />
                 <Row label="asyncJobPhase" value={asyncJobPhase} />
                 <Row label="lastSyncAt" value={relativeTime(lastSyncAt)} />
                 <Row label="syncState" value={syncStatusMessage?.state ?? 'idle'} />

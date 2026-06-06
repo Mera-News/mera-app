@@ -25,13 +25,9 @@ import { getAttributeKeysForLevel, TOTAL_LEVELS, buildAttributeTextToIdMap } fro
 import { cloudBatchComplete, type BatchCompletionResult } from '../llm/cloudComplete';
 import {
   buildCloudBatchCallsForFact,
-  buildSwapBatchCallForFact,
-  filterDecoysAgainstReal,
   mergeRealOutputsForFact,
-  parseSwapOutput,
 } from '../mera-protocol/topic-generation-service';
 import { submitTopicsToServer } from '../mera-protocol/interest-submission-service';
-import { insertNoisyTopics } from '../database/services/noisy-user-topic-service';
 import type { BatchCall } from '../llm/types';
 import logger from '../logger';
 
@@ -160,11 +156,9 @@ export async function handleSaveExtractedFacts(
 }
 
 /**
- * Batch-generates real + noisy topics for all facts in ONE cloud API call.
- * Each fact contributes up to 3 BatchCall entries (fact-only + combo + noise);
- * the full 3N-entry batch goes out in a single request. After the response,
- * real and noisy texts ride a single SubmitUserTopics mutation; the response
- * is partitioned by text-match against the per-fact noisy set.
+ * Batch-generates real topics for all facts in ONE cloud API call.
+ * Each fact contributes up to 2 BatchCall entries (fact-only + combo).
+ * After the response, all real texts ride a single SubmitUserTopics mutation.
  */
 async function batchGenerateTopics(
   factEntries: Array<{ id: string; statement: string }>,
@@ -180,11 +174,6 @@ async function batchGenerateTopics(
     return attrId !== undefined && userOwnLocationIds.has(attrId);
   });
 
-  const injectNoise = useMeraProtocolStore.getState().injectNoise;
-
-  // Stage 1: real-topic batch. fact-only (always) + combo (when other facts
-  // exist). Decoy is a separate second-stage batch over the merged real
-  // topics — see Stage 2 below.
   const realCalls: BatchCall[] = [];
   for (const entry of factEntries) {
     const otherFacts = allFacts
@@ -202,28 +191,25 @@ async function batchGenerateTopics(
     );
   }
 
-  logger.debug('[topic-gen-batch] stage1 calling batch-infer', {
+  logger.debug('[topic-gen-batch] calling batch-infer', {
     callCount: realCalls.length,
     factCount: factEntries.length,
-    injectNoise,
   });
   let realResults: BatchCompletionResult[];
   try {
     realResults = await cloudBatchComplete(realCalls);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    logger.warn('[topic-gen-batch] stage1 cloud batch threw', { error: errMsg });
+    logger.warn('[topic-gen-batch] cloud batch threw', { error: errMsg });
     for (const entry of factEntries) {
       await updateFact(entry.id, { metadata: { topicGenError: [errMsg] } });
     }
     useChatPopupStore.getState().notifyFactMutation();
     return;
   }
-  logger.debug('[topic-gen-batch] stage1 response', {
-    resultCount: realResults.length,
-  });
+  logger.debug('[topic-gen-batch] response', { resultCount: realResults.length });
 
-  // Re-key stage-1 results into per-fact (factOnly, combo) buckets.
+  // Re-key results into per-fact (factOnly, combo) buckets.
   type RealBucket = {
     factOnly: string | null;
     combo: string | null;
@@ -248,7 +234,6 @@ async function batchGenerateTopics(
       logger.warn('[topic-gen-batch] half failed', { factId, half, error: result.error });
     } else {
       bucket[half] = result.output;
-      logger.debug('[topic-gen-batch] half output', { factId, half, output: result.output });
     }
     realOutputsByFactId.set(factId, bucket);
   }
@@ -277,56 +262,11 @@ async function batchGenerateTopics(
     realByFactId.set(entry.id, real);
   }
 
-  // Stage 2: entity-swap decoy batch over merged real topics. One call per
-  // fact that produced real topics.
-  const noisyByFactId = new Map<string, string[]>();
-  const noisyDecoyFactByFactId = new Map<string, string | null>();
-  if (injectNoise && realByFactId.size > 0) {
-    const swapCalls: BatchCall[] = [];
-    for (const [factId, real] of realByFactId.entries()) {
-      const entry = factEntries.find((e) => e.id === factId);
-      if (!entry) continue;
-      swapCalls.push(buildSwapBatchCallForFact(entry.statement, real, entry.id));
-    }
-    logger.debug('[topic-gen-batch] stage2 swap batch', { callCount: swapCalls.length });
-    let swapResults: BatchCompletionResult[] = [];
-    try {
-      swapResults = await cloudBatchComplete(swapCalls);
-    } catch (err) {
-      logger.warn('[topic-gen-batch] stage2 swap batch threw', {
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
-    for (const result of swapResults) {
-      const sep = result.id.lastIndexOf(':');
-      if (sep === -1) continue;
-      const factId = result.id.slice(0, sep);
-      const real = realByFactId.get(factId) ?? [];
-      if (result.error) {
-        logger.warn('[topic-gen-batch] swap failed', { factId, error: result.error });
-        continue;
-      }
-      const parsed = parseSwapOutput(result.output, real.length);
-      const noisy = filterDecoysAgainstReal(parsed.topics, real);
-      noisyByFactId.set(factId, noisy);
-      noisyDecoyFactByFactId.set(factId, parsed.decoyFact);
-      logger.debug('[topic-gen-batch] swap output', {
-        factId,
-        decoyFact: parsed.decoyFact,
-        noisyCount: noisy.length,
-      });
-    }
-  }
-
-  // Build the flat submission payload now that we know real + noisy per fact.
   const allTopicsForSubmission: Array<{ text: string; sourceFactLocalId: string }> = [];
   for (const entry of factEntries) {
     const real = realByFactId.get(entry.id);
     if (!real) continue;
     for (const text of real) {
-      allTopicsForSubmission.push({ text, sourceFactLocalId: entry.id });
-    }
-    for (const text of noisyByFactId.get(entry.id) ?? []) {
       allTopicsForSubmission.push({ text, sourceFactLocalId: entry.id });
     }
   }
@@ -340,37 +280,17 @@ async function batchGenerateTopics(
         count: allTopicsForSubmission.length,
       });
 
-      // Partition response per fact, then per (real vs noisy) by text match
-      // against `noisyByFactId`. A topicId that comes back for BOTH a real
-      // and a noisy entry (server-side semantic dedup) is treated as real so
-      // we never accidentally tag a useful cluster as noise.
       const linksByFactId = new Map<
         string,
         { serverTopicId: string; topicText: string }[]
       >();
-      const realIdsByFactId = new Map<string, Set<string>>();
-      const noisyByFactAndId = new Map<string, Map<string, { text: string }>>();
+      const seenByFact = new Map<string, Set<string>>();
       for (const entry of submitted) {
         if (!entry.topicId) continue;
-        const noisySet = new Set(
-          (noisyByFactId.get(entry.sourceFactLocalId) ?? []).map((t) =>
-            t.toLowerCase().trim(),
-          ),
-        );
-        const isNoise = noisySet.has(entry.text.toLowerCase().trim());
-        if (isNoise) {
-          const bucket =
-            noisyByFactAndId.get(entry.sourceFactLocalId) ??
-            new Map<string, { text: string }>();
-          if (!bucket.has(entry.topicId)) bucket.set(entry.topicId, { text: entry.text });
-          noisyByFactAndId.set(entry.sourceFactLocalId, bucket);
-          continue;
-        }
-        const realIds =
-          realIdsByFactId.get(entry.sourceFactLocalId) ?? new Set<string>();
-        if (realIds.has(entry.topicId)) continue;
-        realIds.add(entry.topicId);
-        realIdsByFactId.set(entry.sourceFactLocalId, realIds);
+        const seen = seenByFact.get(entry.sourceFactLocalId) ?? new Set<string>();
+        if (seen.has(entry.topicId)) continue;
+        seen.add(entry.topicId);
+        seenByFact.set(entry.sourceFactLocalId, seen);
         const bucket = linksByFactId.get(entry.sourceFactLocalId) ?? [];
         bucket.push({ serverTopicId: entry.topicId, topicText: entry.text });
         linksByFactId.set(entry.sourceFactLocalId, bucket);
@@ -382,39 +302,6 @@ async function batchGenerateTopics(
         await updateFact(entry.id, {
           metadata: { topics: links.map((l) => l.topicText) },
         });
-      }
-
-      // Persist noisy topic ids per fact, skipping any that ALSO came back as
-      // real (collision against an existing real topic).
-      const personaId = useUserStore.getState().userPersona?._id ?? userId;
-      const noisyInserts: {
-        serverTopicId: string;
-        factId: string;
-        newsTopicText: string;
-        parentTopicText: string;
-      }[] = [];
-      for (const entry of factEntries) {
-        const byTopicId = noisyByFactAndId.get(entry.id);
-        if (!byTopicId) continue;
-        const realIds = realIdsByFactId.get(entry.id) ?? new Set<string>();
-        // Decoy persona-fact the noise prompt invented in Step A — persist it
-        // so the persona-tab debug switch can show what fake user spawned the
-        // batch. Fall back to the real fact statement when the model omitted
-        // the decoy_fact field.
-        const decoyFact =
-          noisyDecoyFactByFactId.get(entry.id) ?? entry.statement;
-        for (const [topicId, e] of byTopicId.entries()) {
-          if (realIds.has(topicId)) continue;
-          noisyInserts.push({
-            serverTopicId: topicId,
-            factId: entry.id,
-            newsTopicText: e.text,
-            parentTopicText: decoyFact,
-          });
-        }
-      }
-      if (noisyInserts.length > 0) {
-        await insertNoisyTopics(personaId, noisyInserts);
       }
 
       await useUserStore.getState().fetchUserPersona(userId, true);

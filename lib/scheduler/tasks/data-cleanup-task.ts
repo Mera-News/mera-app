@@ -1,4 +1,3 @@
-import { deleteExpiredSuggestions } from '@/lib/database/services/article-suggestion-service';
 import { pruneOldJobs } from '../scheduler-persistence';
 import { AppScheduler } from '../AppScheduler';
 
@@ -12,7 +11,6 @@ AppScheduler.register({
   maxAttempts: 2,
   exclusive: true,
   handler: async () => {
-    await deleteExpiredSuggestions();
     await pruneOldJobs();
   },
 });

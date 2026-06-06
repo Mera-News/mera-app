@@ -90,7 +90,7 @@ export async function getUnscoredSuggestionsWithFacts(
     titleEn: row.titleEn,
     descriptionEn: row.descriptionEn,
     countryCode: row.countryCode,
-    userTopicIds: parseTopicIds(row.userTopicIdsJson),
+    userTopicIds: parseTopicIds(row.matchedTopicTextsJson),
     relatedFacts: factsBySuggestionId.get(row.id) ?? [],
   }));
 }
@@ -145,7 +145,7 @@ export async function getScoredSuggestionsWithoutReasons(
     titleEn: row.titleEn,
     descriptionEn: row.descriptionEn,
     countryCode: row.countryCode,
-    userTopicIds: parseTopicIds(row.userTopicIdsJson),
+    userTopicIds: parseTopicIds(row.matchedTopicTextsJson),
     relatedFacts: factsBySuggestionId.get(row.id) ?? [],
     relevance: row.relevance,
   }));
@@ -286,35 +286,6 @@ export async function clearSuggestions(): Promise<void> {
   await deleteSetting(FEED_META_KEY);
 }
 
-const SUGGESTION_TTL_MS = 24 * 60 * 60 * 1000;
-
-export async function deleteExpiredSuggestions(): Promise<number> {
-  const threshold = Date.now() - SUGGESTION_TTL_MS;
-
-  const expired = await articleSuggestionsCol
-    .query(Q.where('created_at', Q.lt(threshold)))
-    .fetch();
-  if (expired.length === 0) return 0;
-
-  const expiredLocalIds = expired.map((s) => s.id);
-  const links = await articleSuggestionFactsCol
-    .query(Q.where('article_suggestion_id', Q.oneOf(expiredLocalIds)))
-    .fetch();
-
-  await database.write(async () => {
-    await database.batch([
-      ...links.map((l) => l.prepareDestroyPermanently()),
-      ...expired.map((s) => s.prepareDestroyPermanently()),
-    ]);
-  });
-
-  return expired.length;
-}
-
-export async function deleteAgedOutSuggestions(): Promise<number> {
-  return 0;
-}
-
 // --- Feed metadata (cold-start counters) ---
 
 const FEED_META_KEY = 'feed_metadata';
@@ -358,7 +329,7 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
     description_en: row.descriptionEn,
     article_url: row.articleUrl,
     image_url: row.imageUrl,
-    userTopicIds: parseTopicIds(row.userTopicIdsJson),
+    userTopicIds: parseTopicIds(row.matchedTopicTextsJson),
     createdAt: row.createdAt.toISOString(),
     firstPubDate: row.firstPubDate.toISOString(),
   };
@@ -469,7 +440,7 @@ export async function persistAndLinkV2Suggestions(
         r.descriptionEn = a.description_en ?? null;
         r.articleUrl = a.article_url ?? null;
         r.imageUrl = a.image_url ?? null;
-        r.userTopicIdsJson = JSON.stringify(topicTexts);
+        r.matchedTopicTextsJson = JSON.stringify(topicTexts);
         r.createdAt = now;
         r.firstPubDate = parseDate(a.pubDate) ?? now;
       });
@@ -518,20 +489,3 @@ async function resolveFactsByTopicTexts(
   return result;
 }
 
-
-// --- Stubs for v1 synced_suggestion_ids functions (table removed in v24 migration) ---
-// These are kept as no-ops to avoid breaking async-job-reconciler.ts imports.
-
-export async function markSyncedIdsProcessed(_ids: string[]): Promise<void> {}
-
-export async function countUnprocessedSyncedIds(): Promise<number> {
-  return 0;
-}
-
-export async function countProcessedSyncedIds(): Promise<number> {
-  return 0;
-}
-
-export async function countTotalSyncedIds(): Promise<number> {
-  return 0;
-}

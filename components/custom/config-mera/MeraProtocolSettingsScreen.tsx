@@ -26,13 +26,11 @@ import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequir
 import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types';
 import {
     useDownloadProgress,
-    useInjectNoise,
     useMeraProtocolStore,
     useModelState as useModelStateSelector,
     useProcessingMode,
     useSelectedModelId,
 } from '@/lib/stores/mera-protocol-store';
-import { Switch } from '@/components/ui/switch';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
@@ -98,7 +96,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const selectedModelId = useSelectedModelId();
     const modelState = useModelStateSelector();
     const downloadProgress = useDownloadProgress();
-    const injectNoise = useInjectNoise();
     const store = useMeraProtocolStore();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
@@ -623,30 +620,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     </Box>
                 </>
             )}
-
-            {/* DEPRECATED: Noise Injection — see deprecate-article-suggestion-flow.md
-            <Box className="mx-5 mb-6 border-b border-gray-800" />
-
-            <Box className="px-5 mb-6">
-                <HStack className="items-center justify-between mb-1">
-                    <Text className="text-white text-lg font-semibold">
-                        {t('meraProtocol.injectNoiseTitle')}
-                    </Text>
-                    <Switch
-                        value={injectNoise}
-                        onValueChange={(v: boolean) => store.setInjectNoise(v)}
-                        trackColor={{ false: '#374151', true: '#10b981' }}
-                        thumbColor="#ffffff"
-                    />
-                </HStack>
-                <Text className="text-typography-400 text-sm leading-5 mb-2">
-                    {t('meraProtocol.injectNoiseDescription')}
-                </Text>
-                <Text className="text-amber-400 text-xs leading-4">
-                    {t('meraProtocol.injectNoiseBeta')}
-                </Text>
-            </Box>
-            END DEPRECATED */}
 
             {/* Privacy Explainer */}
             <Box className="px-5 mb-6">

@@ -2,7 +2,6 @@ import { Model } from '@nozbe/watermelondb';
 import { text, json, date, field, children, writer } from '@nozbe/watermelondb/decorators';
 import type { Query } from '@nozbe/watermelondb';
 import type FactTopicLink from './FactTopicLink';
-import type NoisyUserTopic from './NoisyUserTopic';
 
 const sanitizeMetadata = (raw: unknown) => raw || undefined;
 
@@ -11,7 +10,6 @@ export default class Fact extends Model {
 
   static associations = {
     fact_topic_links: { type: 'has_many' as const, foreignKey: 'fact_id' },
-    noisy_user_topics: { type: 'has_many' as const, foreignKey: 'fact_id' },
   } as const;
 
   @text('statement') statement!: string;
@@ -23,7 +21,6 @@ export default class Fact extends Model {
   @date('updated_at') updatedAt!: Date;
 
   @children('fact_topic_links') topicLinks!: Query<FactTopicLink>;
-  @children('noisy_user_topics') noisyTopics!: Query<NoisyUserTopic>;
 
   @writer async updateFact(
     statement: string,
@@ -48,13 +45,9 @@ export default class Fact extends Model {
   }
 
   @writer async destroyCascade() {
-    const [links, noisy] = await Promise.all([
-      this.topicLinks.fetch(),
-      this.noisyTopics.fetch(),
-    ]);
+    const links = await this.topicLinks.fetch();
     const batch: Model[] = [
       ...links.map((link) => link.prepareDestroyPermanently()),
-      ...noisy.map((n) => n.prepareDestroyPermanently()),
       this.prepareDestroyPermanently(),
     ];
     await this.batch(...batch);

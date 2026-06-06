@@ -151,7 +151,7 @@ export function buildToolFormatSection(surface: 'ONBOARDING' | 'CONFIG'): string
   return `
 
 ## Tools
-Every response MUST include ≥1 <tool_call> (always saveExtractedFacts). Never reply with text only.
+Every response MUST include BOTH conversational text AND ≥1 <tool_call>. Never reply with text only. Never reply with tool calls only.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call> — multiple calls per response OK.
 
 ${toolLines}
@@ -215,6 +215,7 @@ export function buildPersonaUpdateStaticPrompt(params: {
 1. Read <context> in the user message (Known Facts always present).
 2. Write conversational text (<200 chars, 1 question, no inline option lists).
 3. Emit tool calls — ALWAYS at least saveExtractedFacts (empty array if nothing new).
+Both text (2) and tool calls (3) are REQUIRED in every response — never omit either.
 
 ## Rules
 ${languageRule}
@@ -279,6 +280,7 @@ function buildPersonaUpdateLocalPrompt(params: {
 1. Read <context> in user message (Known Facts always present).
 2. Write 1 short message (<200 chars, 1 question, no inline option lists).
 3. Emit ≥1 tool call — always saveExtractedFacts (empty array if nothing new).
+Both text (2) and tool call(s) (3) are REQUIRED — never omit either.
 
 ## Rules
 - ${languageRule}

@@ -1,11 +1,6 @@
-// Topic Generation Service — Real-topic generation + entity-swap decoy pass
-// for a single fact. Two stages:
-//   1. Real:  Fact-only (+ Combo when other facts exist) — parallel cloud
-//             batch or sequential on-device.
-//   2. Decoy: Entity-swap pass over the merged real topics — one extra LLM
-//             call per fact. Caller batches these together.
-// Caller submits real + decoy in ONE SubmitUserTopics mutation. Server
-// response is partitioned by text-match against the per-fact decoy set.
+// Topic Generation Service — Real-topic generation for a single fact.
+// Two sub-prompts per fact: fact-only + combo (when other facts exist).
+// Cloud: parallel batch. On-device: sequential calls.
 
 import logger from '../logger';
 import {
@@ -21,13 +16,6 @@ import {
   LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
   sanitizeForPrompt,
 } from './prompts';
-import {
-  buildSwapUserPrompt,
-  parseSwapOutput,
-  swapEntitiesForFact,
-  swapMaxTokensFor,
-  swapSystemPromptFor,
-} from './noise-generation-service';
 
 /**
  * Generates topic strings from a single user fact, fact-only path.
@@ -117,24 +105,6 @@ export function buildCloudBatchCallsForFact(
 }
 
 /**
- * Build the entity-swap BatchCall for one fact. Run as the second-stage batch
- * after real topics are merged.
- */
-export function buildSwapBatchCallForFact(
-  factStatement: string,
-  realTopics: string[],
-  idPrefix: string,
-): BatchCall {
-  return {
-    id: `${idPrefix}:swap`,
-    system: swapSystemPromptFor(true),
-    prompt: buildSwapUserPrompt({ factStatement, realTopics }),
-    temperature: 0.3,
-    maxTokens: swapMaxTokensFor(realTopics.length),
-  };
-}
-
-/**
  * Merge the raw factOnly + combo outputs for a single fact into a deduped
  * real-topic list. Order: factOnly first, then combo, deduped
  * case-insensitively.
@@ -159,41 +129,20 @@ export function mergeRealOutputsForFact(
 }
 
 /**
- * Drop any decoy topic that collides with a real topic (case-insensitive) so
- * the post-submission text-match partition stays clean.
- */
-export function filterDecoysAgainstReal(
-  decoyTopics: string[],
-  realTopics: string[],
-): string[] {
-  const realSet = new Set(realTopics.map((t) => t.toLowerCase().trim()));
-  return decoyTopics.filter((t) => !realSet.has(t.toLowerCase().trim()));
-}
-
-export interface GeneratedTopicsForFact {
-  realTopics: string[];
-  noisyTexts: string[];
-  /** Decoy persona-fact (entity-swapped version of the user's Fact). null
-   *  when swap wasn't requested or failed. */
-  noisyDecoyFact: string | null;
-}
-
-/**
- * End-to-end real + decoy generation for a SINGLE fact. Used by the single-
+ * End-to-end real topic generation for a SINGLE fact. Used by the single-
  * fact handler (topic-gen-handler). The multi-fact batch path in
  * tool-handlers uses the lower-level builders directly to share batches.
  *
- * Cloud → two parallel batches (real, then swap). Local → sequential calls.
+ * Cloud → two parallel batch calls (factOnly + combo). Local → sequential.
  */
-export async function generateTopicsAndNoiseForFact(
-  inputs: RealTopicGenInputs & { includeNoise: boolean },
-): Promise<GeneratedTopicsForFact> {
+export async function generateTopicsForFact(
+  inputs: RealTopicGenInputs,
+): Promise<string[]> {
   const total =
     inputs.totalCount ?? (inputs.useCloud ? DEFAULT_TOTAL_CLOUD : DEFAULT_TOTAL_LOCAL);
   const hasOthers = inputs.otherFacts.length > 0;
   const { factOnly: factOnlyCount, combo: comboCount } = splitCount(total, hasOthers);
 
-  // -- Stage 1: real topics ------------------------------------------------
   let factOnlyOutput: string | null = null;
   let comboOutput: string | null = null;
 
@@ -269,32 +218,14 @@ export async function generateTopicsAndNoiseForFact(
     });
   }
 
-  const realTopics = mergeRealOutputsForFact(factOnlyOutput, comboOutput, inputs.factStatement);
-
-  // -- Stage 2: entity-swap decoy -----------------------------------------
-  if (!inputs.includeNoise || realTopics.length === 0) {
-    return { realTopics, noisyTexts: [], noisyDecoyFact: null };
-  }
-
-  const swap = await swapEntitiesForFact({
-    factStatement: inputs.factStatement,
-    realTopics,
-    useCloud: inputs.useCloud,
-  });
-
-  const noisyTexts = filterDecoysAgainstReal(swap.topics, realTopics);
-  return { realTopics, noisyTexts, noisyDecoyFact: swap.decoyFact };
+  return mergeRealOutputsForFact(factOnlyOutput, comboOutput, inputs.factStatement);
 }
 
-/** Back-compat: real topics only. */
+/** Back-compat alias used by generateTopicsFromFact (local-only path). */
 export async function generateRealTopicsForFact(
   inputs: RealTopicGenInputs,
 ): Promise<string[]> {
-  const { realTopics } = await generateTopicsAndNoiseForFact({
-    ...inputs,
-    includeNoise: false,
-  });
-  return realTopics;
+  return generateTopicsForFact(inputs);
 }
 
 export function parseTopicsFromOutput(output: string, factStatement: string): string[] {
@@ -327,5 +258,3 @@ export function parseTopicsFromOutput(output: string, factStatement: string): st
   return [];
 }
 
-/** Re-export so callers that previously imported merge helpers don't break. */
-export { parseSwapOutput };

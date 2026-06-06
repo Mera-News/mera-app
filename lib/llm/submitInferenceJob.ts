@@ -19,8 +19,6 @@ import {
   type PendingAsyncJob,
 } from '@/lib/database/services/async-job-service';
 import {
-  countProcessedSyncedIds,
-  countTotalSyncedIds,
   getUnscoredSuggestionsWithFacts,
 } from '@/lib/database/services/article-suggestion-service';
 import {
@@ -144,13 +142,7 @@ export async function submitInferenceJob(): Promise<SubmitStatus> {
     const job: PendingAsyncJob = { ...placeholder, requestId };
     await setPendingAsyncJob(job, { expectedRequestId: placeholderRequestId });
     await setCycleState('waiting-for-relevance');
-    const [processedCount, totalCount] = await Promise.all([
-      countProcessedSyncedIds(),
-      countTotalSyncedIds(),
-    ]);
-    useForYouStore
-      .getState()
-      .setAsyncJobPhase('relevance', processedCount, totalCount);
+    useForYouStore.getState().setAsyncJobPhase('relevance');
     logger.info(
       `${TAG} phase=relevance submitted requestId=${requestId} calls=${bundle.calls.length}`,
     );
