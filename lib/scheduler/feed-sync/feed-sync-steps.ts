@@ -4,7 +4,6 @@
 import { ArticleService } from '@/lib/article-service';
 import {
   batchMarkAsScoredByIds,
-  deleteSuggestionsByServerIds,
   getLocalSuggestionServerIds,
   getUnscoredSuggestionsWithFacts,
   persistAndLinkV2Suggestions,
@@ -25,7 +24,6 @@ export interface DiffResult {
   serverArticleIds: string[];
   articleToTopicTexts: Map<string, string[]>;
   missingIds: string[];
-  deletedCount: number;
 }
 
 export interface HydrateResult {
@@ -82,21 +80,11 @@ export async function stepDiff(
 
   const { serverArticleIds, articleToTopicTexts } = result;
   const localIds = await getLocalSuggestionServerIds();
-  const serverIdSet = new Set(serverArticleIds);
-  const toDeleteIds = localIds.filter((id) => !serverIdSet.has(id));
-
-  const deletedCount = toDeleteIds.length
-    ? await deleteSuggestionsByServerIds(toDeleteIds)
-    : 0;
-  if (deletedCount > 0) {
-    ctx.log(`deleted ${deletedCount} stale rows`);
-  }
-
   const localIdSet = new Set(localIds);
   const missingIds = serverArticleIds.filter((id) => !localIdSet.has(id));
   ctx.log(`${missingIds.length} missing ids to hydrate`);
 
-  return { serverArticleIds, articleToTopicTexts, missingIds, deletedCount };
+  return { serverArticleIds, articleToTopicTexts, missingIds };
 }
 
 export async function stepHydrate(

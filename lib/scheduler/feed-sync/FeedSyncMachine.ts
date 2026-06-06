@@ -94,7 +94,7 @@ class FeedSyncMachine {
       if (ctx.signal.aborted) return;
       const diffResult = await steps.stepDiff(topicResult, ctx);
 
-      if (diffResult.missingIds.length === 0 && diffResult.deletedCount === 0) {
+      if (diffResult.missingIds.length === 0) {
         // No new articles and nothing deleted — but still run scoring in case
         // articles from a prior run are waiting to be analysed (e.g. when the
         // previous scoring step failed transiently and left unscoredCount > 0).

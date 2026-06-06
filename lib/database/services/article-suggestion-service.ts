@@ -185,6 +185,27 @@ export async function deleteSuggestionByServerId(
   return (await deleteSuggestionsByServerIds([serverId])) > 0;
 }
 
+export async function deleteOldSuggestions(cutoffMs: number): Promise<number> {
+  const suggestions = await articleSuggestionsCol
+    .query(Q.where('created_at', Q.lt(cutoffMs)))
+    .fetch();
+  if (suggestions.length === 0) return 0;
+
+  const ids = suggestions.map((s) => s.id);
+  const links = await articleSuggestionFactsCol
+    .query(Q.where('article_suggestion_id', Q.oneOf(ids)))
+    .fetch();
+
+  await database.write(async () => {
+    await database.batch([
+      ...links.map((l) => l.prepareDestroyPermanently()),
+      ...suggestions.map((s) => s.prepareDestroyPermanently()),
+    ]);
+  });
+
+  return suggestions.length;
+}
+
 // --- Write: score ---
 
 /**
