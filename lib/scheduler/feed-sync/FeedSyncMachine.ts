@@ -76,10 +76,12 @@ class FeedSyncMachine {
   }
 
   private async _run(personaId: string, ctx: TaskContext): Promise<void> {
+    logger.info('[FeedSyncMachine] run start');
     try {
       // Step 1: fetch topic IDs
       this._transitionTo('fetching-topic-ids');
       publishSyncStatus('fetching-topic-ids');
+      logger.info('[FeedSyncMachine] → fetching-topic-ids');
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
       await this._awaitResumeIfPaused();
@@ -103,6 +105,7 @@ class FeedSyncMachine {
       // Step 2: diff
       this._transitionTo('diffing');
       publishSyncStatus('diffing');
+      logger.info('[FeedSyncMachine] → diffing');
       await feedPersistence.updateMachineState('diffing');
 
       if (ctx.signal.aborted) return;
@@ -114,6 +117,7 @@ class FeedSyncMachine {
         // previous scoring step failed transiently and left unscoredCount > 0).
         this._transitionTo('scoring');
         publishSyncStatus('scoring');
+        logger.info('[FeedSyncMachine] → scoring (no new articles)');
         await feedPersistence.updateMachineState('scoring');
 
         if (ctx.signal.aborted) return;

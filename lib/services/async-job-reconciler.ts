@@ -818,17 +818,11 @@ export async function submitOrphanedReasonJob(
   context: ExecutionContext,
 ): Promise<'submitted' | 'skipped-pending' | 'skipped-empty' | 'skipped-no-token' | 'error'> {
   const pending = await getPendingAsyncJob();
-  if (pending) {
-    logger.info(`${TAG} [orphan-reason] skipped — pending job exists (${pending.requestId})`);
-    return 'skipped-pending';
-  }
+  if (pending) return 'skipped-pending';
 
   const candidates = await getScoredSuggestionsWithoutReasons();
   const qualified = candidates.filter(
     (c) => typeof c.relevance === 'number' && c.relevance > REASON_RELEVANCE_THRESHOLD,
-  );
-  logger.info(
-    `${TAG} [orphan-reason] DB scan: total_orphaned=${candidates.length} qualified_above_threshold=${qualified.length} (threshold=${REASON_RELEVANCE_THRESHOLD})`,
   );
   if (qualified.length === 0) return 'skipped-empty';
 
@@ -866,11 +860,7 @@ export async function submitOrphanedReasonJob(
     await refreshSuggestionsInStoreUnsafe();
   }
 
-  logger.info(
-    `${TAG} [orphan-reason] bundle: eligible=${reasonBundle.eligibleCandidates.length} calls=${reasonBundle.calls.length} ineligible_skipped=${ineligibleOrphans.length}`,
-  );
   if (reasonBundle.calls.length === 0) {
-    logger.info(`${TAG} [orphan-reason] 0 eligible calls — all qualified rows ineligible (already marked skipped)`);
     return 'skipped-empty';
   }
 

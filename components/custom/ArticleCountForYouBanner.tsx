@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text as RNText } from 'react-native';
 
-interface ArticleCountTextProps {
+interface ArticleCountForYouBannerProps {
     articlesProcessed: number;
     articlesAnalysed: number;
     articlesImpactful: number;
@@ -35,7 +35,7 @@ function formatDateTime(dateStr: string): string {
     return `Last processed: ${displayHours}:${minutes} ${ampm}, ${day}${suffix} ${months[date.getMonth()]}`;
 }
 
-const ArticleCountText: React.FC<ArticleCountTextProps> = ({
+const ArticleCountForYouBanner: React.FC<ArticleCountForYouBannerProps> = ({
     articlesProcessed,
     articlesAnalysed,
     articlesImpactful,
@@ -84,7 +84,7 @@ const ArticleCountText: React.FC<ArticleCountTextProps> = ({
                             placement="top"
                             trigger={(triggerProps) => (
                                 <Pressable {...triggerProps} hitSlop={8}>
-                                    <RNText style={{ color: dotColor, fontSize: 8, lineHeight: 14 }}>{'\u2B24'}</RNText>
+                                    <RNText style={{ color: dotColor, fontSize: 8, lineHeight: 14 }}>{'⬤'}</RNText>
                                 </Pressable>
                             )}
                         >
@@ -109,4 +109,4 @@ const ArticleCountText: React.FC<ArticleCountTextProps> = ({
     );
 };
 
-export default ArticleCountText;
+export default ArticleCountForYouBanner;

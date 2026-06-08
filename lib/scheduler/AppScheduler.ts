@@ -68,14 +68,14 @@ class _AppScheduler {
       const isDue = task.frequency === 0 || (now - lastRun) >= task.frequency;
       if (!isDue) continue;
 
-      // Only tick-drive tasks with no declared triggers. Tasks that rely on
-      // events (app-foreground, network-reconnect) are handled by those
-      // handlers and by onStoresHydrated() on cold start.
-      const hasTrigger = !task.triggers || task.triggers.length === 0;
-      if (!hasTrigger) continue;
+      // Skip purely event-driven tasks (frequency === 0 with triggers) — those
+      // are only meant to fire on the declared events, not on a timer.
+      const isTimerDriven = task.frequency > 0;
+      if (!isTimerDriven) continue;
 
       if (!this._conditionsMet(task)) continue;
 
+      logger.info(`[AppScheduler] tick-firing task=${task.name} lastRun=${lastRun ? Math.round((now - lastRun) / 1000) + 's ago' : 'never'}`);
       await this._enqueueAndRun(task);
     }
   }

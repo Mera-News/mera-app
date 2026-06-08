@@ -18,15 +18,15 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
-import SyncProgressToast from '@/components/custom/SyncProgressToast';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
 import database from '@/lib/database';
 import { hydrateAllStores } from '@/lib/database/hydrate-stores';
+import { useUserStore } from '@/lib/stores/user-store';
 import { applyLanguage } from '@/lib/i18n';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import logger from '@/lib/logger';
-import { handleInitialNotification, setupNotifications } from '@/lib/notification-service';
+import { ensurePushTokenRegistered, handleInitialNotification, setupNotifications } from '@/lib/notification-service';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { purgeAllBaseModels } from '@/lib/mera-protocol-toolkit';
@@ -117,7 +117,7 @@ export default Sentry.wrap(function RootLayout() {
     // the instant it resolves — the screen re-renders with cached rows
     // without the rest of hydration needing to complete.
     hydrateAllStores()
-      .then(() => {
+      .then(async () => {
         // Post-hydration tasks that need hydrated store state.
         applyLanguage(useAppLanguageStore.getState().appLanguage);
 
@@ -140,6 +140,16 @@ export default Sentry.wrap(function RootLayout() {
                 tags: { component: 'RootLayout', method: 'purge-disabled-models' },
               }),
             );
+        }
+
+        // Re-register the Expo push token on every boot. This is idempotent —
+        // only POSTs to the server when the token has changed vs the cached
+        // persona. Handles reinstalls, iOS→Android migrations, and token
+        // rotation events. Awaited before onStoresHydrated so the token is
+        // in memory when the first feed-sync scoring pass runs.
+        const { userId } = useUserStore.getState();
+        if (userId) {
+          await ensurePushTokenRegistered(userId);
         }
 
         // Treat cold start like an app-foreground event so tasks that
@@ -171,8 +181,7 @@ export default Sentry.wrap(function RootLayout() {
         <SafeAreaProvider>
         <GluestackUIProvider mode="dark">
           <ToastInitializer />
-          <SyncProgressToast />
-          <OTAUpdatePrompt />
+<OTAUpdatePrompt />
           <ErrorBoundary
             level="screen"
             FallbackComponent={FullScreenErrorFallback}

@@ -43,16 +43,13 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
 
     if (result === 'skipped-no-token') {
       logger.captureMessage(
-        '[runScoringPass] cloud scoring skipped — no Expo push token on userPersona',
+        '[runScoringPass] cloud scoring skipped — no Expo push token on userPersona; sync will complete, next trigger will retry',
         {
           level: 'warning',
           tags: { service: 'SuggestionSyncService', method: 'runScoringPass' },
         },
       );
-      throw Object.assign(
-        new Error('Cloud scoring unavailable: no push token'),
-        { code: 'no-push-token' },
-      );
+      return 0;
     }
 
     if (result === 'error') {
