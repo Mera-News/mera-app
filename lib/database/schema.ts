@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 30,
+  version: 31,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -64,6 +64,7 @@ export default appSchema({
         { name: 'language_code', type: 'string', isOptional: true },
         { name: 'publication_name', type: 'string', isOptional: true },
         { name: 'title_en', type: 'string', isOptional: true },
+        { name: 'title_original', type: 'string', isOptional: true },
         { name: 'description_en', type: 'string', isOptional: true },
         { name: 'article_url', type: 'string', isOptional: true },
         { name: 'image_url', type: 'string', isOptional: true },

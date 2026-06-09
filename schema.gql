@@ -49,6 +49,7 @@ type ArticleWithClusters {
   pubDate: DateTime!
   publication_name: String
   title_en: String!
+  title: String
 }
 
 type ArticlesForPublicationSourceResponse {

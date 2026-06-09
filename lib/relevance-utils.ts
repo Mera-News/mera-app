@@ -21,9 +21,9 @@ export const getRelevanceLabel = (relevance: number): string => {
 
 const DISPLAY_SECTION_LABELS: Record<string, string> = {
     'Emergency Priority Articles': 'feed.sections.emergency',
-    'High Priority Articles': 'feed.sections.majorImpact',
-    'Medium Priority Articles': 'feed.sections.notableImpact',
-    'Low Priority Articles': 'feed.sections.goodToKnow',
+    'High Priority Articles': 'feed.sections.high',
+    'Medium Priority Articles': 'feed.sections.medium',
+    'Low Priority Articles': 'feed.sections.low',
     'Unscored Articles': 'feed.sections.unscoredShort',
 };
 

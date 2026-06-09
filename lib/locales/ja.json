@@ -447,7 +447,10 @@
     "adding": "追加中...",
     "articleAnalysisTitle": "記事分析について",
     "articleAnalysisDescription": "分析される記事の総数を減らすことでMeraを最適化してください。分析される記事が多いほど、使用量を使い切るのが早くなります。",
-    "gotIt": "わかりました"
+    "gotIt": "わかりました",
+    "articlesAnalyzedLast24h": "24時間に分析した記事数",
+    "maxForDailyAnalysis": "1日の最大分析数",
+    "basicPlan": "ベーシックプラン"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",

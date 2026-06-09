@@ -447,7 +447,10 @@
     "adding": "Toevoegen...",
     "articleAnalysisTitle": "Over artikelanalyse",
     "articleAnalysisDescription": "Je moet je Mera optimaliseren door het totale aantal te analyseren artikelen te verminderen, want hoe meer artikelen er worden geanalyseerd, hoe sneller je gebruiksruimte opraakt.",
-    "gotIt": "Begrepen"
+    "gotIt": "Begrepen",
+    "articlesAnalyzedLast24h": "Artikelen geanalyseerd in 24u",
+    "maxForDailyAnalysis": "Max voor dagelijkse analyse",
+    "basicPlan": "Basisplan"
   },
   "errors": {
     "somethingWentWrong": "Er is iets misgegaan",

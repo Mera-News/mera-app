@@ -447,7 +447,10 @@
     "adding": "جارٍ الإضافة...",
     "articleAnalysisTitle": "حول تحليل المقالات",
     "articleAnalysisDescription": "يجب عليك تحسين استخدام Mera بتقليل إجمالي عدد المقالات التي يتم تحليلها، إذ كلما زاد عدد المقالات المُحللة كلما نفد رصيد استخدامك أسرع.",
-    "gotIt": "فهمت"
+    "gotIt": "فهمت",
+    "articlesAnalyzedLast24h": "المقالات المحللة خلال 24 ساعة",
+    "maxForDailyAnalysis": "الحد الأقصى للتحليل اليومي",
+    "basicPlan": "الخطة الأساسية"
   },
   "errors": {
     "somethingWentWrong": "حدث خطأ ما",

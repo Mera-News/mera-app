@@ -447,7 +447,10 @@
     "adding": "Ajout...",
     "articleAnalysisTitle": "À propos de l'analyse des articles",
     "articleAnalysisDescription": "Vous devriez optimiser votre Mera en réduisant le nombre total d'articles analysés, car plus il y a d'articles analysés, plus vous consommez votre quota d'utilisation.",
-    "gotIt": "Compris"
+    "gotIt": "Compris",
+    "articlesAnalyzedLast24h": "Articles analysés dernières 24h",
+    "maxForDailyAnalysis": "Max pour l'analyse quotidienne",
+    "basicPlan": "Plan basique"
   },
   "errors": {
     "somethingWentWrong": "Une erreur est survenue",

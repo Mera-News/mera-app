@@ -447,7 +447,10 @@
     "adding": "新增中...",
     "articleAnalysisTitle": "關於文章分析",
     "articleAnalysisDescription": "您應該透過減少被分析的文章總數來優化您的 Mera，因為被分析的文章越多，使用量消耗就越快。",
-    "gotIt": "我明白了"
+    "gotIt": "我明白了",
+    "articlesAnalyzedLast24h": "過去24小時分析文章數",
+    "maxForDailyAnalysis": "每日最大分析數",
+    "basicPlan": "基礎方案"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",

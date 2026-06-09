@@ -7,8 +7,9 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PersonaArticles() {
-    const params = useLocalSearchParams<{ topicTexts: string }>();
+    const params = useLocalSearchParams<{ topicTexts: string; factStatement?: string }>();
     const topicTexts = params.topicTexts ? (JSON.parse(params.topicTexts) as string[]) : [];
+    const factStatement = params.factStatement;
 
     if (topicTexts.length === 0) {
         router.back();
@@ -21,6 +22,7 @@ export default function PersonaArticles() {
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <PersonaArticleList
                         topicTexts={topicTexts}
+                        factStatement={factStatement}
                         onBack={() => router.back()}
                     />
                 </ErrorBoundary>

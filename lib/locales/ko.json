@@ -447,7 +447,10 @@
     "adding": "추가 중...",
     "articleAnalysisTitle": "기사 분석에 대하여",
     "articleAnalysisDescription": "분석되는 기사 수를 줄여 Mera를 최적화하는 것이 좋습니다. 기사가 많이 분석될수록 사용량이 빨리 소진됩니다.",
-    "gotIt": "알겠습니다"
+    "gotIt": "알겠습니다",
+    "articlesAnalyzedLast24h": "지난 24시간 분석된 기사",
+    "maxForDailyAnalysis": "일일 최대 분석 수",
+    "basicPlan": "기본 플랜"
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",

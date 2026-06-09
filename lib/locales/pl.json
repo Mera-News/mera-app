@@ -447,7 +447,10 @@
     "adding": "Dodawanie...",
     "articleAnalysisTitle": "O analizie artykułów",
     "articleAnalysisDescription": "Powinieneś optymalizować Mera przez zmniejszenie całkowitej liczby analizowanych artykułów, ponieważ im więcej artykułów jest analizowanych, tym szybciej wyczerpujesz limit użycia.",
-    "gotIt": "Rozumiem"
+    "gotIt": "Rozumiem",
+    "articlesAnalyzedLast24h": "Artykuły przeanalizowane ostatnie 24h",
+    "maxForDailyAnalysis": "Maks dla dziennej analizy",
+    "basicPlan": "Plan podstawowy"
   },
   "errors": {
     "somethingWentWrong": "Coś poszło nie tak",

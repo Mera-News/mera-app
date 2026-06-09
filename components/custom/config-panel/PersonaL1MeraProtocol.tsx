@@ -236,7 +236,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         if (topicTexts.length === 0) return;
         router.push({
             pathname: '/logged-in/persona-articles',
-            params: { topicTexts: JSON.stringify(topicTexts) },
+            params: { topicTexts: JSON.stringify(topicTexts), factStatement: fact.statement },
         });
     }, []);
 
@@ -328,7 +328,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                     <HStack className="mx-4 mb-3" space="sm">
                         <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
                             <HStack className="items-center mb-2" space="xs">
-                                <Text size="xs" className="text-gray-400 flex-1">Articles analyzed last 24h</Text>
+                                <Text size="xs" className="text-gray-400 flex-1">{t('configPanel.articlesAnalyzedLast24h')}</Text>
                                 <Pressable onPress={() => setShowArticleCountInfo(true)} hitSlop={8}>
                                     <MaterialIcons name="info-outline" size={14} color="#6b7280" />
                                 </Pressable>
@@ -336,9 +336,9 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                             <Text size="2xl" className="text-white font-semibold">{totalArticleCount}</Text>
                         </Box>
                         <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
-                            <Text size="xs" className="text-gray-400 mb-2">Max for daily analysis</Text>
+                            <Text size="xs" className="text-gray-400 mb-2">{t('configPanel.maxForDailyAnalysis')}</Text>
                             <Text size="2xl" className="text-white font-semibold">500</Text>
-                            <Text size="xs" className="text-primary-400 mt-0.5">Basic Plan</Text>
+                            <Text size="xs" className="text-primary-400 mt-0.5">{t('configPanel.basicPlan')}</Text>
                         </Box>
                     </HStack>
 
@@ -498,9 +498,12 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                                                         onPress={() => handleTopicPress(topicText)}
                                                                     >
                                                                         <HStack className="items-center justify-between flex-1 mr-3">
-                                                                            <Text size="sm" className="text-gray-200 flex-1 mr-2 capitalize" numberOfLines={2}>
-                                                                                {topicText}
-                                                                            </Text>
+                                                                            <TranslatableDynamic
+                                                                                text={topicText}
+                                                                                size="sm"
+                                                                                className="text-gray-200 flex-1 mr-2 capitalize"
+                                                                                numberOfLines={2}
+                                                                            />
                                                                             <Text size="xs" className="text-gray-500">
                                                                                 {t('configPanel.articleCount', { count })}
                                                                             </Text>

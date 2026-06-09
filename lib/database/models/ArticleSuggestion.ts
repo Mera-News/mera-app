@@ -33,6 +33,7 @@ export default class ArticleSuggestion extends Model {
   @field('language_code') languageCode!: string | null;
   @field('publication_name') publicationName!: string | null;
   @field('title_en') titleEn!: string | null;
+  @field('title_original') titleOriginal!: string | null;
   @field('description_en') descriptionEn!: string | null;
   @field('article_url') articleUrl!: string | null;
   @field('image_url') imageUrl!: string | null;

@@ -79,10 +79,15 @@ export const ArticleSuggestionContainer: React.FC<ArticleSuggestionContainerProp
 
     // Common view model derived from whichever source was provided.
     const imageUrl = suggestion?.image_url ?? article?.image_url ?? null;
+    // English source used as the base for on-device translation.
     const titleEnglish = suggestion?.title_en
         ?? article?.title_en_internal_only
         ?? article?.title
         ?? null;
+    // Original-language version shown directly when appLanguage matches the article language.
+    const titleOriginal: string | undefined = suggestion
+        ? (suggestion.title_original ?? undefined)
+        : (article?.title ?? undefined);
     const sourceLanguage = (suggestion?.language_code ?? article?.original_language_code) ?? undefined;
     const metaPubDate = timestamp
         ?? suggestion?.firstPubDate
@@ -134,7 +139,7 @@ export const ArticleSuggestionContainer: React.FC<ArticleSuggestionContainerProp
         <TranslatableDynamic
             as="heading"
             text={displayTitle}
-            originalText={titleEnglish ?? undefined}
+            originalText={titleOriginal}
             originalLanguage={sourceLanguage}
             size={isCard ? 'md' : 'xl'}
             className={isCard ? 'leading-6' : 'text-white'}

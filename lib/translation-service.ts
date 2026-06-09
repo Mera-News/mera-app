@@ -114,35 +114,48 @@ export function getArticleTranslatableStatus(
 // concurrent translation sessions.
 let queue: Promise<void> = Promise.resolve();
 
+// Delays (ms) between retry attempts. The OS translator throws transiently
+// when the translation session is busy; a short pause is enough to recover.
+const TRANSLATE_RETRY_DELAYS_MS = [200, 600, 1800] as const;
+
 /** Translate a single text string. Returns null on failure. */
 export function translateText(
     text: string,
     targetLangCode: string,
 ): Promise<string | null> {
     const promise = queue.then(async () => {
-        try {
-            const result = await onTranslateTask({
-                input: text,
-                targetLangCode,
-                // On Android, expo-translate-text's "fixed source" code path
-                // has a pendingCount race that closes the translator before
-                // translate() finishes, causing a native crash with no JS
-                // log. Routing through auto-detect avoids that path. iOS
-                // doesn't use this code, so we keep the explicit 'en'
-                // source there for the small perf win.
-                sourceLangCode: Platform.OS === 'android' ? 'auto' : 'en',
-                // Required on Android: the Kotlin bridge rejects undefined
-                // values for these keys. iOS ignores them.
-                requiresWifi: false,
-                requireCharging: false,
-            });
-            return typeof result.translatedTexts === 'string'
-                ? result.translatedTexts
-                : null;
-        } catch (err) {
-            logger.error('[TranslationService] Translation failed', err as Error);
-            return null;
+        for (let attempt = 0; attempt <= TRANSLATE_RETRY_DELAYS_MS.length; attempt++) {
+            try {
+                const result = await onTranslateTask({
+                    input: text,
+                    targetLangCode,
+                    // On Android, expo-translate-text's "fixed source" code path
+                    // has a pendingCount race that closes the translator before
+                    // translate() finishes, causing a native crash with no JS
+                    // log. Routing through auto-detect avoids that path. iOS
+                    // doesn't use this code, so we keep the explicit 'en'
+                    // source there for the small perf win.
+                    sourceLangCode: Platform.OS === 'android' ? 'auto' : 'en',
+                    // Required on Android: the Kotlin bridge rejects undefined
+                    // values for these keys. iOS ignores them.
+                    requiresWifi: false,
+                    requireCharging: false,
+                });
+                return typeof result.translatedTexts === 'string'
+                    ? result.translatedTexts
+                    : null;
+            } catch (err) {
+                if (attempt < TRANSLATE_RETRY_DELAYS_MS.length) {
+                    await new Promise<void>((resolve) =>
+                        setTimeout(resolve, TRANSLATE_RETRY_DELAYS_MS[attempt]),
+                    );
+                } else {
+                    logger.error('[TranslationService] Translation failed', err as Error);
+                    return null;
+                }
+            }
         }
+        return null;
     });
 
     // Keep the queue moving even if one translation fails

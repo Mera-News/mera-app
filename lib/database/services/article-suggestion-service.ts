@@ -407,6 +407,7 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
     language_code: row.languageCode,
     publication_name: row.publicationName,
     title_en: row.titleEn,
+    title_original: row.titleOriginal,
     description_en: row.descriptionEn,
     article_url: row.articleUrl,
     image_url: row.imageUrl,
@@ -542,6 +543,7 @@ export async function persistAndLinkV2Suggestions(
         r.languageCode = a.language_code ?? null;
         r.publicationName = a.publication_name ?? null;
         r.titleEn = a.title_en ?? null;
+        r.titleOriginal = a.title ?? null;
         r.descriptionEn = a.description_en ?? null;
         r.articleUrl = a.article_url ?? null;
         r.imageUrl = a.image_url ?? null;

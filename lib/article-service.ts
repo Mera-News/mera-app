@@ -272,6 +272,7 @@ const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
       _id
       clusterIds
       title_en
+      title
       description_en
       article_url
       image_url

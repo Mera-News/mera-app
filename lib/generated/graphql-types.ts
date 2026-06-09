@@ -65,6 +65,7 @@ export type ArticleWithClusters = {
   language_code?: Maybe<Scalars['String']['output']>;
   pubDate: Scalars['DateTime']['output'];
   publication_name?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
   title_en: Scalars['String']['output'];
 };
 

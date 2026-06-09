@@ -447,7 +447,10 @@
     "adding": "Agregando...",
     "articleAnalysisTitle": "Acerca del análisis de artículos",
     "articleAnalysisDescription": "Deberías optimizar Mera reduciendo el número total de artículos analizados, ya que cuantos más artículos se analizan, más consumo de uso realizas.",
-    "gotIt": "Entendido"
+    "gotIt": "Entendido",
+    "articlesAnalyzedLast24h": "Artículos analizados últimas 24h",
+    "maxForDailyAnalysis": "Máx para análisis diario",
+    "basicPlan": "Plan básico"
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",

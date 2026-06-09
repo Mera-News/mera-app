@@ -447,7 +447,10 @@
     "adding": "Ekleniyor...",
     "articleAnalysisTitle": "Makale analizi hakkında",
     "articleAnalysisDescription": "Analiz edilen makale sayısını azaltarak Mera'nı optimize etmelisin; çünkü ne kadar çok makale analiz edilirse o kadar hızlı kullanım hakkın tükenir.",
-    "gotIt": "Anladım"
+    "gotIt": "Anladım",
+    "articlesAnalyzedLast24h": "Son 24s'de analiz edilen makaleler",
+    "maxForDailyAnalysis": "Günlük analiz için maks",
+    "basicPlan": "Temel Plan"
   },
   "errors": {
     "somethingWentWrong": "Bir şeyler yanlış gitti",

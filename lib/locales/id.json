@@ -447,7 +447,10 @@
     "adding": "Menambahkan...",
     "articleAnalysisTitle": "Tentang analisis artikel",
     "articleAnalysisDescription": "Anda sebaiknya mengoptimalkan Mera dengan mengurangi jumlah total artikel yang dianalisis karena semakin banyak artikel yang dianalisis, semakin banyak kuota penggunaan yang terpakai.",
-    "gotIt": "Mengerti"
+    "gotIt": "Mengerti",
+    "articlesAnalyzedLast24h": "Artikel dianalisis 24 jam terakhir",
+    "maxForDailyAnalysis": "Maks untuk analisis harian",
+    "basicPlan": "Paket dasar"
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",

@@ -36,6 +36,7 @@ export type ForYouSuggestion = {
     language_code: string | null;
     publication_name: string | null;
     title_en: string | null;
+    title_original: string | null;
     description_en: string | null;
     article_url: string | null;
     image_url: string | null;

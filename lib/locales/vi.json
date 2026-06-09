@@ -447,7 +447,10 @@
     "adding": "Đang thêm...",
     "articleAnalysisTitle": "Về phân tích bài viết",
     "articleAnalysisDescription": "Bạn nên tối ưu hóa Mera bằng cách giảm tổng số bài viết được phân tích vì càng nhiều bài được phân tích, bạn càng nhanh hết hạn mức sử dụng.",
-    "gotIt": "Đã hiểu"
+    "gotIt": "Đã hiểu",
+    "articlesAnalyzedLast24h": "Bài viết được phân tích trong 24h",
+    "maxForDailyAnalysis": "Tối đa cho phân tích hàng ngày",
+    "basicPlan": "Gói cơ bản"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",

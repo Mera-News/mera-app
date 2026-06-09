@@ -1,4 +1,5 @@
 import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -15,6 +16,7 @@ import DrillDownHeader from './DrillDownHeader';
 
 interface PersonaArticleListProps {
     readonly topicTexts: string[];
+    readonly factStatement?: string;
     readonly onBack: () => void;
 }
 
@@ -32,7 +34,7 @@ const toNewsArticle = (s: ArticleSuggestion) => ({
     clusterConfidence: null,
 });
 
-const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, onBack }) => {
+const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, factStatement, onBack }) => {
     const { t } = useTranslation();
     const [articles, setArticles] = useState<ArticleSuggestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +89,14 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, onB
         <Box className="flex-1">
             <DrillDownHeader
                 title={topicTexts[0] ?? t('common.articles')}
+                titleContent={factStatement ? (
+                    <TranslatableDynamic
+                        text={factStatement}
+                        size="lg"
+                        className="text-white font-semibold"
+                        numberOfLines={0}
+                    />
+                ) : undefined}
                 onBack={onBack}
             />
 

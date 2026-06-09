@@ -447,7 +447,10 @@
     "adding": "Wird hinzugefügt...",
     "articleAnalysisTitle": "Über die Artikelanalyse",
     "articleAnalysisDescription": "Sie sollten Mera optimieren, indem Sie die Gesamtanzahl der analysierten Artikel reduzieren, da je mehr Artikel analysiert werden, desto schneller wird Ihr Kontingent aufgebraucht.",
-    "gotIt": "Verstanden"
+    "gotIt": "Verstanden",
+    "articlesAnalyzedLast24h": "Analysierte Artikel letzte 24h",
+    "maxForDailyAnalysis": "Max für tägliche Analyse",
+    "basicPlan": "Basisplan"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",

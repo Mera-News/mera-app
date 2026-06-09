@@ -7,12 +7,14 @@ import React from 'react';
 
 interface DrillDownHeaderProps {
     readonly title: string;
+    readonly titleContent?: React.ReactNode;
     readonly subtitle?: string;
+    readonly titleNumberOfLines?: number;
     readonly onBack: () => void;
     readonly rightAction?: React.ReactNode;
 }
 
-const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({ title, subtitle, onBack, rightAction }) => {
+const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({ title, titleContent, subtitle, titleNumberOfLines = 1, onBack, rightAction }) => {
     return (
         <HStack className="px-4 py-3 items-center border-b border-gray-800">
             <Pressable onPress={onBack} className="p-1 -ml-1 rounded-full">
@@ -24,9 +26,11 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({ title, subtitle, onBa
                         {subtitle}
                     </Text>
                 )}
-                <Text size="lg" className="text-white font-semibold" numberOfLines={1}>
-                    {title}
-                </Text>
+                {titleContent ?? (
+                    <Text size="lg" className="text-white font-semibold" numberOfLines={titleNumberOfLines}>
+                        {title}
+                    </Text>
+                )}
             </VStack>
             {rightAction}
         </HStack>

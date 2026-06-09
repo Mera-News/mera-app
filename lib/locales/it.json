@@ -447,7 +447,10 @@
     "adding": "Aggiunta in corso...",
     "articleAnalysisTitle": "Informazioni sull'analisi degli articoli",
     "articleAnalysisDescription": "Dovresti ottimizzare il tuo Mera riducendo il numero totale di articoli analizzati, poiché più articoli vengono analizzati, più velocemente esaurisci il tuo utilizzo.",
-    "gotIt": "Capito"
+    "gotIt": "Capito",
+    "articlesAnalyzedLast24h": "Articoli analizzati ultime 24h",
+    "maxForDailyAnalysis": "Max per analisi giornaliera",
+    "basicPlan": "Piano base"
   },
   "errors": {
     "somethingWentWrong": "Qualcosa è andato storto",

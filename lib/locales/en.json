@@ -160,9 +160,9 @@
     },
     "sections": {
       "emergency": "Emergency",
-      "majorImpact": "Major impact",
-      "notableImpact": "Notable impact",
-      "goodToKnow": "Good to know",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
       "unscoredShort": "Unscored"
     },
     "syncToast": {
@@ -447,7 +447,10 @@
     "adding": "Adding...",
     "articleAnalysisTitle": "About article analysis",
     "articleAnalysisDescription": "You should be optimizing your Mera by reducing the total number of articles being analyzed as the more articles being analyzed the more you run out of usage.",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "articlesAnalyzedLast24h": "Articles analyzed last 24h",
+    "maxForDailyAnalysis": "Max for daily analysis",
+    "basicPlan": "Basic Plan"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
