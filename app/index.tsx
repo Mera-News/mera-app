@@ -1,5 +1,5 @@
 import { Box } from "@/components/ui/box";
-import { Spinner } from "@/components/ui/spinner";
+import MeraLogo from "@/components/custom/MeraLogo";
 import { authClient } from "@/lib/auth-client";
 import { Redirect } from "expo-router";
 
@@ -9,7 +9,7 @@ export default function Index() {
   if (isPending) {
     return (
       <Box className="flex-1 justify-center items-center bg-black">
-        <Spinner size="large" />
+        <MeraLogo size={96} />
       </Box>
     );
   }

@@ -312,13 +312,18 @@ export async function ensurePushTokenRegistered(userId: string): Promise<void> {
         // token, so we must re-call getExpoPushTokenAsync to get the
         // ExponentPushToken[...] form the server expects. Only attach once.
         if (!pushTokenListener) {
+            let tokenRotationInFlight = false;
             pushTokenListener = Notifications.addPushTokenListener(() => {
                 void (async () => {
+                    if (tokenRotationInFlight) return;
+                    tokenRotationInFlight = true;
                     try {
                         const current = useUserStore.getState().userId;
                         if (!current) return;
                         const expoToken = await registerForPushNotificationsAsync(true);
                         if (!expoToken) return;
+                        const cachedToken = useUserStore.getState().userPersona?.expoPushToken ?? null;
+                        if (cachedToken === expoToken) return;
                         const updated = await AccountService.updateExpoPushTokenMutation(
                             current,
                             expoToken,
@@ -328,6 +333,8 @@ export async function ensurePushTokenRegistered(userId: string): Promise<void> {
                         logger.captureException(err, {
                             tags: { service: 'notification-service', method: 'pushTokenRotation' },
                         });
+                    } finally {
+                        tokenRotationInFlight = false;
                     }
                 })();
             });

@@ -12,7 +12,11 @@
         "retry": "重試",
         "ok": "確定",
         "checking": "檢查中...",
-        "updating": "更新中..."
+        "updating": "更新中...",
+        "goBack": "返回上一頁",
+        "articles": "文章",
+        "loggingOut": "登出中...",
+        "never": "從未"
     },
     "auth": {
         "emailPlaceholder": "輸入您的電子郵件地址",
@@ -29,6 +33,9 @@
         "invalidOtp": "請輸入有效的 6 位數 OTP 驗證碼",
         "invalidOtpServer": "OTP 驗證碼無效，請再試一次。",
         "otpError": "驗證過程中發生錯誤，請再試一次。",
+        "resendCode": "重新發送驗證碼",
+        "resendIn": "{{seconds}} 秒後可重新發送",
+        "resendSuccess": "新的驗證碼已發送。",
         "previousUser": {
             "title": "歡迎回來",
             "subtitle": "我們暫時無法載入您的帳號。請再試一次，或以其他使用者身份登入。",
@@ -42,12 +49,13 @@
     },
     "account": {
         "pendingTitle": "帳號待審核",
-        "pendingDescription": "我們很高興您想試用我們的應用程式。一旦您的帳號通過審核，您將收到一封電子郵件，届時即可繼續使用此應用程式。",
+        "pendingDescription": "我們很高興您想試用我們的應用程式。一旦您的帳號通過審核，您將收到一封電子郵件，屆時即可繼續使用此應用程式。",
         "enquiries": "如有任何疑問，您可以發送郵件至",
         "contactEmail": "{{supportEmail}} ✉️",
         "refresh": "重新整理 🔄"
     },
     "feed": {
+        "updatedAt": "更新於 {{time}}",
         "allCaughtUp": "您已瀏覽完所有與您相關的新聞。",
         "noInterests": "Mera 無法為您分析新聞",
         "noInterestsDescription": "請建立您的使用者人物誌，讓 Mera 開始為您產生新聞。",
@@ -57,12 +65,12 @@
         "stuckDescription": "我們這邊發生了問題。",
         "stuckHint": "請幾分鐘後重新開啟應用程式。",
         "offlineCached": "離線中 — 顯示快取內容",
-        "newBadge": "新",
+        "newBadge": "最新",
         "newsCluster": "新聞叢集",
         "justNow": "剛剛",
-        "minutesAgo": "{{count}} 分鐘前",
-        "hoursAgo": "{{count}} 小時前",
-        "daysAgo": "{{count}} 天前",
+        "minutesAgo": "{{count}}分鐘前",
+        "hoursAgo": "{{count}}小時前",
+        "daysAgo": "{{count}}天前",
         "mindfulness": [
             "是時候放下手機了。",
             "做幾次深呼吸吧。",
@@ -83,7 +91,7 @@
         "analysedArticles": "過去 24 小時內發佈了 {{processed}} {{articleWord}}，其中 {{analysed}} 篇文章經過分析，{{impactful}} 篇與您相關。",
         "analysedArticlesPending": "過去 24 小時內發佈了 {{processed}} {{articleWord}}。",
         "noiseRemovedSummary": "{{count}} 篇{{articleWord}}在分析前已被過濾為干擾內容。",
-        "articleSingular": "文章",
+        "articleSingular": "篇文章",
         "articlePlural": "篇文章",
         "processing": {
             "doneFlash": "一切就緒 — 這是您的新聞",
@@ -91,6 +99,13 @@
             "mustReturnNotificationTitle": "請返回 Mera",
             "mustReturnNotificationBody": "我們正在將您的新聞提取到您的手機上。開啟 Mera 讓我們完成 — 只需要幾秒鐘。",
             "stages": {
+                "fetching": {
+                    "headlines": [
+                        "正在把今日的文章帶到您的手機上…",
+                        "Mera 將新聞帶到您的裝置 — 您的興趣從不離開它。"
+                    ],
+                    "amberSubline": "請保持此畫面開啟。"
+                },
                 "sending": {
                     "shortName": "為您要求今日新聞",
                     "tooltip": "Mera 正在您的手機上準備加密的請求。請保持應用程式開啟。",
@@ -105,9 +120,9 @@
                     "tooltip": "今日的文章正被複製到您的手機，以便下一步可以私密執行。",
                     "headlines": [
                         "正在把今日的文章帶到您的手機上…",
-                        "大多數應用程式會發送您的習慣來分析您。Mera 則相反 — 它將新聞帶進來。"
+                        "Mera 將新聞帶到您的裝置 — 您的興趣從不離開它。"
                     ],
-                    "amberSubline": "快好了 — 請留在此畫面上。"
+                    "amberSubline": "請保持此畫面開啟。"
                 },
                 "noiseRemoval": {
                     "shortName": "移除干擾內容",
@@ -118,37 +133,76 @@
                     ]
                 },
                 "cloudRelevance": {
-                    "shortName": "為您閱讀文章",
+                    "shortName": "計算相關性",
                     "tooltip": "雲端中的 AI 正在逐一閱讀每篇文章，並挑選可能對您重要的內容。您的請求已加密 — 只有您的手機持有金鑰。",
                     "headlines": [
-                        "雲端中的 AI 現在正在逐一閱讀每篇文章，查看哪些對您很重要。",
-                        "您可以離開應用程式 — 準備好後我們會通知您。如果有很多文章要讀，這可能需要一段時間。",
-                        "您的請求在離開前已在您的手機上加密 — 只有您的手機持有金鑰來讀取答案。",
-                        "您的興趣與請求一起傳遞 — 已加密 — 以便 AI 可以挑選重要的內容。",
-                        "加密的請求只在稱為 TEE 的封閉防篡改環境內開啟，絕對沒有人能看進去。",
-                        "我們自己的伺服器只看到他們無法讀取的加密 blob — 一旦答案到達您的手機，它們就會被刪除。"
+                        "AI 正在閱讀每篇文章，看看哪些對您很重要。",
+                        "您的請求已加密 — 只有您的手機持有金鑰。"
                     ]
                 },
                 "cloudReasons": {
                     "shortName": "為您撰寫摘要",
                     "tooltip": "AI 正在為每個故事撰寫簡短說明，解釋為什麼它可能對您很重要。請求保持加密。",
                     "headlines": [
-                        "AI 現在正在為每個故事撰寫簡短說明 — 為什麼這個對您很重要。",
-                        "您可以離開 — 準備好時我們會立即通知您。",
-                        "相同的加密請求 — 只有您的手機可以解密答案。"
+                        "正在為每則相關報導撰寫簡短說明。",
+                        "您可以離開 — 準備好時我們會立即通知您。"
                     ]
                 },
                 "onDevice": {
-                    "shortName": "在您的手機上排序",
-                    "tooltip": "您的手機正在本機進行最後的排序。此步驟無任何內容離開裝置。",
+                    "shortName": "在您的手機上評分",
+                    "tooltip": "您的手機正在本機進行評分。此步驟無任何內容離開裝置。",
                     "headlines": [
-                        "您的手機正在為您排序這些故事…",
-                        "這部分恰好發生在您的裝置上 — 沒有任何內容離開它，因此不需要加密。",
-                        "幾乎完成了。"
+                        "您的手機正在為您對這些報導評分。",
+                        "這完全在您的裝置上進行 — 沒有任何內容離開它。"
                     ]
                 }
             }
+        },
+        "sections": {
+            "emergency": "緊急",
+            "majorImpact": "重大影響",
+            "notableImpact": "顯著影響",
+            "goodToKnow": "值得了解",
+            "unscoredShort": "未評分"
+        },
+        "syncToast": {
+            "relevanceTitle": "計算相關性",
+            "reasonsTitle": "為您撰寫摘要",
+            "onDeviceTitle": "在您的手機上評分",
+            "completedTitle": "全部完成",
+            "completedMessage": "您的動態已準備就緒"
         }
+    },
+    "relevance": {
+        "emergency": "緊急",
+        "high": "高",
+        "medium": "中",
+        "low": "低",
+        "irrelevant": "無關",
+        "unprocessed": "未處理"
+    },
+    "articleDetail": {
+        "readArticle": "閱讀文章",
+        "relatedArticles": "相關文章",
+        "articleUnavailable": "此文章已不再提供",
+        "storyUnavailable": "此報導已不再提供",
+        "failedToLoad": "文章載入失敗",
+        "articleNotFound": "找不到文章"
+    },
+    "newsCluster": {
+        "failedToLoad": "叢集詳情載入失敗",
+        "clusterNotFound": "找不到叢集",
+        "coverage": "報導範圍",
+        "noArticles": "此叢集中沒有可用的文章"
+    },
+    "sources": {
+        "searchCountries": "搜尋國家...",
+        "noCountriesMatch": "沒有符合您搜尋的國家",
+        "noSourcesAvailable": "沒有可用的來源",
+        "noFeedsAvailable": "沒有可用的訂閱源",
+        "publishers": "出版商",
+        "noPublishers": "此國家沒有出版商",
+        "noArticlesFound": "找不到文章"
     },
     "clusterDetail": {
         "translatable": "這篇文章是 {{language}} 的，可以翻譯成您的語言",
@@ -348,15 +402,16 @@
         "signedOutTitle": "已登出",
         "signedOutDescription": "您已成功登出。",
         "logoutFailedTitle": "登出失敗",
-        "logoutFailedDescription": "登出時發生問題，請再試一次。"
+        "logoutFailedDescription": "登出時發生問題，請再試一次。",
+        "loggingOut": "登出中..."
     },
     "configPanel": {
         "tabPersona": "人物誌",
         "tabSources": "來源",
         "tabPreferences": "偏好設定",
-        "privacyOnDevice": "您的事實僅儲存在您的裝置上 — AI 推論透過 Mera Protocol 完全在裝置端執行。只有匿名主題（例如「阿姆斯特丹新聞」）會傳送到我們的伺服器以尋找相關文章。聊天記錄從不儲存；每次工作階段都從頭開始。更換裝置或登出意味著需要重新建立您的個人資料。",
-        "privacyCloud": "您的事實僅儲存在您的裝置上。雲端推論使用加密的可信執行環境（TEE）— 您的資料在裝置上加密，在隔離的飛地中處理，僅在您的裝置上解密。只有匿名主題會傳送到我們的伺服器。聊天記錄從不儲存；每次工作階段都從頭開始。更換裝置或登出意味著需要重新建立您的個人資料。",
-        "privacyPolicy": "隱私權政策",
+        "privacyOnDevice": "您的事實和主題僅儲存在您的裝置上 — AI 推論透過 Mera Protocol 完全在裝置端執行。每次您需要新聞時，您的主題會傳送至我們的伺服器以擷取相關文章；伺服器回傳結果，不儲存您的任何資料。聊天記錄從不儲存；每次工作階段都從頭開始。更換裝置或登出意味著需要重新建立您的個人資料。",
+        "privacyCloud": "您的事實和主題僅儲存在您的裝置上。雲端推論使用加密的可信執行環境（TEE）— 您的資料在裝置上加密，在隔離的飛地中處理，僅在您的裝置上解密。每次您需要新聞時，您的主題會傳送至我們的伺服器以擷取相關文章；伺服器回傳結果，不儲存任何資料。聊天記錄從不儲存；每次工作階段都從頭開始。更換裝置或登出意味著需要重新建立您的個人資料。",
+        "privacyPolicy": "隱私政策",
         "updatingTopics": "正在更新主題... {{completed}}/{{total}}",
         "emptyStateMessage": "回答幾個問題來建立您的個人資料",
         "factsHeading": "事實",
@@ -381,7 +436,17 @@
         "refreshSuggestionsSuccessTitle": "建議已重新整理",
         "refreshSuggestionsSuccessDescription": "正在產生新的個人化建議。",
         "refreshSuggestionsFailedTitle": "重新整理失敗",
-        "refreshSuggestionsFailedDescription": "無法重新整理建議。請再試一次。"
+        "refreshSuggestionsFailedDescription": "無法重新整理建議。請再試一次。",
+        "personaUpdatedRefreshHint": "我看到您已更新個人資料，您希望我重新產生您的動態嗎？",
+        "articleCount_one": "{{count}} 篇文章",
+        "articleCount_other": "{{count}} 篇文章",
+        "addTopic": "新增主題",
+        "addTopicDescription": "請輸入您想追蹤此事實的主題。應用程式將根據您的主題尋找新聞，並根據事實了解其相關性。",
+        "addTopicPlaceholder": "例如：歐洲的 AI 法規",
+        "adding": "新增中...",
+        "articleAnalysisTitle": "關於文章分析",
+        "articleAnalysisDescription": "您應該透過減少被分析的文章總數來優化您的 Mera，因為被分析的文章越多，使用量消耗就越快。",
+        "gotIt": "我明白了"
     },
     "errors": {
         "somethingWentWrong": "發生錯誤",
@@ -401,20 +466,80 @@
         "startingChat": "正在啟動聊天...",
         "loadingModel": "正在載入 AI Model...",
         "loadingModelProgress": "正在載入 AI Model... {{percent}}%",
-        "reloadingModel": "正在重新載入 AI Model... {{percent}}%"
+        "reloadingModel": "正在重新載入 AI Model... {{percent}}%",
+        "waitingForResponse": "等待回應中...",
+        "typeMessage": "輸入訊息...",
+        "inferenceError": "我們目前無法連線至 Mera 推論服務。請稍後再試。"
     },
     "personaChat": {
-        "introMessage": "嗨！我是 Mera，你的個人新聞助理。如果你願意，隨便告訴我一些關於你的事——住在哪裡、做什麼工作、有什麼興趣、關注哪些股票、家人住在哪裡。或者直接說「幫我設定一下」，我會帶你一步一步走完。"
+        "introMessage": "嗨！我是 Mera，您的個人新聞助理。如果您願意，可以分享關於您自己的事 — 住在哪裡、從事什麼工作、追蹤的興趣、持有的股票、家人居住的地方。或者直接說「幫我設定」，我會引導您完成。"
     },
     "publicationVisits": {
         "topVisitedTitle": "您正在閱讀的媒體",
         "badge_one": "過去 30 天內您造訪了 {{publication}} 1 次",
         "badge_other": "過去 30 天內您造訪了 {{publication}} {{count}} 次",
-        "countShort_one": "{{count}} 次造訪",
-        "countShort_other": "{{count}} 次造訪",
+        "countShort_one": "{{count}} 次訪問",
+        "countShort_other": "{{count}} 次訪問",
         "tooltipA11y": "關於閱讀歷史",
         "tooltipIntro": "Mera 為您追蹤閱讀習慣——且資料僅保存在您的裝置上。",
         "tooltipLink": "在這裡查看您的完整閱讀歷史。",
-        "screenIntro": "Mera 追蹤您的閱讀習慣——僅在您的裝置上保留 30 天。這讓您更清楚地了解哪些媒體對您最重要，從而考慮支持那些直接為您帶來價值的媒體。"
+        "screenIntro": "Mera 追蹤您的閱讀習慣——僅在您的裝置上保留 30 天。這讓您更清楚地了解哪些媒體對您最重要，從而考慮支持那些直接為您帶來價值的媒體。",
+        "visitedListTitle": "您造訪過的媒體",
+        "last30Days": "過去 30 天",
+        "lastRead": "上次閱讀 {{time}}",
+        "noArticlesYet": "您尚未閱讀任何文章。",
+        "articlesRead": "您閱讀過的文章",
+        "noArticlesLast30Days": "過去 30 天內沒有來自此媒體的文章。"
+    },
+    "ota": {
+        "updateReady": "更新已就緒",
+        "updateDescription": "點擊以重新啟動並套用最新版本"
+    },
+    "observability": {
+        "title": "可觀測性",
+        "articles": "文章",
+        "relevant": "相關",
+        "unscored": "未評分",
+        "scheduler": "排程器",
+        "dbTables": "資料庫表格",
+        "table": "表格",
+        "rowsStatus": "列數 / 狀態",
+        "schedulerTasks": "排程任務",
+        "task": "任務",
+        "status": "狀態",
+        "lastRun": "上次執行",
+        "progress": "進度",
+        "noTasksYet": "尚未登錄任何任務",
+        "feed": "動態",
+        "protocol": "Protocol",
+        "system": "系統",
+        "settings": "設定",
+        "noSettings": "無設定",
+        "notLoaded": "未載入",
+        "never": "從未",
+        "running": "{{count}} 個執行中",
+        "failed": "{{count}} 個失敗",
+        "pending": "{{count}} 個待處理"
+    },
+    "tableDetail": {
+        "rowsOfCols": "{{rows}} / {{total}} 列 · {{cols}} 欄",
+        "rowsAndCols": "{{rows}} 列 · {{cols}} 欄",
+        "tableEmpty": "表格為空",
+        "loadMore": "載入下 {{count}} 筆",
+        "allRowsLoaded": "已載入全部 {{count}} 列"
+    },
+    "sync": {
+        "fetchingTopics": "正在擷取今日主題…",
+        "checkingForUpdates": "正在檢查更新…",
+        "downloadingArticles": "正在下載文章…",
+        "savingArticles": "正在儲存文章…",
+        "analyzingRelevance": "正在分析相關性…",
+        "upToDate": "您的動態已是最新",
+        "waitingForConnection": "等待連線中…",
+        "serverUnavailable": "伺服器無法連線 — 即將重試",
+        "sessionExpired": "工作階段已過期 — 請重新登入",
+        "noTopics": "新增主題以查看您的新聞",
+        "storageFull": "請釋放裝置儲存空間後再試",
+        "syncFailed": "無法載入最新內容。下拉以重新整理。"
     }
 }

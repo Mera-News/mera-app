@@ -1,5 +1,5 @@
 import { Box } from "@/components/ui/box";
-import { Spinner } from "@/components/ui/spinner";
+import MeraLogo from "@/components/custom/MeraLogo";
 import { AccountService } from "@/lib/account-service";
 import { OnboardingStage } from "@/lib/generated/graphql-types";
 import { authClient } from "@/lib/auth-client";
@@ -78,7 +78,7 @@ export default function LoggedInIndex() {
     if (isSessionPending || isCheckingRoute) {
         return (
             <Box className="flex-1 justify-center items-center bg-black">
-                <Spinner size="large" />
+                <MeraLogo size={96} />
             </Box>
         );
     }
@@ -87,7 +87,7 @@ export default function LoggedInIndex() {
     if (shouldRedirect) {
         return (
             <Box className="flex-1 justify-center items-center bg-black">
-                <Spinner size="large" />
+                <MeraLogo size={96} />
             </Box>
         );
     }
@@ -100,7 +100,7 @@ export default function LoggedInIndex() {
     // Show spinner while redirecting
     return (
         <Box className="flex-1 justify-center items-center bg-black">
-            <Spinner size="large" />
+            <MeraLogo size={96} />
         </Box>
     );
 }

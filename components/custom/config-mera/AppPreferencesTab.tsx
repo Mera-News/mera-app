@@ -16,6 +16,9 @@ import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import LanguageWordTicker from './LanguageWordTicker';
 
 interface PreferenceOption {
     id: string;
@@ -29,6 +32,7 @@ const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
     const toast = useToast();
     const { t } = useTranslation();
+    const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const { data: session } = authClient.useSession();
     const userEmail = session?.user?.email;
     const maskedEmail = React.useMemo(() => {
@@ -156,9 +160,18 @@ const AppPreferencesTab: React.FC = () => {
                 className="flex-row items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg"
                 onPress={option.onPress}
             >
-                <Text className={`text-base ${textColor}`}>
-                    {option.title}
-                </Text>
+                {option.id === 'language' ? (
+                    <HStack className="items-center flex-1" space="md">
+                        <Text className={`text-base ${textColor}`}>
+                            {LANGUAGE_WORD_BY_CODE[appLanguage] ?? 'Language'}
+                        </Text>
+                        <LanguageWordTicker />
+                    </HStack>
+                ) : (
+                    <Text className={`text-base ${textColor}`}>
+                        {option.title}
+                    </Text>
+                )}
                 <MaterialIcons
                     name="chevron-right"
                     size={20}

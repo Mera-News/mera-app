@@ -384,14 +384,19 @@ const MeraNewsScreen: React.FC = () => {
         return items;
     }, [suggestions]);
 
-    // TODO: remove – testing all pills visible
-    const availableSections = useMemo((): SectionItem[] => [
-        { label: 'Emergency Priority Articles', shortLabel: 'feed.sections.emergency' },
-        { label: 'High Priority Articles', shortLabel: 'feed.sections.majorImpact' },
-        { label: 'Medium Priority Articles', shortLabel: 'feed.sections.notableImpact' },
-        { label: 'Low Priority Articles', shortLabel: 'feed.sections.goodToKnow' },
-        { label: 'Unscored Articles', shortLabel: 'feed.sections.unscoredShort' },
-    ], []);
+    const availableSections = useMemo((): SectionItem[] => {
+        const seen = new Set<string>();
+        const result: SectionItem[] = [];
+        for (const item of listData) {
+            if (item.type !== 'priority-label') continue;
+            const shortLabel = getDisplaySectionLabel(item.label);
+            if (!seen.has(shortLabel)) {
+                seen.add(shortLabel);
+                result.push({ label: item.label, shortLabel });
+            }
+        }
+        return result;
+    }, [listData]);
 
     // Hide the onboarding waiting card once the first scored, relevant card is ready.
     useEffect(() => {
