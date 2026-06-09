@@ -12,12 +12,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import { AccountService, type UserTopic } from '@/lib/account-service';
+import type { UserTopic } from '@/lib/account-service';
 import { PRIVACY_URL } from '@/lib/config/branding';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
-import { deleteFact, getFacts, getFactTopicLinks, resolveTopicIdsForFact } from '@/lib/database/services/fact-service';
+import { deleteFact, getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
-import type { Fact, FactTopicLink } from '@/lib/mera-protocol-toolkit/types';
+import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { useChatPopupIsExpanded, useChatPopupStore, useChatPopupFactMutationVersion } from '@/lib/stores/chat-popup-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
@@ -45,7 +45,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [localFacts, setLocalFacts] = useState<Fact[]>([]);
-    const [allLinks, setAllLinks] = useState<FactTopicLink[]>([]);
     const [expandedFactIds, setExpandedFactIds] = useState<Set<string>>(new Set());
     const [factToDelete, setFactToDelete] = useState<Fact | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -64,10 +63,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const factMutationVersion = useChatPopupFactMutationVersion();
 
     const loadLocalFacts = useCallback(async () => {
-        const [facts, links] = await Promise.all([
-            getFacts(),
-            getFactTopicLinks(),
-        ]);
+        const facts = await getFacts();
 
         if (!isInitialLoadRef.current) {
             const newIds = facts
@@ -81,7 +77,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         knownFactIdsRef.current = new Set(facts.map(f => f.id));
 
         setLocalFacts(facts);
-        setAllLinks(links);
         return facts;
     }, []);
 
@@ -144,12 +139,8 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     }, []);
 
     const getTopicsForFact = useCallback(
-        (fact: Fact): UserTopic[] => {
-            const realIds = resolveTopicIdsForFact(fact, allLinks, interests);
-            const realIdSet = new Set(realIds);
-            return interests.filter((i) => realIdSet.has(i._id));
-        },
-        [allLinks, interests],
+        (_fact: Fact): UserTopic[] => interests,
+        [interests],
     );
 
     const handleDeletePress = useCallback((fact: Fact) => {
@@ -160,42 +151,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         if (!factToDelete) return;
         setIsDeleting(true);
         try {
-            // Resolve which server-side topic IDs belong to this fact.
-            const links = await getFactTopicLinks(factToDelete.id);
-            const factTopicIds = resolveTopicIdsForFact(factToDelete, links, interests);
-
-            // Determine which topics would become exclusive to this fact if deleted
-            // (compute WITHOUT deleting — we only delete locally after the server confirms)
-            let exclusiveIds: string[] = [];
-            if (factTopicIds.length > 0) {
-                const allExistingLinks = await getFactTopicLinks();
-                const allExistingFacts = await getFacts();
-                const survivingTopicIds = new Set<string>();
-                for (const f of allExistingFacts) {
-                    if (f.id === factToDelete.id) continue;
-                    const fLinks = allExistingLinks.filter(l => l.factId === f.id);
-                    for (const id of resolveTopicIdsForFact(f, fLinks, interests)) {
-                        survivingTopicIds.add(id);
-                    }
-                }
-                exclusiveIds = factTopicIds.filter(id => !survivingTopicIds.has(id));
-            }
-
-            // Attempt server withdrawal, but don't block local deletion on it.
-            // A fact stuck mid-generation has no valid server topics to withdraw,
-            // and without this, the user would be trapped on a corrupt fact.
-            // Worst case: a few orphaned UserTopic rows server-side.
-            if (exclusiveIds.length > 0) {
-                try {
-                    await AccountService.withdrawUserTopics(userId, exclusiveIds);
-                } catch (err) {
-                    logger.error('[PersonaL1MeraProtocol] withdrawUserTopics failed — proceeding with local delete', err, {
-                        factId: factToDelete.id,
-                        exclusiveIds,
-                    });
-                }
-            }
-
             await deleteFact(factToDelete.id);
 
             setFactToDelete(null);
@@ -227,7 +182,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         } finally {
             setIsDeleting(false);
         }
-    }, [factToDelete, interests, userId, loadLocalFacts, fetchUserPersona, toast, t]);
+    }, [factToDelete, loadLocalFacts, fetchUserPersona, userId, toast, t]);
 
     const handleDeleteCancel = useCallback(() => {
         setFactToDelete(null);
@@ -403,15 +358,11 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                 const factTopics = getTopicsForFact(fact);
                                 const expectedTopicCount = fact.metadata?.topics?.length ?? 0;
                                 const topicGenError = fact.metadata?.topicGenError?.[0];
-                                // Keep the spinner visible until topic-gen produced topics AND
-                                // every one of them has been linked to a server-side UserTopic
-                                // (i.e. appears in factTopics). This covers:
-                                //   • topic-gen still running                        → expectedTopicCount === 0
-                                //   • topic-gen done but server still indexing       → factTopics.length < expectedTopicCount
-                                // On failure, topicGenError is set — stop spinning and surface the error.
+                                // Keep the spinner visible until topic-gen has produced at least
+                                // one topic (expectedTopicCount > 0). On failure, topicGenError
+                                // is set — stop spinning and surface the error.
                                 const topicsSettled =
-                                    !!topicGenError ||
-                                    (expectedTopicCount > 0 && factTopics.length >= expectedTopicCount);
+                                    !!topicGenError || expectedTopicCount > 0;
                                 const isExpanded = expandedFactIds.has(fact.id);
                                 return (
                                     <Box

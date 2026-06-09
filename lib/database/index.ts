@@ -8,12 +8,10 @@ import schema from './schema';
 import ArticleSuggestion from './models/ArticleSuggestion';
 import ArticleSuggestionFact from './models/ArticleSuggestionFact';
 import Fact from './models/Fact';
-import FactTopicLink from './models/FactTopicLink';
 import InferenceJob from './models/InferenceJob';
 import SchedulerJob from './models/SchedulerJob';
 import Setting from './models/Setting';
 import UserPersona from './models/UserPersona';
-import UserTopic from './models/UserTopic';
 import PublicationVisit from './models/PublicationVisit';
 
 const adapter = new SQLiteAdapter({
@@ -33,11 +31,9 @@ const database = new Database({
   adapter,
   modelClasses: [
     Fact,
-    FactTopicLink,
     ArticleSuggestion,
     ArticleSuggestionFact,
     UserPersona,
-    UserTopic,
     PublicationVisit,
     Setting,
     InferenceJob,

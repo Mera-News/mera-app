@@ -6,7 +6,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import { AccountService } from '@/lib/account-service';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import database from '@/lib/database';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
@@ -43,22 +42,12 @@ const FEED_CACHE_TABLES = [
     'inference_jobs',
 ];
 
-// User facts on device, plus the local mirrors of the topics derived from
-// them. The corresponding server topics are withdrawn via a separate
-// AccountService call.
-const FACTS_TABLES = [
-    'facts',
-    'fact_topic_links',
-    'user_topics',
-];
+const FACTS_TABLES = ['facts'];
 
 const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
     const toast = useToast();
     const { t } = useTranslation();
-    const { data: session } = authClient.useSession();
-    const userId = session?.user?.id ?? null;
-
     const [confirmAction, setConfirmAction] = useState<DataAction>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -78,15 +67,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             );
             await database.batch(batches.flat());
         });
-    }, []);
-
-    const collectServerTopicIdsFromFactLinks = useCallback(async (): Promise<string[]> => {
-        const links = await database.get('fact_topic_links').query().fetch();
-        const ids = new Set<string>();
-        for (const link of links as { serverTopicId?: string | null }[]) {
-            if (link.serverTopicId) ids.add(link.serverTopicId);
-        }
-        return Array.from(ids);
     }, []);
 
     const showErrorToast = useCallback(() => {
@@ -137,22 +117,15 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     break;
                 }
                 case 'facts': {
-                    if (!userId) throw new Error('No user session');
-                    const topicIds = await collectServerTopicIdsFromFactLinks();
-                    if (topicIds.length > 0) {
-                        await AccountService.withdrawUserTopics(userId, topicIds);
-                    }
                     await deleteTables(FACTS_TABLES);
                     break;
                 }
                 case 'topics': {
-                    if (!userId) throw new Error('No user session');
-                    await AccountService.deleteAllUserTopics(userId);
-                    await deleteTables([
-                        'user_topics',
-                        ...FEED_CACHE_TABLES,
-                    ]);
+                    await deleteTables(FEED_CACHE_TABLES);
                     useForYouStore.getState().clearData();
+                    if (!useSchedulerStore.getState().isRunning('feed-sync')) {
+                        void AppScheduler.trigger('feed-sync');
+                    }
                     break;
                 }
                 case 'viewingHistory': {
@@ -160,9 +133,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     break;
                 }
                 case 'wipeAll': {
-                    if (!userId) throw new Error('No user session');
-                    // Server first — if it fails we abort, leaving local intact (recoverable).
-                    await AccountService.deleteAllUserTopics(userId);
                     await clearAllStores();
                     break;
                 }
@@ -174,7 +144,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         } finally {
             setIsProcessing(false);
         }
-    }, [confirmAction, deleteTables, userId, collectServerTopicIdsFromFactLinks, showSuccessToast, showErrorToast]);
+    }, [confirmAction, deleteTables, showSuccessToast, showErrorToast]);
 
     const handleDeleteAccount = useCallback(async () => {
         let serverDeleteSucceeded = false;

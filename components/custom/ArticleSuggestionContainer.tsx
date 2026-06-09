@@ -9,7 +9,7 @@ import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getFactsForTopicIds } from '@/lib/database/services/fact-service';
+import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
@@ -72,7 +72,7 @@ export const ArticleSuggestionContainer: React.FC<ArticleSuggestionContainerProp
             setFacts([]);
             return;
         }
-        getFactsForTopicIds(topicIds)
+        getFactsForTopicTexts(topicIds)
             .then(setFacts)
             .catch(() => setFacts([]));
     }, [suggestion?.userTopicIds]);

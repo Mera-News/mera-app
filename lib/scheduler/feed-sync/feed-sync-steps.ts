@@ -8,10 +8,7 @@ import {
   getUnscoredSuggestionsWithFacts,
   persistAndLinkV2Suggestions,
 } from '@/lib/database/services/article-suggestion-service';
-import database from '@/lib/database';
-import { Q } from '@nozbe/watermelondb';
-import type UserPersonaModel from '@/lib/database/models/UserPersona';
-import type UserTopicModel from '@/lib/database/models/UserTopic';
+import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
 import type { TaskContext } from '../scheduler-types';
@@ -38,12 +35,12 @@ export interface PersistResult {
 }
 
 export async function stepFetchTopicIds(
-  userPersonaId: string,
+  _userPersonaId: string,
   ctx: TaskContext,
 ): Promise<FetchTopicIdsResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
 
-  const topicTexts = await getLocalTopicTextsForPersona(userPersonaId);
+  const topicTexts = await getLocalTopicTextsForPersona();
   if (topicTexts.length === 0) {
     throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
@@ -134,23 +131,16 @@ export async function stepScore(ctx: TaskContext): Promise<number> {
 
 // --- Internal helpers ---
 
-async function getLocalTopicTextsForPersona(serverPersonaId: string): Promise<string[]> {
-  const personasCol = database.get<UserPersonaModel>('user_personas');
-  const personas = await personasCol.query(Q.where('server_id', serverPersonaId)).fetch();
-  if (personas.length === 0) {
-    logger.warn(`[feed-sync-steps] no local persona found for serverPersonaId=${serverPersonaId}`);
-    return [];
+async function getLocalTopicTextsForPersona(): Promise<string[]> {
+  const facts = await getFacts();
+  const texts = new Set<string>();
+  for (const fact of facts) {
+    for (const topic of fact.metadata?.topics ?? []) {
+      if (topic.length > 0) texts.add(topic);
+    }
   }
-
-  const localPersonaId = personas[0].id;
-  const topicsCol = database.get<UserTopicModel>('user_topics');
-  const topics = await topicsCol.query(Q.where('user_persona_id', localPersonaId)).fetch();
-  const texts = topics
-    .map((t) => t.newsTopicText)
-    .filter((text): text is string => typeof text === 'string' && text.length > 0);
-
-  logger.info(`[feed-sync-steps] found ${texts.length} topic texts for persona ${localPersonaId}`);
-  return texts;
+  logger.info(`[feed-sync-steps] found ${texts.size} topic texts from facts`);
+  return Array.from(texts);
 }
 
 async function markIneligibleArticlesAsScored(): Promise<number> {

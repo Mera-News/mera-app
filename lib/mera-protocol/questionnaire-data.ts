@@ -2,6 +2,47 @@
 //
 // Each level is fed to the LLM individually based on the user's current progress.
 // Only the current level is included in the prompt to conserve context window.
+//
+// The legacy level-based system is preserved here alongside the new approach.
+// Toggle between them via the "Use Legacy persona update logic" setting.
+
+// ============================================================
+// NEW: Example-questions approach
+// The LLM reads Known Facts and autonomously picks the most
+// relevant unanswered question — no level tracking required.
+// ============================================================
+
+export const EXAMPLE_QUESTIONS: string[] = [
+  'Where do you live? (neighborhood, city, country)',
+  'Where are you originally from?',
+  'What do you do for work? (role, company, industry)',
+  'What news topics interest you most?',
+  'Which companies or brands do you follow closely?',
+  'Do you hold any stocks, ETFs, or crypto?',
+  'Are there politicians, policies, or local issues you follow?',
+  'Do you have family in other cities or countries?',
+  'What are your main hobbies or outside-of-work interests?',
+  'Do you follow any sports teams or athletes?',
+  'Do you travel frequently or have ties to other cities?',
+  'What is your educational or cultural background?',
+  'Are you working on any side projects or ventures?',
+  'Are there specific news sources you trust or want to avoid?',
+];
+
+/** Returns true if a questionnaire_attribute key represents the user's current location. */
+export function isLocationAttribute(questionnaireAttribute: string): boolean {
+  const key = questionnaireAttribute.split(':')[0].trim().toLowerCase();
+  return key === 'location' || key === 'neighborhood' || key === 'residence' || key === 'home';
+}
+
+/** Formats the example questions as a numbered list for the system prompt. */
+export function buildExampleQuestionsText(): string {
+  return EXAMPLE_QUESTIONS.map((q, i) => `${i + 1}. ${q}`).join('\n');
+}
+
+// ============================================================
+// LEGACY: Level-based questionnaire (kept for reference)
+// ============================================================
 
 export interface QuestionnaireAttribute {
     /** Stable ID — same across all app installs so facts share consistent identifiers. */

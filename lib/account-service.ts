@@ -1,13 +1,7 @@
 import { gql } from '@apollo/client';
 import client from './apollo-client';
-import type {
-    SubmittedUserTopic,
-    SubmitUserTopicsResponse as SubmitUserTopicsResult,
-} from './generated/graphql-types';
 import { OnboardingStage, ProcessingMode } from './generated/graphql-types';
 import logger from './logger';
-
-export type { SubmittedUserTopic, SubmitUserTopicsResult };
 
 const GET_USER_PERSONA = gql`
   query GetUserPersona($userId: ID!) {
@@ -87,24 +81,6 @@ const DELETE_EXPO_PUSH_TOKEN = gql`
   }
 `;
 
-const WITHDRAW_USER_TOPICS = gql`
-  mutation WithdrawUserTopics($input: WithdrawUserTopicsInput!) {
-    withdrawUserTopics(input: $input) {
-      success
-      removedCount
-    }
-  }
-`;
-
-const DELETE_ALL_USER_TOPICS = gql`
-  mutation DeleteAllUserTopics($userId: ID!) {
-    deleteAllUserTopics(userId: $userId) {
-      success
-      removedCount
-    }
-  }
-`;
-
 const ADVANCE_ONBOARDING_STAGE = gql`
   mutation AdvanceOnboardingStage($userId: ID!, $stage: OnboardingStage!) {
     advanceOnboardingStage(userId: $userId, stage: $stage) {
@@ -115,20 +91,6 @@ const ADVANCE_ONBOARDING_STAGE = gql`
       onboardingStage
       createdAt
       updatedAt
-    }
-  }
-`;
-
-const SUBMIT_USER_TOPICS = gql`
-  mutation SubmitUserTopics($input: SubmitUserTopicsInput!) {
-    submitUserTopics(input: $input) {
-      success
-      message
-      topics {
-        topicId
-        sourceFactLocalId
-        text
-      }
     }
   }
 `;
@@ -210,26 +172,8 @@ export interface DeleteExpoPushTokenResponse {
     deleteExpoPushToken: UserPersona;
 }
 
-export interface WithdrawUserTopicsResponse {
-    withdrawUserTopics: {
-        success: boolean;
-        removedCount: number;
-    };
-}
-
-export interface DeleteAllUserTopicsResponse {
-    deleteAllUserTopics: {
-        success: boolean;
-        removedCount: number;
-    };
-}
-
 export interface AdvanceOnboardingStageResponse {
     advanceOnboardingStage: UserPersona;
-}
-
-export interface SubmitUserTopicsResponse {
-    submitUserTopics: SubmitUserTopicsResult;
 }
 
 export interface UpdateProcessingModeResponse {
@@ -413,66 +357,6 @@ export class AccountService {
     }
 
     /**
-     * Withdraw topic IDs from UserPersona on the server.
-     * Used when deleting on-device facts to cascade-remove their generated topics.
-     */
-    static async withdrawUserTopics(userId: string, topicIds: string[]): Promise<WithdrawUserTopicsResponse['withdrawUserTopics']> {
-        try {
-            const { data, error } = await client.mutate<WithdrawUserTopicsResponse>({
-                mutation: WITHDRAW_USER_TOPICS,
-                variables: {
-                    input: {
-                        userId,
-                        topicIds,
-                    },
-                },
-            });
-            if (error) {
-                throw error;
-            }
-            const result = data?.withdrawUserTopics;
-            if (!result) {
-                throw new Error('Failed to withdraw user topics - no data returned');
-            }
-            return result;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'account-service', method: 'withdrawUserTopics' },
-                extra: { userId, topicIds },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Delete every UserTopic on the server for this user. Cascades on the
-     * server to TopicClusterLink + TopicArticleLink, and pulls the topic ids
-     * out of every ArticleSuggestion.userTopicIds for the persona.
-     */
-    static async deleteAllUserTopics(userId: string): Promise<DeleteAllUserTopicsResponse['deleteAllUserTopics']> {
-        try {
-            const { data, error } = await client.mutate<DeleteAllUserTopicsResponse>({
-                mutation: DELETE_ALL_USER_TOPICS,
-                variables: { userId },
-            });
-            if (error) {
-                throw error;
-            }
-            const result = data?.deleteAllUserTopics;
-            if (!result) {
-                throw new Error('Failed to delete all user topics - no data returned');
-            }
-            return result;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'account-service', method: 'deleteAllUserTopics' },
-                extra: { userId },
-            });
-            throw error;
-        }
-    }
-
-    /**
      * Advance the user's onboarding stage. Server enforces monotonic
      * progression — sending a lower or equal stage is a no-op.
      */
@@ -500,46 +384,6 @@ export class AccountService {
             logger.captureException(error, {
                 tags: { service: 'account-service', method: 'advanceOnboardingStage' },
                 extra: { userId, stage },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Submit on-device-generated topics to the server.
-     *
-     * The mutation is synchronous: by the time it returns, each submitted
-     * topic has a server-assigned id attached to the user's persona. Embedding
-     * generation continues in the background. The returned `topics` array
-     * gives us the (topicId, sourceFactLocalId, text) tuples we need to write
-     * fact_topic_links locally with no race.
-     */
-    static async submitUserTopics(
-        userId: string,
-        topics: Array<{ text: string; sourceFactLocalId: string }>,
-    ): Promise<SubmitUserTopicsResult> {
-        try {
-            const { data, error } = await client.mutate<SubmitUserTopicsResponse>({
-                mutation: SUBMIT_USER_TOPICS,
-                variables: {
-                    input: {
-                        userId,
-                        topics,
-                    },
-                },
-            });
-            if (error) {
-                throw error;
-            }
-            const result = data?.submitUserTopics;
-            if (!result) {
-                throw new Error('Failed to submit user topics - no data returned');
-            }
-            return result;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'account-service', method: 'submitUserTopics' },
-                extra: { userId, topicCount: topics.length },
             });
             throw error;
         }

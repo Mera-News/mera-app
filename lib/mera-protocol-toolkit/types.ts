@@ -16,16 +16,6 @@ export type Fact = {
   updatedAt: string; // ISO timestamp
 };
 
-/**
- * Links a local fact to a server-side UserTopic.
- * Stored on-device only — the server never sees which facts generated which topics.
- */
-export type FactTopicLink = {
-  factId: string; // Local fact UUID
-  serverTopicId: string; // Server-side UserTopic._id
-  topicText: string; // The topic string sent to server
-};
-
 // --- Core Inference ---
 
 export type InferParams = {

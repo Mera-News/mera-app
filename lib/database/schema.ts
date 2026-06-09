@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 29,
+  version: 30,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -15,15 +15,6 @@ export default appSchema({
         { name: 'questionnaire_attribute', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
-      ],
-    }),
-
-    tableSchema({
-      name: 'fact_topic_links',
-      columns: [
-        { name: 'fact_id', type: 'string', isIndexed: true },
-        { name: 'server_topic_id', type: 'string', isIndexed: true },
-        { name: 'topic_text', type: 'string' },
       ],
     }),
 
@@ -111,20 +102,6 @@ export default appSchema({
         { name: 'preferred_notification_window_json', type: 'string' },
         { name: 'country_codes_json', type: 'string', isOptional: true },
         { name: 'language_codes_json', type: 'string', isOptional: true },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
-      ],
-    }),
-
-    tableSchema({
-      name: 'user_topics',
-      columns: [
-        { name: 'server_id', type: 'string', isIndexed: true },
-        { name: 'user_persona_id', type: 'string', isIndexed: true },
-        { name: 'news_topic_text', type: 'string' },
-        { name: 'article_count', type: 'number' },
-        { name: 'cluster_count', type: 'number' },
-        { name: 'is_canonical', type: 'boolean' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],

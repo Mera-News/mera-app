@@ -687,5 +687,15 @@ export default schemaMigrations({
         unsafeExecuteSql("DELETE FROM scheduler_jobs WHERE status = 'retrying';"),
       ],
     },
+    {
+      toVersion: 30,
+      steps: [
+        // Drop server-topic-sync tables. Topics are now sent as raw text strings
+        // directly to the server at feed-sync time; there is no longer a
+        // server-assigned topicId or a local mirror of server topics.
+        unsafeExecuteSql('DROP TABLE IF EXISTS fact_topic_links;'),
+        unsafeExecuteSql('DROP TABLE IF EXISTS user_topics;'),
+      ],
+    },
   ],
 });

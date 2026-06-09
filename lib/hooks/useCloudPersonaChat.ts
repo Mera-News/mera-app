@@ -92,6 +92,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const streamOne = async (
         targetId: string,
         includeContext: boolean,
+        toolChoice: 'required' | 'auto' = 'required',
       ): Promise<{ accContent: string; toolCalls: ReturnType<typeof finalizeToolCalls> }> => {
         let accContent = '';
         const toolCallAccumulators = new Map<number, ToolCallAccumulator>();
@@ -130,7 +131,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const stream = cloudChatStream({
           messages: [{ role: 'system', content: systemPrompt }, ...windowed],
           tools,
-          toolChoice: 'required',
+          toolChoice,
           model: BIG_MODEL,
         });
 
@@ -278,7 +279,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const followUpPlaceholder: ConversationMessage = { id: followUpId, role: 'assistant', content: '' };
       useCloudChatStore.getState().setMessages((prev) => [...prev, followUpPlaceholder]);
 
-      const second = await streamOne(followUpId, false);
+      const second = await streamOne(followUpId, false, 'auto');
       pushAssistantToWire(second.accContent, second.toolCalls);
       if (second.toolCalls.length > 0) {
         await executeToolsAndPushResults(followUpId, second.toolCalls);

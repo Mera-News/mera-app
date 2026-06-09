@@ -41,7 +41,6 @@ export { checkRequirements } from './core/systemRequirements';
 export type {
   // Core
   Fact,
-  FactTopicLink,
   Query,
   InferParams,
   InferResult,

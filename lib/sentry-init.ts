@@ -30,6 +30,8 @@ function capStringValues(
     const value = obj[key];
     if (typeof value === 'string' && value.length > MAX_PII_STRING_LEN) {
       obj[key] = `[redacted:${value.length}]`;
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      capStringValues(value as Record<string, unknown>);
     }
   }
 }

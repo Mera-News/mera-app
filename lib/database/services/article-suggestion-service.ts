@@ -8,15 +8,14 @@ import database from '../index';
 import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import type FactModel from '../models/Fact';
-import type FactTopicLinkModel from '../models/FactTopicLink';
 import type { ArticleWithClusters } from '../../generated/graphql-types';
 import type { ForYouSuggestion } from '../../stores/for-you-store';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
+import { getFacts } from './fact-service';
 
 const articleSuggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
 const articleSuggestionFactsCol = database.get<ArticleSuggestionFactModel>('article_suggestion_facts');
 const factsCol = database.get<FactModel>('facts');
-const factTopicLinksCol = database.get<FactTopicLinkModel>('fact_topic_links');
 
 // --- Read: server ids only ---
 
@@ -417,9 +416,8 @@ function parseDate(value: unknown): Date | null {
 /**
  * [Flow v2] Persist articles returned by the stateless `articlesForTopicsByIds`
  * query. WMDB row id == articleId (no server-side suggestion document). Facts
- * are linked via `fact_topic_links.topic_text` using the topic texts that
- * matched each article (supplied by the caller from the `articleIdsForTopics`
- * response).
+ * are linked via fact metadata topic texts using the topic texts that matched
+ * each article (supplied by the caller from the `articleIdsForTopics` response).
  */
 export async function persistAndLinkV2Suggestions(
   fetched: ArticleWithClusters[],
@@ -516,14 +514,16 @@ async function resolveFactsByTopicTexts(
   const result = new Map<string, string[]>();
   if (topicTexts.length === 0) return result;
 
-  const links = await factTopicLinksCol
-    .query(Q.where('topic_text', Q.oneOf(topicTexts)))
-    .fetch();
-
-  for (const link of links) {
-    const bucket = result.get(link.topicText) ?? [];
-    bucket.push(link.factId);
-    result.set(link.topicText, bucket);
+  const topicSet = new Set(topicTexts);
+  const facts = await getFacts();
+  for (const fact of facts) {
+    for (const topic of fact.metadata?.topics ?? []) {
+      if (topicSet.has(topic)) {
+        const bucket = result.get(topic) ?? [];
+        bucket.push(fact.id);
+        result.set(topic, bucket);
+      }
+    }
   }
   return result;
 }

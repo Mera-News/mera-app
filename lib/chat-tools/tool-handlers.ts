@@ -5,9 +5,6 @@ import {
   addFact,
   deleteFact,
   getFacts,
-  getFactTopicLinks,
-  replaceFactTopicLinks,
-  resolveTopicIdsForFact,
   updateFact,
   getCoveredAttributeKeys,
   getQuestionnaireLevel,
@@ -20,14 +17,12 @@ import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import { inferenceQueue } from '../inference/InferenceQueue';
-import { useUserStore } from '../stores/user-store';
 import { getAttributeKeysForLevel, TOTAL_LEVELS, buildAttributeTextToIdMap } from '../mera-protocol/questionnaire-data';
 import { cloudBatchComplete, type BatchCompletionResult } from '../llm/cloudComplete';
 import {
   buildCloudBatchCallsForFact,
   mergeRealOutputsForFact,
 } from '../mera-protocol/topic-generation-service';
-import { submitTopicsToServer } from '../mera-protocol/interest-submission-service';
 import type { BatchCall } from '../llm/types';
 import logger from '../logger';
 
@@ -158,7 +153,7 @@ export async function handleSaveExtractedFacts(
 /**
  * Batch-generates real topics for all facts in ONE cloud API call.
  * Each fact contributes up to 2 BatchCall entries (fact-only + combo).
- * After the response, all real texts ride a single SubmitUserTopics mutation.
+ * Generated topics are saved to fact.metadata.topics locally.
  */
 async function batchGenerateTopics(
   factEntries: Array<{ id: string; statement: string }>,
@@ -239,7 +234,6 @@ async function batchGenerateTopics(
   }
 
   // Merge real topics per fact.
-  const realByFactId = new Map<string, string[]>();
   for (const entry of factEntries) {
     const bucket = realOutputsByFactId.get(entry.id);
     if (!bucket) {
@@ -259,69 +253,6 @@ async function batchGenerateTopics(
       continue;
     }
     await updateFact(entry.id, { metadata: { topics: real } });
-    realByFactId.set(entry.id, real);
-  }
-
-  const allTopicsForSubmission: Array<{ text: string; sourceFactLocalId: string }> = [];
-  for (const entry of factEntries) {
-    const real = realByFactId.get(entry.id);
-    if (!real) continue;
-    for (const text of real) {
-      allTopicsForSubmission.push({ text, sourceFactLocalId: entry.id });
-    }
-  }
-
-  const userId = await getStoredUserId();
-
-  if (allTopicsForSubmission.length > 0 && userId) {
-    try {
-      const submitted = await submitTopicsToServer(userId, allTopicsForSubmission);
-      logger.debug('[topic-gen-batch] submitted topics', {
-        count: allTopicsForSubmission.length,
-      });
-
-      const linksByFactId = new Map<
-        string,
-        { serverTopicId: string; topicText: string }[]
-      >();
-      const seenByFact = new Map<string, Set<string>>();
-      for (const entry of submitted) {
-        if (!entry.topicId) continue;
-        const seen = seenByFact.get(entry.sourceFactLocalId) ?? new Set<string>();
-        if (seen.has(entry.topicId)) continue;
-        seen.add(entry.topicId);
-        seenByFact.set(entry.sourceFactLocalId, seen);
-        const bucket = linksByFactId.get(entry.sourceFactLocalId) ?? [];
-        bucket.push({ serverTopicId: entry.topicId, topicText: entry.text });
-        linksByFactId.set(entry.sourceFactLocalId, bucket);
-      }
-
-      for (const entry of factEntries) {
-        const links = linksByFactId.get(entry.id) ?? [];
-        await replaceFactTopicLinks(entry.id, links);
-        await updateFact(entry.id, {
-          metadata: { topics: links.map((l) => l.topicText) },
-        });
-      }
-
-      await useUserStore.getState().fetchUserPersona(userId, true);
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      logger.error('[topic-gen-batch] submission/link-persist failed', err, {
-        factIds: factEntries.map((e) => e.id),
-      });
-      for (const entry of factEntries) {
-        await updateFact(entry.id, {
-          metadata: { topicGenError: [errMsg || 'Failed to link topics'] },
-        }).catch((updateErr) =>
-          logger.error(
-            '[topic-gen-batch] failed to persist topicGenError',
-            updateErr,
-            { factId: entry.id },
-          ),
-        );
-      }
-    }
   }
 
   useChatPopupStore.getState().notifyFactMutation();
@@ -369,7 +300,7 @@ export async function handleDeleteUserFacts(
     return { error: 'fact_ids must be a non-empty array' };
   }
 
-  // Load all facts and topics for resolution
+  // Resolve all facts to delete (by ID, attribute key, or statement text)
   const allFacts = await getFacts();
   const factsByAttrMap = new Map(
     allFacts
@@ -378,9 +309,7 @@ export async function handleDeleteUserFacts(
   );
   const factsByIdMap = new Map(allFacts.map(f => [f.id, f]));
   const factsByTextMap = new Map(allFacts.map(f => [f.statement.toLowerCase().trim(), f]));
-  const userTopics = useUserStore.getState().userPersona?.userTopics ?? [];
 
-  // Phase 1: resolve all facts to delete (no mutation yet)
   const factsToDelete: typeof allFacts = [];
   const seenIds = new Set<string>();
   for (const rawId of factIds) {
@@ -404,44 +333,6 @@ export async function handleDeleteUserFacts(
     return { success: true, deletedCount: 0 };
   }
 
-  // Phase 2: compute which topic IDs would become exclusive (no surviving fact
-  // shares them) — do this BEFORE deleting so the server can be notified first.
-  const deletingFactIds = new Set(factsToDelete.map(f => f.id));
-  const allTopicIdsForDeleting = new Set<string>();
-  for (const fact of factsToDelete) {
-    const links = await getFactTopicLinks(fact.id);
-    for (const id of resolveTopicIdsForFact(fact, links, userTopics)) {
-      allTopicIdsForDeleting.add(id);
-    }
-  }
-
-  const allLinks = await getFactTopicLinks();
-  const survivingTopicIds = new Set<string>();
-  for (const f of allFacts) {
-    if (deletingFactIds.has(f.id)) continue;
-    const fLinks = allLinks.filter(l => l.factId === f.id);
-    for (const id of resolveTopicIdsForFact(f, fLinks, userTopics)) {
-      survivingTopicIds.add(id);
-    }
-  }
-  const exclusiveIds = [...allTopicIdsForDeleting].filter(id => !survivingTopicIds.has(id));
-
-  // Phase 3: await server withdrawal BEFORE touching local state.
-  if (exclusiveIds.length > 0) {
-    const userId = await getStoredUserId();
-    if (!userId) {
-      logger.warn('[deleteUserFacts] No userId available — aborting (keeping local facts intact)');
-      return { error: 'No userId available for server topic withdrawal' };
-    }
-    try {
-      await AccountService.withdrawUserTopics(userId, exclusiveIds);
-    } catch (err) {
-      logger.warn('[deleteUserFacts] Server withdrawal failed — keeping local facts intact', { error: String(err) });
-      return { error: 'Server topic withdrawal failed. Please try again.' };
-    }
-  }
-
-  // Phase 4: server confirmed — now delete locally.
   let deletedCount = 0;
   for (const fact of factsToDelete) {
     await deleteFact(fact.id);

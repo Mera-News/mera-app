@@ -2,12 +2,14 @@
 // Static system prompt (cacheable by KV cache) + dynamic context (injected into user messages).
 
 import type { ToolDefinition } from '../llm/types';
+import { buildExampleQuestionsText } from './questionnaire-data';
 
 /**
  * Builds tool definitions in OpenAI JSON Schema format (sent to cloud backend).
- * Same 5 tools as the XML format in buildToolFormatSection() — single source of truth.
+ * Same tools as the XML format in buildToolFormatSection() — single source of truth.
+ * When useLegacy is false, advanceQuestionnaireLevel is omitted.
  */
-export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG'): ToolDefinition[] {
+export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy = true): ToolDefinition[] {
   const tools: ToolDefinition[] = [
     {
       type: 'function',
@@ -56,17 +58,6 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG'): ToolDefi
     {
       type: 'function',
       function: {
-        name: 'advanceQuestionnaireLevel',
-        description: 'Move to next level after all current-level topics are covered or skipped.',
-        parameters: {
-          type: 'object',
-          properties: {},
-        },
-      },
-    },
-    {
-      type: 'function',
-      function: {
         name: 'issueWarning',
         description: 'Warn an off-topic or abusive user. Chat blocks at 3 warnings.',
         parameters: {
@@ -79,6 +70,20 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG'): ToolDefi
       },
     },
   ];
+
+  if (useLegacy) {
+    tools.push({
+      type: 'function',
+      function: {
+        name: 'advanceQuestionnaireLevel',
+        description: 'Move to next level after all current-level topics are covered or skipped.',
+        parameters: {
+          type: 'object',
+          properties: {},
+        },
+      },
+    });
+  }
 
   if (surface === 'CONFIG') {
     tools.push({
@@ -140,28 +145,20 @@ function schemaTypeToString(schema: Record<string, unknown>): string {
  * Builds the XML tool format section (tool definitions, rules, and examples).
  * Tool listing is derived from buildToolDefinitions() — single source of truth.
  */
-export function buildToolFormatSection(surface: 'ONBOARDING' | 'CONFIG'): string {
+export function buildToolFormatSection(surface: 'ONBOARDING' | 'CONFIG', useLegacy = true): string {
   const isOnboarding = surface === 'ONBOARDING';
 
-  const tools = buildToolDefinitions(surface);
+  const tools = buildToolDefinitions(surface, useLegacy);
   const toolLines = tools
     .map((t) => `- ${t.function.name}: ${schemaToCompactSignature(t.function.parameters)}`)
     .join('\n');
 
-  return `
+  const saveFactsFields = useLegacy
+    ? '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_level / _category / _attribute: copy verbatim from the questionnaire entry the fact answers. If no entry fits, mint a new attribute as "key: description".'
+    : '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_attribute: a short category label for this fact (e.g. "location: residence", "profession: job", "background: origin"). Mint freely.';
 
-## Tools
-Every response MUST include BOTH conversational text AND ≥1 <tool_call>. Never reply with text only. Never reply with tool calls only.
-Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call> — multiple calls per response OK.
-
-${toolLines}
-
-## saveExtractedFacts fields
-- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.
-- questionnaire_level / _category / _attribute: copy verbatim from the questionnaire entry the fact answers. If no entry fits, mint a new attribute as "key: description".
-
-## Examples (format only — never save these as real facts; translate conversational text into the user's language)
-<examples>
+  const examples = useLegacy
+    ? `<examples>
 <example>
 <user_input>I live near Brixton in London</user_input>
 <assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
@@ -172,7 +169,33 @@ ${toolLines}
 <assistant_output>${isOnboarding ? "DeepMind, exciting! Tracking any stocks?" : "Got it, updated your profession. Anything else?"}
 <tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Senior ML engineer at DeepMind", "questionnaire_level": 1, "questionnaire_level_category": "Core", "questionnaire_attribute": "profession: job role and industry"}, {"statement": "Works in AI/Machine Learning industry", "questionnaire_level": 2, "questionnaire_level_category": "Professional", "questionnaire_attribute": "sub_industry: specific niche"}]}}</tool_call></assistant_output>
 </example>
+</examples>`
+    : `<examples>
+<example>
+<user_input>I live near Brixton in London</user_input>
+<assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
+<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Lives near Brixton, London, UK, Europe", "questionnaire_attribute": "location: residence"}]}}</tool_call></assistant_output>
+</example>
+<example>
+<user_input>I'm a senior ML engineer at DeepMind</user_input>
+<assistant_output>${isOnboarding ? "DeepMind, exciting! Do you follow any AI companies or hold any stocks?" : "Got it. Anything else to update?"}
+<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Senior ML engineer at DeepMind", "questionnaire_attribute": "profession: job"}, {"statement": "Works in AI/Machine Learning industry", "questionnaire_attribute": "industry: sector"}]}}</tool_call></assistant_output>
+</example>
 </examples>`;
+
+  return `
+
+## Tools
+Every response MUST include BOTH conversational text AND ≥1 <tool_call>. Never reply with text only. Never reply with tool calls only.
+Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call> — multiple calls per response OK.
+
+${toolLines}
+
+## saveExtractedFacts fields
+${saveFactsFields}
+
+## Examples (format only — never save these as real facts; translate conversational text into the user's language)
+${examples}`;
 }
 
 /**
@@ -192,22 +215,49 @@ export function buildPersonaUpdateStaticPrompt(params: {
    *  the over-compressed Qwen3 4B prompt would imply — see
    *  buildPersonaUpdateLocalPrompt for the architecture-aware rationale). */
   mode?: 'CLOUD' | 'LOCAL';
+  /** When false (default), uses the new example-questions approach where the LLM
+   *  autonomously picks questions based on Known Facts. When true, uses the legacy
+   *  level-based questionnaire with [ASK]/[DONE] annotations. */
+  useLegacy?: boolean;
 }): string {
-  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD' } = params;
+  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', useLegacy = false } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   if (mode === 'LOCAL') {
-    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName });
+    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, useLegacy });
   }
 
   const languageRule = languageName
     ? `- LANGUAGE: User's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch languages even if the user writes in English, Chinese, or any other language; reply in ${languageName} regardless. Fact statements stay English (see Facts).`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English (see Facts).`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
 - DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.`;
+
+  const conversationGuide = useLegacy
+    ? `## Rules
+${languageRule}
+- The questionnaire is a **suggestion**, not a script. [ASK] items are prompts to use ONLY when the user has nothing to add on their own. The user's own input always wins.
+- **If the user volunteers any new personal info — even when it doesn't match the current [ASK] — extract it FIRST** via saveExtractedFacts, acknowledge briefly, then either ask a follow-up about that info or move on to the next [ASK]. Mint a new attribute as "key: description" when no questionnaire entry fits ("expat from India" → questionnaire_attribute "background: origin / cultural identity"). NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
+- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
+${isOnboarding
+        ? '- A welcome message was already shown — start with the first [ASK] question.'
+        : '- Respond to user messages directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
+- Stay on profile/news topics. Redirect off-topic politely.`
+    : `## Rules
+${languageRule}
+- **Save first, then ask.** If the user volunteers any info, extract it via saveExtractedFacts before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
+- **Read Known Facts before asking.** Never ask about a topic that is already present in Known Facts, even partially — if the city is known, don't ask for the city again.
+${isOnboarding
+        ? '- A welcome message was already shown — jump straight to asking the first unanswered question from the list below.'
+        : '- Respond to user messages directly. After extracting, confirm briefly and ask if there\'s more.'}
+- Stay on profile/news topics. Redirect off-topic politely.
+
+## Questions to explore
+Ask one at a time, only if not already answered in Known Facts. These are guides — follow the user's lead and ask natural follow-ups when their answer opens something new.
+${buildExampleQuestionsText()}`;
 
   return `You are Mera. ${isOnboarding ? 'Onboard the user — learn what news matters to them.' : 'Update the user\'s news profile (add / change / remove info).'}
 
@@ -217,15 +267,7 @@ export function buildPersonaUpdateStaticPrompt(params: {
 3. Emit tool calls — ALWAYS at least saveExtractedFacts (empty array if nothing new).
 Both text (2) and tool calls (3) are REQUIRED in every response — never omit either.
 
-## Rules
-${languageRule}
-- The questionnaire is a **suggestion**, not a script. [ASK] items are prompts to use ONLY when the user has nothing to add on their own. The user's own input always wins.
-- **If the user volunteers any new personal info — even when it doesn't match the current [ASK] — extract it FIRST** via saveExtractedFacts, acknowledge briefly, then either ask a follow-up about that info or move on to the next [ASK]. Mint a new attribute as "key: description" when no questionnaire entry fits ("expat from India" → questionnaire_attribute "background: origin / cultural identity"). NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
-- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
-${isOnboarding
-      ? '- A welcome message was already shown — start with the first [ASK] question.'
-      : '- Respond to user messages directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
-- Stay on profile/news topics. Redirect off-topic politely.
+${conversationGuide}
 
 ## Facts
 - ENGLISH ONLY. Translate meaning into natural English; preserve specifics (places, names, numbers). Never generalize.
@@ -262,17 +304,43 @@ function buildPersonaUpdateLocalPrompt(params: {
   surface: 'ONBOARDING' | 'CONFIG';
   includeToolFormat: boolean;
   languageName?: string;
+  useLegacy?: boolean;
 }): string {
-  const { surface, includeToolFormat, languageName } = params;
+  const { surface, includeToolFormat, languageName, useLegacy = false } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
     ? `ALWAYS reply in **${languageName}**. NEVER switch languages, even if the user writes in English or any other language — reply in ${languageName} regardless. Fact statements stay English.`
     : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
 
   const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.';
+
+  const rulesSection = useLegacy
+    ? `## Rules
+- ${languageRule}
+- The questionnaire [ASK] items are **suggestions, not a script**. The user's own input always wins. If the user gives any new personal info — even off-topic for the current [ASK] — save it FIRST via saveExtractedFacts, acknowledge briefly, then either follow up on the new info or move to the next [ASK]. NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
+- If no [ASK] fits the new info, mint a new attribute "key: description" (e.g. "background: origin / cultural identity" for "expat").
+- **Off-script example.** Asked "What do you do for work?", user says "I'm an expat" → save \`{"statement": "Expatriate / lives outside country of origin", "questionnaire_attribute": "background: origin / cultural identity"}\`, reply "Got it — where are you originally from, and what do you do for work?". Do NOT re-ask "What do you do for work?".
+- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
+${isOnboarding
+        ? '- A welcome message was already shown — start with the first [ASK] question.'
+        : '- Respond directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
+- Stay on profile/news topics; redirect off-topic politely.`
+    : `## Rules
+- ${languageRule}
+- **Save first, then ask.** Save any info the user volunteers before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
+- **Read Known Facts before asking.** Never ask about a topic already in Known Facts — if the city is known, do not ask for the city again.
+- **Off-script example.** User says "I'm an expat from India" → save \`{"statement": "Expatriate / lives outside country of origin", "questionnaire_attribute": "background: origin"}\`, reply "Got it — where in India are you from, and where are you living now?".
+${isOnboarding
+        ? '- A welcome message was already shown — ask the first unanswered question from the list below.'
+        : '- Respond directly. After extracting, confirm briefly and ask if there\'s more.'}
+- Stay on profile/news topics; redirect off-topic politely.
+
+## Questions to explore
+Ask one at a time, only if not already in Known Facts.
+${buildExampleQuestionsText()}`;
 
   return `You are Mera. ${isOnboarding ? 'Onboard the user — learn what news matters to them.' : 'Update the user\'s news profile (add / change / remove info).'}
 
@@ -282,16 +350,7 @@ function buildPersonaUpdateLocalPrompt(params: {
 3. Emit ≥1 tool call — always saveExtractedFacts (empty array if nothing new).
 Both text (2) and tool call(s) (3) are REQUIRED — never omit either.
 
-## Rules
-- ${languageRule}
-- The questionnaire [ASK] items are **suggestions, not a script**. The user's own input always wins. If the user gives any new personal info — even off-topic for the current [ASK] — save it FIRST via saveExtractedFacts, acknowledge briefly, then either follow up on the new info or move to the next [ASK]. NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
-- If no [ASK] fits the new info, mint a new attribute "key: description" (e.g. "background: origin / cultural identity" for "expat").
-- **Off-script example.** Asked "What do you do for work?", user says "I'm an expat" → save \`{"statement": "Expatriate / lives outside country of origin", "questionnaire_attribute": "background: origin / cultural identity"}\`, reply "Got it — where are you originally from, and what do you do for work?". Do NOT re-ask "What do you do for work?".
-- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
-${isOnboarding
-      ? '- A welcome message was already shown — start with the first [ASK] question.'
-      : '- Respond directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
-- Stay on profile/news topics; redirect off-topic politely.
+${rulesSection}
 
 ## Facts (saveExtractedFacts.statement)
 - ENGLISH ONLY. Translate meaning to natural English; preserve specifics (places, names, numbers). GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech". GOOD "Lives near Brixton, London, UK" / BAD "Lives in London".
@@ -309,20 +368,30 @@ ${isOnboarding
 
 /**
  * Builds the DYNAMIC context block injected into user messages.
- * Contains known facts, questionnaire progress, and config — data that changes between turns.
+ * Legacy path includes the questionnaire level + guide with [ASK]/[DONE] markers.
+ * New path omits the questionnaire entirely — just Known Facts.
  */
 export function buildPersonaUpdateContext(params: {
-  questionnaireGuide: string;
-  currentLevel: number;
-  totalLevels: number;
   knownFactsList: string;
+  useLegacy?: boolean;
+  // Legacy-only fields:
+  questionnaireGuide?: string;
+  currentLevel?: number;
+  totalLevels?: number;
 }): string {
-  const { questionnaireGuide, currentLevel, totalLevels, knownFactsList } = params;
+  const { knownFactsList, useLegacy = false, questionnaireGuide, currentLevel, totalLevels } = params;
 
-  return `<context>
+  if (useLegacy && questionnaireGuide !== undefined && currentLevel !== undefined && totalLevels !== undefined) {
+    return `<context>
 ## Questionnaire: Level ${currentLevel}/${totalLevels}
 ${questionnaireGuide}
 
+## Known Facts
+${knownFactsList}
+</context>`;
+  }
+
+  return `<context>
 ## Known Facts
 ${knownFactsList}
 </context>`;

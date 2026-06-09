@@ -18,7 +18,7 @@ import {
   TOTAL_LEVELS,
 } from '../../mera-protocol/questionnaire-data';
 import { useAppLanguageStore } from '../../stores/app-language-store';
-import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
+import { useMeraProtocolStore, useUseLegacyPersonaUpdate } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import type {
@@ -52,6 +52,7 @@ export class PersonaUpdateAgent implements IAgent {
   private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
+  private lastUseLegacy: boolean | null = null;
 
   async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
@@ -61,8 +62,9 @@ export class PersonaUpdateAgent implements IAgent {
       useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
         ? 'LOCAL'
         : 'CLOUD';
+    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
 
-    // Static prompt depends on surface + needsToolFormat + languageName + mode.
+    // Static prompt depends on surface + needsToolFormat + languageName + mode + useLegacy.
     // All are fixed per session unless the user changes their app language or
     // toggles on-device / cloud processing.
     if (
@@ -70,6 +72,7 @@ export class PersonaUpdateAgent implements IAgent {
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
       && this.lastMode === mode
+      && this.lastUseLegacy === useLegacy
     ) {
       return this.cachedSystemPrompt;
     }
@@ -78,16 +81,20 @@ export class PersonaUpdateAgent implements IAgent {
       includeToolFormat: needsToolFormat,
       languageName,
       mode,
+      useLegacy,
     });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
+    this.lastUseLegacy = useLegacy;
     return this.cachedSystemPrompt;
   }
 
   // --- IAgent: dynamic context (injected into user messages each turn) ---
 
   async buildContext(): Promise<string> {
+    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
+
     const facts = await getFacts();
     const displayFacts = facts.length > MAX_FACTS_IN_CONTEXT
       ? facts.slice(-MAX_FACTS_IN_CONTEXT)
@@ -96,15 +103,18 @@ export class PersonaUpdateAgent implements IAgent {
     const knownFactsList =
       displayFacts.length > 0
         ? displayFacts.map((f) => {
-            // Use the questionnaire attribute text as the key (falls back to 'other' for ad-hoc facts)
             const attrText = f.questionnaireAttribute ?? 'other';
             return `- '${attrText}': ${f.statement}`;
           }).join('\n')
         : 'Nothing yet.';
 
+    if (!useLegacy) {
+      return buildPersonaUpdateContext({ knownFactsList, useLegacy: false });
+    }
+
+    // Legacy path: level-based questionnaire with [ASK]/[DONE] annotations
     const coveredAttributes = await getCoveredAttributeKeys();
 
-    // Auto-reset to the earliest uncovered level (handles fact deletion / fresh start)
     let currentLevel = await getQuestionnaireLevel();
     while (currentLevel > 1) {
       const prevLevelKeys = getAttributeKeysForLevel(currentLevel - 1);
@@ -112,8 +122,6 @@ export class PersonaUpdateAgent implements IAgent {
       if (allPrevCovered) break;
       currentLevel--;
     }
-
-    // Auto-advance past fully-covered levels
     while (currentLevel < TOTAL_LEVELS) {
       const levelKeys = getAttributeKeysForLevel(currentLevel);
       if (levelKeys.length === 0) break;
@@ -121,23 +129,24 @@ export class PersonaUpdateAgent implements IAgent {
       if (!allCovered) break;
       currentLevel++;
     }
-
     await setQuestionnaireLevel(currentLevel);
 
     const questionnaireGuide = buildQuestionnaireGuide(currentLevel, coveredAttributes);
 
     return buildPersonaUpdateContext({
+      knownFactsList,
+      useLegacy: true,
       questionnaireGuide,
       currentLevel,
       totalLevels: TOTAL_LEVELS,
-      knownFactsList,
     });
   }
 
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---
 
   getToolDefinitions(): ToolDefinition[] {
-    return buildToolDefinitions(this.surface);
+    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
+    return buildToolDefinitions(this.surface, useLegacy);
   }
 
   // --- IAgent: message formatting ---

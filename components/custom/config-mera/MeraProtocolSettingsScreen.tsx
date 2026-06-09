@@ -30,7 +30,9 @@ import {
     useModelState as useModelStateSelector,
     useProcessingMode,
     useSelectedModelId,
+    useUseLegacyPersonaUpdate,
 } from '@/lib/stores/mera-protocol-store';
+import { Switch } from '@/components/ui/switch';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
@@ -97,6 +99,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const modelState = useModelStateSelector();
     const downloadProgress = useDownloadProgress();
     const store = useMeraProtocolStore();
+    const useLegacyPersonaUpdate = useUseLegacyPersonaUpdate();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -620,6 +623,34 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     </Box>
                 </>
             )}
+
+            {/* Legacy persona update toggle */}
+            <Box className="px-5 mb-6">
+                <HStack space="md" className="items-center justify-between">
+                    <HStack space="md" className="items-center flex-1">
+                        <MaterialIcons
+                            name="history"
+                            size={24}
+                            color={useLegacyPersonaUpdate ? "#10b981" : "#9ca3af"}
+                        />
+                        <VStack className="flex-1">
+                            <Text className="text-white text-base font-semibold">
+                                Use Legacy persona update logic
+                            </Text>
+                            <Text className="text-typography-500 text-sm mt-0.5">
+                                {useLegacyPersonaUpdate
+                                    ? 'Using structured questionnaire levels'
+                                    : 'Using LLM-driven question selection'}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                    <Switch
+                        value={useLegacyPersonaUpdate}
+                        onToggle={() => store.setUseLegacyPersonaUpdate(!useLegacyPersonaUpdate)}
+                        size="md"
+                    />
+                </HStack>
+            </Box>
 
             {/* Privacy Explainer */}
             <Box className="px-5 mb-6">

@@ -69,7 +69,6 @@ const errorLink = new ErrorLink(({ error, operation }) => {
                 tags: { source: 'apollo-error-link', type: 'graphql' },
                 extra: {
                     operationName: operation.operationName,
-                    variables: operation.variables,
                     errorCode,
                     graphQLError: JSON.stringify(graphQLError, null, 2),
                 },
@@ -111,7 +110,6 @@ const errorLink = new ErrorLink(({ error, operation }) => {
             tags: { source: 'apollo-error-link', type: 'network' },
             extra: {
                 operationName: operation.operationName,
-                variables: operation.variables,
                 statusCode,
             },
         });

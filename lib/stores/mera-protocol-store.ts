@@ -20,6 +20,10 @@ interface MeraProtocolState {
   // discards clusters that only matched noisy topics at sync time.
   injectNoise: boolean;
 
+  // When true, uses the old level-based questionnaire chat logic instead of
+  // the LLM-driven example-questions approach. Disabled by default.
+  useLegacyPersonaUpdate: boolean;
+
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -35,6 +39,7 @@ interface MeraProtocolState {
   // Actions — protocol
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
+  setUseLegacyPersonaUpdate: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -56,11 +61,13 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
+const SETTING_LEGACY_PERSONA_UPDATE = 'mera_legacy_persona_update';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 
 const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
+  useLegacyPersonaUpdate: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -82,6 +89,11 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setInjectNoise: (injectNoise) => {
     set({ injectNoise });
     setSetting(SETTING_INJECT_NOISE, injectNoise ? 'true' : 'false').catch(() => { });
+  },
+
+  setUseLegacyPersonaUpdate: (useLegacyPersonaUpdate) => {
+    set({ useLegacyPersonaUpdate });
+    setSetting(SETTING_LEGACY_PERSONA_UPDATE, useLegacyPersonaUpdate ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -124,17 +136,19 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(LEGACY_SETTING_PROTOCOL_ENABLED).catch(() => { });
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
+    deleteSetting(SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
   },
 
   hydrateFromDb: async () => {
     try {
-      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue] =
+      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue, legacyPersonaValue] =
         await Promise.all([
           getSetting(SETTING_PROCESSING_MODE),
           getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
           getSetting('mera_selected_model_id'),
           getSetting(SETTING_INJECT_NOISE),
+          getSetting(SETTING_LEGACY_PERSONA_UPDATE),
         ]);
       const updates: Partial<MeraProtocolState> = {};
       if (modeValue === ProcessingMode.OnDevice || modeValue === ProcessingMode.Cloud) {
@@ -157,6 +171,9 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (injectNoiseValue === 'false') {
         updates.injectNoise = false;
       }
+      if (legacyPersonaValue === 'true') {
+        updates.useLegacyPersonaUpdate = true;
+      }
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -175,6 +192,9 @@ export const useIsOnDeviceProcessing = () =>
 
 export const useInjectNoise = () =>
   useMeraProtocolStore((state) => state.injectNoise);
+
+export const useUseLegacyPersonaUpdate = () =>
+  useMeraProtocolStore((state) => state.useLegacyPersonaUpdate);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

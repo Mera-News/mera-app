@@ -1,15 +1,12 @@
-// Fact Service — WatermelonDB replacement for factsDb.ts
-// Same public API. Returns plain objects matching Fact/FactTopicLink interfaces.
+// Fact Service — WatermelonDB CRUD for facts.
 
-import { Model, Q } from '@nozbe/watermelondb';
+import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type FactModel from '../models/Fact';
-import type FactTopicLinkModel from '../models/FactTopicLink';
-import type { Fact, FactTopicLink } from '../../mera-protocol-toolkit/types';
+import type { Fact } from '../../mera-protocol-toolkit/types';
 import { getSetting, setSetting } from './setting-service';
 
 const factsCollection = database.get<FactModel>('facts');
-const linksCollection = database.get<FactTopicLinkModel>('fact_topic_links');
 
 // --- Helpers ---
 
@@ -23,14 +20,6 @@ function toFact(record: FactModel): Fact {
     questionnaireAttribute: record.questionnaireAttribute ?? undefined,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
-  };
-}
-
-function toFactTopicLink(record: FactTopicLinkModel): FactTopicLink {
-  return {
-    factId: record.factId,
-    serverTopicId: record.serverTopicId,
-    topicText: record.topicText,
   };
 }
 
@@ -116,84 +105,14 @@ export async function getFacts(): Promise<Fact[]> {
   return records.map(toFact);
 }
 
-// --- Fact-Topic Links ---
-
-export async function getFactTopicLinks(
-  factId?: string,
-): Promise<FactTopicLink[]> {
-  const query = factId
-    ? linksCollection.query(Q.where('fact_id', factId))
-    : linksCollection.query();
-  const records = await query.fetch();
-  return records.map(toFactTopicLink);
-}
-
-export async function getFactsForTopicIds(
-  topicIds: string[],
-): Promise<Fact[]> {
-  if (topicIds.length === 0) return [];
-
-  const links = await linksCollection
-    .query(Q.where('server_topic_id', Q.oneOf(topicIds)))
-    .fetch();
-  const factIds = [...new Set(links.map((l) => l.factId))];
-
-  if (factIds.length === 0) return [];
-
-  const records = await factsCollection
-    .query(Q.where('id', Q.oneOf(factIds)), Q.sortBy('created_at', Q.desc))
-    .fetch();
-  return records.map(toFact);
-}
-
-/**
- * Replace all fact_topic_links for a given local fact with a fresh set. Used
- * by the topic-gen flow after the server returns the assigned topic ids.
- */
-export async function replaceFactTopicLinks(
-  factId: string,
-  links: Array<{ serverTopicId: string; topicText: string }>,
-): Promise<void> {
-  const existing = await linksCollection
-    .query(Q.where('fact_id', factId))
-    .fetch();
-
-  await database.write(async () => {
-    const ops: Model[] = [
-      ...existing.map((l) => l.prepareDestroyPermanently()),
-      ...links.map((link) =>
-        linksCollection.prepareCreate((r) => {
-          r.factId = factId;
-          r.serverTopicId = link.serverTopicId;
-          r.topicText = link.topicText;
-        }),
-      ),
-    ];
-    if (ops.length > 0) await database.batch(ops);
-  });
-}
-
-/**
- * Resolves server-side topic IDs associated with a fact.
- * Pure function — no DB access needed.
- */
-export function resolveTopicIdsForFact(
-  fact: Fact,
-  links: FactTopicLink[],
-  userTopics: { _id: string; news_topic_text: string }[],
-): string[] {
-  const fromLinks = links
-    .filter((l) => l.factId === fact.id && l.serverTopicId)
-    .map((l) => l.serverTopicId);
-  if (fromLinks.length > 0) return fromLinks;
-
-  const topics = fact.metadata?.topics ?? [];
-  const topicsByText = new Map(
-    userTopics.map((i) => [i.news_topic_text, i._id]),
+/** Returns facts that have at least one of the given topic texts in their metadata.topics. */
+export async function getFactsForTopicTexts(topicTexts: string[]): Promise<Fact[]> {
+  if (topicTexts.length === 0) return [];
+  const topicSet = new Set(topicTexts);
+  const facts = await getFacts();
+  return facts.filter((f) =>
+    f.metadata?.topics?.some((t) => topicSet.has(t)) ?? false,
   );
-  return topics
-    .map((t) => topicsByText.get(t))
-    .filter((id): id is string => !!id);
 }
 
 // --- Questionnaire Coverage ---

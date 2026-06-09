@@ -4,11 +4,9 @@
 // WatermelonDB open + migration cost rather than queueing behind 5 unrelated
 // stores — the For You screen subscribes to the store and re-renders the
 // instant the suggestions set() lands. Everything else hydrates in parallel
-// in the background; database-store.ready flips once all of it (including
-// the metadata pass and the fact-topic backfill) has finished, which is
-// still the gate for syncFeed.
+// in the background; database-store.ready flips once all of it has finished,
+// which is the gate for syncFeed.
 
-import { backfillFactTopicLinks } from './services/fact-topic-backfill';
 import { pruneStaleVisits } from './services/publication-visit-service';
 import { useDatabaseStore } from '../stores/database-store';
 import logger from '../logger';
@@ -49,13 +47,6 @@ export function hydrateAllStores(): Promise<void> {
     useAppStateStore.getState().hydrateFromDb(),
     useForYouPrefsStore.getState().hydrate(),
   ])
-    .then(() =>
-      backfillFactTopicLinks().catch((err: unknown) => {
-        logger.captureException(err, {
-          tags: { module: 'hydrate-stores', step: 'backfill-fact-topic-links' },
-        });
-      }),
-    )
     .then(() =>
       pruneStaleVisits().catch((err: unknown) => {
         logger.captureException(err, {

@@ -312,7 +312,7 @@ export class ArticleService {
             });
             return data?.articleIdsForTopics ?? { results: [] };
         } catch (error) {
-            logger.error('[ArticleService] getArticleIdsForTopics FAILED', error);
+            logger.warn('[ArticleService] getArticleIdsForTopics FAILED', { topicCount: topics.length });
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getArticleIdsForTopics' },
                 extra: { topicCount: topics.length },

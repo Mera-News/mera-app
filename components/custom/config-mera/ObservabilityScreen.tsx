@@ -17,9 +17,17 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
+import {
+    Table,
+    TableBody,
+    TableData,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import TableDetailScreen from './TableDetailScreen';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -37,8 +45,6 @@ const COUNT_TABLES = [
     'article_suggestion_facts',
     'publication_visits',
     'facts',
-    'fact_topic_links',
-    'user_topics',
     'user_personas',
 ] as const;
 
@@ -105,30 +111,21 @@ async function loadDbStats(): Promise<DbStats> {
     return { tableCounts, schedulerJobsByStatus, inferenceJobsByStatus, settings };
 }
 
+// ─── Shared table styles ──────────────────────────────────────────────────────
+
+const TH_CLS = 'bg-gray-950 px-3 py-2 border-b border-gray-800';
+const TD_CLS = 'px-3 py-2 border-b border-gray-800';
+const ROW_EVEN = 'bg-black';
+const ROW_ODD = 'bg-gray-950';
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 const SectionHeader = ({ title }: { title: string }) => (
-    <Box className="pt-5 pb-1.5 border-b border-gray-800 mb-1">
+    <Box className="pt-5 pb-1.5 border-b border-gray-800 mb-2">
         <Text size="xs" className="text-gray-500 uppercase tracking-widest font-semibold">
             {title}
         </Text>
     </Box>
-);
-
-const Row = ({ label, value }: { label: string; value: string }) => (
-    <HStack className="justify-between items-center py-1.5 border-b border-gray-900">
-        <Text size="sm" className="text-gray-500 flex-1">{label}</Text>
-        <Text size="sm" className="text-white ml-2 text-right" numberOfLines={1} style={{ maxWidth: '55%' }}>
-            {value}
-        </Text>
-    </HStack>
-);
-
-const SettingsRow = ({ keyStr, value }: { keyStr: string; value: string }) => (
-    <VStack className="py-1.5 border-b border-gray-900">
-        <Text size="xs" className="text-gray-500">{keyStr}</Text>
-        <Text size="xs" className="text-white mt-0.5 pl-2" numberOfLines={1}>→ {value}</Text>
-    </VStack>
 );
 
 const MetricCard = ({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) => (
@@ -139,45 +136,23 @@ const MetricCard = ({ title, value, subtitle }: { title: string; value: string; 
     </Box>
 );
 
-const TaskCard = ({
-    name,
-    status,
-    lastRun,
-    progress,
-    errorMessage,
-}: {
-    name: string;
-    status: string | null;
-    lastRun: number | null | undefined;
-    progress: TaskProgress | null | undefined;
-    errorMessage?: string;
-}) => (
-    <Box className="border border-gray-800 rounded-xl p-3 mb-2 bg-gray-900">
-        <HStack className="justify-between items-center mb-1.5">
-            <Text className="text-white font-semibold text-sm flex-1 mr-2" numberOfLines={1}>
-                {name}
-            </Text>
-            <HStack className="items-center" space="xs">
-                <Box
-                    style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: statusDotColor(status),
-                    }}
-                />
-                <Text size="xs" className="text-gray-400">{status ?? 'idle'}</Text>
-            </HStack>
-        </HStack>
-        <Row label="last run" value={relativeTime(lastRun)} />
-        {progress?.current != null && progress?.total != null ? (
-            <Row label="progress" value={`${progress.current}/${progress.total}`} />
-        ) : null}
-        {errorMessage ? (
-            <Text size="xs" className="text-red-400 mt-1.5" numberOfLines={2}>
-                {errorMessage}
-            </Text>
-        ) : null}
+// 2-column key/value table used by Feed, Protocol, System, Settings
+const KVTable = ({ rows }: { rows: [string, string][] }) => (
+    <Box className="rounded-xl overflow-hidden border border-gray-800">
+        <Table>
+            <TableBody>
+                {rows.map(([k, v], i) => (
+                    <TableRow key={k} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
+                        <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
+                            <Text size="xs" className="text-gray-400">{k}</Text>
+                        </TableData>
+                        <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
+                            <Text size="xs" className="text-white text-right" numberOfLines={1}>{v}</Text>
+                        </TableData>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
     </Box>
 );
 
@@ -245,6 +220,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
 
     const [dbStats, setDbStats] = useState<DbStats | null>(null);
     const [loadingDb, setLoadingDb] = useState(false);
+    const [selectedTable, setSelectedTable] = useState<string | null>(null);
 
     const refresh = useCallback(async () => {
         setLoadingDb(true);
@@ -335,14 +311,19 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     ? `${pendingCount} pending`
                     : undefined;
 
+    if (selectedTable) {
+        return (
+            <TableDetailScreen
+                tableName={selectedTable}
+                onBack={() => setSelectedTable(null)}
+            />
+        );
+    }
+
     return (
         <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
             <HStack className="px-4 py-3 items-center justify-between">
-                <Pressable
-                    onPress={onBack}
-                    className="bg-gray-900 rounded-full p-2"
-                    hitSlop={8}
-                >
+                <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
                 </Pressable>
                 <Text className="text-white font-semibold text-base">Observability</Text>
@@ -396,62 +377,174 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     />
                 </HStack>
 
-                {/* Scheduler tasks */}
+                {/* Scheduler Tasks */}
                 <SectionHeader title="Scheduler Tasks" />
                 {taskNames.length === 0 ? (
                     <Text size="sm" className="text-gray-600 py-2">No tasks registered yet</Text>
                 ) : (
-                    taskNames.map((name) => (
-                        <TaskCard
-                            key={name}
-                            name={name}
-                            status={taskCurrentStatus[name] ?? null}
-                            lastRun={taskLastRun[name]}
-                            progress={taskProgress[name] ?? null}
-                            errorMessage={getTaskError(name)}
-                        />
-                    ))
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <Box className="rounded-xl overflow-hidden border border-gray-800">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 200 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Task</Text>
+                                        </TableHead>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 100 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Status</Text>
+                                        </TableHead>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Last Run</Text>
+                                        </TableHead>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Progress</Text>
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {taskNames.map((name, i) => {
+                                        const status = taskCurrentStatus[name] ?? null;
+                                        const progress: TaskProgress | null | undefined = taskProgress[name];
+                                        const error = getTaskError(name);
+                                        const rowCls = i % 2 === 0 ? ROW_EVEN : ROW_ODD;
+                                        return (
+                                            <React.Fragment key={name}>
+                                                <TableRow className={rowCls}>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 200 }}>
+                                                        <Text size="xs" className="text-white" numberOfLines={1}>{name}</Text>
+                                                    </TableData>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 100 }}>
+                                                        <HStack space="xs" className="items-center">
+                                                            <Box
+                                                                style={{
+                                                                    width: 6,
+                                                                    height: 6,
+                                                                    borderRadius: 3,
+                                                                    backgroundColor: statusDotColor(status),
+                                                                    flexShrink: 0,
+                                                                }}
+                                                            />
+                                                            <Text size="xs" className="text-gray-300">{status ?? 'idle'}</Text>
+                                                        </HStack>
+                                                    </TableData>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
+                                                        <Text size="xs" className="text-gray-300">
+                                                            {relativeTime(taskLastRun[name])}
+                                                        </Text>
+                                                    </TableData>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
+                                                        <Text size="xs" className="text-gray-300">
+                                                            {progress?.current != null && progress?.total != null
+                                                                ? `${progress.current}/${progress.total}`
+                                                                : '—'}
+                                                        </Text>
+                                                    </TableData>
+                                                </TableRow>
+                                                {error ? (
+                                                    <TableRow className={rowCls}>
+                                                        <TableData
+                                                            useRNView
+                                                            className="px-3 py-1.5 border-b border-gray-800"
+                                                            style={{ width: 480 }}
+                                                        >
+                                                            <Text size="xs" className="text-red-400" numberOfLines={2}>{error}</Text>
+                                                        </TableData>
+                                                    </TableRow>
+                                                ) : null}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </Box>
+                    </ScrollView>
                 )}
 
                 {/* Feed */}
                 <SectionHeader title="Feed" />
-                <Row label="articleCount" value={String(articleCount)} />
-                <Row label="relevantArticleCount" value={String(relevantArticleCount)} />
-                <Row label="unscoredCount" value={String(unscoredCount)} />
-                <Row label="asyncJobPhase" value={asyncJobPhase} />
-                <Row label="lastSyncAt" value={relativeTime(lastSyncAt)} />
-                <Row label="syncState" value={syncStatusMessage?.state ?? 'idle'} />
+                <KVTable rows={[
+                    ['articleCount', String(articleCount)],
+                    ['relevantArticleCount', String(relevantArticleCount)],
+                    ['unscoredCount', String(unscoredCount)],
+                    ['asyncJobPhase', asyncJobPhase],
+                    ['lastSyncAt', relativeTime(lastSyncAt)],
+                    ['syncState', syncStatusMessage?.state ?? 'idle'],
+                ]} />
 
                 {/* Protocol */}
                 <SectionHeader title="Protocol" />
-                <Row label="processingMode" value={String(processingMode)} />
-                <Row label="modelState" value={modelState} />
-                <Row label="downloadProgress" value={`${downloadProgress}%`} />
-                <Row label="isProcessing" value={String(isProcessing)} />
+                <KVTable rows={[
+                    ['processingMode', String(processingMode)],
+                    ['modelState', modelState],
+                    ['downloadProgress', `${downloadProgress}%`],
+                    ['isProcessing', String(isProcessing)],
+                ]} />
 
                 {/* System */}
                 <SectionHeader title="System" />
-                <Row label="network" value={isConnected ? 'connected' : 'offline'} />
-                <Row label="db" value={dbReady ? 'ready' : 'not ready'} />
-                <Row label="schemaVersion" value={String(schema.version)} />
-                <Row label="userId" value={userId ? `${userId.slice(0, 8)}…` : 'null'} />
+                <KVTable rows={[
+                    ['network', isConnected ? 'connected' : 'offline'],
+                    ['db', dbReady ? 'ready' : 'not ready'],
+                    ['schemaVersion', String(schema.version)],
+                    ['userId', userId ? `${userId.slice(0, 8)}…` : 'null'],
+                ]} />
 
                 {/* DB Tables */}
                 <SectionHeader title="DB Tables" />
                 {dbStats ? (
-                    <>
-                        {COUNT_TABLES.map((name) => (
-                            <Row key={name} label={name} value={String(dbStats.tableCounts[name] ?? '…')} />
-                        ))}
-                        <Row
-                            label="scheduler_jobs"
-                            value={formatStatusCounts(dbStats.schedulerJobsByStatus, SCHEDULER_STATUSES)}
-                        />
-                        <Row
-                            label="inference_jobs"
-                            value={formatStatusCounts(dbStats.inferenceJobsByStatus, INFERENCE_STATUSES)}
-                        />
-                    </>
+                    <Box className="rounded-xl overflow-hidden border border-gray-800">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead useRNView className={TH_CLS} style={{ flex: 1 }}>
+                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">Table</Text>
+                                    </TableHead>
+                                    <TableHead useRNView className={`${TH_CLS} items-end`} style={{ width: 140 }}>
+                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">Rows / Status</Text>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {COUNT_TABLES.map((name, i) => (
+                                    <TableRow key={name} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
+                                        <TableData useRNView className="p-0" style={{ flex: 1 }}>
+                                            <Pressable
+                                                onPress={() => setSelectedTable(name)}
+                                                className="flex-row items-center px-3 py-2.5"
+                                            >
+                                                <Text size="xs" className="text-gray-400 flex-1">{name}</Text>
+                                                <MaterialIcons name="chevron-right" size={13} color="#4b5563" />
+                                            </Pressable>
+                                        </TableData>
+                                        <TableData useRNView className={TD_CLS} style={{ width: 140 }}>
+                                            <Text size="xs" className="text-white text-right">
+                                                {String(dbStats.tableCounts[name] ?? '…')}
+                                            </Text>
+                                        </TableData>
+                                    </TableRow>
+                                ))}
+                                {([
+                                    ['scheduler_jobs', formatStatusCounts(dbStats.schedulerJobsByStatus, SCHEDULER_STATUSES)],
+                                    ['inference_jobs', formatStatusCounts(dbStats.inferenceJobsByStatus, INFERENCE_STATUSES)],
+                                ] as [string, string][]).map(([name, value], i) => (
+                                    <TableRow key={name} className={(COUNT_TABLES.length + i) % 2 === 0 ? ROW_EVEN : ROW_ODD}>
+                                        <TableData useRNView className="p-0" style={{ flex: 1 }}>
+                                            <Pressable
+                                                onPress={() => setSelectedTable(name)}
+                                                className="flex-row items-center px-3 py-2.5"
+                                            >
+                                                <Text size="xs" className="text-gray-400 flex-1">{name}</Text>
+                                                <MaterialIcons name="chevron-right" size={13} color="#4b5563" />
+                                            </Pressable>
+                                        </TableData>
+                                        <TableData useRNView className={TD_CLS} style={{ width: 140 }}>
+                                            <Text size="xs" className="text-white text-right">{value}</Text>
+                                        </TableData>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Box>
                 ) : (
                     <Text size="sm" className="text-gray-600 py-2">
                         {loadingDb ? 'Loading…' : 'Not loaded'}
@@ -464,9 +557,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     dbStats.settings.length === 0 ? (
                         <Text size="sm" className="text-gray-600 py-2">No settings</Text>
                     ) : (
-                        dbStats.settings.map(({ key, value }) => (
-                            <SettingsRow key={key} keyStr={key} value={value} />
-                        ))
+                        <KVTable rows={dbStats.settings.map(({ key, value }) => [key, value])} />
                     )
                 ) : (
                     <Text size="sm" className="text-gray-600 py-2">
