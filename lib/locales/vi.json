@@ -269,6 +269,7 @@
     "languagePacksIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng → Ngôn ngữ dịch",
     "languagePacksAndroid": "Mô hình dịch (~30MB mỗi gói) sẽ được tải tự động khi bạn dịch sang ngôn ngữ mới lần đầu.",
     "openDeviceSettings": "Mở cài đặt thiết bị",
+    "openLanguageSettings": "Mở cài đặt ngôn ngữ",
     "restartRequired": "Cần khởi động lại ứng dụng",
     "restartDescription": "Ứng dụng cần khởi động lại để áp dụng thay đổi ngôn ngữ.",
     "restart": "Khởi động lại ngay",

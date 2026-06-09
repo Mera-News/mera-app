@@ -7,9 +7,11 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, FlatList, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as Updates from 'expo-updates';
@@ -30,6 +32,18 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
     const setShowOriginal = useAppLanguageStore((s) => s.setShowOriginal);
 
     const [showLangPicker, setShowLangPicker] = useState(false);
+    const [videoLoading, setVideoLoading] = useState(false);
+
+    const handleWatchGuide = async () => {
+        setVideoLoading(true);
+        try {
+            await WebBrowser.openBrowserAsync(TRANSLATION_GUIDE_URL);
+        } catch {
+            Alert.alert('Error', 'Could not load the guide. Please try again.');
+        } finally {
+            setVideoLoading(false);
+        }
+    };
 
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
 
@@ -143,6 +157,18 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                 </Text>
                             </HStack>
 
+                            <Pressable
+                                onPress={handleWatchGuide}
+                                disabled={videoLoading}
+                                className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                            >
+                                <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
+                                <Text className="text-violet-400 text-sm font-medium flex-1">
+                                    {videoLoading ? 'Loading…' : 'Watch translation guide'}
+                                </Text>
+                                <MaterialIcons name="open-in-new" size={16} color="#6b7280" />
+                            </Pressable>
+
                             <Box className="p-4 bg-gray-800 rounded-lg border border-background-700">
                                 {Platform.OS === 'ios' ? (
                                     <VStack space="sm">
@@ -156,11 +182,31 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                             </Text>
                                             .
                                         </Text>
+                                        <Pressable
+                                            onPress={() => Linking.openURL('App-Prefs:General')}
+                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-gray-700 rounded-lg"
+                                        >
+                                            <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
+                                            <Text className="text-violet-400 text-sm font-medium">
+                                                {t('language.openLanguageSettings')}
+                                            </Text>
+                                        </Pressable>
                                     </VStack>
                                 ) : (
-                                    <Text className="text-typography-400 text-sm leading-5">
-                                        {t('language.languagePacksAndroid')}
-                                    </Text>
+                                    <VStack space="sm">
+                                        <Text className="text-typography-400 text-sm leading-5">
+                                            {t('language.languagePacksAndroid')}
+                                        </Text>
+                                        <Pressable
+                                            onPress={() => Linking.sendIntent('android.settings.LOCALE_SETTINGS')}
+                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-gray-700 rounded-lg"
+                                        >
+                                            <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
+                                            <Text className="text-violet-400 text-sm font-medium">
+                                                {t('language.openLanguageSettings')}
+                                            </Text>
+                                        </Pressable>
+                                    </VStack>
                                 )}
                             </Box>
 

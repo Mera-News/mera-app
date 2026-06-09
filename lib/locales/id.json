@@ -269,6 +269,7 @@
     "languagePacksIosPath": "Pengaturan → Umum → Bahasa & Wilayah → Bahasa Terjemahan",
     "languagePacksAndroid": "Model terjemahan (~30MB masing-masing) diunduh secara otomatis saat Anda pertama kali menerjemahkan ke bahasa baru.",
     "openDeviceSettings": "Buka Pengaturan Perangkat",
+    "openLanguageSettings": "Buka Pengaturan Bahasa",
     "restartRequired": "Perlu Memulai Ulang Aplikasi",
     "restartDescription": "Aplikasi perlu dimulai ulang untuk menerapkan perubahan bahasa.",
     "restart": "Mulai Ulang Sekarang",

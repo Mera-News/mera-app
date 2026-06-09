@@ -11,3 +11,6 @@ export const WEBSITE_URL =
   process.env.EXPO_PUBLIC_WEBSITE_URL || 'https://mera.news';
 export const GITHUB_URL =
   process.env.EXPO_PUBLIC_GITHUB_URL || 'https://github.com/Mera-News/mera-app';
+export const TRANSLATION_GUIDE_URL =
+  process.env.EXPO_PUBLIC_TRANSLATION_GUIDE_URL ||
+  'https://mera.news/assets/mera-translation-guide.mp4';

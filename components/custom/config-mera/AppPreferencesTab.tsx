@@ -210,6 +210,9 @@ const AppPreferencesTab: React.FC = () => {
                     <Text size="xs" className="text-gray-500">
                         App Version: {getAppVersionLabel()}
                     </Text>
+                    <Text size="xs" className="text-gray-500 mt-1">
+                        © {new Date().getFullYear()} Mera Labs B.V.
+                    </Text>
                 </Box>
             </Box>
 

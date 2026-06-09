@@ -190,6 +190,9 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                 <Text size="xs" className="text-gray-500 mt-1">
                     {getAppVersionLabel()}
                 </Text>
+                <Text size="xs" className="text-gray-500 mt-1">
+                    © {new Date().getFullYear()} Mera Labs B.V.
+                </Text>
             </Box>
         </Box>
     );

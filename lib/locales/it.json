@@ -269,6 +269,7 @@
     "languagePacksIosPath": "Impostazioni → Generali → Lingua e Regione → Lingue di traduzione",
     "languagePacksAndroid": "I modelli di traduzione (~30MB ciascuno) vengono scaricati automaticamente quando traduci per la prima volta in una nuova lingua.",
     "openDeviceSettings": "Apri Impostazioni dispositivo",
+    "openLanguageSettings": "Apri impostazioni lingua",
     "restartRequired": "Riavvio dell'app necessario",
     "restartDescription": "L'app deve essere riavviata per applicare la modifica della lingua.",
     "restart": "Riavvia ora",

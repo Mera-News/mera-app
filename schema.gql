@@ -24,6 +24,7 @@ enum ArticleProcessingStatus {
   TRANSLATION_SUCCESS
 }
 
+"""Sibling article returned by the relatedArticles query"""
 type ArticleSummary {
   _id: ID!
   article_url: String
@@ -60,15 +61,9 @@ type ClusterArticlesConnection {
   pageInfo: CursorPageInfo!
 }
 
-"""Cursor-based pagination metadata"""
 type CursorPageInfo {
-  """Cursor pointing to the last item in the current page"""
   endCursor: String
-
-  """Whether there are more items after the current page"""
   hasNextPage: Boolean!
-
-  """Number of items requested"""
   pageSize: Int!
 }
 
@@ -220,7 +215,6 @@ type Query {
   """
   articleById(id: ID!): NewsArticle
   articleIdsForTopics(limitPerTopic: Int! = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
-  recentArticleCount: Int!
   articlesForPublicationSource(
     """Cursor to fetch items after"""
     after: String
@@ -240,6 +234,7 @@ type Query {
     first: Int = 20
     userTopicId: ID
   ): NewsClustersResponse!
+  newsClustersForTopicText(after: String, first: Int = 20, topicText: String!): NewsClustersResponse!
   newsPublishers(
     """Cursor to fetch items after"""
     after: String
@@ -259,6 +254,7 @@ type Query {
     languageCode: String
   ): PublicationSourcesResponse! @deprecated(reason: "Use newsPublishers and publicationSourcesForNewsPublisher queries instead")
   publicationSourcesForNewsPublisher(publisherId: ID!): PublicationSourcesForPublisherResponse!
+  recentArticleCount: Int!
   relatedArticles(articleId: ID!): [ArticleSummary!]!
 
   """Vector search using cosine similarity (scores 0–1)."""

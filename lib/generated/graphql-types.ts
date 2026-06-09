@@ -39,6 +39,7 @@ export enum ArticleProcessingStatus {
   TranslationSuccess = 'TRANSLATION_SUCCESS'
 }
 
+/** Sibling article returned by the relatedArticles query */
 export type ArticleSummary = {
   __typename?: 'ArticleSummary';
   _id: Scalars['ID']['output'];
@@ -79,14 +80,10 @@ export type ClusterArticlesConnection = {
   pageInfo: CursorPageInfo;
 };
 
-/** Cursor-based pagination metadata */
 export type CursorPageInfo = {
   __typename?: 'CursorPageInfo';
-  /** Cursor pointing to the last item in the current page */
   endCursor?: Maybe<Scalars['String']['output']>;
-  /** Whether there are more items after the current page */
   hasNextPage: Scalars['Boolean']['output'];
-  /** Number of items requested */
   pageSize: Scalars['Int']['output'];
 };
 
@@ -294,10 +291,12 @@ export type Query = {
   articlesForTopicsByIds: Array<ArticleWithClusters>;
   newsClusterForUser: NewsCluster;
   newsClusters: NewsClustersResponse;
+  newsClustersForTopicText: NewsClustersResponse;
   newsPublishers: NewsPublishersResponse;
   /** @deprecated Use newsPublishers and publicationSourcesForNewsPublisher queries instead */
   publicationSources: PublicationSourcesResponse;
   publicationSourcesForNewsPublisher: PublicationSourcesForPublisherResponse;
+  recentArticleCount: Scalars['Int']['output'];
   relatedArticles: Array<ArticleSummary>;
   /** Vector search using cosine similarity (scores 0–1). */
   searchArticlesVector: EmbeddingSearchResponse;
@@ -340,6 +339,13 @@ export type QueryNewsClustersArgs = {
   countryCodes?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
   userTopicId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryNewsClustersForTopicTextArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  topicText: Scalars['String']['input'];
 };
 
 

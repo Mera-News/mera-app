@@ -269,6 +269,7 @@
     "languagePacksIosPath": "Ayarlar → Genel → Dil ve Bölge → Çeviri Dilleri",
     "languagePacksAndroid": "Çeviri modelleri (~30MB her biri) yeni bir dile ilk çeviriyi yaptığında otomatik olarak indirilir.",
     "openDeviceSettings": "Cihaz Ayarlarını Aç",
+    "openLanguageSettings": "Dil Ayarlarını Aç",
     "restartRequired": "Uygulama Yeniden Başlatma Gerekli",
     "restartDescription": "Dil değişikliğini uygulamak için uygulamanın yeniden başlatılması gerekiyor.",
     "restart": "Şimdi Yeniden Başlat",

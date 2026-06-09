@@ -269,6 +269,7 @@
     "languagePacksIosPath": "设置 → 通用 → 语言与地区 → 翻译语言",
     "languagePacksAndroid": "翻译模型（每个约30MB）将在您首次翻译为新语言时自动下载。",
     "openDeviceSettings": "打开设备设置",
+    "openLanguageSettings": "打开语言设置",
     "restartRequired": "需要重启应用",
     "restartDescription": "应用需要重启以应用语言更改。",
     "restart": "立即重启",

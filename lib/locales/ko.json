@@ -269,6 +269,7 @@
     "languagePacksIosPath": "설정 → 일반 → 언어 및 지역 → 번역 언어",
     "languagePacksAndroid": "번역 모델(각 약 30MB)은 새 언어로 처음 번역할 때 자동으로 다운로드됩니다.",
     "openDeviceSettings": "기기 설정 열기",
+    "openLanguageSettings": "언어 설정 열기",
     "restartRequired": "앱 재시작 필요",
     "restartDescription": "언어 변경을 적용하려면 앱을 재시작해야 합니다.",
     "restart": "지금 재시작",

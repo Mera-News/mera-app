@@ -269,6 +269,7 @@
     "languagePacksIosPath": "Einstellungen → Allgemein → Sprache & Region → Übersetzungssprachen",
     "languagePacksAndroid": "Übersetzungsmodelle (je ca. 30 MB) werden automatisch heruntergeladen, wenn Sie zum ersten Mal in eine neue Sprache übersetzen.",
     "openDeviceSettings": "Geräteeinstellungen öffnen",
+    "openLanguageSettings": "Spracheinstellungen öffnen",
     "restartRequired": "App-Neustart erforderlich",
     "restartDescription": "Die App muss neu gestartet werden, um die Sprachänderung anzuwenden.",
     "restart": "Jetzt neu starten",

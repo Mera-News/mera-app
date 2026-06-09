@@ -269,6 +269,7 @@
     "languagePacksIosPath": "設定 → 一般 → 言語と地域 → 翻訳言語",
     "languagePacksAndroid": "翻訳モデル（各約30MB）は、新しい言語に初めて翻訳するときに自動的にダウンロードされます。",
     "openDeviceSettings": "デバイスの設定を開く",
+    "openLanguageSettings": "言語設定を開く",
     "restartRequired": "アプリの再起動が必要です",
     "restartDescription": "言語の変更を適用するにはアプリを再起動する必要があります。",
     "restart": "今すぐ再起動",
