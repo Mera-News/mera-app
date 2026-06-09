@@ -12,6 +12,7 @@ import logger from '@/lib/logger';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 
@@ -45,6 +46,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     countryCode,
     onBack,
 }) => {
+    const { t } = useTranslation();
     const [items, setItems] = useState<VisitedArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -113,7 +115,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
         <Box className="flex-1 bg-black">
             <DrillDownHeader
                 title={publicationName}
-                subtitle="Articles you've read"
+                subtitle={t('publicationVisits.articlesRead')}
                 onBack={onBack}
             />
             {isLoading ? (
@@ -124,7 +126,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="article" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
-                        No articles from this publication in the last 30 days.
+                        {t('publicationVisits.noArticlesLast30Days')}
                     </Text>
                 </VStack>
             ) : (

@@ -13,23 +13,24 @@ import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 
 interface Props {
     readonly onBack: () => void;
 }
 
-const formatRelativeAgo = (timestamp: number): string => {
+const formatRelativeAgo = (timestamp: number, t: TFunction): string => {
     const diffMs = Date.now() - timestamp;
     const mins = Math.max(0, Math.floor(diffMs / 60000));
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1) return t('feed.justNow');
+    if (mins < 60) return t('feed.minutesAgo', { count: mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return t('feed.hoursAgo', { count: hours });
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return t('feed.daysAgo', { count: days });
 };
 
 const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
@@ -94,7 +95,7 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                             {item.publicationName}
                         </Text>
                         <Text size="xs" className="text-gray-400">
-                            Last read {formatRelativeAgo(item.lastVisitedAt)}
+                            {t('publicationVisits.lastRead', { time: formatRelativeAgo(item.lastVisitedAt, t) })}
                         </Text>
                     </VStack>
                     <Box className="px-2.5 py-1 rounded-full border border-white">
@@ -120,8 +121,8 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
     return (
         <Box className="flex-1 bg-black">
             <DrillDownHeader
-                title="Publications you've visited"
-                subtitle="Last 30 days"
+                title={t('publicationVisits.visitedListTitle')}
+                subtitle={t('publicationVisits.last30Days')}
                 onBack={onBack}
             />
             {isLoading ? (
@@ -132,7 +133,7 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="visibility-off" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
-                        You haven&apos;t read any articles yet.
+                        {t('publicationVisits.noArticlesYet')}
                     </Text>
                 </VStack>
             ) : (

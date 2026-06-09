@@ -12,7 +12,11 @@
     "retry": "Retry",
     "ok": "OK",
     "checking": "Checking...",
-    "updating": "Updating..."
+    "updating": "Updating...",
+    "goBack": "Go Back",
+    "articles": "Articles",
+    "loggingOut": "Logging Out...",
+    "never": "Never"
   },
   "auth": {
     "emailPlaceholder": "Enter your email address",
@@ -51,6 +55,7 @@
     "refresh": "Refresh 🔄"
   },
   "feed": {
+    "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
     "noInterests": "Mera cannot analyze news for you",
     "noInterestsDescription": "Please create your user persona for Mera to start generating news for you.",
@@ -151,15 +156,53 @@
             "This happens entirely on your device — nothing leaves it."
           ]
         }
-      },
-      "syncToast": {
-        "relevanceTitle": "Calculating relevance",
-        "reasonsTitle": "Writing notes for you",
-        "onDeviceTitle": "Scoring on your phone",
-        "completedTitle": "All done",
-        "completedMessage": "Your feed is ready"
       }
+    },
+    "sections": {
+      "emergency": "Emergency",
+      "majorImpact": "Major impact",
+      "notableImpact": "Notable impact",
+      "goodToKnow": "Good to know",
+      "unscoredShort": "Unscored"
+    },
+    "syncToast": {
+      "relevanceTitle": "Calculating relevance",
+      "reasonsTitle": "Writing notes for you",
+      "onDeviceTitle": "Scoring on your phone",
+      "completedTitle": "All done",
+      "completedMessage": "Your feed is ready"
     }
+  },
+  "relevance": {
+    "emergency": "Emergency",
+    "high": "High",
+    "medium": "Med",
+    "low": "Low",
+    "irrelevant": "Irrelevant",
+    "unprocessed": "Unprocessed"
+  },
+  "articleDetail": {
+    "readArticle": "Read Article",
+    "relatedArticles": "Related Articles",
+    "articleUnavailable": "This article is no longer available",
+    "storyUnavailable": "This story is no longer available",
+    "failedToLoad": "Failed to load article",
+    "articleNotFound": "Article not found"
+  },
+  "newsCluster": {
+    "failedToLoad": "Failed to load cluster details",
+    "clusterNotFound": "Cluster not found",
+    "coverage": "Coverage",
+    "noArticles": "No articles available in this cluster"
+  },
+  "sources": {
+    "searchCountries": "Search countries...",
+    "noCountriesMatch": "No countries match your search",
+    "noSourcesAvailable": "No sources available",
+    "noFeedsAvailable": "No feeds available",
+    "publishers": "Publishers",
+    "noPublishers": "No publishers for this country",
+    "noArticlesFound": "No articles found"
   },
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",
@@ -359,7 +402,8 @@
     "signedOutTitle": "Signed Out",
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
-    "logoutFailedDescription": "There was an issue signing out. Please try again."
+    "logoutFailedDescription": "There was an issue signing out. Please try again.",
+    "loggingOut": "Logging Out..."
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -393,7 +437,16 @@
     "refreshSuggestionsSuccessDescription": "New personalized suggestions are being generated.",
     "refreshSuggestionsFailedTitle": "Refresh Failed",
     "refreshSuggestionsFailedDescription": "Could not refresh suggestions. Please try again.",
-    "personaUpdatedRefreshHint": "I see you've updated your persona, would you like me to regenerate your feed?"
+    "personaUpdatedRefreshHint": "I see you've updated your persona, would you like me to regenerate your feed?",
+    "articleCount_one": "{{count}} article",
+    "articleCount_other": "{{count}} articles",
+    "addTopic": "Add topic",
+    "addTopicDescription": "Please enter the topic that you'd like to track for this fact. The App finds news based on your topic and understands its relevance based on the fact.",
+    "addTopicPlaceholder": "e.g. AI regulation in Europe",
+    "adding": "Adding...",
+    "articleAnalysisTitle": "About article analysis",
+    "articleAnalysisDescription": "You should be optimizing your Mera by reducing the total number of articles being analyzed as the more articles being analyzed the more you run out of usage.",
+    "gotIt": "Got it"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -413,7 +466,10 @@
     "startingChat": "Starting chat...",
     "loadingModel": "Loading AI model...",
     "loadingModelProgress": "Loading AI model... {{percent}}%",
-    "reloadingModel": "Reloading AI model... {{percent}}%"
+    "reloadingModel": "Reloading AI model... {{percent}}%",
+    "waitingForResponse": "Waiting for response...",
+    "typeMessage": "Type a message...",
+    "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment."
   },
   "personaChat": {
     "introMessage": "Hi! I'm Mera, your personal news assistant. If you'd like, share anything about yourself — where you live, what you do for work, hobbies you follow, stocks you track, places your family lives. Or just say 'help me set up' and I'll walk you through it."
@@ -427,7 +483,50 @@
     "tooltipA11y": "About reading history",
     "tooltipIntro": "Mera keeps track of your reading patterns for you — and it lives only on your device.",
     "tooltipLink": "See all your reading history here.",
-    "screenIntro": "Mera tracks your reading patterns - only on your device for 30 days. This gives you a clearer picture of which publications matter most to you, so you can consider supporting the ones that directly benefit you."
+    "screenIntro": "Mera tracks your reading patterns - only on your device for 30 days. This gives you a clearer picture of which publications matter most to you, so you can consider supporting the ones that directly benefit you.",
+    "visitedListTitle": "Publications you've visited",
+    "last30Days": "Last 30 days",
+    "lastRead": "Last read {{time}}",
+    "noArticlesYet": "You haven't read any articles yet.",
+    "articlesRead": "Articles you've read",
+    "noArticlesLast30Days": "No articles from this publication in the last 30 days."
+  },
+  "ota": {
+    "updateReady": "Update ready",
+    "updateDescription": "Tap to restart and apply the latest version"
+  },
+  "observability": {
+    "title": "Observability",
+    "articles": "Articles",
+    "relevant": "Relevant",
+    "unscored": "Unscored",
+    "scheduler": "Scheduler",
+    "dbTables": "DB Tables",
+    "table": "Table",
+    "rowsStatus": "Rows / Status",
+    "schedulerTasks": "Scheduler Tasks",
+    "task": "Task",
+    "status": "Status",
+    "lastRun": "Last Run",
+    "progress": "Progress",
+    "noTasksYet": "No tasks registered yet",
+    "feed": "Feed",
+    "protocol": "Protocol",
+    "system": "System",
+    "settings": "Settings",
+    "noSettings": "No settings",
+    "notLoaded": "Not loaded",
+    "never": "Never",
+    "running": "{{count}} running",
+    "failed": "{{count}} failed",
+    "pending": "{{count}} pending"
+  },
+  "tableDetail": {
+    "rowsOfCols": "{{rows}} of {{total}} rows · {{cols}} cols",
+    "rowsAndCols": "{{rows}} rows · {{cols}} cols",
+    "tableEmpty": "Table is empty",
+    "loadMore": "Load next {{count}}",
+    "allRowsLoaded": "All {{count}} rows loaded"
   },
   "sync": {
     "fetchingTopics": "Fetching topics for today…",

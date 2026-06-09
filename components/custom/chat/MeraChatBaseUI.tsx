@@ -4,11 +4,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useRef } from 'react';
 import {
     Pressable,
+    ScrollView,
     StyleSheet,
     TextInput,
     View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { useTranslation } from 'react-i18next';
 import StreamingIndicator from './StreamingIndicator';
 
 export interface MeraChatBaseUIProps {
@@ -57,6 +59,7 @@ const MeraChatBaseUI: React.FC<MeraChatBaseUIProps> = ({
     onBlockedAction,
     textInputRef: externalTextInputRef,
 }) => {
+    const { t } = useTranslation();
     const internalTextInputRef = useRef<TextInput>(null);
     const textInputRef = externalTextInputRef ?? internalTextInputRef;
 
@@ -69,7 +72,7 @@ const MeraChatBaseUI: React.FC<MeraChatBaseUIProps> = ({
         return (
             <View style={styles.loadingContainer}>
                 <Spinner size="large" />
-                <Text style={styles.loadingText}>{loadingMessage ?? 'Starting chat...'}</Text>
+                <Text style={styles.loadingText}>{loadingMessage ?? t('chat.startingChat')}</Text>
             </View>
         );
     }
@@ -95,7 +98,10 @@ const MeraChatBaseUI: React.FC<MeraChatBaseUIProps> = ({
                             </View>
                         </View>
                     ) : (
-                        <View style={{ maxHeight: 130 }}>
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{ flexGrow: 1 }}
+                        >
                             {showStreamingIndicator ? (
                                 <StreamingIndicator />
                             ) : introMessage ? (
@@ -108,7 +114,7 @@ const MeraChatBaseUI: React.FC<MeraChatBaseUIProps> = ({
                                     <Spinner size="small" />
                                 </View>
                             ) : null}
-                        </View>
+                        </ScrollView>
                     )}
                 </View>
             )}
@@ -127,7 +133,7 @@ const MeraChatBaseUI: React.FC<MeraChatBaseUIProps> = ({
                     multiline
                     value={inputText}
                     onChangeText={onChangeText}
-                    placeholder={isStreaming ? 'Waiting for response...' : 'Type a message...'}
+                    placeholder={isStreaming ? t('chat.waitingForResponse') : t('chat.typeMessage')}
                     placeholderTextColor="#6B7280"
                     editable={!isInputDisabled && !blockedMessage}
                     keyboardAppearance="dark"
@@ -179,7 +185,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 12,
         marginBottom: 12,
         padding: 16,
-        maxHeight: 300,
+        maxHeight: 420,
     },
     blockedContainer: {
         flexDirection: 'row',

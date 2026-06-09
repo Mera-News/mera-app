@@ -80,7 +80,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
-                    setError('This article is no longer available');
+                    setError(t('articleDetail.articleUnavailable'));
                 } else {
                     setArticle(row);
                 }
@@ -91,7 +91,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                     tags: { screen: 'ArticleDetailScreen', method: 'getArticleById' },
                     extra: { articleId },
                 });
-                setError('Failed to load article');
+                setError(t('articleDetail.failedToLoad'));
             })
             .finally(() => {
                 if (!cancelled) setIsLoading(false);
@@ -167,10 +167,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
             <Box className="flex-1 bg-black items-center justify-center p-5">
                 <MaterialIcons name="error-outline" size={48} color="#EF4444" />
                 <Text size="lg" className="text-white mt-4 text-center">
-                    {error || 'Article not found'}
+                    {error || t('articleDetail.articleNotFound')}
                 </Text>
                 <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">Go Back</Text>
+                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -213,7 +213,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                                     onPress={() => handleArticleUrlPress(articleUrl)}
                                 >
                                     <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                    <ButtonText className="text-white ml-2">Read Article</ButtonText>
+                                    <ButtonText className="text-white ml-2">{t('articleDetail.readArticle')}</ButtonText>
                                 </Button>
                                 {(() => {
                                     const status = getArticleTranslatableStatus(
@@ -253,7 +253,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">
                                 <Heading size="md" className="text-gray-300">
-                                    Related Articles
+                                    {t('articleDetail.relatedArticles')}
                                 </Heading>
                                 {isLoadingRelated ? (
                                     <Box className="items-center justify-center py-4">

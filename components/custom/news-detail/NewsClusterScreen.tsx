@@ -68,7 +68,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                     tags: { screen: 'NewsClusterScreen', method: 'loadCluster' },
                     extra: { clusterId },
                 });
-                setError('Failed to load cluster details');
+                setError(t('newsCluster.failedToLoad'));
             } finally {
                 setIsLoading(false);
             }
@@ -124,10 +124,10 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
             <Box className="flex-1 bg-black items-center justify-center p-5">
                 <MaterialIcons name="error-outline" size={48} color="#EF4444" />
                 <Text size="lg" className="text-white mt-4 text-center">
-                    {error || 'Cluster not found'}
+                    {error || t('newsCluster.clusterNotFound')}
                 </Text>
                 <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">Go Back</Text>
+                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -199,7 +199,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                     {/* Headline */}
                     <TranslatableDynamic
                         as="heading"
-                        text={displayTitle || 'News Cluster'}
+                        text={displayTitle || t('feed.newsCluster')}
                         originalText={headlineArticle?.title ?? undefined}
                         originalLanguage={sourceLanguage ?? undefined}
                         size="xl"
@@ -241,7 +241,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                     {/* Articles */}
                     <VStack space="md">
                         <Heading size="md" className="text-gray-300">
-                            Coverage
+                            {t('newsCluster.coverage')}
                         </Heading>
                         {articles.length > 0 ? (
                             articles.map((article, index) => (
@@ -254,7 +254,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                         ) : (
                             <Box className="bg-gray-800 rounded-lg p-4">
                                 <Text size="sm" className="text-gray-400 text-center">
-                                    No articles available in this cluster
+                                    {t('newsCluster.noArticles')}
                                 </Text>
                             </Box>
                         )}

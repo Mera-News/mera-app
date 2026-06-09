@@ -50,7 +50,7 @@ export default function PersonaChatUI({
   const displayBlockedMessage = isBlocked
     ? blockedReason
     : error
-      ? `We're having trouble reaching the Mera inference service right now. Please try again in a moment. (${error})`
+      ? `${t('chat.inferenceError')} (${error})`
       : null;
 
   const handleSend = useCallback(() => {

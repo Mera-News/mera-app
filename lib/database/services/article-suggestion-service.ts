@@ -324,6 +324,49 @@ export async function clearSuggestions(): Promise<void> {
   await deleteSetting(FEED_META_KEY);
 }
 
+/**
+ * Deletes suggestions whose matched topic texts are entirely absent from
+ * current active facts. Suggestions that still overlap with at least one
+ * active topic are preserved (along with their relevance scores).
+ * Returns the number of deleted suggestion rows, or -1 if a full clear
+ * was performed because no active topics exist.
+ */
+export async function pruneOrphanedSuggestions(): Promise<number> {
+  const facts = await getFacts();
+  const activeTopics = new Set<string>();
+  for (const fact of facts) {
+    for (const topic of fact.metadata?.topics ?? []) {
+      if (topic.length > 0) activeTopics.add(topic);
+    }
+  }
+
+  if (activeTopics.size === 0) {
+    await clearSuggestions();
+    return -1;
+  }
+
+  const allSuggestions = await articleSuggestionsCol.query().fetch();
+  const toDelete = allSuggestions.filter((s) => {
+    const matched = parseTopicIds(s.matchedTopicTextsJson);
+    return matched.length > 0 && matched.every((t) => !activeTopics.has(t));
+  });
+
+  if (toDelete.length === 0) return 0;
+
+  const toDeleteIds = new Set(toDelete.map((s) => s.id));
+  const allLinks = await articleSuggestionFactsCol.query().fetch();
+  const linksToDelete = allLinks.filter((l) => toDeleteIds.has(l.articleSuggestionId));
+
+  await database.write(async () => {
+    await database.batch([
+      ...linksToDelete.map((l) => l.prepareDestroyPermanently()),
+      ...toDelete.map((s) => s.prepareDestroyPermanently()),
+    ]);
+  });
+
+  return toDelete.length;
+}
+
 // --- Feed metadata (cold-start counters) ---
 
 const FEED_META_KEY = 'feed_metadata';
@@ -399,6 +442,31 @@ function parseTopicIds(json: string | null | undefined): string[] {
   } catch {
     return [];
   }
+}
+
+/** Returns a count of cached article_suggestions per topic text. */
+export async function getArticleCountByTopicTexts(): Promise<Map<string, number>> {
+  const rows = await articleSuggestionsCol.query().fetch();
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const topics = parseTopicIds(row.matchedTopicTextsJson);
+    for (const topic of topics) {
+      counts.set(topic, (counts.get(topic) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+export async function getArticleSuggestionsByTopicTexts(
+  topicTexts: string[],
+): Promise<ArticleSuggestionModel[]> {
+  if (topicTexts.length === 0) return [];
+  const topicSet = new Set(topicTexts);
+  const rows = await articleSuggestionsCol.query().fetch();
+  return rows.filter(row => {
+    const topics = parseTopicIds(row.matchedTopicTextsJson);
+    return topics.some(t => topicSet.has(t));
+  });
 }
 
 function parseDate(value: unknown): Date | null {
@@ -526,5 +594,9 @@ async function resolveFactsByTopicTexts(
     }
   }
   return result;
+}
+
+export async function getTotalArticleSuggestionCount(): Promise<number> {
+  return articleSuggestionsCol.query().fetchCount();
 }
 

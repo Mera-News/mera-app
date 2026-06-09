@@ -10,6 +10,7 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 
@@ -21,6 +22,7 @@ interface SourcesArticleListProps {
 }
 
 const SourcesArticleList: React.FC<SourcesArticleListProps> = ({ title, publisherName, publicationSourceId, onBack }) => {
+    const { t } = useTranslation();
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -128,7 +130,7 @@ const SourcesArticleList: React.FC<SourcesArticleListProps> = ({ title, publishe
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="article" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
-                        No articles found
+                        {t('sources.noArticlesFound')}
                     </Text>
                 </VStack>
             ) : (

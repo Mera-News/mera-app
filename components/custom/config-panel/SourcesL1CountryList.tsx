@@ -16,6 +16,7 @@ import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 
 interface CountryItem {
@@ -31,6 +32,7 @@ const GLOBAL_COUNTRY: CountryItem = {
 };
 
 const SourcesL1CountryList: React.FC = () => {
+    const { t } = useTranslation();
     const [countryCodes, setCountryCodes] = useState<string[]>([]);
     const [topPublications, setTopPublications] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -148,7 +150,7 @@ const SourcesL1CountryList: React.FC = () => {
                         <MaterialIcons name="search" size={18} color="#999999" />
                     </InputSlot>
                     <InputField
-                        placeholder="Search countries..."
+                        placeholder={t('sources.searchCountries')}
                         placeholderTextColor="#666666"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -162,7 +164,7 @@ const SourcesL1CountryList: React.FC = () => {
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="public" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
-                        {searchQuery ? 'No countries match your search' : 'No sources available'}
+                        {searchQuery ? t('sources.noCountriesMatch') : t('sources.noSourcesAvailable')}
                     </Text>
                 </VStack>
             ) : (

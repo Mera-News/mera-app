@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { getDisplaySectionLabel, getRelevanceColors } from '@/lib/relevance-utils';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface PriorityLabelCardProps {
     label: string;
@@ -9,6 +10,7 @@ interface PriorityLabelCardProps {
 }
 
 const PriorityLabelCard: React.FC<PriorityLabelCardProps> = ({ label, relevance }) => {
+    const { t } = useTranslation();
     const colors = getRelevanceColors(relevance);
 
     return (
@@ -20,7 +22,7 @@ const PriorityLabelCard: React.FC<PriorityLabelCardProps> = ({ label, relevance 
                 }}
                 size="lg"
             >
-                {getDisplaySectionLabel(label)}
+                {t(getDisplaySectionLabel(label))}
             </Text>
         </Card>
     );

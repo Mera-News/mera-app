@@ -14,6 +14,7 @@ import { getSetting, setSetting } from '../database/services/setting-service';
 import { AccountService } from '../account-service';
 import { useChatPopupStore } from '../stores/chat-popup-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import { useUserStore } from '../stores/user-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import { inferenceQueue } from '../inference/InferenceQueue';

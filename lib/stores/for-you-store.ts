@@ -5,6 +5,7 @@ import {
     persistFeedMetadata,
     loadFeedMetadata,
     clearSuggestions,
+    pruneOrphanedSuggestions,
 } from '@/lib/database/services/article-suggestion-service';
 import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 
@@ -119,6 +120,7 @@ interface ForYouState {
     ) => void;
     setAsyncJobProgress: (processedCount: number, totalCount: number) => void;
     clearData: () => Promise<void>;
+    pruneOrphanedData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
     hydrateMetadataFromDb: () => Promise<void>;
     setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
@@ -305,6 +307,43 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             });
         } catch (err) {
             logger.captureException(err, { tags: { store: 'for-you-store' } });
+        }
+    },
+
+    pruneOrphanedData: async () => {
+        const deletedCount = await pruneOrphanedSuggestions();
+
+        if (deletedCount === -1) {
+            // No active topics — full clear
+            const hasGeneratedTopics = get().hasGeneratedTopics;
+            set({ ...initialState, hasGeneratedTopics });
+            await persistFeedMetadata({
+                articleCount: 0,
+                relevantArticleCount: 0,
+                hasGeneratedTopics,
+                lastProcessingRunFinishedAt: null,
+            }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+            return;
+        }
+
+        if (deletedCount > 0) {
+            const rows = await loadSuggestions();
+            rows.sort(byRelevanceDesc);
+            const relevantCount = rows.filter(
+                (s) => s.relevanceGenerationCompleted && s.relevance > 0.3,
+            ).length;
+            const state = get();
+            set({
+                suggestions: rows,
+                articleCount: rows.length,
+                relevantArticleCount: relevantCount,
+            });
+            await persistFeedMetadata({
+                articleCount: rows.length,
+                relevantArticleCount: relevantCount,
+                hasGeneratedTopics: state.hasGeneratedTopics,
+                lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
+            }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
         }
     },
 

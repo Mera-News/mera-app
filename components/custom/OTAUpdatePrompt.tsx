@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus, Pressable } from 'react-native';
 import * as Updates from 'expo-updates';
+import { useTranslation } from 'react-i18next';
 
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import logger from '@/lib/logger';
@@ -8,6 +9,7 @@ import logger from '@/lib/logger';
 export default function OTAUpdatePrompt() {
   const { isUpdatePending } = Updates.useUpdates();
   const toast = useToast();
+  const { t } = useTranslation();
   const shownToastIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -32,9 +34,9 @@ export default function OTAUpdatePrompt() {
           }}
         >
           <Toast nativeID={toastId} action="info" variant="solid">
-            <ToastTitle>Update ready</ToastTitle>
+            <ToastTitle>{t('ota.updateReady')}</ToastTitle>
             <ToastDescription>
-              Tap to restart and apply the latest version
+              {t('ota.updateDescription')}
             </ToastDescription>
           </Toast>
         </Pressable>

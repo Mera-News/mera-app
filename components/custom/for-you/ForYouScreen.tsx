@@ -109,14 +109,14 @@ const MeraNewsScreen: React.FC = () => {
     const lastProcessedLabel = useMemo(() => {
         if (!lastProcessingRunFinishedAt) return null;
         const diffSec = Math.max(0, Math.floor((nowTick - lastProcessingRunFinishedAt) / 1000));
-        if (diffSec < 60) return 'just now';
+        if (diffSec < 60) return t('feed.justNow');
         const diffMin = Math.floor(diffSec / 60);
-        if (diffMin < 60) return `${diffMin}m ago`;
+        if (diffMin < 60) return t('feed.minutesAgo', { count: diffMin });
         const diffHour = Math.floor(diffMin / 60);
-        if (diffHour < 24) return `${diffHour}h ago`;
+        if (diffHour < 24) return t('feed.hoursAgo', { count: diffHour });
         const diffDay = Math.floor(diffHour / 24);
-        return `${diffDay}d ago`;
-    }, [lastProcessingRunFinishedAt, nowTick]);
+        return t('feed.daysAgo', { count: diffDay });
+    }, [lastProcessingRunFinishedAt, nowTick, t]);
 
     const isAnySyncActive =
         syncStatusMessage !== null &&
@@ -264,7 +264,7 @@ const MeraNewsScreen: React.FC = () => {
     };
 
     // No pagination — feed is rebuilt locally by background syncs.
-    const loadMoreArticles = useCallback(() => {}, []);
+    const loadMoreArticles = useCallback(() => { }, []);
 
     // Scored cards grouped by priority, then collapsed into clusters.
     // Unscored rows and low-relevance rows (≤ 0.3) don't render.
@@ -384,19 +384,14 @@ const MeraNewsScreen: React.FC = () => {
         return items;
     }, [suggestions]);
 
-    const availableSections = useMemo((): SectionItem[] => {
-        const seen = new Set<string>();
-        const result: SectionItem[] = [];
-        for (const item of listData) {
-            if (item.type !== 'priority-label') continue;
-            const shortLabel = getDisplaySectionLabel(item.label);
-            if (!seen.has(shortLabel)) {
-                seen.add(shortLabel);
-                result.push({ label: item.label, shortLabel });
-            }
-        }
-        return result;
-    }, [listData]);
+    // TODO: remove – testing all pills visible
+    const availableSections = useMemo((): SectionItem[] => [
+        { label: 'Emergency Priority Articles', shortLabel: 'feed.sections.emergency' },
+        { label: 'High Priority Articles', shortLabel: 'feed.sections.majorImpact' },
+        { label: 'Medium Priority Articles', shortLabel: 'feed.sections.notableImpact' },
+        { label: 'Low Priority Articles', shortLabel: 'feed.sections.goodToKnow' },
+        { label: 'Unscored Articles', shortLabel: 'feed.sections.unscoredShort' },
+    ], []);
 
     // Hide the onboarding waiting card once the first scored, relevant card is ready.
     useEffect(() => {
@@ -415,7 +410,7 @@ const MeraNewsScreen: React.FC = () => {
             syncStatusMessage.state !== 'failed' &&
             syncStatusMessage.state !== 'done';
         if (isActive) setStuckOnEmpty(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [syncStatusMessage?.state]);
 
     useEffect(() => {
@@ -644,13 +639,9 @@ const MeraNewsScreen: React.FC = () => {
                     </Pressable>
                 </HStack>
 
-                {/* Sync/polling status row — fixed height to prevent feed jumps */}
-                <View style={{ height: 32 }} className="mb-1 justify-center">
+                {/* Banner area — polling status + progress/article-count in one compact slot */}
+                <View className="mb-2" style={{ minHeight: 70 }}>
                     <NewsPollingBanner />
-                </View>
-
-                {/* Progress / article-count slot — fixed height to prevent feed jumps */}
-                <View style={{ height: 56 }} className="mb-2 justify-center">
                     {showSyncProgress ? (
                         <SyncProgressForYouBanner />
                     ) : (

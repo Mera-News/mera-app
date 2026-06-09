@@ -20,6 +20,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ChevronDownIcon } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 
@@ -33,6 +34,7 @@ interface SourcesL2PublisherListProps {
 }
 
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
+    const { t } = useTranslation();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -129,7 +131,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                         <AccordionContent className="px-0 pb-2 pt-0">
                             {item.publicationSources.length === 0 ? (
                                 <Text size="sm" className="text-gray-500 px-4 py-2">
-                                    No feeds available
+                                    {t('sources.noFeedsAvailable')}
                                 </Text>
                             ) : (
                                 item.publicationSources.map((feed) => (
@@ -173,7 +175,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
 
     return (
         <Box className="flex-1">
-            <DrillDownHeader title={countryName ?? 'Publishers'} onBack={onBack} />
+            <DrillDownHeader title={countryName ?? t('sources.publishers')} onBack={onBack} />
 
             {isLoading ? (
                 <Box className="flex-1 items-center justify-center">
@@ -183,7 +185,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="newspaper" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
-                        No publishers for this country
+                        {t('sources.noPublishers')}
                     </Text>
                 </VStack>
             ) : (

@@ -285,7 +285,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                                 className="w-full"
                             >
                                 <ButtonText>
-                                    {isLoggingOut ? 'Logging Out...' : t('onboarding.logout')}
+                                    {isLoggingOut ? t('onboarding.loggingOut') : t('onboarding.logout')}
                                 </ButtonText>
                             </Button>
                             <Button

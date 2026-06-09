@@ -5,30 +5,29 @@ import MeraPersonaUpdateChat from '@/components/custom/chat/MeraPersonaUpdateCha
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
+import { Input, InputField } from '@/components/ui/input';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
-import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import type { UserTopic } from '@/lib/account-service';
 import { PRIVACY_URL } from '@/lib/config/branding';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
-import { deleteFact, getFacts } from '@/lib/database/services/fact-service';
+import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
+import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { useChatPopupIsExpanded, useChatPopupStore, useChatPopupFactMutationVersion } from '@/lib/stores/chat-popup-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
-import { useTopicSyncIsSyncing, useTopicSyncProgress } from '@/lib/stores/topic-sync-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Keyboard, Pressable as RNPressable, RefreshControl, ScrollView, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,10 +44,16 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [localFacts, setLocalFacts] = useState<Fact[]>([]);
+    const [articleCountByTopic, setArticleCountByTopic] = useState<Map<string, number>>(new Map());
     const [expandedFactIds, setExpandedFactIds] = useState<Set<string>>(new Set());
     const [factToDelete, setFactToDelete] = useState<Fact | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
+    const [totalArticleCount, setTotalArticleCount] = useState(0);
+    const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
+    const [addTopicFact, setAddTopicFact] = useState<Fact | null>(null);
+    const [addTopicText, setAddTopicText] = useState('');
+    const [isAddingTopic, setIsAddingTopic] = useState(false);
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const glowAnim = useRef(new Animated.Value(0.3)).current;
     const isChatExpanded = useChatPopupIsExpanded();
@@ -56,14 +61,15 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const insets = useSafeAreaInsets();
     const knownFactIdsRef = useRef<Set<string>>(new Set());
     const isInitialLoadRef = useRef(true);
-
-    // Topic sync progress
-    const isSyncing = useTopicSyncIsSyncing();
-    const { total, completed } = useTopicSyncProgress();
     const factMutationVersion = useChatPopupFactMutationVersion();
 
     const loadLocalFacts = useCallback(async () => {
-        const facts = await getFacts();
+        const [facts, counts, total] = await Promise.all([
+            getFacts(),
+            getArticleCountByTopicTexts(),
+            getTotalArticleSuggestionCount(),
+        ]);
+        setTotalArticleCount(total);
 
         if (!isInitialLoadRef.current) {
             const newIds = facts
@@ -77,6 +83,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         knownFactIdsRef.current = new Set(facts.map(f => f.id));
 
         setLocalFacts(facts);
+        setArticleCountByTopic(counts);
         return facts;
     }, []);
 
@@ -129,19 +136,12 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         setRefreshing(false);
     }, [userId, fetchUserPersona, loadLocalFacts]);
 
-    const interests = useMemo(() => userPersona?.userTopics ?? [], [userPersona?.userTopics]);
-
     const toggleFact = useCallback((factId: string) => {
         setExpandedFactIds(prev => {
             if (prev.has(factId)) return new Set();
             return new Set([factId]);
         });
     }, []);
-
-    const getTopicsForFact = useCallback(
-        (_fact: Fact): UserTopic[] => interests,
-        [interests],
-    );
 
     const handleDeletePress = useCallback((fact: Fact) => {
         setFactToDelete(fact);
@@ -195,7 +195,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         setIsRefreshingSuggestions(true);
         useForYouStore.getState().setFeedNeedsRefresh(false);
         try {
-            await useForYouStore.getState().clearData();
+            await useForYouStore.getState().pruneOrphanedData();
             await AppScheduler.trigger('feed-sync');
             toast.show({
                 placement: 'top',
@@ -231,15 +231,70 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         useChatPopupStore.getState().expand();
     }, []);
 
-    const handleInterestPress = useCallback(
-        (interest: UserTopic) => {
-            router.push({
-                pathname: '/logged-in/persona-articles',
-                params: { interestId: interest._id, interestText: interest.news_topic_text },
+    const handleFactArticlesPress = useCallback((fact: Fact) => {
+        const topicTexts = fact.metadata?.topics ?? [];
+        if (topicTexts.length === 0) return;
+        router.push({
+            pathname: '/logged-in/persona-articles',
+            params: { topicTexts: JSON.stringify(topicTexts) },
+        });
+    }, []);
+
+    const handleTopicPress = useCallback((topicText: string) => {
+        router.push({
+            pathname: '/logged-in/persona-articles',
+            params: { topicTexts: JSON.stringify([topicText]) },
+        });
+    }, []);
+
+    const handleDeleteTopic = useCallback(async (fact: Fact, topicText: string) => {
+        const currentTopics = fact.metadata?.topics ?? [];
+        const updatedTopics = currentTopics.filter(t => t !== topicText);
+        try {
+            await updateFact(fact.id, {
+                metadata: { ...(fact.metadata ?? {}), topics: updatedTopics },
             });
-        },
-        []
-    );
+            loadLocalFacts();
+            fetchUserPersona(userId, true);
+            useForYouStore.getState().setFeedNeedsRefresh(true);
+        } catch (error) {
+            logger.error('[PersonaL1MeraProtocol] deleteTopic failed', error, { factId: fact.id, topicText });
+        }
+    }, [loadLocalFacts, fetchUserPersona, userId]);
+
+    const handleAddTopicPress = useCallback((fact: Fact) => {
+        setAddTopicFact(fact);
+        setAddTopicText('');
+    }, []);
+
+    const handleAddTopicConfirm = useCallback(async () => {
+        if (!addTopicFact || !addTopicText.trim()) return;
+        setIsAddingTopic(true);
+        try {
+            const currentTopics = addTopicFact.metadata?.topics ?? [];
+            const trimmed = addTopicText.trim();
+            if (currentTopics.includes(trimmed)) {
+                setAddTopicFact(null);
+                return;
+            }
+            await updateFact(addTopicFact.id, {
+                metadata: { ...(addTopicFact.metadata ?? {}), topics: [...currentTopics, trimmed] },
+            });
+            setAddTopicFact(null);
+            loadLocalFacts();
+            fetchUserPersona(userId, true);
+            useForYouStore.getState().setFeedNeedsRefresh(true);
+        } catch (error) {
+            logger.error('[PersonaL1MeraProtocol] addTopic failed', error, { factId: addTopicFact?.id });
+        } finally {
+            setIsAddingTopic(false);
+        }
+    }, [addTopicFact, addTopicText, loadLocalFacts, fetchUserPersona, userId]);
+
+    const handleAddTopicCancel = useCallback(() => {
+        setAddTopicFact(null);
+        setAddTopicText('');
+    }, []);
 
     const isBlocked = userPersona?.blockedByLlm ?? false;
 
@@ -268,6 +323,24 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                             </Text>
                         </HStack>
                     </Box>
+
+                    {/* Metrics cards */}
+                    <HStack className="mx-4 mb-3" space="sm">
+                        <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
+                            <HStack className="items-center mb-2" space="xs">
+                                <Text size="xs" className="text-gray-400 flex-1">Articles analyzed last 24h</Text>
+                                <Pressable onPress={() => setShowArticleCountInfo(true)} hitSlop={8}>
+                                    <MaterialIcons name="info-outline" size={14} color="#6b7280" />
+                                </Pressable>
+                            </HStack>
+                            <Text size="2xl" className="text-white font-semibold">{totalArticleCount}</Text>
+                        </Box>
+                        <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
+                            <Text size="xs" className="text-gray-400 mb-2">Max for daily analysis</Text>
+                            <Text size="2xl" className="text-white font-semibold">500</Text>
+                            <Text size="xs" className="text-primary-400 mt-0.5">Basic Plan</Text>
+                        </Box>
+                    </HStack>
 
                     <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
                         {feedNeedsRefresh && !isRefreshingSuggestions && (
@@ -317,16 +390,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                         </Box>
                     )}
 
-                    {isSyncing && (
-                        <Box className="px-4 py-2">
-                            <Text size="xs" className="text-gray-400 mb-1">{t('configPanel.updatingTopics', { completed, total })}</Text>
-                            <Progress value={total > 0 ? (completed / total) * 100 : 0} size="sm">
-                                <ProgressFilledTrack />
-                            </Progress>
-                        </Box>
-                    )}
-
-                    {localFacts.length === 0 && interests.length === 0 ? (
+                    {localFacts.length === 0 ? (
                         <VStack className="flex-1 items-center justify-center p-6" space="md">
                             <MaterialIcons name="chat" size={48} color="#666666" />
                             <Text size="md" className="text-gray-400 text-center">
@@ -355,99 +419,113 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
 
                             {/* Fact accordions */}
                             {localFacts.map((fact) => {
-                                const factTopics = getTopicsForFact(fact);
-                                const expectedTopicCount = fact.metadata?.topics?.length ?? 0;
+                                const factTopics = fact.metadata?.topics ?? [];
+                                const expectedTopicCount = factTopics.length;
                                 const topicGenError = fact.metadata?.topicGenError?.[0];
-                                // Keep the spinner visible until topic-gen has produced at least
-                                // one topic (expectedTopicCount > 0). On failure, topicGenError
-                                // is set — stop spinning and surface the error.
                                 const topicsSettled =
                                     !!topicGenError || expectedTopicCount > 0;
                                 const isExpanded = expandedFactIds.has(fact.id);
+                                const totalCount = factTopics.reduce(
+                                    (sum, t) => sum + (articleCountByTopic.get(t) ?? 0),
+                                    0,
+                                );
                                 return (
                                     <Box
                                         key={fact.id}
                                         className="mx-4 mb-3 border border-gray-700 rounded-lg overflow-hidden"
                                     >
                                         {/* Accordion header */}
-                                        <Pressable onPress={() => toggleFact(fact.id)}>
-                                            <HStack className="px-4 py-3 items-center justify-between">
-                                                <Box className="flex-1 mr-3">
-                                                    <TranslatableDynamic
-                                                        text={fact.statement}
-                                                        size="md"
-                                                        className="text-white capitalize"
-                                                        numberOfLines={2}
-                                                    />
-                                                </Box>
-                                                <HStack space="sm" className="items-center">
-                                                    {!topicsSettled && (
-                                                        <Spinner size="small" />
-                                                    )}
-                                                    <Pressable
-                                                        onPress={() => handleDeletePress(fact)}
-                                                        hitSlop={8}
+                                        <HStack className="px-4 py-3 items-center">
+                                            <Pressable
+                                                onPress={() => handleDeletePress(fact)}
+                                                hitSlop={8}
+                                                className="mr-3"
+                                            >
+                                                <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
+                                            </Pressable>
+                                            <Pressable
+                                                onPress={() => toggleFact(fact.id)}
+                                                className="flex-1 mr-2"
+                                            >
+                                                <TranslatableDynamic
+                                                    text={fact.statement}
+                                                    size="md"
+                                                    className="text-white capitalize"
+                                                    numberOfLines={2}
+                                                />
+                                            </Pressable>
+                                            <HStack space="xs" className="items-center">
+                                                {!topicsSettled && <Spinner size="small" />}
+                                                {topicsSettled && totalCount > 0 && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="xs"
+                                                        onPress={() => handleFactArticlesPress(fact)}
+                                                        className="rounded-full"
                                                     >
-                                                        <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
-                                                    </Pressable>
+                                                        <ButtonText>{t('configPanel.articleCount', { count: totalCount })}</ButtonText>
+                                                    </Button>
+                                                )}
+                                                <Pressable onPress={() => toggleFact(fact.id)} hitSlop={8}>
                                                     <MaterialIcons
                                                         name={isExpanded ? 'expand-less' : 'expand-more'}
                                                         size={20}
                                                         color="#9ca3af"
                                                     />
-                                                </HStack>
+                                                </Pressable>
                                             </HStack>
-                                        </Pressable>
+                                        </HStack>
 
                                         {/* Accordion body */}
                                         {isExpanded && (
-                                            <Box className="border-t border-gray-700">
+                                            <Box className="border-t border-gray-700 px-4 py-3">
                                                 {topicGenError ? (
-                                                    <Box className="px-4 py-3">
-                                                        <Text className="text-red-400 text-sm">
-                                                            {t('configPanel.topicGenFailed', { error: topicGenError })}
-                                                        </Text>
-                                                    </Box>
+                                                    <Text className="text-red-400 text-sm">
+                                                        {t('configPanel.topicGenFailed', { error: topicGenError })}
+                                                    </Text>
                                                 ) : !topicsSettled ? (
-                                                    <Box className="px-4 py-3">
-                                                        <Text className="text-typography-400 text-sm">
-                                                            {expectedTopicCount === 0
-                                                                ? t('configPanel.generatingTopics')
-                                                                : t('configPanel.updatingTopics', {
-                                                                    completed: factTopics.length,
-                                                                    total: expectedTopicCount,
-                                                                })}
-                                                        </Text>
-                                                    </Box>
+                                                    <Text className="text-typography-400 text-sm">
+                                                        {t('configPanel.generatingTopics')}
+                                                    </Text>
                                                 ) : (
-                                                    factTopics.map((topic, tIdx) => {
-                                                        const isLast = tIdx === factTopics.length - 1;
-                                                        return (
-                                                            <Pressable
-                                                                key={topic._id}
-                                                                onPress={() => handleInterestPress(topic)}
-                                                                className={`px-4 py-3${isLast ? '' : ' border-b border-gray-800'}`}
-                                                            >
-                                                                <HStack className="items-center justify-between">
-                                                                    <VStack className="flex-1 mr-3" space="xs">
-                                                                        <TranslatableDynamic
-                                                                            text={topic.news_topic_text}
-                                                                            size="sm"
-                                                                            className="text-white"
-                                                                        />
-                                                                        <Text size="xs" className="text-gray-500">
-                                                                            {t('configPanel.clusterCount', { count: topic.cluster_count })}
-                                                                        </Text>
-                                                                    </VStack>
-                                                                    <MaterialIcons
-                                                                        name="chevron-right"
-                                                                        size={18}
-                                                                        color="#999999"
-                                                                    />
+                                                    <VStack space="sm">
+                                                        {factTopics.map(topicText => {
+                                                            const count = articleCountByTopic.get(topicText) ?? 0;
+                                                            return (
+                                                                <HStack key={topicText} className="items-center">
+                                                                    <Pressable
+                                                                        className="flex-1"
+                                                                        onPress={() => handleTopicPress(topicText)}
+                                                                    >
+                                                                        <HStack className="items-center justify-between flex-1 mr-3">
+                                                                            <Text size="sm" className="text-gray-200 flex-1 mr-2 capitalize" numberOfLines={2}>
+                                                                                {topicText}
+                                                                            </Text>
+                                                                            <Text size="xs" className="text-gray-500">
+                                                                                {t('configPanel.articleCount', { count })}
+                                                                            </Text>
+                                                                        </HStack>
+                                                                    </Pressable>
+                                                                    <Pressable
+                                                                        onPress={() => handleDeleteTopic(fact, topicText)}
+                                                                        hitSlop={8}
+                                                                        className="ml-1"
+                                                                    >
+                                                                        <MaterialIcons name="delete-outline" size={16} color="#6b7280" />
+                                                                    </Pressable>
                                                                 </HStack>
-                                                            </Pressable>
-                                                        );
-                                                    })
+                                                            );
+                                                        })}
+                                                        <Pressable
+                                                            onPress={() => handleAddTopicPress(fact)}
+                                                            className="mt-1"
+                                                        >
+                                                            <HStack className="items-center" space="xs">
+                                                                <MaterialIcons name="add" size={16} color="#60a5fa" />
+                                                                <Text size="sm" className="text-blue-400">{t('configPanel.addTopic')}</Text>
+                                                            </HStack>
+                                                        </Pressable>
+                                                    </VStack>
                                                 )}
                                             </Box>
                                         )}
@@ -494,6 +572,77 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                     </KeyboardStickyView>
                 </View>
             )}
+
+            <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader className="pb-3">
+                        <HStack className="items-center" space="xs">
+                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
+                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
+                        </HStack>
+                    </ModalHeader>
+                    <ModalBody className="py-4">
+                        <Text className="text-gray-300 text-sm leading-relaxed">
+                            {t('configPanel.articleAnalysisDescription')}
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter className="border-t border-gray-700 pt-4">
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={() => setShowArticleCountInfo(false)}
+                            className="w-full"
+                        >
+                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            <Modal isOpen={addTopicFact !== null} onClose={handleAddTopicCancel} size="sm">
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader className="pb-4">
+                        <Text className="text-xl font-semibold text-white">{t('configPanel.addTopic')}</Text>
+                    </ModalHeader>
+                    <ModalBody className="py-4">
+                        <Text className="text-gray-400 text-sm mb-4">
+                            {t('configPanel.addTopicDescription')}
+                        </Text>
+                        <Input>
+                            <InputField
+                                placeholder={t('configPanel.addTopicPlaceholder')}
+                                value={addTopicText}
+                                onChangeText={setAddTopicText}
+                                autoFocus
+                                returnKeyType="done"
+                                onSubmitEditing={handleAddTopicConfirm}
+                            />
+                        </Input>
+                    </ModalBody>
+                    <ModalFooter className="border-t border-gray-700 pt-4">
+                        <VStack className="w-full" space="md">
+                            <Button
+                                onPress={handleAddTopicConfirm}
+                                disabled={isAddingTopic || !addTopicText.trim()}
+                                className="w-full"
+                            >
+                                <ButtonText>{isAddingTopic ? t('configPanel.adding') : t('configPanel.addTopic')}</ButtonText>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                action="secondary"
+                                onPress={handleAddTopicCancel}
+                                disabled={isAddingTopic}
+                                className="w-full"
+                            >
+                                <ButtonText>{t('common.cancel')}</ButtonText>
+                            </Button>
+                        </VStack>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             <Modal isOpen={factToDelete !== null} onClose={handleDeleteCancel} size="sm">
                 <ModalBackdrop />

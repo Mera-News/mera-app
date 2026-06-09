@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 import database from '@/lib/database';
 import dbSchema from '@/lib/database/schema';
@@ -41,6 +42,7 @@ interface TableDetailScreenProps {
 }
 
 const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack }) => {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
 
     const tableInfo = dbSchema.tables[tableName];
@@ -93,10 +95,10 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
     const hasMore = totalCount !== null && offsetRef.current < totalCount;
 
     const subtitle = loading
-        ? 'Loading…'
+        ? t('common.loading')
         : totalCount !== null
-            ? `${rows.length} of ${totalCount} rows · ${columns.length} cols`
-            : `${rows.length} rows · ${columns.length} cols`;
+            ? t('tableDetail.rowsOfCols', { rows: rows.length, total: totalCount, cols: columns.length })
+            : t('tableDetail.rowsAndCols', { rows: rows.length, cols: columns.length });
 
     return (
         <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
@@ -122,7 +124,7 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
 
             {!loading && rows.length === 0 ? (
                 <Box className="flex-1 items-center justify-center">
-                    <Text className="text-gray-500">Table is empty</Text>
+                    <Text className="text-gray-500">{t('tableDetail.tableEmpty')}</Text>
                 </Box>
             ) : (
                 <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -181,11 +183,11 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                                 className="bg-gray-900 border border-gray-700 rounded-lg px-5 py-2.5"
                             >
                                 <Text size="xs" className={loadingMore ? 'text-gray-600' : 'text-gray-300'}>
-                                    {loadingMore ? 'Loading…' : `Load next ${PAGE_SIZE}`}
+                                    {loadingMore ? t('common.loading') : t('tableDetail.loadMore', { count: PAGE_SIZE })}
                                 </Text>
                             </Pressable>
                         ) : !loading && rows.length > 0 ? (
-                            <Text size="xs" className="text-gray-700">All {totalCount} rows loaded</Text>
+                            <Text size="xs" className="text-gray-700">{t('tableDetail.allRowsLoaded', { count: totalCount })}</Text>
                         ) : null}
                     </Box>
                 </ScrollView>

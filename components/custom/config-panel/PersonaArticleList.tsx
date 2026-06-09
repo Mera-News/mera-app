@@ -3,136 +3,90 @@ import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { ArticleService } from '@/lib/article-service';
-import type { NewsArticle, NewsCluster } from '@/lib/generated/graphql-types';
+import { getArticleSuggestionsByTopicTexts } from '@/lib/database/services/article-suggestion-service';
+import type ArticleSuggestion from '@/lib/database/models/ArticleSuggestion';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 
 interface PersonaArticleListProps {
-    readonly interestId: string;
-    readonly interestText: string;
+    readonly topicTexts: string[];
     readonly onBack: () => void;
 }
 
-// Project a cluster down to its lead article (the first one returned by the
-// embedded articles connection). Clusters with an empty article list are
-// dropped — there's nothing to render for them.
-const clustersToLeadArticles = (clusters: NewsCluster[]): NewsArticle[] => {
-    const out: NewsArticle[] = [];
-    for (const c of clusters) {
-        const lead = c.articles?.articles?.[0];
-        if (lead) out.push(lead as NewsArticle);
-    }
-    return out;
-};
+const toNewsArticle = (s: ArticleSuggestion) => ({
+    _id: s.id,
+    title_en_internal_only: s.titleEn ?? null,
+    title: s.titleEn ?? '',
+    pubDate: s.firstPubDate ?? null,
+    image_url: s.imageUrl ?? null,
+    publicationSource: s.publicationName
+        ? { publication_name: s.publicationName, country_code: s.countryCode ?? null }
+        : null,
+    source_uri: s.articleUrl ?? null,
+    original_language_code: s.languageCode ?? null,
+    clusterConfidence: null,
+});
 
-const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ interestId, interestText, onBack }) => {
-    const [articles, setArticles] = useState<NewsArticle[]>([]);
+const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, onBack }) => {
+    const { t } = useTranslation();
+    const [articles, setArticles] = useState<ArticleSuggestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [endCursor, setEndCursor] = useState<string | null>(null);
-    const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
 
     useEffect(() => {
-        if (interestId && !hasFetched.current) {
+        if (topicTexts.length > 0 && !hasFetched.current) {
             hasFetched.current = true;
             loadArticles();
         }
-        // Fetch once per interestId (guarded by hasFetched ref); loadArticles is
-        // defined below and intentionally excluded to avoid re-fetch loops.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [interestId]);
+    }, [topicTexts]);
 
     const loadArticles = async () => {
         try {
             setIsLoading(true);
-            const response = await ArticleService.getNewsClusters({
-                userTopicId: interestId,
-                first: 10,
-            });
-            setArticles(clustersToLeadArticles(response.newsClusters));
-            setEndCursor(response.pageInfo.endCursor ?? null);
-            setHasNextPage(response.pageInfo.hasNextPage);
+            const suggestions = await getArticleSuggestionsByTopicTexts(topicTexts);
+            setArticles(suggestions);
         } catch (error) {
             logger.captureException(error, {
                 tags: { screen: 'PersonaArticleList', method: 'loadArticles' },
-                extra: { interestId },
+                extra: { topicTexts },
             });
         } finally {
             setIsLoading(false);
         }
     };
 
-    const loadMore = useCallback(async () => {
-        if (!hasNextPage || isLoadingMore || !endCursor) return;
+    const handleArticlePress = useCallback((article: ArticleSuggestion) => {
+        router.push({
+            pathname: '/logged-in/article-detail',
+            params: { articleId: article.id },
+        });
+    }, []);
 
-        try {
-            setIsLoadingMore(true);
-            const response = await ArticleService.getNewsClusters({
-                userTopicId: interestId,
-                first: 10,
-                after: endCursor,
-            });
-            setArticles((prev) => [...prev, ...clustersToLeadArticles(response.newsClusters)]);
-            setEndCursor(response.pageInfo.endCursor ?? null);
-            setHasNextPage(response.pageInfo.hasNextPage);
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { screen: 'PersonaArticleList', method: 'loadMore' },
-                extra: { interestId },
-            });
-        } finally {
-            setIsLoadingMore(false);
-        }
-    }, [hasNextPage, isLoadingMore, endCursor, interestId]);
-
-    const handleArticlePress = useCallback(
-        (article: NewsArticle) => {
-            router.push({
-                pathname: '/logged-in/article-detail',
-                params: {
-                    articleId: article._id,
-                },
-            });
-        },
-        []
-    );
-
-    const renderItem: ListRenderItem<NewsArticle> = useCallback(
+    const renderItem: ListRenderItem<ArticleSuggestion> = useCallback(
         ({ item }) => (
             <CompactPublisherNewsCard
-                article={item}
+                article={toNewsArticle(item) as any}
                 onPress={() => handleArticlePress(item)}
             />
         ),
-        [handleArticlePress]
+        [handleArticlePress],
     );
 
     const keyExtractor = useCallback(
-        (item: NewsArticle, index: number) => item._id || `article-${index}`,
-        []
+        (item: ArticleSuggestion, index: number) => item.id || `article-${index}`,
+        [],
     );
-
-    const ListFooterComponent = useCallback(() => {
-        if (isLoadingMore) {
-            return (
-                <Box className="items-center py-4">
-                    <Spinner size="small" />
-                </Box>
-            );
-        }
-        return null;
-    }, [isLoadingMore]);
 
     return (
         <Box className="flex-1">
             <DrillDownHeader
-                title={interestText ?? 'Articles'}
+                title={topicTexts[0] ?? t('common.articles')}
                 onBack={onBack}
             />
 
@@ -144,7 +98,7 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ interestId, int
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="article" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
-                        No articles found
+                        {t('sources.noArticlesFound')}
                     </Text>
                 </VStack>
             ) : (
@@ -154,9 +108,6 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ interestId, int
                     keyExtractor={keyExtractor}
                     contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
                     showsVerticalScrollIndicator={false}
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.5}
-                    ListFooterComponent={ListFooterComponent}
                 />
             )}
         </Box>

@@ -133,6 +133,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           tools,
           toolChoice,
           model: BIG_MODEL,
+          maxTokens: 300,
         });
 
         let eventCount = 0;
@@ -279,7 +280,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const followUpPlaceholder: ConversationMessage = { id: followUpId, role: 'assistant', content: '' };
       useCloudChatStore.getState().setMessages((prev) => [...prev, followUpPlaceholder]);
 
-      const second = await streamOne(followUpId, false, 'auto');
+      const second = await streamOne(followUpId, true, 'auto');
       pushAssistantToWire(second.accContent, second.toolCalls);
       if (second.toolCalls.length > 0) {
         await executeToolsAndPushResults(followUpId, second.toolCalls);
@@ -318,6 +319,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         try {
           const systemPrompt = await agentRef.current.buildSystemPrompt(false);
           logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
+          logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
 
           const tools = agentRef.current.getToolDefinitions?.() ?? [];
           logger.debug(`${TAG} tool definitions`, { count: tools.length, names: tools.map(t => t.function.name) });
@@ -327,6 +329,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             try {
               context = await agentRef.current.buildContext();
               logger.debug(`${TAG} context built`, { length: context.length });
+              logger.debug(`${TAG} context content`, { content: context });
             } catch (err) {
               logger.warn(`${TAG} buildContext failed, proceeding without context`, { error: String(err) });
             }

@@ -1,4 +1,4 @@
-import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client';
+import { ApolloClient, ApolloLink, InMemoryCache, Observable } from '@apollo/client';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 
 interface GraphQLErrorExtensions {
@@ -27,8 +27,10 @@ const httpLink = new HttpLink({
     credentials: 'omit', // Important: prevents interference with manually set cookies
 });
 
+const MAX_THROTTLE_RETRIES = 3;
+
 // Create error link to handle GraphQL errors (Apollo Client v4 syntax)
-const errorLink = new ErrorLink(({ error, operation }) => {
+const errorLink = new ErrorLink(({ error, operation, forward }) => {
     if (CombinedGraphQLErrors.is(error)) {
         // Handle GraphQL errors
         for (const graphQLError of error.errors) {
@@ -62,6 +64,25 @@ const errorLink = new ErrorLink(({ error, operation }) => {
                     extra: { operationName: operation.operationName },
                 });
                 return;
+            }
+
+            // Retry on rate-limit with exponential backoff before logging
+            if (errorCode === 'TOO_MANY_REQUESTS') {
+                const attempt = (operation.getContext().throttleRetryCount as number | undefined) ?? 0;
+                if (attempt < MAX_THROTTLE_RETRIES) {
+                    const delay = Math.min(500 * 2 ** attempt, 16000);
+                    return new Observable((observer) => {
+                        const timer = setTimeout(() => {
+                            operation.setContext({ throttleRetryCount: attempt + 1 });
+                            forward(operation).subscribe({
+                                next: (value) => observer.next(value),
+                                error: (err) => observer.error(err),
+                                complete: () => observer.complete(),
+                            });
+                        }, delay);
+                        return () => clearTimeout(timer);
+                    });
+                }
             }
 
             // Log other GraphQL errors to Sentry

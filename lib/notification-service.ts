@@ -307,17 +307,21 @@ export async function ensurePushTokenRegistered(userId: string): Promise<void> {
             useUserStore.getState().setUserPersona(updated);
         }
 
-        // Wire a rotation listener — silently re-register on the rare Expo
-        // token rotation. Only attach once.
+        // Wire a rotation listener — silently re-register on the rare native
+        // token rotation. addPushTokenListener fires with a raw APNs/FCM device
+        // token, so we must re-call getExpoPushTokenAsync to get the
+        // ExponentPushToken[...] form the server expects. Only attach once.
         if (!pushTokenListener) {
-            pushTokenListener = Notifications.addPushTokenListener((newToken) => {
+            pushTokenListener = Notifications.addPushTokenListener(() => {
                 void (async () => {
                     try {
                         const current = useUserStore.getState().userId;
                         if (!current) return;
+                        const expoToken = await registerForPushNotificationsAsync(true);
+                        if (!expoToken) return;
                         const updated = await AccountService.updateExpoPushTokenMutation(
                             current,
-                            newToken.data,
+                            expoToken,
                         );
                         useUserStore.getState().setUserPersona(updated);
                     } catch (err) {

@@ -256,6 +256,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         try {
           systemPrompt = await agent.buildSystemPrompt(true);
           logger.debug(`${TAG} system prompt built`, { length: systemPrompt.length });
+          logger.debug(`${TAG} system prompt content`, { content: systemPrompt });
         } catch (err) {
           throw new Error(`Failed to build system prompt: ${String(err)}`);
         }
@@ -266,6 +267,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
           try {
             context = await agent.buildContext();
             logger.debug(`${TAG} context built`, { length: context.length });
+            logger.debug(`${TAG} context content`, { content: context });
           } catch (err) {
             logger.warn(`${TAG} buildContext failed, proceeding without context`, {
               error: String(err),

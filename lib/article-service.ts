@@ -135,6 +135,45 @@ const GET_NEWS_CLUSTERS = gql`
   }
 `;
 
+// GraphQL Query for fetching clusters by topic text string (no server topic ID needed)
+const GET_NEWS_CLUSTERS_FOR_TOPIC_TEXT = gql`
+  query GetNewsClustersForTopicText($topicText: String!, $first: Int, $after: String) {
+    newsClustersForTopicText(topicText: $topicText, first: $first, after: $after) {
+      newsClusters {
+        _id
+        createdAt
+        updatedAt
+        topicConfidence
+        articles(first: 1) {
+          articles {
+            _id
+            image_url
+            title
+            title_en_internal_only
+            original_language_code
+            pubDate
+            publicationSource {
+              _id
+              publication_name
+              country_code
+            }
+          }
+          pageInfo {
+            endCursor
+            hasNextPage
+            pageSize
+          }
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+    }
+  }
+`;
+
 // GraphQL Query for fetching a single news cluster with articles.
 // `articles` is a cursor-paginated connection; server caps each page at 10.
 const GET_NEWS_CLUSTER_FOR_USER = gql`
@@ -516,6 +555,42 @@ export class ArticleService {
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getNewsClusters' },
                 extra: { options },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Get news clusters by topic text string (no server topic ID required).
+     * Used by PersonaArticleList after the server topic sync pipeline was removed.
+     */
+    static async getNewsClustersForTopicText(
+        topicText: string,
+        options?: { first?: number; after?: string }
+    ): Promise<NewsClustersResponse> {
+        try {
+            const { data } = await client.query<{ newsClustersForTopicText: NewsClustersResponse }>({
+                query: GET_NEWS_CLUSTERS_FOR_TOPIC_TEXT,
+                variables: {
+                    topicText,
+                    first: options?.first ?? 20,
+                    after: options?.after,
+                },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.newsClustersForTopicText || {
+                newsClusters: [],
+                pageInfo: {
+                    endCursor: null,
+                    hasNextPage: false,
+                    pageSize: options?.first ?? 20,
+                },
+            };
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getNewsClustersForTopicText' },
+                extra: { topicText },
             });
             throw error;
         }

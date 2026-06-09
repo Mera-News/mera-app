@@ -3,6 +3,8 @@ import { ScrollView, Share } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import database from '@/lib/database';
 import type Setting from '@/lib/database/models/Setting';
 import type { TaskProgress } from '@/lib/scheduler/scheduler-types';
@@ -56,13 +58,13 @@ const INFERENCE_STATUSES = ['pending', 'running', 'done', 'failed'] as const;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function relativeTime(ms: number | null | undefined): string {
-    if (!ms) return 'never';
+function relativeTime(ms: number | null | undefined, t: TFunction): string {
+    if (!ms) return t('observability.never');
     const diff = Date.now() - ms;
-    if (diff < 60_000) return 'just now';
-    if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-    if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-    return `${Math.floor(diff / 86_400_000)}d ago`;
+    if (diff < 60_000) return t('feed.justNow');
+    if (diff < 3_600_000) return t('feed.minutesAgo', { count: Math.floor(diff / 60_000) });
+    if (diff < 86_400_000) return t('feed.hoursAgo', { count: Math.floor(diff / 3_600_000) });
+    return t('feed.daysAgo', { count: Math.floor(diff / 86_400_000) });
 }
 
 function statusDotColor(status: string | null | undefined): string {
@@ -139,7 +141,7 @@ const MetricCard = ({ title, value, subtitle }: { title: string; value: string; 
 // 2-column key/value table used by Feed, Protocol, System, Settings
 const KVTable = ({ rows }: { rows: [string, string][] }) => (
     <Box className="rounded-xl overflow-hidden border border-gray-800">
-        <Table>
+        <Table className="w-full">
             <TableBody>
                 {rows.map(([k, v], i) => (
                     <TableRow key={k} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
@@ -163,6 +165,7 @@ interface ObservabilityScreenProps {
 }
 
 const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
 
     const {
@@ -304,11 +307,11 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
 
     const schedulerStatusSub =
         runningCount > 0
-            ? `${runningCount} running`
+            ? t('observability.running', { count: runningCount })
             : failedCount > 0
-                ? `${failedCount} failed`
+                ? t('observability.failed', { count: failedCount })
                 : pendingCount > 0
-                    ? `${pendingCount} pending`
+                    ? t('observability.pending', { count: pendingCount })
                     : undefined;
 
     if (selectedTable) {
@@ -326,7 +329,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
                 </Pressable>
-                <Text className="text-white font-semibold text-base">Observability</Text>
+                <Text className="text-white font-semibold text-base">{t('observability.title')}</Text>
                 <HStack space="sm" className="items-center">
                     <Pressable
                         onPress={() => void refresh()}
@@ -361,146 +364,34 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
             >
                 {/* Top metric cards */}
                 <HStack space="sm" className="mb-2">
-                    <MetricCard title="Articles" value={String(articleCount)} />
+                    <MetricCard title={t('observability.articles')} value={String(articleCount)} />
                     <MetricCard
-                        title="Relevant"
+                        title={t('observability.relevant')}
                         value={String(relevantArticleCount)}
                         subtitle={`${relevantPct}%`}
                     />
                 </HStack>
                 <HStack space="sm">
-                    <MetricCard title="Unscored" value={String(unscoredCount)} />
+                    <MetricCard title={t('observability.unscored')} value={String(unscoredCount)} />
                     <MetricCard
-                        title="Scheduler"
+                        title={t('observability.scheduler')}
                         value={schedulerStatus}
                         subtitle={schedulerStatusSub}
                     />
                 </HStack>
 
-                {/* Scheduler Tasks */}
-                <SectionHeader title="Scheduler Tasks" />
-                {taskNames.length === 0 ? (
-                    <Text size="sm" className="text-gray-600 py-2">No tasks registered yet</Text>
-                ) : (
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <Box className="rounded-xl overflow-hidden border border-gray-800">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead useRNView className={TH_CLS} style={{ width: 200 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Task</Text>
-                                        </TableHead>
-                                        <TableHead useRNView className={TH_CLS} style={{ width: 100 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Status</Text>
-                                        </TableHead>
-                                        <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Last Run</Text>
-                                        </TableHead>
-                                        <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">Progress</Text>
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {taskNames.map((name, i) => {
-                                        const status = taskCurrentStatus[name] ?? null;
-                                        const progress: TaskProgress | null | undefined = taskProgress[name];
-                                        const error = getTaskError(name);
-                                        const rowCls = i % 2 === 0 ? ROW_EVEN : ROW_ODD;
-                                        return (
-                                            <React.Fragment key={name}>
-                                                <TableRow className={rowCls}>
-                                                    <TableData useRNView className={TD_CLS} style={{ width: 200 }}>
-                                                        <Text size="xs" className="text-white" numberOfLines={1}>{name}</Text>
-                                                    </TableData>
-                                                    <TableData useRNView className={TD_CLS} style={{ width: 100 }}>
-                                                        <HStack space="xs" className="items-center">
-                                                            <Box
-                                                                style={{
-                                                                    width: 6,
-                                                                    height: 6,
-                                                                    borderRadius: 3,
-                                                                    backgroundColor: statusDotColor(status),
-                                                                    flexShrink: 0,
-                                                                }}
-                                                            />
-                                                            <Text size="xs" className="text-gray-300">{status ?? 'idle'}</Text>
-                                                        </HStack>
-                                                    </TableData>
-                                                    <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
-                                                        <Text size="xs" className="text-gray-300">
-                                                            {relativeTime(taskLastRun[name])}
-                                                        </Text>
-                                                    </TableData>
-                                                    <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
-                                                        <Text size="xs" className="text-gray-300">
-                                                            {progress?.current != null && progress?.total != null
-                                                                ? `${progress.current}/${progress.total}`
-                                                                : '—'}
-                                                        </Text>
-                                                    </TableData>
-                                                </TableRow>
-                                                {error ? (
-                                                    <TableRow className={rowCls}>
-                                                        <TableData
-                                                            useRNView
-                                                            className="px-3 py-1.5 border-b border-gray-800"
-                                                            style={{ width: 480 }}
-                                                        >
-                                                            <Text size="xs" className="text-red-400" numberOfLines={2}>{error}</Text>
-                                                        </TableData>
-                                                    </TableRow>
-                                                ) : null}
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </Box>
-                    </ScrollView>
-                )}
-
-                {/* Feed */}
-                <SectionHeader title="Feed" />
-                <KVTable rows={[
-                    ['articleCount', String(articleCount)],
-                    ['relevantArticleCount', String(relevantArticleCount)],
-                    ['unscoredCount', String(unscoredCount)],
-                    ['asyncJobPhase', asyncJobPhase],
-                    ['lastSyncAt', relativeTime(lastSyncAt)],
-                    ['syncState', syncStatusMessage?.state ?? 'idle'],
-                ]} />
-
-                {/* Protocol */}
-                <SectionHeader title="Protocol" />
-                <KVTable rows={[
-                    ['processingMode', String(processingMode)],
-                    ['modelState', modelState],
-                    ['downloadProgress', `${downloadProgress}%`],
-                    ['isProcessing', String(isProcessing)],
-                ]} />
-
-                {/* System */}
-                <SectionHeader title="System" />
-                <KVTable rows={[
-                    ['network', isConnected ? 'connected' : 'offline'],
-                    ['db', dbReady ? 'ready' : 'not ready'],
-                    ['schemaVersion', String(schema.version)],
-                    ['userId', userId ? `${userId.slice(0, 8)}…` : 'null'],
-                ]} />
-
                 {/* DB Tables */}
-                <SectionHeader title="DB Tables" />
+                <SectionHeader title={t('observability.dbTables')} />
                 {dbStats ? (
                     <Box className="rounded-xl overflow-hidden border border-gray-800">
-                        <Table>
+                        <Table className="w-full">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead useRNView className={TH_CLS} style={{ flex: 1 }}>
-                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">Table</Text>
+                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.table')}</Text>
                                     </TableHead>
                                     <TableHead useRNView className={`${TH_CLS} items-end`} style={{ width: 140 }}>
-                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">Rows / Status</Text>
+                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.rowsStatus')}</Text>
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -547,21 +438,133 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     </Box>
                 ) : (
                     <Text size="sm" className="text-gray-600 py-2">
-                        {loadingDb ? 'Loading…' : 'Not loaded'}
+                        {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
                 )}
 
+                {/* Scheduler Tasks */}
+                <SectionHeader title={t('observability.schedulerTasks')} />
+                {taskNames.length === 0 ? (
+                    <Text size="sm" className="text-gray-600 py-2">{t('observability.noTasksYet')}</Text>
+                ) : (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <Box className="rounded-xl overflow-hidden border border-gray-800">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 200 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.task')}</Text>
+                                        </TableHead>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 100 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.status')}</Text>
+                                        </TableHead>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.lastRun')}</Text>
+                                        </TableHead>
+                                        <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
+                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.progress')}</Text>
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {taskNames.map((name, i) => {
+                                        const status = taskCurrentStatus[name] ?? null;
+                                        const progress: TaskProgress | null | undefined = taskProgress[name];
+                                        const error = getTaskError(name);
+                                        const rowCls = i % 2 === 0 ? ROW_EVEN : ROW_ODD;
+                                        return (
+                                            <React.Fragment key={name}>
+                                                <TableRow className={rowCls}>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 200 }}>
+                                                        <Text size="xs" className="text-white" numberOfLines={1}>{name}</Text>
+                                                    </TableData>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 100 }}>
+                                                        <HStack space="xs" className="items-center">
+                                                            <Box
+                                                                style={{
+                                                                    width: 6,
+                                                                    height: 6,
+                                                                    borderRadius: 3,
+                                                                    backgroundColor: statusDotColor(status),
+                                                                    flexShrink: 0,
+                                                                }}
+                                                            />
+                                                            <Text size="xs" className="text-gray-300">{status ?? 'idle'}</Text>
+                                                        </HStack>
+                                                    </TableData>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
+                                                        <Text size="xs" className="text-gray-300">
+                                                            {relativeTime(taskLastRun[name], t)}
+                                                        </Text>
+                                                    </TableData>
+                                                    <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
+                                                        <Text size="xs" className="text-gray-300">
+                                                            {progress?.current != null && progress?.total != null
+                                                                ? `${progress.current}/${progress.total}`
+                                                                : '—'}
+                                                        </Text>
+                                                    </TableData>
+                                                </TableRow>
+                                                {error ? (
+                                                    <TableRow className={rowCls}>
+                                                        <TableData
+                                                            useRNView
+                                                            className="px-3 py-1.5 border-b border-gray-800"
+                                                            style={{ width: 480 }}
+                                                        >
+                                                            <Text size="xs" className="text-red-400" numberOfLines={2}>{error}</Text>
+                                                        </TableData>
+                                                    </TableRow>
+                                                ) : null}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </Box>
+                    </ScrollView>
+                )}
+
+                {/* Feed */}
+                <SectionHeader title={t('observability.feed')} />
+                <KVTable rows={[
+                    ['articleCount', String(articleCount)],
+                    ['relevantArticleCount', String(relevantArticleCount)],
+                    ['unscoredCount', String(unscoredCount)],
+                    ['asyncJobPhase', asyncJobPhase],
+                    ['lastSyncAt', relativeTime(lastSyncAt, t)],
+                    ['syncState', syncStatusMessage?.state ?? 'idle'],
+                ]} />
+
+                {/* Protocol */}
+                <SectionHeader title={t('observability.protocol')} />
+                <KVTable rows={[
+                    ['processingMode', String(processingMode)],
+                    ['modelState', modelState],
+                    ['downloadProgress', `${downloadProgress}%`],
+                    ['isProcessing', String(isProcessing)],
+                ]} />
+
+                {/* System */}
+                <SectionHeader title={t('observability.system')} />
+                <KVTable rows={[
+                    ['network', isConnected ? 'connected' : 'offline'],
+                    ['db', dbReady ? 'ready' : 'not ready'],
+                    ['schemaVersion', String(schema.version)],
+                    ['userId', userId ? `${userId.slice(0, 8)}…` : 'null'],
+                ]} />
+
                 {/* Settings */}
-                <SectionHeader title="Settings" />
+                <SectionHeader title={t('observability.settings')} />
                 {dbStats ? (
                     dbStats.settings.length === 0 ? (
-                        <Text size="sm" className="text-gray-600 py-2">No settings</Text>
+                        <Text size="sm" className="text-gray-600 py-2">{t('observability.noSettings')}</Text>
                     ) : (
                         <KVTable rows={dbStats.settings.map(({ key, value }) => [key, value])} />
                     )
                 ) : (
                     <Text size="sm" className="text-gray-600 py-2">
-                        {loadingDb ? 'Loading…' : 'Not loaded'}
+                        {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
                 )}
             </ScrollView>

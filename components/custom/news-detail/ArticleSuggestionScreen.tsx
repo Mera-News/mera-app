@@ -85,7 +85,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
-                    setError('This story is no longer available');
+                    setError(t('articleDetail.storyUnavailable'));
                 } else {
                     setSuggestion(row);
                 }
@@ -96,7 +96,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                     tags: { screen: 'ArticleSuggestionScreen', method: 'loadLocal' },
                     extra: { articleSuggestionId },
                 });
-                setError('Failed to load article');
+                setError(t('articleDetail.failedToLoad'));
             })
             .finally(() => {
                 if (!cancelled) setIsLoading(false);
@@ -178,10 +178,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             <Box className="flex-1 bg-black items-center justify-center p-5">
                 <MaterialIcons name="error-outline" size={48} color="#EF4444" />
                 <Text size="lg" className="text-white mt-4 text-center">
-                    {error || 'Article not found'}
+                    {error || t('articleDetail.articleNotFound')}
                 </Text>
                 <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">Go Back</Text>
+                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -247,7 +247,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     onPress={() => handleArticleUrlPress(suggestion.article_url)}
                                 >
                                     <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                    <ButtonText className="text-white ml-2">Read Article</ButtonText>
+                                    <ButtonText className="text-white ml-2">{t('articleDetail.readArticle')}</ButtonText>
                                 </Button>
                                 {(() => {
                                     const status = getArticleTranslatableStatus(
@@ -291,7 +291,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">
                                 <Heading size="md" className="text-gray-300">
-                                    Related Articles
+                                    {t('articleDetail.relatedArticles')}
                                 </Heading>
                                 {isLoadingRelated && related.length === 0 ? (
                                     <Box className="items-center justify-center py-4">
