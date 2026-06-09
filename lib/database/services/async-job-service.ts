@@ -84,7 +84,10 @@ export interface PendingAsyncJob {
    *  concurrent sync). */
   relevanceMap?: Record<string, number>;
   submittedAt: number;
-  expoPushToken: string;
+  /** Null when the device has no registered Expo push token. The job still
+   *  submits; results are retrieved by foreground polling instead of a
+   *  gateway silent-push wake. */
+  expoPushToken: string | null;
   modelCalls: number;
   /** Hex-encoded Ed25519 secret used to decrypt E2EE responses on reconcile.
    *  Device-local only; never leaves this device. */

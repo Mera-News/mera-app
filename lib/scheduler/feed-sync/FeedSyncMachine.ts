@@ -127,7 +127,13 @@ class FeedSyncMachine {
         this._transitionTo('done');
         publishSyncStatus('done');
         useForYouStore.getState().setLastSyncAt(Date.now());
-        await feedPersistence.clearMachineSnapshot();
+        try {
+          await feedPersistence.clearMachineSnapshot();
+        } catch (snapErr) {
+          logger.captureException(snapErr, {
+            tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
+          });
+        }
 
         setTimeout(() => {
           if (this._state === 'done') {
@@ -176,7 +182,13 @@ class FeedSyncMachine {
       this._transitionTo('done');
       publishSyncStatus('done');
       useForYouStore.getState().setLastSyncAt(Date.now());
-      await feedPersistence.clearMachineSnapshot();
+      try {
+        await feedPersistence.clearMachineSnapshot();
+      } catch (snapErr) {
+        logger.captureException(snapErr, {
+          tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
+        });
+      }
 
       // Auto-reset to idle after 2s so the UI can show "done" briefly
       setTimeout(() => {
@@ -189,7 +201,7 @@ class FeedSyncMachine {
     } catch (err) {
       const errorCode = classifyError(err);
       const failedAtState = this._state; // capture before transition
-      if (this._state !== 'failed') {
+      if (this._state !== 'failed' && this._state !== 'done') {
         this._transitionTo('failed');
         publishSyncError(errorCode, undefined, failedAtState);
         await feedPersistence.saveMachineSnapshot({

@@ -396,13 +396,27 @@ export async function setVisibleNotificationsEnabled(
 export async function checkPushTokenRevocation(): Promise<void> {
     try {
         const { status } = await Notifications.getPermissionsAsync();
+        const uid = useUserStore.getState().userId;
+        if (!uid) return;
+
         if (status === 'denied') {
-            const uid = useUserStore.getState().userId;
-            if (!uid) return;
             const cached = useUserStore.getState().userPersona?.expoPushToken;
             if (!cached) return;
             const updated = await AccountService.deleteExpoPushToken(uid);
             useUserStore.getState().setUserPersona(updated);
+            return;
+        }
+
+        // Re-register if permission is granted but token is missing on the persona.
+        // Covers: boot-time registration failure, FCM transient errors, and users
+        // who granted notification permission after the initial prompt was dismissed.
+        const cachedToken = useUserStore.getState().userPersona?.expoPushToken ?? null;
+        if (!cachedToken && (status === 'granted' || status === 'undetermined')) {
+            const token = await registerForPushNotificationsAsync(true);
+            if (token) {
+                const updated = await AccountService.updateExpoPushTokenMutation(uid, token);
+                useUserStore.getState().setUserPersona(updated);
+            }
         }
     } catch (err) {
         logger.captureException(err, {

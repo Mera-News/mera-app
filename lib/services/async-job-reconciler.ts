@@ -826,14 +826,10 @@ export async function submitOrphanedReasonJob(
   );
   if (qualified.length === 0) return 'skipped-empty';
 
+  // Push token is optional — submit tokenless and rely on foreground polling
+  // when absent (Android FCM-registration failures). The gateway omits the
+  // completion push for tokenless jobs.
   const token = useUserStore.getState().userPersona?.expoPushToken ?? null;
-  if (!token) {
-    logger.captureMessage(
-      `${TAG} [orphan-reason] no Expo push token — cannot submit`,
-      { level: 'warning', tags: { service: 'async-job-reconciler', step: 'orphan-reason' } },
-    );
-    return 'skipped-no-token';
-  }
 
   // Build relevance map from stored (bucketed) values. Raw pre-bucket scores
   // are not persisted; REASON_MIN_RAW_SCORE=0 means all threshold-passing rows

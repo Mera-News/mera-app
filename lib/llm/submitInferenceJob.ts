@@ -64,13 +64,15 @@ export async function submitInferenceJob(): Promise<SubmitStatus> {
   logger.info(`${TAG} unscored candidates loaded=${candidates.length}`);
   if (candidates.length === 0) return 'skipped-empty';
 
+  // The push token is no longer a hard gate. When present, the gateway uses it
+  // to wake the app with a silent push on completion; when absent (common on
+  // Android where FCM registration fails), the job still submits and results
+  // are retrieved by the foreground polling path (inference-recover / scoring
+  // pass reconcile). See sendInferenceRequest — the token is omitted from the
+  // body when null.
   const token = getCachedExpoPushToken();
   if (!token) {
-    logger.captureMessage(`${TAG} no Expo push token on userPersona — cloud scoring cannot proceed`, {
-      level: 'warning',
-      tags: { service: 'submitInferenceJob', result: 'skipped-no-token' },
-    });
-    return 'skipped-no-token';
+    logger.info(`${TAG} no Expo push token — submitting tokenless, will poll for results`);
   }
 
   const bundle = await buildRelevanceCalls(candidates);
@@ -183,7 +185,9 @@ export async function submitInferenceJob(): Promise<SubmitStatus> {
 export async function sendInferenceRequest(args: {
   bundle: CloudCallBundle;
   ctx: E2EEContext;
-  token: string;
+  /** Null when the device has no registered Expo push token — the field is
+   *  omitted from the request body and the gateway skips the completion push. */
+  token: string | null;
   model: string;
   /** Required. Foreground submits use the keychain JWT (only the user's
    *  active device can mint one). Background submits — phase-2 chain from
@@ -239,15 +243,17 @@ export async function sendInferenceRequest(args: {
   }
 
   const body: {
-    expoPushToken: string;
+    expoPushToken?: string;
     e2eeSession: Record<string, string>;
     requests: typeof encryptedCalls;
     sharedSystem?: string;
   } = {
-    expoPushToken: token,
     e2eeSession,
     requests: encryptedCalls,
   };
+  // Only include the token when present — the gateway DTO accepts its absence
+  // (tokenless submit) but rejects an empty/invalid token via @Matches.
+  if (token) body.expoPushToken = token;
   if (sharedSystem) body.sharedSystem = sharedSystem;
 
   const bodyJson = JSON.stringify(body);

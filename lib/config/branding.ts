@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // Forker-facing branding. Override via EXPO_PUBLIC_* in .env; defaults are
 // the reference (mera.news) values. Keep all user-facing URLs/email here so a
 // rebrand touches exactly one file (+ .env), never call sites or locale JSONs.
@@ -13,4 +15,6 @@ export const GITHUB_URL =
   process.env.EXPO_PUBLIC_GITHUB_URL || 'https://github.com/Mera-News/mera-app';
 export const TRANSLATION_GUIDE_URL =
   process.env.EXPO_PUBLIC_TRANSLATION_GUIDE_URL ||
-  'https://mera.news/assets/mera-translation-guide.mp4';
+  `https://mera.news/assets/translation-guide-${
+    Platform.OS === 'android' ? 'android' : 'ios'
+  }.mp4`;

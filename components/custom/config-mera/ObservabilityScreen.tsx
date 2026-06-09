@@ -262,7 +262,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 lastSyncAt,
                 syncState: syncStatusMessage?.state ?? 'idle',
             },
-            protocol: { processingMode, modelState, downloadProgress, isProcessing },
+            protocol: { processingMode, modelState, downloadProgress, isProcessing, hasPushToken: useUserStore.getState().userPersona?.expoPushToken != null },
             system: {
                 network: isConnected,
                 dbReady,
@@ -543,6 +543,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     ['modelState', modelState],
                     ['downloadProgress', `${downloadProgress}%`],
                     ['isProcessing', String(isProcessing)],
+                    ['hasPushToken', String(useUserStore.getState().userPersona?.expoPushToken != null)],
                 ]} />
 
                 {/* System */}
