@@ -1,11 +1,13 @@
 import { Heading } from '@/components/ui/heading';
+import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { translateText } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Dimensions, View } from 'react-native';
 
 type MeasurableNode = {
     measureInWindow?: (
@@ -39,6 +41,12 @@ interface TranslatableProps {
     readonly numberOfLines?: number;
     readonly bold?: boolean;
     readonly italic?: boolean;
+    /**
+     * When true, replaces the inline translate icon with a tappable rounded
+     * button that lets the user toggle between translated and original text.
+     * Intended for the screen (detail) variant where there is space for it.
+     */
+    readonly showToggle?: boolean;
 }
 
 /** Loose match so `hi-IN` ≈ `hi`, `zh-Hans` ≈ `zh-CN`, etc. */
@@ -107,10 +115,22 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     numberOfLines,
     bold,
     italic,
+    showToggle = false,
 }) => {
+    const { t } = useTranslation();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const showOriginal = useAppLanguageStore((s) => s.showOriginal);
     const cache = useAppLanguageStore((s) => s.cache);
+
+    // Local toggle state: lets the user flip between original and translated
+    // text on the detail screen without touching the global setting.
+    const [localShowOriginal, setLocalShowOriginal] = useState(false);
+
+    // When showToggle is on, respect the global setting as the floor but allow
+    // the local toggle to add "show original" on top of it.
+    const effectiveShowOriginal = showToggle
+        ? showOriginal || localShowOriginal
+        : showOriginal;
 
     // If the original is already in the target language, don't translate —
     // just show the original.
@@ -118,7 +138,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         !!originalText && languagesMatch(originalLanguage, appLanguage);
 
     const needsTranslation =
-        !showOriginal
+        !effectiveShowOriginal
         && !!appLanguage
         && appLanguage !== 'en'
         && !originalIsTargetLang;
@@ -151,10 +171,12 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         }
     }, []);
 
-    // Reset visibility when the text prop changes (e.g. FlatList recycling), then
-    // re-measure on the next tick so recycled cells re-check at their new position.
+    // Reset visibility (and local toggle) when the text prop changes (e.g. FlatList
+    // recycling), then re-measure on the next tick so recycled cells re-check at
+    // their new position.
     useEffect(() => {
         setIsOnScreen(false);
+        setLocalShowOriginal(false);
         firedRef.current = null;
         const id = setTimeout(checkVisibility, 0);
         return () => clearTimeout(id);
@@ -194,7 +216,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     }, [needsTranslation, isOnScreen, appLanguage, text, cachedTranslation]);
 
     let displayText: string;
-    if (showOriginal || originalIsTargetLang) {
+    if (effectiveShowOriginal || originalIsTargetLang) {
         // User asked for the original, or it's already in their language.
         displayText = originalText ?? text;
     } else if (needsTranslation && cachedTranslation != null) {
@@ -218,13 +240,14 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // translator) and server-side English translations (e.g. a Portuguese
     // article rendered in English via `title_en_internal_only`).
     const isTranslated =
-        !showOriginal && !!originalText && displayText !== originalText;
+        !effectiveShowOriginal && !!originalText && displayText !== originalText;
 
-    // Inline-nest the translate icon inside Text so the parent's flex layout
-    // sees a single Text child (same as before this component existed). The
-    // icon uses the Material Icons font, which renders correctly when nested
-    // inside a React Native <Text>.
-    const translatedIndicator = isTranslated ? (
+    // Show the toggle button when: showToggle is on, there is an original to
+    // switch to, and the global setting isn't already forcing original everywhere.
+    const showToggleButton = showToggle && !!originalText && !originalIsTargetLang && !showOriginal;
+
+    // Inline icon — shown only in non-toggle mode.
+    const translatedIndicator = isTranslated && !showToggleButton ? (
         <>
             <MaterialIcons name="translate" size={11} color="#9ca3af" />
             {' '}
@@ -271,6 +294,34 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
             </Text>
         );
     };
+
+    if (showToggleButton) {
+        return (
+            <View>
+                {renderTextNode(displayText)}
+                <Pressable
+                    onPress={() => setLocalShowOriginal((v) => !v)}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        alignSelf: 'flex-start',
+                        marginTop: 6,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 999,
+                        backgroundColor: '#1f2937',
+                    }}
+                >
+                    <MaterialIcons name="translate" size={12} color="#9ca3af" />
+                    <Text size="xs" style={{ color: '#9ca3af', marginLeft: 4 }}>
+                        {localShowOriginal
+                            ? t('clusterDetail.showTranslation')
+                            : t('clusterDetail.showOriginal')}
+                    </Text>
+                </Pressable>
+            </View>
+        );
+    }
 
     return renderTextNode(content);
 };

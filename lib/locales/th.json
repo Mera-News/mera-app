@@ -163,7 +163,10 @@
       "majorImpact": "ผลกระทบสำคัญ",
       "notableImpact": "ผลกระทบที่น่าสังเกต",
       "goodToKnow": "ควรรู้",
-      "unscoredShort": "ยังไม่ประเมิน"
+      "unscoredShort": "ยังไม่ประเมิน",
+      "high": "สูง",
+      "medium": "กลาง",
+      "low": "ต่ำ"
     },
     "syncToast": {
       "relevanceTitle": "กำลังคำนวณความเกี่ยวข้อง",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "บทความนี้อยู่ในภาษา {{language}} และสามารถแปลเป็นภาษาของคุณได้",
     "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} และอาจไม่สามารถแปลได้",
-    "unknownLanguage": "ภาษาอื่น"
+    "unknownLanguage": "ภาษาอื่น",
+    "translationGuideLink": "แสดงวิธีแปลบทความ",
+    "showOriginal": "แสดงต้นฉบับ",
+    "showTranslation": "แสดงคำแปล"
   },
   "onboarding": {
     "stepOf": "ขั้นตอนที่ {{current}} จาก {{total}}",
@@ -276,7 +282,8 @@
     "later": "ภายหลัง",
     "packMissingBanner": "ภาษานี้ต้องการแพ็กการแปลในเครื่อง Mera ประมวลผลทุกอย่างในเครื่อง ข้อมูลของคุณจึงไม่ออกจากอุปกรณ์ คุณสามารถจัดการภาษาได้จากการตั้งค่าโทรศัพท์",
     "packMissingIosPath": "การตั้งค่า → ทั่วไป → ภาษาและภูมิภาค",
-    "retry": "ลองใหม่"
+    "retry": "ลองใหม่",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

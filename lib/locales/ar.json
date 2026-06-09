@@ -163,7 +163,10 @@
       "majorImpact": "تأثير كبير",
       "notableImpact": "تأثير ملحوظ",
       "goodToKnow": "مفيد للمعرفة",
-      "unscoredShort": "غير مُرتَّب"
+      "unscoredShort": "غير مُرتَّب",
+      "high": "مرتفع",
+      "medium": "متوسط",
+      "low": "منخفض"
     },
     "syncToast": {
       "relevanceTitle": "حساب الصلة بالموضوع",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "هذا المقال باللغة {{language}} ويمكن ترجمته إلى لغتك",
     "notTranslatable": "هذا المقال باللغة {{language}} وقد لا يكون قابلاً للترجمة",
-    "unknownLanguage": "لغة أخرى"
+    "unknownLanguage": "لغة أخرى",
+    "translationGuideLink": "أرني كيفية ترجمة المقال",
+    "showOriginal": "عرض النص الأصلي",
+    "showTranslation": "عرض الترجمة"
   },
   "onboarding": {
     "stepOf": "الخطوة {{current}} من {{total}}",
@@ -276,7 +282,8 @@
     "later": "لاحقًا",
     "packMissingBanner": "تحتاج هذه اللغة إلى حزمة ترجمة على الجهاز. يعالج Mera كل شيء محليًا، لذا لا تغادر بياناتك جهازك أبدًا. يمكنك إدارة اللغات من إعدادات هاتفك.",
     "packMissingIosPath": "الإعدادات ← عام ← اللغة والمنطقة",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

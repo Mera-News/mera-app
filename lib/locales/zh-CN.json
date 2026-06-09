@@ -163,7 +163,10 @@
       "majorImpact": "重大影响",
       "notableImpact": "显著影响",
       "goodToKnow": "值得了解",
-      "unscoredShort": "未评分"
+      "unscoredShort": "未评分",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
     },
     "syncToast": {
       "relevanceTitle": "计算相关性",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "这篇文章是{{language}}的，可以翻译成您的语言",
     "notTranslatable": "此文章为 {{language}} 语言，可能无法翻译",
-    "unknownLanguage": "其他语言"
+    "unknownLanguage": "其他语言",
+    "translationGuideLink": "告诉我如何翻译这篇文章",
+    "showOriginal": "显示原文",
+    "showTranslation": "显示译文"
   },
   "onboarding": {
     "stepOf": "第 {{current}} 步，共 {{total}} 步",
@@ -276,7 +282,8 @@
     "later": "稍后",
     "packMissingBanner": "此语言需要本地翻译包。Mera 完全在本地处理，您的数据永不离开设备。您可以在手机设置中管理语言。",
     "packMissingIosPath": "设置 → 通用 → 语言与地区",
-    "retry": "重试"
+    "retry": "重试",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

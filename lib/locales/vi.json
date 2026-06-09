@@ -163,7 +163,10 @@
       "majorImpact": "Tác động lớn",
       "notableImpact": "Tác động đáng chú ý",
       "goodToKnow": "Hay biết thêm",
-      "unscoredShort": "Chưa chấm điểm"
+      "unscoredShort": "Chưa chấm điểm",
+      "high": "Cao",
+      "medium": "Trung bình",
+      "low": "Thấp"
     },
     "syncToast": {
       "relevanceTitle": "Đang tính mức độ liên quan",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}} và có thể được dịch sang ngôn ngữ của bạn",
     "notTranslatable": "Bài viết này bằng {{language}} và có thể không được dịch",
-    "unknownLanguage": "ngôn ngữ khác"
+    "unknownLanguage": "ngôn ngữ khác",
+    "translationGuideLink": "Hướng dẫn tôi cách dịch bài viết",
+    "showOriginal": "Hiển thị bản gốc",
+    "showTranslation": "Hiển thị bản dịch"
   },
   "onboarding": {
     "stepOf": "Bước {{current}} / {{total}}",
@@ -276,7 +282,8 @@
     "later": "Để sau",
     "packMissingBanner": "Ngôn ngữ này cần gói dịch thuật trên thiết bị. Mera xử lý mọi thứ ngay trên máy, nên dữ liệu của bạn không bao giờ rời thiết bị. Bạn có thể quản lý ngôn ngữ trong cài đặt điện thoại.",
     "packMissingIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

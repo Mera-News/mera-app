@@ -21,13 +21,14 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { useUserStore } from '@/lib/stores/user-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
+import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ArticleSuggestionScreenProps {
@@ -276,6 +277,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                                         ? 'clusterDetail.translatable'
                                                         : 'clusterDetail.notTranslatable',
                                                     { language: languageName },
+                                                )}
+                                                {translatable && Platform.OS === 'ios' && (
+                                                    <Text
+                                                        size="xs"
+                                                        italic
+                                                        className="text-orange-400 underline"
+                                                        onPress={() => openInAppBrowser(TRANSLATION_GUIDE_URL).catch(() => {})}
+                                                    >
+                                                        {' '}{t('clusterDetail.translationGuideLink')}
+                                                    </Text>
                                                 )}
                                             </Text>
                                         </HStack>

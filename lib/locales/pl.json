@@ -163,7 +163,10 @@
       "majorImpact": "Duży wpływ",
       "notableImpact": "Zauważalny wpływ",
       "goodToKnow": "Warto wiedzieć",
-      "unscoredShort": "Nieocenione"
+      "unscoredShort": "Nieocenione",
+      "high": "Wysoki",
+      "medium": "Średni",
+      "low": "Niski"
     },
     "syncToast": {
       "relevanceTitle": "Obliczanie trafności",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Ten artykuł jest w języku {{language}} i może zostać przetłumaczony na Twój język",
     "notTranslatable": "Ten artykuł jest w języku {{language}} i może nie być przetłumaczony",
-    "unknownLanguage": "innym języku"
+    "unknownLanguage": "innym języku",
+    "translationGuideLink": "Pokaż mi, jak przetłumaczyć artykuł",
+    "showOriginal": "Pokaż oryginał",
+    "showTranslation": "Pokaż tłumaczenie"
   },
   "onboarding": {
     "stepOf": "Krok {{current}} z {{total}}",
@@ -276,7 +282,8 @@
     "later": "Później",
     "packMissingBanner": "Ten język wymaga lokalnego pakietu tłumaczeń. Mera przetwarza wszystko lokalnie, więc Twoje dane nigdy nie opuszczają urządzenia. Możesz zarządzać językami w ustawieniach telefonu.",
     "packMissingIosPath": "Ustawienia → Ogólne → Język i region",
-    "retry": "Ponów"
+    "retry": "Ponów",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

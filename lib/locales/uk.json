@@ -163,7 +163,10 @@
       "majorImpact": "Значний вплив",
       "notableImpact": "Помітний вплив",
       "goodToKnow": "Корисно знати",
-      "unscoredShort": "Без оцінки"
+      "unscoredShort": "Без оцінки",
+      "high": "Висока",
+      "medium": "Середня",
+      "low": "Низька"
     },
     "syncToast": {
       "relevanceTitle": "Обчислення релевантності",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Ця стаття мовою {{language}} та може бути перекладена на вашу мову",
     "notTranslatable": "Ця стаття мовою {{language}} та, можливо, не буде перекладена",
-    "unknownLanguage": "іншою мовою"
+    "unknownLanguage": "іншою мовою",
+    "translationGuideLink": "Покажи, як перекласти статтю",
+    "showOriginal": "Показати оригінал",
+    "showTranslation": "Показати переклад"
   },
   "onboarding": {
     "stepOf": "Крок {{current}} з {{total}}",
@@ -276,7 +282,8 @@
     "later": "Пізніше",
     "packMissingBanner": "Для цієї мови потрібен пакет перекладу на пристрої. Mera обробляє все локально, тому ваші дані ніколи не залишають пристрій. Ви можете керувати мовами в налаштуваннях телефону.",
     "packMissingIosPath": "Налаштування → Загальні → Мова та регіон",
-    "retry": "Повторити"
+    "retry": "Повторити",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

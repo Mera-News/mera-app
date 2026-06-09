@@ -144,6 +144,7 @@ export const ArticleSuggestionContainer: React.FC<ArticleSuggestionContainerProp
             size={isCard ? 'md' : 'xl'}
             className={isCard ? 'leading-6' : 'text-white'}
             style={isCard ? undefined : { paddingTop: 8 }}
+            showToggle={!isCard}
         />
     );
 

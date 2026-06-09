@@ -163,7 +163,10 @@
       "majorImpact": "Büyük etki",
       "notableImpact": "Önemli etki",
       "goodToKnow": "Bilinmesinde fayda var",
-      "unscoredShort": "Puansız"
+      "unscoredShort": "Puansız",
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük"
     },
     "syncToast": {
       "relevanceTitle": "Alaka düzeyi hesaplanıyor",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde ve senin diline çevrilebilir",
     "notTranslatable": "Bu makale {{language}} dilindedir ve çevrilemeyebilir",
-    "unknownLanguage": "başka bir dil"
+    "unknownLanguage": "başka bir dil",
+    "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
+    "showOriginal": "Orijinali göster",
+    "showTranslation": "Çeviriyi göster"
   },
   "onboarding": {
     "stepOf": "Adım {{current}} / {{total}}",
@@ -276,7 +282,8 @@
     "later": "Daha Sonra",
     "packMissingBanner": "Bu dil için cihaz üzerinde bir çeviri paketi gerekiyor. Mera her şeyi yerel olarak işler, bu nedenle verilerin cihazından çıkmaz. Dilleri telefonunun ayarlarından yönetebilirsin.",
     "packMissingIosPath": "Ayarlar → Genel → Dil ve Bölge",
-    "retry": "Tekrar Dene"
+    "retry": "Tekrar Dene",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

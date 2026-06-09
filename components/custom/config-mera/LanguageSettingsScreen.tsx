@@ -120,6 +120,25 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                 </VStack>
                                 <MaterialIcons name="chevron-right" size={20} color="#999999" />
                             </Pressable>
+
+                            {Platform.OS === 'ios' && (
+                                <VStack space="sm">
+                                    <Text className="text-typography-500 text-xs leading-5">
+                                        Only selecting this language is not enough — you'll need to also select this language in the iOS language settings.
+                                    </Text>
+                                    <Pressable
+                                        onPress={handleWatchGuide}
+                                        disabled={videoLoading}
+                                        className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                                    >
+                                        <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
+                                        <Text className="text-violet-400 text-sm font-medium flex-1">
+                                            {videoLoading ? 'Loading…' : t('language.watchGuide')}
+                                        </Text>
+                                        <MaterialIcons name="open-in-new" size={16} color="#6b7280" />
+                                    </Pressable>
+                                </VStack>
+                            )}
                         </VStack>
 
                         <Box className="border-b border-gray-800" />

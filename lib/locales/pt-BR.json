@@ -163,7 +163,10 @@
       "majorImpact": "Grande impacto",
       "notableImpact": "Impacto notável",
       "goodToKnow": "Bom saber",
-      "unscoredShort": "Não pontuado"
+      "unscoredShort": "Não pontuado",
+      "high": "Alta",
+      "medium": "Média",
+      "low": "Baixa"
     },
     "syncToast": {
       "relevanceTitle": "Calculando relevância",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Este artigo está em {{language}} e pode ser traduzido para o seu idioma",
     "notTranslatable": "Este artigo está em {{language}} e pode não ser traduzido",
-    "unknownLanguage": "outro idioma"
+    "unknownLanguage": "outro idioma",
+    "translationGuideLink": "Mostre-me como traduzir o artigo",
+    "showOriginal": "Ver original",
+    "showTranslation": "Ver tradução"
   },
   "onboarding": {
     "stepOf": "Etapa {{current}} de {{total}}",
@@ -276,7 +282,8 @@
     "later": "Depois",
     "packMissingBanner": "Este idioma precisa de um pacote de tradução local. O Mera processa tudo localmente, então seus dados nunca saem do seu dispositivo. Você pode gerenciar os idiomas nas configurações do seu celular.",
     "packMissingIosPath": "Ajustes → Geral → Idioma e Região",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -407,7 +414,7 @@
     "loggingOut": "Saindo..."
   },
   "configPanel": {
-    "tabPersona": "Persona",
+    "tabPersona": "Perfil",
     "tabSources": "Fontes",
     "tabPreferences": "Preferências",
     "privacyOnDevice": "Seus fatos e tópicos são armazenados exclusivamente no seu dispositivo — a inferência de IA roda inteiramente no dispositivo via Mera Protocol. Cada vez que você precisar de notícias, seus tópicos são enviados aos nossos servidores para buscar artigos relevantes; o servidor retorna os resultados sem armazenar nenhum dos seus dados. O histórico de chat nunca é salvo; cada sessão começa do zero. Trocar de dispositivo ou sair significa reconstruir seu perfil.",

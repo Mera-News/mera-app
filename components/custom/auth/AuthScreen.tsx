@@ -6,19 +6,21 @@ import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
 import { Input, InputField } from '@/components/ui/input';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import validator from 'validator';
 
@@ -152,6 +154,21 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
 
                 {/* Language Selector */}
                 <LanguageSelector />
+
+                {Platform.OS === 'ios' && (
+                    <VStack space="sm" className="mt-4">
+                        <Pressable
+                            onPress={() => openInAppBrowser(TRANSLATION_GUIDE_URL)}
+                            className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                        >
+                            <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
+                            <Text className="text-violet-400 text-sm font-medium flex-1">
+                                {t('language.watchGuide')}
+                            </Text>
+                            <MaterialIcons name="open-in-new" size={16} color="#6b7280" />
+                        </Pressable>
+                    </VStack>
+                )}
             </Box>
 
             {/* Privacy Policy & Terms of Service Buttons at bottom */}

@@ -163,7 +163,10 @@
       "majorImpact": "Große Auswirkung",
       "notableImpact": "Nennenswerte Auswirkung",
       "goodToKnow": "Gut zu wissen",
-      "unscoredShort": "Nicht bewertet"
+      "unscoredShort": "Nicht bewertet",
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig"
     },
     "syncToast": {
       "relevanceTitle": "Relevanz wird berechnet",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} und kann in Ihre Sprache übersetzt werden",
     "notTranslatable": "Dieser Artikel ist auf {{language}} und kann möglicherweise nicht übersetzt werden",
-    "unknownLanguage": "einer anderen Sprache"
+    "unknownLanguage": "einer anderen Sprache",
+    "translationGuideLink": "Zeig mir, wie ich den Artikel übersetze",
+    "showOriginal": "Original anzeigen",
+    "showTranslation": "Übersetzung anzeigen"
   },
   "onboarding": {
     "stepOf": "Schritt {{current}} von {{total}}",
@@ -276,7 +282,8 @@
     "later": "Später",
     "packMissingBanner": "Diese Sprache benötigt ein lokales Übersetzungspaket. Mera verarbeitet alles lokal, sodass Ihre Daten Ihr Gerät nie verlassen. Sie können Sprachen in den Telefoneinstellungen verwalten.",
     "packMissingIosPath": "Einstellungen → Allgemein → Sprache & Region",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -500,7 +507,7 @@
     "updateDescription": "Tippen Sie, um neu zu starten und die neueste Version zu installieren"
   },
   "observability": {
-    "title": "Observability",
+    "title": "Beobachtbarkeit",
     "articles": "Artikel",
     "relevant": "Relevant",
     "unscored": "Nicht bewertet",
@@ -515,7 +522,7 @@
     "progress": "Fortschritt",
     "noTasksYet": "Noch keine Aufgaben registriert",
     "feed": "Feed",
-    "protocol": "Protocol",
+    "protocol": "Protokoll",
     "system": "System",
     "settings": "Einstellungen",
     "noSettings": "Keine Einstellungen",

@@ -163,7 +163,10 @@
       "majorImpact": "Dampak besar",
       "notableImpact": "Dampak penting",
       "goodToKnow": "Perlu diketahui",
-      "unscoredShort": "Belum dinilai"
+      "unscoredShort": "Belum dinilai",
+      "high": "Tinggi",
+      "medium": "Sedang",
+      "low": "Rendah"
     },
     "syncToast": {
       "relevanceTitle": "Menghitung relevansi",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}} dan dapat diterjemahkan ke bahasa Anda",
     "notTranslatable": "Artikel ini dalam bahasa {{language}} dan mungkin tidak dapat diterjemahkan",
-    "unknownLanguage": "bahasa lain"
+    "unknownLanguage": "bahasa lain",
+    "translationGuideLink": "Tunjukkan cara menerjemahkan artikel",
+    "showOriginal": "Tampilkan asli",
+    "showTranslation": "Tampilkan terjemahan"
   },
   "onboarding": {
     "stepOf": "Langkah {{current}} dari {{total}}",
@@ -276,7 +282,8 @@
     "later": "Nanti",
     "packMissingBanner": "Bahasa ini membutuhkan paket terjemahan di perangkat. Mera memproses segalanya secara lokal, sehingga data Anda tidak pernah meninggalkan perangkat. Anda dapat mengelola bahasa dari pengaturan ponsel Anda.",
     "packMissingIosPath": "Pengaturan → Umum → Bahasa & Wilayah",
-    "retry": "Coba Lagi"
+    "retry": "Coba Lagi",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -515,7 +522,7 @@
     "progress": "Kemajuan",
     "noTasksYet": "Belum ada tugas yang terdaftar",
     "feed": "Feed",
-    "protocol": "Protocol",
+    "protocol": "Protokol",
     "system": "Sistem",
     "settings": "Pengaturan",
     "noSettings": "Tidak ada pengaturan",

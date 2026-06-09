@@ -207,7 +207,10 @@
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",
     "notTranslatable": "This article is in {{language}} and may not be translated",
-    "unknownLanguage": "another language"
+    "unknownLanguage": "another language",
+    "translationGuideLink": "Show me how to translate the article",
+    "showOriginal": "Show original",
+    "showTranslation": "Show translation"
   },
   "onboarding": {
     "stepOf": "Step {{current}} of {{total}}",
@@ -276,7 +279,8 @@
     "later": "Later",
     "packMissingBanner": "This language needs an on-device translation pack. Mera processes everything locally, so your data never leaves your device. You can manage languages from your phone's settings.",
     "packMissingIosPath": "Settings → General → Language & Region",
-    "retry": "Retry"
+    "retry": "Retry",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

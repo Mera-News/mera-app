@@ -163,7 +163,10 @@
       "majorImpact": "Grote impact",
       "notableImpact": "Merkbare impact",
       "goodToKnow": "Goed om te weten",
-      "unscoredShort": "Ongepuntueerd"
+      "unscoredShort": "Ongepuntueerd",
+      "high": "Hoog",
+      "medium": "Gemiddeld",
+      "low": "Laag"
     },
     "syncToast": {
       "relevanceTitle": "Relevantie berekenen",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "Dit artikel is in {{language}} en kan naar jouw taal worden vertaald",
     "notTranslatable": "Dit artikel is in {{language}} en kan mogelijk niet worden vertaald",
-    "unknownLanguage": "een andere taal"
+    "unknownLanguage": "een andere taal",
+    "translationGuideLink": "Laat me zien hoe ik het artikel kan vertalen",
+    "showOriginal": "Origineel tonen",
+    "showTranslation": "Vertaling tonen"
   },
   "onboarding": {
     "stepOf": "Stap {{current}} van {{total}}",
@@ -276,7 +282,8 @@
     "later": "Later",
     "packMissingBanner": "Voor deze taal is een on-device vertaalpakket nodig. Mera verwerkt alles lokaal, zodat je gegevens je apparaat nooit verlaten. Je kunt talen beheren via de instellingen van je telefoon.",
     "packMissingIosPath": "Instellingen → Algemeen → Taal en regio",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

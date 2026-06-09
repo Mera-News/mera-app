@@ -163,7 +163,10 @@
       "majorImpact": "大きな影響",
       "notableImpact": "注目の影響",
       "goodToKnow": "知っておくと役立つ",
-      "unscoredShort": "未評価"
+      "unscoredShort": "未評価",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
     },
     "syncToast": {
       "relevanceTitle": "関連性を計算中",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれており、あなたの言語に翻訳できます",
     "notTranslatable": "この記事は{{language}}で書かれており、翻訳できない場合があります",
-    "unknownLanguage": "別の言語"
+    "unknownLanguage": "別の言語",
+    "translationGuideLink": "記事の翻訳方法を教えてください",
+    "showOriginal": "原文を表示",
+    "showTranslation": "翻訳を表示"
   },
   "onboarding": {
     "stepOf": "ステップ {{current}} / {{total}}",
@@ -276,7 +282,8 @@
     "later": "後で",
     "packMissingBanner": "この言語にはデバイス上の翻訳パックが必要です。Meraはすべてローカルで処理するため、あなたのデータはデバイスの外に出ることはありません。端末の設定から言語を管理できます。",
     "packMissingIosPath": "設定 → 一般 → 言語と地域",
-    "retry": "再試行"
+    "retry": "再試行",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

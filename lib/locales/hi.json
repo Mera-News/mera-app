@@ -163,7 +163,10 @@
       "majorImpact": "बड़ा प्रभाव",
       "notableImpact": "उल्लेखनीय प्रभाव",
       "goodToKnow": "जानने लायक",
-      "unscoredShort": "अनस्कोर्ड"
+      "unscoredShort": "अनस्कोर्ड",
+      "high": "उच्च",
+      "medium": "मध्यम",
+      "low": "कम"
     },
     "syncToast": {
       "relevanceTitle": "प्रासंगिकता की गणना हो रही है",
@@ -207,7 +210,10 @@
   "clusterDetail": {
     "translatable": "यह लेख {{language}} में है और आपकी भाषा में अनुवादित हो सकता है",
     "notTranslatable": "यह लेख {{language}} में है और इसे अनुवादित नहीं किया जा सकता",
-    "unknownLanguage": "कोई अन्य भाषा"
+    "unknownLanguage": "कोई अन्य भाषा",
+    "translationGuideLink": "मुझे लेख अनुवाद करने का तरीका बताएं",
+    "showOriginal": "मूल दिखाएं",
+    "showTranslation": "अनुवाद दिखाएं"
   },
   "onboarding": {
     "stepOf": "चरण {{current}} / {{total}}",
@@ -276,7 +282,8 @@
     "later": "बाद में",
     "packMissingBanner": "इस भाषा के लिए डिवाइस पर एक ट्रांसलेशन पैक चाहिए। Mera सब कुछ लोकल प्रोसेस करता है, इसलिए आपका डेटा कभी डिवाइस नहीं छोड़ता। आप अपने फ़ोन की सेटिंग्स से भाषाएं प्रबंधित कर सकते हैं।",
     "packMissingIosPath": "सेटिंग्स → सामान्य → भाषा और क्षेत्र",
-    "retry": "पुनः प्रयास करें"
+    "retry": "पुनः प्रयास करें",
+    "watchGuide": "Watch how to add language to your device"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

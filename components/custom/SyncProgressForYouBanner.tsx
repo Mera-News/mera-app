@@ -67,10 +67,10 @@ function CompletionToast({ nativeID }: { nativeID?: string }) {
             <HStack className="items-center" space="sm">
                 <MaterialIcons name="check-circle" size={16} color="#fff" />
                 <ToastTitle size="sm" className="font-semibold text-white">
-                    {(t as any)('feed.processing.syncToast.completedTitle') as string}
+                    {(t as any)('feed.syncToast.completedTitle') as string}
                 </ToastTitle>
                 <Text size="xs" className="text-green-200">
-                    {(t as any)('feed.processing.syncToast.completedMessage') as string}
+                    {(t as any)('feed.syncToast.completedMessage') as string}
                 </Text>
             </HStack>
         </Toast>
@@ -159,9 +159,9 @@ function Stage23Content({
         : 'onDevice';
 
     const titleKey =
-        stage === 'relevance' ? 'feed.processing.syncToast.relevanceTitle'
-        : stage === 'reasons' ? 'feed.processing.syncToast.reasonsTitle'
-        : 'feed.processing.syncToast.onDeviceTitle';
+        stage === 'relevance' ? 'feed.syncToast.relevanceTitle'
+        : stage === 'reasons' ? 'feed.syncToast.reasonsTitle'
+        : 'feed.syncToast.onDeviceTitle';
 
     const tAny = t as any;
     const title = tAny(titleKey) as string;
