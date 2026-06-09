@@ -283,7 +283,8 @@
     "packMissingBanner": "Ngôn ngữ này cần gói dịch thuật trên thiết bị. Mera xử lý mọi thứ ngay trên máy, nên dữ liệu của bạn không bao giờ rời thiết bị. Bạn có thể quản lý ngôn ngữ trong cài đặt điện thoại.",
     "packMissingIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng",
     "retry": "Thử lại",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

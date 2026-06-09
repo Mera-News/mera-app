@@ -283,7 +283,8 @@
     "packMissingBanner": "इस भाषा के लिए डिवाइस पर एक ट्रांसलेशन पैक चाहिए। Mera सब कुछ लोकल प्रोसेस करता है, इसलिए आपका डेटा कभी डिवाइस नहीं छोड़ता। आप अपने फ़ोन की सेटिंग्स से भाषाएं प्रबंधित कर सकते हैं।",
     "packMissingIosPath": "सेटिंग्स → सामान्य → भाषा और क्षेत्र",
     "retry": "पुनः प्रयास करें",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

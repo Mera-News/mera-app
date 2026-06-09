@@ -283,7 +283,8 @@
     "packMissingBanner": "この言語にはデバイス上の翻訳パックが必要です。Meraはすべてローカルで処理するため、あなたのデータはデバイスの外に出ることはありません。端末の設定から言語を管理できます。",
     "packMissingIosPath": "設定 → 一般 → 言語と地域",
     "retry": "再試行",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

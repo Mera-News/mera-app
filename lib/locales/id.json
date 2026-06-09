@@ -283,7 +283,8 @@
     "packMissingBanner": "Bahasa ini membutuhkan paket terjemahan di perangkat. Mera memproses segalanya secara lokal, sehingga data Anda tidak pernah meninggalkan perangkat. Anda dapat mengelola bahasa dari pengaturan ponsel Anda.",
     "packMissingIosPath": "Pengaturan → Umum → Bahasa & Wilayah",
     "retry": "Coba Lagi",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

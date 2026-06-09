@@ -283,7 +283,8 @@
     "packMissingBanner": "ภาษานี้ต้องการแพ็กการแปลในเครื่อง Mera ประมวลผลทุกอย่างในเครื่อง ข้อมูลของคุณจึงไม่ออกจากอุปกรณ์ คุณสามารถจัดการภาษาได้จากการตั้งค่าโทรศัพท์",
     "packMissingIosPath": "การตั้งค่า → ทั่วไป → ภาษาและภูมิภาค",
     "retry": "ลองใหม่",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

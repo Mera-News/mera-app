@@ -124,7 +124,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                             {Platform.OS === 'ios' && (
                                 <VStack space="sm">
                                     <Text className="text-typography-500 text-xs leading-5">
-                                        Only selecting this language is not enough — you'll need to also select this language in the iOS language settings.
+                                        {t('language.iosLanguageHint')}
                                     </Text>
                                     <Pressable
                                         onPress={handleWatchGuide}

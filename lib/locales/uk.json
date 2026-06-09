@@ -283,7 +283,8 @@
     "packMissingBanner": "Для цієї мови потрібен пакет перекладу на пристрої. Mera обробляє все локально, тому ваші дані ніколи не залишають пристрій. Ви можете керувати мовами в налаштуваннях телефону.",
     "packMissingIosPath": "Налаштування → Загальні → Мова та регіон",
     "retry": "Повторити",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

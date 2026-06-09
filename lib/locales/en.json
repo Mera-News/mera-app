@@ -280,7 +280,8 @@
     "packMissingBanner": "This language needs an on-device translation pack. Mera processes everything locally, so your data never leaves your device. You can manage languages from your phone's settings.",
     "packMissingIosPath": "Settings → General → Language & Region",
     "retry": "Retry",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

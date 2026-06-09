@@ -283,7 +283,8 @@
     "packMissingBanner": "Bu dil için cihaz üzerinde bir çeviri paketi gerekiyor. Mera her şeyi yerel olarak işler, bu nedenle verilerin cihazından çıkmaz. Dilleri telefonunun ayarlarından yönetebilirsin.",
     "packMissingIosPath": "Ayarlar → Genel → Dil ve Bölge",
     "retry": "Tekrar Dene",
-    "watchGuide": "Watch how to add language to your device"
+    "watchGuide": "Watch how to add language to your device",
+    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
