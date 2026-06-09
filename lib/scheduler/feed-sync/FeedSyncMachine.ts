@@ -20,7 +20,7 @@ const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
   hydrating:            ['persisting', 'paused-offline', 'failed'],
   persisting:           ['scoring', 'failed'],
   scoring:              ['done', 'failed'],
-  'paused-offline':     ['fetching-topic-ids', 'failed'],
+  'paused-offline':     ['fetching-topic-ids', 'diffing', 'persisting', 'failed'],
   failed:               ['idle'],
   done:                 ['idle'],
 };
@@ -189,14 +189,15 @@ class FeedSyncMachine {
     } catch (err) {
       const errorCode = classifyError(err);
       const failedAtState = this._state; // capture before transition
-      const retryAt = undefined; // scheduler handles retry timing
-      this._transitionTo('failed');
-      publishSyncError(errorCode, retryAt, failedAtState);
-      await feedPersistence.saveMachineSnapshot({
-        state: 'failed',
-        startedAt: Date.now(),
-        errorCode,
-      });
+      if (this._state !== 'failed') {
+        this._transitionTo('failed');
+        publishSyncError(errorCode, undefined, failedAtState);
+        await feedPersistence.saveMachineSnapshot({
+          state: 'failed',
+          startedAt: Date.now(),
+          errorCode,
+        });
+      }
       throw err;
     }
   }
