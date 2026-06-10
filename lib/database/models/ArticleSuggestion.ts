@@ -8,11 +8,12 @@ import type ArticleSuggestionFact from './ArticleSuggestionFact';
  * ArticleSuggestion. Seeded via `_raw.id = a._id` at prepareCreate time, so
  * there is no separate `server_id` column.
  *
- * `clusterIdsJson` is the latest list of clusters this article belongs to,
- * refreshed every sync (overwritten unconditionally, including when empty).
- * An article can be in multiple clusters via the server's
- * `cluster-article-link` model. The For-You feed groups suggestions whose
- * cluster sets overlap into a stacked card. The detail screen's "related
+ * `clusterMembershipsJson` is the latest list of clusters this article belongs
+ * to, each with its HDBSCAN membership confidence — refreshed every sync
+ * (overwritten unconditionally, including when empty). An article can be in
+ * multiple clusters via the server's `cluster-article-link` model. The For-You
+ * feed collapses suggestions whose dense (high-confidence) cluster cores
+ * overlap into a single representative card. The detail screen's "related
  * articles" panel still calls `relatedArticles(articleId)` to get the
  * authoritative live cluster siblings.
  */
@@ -24,7 +25,7 @@ export default class ArticleSuggestion extends Model {
   } as const;
 
   @field('article_id') articleId!: string;
-  @field('cluster_ids_json') clusterIdsJson!: string | null;
+  @field('cluster_memberships_json') clusterMembershipsJson!: string | null;
   @field('relevance') relevance!: number;
   @field('reason') reason!: string;
   @field('relevance_generation_completed') relevanceGenerationCompleted!: boolean;

@@ -41,7 +41,7 @@ type ArticleSummary {
 type ArticleWithClusters {
   _id: ID!
   article_url: String
-  clusterIds: [ID!]!
+  clusters: [ClusterMembership!]!
   country_code: String
   description_en: String
   image_url: String
@@ -60,6 +60,12 @@ type ArticlesForPublicationSourceResponse {
 type ClusterArticlesConnection {
   articles: [NewsArticle!]!
   pageInfo: CursorPageInfo!
+}
+
+"""Membership of an article in a cluster, with the HDBSCAN confidence (0.0–1.0)"""
+type ClusterMembership {
+  clusterId: ID!
+  confidence: Float!
 }
 
 type CursorPageInfo {

@@ -18,16 +18,23 @@ import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-type
  *  `reasonGenerationCompleted=false` means the reason step failed and will
  *  be retried on the next sync.
  *
- *  `clusterIds` is the latest list of clusters the article belongs to,
- *  refreshed every sync (overwritten unconditionally, including when empty).
- *  An article can be in multiple clusters via `cluster-article-link`. The
- *  For-You feed groups suggestions whose cluster sets overlap into a
- *  stacked card. The detail screen's "related articles" panel still calls
- *  `relatedArticles(articleId)` for the authoritative live cluster siblings. */
+ *  `clusters` is the latest list of clusters the article belongs to, each with
+ *  its HDBSCAN membership confidence (0.0–1.0), refreshed every sync
+ *  (overwritten unconditionally, including when empty). An article can be in
+ *  multiple clusters via `cluster-article-link`. The For-You feed collapses
+ *  suggestions whose dense (high-confidence) cluster cores overlap into a
+ *  single representative card. The detail screen's "related articles" panel
+ *  still calls `relatedArticles(articleId)` for the authoritative live
+ *  cluster siblings. */
+export type ClusterMembership = {
+    clusterId: string;
+    confidence: number;
+};
+
 export type ForYouSuggestion = {
     _id: string;
     articleId: string;
-    clusterIds: string[];
+    clusters: ClusterMembership[];
     relevance: number;
     reason: string;
     relevanceGenerationCompleted: boolean;

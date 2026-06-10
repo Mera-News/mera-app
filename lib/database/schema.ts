@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 31,
+  version: 32,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -45,17 +45,18 @@ export default appSchema({
       // ArticleSuggestion — seeded at prepareCreate time via `_raw.id = a._id`.
       // No separate server_id column.
       //
-      // `cluster_ids_json` is the latest list of clusters this article
-      // belongs to (a JSON-encoded `string[]`), refreshed every sync
-      // (overwritten unconditionally, including when empty). An article can
-      // be in multiple clusters via the server's `cluster-article-link`
-      // model. The For-You feed groups suggestions whose cluster sets
-      // overlap into a stacked-cards component. May briefly be stale
-      // between aggregation passes — accepted because grouping is
-      // presentational.
+      // `cluster_memberships_json` is the latest list of clusters this article
+      // belongs to, each with its HDBSCAN membership confidence — a
+      // JSON-encoded `{ clusterId: string; confidence: number }[]`, refreshed
+      // every sync (overwritten unconditionally, including when empty). An
+      // article can be in multiple clusters via the server's
+      // `cluster-article-link` model. The For-You feed collapses suggestions
+      // whose dense (high-confidence) cluster cores overlap into a single
+      // representative card. May briefly be stale between aggregation passes —
+      // accepted because grouping is presentational.
       columns: [
         { name: 'article_id', type: 'string', isIndexed: true },
-        { name: 'cluster_ids_json', type: 'string', isOptional: true },
+        { name: 'cluster_memberships_json', type: 'string', isOptional: true },
         { name: 'relevance', type: 'number' },
         { name: 'reason', type: 'string' },
         { name: 'relevance_generation_completed', type: 'boolean' },

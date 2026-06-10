@@ -58,7 +58,7 @@ export type ArticleWithClusters = {
   __typename?: 'ArticleWithClusters';
   _id: Scalars['ID']['output'];
   article_url?: Maybe<Scalars['String']['output']>;
-  clusterIds: Array<Scalars['ID']['output']>;
+  clusters: Array<ClusterMembership>;
   country_code?: Maybe<Scalars['String']['output']>;
   description_en?: Maybe<Scalars['String']['output']>;
   image_url?: Maybe<Scalars['String']['output']>;
@@ -79,6 +79,13 @@ export type ClusterArticlesConnection = {
   __typename?: 'ClusterArticlesConnection';
   articles: Array<NewsArticle>;
   pageInfo: CursorPageInfo;
+};
+
+/** Membership of an article in a cluster, with the HDBSCAN confidence (0.0–1.0) */
+export type ClusterMembership = {
+  __typename?: 'ClusterMembership';
+  clusterId: Scalars['ID']['output'];
+  confidence: Scalars['Float']['output'];
 };
 
 export type CursorPageInfo = {

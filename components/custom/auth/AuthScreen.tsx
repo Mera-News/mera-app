@@ -2,9 +2,9 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
+import PolicyPill from '@/components/custom/PolicyPill';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Input, InputField } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
@@ -42,6 +42,10 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
 
     const handleTermsOfServicePress = async () => {
         await openInAppBrowser(TERMS_URL);
+    };
+
+    const handleContentPolicyPress = async () => {
+        await openInAppBrowser(CONTENT_POLICY_URL);
     };
 
     const handleGithubPress = async () => {
@@ -171,30 +175,12 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                 )}
             </Box>
 
-            {/* Privacy Policy & Terms of Service Buttons at bottom */}
+            {/* Policy buttons at bottom */}
             <Box className="items-center" style={{ paddingBottom: insets.bottom + 32 }}>
-                <HStack space="md" className="items-center">
-                    <Button
-                        variant="link"
-                        action="secondary"
-                        size="sm"
-                        onPress={handlePrivacyPolicyPress}
-                    >
-                        <ButtonText className="text-gray-400">
-                            {t('auth.privacyPolicy')}
-                        </ButtonText>
-                    </Button>
-                    <Text className="text-gray-500">·</Text>
-                    <Button
-                        variant="link"
-                        action="secondary"
-                        size="sm"
-                        onPress={handleTermsOfServicePress}
-                    >
-                        <ButtonText className="text-gray-400">
-                            {t('auth.termsOfService')}
-                        </ButtonText>
-                    </Button>
+                <HStack space="sm" className="items-center justify-center flex-wrap">
+                    <PolicyPill label={t('auth.privacyPolicy')} onPress={handlePrivacyPolicyPress} />
+                    <PolicyPill label={t('auth.termsOfService')} onPress={handleTermsOfServicePress} />
+                    <PolicyPill label={t('auth.contentPolicy')} onPress={handleContentPolicyPress} />
                 </HStack>
                 <HStack space="lg" className="items-center mt-3">
                     <Pressable onPress={handleGithubPress} hitSlop={8}>

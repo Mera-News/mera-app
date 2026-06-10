@@ -7,6 +7,9 @@ export const PRIVACY_URL =
   process.env.EXPO_PUBLIC_PRIVACY_URL || 'https://mera.news/privacy';
 export const TERMS_URL =
   process.env.EXPO_PUBLIC_TERMS_URL || 'https://mera.news/terms';
+export const CONTENT_POLICY_URL =
+  process.env.EXPO_PUBLIC_CONTENT_POLICY_URL ||
+  'https://mera.news/content-policy';
 export const SUPPORT_EMAIL =
   process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'contact@mera.news';
 export const WEBSITE_URL =

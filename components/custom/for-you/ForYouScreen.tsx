@@ -6,7 +6,6 @@ import SyncProgressForYouBanner from '@/components/custom/SyncProgressForYouBann
 import { ArticleCard } from '@/components/custom/ArticleCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
-import { StackedCards } from '@/components/custom/for-you/StackedCards';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import SectionNavigator, { SectionItem } from '@/components/custom/for-you/SectionNavigator';
@@ -52,10 +51,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type PriorityLabelItem = { type: 'priority-label'; label: string; relevance: number };
 type SuggestionItem = { type: 'suggestion'; data: ForYouSuggestion };
-// Stack of 2+ suggestions sharing a clusterId. `data` is sorted with the
-// highest-relevance suggestion first — that one becomes the top card.
-type StackedSuggestionItem = { type: 'stacked-suggestion'; data: ForYouSuggestion[] };
-type ForYouListItem = PriorityLabelItem | SuggestionItem | StackedSuggestionItem;
+type ForYouListItem = PriorityLabelItem | SuggestionItem;
+
+// A cluster member must belong to its cluster with at least this HDBSCAN
+// membership confidence to be treated as part of the dense "same-story" core
+// and collapsed into one card. Fringe members below the cut stay as their own
+// suggestions — same cluster doesn't always mean same story. HDBSCAN assigns
+// singletons/noise a confidence of 1.0, so they always clear the bar.
+// Tune from observed `clusters.confidence` values (see plan verification).
+const CLUSTER_CORE_CONFIDENCE_THRESHOLD = 0.7;
 
 const openConfigPanel = () => router.push('/logged-in/config-panel');
 
@@ -266,15 +270,18 @@ const MeraNewsScreen: React.FC = () => {
     // No pagination — feed is rebuilt locally by background syncs.
     const loadMoreArticles = useCallback(() => { }, []);
 
-    // Scored cards grouped by priority, then collapsed into clusters.
+    // Scored cards grouped by priority, then collapsed into one card per story.
     // Unscored rows and low-relevance rows (≤ 0.3) don't render.
     //
     // An article can belong to multiple clusters via `cluster-article-link`,
-    // so a suggestion's `clusterIds` is a set. We bucket every (suggestion,
-    // clusterId) pair, then assign each suggestion to its largest cluster
-    // so each card renders exactly once. Suggestions whose largest cluster
-    // is still a singleton — or who have no clusterIds at all — render as
-    // a plain `ArticleCard`.
+    // each with an HDBSCAN membership confidence. We only treat memberships at
+    // or above CLUSTER_CORE_CONFIDENCE_THRESHOLD as the dense "same-story" core.
+    // Every suggestion is assigned to its largest core cluster, then the whole
+    // group collapses to a single representative card (the member most strongly
+    // attached to that cluster). Suggestions with no core membership — fringe
+    // members below the cut, or articles with no clusters at all — render on
+    // their own. The detail screen still fetches the live cluster siblings via
+    // `relatedArticles(articleId)`.
     const listData: ForYouListItem[] = useMemo(() => {
         if (suggestions.length === 0) return [];
 
@@ -300,31 +307,37 @@ const MeraNewsScreen: React.FC = () => {
             return true;
         });
 
+        // Core memberships only: drop any cluster the article is loosely
+        // attached to (confidence below the threshold) so fringe articles
+        // aren't merged into a story they aren't really about.
+        const coreClusters = (s: ForYouSuggestion) =>
+            s.clusters.filter((c) => c.confidence >= CLUSTER_CORE_CONFIDENCE_THRESHOLD);
+
         // Cluster sizes across the visible window: count one membership per
-        // (suggestion, clusterId) pair.
+        // (suggestion, core clusterId) pair.
         const clusterSizes = new Map<string, number>();
         for (const s of visible) {
-            for (const cid of s.clusterIds) {
-                clusterSizes.set(cid, (clusterSizes.get(cid) ?? 0) + 1);
+            for (const c of coreClusters(s)) {
+                clusterSizes.set(c.clusterId, (clusterSizes.get(c.clusterId) ?? 0) + 1);
             }
         }
 
-        // Assign each suggestion to a single group: its largest cluster (so
-        // overlapping cluster sets resolve to the most useful stack). Ties
+        // Assign each suggestion to a single group: its largest core cluster (so
+        // overlapping cluster sets resolve to the most useful collapse). Ties
         // break on the lexicographically-smaller clusterId for stability.
-        // Suggestions with no clusterIds, or whose chosen cluster has size 1,
-        // become singleton groups keyed by suggestion `_id`.
+        // Suggestions with no core membership, or whose chosen cluster has size
+        // 1, become singleton groups keyed by suggestion `_id`.
         const groups = new Map<string, ForYouSuggestion[]>();
         for (const s of visible) {
             let chosen: string | null = null;
             let chosenSize = 0;
-            for (const cid of s.clusterIds) {
-                const size = clusterSizes.get(cid) ?? 0;
+            for (const c of coreClusters(s)) {
+                const size = clusterSizes.get(c.clusterId) ?? 0;
                 if (
                     size > chosenSize ||
-                    (size === chosenSize && chosen !== null && cid < chosen)
+                    (size === chosenSize && chosen !== null && c.clusterId < chosen)
                 ) {
-                    chosen = cid;
+                    chosen = c.clusterId;
                     chosenSize = size;
                 }
             }
@@ -334,39 +347,41 @@ const MeraNewsScreen: React.FC = () => {
             else groups.set(key, [s]);
         }
 
-        // Each group's "head" — the highest-relevance member — drives its
-        // priority bucket and sort position. Within a group, sort members
-        // by relevance desc so the top card is also the head.
-        type Group = { head: ForYouSuggestion; members: ForYouSuggestion[] };
-        const sortedGroups: Group[] = Array.from(groups.values())
-            .map((members) => {
-                const sortedMembers = [...members].sort(
-                    (a, b) => b.relevance - a.relevance,
-                );
-                return { head: sortedMembers[0], members: sortedMembers };
+        // Each group collapses to one representative: the member most strongly
+        // attached to the group's cluster (highest confidence to that cluster),
+        // tie-broken by newest publication. The representative's relevance
+        // drives the group's priority bucket and sort position. Solo groups
+        // (key `__solo_…`) have a single member.
+        const confidenceTo = (s: ForYouSuggestion, clusterId: string): number =>
+            s.clusters.find((c) => c.clusterId === clusterId)?.confidence ?? 0;
+
+        const representatives: ForYouSuggestion[] = Array.from(groups.entries())
+            .map(([key, members]) => {
+                if (members.length === 1) return members[0];
+                return [...members].sort((a, b) => {
+                    const dc = confidenceTo(b, key) - confidenceTo(a, key);
+                    if (dc !== 0) return dc;
+                    return pubDateMs(b) - pubDateMs(a);
+                })[0];
             })
             .sort((a, b) => {
                 const lr =
-                    labelRank(getRelevanceLabel(a.head.relevance)) -
-                    labelRank(getRelevanceLabel(b.head.relevance));
+                    labelRank(getRelevanceLabel(a.relevance)) -
+                    labelRank(getRelevanceLabel(b.relevance));
                 if (lr !== 0) return lr;
-                return pubDateMs(b.head) - pubDateMs(a.head);
+                return pubDateMs(b) - pubDateMs(a);
             });
 
         const items: ForYouListItem[] = [];
         let currentLabel = '';
 
-        for (const { head, members } of sortedGroups) {
-            const label = getRelevanceLabel(head.relevance);
+        for (const rep of representatives) {
+            const label = getRelevanceLabel(rep.relevance);
             if (label !== currentLabel) {
                 currentLabel = label;
-                items.push({ type: 'priority-label', label, relevance: head.relevance });
+                items.push({ type: 'priority-label', label, relevance: rep.relevance });
             }
-            if (members.length >= 2) {
-                items.push({ type: 'stacked-suggestion', data: members });
-            } else {
-                items.push({ type: 'suggestion', data: head });
-            }
+            items.push({ type: 'suggestion', data: rep });
         }
 
         // Unscored section — articles that have been fetched but not yet scored.
@@ -488,15 +503,6 @@ const MeraNewsScreen: React.FC = () => {
         if (item.type === 'priority-label') {
             return <PriorityLabelCard label={item.label} relevance={item.relevance} />;
         }
-        if (item.type === 'stacked-suggestion') {
-            const top = item.data[0];
-            return (
-                <StackedCards
-                    suggestions={item.data}
-                    onPress={() => handleSuggestionPress(top)}
-                />
-            );
-        }
         return (
             <ArticleCard
                 suggestion={item.data}
@@ -578,9 +584,6 @@ const MeraNewsScreen: React.FC = () => {
 
     const keyExtractor = useCallback((item: ForYouListItem, index: number) => {
         if (item.type === 'priority-label') return `label-${item.label}`;
-        if (item.type === 'stacked-suggestion') {
-            return `stack-${item.data[0]?._id ?? index}`;
-        }
         return item.data._id || `suggestion-${index}`;
     }, []);
 

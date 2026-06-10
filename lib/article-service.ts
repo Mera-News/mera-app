@@ -265,12 +265,15 @@ const GET_ARTICLE_IDS_FOR_TOPICS = gql`
 
 // [Flow v2] GraphQL Query: hydrate full article records for IDs the app
 // doesn't already have locally. Returns ArticleWithClusters which includes
-// clusterIds for the For-You feed's stacking logic.
+// per-cluster membership confidence for the For-You feed's collapse logic.
 const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
   query GetArticlesForTopicsByIds($articleIds: [ID!]!) {
     articlesForTopicsByIds(articleIds: $articleIds) {
       _id
-      clusterIds
+      clusters {
+        clusterId
+        confidence
+      }
       title_en
       title
       description_en
@@ -363,8 +366,8 @@ export class ArticleService {
 
     /**
      * Fetch full article records for a set of IDs. Returns `ArticleWithClusters`
-     * which includes `clusterIds` for feed
-     * stacking. Chunk size matches the server's max-50 limit.
+     * which includes per-cluster membership `clusters { clusterId confidence }`
+     * for the feed's collapse logic. Chunk size matches the server's max-50 limit.
      */
     static async getArticlesForTopicsByIds(
         articleIds: string[],

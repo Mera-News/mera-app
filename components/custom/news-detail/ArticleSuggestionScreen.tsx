@@ -132,10 +132,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         };
     }, [suggestion?.articleId]);
 
-    // Sibling ArticleSuggestions sharing a cluster with this article (the
-    // user's other personalized cards for the same story). An article can
-    // belong to multiple clusters; we query against the first id in the
-    // server-returned array. Skipped when the suggestion has no clusterIds
+    // Sibling articles sharing a cluster with this article (the user's other
+    // cards for the same story) are fetched live from the server via
+    // `relatedArticles(articleId)` above — the feed's collapse keeps only one
+    // representative card per story, so siblings are surfaced here on demand.
 
     const handleArticleUrlPress = async (url: string | null | undefined) => {
         if (!url) return;

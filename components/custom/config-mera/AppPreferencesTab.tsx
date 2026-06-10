@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import LanguageWordTicker from './LanguageWordTicker';
+import PolicyPill from '@/components/custom/PolicyPill';
 
 interface PreferenceOption {
     id: string;
@@ -110,18 +111,6 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
         },
         {
-            id: 'privacy-policy',
-            title: t('preferences.privacyPolicy'),
-            icon: 'privacy-tip',
-            onPress: () => openInAppBrowser(PRIVACY_URL),
-        },
-        {
-            id: 'terms-of-service',
-            title: t('preferences.termsOfService'),
-            icon: 'description',
-            onPress: () => openInAppBrowser(TERMS_URL),
-        },
-        {
             id: 'support',
             title: t('preferences.support'),
             icon: 'support-agent',
@@ -194,6 +183,11 @@ const AppPreferencesTab: React.FC = () => {
                     {preferenceOptions.map(renderOption)}
                 </VStack>
                 <Box className="items-center py-4">
+                    <HStack space="sm" className="items-center justify-center flex-wrap mb-4">
+                        <PolicyPill label={t('preferences.privacyPolicy')} onPress={() => openInAppBrowser(PRIVACY_URL)} />
+                        <PolicyPill label={t('preferences.termsOfService')} onPress={() => openInAppBrowser(TERMS_URL)} />
+                        <PolicyPill label={t('preferences.contentPolicy')} onPress={() => openInAppBrowser(CONTENT_POLICY_URL)} />
+                    </HStack>
                     <HStack space="lg" className="items-center mb-3">
                         <Pressable onPress={() => openInAppBrowser(GITHUB_URL)} hitSlop={8}>
                             <FontAwesome name="github" size={22} color="#9ca3af" />

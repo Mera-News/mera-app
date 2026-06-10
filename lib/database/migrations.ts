@@ -737,5 +737,46 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 32,
+      steps: [
+        // Replace cluster_ids_json (JSON `string[]`) with cluster_memberships_json
+        // (JSON `{ clusterId, confidence }[]`) so the For-You feed can collapse
+        // only the dense, high-confidence core of a cluster into one card.
+        // article_suggestions is ephemeral; drop-and-recreate per established pattern.
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestion_facts;'),
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestions;'),
+        createTable({
+          name: 'article_suggestions',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'cluster_memberships_json', type: 'string', isOptional: true },
+            { name: 'relevance', type: 'number' },
+            { name: 'reason', type: 'string' },
+            { name: 'relevance_generation_completed', type: 'boolean' },
+            { name: 'reason_generation_completed', type: 'boolean' },
+            { name: 'country_code', type: 'string', isOptional: true },
+            { name: 'language_code', type: 'string', isOptional: true },
+            { name: 'publication_name', type: 'string', isOptional: true },
+            { name: 'title_en', type: 'string', isOptional: true },
+            { name: 'title_original', type: 'string', isOptional: true },
+            { name: 'description_en', type: 'string', isOptional: true },
+            { name: 'article_url', type: 'string', isOptional: true },
+            { name: 'image_url', type: 'string', isOptional: true },
+            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'first_pub_date', type: 'number' },
+          ],
+        }),
+        createTable({
+          name: 'article_suggestion_facts',
+          columns: [
+            { name: 'article_suggestion_id', type: 'string', isIndexed: true },
+            { name: 'fact_id', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });

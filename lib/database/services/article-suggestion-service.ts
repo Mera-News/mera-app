@@ -9,7 +9,7 @@ import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import type FactModel from '../models/Fact';
 import type { ArticleWithClusters } from '../../generated/graphql-types';
-import type { ForYouSuggestion } from '../../stores/for-you-store';
+import type { ForYouSuggestion, ClusterMembership } from '../../stores/for-you-store';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
 
@@ -398,7 +398,7 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
   return {
     _id: row.id,
     articleId: row.articleId,
-    clusterIds: parseClusterIds(row.clusterIdsJson),
+    clusters: parseClusterMemberships(row.clusterMembershipsJson),
     relevance: row.relevance,
     reason: row.reason,
     relevanceGenerationCompleted: row.relevanceGenerationCompleted,
@@ -417,21 +417,43 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
   };
 }
 
-function parseClusterIds(json: string | null | undefined): string[] {
+/** Strip GraphQL `__typename` from the hydrated `clusters` field down to the
+ *  plain `{ clusterId, confidence }` shape we persist and feed the UI. */
+function toClusterMemberships(
+  clusters: ArticleWithClusters['clusters'] | null | undefined,
+): ClusterMembership[] {
+  if (!clusters) return [];
+  return clusters.map((c) => ({ clusterId: c.clusterId, confidence: c.confidence }));
+}
+
+function parseClusterMemberships(
+  json: string | null | undefined,
+): ClusterMembership[] {
   if (!json) return [];
   try {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((s): s is string => typeof s === 'string' && s.length > 0);
+    return parsed.filter(
+      (m): m is ClusterMembership =>
+        m != null &&
+        typeof m.clusterId === 'string' &&
+        m.clusterId.length > 0 &&
+        typeof m.confidence === 'number',
+    );
   } catch {
     return [];
   }
 }
 
-/** Sorted JSON encoding so equality checks are stable regardless of the
- *  order the server returned the cluster ids in. */
-function canonicalClusterIdsJson(ids: string[]): string {
-  return JSON.stringify([...ids].sort());
+/** Sorted JSON encoding (by clusterId) so equality checks are stable
+ *  regardless of the order the server returned the memberships in. */
+function canonicalClusterMembershipsJson(
+  memberships: ClusterMembership[],
+): string {
+  const normalized = memberships
+    .map((m) => ({ clusterId: m.clusterId, confidence: m.confidence }))
+    .sort((a, b) => (a.clusterId < b.clusterId ? -1 : a.clusterId > b.clusterId ? 1 : 0));
+  return JSON.stringify(normalized);
 }
 
 function parseTopicIds(json: string | null | undefined): string[] {
@@ -500,16 +522,18 @@ export async function persistAndLinkV2Suggestions(
   const existingById = new Map(existingRows.map((r) => [r.id, r]));
   const toInsert = fetched.filter((a) => !existingById.has(a._id));
 
-  const clusterIdsRefreshes: { row: ArticleSuggestionModel; nextJson: string }[] = [];
+  const clusterRefreshes: { row: ArticleSuggestionModel; nextJson: string }[] = [];
   for (const a of fetched) {
     const row = existingById.get(a._id);
     if (!row) continue;
-    const nextJson = canonicalClusterIdsJson(a.clusterIds ?? []);
-    const currentJson = canonicalClusterIdsJson(parseClusterIds(row.clusterIdsJson));
-    if (currentJson !== nextJson) clusterIdsRefreshes.push({ row, nextJson });
+    const nextJson = canonicalClusterMembershipsJson(toClusterMemberships(a.clusters));
+    const currentJson = canonicalClusterMembershipsJson(
+      parseClusterMemberships(row.clusterMembershipsJson),
+    );
+    if (currentJson !== nextJson) clusterRefreshes.push({ row, nextJson });
   }
 
-  if (toInsert.length === 0 && clusterIdsRefreshes.length === 0) {
+  if (toInsert.length === 0 && clusterRefreshes.length === 0) {
     return { insertedCount: 0, linkedCount: 0 };
   }
 
@@ -525,8 +549,8 @@ export async function persistAndLinkV2Suggestions(
     const ops: any[] = [];
     const now = new Date();
 
-    for (const { row, nextJson } of clusterIdsRefreshes) {
-      ops.push(row.prepareUpdate((r) => { r.clusterIdsJson = nextJson; }));
+    for (const { row, nextJson } of clusterRefreshes) {
+      ops.push(row.prepareUpdate((r) => { r.clusterMembershipsJson = nextJson; }));
     }
 
     for (const a of toInsert) {
@@ -534,7 +558,9 @@ export async function persistAndLinkV2Suggestions(
       const prepared = articleSuggestionsCol.prepareCreate((r) => {
         r._raw.id = a._id;
         r.articleId = a._id;
-        r.clusterIdsJson = canonicalClusterIdsJson(a.clusterIds ?? []);
+        r.clusterMembershipsJson = canonicalClusterMembershipsJson(
+          toClusterMemberships(a.clusters),
+        );
         r.relevance = 0;
         r.reason = '';
         r.relevanceGenerationCompleted = false;
