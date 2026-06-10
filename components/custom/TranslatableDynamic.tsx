@@ -60,7 +60,7 @@ function languagesMatch(a: string | null | undefined, b: string | null | undefin
  *  just off-screen, so they don't flash untranslated when scrolled in. */
 const VISIBILITY_BUFFER_PX = 200;
 
-/** Both our server-side translator (LibreTranslate) and iOS's on-device
+/** Both our server-side translator (NLLB-200) and iOS's on-device
  *  translator occasionally emit literal `<unk>` tokens for glyphs they
  *  couldn't map. Strip them and collapse the whitespace they leave behind. */
 function stripUnkTokens(value: string): string {

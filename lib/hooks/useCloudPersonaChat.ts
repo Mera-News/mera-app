@@ -152,7 +152,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
             );
           } else if (event.type === 'tool-call-delta') {
-            // Gemini may send multiple tool calls with the same index (or all index 0).
+            // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
             const existingAcc = toolCallAccumulators.get(event.index);
             const key =
@@ -361,7 +361,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
     // Skip empty assistant placeholders (e.g. from tool-call rounds that returned no text)
     const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant' && m.content.length > 0);
     if (!lastAssistant) return '';
-    // Strip "Options: [...]" that Gemini sometimes echoes in text despite prompt instructions
+    // Strip "Options: [...]" that the model sometimes echoes in text despite prompt instructions
     return lastAssistant.content.replace(/\n?\s*Options:\s*\[.*?\]\s*/gs, '').trim();
   })();
 

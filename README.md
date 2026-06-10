@@ -3,13 +3,12 @@
 [![App Store](https://img.shields.io/badge/App%20Store-Download-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/nl/app/mera-news/id6754119677)
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-414141?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.mera.news)
 
-[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue)](LICENSE.md)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary%20(All%20Rights%20Reserved)-red)](LICENSE.md)
 [![Platform: iOS & Android](https://img.shields.io/badge/Platform-iOS%20%26%20Android-lightgrey)]()
-[![Source Available](https://img.shields.io/badge/Source-Available%20(not%20OSI%20open%20source)-orange)]()
 
 ## What is Mera?
 
-Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE** — a hardware-encrypted, attestation-verified enclave — with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: no personal data leaves the device in readable form, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against a BYO backend. The app is source-available under the PolyForm Noncommercial License 1.0.0 — you may run, study, and fork it for non-commercial purposes; commercial use requires a separate agreement with Mera News B.V.
+Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE** — a hardware-encrypted, attestation-verified enclave — with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: no personal data leaves the device in readable form, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against the Mera backend. This software is proprietary and confidential — Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437), all rights reserved. No license to use, copy, modify, or distribute it is granted except by separate written agreement with Mera Labs B.V.
 
 ## Architecture Overview
 
@@ -19,7 +18,7 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 - **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
 - **Inference (on-device or confidential cloud)** — Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
 - **Mera Protocol** — the privacy ruleset enforced across both paths: no personal data leaves the device in readable form, and inference is performed only locally or inside an attested, encrypted environment. An optional noise-injection mode adds decoy topics to further obfuscate intent.
-- **E2EE cloud inference (TEE)** — when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 attestation-verified gateway, so inference runs inside a verified trusted execution environment that the operator cannot inspect. The gateway is open-source: [Mera-News/mera-inference-gateway](https://github.com/Mera-News/mera-inference-gateway).
+- **E2EE cloud inference (TEE)** — when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 attestation-verified gateway, so inference runs inside a verified trusted execution environment that the operator cannot inspect. The gateway (`mera-inference-gateway`) is a proprietary Mera Labs service.
 - **Better Auth** with email OTP handles authentication; tokens are stored in expo-secure-store.
 - **BYO backend** — all three required service endpoints are configured via environment variables; no Mera infrastructure is required to run the app.
 
@@ -49,7 +48,7 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
    ```
 
 3. **Supply your Firebase `google-services.json`:**
-   The file committed in this repo belongs to Mera News B.V. and will not work for your fork. Create a Firebase Android app in your own Firebase project, download its `google-services.json`, and place it at both the repo root and `android/app/google-services.json`. See `google-services.example.json` for the expected JSON shape.
+   The file committed in this repo belongs to Mera Labs B.V. and will not work for your fork. Create a Firebase Android app in your own Firebase project, download its `google-services.json`, and place it at both the repo root and `android/app/google-services.json`. See `google-services.example.json` for the expected JSON shape.
 
 4. **Start the dev server:**
    ```bash
@@ -66,7 +65,7 @@ You must supply your own backend. The app reads three required endpoint variable
 | `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` | Base URL of the NestJS GraphQL API. Apollo appends `/graphql`. | Yes — hard crash if absent |
 | `EXPO_PUBLIC_INFERENCE_ENDPOINT` | Base URL of the inference gateway. Must expose: `/v1/inference/jobs`, `/v1/chat/completions`, `/v1/chat/completions/batch`, `/api/attestation/report` (NEAR AI Cloud v2 attestation contract for E2EE cloud inference). | Yes — hard crash if absent |
 
-> **The inference gateway is open-source.** You can run or modify it to provide the cloud-inference path (and to experiment with the E2EE / attestation contract) instead of building one from scratch: **[Mera-News/mera-inference-gateway](https://github.com/Mera-News/mera-inference-gateway)**. Point `EXPO_PUBLIC_INFERENCE_ENDPOINT` at your own deployment of it. The auth and GraphQL services (the reference `mera-server`) are **not** published — you must supply your own that satisfies the contracts above.
+> **The Mera backend services are proprietary and not published.** The inference gateway (`mera-inference-gateway`), the auth service, and the GraphQL API (`mera-server`) are proprietary Mera Labs services. `EXPO_PUBLIC_INFERENCE_ENDPOINT` must point at a Mera Labs deployment of the gateway that satisfies the contracts above.
 
 Additionally, the following external service dependencies must be configured before the app is fully functional. See the Required-Config Inventory in `open-source-readiness/04-infra-coupling-and-config.md` for the complete variable and service table:
 
@@ -115,11 +114,11 @@ Native builds are required for native dependency changes, SDK version bumps, `ap
 
 ## License & Trademark
 
-**This project is NOT open source in the OSI sense.** It is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). You may use, study, and fork it for non-commercial purposes. Commercial use requires a separate written agreement with Mera News B.V.
+**This project is proprietary and confidential — not open source.** It is licensed under the proprietary terms in [LICENSE.md](LICENSE.md). Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437), all rights reserved. No license to use, copy, modify, or distribute it is granted except by separate written agreement with Mera Labs B.V.
 
-`"private": true` in `package.json` is intentional — it prevents accidental `npm publish` but does not restrict source distribution under the PolyForm Noncommercial License.
+`"private": true` in `package.json` is intentional — it prevents accidental `npm publish`.
 
-See [TRADEMARK.md](TRADEMARK.md) for trademark restrictions. Forks must remove all Mera branding before public distribution.
+See [TRADEMARK.md](TRADEMARK.md) for trademark restrictions.
 
 For licensing inquiries: legal@meranews.app
 For security vulnerabilities: see [SECURITY.md](SECURITY.md)
