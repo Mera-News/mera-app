@@ -28,7 +28,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ArticleSuggestionScreenProps {
@@ -278,7 +277,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                                         : 'clusterDetail.notTranslatable',
                                                     { language: languageName },
                                                 )}
-                                                {translatable && Platform.OS === 'ios' && (
+                                                {translatable && (
                                                     <Text
                                                         size="xs"
                                                         italic

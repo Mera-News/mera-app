@@ -63,13 +63,16 @@ describe('getSetting', () => {
 // ---------------------------------------------------------------------------
 
 describe('setSetting', () => {
-  it('calls updateValue on the existing record when the key already exists', async () => {
+  it('updates the existing record inside a write() when the key already exists', async () => {
     const rec = settingRecord('1', 'lang', 'en');
     db._setRows('settings', [rec]);
     await setSetting('lang', 'fr');
-    expect(rec.updateValue).toHaveBeenCalledWith('fr');
-    // database.write should NOT be called when updating via updateValue
-    expect(database.write).not.toHaveBeenCalled();
+    // The read-modify-write is now wrapped in a single database.write() so the
+    // query + update are atomic (guards the concurrent-delete race during
+    // feed-sync). update() runs inside that transaction and mutates value.
+    expect(database.write).toHaveBeenCalledTimes(1);
+    expect(rec.update).toHaveBeenCalledTimes(1);
+    expect(rec.value).toBe('fr');
   });
 
   it('creates a new record via database.write when the key does not exist', async () => {
