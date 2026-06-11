@@ -31,34 +31,37 @@ describe('getRelevanceLabel', () => {
 });
 
 describe('getRelevanceColors', () => {
+  // getRelevanceColors returns i18n KEYS for the label (resolved to display
+  // text by the caller via i18n), unlike getRelevanceLabel which returns the
+  // English section heading.
   it('returns the Unprocessed style for negative scores', () => {
-    expect(getRelevanceColors(-0.1).label).toBe('Unprocessed');
+    expect(getRelevanceColors(-0.1).label).toBe('relevance.unprocessed');
   });
 
   it('returns Emergency for scores above 1.0', () => {
     const colors = getRelevanceColors(1.1);
-    expect(colors.label).toBe('Emergency');
+    expect(colors.label).toBe('relevance.emergency');
     expect(colors.borderColor).toBe('#6A1B9A');
   });
 
   it('returns High at the 0.77 boundary up to 1.0 inclusive', () => {
-    expect(getRelevanceColors(0.77).label).toBe('High');
-    expect(getRelevanceColors(1.0).label).toBe('High');
+    expect(getRelevanceColors(0.77).label).toBe('relevance.high');
+    expect(getRelevanceColors(1.0).label).toBe('relevance.high');
   });
 
   it('returns Med at the 0.53 boundary', () => {
-    expect(getRelevanceColors(0.53).label).toBe('Med');
-    expect(getRelevanceColors(0.76).label).toBe('Med');
+    expect(getRelevanceColors(0.53).label).toBe('relevance.medium');
+    expect(getRelevanceColors(0.76).label).toBe('relevance.medium');
   });
 
   it('returns Low just above 0.3', () => {
-    expect(getRelevanceColors(0.31).label).toBe('Low');
-    expect(getRelevanceColors(0.52).label).toBe('Low');
+    expect(getRelevanceColors(0.31).label).toBe('relevance.low');
+    expect(getRelevanceColors(0.52).label).toBe('relevance.low');
   });
 
   it('returns Irrelevant at and below 0.3 (but non-negative)', () => {
-    expect(getRelevanceColors(0.3).label).toBe('Irrelevant');
-    expect(getRelevanceColors(0).label).toBe('Irrelevant');
+    expect(getRelevanceColors(0.3).label).toBe('relevance.irrelevant');
+    expect(getRelevanceColors(0).label).toBe('relevance.irrelevant');
   });
 
   it('always returns all four color fields', () => {

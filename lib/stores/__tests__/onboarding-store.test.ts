@@ -11,8 +11,27 @@ jest.mock('@/lib/database/services/setting-service', () => ({
   deleteSetting: (key: string) => mockDeleteSetting(key),
 }));
 
+jest.mock('@/lib/logger', () => ({
+  __esModule: true,
+  default: {
+    captureException: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+  },
+}));
+
+import { renderHook } from '@testing-library/react-native';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { useOnboardingStore } from '../onboarding-store';
+import {
+  useOnboardingStore,
+  useOnboardingStep,
+  useOnboardingPreferences,
+  useOnboardingIsInitializing,
+  useOnboardingCompletedSteps,
+} from '../onboarding-store';
+import logger from '@/lib/logger';
 
 describe('useOnboardingStore', () => {
   beforeEach(() => {
@@ -87,5 +106,53 @@ describe('useOnboardingStore', () => {
     mockGetSetting.mockResolvedValueOnce(null);
     await useOnboardingStore.getState().hydrateFromDb();
     expect(useOnboardingStore.getState().preferences.countries).toEqual([]);
+  });
+
+  it('setIsInitializing updates the isInitializing flag', () => {
+    useOnboardingStore.getState().setIsInitializing(false);
+    expect(useOnboardingStore.getState().isInitializing).toBe(false);
+    useOnboardingStore.getState().setIsInitializing(true);
+    expect(useOnboardingStore.getState().isInitializing).toBe(true);
+  });
+
+  it('hydrateFromDb logs warning on parse error', async () => {
+    mockGetSetting.mockResolvedValueOnce('NOT_JSON_AT_ALL{{{');
+    await useOnboardingStore.getState().hydrateFromDb();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('hydrateFromDb failed'),
+      expect.objectContaining({ error: expect.any(String) }),
+    );
+  });
+
+  it('hydrateFromDb falls back to initialPreferences when preferences key is missing', async () => {
+    mockGetSetting.mockResolvedValueOnce(JSON.stringify({ other: 'data' }));
+    await useOnboardingStore.getState().hydrateFromDb();
+    expect(useOnboardingStore.getState().preferences.countries).toEqual([]);
+  });
+
+  // ── selector hooks ──────────────────────────────────────────────────────────
+
+  it('useOnboardingStep returns current step', () => {
+    useOnboardingStore.getState().setStep(2);
+    const { result } = renderHook(() => useOnboardingStep());
+    expect(result.current).toBe(2);
+  });
+
+  it('useOnboardingPreferences returns current preferences', () => {
+    useOnboardingStore.getState().updatePreferences('newsImpact', 'high');
+    const { result } = renderHook(() => useOnboardingPreferences());
+    expect(result.current.newsImpact).toBe('high');
+  });
+
+  it('useOnboardingIsInitializing returns current isInitializing value', () => {
+    useOnboardingStore.getState().setIsInitializing(false);
+    const { result } = renderHook(() => useOnboardingIsInitializing());
+    expect(result.current).toBe(false);
+  });
+
+  it('useOnboardingCompletedSteps returns current completedSteps', () => {
+    useOnboardingStore.getState().markStepCompleted(3);
+    const { result } = renderHook(() => useOnboardingCompletedSteps());
+    expect(result.current).toContain(3);
   });
 });
