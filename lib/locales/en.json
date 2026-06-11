@@ -103,55 +103,23 @@
         "fetching": {
           "headlines": [
             "Fetching today’s articles onto your phone…",
-            "Mera brings the news to your device — your interests never leave it."
+            "Getting today’s stories ready for you…"
           ],
           "amberSubline": "Please keep this screen open."
-        },
-        "sending": {
-          "shortName": "Asking for today’s news",
-          "tooltip": "Mera is preparing your encrypted request on your phone. Please keep the app open for this part.",
-          "headlines": [
-            "Asking for today’s news for you…",
-            "Mera is a different kind of app — your request is encrypted on your phone before it leaves."
-          ],
-          "amberSubline": "Please keep this screen open for a few seconds — we can’t do this part in the background."
-        },
-        "hydrating": {
-          "shortName": "Fetching to your phone",
-          "tooltip": "Today’s articles are being copied to your phone so the next steps can run privately.",
-          "headlines": [
-            "Fetching today’s articles onto your phone…",
-            "Mera brings the news to your device — your interests never leave it."
-          ],
-          "amberSubline": "Please keep this screen open."
-        },
-        "noiseRemoval": {
-          "shortName": "Removing decoys",
-          "tooltip": "Filtering out the decoy stories that were fetched against the noise topics. Only happens when noise injection is on.",
-          "headlines": [
-            "Filtering out decoy stories from your feed…",
-            "Noise injection submitted decoy topics alongside your real ones — we’re now dropping the stories that matched only those decoys."
-          ]
         },
         "cloudRelevance": {
-          "shortName": "Calculating relevance",
-          "tooltip": "An AI in the cloud is reading each article and picking what may matter to you. Your request is encrypted — only your phone holds the key.",
           "headlines": [
             "An AI is reading each article to see which ones matter to you.",
             "Your request is encrypted — only your phone holds the key."
           ]
         },
         "cloudReasons": {
-          "shortName": "Writing notes for you",
-          "tooltip": "The AI is writing a short note for each story explaining why it may matter to you. The request stays encrypted.",
           "headlines": [
             "Writing a short note for each relevant story.",
             "You can step away — we’ll notify you when it’s ready."
           ]
         },
         "onDevice": {
-          "shortName": "Scoring on your phone",
-          "tooltip": "Your phone is scoring these stories locally. Nothing leaves the device for this step.",
           "headlines": [
             "Your phone is scoring these stories for you.",
             "This happens entirely on your device — nothing leaves it."
@@ -220,6 +188,7 @@
     "connectionIssue": "Connection Issue",
     "connectionDescription": "We're having some issues connecting to the server. You can close the app and try again later. If the issue persists, we recommend you logout and login again.",
     "logout": "Logout",
+    "loggingOut": "Logging Out...",
     "close": "Close",
     "nextStep": "Next Step",
     "notificationLow": "Low",
@@ -355,25 +324,21 @@
   "manageData": {
     "deleting": "Deleting...",
     "title": "Manage Data",
-    "description": "Delete specific pieces of your data. Each action shows exactly what it will clear before you confirm.",
+    "description": "Delete specific pieces of your data. Each action shows exactly what it will clear, and whether it lives on this device or on our servers, before you confirm.",
+    "locationDevice": "On device",
+    "locationServer": "Server",
     "feedCacheTitle": "Clear article feed cache",
-    "feedCacheDescription": "Cached suggestions, links & inference jobs",
-    "feedCacheModalDescription": "Clears the article feed cache: suggestions, links, and inference jobs. The feed will rebuild on the next refresh. No other data is affected.",
-    "suggestionsTitle": "Clear all article suggestions",
-    "suggestionsDescription": "Every article suggestion on your account",
-    "suggestionsModalDescription": "Clears every article suggestion stored for your account, plus the local article feed cache so you don't see stale rows before the next refresh.",
+    "feedCacheDescription": "Cached articles & scoring jobs on this device",
+    "feedCacheModalDescription": "Clears the cached article feed on this device: suggestions, their fact links, and pending scoring jobs. The feed rebuilds from the server on the next refresh. Nothing else is affected, and no server data is touched.",
     "factsTitle": "Clear facts & topics",
-    "factsDescription": "Your facts, fact-topic links & the topics they generated",
-    "factsModalDescription": "Clears your facts, their topic links, and every topic derived from them. The topics' cluster and article links are also removed so nothing is left dangling.",
-    "topicsTitle": "Clear all topics",
-    "topicsDescription": "Every topic on your account, plus their links",
-    "topicsModalDescription": "Clears every topic on your account, plus their cluster and article links. Your article feed cache is cleared as well since it depends on these topics.",
+    "factsDescription": "Your facts and the topics they generate — on this device",
+    "factsModalDescription": "Clears the facts you've added and the topics generated from them. Topics live only on this device — they're never stored on our servers. Your article feed is cleared too, since it's built from these topics, and rebuilds empty until you add new facts.",
     "viewingHistoryTitle": "Clear viewing history",
-    "viewingHistoryDescription": "Every article you've opened from Mera",
+    "viewingHistoryDescription": "Articles you've opened — on this device",
     "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Nothing else is affected, and no server data is touched (this data never left your device).",
-    "wipeAllTitle": "Wipe all data",
-    "wipeAllDescription": "Reset everything except your account",
-    "wipeAllModalDescription": "Clears every piece of your data: feed cache, facts, topics, suggestions, app settings, reading history. You stay signed in; your account itself is kept.",
+    "wipeAllTitle": "Wipe all on-device data",
+    "wipeAllDescription": "Reset everything on this device except your account",
+    "wipeAllModalDescription": "Clears every piece of data stored on this device: feed cache, facts, topics, app settings, and reading history. You stay signed in and your account is kept — nothing is deleted from our servers.",
     "deletedTitle": "Data Deleted",
     "deletedDescription": "Selected data has been cleared successfully.",
     "errorTitle": "Error",
@@ -540,7 +505,7 @@
     "allRowsLoaded": "All {{count}} rows loaded"
   },
   "sync": {
-    "fetchingTopics": "Fetching topics for today…",
+    "fetchingTopics": "Finding today’s news for your topics…",
     "checkingForUpdates": "Checking for updates…",
     "downloadingArticles": "Downloading articles…",
     "savingArticles": "Saving articles…",

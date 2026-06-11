@@ -27,7 +27,7 @@ const SectionNavigator: React.FC<Props> = ({ sections, activeSection, onSelect }
                 size="sm"
                 className={`font-medium ${activeSection === shortLabel ? 'text-orange-500' : 'text-gray-500'}`}
             >
-                {t(shortLabel)}
+                {t(shortLabel as any)}
             </Text>
         </Pressable>
     ));

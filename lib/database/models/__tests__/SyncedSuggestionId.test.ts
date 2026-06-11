@@ -25,7 +25,7 @@ describe('SyncedSuggestionId model', () => {
   });
 
   it('can be instantiated', () => {
-    const s = new SyncedSuggestionId();
+    const s = new (SyncedSuggestionId as any)();
     expect(s).toBeDefined();
     expect(s instanceof SyncedSuggestionId).toBe(true);
   });

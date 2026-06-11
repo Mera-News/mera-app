@@ -311,7 +311,7 @@ describe('selectors/index', () => {
         } as any;
         useUserStore.setState({ userPersona: persona });
         const { result } = renderHook(() => useUserPersona());
-        expect(result.current?.id).toBe('persona-1');
+        expect((result.current as any)?.id).toBe('persona-1');
     });
 
     // ── getUserActions (non-reactive) ─────────────────────────────────────

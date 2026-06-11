@@ -23,12 +23,14 @@ import { useTranslation } from 'react-i18next';
 
 type DataAction =
     | 'feedCache'
-    | 'suggestions'
-    | 'facts'
-    | 'topics'
+    | 'factsTopics'
     | 'viewingHistory'
     | 'wipeAll'
     | null;
+
+// Where the data an action clears actually lives. Surfaced as a chip on each
+// row so the on-device vs server distinction is unmistakable.
+type DataLocation = 'device' | 'server';
 
 interface ManageDataScreenProps {
     onBack?: () => void;
@@ -42,7 +44,10 @@ const FEED_CACHE_TABLES = [
     'inference_jobs',
 ];
 
-const FACTS_TABLES = ['facts'];
+// Facts hold the user's topics in `metadata_json`, and the feed cache is built
+// from those topics — so clearing facts must also clear the derived cache (and
+// its topic-gen jobs) to avoid leaving stale or orphaned rows behind.
+const FACTS_AND_TOPICS_TABLES = ['facts', ...FEED_CACHE_TABLES];
 
 const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
@@ -108,20 +113,8 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     }
                     break;
                 }
-                case 'suggestions': {
-                    await deleteTables(FEED_CACHE_TABLES);
-                    useForYouStore.getState().clearData();
-                    if (!useSchedulerStore.getState().isRunning('feed-sync')) {
-                        void AppScheduler.trigger('feed-sync');
-                    }
-                    break;
-                }
-                case 'facts': {
-                    await deleteTables(FACTS_TABLES);
-                    break;
-                }
-                case 'topics': {
-                    await deleteTables(FEED_CACHE_TABLES);
+                case 'factsTopics': {
+                    await deleteTables(FACTS_AND_TOPICS_TABLES);
                     useForYouStore.getState().clearData();
                     if (!useSchedulerStore.getState().isRunning('feed-sync')) {
                         void AppScheduler.trigger('feed-sync');
@@ -200,6 +193,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         description: string;
         modalDescription: string;
         icon: keyof typeof MaterialIcons.glyphMap;
+        location: DataLocation;
     };
 
     type AccountEntry = {
@@ -207,6 +201,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         title: string;
         description: string;
         icon: keyof typeof MaterialIcons.glyphMap;
+        location: DataLocation;
         onPress: () => void;
     };
 
@@ -217,27 +212,15 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             description: t('manageData.feedCacheDescription'),
             modalDescription: t('manageData.feedCacheModalDescription'),
             icon: 'article',
+            location: 'device',
         },
         {
-            id: 'suggestions',
-            title: t('manageData.suggestionsTitle'),
-            description: t('manageData.suggestionsDescription'),
-            modalDescription: t('manageData.suggestionsModalDescription'),
-            icon: 'auto-stories',
-        },
-        {
-            id: 'facts',
+            id: 'factsTopics',
             title: t('manageData.factsTitle'),
             description: t('manageData.factsDescription'),
             modalDescription: t('manageData.factsModalDescription'),
             icon: 'psychology',
-        },
-        {
-            id: 'topics',
-            title: t('manageData.topicsTitle'),
-            description: t('manageData.topicsDescription'),
-            modalDescription: t('manageData.topicsModalDescription'),
-            icon: 'label',
+            location: 'device',
         },
         {
             id: 'viewingHistory',
@@ -245,6 +228,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             description: t('manageData.viewingHistoryDescription'),
             modalDescription: t('manageData.viewingHistoryModalDescription'),
             icon: 'visibility-off',
+            location: 'device',
         },
         {
             id: 'wipeAll',
@@ -252,15 +236,37 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             description: t('manageData.wipeAllDescription'),
             modalDescription: t('manageData.wipeAllModalDescription'),
             icon: 'delete-sweep',
+            location: 'device',
         },
         {
             id: 'deleteAccount',
             title: t('preferences.deleteAccount'),
             description: t('preferences.deleteAccountConfirm'),
             icon: 'delete-forever',
+            location: 'server',
             onPress: () => openModal('deleteAccount'),
         },
     ];
+
+    const renderLocationChip = (location: DataLocation) => {
+        const isServer = location === 'server';
+        return (
+            <Box
+                className={`ml-2 px-2 py-0.5 rounded-full border ${
+                    isServer
+                        ? 'bg-amber-950 border-amber-700'
+                        : 'bg-green-950 border-green-800'
+                }`}
+            >
+                <Text
+                    size="2xs"
+                    className={isServer ? 'text-amber-300' : 'text-green-300'}
+                >
+                    {t(isServer ? 'manageData.locationServer' : 'manageData.locationDevice')}
+                </Text>
+            </Box>
+        );
+    };
 
     const renderOption = (
         option: OptionEntry | AccountEntry,
@@ -280,7 +286,10 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 <Box className="flex-row items-center flex-1">
                     <MaterialIcons name={option.icon} size={22} color="#ef4444" />
                     <VStack className="ml-3 flex-1">
-                        <Text className="text-base text-red-400">{option.title}</Text>
+                        <Box className="flex-row items-center">
+                            <Text className="text-base text-red-400">{option.title}</Text>
+                            {renderLocationChip(option.location)}
+                        </Box>
                         <Text size="xs" className="text-gray-500">{option.description}</Text>
                     </VStack>
                 </Box>

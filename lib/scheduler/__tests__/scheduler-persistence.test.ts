@@ -6,8 +6,8 @@ jest.mock('@/lib/database', () => {
   return makeDatabaseMock();
 });
 
-const mockGetSetting = jest.fn((): Promise<string | null> => Promise.resolve(null));
-const mockSetSetting = jest.fn((): Promise<void> => Promise.resolve());
+const mockGetSetting = jest.fn((..._args: any[]): Promise<string | null> => Promise.resolve(null));
+const mockSetSetting = jest.fn((..._args: any[]): Promise<void> => Promise.resolve());
 
 jest.mock('@/lib/database/services/setting-service', () => ({
   getSetting: (...args: unknown[]) => mockGetSetting(...args),

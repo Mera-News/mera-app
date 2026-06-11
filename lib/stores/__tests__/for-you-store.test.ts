@@ -2,8 +2,8 @@
 // Mock all DB-service seams BEFORE any imports
 // ──────────────────────────────────────────────────────────────────────────────
 
-const mockLoadSuggestions = jest.fn(() => Promise.resolve([]));
-const mockPersistFeedMetadata = jest.fn(() => Promise.resolve());
+const mockLoadSuggestions = jest.fn((): Promise<ForYouSuggestion[]> => Promise.resolve([]));
+const mockPersistFeedMetadata = jest.fn((..._args: any[]) => Promise.resolve());
 const mockLoadFeedMetadata = jest.fn(() => Promise.resolve(null));
 const mockClearSuggestions = jest.fn(() => Promise.resolve());
 const mockPruneOrphanedSuggestions = jest.fn(() => Promise.resolve(0));

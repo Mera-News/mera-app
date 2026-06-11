@@ -56,10 +56,17 @@ type ForYouListItem = PriorityLabelItem | SuggestionItem;
 // A cluster member must belong to its cluster with at least this HDBSCAN
 // membership confidence to be treated as part of the dense "same-story" core
 // and collapsed into one card. Fringe members below the cut stay as their own
-// suggestions — same cluster doesn't always mean same story. HDBSCAN assigns
-// singletons/noise a confidence of 1.0, so they always clear the bar.
-// Tune from observed `clusters.confidence` values (see plan verification).
-const CLUSTER_CORE_CONFIDENCE_THRESHOLD = 0.7;
+// suggestions — same cluster doesn't always mean same story.
+//
+// Calibrated against a real feed (~125 visible articles): every confirmed
+// same-story member scored ≥ 0.54, while genuinely unrelated articles that
+// HDBSCAN lumped together scored exactly 0.0 — a clean, wide gap. 0.5 sits
+// just under the lowest confirmed duplicate so it collapses all real dupes
+// while clearing the 0.0 noise floor with huge margin. (0.7 was too high and
+// split real story-clusters; e.g. an EU-AI-labelling cluster leaked 3 dupes at
+// 0.61–0.70.) Re-check via the '[ForYou] cluster detail' debug log if the
+// embedding model or clustering params change.
+const CLUSTER_CORE_CONFIDENCE_THRESHOLD = 0.5;
 
 const openConfigPanel = () => router.push('/logged-in/config-panel');
 

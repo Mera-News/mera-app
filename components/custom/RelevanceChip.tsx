@@ -25,7 +25,7 @@ const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {
                     fontSize: 11
                 }}
             >
-                {t(colors.label)}
+                {t(colors.label as any)}
             </Text>
         </Box>
     );

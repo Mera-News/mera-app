@@ -38,7 +38,7 @@ describe('Fact model', () => {
 
   describe('updateFact', () => {
     it('updates statement and metadata when both provided', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       instance.statement = 'old statement';
       instance.metadata = { topics: ['old'] };
 
@@ -49,7 +49,7 @@ describe('Fact model', () => {
     });
 
     it('clears metadata when undefined is passed (metadata branch skipped)', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       instance.statement = 'stmt';
       instance.metadata = { topics: ['x'] };
 
@@ -60,7 +60,7 @@ describe('Fact model', () => {
     });
 
     it('sets metadata to null/undefined when explicitly passed null', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       instance.statement = 'stmt';
       instance.metadata = { topics: ['x'] };
 
@@ -69,7 +69,7 @@ describe('Fact model', () => {
     });
 
     it('updates questionnaire fields when provided', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       instance.statement = 'stmt';
       await instance.updateFact('stmt', undefined, {
         level: 3,
@@ -82,7 +82,7 @@ describe('Fact model', () => {
     });
 
     it('only sets questionnaire subfields that are provided', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       instance.statement = 'stmt';
       instance.questionnaireLevel = 1;
       instance.questionnaireLevelCategory = 'Existing';
@@ -93,7 +93,7 @@ describe('Fact model', () => {
     });
 
     it('does not touch questionnaire fields when questionnaire arg is omitted', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       instance.statement = 'stmt';
       instance.questionnaireLevel = 2;
       await instance.updateFact('stmt');
@@ -103,13 +103,13 @@ describe('Fact model', () => {
 
   describe('destroyCascade', () => {
     it('calls batch with prepareDestroyPermanently result', async () => {
-      const instance: any = new Fact();
+      const instance: any = new (Fact as any)();
       const batchSpy = jest.spyOn(instance, 'batch');
       await instance.destroyCascade();
       expect(batchSpy).toHaveBeenCalledTimes(1);
       // The argument should be the result of prepareDestroyPermanently
       const arg = batchSpy.mock.calls[0][0];
-      expect(arg._type).toBe('destroyPermanently');
+      expect((arg as any)._type).toBe('destroyPermanently');
     });
   });
 });

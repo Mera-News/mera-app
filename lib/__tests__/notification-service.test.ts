@@ -262,7 +262,7 @@ describe('registerForPushNotificationsAsync', () => {
   it('times out when getExpoPushTokenAsync hangs past 30s (covers line 113 setTimeout callback)', async () => {
     // Covers anonymous_3 (the setTimeout(() => reject(...), 30000) callback at line 113).
     // Use fake timers so we don't wait 30 real seconds.
-    jest.useFakeTimers({ doNotFake: ['Promise', 'nextTick', 'queueMicrotask', 'setImmediate'] });
+    jest.useFakeTimers({ doNotFake: ['Promise', 'nextTick', 'queueMicrotask', 'setImmediate'] as any });
     try {
       mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted', ios: {} });
       // getExpoPushTokenAsync never resolves — simulates a hang

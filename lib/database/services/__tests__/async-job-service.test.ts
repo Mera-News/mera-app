@@ -1,9 +1,9 @@
 // async-job-service unit tests
 // Mocks: setting-service (WatermelonDB), expo-secure-store, logger
 
-const mockGetSetting = jest.fn((): Promise<string | null> => Promise.resolve(null));
-const mockSetSetting = jest.fn((): Promise<void> => Promise.resolve());
-const mockDeleteSetting = jest.fn((): Promise<void> => Promise.resolve());
+const mockGetSetting = jest.fn((..._args: any[]): Promise<string | null> => Promise.resolve(null));
+const mockSetSetting = jest.fn((..._args: any[]): Promise<void> => Promise.resolve());
+const mockDeleteSetting = jest.fn((..._args: any[]): Promise<void> => Promise.resolve());
 
 jest.mock('@/lib/database/services/setting-service', () => ({
   getSetting: (...args: unknown[]) => mockGetSetting(...args),
@@ -11,9 +11,9 @@ jest.mock('@/lib/database/services/setting-service', () => ({
   deleteSetting: (...args: unknown[]) => mockDeleteSetting(...args),
 }));
 
-const mockSecureStoreGetItem = jest.fn((): Promise<string | null> => Promise.resolve(null));
-const mockSecureStoreSetItem = jest.fn((): Promise<void> => Promise.resolve());
-const mockSecureStoreDeleteItem = jest.fn((): Promise<void> => Promise.resolve());
+const mockSecureStoreGetItem = jest.fn((..._args: any[]): Promise<string | null> => Promise.resolve(null));
+const mockSecureStoreSetItem = jest.fn((..._args: any[]): Promise<void> => Promise.resolve());
+const mockSecureStoreDeleteItem = jest.fn((..._args: any[]): Promise<void> => Promise.resolve());
 
 jest.mock('@/lib/utils/secure-store-adapter', () => ({
   secureStore: {

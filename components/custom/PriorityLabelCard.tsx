@@ -22,7 +22,7 @@ const PriorityLabelCard: React.FC<PriorityLabelCardProps> = ({ label, relevance 
                 }}
                 size="lg"
             >
-                {t(getDisplaySectionLabel(label))}
+                {t(getDisplaySectionLabel(label) as any)}
             </Text>
         </Card>
     );

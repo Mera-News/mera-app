@@ -24,7 +24,7 @@ describe('SchedulerJob model', () => {
   });
 
   it('can be instantiated', () => {
-    const j = new SchedulerJob();
+    const j = new (SchedulerJob as any)();
     expect(j).toBeDefined();
     expect(j instanceof SchedulerJob).toBe(true);
   });

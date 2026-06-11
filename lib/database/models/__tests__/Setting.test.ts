@@ -29,7 +29,7 @@ describe('Setting model', () => {
   });
 
   it('updateValue calls this.update and mutates the value field', async () => {
-    const instance: any = new Setting();
+    const instance: any = new (Setting as any)();
     // Pre-seed a field so the callback can read it
     instance.value = 'old_value';
     // The writer decorator is stripped to a passthrough in our mock
@@ -38,7 +38,7 @@ describe('Setting model', () => {
   });
 
   it('updateValue does not mutate other fields', async () => {
-    const instance: any = new Setting();
+    const instance: any = new (Setting as any)();
     instance.key = 'my_key';
     instance.value = 'old';
     await instance.updateValue('new');

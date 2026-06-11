@@ -33,7 +33,7 @@ const mockLoggerInfo = logger.info as jest.Mock;
 
 function makeToastFn() {
   return {
-    show: jest.fn(() => 'toast-id-1'),
+    show: jest.fn((..._args: any[]) => 'toast-id-1'),
     close: jest.fn(),
     closeAll: jest.fn(),
     isActive: jest.fn(() => false),

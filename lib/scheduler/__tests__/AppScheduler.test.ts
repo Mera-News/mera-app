@@ -11,14 +11,14 @@ const mockSchedulerStore = {
   setStatus: jest.fn(),
   loadLastRunTimes: jest.fn(),
   isRunning: jest.fn(() => false),
-  getLastRun: jest.fn(() => null),
+  getLastRun: jest.fn((): number | null => null),
   addJob: jest.fn(),
 };
 
 // Network-store state + subscription
 let networkSubscribeFn: ((state: any, prev: any) => void) | null = null;
-const mockNetworkStoreSubscribe = jest.fn((fn: any) => {
-  networkSubscribeFn = fn;
+const mockNetworkStoreSubscribe = jest.fn((...args: any[]) => {
+  networkSubscribeFn = args[0];
   return jest.fn(); // unsubscribe
 });
 const mockNetworkState = { isConnected: true };
@@ -402,7 +402,7 @@ describe('AppScheduler — foreground trigger', () => {
     jest.clearAllMocks();
     mockCreateJob.mockResolvedValue(makeJob({ taskName: 'appstate-task' }));
 
-    appStateHandler?.('active');
+    (appStateHandler as ((state: string) => void) | null)?.('active');
     await jest.advanceTimersByTimeAsync(0);
 
     expect(mockCreateJob).toHaveBeenCalled();
@@ -476,7 +476,7 @@ describe('AppScheduler — foreground trigger', () => {
     mockCreateJob.mockResolvedValue(makeJob({ taskName: 'fg-appstate-task' }));
 
     // AppState non-active → should not fire
-    appStateHandler?.('background');
+    (appStateHandler as ((state: string) => void) | null)?.('background');
     await jest.advanceTimersByTimeAsync(0);
     expect(mockCreateJob).not.toHaveBeenCalled();
   });

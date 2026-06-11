@@ -1,10 +1,10 @@
+import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getFlagEmoji } from '@/lib/country-utils';
 import {
     getTopVisitedPublications,
     type VisitedPublication,
@@ -87,9 +87,7 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                     className="mx-4 mb-2 p-3 items-center"
                     space="md"
                 >
-                    {item.countryCode ? (
-                        <Text className="text-xl">{getFlagEmoji(item.countryCode)}</Text>
-                    ) : null}
+                    <SourceFlag countryCode={item.countryCode} size="xl" />
                     <VStack className="flex-1" space="xs">
                         <Text size="md" className="text-white" numberOfLines={1}>
                             {item.publicationName}

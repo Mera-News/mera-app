@@ -26,7 +26,7 @@ describe('UserPersona model', () => {
   });
 
   it('can be instantiated', () => {
-    const p = new UserPersona();
+    const p = new (UserPersona as any)();
     expect(p).toBeDefined();
     expect(p instanceof UserPersona).toBe(true);
   });

@@ -54,7 +54,7 @@ describe('ArticleSuggestionFact model', () => {
 
   describe('field assignment', () => {
     it('allows direct field mutations for articleSuggestionId and factId', () => {
-      const instance: any = new ArticleSuggestionFact();
+      const instance: any = new (ArticleSuggestionFact as any)();
       instance.articleSuggestionId = 'sug-123';
       instance.factId = 'fact-456';
       expect(instance.articleSuggestionId).toBe('sug-123');
@@ -62,7 +62,7 @@ describe('ArticleSuggestionFact model', () => {
     });
 
     it('prepareDestroyPermanently returns a destroy op referencing self', () => {
-      const instance: any = new ArticleSuggestionFact();
+      const instance: any = new (ArticleSuggestionFact as any)();
       const op = instance.prepareDestroyPermanently();
       expect(op._type).toBe('destroyPermanently');
       expect(op.record).toBe(instance);

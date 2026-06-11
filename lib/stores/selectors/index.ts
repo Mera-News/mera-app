@@ -101,7 +101,7 @@ export const useForYouHydrationProgress = () =>
 /** Number of article_suggestions discarded as pure-noise in the latest sync.
  *  Drives the "X decoy articles filtered out" line on the ForYou header. */
 export const useForYouNoisyDiscardedCount = () =>
-    useForYouStore((state) => state.noisyDiscardedCount);
+    useForYouStore((state) => (state as { noisyDiscardedCount?: number }).noisyDiscardedCount);
 
 /** Get sync status message (reactive) */
 export const useForYouSyncStatusMessage = () =>

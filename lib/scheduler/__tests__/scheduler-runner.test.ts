@@ -326,7 +326,7 @@ describe('run — timeout/abort', () => {
 
     await run(job, def); // resolves after handler finishes (~200 ms real time)
 
-    expect(capturedSignal?.aborted).toBe(true);
+    expect((capturedSignal as AbortSignal | null)?.aborted).toBe(true);
   }, 15_000);
 });
 

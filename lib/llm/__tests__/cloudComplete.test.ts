@@ -3,17 +3,19 @@
 
 // ─── I/O mocks (must precede imports) ─────────────────────────────────────────
 
-const mockFetch = jest.fn();
+const mockFetch = jest.fn<Promise<Response>, unknown[]>();
 jest.mock('expo/fetch', () => ({ fetch: (...args: unknown[]) => mockFetch(...args) }));
 
-const mockGetJwtToken = jest.fn(() => Promise.resolve('test-jwt'));
+const mockGetJwtToken = jest.fn<Promise<string | null>, unknown[]>(() =>
+  Promise.resolve('test-jwt'),
+);
 const mockInvalidateJwtCache = jest.fn();
 jest.mock('@/lib/auth-client', () => ({
   getJwtToken: (...args: unknown[]) => mockGetJwtToken(...args),
   invalidateJwtCache: (...args: unknown[]) => mockInvalidateJwtCache(...args),
 }));
 
-const mockPrepareE2EEContext = jest.fn();
+const mockPrepareE2EEContext = jest.fn<Promise<ReturnType<typeof makeE2EECtx>>, unknown[]>();
 const mockEncryptContent = jest.fn((s: string) => `enc(${s})`);
 const mockDecryptContent = jest.fn((s: string) => s);
 const mockEncryptMessages = jest.fn(
@@ -41,9 +43,10 @@ function makeE2EECtx() {
 
 jest.mock('@/lib/e2ee/e2ee-service', () => ({
   prepareE2EEContext: (...args: unknown[]) => mockPrepareE2EEContext(...args),
-  encryptContent: (...args: unknown[]) => mockEncryptContent(...args),
-  decryptContent: (...args: unknown[]) => mockDecryptContent(...args),
-  encryptMessages: (...args: unknown[]) => mockEncryptMessages(...args),
+  encryptContent: (...args: unknown[]) => mockEncryptContent(...(args as [string])),
+  decryptContent: (...args: unknown[]) => mockDecryptContent(...(args as [string])),
+  encryptMessages: (...args: unknown[]) =>
+    mockEncryptMessages(...(args as [{ role: string; content: string }[]])),
 }));
 
 jest.mock('@/lib/logger', () => ({

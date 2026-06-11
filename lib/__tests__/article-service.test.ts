@@ -1,7 +1,7 @@
 // Mock apollo-client BEFORE any imports that transitively load it.
 const mockQuery = jest.fn();
 const mockMutate = jest.fn();
-const mockCacheReset = jest.fn(async () => {});
+const mockCacheReset = jest.fn(async (..._a: any[]) => {});
 
 jest.mock('@/lib/apollo-client', () => ({
     __esModule: true,
@@ -197,14 +197,14 @@ describe('ArticleService.getArticleIdsForTopics', () => {
         };
         mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: mockResponse } });
 
-        const result = await ArticleService.getArticleIdsForTopics([{ topicText: 'AI', cursor: null }]);
+        const result = await ArticleService.getArticleIdsForTopics([{ topicText: 'AI', cursor: null } as any]);
         expect(result).toEqual(mockResponse);
     });
 
     it('passes default limitPerTopic of 20', async () => {
         mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: [] } } });
 
-        await ArticleService.getArticleIdsForTopics([{ topicText: 'Tech', cursor: null }]);
+        await ArticleService.getArticleIdsForTopics([{ topicText: 'Tech', cursor: null } as any]);
         expect(mockQuery).toHaveBeenCalledWith(
             expect.objectContaining({
                 variables: expect.objectContaining({ limitPerTopic: 20 }),
@@ -215,7 +215,7 @@ describe('ArticleService.getArticleIdsForTopics', () => {
     it('respects custom limitPerTopic option', async () => {
         mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: [] } } });
 
-        await ArticleService.getArticleIdsForTopics([{ topicText: 'Tech', cursor: null }], { limitPerTopic: 5 });
+        await ArticleService.getArticleIdsForTopics([{ topicText: 'Tech', cursor: null } as any], { limitPerTopic: 5 });
         expect(mockQuery).toHaveBeenCalledWith(
             expect.objectContaining({
                 variables: expect.objectContaining({ limitPerTopic: 5 }),
@@ -234,7 +234,7 @@ describe('ArticleService.getArticleIdsForTopics', () => {
         mockQuery.mockRejectedValueOnce(err);
 
         await expect(
-            ArticleService.getArticleIdsForTopics([{ topicText: 'AI', cursor: null }]),
+            ArticleService.getArticleIdsForTopics([{ topicText: 'AI', cursor: null } as any]),
         ).rejects.toThrow('getArticleIdsForTopics failed');
 
         expect((logger.warn as jest.Mock)).toHaveBeenCalledWith(

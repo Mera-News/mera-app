@@ -1,7 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
-import { getFlagEmoji } from '@/lib/country-utils';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { getArticleTranslatableStatus, getNativeLanguageName } from '@/lib/translation-service';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -56,7 +56,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const age = formatAge(pubDate);
     const language = getNativeLanguageName(languageCode) ?? '';
     const publication = publicationName ?? '';
-    const flag = getFlagEmoji(countryCode);
 
     const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
     const translateColor = translateStatus === 'not-translatable' ? '#FCA5A5' : '#86EFAC';
@@ -111,7 +110,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
             ) : <Box />}
 
             {/* 4. Country flag */}
-            <Text size="sm">{flag}</Text>
+            <SourceFlag countryCode={countryCode} size="sm" iconClassName={isCard ? 'text-typography-500' : 'text-gray-400'} />
         </HStack>
     );
 };

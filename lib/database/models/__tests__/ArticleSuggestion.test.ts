@@ -47,7 +47,7 @@ describe('ArticleSuggestion model', () => {
 
   describe('field assignment (via prepareUpdate pattern)', () => {
     it('allows direct field mutations used by service write operations', () => {
-      const instance: any = new ArticleSuggestion();
+      const instance: any = new (ArticleSuggestion as any)();
       instance.relevance = 0.8;
       instance.reason = 'Test reason';
       instance.relevanceGenerationCompleted = true;
@@ -64,7 +64,7 @@ describe('ArticleSuggestion model', () => {
     });
 
     it('prepareUpdate applies mutations and returns self', () => {
-      const instance: any = new ArticleSuggestion();
+      const instance: any = new (ArticleSuggestion as any)();
       instance.relevance = 0;
       const returned = instance.prepareUpdate((r: any) => {
         r.relevance = 0.5;
@@ -78,7 +78,7 @@ describe('ArticleSuggestion model', () => {
     });
 
     it('prepareDestroyPermanently returns a destroy op', () => {
-      const instance: any = new ArticleSuggestion();
+      const instance: any = new (ArticleSuggestion as any)();
       const op = instance.prepareDestroyPermanently();
       expect(op._type).toBe('destroyPermanently');
       expect(op.record).toBe(instance);

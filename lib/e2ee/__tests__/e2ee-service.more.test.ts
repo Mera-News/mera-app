@@ -7,7 +7,7 @@
 
 // ─── I/O mocks (must precede imports) ─────────────────────────────────────────
 
-const mockGetJwtToken = jest.fn(() => Promise.resolve('test-jwt'));
+const mockGetJwtToken = jest.fn((..._args: any[]): Promise<string | null> => Promise.resolve('test-jwt'));
 jest.mock('../../auth-client', () => ({
   getJwtToken: (...args: unknown[]) => mockGetJwtToken(...args),
 }));
@@ -21,7 +21,7 @@ const mockLogger = {
 };
 jest.mock('../../logger', () => ({ __esModule: true, default: mockLogger }));
 
-const mockGetCachedAttestation = jest.fn(() => null as null | import('../e2ee-service').ModelAttestation);
+const mockGetCachedAttestation = jest.fn((..._args: any[]) => null as null | import('../e2ee-service').ModelAttestation);
 const mockSetCachedAttestation = jest.fn();
 jest.mock('../e2ee-cache', () => ({
   getCachedAttestation: (...args: unknown[]) => mockGetCachedAttestation(...args),

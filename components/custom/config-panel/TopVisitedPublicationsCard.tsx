@@ -1,10 +1,10 @@
+import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getFlagEmoji } from '@/lib/country-utils';
 import type { VisitedPublication } from '@/lib/database/services/publication-visit-service';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -42,9 +42,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
                                 space="sm"
                             >
                                 <HStack className="items-center flex-1 mr-3" space="sm">
-                                    {p.countryCode ? (
-                                        <Text className="text-lg">{getFlagEmoji(p.countryCode)}</Text>
-                                    ) : null}
+                                    <SourceFlag countryCode={p.countryCode} size="lg" />
                                     <Text
                                         size="sm"
                                         className="text-white flex-1"

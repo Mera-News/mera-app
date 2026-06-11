@@ -61,9 +61,9 @@ jest.mock('@/lib/mera-protocol/scoring-service', () => ({
 }));
 
 const mockEncryptContent = jest.fn((text: string) => `enc:${text}`);
-const mockPrepareE2EEContext = jest.fn();
+const mockPrepareE2EEContext = jest.fn<Promise<ReturnType<typeof makeE2EEContext>>, unknown[]>();
 jest.mock('@/lib/e2ee/e2ee-service', () => ({
-  encryptContent: (...args: unknown[]) => mockEncryptContent(...args),
+  encryptContent: (...args: unknown[]) => mockEncryptContent(...(args as [string])),
   prepareE2EEContext: (...args: unknown[]) => mockPrepareE2EEContext(...args),
 }));
 
@@ -116,7 +116,13 @@ import {
   sendInferenceRequest,
   bytesToHex,
 } from '../submitInferenceJob';
-import { PendingJobStaleError } from '@/lib/database/services/async-job-service';
+import type { CloudCallBundle } from '@/lib/mera-protocol/scoring-service';
+import type { E2EEContext } from '@/lib/e2ee/e2ee-service';
+import { PendingJobStaleError as RealPendingJobStaleError } from '@/lib/database/services/async-job-service';
+
+// The async-job-service module is mocked above with a 0-arg PendingJobStaleError.
+// Re-type the imported symbol so test instantiation matches the mock's signature.
+const PendingJobStaleError = RealPendingJobStaleError as unknown as new () => Error;
 
 // ---- Helpers ----
 
@@ -129,14 +135,18 @@ function makeBundle(callCount = 1) {
       temperature: 0.3,
     })),
     eligibleCandidates: Array.from({ length: callCount }, (_, i) => ({ id: `c${i}` })),
-  };
+    promptsById: new Map<string, string>(),
+    chunkIdToCandidates: new Map<string, unknown[]>(),
+  } as unknown as CloudCallBundle;
 }
 
-function makeE2EEContext() {
+function makeE2EEContext(): E2EEContext {
   return {
     privateKey: new Uint8Array([1, 2, 3, 4]),
     headers: { 'X-E2EE-Key': 'abc123' },
-  };
+    modelPubKeyHex: 'ccdd',
+    clientPubKeyHex: 'aabb',
+  } as unknown as E2EEContext;
 }
 
 function makeResponse(status: number, body: unknown) {
@@ -480,7 +490,7 @@ describe('sendInferenceRequest', () => {
         { id: 'c1', system: 'sys-b', prompt: 'p1', temperature: 0.3 },
       ],
       eligibleCandidates: [{ id: 'x0' }, { id: 'x1' }],
-    };
+    } as unknown as CloudCallBundle;
     const response = makeResponse(202, { requestId: 'req-noshard' });
     mockExpoFetch.mockResolvedValue(response);
 

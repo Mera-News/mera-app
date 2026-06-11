@@ -1,9 +1,9 @@
 // Tests for lib/llm/capability-token.ts — AsyncStorage wrapper with
 // error-handling. AsyncStorage is mocked globally in jest.setup.js.
 
-const mockSetItem = jest.fn(() => Promise.resolve());
-const mockGetItem = jest.fn(() => Promise.resolve(null));
-const mockRemoveItem = jest.fn(() => Promise.resolve());
+const mockSetItem = jest.fn((..._args: unknown[]) => Promise.resolve());
+const mockGetItem = jest.fn((..._args: unknown[]): Promise<string | null> => Promise.resolve(null));
+const mockRemoveItem = jest.fn((..._args: unknown[]) => Promise.resolve());
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,

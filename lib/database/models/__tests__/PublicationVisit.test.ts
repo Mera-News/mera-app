@@ -25,7 +25,7 @@ describe('PublicationVisit model', () => {
   });
 
   it('can be instantiated', () => {
-    const v = new PublicationVisit();
+    const v = new (PublicationVisit as any)();
     expect(v).toBeDefined();
     expect(v instanceof PublicationVisit).toBe(true);
   });

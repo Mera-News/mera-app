@@ -240,7 +240,7 @@ describe('runScoringPass', () => {
 
       // Now invoke the captured callback
       if (capturedOnBatchComplete) {
-        capturedOnBatchComplete();
+        (capturedOnBatchComplete as (() => void))();
         // Allow async operations to complete
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
@@ -260,7 +260,7 @@ describe('runScoringPass', () => {
       await runScoringPass();
 
       // Invoke the callback — it calls refreshSuggestionsInStore() which rejects
-      capturedOnBatchComplete?.();
+      (capturedOnBatchComplete as (() => void) | null)?.();
       // Let the rejected promise propagate through the .catch() callback
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
 

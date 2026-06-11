@@ -1,7 +1,7 @@
 // Mock apollo-client BEFORE imports.
 const mockQuery = jest.fn();
 const mockMutate = jest.fn();
-const mockCacheReset = jest.fn(async () => {});
+const mockCacheReset = jest.fn(async (..._a: any[]) => {});
 
 jest.mock('@/lib/apollo-client', () => ({
     __esModule: true,

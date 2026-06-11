@@ -404,7 +404,7 @@ describe('PersonaUpdateAgent', () => {
       const result = agent.formatMessages(msgs);
       // First element should be a user turn (prepended from original messages)
       expect(result[0].role).toBe('user');
-      expect(result[0].content).toBe('first user msg');
+      expect((result[0] as { content: string }).content).toBe('first user msg');
     });
 
     it('does not prepend when no user message exists at all', () => {

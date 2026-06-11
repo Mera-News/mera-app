@@ -22,6 +22,7 @@ jest.mock('../modelManager', () => ({
 
 import { infer, inferStream } from '../inference';
 import type { InferParams } from '../../types';
+import type { LlamaContext } from 'llama.rn';
 import * as modelManager from '../modelManager';
 
 // Grab typed mock refs from the hoisted mock — safe to do after imports.
@@ -30,7 +31,7 @@ const mockUpdateInferenceSpeed = modelManager._updateInferenceSpeed as jest.Mock
 
 // Completion mock lives on the context object returned by _getContext.
 const mockCompletion = jest.fn();
-const mockContext = { completion: mockCompletion };
+const mockContext = { completion: mockCompletion } as unknown as LlamaContext;
 
 const BASE_PARAMS: InferParams = {
   prompt: 'What is the capital of France?',

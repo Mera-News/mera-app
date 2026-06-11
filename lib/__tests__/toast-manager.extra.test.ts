@@ -57,7 +57,7 @@ import { toastManager } from '../toast-manager';
 
 function makeToastFn() {
   return {
-    show: jest.fn(() => 'toast-id'),
+    show: jest.fn((..._args: any[]) => 'toast-id'),
     close: jest.fn(),
     closeAll: jest.fn(),
     isActive: jest.fn(() => false),

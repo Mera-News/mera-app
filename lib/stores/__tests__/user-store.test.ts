@@ -3,8 +3,8 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 const mockGetSetting = jest.fn((_k: string) => Promise.resolve(null as string | null));
-const mockSetSetting = jest.fn(() => Promise.resolve());
-const mockDeleteSetting = jest.fn(() => Promise.resolve());
+const mockSetSetting = jest.fn((..._args: any[]) => Promise.resolve());
+const mockDeleteSetting = jest.fn((..._args: any[]) => Promise.resolve());
 
 jest.mock('@/lib/database/services/setting-service', () => ({
     getSetting: (k: string) => mockGetSetting(k),
@@ -12,8 +12,8 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     deleteSetting: (k: string) => mockDeleteSetting(k),
 }));
 
-const mockPersistUserPersona = jest.fn(() => Promise.resolve());
-const mockLoadUserPersona = jest.fn(() => Promise.resolve(null));
+const mockPersistUserPersona = jest.fn((..._args: any[]) => Promise.resolve());
+const mockLoadUserPersona = jest.fn((..._args: any[]): Promise<UserPersona | null> => Promise.resolve(null));
 const mockClearUserPersona = jest.fn(() => Promise.resolve());
 
 jest.mock('@/lib/database/services/user-persona-service', () => ({

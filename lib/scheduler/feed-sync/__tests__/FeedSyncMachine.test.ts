@@ -459,7 +459,7 @@ describe('FeedSyncMachine — offline pause/resume', () => {
     networkSubscribeFn?.({ isConnected: true }, { isConnected: false });
 
     // Now resolve the pending step
-    resolveStep?.();
+    (resolveStep as (() => void) | null)?.();
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
   });
@@ -501,7 +501,7 @@ describe('FeedSyncMachine — offline pause/resume', () => {
 
     // Now the machine is suspended inside updateMachineState('hydrating').
     // _paused = true (disconnect was fired). Resolve the deferred.
-    hydratingResolveFn?.();
+    (hydratingResolveFn as (() => void) | null)?.();
     // Let the machine resume through updateMachineState and enter _awaitResumeIfPaused
     await jest.advanceTimersByTimeAsync(0);
 
@@ -586,7 +586,7 @@ describe('FeedSyncMachine — isRunning during active states', () => {
     // Machine is in fetching-topic-ids state — isRunning should be true
     expect(feedSyncMachine.isRunning()).toBe(true);
 
-    resolveStep?.();
+    (resolveStep as (() => void) | null)?.();
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
   });

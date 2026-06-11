@@ -110,7 +110,7 @@ describe('notifyScrollTick', () => {
     // Second round
     rafCallback = null;
     notifyScrollTick();
-    if (rafCallback) rafCallback(0);
+    if (rafCallback) (rafCallback as FrameRequestCallback)(0);
 
     expect(listener).toHaveBeenCalledTimes(2);
   });

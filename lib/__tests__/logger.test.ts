@@ -38,7 +38,7 @@ describe('logger.captureException', () => {
     logger.captureException('string error');
     const [passedErr] = mockCaptureException.mock.calls[0];
     expect(passedErr).toBeInstanceOf(Error);
-    expect(passedErr.message).toBe('string error');
+    expect((passedErr as Error).message).toBe('string error');
   });
 
   it('passes custom level, tags, extra, fingerprint to Sentry', () => {

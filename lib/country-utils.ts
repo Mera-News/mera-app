@@ -5,6 +5,7 @@ countries.registerLocale(en);
 
 export const getFlagEmoji = (alpha3Code: string | null | undefined): string => {
     if (!alpha3Code) return '';
+    if (alpha3Code === 'GLOBAL') return '🌍';
     const alpha2 = countries.alpha3ToAlpha2(alpha3Code);
     if (!alpha2) return '';
     const codePoints = [...alpha2.toUpperCase()].map((c) => 127397 + c.charCodeAt(0));

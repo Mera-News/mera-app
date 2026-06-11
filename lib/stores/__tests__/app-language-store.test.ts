@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 const mockGetSetting = jest.fn((_k: string) => Promise.resolve(null as string | null));
-const mockSetSetting = jest.fn(() => Promise.resolve());
+const mockSetSetting = jest.fn((..._args: any[]) => Promise.resolve());
 
 jest.mock('@/lib/database/services/setting-service', () => ({
     getSetting: (k: string) => mockGetSetting(k),
