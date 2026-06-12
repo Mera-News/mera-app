@@ -152,6 +152,7 @@
   },
   "articleDetail": {
     "readArticle": "Read Article",
+    "readOn": "Read on {{publication}}",
     "relatedArticles": "Related Articles",
     "articleUnavailable": "This article is no longer available",
     "storyUnavailable": "This story is no longer available",
@@ -469,6 +470,17 @@
     "noArticlesYet": "You haven't read any articles yet.",
     "articlesRead": "Articles you've read",
     "noArticlesLast30Days": "No articles from this publication in the last 30 days."
+  },
+  "savedSuggestions": {
+    "title": "Saved",
+    "note": "These articles are saved only on your device. Add or remove them anytime — they stay here until you delete them.",
+    "savedToastTitle": "Saved",
+    "savedToastMessage": "Article saved for later",
+    "removedToastMessage": "Removed from saved",
+    "deleteConfirmTitle": "Remove saved article?",
+    "deleteConfirmMessage": "This will remove the article from your saved list on this device.",
+    "deleteConfirmCta": "Delete",
+    "empty": "You haven't saved any articles yet. Tap the bookmark on an article to save it for later."
   },
   "ota": {
     "updateReady": "Update ready",

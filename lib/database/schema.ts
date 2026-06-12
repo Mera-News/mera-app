@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 32,
+  version: 33,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -81,6 +81,36 @@ export default appSchema({
         { name: 'article_suggestion_id', type: 'string', isIndexed: true },
         { name: 'fact_id', type: 'string', isIndexed: true },
         { name: 'created_at', type: 'number' },
+      ],
+    }),
+
+    // Device-local "save for later". User-owned, long-lived state (30-day TTL,
+    // pruned by data-cleanup-task) — NOT wiped on the article_suggestions
+    // resync. Every card-renderable field is snapshotted off the source
+    // ForYouSuggestion at save time so the row renders fully even after the
+    // ephemeral feed row is gone. WMDB row `id` == the source ArticleSuggestion
+    // server `_id`. `saved_at` is indexed for the TTL range scan.
+    tableSchema({
+      name: 'saved_article_suggestions',
+      columns: [
+        { name: 'article_id', type: 'string', isIndexed: true },
+        { name: 'cluster_memberships_json', type: 'string', isOptional: true },
+        { name: 'relevance', type: 'number' },
+        { name: 'reason', type: 'string' },
+        { name: 'relevance_generation_completed', type: 'boolean' },
+        { name: 'reason_generation_completed', type: 'boolean' },
+        { name: 'country_code', type: 'string', isOptional: true },
+        { name: 'language_code', type: 'string', isOptional: true },
+        { name: 'publication_name', type: 'string', isOptional: true },
+        { name: 'title_en', type: 'string', isOptional: true },
+        { name: 'title_original', type: 'string', isOptional: true },
+        { name: 'description_en', type: 'string', isOptional: true },
+        { name: 'article_url', type: 'string', isOptional: true },
+        { name: 'image_url', type: 'string', isOptional: true },
+        { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+        { name: 'created_at', type: 'number' },
+        { name: 'first_pub_date', type: 'number' },
+        { name: 'saved_at', type: 'number', isIndexed: true },
       ],
     }),
 

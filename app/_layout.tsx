@@ -214,6 +214,7 @@ export default Sentry.wrap(function RootLayout() {
                     name="logged-in"
                     options={{
                       headerShown: false,
+                      animation: 'fade'
                     }}
                   />
                 </Stack>

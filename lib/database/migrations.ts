@@ -778,5 +778,36 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 33,
+      steps: [
+        // Device-local "save for later" table. Long-lived, user-owned state
+        // (30-day TTL) — created via createTable, never wipe-and-recreate.
+        // Mirrors article_suggestions' columns plus an indexed saved_at.
+        createTable({
+          name: 'saved_article_suggestions',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'cluster_memberships_json', type: 'string', isOptional: true },
+            { name: 'relevance', type: 'number' },
+            { name: 'reason', type: 'string' },
+            { name: 'relevance_generation_completed', type: 'boolean' },
+            { name: 'reason_generation_completed', type: 'boolean' },
+            { name: 'country_code', type: 'string', isOptional: true },
+            { name: 'language_code', type: 'string', isOptional: true },
+            { name: 'publication_name', type: 'string', isOptional: true },
+            { name: 'title_en', type: 'string', isOptional: true },
+            { name: 'title_original', type: 'string', isOptional: true },
+            { name: 'description_en', type: 'string', isOptional: true },
+            { name: 'article_url', type: 'string', isOptional: true },
+            { name: 'image_url', type: 'string', isOptional: true },
+            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'first_pub_date', type: 'number' },
+            { name: 'saved_at', type: 'number', isIndexed: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

@@ -141,11 +141,11 @@ const SourcesL1CountryList: React.FC = () => {
             >
                 <HStack className="items-center justify-between w-full" space="sm">
                     <HStack className="items-center flex-1 mr-3" space="md">
-                        <Text className="text-2xl">{item.flag}</Text>
-                        <Text className="text-base text-white">{item.name}</Text>
-                    </HStack>
-                    <HStack className="items-center" space="sm">
-                        {item.code !== 'GLOBAL' && (
+                        {item.code === 'GLOBAL' ? (
+                            // Global is not pinnable — keep an equal-width spacer so
+                            // the flags/names stay aligned with the pinnable rows.
+                            <Box className="w-[30px]" />
+                        ) : (
                             <Pressable
                                 onPress={() => togglePin(item.code)}
                                 className="p-1"
@@ -159,6 +159,10 @@ const SourcesL1CountryList: React.FC = () => {
                                 />
                             </Pressable>
                         )}
+                        <Text className="text-2xl">{item.flag}</Text>
+                        <Text className="text-base text-white">{item.name}</Text>
+                    </HStack>
+                    <HStack className="items-center" space="sm">
                         <Button
                             variant="outline"
                             size="xs"

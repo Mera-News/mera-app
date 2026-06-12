@@ -10,12 +10,19 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import {
     deleteSuggestionByServerId,
     getSuggestionByServerId,
 } from '@/lib/database/services/article-suggestion-service';
+import {
+    deleteSavedSuggestion,
+    getSavedSuggestionByServerId,
+    isSuggestionSaved,
+    saveSuggestion,
+} from '@/lib/database/services/saved-article-suggestion-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -49,12 +56,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
+    const toast = useToast();
     const storeSuggestion = useForYouStore((s) =>
         s.suggestions.find((sg) => sg._id === articleSuggestionId),
     );
     const [suggestion, setSuggestion] = useState<ForYouSuggestion | null>(
         storeSuggestion ?? null,
     );
+    const [isSaved, setIsSaved] = useState(false);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [isLoading, setIsLoading] = useState(!storeSuggestion);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
@@ -82,6 +91,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         }
         let cancelled = false;
         getSuggestionByServerId(articleSuggestionId)
+            // Fall back to the saved table — a saved item's source feed row may
+            // have already been pruned by the 48h TTL.
+            .then((row) => row ?? getSavedSuggestionByServerId(articleSuggestionId))
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
@@ -135,6 +147,57 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // cards for the same story) are fetched live from the server via
     // `relatedArticles(articleId)` above — the feed's collapse keeps only one
     // representative card per story, so siblings are surfaced here on demand.
+
+    // Reflect whether this suggestion is already saved for later.
+    useEffect(() => {
+        let cancelled = false;
+        isSuggestionSaved(articleSuggestionId)
+            .then((saved) => {
+                if (!cancelled) setIsSaved(saved);
+            })
+            .catch(() => {
+                /* non-fatal — default to unsaved */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [articleSuggestionId]);
+
+    const showSavedToast = useCallback(
+        (message: string) => {
+            toast.show({
+                placement: 'top',
+                duration: 3000,
+                render: ({ id }: { id: string }) => (
+                    <Toast nativeID={id} action="success" variant="solid">
+                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastDescription>{message}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        },
+        [toast, t],
+    );
+
+    const handleToggleSave = useCallback(async () => {
+        if (!suggestion) return;
+        try {
+            if (isSaved) {
+                await deleteSavedSuggestion(suggestion._id);
+                setIsSaved(false);
+                showSavedToast(t('savedSuggestions.removedToastMessage'));
+            } else {
+                await saveSuggestion(suggestion);
+                setIsSaved(true);
+                showSavedToast(t('savedSuggestions.savedToastMessage'));
+            }
+        } catch (err) {
+            logger.captureException(err, {
+                tags: { screen: 'ArticleSuggestionScreen', method: 'toggleSave' },
+                extra: { articleSuggestionId },
+            });
+        }
+    }, [suggestion, isSaved, showSavedToast, t, articleSuggestionId]);
 
     const handleArticleUrlPress = async (url: string | null | undefined) => {
         if (!url) return;
@@ -238,17 +301,40 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 }
                 footer={
                     <>
-                        {/* Read Article CTA */}
+                        {/* Read Article CTA — 80% read button, 20% save toggle */}
                         {suggestion.article_url ? (
                             <VStack space="xs">
-                                <Button
-                                    variant="outline"
-                                    action="primary"
-                                    onPress={() => handleArticleUrlPress(suggestion.article_url)}
-                                >
-                                    <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                    <ButtonText className="text-white ml-2">{t('articleDetail.readArticle')}</ButtonText>
-                                </Button>
+                                <HStack space="sm" className="items-center">
+                                    <Box className="flex-[4]">
+                                        <Button
+                                            variant="outline"
+                                            action="primary"
+                                            onPress={() => handleArticleUrlPress(suggestion.article_url)}
+                                        >
+                                            <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
+                                            <ButtonText className="text-white ml-2">
+                                                {suggestion.publication_name
+                                                    ? t('articleDetail.readOn', { publication: suggestion.publication_name })
+                                                    : t('articleDetail.readArticle')}
+                                            </ButtonText>
+                                        </Button>
+                                    </Box>
+                                    <Box className="flex-1 items-center justify-center">
+                                        <Pressable
+                                            onPress={handleToggleSave}
+                                            hitSlop={12}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={t('savedSuggestions.savedToastTitle')}
+                                            className="bg-gray-900 rounded-full p-2.5 shadow-hard-2"
+                                        >
+                                            <MaterialIcons
+                                                name={isSaved ? 'bookmark' : 'bookmark-border'}
+                                                size={24}
+                                                color="#ffffff"
+                                            />
+                                        </Pressable>
+                                    </Box>
+                                </HStack>
                                 {(() => {
                                     const status = getArticleTranslatableStatus(
                                         sourceLanguage,

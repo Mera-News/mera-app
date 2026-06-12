@@ -40,6 +40,7 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { Icon, SettingsIcon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -645,13 +646,24 @@ const MeraNewsScreen: React.FC = () => {
                         <Heading size="3xl" className="text-white">{t('feed.forYou')}</Heading>
                         <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
                     </HStack>
-                    <Pressable
-                        onPress={openConfigPanel}
-                        hitSlop={12}
-                        className="p-3 rounded-full bg-primary-500"
-                    >
-                        <Icon as={SettingsIcon} size="xl" className="text-white" />
-                    </Pressable>
+                    <HStack className="items-center" space="sm">
+                        <Pressable
+                            onPress={() => router.push('/logged-in/saved-suggestions')}
+                            hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('savedSuggestions.title')}
+                            className="p-3 rounded-full bg-primary-500"
+                        >
+                            <MaterialIcons name="bookmark" size={22} color="#ffffff" />
+                        </Pressable>
+                        <Pressable
+                            onPress={openConfigPanel}
+                            hitSlop={12}
+                            className="p-3 rounded-full bg-primary-500"
+                        >
+                            <Icon as={SettingsIcon} size="xl" className="text-white" />
+                        </Pressable>
+                    </HStack>
                 </HStack>
 
                 {/* Banner area — polling status + progress/article-count in one compact slot */}

@@ -1,7 +1,7 @@
-import { pruneOldJobs } from '../scheduler-persistence';
-import { AppScheduler } from '../AppScheduler';
 import { deleteOldSuggestions } from '@/lib/database/services/article-suggestion-service';
 import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
+import { AppScheduler } from '../AppScheduler';
+import { pruneOldJobs } from '../scheduler-persistence';
 
 const SUGGESTION_TTL_MS = 48 * 60 * 60 * 1000;
 

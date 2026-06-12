@@ -13,6 +13,7 @@ import SchedulerJob from './models/SchedulerJob';
 import Setting from './models/Setting';
 import UserPersona from './models/UserPersona';
 import PublicationVisit from './models/PublicationVisit';
+import SavedArticleSuggestion from './models/SavedArticleSuggestion';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -35,6 +36,7 @@ const database = new Database({
     ArticleSuggestionFact,
     UserPersona,
     PublicationVisit,
+    SavedArticleSuggestion,
     Setting,
     InferenceJob,
     SchedulerJob,
