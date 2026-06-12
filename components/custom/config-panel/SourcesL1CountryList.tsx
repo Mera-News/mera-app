@@ -14,7 +14,8 @@ import {
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
-import { MaterialIcons } from '@expo/vector-icons';
+import { usePinnedCountriesStore } from '@/lib/stores/pinned-countries-store';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,9 +25,10 @@ interface CountryItem {
     code: string;
     name: string;
     flag: string;
+    isPinned: boolean;
 }
 
-const GLOBAL_COUNTRY: CountryItem = {
+const GLOBAL_COUNTRY = {
     code: 'GLOBAL',
     name: 'Global',
     flag: '🌍',
@@ -40,6 +42,9 @@ const SourcesL1CountryList: React.FC = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const hasFetched = useRef(false);
+    const pinnedCodes = usePinnedCountriesStore((s) => s.pinnedCodes);
+    const togglePin = usePinnedCountriesStore((s) => s.togglePin);
+    const hydratePinned = usePinnedCountriesStore((s) => s.hydrate);
 
     const loadCountries = useCallback(async () => {
         try {
@@ -61,11 +66,12 @@ const SourcesL1CountryList: React.FC = () => {
         if (!hasFetched.current) {
             hasFetched.current = true;
             setIsLoading(true);
+            hydratePinned();
             Promise.all([loadCountries(), loadTopPublications()]).finally(() =>
                 setIsLoading(false),
             );
         }
-    }, [loadCountries, loadTopPublications]);
+    }, [loadCountries, loadTopPublications, hydratePinned]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -75,23 +81,35 @@ const SourcesL1CountryList: React.FC = () => {
 
     const countryList: CountryItem[] = useMemo(() => {
         const query = searchQuery.toLowerCase().trim();
-        const allItems: CountryItem[] = countryCodes
+        const pinnedSet = new Set(pinnedCodes);
+
+        const countryItems: CountryItem[] = countryCodes
             .filter((code) => code !== 'GLOBAL')
             .map((code) => ({
                 code,
                 name: getCountryName(code),
                 flag: getFlagEmoji(code),
+                isPinned: pinnedSet.has(code),
             }))
-            .filter((item) => !query || item.name.toLowerCase().includes(query))
+            .filter((item) => !query || item.name.toLowerCase().includes(query));
+
+        // Order: pinned countries first, then the fixed Global item, then the
+        // rest. Each country group is alphabetical by name; Global is not pinnable.
+        const pinned = countryItems
+            .filter((item) => item.isPinned)
+            .sort((a, b) => a.name.localeCompare(b.name));
+        const rest = countryItems
+            .filter((item) => !item.isPinned)
             .sort((a, b) => a.name.localeCompare(b.name));
 
         const globalMatchesSearch = !query || GLOBAL_COUNTRY.name.toLowerCase().includes(query);
 
         return [
-            ...(globalMatchesSearch ? [GLOBAL_COUNTRY] : []),
-            ...allItems,
+            ...pinned,
+            ...(globalMatchesSearch ? [{ ...GLOBAL_COUNTRY, isPinned: false }] : []),
+            ...rest,
         ];
-    }, [countryCodes, searchQuery]);
+    }, [countryCodes, searchQuery, pinnedCodes]);
 
     const handleCountryPress = useCallback(
         (item: CountryItem) => {
@@ -127,6 +145,20 @@ const SourcesL1CountryList: React.FC = () => {
                         <Text className="text-base text-white">{item.name}</Text>
                     </HStack>
                     <HStack className="items-center" space="sm">
+                        {item.code !== 'GLOBAL' && (
+                            <Pressable
+                                onPress={() => togglePin(item.code)}
+                                className="p-1"
+                                accessibilityRole="button"
+                                accessibilityLabel={t('sources.togglePin')}
+                            >
+                                <MaterialCommunityIcons
+                                    name={item.isPinned ? 'pin' : 'pin-outline'}
+                                    size={22}
+                                    color={item.isPinned ? '#3b82f6' : '#666666'}
+                                />
+                            </Pressable>
+                        )}
                         <Button
                             variant="outline"
                             size="xs"
@@ -144,7 +176,7 @@ const SourcesL1CountryList: React.FC = () => {
                 </HStack>
             </Pressable>
         ),
-        [handleCountryPress, handleTopHeadlinesPress, t]
+        [handleCountryPress, handleTopHeadlinesPress, togglePin, t]
     );
 
     const keyExtractor = useCallback((item: CountryItem) => item.code, []);

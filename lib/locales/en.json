@@ -173,7 +173,8 @@
     "noPublishers": "No publishers for this country",
     "noArticlesFound": "No articles found",
     "viewTopHeadlines": "Top headlines",
-    "topHeadlines": "Top headlines"
+    "topHeadlines": "Top headlines",
+    "togglePin": "Toggle pin"
   },
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",

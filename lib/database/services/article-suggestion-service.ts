@@ -485,7 +485,9 @@ export async function getArticleSuggestionsByTopicTexts(
 ): Promise<ArticleSuggestionModel[]> {
   if (topicTexts.length === 0) return [];
   const topicSet = new Set(topicTexts);
-  const rows = await articleSuggestionsCol.query().fetch();
+  const rows = await articleSuggestionsCol
+    .query(Q.sortBy('first_pub_date', Q.desc))
+    .fetch();
   return rows.filter(row => {
     const topics = parseTopicIds(row.matchedTopicTextsJson);
     return topics.some(t => topicSet.has(t));

@@ -115,10 +115,16 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
 
     const stageCopy = useMemo(() => {
         if (stage === 'idle' || stage === 'done' || stage === 'error') return null;
-        const headlines = t(`feed.processing.stages.${stage}.headlines`, {
+        // The key is dynamic over every ProcessingStage, but only some stages
+        // have headline copy in the locale files; the rest fall back to the
+        // empty `defaultValue` at runtime. Cast the key to a known headlines
+        // key so the typed-i18n `returnObjects` overload resolves to string[].
+        const headlinesKey =
+            `feed.processing.stages.${stage}.headlines` as 'feed.processing.stages.fetching.headlines';
+        const headlines = t(headlinesKey, {
             returnObjects: true,
-            defaultValue: [],
-        }) as string[];
+            defaultValue: [] as string[],
+        });
         const amberKey = `feed.processing.stages.${stage}.amberSubline`;
         const amber = t(amberKey, { defaultValue: '' });
         return { headlines, amberSubline: amber || undefined };
