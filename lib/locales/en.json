@@ -171,7 +171,9 @@
     "noFeedsAvailable": "No feeds available",
     "publishers": "Publishers",
     "noPublishers": "No publishers for this country",
-    "noArticlesFound": "No articles found"
+    "noArticlesFound": "No articles found",
+    "viewTopHeadlines": "Top headlines",
+    "topHeadlines": "Top headlines"
   },
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",

@@ -75,6 +75,20 @@ export default function LoggedInLayout() {
         }}
       />
       <Stack.Screen
+        name="country-articles"
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right'
+        }}
+      />
+      <Stack.Screen
+        name="publisher-articles"
+        options={{
+          headerShown: false,
+          animation: 'slide_from_right'
+        }}
+      />
+      <Stack.Screen
         name="article-detail"
         options={{
           headerShown: false,

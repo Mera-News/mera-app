@@ -210,6 +210,7 @@ export type NewsCluster = {
   __typename?: 'NewsCluster';
   _id: Scalars['ID']['output'];
   articles: ClusterArticlesConnection;
+  clusterSize?: Maybe<Scalars['Int']['output']>;
   createdAt: Scalars['DateTime']['output'];
   topicConfidence?: Maybe<Scalars['Float']['output']>;
   updatedAt: Scalars['DateTime']['output'];
@@ -295,7 +296,11 @@ export type Query = {
   /** Fetch a single article by ID. Returns null if not found (e.g. TTL’d out). */
   articleById?: Maybe<NewsArticle>;
   articleIdsForTopics: ArticleIdsForTopicsResponse;
+  /** A country's last-24h articles across all its sources, sorted by largest cluster size (top headlines). A null or "GLOBAL" countryCode spans all countries. */
+  articlesForCountry: ArticlesForPublicationSourceResponse;
   articlesForPublicationSource: ArticlesForPublicationSourceResponse;
+  /** A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines). */
+  articlesForPublisher: ArticlesForPublicationSourceResponse;
   articlesForTopicsByIds: Array<ArticleWithClusters>;
   newsClusterForUser: NewsCluster;
   newsClusters: NewsClustersResponse;
@@ -325,10 +330,24 @@ export type QueryArticleIdsForTopicsArgs = {
 };
 
 
+export type QueryArticlesForCountryArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  countryCode?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryArticlesForPublicationSourceArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   publicationSourceId: Scalars['ID']['input'];
+};
+
+
+export type QueryArticlesForPublisherArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  newsPublisherId: Scalars['ID']['input'];
 };
 
 

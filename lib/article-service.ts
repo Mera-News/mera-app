@@ -96,6 +96,71 @@ const GET_ARTICLES_FOR_PUBLICATION_SOURCE = gql`
   }
 `;
 
+// GraphQL Query for a country's "top headlines": last-24h articles across all
+// the country's sources, sorted by largest cluster size (server-side global
+// sort). A null/"GLOBAL" countryCode spans all countries.
+const GET_ARTICLES_FOR_COUNTRY = gql`
+  query GetArticlesForCountry($countryCode: String, $first: Int, $after: String) {
+    articlesForCountry(countryCode: $countryCode, first: $first, after: $after) {
+      articles {
+        _id
+        title
+        title_en_internal_only
+        description
+        description_en_internal_only
+        pubDate
+        article_url
+        image_url
+        creator
+        source_uri
+        original_language_code
+        publicationSource {
+          _id
+          publication_name
+          country_code
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+    }
+  }
+`;
+
+// GraphQL Query for a publisher's "top headlines": last-24h articles
+// aggregated across all the publisher's feeds, sorted by largest cluster size.
+const GET_ARTICLES_FOR_PUBLISHER = gql`
+  query GetArticlesForPublisher($newsPublisherId: ID!, $first: Int, $after: String) {
+    articlesForPublisher(newsPublisherId: $newsPublisherId, first: $first, after: $after) {
+      articles {
+        _id
+        title
+        title_en_internal_only
+        description
+        description_en_internal_only
+        pubDate
+        article_url
+        image_url
+        creator
+        source_uri
+        original_language_code
+        publicationSource {
+          _id
+          publication_name
+          country_code
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+    }
+  }
+`;
+
 // GraphQL Query for fetching news clusters (paginated, unordered)
 const GET_NEWS_CLUSTERS = gql`
   query GetNewsClusters($userTopicId: ID, $countryCodes: [String!], $first: Int, $after: String) {
@@ -518,6 +583,72 @@ export class ArticleService {
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getArticlesForPublicationSource' },
                 extra: { publicationSourceId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Get a country's "top headlines" with pagination — last-24h articles
+     * across all the country's sources, sorted by largest cluster size on the
+     * server. Pass 'GLOBAL' (or omit) for all countries.
+     */
+    static async getArticlesForCountry(
+        countryCode: string | undefined,
+        options?: { first?: number; after?: string }
+    ): Promise<ArticlesForPublicationSourceResponse> {
+        try {
+            const { data } = await client.query<{ articlesForCountry: ArticlesForPublicationSourceResponse }>({
+                query: GET_ARTICLES_FOR_COUNTRY,
+                variables: {
+                    countryCode: countryCode === 'GLOBAL' ? null : countryCode,
+                    first: options?.first ?? 20,
+                    after: options?.after,
+                },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.articlesForCountry || {
+                articles: [],
+                pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
+            };
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getArticlesForCountry' },
+                extra: { countryCode },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Get a publisher's "top headlines" with pagination — last-24h articles
+     * aggregated across all the publisher's feeds, sorted by largest cluster
+     * size on the server.
+     */
+    static async getArticlesForPublisher(
+        newsPublisherId: string,
+        options?: { first?: number; after?: string }
+    ): Promise<ArticlesForPublicationSourceResponse> {
+        try {
+            const { data } = await client.query<{ articlesForPublisher: ArticlesForPublicationSourceResponse }>({
+                query: GET_ARTICLES_FOR_PUBLISHER,
+                variables: {
+                    newsPublisherId,
+                    first: options?.first ?? 20,
+                    after: options?.after,
+                },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.articlesForPublisher || {
+                articles: [],
+                pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
+            };
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getArticlesForPublisher' },
+                extra: { newsPublisherId },
             });
             throw error;
         }

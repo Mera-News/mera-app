@@ -2,6 +2,7 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField, InputSlot } from '@/components/ui/input';
+import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -102,33 +103,48 @@ const SourcesL1CountryList: React.FC = () => {
         []
     );
 
+    const handleTopHeadlinesPress = useCallback(
+        (item: CountryItem) => {
+            router.push({
+                pathname: '/logged-in/country-articles',
+                params: { countryCode: item.code, countryName: item.name },
+            });
+        },
+        []
+    );
+
     const renderItem: ListRenderItem<CountryItem> = useCallback(
         ({ item }) => (
-            <HStack className="mx-4 mb-3 items-center" space="sm">
-                <Button
-                    variant="outline"
-                    size="lg"
-                    action="default"
-                    onPress={() => handleCountryPress(item)}
-                    className="flex-1 h-auto px-4 py-3 justify-start"
-                >
-                    <HStack className="items-center justify-between w-full">
-                        <HStack className="items-center flex-1 mr-3" space="md">
-                            <Text className="text-2xl">{item.flag}</Text>
-                            <ButtonText className="text-base text-white">
-                                {item.name}
-                            </ButtonText>
-                        </HStack>
+            // Outer Pressable opens the country's publishers; the inner "top
+            // headlines" Button is a separate touchable that fetches on tap.
+            <Pressable
+                onPress={() => handleCountryPress(item)}
+                className="mx-4 mb-3 h-auto px-4 py-3 justify-start rounded-lg border border-gray-700"
+            >
+                <HStack className="items-center justify-between w-full" space="sm">
+                    <HStack className="items-center flex-1 mr-3" space="md">
+                        <Text className="text-2xl">{item.flag}</Text>
+                        <Text className="text-base text-white">{item.name}</Text>
+                    </HStack>
+                    <HStack className="items-center" space="sm">
+                        <Button
+                            variant="outline"
+                            size="xs"
+                            onPress={() => handleTopHeadlinesPress(item)}
+                            className="rounded-full"
+                        >
+                            <ButtonText>{t('sources.viewTopHeadlines')}</ButtonText>
+                        </Button>
                         <MaterialIcons
                             name="chevron-right"
                             size={20}
                             color="#999999"
                         />
                     </HStack>
-                </Button>
-            </HStack>
+                </HStack>
+            </Pressable>
         ),
-        [handleCountryPress]
+        [handleCountryPress, handleTopHeadlinesPress, t]
     );
 
     const keyExtractor = useCallback((item: CountryItem) => item.code, []);

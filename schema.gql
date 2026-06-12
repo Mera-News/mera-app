@@ -48,8 +48,8 @@ type ArticleWithClusters {
   language_code: String
   pubDate: DateTime!
   publication_name: String
-  title_en: String!
   title: String
+  title_en: String!
 }
 
 type ArticlesForPublicationSourceResponse {
@@ -62,7 +62,9 @@ type ClusterArticlesConnection {
   pageInfo: CursorPageInfo!
 }
 
-"""Membership of an article in a cluster, with the HDBSCAN confidence (0.0–1.0)"""
+"""
+Membership of an article in a cluster, with the HDBSCAN confidence (0.0–1.0)
+"""
 type ClusterMembership {
   clusterId: ID!
   confidence: Float!
@@ -143,6 +145,7 @@ type NewsCluster {
     """Number of articles to fetch (max 10)"""
     first: Int = 10
   ): ClusterArticlesConnection!
+  clusterSize: Int
   createdAt: DateTime!
   topicConfidence: Float
   updatedAt: DateTime!
@@ -222,6 +225,20 @@ type Query {
   """
   articleById(id: ID!): NewsArticle
   articleIdsForTopics(limitPerTopic: Int! = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
+
+  """
+  A country's last-24h articles across all its sources, sorted by largest cluster size (top headlines). A null or "GLOBAL" countryCode spans all countries.
+  """
+  articlesForCountry(
+    """Cursor to fetch items after"""
+    after: String
+
+    """ISO country code, or null/"GLOBAL" for all countries"""
+    countryCode: String
+
+    """Number of items to fetch"""
+    first: Int = 20
+  ): ArticlesForPublicationSourceResponse!
   articlesForPublicationSource(
     """Cursor to fetch items after"""
     after: String
@@ -229,6 +246,18 @@ type Query {
     """Number of items to fetch"""
     first: Int = 20
     publicationSourceId: ID!
+  ): ArticlesForPublicationSourceResponse!
+
+  """
+  A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines).
+  """
+  articlesForPublisher(
+    """Cursor to fetch items after"""
+    after: String
+
+    """Number of items to fetch"""
+    first: Int = 20
+    newsPublisherId: ID!
   ): ArticlesForPublicationSourceResponse!
   articlesForTopicsByIds(articleIds: [ID!]!): [ArticleWithClusters!]!
   newsClusterForUser(clusterId: ID!): NewsCluster!

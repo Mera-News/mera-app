@@ -8,6 +8,7 @@ import {
     AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
@@ -105,6 +106,16 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         [countryCode]
     );
 
+    const handleTopHeadlinesPress = useCallback(
+        (publisher: NewsPublisher) => {
+            router.push({
+                pathname: '/logged-in/publisher-articles',
+                params: { publisherId: publisher._id, publisherName: publisher.name },
+            });
+        },
+        []
+    );
+
     const renderPublisher: ListRenderItem<NewsPublisher> = useCallback(
         ({ item }) => (
             <Box className="mx-4 mb-3">
@@ -122,6 +133,14 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                         </Text>
                                     )}
                                 </VStack>
+                                <Button
+                                    variant="outline"
+                                    size="xs"
+                                    onPress={() => handleTopHeadlinesPress(item)}
+                                    className="rounded-full mr-2"
+                                >
+                                    <ButtonText>{t('sources.viewTopHeadlines')}</ButtonText>
+                                </Button>
                                 <AccordionIcon
                                     as={ChevronDownIcon}
                                     className="text-gray-400"
@@ -154,7 +173,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 </Accordion>
             </Box>
         ),
-        [handleFeedPress]
+        [handleFeedPress, handleTopHeadlinesPress, t]
     );
 
     const keyExtractor = useCallback(
