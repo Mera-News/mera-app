@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import logger from '@/lib/logger';
+import { isTransientNetworkError } from '@/lib/utils/transient-error';
 
 export default function OTAUpdatePrompt() {
   const { isUpdatePending } = Updates.useUpdates();
@@ -26,11 +27,12 @@ export default function OTAUpdatePrompt() {
       render: ({ id: toastId }: { id: string }) => (
         <Pressable
           onPress={() => {
-            Updates.reloadAsync().catch((error) =>
+            Updates.reloadAsync().catch((error) => {
+              if (isTransientNetworkError(error)) return;
               logger.captureException(error, {
                 tags: { component: 'OTAUpdatePrompt', method: 'reloadAsync' },
-              }),
-            );
+              });
+            });
           }}
         >
           <Toast nativeID={toastId} action="info" variant="solid">
@@ -42,7 +44,7 @@ export default function OTAUpdatePrompt() {
         </Pressable>
       ),
     });
-  }, [isUpdatePending, toast]);
+  }, [isUpdatePending, toast, t]);
 
   useEffect(() => {
     if (!Updates.isEnabled || __DEV__) return;
@@ -54,6 +56,11 @@ export default function OTAUpdatePrompt() {
           await Updates.fetchUpdateAsync();
         }
       } catch (error) {
+        // The OTA check is best-effort — a timed-out / lost connection is
+        // expected on mobile and recovers on the next foreground. Don't report
+        // those (they were noisy `error`s); only surface genuinely unexpected
+        // failures.
+        if (isTransientNetworkError(error)) return;
         logger.captureException(error as Error, {
           tags: { component: 'OTAUpdatePrompt', method: 'checkForUpdate' },
         });

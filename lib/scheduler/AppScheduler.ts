@@ -40,6 +40,13 @@ class _AppScheduler {
   async trigger(taskName: string, input?: unknown): Promise<void> {
     const task = this.tasks.get(taskName);
     if (!task) throw new Error(`Unknown task: ${taskName}`);
+    // Honor exclusivity for triggered runs too (e.g. the scheduler-runner retry
+    // path). A run already in progress supersedes the trigger — without this an
+    // exclusive task could run concurrently with its own retry.
+    if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) {
+      logger.info(`[AppScheduler] trigger skipped — task=${task.name} already running`);
+      return;
+    }
     await this._enqueueAndRun(task, input);
   }
 
@@ -122,7 +129,20 @@ class _AppScheduler {
   }
 
   private async _enqueueAndRun(task: TaskDefinition, input?: unknown): Promise<void> {
-    const job: Job = await persistence.createJob(task, input);
+    // Reserve the exclusive task synchronously, before the async createJob
+    // below, so two near-simultaneous triggers (e.g. the startup _tick() and
+    // onStoresHydrated→_onForeground()) can't both pass the isRunning() guard
+    // during the await window. setJobRunning() inside runner.run is idempotent.
+    if (task.exclusive) useSchedulerStore.getState().reserveTask(task.name);
+    let job: Job;
+    try {
+      job = await persistence.createJob(task, input);
+    } catch (err) {
+      // createJob failed — release the reservation so the task isn't stuck
+      // permanently 'running' and blocking all future runs.
+      if (task.exclusive) useSchedulerStore.getState().clearTaskReservation(task.name);
+      throw err;
+    }
     useSchedulerStore.getState().addJob(job);
     await runner.run(job, task);
   }

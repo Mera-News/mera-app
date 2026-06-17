@@ -374,6 +374,43 @@ describe('FeedSyncMachine — error handling', () => {
   });
 });
 
+describe('FeedSyncMachine — no-topics-configured is a normal terminal outcome', () => {
+  beforeEach(() => {
+    mockStepFetchTopicIds.mockRejectedValue(
+      Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' }),
+    );
+    mockClassifyError.mockReturnValue('no-topics-configured');
+  });
+
+  it('resolves without throwing (job completes, no retry)', async () => {
+    await expect(feedSyncMachine.start('persona-1', makeCtx())).resolves.toBeUndefined();
+  });
+
+  it('does NOT transition to failed and resets to idle', async () => {
+    await feedSyncMachine.start('persona-1', makeCtx());
+    expect(feedSyncMachine.state).toBe('idle');
+  });
+
+  it('does NOT save a failed snapshot and clears the snapshot instead', async () => {
+    await feedSyncMachine.start('persona-1', makeCtx());
+    expect(mockSaveMachineSnapshot).not.toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'failed' }),
+    );
+    expect(mockClearMachineSnapshot).toHaveBeenCalled();
+  });
+
+  it('surfaces the noTopics UI prompt and does not capture an error to Sentry', async () => {
+    await feedSyncMachine.start('persona-1', makeCtx());
+    expect(mockPublishSyncError).toHaveBeenCalledWith(
+      'no-topics-configured',
+      undefined,
+      expect.any(String),
+    );
+    // No Sentry capture for the (expected) no-topics condition.
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+});
+
 describe('FeedSyncMachine — abort signal handling', () => {
   it('returns early without completing when signal is aborted during scoring', async () => {
     const controller = new AbortController();
@@ -651,6 +688,76 @@ describe('FeedSyncMachine — error catch: already failed/done state', () => {
     await expect(feedSyncMachine.start('persona-1', ctx)).rejects.toThrow('first error');
     expect(feedSyncMachine.state).toBe('failed');
     // publishSyncError called once
+    expect(mockPublishSyncError).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('FeedSyncMachine — re-entrancy guard (single-flight)', () => {
+  it('joins an in-flight run instead of starting a second concurrent run', async () => {
+    // Hold the first run inside stepFetchTopicIds so the second start() lands
+    // while a run is genuinely in flight — the production concurrency scenario.
+    let resolveStep: (() => void) | null = null;
+    mockStepFetchTopicIds.mockImplementation(
+      () => new Promise<typeof defaultTopicResult>((resolve) => {
+        resolveStep = () => resolve(defaultTopicResult);
+      }),
+    );
+
+    const p1 = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+
+    const p2 = feedSyncMachine.start('persona-1', makeCtx());
+
+    // The second call must NOT execute the run body again.
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(1);
+
+    (resolveStep as (() => void) | null)?.();
+    await jest.advanceTimersByTimeAsync(0);
+    await Promise.all([p1, p2]);
+
+    // No "Invalid FeedSyncMachine transition" was ever produced.
+    const transitionErrors = mockCaptureException.mock.calls.filter(
+      ([e]: any[]) => e instanceof Error && /Invalid FeedSyncMachine transition/.test(e.message),
+    );
+    expect(transitionErrors).toHaveLength(0);
+    // The run completed exactly once.
+    expect(mockStepScore).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows a fresh run after the previous run settles', async () => {
+    const p1 = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await p1;
+    expect(mockStepScore).toHaveBeenCalledTimes(1);
+
+    const p2 = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await p2;
+    expect(mockStepScore).toHaveBeenCalledTimes(2);
+  });
+
+  it('joins the in-flight run even when the first run is failing', async () => {
+    // A run that fails should still serialize a concurrent start() — the second
+    // call joins (and shares) the rejection rather than racing transitions.
+    let rejectStep: ((e: Error) => void) | null = null;
+    mockStepFetchTopicIds.mockImplementation(
+      () => new Promise<typeof defaultTopicResult>((_resolve, reject) => {
+        rejectStep = (e: Error) => reject(e);
+      }),
+    );
+    mockClassifyError.mockReturnValue('server-unreachable');
+
+    const p1 = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    const p2 = feedSyncMachine.start('persona-1', makeCtx());
+
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(1);
+
+    (rejectStep as ((e: Error) => void) | null)?.(new Error('boom'));
+
+    await expect(p1).rejects.toThrow('boom');
+    await expect(p2).rejects.toThrow('boom');
+    // Only one failed transition — no duplicate-run "failed → X" artifacts.
     expect(mockPublishSyncError).toHaveBeenCalledTimes(1);
   });
 });

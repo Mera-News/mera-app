@@ -20,9 +20,23 @@ export async function setSetting(key: string, value: string): Promise<void> {
     const existing = await settings.query(Q.where('key', key)).fetch();
 
     if (existing.length > 0) {
-      await existing[0].update((record) => {
-        record.value = value;
-      });
+      try {
+        await existing[0].update((record) => {
+          record.value = value;
+        });
+      } catch (err) {
+        // The fetched record was tombstoned by a concurrent delete (or a
+        // migration's direct `DELETE FROM settings`) — WatermelonDB throws
+        // "Not allowed to change deleted record settings#…". Self-heal by
+        // writing a fresh row instead of surfacing the error. Recoverable, so
+        // no Sentry report.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!msg.includes('deleted record')) throw err;
+        await settings.create((record) => {
+          record.key = key;
+          record.value = value;
+        });
+      }
     } else {
       await settings.create((record) => {
         record.key = key;
@@ -33,15 +47,17 @@ export async function setSetting(key: string, value: string): Promise<void> {
 }
 
 export async function deleteSetting(key: string): Promise<void> {
-  const existing = await settings.query(Q.where('key', key)).fetch();
-  if (existing.length === 0) return;
   try {
     await database.write(async () => {
+      // Query inside the write() so the fetch + destroy share one transaction —
+      // a concurrent writer can't tombstone the row between the two steps.
+      const existing = await settings.query(Q.where('key', key)).fetch();
+      if (existing.length === 0) return;
       await existing[0].destroyPermanently();
     });
   } catch (err) {
-    // Row was concurrently deleted between the query and this write — the goal
-    // (row absent) is already achieved, so treat as success.
+    // Final safety net: if the row was still concurrently deleted, the goal
+    // (row absent) is already achieved — treat as success.
     const msg = err instanceof Error ? err.message : String(err);
     if (!msg.includes('deleted record')) throw err;
   }

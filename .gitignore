@@ -79,3 +79,5 @@ prompt-dumps/
 
 # open-source readiness audit specs (internal, do not publish)
 open-source-readiness/
+
+error-logs/

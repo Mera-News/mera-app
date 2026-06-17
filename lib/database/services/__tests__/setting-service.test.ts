@@ -92,6 +92,34 @@ describe('setSetting', () => {
     expect(created).toBeDefined();
     expect(created.value).toBe('bar');
   });
+
+  it('self-heals by creating a fresh row when update() hits a tombstoned record', async () => {
+    // Simulates the "Not allowed to change deleted record settings#…" production
+    // error: the fetched record was deleted concurrently (or by a migration).
+    const rec = settingRecord('1', 'feed_sync_machine_state', 'old');
+    rec.update = jest.fn(async () => {
+      throw new Error('Not allowed to change deleted record settings#abc');
+    });
+    db._setRows('settings', [rec]);
+
+    await expect(setSetting('feed_sync_machine_state', 'new')).resolves.toBeUndefined();
+
+    const col = db._collections['settings'];
+    expect(col.create).toHaveBeenCalledTimes(1);
+    const created = col._rows.find((r: any) => r.key === 'feed_sync_machine_state' && r.value === 'new');
+    expect(created).toBeDefined();
+  });
+
+  it('rethrows non-"deleted record" update() errors', async () => {
+    const rec = settingRecord('1', 'k', 'v');
+    rec.update = jest.fn(async () => {
+      throw new Error('disk full');
+    });
+    db._setRows('settings', [rec]);
+
+    await expect(setSetting('k', 'v2')).rejects.toThrow('disk full');
+    expect(db._collections['settings'].create).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -99,10 +127,23 @@ describe('setSetting', () => {
 // ---------------------------------------------------------------------------
 
 describe('deleteSetting', () => {
-  it('does nothing when the key does not exist', async () => {
+  it('does nothing destructive when the key does not exist', async () => {
+    const rec = settingRecord('1', 'other', 'x');
     db._setRows('settings', []);
     await deleteSetting('ghost');
-    expect(database.write).not.toHaveBeenCalled();
+    // The query now runs inside write() (so fetch + destroy are atomic), so
+    // write IS entered — but nothing is destroyed.
+    expect(rec.destroyPermanently).not.toHaveBeenCalled();
+  });
+
+  it('queries inside the write() transaction (fetch + destroy are atomic)', async () => {
+    const rec = settingRecord('1', 'session', 'abc');
+    db._setRows('settings', [rec]);
+    await deleteSetting('session');
+    const col = db._collections['settings'];
+    // The query was issued (inside write) and the row destroyed.
+    expect(col.query).toHaveBeenCalled();
+    expect(database.write).toHaveBeenCalledTimes(1);
   });
 
   it('destroys the record permanently when it exists', async () => {

@@ -101,6 +101,14 @@ jest.mock('../database/services/article-suggestion-service', () => ({
   loadSuggestions: jest.fn(() => Promise.resolve([])),
 }));
 
+// setting-service backs the push-token failure streak. Mock it so the test
+// never touches the native WatermelonDB singleton.
+jest.mock('../database/services/setting-service', () => ({
+  getSetting: jest.fn(async () => null),
+  setSetting: jest.fn(async () => {}),
+  deleteSetting: jest.fn(async () => {}),
+}));
+
 import {
   registerForPushNotificationsAsync,
   setupNotifications,
@@ -138,6 +146,11 @@ const mockDeleteExpoPushToken: jest.Mock = MockAccountService.deleteExpoPushToke
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mockLogger = require('../logger').default;
 const mockLoggerCaptureException: jest.Mock = mockLogger.captureException;
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockSettingService = require('../database/services/setting-service');
+const mockGetSetting: jest.Mock = mockSettingService.getSetting;
+const mockSetSetting: jest.Mock = mockSettingService.setSetting;
 
 describe('registerForPushNotificationsAsync', () => {
   beforeEach(() => {
@@ -288,6 +301,49 @@ describe('registerForPushNotificationsAsync', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('reports the first token-retrieval failure as a warning and increments the streak', async () => {
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted', ios: {} });
+    mockGetExpoPushTokenAsync.mockRejectedValueOnce(new Error('APNs error'));
+    mockGetSetting.mockResolvedValueOnce('0');
+
+    await registerForPushNotificationsAsync();
+
+    expect(mockSetSetting).toHaveBeenCalledWith('push_token_fail_streak', '1');
+    expect(mockLoggerCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        level: 'warning',
+        extra: expect.objectContaining({ failStreak: 1 }),
+      }),
+    );
+  });
+
+  it('escalates to error once the failure streak reaches the threshold (recovery consistently failing)', async () => {
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted', ios: {} });
+    mockGetExpoPushTokenAsync.mockRejectedValueOnce(new Error('APNs error'));
+    mockGetSetting.mockResolvedValueOnce('2'); // → next failure makes streak 3 (== threshold)
+
+    await registerForPushNotificationsAsync();
+
+    expect(mockLoggerCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        level: 'error',
+        extra: expect.objectContaining({ failStreak: 3 }),
+      }),
+    );
+  });
+
+  it('resets the failure streak to 0 after a successful token retrieval', async () => {
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted', ios: {} });
+    mockGetExpoPushTokenAsync.mockResolvedValueOnce({ data: 'ExponentPushToken[ok]' });
+
+    const result = await registerForPushNotificationsAsync();
+
+    expect(result).toBe('ExponentPushToken[ok]');
+    expect(mockSetSetting).toHaveBeenCalledWith('push_token_fail_streak', '0');
   });
 });
 

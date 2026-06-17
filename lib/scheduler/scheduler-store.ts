@@ -15,6 +15,8 @@ interface SchedulerState {
   pendingCount: number;
 
   setStatus: (s: SchedulerState['status']) => void;
+  reserveTask: (taskName: string) => void;
+  clearTaskReservation: (taskName: string) => void;
   addJob: (job: Job) => void;
   setJobRunning: (jobId: string) => void;
   setJobCompleted: (jobId: string, completedAt: number) => void;
@@ -38,10 +40,34 @@ export const useSchedulerStore = create<SchedulerState>((set, get) => ({
 
   setStatus: (s) => set({ status: s }),
 
+  // Synchronously mark a task as running before its job is created, so two
+  // near-simultaneous triggers can't both pass the isRunning() exclusivity
+  // guard during the async createJob window. Resolved later by setJobRunning /
+  // setJobCompleted / setJobFailed, or cleared by clearTaskReservation if the
+  // job is never created.
+  reserveTask: (taskName) =>
+    set((state) => ({
+      taskCurrentStatus: { ...state.taskCurrentStatus, [taskName]: 'running' },
+    })),
+
+  clearTaskReservation: (taskName) =>
+    set((state) => {
+      if (state.taskCurrentStatus[taskName] !== 'running') return state;
+      return {
+        taskCurrentStatus: { ...state.taskCurrentStatus, [taskName]: null },
+      };
+    }),
+
   addJob: (job) =>
     set((state) => ({
       jobs: { ...state.jobs, [job.id]: { ...job } },
-      taskCurrentStatus: { ...state.taskCurrentStatus, [job.taskName]: job.status },
+      // Preserve an existing 'running' reservation (reserveTask) so the
+      // exclusivity window isn't reopened between enqueue and setJobRunning.
+      taskCurrentStatus: {
+        ...state.taskCurrentStatus,
+        [job.taskName]:
+          state.taskCurrentStatus[job.taskName] === 'running' ? 'running' : job.status,
+      },
       pendingCount: state.pendingCount + 1,
     })),
 

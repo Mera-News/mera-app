@@ -462,6 +462,10 @@ const MeraNewsScreen: React.FC = () => {
             dbReady &&
             hasGeneratedInterests &&
             !errorMessage &&
+            // An empty feed because the user has no topics configured is an
+            // expected state, not a silent failure — the no-topics prompt is
+            // shown elsewhere. Don't trip the watchdog (and don't spam Sentry).
+            syncStatusMessage?.errorCode !== 'no-topics-configured' &&
             asyncJobPhase === 'idle' && // cloud scoring in-flight counts as productive work
             unscoredCount === 0; // unscored articles exist but scoring is blocked (e.g. no push token) — not truly stuck
         if (!shouldArm) return;
@@ -493,7 +497,7 @@ const MeraNewsScreen: React.FC = () => {
         // store snapshots read inside are pulled via getState() at fire time, so
         // they are intentionally excluded from the dep array.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length, asyncJobPhase, unscoredCount]);
+    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
         const userPersonaId = useUserStore.getState().userPersona?._id || '';

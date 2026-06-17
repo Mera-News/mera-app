@@ -276,6 +276,41 @@ describe('runBackgroundCycle — error handling', () => {
     expect(result).toBe('error');
     expect(mockCaptureException).toHaveBeenCalled();
   });
+
+  it('reports keychain errors at warning level (recoverable on next foreground)', async () => {
+    mockGetPendingAsyncJob.mockRejectedValue(new Error('SecItem errSecInteractionNotAllowed'));
+    await runBackgroundCycle('silent-push');
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ level: 'warning' }),
+    );
+  });
+
+  it('reports a transient scoring-pass abort at warning level with kind=transient-network', async () => {
+    const abortErr = new Error('Aborted');
+    abortErr.name = 'AbortError';
+    mockGetPendingAsyncJob.mockRejectedValue(abortErr);
+
+    const result = await runBackgroundCycle('scoring-pass');
+
+    expect(result).toBe('error');
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      abortErr,
+      expect.objectContaining({
+        level: 'warning',
+        tags: expect.objectContaining({ kind: 'transient-network' }),
+      }),
+    );
+  });
+
+  it('reports genuinely unexpected errors at error level', async () => {
+    mockGetPendingAsyncJob.mockRejectedValue(new Error('some random failure'));
+    await runBackgroundCycle('app-resume');
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ level: 'error', tags: expect.objectContaining({ kind: 'generic' }) }),
+    );
+  });
 });
 
 describe('runBackgroundCycle — context derivation', () => {

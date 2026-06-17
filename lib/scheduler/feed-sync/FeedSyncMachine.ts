@@ -30,6 +30,12 @@ class FeedSyncMachine {
   private _networkUnsubscribe: (() => void) | null = null;
   private _paused = false;
   private _resumeCallback: (() => void) | null = null;
+  /** Non-null while a run is in flight. The machine is a module singleton with a
+   *  single mutable `_state`, so two concurrent runs would stomp each other's
+   *  transitions (the "Invalid FeedSyncMachine transition" errors). This makes
+   *  non-reentrancy an invariant of the machine itself, independent of the
+   *  scheduler's exclusivity guard. */
+  private _inFlight: Promise<void> | null = null;
 
   get state(): FeedSyncState {
     return this._state;
@@ -44,6 +50,22 @@ class FeedSyncMachine {
   }
 
   async start(personaId: string, ctx: TaskContext): Promise<void> {
+    // Re-entrancy guard. If a run is already in flight, join it rather than
+    // starting a second run that would reset `_state` to 'idle' mid-flight and
+    // race the existing run's transitions. Covers the scheduler's
+    // check-then-run async gap and the retry path that bypasses the exclusivity
+    // guard (AppScheduler.trigger).
+    if (this._inFlight) {
+      logger.info('[FeedSyncMachine] start() called while a run is in flight — joining existing run');
+      return this._inFlight;
+    }
+    this._inFlight = this._start(personaId, ctx).finally(() => {
+      this._inFlight = null;
+    });
+    return this._inFlight;
+  }
+
+  private async _start(personaId: string, ctx: TaskContext): Promise<void> {
     const snap = await feedPersistence.loadValidSnapshot();
     if (snap && snap.state !== 'idle' && snap.state !== 'done' && snap.state !== 'failed') {
       logger.info(`[FeedSyncMachine] resuming from persisted state: ${snap.state}`);
@@ -200,6 +222,25 @@ class FeedSyncMachine {
 
     } catch (err) {
       const errorCode = classifyError(err);
+
+      // `no-topics-configured` is the normal state for a user who hasn't
+      // generated interests yet — not a failure. Treat it as a clean, terminal
+      // "no work" outcome: show the add-interests prompt, reset to idle, and
+      // return WITHOUT throwing so the scheduler marks the job completed (no
+      // 3× retry, no Sentry error). Recovery is the user adding interests.
+      if (errorCode === 'no-topics-configured') {
+        publishSyncError('no-topics-configured', undefined, this._state);
+        this._state = 'idle'; // force reset — bypasses transition guard, valid from any state
+        try {
+          await feedPersistence.clearMachineSnapshot();
+        } catch (snapErr) {
+          logger.captureException(snapErr, {
+            tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
+          });
+        }
+        return;
+      }
+
       const failedAtState = this._state; // capture before transition
       if (this._state !== 'failed' && this._state !== 'done') {
         this._transitionTo('failed');

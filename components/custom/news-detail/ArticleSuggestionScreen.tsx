@@ -116,7 +116,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [articleSuggestionId, storeSuggestion]);
+    }, [articleSuggestionId, storeSuggestion, t]);
 
     // Lazy-load related articles once we know the article id.
     useEffect(() => {

@@ -75,7 +75,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
         };
 
         loadCluster();
-    }, [clusterId]);
+    }, [clusterId, t]);
 
     const loadMore = useCallback(async () => {
         if (!hasNextPage || isLoadingMore || !endCursor) return;

@@ -13,6 +13,8 @@ const mockSchedulerStore = {
   isRunning: jest.fn(() => false),
   getLastRun: jest.fn((): number | null => null),
   addJob: jest.fn(),
+  reserveTask: jest.fn(),
+  clearTaskReservation: jest.fn(),
 };
 
 // Network-store state + subscription
@@ -594,6 +596,59 @@ describe('AppScheduler.trigger', () => {
     await AppScheduler.trigger('input-task', { key: 'val' });
 
     expect(mockCreateJob).toHaveBeenCalledWith(task, { key: 'val' });
+  });
+
+  it('skips an exclusive task that is already running (retry must not run concurrently)', async () => {
+    const task = makeTask({ name: 'exclusive-trigger-task', exclusive: true });
+    AppScheduler.register(task);
+    mockSchedulerStore.isRunning.mockReturnValue(true);
+
+    await AppScheduler.trigger('exclusive-trigger-task');
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+    expect(mockRunnerRun).not.toHaveBeenCalled();
+  });
+
+  it('still runs a non-exclusive task even if isRunning reports true', async () => {
+    const task = makeTask({ name: 'non-exclusive-trigger-task', exclusive: false });
+    AppScheduler.register(task);
+    mockSchedulerStore.isRunning.mockReturnValue(true);
+
+    await AppScheduler.trigger('non-exclusive-trigger-task');
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+});
+
+describe('AppScheduler — exclusive reservation (close check-then-run gap)', () => {
+  it('reserves an exclusive task synchronously before createJob', async () => {
+    const task = makeTask({ name: 'reserve-task', exclusive: true });
+    AppScheduler.register(task);
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'reserve-task' }));
+
+    await AppScheduler.trigger('reserve-task');
+
+    expect(mockSchedulerStore.reserveTask).toHaveBeenCalledWith('reserve-task');
+  });
+
+  it('does NOT reserve a non-exclusive task', async () => {
+    const task = makeTask({ name: 'no-reserve-task', exclusive: false });
+    AppScheduler.register(task);
+
+    await AppScheduler.trigger('no-reserve-task');
+
+    expect(mockSchedulerStore.reserveTask).not.toHaveBeenCalled();
+  });
+
+  it('releases the reservation if createJob throws', async () => {
+    const task = makeTask({ name: 'reserve-fail-task', exclusive: true });
+    AppScheduler.register(task);
+    mockCreateJob.mockRejectedValueOnce(new Error('createJob failed'));
+
+    await expect(AppScheduler.trigger('reserve-fail-task')).rejects.toThrow('createJob failed');
+
+    expect(mockSchedulerStore.reserveTask).toHaveBeenCalledWith('reserve-fail-task');
+    expect(mockSchedulerStore.clearTaskReservation).toHaveBeenCalledWith('reserve-fail-task');
   });
 });
 

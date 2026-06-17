@@ -37,7 +37,7 @@ type DbStats = {
     tableCounts: Record<string, number>;
     schedulerJobsByStatus: Record<string, number>;
     inferenceJobsByStatus: Record<string, number>;
-    settings: Array<{ key: string; value: string }>;
+    settings: { key: string; value: string }[];
 };
 
 // ─── Constants ───────────────────────────────────────────────────────────────

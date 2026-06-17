@@ -73,6 +73,33 @@ describe('useSchedulerStore', () => {
         expect(state.pendingCount).toBe(2);
     });
 
+    // ── reserveTask / clearTaskReservation ────────────────────────────────
+    it('reserveTask marks the task as running so isRunning() reports true', () => {
+        useSchedulerStore.getState().reserveTask('feed-sync');
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(true);
+    });
+
+    it('addJob preserves an existing running reservation (does not downgrade to pending)', () => {
+        // reserveTask runs before createJob; addJob must not reopen the
+        // exclusivity window by resetting the status back to 'pending'.
+        useSchedulerStore.getState().reserveTask('feed-sync');
+        useSchedulerStore.getState().addJob(makeJob({ taskName: 'feed-sync', status: 'pending' }));
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(true);
+    });
+
+    it('clearTaskReservation releases a reservation', () => {
+        useSchedulerStore.getState().reserveTask('feed-sync');
+        useSchedulerStore.getState().clearTaskReservation('feed-sync');
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(false);
+    });
+
+    it('clearTaskReservation is a no-op when the task is not reserved/running', () => {
+        useSchedulerStore.getState().addJob(makeJob({ taskName: 'feed-sync', status: 'completed' }));
+        useSchedulerStore.getState().clearTaskReservation('feed-sync');
+        // Status must remain 'completed' — clear only affects a live reservation.
+        expect(useSchedulerStore.getState().taskCurrentStatus['feed-sync']).toBe('completed');
+    });
+
     // ── setJobRunning ─────────────────────────────────────────────────────
     it('setJobRunning transitions status to running and adjusts counts', () => {
         useSchedulerStore.getState().addJob(makeJob());

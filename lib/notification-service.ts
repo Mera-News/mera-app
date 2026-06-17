@@ -6,6 +6,13 @@ import { Platform } from 'react-native';
 import logger from './logger';
 import { AccountService } from './account-service';
 import { useUserStore } from './stores/user-store';
+import { getSetting, setSetting } from './database/services/setting-service';
+
+/** Persisted count of consecutive push-token retrieval failures. Used to keep
+ *  the (expected, recoverable) iOS APNs hang at `warning` level until recovery
+ *  has consistently failed, at which point it escalates to `error`. */
+const PUSH_TOKEN_FAIL_STREAK_KEY = 'push_token_fail_streak';
+const PUSH_TOKEN_FAIL_ERROR_THRESHOLD = 3;
 
 /**
  * Interface for notification data payload used for deep linking
@@ -117,10 +124,25 @@ export async function registerForPushNotificationsAsync(
 
         if (pushTokenData) {
             token = pushTokenData.data;
+            // Success — clear any prior failure streak.
+            await setSetting(PUSH_TOKEN_FAIL_STREAK_KEY, '0').catch(() => { /* best-effort */ });
         }
     } catch (error) {
+        // iOS APNs token retrieval can hang/timeout transiently. Recovery is
+        // built in (boot-time, token-rotation, and revocation-check paths all
+        // re-attempt), so a single failure is a `warning`. Only escalate to
+        // `error` once the failure has recurred consecutively — i.e. recovery
+        // is consistently failing.
+        let streak = 1;
+        try {
+            streak = Number((await getSetting(PUSH_TOKEN_FAIL_STREAK_KEY)) ?? '0') + 1;
+            await setSetting(PUSH_TOKEN_FAIL_STREAK_KEY, String(streak));
+        } catch { /* settings unavailable — fall back to single-failure level */ }
+        const exhausted = streak >= PUSH_TOKEN_FAIL_ERROR_THRESHOLD;
         logger.captureException(error, {
+            level: exhausted ? 'error' : 'warning',
             tags: { service: 'notification-service', method: 'registerForPushNotificationsAsync' },
+            extra: { failStreak: streak },
         });
         return null;
     }

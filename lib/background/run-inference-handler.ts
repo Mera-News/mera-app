@@ -11,6 +11,7 @@
 // SuggestionSyncService.syncFeed() and does not funnel through this handler.
 
 import logger from '@/lib/logger';
+import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { getPendingAsyncJob } from '@/lib/database/services/async-job-service';
 import { submitInferenceJob } from '@/lib/llm/submitInferenceJob';
 import {
@@ -95,11 +96,18 @@ export async function runBackgroundCycle(
     // can surface it; the pending lock is preserved so the next foreground
     // retry succeeds.
     const isKeychain = /keychain|secitem|errsec|accessible/i.test(msg);
+    // Both keychain-unavailable (background + device locked) and transient
+    // network/abort failures (e.g. the scoring-pass AbortError after E2EE
+    // attestation retries exhaust) are recoverable — the caller lets the sync
+    // complete and the next foreground trigger retries. Report them as
+    // `warning`, not `error`. Anything else stays `error`.
+    const recoverable = isKeychain || isTransientNetworkError(err);
     logger.captureException(err, {
+      level: recoverable ? 'warning' : 'error',
       tags: {
         service: 'run-background-cycle',
         reason,
-        kind: isKeychain ? 'keychain-unavailable' : 'generic',
+        kind: isKeychain ? 'keychain-unavailable' : isTransientNetworkError(err) ? 'transient-network' : 'generic',
       },
     });
     return 'error';

@@ -99,7 +99,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
         return () => {
             cancelled = true;
         };
-    }, [articleId]);
+    }, [articleId, t]);
 
     useEffect(() => {
         if (!article?._id) return;

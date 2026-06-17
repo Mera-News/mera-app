@@ -105,7 +105,7 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                 </HStack>
             </Pressable>
         ),
-        [handlePublicationPress],
+        [handlePublicationPress, t],
     );
 
     const ListHeader = (

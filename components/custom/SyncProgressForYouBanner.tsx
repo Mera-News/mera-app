@@ -78,7 +78,6 @@ function CompletionToast({ nativeID }: { nativeID?: string }) {
 }
 
 export default function SyncProgressForYouBanner() {
-    const { t } = useTranslation();
     const toast = useToast();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const asyncJobProcessedCount = useForYouAsyncJobProcessedCount();
