@@ -8,10 +8,10 @@ import { VStack } from '@/components/ui/vstack';
 import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
+import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as Updates from 'expo-updates';
@@ -32,18 +32,9 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
     const setShowOriginal = useAppLanguageStore((s) => s.setShowOriginal);
 
     const [showLangPicker, setShowLangPicker] = useState(false);
-    const [videoLoading, setVideoLoading] = useState(false);
+    const [showGuideVideo, setShowGuideVideo] = useState(false);
 
-    const handleWatchGuide = async () => {
-        setVideoLoading(true);
-        try {
-            await WebBrowser.openBrowserAsync(TRANSLATION_GUIDE_URL);
-        } catch {
-            Alert.alert('Error', 'Could not load the guide. Please try again.');
-        } finally {
-            setVideoLoading(false);
-        }
-    };
+    const handleWatchGuide = () => setShowGuideVideo(true);
 
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
 
@@ -128,14 +119,12 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                     </Text>
                                     <Pressable
                                         onPress={handleWatchGuide}
-                                        disabled={videoLoading}
                                         className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
                                     >
                                         <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
                                         <Text className="text-violet-400 text-sm font-medium flex-1">
-                                            {videoLoading ? 'Loading…' : t('language.watchGuide')}
+                                            {t('language.watchGuide')}
                                         </Text>
-                                        <MaterialIcons name="open-in-new" size={16} color="#6b7280" />
                                     </Pressable>
                                 </VStack>
                             )}
@@ -178,14 +167,12 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
 
                             <Pressable
                                 onPress={handleWatchGuide}
-                                disabled={videoLoading}
                                 className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
                             >
                                 <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
                                 <Text className="text-violet-400 text-sm font-medium flex-1">
-                                    {videoLoading ? 'Loading…' : 'Watch translation guide'}
+                                    Watch translation guide
                                 </Text>
-                                <MaterialIcons name="open-in-new" size={16} color="#6b7280" />
                             </Pressable>
 
                             <Box className="p-4 bg-gray-800 rounded-lg border border-background-700">
@@ -291,6 +278,12 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                     </Box>
                 </GluestackUIProvider>
             </Modal>
+
+            <VideoPlayerModal
+                visible={showGuideVideo}
+                uri={TRANSLATION_GUIDE_URL}
+                onClose={() => setShowGuideVideo(false)}
+            />
         </GluestackUIProvider>
     );
 };

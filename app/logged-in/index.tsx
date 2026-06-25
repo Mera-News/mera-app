@@ -5,6 +5,8 @@ import { OnboardingStage } from "@/lib/generated/graphql-types";
 import { authClient } from "@/lib/auth-client";
 import { clearPreviousUserData } from "@/lib/stores";
 import { useUserStore } from "@/lib/stores/user-store";
+import { useSubscriptionStore } from "@/lib/stores/subscription-store";
+import { loginRevenueCat } from "@/lib/revenuecat";
 import { Redirect, router } from "expo-router";
 import { useEffect, useState } from "react";
 
@@ -31,6 +33,13 @@ export default function LoggedInIndex() {
                 const userStore = useUserStore.getState();
                 userStore.setUserId(userId);
                 userStore.setUserPersona(userPersona);
+
+                // Identify the RevenueCat customer as this user so the webhook's
+                // app_user_id maps back to the same id the server gates on.
+                // Fire-and-forget — must not block routing into the app.
+                void loginRevenueCat(userId).then((info) => {
+                    if (info) useSubscriptionStore.getState().setCustomerInfo(info);
+                });
 
                 const stage = userPersona?.onboardingStage ?? OnboardingStage.Notifications;
                 const needsOnboarding = stage !== OnboardingStage.Finished;

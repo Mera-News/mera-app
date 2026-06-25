@@ -17,7 +17,7 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -139,7 +139,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
             }).catch(() => {});
         }
         try {
-            await openInAppBrowser(url);
+            await openArticleInAppBrowser(url);
         } catch (err) {
             logger.captureException(err, {
                 tags: { screen: 'ArticleDetailScreen', method: 'openUrl' },

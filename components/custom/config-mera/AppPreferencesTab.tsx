@@ -15,6 +15,9 @@ import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { Linking } from 'react-native';
+import RevenueCatUI from 'react-native-purchases-ui';
+import { isRevenueCatConfigured } from '@/lib/revenuecat';
+import logger from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -90,6 +93,46 @@ const AppPreferencesTab: React.FC = () => {
         }
     };
 
+    // Present the RevenueCat paywall (subscribe / upgrade tier).
+    const handleViewPlans = async () => {
+        try {
+            await RevenueCatUI.presentPaywall();
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { component: 'AppPreferencesTab', method: 'viewPlans' },
+            });
+        }
+    };
+
+    // Present RevenueCat's Customer Center (manage / cancel / restore).
+    const handleManageSubscription = async () => {
+        try {
+            await RevenueCatUI.presentCustomerCenter();
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { component: 'AppPreferencesTab', method: 'manageSubscription' },
+            });
+        }
+    };
+
+    // Subscription rows are only shown when RevenueCat is configured.
+    const subscriptionOptions: PreferenceOption[] = isRevenueCatConfigured()
+        ? [
+            {
+                id: 'view-plans',
+                title: t('subscription.viewPlans'),
+                icon: 'star',
+                onPress: handleViewPlans,
+            },
+            {
+                id: 'manage-subscription',
+                title: t('subscription.managePlan'),
+                icon: 'card-membership',
+                onPress: handleManageSubscription,
+            },
+        ]
+        : [];
+
     // Define preference options
     const preferenceOptions: PreferenceOption[] = [
         {
@@ -128,6 +171,7 @@ const AppPreferencesTab: React.FC = () => {
             icon: 'monitor-heart',
             onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
         },
+        ...subscriptionOptions,
         {
             id: 'logout',
             title: t('preferences.logout'),

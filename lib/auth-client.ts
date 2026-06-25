@@ -4,6 +4,7 @@ import { createAuthClient } from "better-auth/react";
 import Constants from 'expo-constants';
 import { secureStore } from "./utils/secure-store-adapter";
 import { AUTH_ENDPOINT } from "./config/endpoints";
+import { logoutRevenueCat } from "./revenuecat";
 import logger from "./logger";
 
 // Scheme/slug track whatever app.config.js resolves (env override or app.json
@@ -97,6 +98,9 @@ export const getJwtToken = async (): Promise<string | null> => {
 // explicit user-initiated logout flows.
 export const clearAuthStorage = async () => {
     invalidateJwtCache();
+    // Reset the RevenueCat customer to anonymous so the next signed-in user
+    // doesn't inherit the previous user's entitlements.
+    await logoutRevenueCat();
     try {
         await authClient.signOut();
     } catch {

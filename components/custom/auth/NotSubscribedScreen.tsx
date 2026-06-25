@@ -8,54 +8,100 @@ import { VStack } from "@/components/ui/vstack";
 import { AccountService } from "@/lib/account-service";
 import { authClient } from "@/lib/auth-client";
 import { SUPPORT_EMAIL } from "@/lib/config/branding";
+import logger from "@/lib/logger";
+import {
+    getCustomerInfoSafe,
+    isRevenueCatConfigured,
+} from "@/lib/revenuecat";
+import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, TouchableOpacity } from "react-native";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NotSubscribedScreen() {
     const { data: session, isPending: isSessionPending } = authClient.useSession();
     const router = useRouter();
-    const [isCheckingApproval, setIsCheckingApproval] = useState(false);
     const { t } = useTranslation();
+    const [busy, setBusy] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+    const presentedRef = useRef(false);
+
+    const userId = session?.user?.id;
+
+    // The server is the source of truth: getUserPersona succeeds (200) only once
+    // the user's tier has been synced from RevenueCat. A 402/other error means
+    // "not subscribed yet".
+    const checkServerSubscribed = useCallback(async (): Promise<boolean> => {
+        if (!userId) return false;
+        try {
+            await AccountService.getUserPersona(userId);
+            return true;
+        } catch {
+            return false;
+        }
+    }, [userId]);
+
+    // After a purchase, the RevenueCat webhook updates the server tier
+    // asynchronously — poll a few times before falling back to a manual refresh.
+    const pollUntilSubscribed = useCallback(async (): Promise<boolean> => {
+        for (let i = 0; i < 6; i++) {
+            if (await checkServerSubscribed()) {
+                router.replace('/logged-in');
+                return true;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+        return false;
+    }, [checkServerSubscribed, router]);
+
+    const presentPaywall = useCallback(async () => {
+        if (!isRevenueCatConfigured()) return;
+        setBusy(true);
+        setMessage(null);
+        try {
+            const result = await RevenueCatUI.presentPaywall();
+            if (
+                result === PAYWALL_RESULT.PURCHASED ||
+                result === PAYWALL_RESULT.RESTORED
+            ) {
+                // Optimistically reflect the purchase in the store, then wait for
+                // the server to catch up via the webhook.
+                const info = await getCustomerInfoSafe();
+                if (info) useSubscriptionStore.getState().setCustomerInfo(info);
+                setMessage(t('subscription.activating'));
+                const ok = await pollUntilSubscribed();
+                if (!ok) setMessage(t('subscription.activationDelayed'));
+            }
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { component: 'NotSubscribedScreen', method: 'presentPaywall' },
+            });
+        } finally {
+            setBusy(false);
+        }
+    }, [pollUntilSubscribed, t]);
+
+    // Auto-present the paywall once when the gate is reached.
+    useEffect(() => {
+        if (!presentedRef.current && userId && isRevenueCatConfigured()) {
+            presentedRef.current = true;
+            void presentPaywall();
+        }
+    }, [userId, presentPaywall]);
 
     const handleRefresh = async () => {
-        if (!session?.user?.id) {
-            return;
-        }
-
-        setIsCheckingApproval(true);
-
-        try {
-            // Try to fetch user persona - if successful, user is approved
-            await AccountService.getUserPersona(session.user.id);
-
-            // If we reach here, user is approved - redirect to logged-in
+        setBusy(true);
+        setMessage(null);
+        if (await checkServerSubscribed()) {
             router.replace('/logged-in');
-        } catch (error: any) {
-            // Check if error is subscription-related
-            const statusCode = error?.networkError?.statusCode;
-            const errorMessage = error?.message || '';
-            const errorExtensions = error?.graphQLErrors?.[0]?.extensions;
-
-            const isSubscriptionError =
-                statusCode === 402 ||
-                errorMessage.includes('NotSubscribedException') ||
-                errorExtensions?.code === 'NOT_SUBSCRIBED' ||
-                errorExtensions?.exception?.name === 'NotSubscribedException';
-
-            if (isSubscriptionError) {
-                // User is still not approved - stay on this screen
-                setIsCheckingApproval(false);
-            } else {
-                // Some other error occurred - stay on screen but stop checking
-                setIsCheckingApproval(false);
-            }
+        } else {
+            setBusy(false);
         }
     };
 
-    // Show loading screen while checking session
     if (isSessionPending) {
         return (
             <Box className="flex-1 justify-center items-center bg-black">
@@ -64,22 +110,53 @@ export default function NotSubscribedScreen() {
         );
     }
 
-    // Show subscription pending message
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
             <Box className="flex-1 justify-center items-center bg-black px-6">
                 <VStack space="xl" className="items-center max-w-md">
-                    {/* Logo */}
                     <Box className="items-center mb-8">
                         <MeraLogo size={150} />
                     </Box>
                     <Heading size="2xl" className="text-white text-center">
-                        {t('account.pendingTitle')}
+                        {t('subscription.title')}
                     </Heading>
 
                     <Text size="lg" className="text-gray-300 text-center leading-relaxed">
-                        {t('account.pendingDescription')}
+                        {t('subscription.description')}
                     </Text>
+
+                    {message ? (
+                        <Text size="md" className="text-primary-400 text-center">
+                            {message}
+                        </Text>
+                    ) : null}
+
+                    <Box className="items-center w-full mt-6">
+                        <VStack space="md" className="w-full">
+                            <Button
+                                onPress={presentPaywall}
+                                disabled={busy}
+                                className="bg-primary-500 w-full"
+                                size="lg"
+                            >
+                                {busy ? <Spinner size="small" className="mr-2" /> : null}
+                                <ButtonText className="text-white">
+                                    {t('subscription.viewPlans')}
+                                </ButtonText>
+                            </Button>
+                            <Button
+                                onPress={handleRefresh}
+                                disabled={busy}
+                                variant="outline"
+                                className="border-primary-500 w-full"
+                                size="lg"
+                            >
+                                <ButtonText className="text-white">
+                                    {busy ? t('common.checking') : t('account.refresh')}
+                                </ButtonText>
+                            </Button>
+                        </VStack>
+                    </Box>
 
                     <Text size="md" className="text-gray-400 text-center mt-4">
                         {t('account.enquiries')}{" "}
@@ -89,23 +166,6 @@ export default function NotSubscribedScreen() {
                             </Text>
                         </TouchableOpacity>
                     </Text>
-
-                    <Box className="items-center w-full mt-8">
-                        <Button
-                            onPress={handleRefresh}
-                            disabled={isCheckingApproval}
-                            variant="outline"
-                            className="border-primary-500"
-                            size="lg"
-                        >
-                            {isCheckingApproval ? (
-                                <Spinner size="small" className="mr-2" />
-                            ) : null}
-                            <ButtonText className="text-white">
-                                {isCheckingApproval ? t('common.checking') : t('account.refresh')}
-                            </ButtonText>
-                        </Button>
-                    </Box>
                 </VStack>
             </Box>
         </SafeAreaView>

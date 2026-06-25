@@ -21,3 +21,10 @@ export const TRANSLATION_GUIDE_URL =
   `https://mera.news/assets/translation-guide-${
     Platform.OS === 'android' ? 'android' : 'ios'
   }.mp4`;
+
+// utm_source value appended to publisher article URLs so publishers can
+// attribute the visit to us. Derived from WEBSITE_URL's host (e.g. mera.news)
+// so a rebrand needs no extra config.
+export const REFERRER_SOURCE =
+  process.env.EXPO_PUBLIC_REFERRER_SOURCE ||
+  WEBSITE_URL.replace(/^https?:\/\//, '').replace(/\/.*$/, '');

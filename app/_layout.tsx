@@ -34,6 +34,12 @@ import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { initNetworkListener } from '@/lib/stores/network-store';
+import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import {
+  configureRevenueCat,
+  addCustomerInfoUpdateListener,
+  getCustomerInfoSafe,
+} from '@/lib/revenuecat';
 import {
   defineInferenceTask,
   ensureSilentPushTaskRegistered,
@@ -81,6 +87,21 @@ export default Sentry.wrap(function RootLayout() {
   // Set up network connectivity listener
   useEffect(() => {
     initNetworkListener();
+  }, []);
+
+  // Configure RevenueCat once and keep the subscription store in sync with
+  // entitlement changes (purchases, renewals, expirations). No-op when no
+  // RevenueCat key is configured. logIn happens after auth in
+  // app/logged-in/index.tsx; the server remains the source of truth for access.
+  useEffect(() => {
+    configureRevenueCat();
+    const remove = addCustomerInfoUpdateListener((info) =>
+      useSubscriptionStore.getState().setCustomerInfo(info),
+    );
+    void getCustomerInfoSafe().then((info) =>
+      useSubscriptionStore.getState().setCustomerInfo(info),
+    );
+    return remove;
   }, []);
 
   // Hydrate Zustand stores from WatermelonDB on app start. Fire-and-forget —

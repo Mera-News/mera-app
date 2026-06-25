@@ -30,7 +30,8 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
+import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -69,6 +70,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
+    const [showGuideVideo, setShowGuideVideo] = useState(false);
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguage();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
@@ -215,7 +217,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             }).catch(() => {});
         }
         try {
-            await openInAppBrowser(url);
+            await openArticleInAppBrowser(url);
         } catch (err) {
             logger.captureException(err, {
                 tags: { screen: 'ArticleSuggestionScreen', method: 'openUrl' },
@@ -368,7 +370,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                                         size="xs"
                                                         italic
                                                         className="text-orange-400 underline"
-                                                        onPress={() => openInAppBrowser(TRANSLATION_GUIDE_URL).catch(() => {})}
+                                                        onPress={() => setShowGuideVideo(true)}
                                                     >
                                                         {' '}{t('clusterDetail.translationGuideLink')}
                                                     </Text>
@@ -413,6 +415,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 }
             />
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
+
+            <VideoPlayerModal
+                visible={showGuideVideo}
+                uri={TRANSLATION_GUIDE_URL}
+                onClose={() => setShowGuideVideo(false)}
+            />
         </Box>
     );
 };

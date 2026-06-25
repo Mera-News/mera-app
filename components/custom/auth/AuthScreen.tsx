@@ -3,6 +3,7 @@ import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
 import PolicyPill from '@/components/custom/PolicyPill';
+import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -32,6 +33,7 @@ interface EmailInputViewProps {
 const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail }) => {
     const [email, setEmail] = useState(initialEmail ?? '');
     const [loading, setLoading] = useState(false);
+    const [showGuideVideo, setShowGuideVideo] = useState(false);
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
@@ -162,14 +164,13 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                 {Platform.OS === 'ios' && (
                     <VStack space="sm" className="mt-4">
                         <Pressable
-                            onPress={() => openInAppBrowser(TRANSLATION_GUIDE_URL)}
+                            onPress={() => setShowGuideVideo(true)}
                             className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
                         >
                             <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
                             <Text className="text-violet-400 text-sm font-medium flex-1">
                                 {t('language.watchGuide')}
                             </Text>
-                            <MaterialIcons name="open-in-new" size={16} color="#6b7280" />
                         </Pressable>
                     </VStack>
                 )}
@@ -197,6 +198,12 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                     © {new Date().getFullYear()} Mera Labs B.V.
                 </Text>
             </Box>
+
+            <VideoPlayerModal
+                visible={showGuideVideo}
+                uri={TRANSLATION_GUIDE_URL}
+                onClose={() => setShowGuideVideo(false)}
+            />
         </Box>
     );
 };

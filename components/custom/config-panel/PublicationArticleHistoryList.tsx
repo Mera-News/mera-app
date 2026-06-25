@@ -9,7 +9,7 @@ import {
 } from '@/lib/database/services/publication-visit-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -84,7 +84,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     const handleArticlePress = useCallback(async (url: string | null) => {
         if (!url) return;
         try {
-            await openInAppBrowser(url);
+            await openArticleInAppBrowser(url);
         } catch (err) {
             logger.captureException(err, {
                 tags: { screen: 'PublicationArticleHistoryList', method: 'openUrl' },

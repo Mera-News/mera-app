@@ -15,6 +15,9 @@ jest.mock('expo-web-browser', () => ({
   dismissBrowser: jest.fn(),
 }));
 
+// Isolate from branding.ts (which evaluates Platform.OS at module load).
+jest.mock('../config/branding', () => ({ REFERRER_SOURCE: 'mera.news' }));
+
 import * as WebBrowser from 'expo-web-browser';
 import { openInAppBrowser } from '../web-browser-utils';
 

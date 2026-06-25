@@ -38,6 +38,11 @@ export {
     initNetworkListener,
     stopNetworkListener,
 } from './network-store';
+export {
+    useSubscriptionStore,
+    useIsPremium,
+    useSubscriptionTier,
+} from './subscription-store';
 
 // Selectors
 export * from './selectors';
@@ -55,6 +60,7 @@ export const clearAllStores = async () => {
     const { useMeraProtocolStore } = require('./mera-protocol-store');
     const { useTopicSyncStore } = require('./topic-sync-store');
     const { useCloudChatStore } = require('./cloud-chat-store');
+    const { useSubscriptionStore } = require('./subscription-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
@@ -73,6 +79,7 @@ export const clearAllStores = async () => {
     useMeraProtocolStore.getState().reset();
     useTopicSyncStore.getState().reset();
     useCloudChatStore.getState().reset();
+    useSubscriptionStore.getState().reset();
     clearAttestationCache();
 };
 

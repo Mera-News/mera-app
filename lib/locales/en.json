@@ -49,11 +49,21 @@
     }
   },
   "account": {
-    "pendingTitle": "Account Pending Approval",
-    "pendingDescription": "We're thrilled that you'd like to try out our app. Once your account is approved you'll receive an email. Then you can continue using the app.",
+    "pendingTitle": "Subscribe to Mera",
+    "pendingDescription": "Mera News is a subscription app. Choose a plan to unlock your personalized, on-device news feed.",
     "enquiries": "For any enquiries you can send a mail to",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Refresh 🔄"
+  },
+  "subscription": {
+    "title": "Unlock Mera News",
+    "description": "Subscribe to get your personalized, on-device news feed.",
+    "viewPlans": "View plans",
+    "subscribe": "Subscribe",
+    "managePlan": "Manage subscription",
+    "restore": "Restore purchases",
+    "activating": "Activating your subscription…",
+    "activationDelayed": "Your purchase is being confirmed. This can take a moment — tap refresh if it doesn't continue."
   },
   "feed": {
     "updatedAt": "Updated {{time}}",

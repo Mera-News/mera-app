@@ -16,7 +16,7 @@ import type { NewsArticle, NewsCluster } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -103,7 +103,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
         if (!article.article_url) return;
 
         try {
-            await openInAppBrowser(article.article_url);
+            await openArticleInAppBrowser(article.article_url);
         } catch (err) {
             logger.captureException(err, {
                 tags: { screen: 'NewsClusterScreen', method: 'handleArticlePress' },

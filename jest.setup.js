@@ -1,3 +1,15 @@
+// Baseline EXPO_PUBLIC_* env so lib/config/endpoints.ts (read at module load,
+// not inlined) doesn't hard-crash any test that transitively imports it.
+// endpoints.test.ts manages its own env per-case and overrides these.
+process.env.EXPO_PUBLIC_AUTH_ENDPOINT =
+  process.env.EXPO_PUBLIC_AUTH_ENDPOINT || 'https://auth.test';
+process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT =
+  process.env.EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT || 'https://api.test';
+process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT =
+  process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT || 'https://inference.test';
+process.env.EXPO_PUBLIC_REVENUECAT_API_KEY =
+  process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_rc_key';
+
 // Suppress Expo Winter warnings and polyfills
 global.__ExpoImportMetaRegistry = {
   register: jest.fn(),
@@ -114,11 +126,13 @@ jest.mock('expo-notifications', () => ({
   },
 }));
 
-// Mock react-native Platform
-jest.mock('react-native/Libraries/Utilities/Platform', () => ({
-  OS: 'ios',
-  select: jest.fn((obj) => obj.ios),
-}));
+// Mock react-native Platform. Includes `default` so `import { Platform } from
+// 'react-native'` (which reads the module's default export) resolves — without
+// it, named Platform is undefined and Platform.select throws.
+jest.mock('react-native/Libraries/Utilities/Platform', () => {
+  const platform = { OS: 'ios', select: jest.fn((obj) => obj.ios ?? obj.default) };
+  return { __esModule: true, ...platform, default: platform };
+});
 
 // --- Global native-dep safety nets (plan Phase 0) ---------------------------
 // These keep a stray transitive import from crashing a test. Individual test
@@ -208,6 +222,50 @@ jest.mock('@sentry/react-native', () => ({
   wrap: jest.fn((c) => c),
   reactNavigationIntegration: jest.fn(() => ({})),
   Severity: { Error: 'error', Warning: 'warning' },
+}));
+
+// RevenueCat — native IAP SDK + paywall UI. Never load the real modules (they
+// pull in ESM deps Jest can't transform). Individual tests override behaviour.
+jest.mock('react-native-purchases', () => ({
+  __esModule: true,
+  default: {
+    configure: jest.fn(),
+    setLogLevel: jest.fn(),
+    logIn: jest.fn(() =>
+      Promise.resolve({
+        customerInfo: { entitlements: { active: {} } },
+        created: false,
+      }),
+    ),
+    logOut: jest.fn(() => Promise.resolve({ entitlements: { active: {} } })),
+    getCustomerInfo: jest.fn(() =>
+      Promise.resolve({ entitlements: { active: {} } }),
+    ),
+    addCustomerInfoUpdateListener: jest.fn(),
+    removeCustomerInfoUpdateListener: jest.fn(),
+  },
+  LOG_LEVEL: {
+    VERBOSE: 'VERBOSE',
+    DEBUG: 'DEBUG',
+    INFO: 'INFO',
+    WARN: 'WARN',
+    ERROR: 'ERROR',
+  },
+}));
+jest.mock('react-native-purchases-ui', () => ({
+  __esModule: true,
+  default: {
+    presentPaywall: jest.fn(() => Promise.resolve('NOT_PRESENTED')),
+    presentPaywallIfNeeded: jest.fn(() => Promise.resolve('NOT_PRESENTED')),
+    presentCustomerCenter: jest.fn(() => Promise.resolve()),
+  },
+  PAYWALL_RESULT: {
+    NOT_PRESENTED: 'NOT_PRESENTED',
+    ERROR: 'ERROR',
+    CANCELLED: 'CANCELLED',
+    PURCHASED: 'PURCHASED',
+    RESTORED: 'RESTORED',
+  },
 }));
 
 // Silence console errors during tests

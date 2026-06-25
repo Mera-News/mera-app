@@ -20,8 +20,15 @@ jest.mock('expo-web-browser', () => ({
   dismissBrowser: jest.fn(),
 }));
 
+// Isolate from branding.ts (which evaluates Platform.OS at module load — its own
+// values are covered by config/__tests__/branding.test.ts).
+jest.mock('../config/branding', () => ({ REFERRER_SOURCE: 'mera.news' }));
+
 import * as WebBrowser from 'expo-web-browser';
-import { openInAppBrowser } from '../web-browser-utils';
+import { appendReferrer, openArticleInAppBrowser, openInAppBrowser } from '../web-browser-utils';
+
+// REFERRER_SOURCE is derived from WEBSITE_URL's host (default: mera.news).
+const REFERRER = 'utm_source=mera.news&utm_medium=referral';
 
 const mockOpenBrowserAsync = WebBrowser.openBrowserAsync as jest.Mock;
 const mockGetCustomTabs = (WebBrowser as any).getCustomTabsSupportingBrowsersAsync as jest.Mock;
@@ -72,5 +79,54 @@ describe('openInAppBrowser — iOS (default platform)', () => {
     const [, opts] = mockOpenBrowserAsync.mock.calls[0];
     expect(opts.controlsColor).toBe('#ffffff');
     expect(opts.toolbarColor).toBe('#000000');
+  });
+});
+
+describe('appendReferrer', () => {
+  it('appends UTM params with ? when the URL has no query', () => {
+    expect(appendReferrer('https://publisher.com/story')).toBe(
+      `https://publisher.com/story?${REFERRER}`
+    );
+  });
+
+  it('joins with & when the URL already has a query string', () => {
+    expect(appendReferrer('https://publisher.com/story?id=42')).toBe(
+      `https://publisher.com/story?id=42&${REFERRER}`
+    );
+  });
+
+  it('inserts params before a #fragment', () => {
+    expect(appendReferrer('https://publisher.com/story#section')).toBe(
+      `https://publisher.com/story?${REFERRER}#section`
+    );
+    expect(appendReferrer('https://publisher.com/story?id=42#section')).toBe(
+      `https://publisher.com/story?id=42&${REFERRER}#section`
+    );
+  });
+
+  it('leaves a URL that already carries a utm_source untouched', () => {
+    const url = 'https://publisher.com/story?utm_source=twitter';
+    expect(appendReferrer(url)).toBe(url);
+  });
+
+  it('returns empty/falsy input unchanged', () => {
+    expect(appendReferrer('')).toBe('');
+    expect(appendReferrer(undefined as unknown as string)).toBe(undefined);
+  });
+});
+
+describe('openArticleInAppBrowser', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockOpenBrowserAsync.mockResolvedValue({ type: 'opened' });
+    mockPlatformIOS.OS = 'ios';
+  });
+
+  it('opens the article URL with the referrer params appended', async () => {
+    await openArticleInAppBrowser('https://publisher.com/story');
+    expect(mockOpenBrowserAsync).toHaveBeenCalledWith(
+      `https://publisher.com/story?${REFERRER}`,
+      BASE_OPTIONS
+    );
   });
 });

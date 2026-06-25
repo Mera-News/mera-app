@@ -73,3 +73,17 @@ export const GRAPHQL_SERVER_ENDPOINT = requireEnv(
 // release — it can never ship enabled, only run in a dev bundle.
 export const DUMP_QUERIES_ENABLED =
   __DEV__ && process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING === 'true';
+
+// RevenueCat public SDK keys. Optional (not requireEnv): subscriptions degrade
+// gracefully — when unset, configureRevenueCat() no-ops and the paywall isn't
+// shown. The generic Test Store key (`test_…`) works on both platforms in
+// development; production uses platform-specific App Store (`appl_`) / Play
+// Store (`goog_`) keys. Platform selection happens in lib/revenuecat.ts at call
+// time so this module stays free of react-native imports (it loads extremely
+// early, before any native module is mockable in tests).
+export const REVENUECAT_API_KEY: string =
+  process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '';
+export const REVENUECAT_IOS_KEY: string =
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || '';
+export const REVENUECAT_ANDROID_KEY: string =
+  process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || '';

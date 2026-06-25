@@ -59,6 +59,7 @@
         }
       ],
       "expo-web-browser",
+      "expo-video",
       "expo-secure-store",
       [
         "@sentry/react-native/expo",

@@ -1,6 +1,28 @@
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
+import { REFERRER_SOURCE } from './config/branding';
+
+const REFERRER_PARAMS = `utm_source=${REFERRER_SOURCE}&utm_medium=referral`;
+
+/**
+ * Appends Mera's UTM referrer params to a publisher article URL so the
+ * publisher can attribute the visit to Mera. Handles existing query strings
+ * and fragments, and leaves URLs that already carry a utm_source untouched
+ * (so we don't clobber a publisher's own campaign tracking).
+ */
+export function appendReferrer(url: string): string {
+    if (!url) return url;
+    // Don't override an existing campaign source.
+    if (/[?&]utm_source=/i.test(url)) return url;
+
+    const hashIndex = url.indexOf('#');
+    const fragment = hashIndex >= 0 ? url.slice(hashIndex) : '';
+    const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+    const separator = base.includes('?') ? '&' : '?';
+    return `${base}${separator}${REFERRER_PARAMS}${fragment}`;
+}
+
 /**
  * Opens a URL in an in-app browser.
  *
@@ -38,4 +60,15 @@ export async function openInAppBrowser(url: string): Promise<WebBrowser.WebBrows
     }
 
     return WebBrowser.openBrowserAsync(url, baseOptions);
+}
+
+/**
+ * Opens an external publisher article URL in the in-app browser with Mera's
+ * UTM referrer params appended. Use this for article links; use
+ * {@link openInAppBrowser} directly for first-party URLs (privacy, terms, etc.).
+ */
+export async function openArticleInAppBrowser(
+    url: string
+): Promise<WebBrowser.WebBrowserResult> {
+    return openInAppBrowser(appendReferrer(url));
 }
