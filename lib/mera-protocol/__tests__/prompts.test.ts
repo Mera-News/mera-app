@@ -123,12 +123,20 @@ describe('buildBatchScoringUserMessage', () => {
     expect(msg).toContain('News Description: My Description');
   });
 
-  it('uses "unknown" when country is not provided', () => {
+  it('omits the Article Country line when country is not provided', () => {
     const msg = buildBatchScoringUserMessage({
       userContext,
       articles: [{ title: 'T', description: 'D' }],
     });
-    expect(msg).toContain('Article Country: unknown');
+    expect(msg).not.toContain('Article Country:');
+  });
+
+  it('omits the Article Country line when country is "GLOBAL"', () => {
+    const msg = buildBatchScoringUserMessage({
+      userContext,
+      articles: [{ title: 'T', description: 'D', country: 'GLOBAL' }],
+    });
+    expect(msg).not.toContain('Article Country:');
   });
 
   it('includes the provided country', () => {
@@ -211,13 +219,19 @@ describe('buildReasonUserMessage', () => {
     expect(msg).toContain('News Description: New rules for AI systems take effect.');
   });
 
-  it('uses "unknown" for country when not provided', () => {
+  it('omits the Article Country line when country is not provided', () => {
     const msg = buildReasonUserMessage(base);
-    expect(msg).toContain('unknown');
+    expect(msg).not.toContain('Article Country');
+  });
+
+  it('omits the Article Country line when country is "GLOBAL"', () => {
+    const msg = buildReasonUserMessage({ ...base, articleCountry: 'GLOBAL' });
+    expect(msg).not.toContain('Article Country');
   });
 
   it('includes provided country', () => {
     const msg = buildReasonUserMessage({ ...base, articleCountry: 'US' });
+    expect(msg).toContain('Article Country (');
     expect(msg).toContain('US');
   });
 

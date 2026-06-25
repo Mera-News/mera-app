@@ -29,6 +29,13 @@ export interface HydrateResult {
     ReturnType<typeof ArticleService.getArticlesForTopicsByIds>
   >['articles'];
   articleToTopicTexts: Map<string, string[]>;
+  /** True when the daily delivery cap clipped this hydrate (partial or full).
+   *  On a partial clip we still deliver `fetched`; the machine surfaces the
+   *  limit banner immediately rather than waiting for the next fully-blocked
+   *  cycle. A full clip (nothing delivered) throws `daily-limit` instead. */
+  dailyLimitReached: boolean;
+  /** ISO reset timestamp, set only when `dailyLimitReached`. */
+  resetAt?: string;
 }
 
 export interface PersistResult {
@@ -119,7 +126,12 @@ export async function stepHydrate(
   }
 
   ctx.log(`received ${fetched.length} full records`);
-  return { fetched, articleToTopicTexts };
+  return {
+    fetched,
+    articleToTopicTexts,
+    dailyLimitReached: response.dailyLimitReached,
+    resetAt: response.resetAt,
+  };
 }
 
 export async function stepPersist(

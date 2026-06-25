@@ -372,6 +372,9 @@ describe('stepHydrate', () => {
 
     const result = await stepHydrate(diffResult, makeCtx(), jest.fn());
     expect(result.fetched).toEqual(mockArticles);
+    // Partial clip is surfaced up so the machine can show the banner now.
+    expect(result.dailyLimitReached).toBe(true);
+    expect(result.resetAt).toBe('2026-06-25T00:00:00.000Z');
   });
 
   it('skips ArticleService call and returns empty fetched when missingIds is empty', async () => {
@@ -428,6 +431,7 @@ describe('stepPersist', () => {
     const hydrateResult: HydrateResult = {
       fetched: [],
       articleToTopicTexts: new Map(),
+      dailyLimitReached: false,
     };
     await expect(stepPersist(hydrateResult, ctx)).rejects.toThrow('aborted');
   });
@@ -436,7 +440,7 @@ describe('stepPersist', () => {
     const articles = [{ id: 'art-1' }] as any[];
     const topicMap = new Map([['art-1', ['t1']]]);
     mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
-    const hydrateResult: HydrateResult = { fetched: articles, articleToTopicTexts: topicMap };
+    const hydrateResult: HydrateResult = { fetched: articles, articleToTopicTexts: topicMap, dailyLimitReached: false };
 
     const ctx = makeCtx();
     const result = await stepPersist(hydrateResult, ctx);
@@ -452,7 +456,7 @@ describe('stepPersist', () => {
       { id: 'art-bad-2', titleEn: 'title', descriptionEn: null, relatedFacts: [] },
       { id: 'art-good', titleEn: 'title', descriptionEn: 'desc', relatedFacts: [{}] },
     ]);
-    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map() };
+    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map(), dailyLimitReached: false };
 
     const ctx = makeCtx();
     await stepPersist(hydrateResult, ctx);
@@ -465,7 +469,7 @@ describe('stepPersist', () => {
     mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
       { id: 'art-good', titleEn: 'title', descriptionEn: 'desc', relatedFacts: [{}] },
     ]);
-    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map() };
+    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map(), dailyLimitReached: false };
 
     const ctx = makeCtx();
     await stepPersist(hydrateResult, ctx);
@@ -476,7 +480,7 @@ describe('stepPersist', () => {
   it('logs and skips ctx.log for ineligible when count is 0', async () => {
     mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 0, linkedCount: 0 });
     mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
-    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map() };
+    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map(), dailyLimitReached: false };
 
     const ctx = makeCtx();
     await stepPersist(hydrateResult, ctx);
@@ -489,7 +493,7 @@ describe('stepPersist', () => {
     mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
       { id: 'ineligible-1', titleEn: null, descriptionEn: 'ok', relatedFacts: [{}] },
     ]);
-    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map() };
+    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map(), dailyLimitReached: false };
 
     const ctx = makeCtx();
     await stepPersist(hydrateResult, ctx);
@@ -502,7 +506,7 @@ describe('stepPersist', () => {
     mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
       { id: 'art-no-facts', titleEn: 'title', descriptionEn: 'desc', relatedFacts: [] },
     ]);
-    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map() };
+    const hydrateResult: HydrateResult = { fetched: [], articleToTopicTexts: new Map(), dailyLimitReached: false };
 
     const ctx = makeCtx();
     await stepPersist(hydrateResult, ctx);

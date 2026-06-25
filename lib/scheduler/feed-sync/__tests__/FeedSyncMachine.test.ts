@@ -25,6 +25,7 @@ const mockNetworkUnsubscribe = jest.fn();
 const mockForYouStoreState = {
   setCounts: jest.fn(),
   setLastSyncAt: jest.fn(),
+  setDailyLimitResetAt: jest.fn(),
   resetHydrationProgress: jest.fn(),
   relevantArticleCount: 0,
 };
@@ -408,6 +409,94 @@ describe('FeedSyncMachine — no-topics-configured is a normal terminal outcome'
     );
     // No Sentry capture for the (expected) no-topics condition.
     expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('FeedSyncMachine — daily-limit is a normal terminal outcome', () => {
+  const RESET_AT = 1781827200000;
+  beforeEach(() => {
+    mockStepHydrate.mockRejectedValue(
+      Object.assign(new Error('daily-limit'), {
+        code: 'daily-limit',
+        resetAt: RESET_AT,
+      }),
+    );
+    mockClassifyError.mockReturnValue('daily-limit');
+  });
+
+  it('resolves without throwing (job completes, no retry) and resets to idle', async () => {
+    await expect(
+      feedSyncMachine.start('persona-1', makeCtx()),
+    ).resolves.toBeUndefined();
+    expect(feedSyncMachine.state).toBe('idle');
+  });
+
+  it('sets the sticky daily-limit reset time for the banner', async () => {
+    await feedSyncMachine.start('persona-1', makeCtx());
+    expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(
+      RESET_AT,
+    );
+  });
+
+  it('publishes the daily-limit sync error and does not capture to Sentry', async () => {
+    await feedSyncMachine.start('persona-1', makeCtx());
+    expect(mockPublishSyncError).toHaveBeenCalledWith(
+      'daily-limit',
+      RESET_AT,
+      expect.any(String),
+    );
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the next UTC midnight when the error omits resetAt', async () => {
+    mockStepHydrate.mockRejectedValue(
+      Object.assign(new Error('daily-limit'), { code: 'daily-limit' }),
+    );
+
+    await feedSyncMachine.start('persona-1', makeCtx());
+
+    const arg = mockForYouStoreState.setDailyLimitResetAt.mock.calls.find(
+      (c) => typeof c[0] === 'number',
+    )?.[0] as number;
+    expect(typeof arg).toBe('number');
+    // Computed reset is a future 00:00:00.000 UTC instant.
+    const d = new Date(arg);
+    expect(d.getUTCHours()).toBe(0);
+    expect(d.getUTCMinutes()).toBe(0);
+    expect(arg).toBeGreaterThan(Date.now());
+  });
+});
+
+describe('FeedSyncMachine — clears the daily-limit banner on successful delivery', () => {
+  it('calls setDailyLimitResetAt(null) after a successful persist', async () => {
+    await feedSyncMachine.start('persona-1', makeCtx());
+    expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(null);
+  });
+});
+
+describe('FeedSyncMachine — partial cap surfaces the banner while still delivering', () => {
+  it('sets the reset time (not null) and still persists the granted articles', async () => {
+    mockStepHydrate.mockResolvedValue({
+      fetched: [{ id: 'art-1' }],
+      articleToTopicTexts: defaultTopicResult.articleToTopicTexts,
+      dailyLimitReached: true,
+      resetAt: '2026-06-26T00:00:00.000Z',
+    });
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    // Granted articles are still delivered (no terminal throw on a partial clip).
+    expect(mockStepPersist).toHaveBeenCalled();
+    // Banner is surfaced immediately with the server's reset time.
+    expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(
+      Date.parse('2026-06-26T00:00:00.000Z'),
+    );
+    expect(mockForYouStoreState.setDailyLimitResetAt).not.toHaveBeenCalledWith(
+      null,
+    );
   });
 });
 

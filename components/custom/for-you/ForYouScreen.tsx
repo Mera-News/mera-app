@@ -5,6 +5,7 @@ import NewsPollingBanner from '@/components/custom/NewsPollingBanner';
 import SyncProgressForYouBanner from '@/components/custom/SyncProgressForYouBanner';
 import { ArticleCard } from '@/components/custom/ArticleCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
+import DailyLimitForYouBanner from '@/components/custom/for-you/DailyLimitForYouBanner';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
@@ -33,6 +34,7 @@ import {
     useForYouPagination,
     useForYouSuggestions,
     useForYouSyncStatusMessage,
+    useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -107,16 +109,17 @@ const MeraNewsScreen: React.FC = () => {
     const { isDeviceProcessing } = useForYouDeviceProcessing();
     const unscoredCount = useForYouUnscoredCount();
     const syncStatusMessage = useForYouSyncStatusMessage();
+    const dailyLimitResetAt = useForYouDailyLimitResetAt();
     const noisyDiscardedCount = useForYouNoisyDiscardedCount();
     const injectNoiseEnabled = useInjectNoise();
     const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
     const [nowTick, setNowTick] = useState(() => Date.now());
 
     useEffect(() => {
-        if (!lastProcessingRunFinishedAt) return;
+        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt) return;
         const id = setInterval(() => setNowTick(Date.now()), 30_000);
         return () => clearInterval(id);
-    }, [lastProcessingRunFinishedAt]);
+    }, [lastProcessingRunFinishedAt, dailyLimitResetAt]);
 
     const lastProcessedLabel = useMemo(() => {
         if (!lastProcessingRunFinishedAt) return null;
@@ -138,6 +141,12 @@ const MeraNewsScreen: React.FC = () => {
         syncStatusMessage.state !== 'paused-offline';
 
     const showSyncProgress = isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+
+    // The user is over their daily delivery cap (sticky until a sync delivers
+    // again or the reset time passes). Takes banner priority over the
+    // article-count line so the "limit reached" notice is always visible.
+    const isDailyLimited =
+        dailyLimitResetAt != null && nowTick < dailyLimitResetAt;
 
     // When the user backgrounds the app during article hydration, fire a local
     // notification asking them to return. Dismiss it once they're back.
@@ -466,6 +475,9 @@ const MeraNewsScreen: React.FC = () => {
             // expected state, not a silent failure — the no-topics prompt is
             // shown elsewhere. Don't trip the watchdog (and don't spam Sentry).
             syncStatusMessage?.errorCode !== 'no-topics-configured' &&
+            // A feed blocked by the daily delivery cap is an expected state,
+            // not a silent failure — the limit banner explains it.
+            !isDailyLimited &&
             asyncJobPhase === 'idle' && // cloud scoring in-flight counts as productive work
             unscoredCount === 0; // unscored articles exist but scoring is blocked (e.g. no push token) — not truly stuck
         if (!shouldArm) return;
@@ -497,7 +509,7 @@ const MeraNewsScreen: React.FC = () => {
         // store snapshots read inside are pulled via getState() at fire time, so
         // they are intentionally excluded from the dep array.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode]);
+    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
         const userPersonaId = useUserStore.getState().userPersona?._id || '';
@@ -673,7 +685,9 @@ const MeraNewsScreen: React.FC = () => {
                 {/* Banner area — polling status + progress/article-count in one compact slot */}
                 <View className="mb-2" style={{ minHeight: 70 }}>
                     <NewsPollingBanner />
-                    {showSyncProgress ? (
+                    {isDailyLimited ? (
+                        <DailyLimitForYouBanner />
+                    ) : showSyncProgress ? (
                         <SyncProgressForYouBanner />
                     ) : (
                         <ArticleCountForYouBanner

@@ -13,6 +13,21 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 const KEEP_AWAKE_TAG = 'mera-feed-sync';
 
+/** Epoch ms of the next 00:00 UTC — fallback reset time for the daily cap when
+ *  the server response didn't carry one. */
+function nextUtcMidnightMs(): number {
+  const now = new Date();
+  return Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+}
+
 const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
   idle:                 ['fetching-topic-ids'],
   'fetching-topic-ids': ['diffing', 'paused-offline', 'failed'],
@@ -188,6 +203,17 @@ class FeedSyncMachine {
 
       if (ctx.signal.aborted) return;
       await steps.stepPersist(hydrateResult, ctx);
+      // Daily cap banner: if this hydrate was partially clipped, surface the
+      // "limit reached" notice now (we still delivered what fit) rather than
+      // waiting for the next fully-blocked cycle. A fully-unclipped delivery
+      // means we're under the cap — clear it.
+      useForYouStore.getState().setDailyLimitResetAt(
+        hydrateResult.dailyLimitReached
+          ? hydrateResult.resetAt
+            ? Date.parse(hydrateResult.resetAt)
+            : nextUtcMidnightMs()
+          : null,
+      );
       // Progressive rendering: refresh store after persist so articles appear
       await refreshSuggestionsInStoreUnsafe();
 
@@ -247,6 +273,11 @@ class FeedSyncMachine {
       // return WITHOUT throwing — no retry, no Sentry error.
       if (errorCode === 'daily-limit') {
         const resetAt = (err as { resetAt?: number }).resetAt;
+        // Sticky banner state: persists across the transient fetch/diff
+        // statuses each polling cycle publishes, so the "limit reached" notice
+        // stays visible until a sync delivers articles again or the reset
+        // passes. Fall back to the next UTC midnight if the server omitted it.
+        useForYouStore.getState().setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
         publishSyncError('daily-limit', resetAt, this._state);
         this._state = 'idle';
         try {

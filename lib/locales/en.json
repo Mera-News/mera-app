@@ -66,6 +66,11 @@
     "stuckDescription": "Something went wrong on our end.",
     "stuckHint": "Reopen the app in a few minutes.",
     "offlineCached": "Offline — showing cached content",
+    "dailyLimit": {
+      "title": "Daily article limit reached",
+      "bodyWithTime": "No new articles can be fetched for now. Browse the articles already on your device — new articles unlock at {{time}}.",
+      "body": "No new articles can be fetched for now. Browse the articles already on your device — new articles unlock tomorrow."
+    },
     "newBadge": "NEW",
     "newsCluster": "News Cluster",
     "justNow": "Just now",

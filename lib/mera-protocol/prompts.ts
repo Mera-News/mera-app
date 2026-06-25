@@ -670,12 +670,17 @@ export function buildBatchScoringUserMessage(params: {
 }): string {
   const { userContext, articles } = params;
   const blocks = articles.map((a, i) => {
-    const country = sanitizeForPrompt(a.country ?? '', 60) || 'unknown';
+    // Omit the Article Country line entirely when the publication has no real
+    // country scope — a missing value or a 'GLOBAL' placeholder carries no
+    // location signal, and feeding it in just adds noise to the prompt.
+    const country = sanitizeForPrompt(a.country ?? '', 60);
+    const hasCountry = country.length > 0 && country.toUpperCase() !== 'GLOBAL';
+    const countryLine = hasCountry ? `\nArticle Country: ${country}` : '';
     const related = (a.relatedFacts ?? [])
       .map((f) => sanitizeForPrompt(f, 200))
       .filter((f) => f.length > 0)
       .join('; ') || 'none';
-    return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}\nArticle Country: ${country}\nRelated User Fact: ${related}`;
+    return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}${countryLine}\nRelated User Fact: ${related}`;
   });
   return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\nReturn a JSON array of ${articles.length} numbers (one per article, in order).`;
 }
@@ -695,12 +700,19 @@ export function buildReasonUserMessage(params: {
   relatedFacts?: string[];
 }): string {
   const { userContext, articleTitle, articleDescription, articleCountry, relevance, relatedFacts } = params;
-  const country = sanitizeForPrompt(articleCountry ?? '', 60) || 'unknown';
+  // Omit the Article Country line entirely when the publication has no real
+  // country scope — a missing value or a 'GLOBAL' placeholder carries no
+  // location signal, and feeding it in just adds noise to the prompt.
+  const country = sanitizeForPrompt(articleCountry ?? '', 60);
+  const hasCountry = country.length > 0 && country.toUpperCase() !== 'GLOBAL';
+  const countryLine = hasCountry
+    ? `\n\nArticle Country (publication's country — use as the article's scope ONLY when the title/description names no location): ${country}`
+    : '';
   const related = (relatedFacts ?? [])
     .map((f) => sanitizeForPrompt(f, 200))
     .filter((f) => f.length > 0)
     .join('; ') || 'none';
-  return `Relevance Score: ${relevance}\n\nUser Context: ${userContext}\n\nNews Title: ${sanitizeForPrompt(articleTitle)}\n\nNews Description: ${sanitizeForPrompt(articleDescription)}\n\nArticle Country (publication's country — use as the article's scope ONLY when the title/description names no location): ${country}\n\nRelated User Fact: ${related}`;
+  return `Relevance Score: ${relevance}\n\nUser Context: ${userContext}\n\nNews Title: ${sanitizeForPrompt(articleTitle)}\n\nNews Description: ${sanitizeForPrompt(articleDescription)}${countryLine}\n\nRelated User Fact: ${related}`;
 }
 
 // ============================================================
