@@ -5,6 +5,7 @@
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
+import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import type FactModel from '../models/Fact';
@@ -57,10 +58,10 @@ export async function getUnscoredSuggestionsWithFacts(
 ): Promise<ScoringCandidate[]> {
   const rows = await (limit !== undefined
     ? articleSuggestionsCol
-        .query(Q.where('relevance_generation_completed', false), Q.take(limit))
+        .query(Q.where('status', ArticleSuggestionStatus.Unscored), Q.take(limit))
         .fetch()
     : articleSuggestionsCol
-        .query(Q.where('relevance_generation_completed', false))
+        .query(Q.where('status', ArticleSuggestionStatus.Unscored))
         .fetch());
   if (rows.length === 0) return [];
 
@@ -95,7 +96,9 @@ export async function getUnscoredSuggestionsWithFacts(
 }
 
 export async function countUnscoredSuggestions(): Promise<number> {
-  return articleSuggestionsCol.query(Q.where('relevance_generation_completed', false)).fetchCount();
+  return articleSuggestionsCol
+    .query(Q.where('status', ArticleSuggestionStatus.Unscored))
+    .fetchCount();
 }
 
 // --- Read: scored rows with empty reason (reason-retry input) ---
@@ -103,19 +106,14 @@ export async function countUnscoredSuggestions(): Promise<number> {
 export async function getScoredSuggestionsWithoutReasons(
   limit?: number,
 ): Promise<ScoringCandidate[]> {
+  // Re-attempt rows that are scored but still awaiting a reason. A failed reason
+  // attempt leaves the row in reason_pending, so this query re-fetches it.
   const rows = await (limit !== undefined
     ? articleSuggestionsCol
-        .query(
-          Q.where('relevance_generation_completed', true),
-          Q.where('reason_generation_completed', false),
-          Q.take(limit),
-        )
+        .query(Q.where('status', ArticleSuggestionStatus.ReasonPending), Q.take(limit))
         .fetch()
     : articleSuggestionsCol
-        .query(
-          Q.where('relevance_generation_completed', true),
-          Q.where('reason_generation_completed', false),
-        )
+        .query(Q.where('status', ArticleSuggestionStatus.ReasonPending))
         .fetch());
   if (rows.length === 0) return [];
 
@@ -208,14 +206,12 @@ export async function deleteOldSuggestions(cutoffMs: number): Promise<number> {
 // --- Write: score ---
 
 /**
- * Persists the result of a scoring pass.
- *
- * relevanceGenerationCompleted is set to true — callers only invoke this when
- * the relevance step succeeded. reasonGenerationCompleted reflects whether the
- * reason step reached a terminal state: either the LLM returned usable text
- * (reason non-empty) OR the row is sub-threshold and we deliberately skipped
- * generation (reasonSkipped=true). A failed-and-retryable reason is signalled
- * by reason='' AND reasonSkipped=false.
+ * Persists the result of a scoring pass. Callers only invoke this when the
+ * relevance step succeeded, so the row leaves `unscored`. The resulting `status`
+ * captures where the reason step landed:
+ *   - reason non-empty               → complete (reason shown)
+ *   - reasonSkipped (sub-threshold)  → complete (terminal, no reason → fact chips)
+ *   - otherwise                      → reason_pending (loading; retried next sweep)
  */
 export async function saveScoringResult(
   localSuggestionId: string,
@@ -227,16 +223,18 @@ export async function saveScoringResult(
     await row.update((r) => {
       r.relevance = relevance;
       r.reason = reason;
-      r.relevanceGenerationCompleted = true;
-      r.reasonGenerationCompleted = reasonSkipped || reason.length > 0;
+      r.status =
+        reason.length > 0 || reasonSkipped
+          ? ArticleSuggestionStatus.Complete
+          : ArticleSuggestionStatus.ReasonPending;
     });
   });
 }
 
 /**
  * Mark multiple articles as ineligible for scoring in a single batched write.
- * All rows get relevance=0, reasonSkipped=true. Use instead of calling
- * saveScoringResult in a loop — one database.write instead of N.
+ * All rows get relevance=0 and a terminal `complete` status (no reason). Use
+ * instead of calling saveScoringResult in a loop — one database.write instead of N.
  */
 export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
@@ -247,8 +245,7 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
         row.prepareUpdate((r) => {
           r.relevance = 0;
           r.reason = '';
-          r.relevanceGenerationCompleted = true;
-          r.reasonGenerationCompleted = true;
+          r.status = ArticleSuggestionStatus.Complete;
         }),
       ),
     );
@@ -257,7 +254,8 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
 
 /**
  * Mark already-scored rows as reason-skipped (no eligible facts/title) in one
- * batched write. Keeps existing relevance; reason stays ''.
+ * batched write. Keeps existing relevance; reason stays '' and status becomes
+ * terminal `complete`.
  */
 export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
@@ -266,7 +264,7 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
     await database.batch(
       rows.map((row) =>
         row.prepareUpdate((r) => {
-          r.reasonGenerationCompleted = true;
+          r.status = ArticleSuggestionStatus.Complete;
         }),
       ),
     );
@@ -274,7 +272,9 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
 }
 
 /**
- * Updates the reason for an already-scored row.
+ * Updates the reason for an already-scored row. A non-empty reason transitions
+ * the row to `complete`; an empty reason leaves it `reason_pending` for the
+ * next sweep.
  */
 export async function saveReason(
   localSuggestionId: string,
@@ -284,7 +284,10 @@ export async function saveReason(
   await database.write(async () => {
     await row.update((r) => {
       r.reason = reason;
-      r.reasonGenerationCompleted = reason.length > 0;
+      r.status =
+        reason.length > 0
+          ? ArticleSuggestionStatus.Complete
+          : ArticleSuggestionStatus.ReasonPending;
     });
   });
 }
@@ -401,8 +404,7 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
     clusters: parseClusterMemberships(row.clusterMembershipsJson),
     relevance: row.relevance,
     reason: row.reason,
-    relevanceGenerationCompleted: row.relevanceGenerationCompleted,
-    reasonGenerationCompleted: row.reasonGenerationCompleted,
+    status: row.status,
     country_code: row.countryCode,
     language_code: row.languageCode,
     publication_name: row.publicationName,
@@ -565,8 +567,7 @@ export async function persistAndLinkV2Suggestions(
         );
         r.relevance = 0;
         r.reason = '';
-        r.relevanceGenerationCompleted = false;
-        r.reasonGenerationCompleted = false;
+        r.status = ArticleSuggestionStatus.Unscored;
         r.countryCode = a.country_code ?? null;
         r.languageCode = a.language_code ?? null;
         r.publicationName = a.publication_name ?? null;

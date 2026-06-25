@@ -6,6 +6,8 @@ import {
   getUnscoredSuggestionsWithFacts,
   saveScoringResult,
 } from '@/lib/database/services/article-suggestion-service';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { classifyScoringError } from '@/lib/services/scoring-error';
 import logger from '@/lib/logger';
 import { initBaseModel } from '@/lib/mera-protocol-toolkit';
 import { processAllUnscored } from '@/lib/mera-protocol/scoring-service';
@@ -31,6 +33,8 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
     useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
 
   if (!onDevice) {
+    const setScoringError = useForYouStore.getState().setScoringError;
+
     let result: Awaited<ReturnType<typeof runBackgroundCycle>>;
     try {
       result = await runBackgroundCycle('scoring-pass');
@@ -38,6 +42,9 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
       logger.captureException(err, {
         tags: { service: 'SuggestionSyncService', method: 'runScoringPass.cycle' },
       });
+      // Surface the failure in the header status row immediately (every failure,
+      // no waiting). Cleared when the next sync cycle starts.
+      setScoringError(classifyScoringError());
       throw err; // surface to FeedSyncMachine so the failed stage is recorded
     }
 
@@ -56,11 +63,24 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
       // Transient backend failure (network error, server down, expired endpoint).
       // Log it but let the sync complete so articles are at least persisted.
       // inference-recover will attempt scoring again on the next foreground.
+      // Surface it in the header status row so the user knows the pipeline stalled.
       logger.captureMessage('[runScoringPass] cloud inference cycle returned error — transient, sync will complete', {
         level: 'warning',
         tags: { service: 'SuggestionSyncService', method: 'runScoringPass' },
       });
+      setScoringError(classifyScoringError());
       return 0;
+    }
+
+    // Any cycle that reached the gateway (submitted a job, or fetched/decoded
+    // results) clears the error. Neutral outcomes (no-work, another cycle owns the
+    // pending job, missing push token) leave whatever the header was showing.
+    if (
+      result === 'submitted' ||
+      result === 'reconciled-new-data' ||
+      result === 'reconciled-pending'
+    ) {
+      setScoringError(null);
     }
 
     logger.info(`[runScoringPass] cloud cycle result: ${result}`);
@@ -120,7 +140,7 @@ async function refreshSuggestionsInStore(): Promise<void> {
   let relevantArticleCount = 0;
   let unscoredCount = 0;
   for (const s of suggestions) {
-    if (!s.relevanceGenerationCompleted) {
+    if (s.status === ArticleSuggestionStatus.Unscored) {
       unscoredCount++;
     } else if (s.relevance > RELEVANCE_DISPLAY_THRESHOLD) {
       relevantArticleCount++;
@@ -141,10 +161,10 @@ async function refreshSuggestionsInStore(): Promise<void> {
 }
 
 function byRelevanceDesc(
-  a: { relevance: number; relevanceGenerationCompleted: boolean },
-  b: { relevance: number; relevanceGenerationCompleted: boolean },
+  a: { relevance: number; status: ArticleSuggestionStatus },
+  b: { relevance: number; status: ArticleSuggestionStatus },
 ): number {
-  const av = a.relevanceGenerationCompleted ? a.relevance : -Infinity;
-  const bv = b.relevanceGenerationCompleted ? b.relevance : -Infinity;
+  const av = a.status !== ArticleSuggestionStatus.Unscored ? a.relevance : -Infinity;
+  const bv = b.status !== ArticleSuggestionStatus.Unscored ? b.relevance : -Infinity;
   return bv - av;
 }

@@ -107,6 +107,10 @@ export const useForYouNoisyDiscardedCount = () =>
 export const useForYouSyncStatusMessage = () =>
     useForYouStore((s) => s.syncStatusMessage);
 
+/** Cloud scoring pipeline error kind (reactive); null when healthy/idle. */
+export const useForYouScoringError = () =>
+    useForYouStore((s) => s.scoringError);
+
 /** Epoch ms of the daily-cap reset while the user is over their delivery
  *  limit, else null. Reactive — drives the persistent "limit reached" banner. */
 export const useForYouDailyLimitResetAt = () =>

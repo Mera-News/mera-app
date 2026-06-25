@@ -14,6 +14,7 @@ import * as Notifications from 'expo-notifications';
 import logger from '@/lib/logger';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 
 export interface DispatchArgs {
   scoredIds: string[];
@@ -34,7 +35,7 @@ export async function dispatchResultsNotification(
 
   const readyCount = args.scoredIds.filter((id) => {
     const s = suggestionsById.get(id);
-    return s?.reasonGenerationCompleted === true;
+    return s?.status === ArticleSuggestionStatus.Complete;
   }).length;
 
   if (readyCount === 0) return;

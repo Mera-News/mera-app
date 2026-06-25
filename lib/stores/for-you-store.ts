@@ -8,15 +8,21 @@ import {
     pruneOrphanedSuggestions,
 } from '@/lib/database/services/article-suggestion-service';
 import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
+import {
+    ArticleSuggestionStatus,
+    type ArticleSuggestionStatus as ArticleSuggestionStatusType,
+} from '@/lib/database/article-suggestion-status';
+import type { ScoringErrorKind } from '@/lib/services/scoring-error';
 
 /** Article-keyed feed row hydrated from local WatermelonDB. Populated by the
  *  sync service from articlesForTopicsByIds, with client-side scoring fields.
  *
- *  `relevanceGenerationCompleted` flips to true once the scoring pass writes
- *  a relevance value; while false the row hasn't been processed yet
- *  (relevance=0, reason=''). A completed row with
- *  `reasonGenerationCompleted=false` means the reason step failed and will
- *  be retried on the next sync.
+ *  `status` is the pipeline state machine (see article-suggestion-status.ts):
+ *  `unscored` (relevance not generated yet; relevance=0, reason=''),
+ *  `reason_pending` (scored, reason generating — UI shows loading dots; failed
+ *  reason attempts stay here and are retried, with persistent pipeline failures
+ *  surfaced as a toast), and `complete` (terminal: reason text present, or
+ *  deliberately skipped for a sub-threshold row).
  *
  *  `clusters` is the latest list of clusters the article belongs to, each with
  *  its HDBSCAN membership confidence (0.0–1.0), refreshed every sync
@@ -37,8 +43,7 @@ export type ForYouSuggestion = {
     clusters: ClusterMembership[];
     relevance: number;
     reason: string;
-    relevanceGenerationCompleted: boolean;
-    reasonGenerationCompleted: boolean;
+    status: ArticleSuggestionStatusType;
     country_code: string | null;
     language_code: string | null;
     publication_name: string | null;
@@ -98,6 +103,11 @@ interface ForYouState {
     syncStatusMessage: SyncStatusMessage | null;
     lastSyncAt: number | null;
 
+    // Cloud scoring pipeline error — set on every failed scoring cycle, shown in
+    // the For You header status row, cleared at the start of the next sync cycle.
+    // null when the pipeline is healthy / idle.
+    scoringError: ScoringErrorKind | null;
+
     // Daily delivery cap — epoch ms of the next reset (00:00 UTC) while the
     // user is over their daily article-delivery limit, else null. Sticky:
     // set when a sync is fully blocked by the cap, cleared when a sync
@@ -141,6 +151,7 @@ interface ForYouState {
     hydrateMetadataFromDb: () => Promise<void>;
     setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
     setLastSyncAt: (ts: number) => void;
+    setScoringError: (kind: ScoringErrorKind | null) => void;
     setDailyLimitResetAt: (ts: number | null) => void;
     setHydrationProgress: (completed: number, total: number) => void;
     resetHydrationProgress: () => void;
@@ -166,6 +177,7 @@ const initialState = {
     asyncJobTotalCount: 0,
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
+    scoringError: null as ScoringErrorKind | null,
     dailyLimitResetAt: null as number | null,
     hydrationCompleted: 0,
     hydrationTotal: 0,
@@ -227,7 +239,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         if (!target) return;
 
         const nextSuggestions = state.suggestions.filter((s) => s._id !== serverId);
-        const wasImpactful = target.relevanceGenerationCompleted && target.relevance > 0.3;
+        const wasImpactful =
+            target.status !== ArticleSuggestionStatus.Unscored && target.relevance > 0.3;
         const nextRelevantCount = wasImpactful
             ? Math.max(0, state.relevantArticleCount - 1)
             : state.relevantArticleCount;
@@ -287,6 +300,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setSyncStatusMessage: (msg) => set({ syncStatusMessage: msg }),
 
     setLastSyncAt: (ts) => set({ lastSyncAt: ts }),
+
+    setScoringError: (kind) => set({ scoringError: kind }),
 
     setDailyLimitResetAt: (ts) => set({ dailyLimitResetAt: ts }),
 
@@ -350,7 +365,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             const rows = await loadSuggestions();
             rows.sort(byRelevanceDesc);
             const relevantCount = rows.filter(
-                (s) => s.relevanceGenerationCompleted && s.relevance > 0.3,
+                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance > 0.3,
             ).length;
             const state = get();
             set({
@@ -371,7 +386,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         try {
             const rows = await loadSuggestions();
             rows.sort(byRelevanceDesc);
-            const scoredCount = rows.filter((s) => s.relevanceGenerationCompleted).length;
+            const scoredCount = rows.filter(
+                (s) => s.status !== ArticleSuggestionStatus.Unscored,
+            ).length;
             set({
                 suggestions: rows,
                 unscoredCount: rows.length - scoredCount,
@@ -397,7 +414,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
             const current = get().suggestions;
             const impactfulCount = current.filter(
-                (s) => s.relevanceGenerationCompleted && s.relevance > 0.3,
+                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance > 0.3,
             ).length;
 
             set({
@@ -423,10 +440,10 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 }));
 
 function byRelevanceDesc(
-    a: { relevance: number; relevanceGenerationCompleted: boolean },
-    b: { relevance: number; relevanceGenerationCompleted: boolean },
+    a: { relevance: number; status: ArticleSuggestionStatusType },
+    b: { relevance: number; status: ArticleSuggestionStatusType },
 ): number {
-    const av = a.relevanceGenerationCompleted ? a.relevance : -Infinity;
-    const bv = b.relevanceGenerationCompleted ? b.relevance : -Infinity;
+    const av = a.status !== ArticleSuggestionStatus.Unscored ? a.relevance : -Infinity;
+    const bv = b.status !== ArticleSuggestionStatus.Unscored ? b.relevance : -Infinity;
     return bv - av;
 }

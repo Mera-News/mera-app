@@ -441,7 +441,21 @@
     "networkError": "Unable to connect to the server. Check your network and API endpoint settings.",
     "feedError": "Couldn't load your feed. Please try again.",
     "accountRestricted": "Account Restricted",
-    "accountRestrictedDescription": "Your account has been restricted. Please contact support."
+    "accountRestrictedDescription": "Your account has been restricted. Please contact support.",
+    "scoring": {
+      "offline": {
+        "title": "You're offline",
+        "message": "We can't reach the server to pick news for you. Check your connection — your feed will catch up on its own once you're back online."
+      },
+      "server": {
+        "title": "Service unavailable",
+        "message": "We couldn't reach the news service. This is usually brief — we'll keep trying and your feed will update on its own."
+      },
+      "generic": {
+        "title": "Couldn't update your feed",
+        "message": "Something went wrong while picking news for you. We'll keep trying — pull down to refresh if it continues."
+      }
+    }
   },
   "download": {
     "modelDownloading": "Downloading AI model...",

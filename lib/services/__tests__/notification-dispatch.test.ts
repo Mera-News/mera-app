@@ -38,9 +38,9 @@ const buildPersona = (overrides: Record<string, any> = {}) => ({
   ...overrides,
 });
 
-const buildSuggestion = (id: string, reasonGenerationCompleted = true) => ({
+const buildSuggestion = (id: string, reasonComplete = true) => ({
   _id: id,
-  reasonGenerationCompleted,
+  status: reasonComplete ? 'complete' : 'reason_pending',
 });
 
 describe('dispatchResultsNotification', () => {

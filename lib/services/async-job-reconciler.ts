@@ -274,9 +274,9 @@ async function reconcileRelevancePhase(
     if (relevance === undefined) continue;
     relevanceMap[candidateId] = relevance;
     try {
-      // Persist relevance now; reason empty + not skipped means
-      // reason_generation_completed stays false, which is exactly how we want
-      // the DB to signal "reason pending" for phase-2 readers.
+      // Persist relevance now; reason empty + not skipped + not failed resolves
+      // to status='reason_pending', which is exactly how we want the DB to
+      // signal "reason pending" for phase-2 readers.
       await saveScoringResult(candidateId, {
         relevance,
         reason: '',

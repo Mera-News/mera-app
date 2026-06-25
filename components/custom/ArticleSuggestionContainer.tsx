@@ -15,6 +15,7 @@ import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
 import AnimatedDots from '@/components/custom/AnimatedDots';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -105,12 +106,15 @@ export const ArticleSuggestionContainer: React.FC<ArticleSuggestionContainerProp
     const [imageFailed, setImageFailed] = useState(false);
     const showImage = !!imageUrl && !imageFailed;
 
-    // Relevance/reason only apply to the suggestion path.
-    const relevanceReady = !!suggestion?.relevanceGenerationCompleted;
-    const reasonReady = !!suggestion?.reasonGenerationCompleted;
+    // Relevance/reason only apply to the suggestion path. Driven by the
+    // article-suggestion status state machine.
+    const status = suggestion?.status;
+    const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
+    const reasonReady = status === ArticleSuggestionStatus.Complete;
     const relevance = suggestion?.relevance ?? 0;
     const reason = relevanceReady ? suggestion?.reason ?? '' : '';
-    const reasonLoading = relevanceReady && !reasonReady && !reason;
+    const reasonLoading =
+        status === ArticleSuggestionStatus.ReasonPending && !reason;
 
     const isCard = variant === 'card';
     const displayTitle = titleEnglish || (isCard ? t('feed.newsCluster') : 'Article');

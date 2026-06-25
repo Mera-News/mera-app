@@ -42,6 +42,7 @@ jest.mock('@/lib/logger', () => ({
 import { renderHook } from '@testing-library/react-native';
 import { useForYouStore } from '../../for-you-store';
 import { useUserStore } from '../../user-store';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { UserPersona } from '@/lib/account-service';
 
 import {
@@ -115,8 +116,7 @@ describe('selectors/index', () => {
             clusters: [],
             relevance: 0.8,
             reason: 'test',
-            relevanceGenerationCompleted: true,
-            reasonGenerationCompleted: true,
+            status: ArticleSuggestionStatus.Complete,
             country_code: null,
             language_code: null,
             publication_name: null,

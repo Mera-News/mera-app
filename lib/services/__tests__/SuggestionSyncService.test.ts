@@ -18,6 +18,7 @@ const mockForYouState = {
   finishDeviceProcessing: jest.fn(),
   markProcessingRunFinished: jest.fn(),
   setCounts: jest.fn(),
+  setScoringError: jest.fn(),
   setState: jest.fn(),
   articleCount: 5,
   relevantArticleCount: 2,
@@ -40,6 +41,10 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   loadSuggestions: (...args: any[]) => mockLoadSuggestions(...args),
   getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscoredSuggestionsWithFacts(...args),
   saveScoringResult: (...args: any[]) => mockSaveScoringResult(...args),
+}));
+
+jest.mock('@/lib/services/scoring-error', () => ({
+  classifyScoringError: () => 'server',
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -96,6 +101,7 @@ jest.mock('expo-keep-awake', () => ({
 
 import { runScoringPass, refreshSuggestionsInStoreUnsafe } from '../SuggestionSyncService';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 
 describe('runScoringPass', () => {
   beforeEach(() => {
@@ -118,6 +124,30 @@ describe('runScoringPass', () => {
 
       expect(mockRunBackgroundCycle).toHaveBeenCalledWith('scoring-pass');
       expect(result).toBe(0);
+    });
+
+    it('clears the header scoring error when the cycle reaches the gateway', async () => {
+      mockRunBackgroundCycle.mockResolvedValue('submitted');
+
+      await runScoringPass();
+
+      expect(mockForYouState.setScoringError).toHaveBeenCalledWith(null);
+    });
+
+    it('sets the header scoring error on error result', async () => {
+      mockRunBackgroundCycle.mockResolvedValue('error');
+
+      await runScoringPass();
+
+      expect(mockForYouState.setScoringError).toHaveBeenCalledWith('server');
+    });
+
+    it('does not set or clear the header error on neutral outcomes (skipped-pending)', async () => {
+      mockRunBackgroundCycle.mockResolvedValue('skipped-pending');
+
+      await runScoringPass();
+
+      expect(mockForYouState.setScoringError).not.toHaveBeenCalled();
     });
 
     it('logs warning and returns 0 when skipped-no-token', async () => {
@@ -144,12 +174,13 @@ describe('runScoringPass', () => {
       expect(result).toBe(0);
     });
 
-    it('rethrows exceptions from runBackgroundCycle', async () => {
+    it('rethrows exceptions from runBackgroundCycle and sets the header error', async () => {
       const err = new Error('cycle error');
       mockRunBackgroundCycle.mockRejectedValue(err);
 
       await expect(runScoringPass()).rejects.toThrow('cycle error');
       expect(mockCaptureException).toHaveBeenCalledWith(err, expect.any(Object));
+      expect(mockForYouState.setScoringError).toHaveBeenCalledWith('server');
     });
   });
 
@@ -227,7 +258,7 @@ describe('runScoringPass', () => {
 
     it('onBatchComplete callback refreshes suggestions without throwing', async () => {
       mockLoadSuggestions.mockResolvedValue([
-        { relevance: 0.9, relevanceGenerationCompleted: true },
+        { relevance: 0.9, status: ArticleSuggestionStatus.ReasonPending },
       ]);
 
       let capturedOnBatchComplete: (() => void) | null = null;
@@ -307,8 +338,8 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
 
   it('loads suggestions and updates store state', async () => {
     const suggestions = [
-      { relevance: 0.9, relevanceGenerationCompleted: true },
-      { relevance: 0.1, relevanceGenerationCompleted: true },
+      { relevance: 0.9, status: ArticleSuggestionStatus.ReasonPending },
+      { relevance: 0.1, status: ArticleSuggestionStatus.ReasonPending },
     ];
     mockLoadSuggestions.mockResolvedValue(suggestions);
 
@@ -325,9 +356,9 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
 
   it('sorts suggestions by relevance descending (scored before unscored)', async () => {
     const suggestions = [
-      { relevance: 0.3, relevanceGenerationCompleted: true },
-      { relevance: 0.9, relevanceGenerationCompleted: true },
-      { relevance: 0.0, relevanceGenerationCompleted: false },
+      { relevance: 0.3, status: ArticleSuggestionStatus.ReasonPending },
+      { relevance: 0.9, status: ArticleSuggestionStatus.ReasonPending },
+      { relevance: 0.0, status: ArticleSuggestionStatus.Unscored },
     ];
     mockLoadSuggestions.mockResolvedValue(suggestions);
 
@@ -338,14 +369,14 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
     expect(callArg.suggestions[0].relevance).toBe(0.9);
     expect(callArg.suggestions[1].relevance).toBe(0.3);
     // unscored goes last (-Infinity sort key)
-    expect(callArg.suggestions[2].relevanceGenerationCompleted).toBe(false);
+    expect(callArg.suggestions[2].status).toBe(ArticleSuggestionStatus.Unscored);
   });
 
   it('counts unscored and relevant articles correctly', async () => {
     const suggestions = [
-      { relevance: 0.9, relevanceGenerationCompleted: true },
-      { relevance: 0.1, relevanceGenerationCompleted: true }, // below display threshold
-      { relevance: 0.0, relevanceGenerationCompleted: false }, // unscored
+      { relevance: 0.9, status: ArticleSuggestionStatus.ReasonPending },
+      { relevance: 0.1, status: ArticleSuggestionStatus.ReasonPending }, // below display threshold
+      { relevance: 0.0, status: ArticleSuggestionStatus.Unscored }, // unscored
     ];
     mockLoadSuggestions.mockResolvedValue(suggestions);
 
@@ -366,8 +397,8 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
     // When articleCount is 0 (falsy), setCounts should use suggestions.length
     mockForYouState.articleCount = 0;
     const suggestions = [
-      { relevance: 0.9, relevanceGenerationCompleted: true },
-      { relevance: 0.5, relevanceGenerationCompleted: true },
+      { relevance: 0.9, status: ArticleSuggestionStatus.ReasonPending },
+      { relevance: 0.5, status: ArticleSuggestionStatus.ReasonPending },
     ];
     mockLoadSuggestions.mockResolvedValue(suggestions);
 
@@ -378,11 +409,11 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
   });
 
   it('byRelevanceDesc: sorts two unscored articles (both -Infinity, covers line 148 false branch)', async () => {
-    // Covers `b.relevanceGenerationCompleted ? b.relevance : -Infinity` false branch
+    // Covers the `status !== Unscored ? relevance : -Infinity` false branch
     // when BOTH a and b are unscored (both get -Infinity → stable relative order)
     const suggestions = [
-      { relevance: 0.0, relevanceGenerationCompleted: false }, // unscored
-      { relevance: 0.0, relevanceGenerationCompleted: false }, // unscored
+      { relevance: 0.0, status: ArticleSuggestionStatus.Unscored }, // unscored
+      { relevance: 0.0, status: ArticleSuggestionStatus.Unscored }, // unscored
     ];
     mockLoadSuggestions.mockResolvedValue(suggestions);
 
@@ -392,6 +423,6 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
     const callArg = useForYouStore.setState.mock.calls.at(-1)[0];
     // Both unscored → both -Infinity → sort returns 0, order preserved
     expect(callArg.suggestions).toHaveLength(2);
-    expect(callArg.suggestions.every((s: any) => !s.relevanceGenerationCompleted)).toBe(true);
+    expect(callArg.suggestions.every((s: any) => s.status === ArticleSuggestionStatus.Unscored)).toBe(true);
   });
 });

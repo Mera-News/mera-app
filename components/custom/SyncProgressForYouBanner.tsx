@@ -7,8 +7,10 @@ import {
     useForYouAsyncJobProcessedCount,
     useForYouAsyncJobTotalCount,
     useForYouDeviceProcessing,
+    useForYouScoringError,
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
+import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -84,6 +86,7 @@ export default function SyncProgressForYouBanner() {
     const asyncJobTotalCount = useForYouAsyncJobTotalCount();
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
     const syncStatusMessage = useForYouSyncStatusMessage();
+    const scoringError = useForYouScoringError();
 
     const isStage1Active =
         syncStatusMessage?.state === 'hydrating' ||
@@ -123,7 +126,35 @@ export default function SyncProgressForYouBanner() {
         return <Stage1Content />;
     }
 
+    // Pipeline failed this cycle — surface it in the same status slot. Cleared at
+    // the start of the next sync cycle.
+    if (scoringError) {
+        return <ScoringErrorContent kind={scoringError} />;
+    }
+
     return null;
+}
+
+// ---------- Scoring pipeline error ----------
+
+function ScoringErrorContent({ kind }: { kind: keyof typeof SCORING_ERROR_I18N_KEYS }) {
+    const { t } = useTranslation();
+    const keys = SCORING_ERROR_I18N_KEYS[kind];
+    return (
+        <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+            <HStack className="items-start" space="sm">
+                <MaterialIcons name="error-outline" size={16} color="#F87171" style={{ marginTop: 1 }} />
+                <VStack className="flex-1" space="xs">
+                    <Text size="sm" className="font-semibold text-red-400">
+                        {t(keys.title)}
+                    </Text>
+                    <Text size="xs" className="text-typography-400 leading-4">
+                        {t(keys.message)}
+                    </Text>
+                </VStack>
+            </HStack>
+        </Animated.View>
+    );
 }
 
 // ---------- Stage 2-3: cloud relevance / reasons / on-device ----------

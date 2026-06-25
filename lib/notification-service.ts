@@ -7,6 +7,7 @@ import logger from './logger';
 import { AccountService } from './account-service';
 import { useUserStore } from './stores/user-store';
 import { getSetting, setSetting } from './database/services/setting-service';
+import { ArticleSuggestionStatus } from './database/article-suggestion-status';
 
 /** Persisted count of consecutive push-token retrieval failures. Used to keep
  *  the (expected, recoverable) iOS APNs hang at `warning` level until recovery
@@ -216,11 +217,13 @@ async function refreshForYouCacheFromDb(): Promise<void> {
         if (!rows || rows.length === 0) return;
 
         rows.sort((a, b) => {
-            const av = a.relevanceGenerationCompleted ? a.relevance : -Infinity;
-            const bv = b.relevanceGenerationCompleted ? b.relevance : -Infinity;
+            const av = a.status !== ArticleSuggestionStatus.Unscored ? a.relevance : -Infinity;
+            const bv = b.status !== ArticleSuggestionStatus.Unscored ? b.relevance : -Infinity;
             return bv - av;
         });
-        const scoredCount = rows.filter((s) => s.relevanceGenerationCompleted).length;
+        const scoredCount = rows.filter(
+            (s) => s.status !== ArticleSuggestionStatus.Unscored,
+        ).length;
 
         useForYouStore.setState({
             suggestions: rows,

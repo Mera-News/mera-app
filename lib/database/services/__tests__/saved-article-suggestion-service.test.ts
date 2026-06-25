@@ -9,6 +9,7 @@ jest.mock('@/lib/database/index', () => {
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import {
   saveSuggestion,
   isSuggestionSaved,
@@ -28,8 +29,7 @@ function makeSuggestion(overrides: Partial<ForYouSuggestion> = {}): ForYouSugges
     clusters: [{ clusterId: 'c1', confidence: 0.9 }],
     relevance: 0.7,
     reason: 'Because you follow Berlin',
-    relevanceGenerationCompleted: true,
-    reasonGenerationCompleted: true,
+    status: ArticleSuggestionStatus.Complete,
     country_code: 'DE',
     language_code: 'de',
     publication_name: 'Der Spiegel',

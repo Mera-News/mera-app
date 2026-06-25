@@ -35,21 +35,36 @@ jest.mock('@/lib/logger', () => ({
 
 import { useForYouStore } from '../for-you-store';
 import type { ForYouSuggestion } from '../for-you-store';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import logger from '@/lib/logger';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-function makeSuggestion(overrides: Partial<ForYouSuggestion> = {}): ForYouSuggestion {
+function makeSuggestion(
+    overrides: Partial<ForYouSuggestion> & {
+        relevanceGenerationCompleted?: boolean;
+        reasonGenerationCompleted?: boolean;
+    } = {},
+): ForYouSuggestion {
+    // Accept legacy boolean overrides and derive the `status` state machine so
+    // the existing call sites keep working.
+    const { relevanceGenerationCompleted, reasonGenerationCompleted, ...rest } = overrides;
+    const status =
+        rest.status ??
+        (reasonGenerationCompleted
+            ? ArticleSuggestionStatus.Complete
+            : relevanceGenerationCompleted
+                ? ArticleSuggestionStatus.ReasonPending
+                : ArticleSuggestionStatus.Unscored);
     return {
         _id: 'srv-1',
         articleId: 'art-1',
         clusters: [],
         relevance: 0,
         reason: '',
-        relevanceGenerationCompleted: false,
-        reasonGenerationCompleted: false,
+        status,
         country_code: 'US',
         language_code: 'en',
         publication_name: 'Test Pub',
@@ -61,7 +76,7 @@ function makeSuggestion(overrides: Partial<ForYouSuggestion> = {}): ForYouSugges
         userTopicIds: [],
         createdAt: new Date().toISOString(),
         firstPubDate: new Date().toISOString(),
-        ...overrides,
+        ...rest,
     };
 }
 
@@ -82,6 +97,7 @@ const initialState = {
     asyncJobTotalCount: 0,
     syncStatusMessage: null,
     lastSyncAt: null as number | null,
+    scoringError: null,
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
@@ -408,6 +424,13 @@ describe('useForYouStore', () => {
     it('setLastSyncAt stores the timestamp', () => {
         useForYouStore.getState().setLastSyncAt(1234567890);
         expect(useForYouStore.getState().lastSyncAt).toBe(1234567890);
+    });
+
+    it('setScoringError stores and clears the scoring error kind', () => {
+        useForYouStore.getState().setScoringError('server');
+        expect(useForYouStore.getState().scoringError).toBe('server');
+        useForYouStore.getState().setScoringError(null);
+        expect(useForYouStore.getState().scoringError).toBeNull();
     });
 
     // ── setHydrationProgress / resetHydrationProgress ────────────────────────

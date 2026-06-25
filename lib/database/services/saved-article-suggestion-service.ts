@@ -7,6 +7,7 @@
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
+import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type SavedArticleSuggestionModel from '../models/SavedArticleSuggestion';
 import type { ForYouSuggestion, ClusterMembership } from '../../stores/for-you-store';
 
@@ -96,8 +97,10 @@ function applySnapshot(
   r.clusterMembershipsJson = JSON.stringify(s.clusters ?? []);
   r.relevance = s.relevance;
   r.reason = s.reason;
-  r.relevanceGenerationCompleted = s.relevanceGenerationCompleted;
-  r.reasonGenerationCompleted = s.reasonGenerationCompleted;
+  // The saved table predates the `status` state machine and keeps its boolean
+  // columns (long-lived, no migration). Map status → booleans at the boundary.
+  r.relevanceGenerationCompleted = s.status !== ArticleSuggestionStatus.Unscored;
+  r.reasonGenerationCompleted = s.status === ArticleSuggestionStatus.Complete;
   r.countryCode = s.country_code;
   r.languageCode = s.language_code;
   r.publicationName = s.publication_name;
@@ -118,8 +121,12 @@ function toForYouSuggestion(row: SavedArticleSuggestionModel): ForYouSuggestion 
     clusters: parseClusterMemberships(row.clusterMembershipsJson),
     relevance: row.relevance,
     reason: row.reason,
-    relevanceGenerationCompleted: row.relevanceGenerationCompleted,
-    reasonGenerationCompleted: row.reasonGenerationCompleted,
+    // Reconstruct status from the saved table's boolean columns.
+    status: row.reasonGenerationCompleted
+      ? ArticleSuggestionStatus.Complete
+      : row.relevanceGenerationCompleted
+        ? ArticleSuggestionStatus.ReasonPending
+        : ArticleSuggestionStatus.Unscored,
     country_code: row.countryCode,
     language_code: row.languageCode,
     publication_name: row.publicationName,

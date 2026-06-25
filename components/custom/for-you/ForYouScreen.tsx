@@ -21,6 +21,7 @@ import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import { getDisplaySectionLabel, getRelevanceLabel } from '@/lib/relevance-utils';
 import { ForYouSuggestion, useForYouStore } from '@/lib/stores/for-you-store';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
@@ -34,6 +35,7 @@ import {
     useForYouPagination,
     useForYouSuggestions,
     useForYouSyncStatusMessage,
+    useForYouScoringError,
     useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
@@ -109,6 +111,7 @@ const MeraNewsScreen: React.FC = () => {
     const { isDeviceProcessing } = useForYouDeviceProcessing();
     const unscoredCount = useForYouUnscoredCount();
     const syncStatusMessage = useForYouSyncStatusMessage();
+    const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
     const noisyDiscardedCount = useForYouNoisyDiscardedCount();
     const injectNoiseEnabled = useInjectNoise();
@@ -140,7 +143,8 @@ const MeraNewsScreen: React.FC = () => {
         syncStatusMessage.state !== 'failed' &&
         syncStatusMessage.state !== 'paused-offline';
 
-    const showSyncProgress = isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+    const showSyncProgress =
+        isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing || scoringError !== null;
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes). Takes banner priority over the
@@ -184,7 +188,7 @@ const MeraNewsScreen: React.FC = () => {
         let analysed = 0;
         let relevant = 0;
         for (const s of suggestions) {
-            if (!s.relevanceGenerationCompleted) continue;
+            if (s.status === ArticleSuggestionStatus.Unscored) continue;
             const t = Date.parse(s.firstPubDate);
             if (!Number.isFinite(t) || t < cutoffMs) continue;
             analysed++;
@@ -317,7 +321,7 @@ const MeraNewsScreen: React.FC = () => {
         };
 
         const visible = suggestions.filter((s) => {
-            if (!s.relevanceGenerationCompleted) return false;
+            if (s.status === ArticleSuggestionStatus.Unscored) return false;
             if (s.relevance <= 0.3) return false;
             const t = pubDateMs(s);
             if (t === -Infinity || t < cutoffMs) return false;
@@ -404,7 +408,7 @@ const MeraNewsScreen: React.FC = () => {
         // Unscored section — articles that have been fetched but not yet scored.
         // Sorted by newest-first since relevance isn't known yet.
         const unscored = suggestions
-            .filter((s) => !s.relevanceGenerationCompleted)
+            .filter((s) => s.status === ArticleSuggestionStatus.Unscored)
             .sort((a, b) => pubDateMs(b) - pubDateMs(a));
         if (unscored.length > 0) {
             items.push({ type: 'priority-label', label: 'Unscored Articles', relevance: -1 });

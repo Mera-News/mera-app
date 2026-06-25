@@ -27,6 +27,7 @@ const mockForYouStoreState = {
   setLastSyncAt: jest.fn(),
   setDailyLimitResetAt: jest.fn(),
   resetHydrationProgress: jest.fn(),
+  setScoringError: jest.fn(),
   relevantArticleCount: 0,
 };
 
@@ -224,6 +225,15 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
     await startPromise;
 
     expect(mockForYouStoreState.setLastSyncAt).toHaveBeenCalledWith(expect.any(Number));
+  });
+
+  it('clears the scoring error at the start of a run', async () => {
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockForYouStoreState.setScoringError).toHaveBeenCalledWith(null);
   });
 
   it('calls clearMachineSnapshot on completion', async () => {

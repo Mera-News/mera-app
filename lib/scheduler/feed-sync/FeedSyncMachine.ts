@@ -114,6 +114,10 @@ class FeedSyncMachine {
 
   private async _run(personaId: string, ctx: TaskContext): Promise<void> {
     logger.info('[FeedSyncMachine] run start');
+    // Clear any prior scoring-pipeline error at the start of a fresh cycle — the
+    // header status reflects this cycle's outcome. It re-appears if scoring fails
+    // again, and resolves on its own if scoring succeeds.
+    useForYouStore.getState().setScoringError(null);
     try {
       // Step 1: fetch topic IDs
       this._transitionTo('fetching-topic-ids');

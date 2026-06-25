@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 33,
+  version: 34,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -59,8 +59,9 @@ export default appSchema({
         { name: 'cluster_memberships_json', type: 'string', isOptional: true },
         { name: 'relevance', type: 'number' },
         { name: 'reason', type: 'string' },
-        { name: 'relevance_generation_completed', type: 'boolean' },
-        { name: 'reason_generation_completed', type: 'boolean' },
+        // Pipeline state machine — see lib/database/article-suggestion-status.ts.
+        // One of: unscored | reason_pending | complete.
+        { name: 'status', type: 'string', isIndexed: true },
         { name: 'country_code', type: 'string', isOptional: true },
         { name: 'language_code', type: 'string', isOptional: true },
         { name: 'publication_name', type: 'string', isOptional: true },

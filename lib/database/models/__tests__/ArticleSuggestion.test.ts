@@ -50,15 +50,13 @@ describe('ArticleSuggestion model', () => {
       const instance: any = new (ArticleSuggestion as any)();
       instance.relevance = 0.8;
       instance.reason = 'Test reason';
-      instance.relevanceGenerationCompleted = true;
-      instance.reasonGenerationCompleted = false;
+      instance.status = 'reason_pending';
       instance.clusterMembershipsJson = '[{"clusterId":"c1","confidence":0.9}]';
       instance.matchedTopicTextsJson = '["berlin"]';
 
       expect(instance.relevance).toBe(0.8);
       expect(instance.reason).toBe('Test reason');
-      expect(instance.relevanceGenerationCompleted).toBe(true);
-      expect(instance.reasonGenerationCompleted).toBe(false);
+      expect(instance.status).toBe('reason_pending');
       expect(instance.clusterMembershipsJson).toBe('[{"clusterId":"c1","confidence":0.9}]');
       expect(instance.matchedTopicTextsJson).toBe('["berlin"]');
     });
@@ -69,8 +67,7 @@ describe('ArticleSuggestion model', () => {
       const returned = instance.prepareUpdate((r: any) => {
         r.relevance = 0.5;
         r.reason = 'updated';
-        r.relevanceGenerationCompleted = true;
-        r.reasonGenerationCompleted = true;
+        r.status = 'complete';
       });
       expect(returned).toBe(instance);
       expect(instance.relevance).toBe(0.5);

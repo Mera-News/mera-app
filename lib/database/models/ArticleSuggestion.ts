@@ -2,6 +2,7 @@ import { Model } from '@nozbe/watermelondb';
 import { field, date, children } from '@nozbe/watermelondb/decorators';
 import type { Query } from '@nozbe/watermelondb';
 import type ArticleSuggestionFact from './ArticleSuggestionFact';
+import type { ArticleSuggestionStatus } from '../article-suggestion-status';
 
 /**
  * The WatermelonDB `id` field IS the MongoDB `_id` of the server-side
@@ -28,8 +29,7 @@ export default class ArticleSuggestion extends Model {
   @field('cluster_memberships_json') clusterMembershipsJson!: string | null;
   @field('relevance') relevance!: number;
   @field('reason') reason!: string;
-  @field('relevance_generation_completed') relevanceGenerationCompleted!: boolean;
-  @field('reason_generation_completed') reasonGenerationCompleted!: boolean;
+  @field('status') status!: ArticleSuggestionStatus;
   @field('country_code') countryCode!: string | null;
   @field('language_code') languageCode!: string | null;
   @field('publication_name') publicationName!: string | null;

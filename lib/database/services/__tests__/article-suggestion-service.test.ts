@@ -57,14 +57,22 @@ const db = database as any;
 const NOW = new Date('2024-06-01T00:00:00.000Z');
 
 function makeSuggestion(overrides: Record<string, any> = {}) {
+  // Derive the `status` state machine from any legacy boolean overrides so the
+  // existing call sites keep working without touching every one.
+  const status =
+    overrides.status ??
+    (overrides.reasonGenerationCompleted
+      ? 'complete'
+      : overrides.relevanceGenerationCompleted
+        ? 'reason_pending'
+        : 'unscored');
   return makeRecord({
     id: overrides.id ?? 'sug-1',
     articleId: overrides.articleId ?? overrides.id ?? 'article-1',
     clusterMembershipsJson: overrides.clusterMembershipsJson ?? null,
     relevance: overrides.relevance ?? 0,
     reason: overrides.reason ?? '',
-    relevanceGenerationCompleted: overrides.relevanceGenerationCompleted ?? false,
-    reasonGenerationCompleted: overrides.reasonGenerationCompleted ?? false,
+    status,
     countryCode: overrides.countryCode ?? 'USA',
     languageCode: overrides.languageCode ?? 'en',
     publicationName: overrides.publicationName ?? 'Test Pub',
@@ -285,8 +293,7 @@ describe('loadSuggestions', () => {
     expect(result.image_url).toBe('https://spiegel.de/img.jpg');
     expect(result.relevance).toBe(0.75);
     expect(result.reason).toBe('Relevant to Berlin');
-    expect(result.relevanceGenerationCompleted).toBe(true);
-    expect(result.reasonGenerationCompleted).toBe(true);
+    expect(result.status).toBe('complete');
     expect(result.userTopicIds).toEqual(['berlin', 'germany']);
   });
 });
@@ -557,7 +564,7 @@ describe('deleteOldSuggestions', () => {
 // ===========================================================================
 
 describe('saveScoringResult', () => {
-  it('updates relevance, reason, and flags on the row', async () => {
+  it('updates relevance, reason, and status on the row', async () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
 
@@ -566,29 +573,28 @@ describe('saveScoringResult', () => {
     expect(database.write).toHaveBeenCalledTimes(1);
     expect(sug.relevance).toBe(0.8);
     expect(sug.reason).toBe('Good match');
-    expect(sug.relevanceGenerationCompleted).toBe(true);
-    expect(sug.reasonGenerationCompleted).toBe(true);
+    expect(sug.status).toBe('complete');
   });
 
-  it('sets reasonGenerationCompleted=true when reason is non-empty', async () => {
+  it('sets status=complete when reason is non-empty', async () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
     await saveScoringResult('sug-1', { relevance: 0.5, reason: 'some reason', reasonSkipped: false });
-    expect(sug.reasonGenerationCompleted).toBe(true);
+    expect(sug.status).toBe('complete');
   });
 
-  it('sets reasonGenerationCompleted=false when reason is empty and not skipped', async () => {
+  it('sets status=reason_pending when reason is empty and not skipped/failed', async () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
     await saveScoringResult('sug-1', { relevance: 0.5, reason: '', reasonSkipped: false });
-    expect(sug.reasonGenerationCompleted).toBe(false);
+    expect(sug.status).toBe('reason_pending');
   });
 
-  it('sets reasonGenerationCompleted=true when reasonSkipped=true even with empty reason', async () => {
+  it('sets status=complete when reasonSkipped=true even with empty reason', async () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
     await saveScoringResult('sug-1', { relevance: 0.1, reason: '', reasonSkipped: true });
-    expect(sug.reasonGenerationCompleted).toBe(true);
+    expect(sug.status).toBe('complete');
   });
 
   it('uses articleSuggestionsCol.find to locate the row', async () => {
@@ -610,7 +616,7 @@ describe('batchMarkAsScoredByIds', () => {
     expect(database.write).not.toHaveBeenCalled();
   });
 
-  it('sets relevance=0, reason="", both completed flags=true in one batch', async () => {
+  it('sets relevance=0, reason="", status=complete in one batch', async () => {
     const sug1 = makeSuggestion({ id: 'sug-1' });
     const sug2 = makeSuggestion({ id: 'sug-2' });
     db._setRows('article_suggestions', [sug1, sug2]);
@@ -621,9 +627,8 @@ describe('batchMarkAsScoredByIds', () => {
     expect(database.batch).toHaveBeenCalledTimes(1);
     expect(sug1.relevance).toBe(0);
     expect(sug1.reason).toBe('');
-    expect(sug1.relevanceGenerationCompleted).toBe(true);
-    expect(sug1.reasonGenerationCompleted).toBe(true);
-    expect(sug2.relevanceGenerationCompleted).toBe(true);
+    expect(sug1.status).toBe('complete');
+    expect(sug2.status).toBe('complete');
   });
 });
 
@@ -637,24 +642,25 @@ describe('batchMarkReasonSkipped', () => {
     expect(database.write).not.toHaveBeenCalled();
   });
 
-  it('sets reasonGenerationCompleted=true for each id in one batch', async () => {
-    const sug = makeSuggestion({ id: 'sug-1', reasonGenerationCompleted: false });
+  it('sets status=complete for each id in one batch', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', status: 'reason_pending' });
     db._setRows('article_suggestions', [sug]);
 
     await batchMarkReasonSkipped(['sug-1']);
 
     expect(database.write).toHaveBeenCalledTimes(1);
     expect(database.batch).toHaveBeenCalledTimes(1);
-    expect(sug.reasonGenerationCompleted).toBe(true);
+    expect(sug.status).toBe('complete');
   });
 });
+
 
 // ===========================================================================
 // saveReason
 // ===========================================================================
 
 describe('saveReason', () => {
-  it('updates reason and reasonGenerationCompleted on the row', async () => {
+  it('updates reason and sets status=complete on the row', async () => {
     const sug = makeSuggestion({ id: 'sug-1', reason: '' });
     db._setRows('article_suggestions', [sug]);
 
@@ -662,14 +668,14 @@ describe('saveReason', () => {
 
     expect(database.write).toHaveBeenCalledTimes(1);
     expect(sug.reason).toBe('This matters to you.');
-    expect(sug.reasonGenerationCompleted).toBe(true);
+    expect(sug.status).toBe('complete');
   });
 
-  it('sets reasonGenerationCompleted=false when reason is empty string', async () => {
+  it('sets status=reason_pending when reason is empty string', async () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
     await saveReason('sug-1', '');
-    expect(sug.reasonGenerationCompleted).toBe(false);
+    expect(sug.status).toBe('reason_pending');
   });
 });
 
