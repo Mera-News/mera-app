@@ -257,39 +257,47 @@ describe('ArticleService.getArticleIdsForTopics', () => {
 describe('ArticleService.getArticlesForTopicsByIds', () => {
     beforeEach(() => jest.clearAllMocks());
 
-    it('returns empty array for empty input without calling query', async () => {
+    // Helper: wrap a list of articles in the server's ArticlesForTopicsByIdsResponse shape.
+    const wrap = (
+        articles: unknown[],
+        dailyLimitReached = false,
+        resetAt?: string,
+    ) => ({ data: { articlesForTopicsByIds: { articles, dailyLimitReached, resetAt } } });
+
+    it('returns empty result for empty input without calling query', async () => {
         const result = await ArticleService.getArticlesForTopicsByIds([]);
-        expect(result).toEqual([]);
+        expect(result).toEqual({ articles: [], dailyLimitReached: false });
         expect(mockQuery).not.toHaveBeenCalled();
     });
 
     it('returns articles for a single chunk (< 50)', async () => {
         const articles = ['id1', 'id2', 'id3'].map(makeArticleWithClusters);
-        mockQuery.mockResolvedValueOnce({ data: { articlesForTopicsByIds: articles } });
+        mockQuery.mockResolvedValueOnce(wrap(articles));
 
         const result = await ArticleService.getArticlesForTopicsByIds(['id1', 'id2', 'id3']);
-        expect(result).toHaveLength(3);
+        expect(result.articles).toHaveLength(3);
+        expect(result.dailyLimitReached).toBe(false);
         expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
     it('splits exactly 50 ids into one chunk', async () => {
         const ids = Array.from({ length: 50 }, (_, i) => `id-${i}`);
         const articles = ids.map(makeArticleWithClusters);
-        mockQuery.mockResolvedValueOnce({ data: { articlesForTopicsByIds: articles } });
+        mockQuery.mockResolvedValueOnce(wrap(articles));
 
         const result = await ArticleService.getArticlesForTopicsByIds(ids);
         expect(mockQuery).toHaveBeenCalledTimes(1);
-        expect(result).toHaveLength(50);
+        expect(result.articles).toHaveLength(50);
     });
 
     it('splits 51 ids into exactly 2 chunks', async () => {
         const ids = Array.from({ length: 51 }, (_, i) => `id-${i}`);
-        mockQuery.mockResolvedValueOnce({ data: { articlesForTopicsByIds: ids.slice(0, 50).map(makeArticleWithClusters) } });
-        mockQuery.mockResolvedValueOnce({ data: { articlesForTopicsByIds: ids.slice(50).map(makeArticleWithClusters) } });
+        mockQuery.mockResolvedValueOnce(wrap(ids.slice(0, 50).map(makeArticleWithClusters)));
+        mockQuery.mockResolvedValueOnce(wrap(ids.slice(50).map(makeArticleWithClusters)));
 
         const result = await ArticleService.getArticlesForTopicsByIds(ids);
         expect(mockQuery).toHaveBeenCalledTimes(2);
-        expect(result).toHaveLength(51);
+        expect(result.articles).toHaveLength(51);
     });
 
     it('splits 150 ids into exactly 3 chunks of 50', async () => {
@@ -297,19 +305,29 @@ describe('ArticleService.getArticlesForTopicsByIds', () => {
         // All 3 batches resolve
         for (let i = 0; i < 3; i++) {
             const slice = ids.slice(i * 50, (i + 1) * 50);
-            mockQuery.mockResolvedValueOnce({
-                data: { articlesForTopicsByIds: slice.map(makeArticleWithClusters) },
-            });
+            mockQuery.mockResolvedValueOnce(wrap(slice.map(makeArticleWithClusters)));
         }
 
         const result = await ArticleService.getArticlesForTopicsByIds(ids);
         expect(mockQuery).toHaveBeenCalledTimes(3);
-        expect(result).toHaveLength(150);
+        expect(result.articles).toHaveLength(150);
+    });
+
+    it('ORs dailyLimitReached across chunks and surfaces the first resetAt', async () => {
+        const ids = Array.from({ length: 51 }, (_, i) => `id-${i}`);
+        mockQuery.mockResolvedValueOnce(wrap(ids.slice(0, 50).map(makeArticleWithClusters)));
+        mockQuery.mockResolvedValueOnce(
+            wrap(ids.slice(50).map(makeArticleWithClusters), true, '2026-06-25T00:00:00.000Z'),
+        );
+
+        const result = await ArticleService.getArticlesForTopicsByIds(ids);
+        expect(result.dailyLimitReached).toBe(true);
+        expect(result.resetAt).toBe('2026-06-25T00:00:00.000Z');
     });
 
     it('sends correct chunk boundaries as variables', async () => {
         const ids = Array.from({ length: 60 }, (_, i) => `id-${i}`);
-        mockQuery.mockResolvedValue({ data: { articlesForTopicsByIds: [] } });
+        mockQuery.mockResolvedValue(wrap([]));
 
         await ArticleService.getArticlesForTopicsByIds(ids);
         const calls = (mockQuery as jest.Mock).mock.calls;
@@ -323,7 +341,7 @@ describe('ArticleService.getArticlesForTopicsByIds', () => {
 
     it('fires onProgress(0, total) at start and updates as batches complete', async () => {
         const ids = Array.from({ length: 100 }, (_, i) => `id-${i}`);
-        mockQuery.mockResolvedValue({ data: { articlesForTopicsByIds: [] } });
+        mockQuery.mockResolvedValue(wrap([]));
 
         const progressCalls: [number, number][] = [];
         await ArticleService.getArticlesForTopicsByIds(ids, (completed, total) => {
@@ -342,7 +360,8 @@ describe('ArticleService.getArticlesForTopicsByIds', () => {
     it('handles null/undefined articlesForTopicsByIds gracefully', async () => {
         mockQuery.mockResolvedValueOnce({ data: { articlesForTopicsByIds: null } });
         const result = await ArticleService.getArticlesForTopicsByIds(['id1']);
-        expect(result).toEqual([]);
+        expect(result.articles).toEqual([]);
+        expect(result.dailyLimitReached).toBe(false);
     });
 
     it('re-throws on error and logs', async () => {

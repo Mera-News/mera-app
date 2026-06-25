@@ -241,6 +241,24 @@ class FeedSyncMachine {
         return;
       }
 
+      // `daily-limit` is a normal terminal "no more today" outcome (the user
+      // hit their daily article-delivery cap), not a failure. Surface the
+      // "resumes at X" notice (retryAt = server resetAt), reset to idle, and
+      // return WITHOUT throwing — no retry, no Sentry error.
+      if (errorCode === 'daily-limit') {
+        const resetAt = (err as { resetAt?: number }).resetAt;
+        publishSyncError('daily-limit', resetAt, this._state);
+        this._state = 'idle';
+        try {
+          await feedPersistence.clearMachineSnapshot();
+        } catch (snapErr) {
+          logger.captureException(snapErr, {
+            tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
+          });
+        }
+        return;
+      }
+
       const failedAtState = this._state; // capture before transition
       if (this._state !== 'failed' && this._state !== 'done') {
         this._transitionTo('failed');

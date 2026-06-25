@@ -14,6 +14,7 @@ export type SyncErrorCode =
   | 'server-unreachable'
   | 'auth-expired'
   | 'no-topics-configured'
+  | 'daily-limit'
   | 'storage-error'
   | 'scoring-unavailable'
   | 'unknown';

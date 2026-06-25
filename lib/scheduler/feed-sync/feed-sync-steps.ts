@@ -25,7 +25,9 @@ export interface DiffResult {
 }
 
 export interface HydrateResult {
-  fetched: Awaited<ReturnType<typeof ArticleService.getArticlesForTopicsByIds>>;
+  fetched: Awaited<
+    ReturnType<typeof ArticleService.getArticlesForTopicsByIds>
+  >['articles'];
   articleToTopicTexts: Map<string, string[]>;
 }
 
@@ -65,6 +67,7 @@ export async function stepFetchTopicIds(
     }
   }
   const serverArticleIds = [...articleToTopicTexts.keys()];
+
   logger.info(`[feed-sync-steps] getArticleIdsForTopics returned ${serverArticleIds.length} article ids`);
   ctx.log(`server returned ${serverArticleIds.length} article ids`);
   return { articleToTopicTexts, serverArticleIds };
@@ -93,12 +96,28 @@ export async function stepHydrate(
   if (ctx.signal.aborted) throw new Error('aborted');
 
   const { missingIds, articleToTopicTexts } = diffResult;
-  const fetched = missingIds.length
+  const response = missingIds.length
     ? await withRetry(
         () => ArticleService.getArticlesForTopicsByIds(missingIds, onProgress),
         ctx.signal,
       )
-    : [];
+    : { articles: [], dailyLimitReached: false as boolean, resetAt: undefined };
+  const fetched = response.articles;
+
+  // Daily delivery cap: the server charges the cap here (the delivery point)
+  // and clips the response to what's left of the user's quota. If the cap left
+  // nothing to deliver, surface a terminal "daily limit reached" notice
+  // (resumes at the server's resetAt). A partial clip (some articles still
+  // delivered) proceeds normally — those were counted server-side, so we must
+  // persist them; the notice surfaces on the next sync once the cap is dry.
+  if (response.dailyLimitReached && fetched.length === 0) {
+    logger.info('[feed-sync-steps] daily article-delivery limit reached');
+    throw Object.assign(new Error('daily-limit'), {
+      code: 'daily-limit',
+      resetAt: response.resetAt ? Date.parse(response.resetAt) : undefined,
+    });
+  }
+
   ctx.log(`received ${fetched.length} full records`);
   return { fetched, articleToTopicTexts };
 }

@@ -57,6 +57,23 @@ type ArticlesForPublicationSourceResponse {
   pageInfo: CursorPageInfo!
 }
 
+"""
+Hydrated articles for a set of IDs, plus the daily-delivery-cap signal. The cap is charged here (delivery point), so a clipped response means the user hit their daily article limit — distinct from IDs that simply TTL'd out.
+"""
+type ArticlesForTopicsByIdsResponse {
+  articles: [ArticleWithClusters!]!
+
+  """
+  True when the user's daily article-delivery cap clipped this response (fewer articles returned than requested).
+  """
+  dailyLimitReached: Boolean!
+
+  """
+  ISO timestamp of the next 00:00 UTC when the daily cap resets; set only when dailyLimitReached is true.
+  """
+  resetAt: String
+}
+
 type ClusterArticlesConnection {
   articles: [NewsArticle!]!
   pageInfo: CursorPageInfo!
@@ -259,7 +276,7 @@ type Query {
     first: Int = 20
     newsPublisherId: ID!
   ): ArticlesForPublicationSourceResponse!
-  articlesForTopicsByIds(articleIds: [ID!]!): [ArticleWithClusters!]!
+  articlesForTopicsByIds(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
   newsClusterForUser(clusterId: ID!): NewsCluster!
   newsClusters(
     """Cursor to fetch items after"""

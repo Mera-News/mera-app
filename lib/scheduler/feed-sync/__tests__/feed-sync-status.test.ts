@@ -176,6 +176,17 @@ describe('publishSyncError', () => {
     );
   });
 
+  it('publishes daily-limit error with resetAt as retryAt', () => {
+    publishSyncError('daily-limit', 1781827200000);
+    expect(mockSetSyncStatusMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCode: 'daily-limit',
+        headlineKey: 'sync.dailyLimitReached',
+        retryAt: 1781827200000,
+      }),
+    );
+  });
+
   it('publishes storage-error', () => {
     publishSyncError('storage-error');
     expect(mockSetSyncStatusMessage).toHaveBeenCalledWith(
@@ -239,6 +250,13 @@ describe('classifyError', () => {
 
   it('returns no-topics-configured for matching message', () => {
     expect(classifyError(new Error('no-topics-configured'))).toBe('no-topics-configured');
+  });
+
+  it('returns daily-limit for a daily-limit coded error or message', () => {
+    expect(
+      classifyError(Object.assign(new Error('daily-limit'), { code: 'daily-limit' })),
+    ).toBe('daily-limit');
+    expect(classifyError(new Error('daily-limit'))).toBe('daily-limit');
   });
 
   it('returns no-topics-configured when message includes no-topics-configured', () => {

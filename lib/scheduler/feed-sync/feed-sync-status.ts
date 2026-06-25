@@ -41,6 +41,7 @@ export function publishSyncError(
     'server-unreachable':  'sync.serverUnavailable',
     'auth-expired':        'sync.sessionExpired',
     'no-topics-configured': 'sync.noTopics',
+    'daily-limit':         'sync.dailyLimitReached',
     'storage-error':       'sync.storageFull',
     'scoring-unavailable': 'sync.syncFailed',
     unknown:               'sync.syncFailed',
@@ -70,6 +71,12 @@ export function classifyError(err: unknown): SyncErrorCode {
     }
     if (msg.includes('storage') || msg.includes('disk')) {
       return 'storage-error';
+    }
+    if (
+      (err as { code?: string }).code === 'daily-limit' ||
+      msg === 'daily-limit'
+    ) {
+      return 'daily-limit';
     }
     if ((err as { code?: string }).code === 'no-topics-configured') {
       return 'no-topics-configured';

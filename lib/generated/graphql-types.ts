@@ -75,6 +75,16 @@ export type ArticlesForPublicationSourceResponse = {
   pageInfo: CursorPageInfo;
 };
 
+/** Hydrated articles for a set of IDs, plus the daily-delivery-cap signal. The cap is charged here (delivery point), so a clipped response means the user hit their daily article limit — distinct from IDs that simply TTL'd out. */
+export type ArticlesForTopicsByIdsResponse = {
+  __typename?: 'ArticlesForTopicsByIdsResponse';
+  articles: Array<ArticleWithClusters>;
+  /** True when the user's daily article-delivery cap clipped this response (fewer articles returned than requested). */
+  dailyLimitReached: Scalars['Boolean']['output'];
+  /** ISO timestamp of the next 00:00 UTC when the daily cap resets; set only when dailyLimitReached is true. */
+  resetAt?: Maybe<Scalars['String']['output']>;
+};
+
 export type ClusterArticlesConnection = {
   __typename?: 'ClusterArticlesConnection';
   articles: Array<NewsArticle>;
@@ -301,7 +311,7 @@ export type Query = {
   articlesForPublicationSource: ArticlesForPublicationSourceResponse;
   /** A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines). */
   articlesForPublisher: ArticlesForPublicationSourceResponse;
-  articlesForTopicsByIds: Array<ArticleWithClusters>;
+  articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
   newsClusterForUser: NewsCluster;
   newsClusters: NewsClustersResponse;
   newsClustersForTopicText: NewsClustersResponse;

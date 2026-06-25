@@ -530,6 +530,7 @@
     "serverUnavailable": "Server unavailable — retrying shortly",
     "sessionExpired": "Session expired — please sign in again",
     "noTopics": "Add topics to see your news",
+    "dailyLimitReached": "You've reached today's article limit. More news tomorrow.",
     "storageFull": "Free up device storage and try again",
     "syncFailed": "We couldn't load the latest content. Pull to refresh."
   }

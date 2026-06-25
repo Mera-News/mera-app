@@ -3,6 +3,7 @@ import client from './apollo-client';
 import {
     ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
+    ArticlesForTopicsByIdsResponse,
     ArticleSummary,
     ArticleWithClusters,
     NewsArticle,
@@ -331,23 +332,29 @@ const GET_ARTICLE_IDS_FOR_TOPICS = gql`
 // [Flow v2] GraphQL Query: hydrate full article records for IDs the app
 // doesn't already have locally. Returns ArticleWithClusters which includes
 // per-cluster membership confidence for the For-You feed's collapse logic.
+// The daily-delivery cap is charged here (the server's delivery point), so a
+// clipped response carries `dailyLimitReached` + `resetAt`.
 const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
   query GetArticlesForTopicsByIds($articleIds: [ID!]!) {
     articlesForTopicsByIds(articleIds: $articleIds) {
-      _id
-      clusters {
-        clusterId
-        confidence
+      articles {
+        _id
+        clusters {
+          clusterId
+          confidence
+        }
+        title_en
+        title
+        description_en
+        article_url
+        image_url
+        country_code
+        publication_name
+        language_code
+        pubDate
       }
-      title_en
-      title
-      description_en
-      article_url
-      image_url
-      country_code
-      publication_name
-      language_code
-      pubDate
+      dailyLimitReached
+      resetAt
     }
   }
 `;
@@ -430,15 +437,18 @@ export class ArticleService {
     }
 
     /**
-     * Fetch full article records for a set of IDs. Returns `ArticleWithClusters`
-     * which includes per-cluster membership `clusters { clusterId confidence }`
-     * for the feed's collapse logic. Chunk size matches the server's max-50 limit.
+     * Fetch full article records for a set of IDs. Returns the hydrated
+     * `articles` (with per-cluster membership `clusters { clusterId confidence }`
+     * for the feed's collapse logic) plus the daily-delivery-cap signal — the
+     * cap is charged server-side at this delivery point, so `dailyLimitReached`
+     * is true (with `resetAt`) when the cap clipped the response. Chunk size
+     * matches the server's max-50 limit; the flags are OR'd across chunks.
      */
     static async getArticlesForTopicsByIds(
         articleIds: string[],
         onProgress?: (completed: number, total: number) => void,
-    ): Promise<ArticleWithClusters[]> {
-        if (articleIds.length === 0) return [];
+    ): Promise<{ articles: ArticleWithClusters[]; dailyLimitReached: boolean; resetAt?: string }> {
+        if (articleIds.length === 0) return { articles: [], dailyLimitReached: false };
 
         const CHUNK = 50;
         const CONCURRENCY = 5;
@@ -447,6 +457,8 @@ export class ArticleService {
             batches.push(articleIds.slice(i, i + CHUNK));
         }
         const results: ArticleWithClusters[] = [];
+        let dailyLimitReached = false;
+        let resetAt: string | undefined;
         let completedIds = 0;
         onProgress?.(0, articleIds.length);
 
@@ -460,21 +472,25 @@ export class ArticleService {
                         if (idx >= batches.length) return;
                         const batch = batches[idx];
                         const { data } = await client.query<{
-                            articlesForTopicsByIds: ArticleWithClusters[];
+                            articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
                         }>({
                             query: GET_ARTICLES_FOR_TOPICS_BY_IDS,
                             variables: { articleIds: batch },
                             fetchPolicy: 'no-cache',
                         });
-                        const rows = data?.articlesForTopicsByIds ?? [];
+                        const rows = data?.articlesForTopicsByIds?.articles ?? [];
                         if (rows.length) results.push(...rows);
+                        if (data?.articlesForTopicsByIds?.dailyLimitReached) {
+                            dailyLimitReached = true;
+                            resetAt = resetAt ?? data.articlesForTopicsByIds.resetAt ?? undefined;
+                        }
                         completedIds += batch.length;
                         onProgress?.(completedIds, articleIds.length);
                     }
                 },
             );
             await Promise.all(workers);
-            return results;
+            return { articles: results, dailyLimitReached, resetAt };
         } catch (error) {
             logger.error('[ArticleService] getArticlesForTopicsByIds FAILED', error);
             logger.captureException(error, {

@@ -220,6 +220,7 @@ describe('stepFetchTopicIds', () => {
       expect.stringContaining('2 topic texts'),
     );
   });
+
 });
 
 // ── stepDiff ──────────────────────────────────────────────────────────────────
@@ -319,7 +320,10 @@ describe('stepHydrate', () => {
 
   it('calls ArticleService.getArticlesForTopicsByIds when missingIds is non-empty', async () => {
     const mockArticles = [{ id: 'art-1', title: 'Article 1' }];
-    mockGetArticlesForTopicsByIds.mockResolvedValue(mockArticles);
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: mockArticles,
+      dailyLimitReached: false,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: ['art-1'],
       articleToTopicTexts: new Map([['art-1', ['topic-a']]]),
@@ -331,6 +335,42 @@ describe('stepHydrate', () => {
     const result = await stepHydrate(diffResult, ctx, onProgress);
 
     expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledWith(['art-1'], onProgress);
+    expect(result.fetched).toEqual(mockArticles);
+  });
+
+  it('throws a daily-limit coded error (with resetAt) when the cap left nothing to deliver', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [],
+      dailyLimitReached: true,
+      resetAt: '2026-06-25T00:00:00.000Z',
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-1'],
+    };
+
+    const err = await stepHydrate(diffResult, makeCtx(), jest.fn()).catch((e) => e);
+    expect((err as { code?: string }).code).toBe('daily-limit');
+    expect((err as { resetAt?: number }).resetAt).toBe(
+      Date.parse('2026-06-25T00:00:00.000Z'),
+    );
+  });
+
+  it('does NOT throw when the cap only partially clipped — delivers the granted articles', async () => {
+    const mockArticles = [{ id: 'art-1', title: 'Article 1' }];
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: mockArticles,
+      dailyLimitReached: true,
+      resetAt: '2026-06-25T00:00:00.000Z',
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1', 'art-2'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-1', 'art-2'],
+    };
+
+    const result = await stepHydrate(diffResult, makeCtx(), jest.fn());
     expect(result.fetched).toEqual(mockArticles);
   });
 
@@ -363,7 +403,10 @@ describe('stepHydrate', () => {
   });
 
   it('passes signal to withRetry', async () => {
-    mockGetArticlesForTopicsByIds.mockResolvedValue([{ id: 'art-1' }]);
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ id: 'art-1' }],
+      dailyLimitReached: false,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: ['art-1'],
       articleToTopicTexts: new Map(),
