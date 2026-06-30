@@ -496,6 +496,11 @@
     "articlesRead": "您阅读过的文章",
     "noArticlesLast30Days": "过去30天内该媒体没有文章。"
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "需要更新",
+    "updateRequiredBody": "请将 Mera 更新到最新版本以继续。",
+    "updateCta": "更新"
+  },
   "ota": {
     "updateReady": "更新已就绪",
     "updateDescription": "点击重启以应用最新版本"

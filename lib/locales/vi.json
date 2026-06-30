@@ -496,6 +496,11 @@
     "articlesRead": "Bài viết bạn đã đọc",
     "noArticlesLast30Days": "Không có bài viết nào từ ấn phẩm này trong 30 ngày qua."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Cần cập nhật",
+    "updateRequiredBody": "Vui lòng cập nhật Mera lên phiên bản mới nhất để tiếp tục.",
+    "updateCta": "Cập nhật"
+  },
   "ota": {
     "updateReady": "Cập nhật sẵn sàng",
     "updateDescription": "Chạm để khởi động lại và áp dụng phiên bản mới nhất"

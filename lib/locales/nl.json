@@ -496,6 +496,11 @@
     "articlesRead": "Artikelen die je hebt gelezen",
     "noArticlesLast30Days": "Geen artikelen van deze publicatie in de afgelopen 30 dagen."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Update vereist",
+    "updateRequiredBody": "Werk Mera bij naar de nieuwste versie om door te gaan.",
+    "updateCta": "Bijwerken"
+  },
   "ota": {
     "updateReady": "Update gereed",
     "updateDescription": "Tik om opnieuw te starten en de nieuwste versie toe te passen"

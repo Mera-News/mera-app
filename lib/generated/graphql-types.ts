@@ -16,6 +16,22 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+/** Mobile app platform the version check is being made for. */
+export enum AppPlatform {
+  /** Google Android — directs to the Play Store. */
+  Android = 'ANDROID',
+  /** Apple iOS — directs to the App Store. */
+  Ios = 'IOS'
+}
+
+export type AppVersionInfo = {
+  __typename?: 'AppVersionInfo';
+  /** Minimum native app version still allowed to run. Installs older than this must be force-updated. Null when no floor is configured (gate disabled). */
+  minSupportedVersion?: Maybe<Scalars['String']['output']>;
+  /** Store listing URL the user is sent to in order to update. Null when not configured. */
+  storeUrl?: Maybe<Scalars['String']['output']>;
+};
+
 export type ArticleIdsForTopicsResponse = {
   __typename?: 'ArticleIdsForTopicsResponse';
   results: Array<TopicArticleIdsResult>;
@@ -303,6 +319,7 @@ export type PublicationSourcesResponse = {
 export type Query = {
   __typename?: 'Query';
   allCountries: Array<Scalars['String']['output']>;
+  appVersionInfo: AppVersionInfo;
   /** Fetch a single article by ID. Returns null if not found (e.g. TTL’d out). */
   articleById?: Maybe<NewsArticle>;
   articleIdsForTopics: ArticleIdsForTopicsResponse;
@@ -326,6 +343,11 @@ export type Query = {
   /** Vector search on user topics using cosine similarity (scores 0–1). */
   searchTopicsVector: TopicSearchResponse;
   userPersonaByUserId?: Maybe<UserPersona>;
+};
+
+
+export type QueryAppVersionInfoArgs = {
+  platform: AppPlatform;
 };
 
 

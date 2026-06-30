@@ -496,6 +496,11 @@
     "articlesRead": "Okuduğun makaleler",
     "noArticlesLast30Days": "Son 30 günde bu yayından makale yok."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Güncelleme gerekli",
+    "updateRequiredBody": "Devam etmek için lütfen Mera'yı en son sürüme güncelleyin.",
+    "updateCta": "Güncelle"
+  },
   "ota": {
     "updateReady": "Güncelleme hazır",
     "updateDescription": "Yeniden başlatmak ve en son sürümü uygulamak için dokun"

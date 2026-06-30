@@ -19,7 +19,7 @@
 // connect failures that look like server outages. We capture to Sentry on
 // the way out (sentry-init runs first in every entry point) and re-throw.
 //
-// Cache-bust marker (bump when env values change): 2026-05-23
+// Cache-bust marker (bump when env values change): 2026-06-30
 
 import * as Sentry from '@sentry/react-native';
 
@@ -87,3 +87,11 @@ export const REVENUECAT_IOS_KEY: string =
   process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || '';
 export const REVENUECAT_ANDROID_KEY: string =
   process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || '';
+
+// Dev-only override for the mandatory-update gate. The gate skips in dev builds
+// by default so the team isn't locked out while the server's min-version floor
+// is set high; set EXPO_PUBLIC_FORCE_UPDATE_IN_DEV=true to exercise it locally.
+// Same `__DEV__ &&` interlock as above: this is only ever consulted in dev — a
+// release build runs the gate unconditionally regardless of this value.
+export const FORCE_UPDATE_CHECK_IN_DEV =
+  __DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_IN_DEV === 'true';

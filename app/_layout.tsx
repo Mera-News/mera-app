@@ -16,6 +16,7 @@ import client from '../lib/apollo-client';
 
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
+import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -61,7 +62,13 @@ import '@/lib/scheduler/tasks/data-cleanup-task';
 // response-unpacking only; fresh cycles are kicked off in the foreground.
 defineInferenceTask();
 
-export default Sentry.wrap(function RootLayout() {
+// Everything below the mandatory-update gate. Kept as its own component so the
+// gate can mount/unmount it as a unit: when an update is required (or while the
+// version check is still resolving) this never mounts, so NONE of the boot
+// hooks/effects below run — no hydration, no notifications, no push-token
+// registration, no scheduler, no OTA. That is what makes the update screen
+// truly quiescent (nothing in the background).
+function AppRoot() {
   const navigationRef = useNavigationContainerRef();
 
   // Mirror the current route into a module variable so non-React code (the
@@ -205,52 +212,63 @@ export default Sentry.wrap(function RootLayout() {
   }, [isNavigationReady]);
 
   return (
+    <ErrorBoundary
+      level="screen"
+      FallbackComponent={FullScreenErrorFallback}
+    >
+      <DatabaseProvider database={database}>
+        <ApolloProvider client={client}>
+          <StatusBar style="light" backgroundColor="#000000" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#000000' },
+              animation: 'slide_from_right',
+            }}
+          >
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+                animation: 'fade'
+              }}
+            />
+            <Stack.Screen
+              name="login"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_left'
+              }}
+            />
+            <Stack.Screen
+              name="logged-in"
+              options={{
+                headerShown: false,
+                animation: 'fade'
+              }}
+            />
+          </Stack>
+        </ApolloProvider>
+      </DatabaseProvider>
+    </ErrorBoundary>
+  );
+}
+
+// Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
+// store subscriptions or boot logic of its own, so background activity can never
+// re-render the gate / update screen — when blocked, the screen is static.
+export default Sentry.wrap(function RootLayout() {
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-        <GluestackUIProvider mode="dark">
-          <ToastInitializer />
-<OTAUpdatePrompt />
-          <ErrorBoundary
-            level="screen"
-            FallbackComponent={FullScreenErrorFallback}
-          >
-            <DatabaseProvider database={database}>
-              <ApolloProvider client={client}>
-                <StatusBar style="light" backgroundColor="#000000" />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: '#000000' },
-                    animation: 'slide_from_right',
-                  }}
-                >
-                  <Stack.Screen
-                    name="index"
-                    options={{
-                      headerShown: false,
-                      animation: 'fade'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="login"
-                    options={{
-                      headerShown: false,
-                      animation: 'slide_from_left'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="logged-in"
-                    options={{
-                      headerShown: false,
-                      animation: 'fade'
-                    }}
-                  />
-                </Stack>
-              </ApolloProvider>
-            </DatabaseProvider>
-          </ErrorBoundary>
-        </GluestackUIProvider>
+          <GluestackUIProvider mode="dark">
+            <NativeUpdateGate>
+              <ToastInitializer />
+              <OTAUpdatePrompt />
+              <AppRoot />
+            </NativeUpdateGate>
+          </GluestackUIProvider>
         </SafeAreaProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>

@@ -496,6 +496,11 @@
     "articlesRead": "Artikel yang Anda baca",
     "noArticlesLast30Days": "Tidak ada artikel dari publikasi ini dalam 30 hari terakhir."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Pembaruan diperlukan",
+    "updateRequiredBody": "Harap perbarui Mera ke versi terbaru untuk melanjutkan.",
+    "updateCta": "Perbarui"
+  },
   "ota": {
     "updateReady": "Pembaruan siap",
     "updateDescription": "Ketuk untuk memulai ulang dan menerapkan versi terbaru"

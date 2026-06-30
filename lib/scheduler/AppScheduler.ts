@@ -13,12 +13,16 @@ class _AppScheduler {
   private tickInterval: ReturnType<typeof setInterval> | null = null;
   private appStateSubscription: { remove: () => void } | null = null;
   private networkUnsubscribe: (() => void) | null = null;
+  private suspended = false;
 
   register<T>(definition: TaskDefinition<T>): void {
     this.tasks.set(definition.name, definition as TaskDefinition);
   }
 
   async init(): Promise<void> {
+    // The mandatory-update gate may suspend us mid-boot (the version check and
+    // store hydration race). Don't re-arm the tick/listeners if that happened.
+    if (this.suspended) return;
     const times = await persistence.loadLastRunTimes(this.tasks.keys());
     useSchedulerStore.getState().loadLastRunTimes(times);
 
@@ -55,6 +59,19 @@ class _AppScheduler {
     this.appStateSubscription?.remove();
     this.networkUnsubscribe?.();
     useSchedulerStore.getState().setStatus('paused');
+  }
+
+  /**
+   * Permanently halt all background work for this app session. Used by the
+   * mandatory-update gate: once the installed version is below the supported
+   * floor, no task may run again — not via the tick, a foreground event, a
+   * network reconnect, or an in-flight hydration callback. `dispose()` tears
+   * down the triggers; the `suspended` flag is the chokepoint that stops any
+   * already-queued enqueue from slipping through.
+   */
+  suspend(): void {
+    this.suspended = true;
+    this.dispose();
   }
 
   /** Called once after all Zustand stores have been hydrated from the DB.
@@ -129,6 +146,10 @@ class _AppScheduler {
   }
 
   private async _enqueueAndRun(task: TaskDefinition, input?: unknown): Promise<void> {
+    // Hard stop when the app is gated behind a mandatory update — no background
+    // task should execute, regardless of which trigger path (tick, foreground,
+    // network, scheduled retry) reached here.
+    if (this.suspended) return;
     // Reserve the exclusive task synchronously, before the async createJob
     // below, so two near-simultaneous triggers (e.g. the startup _tick() and
     // onStoresHydrated→_onForeground()) can't both pass the isRunning() guard

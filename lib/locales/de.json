@@ -496,6 +496,11 @@
     "articlesRead": "Gelesene Artikel",
     "noArticlesLast30Days": "Keine Artikel dieser Publikation in den letzten 30 Tagen."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Update erforderlich",
+    "updateRequiredBody": "Bitte aktualisiere Mera auf die neueste Version, um fortzufahren.",
+    "updateCta": "Aktualisieren"
+  },
   "ota": {
     "updateReady": "Update bereit",
     "updateDescription": "Tippen Sie, um neu zu starten und die neueste Version zu installieren"

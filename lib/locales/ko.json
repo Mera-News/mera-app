@@ -496,6 +496,11 @@
     "articlesRead": "읽은 기사",
     "noArticlesLast30Days": "지난 30일 동안 이 발행사의 기사가 없습니다."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "업데이트 필요",
+    "updateRequiredBody": "계속하려면 Mera를 최신 버전으로 업데이트하세요.",
+    "updateCta": "업데이트"
+  },
   "ota": {
     "updateReady": "업데이트 준비 완료",
     "updateDescription": "탭하여 재시작하고 최신 버전을 적용하세요"

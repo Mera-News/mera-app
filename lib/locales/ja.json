@@ -496,6 +496,11 @@
     "articlesRead": "読んだ記事",
     "noArticlesLast30Days": "過去30日間にこの出版社の記事はありません。"
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "アップデートが必要です",
+    "updateRequiredBody": "続行するには Mera を最新バージョンにアップデートしてください。",
+    "updateCta": "アップデート"
+  },
   "ota": {
     "updateReady": "アップデートの準備ができました",
     "updateDescription": "タップして再起動し、最新バージョンを適用してください"

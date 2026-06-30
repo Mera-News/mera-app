@@ -496,6 +496,11 @@
     "articlesRead": "المقالات التي قرأتها",
     "noArticlesLast30Days": "لا توجد مقالات من هذا المنشور في آخر 30 يومًا."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "التحديث مطلوب",
+    "updateRequiredBody": "يرجى تحديث Mera إلى أحدث إصدار للمتابعة.",
+    "updateCta": "تحديث"
+  },
   "ota": {
     "updateReady": "التحديث جاهز",
     "updateDescription": "اضغط لإعادة التشغيل وتطبيق أحدث إصدار"

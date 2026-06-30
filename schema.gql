@@ -2,6 +2,27 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""Mobile app platform the version check is being made for."""
+enum AppPlatform {
+  """Google Android — directs to the Play Store."""
+  ANDROID
+
+  """Apple iOS — directs to the App Store."""
+  IOS
+}
+
+type AppVersionInfo {
+  """
+  Minimum native app version still allowed to run. Installs older than this must be force-updated. Null when no floor is configured (gate disabled).
+  """
+  minSupportedVersion: String
+
+  """
+  Store listing URL the user is sent to in order to update. Null when not configured.
+  """
+  storeUrl: String
+}
+
 type ArticleIdsForTopicsResponse {
   results: [TopicArticleIdsResult!]!
 }
@@ -236,6 +257,7 @@ type PublicationSourcesResponse {
 
 type Query {
   allCountries: [String!]!
+  appVersionInfo(platform: AppPlatform!): AppVersionInfo!
 
   """
   Fetch a single article by ID. Returns null if not found (e.g. TTL’d out).

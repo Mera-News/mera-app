@@ -496,6 +496,11 @@
     "articlesRead": "Прочитанные статьи",
     "noArticlesLast30Days": "Нет статей из этого издания за последние 30 дней."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Требуется обновление",
+    "updateRequiredBody": "Пожалуйста, обновите Mera до последней версии, чтобы продолжить.",
+    "updateCta": "Обновить"
+  },
   "ota": {
     "updateReady": "Обновление готово",
     "updateDescription": "Нажмите, чтобы перезапустить и применить последнюю версию"

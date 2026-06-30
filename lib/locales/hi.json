@@ -496,6 +496,11 @@
     "articlesRead": "आपके पढ़े लेख",
     "noArticlesLast30Days": "पिछले 30 दिनों में इस प्रकाशन का कोई लेख नहीं।"
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "अपडेट आवश्यक है",
+    "updateRequiredBody": "जारी रखने के लिए कृपया Mera को नवीनतम संस्करण में अपडेट करें।",
+    "updateCta": "अपडेट करें"
+  },
   "ota": {
     "updateReady": "अपडेट तैयार है",
     "updateDescription": "नवीनतम संस्करण लागू करने के लिए टैप करके रिस्टार्ट करें"

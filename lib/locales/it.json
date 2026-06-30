@@ -496,6 +496,11 @@
     "articlesRead": "Articoli letti",
     "noArticlesLast30Days": "Nessun articolo di questa pubblicazione negli ultimi 30 giorni."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Aggiornamento necessario",
+    "updateRequiredBody": "Aggiorna Mera all'ultima versione per continuare.",
+    "updateCta": "Aggiorna"
+  },
   "ota": {
     "updateReady": "Aggiornamento pronto",
     "updateDescription": "Tocca per riavviare e applicare l'ultima versione"

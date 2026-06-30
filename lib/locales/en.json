@@ -512,6 +512,11 @@
     "deleteConfirmCta": "Delete",
     "empty": "You haven't saved any articles yet. Tap the bookmark on an article to save it for later."
   },
+  "nativeUpdate": {
+    "updateRequiredTitle": "Update required",
+    "updateRequiredBody": "Please update Mera to the latest version to continue.",
+    "updateCta": "Update"
+  },
   "ota": {
     "updateReady": "Update ready",
     "updateDescription": "Tap to restart and apply the latest version"
