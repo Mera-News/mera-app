@@ -36,7 +36,15 @@ function capStringValues(
   }
 }
 
-if (!__DEV__) {
+// Sentry is production-only by default. Set EXPO_PUBLIC_SENTRY_IN_DEV=true in a
+// local .env to force-initialise it in a dev build — needed to exercise the
+// User Feedback widget (showFeedbackWidget) and other Sentry UI from `expo start`.
+// The feedback helper (lib/feedback.ts) reads this same flag so both gates lift
+// together.
+export const SENTRY_ENABLED =
+  !__DEV__ || process.env.EXPO_PUBLIC_SENTRY_IN_DEV === 'true';
+
+if (SENTRY_ENABLED) {
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     // Do NOT auto-attach IP address, request headers, or OS-user identifiers to
@@ -44,7 +52,36 @@ if (!__DEV__) {
     // inference (logger.setUser is never called). The beforeSend scrubber below
     // is a belt-and-suspenders defense in case a future contributor re-adds it.
     sendDefaultPii: false,
-    integrations: [Sentry.feedbackIntegration()],
+    integrations: [
+      Sentry.feedbackIntegration({
+        // Dark-mode-only app; the accent colors style the submit button to the
+        // brand purple (primary-500 = #a78bfa).
+        colorScheme: 'dark',
+        themeDark: {
+          background: '#000000',
+          foreground: '#ffffff',
+          accentBackground: '#a78bfa',
+          accentForeground: '#000000',
+        },
+        // `logger.setUser` is intentionally never called (privacy invariant), so
+        // these fields start empty and the user opts in by typing. Keep optional.
+        showName: true,
+        showEmail: true,
+        isNameRequired: false,
+        isEmailRequired: false,
+        // "Take Screenshot" captures the current app screen via Sentry's native
+        // module (already in the build) — no expo-image-picker, no photo-library
+        // permission. We intentionally omit `enableScreenshot`/`imagePicker`
+        // (pick-from-library); a news app doesn't need camera-roll attachments.
+        enableTakeScreenshot: true,
+        // Labels. These are fixed at init and are NOT reactive to the user's
+        // chosen language — the built-in form ships English-only for now.
+        formTitle: 'Report a Bug',
+        submitButtonLabel: 'Send',
+        messagePlaceholder: "What's the bug? What did you expect?",
+        successMessageText: 'Thanks for your feedback!',
+      }),
+    ],
     // Defensive scrubber: strip residual PII and cap free-form payloads
     // regardless of the flag above, so a future regression can't leak content.
     beforeSend(event) {

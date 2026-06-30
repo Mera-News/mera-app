@@ -3,6 +3,7 @@ import { View } from 'react-native';
 
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
+import FeedbackFab from '@/components/custom/FeedbackFab';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 
 // Foreground polling, AppState listening, and recoverCycle calls have moved
@@ -19,6 +20,7 @@ export default function AppLayout() {
             >
                 <Slot />
             </ErrorBoundary>
+            <FeedbackFab />
             <ModelDownloadBanner />
         </View>
     );

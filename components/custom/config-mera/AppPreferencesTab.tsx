@@ -11,6 +11,7 @@ import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, 
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { showFeedback } from '@/lib/feedback';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
 import React from 'react';
@@ -176,6 +177,12 @@ const AppPreferencesTab: React.FC = () => {
             title: 'Observability',
             icon: 'monitor-heart',
             onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
+        },
+        {
+            id: 'report-bug',
+            title: t('preferences.reportBug'),
+            icon: 'bug-report',
+            onPress: showFeedback,
         },
         ...subscriptionOptions,
         {

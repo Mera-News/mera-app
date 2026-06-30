@@ -372,6 +372,7 @@
     "termsOfService": "Terms of Service",
     "contentPolicy": "Content Policy",
     "support": "Support",
+    "reportBug": "Report a Bug",
     "manageData": "Manage Data",
     "deleteAccount": "Delete Account",
     "logout": "Log Out",
@@ -520,6 +521,9 @@
   "ota": {
     "updateReady": "Update ready",
     "updateDescription": "Tap to restart and apply the latest version"
+  },
+  "feedback": {
+    "fabLabel": "Report a bug"
   },
   "observability": {
     "title": "Observability",
