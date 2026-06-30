@@ -413,6 +413,7 @@
     "privacyOnDevice": "Je feiten en onderwerpen worden uitsluitend op je apparaat opgeslagen — AI-inferentie draait volledig op het apparaat via het Mera Protocol. Elke keer dat je nieuws nodig hebt, worden je onderwerpen naar onze servers gestuurd om relevante artikelen op te halen; de server geeft resultaten terug zonder je gegevens op te slaan. Chatgeschiedenis wordt nooit opgeslagen; elke sessie begint opnieuw. Van apparaat wisselen of uitloggen betekent je profiel opnieuw opbouwen.",
     "privacyCloud": "Je feiten en onderwerpen worden uitsluitend op je apparaat opgeslagen. Cloud-inferentie gebruikt versleutelde Trusted Execution Environments (TEE) — je gegevens worden op het apparaat versleuteld, verwerkt in een geïsoleerde enclave en alleen op je apparaat ontsleuteld. Elke keer dat je nieuws nodig hebt, worden je onderwerpen naar onze servers gestuurd om relevante artikelen op te halen; de server geeft resultaten terug zonder je gegevens op te slaan. Chatgeschiedenis wordt nooit opgeslagen; elke sessie begint opnieuw. Van apparaat wisselen of uitloggen betekent je profiel opnieuw opbouwen.",
     "privacyPolicy": "Privacybeleid",
+    "privacyNoticeTitle": "Jouw privacy",
     "updatingTopics": "Onderwerpen bijwerken... {{completed}}/{{total}}",
     "emptyStateMessage": "Beantwoord een paar vragen om je profiel op te bouwen",
     "factsHeading": "Feiten",

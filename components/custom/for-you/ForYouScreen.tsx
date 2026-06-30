@@ -668,6 +668,15 @@ const MeraNewsScreen: React.FC = () => {
                     </HStack>
                     <HStack className="items-center" space="sm">
                         <Pressable
+                            onPress={() => router.push('/logged-in/visited-publications')}
+                            hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('publicationVisits.visitedListTitle')}
+                            className="p-3 rounded-full bg-primary-500"
+                        >
+                            <MaterialIcons name="history" size={22} color="#ffffff" />
+                        </Pressable>
+                        <Pressable
                             onPress={() => router.push('/logged-in/saved-suggestions')}
                             hitSlop={12}
                             accessibilityRole="button"

@@ -1,6 +1,7 @@
 import { useUserStore } from '@/lib/stores/user-store';
 import { feedSyncMachine } from '../feed-sync/FeedSyncMachine';
 import { AppScheduler } from '../AppScheduler';
+import { getCurrentPathname } from '@/lib/nav-state';
 import logger from '@/lib/logger';
 
 AppScheduler.register({
@@ -12,6 +13,13 @@ AppScheduler.register({
     { type: 'network' },
     { type: 'authenticated' },
     { type: 'db-ready' },
+    // Don't sync while the user is gated behind the paywall — a non-subscribed
+    // user is pinned to /logged-in/not-subscribed, where every server query
+    // would just 402 until they have an active subscription.
+    {
+      type: 'custom',
+      check: () => !getCurrentPathname().includes('not-subscribed'),
+    },
   ],
   timeout: 3 * 60 * 1000,
   maxAttempts: 3,

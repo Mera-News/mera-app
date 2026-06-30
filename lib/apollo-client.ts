@@ -18,6 +18,8 @@ import logger from './logger';
 import { useForYouStore } from './stores/for-you-store';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
+import { isNotSubscribedError } from './subscription/not-subscribed-error';
+import { navigateToPaywall } from './nav-state';
 
 // Cache TTL in milliseconds (10 minutes)
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -31,25 +33,22 @@ const MAX_THROTTLE_RETRIES = 3;
 
 // Create error link to handle GraphQL errors (Apollo Client v4 syntax)
 const errorLink = new ErrorLink(({ error, operation, forward }) => {
+    // The server's "active subscription required" 402 arrives as a GraphQL
+    // error (extensions.code === 'PAYMENT_REQUIRED') or a network 402; the
+    // shared helper covers both. Route to the paywall — but only if we're not
+    // already there, so the steady stream of background 402s doesn't re-mount
+    // NotSubscribedScreen and re-present the paywall over and over.
+    if (isNotSubscribedError(error)) {
+        navigateToPaywall();
+        return;
+    }
+
     if (CombinedGraphQLErrors.is(error)) {
         // Handle GraphQL errors
         for (const graphQLError of error.errors) {
-            const { message, extensions } = graphQLError;
-
-            // Check if the error is NotSubscribedException
+            const { extensions } = graphQLError;
             const ext = extensions as GraphQLErrorExtensions | undefined;
-            const exceptionName = ext?.exception?.name;
             const errorCode = ext?.code;
-
-            if (
-                message?.includes('NotSubscribedException') ||
-                errorCode === 'NOT_SUBSCRIBED' ||
-                exceptionName === 'NotSubscribedException'
-            ) {
-                // Redirect to not-subscribed page
-                router.replace('/logged-in/not-subscribed' as any);
-                return;
-            }
 
             // UNAUTHENTICATED is logged but does NOT auto-logout. A single
             // failed request — e.g. a transient keychain-locked window during
@@ -103,17 +102,13 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 });
         }
     } else {
-        // Handle network errors
-        // Check if the error has a status code of 402 (Payment Required - used for subscription errors)
+        // Handle network errors. (The 402 "not subscribed" case is handled by
+        // the isNotSubscribedError() check at the top, covering both GraphQL
+        // and network shapes.)
         const networkError = error as
             | { statusCode?: number; response?: { status?: number } }
             | undefined;
         const statusCode = networkError?.statusCode || networkError?.response?.status;
-
-        if (statusCode === StatusCodes.PAYMENT_REQUIRED) {
-            router.replace('/logged-in/not-subscribed' as any);
-            return;
-        }
 
         // 401 is logged but does NOT auto-logout (see GraphQL UNAUTHENTICATED
         // branch above for rationale).
@@ -146,8 +141,16 @@ const retryLink = new RetryLink({
     attempts: {
         max: 3, // Maximum 3 retry attempts
         retryIf: (error) => {
-            // Only retry on network errors, not GraphQL errors or auth failures.
+            // Only retry transient/transport failures. Never retry client (4xx)
+            // errors — e.g. a 402 "not subscribed" is deterministic, so retrying
+            // just multiplies the request storm while the gate is active.
             if (!error || (error as { result?: unknown }).result) return false;
+            const status =
+                (error as { statusCode?: number }).statusCode ??
+                (error as { response?: { status?: number } }).response?.status;
+            if (typeof status === 'number' && status >= 400 && status < 500) {
+                return false;
+            }
             return true;
         },
     },

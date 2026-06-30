@@ -16,7 +16,7 @@ import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { Linking } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
-import { isRevenueCatConfigured } from '@/lib/revenuecat';
+import { getOfferingSafe, isRevenueCatConfigured } from '@/lib/revenuecat';
 import logger from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
@@ -96,7 +96,13 @@ const AppPreferencesTab: React.FC = () => {
     // Present the RevenueCat paywall (subscribe / upgrade tier).
     const handleViewPlans = async () => {
         try {
-            await RevenueCatUI.presentPaywall();
+            const offering = await getOfferingSafe();
+            // Browsing/upgrading from settings — show a close button so the user
+            // can dismiss without purchasing (unlike the hard gate).
+            await RevenueCatUI.presentPaywall({
+                ...(offering ? { offering } : {}),
+                displayCloseButton: true,
+            });
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'AppPreferencesTab', method: 'viewPlans' },

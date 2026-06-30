@@ -51,6 +51,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
+    const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
     const [addTopicFact, setAddTopicFact] = useState<Fact | null>(null);
     const [addTopicText, setAddTopicText] = useState('');
     const [isAddingTopic, setIsAddingTopic] = useState(false);
@@ -310,20 +311,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                         <BlockedBanner reason={userPersona?.blockedByLlmReason} />
                     )}
 
-                    <Box className="mx-4 mb-3 px-3 py-2 border border-primary-500 rounded-lg bg-gray-900">
-                        <HStack className="items-start" space="sm">
-                            <MaterialIcons name="shield" size={16} color="#9ca3af" style={{ marginTop: 2 }} />
-                            <Text size="xs" className="text-gray-400 flex-1">
-                                {isOnDeviceProcessing
-                                    ? t('configPanel.privacyOnDevice')
-                                    : t('configPanel.privacyCloud')}{' '}
-                                <Text size="xs" className="text-primary-400 underline" onPress={() => openInAppBrowser(PRIVACY_URL)}>
-                                    {t('configPanel.privacyPolicy')}
-                                </Text>
-                            </Text>
-                        </HStack>
-                    </Box>
-
                     {/* Metrics cards */}
                     <HStack className="mx-4 mb-3" space="sm">
                         <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
@@ -415,6 +402,15 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                             {/* Facts heading */}
                             <HStack className="mx-4 mb-2 items-center justify-between">
                                 <Text size="sm" className="text-gray-400 font-medium">{t('configPanel.factsHeading')}</Text>
+                                <Pressable
+                                    onPress={() => setShowPrivacyInfo(true)}
+                                    hitSlop={8}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('configPanel.privacyNoticeTitle')}
+                                    className="w-8 h-8 rounded-full items-center justify-center"
+                                >
+                                    <MaterialIcons name="help-outline" size={18} color="#60a5fa" />
+                                </Pressable>
                             </HStack>
 
                             {/* Fact accordions */}
@@ -546,6 +542,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                 </Box>
             )}
 
+
             {isChatExpanded && (
                 <View
                     style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}
@@ -575,6 +572,38 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                     </KeyboardStickyView>
                 </View>
             )}
+
+            <Modal isOpen={showPrivacyInfo} onClose={() => setShowPrivacyInfo(false)} size="sm">
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader className="pb-3">
+                        <HStack className="items-center" space="xs">
+                            <MaterialIcons name="shield" size={18} color="#9ca3af" />
+                            <Text className="text-base font-semibold text-white">{t('configPanel.privacyNoticeTitle')}</Text>
+                        </HStack>
+                    </ModalHeader>
+                    <ModalBody className="py-4">
+                        <Text className="text-gray-300 text-sm leading-relaxed">
+                            {isOnDeviceProcessing
+                                ? t('configPanel.privacyOnDevice')
+                                : t('configPanel.privacyCloud')}{' '}
+                            <Text className="text-primary-400 underline text-sm" onPress={() => openInAppBrowser(PRIVACY_URL)}>
+                                {t('configPanel.privacyPolicy')}
+                            </Text>
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter className="border-t border-gray-700 pt-4">
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={() => setShowPrivacyInfo(false)}
+                            className="w-full"
+                        >
+                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
                 <ModalBackdrop />

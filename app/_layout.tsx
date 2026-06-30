@@ -6,7 +6,7 @@ import '@/lib/sentry-init';
 import 'react-native-get-random-values';
 import { ApolloProvider } from '@apollo/client/react';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import { Stack, useNavigationContainerRef, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -33,6 +33,7 @@ import { purgeAllBaseModels } from '@/lib/mera-protocol-toolkit';
 import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
+import { setCurrentPathname } from '@/lib/nav-state';
 import { initNetworkListener } from '@/lib/stores/network-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import {
@@ -62,6 +63,13 @@ defineInferenceTask();
 
 export default Sentry.wrap(function RootLayout() {
   const navigationRef = useNavigationContainerRef();
+
+  // Mirror the current route into a module variable so non-React code (the
+  // Apollo error link) can avoid redundant navigations to the paywall.
+  const pathname = usePathname();
+  useEffect(() => {
+    setCurrentPathname(pathname);
+  }, [pathname]);
 
   // Use Zustand store for navigation readiness (accessible globally)
   const isNavigationReady = useIsNavigationReady();

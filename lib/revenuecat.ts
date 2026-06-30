@@ -10,6 +10,7 @@ import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
   LOG_LEVEL,
+  PurchasesOffering,
 } from 'react-native-purchases';
 import {
   REVENUECAT_API_KEY,
@@ -32,6 +33,12 @@ function resolveApiKey(): string {
 // `individual` when both are active.
 export const ENTITLEMENT_INDIVIDUAL = 'individual';
 export const ENTITLEMENT_PROFESSIONAL = 'professional';
+
+// Offering identifier (RevenueCat dashboard) whose paywall the app presents.
+// Holds both tiers (individual + professional) as packages; the paywall splits
+// them via its Tabs component. This is the SDK identifier, not the REST
+// `ofrng…` id (which the client SDK never uses).
+export const OFFERING_SUBSCRIPTION = 'mera-news-subscription';
 
 export type SubscriptionTier = 'individual' | 'professional' | null;
 
@@ -100,6 +107,26 @@ export function getActiveTier(
   if (active[ENTITLEMENT_PROFESSIONAL]) return 'professional';
   if (active[ENTITLEMENT_INDIVIDUAL]) return 'individual';
   return null;
+}
+
+/**
+ * Fetch a specific offering by its dashboard identifier, null-safe. Returns
+ * null when the SDK isn't configured, the offering doesn't exist, or on error —
+ * callers then fall back to presenting the current offering's paywall.
+ */
+export async function getOfferingSafe(
+  identifier: string = OFFERING_SUBSCRIPTION,
+): Promise<PurchasesOffering | null> {
+  if (!configured) return null;
+  try {
+    const offerings = await Purchases.getOfferings();
+    return offerings.all[identifier] ?? null;
+  } catch (e) {
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'getOffering' },
+    });
+    return null;
+  }
 }
 
 /** Fetch the latest CustomerInfo, null-safe. */

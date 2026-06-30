@@ -413,6 +413,7 @@
     "privacyOnDevice": "Tus hechos y temas se almacenan exclusivamente en tu dispositivo — la inferencia de IA se ejecuta completamente en el dispositivo a través del Mera Protocol. Cada vez que necesitas noticias, tus temas se envían a nuestros servidores para obtener artículos relevantes; el servidor devuelve los resultados sin almacenar ninguno de tus datos. El historial de chat nunca se guarda; cada sesión comienza de nuevo. Cambiar de dispositivo o cerrar sesión significa reconstruir tu perfil.",
     "privacyCloud": "Tus hechos y temas se almacenan exclusivamente en tu dispositivo. La inferencia en la nube utiliza entornos de ejecución confiables cifrados (TEE) — tus datos se cifran en el dispositivo, se procesan en un enclave aislado y se descifran solo en tu dispositivo. Cada vez que necesitas noticias, tus temas se envían a nuestros servidores para obtener artículos relevantes; el servidor devuelve los resultados sin almacenar ninguno de tus datos. El historial de chat nunca se almacena; cada sesión comienza de nuevo. Cambiar de dispositivo o cerrar sesión significa reconstruir tu perfil.",
     "privacyPolicy": "Política de privacidad",
+    "privacyNoticeTitle": "Tu privacidad",
     "updatingTopics": "Actualizando temas... {{completed}}/{{total}}",
     "emptyStateMessage": "Responde algunas preguntas para crear tu perfil",
     "factsHeading": "Hechos",

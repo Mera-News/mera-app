@@ -7,6 +7,8 @@ import { clearPreviousUserData } from "@/lib/stores";
 import { useUserStore } from "@/lib/stores/user-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
+import { isNotSubscribedError } from "@/lib/subscription/not-subscribed-error";
+import { navigateToPaywall } from "@/lib/nav-state";
 import { Redirect, router } from "expo-router";
 import { useEffect, useState } from "react";
 
@@ -51,17 +53,11 @@ export default function LoggedInIndex() {
 
                 router.replace('/logged-in/app_container/for_you');
             } catch (error: any) {
-                const errorMessage = error?.message || '';
-                const errorExtensions = error?.graphQLErrors?.[0]?.extensions;
-                const statusCode = error?.statusCode || error?.response?.status || error?.networkError?.statusCode;
-
-                if (
-                    statusCode === 402 ||
-                    errorMessage.includes('NotSubscribedException') ||
-                    errorExtensions?.code === 'NOT_SUBSCRIBED' ||
-                    errorExtensions?.exception?.name === 'NotSubscribedException'
-                ) {
-                    router.replace('/logged-in/not-subscribed' as any);
+                // The server gates unsubscribed users with a 402 (GraphQL error
+                // code PAYMENT_REQUIRED). Detect it across every Apollo shape via
+                // the shared helper and route to the paywall.
+                if (isNotSubscribedError(error)) {
+                    navigateToPaywall();
                     return;
                 }
 

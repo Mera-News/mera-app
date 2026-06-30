@@ -11,6 +11,7 @@ import { SUPPORT_EMAIL } from "@/lib/config/branding";
 import logger from "@/lib/logger";
 import {
     getCustomerInfoSafe,
+    getOfferingSafe,
     isRevenueCatConfigured,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
@@ -62,7 +63,12 @@ export default function NotSubscribedScreen() {
         setBusy(true);
         setMessage(null);
         try {
-            const result = await RevenueCatUI.presentPaywall();
+            // Present the mera-news-subscription offering's paywall (both tiers),
+            // falling back to the current offering if it can't be fetched.
+            const offering = await getOfferingSafe();
+            const result = await RevenueCatUI.presentPaywall(
+                offering ? { offering } : {},
+            );
             if (
                 result === PAYWALL_RESULT.PURCHASED ||
                 result === PAYWALL_RESULT.RESTORED

@@ -413,6 +413,7 @@
     "privacyOnDevice": "Thông tin và chủ đề của bạn được lưu trữ độc quyền trên thiết bị — suy luận AI chạy hoàn toàn trên thiết bị thông qua Mera Protocol. Mỗi khi bạn cần tin tức, các chủ đề của bạn được gửi đến máy chủ để tìm bài viết liên quan; máy chủ trả kết quả mà không lưu bất kỳ dữ liệu nào của bạn. Lịch sử trò chuyện không bao giờ được lưu; mỗi phiên bắt đầu mới. Đổi thiết bị hoặc đăng xuất có nghĩa là phải xây dựng lại hồ sơ của bạn.",
     "privacyCloud": "Thông tin và chủ đề của bạn được lưu trữ độc quyền trên thiết bị. Suy luận đám mây sử dụng Môi trường Thực thi Đáng tin cậy (TEE) được mã hóa — dữ liệu của bạn được mã hóa trên thiết bị, xử lý trong vùng cô lập và chỉ được giải mã trên thiết bị của bạn. Mỗi khi bạn cần tin tức, các chủ đề của bạn được gửi đến máy chủ để tìm bài viết liên quan; máy chủ trả kết quả mà không lưu bất kỳ dữ liệu nào của bạn. Lịch sử trò chuyện không bao giờ được lưu; mỗi phiên bắt đầu mới. Đổi thiết bị hoặc đăng xuất có nghĩa là phải xây dựng lại hồ sơ của bạn.",
     "privacyPolicy": "Chính sách bảo mật",
+    "privacyNoticeTitle": "Quyền riêng tư của bạn",
     "updatingTopics": "Đang cập nhật chủ đề... {{completed}}/{{total}}",
     "emptyStateMessage": "Trả lời một vài câu hỏi để tạo hồ sơ của bạn",
     "factsHeading": "Thông tin",

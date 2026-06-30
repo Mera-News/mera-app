@@ -413,6 +413,7 @@
     "privacyOnDevice": "Vos faits et sujets sont stockés exclusivement sur votre appareil — l'inférence IA s'exécute entièrement sur l'appareil via le Mera Protocol. À chaque fois que vous avez besoin d'actualités, vos sujets sont envoyés à nos serveurs pour récupérer les articles pertinents ; le serveur renvoie les résultats sans stocker aucune de vos données. L'historique des conversations n'est jamais enregistré ; chaque session repart de zéro. Changer d'appareil ou se déconnecter implique de reconstruire votre profil.",
     "privacyCloud": "Vos faits et sujets sont stockés exclusivement sur votre appareil. L'inférence cloud utilise des environnements d'exécution de confiance chiffrés (TEE) — vos données sont chiffrées sur l'appareil, traitées dans une enclave isolée et déchiffrées uniquement sur votre appareil. À chaque fois que vous avez besoin d'actualités, vos sujets sont envoyés à nos serveurs pour récupérer les articles pertinents ; le serveur renvoie les résultats sans stocker aucune de vos données. L'historique des conversations n'est jamais stocké ; chaque session repart de zéro. Changer d'appareil ou se déconnecter implique de reconstruire votre profil.",
     "privacyPolicy": "Politique de confidentialité",
+    "privacyNoticeTitle": "Votre confidentialité",
     "updatingTopics": "Mise à jour des sujets... {{completed}}/{{total}}",
     "emptyStateMessage": "Répondez à quelques questions pour créer votre profil",
     "factsHeading": "Faits",

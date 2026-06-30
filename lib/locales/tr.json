@@ -413,6 +413,7 @@
     "privacyOnDevice": "Gerçeklerin ve konuların yalnızca cihazında saklanır — yapay zeka çıkarımı Mera Protocol aracılığıyla tamamen cihazda çalışır. Haber ihtiyacın olduğunda konuların ilgili makaleleri bulmak için sunucularımıza gönderilir; sunucu sonuçları verilerini saklamadan döner. Sohbet geçmişi asla kaydedilmez; her oturum sıfırdan başlar. Cihaz değiştirmek veya çıkış yapmak profilini yeniden oluşturmak anlamına gelir.",
     "privacyCloud": "Gerçeklerin ve konuların yalnızca cihazında saklanır. Bulut çıkarımı şifrelenmiş Güvenilir Yürütme Ortamlarını (TEE) kullanır — verilerin cihazda şifrelenir, izole bir bölgede işlenir ve yalnızca cihazında çözülür. Haber ihtiyacın olduğunda konuların ilgili makaleleri bulmak için sunucularımıza gönderilir; sunucu sonuçları verilerini saklamadan döner. Sohbet geçmişi asla saklanmaz; her oturum sıfırdan başlar. Cihaz değiştirmek veya çıkış yapmak profilini yeniden oluşturmak anlamına gelir.",
     "privacyPolicy": "Gizlilik Politikası",
+    "privacyNoticeTitle": "Gizliliğiniz",
     "updatingTopics": "Konular güncelleniyor... {{completed}}/{{total}}",
     "emptyStateMessage": "Profilini oluşturmak için birkaç soruyu yanıtla",
     "factsHeading": "Gerçekler",

@@ -413,6 +413,7 @@
     "privacyOnDevice": "I tuoi fatti e topic sono archiviati esclusivamente sul tuo dispositivo — l'inferenza IA viene eseguita interamente sul dispositivo tramite il Mera Protocol. Ogni volta che hai bisogno di notizie, i tuoi topic vengono inviati ai nostri server per trovare articoli pertinenti; il server restituisce i risultati senza memorizzare alcun dato. La cronologia chat non viene mai salvata; ogni sessione inizia da zero. Cambiare dispositivo o disconnettersi significa ricostruire il proprio profilo.",
     "privacyCloud": "I tuoi fatti e topic sono archiviati esclusivamente sul tuo dispositivo. L'inferenza cloud utilizza ambienti di esecuzione affidabili crittografati (TEE) — i tuoi dati vengono crittografati sul dispositivo, elaborati in un'enclave isolata e decrittografati solo sul tuo dispositivo. Ogni volta che hai bisogno di notizie, i tuoi topic vengono inviati ai nostri server per trovare articoli pertinenti; il server restituisce i risultati senza memorizzare alcun dato. La cronologia chat non viene mai archiviata; ogni sessione inizia da zero. Cambiare dispositivo o disconnettersi significa ricostruire il proprio profilo.",
     "privacyPolicy": "Informativa sulla privacy",
+    "privacyNoticeTitle": "La tua privacy",
     "updatingTopics": "Aggiornamento argomenti... {{completed}}/{{total}}",
     "emptyStateMessage": "Rispondi ad alcune domande per creare il tuo profilo",
     "factsHeading": "Fatti",

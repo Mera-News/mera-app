@@ -413,6 +413,7 @@
     "privacyOnDevice": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda — inferensi AI berjalan sepenuhnya di perangkat melalui Mera Protocol. Setiap kali Anda membutuhkan berita, topik Anda dikirim ke server kami untuk mengambil artikel yang relevan; server mengembalikan hasil tanpa menyimpan data Anda. Riwayat obrolan tidak pernah disimpan; setiap sesi dimulai dari awal. Mengganti perangkat atau keluar berarti membangun ulang persona Anda.",
     "privacyCloud": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda. Inferensi cloud menggunakan Trusted Execution Environments (TEE) terenkripsi — data Anda dienkripsi di perangkat, diproses di enclave terisolasi, dan didekripsi hanya di perangkat Anda. Setiap kali Anda membutuhkan berita, topik Anda dikirim ke server kami untuk mengambil artikel yang relevan; server mengembalikan hasil tanpa menyimpan data Anda. Riwayat obrolan tidak pernah disimpan; setiap sesi dimulai dari awal. Mengganti perangkat atau keluar berarti membangun ulang persona Anda.",
     "privacyPolicy": "Kebijakan Privasi",
+    "privacyNoticeTitle": "Privasi Anda",
     "updatingTopics": "Memperbarui topik... {{completed}}/{{total}}",
     "emptyStateMessage": "Jawab beberapa pertanyaan untuk membuat profil Anda",
     "factsHeading": "Fakta",

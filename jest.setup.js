@@ -241,6 +241,9 @@ jest.mock('react-native-purchases', () => ({
     getCustomerInfo: jest.fn(() =>
       Promise.resolve({ entitlements: { active: {} } }),
     ),
+    getOfferings: jest.fn(() =>
+      Promise.resolve({ current: null, all: {} }),
+    ),
     addCustomerInfoUpdateListener: jest.fn(),
     removeCustomerInfoUpdateListener: jest.fn(),
   },

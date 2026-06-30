@@ -139,6 +139,49 @@ describe('revenuecat', () => {
     });
   });
 
+  describe('getOfferingSafe', () => {
+    it('returns null when not configured', async () => {
+      const { rc } = load();
+      expect(await rc.getOfferingSafe()).toBeNull();
+    });
+
+    it('returns the offering matching the default identifier', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      const offering = { identifier: rc.OFFERING_SUBSCRIPTION };
+      Purchases.getOfferings.mockResolvedValueOnce({
+        current: null,
+        all: { [rc.OFFERING_SUBSCRIPTION]: offering },
+      });
+      expect(await rc.getOfferingSafe()).toBe(offering);
+    });
+
+    it('looks up an explicit identifier', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      const offering = { identifier: 'other' };
+      Purchases.getOfferings.mockResolvedValueOnce({
+        current: null,
+        all: { other: offering },
+      });
+      expect(await rc.getOfferingSafe('other')).toBe(offering);
+    });
+
+    it('returns null when the offering is absent', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      Purchases.getOfferings.mockResolvedValueOnce({ current: null, all: {} });
+      expect(await rc.getOfferingSafe()).toBeNull();
+    });
+
+    it('returns null on error', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      Purchases.getOfferings.mockRejectedValueOnce(new Error('net'));
+      expect(await rc.getOfferingSafe()).toBeNull();
+    });
+  });
+
   describe('addCustomerInfoUpdateListener', () => {
     it('returns a no-op unsubscribe when not configured', () => {
       const { rc, Purchases } = load();

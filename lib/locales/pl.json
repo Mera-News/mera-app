@@ -413,6 +413,7 @@
     "privacyOnDevice": "Twoje fakty i tematy są przechowywane wyłącznie na Twoim urządzeniu — wnioskowanie AI odbywa się w całości na urządzeniu za pośrednictwem Mera Protocol. Za każdym razem, gdy potrzebujesz wiadomości, Twoje tematy są wysyłane na nasze serwery w celu pobrania odpowiednich artykułów; serwer zwraca wyniki bez zapisywania żadnych Twoich danych. Historia czatu nigdy nie jest zapisywana; każda sesja zaczyna się od nowa. Zmiana urządzenia lub wylogowanie oznacza konieczność przebudowania persony.",
     "privacyCloud": "Twoje fakty i tematy są przechowywane wyłącznie na Twoim urządzeniu. Wnioskowanie w chmurze używa szyfrowanych zaufanych środowisk wykonawczych (TEE) — Twoje dane są szyfrowane na urządzeniu, przetwarzane w izolowanej enklawie i deszyfrowane tylko na Twoim urządzeniu. Za każdym razem, gdy potrzebujesz wiadomości, Twoje tematy są wysyłane na nasze serwery w celu pobrania odpowiednich artykułów; serwer zwraca wyniki bez zapisywania żadnych Twoich danych. Historia czatu nigdy nie jest zapisywana; każda sesja zaczyna się od nowa. Zmiana urządzenia lub wylogowanie oznacza konieczność przebudowania persony.",
     "privacyPolicy": "Polityka prywatności",
+    "privacyNoticeTitle": "Twoja prywatność",
     "updatingTopics": "Aktualizowanie tematów... {{completed}}/{{total}}",
     "emptyStateMessage": "Odpowiedz na kilka pytań, aby zbudować swój profil",
     "factsHeading": "Fakty",

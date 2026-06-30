@@ -413,6 +413,7 @@
     "privacyOnDevice": "Ihre Fakten und Themen werden ausschließlich auf Ihrem Gerät gespeichert — die KI-Inferenz läuft vollständig auf dem Gerät über das Mera Protocol. Jedes Mal, wenn Sie Nachrichten benötigen, werden Ihre Themen an unsere Server gesendet, um relevante Artikel abzurufen; der Server gibt Ergebnisse zurück, ohne Ihre Daten zu speichern. Der Chatverlauf wird nie gespeichert; jede Sitzung beginnt von vorn. Das Wechseln des Geräts oder das Abmelden bedeutet, dass Ihre Persona neu aufgebaut werden muss.",
     "privacyCloud": "Ihre Fakten und Themen werden ausschließlich auf Ihrem Gerät gespeichert. Die Cloud-Inferenz verwendet verschlüsselte Trusted Execution Environments (TEE) — Ihre Daten werden auf dem Gerät verschlüsselt, in einer isolierten Enklave verarbeitet und nur auf Ihrem Gerät entschlüsselt. Jedes Mal, wenn Sie Nachrichten benötigen, werden Ihre Themen an unsere Server gesendet, um relevante Artikel abzurufen; der Server gibt Ergebnisse zurück, ohne Ihre Daten zu speichern. Der Chatverlauf wird nie gespeichert; jede Sitzung beginnt von vorn. Das Wechseln des Geräts oder das Abmelden bedeutet, dass Ihre Persona neu aufgebaut werden muss.",
     "privacyPolicy": "Datenschutzrichtlinie",
+    "privacyNoticeTitle": "Deine Privatsphäre",
     "updatingTopics": "Themen werden aktualisiert... {{completed}}/{{total}}",
     "emptyStateMessage": "Beantworten Sie einige Fragen, um Ihr Profil zu erstellen",
     "factsHeading": "Fakten",
