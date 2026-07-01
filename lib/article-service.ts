@@ -12,6 +12,8 @@ import {
     TopicPaginationInput,
 } from './generated/graphql-types';
 import logger from './logger';
+import { isNotSubscribedError } from './subscription/not-subscribed-error';
+import { navigateToPaywall } from './nav-state';
 
 // GraphQL Query for fetching articles for a cluster (excluding already shown articles)
 const GET_ARTICLES_FOR_CLUSTER = gql`
@@ -427,6 +429,14 @@ export class ArticleService {
             });
             return data?.articleIdsForTopics ?? { results: [] };
         } catch (error) {
+            // The For You feed is the sole subscription gate: when the server
+            // forces subscriptions, these queries 402 (PAYMENT_REQUIRED) for
+            // unsubscribed users. Surface the paywall here so it's scoped to the
+            // For You screen and never interrupts login/onboarding.
+            if (isNotSubscribedError(error)) {
+                navigateToPaywall();
+                throw error;
+            }
             logger.warn('[ArticleService] getArticleIdsForTopics FAILED', { topicCount: topics.length });
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getArticleIdsForTopics' },
@@ -492,6 +502,12 @@ export class ArticleService {
             await Promise.all(workers);
             return { articles: results, dailyLimitReached, resetAt };
         } catch (error) {
+            // See getArticleIdsForTopics: the paywall is triggered from the feed
+            // layer, scoped to For You.
+            if (isNotSubscribedError(error)) {
+                navigateToPaywall();
+                throw error;
+            }
             logger.error('[ArticleService] getArticlesForTopicsByIds FAILED', error);
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getArticlesForTopicsByIds' },

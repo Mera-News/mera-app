@@ -18,8 +18,6 @@ import logger from './logger';
 import { useForYouStore } from './stores/for-you-store';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
-import { isNotSubscribedError } from './subscription/not-subscribed-error';
-import { navigateToPaywall } from './nav-state';
 
 // Cache TTL in milliseconds (10 minutes)
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -33,15 +31,11 @@ const MAX_THROTTLE_RETRIES = 3;
 
 // Create error link to handle GraphQL errors (Apollo Client v4 syntax)
 const errorLink = new ErrorLink(({ error, operation, forward }) => {
-    // The server's "active subscription required" 402 arrives as a GraphQL
-    // error (extensions.code === 'PAYMENT_REQUIRED') or a network 402; the
-    // shared helper covers both. Route to the paywall — but only if we're not
-    // already there, so the steady stream of background 402s doesn't re-mount
-    // NotSubscribedScreen and re-present the paywall over and over.
-    if (isNotSubscribedError(error)) {
-        navigateToPaywall();
-        return;
-    }
+    // Note: the "active subscription required" 402 (PAYMENT_REQUIRED) is NOT
+    // handled globally any more. The server only emits it on the For You feed
+    // queries, and the paywall is triggered explicitly there (article-service),
+    // so it stays scoped to the For You screen instead of firing from arbitrary
+    // background queries.
 
     if (CombinedGraphQLErrors.is(error)) {
         // Handle GraphQL errors
@@ -102,9 +96,8 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 });
         }
     } else {
-        // Handle network errors. (The 402 "not subscribed" case is handled by
-        // the isNotSubscribedError() check at the top, covering both GraphQL
-        // and network shapes.)
+        // Handle network errors. (The 402 "not subscribed" case is handled at
+        // the For You feed layer, not here — see article-service.)
         const networkError = error as
             | { statusCode?: number; response?: { status?: number } }
             | undefined;

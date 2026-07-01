@@ -13,6 +13,7 @@ import {
     getCustomerInfoSafe,
     getOfferingSafe,
     isRevenueCatConfigured,
+    logRevenueCatDiagnostics,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { useRouter } from "expo-router";
@@ -63,6 +64,9 @@ export default function NotSubscribedScreen() {
         setBusy(true);
         setMessage(null);
         try {
+            // Dump the full RevenueCat state to the logs before presenting —
+            // diagnoses empty offerings / products-not-fetched issues in dev.
+            if (__DEV__) await logRevenueCatDiagnostics();
             // Present the mera-news-subscription offering's paywall (both tiers),
             // falling back to the current offering if it can't be fetched.
             const offering = await getOfferingSafe();

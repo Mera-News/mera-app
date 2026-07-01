@@ -7,8 +7,6 @@ import { clearPreviousUserData } from "@/lib/stores";
 import { useUserStore } from "@/lib/stores/user-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
-import { isNotSubscribedError } from "@/lib/subscription/not-subscribed-error";
-import { navigateToPaywall } from "@/lib/nav-state";
 import { Redirect, router } from "expo-router";
 import { useEffect, useState } from "react";
 
@@ -52,14 +50,11 @@ export default function LoggedInIndex() {
                 }
 
                 router.replace('/logged-in/app_container/for_you');
-            } catch (error: any) {
-                // The server gates unsubscribed users with a 402 (GraphQL error
-                // code PAYMENT_REQUIRED). Detect it across every Apollo shape via
-                // the shared helper and route to the paywall.
-                if (isNotSubscribedError(error)) {
-                    navigateToPaywall();
-                    return;
-                }
+            } catch {
+                // The subscription paywall is no longer triggered here — the
+                // server never gates login/onboarding. It's owned by the For You
+                // feed (see article-service), so unsubscribed users still reach
+                // the app; the paywall appears when the feed loads (if forced).
 
                 // 401 here used to clear auth and bounce to login — that
                 // turned a single transient failure into a forced logout.

@@ -44,6 +44,25 @@ export type SubscriptionTier = 'individual' | 'professional' | null;
 
 let configured = false;
 
+// RevenueCat rejects with a PurchasesError carrying rich diagnostic fields
+// (code, readableErrorCode, underlyingErrorMessage, userInfo) that a bare
+// `String(e)` throws away — exactly the fields that explain an empty-offerings
+// / "products couldn't be fetched from App Store Connect" failure. Pull them
+// out defensively so they land in the logs.
+function describeError(e: unknown): Record<string, unknown> {
+  if (e && typeof e === 'object') {
+    const err = e as Record<string, unknown>;
+    return {
+      message: err.message ?? String(e),
+      code: err.code,
+      readableErrorCode: err.readableErrorCode,
+      underlyingErrorMessage: err.underlyingErrorMessage,
+      userInfo: err.userInfo,
+    };
+  }
+  return { message: String(e) };
+}
+
 /** True when a RevenueCat key is present and configure() has run. */
 export function isRevenueCatConfigured(): boolean {
   return configured;
@@ -83,6 +102,7 @@ export async function loginRevenueCat(
   } catch (e) {
     logger.captureException(e, {
       tags: { module: 'revenuecat', method: 'login' },
+      extra: describeError(e),
     });
     return null;
   }
@@ -120,10 +140,29 @@ export async function getOfferingSafe(
   if (!configured) return null;
   try {
     const offerings = await Purchases.getOfferings();
-    return offerings.all[identifier] ?? null;
+    const target = offerings.all[identifier] ?? null;
+    logger.debug('[revenuecat] getOfferings ok', {
+      requested: identifier,
+      current: offerings.current?.identifier ?? null,
+      allIdentifiers: Object.keys(offerings.all),
+      targetFound: target !== null,
+      targetPackageCount: target?.availablePackages.length ?? 0,
+      targetProducts: target?.availablePackages.map((p) => ({
+        packageId: p.identifier,
+        productId: p.product.identifier,
+        priceString: p.product.priceString,
+      })),
+    });
+    if (target && target.availablePackages.length === 0) {
+      logger.warn('[revenuecat] offering has zero available packages', {
+        requested: identifier,
+      });
+    }
+    return target;
   } catch (e) {
     logger.captureException(e, {
       tags: { module: 'revenuecat', method: 'getOffering' },
+      extra: describeError(e),
     });
     return null;
   }
@@ -137,6 +176,7 @@ export async function getCustomerInfoSafe(): Promise<CustomerInfo | null> {
   } catch (e) {
     logger.captureException(e, {
       tags: { module: 'revenuecat', method: 'getCustomerInfo' },
+      extra: describeError(e),
     });
     return null;
   }
@@ -152,4 +192,84 @@ export function addCustomerInfoUpdateListener(
   if (!configured) return () => {};
   Purchases.addCustomerInfoUpdateListener(cb);
   return () => Purchases.removeCustomerInfoUpdateListener(cb);
+}
+
+/**
+ * Dump everything the SDK can tell us about the current RevenueCat state to the
+ * logs — for diagnosing empty offerings / "products couldn't be fetched from
+ * App Store Connect". Each probe is isolated so one failure doesn't hide the
+ * rest. Safe to call anytime (no-op when unconfigured); wire it behind a debug
+ * gesture or call it right before presenting the paywall.
+ */
+export async function logRevenueCatDiagnostics(): Promise<void> {
+  logger.info('[revenuecat] --- diagnostics start ---', {
+    platform: Platform.OS,
+    configured,
+    // Which key kind is in use — never log the key value itself.
+    apiKeyPrefix: resolveApiKey().slice(0, 5),
+  });
+  if (!configured) {
+    logger.warn('[revenuecat] not configured — nothing to diagnose');
+    return;
+  }
+
+  try {
+    logger.info('[revenuecat] appUserID', {
+      appUserID: await Purchases.getAppUserID(),
+    });
+  } catch (e) {
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'diag.appUserID' },
+      extra: describeError(e),
+    });
+  }
+
+  // Whether the store permits purchases at all (parental controls, device
+  // restrictions). If false, offerings/products will look "empty" regardless
+  // of dashboard config.
+  try {
+    logger.info('[revenuecat] canMakePayments', {
+      canMakePayments: await Purchases.canMakePayments(),
+    });
+  } catch (e) {
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'diag.canMakePayments' },
+      extra: describeError(e),
+    });
+  }
+
+  // Fetches the raw offerings (also logs the parsed breakdown via getOfferingSafe).
+  try {
+    const offerings = await Purchases.getOfferings();
+    logger.info('[revenuecat] offerings snapshot', {
+      current: offerings.current?.identifier ?? null,
+      all: Object.entries(offerings.all).map(([id, o]) => ({
+        id,
+        packages: o.availablePackages.map((p) => p.product.identifier),
+      })),
+    });
+  } catch (e) {
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'diag.offerings' },
+      extra: describeError(e),
+    });
+  }
+
+  try {
+    const info = await Purchases.getCustomerInfo();
+    logger.info('[revenuecat] customerInfo', {
+      originalAppUserId: info.originalAppUserId,
+      activeEntitlements: Object.keys(info.entitlements.active),
+      activeSubscriptions: info.activeSubscriptions,
+      tier: getActiveTier(info),
+    });
+  } catch (e) {
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'diag.customerInfo' },
+      extra: describeError(e),
+    });
+  }
+
+  await getOfferingSafe();
+  logger.info('[revenuecat] --- diagnostics end ---');
 }
