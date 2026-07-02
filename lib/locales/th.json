@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "คุณสามารถทดลองใช้แผน Individual ได้ฟรีในช่วงเปิดตัวแอป ข้อเสนอนี้มีระยะเวลาจำกัด",
     "individualPlan": "แผน Individual",
-    "professionalPlan": "แผน Professional"
+    "professionalPlan": "แผน Professional",
+    "promoInfoTitle": "ข้อเสนอเปิดตัว"
   },
   "errors": {
     "somethingWentWrong": "เกิดข้อผิดพลาดบางอย่าง",

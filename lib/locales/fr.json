@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "Vous pouvez tester gratuitement la formule Individual à l'occasion du lancement de l'application. Offre à durée limitée.",
     "individualPlan": "Formule Individual",
-    "professionalPlan": "Formule Professional"
+    "professionalPlan": "Formule Professional",
+    "promoInfoTitle": "Offre de lancement"
   },
   "errors": {
     "somethingWentWrong": "Une erreur est survenue",

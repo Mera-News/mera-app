@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "アプリのローンチ記念として、Individualプランを無料でお試しいただけます。期間限定のオファーです。",
     "individualPlan": "Individualプラン",
-    "professionalPlan": "Professionalプラン"
+    "professionalPlan": "Professionalプラン",
+    "promoInfoTitle": "ローンチ特典"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",

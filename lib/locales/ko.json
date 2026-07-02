@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "앱 출시 기념으로 Individual 플랜을 무료로 사용해 보실 수 있습니다. 기간 한정 혜택입니다.",
     "individualPlan": "Individual 플랜",
-    "professionalPlan": "Professional 플랜"
+    "professionalPlan": "Professional 플랜",
+    "promoInfoTitle": "출시 기념 혜택"
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",

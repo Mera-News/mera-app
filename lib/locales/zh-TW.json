@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "作為應用程式上市活動的一部分，您可以免費試用 Individual 方案。此優惠限時有效。",
     "individualPlan": "Individual 方案",
-    "professionalPlan": "Professional 方案"
+    "professionalPlan": "Professional 方案",
+    "promoInfoTitle": "上市優惠"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",

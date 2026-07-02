@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "作为应用发布活动的一部分，您可以免费试用 Individual 套餐。此优惠限时有效。",
     "individualPlan": "Individual 套餐",
-    "professionalPlan": "Professional 套餐"
+    "professionalPlan": "Professional 套餐",
+    "promoInfoTitle": "上线优惠"
   },
   "errors": {
     "somethingWentWrong": "出了点问题",

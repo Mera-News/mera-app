@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "W ramach premiery aplikacji możesz bezpłatnie testować plan Individual. Oferta ograniczona czasowo.",
     "individualPlan": "Plan Individual",
-    "professionalPlan": "Plan Professional"
+    "professionalPlan": "Plan Professional",
+    "promoInfoTitle": "Oferta premierowa"
   },
   "errors": {
     "somethingWentWrong": "Coś poszło nie tak",

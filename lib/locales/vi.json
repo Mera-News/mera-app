@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "Bạn có thể dùng thử miễn phí gói Individual nhân dịp ra mắt ứng dụng. Đây là ưu đãi có thời hạn.",
     "individualPlan": "Gói Individual",
-    "professionalPlan": "Gói Professional"
+    "professionalPlan": "Gói Professional",
+    "promoInfoTitle": "Ưu đãi ra mắt"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",

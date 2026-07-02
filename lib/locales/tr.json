@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "Uygulama lansmanımız kapsamında Individual planını ücretsiz deneyebilirsiniz. Bu sınırlı süreli bir tekliftir.",
     "individualPlan": "Individual Planı",
-    "professionalPlan": "Professional Planı"
+    "professionalPlan": "Professional Planı",
+    "promoInfoTitle": "Lansman teklifi"
   },
   "errors": {
     "somethingWentWrong": "Bir şeyler yanlış gitti",

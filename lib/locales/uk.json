@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "У межах запуску застосунку ви можете безкоштовно тестувати план Individual. Це обмежена за часом пропозиція.",
     "individualPlan": "План Individual",
-    "professionalPlan": "План Professional"
+    "professionalPlan": "План Professional",
+    "promoInfoTitle": "Пропозиція до запуску"
   },
   "errors": {
     "somethingWentWrong": "Щось пішло не так",

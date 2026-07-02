@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "Anda dapat mencoba paket Individual secara gratis sebagai bagian dari peluncuran aplikasi. Penawaran ini berlaku terbatas.",
     "individualPlan": "Paket Individual",
-    "professionalPlan": "Paket Professional"
+    "professionalPlan": "Paket Professional",
+    "promoInfoTitle": "Penawaran peluncuran"
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",

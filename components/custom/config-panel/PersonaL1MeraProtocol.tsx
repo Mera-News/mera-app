@@ -11,7 +11,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
 import { VStack } from '@/components/ui/vstack';
 import { PRIVACY_URL } from '@/lib/config/branding';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
@@ -54,6 +53,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
+    const [showPromoInfo, setShowPromoInfo] = useState(false);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
     const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
     const [addTopicFact, setAddTopicFact] = useState<Fact | null>(null);
@@ -325,7 +325,9 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                     <MaterialIcons name="info-outline" size={14} color="#6b7280" />
                                 </Pressable>
                             </HStack>
-                            <Text size="2xl" className="text-white font-semibold">{totalArticleCount}</Text>
+                            {/* Server-side delivery tally (user-daily-usage); local count only
+                                as a fallback while offline. */}
+                            <Text size="2xl" className="text-white font-semibold">{billing?.articlesUsedToday ?? totalArticleCount}</Text>
                         </Box>
                         {billing?.subscriptionTier === 'individual' || billing?.subscriptionTier === 'professional' ? (
                             <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
@@ -338,28 +340,18 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                                 </Text>
                             </Box>
                         ) : (
-                            /* Not on a paid plan (or billing unavailable): launch-promo display */
-                            <Box className="flex-1">
-                                <Tooltip
-                                    placement="top"
-                                    trigger={(triggerProps) => (
-                                        <Pressable {...triggerProps} hitSlop={6}>
-                                            <Box className="px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
-                                                <HStack className="items-center mb-2" space="xs">
-                                                    <Text size="xs" className="text-gray-400 flex-1">{t('configPanel.maxForDailyAnalysis')}</Text>
-                                                    <MaterialIcons name="info-outline" size={14} color="#6b7280" />
-                                                </HStack>
-                                                <Text size="2xl" className="text-white font-semibold">1000</Text>
-                                                <Text size="xs" className="text-primary-400 mt-0.5">{t('configPanel.promoPlan')}</Text>
-                                            </Box>
-                                        </Pressable>
-                                    )}
-                                >
-                                    <TooltipContent className="max-w-[280px] mx-4">
-                                        <TooltipText>{t('configPanel.promoTooltip')}</TooltipText>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </Box>
+                            /* Not on a paid plan (or billing unavailable): launch-promo display;
+                               tapping opens the same info-modal pattern as the left tile. */
+                            <Pressable className="flex-1" onPress={() => setShowPromoInfo(true)}>
+                                <Box className="px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
+                                    <HStack className="items-center mb-2" space="xs">
+                                        <Text size="xs" className="text-gray-400 flex-1">{t('configPanel.maxForDailyAnalysis')}</Text>
+                                        <MaterialIcons name="info-outline" size={14} color="#6b7280" />
+                                    </HStack>
+                                    <Text size="2xl" className="text-white font-semibold">1000</Text>
+                                    <Text size="xs" className="text-primary-400 mt-0.5">{t('configPanel.promoPlan')}</Text>
+                                </Box>
+                            </Pressable>
                         )}
                     </HStack>
 
@@ -658,6 +650,33 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                             variant="outline"
                             action="secondary"
                             onPress={() => setShowArticleCountInfo(false)}
+                            className="w-full"
+                        >
+                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            <Modal isOpen={showPromoInfo} onClose={() => setShowPromoInfo(false)} size="sm">
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader className="pb-3">
+                        <HStack className="items-center" space="xs">
+                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
+                            <Text className="text-base font-semibold text-white">{t('configPanel.promoInfoTitle')}</Text>
+                        </HStack>
+                    </ModalHeader>
+                    <ModalBody className="py-4">
+                        <Text className="text-gray-300 text-sm leading-relaxed">
+                            {t('configPanel.promoTooltip')}
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter className="border-t border-gray-700 pt-4">
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={() => setShowPromoInfo(false)}
                             className="w-full"
                         >
                             <ButtonText>{t('configPanel.gotIt')}</ButtonText>

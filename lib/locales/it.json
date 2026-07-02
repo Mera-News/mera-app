@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "Puoi provare gratuitamente il piano Individual in occasione del lancio dell'app. Offerta a tempo limitato.",
     "individualPlan": "Piano Individual",
-    "professionalPlan": "Piano Professional"
+    "professionalPlan": "Piano Professional",
+    "promoInfoTitle": "Offerta di lancio"
   },
   "errors": {
     "somethingWentWrong": "Qualcosa è andato storto",

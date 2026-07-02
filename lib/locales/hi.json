@@ -456,7 +456,8 @@
     "promoPlan": "Promo",
     "promoTooltip": "ऐप लॉन्च के अवसर पर आप Individual प्लान मुफ़्त में आज़मा सकते हैं। यह सीमित समय का ऑफ़र है।",
     "individualPlan": "Individual प्लान",
-    "professionalPlan": "Professional प्लान"
+    "professionalPlan": "Professional प्लान",
+    "promoInfoTitle": "लॉन्च ऑफ़र"
   },
   "errors": {
     "somethingWentWrong": "कुछ गलत हो गया",
