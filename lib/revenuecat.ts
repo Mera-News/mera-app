@@ -10,6 +10,7 @@ import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
   LOG_LEVEL,
+  PurchasesEntitlementInfo,
   PurchasesOffering,
 } from 'react-native-purchases';
 import {
@@ -29,10 +30,18 @@ function resolveApiKey(): string {
 }
 
 // Entitlement identifiers configured in the RevenueCat dashboard. Must match
-// the server (mera-server-auth RevenueCatService) — `professional` outranks
-// `individual` when both are active.
-export const ENTITLEMENT_INDIVIDUAL = 'individual';
-export const ENTITLEMENT_PROFESSIONAL = 'professional';
+// the server (mera-server-auth REVENUECAT_ENTITLEMENT_* env vars). Store
+// purchases grant `mera-news-*-plan`; legacy promotional grants used the bare
+// tier name — accept both. Professional outranks individual when both are
+// active.
+export const INDIVIDUAL_ENTITLEMENT_IDS = [
+  'mera-news-individual-plan',
+  'individual',
+];
+export const PROFESSIONAL_ENTITLEMENT_IDS = [
+  'mera-news-professional-plan',
+  'professional',
+];
 
 // Offering identifier (RevenueCat dashboard) whose paywall the app presents.
 // Holds both tiers (individual + professional) as packages; the paywall splits
@@ -124,8 +133,24 @@ export function getActiveTier(
   info: CustomerInfo | null | undefined,
 ): SubscriptionTier {
   const active = info?.entitlements.active ?? {};
-  if (active[ENTITLEMENT_PROFESSIONAL]) return 'professional';
-  if (active[ENTITLEMENT_INDIVIDUAL]) return 'individual';
+  if (PROFESSIONAL_ENTITLEMENT_IDS.some((id) => active[id])) {
+    return 'professional';
+  }
+  if (INDIVIDUAL_ENTITLEMENT_IDS.some((id) => active[id])) return 'individual';
+  return null;
+}
+
+/** The active entitlement backing the highest tier, or null. */
+export function getActiveEntitlementInfo(
+  info: CustomerInfo | null | undefined,
+): PurchasesEntitlementInfo | null {
+  const active = info?.entitlements.active ?? {};
+  for (const id of [
+    ...PROFESSIONAL_ENTITLEMENT_IDS,
+    ...INDIVIDUAL_ENTITLEMENT_IDS,
+  ]) {
+    if (active[id]) return active[id];
+  }
   return null;
 }
 

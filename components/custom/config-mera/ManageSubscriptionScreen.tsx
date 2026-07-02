@@ -9,7 +9,7 @@ import { VStack } from '@/components/ui/vstack';
 import { fetchUserBilling } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { getActiveTier, getCustomerInfoSafe, getOfferingSafe } from '@/lib/revenuecat';
+import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
@@ -72,7 +72,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const setCustomerInfo = useSubscriptionStore((s) => s.setCustomerInfo);
 
     const rcTier = getActiveTier(customerInfo);
-    const activeEntitlement = rcTier ? customerInfo?.entitlements.active[rcTier] ?? null : null;
+    const activeEntitlement = getActiveEntitlementInfo(customerInfo);
 
     useEffect(() => {
         const load = async () => {
@@ -87,8 +87,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             // Price lives on the offering's packages, not on CustomerInfo —
             // match the active entitlement's product to a package.
             const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
-            const tier = getActiveTier(info);
-            const productId = tier ? info?.entitlements.active[tier]?.productIdentifier : null;
+            const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
             if (productId && offering) {
                 const pkg = offering.availablePackages.find(
                     (p) =>
