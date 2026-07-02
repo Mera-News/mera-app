@@ -97,20 +97,11 @@ This regenerates `/ios` and `/android` from your updated `app.json`/`app.config.
 
 ## Development
 
-```bash
-npm run lint              # ESLint
-npm run codegen           # Regenerate GraphQL types from schema.gql
-npm test                  # Jest unit tests
-npm run test:coverage     # Jest with coverage thresholds (CI gate)
-npx expo start            # Dev server
-eas build --profile development   # EAS development build
-```
+All day-to-day commands — npm scripts, Expo, EAS build/submit, device install, and OTA updates — live in [COMMANDS.md](COMMANDS.md).
 
-EAS updates (OTA, JS/TS/styling/GraphQL changes only):
-```bash
-eas update --branch production --message "description"
-```
-Native builds are required for native dependency changes, SDK version bumps, `app.json` native config, or new native modules.
+Before contributing, read [CONTRIBUTING.md](CONTRIBUTING.md) for the versioning, dependency, and testing rules.
+
+OTA updates apply to JS/TS/styling/GraphQL changes only. Native builds are required for native dependency changes, SDK version bumps, `app.json` native config, or new native modules.
 
 ## License & Trademark
 

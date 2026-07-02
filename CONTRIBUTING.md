@@ -24,11 +24,33 @@ For larger feature PRs, **open an issue for discussion before building**. This a
 - PRs that re-introduce hardcoded `mera.news` URLs, `com.mera.news` bundle IDs, or `contact@mera.news` addresses (these must use `lib/config/branding.ts` and `.env.example` instead)
 - PRs that introduce new Mera trademarks into copy or assets in a way that would require trademark permission from Mera Labs B.V. (see [TRADEMARK.md](TRADEMARK.md))
 - New server-side features that require backend changes without a paired description of the required backend API contract
-- Dependency additions without a license review (run `npx license-checker --summary` and confirm every dependency permits commercial, proprietary redistribution)
+- Dependency additions that skip the rules in [Dependencies](#dependencies) below
+
+## Dependencies
+
+- **Do not add any new dependency without discussion first.** This is a hard rule — open an issue before adding a package.
+- **Never add packages that request sensitive device permissions** — camera, photo library, location, contacts, microphone, etc. Mera does not use them, and adding one changes our privacy posture and store-review footprint. If a feature seems to need one, raise it for discussion before writing any code.
+- **License review**: run `npx license-checker --summary` and confirm every new dependency permits commercial, proprietary redistribution.
 
 ## Development Setup
 
 See the [README Quick Start](README.md#quick-start) for setup instructions. This app requires the Mera backend services — the auth/GraphQL server (`mera-server`) and the inference gateway (`mera-inference-gateway`) — which are proprietary and not published.
+
+Day-to-day commands (npm scripts, Expo, EAS build/submit, OTA) live in [COMMANDS.md](COMMANDS.md).
+
+**Testing**: use development builds. Build the `development` profile (`eas build --profile development`) and run against the custom dev client — not Expo Go, which cannot load the native modules this app depends on.
+
+## Versioning & Releases
+
+- **Always update the version in `app.json` and `package.json` together.** They must never drift apart. The runtime version policy is `appVersion`, so the `app.json` `version` is what native builds and OTA-update compatibility are keyed on — a mismatch silently breaks update targeting.
+- **Follow [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)**:
+  - `PATCH` (`1.2.0` → `1.2.1`) — bug fixes, no behavior change.
+  - `MINOR` (`1.2.0` → `1.3.0`) — new features, backward compatible.
+  - `MAJOR` (`1.2.0` → `2.0.0`) — breaking changes.
+- **Only bump the version when publishing a new build to the App Store / Play Store.** A store release is the only thing that increments the version.
+- **Never bump the version for an OTA update.** OTA updates (`eas update`) ship to installs that already share the current `appVersion` — changing the version would cut those updates off from the very builds they target. Ship OTA patches against the existing version; leave `app.json`/`package.json` untouched.
+
+See the version-bump checklist in [COMMANDS.md](COMMANDS.md) for the full release flow.
 
 ## Code Style
 
@@ -52,11 +74,18 @@ Before submitting a PR, confirm:
 
 ## License of Contributions
 
-By submitting a contribution you agree that:
+> **Read this before you open a PR.** Mera is **not** a standard open-source project (it is not MIT-style). It is proprietary and commercial — see [LICENSE.md](LICENSE.md). Submitting a PR does **not** obligate us to use it, and it is not treated as open-source.
 
-1. You assign to Mera Labs B.V. all right, title, and interest in and to your contribution, which becomes part of the proprietary Software governed by [LICENSE.md](LICENSE.md). To the extent any right cannot be assigned, you grant Mera Labs B.V. a perpetual, worldwide, royalty-free, irrevocable license to use it for any purpose.
-2. You have the right to make the contribution (you own it or have written permission from the owner).
-3. The contribution does not grant you any license to the Software or any rights to the Mera trademarks.
+**By opening a pull request you authorize Mera Labs B.V. to use, modify, and ship your contribution in our commercial app — royalty-free — and you assign it to us.** Concretely:
+
+1. You assign to Mera Labs B.V. all right, title, and interest in and to your contribution, which becomes part of the proprietary Software governed by [LICENSE.md](LICENSE.md). To the extent any right cannot be assigned, you grant Mera Labs B.V. a perpetual, worldwide, royalty-free, irrevocable license to use it for any purpose, including in our commercial products.
+2. **We may or may not use your code.** We are under no obligation to merge, ship, or otherwise use any contribution, and we may modify it freely if we do.
+3. You have the right to make the contribution (you own it or have written permission from the owner).
+4. The contribution does not grant you any license to the Software or any rights to the Mera trademarks.
+
+The admin may ask you to sign a Contributor License Agreement (CLA) form confirming the above before your PR can be merged.
+
+**If you do not agree to these terms, do not open a PR.** Instead, [open an issue](https://github.com/Mera-News/mera-app/issues) describing your request or idea, and our team will take it from there.
 
 ## Contact
 
