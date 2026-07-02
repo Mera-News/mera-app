@@ -16,7 +16,9 @@
     "goBack": "Geri Dön",
     "articles": "Makaleler",
     "loggingOut": "Çıkış Yapılıyor...",
-    "never": "Hiçbir zaman"
+    "never": "Hiçbir zaman",
+    "yes": "Evet",
+    "no": "Hayır"
   },
   "auth": {
     "emailPlaceholder": "E-posta adresinizi girin",
@@ -451,7 +453,10 @@
     "gotIt": "Anladım",
     "articlesAnalyzedLast24h": "Son 24s'de analiz edilen makaleler",
     "maxForDailyAnalysis": "Günlük analiz için maks",
-    "basicPlan": "Temel Plan"
+    "promoPlan": "Promo",
+    "promoTooltip": "Uygulama lansmanımız kapsamında Individual planını ücretsiz deneyebilirsiniz. Bu sınırlı süreli bir tekliftir.",
+    "individualPlan": "Individual Planı",
+    "professionalPlan": "Professional Planı"
   },
   "errors": {
     "somethingWentWrong": "Bir şeyler yanlış gitti",

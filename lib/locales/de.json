@@ -1,5 +1,7 @@
 {
   "common": {
+    "yes": "Ja",
+    "no": "Nein",
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "save": "Speichern",
@@ -451,7 +453,10 @@
     "gotIt": "Verstanden",
     "articlesAnalyzedLast24h": "Analysierte Artikel letzte 24h",
     "maxForDailyAnalysis": "Max für tägliche Analyse",
-    "basicPlan": "Basisplan"
+    "promoPlan": "Promo",
+    "promoTooltip": "Zum App-Start können Sie den Individual-Plan kostenlos testen. Dies ist ein zeitlich begrenztes Angebot.",
+    "individualPlan": "Individual-Plan",
+    "professionalPlan": "Professional-Plan"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",

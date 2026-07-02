@@ -16,7 +16,9 @@
     "goBack": "Назад",
     "articles": "Статті",
     "loggingOut": "Вихід...",
-    "never": "Ніколи"
+    "never": "Ніколи",
+    "yes": "Так",
+    "no": "Ні"
   },
   "auth": {
     "emailPlaceholder": "Введіть вашу електронну адресу",
@@ -451,7 +453,10 @@
     "gotIt": "Зрозуміло",
     "articlesAnalyzedLast24h": "Статей проаналізовано за 24год",
     "maxForDailyAnalysis": "Макс для щоденного аналізу",
-    "basicPlan": "Базовий план"
+    "promoPlan": "Promo",
+    "promoTooltip": "У межах запуску застосунку ви можете безкоштовно тестувати план Individual. Це обмежена за часом пропозиція.",
+    "individualPlan": "План Individual",
+    "professionalPlan": "План Professional"
   },
   "errors": {
     "somethingWentWrong": "Щось пішло не так",

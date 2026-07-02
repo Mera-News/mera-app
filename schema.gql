@@ -367,6 +367,7 @@ type Query {
     """Search text"""
     query: String!
   ): TopicSearchResponse!
+  userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
 }
 
@@ -440,6 +441,25 @@ input UpdateProcessingModeInput {
 input UpdateUserConfigInput {
   language_codes: [String!]
   userId: ID!
+}
+
+type UserBillingInfo {
+  """Articles already delivered in the current UTC day."""
+  articlesUsedToday: Int!
+
+  """Max article IDs delivered per UTC day."""
+  dailyArticleLimit: Int!
+
+  """
+  ISO timestamp when the active entitlement expires; null = no entitlement or lifetime.
+  """
+  entitlementExpiresAt: String
+
+  """ISO timestamp of the next UTC midnight — when usage resets."""
+  resetAt: String!
+
+  """Subscription tier: 'none' | 'individual' | 'professional'."""
+  subscriptionTier: String!
 }
 
 type UserPersona {

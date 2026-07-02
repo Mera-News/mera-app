@@ -16,7 +16,9 @@
     "goBack": "Volver",
     "articles": "Artículos",
     "loggingOut": "Cerrando sesión...",
-    "never": "Nunca"
+    "never": "Nunca",
+    "yes": "Sí",
+    "no": "No"
   },
   "auth": {
     "emailPlaceholder": "Ingresa tu dirección de correo electrónico",
@@ -451,7 +453,10 @@
     "gotIt": "Entendido",
     "articlesAnalyzedLast24h": "Artículos analizados últimas 24h",
     "maxForDailyAnalysis": "Máx para análisis diario",
-    "basicPlan": "Plan básico"
+    "promoPlan": "Promo",
+    "promoTooltip": "Puedes probar gratis el plan Individual como parte del lanzamiento de la app. Es una oferta por tiempo limitado.",
+    "individualPlan": "Plan Individual",
+    "professionalPlan": "Plan Professional"
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",

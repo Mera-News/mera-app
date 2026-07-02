@@ -1,5 +1,7 @@
 {
   "common": {
+    "yes": "Ja",
+    "no": "Nee",
     "cancel": "Annuleren",
     "delete": "Verwijderen",
     "save": "Opslaan",
@@ -451,7 +453,10 @@
     "gotIt": "Begrepen",
     "articlesAnalyzedLast24h": "Artikelen geanalyseerd in 24u",
     "maxForDailyAnalysis": "Max voor dagelijkse analyse",
-    "basicPlan": "Basisplan"
+    "promoPlan": "Promo",
+    "promoTooltip": "Je kunt het Individual-abonnement gratis testen als onderdeel van onze app-lancering. Dit is een tijdelijke aanbieding.",
+    "individualPlan": "Individual-abonnement",
+    "professionalPlan": "Professional-abonnement"
   },
   "errors": {
     "somethingWentWrong": "Er is iets misgegaan",

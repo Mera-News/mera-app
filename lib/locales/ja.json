@@ -16,7 +16,9 @@
     "goBack": "戻る",
     "articles": "記事",
     "loggingOut": "ログアウト中...",
-    "never": "なし"
+    "never": "なし",
+    "yes": "はい",
+    "no": "いいえ"
   },
   "auth": {
     "emailPlaceholder": "メールアドレスを入力してください",
@@ -451,7 +453,10 @@
     "gotIt": "わかりました",
     "articlesAnalyzedLast24h": "24時間に分析した記事数",
     "maxForDailyAnalysis": "1日の最大分析数",
-    "basicPlan": "ベーシックプラン"
+    "promoPlan": "Promo",
+    "promoTooltip": "アプリのローンチ記念として、Individualプランを無料でお試しいただけます。期間限定のオファーです。",
+    "individualPlan": "Individualプラン",
+    "professionalPlan": "Professionalプラン"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",

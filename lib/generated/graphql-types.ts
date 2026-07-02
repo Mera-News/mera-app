@@ -342,6 +342,7 @@ export type Query = {
   searchArticlesVector: EmbeddingSearchResponse;
   /** Vector search on user topics using cosine similarity (scores 0–1). */
   searchTopicsVector: TopicSearchResponse;
+  userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
 };
 
@@ -531,6 +532,20 @@ export type UpdateProcessingModeInput = {
 export type UpdateUserConfigInput = {
   language_codes?: InputMaybe<Array<Scalars['String']['input']>>;
   userId: Scalars['ID']['input'];
+};
+
+export type UserBillingInfo = {
+  __typename?: 'UserBillingInfo';
+  /** Articles already delivered in the current UTC day. */
+  articlesUsedToday: Scalars['Int']['output'];
+  /** Max article IDs delivered per UTC day. */
+  dailyArticleLimit: Scalars['Int']['output'];
+  /** ISO timestamp when the active entitlement expires; null = no entitlement or lifetime. */
+  entitlementExpiresAt?: Maybe<Scalars['String']['output']>;
+  /** ISO timestamp of the next UTC midnight — when usage resets. */
+  resetAt: Scalars['String']['output'];
+  /** Subscription tier: 'none' | 'individual' | 'professional'. */
+  subscriptionTier: Scalars['String']['output'];
 };
 
 export type UserPersona = {

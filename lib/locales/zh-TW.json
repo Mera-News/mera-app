@@ -16,7 +16,9 @@
     "goBack": "返回上一頁",
     "articles": "文章",
     "loggingOut": "登出中...",
-    "never": "從未"
+    "never": "從未",
+    "yes": "是",
+    "no": "否"
   },
   "auth": {
     "emailPlaceholder": "輸入您的電子郵件地址",
@@ -451,7 +453,10 @@
     "gotIt": "我明白了",
     "articlesAnalyzedLast24h": "過去24小時分析文章數",
     "maxForDailyAnalysis": "每日最大分析數",
-    "basicPlan": "基礎方案"
+    "promoPlan": "Promo",
+    "promoTooltip": "作為應用程式上市活動的一部分，您可以免費試用 Individual 方案。此優惠限時有效。",
+    "individualPlan": "Individual 方案",
+    "professionalPlan": "Professional 方案"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",

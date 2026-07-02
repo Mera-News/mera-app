@@ -11,11 +11,14 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
 import { VStack } from '@/components/ui/vstack';
 import { PRIVACY_URL } from '@/lib/config/branding';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
+import { fetchUserBilling } from '@/lib/billing-service';
+import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { useChatPopupIsExpanded, useChatPopupStore, useChatPopupFactMutationVersion } from '@/lib/stores/chat-popup-store';
@@ -50,6 +53,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
+    const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
     const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
     const [addTopicFact, setAddTopicFact] = useState<Fact | null>(null);
@@ -93,6 +97,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
             setIsLoading(true);
             await Promise.all([
                 loadLocalFacts(),
+                fetchUserBilling().then(setBilling),
                 !userPersona && userId ? fetchUserPersona(userId) : Promise.resolve(),
             ]);
             setIsLoading(false);
@@ -322,11 +327,40 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                             </HStack>
                             <Text size="2xl" className="text-white font-semibold">{totalArticleCount}</Text>
                         </Box>
-                        <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
-                            <Text size="xs" className="text-gray-400 mb-2">{t('configPanel.maxForDailyAnalysis')}</Text>
-                            <Text size="2xl" className="text-white font-semibold">500</Text>
-                            <Text size="xs" className="text-primary-400 mt-0.5">{t('configPanel.basicPlan')}</Text>
-                        </Box>
+                        {billing?.subscriptionTier === 'individual' || billing?.subscriptionTier === 'professional' ? (
+                            <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
+                                <Text size="xs" className="text-gray-400 mb-2">{t('configPanel.maxForDailyAnalysis')}</Text>
+                                <Text size="2xl" className="text-white font-semibold">{billing.dailyArticleLimit}</Text>
+                                <Text size="xs" className="text-primary-400 mt-0.5">
+                                    {billing.subscriptionTier === 'professional'
+                                        ? t('configPanel.professionalPlan')
+                                        : t('configPanel.individualPlan')}
+                                </Text>
+                            </Box>
+                        ) : (
+                            /* Not on a paid plan (or billing unavailable): launch-promo display */
+                            <Box className="flex-1">
+                                <Tooltip
+                                    placement="top"
+                                    trigger={(triggerProps) => (
+                                        <Pressable {...triggerProps} hitSlop={6}>
+                                            <Box className="px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
+                                                <HStack className="items-center mb-2" space="xs">
+                                                    <Text size="xs" className="text-gray-400 flex-1">{t('configPanel.maxForDailyAnalysis')}</Text>
+                                                    <MaterialIcons name="info-outline" size={14} color="#6b7280" />
+                                                </HStack>
+                                                <Text size="2xl" className="text-white font-semibold">1000</Text>
+                                                <Text size="xs" className="text-primary-400 mt-0.5">{t('configPanel.promoPlan')}</Text>
+                                            </Box>
+                                        </Pressable>
+                                    )}
+                                >
+                                    <TooltipContent className="max-w-[280px] mx-4">
+                                        <TooltipText>{t('configPanel.promoTooltip')}</TooltipText>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </Box>
+                        )}
                     </HStack>
 
                     <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>

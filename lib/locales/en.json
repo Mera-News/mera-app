@@ -1,5 +1,7 @@
 {
   "common": {
+    "yes": "Yes",
+    "no": "No",
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
@@ -63,7 +65,32 @@
     "managePlan": "Manage subscription",
     "restore": "Restore purchases",
     "activating": "Activating your subscription…",
-    "activationDelayed": "Your purchase is being confirmed. This can take a moment — tap refresh if it doesn't continue."
+    "activationDelayed": "Your purchase is being confirmed. This can take a moment — tap refresh if it doesn't continue.",
+    "planSection": "Your plan",
+    "planLabel": "Plan",
+    "priceLabel": "Price",
+    "planPromo": "Promo",
+    "planIndividual": "Individual",
+    "planProfessional": "Professional",
+    "usageSection": "Usage",
+    "dailyArticleLimit": "Daily article limit",
+    "usedToday": "Analyzed today",
+    "resetsOn": "Resets",
+    "detailsSection": "Subscription details",
+    "renewsOn": "Renews on",
+    "expiresOn": "Expires on",
+    "autoRenew": "Auto-renew",
+    "periodLabel": "Period",
+    "periodNormal": "Standard",
+    "periodTrial": "Free trial",
+    "periodIntro": "Introductory",
+    "periodPromotional": "Promotional",
+    "storeLabel": "Purchased via",
+    "storeAppStore": "App Store",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promotional",
+    "lifetime": "Lifetime",
+    "customerCenter": "Manage / cancel subscription"
   },
   "feed": {
     "updatedAt": "Updated {{time}}",
@@ -443,7 +470,10 @@
     "gotIt": "Got it",
     "articlesAnalyzedLast24h": "Articles analyzed last 24h",
     "maxForDailyAnalysis": "Max for daily analysis",
-    "basicPlan": "Basic Plan"
+    "promoPlan": "Promo",
+    "promoTooltip": "You're free to test the Individual plan as part of our app launch. This is a limited-time offer.",
+    "individualPlan": "Individual Plan",
+    "professionalPlan": "Professional Plan"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",

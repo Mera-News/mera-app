@@ -16,7 +16,9 @@
     "goBack": "返回上页",
     "articles": "文章",
     "loggingOut": "正在退出登录...",
-    "never": "从未"
+    "never": "从未",
+    "yes": "是",
+    "no": "否"
   },
   "auth": {
     "emailPlaceholder": "请输入您的电子邮箱地址",
@@ -451,7 +453,10 @@
     "gotIt": "知道了",
     "articlesAnalyzedLast24h": "过去24小时分析文章数",
     "maxForDailyAnalysis": "每日最大分析数",
-    "basicPlan": "基础套餐"
+    "promoPlan": "Promo",
+    "promoTooltip": "作为应用发布活动的一部分，您可以免费试用 Individual 套餐。此优惠限时有效。",
+    "individualPlan": "Individual 套餐",
+    "professionalPlan": "Professional 套餐"
   },
   "errors": {
     "somethingWentWrong": "出了点问题",

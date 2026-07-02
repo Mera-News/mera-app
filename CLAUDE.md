@@ -79,6 +79,8 @@ export default function MyRoute() {
 - **Path aliases**: `@/*` → project root
 - **iOS + Android** builds. New Architecture + React Compiler enabled.
 
+**Watchman / Metro gotcha:** Never put `node_modules` (or `.git`) in `.watchmanconfig`'s `ignore_dirs`. Metro builds its module-resolution file map from the Watchman crawl, so ignoring `node_modules` makes every package invisible and produces `Unable to resolve module ...` for files that plainly exist on disk (e.g. `expo-router/entry`). `.watchmanconfig` should only ignore build-output dirs (`.expo`, `ios/build`, `ios/Pods`, `android/build`, etc.). To clear a Watchman recrawl warning, just reset the watch (`watchman watch-del <path> ; watchman watch-project <path>`) — that resets the recrawl counter without touching `ignore_dirs`.
+
 ### Local Database (WatermelonDB)
 
 Schema lives in `lib/database/schema.ts`; migrations in `lib/database/migrations.ts`. Migrations are a linear chain — add a new `{ toVersion: N, steps: [...] }` and bump `appSchema.version`.

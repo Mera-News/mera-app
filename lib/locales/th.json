@@ -16,7 +16,9 @@
     "goBack": "กลับ",
     "articles": "บทความ",
     "loggingOut": "กำลังออกจากระบบ...",
-    "never": "ไม่เคย"
+    "never": "ไม่เคย",
+    "yes": "ใช่",
+    "no": "ไม่"
   },
   "auth": {
     "emailPlaceholder": "กรอกที่อยู่อีเมลของคุณ",
@@ -451,7 +453,10 @@
     "gotIt": "รับทราบ",
     "articlesAnalyzedLast24h": "บทความที่วิเคราะห์ใน 24 ชม.",
     "maxForDailyAnalysis": "สูงสุดสำหรับการวิเคราะห์รายวัน",
-    "basicPlan": "แผนพื้นฐาน"
+    "promoPlan": "Promo",
+    "promoTooltip": "คุณสามารถทดลองใช้แผน Individual ได้ฟรีในช่วงเปิดตัวแอป ข้อเสนอนี้มีระยะเวลาจำกัด",
+    "individualPlan": "แผน Individual",
+    "professionalPlan": "แผน Professional"
   },
   "errors": {
     "somethingWentWrong": "เกิดข้อผิดพลาดบางอย่าง",

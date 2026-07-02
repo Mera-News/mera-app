@@ -16,7 +16,9 @@
     "goBack": "Kembali",
     "articles": "Artikel",
     "loggingOut": "Sedang Keluar...",
-    "never": "Tidak pernah"
+    "never": "Tidak pernah",
+    "yes": "Ya",
+    "no": "Tidak"
   },
   "auth": {
     "emailPlaceholder": "Masukkan alamat email Anda",
@@ -451,7 +453,10 @@
     "gotIt": "Mengerti",
     "articlesAnalyzedLast24h": "Artikel dianalisis 24 jam terakhir",
     "maxForDailyAnalysis": "Maks untuk analisis harian",
-    "basicPlan": "Paket dasar"
+    "promoPlan": "Promo",
+    "promoTooltip": "Anda dapat mencoba paket Individual secara gratis sebagai bagian dari peluncuran aplikasi. Penawaran ini berlaku terbatas.",
+    "individualPlan": "Paket Individual",
+    "professionalPlan": "Paket Professional"
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",

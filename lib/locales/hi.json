@@ -16,7 +16,9 @@
     "goBack": "वापस जाएं",
     "articles": "लेख",
     "loggingOut": "लॉग आउट हो रहा है...",
-    "never": "कभी नहीं"
+    "never": "कभी नहीं",
+    "yes": "हाँ",
+    "no": "नहीं"
   },
   "auth": {
     "emailPlaceholder": "अपना ईमेल पता दर्ज करें",
@@ -451,7 +453,10 @@
     "gotIt": "समझ गया",
     "articlesAnalyzedLast24h": "पिछले 24 घंटे में विश्लेषित लेख",
     "maxForDailyAnalysis": "दैनिक विश्लेषण की अधिकतम सीमा",
-    "basicPlan": "बेसिक प्लान"
+    "promoPlan": "Promo",
+    "promoTooltip": "ऐप लॉन्च के अवसर पर आप Individual प्लान मुफ़्त में आज़मा सकते हैं। यह सीमित समय का ऑफ़र है।",
+    "individualPlan": "Individual प्लान",
+    "professionalPlan": "Professional प्लान"
   },
   "errors": {
     "somethingWentWrong": "कुछ गलत हो गया",

@@ -16,7 +16,9 @@
     "goBack": "Retour",
     "articles": "Articles",
     "loggingOut": "Déconnexion...",
-    "never": "Jamais"
+    "never": "Jamais",
+    "yes": "Oui",
+    "no": "Non"
   },
   "auth": {
     "emailPlaceholder": "Entrez votre adresse e-mail",
@@ -451,7 +453,10 @@
     "gotIt": "Compris",
     "articlesAnalyzedLast24h": "Articles analysés dernières 24h",
     "maxForDailyAnalysis": "Max pour l'analyse quotidienne",
-    "basicPlan": "Plan basique"
+    "promoPlan": "Promo",
+    "promoTooltip": "Vous pouvez tester gratuitement la formule Individual à l'occasion du lancement de l'application. Offre à durée limitée.",
+    "individualPlan": "Formule Individual",
+    "professionalPlan": "Formule Professional"
   },
   "errors": {
     "somethingWentWrong": "Une erreur est survenue",

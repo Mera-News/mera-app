@@ -16,7 +16,9 @@
     "goBack": "Назад",
     "articles": "Статьи",
     "loggingOut": "Выход...",
-    "never": "Никогда"
+    "never": "Никогда",
+    "yes": "Да",
+    "no": "Нет"
   },
   "auth": {
     "emailPlaceholder": "Введите адрес электронной почты",
@@ -451,7 +453,10 @@
     "gotIt": "Понятно",
     "articlesAnalyzedLast24h": "Статей проанализировано за 24ч",
     "maxForDailyAnalysis": "Макс для ежедневного анализа",
-    "basicPlan": "Базовый план"
+    "promoPlan": "Promo",
+    "promoTooltip": "В рамках запуска приложения вы можете бесплатно тестировать план Individual. Это предложение ограничено по времени.",
+    "individualPlan": "План Individual",
+    "professionalPlan": "План Professional"
   },
   "errors": {
     "somethingWentWrong": "Что-то пошло не так",

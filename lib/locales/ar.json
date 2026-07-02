@@ -16,7 +16,9 @@
     "goBack": "العودة",
     "articles": "المقالات",
     "loggingOut": "جارٍ تسجيل الخروج...",
-    "never": "أبدًا"
+    "never": "أبدًا",
+    "yes": "نعم",
+    "no": "لا"
   },
   "auth": {
     "emailPlaceholder": "أدخل عنوان بريدك الإلكتروني",
@@ -451,7 +453,10 @@
     "gotIt": "فهمت",
     "articlesAnalyzedLast24h": "المقالات المحللة خلال 24 ساعة",
     "maxForDailyAnalysis": "الحد الأقصى للتحليل اليومي",
-    "basicPlan": "الخطة الأساسية"
+    "promoPlan": "Promo",
+    "promoTooltip": "يمكنك تجربة خطة Individual مجانًا بمناسبة إطلاق التطبيق. هذا عرض لفترة محدودة.",
+    "individualPlan": "خطة Individual",
+    "professionalPlan": "خطة Professional"
   },
   "errors": {
     "somethingWentWrong": "حدث خطأ ما",

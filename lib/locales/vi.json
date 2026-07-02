@@ -16,7 +16,9 @@
     "goBack": "Quay lại",
     "articles": "Bài viết",
     "loggingOut": "Đang đăng xuất...",
-    "never": "Chưa bao giờ"
+    "never": "Chưa bao giờ",
+    "yes": "Có",
+    "no": "Không"
   },
   "auth": {
     "emailPlaceholder": "Nhập địa chỉ email của bạn",
@@ -451,7 +453,10 @@
     "gotIt": "Đã hiểu",
     "articlesAnalyzedLast24h": "Bài viết được phân tích trong 24h",
     "maxForDailyAnalysis": "Tối đa cho phân tích hàng ngày",
-    "basicPlan": "Gói cơ bản"
+    "promoPlan": "Promo",
+    "promoTooltip": "Bạn có thể dùng thử miễn phí gói Individual nhân dịp ra mắt ứng dụng. Đây là ưu đãi có thời hạn.",
+    "individualPlan": "Gói Individual",
+    "professionalPlan": "Gói Professional"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",
