@@ -146,14 +146,14 @@ export async function getOfferingSafe(
       current: offerings.current?.identifier ?? null,
       allIdentifiers: Object.keys(offerings.all),
       targetFound: target !== null,
-      targetPackageCount: target?.availablePackages.length ?? 0,
-      targetProducts: target?.availablePackages.map((p) => ({
+      targetPackageCount: target?.availablePackages?.length ?? 0,
+      targetProducts: target?.availablePackages?.map((p) => ({
         packageId: p.identifier,
         productId: p.product.identifier,
         priceString: p.product.priceString,
       })),
     });
-    if (target && target.availablePackages.length === 0) {
+    if (target && target.availablePackages?.length === 0) {
       logger.warn('[revenuecat] offering has zero available packages', {
         requested: identifier,
       });
