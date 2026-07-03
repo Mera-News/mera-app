@@ -72,7 +72,7 @@ Additionally, the following external service dependencies must be configured bef
 - **Expo / EAS project** — run `eas init` to bind to your own EAS project, or set `EXPO_OWNER`/`EAS_PROJECT_ID` in `.env`.
 - **Firebase (Android push notifications)** — supply your own `google-services.json` matching your app package name.
 - **iOS push notifications** — register your own bundle ID for push and regenerate `/ios` via `expo prebuild --clean`.
-- **Google Play submit** — supply your own GCP service-account key at `google-play-service-account.json`.
+- **Google Play submit** — upload your own GCP service-account key to EAS (project credentials → Android → "Google service account key for EAS Submit"). Alternatively, keep a local key file and point `submit.production.android.serviceAccountKeyPath` at it in `eas.json`.
 - **Sentry (optional)** — set `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in `.env`. The app runs without these; error reporting is a no-op.
 
 **GraphQL schema:** `schema.gql` in this repo is a snapshot of the reference backend's schema and doubles as the contract your backend must satisfy. If your backend's schema diverges, export your server's `schema.gql` into the repo root, then run `npm run codegen` to regenerate `lib/generated/graphql-types.ts`.

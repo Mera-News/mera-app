@@ -127,7 +127,7 @@ xcrun simctl install booted path/to/Mera.app
 
 ## 7. EAS Submit (to the stores)
 
-`eas.json` defines the `production` submit profile (Android → Play Console **internal** track via `google-play-service-account.json`).
+`eas.json` defines the `production` submit profile (Android → Play Console **internal** track, using the Google service account key stored in EAS credentials).
 
 ```bash
 # Submit the latest production build
