@@ -1,4 +1,5 @@
 import { showFeedback } from '@/lib/feedback';
+import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -6,13 +7,19 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Floating "Report a Bug" button shown across the main tabs. Opens Sentry's
- * built-in User Feedback widget. Mirrors ScrollToTopFab (same size/offset/look)
- * but pinned bottom-LEFT so the two sit inline as a matched pair.
+ * Floating "Report a Bug" button shown across the main tabs. Opens the feedback
+ * form (FeedbackWidgetModal). Mirrors ScrollToTopFab (same size/offset/look) but
+ * pinned bottom-LEFT so the two sit inline as a matched pair. Hidden entirely
+ * when Sentry is disabled (dev builds without EXPO_PUBLIC_SENTRY_IN_DEV), since
+ * showFeedback() would no-op — no dead button.
  */
 const FeedbackFab: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+
+    if (!SENTRY_ENABLED) {
+        return null;
+    }
 
     return (
         <Pressable

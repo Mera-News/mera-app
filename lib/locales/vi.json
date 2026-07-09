@@ -532,6 +532,28 @@
     "updateReady": "Cập nhật sẵn sàng",
     "updateDescription": "Chạm để khởi động lại và áp dụng phiên bản mới nhất"
   },
+  "feedback": {
+    "fabLabel": "Báo cáo lỗi",
+    "formTitle": "Báo cáo lỗi",
+    "submitButtonLabel": "Gửi",
+    "cancelButtonLabel": "Hủy",
+    "nameLabel": "Tên",
+    "namePlaceholder": "Tên của bạn",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Mô tả",
+    "messagePlaceholder": "Lỗi là gì? Bạn mong đợi điều gì?",
+    "isRequiredLabel": "(bắt buộc)",
+    "successMessageText": "Cảm ơn phản hồi của bạn!",
+    "addScreenshotButtonLabel": "Thêm ảnh chụp màn hình",
+    "removeScreenshotButtonLabel": "Xóa ảnh chụp màn hình",
+    "captureScreenshotButtonLabel": "Chụp ảnh màn hình",
+    "errorTitle": "Lỗi",
+    "formError": "Vui lòng điền đầy đủ các trường bắt buộc.",
+    "emailError": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "captureScreenshotError": "Không thể chụp ảnh màn hình.",
+    "genericError": "Không thể gửi phản hồi do lỗi không mong muốn."
+  },
   "observability": {
     "title": "Quan sát",
     "articles": "Bài viết",

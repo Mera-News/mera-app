@@ -532,6 +532,28 @@
     "updateReady": "Обновление готово",
     "updateDescription": "Нажмите, чтобы перезапустить и применить последнюю версию"
   },
+  "feedback": {
+    "fabLabel": "Сообщить об ошибке",
+    "formTitle": "Сообщить об ошибке",
+    "submitButtonLabel": "Отправить",
+    "cancelButtonLabel": "Отмена",
+    "nameLabel": "Имя",
+    "namePlaceholder": "Ваше имя",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Описание",
+    "messagePlaceholder": "В чём заключается ошибка? Что вы ожидали увидеть?",
+    "isRequiredLabel": "(обязательно)",
+    "successMessageText": "Спасибо за ваш отзыв!",
+    "addScreenshotButtonLabel": "Добавить скриншот",
+    "removeScreenshotButtonLabel": "Удалить скриншот",
+    "captureScreenshotButtonLabel": "Сделать скриншот",
+    "errorTitle": "Ошибка",
+    "formError": "Пожалуйста, заполните все обязательные поля.",
+    "emailError": "Пожалуйста, введите действительный адрес электронной почты.",
+    "captureScreenshotError": "Не удалось сделать скриншот.",
+    "genericError": "Не удалось отправить отзыв из-за непредвиденной ошибки."
+  },
   "observability": {
     "title": "Наблюдаемость",
     "articles": "Статьи",

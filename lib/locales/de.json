@@ -532,6 +532,28 @@
     "updateReady": "Update bereit",
     "updateDescription": "Tippen Sie, um neu zu starten und die neueste Version zu installieren"
   },
+  "feedback": {
+    "fabLabel": "Fehler melden",
+    "formTitle": "Fehler melden",
+    "submitButtonLabel": "Senden",
+    "cancelButtonLabel": "Abbrechen",
+    "nameLabel": "Name",
+    "namePlaceholder": "Ihr Name",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Beschreibung",
+    "messagePlaceholder": "Was ist der Fehler? Was hatten Sie erwartet?",
+    "isRequiredLabel": "(erforderlich)",
+    "successMessageText": "Danke für Ihr Feedback!",
+    "addScreenshotButtonLabel": "Screenshot hinzufügen",
+    "removeScreenshotButtonLabel": "Screenshot entfernen",
+    "captureScreenshotButtonLabel": "Screenshot aufnehmen",
+    "errorTitle": "Fehler",
+    "formError": "Bitte füllen Sie alle erforderlichen Felder aus.",
+    "emailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "captureScreenshotError": "Screenshot konnte nicht aufgenommen werden.",
+    "genericError": "Feedback konnte aufgrund eines unerwarteten Fehlers nicht gesendet werden."
+  },
   "observability": {
     "title": "Beobachtbarkeit",
     "articles": "Artikel",

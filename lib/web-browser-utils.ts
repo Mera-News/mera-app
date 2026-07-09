@@ -2,8 +2,30 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 import { REFERRER_SOURCE } from './config/branding';
+import { useAppLanguageStore } from './stores/app-language-store';
 
 const REFERRER_PARAMS = `utm_source=${REFERRER_SOURCE}&utm_medium=referral`;
+
+/**
+ * Appends the user's current app language as a `?lang=<code>` param so a
+ * first-party page (privacy, terms, content policy) opens in that language.
+ * English (the default) is left as-is to keep canonical URLs clean, and an
+ * existing `lang` param is never overridden. Reads the language store
+ * non-reactively — safe to call from event handlers.
+ */
+export function withAppLanguage(url: string): string {
+    if (!url) return url;
+    if (/[?&]lang=/i.test(url)) return url;
+
+    const lang = useAppLanguageStore.getState().appLanguage;
+    if (!lang || lang === 'en') return url;
+
+    const hashIndex = url.indexOf('#');
+    const fragment = hashIndex >= 0 ? url.slice(hashIndex) : '';
+    const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+    const separator = base.includes('?') ? '&' : '?';
+    return `${base}${separator}lang=${encodeURIComponent(lang)}${fragment}`;
+}
 
 /**
  * Appends Mera's UTM referrer params to a publisher article URL so the

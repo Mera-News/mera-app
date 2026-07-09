@@ -24,7 +24,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
@@ -601,7 +601,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                             {isOnDeviceProcessing
                                 ? t('configPanel.privacyOnDevice')
                                 : t('configPanel.privacyCloud')}{' '}
-                            <Text className="text-primary-400 underline text-sm" onPress={() => openInAppBrowser(PRIVACY_URL)}>
+                            <Text className="text-primary-400 underline text-sm" onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}>
                                 {t('configPanel.privacyPolicy')}
                             </Text>
                         </Text>

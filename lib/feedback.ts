@@ -1,11 +1,16 @@
-// Single entry point for opening Sentry's built-in User Feedback widget.
+// Single entry point for opening the "Report a Bug" feedback form.
+//
+// The form is Sentry's `FeedbackWidget` component, rendered by us in
+// FeedbackWidgetModal so its labels can be localized (see that component). We
+// don't call Sentry.showFeedbackWidget() — that native path freezes English
+// labels at Sentry.init(), before the user's language is applied.
 //
 // Sentry.init only runs when SENTRY_ENABLED is true (production, or a dev build
-// with EXPO_PUBLIC_SENTRY_IN_DEV=true — see lib/sentry-init.ts). Without init the
-// feedbackIntegration isn't registered and showFeedbackWidget would no-op, so we
-// gate on the same flag and route both triggers (Preferences row + FAB) here.
+// with EXPO_PUBLIC_SENTRY_IN_DEV=true — see lib/sentry-init.ts). Without init,
+// captureFeedback (called by FeedbackWidget on submit) no-ops, so we gate on the
+// same flag and route both triggers (Preferences row + FAB) here.
 
-import * as Sentry from '@sentry/react-native';
+import { useFeedbackStore } from './stores/feedback-store';
 import { SENTRY_ENABLED } from './sentry-init';
 
 export function showFeedback(): void {
@@ -15,5 +20,5 @@ export function showFeedback(): void {
     );
     return;
   }
-  Sentry.showFeedbackWidget();
+  useFeedbackStore.getState().show();
 }

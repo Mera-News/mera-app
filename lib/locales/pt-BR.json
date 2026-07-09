@@ -532,6 +532,28 @@
     "updateReady": "Atualização disponível",
     "updateDescription": "Toque para reiniciar e aplicar a versão mais recente"
   },
+  "feedback": {
+    "fabLabel": "Relatar um problema",
+    "formTitle": "Relatar um problema",
+    "submitButtonLabel": "Enviar",
+    "cancelButtonLabel": "Cancelar",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Seu nome",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Descrição",
+    "messagePlaceholder": "Qual é o problema? O que você esperava que acontecesse?",
+    "isRequiredLabel": "(obrigatório)",
+    "successMessageText": "Obrigado pelo seu feedback!",
+    "addScreenshotButtonLabel": "Adicionar uma captura de tela",
+    "removeScreenshotButtonLabel": "Remover captura de tela",
+    "captureScreenshotButtonLabel": "Tirar uma captura de tela",
+    "errorTitle": "Erro",
+    "formError": "Preencha todos os campos obrigatórios.",
+    "emailError": "Digite um endereço de e-mail válido.",
+    "captureScreenshotError": "Falha ao capturar a tela.",
+    "genericError": "Não foi possível enviar o feedback devido a um erro inesperado."
+  },
   "observability": {
     "title": "Observabilidade",
     "articles": "Artigos",

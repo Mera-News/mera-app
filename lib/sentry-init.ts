@@ -53,33 +53,23 @@ if (SENTRY_ENABLED) {
     // is a belt-and-suspenders defense in case a future contributor re-adds it.
     sendDefaultPii: false,
     integrations: [
+      // We render the feedback form ourselves via the <FeedbackWidget> component
+      // (components/custom/FeedbackWidgetModal.tsx) so its labels can be
+      // localized — the native showFeedbackWidget() freezes English labels at
+      // init, before the user's language is applied. This integration stays
+      // registered only to supply the widget's THEME (FeedbackWidget reads
+      // colorScheme/themeDark via getTheme()); labels and general config
+      // (showName, enableTakeScreenshot, …) live on the component. Dark-mode-only
+      // app; the accent colors style the submit button to brand purple
+      // (Mera orange, primary-400 = rgb(231,138,83)).
       Sentry.feedbackIntegration({
-        // Dark-mode-only app; the accent colors style the submit button to the
-        // brand purple (primary-500 = #a78bfa).
         colorScheme: 'dark',
         themeDark: {
           background: '#000000',
           foreground: '#ffffff',
-          accentBackground: '#a78bfa',
+          accentBackground: 'rgb(231,138,83)',
           accentForeground: '#000000',
         },
-        // `logger.setUser` is intentionally never called (privacy invariant), so
-        // these fields start empty and the user opts in by typing. Keep optional.
-        showName: true,
-        showEmail: true,
-        isNameRequired: false,
-        isEmailRequired: false,
-        // "Take Screenshot" captures the current app screen via Sentry's native
-        // module (already in the build) — no expo-image-picker, no photo-library
-        // permission. We intentionally omit `enableScreenshot`/`imagePicker`
-        // (pick-from-library); a news app doesn't need camera-roll attachments.
-        enableTakeScreenshot: true,
-        // Labels. These are fixed at init and are NOT reactive to the user's
-        // chosen language — the built-in form ships English-only for now.
-        formTitle: 'Report a Bug',
-        submitButtonLabel: 'Send',
-        messagePlaceholder: "What's the bug? What did you expect?",
-        successMessageText: 'Thanks for your feedback!',
       }),
     ],
     // Defensive scrubber: strip residual PII and cap free-form payloads

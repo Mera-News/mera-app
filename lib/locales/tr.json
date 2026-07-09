@@ -532,6 +532,28 @@
     "updateReady": "Güncelleme hazır",
     "updateDescription": "Yeniden başlatmak ve en son sürümü uygulamak için dokun"
   },
+  "feedback": {
+    "fabLabel": "Hata bildir",
+    "formTitle": "Hata Bildir",
+    "submitButtonLabel": "Gönder",
+    "cancelButtonLabel": "İptal",
+    "nameLabel": "Ad",
+    "namePlaceholder": "Adınız",
+    "emailLabel": "E-posta",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Açıklama",
+    "messagePlaceholder": "Hata nedir? Ne olmasını bekliyordunuz?",
+    "isRequiredLabel": "(zorunlu)",
+    "successMessageText": "Geri bildiriminiz için teşekkürler!",
+    "addScreenshotButtonLabel": "Ekran görüntüsü ekle",
+    "removeScreenshotButtonLabel": "Ekran görüntüsünü kaldır",
+    "captureScreenshotButtonLabel": "Ekran görüntüsü al",
+    "errorTitle": "Hata",
+    "formError": "Lütfen tüm zorunlu alanları doldurun.",
+    "emailError": "Lütfen geçerli bir e-posta adresi girin.",
+    "captureScreenshotError": "Ekran görüntüsü alınamadı.",
+    "genericError": "Beklenmeyen bir hata nedeniyle geri bildirim gönderilemedi."
+  },
   "observability": {
     "title": "Gözlemlenebilirlik",
     "articles": "Makaleler",

@@ -532,6 +532,28 @@
     "updateReady": "Update gereed",
     "updateDescription": "Tik om opnieuw te starten en de nieuwste versie toe te passen"
   },
+  "feedback": {
+    "fabLabel": "Bug melden",
+    "formTitle": "Bug Melden",
+    "submitButtonLabel": "Verzenden",
+    "cancelButtonLabel": "Annuleren",
+    "nameLabel": "Naam",
+    "namePlaceholder": "Je naam",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Beschrijving",
+    "messagePlaceholder": "Wat is de bug? Wat had je verwacht?",
+    "isRequiredLabel": "(verplicht)",
+    "successMessageText": "Bedankt voor je feedback!",
+    "addScreenshotButtonLabel": "Screenshot toevoegen",
+    "removeScreenshotButtonLabel": "Screenshot verwijderen",
+    "captureScreenshotButtonLabel": "Screenshot maken",
+    "errorTitle": "Fout",
+    "formError": "Vul alle verplichte velden in.",
+    "emailError": "Voer een geldig e-mailadres in.",
+    "captureScreenshotError": "Screenshot maken is mislukt.",
+    "genericError": "Feedback versturen is mislukt door een onverwachte fout."
+  },
   "observability": {
     "title": "Observabiliteit",
     "articles": "Artikelen",

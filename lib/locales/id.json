@@ -532,6 +532,28 @@
     "updateReady": "Pembaruan siap",
     "updateDescription": "Ketuk untuk memulai ulang dan menerapkan versi terbaru"
   },
+  "feedback": {
+    "fabLabel": "Laporkan bug",
+    "formTitle": "Laporkan Bug",
+    "submitButtonLabel": "Kirim",
+    "cancelButtonLabel": "Batal",
+    "nameLabel": "Nama",
+    "namePlaceholder": "Nama Anda",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Deskripsi",
+    "messagePlaceholder": "Apa bug-nya? Apa yang Anda harapkan?",
+    "isRequiredLabel": "(wajib diisi)",
+    "successMessageText": "Terima kasih atas masukan Anda!",
+    "addScreenshotButtonLabel": "Tambahkan tangkapan layar",
+    "removeScreenshotButtonLabel": "Hapus tangkapan layar",
+    "captureScreenshotButtonLabel": "Ambil tangkapan layar",
+    "errorTitle": "Kesalahan",
+    "formError": "Harap isi semua kolom yang wajib diisi.",
+    "emailError": "Harap masukkan alamat email yang valid.",
+    "captureScreenshotError": "Gagal mengambil tangkapan layar.",
+    "genericError": "Tidak dapat mengirim masukan karena terjadi kesalahan yang tidak terduga."
+  },
   "observability": {
     "title": "Keterlihatan",
     "articles": "Artikel",

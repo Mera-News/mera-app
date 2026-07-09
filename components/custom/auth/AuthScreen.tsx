@@ -17,7 +17,7 @@ import { sendOTP } from '@/lib/auth-client';
 import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { getAppVersionLabel } from '@/lib/version';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -39,15 +39,15 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
     const { t } = useTranslation();
 
     const handlePrivacyPolicyPress = async () => {
-        await openInAppBrowser(PRIVACY_URL);
+        await openInAppBrowser(withAppLanguage(PRIVACY_URL));
     };
 
     const handleTermsOfServicePress = async () => {
-        await openInAppBrowser(TERMS_URL);
+        await openInAppBrowser(withAppLanguage(TERMS_URL));
     };
 
     const handleContentPolicyPress = async () => {
-        await openInAppBrowser(CONTENT_POLICY_URL);
+        await openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL));
     };
 
     const handleGithubPress = async () => {

@@ -532,6 +532,28 @@
     "updateReady": "Actualización lista",
     "updateDescription": "Toca para reiniciar y aplicar la última versión"
   },
+  "feedback": {
+    "fabLabel": "Reportar un error",
+    "formTitle": "Reportar un error",
+    "submitButtonLabel": "Enviar",
+    "cancelButtonLabel": "Cancelar",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Descripción",
+    "messagePlaceholder": "¿Cuál es el error? ¿Qué esperabas que sucediera?",
+    "isRequiredLabel": "(obligatorio)",
+    "successMessageText": "¡Gracias por tus comentarios!",
+    "addScreenshotButtonLabel": "Añadir una captura de pantalla",
+    "removeScreenshotButtonLabel": "Eliminar captura de pantalla",
+    "captureScreenshotButtonLabel": "Tomar una captura de pantalla",
+    "errorTitle": "Error",
+    "formError": "Por favor, completa todos los campos obligatorios.",
+    "emailError": "Por favor, ingresa una dirección de correo electrónico válida.",
+    "captureScreenshotError": "No se pudo capturar la pantalla.",
+    "genericError": "No se pudieron enviar los comentarios debido a un error inesperado."
+  },
   "observability": {
     "title": "Observabilidad",
     "articles": "Artículos",

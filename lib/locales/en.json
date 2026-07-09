@@ -578,7 +578,26 @@
     "updateDescription": "Tap to restart and apply the latest version"
   },
   "feedback": {
-    "fabLabel": "Report a bug"
+    "fabLabel": "Report a bug",
+    "formTitle": "Report a Bug",
+    "submitButtonLabel": "Send",
+    "cancelButtonLabel": "Cancel",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your Name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Description",
+    "messagePlaceholder": "What's the bug? What did you expect?",
+    "isRequiredLabel": "(required)",
+    "successMessageText": "Thanks for your feedback!",
+    "addScreenshotButtonLabel": "Add a screenshot",
+    "removeScreenshotButtonLabel": "Remove screenshot",
+    "captureScreenshotButtonLabel": "Take a screenshot",
+    "errorTitle": "Error",
+    "formError": "Please fill out all required fields.",
+    "emailError": "Please enter a valid email address.",
+    "captureScreenshotError": "Failed to capture screenshot.",
+    "genericError": "Unable to send feedback due to an unexpected error."
   },
   "observability": {
     "title": "Observability",

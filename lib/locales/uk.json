@@ -532,6 +532,28 @@
     "updateReady": "Оновлення готове",
     "updateDescription": "Торкніться, щоб перезапустити та застосувати останню версію"
   },
+  "feedback": {
+    "fabLabel": "Повідомити про помилку",
+    "formTitle": "Повідомити про помилку",
+    "submitButtonLabel": "Надіслати",
+    "cancelButtonLabel": "Скасувати",
+    "nameLabel": "Ім'я",
+    "namePlaceholder": "Ваше ім'я",
+    "emailLabel": "Електронна пошта",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Опис",
+    "messagePlaceholder": "У чому проблема? Що ви очікували?",
+    "isRequiredLabel": "(обов'язково)",
+    "successMessageText": "Дякуємо за ваш відгук!",
+    "addScreenshotButtonLabel": "Додати знімок екрана",
+    "removeScreenshotButtonLabel": "Видалити знімок екрана",
+    "captureScreenshotButtonLabel": "Зробити знімок екрана",
+    "errorTitle": "Помилка",
+    "formError": "Будь ласка, заповніть усі обов'язкові поля.",
+    "emailError": "Будь ласка, введіть дійсну електронну адресу.",
+    "captureScreenshotError": "Не вдалося зробити знімок екрана.",
+    "genericError": "Не вдалося надіслати відгук через непередбачену помилку."
+  },
   "observability": {
     "title": "Спостережуваність",
     "articles": "Статті",

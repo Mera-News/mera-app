@@ -532,6 +532,28 @@
     "updateReady": "アップデートの準備ができました",
     "updateDescription": "タップして再起動し、最新バージョンを適用してください"
   },
+  "feedback": {
+    "fabLabel": "バグを報告",
+    "formTitle": "バグを報告",
+    "submitButtonLabel": "送信",
+    "cancelButtonLabel": "キャンセル",
+    "nameLabel": "名前",
+    "namePlaceholder": "お名前",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "説明",
+    "messagePlaceholder": "どのようなバグですか?本来どうなることを期待していましたか?",
+    "isRequiredLabel": "(必須)",
+    "successMessageText": "フィードバックをありがとうございます!",
+    "addScreenshotButtonLabel": "スクリーンショットを追加",
+    "removeScreenshotButtonLabel": "スクリーンショットを削除",
+    "captureScreenshotButtonLabel": "スクリーンショットを撮影",
+    "errorTitle": "エラー",
+    "formError": "必須項目をすべて入力してください。",
+    "emailError": "有効なメールアドレスを入力してください。",
+    "captureScreenshotError": "スクリーンショットの撮影に失敗しました。",
+    "genericError": "予期しないエラーによりフィードバックを送信できませんでした。"
+  },
   "observability": {
     "title": "オブザーバビリティ",
     "articles": "記事",

@@ -532,6 +532,28 @@
     "updateReady": "อัปเดตพร้อมแล้ว",
     "updateDescription": "แตะเพื่อรีสตาร์ทและใช้เวอร์ชันล่าสุด"
   },
+  "feedback": {
+    "fabLabel": "รายงานปัญหา",
+    "formTitle": "รายงานปัญหา",
+    "submitButtonLabel": "ส่ง",
+    "cancelButtonLabel": "ยกเลิก",
+    "nameLabel": "ชื่อ",
+    "namePlaceholder": "ชื่อของคุณ",
+    "emailLabel": "อีเมล",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "รายละเอียด",
+    "messagePlaceholder": "ปัญหาคืออะไร คุณคาดหวังผลลัพธ์แบบไหน",
+    "isRequiredLabel": "(จำเป็น)",
+    "successMessageText": "ขอบคุณสำหรับความคิดเห็นของคุณ!",
+    "addScreenshotButtonLabel": "เพิ่มภาพหน้าจอ",
+    "removeScreenshotButtonLabel": "ลบภาพหน้าจอ",
+    "captureScreenshotButtonLabel": "ถ่ายภาพหน้าจอ",
+    "errorTitle": "ข้อผิดพลาด",
+    "formError": "กรุณากรอกข้อมูลในช่องที่จำเป็นทั้งหมด",
+    "emailError": "กรุณากรอกที่อยู่อีเมลที่ถูกต้อง",
+    "captureScreenshotError": "ไม่สามารถถ่ายภาพหน้าจอได้",
+    "genericError": "ไม่สามารถส่งความคิดเห็นได้เนื่องจากข้อผิดพลาดที่ไม่คาดคิด"
+  },
   "observability": {
     "title": "การตรวจสอบ",
     "articles": "บทความ",

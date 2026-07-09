@@ -532,6 +532,28 @@
     "updateReady": "업데이트 준비 완료",
     "updateDescription": "탭하여 재시작하고 최신 버전을 적용하세요"
   },
+  "feedback": {
+    "fabLabel": "버그 신고",
+    "formTitle": "버그 신고",
+    "submitButtonLabel": "보내기",
+    "cancelButtonLabel": "취소",
+    "nameLabel": "이름",
+    "namePlaceholder": "이름을 입력하세요",
+    "emailLabel": "이메일",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "설명",
+    "messagePlaceholder": "어떤 버그인가요? 어떻게 동작할 것으로 예상했나요?",
+    "isRequiredLabel": "(필수)",
+    "successMessageText": "소중한 의견 감사합니다!",
+    "addScreenshotButtonLabel": "스크린샷 추가",
+    "removeScreenshotButtonLabel": "스크린샷 제거",
+    "captureScreenshotButtonLabel": "스크린샷 촬영",
+    "errorTitle": "오류",
+    "formError": "필수 항목을 모두 입력해 주세요.",
+    "emailError": "올바른 이메일 주소를 입력해 주세요.",
+    "captureScreenshotError": "스크린샷 촬영에 실패했습니다.",
+    "genericError": "예기치 않은 오류로 인해 피드백을 보낼 수 없습니다."
+  },
   "observability": {
     "title": "관찰성",
     "articles": "기사",

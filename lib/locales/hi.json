@@ -532,6 +532,28 @@
     "updateReady": "अपडेट तैयार है",
     "updateDescription": "नवीनतम संस्करण लागू करने के लिए टैप करके रिस्टार्ट करें"
   },
+  "feedback": {
+    "fabLabel": "बग की रिपोर्ट करें",
+    "formTitle": "बग की रिपोर्ट करें",
+    "submitButtonLabel": "भेजें",
+    "cancelButtonLabel": "रद्द करें",
+    "nameLabel": "नाम",
+    "namePlaceholder": "आपका नाम",
+    "emailLabel": "ईमेल",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "विवरण",
+    "messagePlaceholder": "बग क्या है? आपने क्या अपेक्षा की थी?",
+    "isRequiredLabel": "(आवश्यक)",
+    "successMessageText": "आपकी प्रतिक्रिया के लिए धन्यवाद!",
+    "addScreenshotButtonLabel": "स्क्रीनशॉट जोड़ें",
+    "removeScreenshotButtonLabel": "स्क्रीनशॉट हटाएं",
+    "captureScreenshotButtonLabel": "स्क्रीनशॉट लें",
+    "errorTitle": "त्रुटि",
+    "formError": "कृपया सभी आवश्यक फ़ील्ड भरें।",
+    "emailError": "कृपया एक मान्य ईमेल पता दर्ज करें।",
+    "captureScreenshotError": "स्क्रीनशॉट कैप्चर करने में विफल।",
+    "genericError": "एक अप्रत्याशित त्रुटि के कारण प्रतिक्रिया नहीं भेजी जा सकी।"
+  },
   "observability": {
     "title": "ऑब्ज़र्वेबिलिटी",
     "articles": "लेख",

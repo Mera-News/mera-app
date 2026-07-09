@@ -532,6 +532,28 @@
     "updateReady": "التحديث جاهز",
     "updateDescription": "اضغط لإعادة التشغيل وتطبيق أحدث إصدار"
   },
+  "feedback": {
+    "fabLabel": "الإبلاغ عن خطأ",
+    "formTitle": "الإبلاغ عن خطأ",
+    "submitButtonLabel": "إرسال",
+    "cancelButtonLabel": "إلغاء",
+    "nameLabel": "الاسم",
+    "namePlaceholder": "اسمك",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "الوصف",
+    "messagePlaceholder": "ما هو الخطأ؟ ماذا كنت تتوقع؟",
+    "isRequiredLabel": "(مطلوب)",
+    "successMessageText": "شكرًا لملاحظاتك!",
+    "addScreenshotButtonLabel": "إضافة لقطة شاشة",
+    "removeScreenshotButtonLabel": "إزالة لقطة الشاشة",
+    "captureScreenshotButtonLabel": "التقاط لقطة شاشة",
+    "errorTitle": "خطأ",
+    "formError": "يرجى ملء جميع الحقول المطلوبة.",
+    "emailError": "يرجى إدخال عنوان بريد إلكتروني صالح.",
+    "captureScreenshotError": "فشل في التقاط لقطة الشاشة.",
+    "genericError": "تعذّر إرسال الملاحظات بسبب خطأ غير متوقع."
+  },
   "observability": {
     "title": "المراقبة",
     "articles": "المقالات",

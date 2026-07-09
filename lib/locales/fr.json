@@ -532,6 +532,28 @@
     "updateReady": "Mise à jour disponible",
     "updateDescription": "Appuyez pour redémarrer et appliquer la dernière version"
   },
+  "feedback": {
+    "fabLabel": "Signaler un bug",
+    "formTitle": "Signaler un bug",
+    "submitButtonLabel": "Envoyer",
+    "cancelButtonLabel": "Annuler",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Votre nom",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Description",
+    "messagePlaceholder": "Quel est le bug ? Qu'attendiez-vous ?",
+    "isRequiredLabel": "(requis)",
+    "successMessageText": "Merci pour votre retour !",
+    "addScreenshotButtonLabel": "Ajouter une capture d'écran",
+    "removeScreenshotButtonLabel": "Supprimer la capture d'écran",
+    "captureScreenshotButtonLabel": "Prendre une capture d'écran",
+    "errorTitle": "Erreur",
+    "formError": "Veuillez remplir tous les champs obligatoires.",
+    "emailError": "Veuillez entrer une adresse e-mail valide.",
+    "captureScreenshotError": "Échec de la capture d'écran.",
+    "genericError": "Impossible d'envoyer le retour en raison d'une erreur inattendue."
+  },
   "observability": {
     "title": "Observabilité",
     "articles": "Articles",

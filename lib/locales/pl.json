@@ -532,6 +532,28 @@
     "updateReady": "Aktualizacja gotowa",
     "updateDescription": "Dotknij, aby uruchomić ponownie i zastosować najnowszą wersję"
   },
+  "feedback": {
+    "fabLabel": "Zgłoś błąd",
+    "formTitle": "Zgłoś błąd",
+    "submitButtonLabel": "Wyślij",
+    "cancelButtonLabel": "Anuluj",
+    "nameLabel": "Imię",
+    "namePlaceholder": "Twoje imię",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Opis",
+    "messagePlaceholder": "Na czym polega błąd? Czego się spodziewałeś?",
+    "isRequiredLabel": "(wymagane)",
+    "successMessageText": "Dziękujemy za opinię!",
+    "addScreenshotButtonLabel": "Dodaj zrzut ekranu",
+    "removeScreenshotButtonLabel": "Usuń zrzut ekranu",
+    "captureScreenshotButtonLabel": "Zrób zrzut ekranu",
+    "errorTitle": "Błąd",
+    "formError": "Wypełnij wszystkie wymagane pola.",
+    "emailError": "Podaj prawidłowy adres e-mail.",
+    "captureScreenshotError": "Nie udało się zrobić zrzutu ekranu.",
+    "genericError": "Nie udało się wysłać opinii z powodu nieoczekiwanego błędu."
+  },
   "observability": {
     "title": "Obserwowalność",
     "articles": "Artykuły",

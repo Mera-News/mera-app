@@ -532,6 +532,28 @@
     "updateReady": "更新已就绪",
     "updateDescription": "点击重启以应用最新版本"
   },
+  "feedback": {
+    "fabLabel": "报告问题",
+    "formTitle": "报告问题",
+    "submitButtonLabel": "发送",
+    "cancelButtonLabel": "取消",
+    "nameLabel": "姓名",
+    "namePlaceholder": "您的姓名",
+    "emailLabel": "电子邮箱",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "问题描述",
+    "messagePlaceholder": "遇到了什么问题？您期望的结果是什么？",
+    "isRequiredLabel": "（必填）",
+    "successMessageText": "感谢您的反馈！",
+    "addScreenshotButtonLabel": "添加截图",
+    "removeScreenshotButtonLabel": "移除截图",
+    "captureScreenshotButtonLabel": "截取屏幕截图",
+    "errorTitle": "错误",
+    "formError": "请填写所有必填字段。",
+    "emailError": "请输入有效的电子邮箱地址。",
+    "captureScreenshotError": "截屏失败。",
+    "genericError": "由于意外错误，无法发送反馈。"
+  },
   "observability": {
     "title": "可观测性",
     "articles": "文章",

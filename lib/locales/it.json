@@ -532,6 +532,28 @@
     "updateReady": "Aggiornamento pronto",
     "updateDescription": "Tocca per riavviare e applicare l'ultima versione"
   },
+  "feedback": {
+    "fabLabel": "Segnala un bug",
+    "formTitle": "Segnala un Bug",
+    "submitButtonLabel": "Invia",
+    "cancelButtonLabel": "Annulla",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Il tuo nome",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.org",
+    "messageLabel": "Descrizione",
+    "messagePlaceholder": "Qual è il bug? Cosa ti aspettavi?",
+    "isRequiredLabel": "(obbligatorio)",
+    "successMessageText": "Grazie per il tuo feedback!",
+    "addScreenshotButtonLabel": "Aggiungi uno screenshot",
+    "removeScreenshotButtonLabel": "Rimuovi screenshot",
+    "captureScreenshotButtonLabel": "Scatta uno screenshot",
+    "errorTitle": "Errore",
+    "formError": "Compila tutti i campi obbligatori.",
+    "emailError": "Inserisci un indirizzo email valido.",
+    "captureScreenshotError": "Impossibile acquisire lo screenshot.",
+    "genericError": "Impossibile inviare il feedback a causa di un errore imprevisto."
+  },
   "observability": {
     "title": "Osservabilità",
     "articles": "Articoli",

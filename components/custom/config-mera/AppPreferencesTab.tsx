@@ -10,8 +10,9 @@ import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { getAppVersionLabel } from '@/lib/version';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { showFeedback } from '@/lib/feedback';
+import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
 import React from 'react';
@@ -105,6 +106,19 @@ const AppPreferencesTab: React.FC = () => {
         ]
         : [];
 
+    // "Report a Bug" row — only when Sentry is enabled (showFeedback() no-ops
+    // otherwise, so a dead row would be misleading). Same gate as FeedbackFab.
+    const feedbackOptions: PreferenceOption[] = SENTRY_ENABLED
+        ? [
+            {
+                id: 'report-bug',
+                title: t('preferences.reportBug'),
+                icon: 'bug-report',
+                onPress: showFeedback,
+            },
+        ]
+        : [];
+
     // Define preference options
     const preferenceOptions: PreferenceOption[] = [
         {
@@ -143,12 +157,7 @@ const AppPreferencesTab: React.FC = () => {
             icon: 'monitor-heart',
             onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
         },
-        {
-            id: 'report-bug',
-            title: t('preferences.reportBug'),
-            icon: 'bug-report',
-            onPress: showFeedback,
-        },
+        ...feedbackOptions,
         ...subscriptionOptions,
         {
             id: 'logout',
@@ -206,9 +215,9 @@ const AppPreferencesTab: React.FC = () => {
                 </VStack>
                 <Box className="items-center py-4">
                     <HStack space="sm" className="items-center justify-center flex-wrap mb-4">
-                        <PolicyPill label={t('preferences.privacyPolicy')} onPress={() => openInAppBrowser(PRIVACY_URL)} />
-                        <PolicyPill label={t('preferences.termsOfService')} onPress={() => openInAppBrowser(TERMS_URL)} />
-                        <PolicyPill label={t('preferences.contentPolicy')} onPress={() => openInAppBrowser(CONTENT_POLICY_URL)} />
+                        <PolicyPill label={t('preferences.privacyPolicy')} onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))} />
+                        <PolicyPill label={t('preferences.termsOfService')} onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))} />
+                        <PolicyPill label={t('preferences.contentPolicy')} onPress={() => openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL))} />
                     </HStack>
                     <HStack space="lg" className="items-center mb-3">
                         <Pressable onPress={() => openInAppBrowser(GITHUB_URL)} hitSlop={8}>
