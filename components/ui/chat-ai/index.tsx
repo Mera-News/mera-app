@@ -24,12 +24,12 @@ import {
   FlatList,
   type FlatListProps,
   type ListRenderItem,
-  Pressable,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { Button } from '@/components/ui/button';
 
 const ACCENT = 'rgb(231, 138, 83)';
 // Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
@@ -272,17 +272,20 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         onSubmitEditing={handleSend}
         style={styles.textInput}
       />
-      <Pressable
-        onPress={isSendDisabled ? undefined : handleSend}
-        disabled={isSendDisabled}
-        style={({ pressed }) => [
-          styles.sendButton,
-          isSendDisabled && styles.sendButtonDisabled,
-          pressed && styles.sendButtonPressed,
-        ]}
+      {/* Gluestack Button (className/tva-driven) rather than a Pressable with a
+          function-form style prop — NativeWind v4's babel interop drops that
+          form, which erased this button's orange fill at runtime (item-13 bug).
+          Dark-mode primary-400 = rgb(231,138,83); isDisabled dims via the
+          Button's built-in data-[disabled=true]:opacity-40. */}
+      <Button
+        onPress={handleSend}
+        isDisabled={isSendDisabled}
+        accessibilityLabel="Send"
+        hitSlop={8}
+        className="w-9 h-9 p-0 rounded-full bg-primary-400 data-[active=true]:bg-primary-300 data-[active=true]:scale-90"
       >
         <MaterialIcons name="arrow-upward" size={20} color="#FFFFFF" />
-      </Pressable>
+      </Button>
     </View>
   );
 });
@@ -356,20 +359,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     maxHeight: 140,
     textAlignVertical: 'top',
-  },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: ACCENT,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButtonDisabled: {
-    opacity: 0.4,
-  },
-  sendButtonPressed: {
-    transform: [{ scale: 0.9 }],
   },
 });
 

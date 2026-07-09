@@ -5,6 +5,7 @@
 // is mounted fresh on every open (unmount on close guarantees a fresh session).
 
 import MeraLogo from '@/components/custom/MeraLogo';
+import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -27,10 +28,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ACCENT = 'rgb(231,138,83)';
 const PANEL_BG = '#1a1a1a';
-// The app's destructive red — same token as the fact-delete trash icon
-// (#ef4444 = error-500). Used for the close button so its tap target reads clearly.
-const CLOSE_RED = '#ef4444';
-const CLOSE_RED_PRESSED = '#c53030';
 const BUBBLE_SIZE = 64; // diameter of the floating bubble the panel morphs from
 
 // Swipe-down-to-close thresholds (header grab zone only).
@@ -257,24 +254,29 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                             <Text style={styles.title}>{t('floatingChat.title')}</Text>
                         </View>
                     </GestureDetector>
-                    <Pressable
+                    {/* Gluestack Buttons (className/tva-driven), NOT Pressables with
+                        function-form style props: under NativeWind v4's babel interop
+                        the function form gets dropped, which erased these buttons'
+                        background fills at runtime (item-13 bug). Dark-mode tokens:
+                        primary-400 = rgb(231,138,83) (ACCENT), error-400 = #ef4444. */}
+                    <Button
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
-                        accessibilityRole="button"
-                        hitSlop={16}
-                        style={({ pressed }) => [styles.newChatButton, pressed && styles.newChatButtonPressed]}
+                        hitSlop={12}
+                        action="default"
+                        className="w-9 h-9 p-0 rounded-full bg-primary-400/25 data-[active=true]:bg-primary-400/40"
                     >
                         <MaterialIcons name="add-comment" size={20} color={ACCENT} />
-                    </Pressable>
-                    <Pressable
+                    </Button>
+                    <Button
                         onPress={onClosePress}
                         accessibilityLabel={t('floatingChat.close')}
-                        accessibilityRole="button"
-                        hitSlop={16}
-                        style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
+                        hitSlop={12}
+                        action="negative"
+                        className="w-9 h-9 p-0 rounded-full bg-error-400 data-[active=true]:bg-error-300"
                     >
                         <MaterialIcons name="close" size={22} color="#fff" />
-                    </Pressable>
+                    </Button>
                 </Animated.View>
 
                 {/* The panel itself shrinks above the keyboard (see panelStyle), so
@@ -321,30 +323,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 17,
         fontWeight: '600',
-    },
-    newChatButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(231, 138, 83, 0.14)',
-        zIndex: 3,
-    },
-    newChatButtonPressed: {
-        backgroundColor: 'rgba(231, 138, 83, 0.28)',
-    },
-    closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: CLOSE_RED,
-        zIndex: 3,
-    },
-    closeButtonPressed: {
-        backgroundColor: CLOSE_RED_PRESSED,
     },
     body: {
         flex: 1,
