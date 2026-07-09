@@ -10,7 +10,7 @@ export default function FeedSyncLastUpdateText({ lastProcessedLabel }: FeedSyncL
     const { t } = useTranslation();
     if (!lastProcessedLabel) return null;
     return (
-        <Text size="sm" className="text-gray-400">
+        <Text size="sm" className="text-gray-400" numberOfLines={1}>
             {t('feed.updatedAt', { time: lastProcessedLabel })}
         </Text>
     );

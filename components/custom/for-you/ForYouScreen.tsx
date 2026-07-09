@@ -661,29 +661,29 @@ const MeraNewsScreen: React.FC = () => {
         <Box className="flex-1 bg-black">
             <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
                 {/* Title row — static */}
-                <HStack className="items-center justify-between mb-1">
-                    <HStack className="items-center" space="sm">
-                        <Heading size="3xl" className="text-white">{t('feed.forYou')}</Heading>
+                <HStack className="items-start justify-between mb-1">
+                    <VStack className="flex-1 min-w-0 mr-3">
+                        <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.forYou')}</Heading>
                         <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
-                    </HStack>
-                    <HStack className="items-center" space="sm">
+                    </VStack>
+                    <HStack className="items-center flex-shrink-0" space="sm">
                         <Pressable
                             onPress={() => router.push('/logged-in/visited-publications')}
                             hitSlop={12}
                             accessibilityRole="button"
                             accessibilityLabel={t('publicationVisits.visitedListTitle')}
-                            className="p-3 rounded-full bg-primary-500"
+                            className="p-3 rounded-full border border-primary-500 bg-transparent"
                         >
-                            <MaterialIcons name="history" size={22} color="#ffffff" />
+                            <MaterialIcons name="history" size={22} color="#EDA77E" />
                         </Pressable>
                         <Pressable
                             onPress={() => router.push('/logged-in/saved-suggestions')}
                             hitSlop={12}
                             accessibilityRole="button"
                             accessibilityLabel={t('savedSuggestions.title')}
-                            className="p-3 rounded-full bg-primary-500"
+                            className="p-3 rounded-full border border-primary-500 bg-transparent"
                         >
-                            <MaterialIcons name="bookmark" size={22} color="#ffffff" />
+                            <MaterialIcons name="bookmark" size={22} color="#EDA77E" />
                         </Pressable>
                         <Pressable
                             onPress={openConfigPanel}
