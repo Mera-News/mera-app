@@ -18,7 +18,8 @@
     "loggingOut": "Déconnexion...",
     "never": "Jamais",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "saving": "Enregistrement..."
   },
   "auth": {
     "emailPlaceholder": "Entrez votre adresse e-mail",
@@ -47,7 +48,8 @@
       "switchBody": "Le changement d'utilisateur supprimera définitivement toutes les données de cet utilisateur sur cet appareil. Cette action est irréversible.",
       "switchConfirm": "Oui, effacer les données et changer d'utilisateur",
       "switchCancel": "Annuler"
-    }
+    },
+    "contentPolicy": "Politique de contenu"
   },
   "account": {
     "pendingTitle": "Compte en attente d'approbation",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Tri sur votre téléphone",
       "completedTitle": "Tout est prêt",
       "completedMessage": "Votre fil est prêt"
+    },
+    "dailyLimit": {
+      "body": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil — de nouveaux articles seront débloqués demain.",
+      "bodyWithTime": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil — de nouveaux articles seront débloqués à {{time}}.",
+      "title": "Limite quotidienne d'articles atteinte"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Cet article n'est plus disponible",
     "storyUnavailable": "Cette histoire n'est plus disponible",
     "failedToLoad": "Impossible de charger l'article",
-    "articleNotFound": "Article introuvable"
+    "articleNotFound": "Article introuvable",
+    "readOn": "Lire sur {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Aucun flux disponible",
     "publishers": "Éditeurs",
     "noPublishers": "Aucun éditeur pour ce pays",
-    "noArticlesFound": "Aucun article trouvé"
+    "noArticlesFound": "Aucun article trouvé",
+    "togglePin": "Épingler / désépingler",
+    "topHeadlines": "À la une",
+    "viewTopHeadlines": "À la une"
   },
   "clusterDetail": {
     "translatable": "Cet article est en {{language}} et peut être traduit dans votre langue",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Déconnecté",
     "signedOutDescription": "Vous avez été déconnecté avec succès.",
     "logoutFailedTitle": "Échec de la déconnexion",
-    "logoutFailedDescription": "Un problème est survenu lors de la déconnexion. Veuillez réessayer."
+    "logoutFailedDescription": "Un problème est survenu lors de la déconnexion. Veuillez réessayer.",
+    "loggingOut": "Déconnexion..."
   },
   "notifications": {
     "title": "Notifications",
@@ -373,7 +385,11 @@
     "deletedTitle": "Données supprimées",
     "deletedDescription": "Les données sélectionnées ont été effacées avec succès.",
     "errorTitle": "Erreur",
-    "errorDescription": "Impossible de supprimer les données. Veuillez réessayer."
+    "errorDescription": "Impossible de supprimer les données. Veuillez réessayer.",
+    "factsDescription": "Vos informations et les sujets qu'elles génèrent — sur cet appareil",
+    "factsModalDescription": "Efface les informations que vous avez ajoutées et les sujets générés à partir d'elles. Les sujets n'existent que sur cet appareil — ils ne sont jamais stockés sur nos serveurs. Votre fil d'articles est également effacé, car il est construit à partir de ces sujets, et se reconstruit vide jusqu'à ce que vous ajoutiez de nouvelles informations.",
+    "locationDevice": "Sur l'appareil",
+    "locationServer": "Serveur"
   },
   "preferences": {
     "manageSettings": "Gérez les paramètres de votre application et votre compte",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Vous avez été déconnecté avec succès.",
     "logoutFailedTitle": "Échec de la déconnexion",
     "logoutFailedDescription": "Un problème est survenu lors de la déconnexion. Veuillez réessayer.",
-    "loggingOut": "Déconnexion..."
+    "loggingOut": "Déconnexion...",
+    "user": "Utilisateur : {{email}}",
+    "appVersion": "Version de l'app : {{version}}",
+    "contentPolicy": "Politique de contenu",
+    "reportBug": "Signaler un bug"
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -457,7 +477,10 @@
     "promoTooltip": "Vous pouvez tester gratuitement la formule Individual à l'occasion du lancement de l'application. Offre à durée limitée.",
     "individualPlan": "Formule Individual",
     "professionalPlan": "Formule Professional",
-    "promoInfoTitle": "Offre de lancement"
+    "promoInfoTitle": "Offre de lancement",
+    "gotItPromo": "Super ! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Offre de lancement 🎊"
   },
   "errors": {
     "somethingWentWrong": "Une erreur est survenue",
@@ -467,7 +490,21 @@
     "networkError": "Impossible de se connecter au serveur. Vérifiez votre réseau et les paramètres du point d'accès API.",
     "feedError": "Impossible de charger votre fil d'actualités. Veuillez réessayer.",
     "accountRestricted": "Compte restreint",
-    "accountRestrictedDescription": "Votre compte a été restreint. Veuillez contacter l'assistance."
+    "accountRestrictedDescription": "Votre compte a été restreint. Veuillez contacter l'assistance.",
+    "scoring": {
+      "generic": {
+        "message": "Un problème est survenu lors de la sélection des actualités pour vous. Nous continuons d'essayer — tirez vers le bas pour actualiser si cela persiste.",
+        "title": "Impossible de mettre à jour votre fil"
+      },
+      "offline": {
+        "message": "Nous ne parvenons pas à joindre le serveur pour sélectionner vos actualités. Vérifiez votre connexion — votre fil se mettra à jour de lui-même une fois de retour en ligne.",
+        "title": "Vous êtes hors ligne"
+      },
+      "server": {
+        "message": "Nous n'avons pas pu joindre le service d'actualités. C'est généralement bref — nous continuons d'essayer et votre fil se mettra à jour de lui-même.",
+        "title": "Service indisponible"
+      }
+    }
   },
   "download": {
     "modelDownloading": "Téléchargement de l'AI Model...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Session expirée — veuillez vous reconnecter",
     "noTopics": "Ajoutez des sujets pour voir vos actualités",
     "storageFull": "Libérez de l'espace sur l'appareil et réessayez",
-    "syncFailed": "Nous n'avons pas pu charger les derniers contenus. Tirez pour actualiser."
+    "syncFailed": "Nous n'avons pas pu charger les derniers contenus. Tirez pour actualiser.",
+    "dailyLimitReached": "Vous avez atteint la limite d'articles du jour. Plus d'actualités demain."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Supprimer",
+    "deleteConfirmMessage": "Cela supprimera l'article de votre liste enregistrée sur cet appareil.",
+    "deleteConfirmTitle": "Retirer l'article enregistré ?",
+    "empty": "Vous n'avez encore enregistré aucun article. Touchez le signet d'un article pour l'enregistrer pour plus tard.",
+    "note": "Ces articles sont enregistrés uniquement sur votre appareil. Ajoutez-les ou retirez-les à tout moment — ils restent ici jusqu'à ce que vous les supprimiez.",
+    "removedToastMessage": "Retiré des enregistrés",
+    "savedToastMessage": "Article enregistré pour plus tard",
+    "savedToastTitle": "Enregistré",
+    "title": "Enregistrés"
+  },
+  "subscription": {
+    "activating": "Activation de votre abonnement…",
+    "activationDelayed": "Votre achat est en cours de confirmation. Cela peut prendre un instant — touchez actualiser si cela ne se poursuit pas.",
+    "autoRenew": "Renouvellement automatique",
+    "customerCenter": "Gérer / annuler l'abonnement",
+    "dailyArticleLimit": "Limite quotidienne d'articles",
+    "description": "Abonnez-vous pour obtenir votre fil d'actualités personnalisé, sur l'appareil.",
+    "detailsSection": "Détails de l'abonnement",
+    "expiresOn": "Expire le",
+    "lifetime": "À vie",
+    "managePlan": "Gérer l'abonnement",
+    "periodIntro": "Introductif",
+    "periodLabel": "Période",
+    "periodNormal": "Standard",
+    "periodPromotional": "Promotionnel",
+    "periodTrial": "Essai gratuit",
+    "planIndividual": "Individuel",
+    "planLabel": "Forfait",
+    "planProfessional": "Professionnel",
+    "planPromo": "Promo",
+    "planSection": "Votre forfait",
+    "priceLabel": "Prix",
+    "renewsOn": "Renouvellement le",
+    "resetsOn": "Réinitialisation",
+    "restore": "Restaurer les achats",
+    "storeAppStore": "App Store",
+    "storeLabel": "Acheté via",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promotionnel",
+    "subscribe": "S'abonner",
+    "title": "Débloquez Mera News",
+    "usageSection": "Utilisation",
+    "usedToday": "Analysés aujourd'hui",
+    "viewPlans": "Voir les forfaits"
   }
 }

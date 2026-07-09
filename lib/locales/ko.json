@@ -18,7 +18,8 @@
     "loggingOut": "로그아웃 중...",
     "never": "없음",
     "yes": "예",
-    "no": "아니요"
+    "no": "아니요",
+    "saving": "저장 중..."
   },
   "auth": {
     "emailPlaceholder": "이메일 주소를 입력하세요",
@@ -47,7 +48,8 @@
       "switchBody": "사용자를 전환하면 이 기기에서 현재 사용자의 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다.",
       "switchConfirm": "예, 데이터를 삭제하고 사용자를 전환합니다",
       "switchCancel": "취소"
-    }
+    },
+    "contentPolicy": "콘텐츠 정책"
   },
   "account": {
     "pendingTitle": "계정 승인 대기 중",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "기기에서 점수 계산 중",
       "completedTitle": "모두 완료",
       "completedMessage": "피드가 준비되었습니다"
+    },
+    "dailyLimit": {
+      "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
+      "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
+      "title": "일일 기사 한도에 도달했습니다"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "이 기사는 더 이상 이용할 수 없습니다",
     "storyUnavailable": "이 스토리는 더 이상 이용할 수 없습니다",
     "failedToLoad": "기사를 불러오지 못했습니다",
-    "articleNotFound": "기사를 찾을 수 없습니다"
+    "articleNotFound": "기사를 찾을 수 없습니다",
+    "readOn": "{{publication}}에서 읽기"
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "이용 가능한 피드가 없습니다",
     "publishers": "발행사",
     "noPublishers": "이 국가에 발행사가 없습니다",
-    "noArticlesFound": "기사를 찾을 수 없습니다"
+    "noArticlesFound": "기사를 찾을 수 없습니다",
+    "togglePin": "고정 전환",
+    "topHeadlines": "주요 뉴스",
+    "viewTopHeadlines": "주요 뉴스"
   },
   "clusterDetail": {
     "translatable": "이 기사는 {{language}}로 작성되어 있으며 귀하의 언어로 번역할 수 있습니다",
@@ -232,7 +243,8 @@
     "signedOutTitle": "로그아웃 완료",
     "signedOutDescription": "성공적으로 로그아웃되었습니다.",
     "logoutFailedTitle": "로그아웃 실패",
-    "logoutFailedDescription": "로그아웃 중 문제가 발생했습니다. 다시 시도해 주세요."
+    "logoutFailedDescription": "로그아웃 중 문제가 발생했습니다. 다시 시도해 주세요.",
+    "loggingOut": "로그아웃 중..."
   },
   "notifications": {
     "title": "알림",
@@ -373,7 +385,11 @@
     "deletedTitle": "데이터 삭제됨",
     "deletedDescription": "선택한 데이터가 성공적으로 삭제되었습니다.",
     "errorTitle": "오류",
-    "errorDescription": "데이터를 삭제하지 못했습니다. 다시 시도해 주세요."
+    "errorDescription": "데이터를 삭제하지 못했습니다. 다시 시도해 주세요.",
+    "factsDescription": "이 기기에 저장된 회원님의 정보와 이를 기반으로 생성된 토픽",
+    "factsModalDescription": "추가한 정보와 이를 기반으로 생성된 토픽을 삭제합니다. 토픽은 이 기기에만 저장되며 서버에는 저장되지 않습니다. 기사 피드도 이 토픽으로 구성되므로 함께 삭제되며, 새 정보를 추가할 때까지 비어 있는 상태로 다시 구성됩니다.",
+    "locationDevice": "기기",
+    "locationServer": "서버"
   },
   "preferences": {
     "manageSettings": "앱 설정 및 계정 관리",
@@ -406,7 +422,11 @@
     "signedOutDescription": "성공적으로 로그아웃되었습니다.",
     "logoutFailedTitle": "로그아웃 실패",
     "logoutFailedDescription": "로그아웃 중 문제가 발생했습니다. 다시 시도해 주세요.",
-    "loggingOut": "로그아웃 중..."
+    "loggingOut": "로그아웃 중...",
+    "user": "사용자: {{email}}",
+    "appVersion": "앱 버전: {{version}}",
+    "contentPolicy": "콘텐츠 정책",
+    "reportBug": "버그 신고"
   },
   "configPanel": {
     "tabPersona": "페르소나",
@@ -457,7 +477,10 @@
     "promoTooltip": "앱 출시 기념으로 Individual 플랜을 무료로 사용해 보실 수 있습니다. 기간 한정 혜택입니다.",
     "individualPlan": "Individual 플랜",
     "professionalPlan": "Professional 플랜",
-    "promoInfoTitle": "출시 기념 혜택"
+    "promoInfoTitle": "출시 기념 혜택",
+    "gotItPromo": "좋아요! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 출시 기념 혜택 🎊"
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -467,7 +490,21 @@
     "networkError": "서버에 연결할 수 없습니다. 네트워크와 API 엔드포인트 설정을 확인해 주세요.",
     "feedError": "피드를 불러올 수 없습니다. 다시 시도해 주세요.",
     "accountRestricted": "계정 제한됨",
-    "accountRestrictedDescription": "계정이 제한되었습니다. 고객 지원에 문의해 주세요."
+    "accountRestrictedDescription": "계정이 제한되었습니다. 고객 지원에 문의해 주세요.",
+    "scoring": {
+      "generic": {
+        "message": "뉴스를 선별하는 중 문제가 발생했습니다. 계속 시도하고 있으니, 문제가 지속되면 아래로 당겨 새로고침하세요.",
+        "title": "피드를 업데이트하지 못했습니다"
+      },
+      "offline": {
+        "message": "뉴스를 선별하기 위해 서버에 연결할 수 없습니다. 연결 상태를 확인하세요. 다시 온라인이 되면 피드가 자동으로 업데이트됩니다.",
+        "title": "오프라인 상태입니다"
+      },
+      "server": {
+        "message": "뉴스 서비스에 연결할 수 없습니다. 보통 일시적인 문제이며, 계속 시도하는 동안 피드가 자동으로 업데이트됩니다.",
+        "title": "서비스를 이용할 수 없음"
+      }
+    }
   },
   "download": {
     "modelDownloading": "AI 모델 다운로드 중...",
@@ -599,6 +636,53 @@
     "sessionExpired": "세션이 만료되었습니다 — 다시 로그인해 주세요",
     "noTopics": "토픽을 추가하여 뉴스를 확인하세요",
     "storageFull": "기기 저장 공간을 확보하고 다시 시도해 주세요",
-    "syncFailed": "최신 콘텐츠를 불러올 수 없습니다. 당겨서 새로고침해 주세요."
+    "syncFailed": "최신 콘텐츠를 불러올 수 없습니다. 당겨서 새로고침해 주세요.",
+    "dailyLimitReached": "오늘의 기사 한도에 도달했습니다. 새로운 뉴스는 내일 제공됩니다."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "삭제",
+    "deleteConfirmMessage": "이 기기의 저장 목록에서 기사가 제거됩니다.",
+    "deleteConfirmTitle": "저장한 기사를 제거할까요?",
+    "empty": "아직 저장한 기사가 없습니다. 기사의 북마크를 눌러 나중에 볼 수 있도록 저장하세요.",
+    "note": "이 기사들은 이 기기에만 저장됩니다. 언제든지 추가하거나 제거할 수 있으며, 삭제하기 전까지 여기에 남아 있습니다.",
+    "removedToastMessage": "저장 목록에서 제거됨",
+    "savedToastMessage": "나중에 볼 기사로 저장됨",
+    "savedToastTitle": "저장됨",
+    "title": "저장됨"
+  },
+  "subscription": {
+    "activating": "구독을 활성화하는 중…",
+    "activationDelayed": "구매를 확인하는 중입니다. 잠시 걸릴 수 있으며, 계속되지 않으면 새로고침을 눌러주세요.",
+    "autoRenew": "자동 갱신",
+    "customerCenter": "구독 관리 / 취소",
+    "dailyArticleLimit": "일일 기사 한도",
+    "description": "구독하고 기기에서 맞춤형 뉴스 피드를 받아보세요.",
+    "detailsSection": "구독 상세 정보",
+    "expiresOn": "만료일",
+    "lifetime": "평생",
+    "managePlan": "구독 관리",
+    "periodIntro": "도입 기간",
+    "periodLabel": "기간",
+    "periodNormal": "표준",
+    "periodPromotional": "프로모션",
+    "periodTrial": "무료 체험",
+    "planIndividual": "개인",
+    "planLabel": "요금제",
+    "planProfessional": "프로페셔널",
+    "planPromo": "프로모",
+    "planSection": "내 요금제",
+    "priceLabel": "가격",
+    "renewsOn": "갱신일",
+    "resetsOn": "초기화일",
+    "restore": "구매 복원",
+    "storeAppStore": "App Store",
+    "storeLabel": "구매 경로",
+    "storePlayStore": "Google Play",
+    "storePromotional": "프로모션",
+    "subscribe": "구독하기",
+    "title": "Mera News 잠금 해제",
+    "usageSection": "사용량",
+    "usedToday": "오늘 분석함",
+    "viewPlans": "요금제 보기"
   }
 }

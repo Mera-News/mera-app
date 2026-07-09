@@ -18,7 +18,8 @@
     "loggingOut": "ログアウト中...",
     "never": "なし",
     "yes": "はい",
-    "no": "いいえ"
+    "no": "いいえ",
+    "saving": "保存中..."
   },
   "auth": {
     "emailPlaceholder": "メールアドレスを入力してください",
@@ -47,7 +48,8 @@
       "switchBody": "ユーザーを切り替えると、このデバイス上のユーザーデータがすべて完全に削除されます。この操作は元に戻せません。",
       "switchConfirm": "はい、データを消去してユーザーを切り替えます",
       "switchCancel": "キャンセル"
-    }
+    },
+    "contentPolicy": "コンテンツポリシー"
   },
   "account": {
     "pendingTitle": "アカウントの承認待ちです",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "端末でスコアリング中",
       "completedTitle": "完了しました",
       "completedMessage": "フィードの準備ができました"
+    },
+    "dailyLimit": {
+      "body": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は明日解放されます。",
+      "bodyWithTime": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は{{time}}に解放されます。",
+      "title": "1日の記事上限に達しました"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "この記事はもう利用できません",
     "storyUnavailable": "このストーリーはもう利用できません",
     "failedToLoad": "記事の読み込みに失敗しました",
-    "articleNotFound": "記事が見つかりません"
+    "articleNotFound": "記事が見つかりません",
+    "readOn": "{{publication}}で読む"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "利用可能なフィードがありません",
     "publishers": "出版社",
     "noPublishers": "この国に出版社がありません",
-    "noArticlesFound": "記事が見つかりません"
+    "noArticlesFound": "記事が見つかりません",
+    "togglePin": "ピン留めを切り替え",
+    "topHeadlines": "トップニュース",
+    "viewTopHeadlines": "トップニュース"
   },
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれており、あなたの言語に翻訳できます",
@@ -232,7 +243,8 @@
     "signedOutTitle": "サインアウトしました",
     "signedOutDescription": "正常にサインアウトしました。",
     "logoutFailedTitle": "ログアウトに失敗しました",
-    "logoutFailedDescription": "サインアウト中に問題が発生しました。もう一度お試しください。"
+    "logoutFailedDescription": "サインアウト中に問題が発生しました。もう一度お試しください。",
+    "loggingOut": "ログアウトしています…"
   },
   "notifications": {
     "title": "通知",
@@ -373,7 +385,11 @@
     "deletedTitle": "データを削除しました",
     "deletedDescription": "選択されたデータが正常に消去されました。",
     "errorTitle": "エラー",
-    "errorDescription": "データの削除に失敗しました。もう一度お試しください。"
+    "errorDescription": "データの削除に失敗しました。もう一度お試しください。",
+    "factsDescription": "あなたのファクトとそこから生成されたトピック（この端末上）",
+    "factsModalDescription": "追加したファクトと、そこから生成されたトピックを消去します。トピックはこの端末上にのみ存在し、当社のサーバーには保存されません。記事フィードもこれらのトピックから作られているため消去され、新しいファクトを追加するまで空の状態で再構築されます。",
+    "locationDevice": "端末上",
+    "locationServer": "サーバー"
   },
   "preferences": {
     "manageSettings": "アプリの設定とアカウントを管理する",
@@ -406,7 +422,11 @@
     "signedOutDescription": "正常にサインアウトしました。",
     "logoutFailedTitle": "ログアウトに失敗しました",
     "logoutFailedDescription": "サインアウト中に問題が発生しました。もう一度お試しください。",
-    "loggingOut": "ログアウト中..."
+    "loggingOut": "ログアウト中...",
+    "user": "ユーザー: {{email}}",
+    "appVersion": "アプリバージョン: {{version}}",
+    "contentPolicy": "コンテンツポリシー",
+    "reportBug": "バグを報告"
   },
   "configPanel": {
     "tabPersona": "ペルソナ",
@@ -457,7 +477,10 @@
     "promoTooltip": "アプリのローンチ記念として、Individualプランを無料でお試しいただけます。期間限定のオファーです。",
     "individualPlan": "Individualプラン",
     "professionalPlan": "Professionalプラン",
-    "promoInfoTitle": "ローンチ特典"
+    "promoInfoTitle": "ローンチ特典",
+    "gotItPromo": "やった！ 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 ローンチ特典 🎊"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",
@@ -467,7 +490,21 @@
     "networkError": "サーバーに接続できません。ネットワークとAPIエンドポイントの設定を確認してください。",
     "feedError": "フィードを読み込めませんでした。もう一度お試しください。",
     "accountRestricted": "アカウントが制限されています",
-    "accountRestrictedDescription": "アカウントが制限されています。サポートにお問い合わせください。"
+    "accountRestrictedDescription": "アカウントが制限されています。サポートにお問い合わせください。",
+    "scoring": {
+      "generic": {
+        "message": "ニュースの選定中に問題が発生しました。引き続き試行します。問題が続く場合は下に引っ張って更新してください。",
+        "title": "フィードを更新できませんでした"
+      },
+      "offline": {
+        "message": "サーバーに接続できず、ニュースを選定できません。接続をご確認ください。オンラインに戻れば、フィードは自動的に更新されます。",
+        "title": "オフラインです"
+      },
+      "server": {
+        "message": "ニュースサービスに接続できませんでした。通常は一時的なもので、引き続き試行し、フィードは自動的に更新されます。",
+        "title": "サービスを利用できません"
+      }
+    }
   },
   "download": {
     "modelDownloading": "AIモデルをダウンロード中...",
@@ -599,6 +636,53 @@
     "sessionExpired": "セッションが期限切れです — 再度サインインしてください",
     "noTopics": "トピックを追加してニュースを表示してください",
     "storageFull": "デバイスのストレージを解放してもう一度お試しください",
-    "syncFailed": "最新コンテンツを読み込めませんでした。プルして更新してください。"
+    "syncFailed": "最新コンテンツを読み込めませんでした。プルして更新してください。",
+    "dailyLimitReached": "本日の記事上限に達しました。ニュースの続きは明日お届けします。"
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "削除",
+    "deleteConfirmMessage": "この端末の保存リストから記事を削除します。",
+    "deleteConfirmTitle": "保存した記事を削除しますか？",
+    "empty": "まだ記事を保存していません。記事のブックマークをタップすると、後で読むために保存できます。",
+    "note": "これらの記事はこの端末にのみ保存されます。いつでも追加・削除でき、削除するまでここに残ります。",
+    "removedToastMessage": "保存済みから削除しました",
+    "savedToastMessage": "記事を後で読むために保存しました",
+    "savedToastTitle": "保存しました",
+    "title": "保存済み"
+  },
+  "subscription": {
+    "activating": "サブスクリプションを有効化しています…",
+    "activationDelayed": "購入を確認しています。少々お時間がかかる場合があります。進まない場合は更新をタップしてください。",
+    "autoRenew": "自動更新",
+    "customerCenter": "サブスクリプションを管理・解約",
+    "dailyArticleLimit": "1日の記事上限",
+    "description": "登録して、端末上でパーソナライズされたニュースフィードを手に入れましょう。",
+    "detailsSection": "サブスクリプションの詳細",
+    "expiresOn": "有効期限",
+    "lifetime": "買い切り",
+    "managePlan": "サブスクリプションを管理",
+    "periodIntro": "導入期間",
+    "periodLabel": "期間",
+    "periodNormal": "通常",
+    "periodPromotional": "プロモーション",
+    "periodTrial": "無料トライアル",
+    "planIndividual": "個人",
+    "planLabel": "プラン",
+    "planProfessional": "プロフェッショナル",
+    "planPromo": "プロモ",
+    "planSection": "ご利用中のプラン",
+    "priceLabel": "料金",
+    "renewsOn": "更新日",
+    "resetsOn": "リセット",
+    "restore": "購入を復元",
+    "storeAppStore": "App Store",
+    "storeLabel": "購入元",
+    "storePlayStore": "Google Play",
+    "storePromotional": "プロモーション",
+    "subscribe": "登録する",
+    "title": "Mera News のロックを解除",
+    "usageSection": "利用状況",
+    "usedToday": "本日の分析数",
+    "viewPlans": "プランを見る"
   }
 }

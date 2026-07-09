@@ -18,7 +18,8 @@
     "goBack": "Zurück",
     "articles": "Artikel",
     "loggingOut": "Wird abgemeldet...",
-    "never": "Nie"
+    "never": "Nie",
+    "saving": "Wird gespeichert..."
   },
   "auth": {
     "emailPlaceholder": "E-Mail-Adresse eingeben",
@@ -47,7 +48,8 @@
       "switchBody": "Beim Wechsel des Benutzers werden alle Daten dieses Benutzers auf diesem Gerät dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.",
       "switchConfirm": "Ja, Daten löschen und Benutzer wechseln",
       "switchCancel": "Abbrechen"
-    }
+    },
+    "contentPolicy": "Inhaltsrichtlinie"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Bewertung auf Ihrem Telefon",
       "completedTitle": "Alles erledigt",
       "completedMessage": "Ihr Feed ist bereit"
+    },
+    "dailyLimit": {
+      "body": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden morgen freigeschaltet.",
+      "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden um {{time}} freigeschaltet.",
+      "title": "Tägliches Artikellimit erreicht"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Dieser Artikel ist nicht mehr verfügbar",
     "storyUnavailable": "Diese Geschichte ist nicht mehr verfügbar",
     "failedToLoad": "Artikel konnte nicht geladen werden",
-    "articleNotFound": "Artikel nicht gefunden"
+    "articleNotFound": "Artikel nicht gefunden",
+    "readOn": "Auf {{publication}} lesen"
   },
   "newsCluster": {
     "failedToLoad": "Cluster-Details konnten nicht geladen werden",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Keine Feeds verfügbar",
     "publishers": "Herausgeber",
     "noPublishers": "Keine Herausgeber für dieses Land",
-    "noArticlesFound": "Keine Artikel gefunden"
+    "noArticlesFound": "Keine Artikel gefunden",
+    "togglePin": "Anpinnen umschalten",
+    "topHeadlines": "Top-Schlagzeilen",
+    "viewTopHeadlines": "Top-Schlagzeilen"
   },
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} und kann in Ihre Sprache übersetzt werden",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Abgemeldet",
     "signedOutDescription": "Sie wurden erfolgreich abgemeldet.",
     "logoutFailedTitle": "Abmeldung fehlgeschlagen",
-    "logoutFailedDescription": "Bei der Abmeldung ist ein Problem aufgetreten. Bitte versuchen Sie es erneut."
+    "logoutFailedDescription": "Bei der Abmeldung ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
+    "loggingOut": "Abmeldung läuft …"
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -373,7 +385,11 @@
     "deletedTitle": "Daten gelöscht",
     "deletedDescription": "Die ausgewählten Daten wurden erfolgreich gelöscht.",
     "errorTitle": "Fehler",
-    "errorDescription": "Daten konnten nicht gelöscht werden. Bitte versuchen Sie es erneut."
+    "errorDescription": "Daten konnten nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "factsDescription": "Deine Fakten und die daraus generierten Themen – auf diesem Gerät",
+    "factsModalDescription": "Löscht die von dir hinzugefügten Fakten und die daraus generierten Themen. Themen existieren nur auf diesem Gerät – sie werden nie auf unseren Servern gespeichert. Dein Artikel-Feed wird ebenfalls geleert, da er aus diesen Themen aufgebaut wird, und bleibt leer, bis du neue Fakten hinzufügst.",
+    "locationDevice": "Auf dem Gerät",
+    "locationServer": "Server"
   },
   "preferences": {
     "manageSettings": "App-Einstellungen und Konto verwalten",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Sie wurden erfolgreich abgemeldet.",
     "logoutFailedTitle": "Abmeldung fehlgeschlagen",
     "logoutFailedDescription": "Bei der Abmeldung ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
-    "loggingOut": "Wird abgemeldet..."
+    "loggingOut": "Wird abgemeldet...",
+    "user": "Benutzer: {{email}}",
+    "appVersion": "App-Version: {{version}}",
+    "contentPolicy": "Inhaltsrichtlinie",
+    "reportBug": "Fehler melden"
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -457,7 +477,10 @@
     "promoInfoTitle": "Angebot zum App-Start",
     "promoTooltip": "Zum App-Start können Sie den Individual-Plan kostenlos testen. Dies ist ein zeitlich begrenztes Angebot.",
     "individualPlan": "Individual-Plan",
-    "professionalPlan": "Professional-Plan"
+    "professionalPlan": "Professional-Plan",
+    "gotItPromo": "Super! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Launch-Angebot 🎊"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",
@@ -467,7 +490,21 @@
     "networkError": "Verbindung zum Server nicht möglich. Prüfen Sie Ihr Netzwerk und die API-Endpunkteinstellungen.",
     "feedError": "Ihr Feed konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
     "accountRestricted": "Konto eingeschränkt",
-    "accountRestrictedDescription": "Ihr Konto wurde eingeschränkt. Bitte kontaktieren Sie den Support."
+    "accountRestrictedDescription": "Ihr Konto wurde eingeschränkt. Bitte kontaktieren Sie den Support.",
+    "scoring": {
+      "generic": {
+        "message": "Beim Auswählen der News für dich ist etwas schiefgelaufen. Wir versuchen es weiter – zieh nach unten, um zu aktualisieren, falls es weiterhin auftritt.",
+        "title": "Feed konnte nicht aktualisiert werden"
+      },
+      "offline": {
+        "message": "Wir erreichen den Server nicht, um News für dich auszuwählen. Prüfe deine Verbindung – dein Feed holt automatisch auf, sobald du wieder online bist.",
+        "title": "Du bist offline"
+      },
+      "server": {
+        "message": "Wir konnten den News-Dienst nicht erreichen. Das ist meist nur kurz – wir versuchen es weiter und dein Feed aktualisiert sich von selbst.",
+        "title": "Dienst nicht verfügbar"
+      }
+    }
   },
   "download": {
     "modelDownloading": "KI-Modell wird heruntergeladen...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Sitzung abgelaufen — bitte melden Sie sich erneut an",
     "noTopics": "Fügen Sie Themen hinzu, um Ihre Nachrichten zu sehen",
     "storageFull": "Geben Sie Gerätespeicher frei und versuchen Sie es erneut",
-    "syncFailed": "Die neuesten Inhalte konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen."
+    "syncFailed": "Die neuesten Inhalte konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen.",
+    "dailyLimitReached": "Du hast das heutige Artikellimit erreicht. Mehr News gibt es morgen."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Löschen",
+    "deleteConfirmMessage": "Damit wird der Artikel aus deiner Merkliste auf diesem Gerät entfernt.",
+    "deleteConfirmTitle": "Gespeicherten Artikel entfernen?",
+    "empty": "Du hast noch keine Artikel gespeichert. Tippe auf das Lesezeichen bei einem Artikel, um ihn für später zu speichern.",
+    "note": "Diese Artikel werden nur auf deinem Gerät gespeichert. Füge sie jederzeit hinzu oder entferne sie – sie bleiben hier, bis du sie löschst.",
+    "removedToastMessage": "Aus Gespeichertem entfernt",
+    "savedToastMessage": "Artikel für später gespeichert",
+    "savedToastTitle": "Gespeichert",
+    "title": "Gespeichert"
+  },
+  "subscription": {
+    "activating": "Dein Abo wird aktiviert …",
+    "activationDelayed": "Dein Kauf wird bestätigt. Das kann einen Moment dauern – tippe auf Aktualisieren, falls es nicht weitergeht.",
+    "autoRenew": "Automatische Verlängerung",
+    "customerCenter": "Abo verwalten / kündigen",
+    "dailyArticleLimit": "Tägliches Artikellimit",
+    "description": "Abonniere, um deinen personalisierten News-Feed direkt auf dem Gerät zu erhalten.",
+    "detailsSection": "Abo-Details",
+    "expiresOn": "Läuft ab am",
+    "lifetime": "Lebenslang",
+    "managePlan": "Abo verwalten",
+    "periodIntro": "Einführung",
+    "periodLabel": "Zeitraum",
+    "periodNormal": "Standard",
+    "periodPromotional": "Aktion",
+    "periodTrial": "Kostenlose Testphase",
+    "planIndividual": "Einzelperson",
+    "planLabel": "Tarif",
+    "planProfessional": "Professional",
+    "planPromo": "Aktion",
+    "planSection": "Dein Tarif",
+    "priceLabel": "Preis",
+    "renewsOn": "Verlängert sich am",
+    "resetsOn": "Zurücksetzung",
+    "restore": "Käufe wiederherstellen",
+    "storeAppStore": "App Store",
+    "storeLabel": "Gekauft über",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Aktion",
+    "subscribe": "Abonnieren",
+    "title": "Mera News freischalten",
+    "usageSection": "Nutzung",
+    "usedToday": "Heute analysiert",
+    "viewPlans": "Tarife ansehen"
   }
 }

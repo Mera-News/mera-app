@@ -18,7 +18,8 @@
     "loggingOut": "लॉग आउट हो रहा है...",
     "never": "कभी नहीं",
     "yes": "हाँ",
-    "no": "नहीं"
+    "no": "नहीं",
+    "saving": "सहेजा जा रहा है..."
   },
   "auth": {
     "emailPlaceholder": "अपना ईमेल पता दर्ज करें",
@@ -47,7 +48,8 @@
       "switchBody": "उपयोगकर्ता बदलने पर इस डिवाइस पर इस उपयोगकर्ता का सारा डेटा स्थायी रूप से हटा दिया जाएगा। यह क्रिया पूर्ववत नहीं की जा सकती।",
       "switchConfirm": "हाँ, डेटा मिटाएं और उपयोगकर्ता बदलें",
       "switchCancel": "रद्द करें"
-    }
+    },
+    "contentPolicy": "कंटेंट नीति"
   },
   "account": {
     "pendingTitle": "खाता अनुमोदन लंबित",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "आपके फ़ोन पर स्कोर हो रहा है",
       "completedTitle": "सब पूरा हुआ",
       "completedMessage": "आपकी फ़ीड तैयार है"
+    },
+    "dailyLimit": {
+      "body": "अभी कोई नया लेख नहीं लाया जा सकता। अपने डिवाइस पर पहले से मौजूद लेख देखें — नए लेख कल अनलॉक होंगे।",
+      "bodyWithTime": "अभी कोई नया लेख नहीं लाया जा सकता। अपने डिवाइस पर पहले से मौजूद लेख देखें — नए लेख {{time}} बजे अनलॉक होंगे।",
+      "title": "दैनिक लेख सीमा पूरी हो गई"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "यह लेख अब उपलब्ध नहीं है",
     "storyUnavailable": "यह स्टोरी अब उपलब्ध नहीं है",
     "failedToLoad": "लेख लोड करने में विफल",
-    "articleNotFound": "लेख नहीं मिला"
+    "articleNotFound": "लेख नहीं मिला",
+    "readOn": "{{publication}} पर पढ़ें"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "कोई फ़ीड उपलब्ध नहीं",
     "publishers": "प्रकाशक",
     "noPublishers": "इस देश के लिए कोई प्रकाशक नहीं",
-    "noArticlesFound": "कोई लेख नहीं मिला"
+    "noArticlesFound": "कोई लेख नहीं मिला",
+    "togglePin": "पिन टॉगल करें",
+    "topHeadlines": "मुख्य सुर्खियाँ",
+    "viewTopHeadlines": "मुख्य सुर्खियाँ"
   },
   "clusterDetail": {
     "translatable": "यह लेख {{language}} में है और आपकी भाषा में अनुवादित हो सकता है",
@@ -232,7 +243,8 @@
     "signedOutTitle": "साइन आउट हो गया",
     "signedOutDescription": "आप सफलतापूर्वक साइन आउट हो गए हैं।",
     "logoutFailedTitle": "लॉगआउट विफल",
-    "logoutFailedDescription": "साइन आउट करने में समस्या हुई। कृपया पुनः प्रयास करें।"
+    "logoutFailedDescription": "साइन आउट करने में समस्या हुई। कृपया पुनः प्रयास करें।",
+    "loggingOut": "लॉग आउट हो रहा है..."
   },
   "notifications": {
     "title": "नोटिफिकेशन",
@@ -373,7 +385,11 @@
     "deletedTitle": "डेटा हटाया गया",
     "deletedDescription": "चयनित डेटा सफलतापूर्वक साफ़ कर दिया गया है।",
     "errorTitle": "त्रुटि",
-    "errorDescription": "डेटा हटाने में विफल। कृपया पुनः प्रयास करें।"
+    "errorDescription": "डेटा हटाने में विफल। कृपया पुनः प्रयास करें।",
+    "factsDescription": "आपके फ़ैक्ट्स और उनसे बने टॉपिक्स — इसी डिवाइस पर",
+    "factsModalDescription": "आपके जोड़े गए फ़ैक्ट्स और उनसे बने टॉपिक्स हटा देता है। टॉपिक्स सिर्फ़ इसी डिवाइस पर रहते हैं — वे कभी हमारे सर्वर पर संग्रहीत नहीं होते। आपकी लेख फ़ीड भी हट जाती है, क्योंकि वह इन्हीं टॉपिक्स से बनी होती है, और नए फ़ैक्ट्स जोड़ने तक खाली ही रहती है।",
+    "locationDevice": "डिवाइस पर",
+    "locationServer": "सर्वर"
   },
   "preferences": {
     "manageSettings": "अपनी ऐप सेटिंग्स और खाता प्रबंधित करें",
@@ -406,7 +422,11 @@
     "signedOutDescription": "आप सफलतापूर्वक साइन आउट हो गए हैं।",
     "logoutFailedTitle": "लॉगआउट विफल",
     "logoutFailedDescription": "साइन आउट करने में समस्या हुई। कृपया पुनः प्रयास करें।",
-    "loggingOut": "लॉग आउट हो रहा है..."
+    "loggingOut": "लॉग आउट हो रहा है...",
+    "user": "उपयोगकर्ता: {{email}}",
+    "appVersion": "ऐप संस्करण: {{version}}",
+    "contentPolicy": "कंटेंट नीति",
+    "reportBug": "बग रिपोर्ट करें"
   },
   "configPanel": {
     "tabPersona": "व्यक्तित्व",
@@ -457,7 +477,10 @@
     "promoTooltip": "ऐप लॉन्च के अवसर पर आप Individual प्लान मुफ़्त में आज़मा सकते हैं। यह सीमित समय का ऑफ़र है।",
     "individualPlan": "Individual प्लान",
     "professionalPlan": "Professional प्लान",
-    "promoInfoTitle": "लॉन्च ऑफ़र"
+    "promoInfoTitle": "लॉन्च ऑफ़र",
+    "gotItPromo": "बढ़िया! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 लॉन्च ऑफर 🎊"
   },
   "errors": {
     "somethingWentWrong": "कुछ गलत हो गया",
@@ -467,7 +490,21 @@
     "networkError": "सर्वर से कनेक्ट करने में असमर्थ। अपना नेटवर्क और API एंडपॉइंट सेटिंग्स जाँचें।",
     "feedError": "आपकी फ़ीड लोड नहीं हो सकी। कृपया पुनः प्रयास करें।",
     "accountRestricted": "खाता प्रतिबंधित",
-    "accountRestrictedDescription": "आपका खाता प्रतिबंधित कर दिया गया है। कृपया सहायता से संपर्क करें।"
+    "accountRestrictedDescription": "आपका खाता प्रतिबंधित कर दिया गया है। कृपया सहायता से संपर्क करें।",
+    "scoring": {
+      "generic": {
+        "message": "आपके लिए न्यूज़ चुनते समय कुछ गड़बड़ हो गई। हम कोशिश करते रहेंगे — अगर यह जारी रहे तो रिफ्रेश करने के लिए नीचे खींचें।",
+        "title": "आपकी फ़ीड अपडेट नहीं हो सकी"
+      },
+      "offline": {
+        "message": "हम आपके लिए न्यूज़ चुनने हेतु सर्वर तक नहीं पहुँच पा रहे। अपना कनेक्शन जाँचें — ऑनलाइन होते ही आपकी फ़ीड अपने आप अपडेट हो जाएगी।",
+        "title": "आप ऑफ़लाइन हैं"
+      },
+      "server": {
+        "message": "हम न्यूज़ सेवा तक नहीं पहुँच सके। आमतौर पर यह थोड़ी देर के लिए ही होता है — हम कोशिश करते रहेंगे और आपकी फ़ीड अपने आप अपडेट हो जाएगी।",
+        "title": "सेवा उपलब्ध नहीं है"
+      }
+    }
   },
   "download": {
     "modelDownloading": "AI Model डाउनलोड हो रहा है...",
@@ -599,6 +636,53 @@
     "sessionExpired": "सत्र समाप्त हो गया — कृपया फिर से साइन इन करें",
     "noTopics": "अपने समाचार देखने के लिए विषय जोड़ें",
     "storageFull": "डिवाइस स्टोरेज खाली करें और पुनः प्रयास करें",
-    "syncFailed": "नवीनतम सामग्री लोड नहीं हो सकी। रिफ्रेश करने के लिए खींचें।"
+    "syncFailed": "नवीनतम सामग्री लोड नहीं हो सकी। रिफ्रेश करने के लिए खींचें।",
+    "dailyLimitReached": "आप आज की लेख सीमा तक पहुँच गए हैं। और न्यूज़ कल मिलेगी।"
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "हटाएँ",
+    "deleteConfirmMessage": "इससे यह लेख आपके इस डिवाइस की सहेजी गई सूची से हट जाएगा।",
+    "deleteConfirmTitle": "सहेजा गया लेख हटाएँ?",
+    "empty": "आपने अभी तक कोई लेख नहीं सहेजा है। बाद में पढ़ने के लिए किसी लेख पर बुकमार्क टैप करें।",
+    "note": "ये लेख सिर्फ़ आपके डिवाइस पर सहेजे जाते हैं। इन्हें कभी भी जोड़ें या हटाएँ — जब तक आप न हटाएँ, ये यहीं रहेंगे।",
+    "removedToastMessage": "सहेजे गए से हटाया गया",
+    "savedToastMessage": "लेख बाद के लिए सहेजा गया",
+    "savedToastTitle": "सहेजा गया",
+    "title": "सहेजे गए"
+  },
+  "subscription": {
+    "activating": "आपका सब्सक्रिप्शन सक्रिय किया जा रहा है…",
+    "activationDelayed": "आपकी खरीद की पुष्टि हो रही है। इसमें थोड़ा समय लग सकता है — अगर आगे न बढ़े तो रिफ्रेश टैप करें।",
+    "autoRenew": "ऑटो-रिन्यू",
+    "customerCenter": "सब्सक्रिप्शन प्रबंधित / रद्द करें",
+    "dailyArticleLimit": "दैनिक लेख सीमा",
+    "description": "अपनी वैयक्तिकृत, ऑन-डिवाइस न्यूज़ फ़ीड पाने के लिए सब्सक्राइब करें।",
+    "detailsSection": "सब्सक्रिप्शन विवरण",
+    "expiresOn": "समाप्ति तिथि",
+    "lifetime": "आजीवन",
+    "managePlan": "सब्सक्रिप्शन प्रबंधित करें",
+    "periodIntro": "परिचयात्मक",
+    "periodLabel": "अवधि",
+    "periodNormal": "मानक",
+    "periodPromotional": "प्रोमोशनल",
+    "periodTrial": "फ़्री ट्रायल",
+    "planIndividual": "इंडिविजुअल",
+    "planLabel": "प्लान",
+    "planProfessional": "प्रोफेशनल",
+    "planPromo": "प्रोमो",
+    "planSection": "आपका प्लान",
+    "priceLabel": "कीमत",
+    "renewsOn": "रिन्यू होगा",
+    "resetsOn": "रीसेट होगा",
+    "restore": "खरीदारी रिस्टोर करें",
+    "storeAppStore": "App Store",
+    "storeLabel": "इसके ज़रिए खरीदा गया",
+    "storePlayStore": "Google Play",
+    "storePromotional": "प्रोमोशनल",
+    "subscribe": "सब्सक्राइब करें",
+    "title": "Mera News अनलॉक करें",
+    "usageSection": "उपयोग",
+    "usedToday": "आज विश्लेषित",
+    "viewPlans": "प्लान देखें"
   }
 }

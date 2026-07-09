@@ -18,7 +18,8 @@
     "loggingOut": "جارٍ تسجيل الخروج...",
     "never": "أبدًا",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "saving": "جارٍ الحفظ..."
   },
   "auth": {
     "emailPlaceholder": "أدخل عنوان بريدك الإلكتروني",
@@ -47,7 +48,8 @@
       "switchBody": "سيؤدي تبديل المستخدمين إلى حذف جميع بيانات هذا المستخدم على هذا الجهاز بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
       "switchConfirm": "نعم، امسح البيانات وانتقل إلى مستخدم آخر",
       "switchCancel": "إلغاء"
-    }
+    },
+    "contentPolicy": "سياسة المحتوى"
   },
   "account": {
     "pendingTitle": "الحساب بانتظار الموافقة",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "الترتيب على هاتفك",
       "completedTitle": "اكتمل",
       "completedMessage": "موجز أخبارك جاهز"
+    },
+    "dailyLimit": {
+      "body": "لا يمكن جلب مقالات جديدة في الوقت الحالي. تصفّح المقالات الموجودة على جهازك — تُتاح مقالات جديدة غدًا.",
+      "bodyWithTime": "لا يمكن جلب مقالات جديدة في الوقت الحالي. تصفّح المقالات الموجودة على جهازك — تُتاح مقالات جديدة في {{time}}.",
+      "title": "تم بلوغ الحد اليومي للمقالات"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "هذا المقال لم يعد متاحًا",
     "storyUnavailable": "هذه القصة لم تعد متاحة",
     "failedToLoad": "فشل تحميل المقال",
-    "articleNotFound": "المقال غير موجود"
+    "articleNotFound": "المقال غير موجود",
+    "readOn": "اقرأ على {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "لا توجد تغذيات متاحة",
     "publishers": "الناشرون",
     "noPublishers": "لا يوجد ناشرون لهذا البلد",
-    "noArticlesFound": "لم يتم العثور على مقالات"
+    "noArticlesFound": "لم يتم العثور على مقالات",
+    "togglePin": "تثبيت / إلغاء التثبيت",
+    "topHeadlines": "أبرز العناوين",
+    "viewTopHeadlines": "أبرز العناوين"
   },
   "clusterDetail": {
     "translatable": "هذا المقال باللغة {{language}} ويمكن ترجمته إلى لغتك",
@@ -232,7 +243,8 @@
     "signedOutTitle": "تم تسجيل الخروج",
     "signedOutDescription": "تم تسجيل خروجك بنجاح.",
     "logoutFailedTitle": "فشل تسجيل الخروج",
-    "logoutFailedDescription": "حدثت مشكلة أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى."
+    "logoutFailedDescription": "حدثت مشكلة أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى.",
+    "loggingOut": "جارٍ تسجيل الخروج..."
   },
   "notifications": {
     "title": "الإشعارات",
@@ -373,7 +385,11 @@
     "deletedTitle": "تم حذف البيانات",
     "deletedDescription": "تم مسح البيانات المحددة بنجاح.",
     "errorTitle": "خطأ",
-    "errorDescription": "فشل حذف البيانات. يرجى المحاولة مرة أخرى."
+    "errorDescription": "فشل حذف البيانات. يرجى المحاولة مرة أخرى.",
+    "factsDescription": "معلوماتك والمواضيع التي تولّدها — على هذا الجهاز",
+    "factsModalDescription": "يمسح المعلومات التي أضفتها والمواضيع المُولَّدة منها. توجد المواضيع على هذا الجهاز فقط — ولا تُخزَّن أبدًا على خوادمنا. تُمسح خلاصة مقالاتك أيضًا لأنها مبنية على هذه المواضيع، وستُعاد فارغة حتى تضيف معلومات جديدة.",
+    "locationDevice": "على الجهاز",
+    "locationServer": "الخادم"
   },
   "preferences": {
     "manageSettings": "إدارة إعدادات التطبيق والحساب",
@@ -406,7 +422,11 @@
     "signedOutDescription": "تم تسجيل خروجك بنجاح.",
     "logoutFailedTitle": "فشل تسجيل الخروج",
     "logoutFailedDescription": "حدثت مشكلة أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى.",
-    "loggingOut": "جارٍ تسجيل الخروج..."
+    "loggingOut": "جارٍ تسجيل الخروج...",
+    "user": "المستخدم: {{email}}",
+    "appVersion": "إصدار التطبيق: {{version}}",
+    "contentPolicy": "سياسة المحتوى",
+    "reportBug": "الإبلاغ عن خطأ"
   },
   "configPanel": {
     "tabPersona": "الشخصية",
@@ -457,7 +477,10 @@
     "promoTooltip": "يمكنك تجربة خطة Individual مجانًا بمناسبة إطلاق التطبيق. هذا عرض لفترة محدودة.",
     "individualPlan": "خطة Individual",
     "professionalPlan": "خطة Professional",
-    "promoInfoTitle": "عرض الإطلاق"
+    "promoInfoTitle": "عرض الإطلاق",
+    "gotItPromo": "رائع! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 عرض الإطلاق 🎊"
   },
   "errors": {
     "somethingWentWrong": "حدث خطأ ما",
@@ -467,7 +490,21 @@
     "networkError": "تعذّر الاتصال بالخادم. تحقق من إعدادات الشبكة ونقطة الوصول API.",
     "feedError": "تعذّر تحميل موجز الأخبار. يرجى المحاولة مرة أخرى.",
     "accountRestricted": "الحساب مقيّد",
-    "accountRestrictedDescription": "تم تقييد حسابك. يرجى التواصل مع الدعم."
+    "accountRestrictedDescription": "تم تقييد حسابك. يرجى التواصل مع الدعم.",
+    "scoring": {
+      "generic": {
+        "message": "حدث خطأ ما أثناء اختيار الأخبار لك. سنواصل المحاولة — اسحب للأسفل للتحديث إذا استمرت المشكلة.",
+        "title": "تعذّر تحديث خلاصتك"
+      },
+      "offline": {
+        "message": "لا يمكننا الوصول إلى الخادم لاختيار الأخبار لك. تحقق من اتصالك — ستتحدّث خلاصتك تلقائيًا بمجرد عودتك إلى الإنترنت.",
+        "title": "أنت غير متصل بالإنترنت"
+      },
+      "server": {
+        "message": "تعذّر علينا الوصول إلى خدمة الأخبار. عادةً ما تكون هذه المشكلة مؤقتة — سنواصل المحاولة وستتحدّث خلاصتك تلقائيًا.",
+        "title": "الخدمة غير متاحة"
+      }
+    }
   },
   "download": {
     "modelDownloading": "جارٍ تنزيل نموذج الذكاء الاصطناعي...",
@@ -599,6 +636,53 @@
     "sessionExpired": "انتهت الجلسة — يرجى تسجيل الدخول مجددًا",
     "noTopics": "أضف موضوعات لرؤية أخبارك",
     "storageFull": "أفرغ مساحة تخزين الجهاز وحاول مجددًا",
-    "syncFailed": "تعذّر تحميل أحدث المحتوى. اسحب للتحديث."
+    "syncFailed": "تعذّر تحميل أحدث المحتوى. اسحب للتحديث.",
+    "dailyLimitReached": "لقد بلغت الحد اليومي للمقالات. المزيد من الأخبار غدًا."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "حذف",
+    "deleteConfirmMessage": "سيؤدي هذا إلى إزالة المقال من قائمة المحفوظات على هذا الجهاز.",
+    "deleteConfirmTitle": "إزالة المقال المحفوظ؟",
+    "empty": "لم تحفظ أي مقالات بعد. اضغط على علامة الحفظ في مقال لحفظه لوقتٍ لاحق.",
+    "note": "تُحفظ هذه المقالات على جهازك فقط. أضفها أو أزلها في أي وقت — تبقى هنا حتى تحذفها.",
+    "removedToastMessage": "تمت الإزالة من المحفوظات",
+    "savedToastMessage": "تم حفظ المقال لوقتٍ لاحق",
+    "savedToastTitle": "محفوظ",
+    "title": "المحفوظات"
+  },
+  "subscription": {
+    "activating": "جارٍ تفعيل اشتراكك…",
+    "activationDelayed": "يجري تأكيد عملية الشراء. قد يستغرق هذا لحظة — اضغط على تحديث إذا لم يكتمل.",
+    "autoRenew": "التجديد التلقائي",
+    "customerCenter": "إدارة الاشتراك / إلغاؤه",
+    "dailyArticleLimit": "الحد اليومي للمقالات",
+    "description": "اشترك للحصول على خلاصة أخبارك المخصصة على جهازك.",
+    "detailsSection": "تفاصيل الاشتراك",
+    "expiresOn": "ينتهي في",
+    "lifetime": "مدى الحياة",
+    "managePlan": "إدارة الاشتراك",
+    "periodIntro": "تمهيدي",
+    "periodLabel": "الفترة",
+    "periodNormal": "قياسي",
+    "periodPromotional": "ترويجي",
+    "periodTrial": "تجربة مجانية",
+    "planIndividual": "فردي",
+    "planLabel": "الخطة",
+    "planProfessional": "احترافي",
+    "planPromo": "ترويجي",
+    "planSection": "خطتك",
+    "priceLabel": "السعر",
+    "renewsOn": "يتجدد في",
+    "resetsOn": "يُعاد الضبط في",
+    "restore": "استعادة المشتريات",
+    "storeAppStore": "App Store",
+    "storeLabel": "تم الشراء عبر",
+    "storePlayStore": "Google Play",
+    "storePromotional": "ترويجي",
+    "subscribe": "اشترك",
+    "title": "افتح Mera News",
+    "usageSection": "الاستخدام",
+    "usedToday": "تم تحليله اليوم",
+    "viewPlans": "عرض الخطط"
   }
 }

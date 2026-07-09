@@ -18,7 +18,8 @@
     "goBack": "Ga terug",
     "articles": "Artikelen",
     "loggingOut": "Uitloggen...",
-    "never": "Nooit"
+    "never": "Nooit",
+    "saving": "Opslaan..."
   },
   "auth": {
     "emailPlaceholder": "Voer je e-mailadres in",
@@ -47,7 +48,8 @@
       "switchBody": "Van gebruiker wisselen verwijdert permanent alle gegevens van deze gebruiker op dit apparaat. Dit kan niet ongedaan worden gemaakt.",
       "switchConfirm": "Ja, gegevens wissen en van gebruiker wisselen",
       "switchCancel": "Annuleren"
-    }
+    },
+    "contentPolicy": "Inhoudsbeleid"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Scoren op je telefoon",
       "completedTitle": "Alles klaar",
       "completedMessage": "Je feed is gereed"
+    },
+    "dailyLimit": {
+      "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden morgen ontgrendeld.",
+      "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden om {{time}} ontgrendeld.",
+      "title": "Daglimiet voor artikelen bereikt"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Dit artikel is niet meer beschikbaar",
     "storyUnavailable": "Dit verhaal is niet meer beschikbaar",
     "failedToLoad": "Artikel laden mislukt",
-    "articleNotFound": "Artikel niet gevonden"
+    "articleNotFound": "Artikel niet gevonden",
+    "readOn": "Lezen op {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Geen feeds beschikbaar",
     "publishers": "Uitgevers",
     "noPublishers": "Geen uitgevers voor dit land",
-    "noArticlesFound": "Geen artikelen gevonden"
+    "noArticlesFound": "Geen artikelen gevonden",
+    "togglePin": "Vastzetten in-/uitschakelen",
+    "topHeadlines": "Topnieuws",
+    "viewTopHeadlines": "Topnieuws"
   },
   "clusterDetail": {
     "translatable": "Dit artikel is in {{language}} en kan naar jouw taal worden vertaald",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Uitgelogd",
     "signedOutDescription": "Je bent succesvol uitgelogd.",
     "logoutFailedTitle": "Uitloggen mislukt",
-    "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw."
+    "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
+    "loggingOut": "Uitloggen..."
   },
   "notifications": {
     "title": "Meldingen",
@@ -373,7 +385,11 @@
     "deletedTitle": "Gegevens verwijderd",
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
-    "errorDescription": "Gegevens verwijderen mislukt. Probeer het opnieuw."
+    "errorDescription": "Gegevens verwijderen mislukt. Probeer het opnieuw.",
+    "factsDescription": "Je feiten en de onderwerpen die ze genereren — op dit apparaat",
+    "factsModalDescription": "Wist de feiten die je hebt toegevoegd en de onderwerpen die daaruit zijn gegenereerd. Onderwerpen staan alleen op dit apparaat — ze worden nooit op onze servers opgeslagen. Je artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebaseerd, en blijft leeg tot je nieuwe feiten toevoegt.",
+    "locationDevice": "Op apparaat",
+    "locationServer": "Server"
   },
   "preferences": {
     "manageSettings": "Beheer je app-instellingen en account",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Je bent succesvol uitgelogd.",
     "logoutFailedTitle": "Uitloggen mislukt",
     "logoutFailedDescription": "Er was een probleem bij het uitloggen. Probeer het opnieuw.",
-    "loggingOut": "Uitloggen..."
+    "loggingOut": "Uitloggen...",
+    "user": "Gebruiker: {{email}}",
+    "appVersion": "App-versie: {{version}}",
+    "contentPolicy": "Inhoudsbeleid",
+    "reportBug": "Een bug melden"
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -457,7 +477,10 @@
     "promoInfoTitle": "Lanceringsaanbieding",
     "promoTooltip": "Je kunt het Individual-abonnement gratis testen als onderdeel van onze app-lancering. Dit is een tijdelijke aanbieding.",
     "individualPlan": "Individual-abonnement",
-    "professionalPlan": "Professional-abonnement"
+    "professionalPlan": "Professional-abonnement",
+    "gotItPromo": "Geweldig! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Lanceeraanbieding 🎊"
   },
   "errors": {
     "somethingWentWrong": "Er is iets misgegaan",
@@ -467,7 +490,21 @@
     "networkError": "Kan geen verbinding maken met de server. Controleer je netwerk en API-eindpuntinstellingen.",
     "feedError": "Je feed kon niet worden geladen. Probeer het opnieuw.",
     "accountRestricted": "Account beperkt",
-    "accountRestrictedDescription": "Je account is beperkt. Neem contact op met de ondersteuning."
+    "accountRestrictedDescription": "Je account is beperkt. Neem contact op met de ondersteuning.",
+    "scoring": {
+      "generic": {
+        "message": "Er ging iets mis bij het selecteren van nieuws voor jou. We blijven het proberen — trek naar beneden om te vernieuwen als dit aanhoudt.",
+        "title": "Kon je feed niet bijwerken"
+      },
+      "offline": {
+        "message": "We kunnen de server niet bereiken om nieuws voor je te selecteren. Controleer je verbinding — je feed wordt vanzelf bijgewerkt zodra je weer online bent.",
+        "title": "Je bent offline"
+      },
+      "server": {
+        "message": "We konden de nieuwsdienst niet bereiken. Dit is meestal van korte duur — we blijven het proberen en je feed wordt vanzelf bijgewerkt.",
+        "title": "Dienst niet beschikbaar"
+      }
+    }
   },
   "download": {
     "modelDownloading": "AI-model downloaden...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Sessie verlopen — log opnieuw in",
     "noTopics": "Voeg onderwerpen toe om je nieuws te zien",
     "storageFull": "Maak opslagruimte vrij op je apparaat en probeer het opnieuw",
-    "syncFailed": "We konden de nieuwste inhoud niet laden. Trek omlaag om te vernieuwen."
+    "syncFailed": "We konden de nieuwste inhoud niet laden. Trek omlaag om te vernieuwen.",
+    "dailyLimitReached": "Je hebt de daglimiet voor artikelen bereikt. Morgen meer nieuws."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Verwijderen",
+    "deleteConfirmMessage": "Hiermee verwijder je het artikel van je opgeslagen lijst op dit apparaat.",
+    "deleteConfirmTitle": "Opgeslagen artikel verwijderen?",
+    "empty": "Je hebt nog geen artikelen opgeslagen. Tik op de bladwijzer bij een artikel om het voor later op te slaan.",
+    "note": "Deze artikelen worden alleen op je apparaat opgeslagen. Voeg ze op elk moment toe of verwijder ze — ze blijven hier tot je ze verwijdert.",
+    "removedToastMessage": "Verwijderd uit opgeslagen",
+    "savedToastMessage": "Artikel opgeslagen voor later",
+    "savedToastTitle": "Opgeslagen",
+    "title": "Opgeslagen"
+  },
+  "subscription": {
+    "activating": "Je abonnement wordt geactiveerd…",
+    "activationDelayed": "Je aankoop wordt bevestigd. Dit kan even duren — tik op vernieuwen als het niet doorgaat.",
+    "autoRenew": "Automatisch verlengen",
+    "customerCenter": "Abonnement beheren / opzeggen",
+    "dailyArticleLimit": "Daglimiet voor artikelen",
+    "description": "Abonneer je om je gepersonaliseerde nieuwsfeed op je apparaat te ontvangen.",
+    "detailsSection": "Abonnementsgegevens",
+    "expiresOn": "Verloopt op",
+    "lifetime": "Levenslang",
+    "managePlan": "Abonnement beheren",
+    "periodIntro": "Introductie",
+    "periodLabel": "Periode",
+    "periodNormal": "Standaard",
+    "periodPromotional": "Promotioneel",
+    "periodTrial": "Gratis proefperiode",
+    "planIndividual": "Individueel",
+    "planLabel": "Abonnement",
+    "planProfessional": "Professioneel",
+    "planPromo": "Promo",
+    "planSection": "Jouw abonnement",
+    "priceLabel": "Prijs",
+    "renewsOn": "Verlengt op",
+    "resetsOn": "Reset op",
+    "restore": "Aankopen herstellen",
+    "storeAppStore": "App Store",
+    "storeLabel": "Gekocht via",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promotioneel",
+    "subscribe": "Abonneren",
+    "title": "Mera News ontgrendelen",
+    "usageSection": "Gebruik",
+    "usedToday": "Vandaag geanalyseerd",
+    "viewPlans": "Abonnementen bekijken"
   }
 }

@@ -493,7 +493,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                         disabled={isSaving}
                         className="w-full"
                     >
-                        <ButtonText>{isSaving ? 'Saving...' : t('notifications.savePreferences')}</ButtonText>
+                        <ButtonText>{isSaving ? t('common.saving') : t('notifications.savePreferences')}</ButtonText>
                     </Button>
                 </VStack>
             </Box>

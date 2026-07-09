@@ -18,7 +18,8 @@
     "loggingOut": "正在退出登录...",
     "never": "从未",
     "yes": "是",
-    "no": "否"
+    "no": "否",
+    "saving": "保存中..."
   },
   "auth": {
     "emailPlaceholder": "请输入您的电子邮箱地址",
@@ -47,7 +48,8 @@
       "switchBody": "切换用户将永久删除此设备上该用户的所有数据，此操作无法撤销。",
       "switchConfirm": "是的，清除数据并切换用户",
       "switchCancel": "取消"
-    }
+    },
+    "contentPolicy": "内容政策"
   },
   "account": {
     "pendingTitle": "账户待审核",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "在您的手机上评分",
       "completedTitle": "全部完成",
       "completedMessage": "您的资讯已准备就绪"
+    },
+    "dailyLimit": {
+      "body": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于明天解锁。",
+      "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于 {{time}} 解锁。",
+      "title": "已达每日文章上限"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "该文章已不再可用",
     "storyUnavailable": "该新闻已不再可用",
     "failedToLoad": "文章加载失败",
-    "articleNotFound": "文章未找到"
+    "articleNotFound": "文章未找到",
+    "readOn": "在 {{publication}} 上阅读"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "暂无可用信息流",
     "publishers": "出版商",
     "noPublishers": "该国家/地区暂无出版商",
-    "noArticlesFound": "未找到文章"
+    "noArticlesFound": "未找到文章",
+    "togglePin": "切换置顶",
+    "topHeadlines": "头条新闻",
+    "viewTopHeadlines": "头条新闻"
   },
   "clusterDetail": {
     "translatable": "这篇文章是{{language}}的，可以翻译成您的语言",
@@ -232,7 +243,8 @@
     "signedOutTitle": "已退出登录",
     "signedOutDescription": "您已成功退出登录。",
     "logoutFailedTitle": "退出登录失败",
-    "logoutFailedDescription": "退出登录时出现问题，请重试。"
+    "logoutFailedDescription": "退出登录时出现问题，请重试。",
+    "loggingOut": "正在退出登录…"
   },
   "notifications": {
     "title": "通知",
@@ -373,7 +385,11 @@
     "deletedTitle": "数据已删除",
     "deletedDescription": "所选数据已成功清除。",
     "errorTitle": "错误",
-    "errorDescription": "数据删除失败，请重试。"
+    "errorDescription": "数据删除失败，请重试。",
+    "factsDescription": "你的事实及其生成的主题——存储在此设备上",
+    "factsModalDescription": "清除你添加的事实及其生成的主题。主题仅存在于此设备上——绝不会存储在我们的服务器上。你的文章信息流也会被一并清除，因为它由这些主题构建；在你添加新的事实之前，它将保持为空。",
+    "locationDevice": "设备上",
+    "locationServer": "服务器"
   },
   "preferences": {
     "manageSettings": "管理您的应用设置和账户",
@@ -406,7 +422,11 @@
     "signedOutDescription": "您已成功退出登录。",
     "logoutFailedTitle": "退出登录失败",
     "logoutFailedDescription": "退出登录时出现问题，请重试。",
-    "loggingOut": "正在退出登录..."
+    "loggingOut": "正在退出登录...",
+    "user": "用户：{{email}}",
+    "appVersion": "应用版本：{{version}}",
+    "contentPolicy": "内容政策",
+    "reportBug": "报告问题"
   },
   "configPanel": {
     "tabPersona": "用户画像",
@@ -457,7 +477,10 @@
     "promoTooltip": "作为应用发布活动的一部分，您可以免费试用 Individual 套餐。此优惠限时有效。",
     "individualPlan": "Individual 套餐",
     "professionalPlan": "Professional 套餐",
-    "promoInfoTitle": "上线优惠"
+    "promoInfoTitle": "上线优惠",
+    "gotItPromo": "太棒了！🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 上线特惠 🎊"
   },
   "errors": {
     "somethingWentWrong": "出了点问题",
@@ -467,7 +490,21 @@
     "networkError": "无法连接到服务器。请检查您的网络和 API 端点设置。",
     "feedError": "无法加载您的资讯，请重试。",
     "accountRestricted": "账户受限",
-    "accountRestrictedDescription": "您的账户已被限制，请联系客服。"
+    "accountRestrictedDescription": "您的账户已被限制，请联系客服。",
+    "scoring": {
+      "generic": {
+        "message": "为你挑选新闻时出错了。我们会继续尝试——如果问题持续，请下拉刷新。",
+        "title": "无法更新你的信息流"
+      },
+      "offline": {
+        "message": "我们无法连接服务器为你挑选新闻。请检查你的网络连接——恢复联网后，你的信息流会自动更新。",
+        "title": "你已离线"
+      },
+      "server": {
+        "message": "我们无法连接新闻服务。这通常是暂时的——我们会继续尝试，你的信息流会自动更新。",
+        "title": "服务不可用"
+      }
+    }
   },
   "download": {
     "modelDownloading": "正在下载 AI 模型...",
@@ -599,6 +636,53 @@
     "sessionExpired": "会话已过期——请重新登录",
     "noTopics": "添加话题以查看您的新闻",
     "storageFull": "请释放设备存储空间后重试",
-    "syncFailed": "无法加载最新内容，下拉可刷新。"
+    "syncFailed": "无法加载最新内容，下拉可刷新。",
+    "dailyLimitReached": "你已达到今日文章上限。更多新闻明天见。"
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "删除",
+    "deleteConfirmMessage": "此操作将从此设备的已保存列表中移除该文章。",
+    "deleteConfirmTitle": "移除已保存的文章？",
+    "empty": "你还没有保存任何文章。点按文章上的书签即可保存以便稍后阅读。",
+    "note": "这些文章仅保存在你的设备上。你可以随时添加或移除——在你删除之前，它们会一直保留在这里。",
+    "removedToastMessage": "已从收藏中移除",
+    "savedToastMessage": "文章已保存以便稍后阅读",
+    "savedToastTitle": "已保存",
+    "title": "已保存"
+  },
+  "subscription": {
+    "activating": "正在激活你的订阅…",
+    "activationDelayed": "正在确认你的购买。这可能需要一点时间——如果没有继续，请点按刷新。",
+    "autoRenew": "自动续订",
+    "customerCenter": "管理／取消订阅",
+    "dailyArticleLimit": "每日文章上限",
+    "description": "订阅即可获得为你个性化定制的设备本地新闻信息流。",
+    "detailsSection": "订阅详情",
+    "expiresOn": "到期日",
+    "lifetime": "永久",
+    "managePlan": "管理订阅",
+    "periodIntro": "介绍期",
+    "periodLabel": "周期",
+    "periodNormal": "标准",
+    "periodPromotional": "促销",
+    "periodTrial": "免费试用",
+    "planIndividual": "个人版",
+    "planLabel": "方案",
+    "planProfessional": "专业版",
+    "planPromo": "促销",
+    "planSection": "你的方案",
+    "priceLabel": "价格",
+    "renewsOn": "续订日",
+    "resetsOn": "重置",
+    "restore": "恢复购买",
+    "storeAppStore": "App Store",
+    "storeLabel": "购买渠道",
+    "storePlayStore": "Google Play",
+    "storePromotional": "促销",
+    "subscribe": "订阅",
+    "title": "解锁 Mera News",
+    "usageSection": "用量",
+    "usedToday": "今日已分析",
+    "viewPlans": "查看方案"
   }
 }

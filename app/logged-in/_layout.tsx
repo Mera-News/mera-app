@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
+import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 
 export default function LoggedInLayout() {
@@ -130,6 +131,7 @@ export default function LoggedInLayout() {
         />
       </Stack>
       <FloatingChatHost />
+      <FeedbackWidgetModal />
     </View>
   );
 }

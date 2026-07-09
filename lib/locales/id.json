@@ -18,7 +18,8 @@
     "loggingOut": "Sedang Keluar...",
     "never": "Tidak pernah",
     "yes": "Ya",
-    "no": "Tidak"
+    "no": "Tidak",
+    "saving": "Menyimpan..."
   },
   "auth": {
     "emailPlaceholder": "Masukkan alamat email Anda",
@@ -47,7 +48,8 @@
       "switchBody": "Mengganti pengguna akan menghapus semua data pengguna ini di perangkat ini secara permanen. Tindakan ini tidak dapat dibatalkan.",
       "switchConfirm": "Ya, hapus data dan ganti pengguna",
       "switchCancel": "Batal"
-    }
+    },
+    "contentPolicy": "Kebijakan Konten"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Memberi skor di ponsel Anda",
       "completedTitle": "Selesai",
       "completedMessage": "Feed Anda sudah siap"
+    },
+    "dailyLimit": {
+      "body": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka besok.",
+      "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka pada {{time}}.",
+      "title": "Batas artikel harian tercapai"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Artikel ini sudah tidak tersedia",
     "storyUnavailable": "Berita ini sudah tidak tersedia",
     "failedToLoad": "Gagal memuat artikel",
-    "articleNotFound": "Artikel tidak ditemukan"
+    "articleNotFound": "Artikel tidak ditemukan",
+    "readOn": "Baca di {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Tidak ada feed yang tersedia",
     "publishers": "Penerbit",
     "noPublishers": "Tidak ada penerbit untuk negara ini",
-    "noArticlesFound": "Tidak ada artikel yang ditemukan"
+    "noArticlesFound": "Tidak ada artikel yang ditemukan",
+    "togglePin": "Alihkan sematan",
+    "topHeadlines": "Berita utama",
+    "viewTopHeadlines": "Berita utama"
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}} dan dapat diterjemahkan ke bahasa Anda",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Telah Keluar",
     "signedOutDescription": "Anda telah berhasil keluar.",
     "logoutFailedTitle": "Gagal Keluar",
-    "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi."
+    "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
+    "loggingOut": "Keluar..."
   },
   "notifications": {
     "title": "Notifikasi",
@@ -373,7 +385,11 @@
     "deletedTitle": "Data Dihapus",
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
-    "errorDescription": "Gagal menghapus data. Silakan coba lagi."
+    "errorDescription": "Gagal menghapus data. Silakan coba lagi.",
+    "factsDescription": "Fakta Anda dan topik yang dihasilkannya — di perangkat ini",
+    "factsModalDescription": "Menghapus fakta yang telah Anda tambahkan dan topik yang dihasilkan darinya. Topik hanya tersimpan di perangkat ini — tidak pernah disimpan di server kami. Feed artikel Anda juga dihapus, karena dibangun dari topik-topik ini, dan akan dibangun ulang dalam keadaan kosong sampai Anda menambahkan fakta baru.",
+    "locationDevice": "Di perangkat",
+    "locationServer": "Server"
   },
   "preferences": {
     "manageSettings": "Kelola pengaturan aplikasi dan akun Anda",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Anda telah berhasil keluar.",
     "logoutFailedTitle": "Gagal Keluar",
     "logoutFailedDescription": "Terjadi masalah saat keluar. Silakan coba lagi.",
-    "loggingOut": "Sedang Keluar..."
+    "loggingOut": "Sedang Keluar...",
+    "user": "Pengguna: {{email}}",
+    "appVersion": "Versi Aplikasi: {{version}}",
+    "contentPolicy": "Kebijakan Konten",
+    "reportBug": "Laporkan Bug"
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -457,7 +477,10 @@
     "promoTooltip": "Anda dapat mencoba paket Individual secara gratis sebagai bagian dari peluncuran aplikasi. Penawaran ini berlaku terbatas.",
     "individualPlan": "Paket Individual",
     "professionalPlan": "Paket Professional",
-    "promoInfoTitle": "Penawaran peluncuran"
+    "promoInfoTitle": "Penawaran peluncuran",
+    "gotItPromo": "Keren! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Penawaran peluncuran 🎊"
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",
@@ -467,7 +490,21 @@
     "networkError": "Tidak dapat terhubung ke server. Periksa jaringan dan pengaturan API endpoint Anda.",
     "feedError": "Tidak dapat memuat feed berita Anda. Silakan coba lagi.",
     "accountRestricted": "Akun Dibatasi",
-    "accountRestrictedDescription": "Akun Anda telah dibatasi. Silakan hubungi dukungan."
+    "accountRestrictedDescription": "Akun Anda telah dibatasi. Silakan hubungi dukungan.",
+    "scoring": {
+      "generic": {
+        "message": "Terjadi kesalahan saat memilih berita untuk Anda. Kami akan terus mencoba — tarik ke bawah untuk menyegarkan jika masih berlanjut.",
+        "title": "Tidak dapat memperbarui feed Anda"
+      },
+      "offline": {
+        "message": "Kami tidak dapat menjangkau server untuk memilih berita bagi Anda. Periksa koneksi Anda — feed Anda akan menyusul dengan sendirinya setelah Anda kembali online.",
+        "title": "Anda sedang offline"
+      },
+      "server": {
+        "message": "Kami tidak dapat menjangkau layanan berita. Ini biasanya sebentar — kami akan terus mencoba dan feed Anda akan diperbarui dengan sendirinya.",
+        "title": "Layanan tidak tersedia"
+      }
+    }
   },
   "download": {
     "modelDownloading": "Mengunduh AI model...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Sesi berakhir — silakan masuk kembali",
     "noTopics": "Tambah topik untuk melihat berita Anda",
     "storageFull": "Bebaskan penyimpanan perangkat dan coba lagi",
-    "syncFailed": "Kami tidak dapat memuat konten terbaru. Tarik untuk memuat ulang."
+    "syncFailed": "Kami tidak dapat memuat konten terbaru. Tarik untuk memuat ulang.",
+    "dailyLimitReached": "Anda telah mencapai batas artikel hari ini. Lebih banyak berita besok."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Hapus",
+    "deleteConfirmMessage": "Ini akan menghapus artikel dari daftar tersimpan Anda di perangkat ini.",
+    "deleteConfirmTitle": "Hapus artikel tersimpan?",
+    "empty": "Anda belum menyimpan artikel apa pun. Ketuk ikon penanda pada artikel untuk menyimpannya nanti.",
+    "note": "Artikel ini hanya disimpan di perangkat Anda. Tambah atau hapus kapan saja — artikel tetap di sini sampai Anda menghapusnya.",
+    "removedToastMessage": "Dihapus dari tersimpan",
+    "savedToastMessage": "Artikel disimpan untuk nanti",
+    "savedToastTitle": "Tersimpan",
+    "title": "Tersimpan"
+  },
+  "subscription": {
+    "activating": "Mengaktifkan langganan Anda…",
+    "activationDelayed": "Pembelian Anda sedang dikonfirmasi. Ini bisa memakan waktu sebentar — ketuk segarkan jika tidak berlanjut.",
+    "autoRenew": "Perpanjang otomatis",
+    "customerCenter": "Kelola / batalkan langganan",
+    "dailyArticleLimit": "Batas artikel harian",
+    "description": "Berlangganan untuk mendapatkan feed berita yang dipersonalisasi di perangkat Anda.",
+    "detailsSection": "Detail langganan",
+    "expiresOn": "Berakhir pada",
+    "lifetime": "Seumur hidup",
+    "managePlan": "Kelola langganan",
+    "periodIntro": "Perkenalan",
+    "periodLabel": "Periode",
+    "periodNormal": "Standar",
+    "periodPromotional": "Promosi",
+    "periodTrial": "Uji coba gratis",
+    "planIndividual": "Individu",
+    "planLabel": "Paket",
+    "planProfessional": "Profesional",
+    "planPromo": "Promo",
+    "planSection": "Paket Anda",
+    "priceLabel": "Harga",
+    "renewsOn": "Diperpanjang pada",
+    "resetsOn": "Direset",
+    "restore": "Pulihkan pembelian",
+    "storeAppStore": "App Store",
+    "storeLabel": "Dibeli melalui",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promosi",
+    "subscribe": "Berlangganan",
+    "title": "Buka Mera News",
+    "usageSection": "Penggunaan",
+    "usedToday": "Dianalisis hari ini",
+    "viewPlans": "Lihat paket"
   }
 }

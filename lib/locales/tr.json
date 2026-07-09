@@ -18,7 +18,8 @@
     "loggingOut": "Çıkış Yapılıyor...",
     "never": "Hiçbir zaman",
     "yes": "Evet",
-    "no": "Hayır"
+    "no": "Hayır",
+    "saving": "Kaydediliyor..."
   },
   "auth": {
     "emailPlaceholder": "E-posta adresinizi girin",
@@ -47,7 +48,8 @@
       "switchBody": "Kullanıcı değiştirmek, bu kullanıcının bu cihazdaki tüm verilerini kalıcı olarak siler. Bu işlem geri alınamaz.",
       "switchConfirm": "Evet, verileri sil ve kullanıcı değiştir",
       "switchCancel": "İptal"
-    }
+    },
+    "contentPolicy": "İçerik Politikası"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Telefonda puanlanıyor",
       "completedTitle": "Tamamlandı",
       "completedMessage": "Haber akışın hazır"
+    },
+    "dailyLimit": {
+      "body": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler yarın açılır.",
+      "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler {{time}} saatinde açılır.",
+      "title": "Günlük makale sınırına ulaşıldı"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Bu makale artık mevcut değil",
     "storyUnavailable": "Bu haber artık mevcut değil",
     "failedToLoad": "Makale yüklenemedi",
-    "articleNotFound": "Makale bulunamadı"
+    "articleNotFound": "Makale bulunamadı",
+    "readOn": "{{publication}} üzerinde oku"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Mevcut akış yok",
     "publishers": "Yayıncılar",
     "noPublishers": "Bu ülke için yayıncı yok",
-    "noArticlesFound": "Makale bulunamadı"
+    "noArticlesFound": "Makale bulunamadı",
+    "togglePin": "Sabitlemeyi değiştir",
+    "topHeadlines": "Öne çıkan başlıklar",
+    "viewTopHeadlines": "Öne çıkan başlıklar"
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde ve senin diline çevrilebilir",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Çıkış Yapıldı",
     "signedOutDescription": "Başarıyla çıkış yaptın.",
     "logoutFailedTitle": "Çıkış Başarısız",
-    "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene."
+    "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
+    "loggingOut": "Çıkış yapılıyor..."
   },
   "notifications": {
     "title": "Bildirimler",
@@ -373,7 +385,11 @@
     "deletedTitle": "Veriler Silindi",
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
-    "errorDescription": "Veriler silinemedi. Lütfen tekrar dene."
+    "errorDescription": "Veriler silinemedi. Lütfen tekrar dene.",
+    "factsDescription": "Bilgileriniz ve bunların ürettiği konular — bu cihazda",
+    "factsModalDescription": "Eklediğiniz bilgileri ve bunlardan üretilen konuları temizler. Konular yalnızca bu cihazda bulunur — sunucularımızda asla saklanmaz. Makale akışınız da bu konulardan oluşturulduğu için temizlenir ve siz yeni bilgi ekleyene kadar boş olarak yeniden oluşturulur.",
+    "locationDevice": "Cihazda",
+    "locationServer": "Sunucu"
   },
   "preferences": {
     "manageSettings": "Uygulama ayarlarını ve hesabını yönet",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Başarıyla çıkış yaptın.",
     "logoutFailedTitle": "Çıkış Başarısız",
     "logoutFailedDescription": "Çıkış yaparken bir sorun oluştu. Lütfen tekrar dene.",
-    "loggingOut": "Çıkış Yapılıyor..."
+    "loggingOut": "Çıkış Yapılıyor...",
+    "user": "Kullanıcı: {{email}}",
+    "appVersion": "Uygulama Sürümü: {{version}}",
+    "contentPolicy": "İçerik Politikası",
+    "reportBug": "Hata bildir"
   },
   "configPanel": {
     "tabPersona": "Profil",
@@ -457,7 +477,10 @@
     "promoTooltip": "Uygulama lansmanımız kapsamında Individual planını ücretsiz deneyebilirsiniz. Bu sınırlı süreli bir tekliftir.",
     "individualPlan": "Individual Planı",
     "professionalPlan": "Professional Planı",
-    "promoInfoTitle": "Lansman teklifi"
+    "promoInfoTitle": "Lansman teklifi",
+    "gotItPromo": "Harika! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Lansman teklifi 🎊"
   },
   "errors": {
     "somethingWentWrong": "Bir şeyler yanlış gitti",
@@ -467,7 +490,21 @@
     "networkError": "Sunucuya bağlanılamıyor. Ağını ve API uç nokta ayarlarını kontrol et.",
     "feedError": "Haber akışın yüklenemedi. Lütfen tekrar dene.",
     "accountRestricted": "Hesap Kısıtlandı",
-    "accountRestrictedDescription": "Hesabın kısıtlanmıştır. Lütfen destek ekibiyle iletişime geç."
+    "accountRestrictedDescription": "Hesabın kısıtlanmıştır. Lütfen destek ekibiyle iletişime geç.",
+    "scoring": {
+      "generic": {
+        "message": "Sizin için haber seçilirken bir sorun oluştu. Denemeye devam edeceğiz — sorun sürerse yenilemek için aşağı çekin.",
+        "title": "Akışınız güncellenemedi"
+      },
+      "offline": {
+        "message": "Sizin için haber seçmek üzere sunucuya ulaşamıyoruz. Bağlantınızı kontrol edin — çevrimiçi olduğunuzda akışınız kendiliğinden güncellenecek.",
+        "title": "Çevrimdışısınız"
+      },
+      "server": {
+        "message": "Haber servisine ulaşamadık. Bu genellikle kısa sürer — denemeye devam edeceğiz ve akışınız kendiliğinden güncellenecek.",
+        "title": "Servis kullanılamıyor"
+      }
+    }
   },
   "download": {
     "modelDownloading": "AI modeli indiriliyor...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Oturum süresi doldu — lütfen tekrar giriş yap",
     "noTopics": "Haberlerini görmek için konu ekle",
     "storageFull": "Cihaz depolama alanını boşalt ve tekrar dene",
-    "syncFailed": "En son içerik yüklenemedi. Yenilemek için aşağı çek."
+    "syncFailed": "En son içerik yüklenemedi. Yenilemek için aşağı çek.",
+    "dailyLimitReached": "Bugünkü makale sınırına ulaştınız. Daha fazla haber yarın."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Sil",
+    "deleteConfirmMessage": "Bu, makaleyi bu cihazdaki kayıtlı listenizden kaldırır.",
+    "deleteConfirmTitle": "Kayıtlı makale kaldırılsın mı?",
+    "empty": "Henüz hiç makale kaydetmediniz. Bir makaleyi daha sonrası için kaydetmek üzere yer imine dokunun.",
+    "note": "Bu makaleler yalnızca cihazınızda kaydedilir. İstediğiniz zaman ekleyin veya kaldırın — siz silene kadar burada kalırlar.",
+    "removedToastMessage": "Kayıtlılardan kaldırıldı",
+    "savedToastMessage": "Makale daha sonrası için kaydedildi",
+    "savedToastTitle": "Kaydedildi",
+    "title": "Kaydedilenler"
+  },
+  "subscription": {
+    "activating": "Aboneliğiniz etkinleştiriliyor…",
+    "activationDelayed": "Satın alımınız onaylanıyor. Bu biraz zaman alabilir — devam etmezse yenile'ye dokunun.",
+    "autoRenew": "Otomatik yenileme",
+    "customerCenter": "Aboneliği yönet / iptal et",
+    "dailyArticleLimit": "Günlük makale sınırı",
+    "description": "Kişiselleştirilmiş, cihaz içi haber akışınızı almak için abone olun.",
+    "detailsSection": "Abonelik ayrıntıları",
+    "expiresOn": "Bitiş tarihi",
+    "lifetime": "Ömür boyu",
+    "managePlan": "Aboneliği yönet",
+    "periodIntro": "Tanıtım",
+    "periodLabel": "Dönem",
+    "periodNormal": "Standart",
+    "periodPromotional": "Promosyon",
+    "periodTrial": "Ücretsiz deneme",
+    "planIndividual": "Bireysel",
+    "planLabel": "Plan",
+    "planProfessional": "Profesyonel",
+    "planPromo": "Promo",
+    "planSection": "Planınız",
+    "priceLabel": "Fiyat",
+    "renewsOn": "Yenilenme tarihi",
+    "resetsOn": "Sıfırlanma",
+    "restore": "Satın alımları geri yükle",
+    "storeAppStore": "App Store",
+    "storeLabel": "Satın alma yeri",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promosyon",
+    "subscribe": "Abone ol",
+    "title": "Mera News'in kilidini açın",
+    "usageSection": "Kullanım",
+    "usedToday": "Bugün analiz edilen",
+    "viewPlans": "Planları görüntüle"
   }
 }

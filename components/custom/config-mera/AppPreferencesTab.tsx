@@ -8,11 +8,11 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { showFeedback } from '@/lib/feedback';
+import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
-import { showFeedback } from '@/lib/feedback';
-import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
 import React from 'react';
@@ -29,7 +29,7 @@ interface PreferenceOption {
     title: string;
     icon: keyof typeof MaterialIcons.glyphMap;
     onPress: () => void;
-    type?: 'normal' | 'danger';
+    type?: 'normal' | 'danger' | 'feedback';
 }
 
 const AppPreferencesTab: React.FC = () => {
@@ -106,19 +106,6 @@ const AppPreferencesTab: React.FC = () => {
         ]
         : [];
 
-    // "Report a Bug" row — only when Sentry is enabled (showFeedback() no-ops
-    // otherwise, so a dead row would be misleading). Same gate as FeedbackFab.
-    const feedbackOptions: PreferenceOption[] = SENTRY_ENABLED
-        ? [
-            {
-                id: 'report-bug',
-                title: t('preferences.reportBug'),
-                icon: 'bug-report',
-                onPress: showFeedback,
-            },
-        ]
-        : [];
-
     // Define preference options
     const preferenceOptions: PreferenceOption[] = [
         {
@@ -153,12 +140,25 @@ const AppPreferencesTab: React.FC = () => {
         },
         {
             id: 'observability',
-            title: 'Observability',
+            title: t('observability.title'),
             icon: 'monitor-heart',
             onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
         },
-        ...feedbackOptions,
         ...subscriptionOptions,
+        // "Report a Bug" sits just above Logout, tinted Mera-orange so it reads
+        // as distinct from the neutral rows. Only shown when Sentry is enabled
+        // (showFeedback() no-ops otherwise). Tapping opens the feedback popup.
+        ...(SENTRY_ENABLED
+            ? [
+                {
+                    id: 'report-bug',
+                    title: t('preferences.reportBug'),
+                    icon: 'bug-report' as const,
+                    onPress: showFeedback,
+                    type: 'feedback' as const,
+                },
+            ]
+            : []),
         {
             id: 'logout',
             title: t('preferences.logout'),
@@ -172,12 +172,19 @@ const AppPreferencesTab: React.FC = () => {
     // Render option item as outline button
     const renderOption = (option: PreferenceOption) => {
         const isDanger = option.type === 'danger';
-        const textColor = isDanger ? 'text-red-400' : 'text-white';
+        const isFeedback = option.type === 'feedback';
+        const textColor = isDanger
+            ? 'text-red-400'
+            : isFeedback
+                ? 'text-primary-400'
+                : 'text-white';
+        // Tint the feedback row's border to match its Mera-orange label.
+        const borderColor = isFeedback ? 'border-primary-400/50' : 'border-gray-700';
 
         return (
             <Pressable
                 key={option.id}
-                className="flex-row items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg"
+                className={`flex-row items-center justify-between py-3 px-4 mb-3 border ${borderColor} rounded-lg`}
                 onPress={option.onPress}
             >
                 {option.id === 'language' ? (
@@ -229,11 +236,11 @@ const AppPreferencesTab: React.FC = () => {
                     </HStack>
                     {maskedEmail && (
                         <Text size="xs" className="text-gray-500 mb-1">
-                            User: {maskedEmail}
+                            {t('preferences.user', { email: maskedEmail })}
                         </Text>
                     )}
                     <Text size="xs" className="text-gray-500">
-                        App Version: {getAppVersionLabel()}
+                        {t('preferences.appVersion', { version: getAppVersionLabel() })}
                     </Text>
                     <Text size="xs" className="text-gray-500 mt-1">
                         © {new Date().getFullYear()} Mera Labs B.V.

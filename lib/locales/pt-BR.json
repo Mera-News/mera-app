@@ -18,7 +18,8 @@
     "loggingOut": "Saindo...",
     "never": "Nunca",
     "yes": "Sim",
-    "no": "Não"
+    "no": "Não",
+    "saving": "Salvando..."
   },
   "auth": {
     "emailPlaceholder": "Digite seu endereço de e-mail",
@@ -47,7 +48,8 @@
       "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Essa ação não pode ser desfeita.",
       "switchConfirm": "Sim, limpar dados e trocar de usuário",
       "switchCancel": "Cancelar"
-    }
+    },
+    "contentPolicy": "Política de conteúdo"
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Classificando no seu celular",
       "completedTitle": "Tudo pronto",
       "completedMessage": "Seu feed está pronto"
+    },
+    "dailyLimit": {
+      "body": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo — novos artigos serão liberados amanhã.",
+      "bodyWithTime": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo — novos artigos serão liberados às {{time}}.",
+      "title": "Limite diário de artigos atingido"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Este artigo não está mais disponível",
     "storyUnavailable": "Esta história não está mais disponível",
     "failedToLoad": "Falha ao carregar artigo",
-    "articleNotFound": "Artigo não encontrado"
+    "articleNotFound": "Artigo não encontrado",
+    "readOn": "Ler no {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Falha ao carregar detalhes do grupo",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Nenhum feed disponível",
     "publishers": "Publicadores",
     "noPublishers": "Nenhum publicador para este país",
-    "noArticlesFound": "Nenhum artigo encontrado"
+    "noArticlesFound": "Nenhum artigo encontrado",
+    "togglePin": "Alternar fixação",
+    "topHeadlines": "Principais manchetes",
+    "viewTopHeadlines": "Principais manchetes"
   },
   "clusterDetail": {
     "translatable": "Este artigo está em {{language}} e pode ser traduzido para o seu idioma",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Sessão Encerrada",
     "signedOutDescription": "Você foi desconectado com sucesso.",
     "logoutFailedTitle": "Falha ao Sair",
-    "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente."
+    "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente.",
+    "loggingOut": "Saindo..."
   },
   "notifications": {
     "title": "Notificações",
@@ -373,7 +385,11 @@
     "deletedTitle": "Dados Excluídos",
     "deletedDescription": "Os dados selecionados foram limpos com sucesso.",
     "errorTitle": "Erro",
-    "errorDescription": "Falha ao excluir dados. Por favor, tente novamente."
+    "errorDescription": "Falha ao excluir dados. Por favor, tente novamente.",
+    "factsDescription": "Seus fatos e os tópicos que eles geram — neste dispositivo",
+    "factsModalDescription": "Apaga os fatos que você adicionou e os tópicos gerados a partir deles. Os tópicos ficam apenas neste dispositivo — nunca são armazenados em nossos servidores. Seu feed de artigos também é apagado, já que é criado a partir desses tópicos, e é recriado vazio até você adicionar novos fatos.",
+    "locationDevice": "No dispositivo",
+    "locationServer": "Servidor"
   },
   "preferences": {
     "manageSettings": "Gerencie as configurações do app e da conta",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Você foi desconectado com sucesso.",
     "logoutFailedTitle": "Falha ao Sair",
     "logoutFailedDescription": "Houve um problema ao encerrar a sessão. Por favor, tente novamente.",
-    "loggingOut": "Saindo..."
+    "loggingOut": "Saindo...",
+    "user": "Usuário: {{email}}",
+    "appVersion": "Versão do app: {{version}}",
+    "contentPolicy": "Política de conteúdo",
+    "reportBug": "Relatar um bug"
   },
   "configPanel": {
     "tabPersona": "Perfil",
@@ -457,7 +477,10 @@
     "promoTooltip": "Você pode testar gratuitamente o plano Individual como parte do lançamento do app. Esta é uma oferta por tempo limitado.",
     "individualPlan": "Plano Individual",
     "professionalPlan": "Plano Professional",
-    "promoInfoTitle": "Oferta de lançamento"
+    "promoInfoTitle": "Oferta de lançamento",
+    "gotItPromo": "Incrível! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Oferta de lançamento 🎊"
   },
   "errors": {
     "somethingWentWrong": "Algo deu errado",
@@ -467,7 +490,21 @@
     "networkError": "Não foi possível conectar ao servidor. Verifique sua rede e as configurações do endpoint da API.",
     "feedError": "Não foi possível carregar seu feed. Por favor, tente novamente.",
     "accountRestricted": "Conta Restrita",
-    "accountRestrictedDescription": "Sua conta foi restrita. Por favor, entre em contato com o suporte."
+    "accountRestrictedDescription": "Sua conta foi restrita. Por favor, entre em contato com o suporte.",
+    "scoring": {
+      "generic": {
+        "message": "Algo deu errado ao selecionar notícias para você. Vamos continuar tentando — puxe para baixo para atualizar se o problema persistir.",
+        "title": "Não foi possível atualizar seu feed"
+      },
+      "offline": {
+        "message": "Não conseguimos acessar o servidor para selecionar notícias para você. Verifique sua conexão — seu feed será atualizado sozinho assim que você voltar a ficar online.",
+        "title": "Você está offline"
+      },
+      "server": {
+        "message": "Não conseguimos acessar o serviço de notícias. Isso costuma ser rápido — vamos continuar tentando e seu feed será atualizado sozinho.",
+        "title": "Serviço indisponível"
+      }
+    }
   },
   "download": {
     "modelDownloading": "Baixando modelo de IA...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Sessão expirada — por favor, faça login novamente",
     "noTopics": "Adicione tópicos para ver suas notícias",
     "storageFull": "Libere armazenamento no dispositivo e tente novamente",
-    "syncFailed": "Não conseguimos carregar o conteúdo mais recente. Puxe para atualizar."
+    "syncFailed": "Não conseguimos carregar o conteúdo mais recente. Puxe para atualizar.",
+    "dailyLimitReached": "Você atingiu o limite de artigos de hoje. Mais notícias amanhã."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Excluir",
+    "deleteConfirmMessage": "Isso removerá o artigo da sua lista de salvos neste dispositivo.",
+    "deleteConfirmTitle": "Remover artigo salvo?",
+    "empty": "Você ainda não salvou nenhum artigo. Toque no marcador de um artigo para salvá-lo para depois.",
+    "note": "Estes artigos são salvos apenas no seu dispositivo. Adicione ou remova quando quiser — eles permanecem aqui até você excluí-los.",
+    "removedToastMessage": "Removido dos salvos",
+    "savedToastMessage": "Artigo salvo para depois",
+    "savedToastTitle": "Salvo",
+    "title": "Salvos"
+  },
+  "subscription": {
+    "activating": "Ativando sua assinatura…",
+    "activationDelayed": "Sua compra está sendo confirmada. Isso pode levar um momento — toque em atualizar se não continuar.",
+    "autoRenew": "Renovação automática",
+    "customerCenter": "Gerenciar / cancelar assinatura",
+    "dailyArticleLimit": "Limite diário de artigos",
+    "description": "Assine para ter seu feed de notícias personalizado e no dispositivo.",
+    "detailsSection": "Detalhes da assinatura",
+    "expiresOn": "Expira em",
+    "lifetime": "Vitalícia",
+    "managePlan": "Gerenciar assinatura",
+    "periodIntro": "Introdutório",
+    "periodLabel": "Período",
+    "periodNormal": "Padrão",
+    "periodPromotional": "Promocional",
+    "periodTrial": "Teste gratuito",
+    "planIndividual": "Individual",
+    "planLabel": "Plano",
+    "planProfessional": "Profissional",
+    "planPromo": "Promo",
+    "planSection": "Seu plano",
+    "priceLabel": "Preço",
+    "renewsOn": "Renova em",
+    "resetsOn": "Reinicia",
+    "restore": "Restaurar compras",
+    "storeAppStore": "App Store",
+    "storeLabel": "Comprado via",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promocional",
+    "subscribe": "Assinar",
+    "title": "Desbloquear o Mera News",
+    "usageSection": "Uso",
+    "usedToday": "Analisados hoje",
+    "viewPlans": "Ver planos"
   }
 }

@@ -18,7 +18,8 @@
     "loggingOut": "Wylogowywanie...",
     "never": "Nigdy",
     "yes": "Tak",
-    "no": "Nie"
+    "no": "Nie",
+    "saving": "Zapisywanie..."
   },
   "auth": {
     "emailPlaceholder": "Wpisz swój adres e-mail",
@@ -47,7 +48,8 @@
       "switchBody": "Zmiana użytkownika spowoduje trwałe usunięcie wszystkich danych tego użytkownika z tego urządzenia. Tej operacji nie można cofnąć.",
       "switchConfirm": "Tak, wyczyść dane i zmień użytkownika",
       "switchCancel": "Anuluj"
-    }
+    },
+    "contentPolicy": "Zasady dotyczące treści"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Ocenianie na Twoim telefonie",
       "completedTitle": "Wszystko gotowe",
       "completedMessage": "Twój kanał jest gotowy"
+    },
+    "dailyLimit": {
+      "body": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu — nowe artykuły odblokują się jutro.",
+      "bodyWithTime": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu — nowe artykuły odblokują się o {{time}}.",
+      "title": "Osiągnięto dzienny limit artykułów"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Ten artykuł nie jest już dostępny",
     "storyUnavailable": "Ta historia nie jest już dostępna",
     "failedToLoad": "Nie udało się załadować artykułu",
-    "articleNotFound": "Nie znaleziono artykułu"
+    "articleNotFound": "Nie znaleziono artykułu",
+    "readOn": "Czytaj w {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Brak dostępnych kanałów",
     "publishers": "Wydawcy",
     "noPublishers": "Brak wydawców dla tego kraju",
-    "noArticlesFound": "Nie znaleziono artykułów"
+    "noArticlesFound": "Nie znaleziono artykułów",
+    "togglePin": "Przełącz przypięcie",
+    "topHeadlines": "Najważniejsze nagłówki",
+    "viewTopHeadlines": "Najważniejsze nagłówki"
   },
   "clusterDetail": {
     "translatable": "Ten artykuł jest w języku {{language}} i może zostać przetłumaczony na Twój język",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Wylogowano",
     "signedOutDescription": "Zostałeś pomyślnie wylogowany.",
     "logoutFailedTitle": "Wylogowanie nieudane",
-    "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie."
+    "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie.",
+    "loggingOut": "Wylogowywanie..."
   },
   "notifications": {
     "title": "Powiadomienia",
@@ -373,7 +385,11 @@
     "deletedTitle": "Dane usunięte",
     "deletedDescription": "Wybrane dane zostały pomyślnie wyczyszczone.",
     "errorTitle": "Błąd",
-    "errorDescription": "Nie udało się usunąć danych. Spróbuj ponownie."
+    "errorDescription": "Nie udało się usunąć danych. Spróbuj ponownie.",
+    "factsDescription": "Twoje fakty i generowane na ich podstawie tematy — na tym urządzeniu",
+    "factsModalDescription": "Usuwa dodane przez Ciebie fakty oraz wygenerowane na ich podstawie tematy. Tematy istnieją tylko na tym urządzeniu — nigdy nie są przechowywane na naszych serwerach. Twój kanał artykułów również zostanie wyczyszczony, ponieważ jest budowany na podstawie tych tematów, i pozostanie pusty, dopóki nie dodasz nowych faktów.",
+    "locationDevice": "Na urządzeniu",
+    "locationServer": "Serwer"
   },
   "preferences": {
     "manageSettings": "Zarządzaj ustawieniami aplikacji i kontem",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Zostałeś pomyślnie wylogowany.",
     "logoutFailedTitle": "Wylogowanie nieudane",
     "logoutFailedDescription": "Wystąpił problem podczas wylogowywania. Spróbuj ponownie.",
-    "loggingOut": "Wylogowywanie..."
+    "loggingOut": "Wylogowywanie...",
+    "user": "Użytkownik: {{email}}",
+    "appVersion": "Wersja aplikacji: {{version}}",
+    "contentPolicy": "Zasady dotyczące treści",
+    "reportBug": "Zgłoś błąd"
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -457,7 +477,10 @@
     "promoTooltip": "W ramach premiery aplikacji możesz bezpłatnie testować plan Individual. Oferta ograniczona czasowo.",
     "individualPlan": "Plan Individual",
     "professionalPlan": "Plan Professional",
-    "promoInfoTitle": "Oferta premierowa"
+    "promoInfoTitle": "Oferta premierowa",
+    "gotItPromo": "Świetnie! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Oferta na start 🎊"
   },
   "errors": {
     "somethingWentWrong": "Coś poszło nie tak",
@@ -467,7 +490,21 @@
     "networkError": "Nie można połączyć się z serwerem. Sprawdź sieć i ustawienia punktu końcowego API.",
     "feedError": "Nie udało się załadować kanału. Spróbuj ponownie.",
     "accountRestricted": "Konto zablokowane",
-    "accountRestrictedDescription": "Twoje konto zostało zablokowane. Skontaktuj się z pomocą techniczną."
+    "accountRestrictedDescription": "Twoje konto zostało zablokowane. Skontaktuj się z pomocą techniczną.",
+    "scoring": {
+      "generic": {
+        "message": "Coś poszło nie tak podczas dobierania wiadomości dla Ciebie. Będziemy próbować dalej — przeciągnij w dół, aby odświeżyć, jeśli problem się utrzymuje.",
+        "title": "Nie udało się zaktualizować kanału"
+      },
+      "offline": {
+        "message": "Nie możemy połączyć się z serwerem, aby dobrać dla Ciebie wiadomości. Sprawdź połączenie — Twój kanał nadrobi zaległości automatycznie, gdy wrócisz do sieci.",
+        "title": "Jesteś offline"
+      },
+      "server": {
+        "message": "Nie udało się połączyć z usługą wiadomości. Zwykle trwa to krótko — będziemy próbować dalej, a Twój kanał zaktualizuje się samodzielnie.",
+        "title": "Usługa niedostępna"
+      }
+    }
   },
   "download": {
     "modelDownloading": "Pobieranie modelu AI...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Sesja wygasła — zaloguj się ponownie",
     "noTopics": "Dodaj tematy, aby zobaczyć swoje wiadomości",
     "storageFull": "Zwolnij miejsce na urządzeniu i spróbuj ponownie",
-    "syncFailed": "Nie udało się załadować najnowszych treści. Pociągnij, aby odświeżyć."
+    "syncFailed": "Nie udało się załadować najnowszych treści. Pociągnij, aby odświeżyć.",
+    "dailyLimitReached": "Osiągnięto dzisiejszy limit artykułów. Więcej wiadomości jutro."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Usuń",
+    "deleteConfirmMessage": "Spowoduje to usunięcie artykułu z listy zapisanych na tym urządzeniu.",
+    "deleteConfirmTitle": "Usunąć zapisany artykuł?",
+    "empty": "Nie masz jeszcze zapisanych artykułów. Dotknij zakładki przy artykule, aby zapisać go na później.",
+    "note": "Te artykuły są zapisane tylko na Twoim urządzeniu. Dodawaj lub usuwaj je w dowolnym momencie — pozostaną tutaj, dopóki ich nie usuniesz.",
+    "removedToastMessage": "Usunięto z zapisanych",
+    "savedToastMessage": "Artykuł zapisany na później",
+    "savedToastTitle": "Zapisano",
+    "title": "Zapisane"
+  },
+  "subscription": {
+    "activating": "Aktywowanie subskrypcji…",
+    "activationDelayed": "Twój zakup jest potwierdzany. Może to chwilę potrwać — dotknij odśwież, jeśli proces się nie kończy.",
+    "autoRenew": "Automatyczne odnawianie",
+    "customerCenter": "Zarządzaj / anuluj subskrypcję",
+    "dailyArticleLimit": "Dzienny limit artykułów",
+    "description": "Subskrybuj, aby uzyskać spersonalizowany kanał wiadomości działający na urządzeniu.",
+    "detailsSection": "Szczegóły subskrypcji",
+    "expiresOn": "Wygasa",
+    "lifetime": "Dożywotnia",
+    "managePlan": "Zarządzaj subskrypcją",
+    "periodIntro": "Wprowadzająca",
+    "periodLabel": "Okres",
+    "periodNormal": "Standardowy",
+    "periodPromotional": "Promocyjny",
+    "periodTrial": "Bezpłatny okres próbny",
+    "planIndividual": "Indywidualny",
+    "planLabel": "Plan",
+    "planProfessional": "Profesjonalny",
+    "planPromo": "Promo",
+    "planSection": "Twój plan",
+    "priceLabel": "Cena",
+    "renewsOn": "Odnawia się",
+    "resetsOn": "Resetuje się",
+    "restore": "Przywróć zakupy",
+    "storeAppStore": "App Store",
+    "storeLabel": "Zakupiono przez",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promocyjny",
+    "subscribe": "Subskrybuj",
+    "title": "Odblokuj Mera News",
+    "usageSection": "Wykorzystanie",
+    "usedToday": "Przeanalizowano dzisiaj",
+    "viewPlans": "Zobacz plany"
   }
 }

@@ -18,7 +18,8 @@
     "loggingOut": "Cerrando sesión...",
     "never": "Nunca",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "saving": "Guardando..."
   },
   "auth": {
     "emailPlaceholder": "Ingresa tu dirección de correo electrónico",
@@ -47,7 +48,8 @@
       "switchBody": "Cambiar de usuario eliminará permanentemente todos los datos de este usuario en este dispositivo. Esta acción no se puede deshacer.",
       "switchConfirm": "Sí, borrar datos y cambiar usuario",
       "switchCancel": "Cancelar"
-    }
+    },
+    "contentPolicy": "Política de contenido"
   },
   "account": {
     "pendingTitle": "Cuenta pendiente de aprobación",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Puntuando en tu teléfono",
       "completedTitle": "Todo listo",
       "completedMessage": "Tu feed está listo"
+    },
+    "dailyLimit": {
+      "body": "Por ahora no se pueden obtener nuevos artículos. Explora los artículos que ya tienes en tu dispositivo; los nuevos se desbloquean mañana.",
+      "bodyWithTime": "Por ahora no se pueden obtener nuevos artículos. Explora los artículos que ya tienes en tu dispositivo; los nuevos se desbloquean a las {{time}}.",
+      "title": "Límite diario de artículos alcanzado"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Este artículo ya no está disponible",
     "storyUnavailable": "Esta historia ya no está disponible",
     "failedToLoad": "Error al cargar el artículo",
-    "articleNotFound": "Artículo no encontrado"
+    "articleNotFound": "Artículo no encontrado",
+    "readOn": "Leer en {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Error al cargar los detalles del grupo",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "No hay feeds disponibles",
     "publishers": "Publicaciones",
     "noPublishers": "No hay publicaciones para este país",
-    "noArticlesFound": "No se encontraron artículos"
+    "noArticlesFound": "No se encontraron artículos",
+    "togglePin": "Fijar o desfijar",
+    "topHeadlines": "Titulares principales",
+    "viewTopHeadlines": "Titulares principales"
   },
   "clusterDetail": {
     "translatable": "Este artículo está en {{language}} y puede traducirse a tu idioma",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Sesión cerrada",
     "signedOutDescription": "Has cerrado sesión exitosamente.",
     "logoutFailedTitle": "Error al cerrar sesión",
-    "logoutFailedDescription": "Hubo un problema al cerrar sesión. Por favor, inténtalo de nuevo."
+    "logoutFailedDescription": "Hubo un problema al cerrar sesión. Por favor, inténtalo de nuevo.",
+    "loggingOut": "Cerrando sesión..."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -373,7 +385,11 @@
     "deletedTitle": "Datos eliminados",
     "deletedDescription": "Los datos seleccionados se han limpiado exitosamente.",
     "errorTitle": "Error",
-    "errorDescription": "No se pudieron eliminar los datos. Por favor, inténtalo de nuevo."
+    "errorDescription": "No se pudieron eliminar los datos. Por favor, inténtalo de nuevo.",
+    "factsDescription": "Tus datos y los temas que generan, en este dispositivo",
+    "factsModalDescription": "Borra los datos que has añadido y los temas generados a partir de ellos. Los temas solo existen en este dispositivo; nunca se guardan en nuestros servidores. Tu feed de artículos también se borra, ya que se crea a partir de estos temas, y se reconstruye vacío hasta que añadas nuevos datos.",
+    "locationDevice": "En el dispositivo",
+    "locationServer": "Servidor"
   },
   "preferences": {
     "manageSettings": "Gestiona los ajustes de tu aplicación y cuenta",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Has cerrado sesión exitosamente.",
     "logoutFailedTitle": "Error al cerrar sesión",
     "logoutFailedDescription": "Hubo un problema al cerrar sesión. Por favor, inténtalo de nuevo.",
-    "loggingOut": "Cerrando sesión..."
+    "loggingOut": "Cerrando sesión...",
+    "user": "Usuario: {{email}}",
+    "appVersion": "Versión de la app: {{version}}",
+    "contentPolicy": "Política de contenido",
+    "reportBug": "Informar de un error"
   },
   "configPanel": {
     "tabPersona": "Perfil",
@@ -457,7 +477,10 @@
     "promoTooltip": "Puedes probar gratis el plan Individual como parte del lanzamiento de la app. Es una oferta por tiempo limitado.",
     "individualPlan": "Plan Individual",
     "professionalPlan": "Plan Professional",
-    "promoInfoTitle": "Oferta de lanzamiento"
+    "promoInfoTitle": "Oferta de lanzamiento",
+    "gotItPromo": "¡Genial! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Oferta de lanzamiento 🎊"
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",
@@ -467,7 +490,21 @@
     "networkError": "No se pudo conectar al servidor. Verifica tu conexión de red y los ajustes del API.",
     "feedError": "No se pudo cargar tu feed. Por favor, inténtalo de nuevo.",
     "accountRestricted": "Cuenta restringida",
-    "accountRestrictedDescription": "Tu cuenta ha sido restringida. Por favor, contacta con soporte."
+    "accountRestrictedDescription": "Tu cuenta ha sido restringida. Por favor, contacta con soporte.",
+    "scoring": {
+      "generic": {
+        "message": "Algo salió mal al seleccionar noticias para ti. Seguiremos intentándolo; desliza hacia abajo para actualizar si continúa.",
+        "title": "No pudimos actualizar tu feed"
+      },
+      "offline": {
+        "message": "No podemos conectar con el servidor para seleccionar noticias para ti. Revisa tu conexión; tu feed se pondrá al día por sí solo cuando vuelvas a estar en línea.",
+        "title": "Estás sin conexión"
+      },
+      "server": {
+        "message": "No pudimos conectar con el servicio de noticias. Suele ser algo breve; seguiremos intentándolo y tu feed se actualizará por sí solo.",
+        "title": "Servicio no disponible"
+      }
+    }
   },
   "download": {
     "modelDownloading": "Descargando AI model...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Sesión expirada — por favor, inicia sesión de nuevo",
     "noTopics": "Agrega temas para ver tus noticias",
     "storageFull": "Libera espacio de almacenamiento en el dispositivo e inténtalo de nuevo",
-    "syncFailed": "No pudimos cargar el contenido más reciente. Desliza para actualizar."
+    "syncFailed": "No pudimos cargar el contenido más reciente. Desliza para actualizar.",
+    "dailyLimitReached": "Has alcanzado el límite de artículos de hoy. Más noticias mañana."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Eliminar",
+    "deleteConfirmMessage": "Esto eliminará el artículo de tu lista de guardados en este dispositivo.",
+    "deleteConfirmTitle": "¿Quitar artículo guardado?",
+    "empty": "Aún no has guardado ningún artículo. Toca el marcador de un artículo para guardarlo para más tarde.",
+    "note": "Estos artículos se guardan solo en tu dispositivo. Añádelos o quítalos cuando quieras; permanecerán aquí hasta que los elimines.",
+    "removedToastMessage": "Quitado de guardados",
+    "savedToastMessage": "Artículo guardado para más tarde",
+    "savedToastTitle": "Guardado",
+    "title": "Guardados"
+  },
+  "subscription": {
+    "activating": "Activando tu suscripción…",
+    "activationDelayed": "Estamos confirmando tu compra. Puede tardar un momento; toca actualizar si no continúa.",
+    "autoRenew": "Renovación automática",
+    "customerCenter": "Gestionar / cancelar suscripción",
+    "dailyArticleLimit": "Límite diario de artículos",
+    "description": "Suscríbete para obtener tu feed de noticias personalizado en el dispositivo.",
+    "detailsSection": "Detalles de la suscripción",
+    "expiresOn": "Caduca el",
+    "lifetime": "De por vida",
+    "managePlan": "Gestionar suscripción",
+    "periodIntro": "Introductorio",
+    "periodLabel": "Periodo",
+    "periodNormal": "Estándar",
+    "periodPromotional": "Promocional",
+    "periodTrial": "Prueba gratuita",
+    "planIndividual": "Individual",
+    "planLabel": "Plan",
+    "planProfessional": "Profesional",
+    "planPromo": "Promoción",
+    "planSection": "Tu plan",
+    "priceLabel": "Precio",
+    "renewsOn": "Se renueva el",
+    "resetsOn": "Se reinicia",
+    "restore": "Restaurar compras",
+    "storeAppStore": "App Store",
+    "storeLabel": "Comprado mediante",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Promocional",
+    "subscribe": "Suscribirse",
+    "title": "Desbloquea Mera News",
+    "usageSection": "Uso",
+    "usedToday": "Analizados hoy",
+    "viewPlans": "Ver planes"
   }
 }

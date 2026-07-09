@@ -84,7 +84,8 @@ const CLOSE_RED = '#ef4444'; // error-400, same close affordance as ChatPopover
  *
  * We localize every label (unlike Sentry.showFeedbackWidget(), whose labels are
  * frozen in English at Sentry.init()). Opened via showFeedback()
- * (lib/feedback.ts) from the FeedbackFab and the Preferences "Report a Bug" row.
+ * (lib/feedback.ts) from the Preferences "Report a Bug" row. Mounted app-wide in
+ * app/logged-in/_layout.tsx so it presents over any screen (it's a native Modal).
  * Theme (dark + Mera-orange accent) is read by FeedbackWidget from the
  * feedbackIntegration config in lib/sentry-init.ts.
  */

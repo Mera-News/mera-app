@@ -18,7 +18,8 @@
     "goBack": "Go Back",
     "articles": "Articles",
     "loggingOut": "Logging Out...",
-    "never": "Never"
+    "never": "Never",
+    "saving": "Saving..."
   },
   "auth": {
     "emailPlaceholder": "Enter your email address",
@@ -423,7 +424,9 @@
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
     "logoutFailedDescription": "There was an issue signing out. Please try again.",
-    "loggingOut": "Logging Out..."
+    "loggingOut": "Logging Out...",
+    "user": "User: {{email}}",
+    "appVersion": "App Version: {{version}}"
   },
   "configPanel": {
     "tabPersona": "Persona",

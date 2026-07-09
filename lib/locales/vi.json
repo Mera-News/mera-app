@@ -18,7 +18,8 @@
     "loggingOut": "Đang đăng xuất...",
     "never": "Chưa bao giờ",
     "yes": "Có",
-    "no": "Không"
+    "no": "Không",
+    "saving": "Đang lưu..."
   },
   "auth": {
     "emailPlaceholder": "Nhập địa chỉ email của bạn",
@@ -47,7 +48,8 @@
       "switchBody": "Chuyển tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu của người dùng này trên thiết bị. Hành động này không thể hoàn tác.",
       "switchConfirm": "Có, xóa dữ liệu và chuyển tài khoản",
       "switchCancel": "Hủy"
-    }
+    },
+    "contentPolicy": "Chính sách nội dung"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",
@@ -176,6 +178,11 @@
       "onDeviceTitle": "Đang chấm điểm trên điện thoại",
       "completedTitle": "Hoàn tất",
       "completedMessage": "Bản tin của bạn đã sẵn sàng"
+    },
+    "dailyLimit": {
+      "body": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào ngày mai.",
+      "bodyWithTime": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào lúc {{time}}.",
+      "title": "Đã đạt giới hạn bài viết hằng ngày"
     }
   },
   "relevance": {
@@ -192,7 +199,8 @@
     "articleUnavailable": "Bài viết này không còn khả dụng",
     "storyUnavailable": "Câu chuyện này không còn khả dụng",
     "failedToLoad": "Không thể tải bài viết",
-    "articleNotFound": "Không tìm thấy bài viết"
+    "articleNotFound": "Không tìm thấy bài viết",
+    "readOn": "Đọc trên {{publication}}"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -207,7 +215,10 @@
     "noFeedsAvailable": "Không có bản tin nào khả dụng",
     "publishers": "Nhà xuất bản",
     "noPublishers": "Không có nhà xuất bản nào cho quốc gia này",
-    "noArticlesFound": "Không tìm thấy bài viết nào"
+    "noArticlesFound": "Không tìm thấy bài viết nào",
+    "togglePin": "Bật/tắt ghim",
+    "topHeadlines": "Tin nổi bật",
+    "viewTopHeadlines": "Tin nổi bật"
   },
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}} và có thể được dịch sang ngôn ngữ của bạn",
@@ -232,7 +243,8 @@
     "signedOutTitle": "Đã đăng xuất",
     "signedOutDescription": "Bạn đã đăng xuất thành công.",
     "logoutFailedTitle": "Đăng xuất thất bại",
-    "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại."
+    "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại.",
+    "loggingOut": "Đang đăng xuất..."
   },
   "notifications": {
     "title": "Thông báo",
@@ -373,7 +385,11 @@
     "deletedTitle": "Đã xóa dữ liệu",
     "deletedDescription": "Dữ liệu đã chọn đã được xóa thành công.",
     "errorTitle": "Lỗi",
-    "errorDescription": "Không thể xóa dữ liệu. Vui lòng thử lại."
+    "errorDescription": "Không thể xóa dữ liệu. Vui lòng thử lại.",
+    "factsDescription": "Các dữ kiện của bạn và những chủ đề chúng tạo ra — trên thiết bị này",
+    "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề được tạo từ chúng. Chủ đề chỉ tồn tại trên thiết bị này — chúng không bao giờ được lưu trên máy chủ của chúng tôi. Bảng tin của bạn cũng sẽ bị xóa vì nó được xây dựng từ các chủ đề này, và sẽ trống cho đến khi bạn thêm dữ kiện mới.",
+    "locationDevice": "Trên thiết bị",
+    "locationServer": "Máy chủ"
   },
   "preferences": {
     "manageSettings": "Quản lý cài đặt ứng dụng và tài khoản",
@@ -406,7 +422,11 @@
     "signedOutDescription": "Bạn đã đăng xuất thành công.",
     "logoutFailedTitle": "Đăng xuất thất bại",
     "logoutFailedDescription": "Đã xảy ra sự cố khi đăng xuất. Vui lòng thử lại.",
-    "loggingOut": "Đang đăng xuất..."
+    "loggingOut": "Đang đăng xuất...",
+    "user": "Người dùng: {{email}}",
+    "appVersion": "Phiên bản ứng dụng: {{version}}",
+    "contentPolicy": "Chính sách nội dung",
+    "reportBug": "Báo lỗi"
   },
   "configPanel": {
     "tabPersona": "Hồ sơ",
@@ -457,7 +477,10 @@
     "promoTooltip": "Bạn có thể dùng thử miễn phí gói Individual nhân dịp ra mắt ứng dụng. Đây là ưu đãi có thời hạn.",
     "individualPlan": "Gói Individual",
     "professionalPlan": "Gói Professional",
-    "promoInfoTitle": "Ưu đãi ra mắt"
+    "promoInfoTitle": "Ưu đãi ra mắt",
+    "gotItPromo": "Tuyệt vời! 🎉",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Ưu đãi ra mắt 🎊"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",
@@ -467,7 +490,21 @@
     "networkError": "Không thể kết nối đến máy chủ. Kiểm tra mạng và cài đặt API endpoint.",
     "feedError": "Không thể tải bản tin của bạn. Vui lòng thử lại.",
     "accountRestricted": "Tài khoản bị hạn chế",
-    "accountRestrictedDescription": "Tài khoản của bạn đã bị hạn chế. Vui lòng liên hệ hỗ trợ."
+    "accountRestrictedDescription": "Tài khoản của bạn đã bị hạn chế. Vui lòng liên hệ hỗ trợ.",
+    "scoring": {
+      "generic": {
+        "message": "Đã xảy ra sự cố khi chọn tin cho bạn. Chúng tôi sẽ tiếp tục thử — kéo xuống để làm mới nếu tình trạng vẫn tiếp diễn.",
+        "title": "Không thể cập nhật bảng tin của bạn"
+      },
+      "offline": {
+        "message": "Chúng tôi không thể kết nối máy chủ để chọn tin cho bạn. Hãy kiểm tra kết nối — bảng tin sẽ tự cập nhật khi bạn trực tuyến trở lại.",
+        "title": "Bạn đang ngoại tuyến"
+      },
+      "server": {
+        "message": "Chúng tôi không thể kết nối dịch vụ tin tức. Việc này thường chỉ diễn ra trong chốc lát — chúng tôi sẽ tiếp tục thử và bảng tin sẽ tự cập nhật.",
+        "title": "Dịch vụ không khả dụng"
+      }
+    }
   },
   "download": {
     "modelDownloading": "Đang tải AI Model...",
@@ -599,6 +636,53 @@
     "sessionExpired": "Phiên đã hết hạn — vui lòng đăng nhập lại",
     "noTopics": "Thêm chủ đề để xem tin tức của bạn",
     "storageFull": "Hãy giải phóng dung lượng thiết bị và thử lại",
-    "syncFailed": "Chúng tôi không thể tải nội dung mới nhất. Kéo để làm mới."
+    "syncFailed": "Chúng tôi không thể tải nội dung mới nhất. Kéo để làm mới.",
+    "dailyLimitReached": "Bạn đã đạt giới hạn bài viết hôm nay. Thêm tin vào ngày mai."
+  },
+  "savedSuggestions": {
+    "deleteConfirmCta": "Xóa",
+    "deleteConfirmMessage": "Thao tác này sẽ xóa bài viết khỏi danh sách đã lưu trên thiết bị này.",
+    "deleteConfirmTitle": "Xóa bài viết đã lưu?",
+    "empty": "Bạn chưa lưu bài viết nào. Chạm vào biểu tượng dấu trang trên một bài viết để lưu lại xem sau.",
+    "note": "Những bài viết này chỉ được lưu trên thiết bị của bạn. Thêm hoặc xóa bất cứ lúc nào — chúng sẽ ở đây cho đến khi bạn xóa.",
+    "removedToastMessage": "Đã xóa khỏi mục đã lưu",
+    "savedToastMessage": "Đã lưu bài viết để xem sau",
+    "savedToastTitle": "Đã lưu",
+    "title": "Đã lưu"
+  },
+  "subscription": {
+    "activating": "Đang kích hoạt gói đăng ký của bạn…",
+    "activationDelayed": "Giao dịch của bạn đang được xác nhận. Việc này có thể mất một chút thời gian — chạm làm mới nếu nó không tiếp tục.",
+    "autoRenew": "Tự động gia hạn",
+    "customerCenter": "Quản lý / hủy gói đăng ký",
+    "dailyArticleLimit": "Giới hạn bài viết hằng ngày",
+    "description": "Đăng ký để nhận bảng tin cá nhân hóa, xử lý ngay trên thiết bị.",
+    "detailsSection": "Chi tiết gói đăng ký",
+    "expiresOn": "Hết hạn vào",
+    "lifetime": "Trọn đời",
+    "managePlan": "Quản lý gói đăng ký",
+    "periodIntro": "Giới thiệu",
+    "periodLabel": "Chu kỳ",
+    "periodNormal": "Tiêu chuẩn",
+    "periodPromotional": "Khuyến mãi",
+    "periodTrial": "Dùng thử miễn phí",
+    "planIndividual": "Cá nhân",
+    "planLabel": "Gói",
+    "planProfessional": "Chuyên nghiệp",
+    "planPromo": "Khuyến mãi",
+    "planSection": "Gói của bạn",
+    "priceLabel": "Giá",
+    "renewsOn": "Gia hạn vào",
+    "resetsOn": "Đặt lại",
+    "restore": "Khôi phục giao dịch mua",
+    "storeAppStore": "App Store",
+    "storeLabel": "Mua qua",
+    "storePlayStore": "Google Play",
+    "storePromotional": "Khuyến mãi",
+    "subscribe": "Đăng ký",
+    "title": "Mở khóa Mera News",
+    "usageSection": "Sử dụng",
+    "usedToday": "Đã phân tích hôm nay",
+    "viewPlans": "Xem các gói"
   }
 }
