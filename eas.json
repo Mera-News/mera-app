@@ -10,17 +10,29 @@
       "channel": "development",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_AUTH_ENDPOINT": "https://auth.staging.mera.news",
+        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news"
       }
     },
     "development-simulator": {
       "extends": "development",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_AUTH_ENDPOINT": "https://auth.staging.mera.news",
+        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news"
       }
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_AUTH_ENDPOINT": "https://auth.staging.mera.news",
+        "EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT": "https://graphql.staging.mera.news"
+      }
     },
     "production": {
       "autoIncrement": true,
