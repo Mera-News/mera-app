@@ -6,25 +6,36 @@ import { useAppLanguageStore } from './stores/app-language-store';
 
 const REFERRER_PARAMS = `utm_source=${REFERRER_SOURCE}&utm_medium=referral`;
 
+// The website's supported locale codes (mirrors mera-promo-website
+// lib/languages.ts). Used to avoid double-injecting a locale segment.
+const WEB_LOCALES = new Set([
+    'en', 'ar', 'zh-Hans', 'zh-Hant', 'nl', 'fr', 'de', 'hi', 'id', 'it',
+    'ja', 'ko', 'pl', 'pt', 'ru', 'es', 'th', 'tr', 'uk', 'vi',
+]);
+
 /**
- * Appends the user's current app language as a `?lang=<code>` param so a
- * first-party page (privacy, terms, content policy) opens in that language.
- * English (the default) is left as-is to keep canonical URLs clean, and an
- * existing `lang` param is never overridden. Reads the language store
- * non-reactively — safe to call from event handlers.
+ * Injects the user's current app language as the first path segment of a
+ * first-party website URL (privacy, terms, content policy) so the page opens
+ * localized — e.g. https://mera.news/privacy → https://mera.news/{lang}/privacy.
+ * The site uses path-based locale routing (Next.js [lang] segment), so every
+ * locale (incl. English) is prefixed; this avoids the proxy's redirect hop.
+ * If the first segment is already a supported locale, the URL is returned
+ * unchanged. Reads the language store non-reactively — safe from event handlers.
  */
 export function withAppLanguage(url: string): string {
     if (!url) return url;
-    if (/[?&]lang=/i.test(url)) return url;
 
-    const lang = useAppLanguageStore.getState().appLanguage;
-    if (!lang || lang === 'en') return url;
+    const lang = useAppLanguageStore.getState().appLanguage || 'en';
 
-    const hashIndex = url.indexOf('#');
-    const fragment = hashIndex >= 0 ? url.slice(hashIndex) : '';
-    const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
-    const separator = base.includes('?') ? '&' : '?';
-    return `${base}${separator}lang=${encodeURIComponent(lang)}${fragment}`;
+    const match = url.match(/^(https?:\/\/[^/]+)(\/[^?#]*)?([?#].*)?$/i);
+    if (!match) return url;
+    const [, origin, rawPath = '', suffix = ''] = match;
+
+    const segments = rawPath.split('/').filter(Boolean);
+    if (segments.length > 0 && WEB_LOCALES.has(segments[0])) return url;
+
+    const rest = segments.length > 0 ? `/${segments.join('/')}` : '';
+    return `${origin}/${lang}${rest}${suffix}`;
 }
 
 /**

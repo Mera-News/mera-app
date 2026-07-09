@@ -164,12 +164,12 @@ const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context }) => {
     const minY = insets.top + TOP_CLAMP_OFFSET;
     const maxY = windowHeight - insets.bottom - BOTTOM_CLAMP_OFFSET;
 
-    // Seed initial position from the store non-reactively.
+    // Default position: horizontally centered, 10% up from the bottom. This is
+    // where the bubble first appears; dragging it afterwards snaps to an edge.
     const initial = useMemo(() => {
-        const { bubbleSnapSide, bubbleY } = useFloatingChatStore.getState();
-        const x = bubbleSnapSide === 'left' ? leftX : rightX;
-        const y = Math.min(Math.max(bubbleY, minY), maxY);
-        return { side: bubbleSnapSide, x, y };
+        const x = (windowWidth - BUBBLE_SIZE) / 2;
+        const y = Math.min(Math.max(windowHeight * 0.9 - BUBBLE_SIZE / 2, minY), maxY);
+        return { side: 'right' as const, x, y };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

@@ -19,6 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { tableLabel } from './observability-labels';
 
 const PAGE_SIZE = 20;
 
@@ -108,7 +109,7 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                 </Pressable>
                 <VStack className="items-center flex-1 mx-4">
                     <Text className="text-white font-semibold text-base" numberOfLines={1}>
-                        {tableName}
+                        {tableLabel(tableName)}
                     </Text>
                     <Text size="xs" className="text-gray-500">{subtitle}</Text>
                 </VStack>

@@ -30,6 +30,16 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import TableDetailScreen from './TableDetailScreen';
+import {
+    FIELD_LABELS,
+    STATUS_LABELS,
+    TABLE_LABELS,
+    TASK_LABELS,
+    humanizeKey,
+    humanizeValue,
+    statusLabel,
+    tableLabel,
+} from './observability-labels';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -75,8 +85,16 @@ function statusDotColor(status: string | null | undefined): string {
     return '#6b7280';
 }
 
-function formatStatusCounts(byStatus: Record<string, number>, statuses: readonly string[]): string {
-    return statuses.map((s) => `${byStatus[s] ?? 0}${s[0]}`).join(' ');
+function sumStatusCounts(byStatus: Record<string, number>): number {
+    return Object.values(byStatus).reduce((acc, n) => acc + (n ?? 0), 0);
+}
+
+// Friendly breakdown of only the non-zero statuses, e.g. "12 done · 3 waiting".
+function formatStatusBreakdown(byStatus: Record<string, number>, statuses: readonly string[]): string {
+    return statuses
+        .filter((s) => (byStatus[s] ?? 0) > 0)
+        .map((s) => `${byStatus[s]} ${(STATUS_LABELS[s] ?? s).toLowerCase()}`)
+        .join(' · ');
 }
 
 async function loadDbStats(): Promise<DbStats> {
@@ -297,6 +315,32 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         [taskCurrentStatus, taskLastRun],
     );
 
+    // Unified DB-table rows: plain counts for the content tables, plus job
+    // tables where the count is the total and the subtitle breaks down statuses.
+    const dbTableRows = useMemo(() => {
+        if (!dbStats) return [];
+        const rows: { name: string; count: string; subtitle?: string }[] = COUNT_TABLES.map((name) => ({
+            name,
+            count: String(dbStats.tableCounts[name] ?? '…'),
+            subtitle: TABLE_LABELS[name]?.description,
+        }));
+        rows.push({
+            name: 'scheduler_jobs',
+            count: String(sumStatusCounts(dbStats.schedulerJobsByStatus)),
+            subtitle:
+                formatStatusBreakdown(dbStats.schedulerJobsByStatus, SCHEDULER_STATUSES) ||
+                TABLE_LABELS.scheduler_jobs?.description,
+        });
+        rows.push({
+            name: 'inference_jobs',
+            count: String(sumStatusCounts(dbStats.inferenceJobsByStatus)),
+            subtitle:
+                formatStatusBreakdown(dbStats.inferenceJobsByStatus, INFERENCE_STATUSES) ||
+                TABLE_LABELS.inference_jobs?.description,
+        });
+        return rows;
+    }, [dbStats]);
+
     const getTaskError = useCallback(
         (taskName: string): string | undefined =>
             Object.values(jobs).find(
@@ -349,7 +393,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         hitSlop={8}
                     >
                         <MaterialIcons
-                            name={copied ? 'check' : 'content-copy'}
+                            name={copied ? 'check' : 'share'}
                             size={20}
                             color={copied ? '#10b981' : '#ffffff'}
                         />
@@ -390,46 +434,30 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                     <TableHead useRNView className={TH_CLS} style={{ flex: 1 }}>
                                         <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.table')}</Text>
                                     </TableHead>
-                                    <TableHead useRNView className={`${TH_CLS} items-end`} style={{ width: 140 }}>
+                                    <TableHead useRNView className={`${TH_CLS} items-end`} style={{ width: 90 }}>
                                         <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.rowsStatus')}</Text>
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {COUNT_TABLES.map((name, i) => (
+                                {dbTableRows.map(({ name, count, subtitle }, i) => (
                                     <TableRow key={name} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
                                         <TableData useRNView className="p-0" style={{ flex: 1 }}>
                                             <Pressable
                                                 onPress={() => setSelectedTable(name)}
                                                 className="flex-row items-center px-3 py-2.5"
                                             >
-                                                <Text size="xs" className="text-gray-400 flex-1">{name}</Text>
+                                                <Box className="flex-1">
+                                                    <Text size="xs" className="text-white">{tableLabel(name)}</Text>
+                                                    {subtitle ? (
+                                                        <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text>
+                                                    ) : null}
+                                                </Box>
                                                 <MaterialIcons name="chevron-right" size={13} color="#4b5563" />
                                             </Pressable>
                                         </TableData>
-                                        <TableData useRNView className={TD_CLS} style={{ width: 140 }}>
-                                            <Text size="xs" className="text-white text-right">
-                                                {String(dbStats.tableCounts[name] ?? '…')}
-                                            </Text>
-                                        </TableData>
-                                    </TableRow>
-                                ))}
-                                {([
-                                    ['scheduler_jobs', formatStatusCounts(dbStats.schedulerJobsByStatus, SCHEDULER_STATUSES)],
-                                    ['inference_jobs', formatStatusCounts(dbStats.inferenceJobsByStatus, INFERENCE_STATUSES)],
-                                ] as [string, string][]).map(([name, value], i) => (
-                                    <TableRow key={name} className={(COUNT_TABLES.length + i) % 2 === 0 ? ROW_EVEN : ROW_ODD}>
-                                        <TableData useRNView className="p-0" style={{ flex: 1 }}>
-                                            <Pressable
-                                                onPress={() => setSelectedTable(name)}
-                                                className="flex-row items-center px-3 py-2.5"
-                                            >
-                                                <Text size="xs" className="text-gray-400 flex-1">{name}</Text>
-                                                <MaterialIcons name="chevron-right" size={13} color="#4b5563" />
-                                            </Pressable>
-                                        </TableData>
-                                        <TableData useRNView className={TD_CLS} style={{ width: 140 }}>
-                                            <Text size="xs" className="text-white text-right">{value}</Text>
+                                        <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
+                                            <Text size="xs" className="text-white text-right">{count}</Text>
                                         </TableData>
                                     </TableRow>
                                 ))}
@@ -476,7 +504,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                             <React.Fragment key={name}>
                                                 <TableRow className={rowCls}>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 200 }}>
-                                                        <Text size="xs" className="text-white" numberOfLines={1}>{name}</Text>
+                                                        <Text size="xs" className="text-white" numberOfLines={1}>{TASK_LABELS[name] ?? humanizeKey(name)}</Text>
                                                     </TableData>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 100 }}>
                                                         <HStack space="xs" className="items-center">
@@ -489,7 +517,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                                                     flexShrink: 0,
                                                                 }}
                                                             />
-                                                            <Text size="xs" className="text-gray-300">{status ?? 'idle'}</Text>
+                                                            <Text size="xs" className="text-gray-300">{statusLabel(status)}</Text>
                                                         </HStack>
                                                     </TableData>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
@@ -528,31 +556,25 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 {/* Feed */}
                 <SectionHeader title={t('observability.feed')} />
                 <KVTable rows={[
-                    ['articleCount', String(articleCount)],
-                    ['relevantArticleCount', String(relevantArticleCount)],
-                    ['unscoredCount', String(unscoredCount)],
-                    ['asyncJobPhase', asyncJobPhase],
-                    ['lastSyncAt', relativeTime(lastSyncAt, t)],
-                    ['syncState', syncStatusMessage?.state ?? 'idle'],
+                    [FIELD_LABELS.articleCount, String(articleCount)],
+                    [FIELD_LABELS.relevantArticleCount, String(relevantArticleCount)],
+                    [FIELD_LABELS.unscoredCount, String(unscoredCount)],
+                    [FIELD_LABELS.lastSyncAt, relativeTime(lastSyncAt, t)],
                 ]} />
 
                 {/* Protocol */}
                 <SectionHeader title={t('observability.protocol')} />
                 <KVTable rows={[
-                    ['processingMode', String(processingMode)],
-                    ['modelState', modelState],
-                    ['downloadProgress', `${downloadProgress}%`],
-                    ['isProcessing', String(isProcessing)],
-                    ['hasPushToken', String(useUserStore.getState().userPersona?.expoPushToken != null)],
+                    [FIELD_LABELS.processingMode, humanizeValue(String(processingMode))],
+                    [FIELD_LABELS.downloadProgress, `${downloadProgress}%`],
+                    [FIELD_LABELS.isProcessing, humanizeValue(String(isProcessing))],
                 ]} />
 
                 {/* System */}
                 <SectionHeader title={t('observability.system')} />
                 <KVTable rows={[
-                    ['network', isConnected ? 'connected' : 'offline'],
-                    ['db', dbReady ? 'ready' : 'not ready'],
-                    ['schemaVersion', String(schema.version)],
-                    ['userId', userId ? `${userId.slice(0, 8)}…` : 'null'],
+                    [FIELD_LABELS.network, humanizeValue(isConnected ? 'connected' : 'offline')],
+                    [FIELD_LABELS.db, humanizeValue(dbReady ? 'ready' : 'not ready')],
                 ]} />
 
                 {/* Settings */}
@@ -561,7 +583,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     dbStats.settings.length === 0 ? (
                         <Text size="sm" className="text-gray-600 py-2">{t('observability.noSettings')}</Text>
                     ) : (
-                        <KVTable rows={dbStats.settings.map(({ key, value }) => [key, value])} />
+                        <KVTable rows={dbStats.settings.map(({ key, value }) => [humanizeKey(key), value])} />
                     )
                 ) : (
                     <Text size="sm" className="text-gray-600 py-2">

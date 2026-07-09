@@ -1,5 +1,6 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import UsageWidget from '@/components/custom/UsageWidget';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -15,10 +16,10 @@ import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling } from '@/lib/billing-service';
-import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
+import { getOfferingSafe } from '@/lib/revenuecat';
 import { useFloatingChatIsExpanded, useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
@@ -30,6 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, View } from 'react-native';
+import RevenueCatUI from 'react-native-purchases-ui';
 
 interface PersonaL1MeraProtocolProps {
     readonly userId: string;
@@ -49,7 +51,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
-    const [showPromoInfo, setShowPromoInfo] = useState(false);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
     const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
     const [addTopicFact, setAddTopicFact] = useState<Fact | null>(null);
@@ -57,7 +58,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const [isAddingTopic, setIsAddingTopic] = useState(false);
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const glowAnim = useRef(new Animated.Value(0.3)).current;
-    const promoPulse = useRef(new Animated.Value(0.7)).current;
     const isChatExpanded = useFloatingChatIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const knownFactIdsRef = useRef<Set<string>>(new Set());
@@ -126,20 +126,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             glowAnim.setValue(0);
         }
     }, [feedNeedsRefresh, glowAnim]);
-
-    // Gentle "spunky" pulse for the launch-promo tile (only shown to non-paid users).
-    const isPromoTileVisible = billing?.subscriptionTier !== 'individual' && billing?.subscriptionTier !== 'professional';
-    useEffect(() => {
-        if (!isPromoTileVisible) return;
-        const animation = Animated.loop(
-            Animated.sequence([
-                Animated.timing(promoPulse, { toValue: 0.7, duration: 800, useNativeDriver: true }),
-                Animated.timing(promoPulse, { toValue: 1, duration: 800, useNativeDriver: true }),
-            ])
-        );
-        animation.start();
-        return () => animation.stop();
-    }, [isPromoTileVisible, promoPulse]);
 
     // When the floating chat popover collapses (true→false transition), reload
     // facts + persona — the same refresh the old embedded chat's closeChat did.
@@ -307,6 +293,20 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
         setAddTopicText('');
     }, []);
 
+    const handleUpgrade = useCallback(async () => {
+        try {
+            const offering = await getOfferingSafe();
+            await RevenueCatUI.presentPaywall({
+                ...(offering ? { offering } : {}),
+                displayCloseButton: true,
+            });
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { component: 'PersonaL1MeraProtocol', method: 'upgrade' },
+            });
+        }
+    }, []);
+
     const isBlocked = userPersona?.blockedByLlm ?? false;
 
     return (
@@ -321,64 +321,26 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                         <BlockedBanner reason={userPersona?.blockedByLlmReason} />
                     )}
 
-                    {/* Metrics cards */}
-                    <HStack className="mx-4 mb-3" space="sm">
-                        <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
-                            <HStack className="items-center mb-2" space="xs">
-                                <Text size="xs" className="text-gray-400 flex-1">{t('configPanel.articlesAnalyzedLast24h')}</Text>
-                                <Pressable onPress={() => setShowArticleCountInfo(true)} hitSlop={8}>
-                                    <MaterialIcons name="info-outline" size={14} color="#6b7280" />
-                                </Pressable>
-                            </HStack>
-                            {/* Server-side delivery tally (user-daily-usage); local count only
-                                as a fallback while offline. */}
-                            <Text size="2xl" className="text-white font-semibold">{billing?.articlesUsedToday ?? totalArticleCount}</Text>
-                        </Box>
-                        {billing?.subscriptionTier === 'individual' || billing?.subscriptionTier === 'professional' ? (
-                            <Box className="flex-1 px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
-                                <Text size="xs" className="text-gray-400 mb-2">{t('configPanel.maxForDailyAnalysis')}</Text>
-                                <Text size="2xl" className="text-white font-semibold">{billing.dailyArticleLimit}</Text>
-                                <Text size="xs" className="text-primary-400 mt-0.5">
-                                    {billing.subscriptionTier === 'professional'
-                                        ? t('configPanel.professionalPlan')
-                                        : t('configPanel.individualPlan')}
-                                </Text>
-                            </Box>
-                        ) : (
-                            /* Not on a paid plan (or billing unavailable): launch-promo display;
-                               tapping opens the same info-modal pattern as the left tile. */
-                            <Pressable
-                                className="flex-1"
-                                onPress={() => {
-                                    hapticSuccess();
-                                    setShowPromoInfo(true);
-                                }}
-                            >
-                                <Box className="px-3 py-3 rounded-lg bg-gray-900 overflow-hidden">
-                                    <Animated.View
-                                        pointerEvents="none"
-                                        style={{
-                                            position: 'absolute',
-                                            top: 2,
-                                            left: 2,
-                                            right: 2,
-                                            bottom: 2,
-                                            borderRadius: 8,
-                                            borderWidth: 1.5,
-                                            borderColor: '#fde047',
-                                            opacity: promoPulse,
-                                        }}
-                                    />
-                                    <HStack className="items-center mb-2" space="xs">
-                                        <Text size="xs" className="text-white/90 font-medium flex-1">{t('configPanel.maxForDailyAnalysis')}</Text>
-                                        <MaterialIcons name="info-outline" size={14} color="#e0e7ff" />
-                                    </HStack>
-                                    <Text size="2xl" className="text-white font-bold">1000 ✨</Text>
-                                    <Text size="xs" className="text-yellow-300 font-semibold mt-0.5">{t('configPanel.promoPlan')}</Text>
-                                </Box>
-                            </Pressable>
-                        )}
-                    </HStack>
+                    {/* Metrics card — server-side delivery tally (user-daily-usage);
+                        local count is only an offline fallback. */}
+                    <UsageWidget
+                        className="mx-4 mb-3"
+                        used={billing?.articlesUsedToday ?? totalArticleCount}
+                        limit={billing?.dailyArticleLimit ?? null}
+                        usedLabel={t('configPanel.articlesAnalyzedLast24h')}
+                        planLabel={
+                            billing?.subscriptionTier === 'professional'
+                                ? t('configPanel.professionalPlan')
+                                : billing?.subscriptionTier === 'individual'
+                                    ? t('configPanel.individualPlan')
+                                    : t('configPanel.promoPlan')
+                        }
+                        onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
+                        upgradeLabel={t('subscription.upgrade')}
+                        resetAt={billing?.resetAt}
+                        resetLabel={t('configPanel.resetsOn')}
+                        onInfoPress={() => setShowArticleCountInfo(true)}
+                    />
 
                     <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
                         {feedNeedsRefresh && !isRefreshingSuggestions && (
@@ -641,35 +603,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                             className="w-full"
                         >
                             <ButtonText>{t('configPanel.gotIt')}</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-
-            <Modal isOpen={showPromoInfo} onClose={() => setShowPromoInfo(false)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="pb-2">
-                        <VStack className="items-center w-full" space="xs">
-                            <Text className="text-2xl text-center">{t('configPanel.promoBanner')}</Text>
-                            <Text className="text-lg font-bold text-white text-center">{t('configPanel.promoInfoTitleEmoji')}</Text>
-                        </VStack>
-                    </ModalHeader>
-                    <ModalBody className="py-4">
-                        <Text className="text-white text-xl leading-relaxed text-center">
-                            ✨ {t('configPanel.promoTooltip')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-primary-800 pt-4">
-                        <Button
-                            action="primary"
-                            onPress={() => {
-                                hapticLight();
-                                setShowPromoInfo(false);
-                            }}
-                            className="w-full bg-primary-500"
-                        >
-                            <ButtonText className="text-white font-bold">{t('configPanel.gotItPromo')}</ButtonText>
                         </Button>
                     </ModalFooter>
                 </ModalContent>

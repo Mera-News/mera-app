@@ -3,7 +3,6 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
-import { Table, TableBody, TableData, TableRow } from '@/components/ui/table';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { fetchUserBilling } from '@/lib/billing-service';
@@ -17,37 +16,33 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import UsageWidget from '../UsageWidget';
+import { humanizeKey } from './observability-labels';
 
-const TD_CLS = 'px-3 py-2 border-b border-gray-800';
-const ROW_EVEN = 'bg-black';
-const ROW_ODD = 'bg-gray-950';
+const GREEN = '#10b981';
+const AMBER = '#f59e0b';
 
 const SectionHeader = ({ title }: { title: string }) => (
-    <Box className="pt-5 pb-1.5 border-b border-gray-800 mb-2">
+    <Box className="pt-6 pb-2">
         <Text size="xs" className="text-gray-500 uppercase tracking-widest font-semibold">
             {title}
         </Text>
     </Box>
 );
 
-// 2-column key/value table (same layout as ObservabilityScreen's KVTable)
-const KVTable = ({ rows }: { rows: [string, string][] }) => (
-    <Box className="rounded-xl overflow-hidden border border-gray-800">
-        <Table className="w-full">
-            <TableBody>
-                {rows.map(([k, v], i) => (
-                    <TableRow key={k} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
-                        <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
-                            <Text size="xs" className="text-gray-400">{k}</Text>
-                        </TableData>
-                        <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
-                            <Text size="xs" className="text-white text-right" numberOfLines={1}>{v}</Text>
-                        </TableData>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    </Box>
+const StatusPill = ({ text, color }: { text: string; color: string }) => (
+    <HStack space="xs" className="items-center self-start bg-black/40 rounded-full px-2.5 py-1 mt-3">
+        <Box style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
+        <Text size="xs" className="text-gray-300">{text}</Text>
+    </HStack>
+);
+
+const InfoRow = ({ icon, label, value, isLast }: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string; isLast?: boolean }) => (
+    <HStack className={`items-center px-4 py-3 ${isLast ? '' : 'border-b border-gray-800'}`}>
+        <MaterialIcons name={icon} size={16} color="#9ca3af" />
+        <Text size="sm" className="text-gray-400 ml-3 flex-1">{label}</Text>
+        <Text size="sm" className="text-white" numberOfLines={1}>{value}</Text>
+    </HStack>
 );
 
 interface ManageSubscriptionScreenProps {
@@ -59,8 +54,8 @@ interface ManageSubscriptionScreenProps {
  * (the source of truth), entitlement details and price from RevenueCat, and
  * the two RevenueCat UI flows (paywall to view/upgrade plans, Customer Center
  * to manage/cancel). Each data source degrades independently — a failed
- * billing fetch hides the DB rows, an unconfigured RevenueCat hides the
- * entitlement rows.
+ * billing fetch hides the usage/plan rows, an unconfigured RevenueCat hides
+ * the entitlement rows.
  */
 const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onBack }) => {
     const { t, i18n } = useTranslation();
@@ -152,7 +147,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             case 'TRIAL': return t('subscription.periodTrial');
             case 'INTRO': return t('subscription.periodIntro');
             case 'PROMOTIONAL': return t('subscription.periodPromotional');
-            default: return periodType;
+            default: return humanizeKey(periodType);
         }
     };
 
@@ -161,7 +156,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             case 'APP_STORE': return t('subscription.storeAppStore');
             case 'PLAY_STORE': return t('subscription.storePlayStore');
             case 'PROMOTIONAL': return t('subscription.storePromotional');
-            default: return store;
+            default: return humanizeKey(store);
         }
     };
 
@@ -171,30 +166,39 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         ? billing.subscriptionTier
         : rcTier;
 
-    const planRows: [string, string][] = [
-        [t('subscription.planLabel'), planName(effectiveTier)],
-        ...(priceString ? [[t('subscription.priceLabel'), priceString] as [string, string]] : []),
-    ];
+    const isPaid = effectiveTier === 'individual' || effectiveTier === 'professional';
 
-    const usageRows: [string, string][] = billing
-        ? [
-            [t('subscription.dailyArticleLimit'), String(billing.dailyArticleLimit)],
-            [t('subscription.usedToday'), String(billing.articlesUsedToday)],
-            ...((formatDate(billing.resetAt))
-                ? [[t('subscription.resetsOn'), new Date(billing.resetAt).toLocaleString(i18n.language, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })] as [string, string]]
-                : []),
-        ]
-        : [];
+    // Glanceable status pill for the hero card.
+    const statusPill: { text: string; color: string } | null = activeEntitlement
+        ? (() => {
+            const date = formatDate(activeEntitlement.expirationDate);
+            if (!date) return { text: t('subscription.lifetime'), color: GREEN };
+            const prefix = activeEntitlement.willRenew
+                ? t('subscription.renewsOn')
+                : t('subscription.expiresOn');
+            return { text: `${prefix} ${date}`, color: activeEntitlement.willRenew ? GREEN : AMBER };
+        })()
+        : isPaid
+            ? { text: t('subscription.active'), color: GREEN }
+            : null;
 
-    const entitlementRows: [string, string][] = activeEntitlement
+    const usedToday = billing?.articlesUsedToday ?? 0;
+    const dailyLimit = billing?.dailyArticleLimit ?? 0;
+
+    const detailRows: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string }[] = activeEntitlement
         ? [
-            [
-                activeEntitlement.willRenew ? t('subscription.renewsOn') : t('subscription.expiresOn'),
-                formatDate(activeEntitlement.expirationDate) ?? t('subscription.lifetime'),
-            ],
-            [t('subscription.autoRenew'), activeEntitlement.willRenew ? t('common.yes') : t('common.no')],
-            [t('subscription.periodLabel'), periodTypeLabel(activeEntitlement.periodType)],
-            [t('subscription.storeLabel'), storeLabel(activeEntitlement.store)],
+            {
+                icon: activeEntitlement.willRenew ? 'event-available' : 'event-busy',
+                label: activeEntitlement.willRenew ? t('subscription.renewsOn') : t('subscription.expiresOn'),
+                value: formatDate(activeEntitlement.expirationDate) ?? t('subscription.lifetime'),
+            },
+            {
+                icon: 'autorenew',
+                label: t('subscription.autoRenew'),
+                value: activeEntitlement.willRenew ? t('common.yes') : t('common.no'),
+            },
+            { icon: 'schedule', label: t('subscription.periodLabel'), value: periodTypeLabel(activeEntitlement.periodType) },
+            { icon: 'store', label: t('subscription.storeLabel'), value: storeLabel(activeEntitlement.store) },
         ]
         : [];
 
@@ -219,28 +223,71 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <SectionHeader title={t('subscription.planSection')} />
-                    <KVTable rows={planRows} />
+                    {/* Hero plan card */}
+                    <Box className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4">
+                        <HStack className="items-center">
+                            <Box className="bg-black/40 rounded-full p-2.5">
+                                <MaterialIcons
+                                    name={isPaid ? 'workspace-premium' : 'person-outline'}
+                                    size={22}
+                                    color={isPaid ? AMBER : '#9ca3af'}
+                                />
+                            </Box>
+                            <VStack className="ml-3 flex-1">
+                                <Text size="xs" className="text-gray-500">{t('subscription.planLabel')}</Text>
+                                <Text className="text-white font-bold text-2xl leading-8">
+                                    {isPaid ? planName(effectiveTier) : t('subscription.freePlan')}
+                                </Text>
+                            </VStack>
+                            {priceString ? (
+                                <Text className="text-white font-semibold text-lg">{priceString}</Text>
+                            ) : null}
+                        </HStack>
+                        {statusPill ? <StatusPill text={statusPill.text} color={statusPill.color} /> : null}
+                    </Box>
 
-                    {usageRows.length > 0 && (
+                    {/* Usage */}
+                    {billing && (
                         <>
                             <SectionHeader title={t('subscription.usageSection')} />
-                            <KVTable rows={usageRows} />
+                            <UsageWidget
+                                used={usedToday}
+                                limit={dailyLimit}
+                                usedLabel={t('subscription.usedToday')}
+                                planLabel={isPaid ? planName(effectiveTier) : t('subscription.freePlan')}
+                                onUpgrade={effectiveTier === 'professional' ? undefined : handleViewPlans}
+                                upgradeLabel={t('subscription.upgrade')}
+                                resetAt={billing.resetAt}
+                                resetLabel={t('subscription.resetsOn')}
+                            />
                         </>
                     )}
 
-                    {entitlementRows.length > 0 && (
+                    {/* Subscription details */}
+                    {detailRows.length > 0 && (
                         <>
                             <SectionHeader title={t('subscription.detailsSection')} />
-                            <KVTable rows={entitlementRows} />
+                            <Box className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+                                {detailRows.map((row, i) => (
+                                    <InfoRow
+                                        key={row.label}
+                                        icon={row.icon}
+                                        label={row.label}
+                                        value={row.value}
+                                        isLast={i === detailRows.length - 1}
+                                    />
+                                ))}
+                            </Box>
                         </>
                     )}
 
                     <VStack space="md" className="mt-8">
                         <Button onPress={handleViewPlans} className="w-full">
+                            <MaterialIcons name="upgrade" size={18} color="#000000" />
                             <ButtonText>{t('subscription.viewPlans')}</ButtonText>
                         </Button>
                         <Button variant="outline" action="secondary" onPress={handleCustomerCenter} className="w-full">
+                            <MaterialIcons name="settings" size={18} color="#ffffff" />
                             <ButtonText>{t('subscription.customerCenter')}</ButtonText>
                         </Button>
                     </VStack>
