@@ -470,9 +470,12 @@
     "gotIt": "Got it",
     "articlesAnalyzedLast24h": "Articles analyzed last 24h",
     "maxForDailyAnalysis": "Max for daily analysis",
-    "promoPlan": "Promo",
+    "promoPlan": "🎉 Promo",
     "promoInfoTitle": "Launch offer",
+    "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
+    "promoInfoTitleEmoji": "🎉 Launch offer 🎊",
     "promoTooltip": "You're free to test the Individual plan as part of our app launch. This is a limited-time offer.",
+    "gotItPromo": "Awesome! 🎉",
     "individualPlan": "Individual Plan",
     "professionalPlan": "Professional Plan"
   },

@@ -15,6 +15,7 @@ import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling } from '@/lib/billing-service';
+import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
@@ -56,6 +57,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const [isAddingTopic, setIsAddingTopic] = useState(false);
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const glowAnim = useRef(new Animated.Value(0.3)).current;
+    const promoPulse = useRef(new Animated.Value(0.7)).current;
     const isChatExpanded = useFloatingChatIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const knownFactIdsRef = useRef<Set<string>>(new Set());
@@ -124,6 +126,20 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             glowAnim.setValue(0);
         }
     }, [feedNeedsRefresh, glowAnim]);
+
+    // Gentle "spunky" pulse for the launch-promo tile (only shown to non-paid users).
+    const isPromoTileVisible = billing?.subscriptionTier !== 'individual' && billing?.subscriptionTier !== 'professional';
+    useEffect(() => {
+        if (!isPromoTileVisible) return;
+        const animation = Animated.loop(
+            Animated.sequence([
+                Animated.timing(promoPulse, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+                Animated.timing(promoPulse, { toValue: 1, duration: 800, useNativeDriver: true }),
+            ])
+        );
+        animation.start();
+        return () => animation.stop();
+    }, [isPromoTileVisible, promoPulse]);
 
     // When the floating chat popover collapses (true→false transition), reload
     // facts + persona — the same refresh the old embedded chat's closeChat did.
@@ -331,14 +347,34 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                         ) : (
                             /* Not on a paid plan (or billing unavailable): launch-promo display;
                                tapping opens the same info-modal pattern as the left tile. */
-                            <Pressable className="flex-1" onPress={() => setShowPromoInfo(true)}>
-                                <Box className="px-3 py-3 border border-gray-700 rounded-lg bg-gray-900">
+                            <Pressable
+                                className="flex-1"
+                                onPress={() => {
+                                    hapticSuccess();
+                                    setShowPromoInfo(true);
+                                }}
+                            >
+                                <Box className="px-3 py-3 rounded-lg bg-gray-900 overflow-hidden">
+                                    <Animated.View
+                                        pointerEvents="none"
+                                        style={{
+                                            position: 'absolute',
+                                            top: 2,
+                                            left: 2,
+                                            right: 2,
+                                            bottom: 2,
+                                            borderRadius: 8,
+                                            borderWidth: 1.5,
+                                            borderColor: '#fde047',
+                                            opacity: promoPulse,
+                                        }}
+                                    />
                                     <HStack className="items-center mb-2" space="xs">
-                                        <Text size="xs" className="text-gray-400 flex-1">{t('configPanel.maxForDailyAnalysis')}</Text>
-                                        <MaterialIcons name="info-outline" size={14} color="#6b7280" />
+                                        <Text size="xs" className="text-white/90 font-medium flex-1">{t('configPanel.maxForDailyAnalysis')}</Text>
+                                        <MaterialIcons name="info-outline" size={14} color="#e0e7ff" />
                                     </HStack>
-                                    <Text size="2xl" className="text-white font-semibold">1000</Text>
-                                    <Text size="xs" className="text-primary-400 mt-0.5">{t('configPanel.promoPlan')}</Text>
+                                    <Text size="2xl" className="text-white font-bold">1000 ✨</Text>
+                                    <Text size="xs" className="text-yellow-300 font-semibold mt-0.5">{t('configPanel.promoPlan')}</Text>
                                 </Box>
                             </Pressable>
                         )}
@@ -613,25 +649,27 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             <Modal isOpen={showPromoInfo} onClose={() => setShowPromoInfo(false)} size="sm">
                 <ModalBackdrop />
                 <ModalContent>
-                    <ModalHeader className="pb-3">
-                        <HStack className="items-center" space="xs">
-                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.promoInfoTitle')}</Text>
-                        </HStack>
+                    <ModalHeader className="pb-2">
+                        <VStack className="items-center w-full" space="xs">
+                            <Text className="text-2xl text-center">{t('configPanel.promoBanner')}</Text>
+                            <Text className="text-lg font-bold text-white text-center">{t('configPanel.promoInfoTitleEmoji')}</Text>
+                        </VStack>
                     </ModalHeader>
                     <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
-                            {t('configPanel.promoTooltip')}
+                        <Text className="text-white text-xl leading-relaxed text-center">
+                            ✨ {t('configPanel.promoTooltip')}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-primary-800 pt-4">
                         <Button
-                            variant="outline"
-                            action="secondary"
-                            onPress={() => setShowPromoInfo(false)}
-                            className="w-full"
+                            action="primary"
+                            onPress={() => {
+                                hapticLight();
+                                setShowPromoInfo(false);
+                            }}
+                            className="w-full bg-primary-500"
                         >
-                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                            <ButtonText className="text-white font-bold">{t('configPanel.gotItPromo')}</ButtonText>
                         </Button>
                     </ModalFooter>
                 </ModalContent>
