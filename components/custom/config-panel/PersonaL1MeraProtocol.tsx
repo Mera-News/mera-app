@@ -1,7 +1,5 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
-import MeraAIBubble from '@/components/custom/MeraAIBubble';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import MeraPersonaUpdateChat from '@/components/custom/chat/MeraPersonaUpdateChat';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -20,7 +18,7 @@ import { fetchUserBilling } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { useChatPopupIsExpanded, useChatPopupStore, useChatPopupFactMutationVersion } from '@/lib/stores/chat-popup-store';
+import { useFloatingChatIsExpanded, useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -30,16 +28,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Keyboard, Pressable as RNPressable, RefreshControl, ScrollView, View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Animated, RefreshControl, ScrollView, View } from 'react-native';
 
 interface PersonaL1MeraProtocolProps {
     readonly userId: string;
-    readonly expandMeraChat?: boolean;
 }
 
-const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, expandMeraChat }) => {
+const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId }) => {
     const { userPersona, fetchUserPersona } = useUserStore();
     const toast = useToast();
     const { t } = useTranslation();
@@ -61,12 +56,12 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
     const [isAddingTopic, setIsAddingTopic] = useState(false);
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const glowAnim = useRef(new Animated.Value(0.3)).current;
-    const isChatExpanded = useChatPopupIsExpanded();
+    const isChatExpanded = useFloatingChatIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
-    const insets = useSafeAreaInsets();
     const knownFactIdsRef = useRef<Set<string>>(new Set());
     const isInitialLoadRef = useRef(true);
-    const factMutationVersion = useChatPopupFactMutationVersion();
+    const wasChatExpandedRef = useRef(false);
+    const factMutationVersion = useFloatingChatFactMutationVersion();
 
     const loadLocalFacts = useCallback(async () => {
         const [facts, counts, total] = await Promise.all([
@@ -130,11 +125,15 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
         }
     }, [feedNeedsRefresh, glowAnim]);
 
-    const closeChat = useCallback(() => {
-        useChatPopupStore.getState().collapse();
-        loadLocalFacts();
-        fetchUserPersona(userId, true);
-    }, [loadLocalFacts, fetchUserPersona, userId]);
+    // When the floating chat popover collapses (true→false transition), reload
+    // facts + persona — the same refresh the old embedded chat's closeChat did.
+    useEffect(() => {
+        if (wasChatExpandedRef.current && !isChatExpanded && userId) {
+            loadLocalFacts();
+            fetchUserPersona(userId, true);
+        }
+        wasChatExpandedRef.current = isChatExpanded;
+    }, [isChatExpanded, loadLocalFacts, fetchUserPersona, userId]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -226,16 +225,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
             setIsRefreshingSuggestions(false);
         }
     }, [userPersona, isRefreshingSuggestions, toast, t]);
-
-    useEffect(() => {
-        if (expandMeraChat) {
-            useChatPopupStore.getState().expand();
-        }
-    }, [expandMeraChat]);
-
-    const handleBubblePress = useCallback(() => {
-        useChatPopupStore.getState().expand();
-    }, []);
 
     const handleFactArticlesPress = useCallback((fact: Fact) => {
         const topicTexts = fact.metadata?.topics ?? [];
@@ -413,7 +402,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                     ) : (
                         <ScrollView
                             showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingTop: 12, paddingBottom: 80 }}
+                            contentContainerStyle={{ paddingTop: 12, paddingBottom: 96 }}
                             onScroll={notifyScrollTick}
                             scrollEventThrottle={16}
                             refreshControl={
@@ -560,43 +549,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId, e
                         </ScrollView>
                     )}
                 </>
-            )}
-
-            {!isChatExpanded && (
-                <Box style={{ position: 'absolute', bottom: 8, alignSelf: 'center', width: '100%', alignItems: 'center' }}>
-                    <MeraAIBubble onPress={handleBubblePress} />
-                </Box>
-            )}
-
-
-            {isChatExpanded && (
-                <View
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}
-                    pointerEvents="box-none"
-                >
-                    <RNPressable
-                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        onPress={() => Keyboard.dismiss()}
-                    />
-                    <KeyboardStickyView offset={{ closed: -(insets.bottom + 16) }}>
-                        <View
-                            style={{
-                                backgroundColor: 'transparent',
-                                borderTopLeftRadius: 24,
-                                borderTopRightRadius: 24,
-                                borderTopWidth: 1,
-                                borderLeftWidth: 1,
-                                borderRightWidth: 1,
-                                borderColor: 'transparent',
-                                minHeight: Dimensions.get('window').height * 0.35,
-                                paddingTop: 16,
-                                justifyContent: 'flex-end',
-                            }}
-                        >
-                            <MeraPersonaUpdateChat onClose={closeChat} />
-                        </View>
-                    </KeyboardStickyView>
-                </View>
             )}
 
             <Modal isOpen={showPrivacyInfo} onClose={() => setShowPrivacyInfo(false)} size="sm">

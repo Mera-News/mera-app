@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn. Nếu muốn, hãy kể bất cứ điều gì về bản thân — bạn sống ở đâu, làm nghề gì, sở thích, cổ phiếu đang theo dõi, gia đình sống ở đâu. Hoặc chỉ cần nói 'giúp mình thiết lập' và mình sẽ hướng dẫn bạn từng bước."
   },
+  "floatingChat": {
+    "bubbleHint": "Trò chuyện với Mera",
+    "close": "Đóng",
+    "title": "Mera",
+    "earlierConversation": "Cuộc trò chuyện trước đó",
+    "loadingHistory": "Đang tải tin nhắn trước đó…",
+    "factSavedTitle": "Đã lưu vào hồ sơ của bạn",
+    "factDeletedTitle": "Đã xóa khỏi hồ sơ của bạn",
+    "factUpdatedTitle": "Đã cập nhật tùy chọn",
+    "factCardUndo": "Hoàn tác",
+    "factCardDelete": "Xóa",
+    "chipAddLocation": "Thêm nơi tôi sống",
+    "chipAddLocationMessage": "Tôi muốn cho bạn biết tôi sống ở đâu",
+    "chipShowFacts": "Hiển thị thông tin của tôi",
+    "chipShowFactsMessage": "Hiện tại bạn biết gì về tôi?",
+    "chipHelpSetup": "Giúp tôi thiết lập",
+    "chipHelpSetupMessage": "Giúp tôi thiết lập hồ sơ của tôi",
+    "thinking": "Đang suy nghĩ…",
+    "newChat": "Trò chuyện mới",
+    "inputPlaceholder": "Nhập tin nhắn..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Ấn phẩm bạn đang đọc",
     "badge_one": "Bạn đã ghé thăm {{publication}} một lần trong 30 ngày qua",

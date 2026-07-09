@@ -7,7 +7,13 @@ export { useUserStore } from './user-store';
 // New stores
 export { useUIStore, useLogoutModal, useDeleteAccountModal } from './ui-store';
 export { useConfigPanelStore, useConfigPanelIsOpen, useConfigPanelActiveTab } from './config-panel-store';
-export { useChatPopupStore, useChatPopupIsExpanded, useChatPopupConversationId } from './chat-popup-store';
+export {
+    useFloatingChatStore,
+    useFloatingChatIsExpanded,
+    useFloatingChatFactMutationVersion,
+    useFloatingChatIsGenerating,
+    useFloatingChatSuppressed,
+} from './floating-chat-store';
 export { useAppStateStore, useIsNavigationReady, useIsAppInitialized, useLastAuthenticatedUserId } from './app-state-store';
 export {
     useOnboardingStore,
@@ -56,7 +62,7 @@ export const clearAllStores = async () => {
     const { useAppStateStore } = require('./app-state-store');
     const { useOnboardingStore } = require('./onboarding-store');
     const { useConfigPanelStore } = require('./config-panel-store');
-    const { useChatPopupStore } = require('./chat-popup-store');
+    const { useFloatingChatStore } = require('./floating-chat-store');
     const { useMeraProtocolStore } = require('./mera-protocol-store');
     const { useTopicSyncStore } = require('./topic-sync-store');
     const { useCloudChatStore } = require('./cloud-chat-store');
@@ -75,7 +81,7 @@ export const clearAllStores = async () => {
     useAppStateStore.getState().resetAppState();
     useOnboardingStore.getState().resetOnboarding();
     useConfigPanelStore.getState().closePanel();
-    useChatPopupStore.getState().reset();
+    useFloatingChatStore.getState().reset();
     useMeraProtocolStore.getState().reset();
     useTopicSyncStore.getState().reset();
     useCloudChatStore.getState().reset();

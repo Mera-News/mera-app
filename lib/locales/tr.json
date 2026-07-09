@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın. İstersen kendin hakkında ne olursa paylaş — nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. Ya da sadece 'kurulumda yardım et' de, sana adım adım rehberlik edeyim."
   },
+  "floatingChat": {
+    "bubbleHint": "Mera ile sohbet et",
+    "close": "Kapat",
+    "title": "Mera",
+    "earlierConversation": "Önceki konuşma",
+    "loadingHistory": "Önceki mesajlar yükleniyor…",
+    "factSavedTitle": "Profiline kaydedildi",
+    "factDeletedTitle": "Profilinden kaldırıldı",
+    "factUpdatedTitle": "Tercihler güncellendi",
+    "factCardUndo": "Geri al",
+    "factCardDelete": "Sil",
+    "chipAddLocation": "Yaşadığım yeri ekle",
+    "chipAddLocationMessage": "Nerede yaşadığımı söylemek istiyorum",
+    "chipShowFacts": "Bilgilerimi göster",
+    "chipShowFactsMessage": "Şu anda benim hakkımda ne biliyorsun?",
+    "chipHelpSetup": "Kurulumda bana yardım et",
+    "chipHelpSetupMessage": "Profilimi kurmama yardım et",
+    "thinking": "Düşünüyor…",
+    "newChat": "Yeni sohbet",
+    "inputPlaceholder": "Bir mesaj yaz..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Okuduğun yayınlar",
     "badge_one": "Son 30 günde {{publication}} yayınını bir kez ziyaret ettin",

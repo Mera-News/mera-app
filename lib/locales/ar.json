@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "مرحباً! أنا Mera، مساعدك الشخصي للأخبار. إذا أردت، شاركني أي شيء عن نفسك — أين تعيش، ماذا تعمل، ما هواياتك، ما الأسهم التي تتابعها، أين تعيش عائلتك. أو قل فقط «ساعدني في الإعداد» وسأرشدك خطوة بخطوة."
   },
+  "floatingChat": {
+    "bubbleHint": "الدردشة مع ميرا",
+    "close": "إغلاق",
+    "title": "Mera",
+    "earlierConversation": "محادثة سابقة",
+    "loadingHistory": "جارٍ تحميل الرسائل السابقة…",
+    "factSavedTitle": "تم الحفظ في ملفك الشخصي",
+    "factDeletedTitle": "تمت الإزالة من ملفك الشخصي",
+    "factUpdatedTitle": "تم تحديث التفضيلات",
+    "factCardUndo": "تراجع",
+    "factCardDelete": "حذف",
+    "chipAddLocation": "أضف مكان إقامتي",
+    "chipAddLocationMessage": "أريد أن أخبرك بمكان إقامتي",
+    "chipShowFacts": "أظهر معلوماتي",
+    "chipShowFactsMessage": "ما الذي تعرفه عني حاليًا؟",
+    "chipHelpSetup": "ساعدني في الإعداد",
+    "chipHelpSetupMessage": "ساعدني في إعداد ملفي الشخصي",
+    "thinking": "يفكّر…",
+    "newChat": "محادثة جديدة",
+    "inputPlaceholder": "اكتب رسالة..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "المنشورات التي كنت تقرأها",
     "badge_one": "زرت {{publication}} مرة واحدة في آخر 30 يومًا",

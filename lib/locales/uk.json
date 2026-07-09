@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "Привіт! Я Mera, ваша особиста новинна помічниця. Якщо хочете, розкажіть будь-що про себе — де ви живете, чим займаєтеся, які маєте захоплення, за якими акціями стежите, де живе ваша родина. Або просто скажіть «допоможи налаштувати», і я проведу вас крок за кроком."
   },
+  "floatingChat": {
+    "bubbleHint": "Чат з Mera",
+    "close": "Закрити",
+    "title": "Mera",
+    "earlierConversation": "Попередня розмова",
+    "loadingHistory": "Завантаження попередніх повідомлень…",
+    "factSavedTitle": "Збережено у вашому профілі",
+    "factDeletedTitle": "Видалено з вашого профілю",
+    "factUpdatedTitle": "Налаштування оновлено",
+    "factCardUndo": "Скасувати",
+    "factCardDelete": "Видалити",
+    "chipAddLocation": "Додати, де я живу",
+    "chipAddLocationMessage": "Я хочу розповісти, де я живу",
+    "chipShowFacts": "Показати мої дані",
+    "chipShowFactsMessage": "Що ви зараз про мене знаєте?",
+    "chipHelpSetup": "Допоможіть із налаштуванням",
+    "chipHelpSetupMessage": "Допоможіть налаштувати мій профіль",
+    "thinking": "Думаю…",
+    "newChat": "Новий чат",
+    "inputPlaceholder": "Введіть повідомлення..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Видання, які ви читаєте",
     "badge_one": "Ви відвідали {{publication}} один раз за останні 30 днів",

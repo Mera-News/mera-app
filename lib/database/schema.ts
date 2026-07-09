@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 34,
+  version: 35,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -33,6 +33,7 @@ export default appSchema({
         { name: 'role', type: 'string' },
         { name: 'content', type: 'string' },
         { name: 'suggested_options_json', type: 'string', isOptional: true },
+        { name: 'tool_calls_json', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
       ],
     }),

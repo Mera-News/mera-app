@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "Hai! Aku Mera, asisten berita pribadimu. Jika mau, ceritakan apa saja tentang dirimu — tinggal di mana, kerja apa, hobi yang diikuti, saham yang dipantau, tempat tinggal keluarga. Atau cukup bilang 'bantu aku menyiapkannya' dan aku akan membimbingmu langkah demi langkah."
   },
+  "floatingChat": {
+    "bubbleHint": "Ngobrol dengan Mera",
+    "close": "Tutup",
+    "title": "Mera",
+    "earlierConversation": "Percakapan sebelumnya",
+    "loadingHistory": "Memuat pesan sebelumnya…",
+    "factSavedTitle": "Disimpan ke profil Anda",
+    "factDeletedTitle": "Dihapus dari profil Anda",
+    "factUpdatedTitle": "Preferensi diperbarui",
+    "factCardUndo": "Urungkan",
+    "factCardDelete": "Hapus",
+    "chipAddLocation": "Tambahkan tempat tinggal saya",
+    "chipAddLocationMessage": "Saya ingin memberi tahu tempat tinggal saya",
+    "chipShowFacts": "Tampilkan info saya",
+    "chipShowFactsMessage": "Apa yang Anda ketahui tentang saya saat ini?",
+    "chipHelpSetup": "Bantu saya menyiapkan",
+    "chipHelpSetupMessage": "Bantu saya menyiapkan profil saya",
+    "thinking": "Berpikir…",
+    "newChat": "Obrolan baru",
+    "inputPlaceholder": "Ketik pesan..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Publikasi yang Anda baca",
     "badge_one": "Anda mengunjungi {{publication}} sekali dalam 30 hari terakhir",

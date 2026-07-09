@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "嗨！我是 Mera，您的個人新聞助理。如果您願意，可以分享關於您自己的事 — 住在哪裡、從事什麼工作、追蹤的興趣、持有的股票、家人居住的地方。或者直接說「幫我設定」，我會引導您完成。"
   },
+  "floatingChat": {
+    "bubbleHint": "與 Mera 聊天",
+    "close": "關閉",
+    "title": "Mera",
+    "earlierConversation": "較早的對話",
+    "loadingHistory": "正在載入較早的訊息…",
+    "factSavedTitle": "已儲存到你的檔案",
+    "factDeletedTitle": "已從你的檔案中移除",
+    "factUpdatedTitle": "偏好設定已更新",
+    "factCardUndo": "復原",
+    "factCardDelete": "刪除",
+    "chipAddLocation": "新增我的居住地",
+    "chipAddLocationMessage": "我想告訴你我住在哪裡",
+    "chipShowFacts": "顯示我的資訊",
+    "chipShowFactsMessage": "你現在對我了解多少？",
+    "chipHelpSetup": "幫我設定",
+    "chipHelpSetupMessage": "幫我設定我的檔案",
+    "thinking": "思考中…",
+    "newChat": "新對話",
+    "inputPlaceholder": "輸入訊息..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "您正在閱讀的媒體",
     "badge_one": "過去 30 天內您造訪了 {{publication}} 1 次",

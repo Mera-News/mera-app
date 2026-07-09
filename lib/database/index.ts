@@ -7,7 +7,9 @@ import schema from './schema';
 
 import ArticleSuggestion from './models/ArticleSuggestion';
 import ArticleSuggestionFact from './models/ArticleSuggestionFact';
+import Conversation from './models/Conversation';
 import Fact from './models/Fact';
+import Message from './models/Message';
 import InferenceJob from './models/InferenceJob';
 import SchedulerJob from './models/SchedulerJob';
 import Setting from './models/Setting';
@@ -34,6 +36,8 @@ const database = new Database({
     Fact,
     ArticleSuggestion,
     ArticleSuggestionFact,
+    Conversation,
+    Message,
     UserPersona,
     PublicationVisit,
     SavedArticleSuggestion,

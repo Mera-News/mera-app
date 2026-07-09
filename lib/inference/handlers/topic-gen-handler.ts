@@ -7,7 +7,7 @@ import {
   updateFact,
 } from '../../database/services/fact-service';
 import { generateTopicsForFact } from '../../mera-protocol/topic-generation-service';
-import { useChatPopupStore } from '../../stores/chat-popup-store';
+import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
 
 export interface TopicGenPayload {
@@ -61,6 +61,6 @@ export async function handleTopicGenJob(
   }
 
   await updateFact(payload.factId, { metadata: { topics: realTopics } });
-  useChatPopupStore.getState().notifyFactMutation();
+  useFloatingChatStore.getState().notifyFactMutation();
   return { topics: realTopics };
 }

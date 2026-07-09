@@ -47,6 +47,7 @@
     "expo-dev-client": "~55.0.36",
     "expo-device": "~55.0.18",
     "expo-font": "~55.0.7",
+    "expo-haptics": "~55.0.15",
     "expo-keep-awake": "~55.0.8",
     "expo-linking": "~55.0.16",
     "expo-localization": "~55.0.16",

@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "Hoi! Ik ben Mera, je persoonlijke nieuwsassistent. Vertel me gerust wat dan ook over jezelf — waar je woont, wat je voor werk doet, hobby's die je volgt, aandelen die je bijhoudt, plaatsen waar je familie woont. Of zeg gewoon 'help me met instellen' en ik begeleid je door het proces."
   },
+  "floatingChat": {
+    "bubbleHint": "Chat met Mera",
+    "close": "Sluiten",
+    "title": "Mera",
+    "earlierConversation": "Eerder gesprek",
+    "loadingHistory": "Eerdere berichten laden…",
+    "factSavedTitle": "Opgeslagen in je profiel",
+    "factDeletedTitle": "Verwijderd uit je profiel",
+    "factUpdatedTitle": "Voorkeuren bijgewerkt",
+    "factCardUndo": "Ongedaan maken",
+    "factCardDelete": "Verwijderen",
+    "chipAddLocation": "Voeg toe waar ik woon",
+    "chipAddLocationMessage": "Ik wil je vertellen waar ik woon",
+    "chipShowFacts": "Toon mijn gegevens",
+    "chipShowFactsMessage": "Wat weet je momenteel over mij?",
+    "chipHelpSetup": "Help me met instellen",
+    "chipHelpSetupMessage": "Help me mijn profiel in te stellen",
+    "thinking": "Aan het denken…",
+    "newChat": "Nieuwe chat",
+    "inputPlaceholder": "Typ een bericht..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Publicaties die je leest",
     "badge_one": "Je hebt {{publication}} één keer bezocht in de afgelopen 30 dagen",

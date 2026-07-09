@@ -516,6 +516,27 @@
   "personaChat": {
     "introMessage": "Hi! I'm Mera, your personal news assistant. If you'd like, share anything about yourself — where you live, what you do for work, hobbies you follow, stocks you track, places your family lives. Or just say 'help me set up' and I'll walk you through it."
   },
+  "floatingChat": {
+    "bubbleHint": "Chat with Mera",
+    "close": "Close",
+    "title": "Mera",
+    "earlierConversation": "Earlier conversation",
+    "loadingHistory": "Loading earlier messages…",
+    "factSavedTitle": "Saved to your persona",
+    "factDeletedTitle": "Removed from your persona",
+    "factUpdatedTitle": "Preferences updated",
+    "factCardUndo": "Undo",
+    "factCardDelete": "Delete",
+    "chipAddLocation": "Add where I live",
+    "chipAddLocationMessage": "I want to tell you where I live",
+    "chipShowFacts": "Show my facts",
+    "chipShowFactsMessage": "What do you currently know about me?",
+    "chipHelpSetup": "Help me set up",
+    "chipHelpSetupMessage": "Help me set up my persona",
+    "thinking": "Thinking…",
+    "newChat": "New chat",
+    "inputPlaceholder": "Type a message..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Publications you've been reading",
     "badge_one": "You've visited {{publication}} once in the last 30 days",

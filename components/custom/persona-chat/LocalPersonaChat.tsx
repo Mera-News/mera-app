@@ -1,36 +1,51 @@
-// LocalPersonaChat — on-device inference path for persona chat.
-// Creates a PersonaUpdateAgent, calls useLocalLLM, renders PersonaChatUI.
+// LocalPersonaChat — on-device inference path for the floating chat session.
+// Creates the context-appropriate agent, calls useLocalLLM, renders
+// ChatSessionView.
 
-import { PersonaUpdateAgent } from '@/lib/llm/agents/PersonaUpdateAgent';
+import ChatSessionView from '@/components/custom/floating-chat/ChatSessionView';
+import { createAgentForContext } from '@/components/custom/floating-chat/agent-registry';
+import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import { useLocalLLM } from '@/lib/llm/useLocalLLM';
+import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import React, { useMemo } from 'react';
-import PersonaChatUI from './PersonaChatUI';
 
 export interface LocalPersonaChatProps {
   userId: string;
   surface: 'ONBOARDING' | 'CONFIG';
+  context: ChatContext;
+  conversationId: string | null;
+  resumeMessages?: PersistedMessage[];
   isLoading: boolean;
   loadingMessage?: string;
-  onClose?: () => void;
 }
 
 export default function LocalPersonaChat({
   userId,
   surface,
+  context,
+  conversationId,
+  resumeMessages,
   isLoading,
   loadingMessage,
-  onClose,
 }: LocalPersonaChatProps) {
-  const agent = useMemo(() => new PersonaUpdateAgent(userId, surface), [userId, surface]);
+  const agent = useMemo(
+    () => createAgentForContext(context, userId, surface),
+    [context, userId, surface],
+  );
   const chat = useLocalLLM(agent);
 
   return (
-    <PersonaChatUI
-      {...chat}
-      surface={surface}
+    <ChatSessionView
+      messages={chat.messages}
+      status={chat.status}
+      sendMessage={chat.sendMessage}
+      isBlocked={chat.isBlocked}
+      blockedReason={chat.blockedReason}
+      error={chat.error}
+      conversationId={conversationId}
+      resumeMessages={resumeMessages}
       isLoading={isLoading}
       loadingMessage={loadingMessage}
-      onClose={onClose}
     />
   );
 }

@@ -22,8 +22,8 @@ jest.mock('../../mera-protocol/topic-generation-service', () => ({
 
 const mockNotifyFactMutation = jest.fn();
 
-jest.mock('../../stores/chat-popup-store', () => ({
-  useChatPopupStore: {
+jest.mock('../../stores/floating-chat-store', () => ({
+  useFloatingChatStore: {
     getState: jest.fn(() => ({ notifyFactMutation: mockNotifyFactMutation })),
   },
 }));

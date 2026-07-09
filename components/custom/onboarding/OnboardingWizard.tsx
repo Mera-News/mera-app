@@ -21,6 +21,7 @@ import {
     useOnboardingStore,
 } from '../../../lib/stores/onboarding-store';
 import { useModelState as useMeraModelState } from '../../../lib/stores/mera-protocol-store';
+import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaL1MeraProtocol from '../config-panel/PersonaL1MeraProtocol';
@@ -113,6 +114,30 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
 
         initializeUserId();
     }, [updatePreferences, setIsInitializing, setStep]);
+
+    // Floating-chat orchestration: the persona step (index 2) is the only step
+    // that uses the floating Mera bubble/popover. Suppress it everywhere else,
+    // and auto-open the popover when the persona step becomes active. Leaving
+    // the persona step collapses the popover.
+    useEffect(() => {
+        const store = useFloatingChatStore.getState();
+        if (currentStep === 2) {
+            store.setSuppressed(false);
+            store.expand({ kind: 'persona' });
+        } else {
+            store.collapse();
+            store.setSuppressed(true);
+        }
+    }, [currentStep]);
+
+    // On wizard unmount/completion, restore the default floating-chat state.
+    useEffect(() => {
+        return () => {
+            const store = useFloatingChatStore.getState();
+            store.collapse();
+            store.setSuppressed(false);
+        };
+    }, []);
 
     // Helper function to get current user ID
     const getCurrentUserId = async (): Promise<string> => {
@@ -224,7 +249,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 );
             case 2:
                 return (
-                    <PersonaL1MeraProtocol userId={userPreferences.userId} expandMeraChat />
+                    <PersonaL1MeraProtocol userId={userPreferences.userId} />
                 );
             default:
                 return null;

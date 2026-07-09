@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "नमस्ते! मैं Mera हूँ, आपकी निजी समाचार सहायक। अगर चाहें तो अपने बारे में कुछ भी साझा करें — आप कहाँ रहते हैं, क्या काम करते हैं, कौन-से शौक हैं, किन स्टॉक्स पर नज़र रखते हैं, परिवार कहाँ रहता है। या बस कहें 'मेरी प्रोफ़ाइल सेट करने में मदद करें' और मैं आपका मार्गदर्शन करूँगी।"
   },
+  "floatingChat": {
+    "bubbleHint": "मेरा से चैट करें",
+    "close": "बंद करें",
+    "title": "Mera",
+    "earlierConversation": "पिछली बातचीत",
+    "loadingHistory": "पिछले संदेश लोड हो रहे हैं…",
+    "factSavedTitle": "आपके प्रोफ़ाइल में सहेजा गया",
+    "factDeletedTitle": "आपके प्रोफ़ाइल से हटाया गया",
+    "factUpdatedTitle": "प्राथमिकताएँ अपडेट हुईं",
+    "factCardUndo": "पूर्ववत करें",
+    "factCardDelete": "हटाएं",
+    "chipAddLocation": "मैं कहाँ रहता हूँ जोड़ें",
+    "chipAddLocationMessage": "मैं आपको बताना चाहता हूँ कि मैं कहाँ रहता हूँ",
+    "chipShowFacts": "मेरी जानकारी दिखाएं",
+    "chipShowFactsMessage": "आप अभी मेरे बारे में क्या जानते हैं?",
+    "chipHelpSetup": "सेटअप में मेरी मदद करें",
+    "chipHelpSetupMessage": "मेरी प्रोफ़ाइल सेटअप करने में मदद करें",
+    "thinking": "सोच रहा है…",
+    "newChat": "नई चैट",
+    "inputPlaceholder": "संदेश टाइप करें..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "आप जो प्रकाशन पढ़ रहे हैं",
     "badge_one": "आपने पिछले 30 दिनों में {{publication}} एक बार देखा",

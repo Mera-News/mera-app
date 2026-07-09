@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "안녕하세요! 저는 Mera, 개인 뉴스 어시스턴트입니다. 원하신다면 자신에 대해 알려 주세요 — 거주 지역, 직업, 취미, 관심 있는 주식, 가족이 사는 곳 등 무엇이든 좋습니다. 또는 '설정 도와줘'라고 말씀해 주시면 안내해 드리겠습니다."
   },
+  "floatingChat": {
+    "bubbleHint": "Mera와 채팅",
+    "close": "닫기",
+    "title": "Mera",
+    "earlierConversation": "이전 대화",
+    "loadingHistory": "이전 메시지를 불러오는 중…",
+    "factSavedTitle": "프로필에 저장됨",
+    "factDeletedTitle": "프로필에서 제거됨",
+    "factUpdatedTitle": "환경설정이 업데이트됨",
+    "factCardUndo": "실행 취소",
+    "factCardDelete": "삭제",
+    "chipAddLocation": "거주지 추가",
+    "chipAddLocationMessage": "제가 사는 곳을 알려드리고 싶어요",
+    "chipShowFacts": "내 정보 보기",
+    "chipShowFactsMessage": "지금 저에 대해 무엇을 알고 있나요?",
+    "chipHelpSetup": "설정을 도와주세요",
+    "chipHelpSetupMessage": "제 프로필 설정을 도와주세요",
+    "thinking": "생각 중…",
+    "newChat": "새 채팅",
+    "inputPlaceholder": "메시지를 입력하세요..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "읽고 계신 발행사",
     "badge_one": "지난 30일 동안 {{publication}}을(를) 1회 방문하셨습니다",

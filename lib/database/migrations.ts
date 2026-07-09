@@ -850,5 +850,19 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 35,
+      steps: [
+        // Persist assistant tool calls alongside chat messages so fact cards can
+        // later render the statements a tool created/deleted. Additive column on
+        // the long-lived `messages` table — never wipe-and-recreate.
+        addColumns({
+          table: 'messages',
+          columns: [
+            { name: 'tool_calls_json', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

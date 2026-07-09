@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "สวัสดี! ฉันคือ Mera ผู้ช่วยข่าวส่วนตัวของคุณ ถ้าอยากแชร์ ก็บอกอะไรเกี่ยวกับตัวคุณก็ได้ — อยู่ที่ไหน ทำงานอะไร งานอดิเรก หุ้นที่ติดตาม ครอบครัวอยู่ที่ไหน หรือพูดว่า 'ช่วยตั้งค่าให้หน่อย' แล้วฉันจะพาไปทีละขั้น"
   },
+  "floatingChat": {
+    "bubbleHint": "แชทกับ Mera",
+    "close": "ปิด",
+    "title": "Mera",
+    "earlierConversation": "การสนทนาก่อนหน้า",
+    "loadingHistory": "กำลังโหลดข้อความก่อนหน้า…",
+    "factSavedTitle": "บันทึกลงในโปรไฟล์ของคุณแล้ว",
+    "factDeletedTitle": "ลบออกจากโปรไฟล์ของคุณแล้ว",
+    "factUpdatedTitle": "อัปเดตการตั้งค่าแล้ว",
+    "factCardUndo": "เลิกทำ",
+    "factCardDelete": "ลบ",
+    "chipAddLocation": "เพิ่มที่ที่ฉันอาศัยอยู่",
+    "chipAddLocationMessage": "ฉันอยากบอกคุณว่าฉันอาศัยอยู่ที่ไหน",
+    "chipShowFacts": "แสดงข้อมูลของฉัน",
+    "chipShowFactsMessage": "ตอนนี้คุณรู้อะไรเกี่ยวกับฉันบ้าง?",
+    "chipHelpSetup": "ช่วยฉันตั้งค่า",
+    "chipHelpSetupMessage": "ช่วยฉันตั้งค่าโปรไฟล์ของฉัน",
+    "thinking": "กำลังคิด…",
+    "newChat": "แชทใหม่",
+    "inputPlaceholder": "พิมพ์ข้อความ..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "สำนักพิมพ์ที่คุณกำลังอ่าน",
     "badge_one": "คุณเยี่ยมชม {{publication}} หนึ่งครั้งในช่วง 30 วันที่ผ่านมา",

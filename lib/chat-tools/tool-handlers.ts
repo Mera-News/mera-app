@@ -12,7 +12,7 @@ import {
 } from '../database/services/fact-service';
 import { getSetting, setSetting } from '../database/services/setting-service';
 import { AccountService } from '../account-service';
-import { useChatPopupStore } from '../stores/chat-popup-store';
+import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { useUserStore } from '../stores/user-store';
 import { ProcessingMode } from '../generated/graphql-types';
@@ -116,7 +116,7 @@ export async function handleSaveExtractedFacts(
     }
 
     // Notify once after all facts are saved (avoids WatermelonDB cache race from per-fact notifications)
-    useChatPopupStore.getState().notifyFactMutation();
+    useFloatingChatStore.getState().notifyFactMutation();
 
     // Generate topics for all new facts
     if (savedFactEntries.length > 0) {
@@ -148,6 +148,7 @@ export async function handleSaveExtractedFacts(
   return {
     success: true,
     factsSaved,
+    savedFacts: savedFactEntries,
   };
 }
 
@@ -200,7 +201,7 @@ async function batchGenerateTopics(
     for (const entry of factEntries) {
       await updateFact(entry.id, { metadata: { topicGenError: [errMsg] } });
     }
-    useChatPopupStore.getState().notifyFactMutation();
+    useFloatingChatStore.getState().notifyFactMutation();
     return;
   }
   logger.debug('[topic-gen-batch] response', { resultCount: realResults.length });
@@ -256,7 +257,7 @@ async function batchGenerateTopics(
     await updateFact(entry.id, { metadata: { topics: real } });
   }
 
-  useChatPopupStore.getState().notifyFactMutation();
+  useFloatingChatStore.getState().notifyFactMutation();
   logger.debug('[topic-gen-batch] done');
 }
 
@@ -331,17 +332,20 @@ export async function handleDeleteUserFacts(
   }
 
   if (factsToDelete.length === 0) {
-    return { success: true, deletedCount: 0 };
+    return { success: true, deletedCount: 0, deletedStatements: [] };
   }
+
+  // Snapshot statements before deletion so fact cards can render what was removed.
+  const deletedStatements = factsToDelete.map((fact) => fact.statement);
 
   let deletedCount = 0;
   for (const fact of factsToDelete) {
     await deleteFact(fact.id);
     deletedCount++;
   }
-  useChatPopupStore.getState().notifyFactMutation();
+  useFloatingChatStore.getState().notifyFactMutation();
 
-  return { success: true, deletedCount };
+  return { success: true, deletedCount, deletedStatements };
 }
 
 /** Advances questionnaire to the next level. */

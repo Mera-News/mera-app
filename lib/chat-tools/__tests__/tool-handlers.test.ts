@@ -19,8 +19,8 @@ jest.mock('../../account-service', () => ({
     updateUserConfig: jest.fn(() => Promise.resolve()),
   },
 }));
-jest.mock('../../stores/chat-popup-store', () => ({
-  useChatPopupStore: {
+jest.mock('../../stores/floating-chat-store', () => ({
+  useFloatingChatStore: {
     getState: jest.fn(() => ({ notifyFactMutation: jest.fn() })),
   },
 }));
@@ -80,7 +80,7 @@ import {
 } from '../../database/services/fact-service';
 import { getSetting, setSetting } from '../../database/services/setting-service';
 import { AccountService } from '../../account-service';
-import { useChatPopupStore } from '../../stores/chat-popup-store';
+import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { useUserStore } from '../../stores/user-store';
 import { enqueueJob, hasPendingJob } from '../../database/services/inference-job-service';
@@ -119,7 +119,7 @@ beforeEach(() => {
   mockCloudBatchComplete.mockResolvedValue([]);
   mockHasPendingJob.mockResolvedValue(false);
   mockEnqueueJob.mockResolvedValue({ id: 'job-id' } as never);
-  (useChatPopupStore.getState as jest.Mock).mockReturnValue({ notifyFactMutation: mockNotifyFactMutation });
+  (useFloatingChatStore.getState as jest.Mock).mockReturnValue({ notifyFactMutation: mockNotifyFactMutation });
   (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
   (useUserStore.getState as jest.Mock).mockReturnValue({ userId: 'user-123' });
 });
@@ -141,13 +141,13 @@ describe('MAX_FACT_LENGTH', () => {
 describe('handleSaveExtractedFacts', () => {
   it('returns success with factsSaved=0 when no facts provided', async () => {
     const result = await handleSaveExtractedFacts({ extracted_user_information: [] });
-    expect(result).toEqual({ success: true, factsSaved: 0 });
+    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [] });
     expect(mockAddFact).not.toHaveBeenCalled();
   });
 
   it('returns success with factsSaved=0 when extracted_user_information is missing', async () => {
     const result = await handleSaveExtractedFacts({});
-    expect(result).toEqual({ success: true, factsSaved: 0 });
+    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [] });
   });
 
   it('saves a new fact and increments factsSaved', async () => {
@@ -242,6 +242,30 @@ describe('handleSaveExtractedFacts', () => {
 
     expect(mockAddFact).toHaveBeenCalledTimes(2);
     expect(result).toMatchObject({ factsSaved: 2 });
+  });
+
+  it('returns savedFacts enrichment with {id, statement} for each saved fact', async () => {
+    mockAddFact
+      .mockResolvedValueOnce({ id: 'f1', statement: 'fact 1' } as never)
+      .mockResolvedValueOnce({ id: 'f2', statement: 'fact 2' } as never);
+
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: ['fact 1', 'fact 2'],
+    });
+
+    expect(result).toMatchObject({
+      success: true,
+      factsSaved: 2,
+      savedFacts: [
+        { id: 'f1', statement: 'fact 1' },
+        { id: 'f2', statement: 'fact 2' },
+      ],
+    });
+  });
+
+  it('returns an empty savedFacts array when nothing is saved', async () => {
+    const result = await handleSaveExtractedFacts({ extracted_user_information: [] });
+    expect(result).toMatchObject({ savedFacts: [] });
   });
 
   it('calls notifyFactMutation after saving facts', async () => {
@@ -465,6 +489,31 @@ describe('handleDeleteUserFacts', () => {
 
     expect(mockDeleteFact).toHaveBeenCalledTimes(2);
     expect(result).toMatchObject({ success: true, deletedCount: 2 });
+  });
+
+  it('returns deletedStatements for the facts actually deleted', async () => {
+    mockGetFacts.mockResolvedValueOnce([
+      { id: 'f1', statement: 'Fact one' } as never,
+      { id: 'f2', statement: 'Fact two' } as never,
+    ]);
+
+    const result = await handleDeleteUserFacts({ fact_ids: ['f1', 'f2'] });
+
+    expect(result).toMatchObject({
+      success: true,
+      deletedCount: 2,
+      deletedStatements: ['Fact one', 'Fact two'],
+    });
+  });
+
+  it('returns an empty deletedStatements array when no facts match', async () => {
+    mockGetFacts.mockResolvedValueOnce([
+      { id: 'f1', statement: 'Lives in Amsterdam' } as never,
+    ]);
+
+    const result = await handleDeleteUserFacts({ fact_ids: ['nonexistent'] });
+
+    expect(result).toMatchObject({ deletedCount: 0, deletedStatements: [] });
   });
 });
 

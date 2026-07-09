@@ -485,6 +485,27 @@
   "personaChat": {
     "introMessage": "¡Hola! Soy Mera, tu asistente personal de noticias. Si quieres, cuéntame lo que sea sobre ti — dónde vives, a qué te dedicas, qué aficiones sigues, qué acciones rastreas, dónde vive tu familia. O simplemente di 'ayúdame a configurarlo' y te guío paso a paso."
   },
+  "floatingChat": {
+    "bubbleHint": "Chatea con Mera",
+    "close": "Cerrar",
+    "title": "Mera",
+    "earlierConversation": "Conversación anterior",
+    "loadingHistory": "Cargando mensajes anteriores…",
+    "factSavedTitle": "Guardado en tu perfil",
+    "factDeletedTitle": "Eliminado de tu perfil",
+    "factUpdatedTitle": "Preferencias actualizadas",
+    "factCardUndo": "Deshacer",
+    "factCardDelete": "Eliminar",
+    "chipAddLocation": "Añadir dónde vivo",
+    "chipAddLocationMessage": "Quiero decirte dónde vivo",
+    "chipShowFacts": "Mostrar mis datos",
+    "chipShowFactsMessage": "¿Qué sabes de mí actualmente?",
+    "chipHelpSetup": "Ayúdame a configurar",
+    "chipHelpSetupMessage": "Ayúdame a configurar mi perfil",
+    "thinking": "Pensando…",
+    "newChat": "Nuevo chat",
+    "inputPlaceholder": "Escribe un mensaje..."
+  },
   "publicationVisits": {
     "topVisitedTitle": "Publicaciones que has estado leyendo",
     "badge_one": "Has visitado {{publication}} una vez en los últimos 30 días",

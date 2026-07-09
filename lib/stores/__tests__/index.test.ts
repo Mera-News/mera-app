@@ -129,16 +129,16 @@ describe('lib/stores/index — exports smoke test', () => {
         expect(typeof storeIndex.useConfigPanelActiveTab).toBe('function');
     });
 
-    it('exports useChatPopupStore', () => {
-        expect(typeof storeIndex.useChatPopupStore).toBe('function');
+    it('exports useFloatingChatStore', () => {
+        expect(typeof storeIndex.useFloatingChatStore).toBe('function');
     });
 
-    it('exports useChatPopupIsExpanded', () => {
-        expect(typeof storeIndex.useChatPopupIsExpanded).toBe('function');
+    it('exports useFloatingChatIsExpanded', () => {
+        expect(typeof storeIndex.useFloatingChatIsExpanded).toBe('function');
     });
 
-    it('exports useChatPopupConversationId', () => {
-        expect(typeof storeIndex.useChatPopupConversationId).toBe('function');
+    it('exports useFloatingChatFactMutationVersion', () => {
+        expect(typeof storeIndex.useFloatingChatFactMutationVersion).toBe('function');
     });
 
     it('exports useAppStateStore', () => {
@@ -199,10 +199,10 @@ describe('clearAllStores', () => {
         expect(storeIndex.useConfigPanelStore.getState().isOpen).toBe(false);
     });
 
-    it('resets chat popup after clearAllStores', async () => {
-        storeIndex.useChatPopupStore.getState().expand();
+    it('resets floating chat after clearAllStores', async () => {
+        storeIndex.useFloatingChatStore.getState().expand();
         await storeIndex.clearAllStores();
-        expect(storeIndex.useChatPopupStore.getState().isExpanded).toBe(false);
+        expect(storeIndex.useFloatingChatStore.getState().isExpanded).toBe(false);
     });
 });
 
