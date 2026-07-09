@@ -38,6 +38,7 @@ function makeE2EECtx() {
     privateKey: new Uint8Array(32),
     modelPubKeyHex: 'ccdd',
     clientPubKeyHex: 'aabb',
+    algo: 'ed25519' as const,
   };
 }
 
@@ -323,7 +324,7 @@ describe('cloudComplete', () => {
     expect(result).toBe(decrypted);
     expect(mockEncryptMessages).toHaveBeenCalledTimes(1);
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockDecryptContent).toHaveBeenCalledWith('raw-blob', expect.any(Uint8Array));
+    expect(mockDecryptContent).toHaveBeenCalledWith('raw-blob', expect.any(Uint8Array), 'ed25519');
   });
 
   it('uses the specified model when provided', async () => {
@@ -377,7 +378,7 @@ describe('cloudComplete', () => {
     mockDecryptContent.mockReturnValueOnce('thinking...');
     const result = await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
     expect(result).toBe('thinking...');
-    expect(mockDecryptContent).toHaveBeenCalledWith('thinking-blob', expect.any(Uint8Array));
+    expect(mockDecryptContent).toHaveBeenCalledWith('thinking-blob', expect.any(Uint8Array), 'ed25519');
   });
 
   it('returns empty string when choices array is absent', async () => {
@@ -509,7 +510,7 @@ describe('cloudBatchComplete', () => {
     const results = await cloudBatchComplete([call]);
     expect(results).toHaveLength(1);
     expect(results[0]).toEqual({ id: 'c1', output: 'answer' });
-    expect(mockDecryptContent).toHaveBeenCalledWith('cipher-blob', expect.any(Uint8Array));
+    expect(mockDecryptContent).toHaveBeenCalledWith('cipher-blob', expect.any(Uint8Array), 'ed25519');
   });
 
   it('handles multiple calls with correct index mapping', async () => {

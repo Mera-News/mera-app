@@ -11,6 +11,7 @@ import {
   encryptContent,
   encryptMessages,
   prepareE2EEContext,
+  type SigningAlgo,
 } from '../e2ee/e2ee-service';
 import logger from '../logger';
 import { SMALL_MODEL } from './constants';
@@ -207,7 +208,7 @@ export async function cloudComplete(request: CloudCompleteRequest): Promise<stri
   const encContent = msg?.content || msg?.reasoning_content || '';
   if (!encContent) return '';
 
-  return decryptContent(encContent, ctx.privateKey).trim();
+  return decryptContent(encContent, ctx.privateKey, ctx.algo).trim();
 }
 
 /** E2EE batch completion via /v1/chat/completions/batch. Shares E2EE context across all items. */
@@ -280,7 +281,7 @@ export async function cloudBatchComplete(
   }
 
   const data = await response.json() as BatchResponse;
-  return mapBatchResults(calls, data, ctx.privateKey);
+  return mapBatchResults(calls, data, ctx.privateKey, ctx.algo);
 }
 
 interface BatchResponse {
@@ -295,6 +296,7 @@ function mapBatchResults(
   calls: BatchCall[],
   data: BatchResponse,
   privateKey: Uint8Array,
+  algo: SigningAlgo,
 ): BatchCompletionResult[] {
   const resultsByIndex = new Map(data.results.map((r) => [r.index, r]));
 
@@ -321,7 +323,7 @@ function mapBatchResults(
     }
 
     try {
-      const output = decryptContent(encContent, privateKey).trim();
+      const output = decryptContent(encContent, privateKey, algo).trim();
       if (output.length === 0) {
         logger.warn(`${TAG} batch item decrypted to empty string`, {
           id: call.id,
@@ -453,7 +455,7 @@ export async function* cloudChatStream(
       finishReason: choice.finish_reason,
       hasReasoning: !!choice.message.reasoning_content,
     });
-    const decrypted = decryptContent(rawContent, ctx.privateKey);
+    const decrypted = decryptContent(rawContent, ctx.privateKey, ctx.algo);
     yield { type: 'text-delta', delta: decrypted };
   }
 

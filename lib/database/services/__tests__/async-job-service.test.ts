@@ -221,6 +221,42 @@ describe('getPendingAsyncJob', () => {
     expect(result!.clientPrivKeyHex).toBe('privkey-hex');
   });
 
+  it('defaults missing algo to ed25519 (rows written before the ecdsa split)', async () => {
+    const legacyJob = {
+      requestId: 'req-legacy-algo',
+      phase: 'relevance',
+      candidateIds: ['c1'],
+      callIds: ['score:0'],
+      submittedAt: 1700000000000,
+      expoPushToken: null,
+      modelCalls: 1,
+      // No `algo` field — persisted before ecdsa support existed.
+    };
+    mockGetSetting.mockResolvedValueOnce(JSON.stringify(legacyJob));
+    mockSecureStoreGetItem.mockResolvedValueOnce('privkey-hex');
+
+    const result = await getPendingAsyncJob();
+    expect(result!.algo).toBe('ed25519');
+  });
+
+  it('preserves a persisted ecdsa algo', async () => {
+    const job = {
+      requestId: 'req-ecdsa',
+      phase: 'relevance',
+      candidateIds: ['c1'],
+      callIds: ['score:0'],
+      submittedAt: 1700000000000,
+      expoPushToken: null,
+      modelCalls: 1,
+      algo: 'ecdsa',
+    };
+    mockGetSetting.mockResolvedValueOnce(JSON.stringify(job));
+    mockSecureStoreGetItem.mockResolvedValueOnce('privkey-hex');
+
+    const result = await getPendingAsyncJob();
+    expect(result!.algo).toBe('ecdsa');
+  });
+
   it('returns null and clears row when JSON is invalid', async () => {
     mockGetSetting.mockResolvedValueOnce('not valid json {{{');
     const result = await getPendingAsyncJob();

@@ -6,6 +6,7 @@
 // - `lastNudgeAt` gates the on-device hourly nudge so we don't spam the user.
 
 import logger from '@/lib/logger';
+import type { SigningAlgo } from '@/lib/e2ee/e2ee-service';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 import {
   deleteSetting,
@@ -89,9 +90,14 @@ export interface PendingAsyncJob {
    *  gateway silent-push wake. */
   expoPushToken: string | null;
   modelCalls: number;
-  /** Hex-encoded Ed25519 secret used to decrypt E2EE responses on reconcile.
-   *  Device-local only; never leaves this device. */
+  /** Hex-encoded client secret used to decrypt E2EE responses on reconcile
+   *  (Ed25519 or secp256k1 per `algo`). Device-local only; never leaves this
+   *  device. */
   clientPrivKeyHex: string;
+  /** Signing/encryption algo the E2EE context used, so the reconciler decrypts
+   *  on the matching curve. Optional for backward-compat: rows written before
+   *  the ecdsa split default to 'ed25519' on read. */
+  algo?: SigningAlgo;
   /** UUID assigned at cycle start (when state moves out of `idle`). Used by
    *  `unpacking-reason` to dedupe the local "X impactful articles" push so
    *  a recovery re-run doesn't double-notify the user. Survives the phase-1
@@ -113,6 +119,11 @@ export async function getPendingAsyncJob(): Promise<PendingAsyncJob | null> {
       parsed.callIds = parsed.calls.map((c) => c.id);
       delete parsed.calls;
     }
+
+    // Backward-compat: rows written before the ecdsa split have no `algo`.
+    // They were necessarily encrypted under the Ed25519-only path, so default
+    // accordingly — the reconciler passes this to decryptContent.
+    parsed.algo = parsed.algo ?? 'ed25519';
 
     // The secret key lives in secure-store, not in the SQLite row. Legacy rows
     // written before this split still carry an inline `clientPrivKeyHex` and no

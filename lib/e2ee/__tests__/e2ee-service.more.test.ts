@@ -42,6 +42,11 @@ jest.mock('../../utils/retry', () => ({
 // ─── Imports ──────────────────────────────────────────────────────────────────
 
 import { ed25519 } from '@noble/curves/ed25519.js';
+import { secp256k1 } from '@noble/curves/secp256k1.js';
+import { hkdf } from '@noble/hashes/hkdf.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { gcm } from '@noble/ciphers/aes.js';
+import { randomBytes } from '@noble/ciphers/utils.js';
 import {
   fetchModelPublicKey,
   prepareE2EEContext,
@@ -53,6 +58,16 @@ import {
 } from '../e2ee-service';
 import { withRetry } from '../../utils/retry';
 
+function toHex(b: Uint8Array): string {
+  return Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+function fromHex(hex: string): Uint8Array {
+  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const out = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16);
+  return out;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Create a real Ed25519 keypair and return the hex public key (server side). */
@@ -63,6 +78,46 @@ function makeModelKeyHex(): { privateKey: Uint8Array; publicKeyHex: string } {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
   return { privateKey, publicKeyHex: hex };
+}
+
+/** Create a real secp256k1 keypair; return the model pubkey as the 64-byte
+ *  raw x‖y hex (the encoding NEAR's attestation uses — uncompressed minus 0x04). */
+function makeEcdsaModelKeyHex(): { privateKey: Uint8Array; publicKeyHex: string } {
+  const privateKey = secp256k1.utils.randomSecretKey();
+  const pub65 = secp256k1.getPublicKey(privateKey, false); // 0x04 ‖ x ‖ y
+  return { privateKey, publicKeyHex: toHex(pub65.slice(1)) };
+}
+
+/** Server-side counterpart of the client's ecdsa scheme, used to prove wire
+ *  interop: derive the AES key from the shared point x-coordinate + HKDF, then
+ *  AES-256-GCM. `peerPub65` is the other party's uncompressed point. */
+function ecdsaDeriveKey(secret: Uint8Array, peerPub65: Uint8Array): Uint8Array {
+  const x = secp256k1.getSharedSecret(secret, peerPub65).slice(1, 33);
+  return hkdf(sha256, x, undefined, new TextEncoder().encode('ecdsa_encryption'), 32);
+}
+/** Decrypt a blob produced by the client's encryptContent (ecdsa) as the model would. */
+function ecdsaServerDecrypt(hexBlob: string, modelSecret: Uint8Array): string {
+  const blob = fromHex(hexBlob);
+  const ephPub = blob.slice(0, 65);
+  const iv = blob.slice(65, 77);
+  const ct = blob.slice(77);
+  const key = ecdsaDeriveKey(modelSecret, ephPub);
+  return new TextDecoder().decode(gcm(key, iv).decrypt(ct));
+}
+/** Encrypt a response toward the client's secp256k1 pubkey, as the server would.
+ *  `clientPub65Hex` is the 65-byte uncompressed point sent in X-Client-Pub-Key. */
+function ecdsaServerEncrypt(plaintext: string, clientPub65Hex: string): string {
+  const clientPub65 = fromHex(clientPub65Hex);
+  const ephSecret = secp256k1.utils.randomSecretKey();
+  const ephPublic = secp256k1.getPublicKey(ephSecret, false);
+  const key = ecdsaDeriveKey(ephSecret, clientPub65);
+  const iv = randomBytes(12);
+  const ct = gcm(key, iv).encrypt(new TextEncoder().encode(plaintext));
+  const blob = new Uint8Array(65 + 12 + ct.length);
+  blob.set(ephPublic, 0);
+  blob.set(iv, 65);
+  blob.set(ct, 77);
+  return toHex(blob);
 }
 
 /** Fake a valid attestation response JSON for a given pubkey hex. */
@@ -106,7 +161,7 @@ describe('fetchModelPublicKey', () => {
 
   it('returns cached attestation without fetching', async () => {
     const { publicKeyHex } = makeModelKeyHex();
-    const cached: ModelAttestation = { publicKey: publicKeyHex, signingId: 'near:test.near' };
+    const cached: ModelAttestation = { publicKey: publicKeyHex, algo: 'ed25519', signingId: 'near:test.near' };
     mockGetCachedAttestation.mockReturnValueOnce(cached);
 
     const result = await fetchModelPublicKey('test-model');
@@ -196,8 +251,8 @@ describe('fetchModelPublicKey', () => {
     );
   });
 
-  it('throws when pubkey is not 32 bytes (wrong length)', async () => {
-    // 16 bytes = 32 hex chars — too short
+  it('throws when pubkey is an unsupported length (neither 32 nor 64)', async () => {
+    // 16 bytes = 32 hex chars — too short for either curve
     const shortKey = 'aa'.repeat(16);
     mockGlobalFetch.mockResolvedValueOnce(
       makeResponse(200, {
@@ -206,8 +261,30 @@ describe('fetchModelPublicKey', () => {
     );
 
     await expect(fetchModelPublicKey('test-model')).rejects.toThrow(
-      /expected 32-byte Ed25519/,
+      /unsupported signing-key length 16/,
     );
+  });
+
+  it('detects ed25519 from a 32-byte key', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+
+    const result = await fetchModelPublicKey('test-model');
+    expect(result.algo).toBe('ed25519');
+    expect(result.publicKey).toBe(publicKeyHex);
+  });
+
+  it('detects ecdsa from a 64-byte secp256k1 key', async () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+
+    const result = await fetchModelPublicKey('test-model');
+    expect(result.algo).toBe('ecdsa');
+    expect(result.publicKey).toBe(publicKeyHex);
   });
 
   it('throws when HTTP response is not ok (non-5xx, e.g. 403)', async () => {
@@ -429,6 +506,7 @@ describe('encryptContent — additional edge cases', () => {
       modelPubKeyHex,
       privateKey: new Uint8Array(32),
       clientPubKeyHex: 'unused',
+      algo: 'ed25519',
       headers: {
         'X-Signing-Algo': 'ed25519',
         'X-Client-Pub-Key': 'unused',
@@ -447,6 +525,7 @@ describe('encryptContent — additional edge cases', () => {
       modelPubKeyHex,
       privateKey: new Uint8Array(32),
       clientPubKeyHex: 'unused',
+      algo: 'ed25519',
       headers: {
         'X-Signing-Algo': 'ed25519',
         'X-Client-Pub-Key': 'unused',
@@ -488,6 +567,7 @@ describe('decryptContent — additional edge cases', () => {
       modelPubKeyHex,
       privateKey: modelPrivKey,
       clientPubKeyHex: 'unused',
+      algo: 'ed25519',
       headers: {
         'X-Signing-Algo': 'ed25519',
         'X-Client-Pub-Key': 'unused',
@@ -508,6 +588,7 @@ describe('decryptContent — additional edge cases', () => {
       modelPubKeyHex,
       privateKey: modelPrivKey,
       clientPubKeyHex: 'unused',
+      algo: 'ed25519',
       headers: {
         'X-Signing-Algo': 'ed25519',
         'X-Client-Pub-Key': 'unused',
@@ -519,5 +600,80 @@ describe('decryptContent — additional edge cases', () => {
     const payload = JSON.stringify({ scores: [0.8, 0.5, 0.1], model: 'test' });
     const blob = encryptContent(payload, ctx);
     expect(JSON.parse(decryptContent(blob, modelPrivKey))).toEqual(JSON.parse(payload));
+  });
+});
+
+// ─── ecdsa (secp256k1) path ────────────────────────────────────────────────────
+
+describe('ecdsa (secp256k1) E2EE path', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetCachedAttestation.mockReturnValue(null);
+  });
+
+  it('prepareE2EEContext builds an ecdsa context with correct headers', async () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+
+    const ctx = await prepareE2EEContext('ecdsa-model');
+
+    expect(ctx.algo).toBe('ecdsa');
+    expect(ctx.headers['X-Signing-Algo']).toBe('ecdsa');
+    expect(ctx.headers['X-Model-Pub-Key']).toBe(publicKeyHex);
+    // Legacy ecdsa scheme is unversioned — the header must be absent.
+    expect(ctx.headers['X-Encryption-Version']).toBeUndefined();
+    // secp256k1 secret is 32 bytes; client pubkey header is the 65-byte
+    // uncompressed point (0x04 ‖ x ‖ y) → 130 hex chars starting with '04'.
+    expect(ctx.privateKey.length).toBe(32);
+    expect(ctx.clientPubKeyHex).toMatch(/^04[0-9a-f]{128}$/);
+    expect(ctx.headers['X-Client-Pub-Key']).toBe(ctx.clientPubKeyHex);
+  });
+
+  it('request direction: encryptContent → the model can decrypt', async () => {
+    const { privateKey: modelSecret, publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+    const ctx = await prepareE2EEContext('ecdsa-model');
+
+    const plaintext = JSON.stringify({ q: 'generate topics', n: 42 });
+    const blob = encryptContent(plaintext, ctx);
+    expect(blob).toMatch(/^[0-9a-f]+$/);
+    // The model (server side) decrypts with its secp256k1 secret.
+    expect(ecdsaServerDecrypt(blob, modelSecret)).toBe(plaintext);
+  });
+
+  it('response direction: decryptContent recovers a server-encrypted reply', async () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+    const ctx = await prepareE2EEContext('ecdsa-model');
+
+    const response = 'The model reply, encrypted toward the client pubkey.';
+    // Server encrypts toward the client's advertised secp256k1 pubkey.
+    const blob = ecdsaServerEncrypt(response, ctx.clientPubKeyHex);
+    expect(decryptContent(blob, ctx.privateKey, 'ecdsa')).toBe(response);
+  });
+
+  it('round-trips a long plaintext through the client encrypt path', async () => {
+    const { privateKey: modelSecret, publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+    const ctx = await prepareE2EEContext('ecdsa-model');
+
+    const longText = 'Lorem ipsum dolor sit amet. '.repeat(200);
+    expect(ecdsaServerDecrypt(encryptContent(longText, ctx), modelSecret)).toBe(longText);
+  });
+
+  it('throws on an ecdsa blob shorter than the minimum', () => {
+    // header (65+12) + tag (16) = 93 bytes minimum; 92 bytes → too short
+    const shortBlob = 'ab'.repeat(92);
+    expect(() => decryptContent(shortBlob, new Uint8Array(32), 'ecdsa')).toThrow(
+      /ecdsa blob too short/,
+    );
   });
 });

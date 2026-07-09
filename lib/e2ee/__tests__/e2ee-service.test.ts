@@ -37,6 +37,7 @@ function makeContextForModel(modelEdSecret: Uint8Array): E2EEContext {
     modelPubKeyHex: bytesToHex(modelEdPublic),
     privateKey: new Uint8Array(32), // unused on the encrypt side
     clientPubKeyHex: 'unused',
+    algo: 'ed25519',
     headers: {
       'X-Signing-Algo': 'ed25519',
       'X-Client-Pub-Key': 'unused',

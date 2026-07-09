@@ -146,6 +146,7 @@ function makeE2EEContext(): E2EEContext {
     headers: { 'X-E2EE-Key': 'abc123' },
     modelPubKeyHex: 'ccdd',
     clientPubKeyHex: 'aabb',
+    algo: 'ed25519',
   } as unknown as E2EEContext;
 }
 

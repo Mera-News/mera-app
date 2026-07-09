@@ -108,6 +108,7 @@ export async function submitInferenceJob(): Promise<SubmitStatus> {
     expoPushToken: token,
     modelCalls: bundle.calls.length,
     clientPrivKeyHex: bytesToHex(ctx.privateKey),
+    algo: ctx.algo,
     idempotencyKey,
   };
 

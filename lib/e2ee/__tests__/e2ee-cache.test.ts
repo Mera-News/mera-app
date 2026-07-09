@@ -11,7 +11,7 @@ import type { ModelAttestation } from '../e2ee-service';
 const TTL_MS = 30 * 60 * 1000; // must match source (30 minutes)
 
 function makeAttestation(publicKey = 'aa'.repeat(32)): ModelAttestation {
-  return { publicKey, signingId: 'near:test.near' };
+  return { publicKey, algo: 'ed25519', signingId: 'near:test.near' };
 }
 
 // Control Date.now() to test TTL expiry without real waits.

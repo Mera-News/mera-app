@@ -24,6 +24,7 @@ import {
 import {
   decryptContent,
   prepareE2EEContext,
+  type SigningAlgo,
 } from '@/lib/e2ee/e2ee-service';
 import {
   clearPendingAsyncJob,
@@ -236,7 +237,7 @@ async function reconcileRelevancePhase(
   useForYouStore.getState().setAsyncJobPhase('reasons');
   const privKey = hexToBytes(pending.clientPrivKeyHex);
   const batchResults: BatchCompletionResult[] = server.results.map((r) =>
-    toBatchResult(r, privKey),
+    toBatchResult(r, privKey, pending.algo ?? 'ed25519'),
   );
 
   if (DUMP_RESULTS_ENABLED) {
@@ -405,6 +406,7 @@ async function reconcileRelevancePhase(
     expoPushToken: token,
     modelCalls: reasonBundle.calls.length,
     clientPrivKeyHex: bytesToHex(ctx.privateKey),
+    algo: ctx.algo,
     idempotencyKey: pending.idempotencyKey,
   };
   try {
@@ -466,7 +468,7 @@ async function reconcileReasonPhase(
 ): Promise<ReconcileResult> {
   const privKey = hexToBytes(pending.clientPrivKeyHex);
   const batchResults: BatchCompletionResult[] = server.results.map((r) =>
-    toBatchResult(r, privKey),
+    toBatchResult(r, privKey, pending.algo ?? 'ed25519'),
   );
 
   if (DUMP_RESULTS_ENABLED) {
@@ -712,6 +714,7 @@ async function fetchResults(
 function toBatchResult(
   row: ServerResults['results'][number],
   privKey: Uint8Array,
+  algo: SigningAlgo,
 ): BatchCompletionResult {
   if (!row.ok) {
     return { id: row.id, output: '', error: row.error ?? 'unknown' };
@@ -722,7 +725,7 @@ function toBatchResult(
   if (!encContent) return { id: row.id, output: '' };
 
   try {
-    const output = decryptContent(encContent, privKey).trim();
+    const output = decryptContent(encContent, privKey, algo).trim();
     return { id: row.id, output };
   } catch (err) {
     return {
@@ -880,6 +883,7 @@ export async function submitOrphanedReasonJob(
     expoPushToken: token,
     modelCalls: reasonBundle.calls.length,
     clientPrivKeyHex: bytesToHex(ctx.privateKey),
+    algo: ctx.algo,
     idempotencyKey,
   };
 
