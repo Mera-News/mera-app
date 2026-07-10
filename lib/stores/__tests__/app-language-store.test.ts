@@ -36,7 +36,7 @@ jest.mock('@/lib/translation-service', () => ({
 }));
 
 import { renderHook } from '@testing-library/react-native';
-import { useAppLanguageStore, useAppLanguage, useShowOriginal } from '../app-language-store';
+import { useAppLanguageStore, useAppLanguage } from '../app-language-store';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Reset helper
@@ -44,7 +44,6 @@ import { useAppLanguageStore, useAppLanguage, useShowOriginal } from '../app-lan
 
 const resetState = {
     appLanguage: 'en',
-    showOriginal: false,
     cache: new Map<string, string>(),
     pending: new Set<string>(),
 };
@@ -61,7 +60,6 @@ describe('useAppLanguageStore', () => {
     it('starts with default English and empty cache/pending', () => {
         const state = useAppLanguageStore.getState();
         expect(state.appLanguage).toBe('en');
-        expect(state.showOriginal).toBe(false);
         expect(state.cache.size).toBe(0);
         expect(state.pending.size).toBe(0);
     });
@@ -115,22 +113,6 @@ describe('useAppLanguageStore', () => {
     it('setAppLanguage persists normalized value to DB', async () => {
         await useAppLanguageStore.getState().setAppLanguage('de');
         expect(mockSetSetting).toHaveBeenCalledWith('app_language', 'de');
-    });
-
-    // ── setShowOriginal ───────────────────────────────────────────────────────
-
-    it('setShowOriginal true persists "true" to DB', async () => {
-        await useAppLanguageStore.getState().setShowOriginal(true);
-
-        expect(useAppLanguageStore.getState().showOriginal).toBe(true);
-        expect(mockSetSetting).toHaveBeenCalledWith('show_original', 'true');
-    });
-
-    it('setShowOriginal false persists "false" to DB', async () => {
-        await useAppLanguageStore.getState().setShowOriginal(false);
-
-        expect(useAppLanguageStore.getState().showOriginal).toBe(false);
-        expect(mockSetSetting).toHaveBeenCalledWith('show_original', 'false');
     });
 
     // ── cacheTranslation ──────────────────────────────────────────────────────
@@ -211,23 +193,17 @@ describe('useAppLanguageStore', () => {
 
     // ── hydrateFromDb ─────────────────────────────────────────────────────────
 
-    it('hydrateFromDb restores stored language and showOriginal', async () => {
-        mockGetSetting
-            .mockResolvedValueOnce('fr') // app_language
-            .mockResolvedValueOnce('true'); // show_original
+    it('hydrateFromDb restores stored language', async () => {
+        mockGetSetting.mockResolvedValueOnce('fr'); // app_language
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
-        const state = useAppLanguageStore.getState();
-        expect(state.appLanguage).toBe('fr');
-        expect(state.showOriginal).toBe(true);
+        expect(useAppLanguageStore.getState().appLanguage).toBe('fr');
     });
 
     it('hydrateFromDb uses device locale when stored value is null', async () => {
         mockGetLocales.mockReturnValueOnce([{ languageCode: 'de', regionCode: 'DE', languageTag: 'de-DE' }]);
-        mockGetSetting
-            .mockResolvedValueOnce(null) // app_language not stored
-            .mockResolvedValueOnce(null); // show_original not stored
+        mockGetSetting.mockResolvedValueOnce(null); // app_language not stored
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
@@ -236,31 +212,16 @@ describe('useAppLanguageStore', () => {
 
     it('hydrateFromDb falls back to "en" when device locale is unsupported', async () => {
         mockGetLocales.mockReturnValueOnce([{ languageCode: 'xx', regionCode: 'XX', languageTag: 'xx-XX' }]);
-        mockGetSetting
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null);
+        mockGetSetting.mockResolvedValueOnce(null);
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
         expect(useAppLanguageStore.getState().appLanguage).toBe('en');
     });
 
-    it('hydrateFromDb sets showOriginal=false when stored value is "false"', async () => {
-        useAppLanguageStore.setState({ showOriginal: true });
-        mockGetSetting
-            .mockResolvedValueOnce('en')
-            .mockResolvedValueOnce('false');
-
-        await useAppLanguageStore.getState().hydrateFromDb();
-
-        expect(useAppLanguageStore.getState().showOriginal).toBe(false);
-    });
-
     it('hydrateFromDb normalizes legacy code and re-persists to DB', async () => {
         // stored 'zh-CN' is a legacy code → normalizes to 'zh-Hans' → different from stored → re-persist
-        mockGetSetting
-            .mockResolvedValueOnce('zh-CN') // legacy stored value
-            .mockResolvedValueOnce(null);
+        mockGetSetting.mockResolvedValueOnce('zh-CN'); // legacy stored value
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
@@ -269,9 +230,7 @@ describe('useAppLanguageStore', () => {
     });
 
     it('hydrateFromDb does NOT re-persist when normalized code equals stored code', async () => {
-        mockGetSetting
-            .mockResolvedValueOnce('fr') // already normalized
-            .mockResolvedValueOnce(null);
+        mockGetSetting.mockResolvedValueOnce('fr'); // already normalized
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
@@ -279,9 +238,7 @@ describe('useAppLanguageStore', () => {
     });
 
     it('hydrateFromDb normalizes pt-BR stored value to pt and re-persists', async () => {
-        mockGetSetting
-            .mockResolvedValueOnce('pt-BR')
-            .mockResolvedValueOnce(null);
+        mockGetSetting.mockResolvedValueOnce('pt-BR');
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
@@ -291,9 +248,7 @@ describe('useAppLanguageStore', () => {
 
     it('hydrateFromDb device locale falls back to "en" when locales array is empty', async () => {
         mockGetLocales.mockReturnValueOnce([]);
-        mockGetSetting
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null);
+        mockGetSetting.mockResolvedValueOnce(null);
 
         await useAppLanguageStore.getState().hydrateFromDb();
 
@@ -306,17 +261,5 @@ describe('useAppLanguageStore', () => {
         useAppLanguageStore.setState({ appLanguage: 'de' });
         const { result } = renderHook(() => useAppLanguage());
         expect(result.current).toBe('de');
-    });
-
-    it('useShowOriginal returns current showOriginal value', () => {
-        useAppLanguageStore.setState({ showOriginal: true });
-        const { result } = renderHook(() => useShowOriginal());
-        expect(result.current).toBe(true);
-    });
-
-    it('useShowOriginal returns false by default', () => {
-        useAppLanguageStore.setState({ showOriginal: false });
-        const { result } = renderHook(() => useShowOriginal());
-        expect(result.current).toBe(false);
     });
 });

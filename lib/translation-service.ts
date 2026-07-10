@@ -124,33 +124,57 @@ export function translateText(
     targetLangCode: string,
 ): Promise<string | null> {
     const promise = queue.then(async () => {
+        // Auto-detect the source language on both platforms, but "auto" means
+        // something different on each: Android's Kotlin bridge treats the
+        // literal string 'auto' as a signal to run its own language-ID step
+        // first. iOS has no such special-case — 'auto' would be passed
+        // straight into `Locale.Language(identifier: "auto")`, which isn't a
+        // real BCP-47 tag and makes the Translation framework reject the
+        // request outright (even for genuinely English text). On iOS,
+        // auto-detection means omitting sourceLangCode entirely so
+        // `TranslationSession.Configuration.source` is nil.
+        const sourceLangCode = Platform.OS === 'android' ? 'auto' : undefined;
         for (let attempt = 0; attempt <= TRANSLATE_RETRY_DELAYS_MS.length; attempt++) {
             try {
                 const result = await onTranslateTask({
                     input: text,
                     targetLangCode,
-                    // On Android, expo-translate-text's "fixed source" code path
-                    // has a pendingCount race that closes the translator before
-                    // translate() finishes, causing a native crash with no JS
-                    // log. Routing through auto-detect avoids that path. iOS
-                    // doesn't use this code, so we keep the explicit 'en'
-                    // source there for the small perf win.
-                    sourceLangCode: Platform.OS === 'android' ? 'auto' : 'en',
+                    sourceLangCode,
                     // Required on Android: the Kotlin bridge rejects undefined
                     // values for these keys. iOS ignores them.
                     requiresWifi: false,
                     requireCharging: false,
                 });
-                return typeof result.translatedTexts === 'string'
+                const translated = typeof result.translatedTexts === 'string'
                     ? result.translatedTexts
                     : null;
+                if (translated == null) {
+                    logger.warn('[TranslationService] Translation returned no text', {
+                        textPreview: text.slice(0, 20),
+                        sourceLangCode,
+                        targetLangCode,
+                        attempt,
+                    });
+                }
+                return translated;
             } catch (err) {
+                logger.warn('[TranslationService] Translation attempt failed', {
+                    textPreview: text.slice(0, 20),
+                    sourceLangCode,
+                    targetLangCode,
+                    attempt,
+                    error: err instanceof Error ? err.message : String(err),
+                });
                 if (attempt < TRANSLATE_RETRY_DELAYS_MS.length) {
                     await new Promise<void>((resolve) =>
                         setTimeout(resolve, TRANSLATE_RETRY_DELAYS_MS[attempt]),
                     );
                 } else {
-                    logger.error('[TranslationService] Translation failed', err as Error);
+                    logger.error('[TranslationService] Translation failed', err as Error, {
+                        textPreview: text.slice(0, 20),
+                        sourceLangCode,
+                        targetLangCode,
+                    });
                     return null;
                 }
             }

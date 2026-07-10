@@ -282,8 +282,6 @@
     "title": "Langue",
     "appLanguage": "Langue de l'application",
     "appLanguageDescription": "Utilisée pour l'interface de l'application et la traduction du contenu des actualités",
-    "showOriginal": "Afficher l'original",
-    "showOriginalDescription": "Afficher les titres et descriptions des articles dans leur langue d'origine au lieu de les traduire.",
     "languagePacks": "Packs de langues",
     "languagePacksIos": "Les modèles de traduction sont gérés par votre appareil. Vous n'avez besoin de télécharger que le modèle pour la langue sélectionnée — iOS gère le reste.",
     "languagePacksIosPath": "Réglages → Général → Langue et région → Langues de traduction",

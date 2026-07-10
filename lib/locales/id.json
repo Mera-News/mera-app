@@ -282,8 +282,6 @@
     "title": "Bahasa",
     "appLanguage": "Bahasa Aplikasi",
     "appLanguageDescription": "Digunakan untuk antarmuka aplikasi dan menerjemahkan konten berita",
-    "showOriginal": "Tampilkan Asli",
-    "showOriginalDescription": "Tampilkan judul dan deskripsi artikel dalam bahasa aslinya, bukan menerjemahkannya.",
     "languagePacks": "Paket Bahasa",
     "languagePacksIos": "Model terjemahan dikelola oleh perangkat Anda. Anda hanya perlu mengunduh model untuk bahasa yang dipilih — iOS mengurus sisanya.",
     "languagePacksIosPath": "Pengaturan → Umum → Bahasa & Wilayah → Bahasa Terjemahan",

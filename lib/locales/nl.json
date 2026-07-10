@@ -282,8 +282,6 @@
     "title": "Taal",
     "appLanguage": "App-taal",
     "appLanguageDescription": "Wordt gebruikt voor de app-interface en het vertalen van nieuwsinhoud",
-    "showOriginal": "Origineel tonen",
-    "showOriginalDescription": "Toon artikeltitels en beschrijvingen in hun oorspronkelijke taal in plaats van ze te vertalen.",
     "languagePacks": "Taalpakketten",
     "languagePacksIos": "Vertaalmodellen worden beheerd door je apparaat. Je hoeft alleen het model voor je geselecteerde taal te downloaden — iOS doet de rest.",
     "languagePacksIosPath": "Instellingen → Algemeen → Taal en regio → Vertaaltalen",

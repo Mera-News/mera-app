@@ -282,8 +282,6 @@
     "title": "語言",
     "appLanguage": "應用程式語言",
     "appLanguageDescription": "用於應用程式介面及翻譯新聞內容",
-    "showOriginal": "顯示原文",
-    "showOriginalDescription": "以原始語言顯示文章標題和描述，而不是翻譯它們。",
     "languagePacks": "語言套件",
     "languagePacksIos": "翻譯模型由您的裝置管理。您只需為所選語言下載模型 — iOS 會處理其餘部分。",
     "languagePacksIosPath": "設定 → 一般 → 語言與地區 → 翻譯語言",

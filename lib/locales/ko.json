@@ -282,8 +282,6 @@
     "title": "언어",
     "appLanguage": "앱 언어",
     "appLanguageDescription": "앱 인터페이스 및 뉴스 콘텐츠 번역에 사용됩니다",
-    "showOriginal": "원문 표시",
-    "showOriginalDescription": "기사 제목 및 설명을 번역하지 않고 원래 언어로 표시합니다.",
     "languagePacks": "언어 팩",
     "languagePacksIos": "번역 모델은 기기에서 관리됩니다. 선택한 언어의 모델만 다운로드하면 되며, 나머지는 iOS가 처리합니다.",
     "languagePacksIosPath": "설정 → 일반 → 언어 및 지역 → 번역 언어",

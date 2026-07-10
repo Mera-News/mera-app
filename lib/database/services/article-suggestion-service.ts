@@ -13,6 +13,7 @@ import type { ArticleWithClusters } from '../../generated/graphql-types';
 import type { ForYouSuggestion, ClusterMembership } from '../../stores/for-you-store';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
+import logger from '../../logger';
 
 const articleSuggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
 const articleSuggestionFactsCol = database.get<ArticleSuggestionFactModel>('article_suggestion_facts');
@@ -571,6 +572,12 @@ export async function persistAndLinkV2Suggestions(
         r.countryCode = a.country_code ?? null;
         r.languageCode = a.language_code ?? null;
         r.publicationName = a.publication_name ?? null;
+        if (a.title_en && a.title_en === a.title && a.language_code && a.language_code !== 'en') {
+          logger.warn('[ArticleSuggestionService] title_en matches original-language title', {
+            articleId: a._id,
+            languageCode: a.language_code,
+          });
+        }
         r.titleEn = a.title_en ?? null;
         r.titleOriginal = a.title ?? null;
         r.descriptionEn = a.description_en ?? null;

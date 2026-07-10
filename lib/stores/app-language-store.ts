@@ -5,7 +5,6 @@ import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { applyLanguage } from '@/lib/i18n';
 
 const APP_LANGUAGE_KEY = 'app_language';
-const SHOW_ORIGINAL_KEY = 'show_original';
 
 const SUPPORTED_CODES = new Set<string>(SUPPORTED_LANGUAGES.map((l) => l.code));
 
@@ -33,7 +32,6 @@ function resolveDeviceLocale(): string {
 
 interface AppLanguageState {
     appLanguage: string;
-    showOriginal: boolean;
 
     // Reactive translation cache — keyed by English source text.
     // Cache is flushed whenever appLanguage changes, so no need to key by target.
@@ -41,7 +39,6 @@ interface AppLanguageState {
     pending: Set<string>;
 
     setAppLanguage: (lang: string) => Promise<void>;
-    setShowOriginal: (value: boolean) => Promise<void>;
     cacheTranslation: (original: string, translated: string) => void;
     addPending: (text: string) => void;
     removePending: (text: string) => void;
@@ -51,7 +48,6 @@ interface AppLanguageState {
 
 export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
     appLanguage: 'en',
-    showOriginal: false,
     cache: new Map(),
     pending: new Set(),
 
@@ -60,11 +56,6 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         set({ appLanguage: normalized, cache: new Map(), pending: new Set() });
         applyLanguage(normalized);
         await setSetting(APP_LANGUAGE_KEY, normalized);
-    },
-
-    setShowOriginal: async (value) => {
-        set({ showOriginal: value });
-        await setSetting(SHOW_ORIGINAL_KEY, value ? 'true' : 'false');
     },
 
     cacheTranslation: (original, translated) => {
@@ -90,15 +81,9 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
     clearCache: () => set({ cache: new Map(), pending: new Set() }),
 
     hydrateFromDb: async () => {
-        const [stored, showOriginal] = await Promise.all([
-            getSetting(APP_LANGUAGE_KEY),
-            getSetting(SHOW_ORIGINAL_KEY),
-        ]);
+        const stored = await getSetting(APP_LANGUAGE_KEY);
         const normalized = normalizeCode(stored) ?? resolveDeviceLocale();
-        set({
-            appLanguage: normalized,
-            showOriginal: showOriginal === 'true',
-        });
+        set({ appLanguage: normalized });
         // Persist normalized value back if we migrated a legacy code
         if (stored && stored !== normalized) {
             await setSetting(APP_LANGUAGE_KEY, normalized);
@@ -107,4 +92,3 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
 }));
 
 export const useAppLanguage = () => useAppLanguageStore((s) => s.appLanguage);
-export const useShowOriginal = () => useAppLanguageStore((s) => s.showOriginal);

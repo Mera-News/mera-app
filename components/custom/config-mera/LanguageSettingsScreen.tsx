@@ -2,7 +2,6 @@ import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
-import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
@@ -28,8 +27,6 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
 
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
-    const showOriginal = useAppLanguageStore((s) => s.showOriginal);
-    const setShowOriginal = useAppLanguageStore((s) => s.setShowOriginal);
 
     const [showLangPicker, setShowLangPicker] = useState(false);
     const [showGuideVideo, setShowGuideVideo] = useState(false);
@@ -128,30 +125,6 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                     </Pressable>
                                 </VStack>
                             )}
-                        </VStack>
-
-                        <Box className="border-b border-gray-800" />
-
-                        {/* Show Original Toggle */}
-                        <VStack space="md">
-                            <HStack space="md" className="items-center justify-between">
-                                <HStack space="md" className="items-center flex-1">
-                                    <MaterialIcons name="translate" size={24} color="#10b981" />
-                                    <VStack className="flex-1">
-                                        <Text className="text-white text-lg font-semibold">
-                                            {t('language.showOriginal')}
-                                        </Text>
-                                        <Text className="text-typography-500 text-sm mt-0.5">
-                                            {t('language.showOriginalDescription')}
-                                        </Text>
-                                    </VStack>
-                                </HStack>
-                                <Switch
-                                    value={showOriginal}
-                                    onToggle={setShowOriginal}
-                                    size="md"
-                                />
-                            </HStack>
                         </VStack>
 
                         <Box className="border-b border-gray-800" />

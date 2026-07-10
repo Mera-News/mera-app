@@ -282,8 +282,6 @@
     "title": "Ngôn ngữ",
     "appLanguage": "Ngôn ngữ ứng dụng",
     "appLanguageDescription": "Dùng cho giao diện ứng dụng và dịch nội dung tin tức",
-    "showOriginal": "Hiển thị nguyên gốc",
-    "showOriginalDescription": "Hiển thị tiêu đề và mô tả bài viết bằng ngôn ngữ gốc thay vì dịch chúng.",
     "languagePacks": "Gói ngôn ngữ",
     "languagePacksIos": "Mô hình dịch được quản lý bởi thiết bị của bạn. Bạn chỉ cần tải mô hình cho ngôn ngữ đã chọn — iOS sẽ xử lý phần còn lại.",
     "languagePacksIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng → Ngôn ngữ dịch",

@@ -282,8 +282,6 @@
     "title": "言語",
     "appLanguage": "アプリの言語",
     "appLanguageDescription": "アプリのインターフェイスとニュースコンテンツの翻訳に使用されます",
-    "showOriginal": "原文を表示",
-    "showOriginalDescription": "記事のタイトルと説明を翻訳せずに元の言語で表示します。",
     "languagePacks": "言語パック",
     "languagePacksIos": "翻訳モデルはデバイスが管理しています。選択した言語のモデルをダウンロードするだけで、iOS が残りを処理します。",
     "languagePacksIosPath": "設定 → 一般 → 言語と地域 → 翻訳言語",

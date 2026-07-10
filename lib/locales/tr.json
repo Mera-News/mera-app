@@ -282,8 +282,6 @@
     "title": "Dil",
     "appLanguage": "Uygulama Dili",
     "appLanguageDescription": "Uygulama arayüzü ve haber içeriğinin çevrilmesi için kullanılır",
-    "showOriginal": "Orijinali göster",
-    "showOriginalDescription": "Makale başlıklarını ve açıklamalarını çevirmek yerine orijinal dilinde göster.",
     "languagePacks": "Dil Paketleri",
     "languagePacksIos": "Çeviri modelleri cihazın tarafından yönetilir. Yalnızca seçtiğin dil için modeli indirmen yeterli — gerisini iOS halleder.",
     "languagePacksIosPath": "Ayarlar → Genel → Dil ve Bölge → Çeviri Dilleri",

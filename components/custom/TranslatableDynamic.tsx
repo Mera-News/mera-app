@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { translateText } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
+import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +23,7 @@ interface TranslatableProps {
     readonly text: string;
     /**
      * Original-language version (DB-stored). Shown when:
-     *  - the "Show original" setting is on, or
+     *  - the per-card "Show original" toggle (see `showToggle`) is on, or
      *  - the original language already matches the user's app language, or
      *  - a translation is still pending (so users see readable content
      *    immediately instead of English flashing through).
@@ -43,8 +44,9 @@ interface TranslatableProps {
     readonly italic?: boolean;
     /**
      * When true, replaces the inline translate icon with a tappable rounded
-     * button that lets the user toggle between translated and original text.
-     * Intended for the screen (detail) variant where there is space for it.
+     * button that lets the user toggle between translated and original text
+     * for this instance only (local state, not persisted). Intended for the
+     * screen (detail) variant where there is space for it.
      */
     readonly showToggle?: boolean;
 }
@@ -99,7 +101,7 @@ const SIZE_TO_FONT_PX: Record<TextSize, number> = {
  * The translated-indicator icon is rendered inline inside the Text content.
  *
  * Translation behavior:
- * 1. If `showOriginal` is on → render `originalText ?? text`, no translation.
+ * 1. If the per-card "Show original" toggle is on → render `originalText ?? text`, no translation.
  * 2. Else if `appLanguage === 'en'` → render `text` as-is.
  * 3. Else → translate `text` → `appLanguage` via the iOS translator, cached globally.
  *    Translation is deferred until the view is within (or near) the viewport.
@@ -119,18 +121,13 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
-    const showOriginal = useAppLanguageStore((s) => s.showOriginal);
     const cache = useAppLanguageStore((s) => s.cache);
 
     // Local toggle state: lets the user flip between original and translated
-    // text on the detail screen without touching the global setting.
+    // text on the detail screen (only when `showToggle` is set).
     const [localShowOriginal, setLocalShowOriginal] = useState(false);
 
-    // When showToggle is on, respect the global setting as the floor but allow
-    // the local toggle to add "show original" on top of it.
-    const effectiveShowOriginal = showToggle
-        ? showOriginal || localShowOriginal
-        : showOriginal;
+    const effectiveShowOriginal = showToggle && localShowOriginal;
 
     // If the original is already in the target language, don't translate —
     // just show the original.
@@ -206,14 +203,24 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         firedRef.current = requestKey;
 
         store.addPending(text);
+        logger.debug('[TranslatableDynamic] Requesting translation', {
+            textPreview: text.slice(0, 20),
+            originalLanguage,
+            appLanguage,
+        });
         translateText(text, appLanguage).then((translated) => {
             if (translated) {
                 useAppLanguageStore.getState().cacheTranslation(text, translated);
             } else {
+                logger.warn('[TranslatableDynamic] Translation unavailable, falling back to original text', {
+                    textPreview: text.slice(0, 20),
+                    originalLanguage,
+                    appLanguage,
+                });
                 useAppLanguageStore.getState().removePending(text);
             }
         });
-    }, [needsTranslation, isOnScreen, appLanguage, text, cachedTranslation]);
+    }, [needsTranslation, isOnScreen, appLanguage, text, cachedTranslation, originalLanguage]);
 
     let displayText: string;
     if (effectiveShowOriginal || originalIsTargetLang) {
@@ -242,9 +249,8 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const isTranslated =
         !effectiveShowOriginal && !!originalText && displayText !== originalText;
 
-    // Show the toggle button when: showToggle is on, there is an original to
-    // switch to, and the global setting isn't already forcing original everywhere.
-    const showToggleButton = showToggle && !!originalText && !originalIsTargetLang && !showOriginal;
+    // Show the toggle button when: showToggle is on and there is an original to switch to.
+    const showToggleButton = showToggle && !!originalText && !originalIsTargetLang;
 
     // Inline icon — shown only in non-toggle mode.
     const translatedIndicator = isTranslated && !showToggleButton ? (

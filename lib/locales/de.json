@@ -282,8 +282,6 @@
     "title": "Sprache",
     "appLanguage": "App-Sprache",
     "appLanguageDescription": "Wird für die App-Oberfläche und die Übersetzung von Nachrichteninhalten verwendet",
-    "showOriginal": "Original anzeigen",
-    "showOriginalDescription": "Artikeltitel und Beschreibungen in ihrer Originalsprache anzeigen, anstatt sie zu übersetzen.",
     "languagePacks": "Sprachpakete",
     "languagePacksIos": "Übersetzungsmodelle werden von Ihrem Gerät verwaltet. Sie müssen nur das Modell für Ihre gewählte Sprache herunterladen — iOS kümmert sich um den Rest.",
     "languagePacksIosPath": "Einstellungen → Allgemein → Sprache & Region → Übersetzungssprachen",

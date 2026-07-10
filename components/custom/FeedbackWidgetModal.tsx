@@ -37,7 +37,7 @@ function attachFeedbackMetadata(userId: string | undefined): void {
     }
 
     // Non-reactive reads — this runs on open, not on every store change.
-    const { appLanguage, showOriginal } = useAppLanguageStore.getState();
+    const { appLanguage } = useAppLanguageStore.getState();
     const { tier, isPremium } = useSubscriptionStore.getState();
     const { processingMode, modelState } = useMeraProtocolStore.getState();
 
@@ -51,7 +51,6 @@ function attachFeedbackMetadata(userId: string | undefined): void {
         platform: Platform.OS,
         platformVersion: String(Platform.Version),
         appLanguage,
-        showOriginal,
         subscriptionTier: tier ?? 'free',
         isPremium,
         processingMode,
