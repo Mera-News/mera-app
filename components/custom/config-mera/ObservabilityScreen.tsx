@@ -40,6 +40,7 @@ import {
     statusLabel,
     tableLabel,
 } from './observability-labels';
+import { useThemeColors, type ThemeColors } from '@/lib/theme/tokens';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -77,12 +78,12 @@ function relativeTime(ms: number | null | undefined, t: TFunction): string {
     return t('feed.daysAgo', { count: Math.floor(diff / 86_400_000) });
 }
 
-function statusDotColor(status: string | null | undefined): string {
-    if (!status) return '#6b7280';
-    if (status === 'completed') return '#10b981';
-    if (status === 'failed' || status === 'stale') return '#ef4444';
-    if (status === 'running' || status === 'pending' || status === 'retrying') return '#f59e0b';
-    return '#6b7280';
+function statusDotColor(status: string | null | undefined, colors: ThemeColors): string {
+    if (!status) return colors.iconMuted;
+    if (status === 'completed') return colors.success;
+    if (status === 'failed' || status === 'stale') return colors.error;
+    if (status === 'running' || status === 'pending' || status === 'retrying') return colors.warning;
+    return colors.iconMuted;
 }
 
 function sumStatusCounts(byStatus: Record<string, number>): number {
@@ -133,41 +134,41 @@ async function loadDbStats(): Promise<DbStats> {
 
 // ─── Shared table styles ──────────────────────────────────────────────────────
 
-const TH_CLS = 'bg-gray-950 px-3 py-2 border-b border-gray-800';
-const TD_CLS = 'px-3 py-2 border-b border-gray-800';
-const ROW_EVEN = 'bg-black';
-const ROW_ODD = 'bg-gray-950';
+const TH_CLS = 'bg-background-50 px-3 py-2 border-b border-outline-50';
+const TD_CLS = 'px-3 py-2 border-b border-outline-50';
+const ROW_EVEN = 'bg-background-0';
+const ROW_ODD = 'bg-background-50';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 const SectionHeader = ({ title }: { title: string }) => (
-    <Box className="pt-5 pb-1.5 border-b border-gray-800 mb-2">
-        <Text size="xs" className="text-gray-500 uppercase tracking-widest font-semibold">
+    <Box className="pt-5 pb-1.5 border-b border-outline-50 mb-2">
+        <Text size="xs" className="text-typography-400 uppercase tracking-widest font-semibold">
             {title}
         </Text>
     </Box>
 );
 
 const MetricCard = ({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) => (
-    <Box className="flex-1 bg-gray-900 rounded-xl p-3 border border-gray-800">
-        <Text size="xs" className="text-gray-500 mb-0.5" numberOfLines={1}>{title}</Text>
-        <Text className="text-white font-bold text-2xl leading-8">{value}</Text>
-        {subtitle ? <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text> : null}
+    <Box className="flex-1 bg-background-50 rounded-xl p-3 border border-outline-50">
+        <Text size="xs" className="text-typography-400 mb-0.5" numberOfLines={1}>{title}</Text>
+        <Text className="text-typography-950 font-bold text-2xl leading-8">{value}</Text>
+        {subtitle ? <Text size="xs" className="text-typography-400 mt-0.5">{subtitle}</Text> : null}
     </Box>
 );
 
 // 2-column key/value table used by Feed, Protocol, System, Settings
 const KVTable = ({ rows }: { rows: [string, string][] }) => (
-    <Box className="rounded-xl overflow-hidden border border-gray-800">
+    <Box className="rounded-xl overflow-hidden border border-outline-50">
         <Table className="w-full">
             <TableBody>
                 {rows.map(([k, v], i) => (
                     <TableRow key={k} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
                         <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
-                            <Text size="xs" className="text-gray-400">{k}</Text>
+                            <Text size="xs" className="text-typography-500">{k}</Text>
                         </TableData>
                         <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
-                            <Text size="xs" className="text-white text-right" numberOfLines={1}>{v}</Text>
+                            <Text size="xs" className="text-typography-950 text-right" numberOfLines={1}>{v}</Text>
                         </TableData>
                     </TableRow>
                 ))}
@@ -185,6 +186,7 @@ interface ObservabilityScreenProps {
 const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
 
     const {
         status: schedulerStatus,
@@ -368,34 +370,34 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     }
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top }}>
             <HStack className="px-4 py-3 items-center justify-between">
-                <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
-                    <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
+                <Pressable onPress={onBack} className="bg-background-50 rounded-full p-2" hitSlop={8}>
+                    <MaterialIcons name="arrow-back" size={20} color={colors.icon} />
                 </Pressable>
-                <Text className="text-white font-semibold text-base">{t('observability.title')}</Text>
+                <Text className="text-typography-950 font-semibold text-base">{t('observability.title')}</Text>
                 <HStack space="sm" className="items-center">
                     <Pressable
                         onPress={() => void refresh()}
-                        className="bg-gray-900 rounded-full p-2"
+                        className="bg-background-50 rounded-full p-2"
                         hitSlop={8}
                         disabled={loadingDb}
                     >
                         <MaterialIcons
                             name="refresh"
                             size={20}
-                            color={loadingDb ? '#6b7280' : '#ffffff'}
+                            color={loadingDb ? colors.iconMuted : colors.icon}
                         />
                     </Pressable>
                     <Pressable
                         onPress={() => void handleCopy()}
-                        className="bg-gray-900 rounded-full p-2"
+                        className="bg-background-50 rounded-full p-2"
                         hitSlop={8}
                     >
                         <MaterialIcons
                             name={copied ? 'check' : 'share'}
                             size={20}
-                            color={copied ? '#10b981' : '#ffffff'}
+                            color={copied ? colors.success : colors.icon}
                         />
                     </Pressable>
                 </HStack>
@@ -427,15 +429,15 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 {/* DB Tables */}
                 <SectionHeader title={t('observability.dbTables')} />
                 {dbStats ? (
-                    <Box className="rounded-xl overflow-hidden border border-gray-800">
+                    <Box className="rounded-xl overflow-hidden border border-outline-50">
                         <Table className="w-full">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead useRNView className={TH_CLS} style={{ flex: 1 }}>
-                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.table')}</Text>
+                                        <Text size="xs" className="text-typography-400 font-semibold uppercase">{t('observability.table')}</Text>
                                     </TableHead>
                                     <TableHead useRNView className={`${TH_CLS} items-end`} style={{ width: 90 }}>
-                                        <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.rowsStatus')}</Text>
+                                        <Text size="xs" className="text-typography-400 font-semibold uppercase">{t('observability.rowsStatus')}</Text>
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -448,16 +450,16 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                                 className="flex-row items-center px-3 py-2.5"
                                             >
                                                 <Box className="flex-1">
-                                                    <Text size="xs" className="text-white">{tableLabel(name)}</Text>
+                                                    <Text size="xs" className="text-typography-950">{tableLabel(name)}</Text>
                                                     {subtitle ? (
-                                                        <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text>
+                                                        <Text size="xs" className="text-typography-400 mt-0.5">{subtitle}</Text>
                                                     ) : null}
                                                 </Box>
-                                                <MaterialIcons name="chevron-right" size={13} color="#4b5563" />
+                                                <MaterialIcons name="chevron-right" size={13} color={colors.iconFaint} />
                                             </Pressable>
                                         </TableData>
                                         <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
-                                            <Text size="xs" className="text-white text-right">{count}</Text>
+                                            <Text size="xs" className="text-typography-950 text-right">{count}</Text>
                                         </TableData>
                                     </TableRow>
                                 ))}
@@ -465,7 +467,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         </Table>
                     </Box>
                 ) : (
-                    <Text size="sm" className="text-gray-600 py-2">
+                    <Text size="sm" className="text-typography-400 py-2">
                         {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
                 )}
@@ -473,24 +475,24 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 {/* Scheduler Tasks */}
                 <SectionHeader title={t('observability.schedulerTasks')} />
                 {taskNames.length === 0 ? (
-                    <Text size="sm" className="text-gray-600 py-2">{t('observability.noTasksYet')}</Text>
+                    <Text size="sm" className="text-typography-400 py-2">{t('observability.noTasksYet')}</Text>
                 ) : (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <Box className="rounded-xl overflow-hidden border border-gray-800">
+                        <Box className="rounded-xl overflow-hidden border border-outline-50">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead useRNView className={TH_CLS} style={{ width: 200 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.task')}</Text>
+                                            <Text size="xs" className="text-typography-400 font-semibold uppercase">{t('observability.task')}</Text>
                                         </TableHead>
                                         <TableHead useRNView className={TH_CLS} style={{ width: 100 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.status')}</Text>
+                                            <Text size="xs" className="text-typography-400 font-semibold uppercase">{t('observability.status')}</Text>
                                         </TableHead>
                                         <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.lastRun')}</Text>
+                                            <Text size="xs" className="text-typography-400 font-semibold uppercase">{t('observability.lastRun')}</Text>
                                         </TableHead>
                                         <TableHead useRNView className={TH_CLS} style={{ width: 90 }}>
-                                            <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.progress')}</Text>
+                                            <Text size="xs" className="text-typography-400 font-semibold uppercase">{t('observability.progress')}</Text>
                                         </TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -504,7 +506,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                             <React.Fragment key={name}>
                                                 <TableRow className={rowCls}>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 200 }}>
-                                                        <Text size="xs" className="text-white" numberOfLines={1}>{TASK_LABELS[name] ?? humanizeKey(name)}</Text>
+                                                        <Text size="xs" className="text-typography-950" numberOfLines={1}>{TASK_LABELS[name] ?? humanizeKey(name)}</Text>
                                                     </TableData>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 100 }}>
                                                         <HStack space="xs" className="items-center">
@@ -513,20 +515,20 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                                                     width: 6,
                                                                     height: 6,
                                                                     borderRadius: 3,
-                                                                    backgroundColor: statusDotColor(status),
+                                                                    backgroundColor: statusDotColor(status, colors),
                                                                     flexShrink: 0,
                                                                 }}
                                                             />
-                                                            <Text size="xs" className="text-gray-300">{statusLabel(status)}</Text>
+                                                            <Text size="xs" className="text-typography-700">{statusLabel(status)}</Text>
                                                         </HStack>
                                                     </TableData>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
-                                                        <Text size="xs" className="text-gray-300">
+                                                        <Text size="xs" className="text-typography-700">
                                                             {relativeTime(taskLastRun[name], t)}
                                                         </Text>
                                                     </TableData>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
-                                                        <Text size="xs" className="text-gray-300">
+                                                        <Text size="xs" className="text-typography-700">
                                                             {progress?.current != null && progress?.total != null
                                                                 ? `${progress.current}/${progress.total}`
                                                                 : '—'}
@@ -537,10 +539,10 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                                     <TableRow className={rowCls}>
                                                         <TableData
                                                             useRNView
-                                                            className="px-3 py-1.5 border-b border-gray-800"
+                                                            className="px-3 py-1.5 border-b border-outline-50"
                                                             style={{ width: 480 }}
                                                         >
-                                                            <Text size="xs" className="text-red-400" numberOfLines={2}>{error}</Text>
+                                                            <Text size="xs" className="text-error-500" numberOfLines={2}>{error}</Text>
                                                         </TableData>
                                                     </TableRow>
                                                 ) : null}
@@ -581,12 +583,12 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 <SectionHeader title={t('observability.settings')} />
                 {dbStats ? (
                     dbStats.settings.length === 0 ? (
-                        <Text size="sm" className="text-gray-600 py-2">{t('observability.noSettings')}</Text>
+                        <Text size="sm" className="text-typography-400 py-2">{t('observability.noSettings')}</Text>
                     ) : (
                         <KVTable rows={dbStats.settings.map(({ key, value }) => [humanizeKey(key), value])} />
                     )
                 ) : (
-                    <Text size="sm" className="text-gray-600 py-2">
+                    <Text size="sm" className="text-typography-400 py-2">
                         {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
                 )}

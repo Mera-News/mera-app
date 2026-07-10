@@ -6,6 +6,7 @@ import {
     useFloatingChatStore,
     type ChatContext,
 } from '@/lib/stores/floating-chat-store';
+import { themeTokens, useThemeColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -31,8 +32,6 @@ const BUBBLE_SIZE = 64;
 const EDGE_MARGIN = 12;
 const TOP_CLAMP_OFFSET = 60; // below insets.top
 const BOTTOM_CLAMP_OFFSET = 120; // above insets.bottom
-
-const PRIMARY = 'rgb(231, 138, 83)';
 
 // ── Pulse (ported from MeraAIBubble PulseLayer) ──────────────────────────────
 const PULSE_SIZE = BUBBLE_SIZE * 1.6;
@@ -154,6 +153,7 @@ interface FloatingMeraBubbleProps {
  */
 const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const insets = useSafeAreaInsets();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isGenerating = useFloatingChatIsGenerating();
@@ -308,19 +308,22 @@ const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context }) => {
                         <PulseLayer scale={pulse2.scale} opacity={pulse2.opacity} id="fcb2" />
                     </>
                 )}
-                <View style={styles.bubble}>
+                {/* Bubble stays Shadow Grey in both themes — the white Mera logo
+                    needs a dark surface (the logo itself is not themed). */}
+                <View style={[styles.bubble, { backgroundColor: themeTokens.dark.background, borderColor: colors.primary }]}>
                     <MeraLogo size={56} />
                 </View>
                 {showHint && (
                     <Animated.View
                         style={[
                             styles.hint,
+                            { backgroundColor: colors.background, borderColor: colors.primary },
                             side === 'left' ? styles.hintRightOfBubble : styles.hintLeftOfBubble,
                             hintStyle,
                         ]}
                         pointerEvents="none"
                     >
-                        <Text size="xs" style={styles.hintText} numberOfLines={1}>
+                        <Text size="xs" style={[styles.hintText, { color: colors.icon }]} numberOfLines={1}>
                             {t('floatingChat.bubbleHint')}
                         </Text>
                     </Animated.View>
@@ -344,9 +347,7 @@ const styles = StyleSheet.create({
         width: BUBBLE_SIZE,
         height: BUBBLE_SIZE,
         borderRadius: BUBBLE_SIZE / 2,
-        backgroundColor: '#1a1a1a',
         borderWidth: 1.5,
-        borderColor: PRIMARY,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
@@ -365,9 +366,7 @@ const styles = StyleSheet.create({
     hint: {
         position: 'absolute',
         top: BUBBLE_SIZE / 2 - 16,
-        backgroundColor: '#000000',
         borderWidth: 1,
-        borderColor: PRIMARY,
         paddingHorizontal: 12,
         paddingVertical: 7,
         borderRadius: 12,
@@ -379,7 +378,6 @@ const styles = StyleSheet.create({
         left: BUBBLE_SIZE + 10,
     },
     hintText: {
-        color: '#FFFFFF',
         fontSize: 12,
     },
 });

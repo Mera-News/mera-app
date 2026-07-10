@@ -395,6 +395,7 @@
     "manageSettings": "管理您的應用程式設定和帳號",
     "notifications": "通知",
     "language": "語言與翻譯",
+    "appearance": "外觀",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "隱私政策",
     "termsOfService": "服務條款",
@@ -684,5 +685,13 @@
     "usageSection": "使用量",
     "usedToday": "今日已分析",
     "viewPlans": "查看方案"
+  },
+  "theme": {
+    "title": "外觀",
+    "appTheme": "應用程式主題",
+    "appThemeDescription": "選擇 Mera 的外觀，或跟隨裝置設定。",
+    "light": "淺色",
+    "dark": "深色",
+    "system": "跟隨系統"
   }
 }

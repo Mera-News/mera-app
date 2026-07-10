@@ -395,6 +395,7 @@
     "manageSettings": "Kelola pengaturan aplikasi dan akun Anda",
     "notifications": "Notifikasi",
     "language": "Bahasa & Terjemahan",
+    "appearance": "Tampilan",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Kebijakan Privasi",
     "termsOfService": "Ketentuan Layanan",
@@ -684,5 +685,13 @@
     "usageSection": "Penggunaan",
     "usedToday": "Dianalisis hari ini",
     "viewPlans": "Lihat paket"
+  },
+  "theme": {
+    "title": "Tampilan",
+    "appTheme": "Tema Aplikasi",
+    "appThemeDescription": "Pilih tampilan Mera, atau ikuti pengaturan perangkat Anda.",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem"
   }
 }

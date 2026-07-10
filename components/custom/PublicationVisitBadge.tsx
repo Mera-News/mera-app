@@ -9,6 +9,7 @@ import {
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -22,6 +23,7 @@ interface Props {
 
 const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const { width: screenWidth } = useWindowDimensions();
     const [count, setCount] = useState<number | null>(null);
     const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -68,11 +70,11 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                     {...triggerProps}
                     onPress={openTooltip}
                     accessibilityLabel={t('publicationVisits.tooltipA11y')}
-                    className="rounded-lg p-3 bg-black border border-white"
+                    className="rounded-lg p-3 bg-background-0 border border-outline-200"
                 >
                     <HStack className="items-center" space="sm">
-                        <MaterialIcons name="visibility" size={16} color="#ffffff" />
-                        <Text size="xs" italic className="flex-1 text-white">
+                        <MaterialIcons name="visibility" size={16} color={colors.icon} />
+                        <Text size="xs" italic className="flex-1 text-typography-950">
                             {t('publicationVisits.badge', {
                                 publication: publicationName,
                                 count,
@@ -84,17 +86,17 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
         >
             <PopoverBackdrop />
             <PopoverContent
-                className="bg-black border border-white"
+                className="bg-background-0 border border-outline-200"
                 style={{ maxWidth: screenWidth - 32 }}
             >
-                <PopoverArrow className="bg-black border border-white" />
+                <PopoverArrow className="bg-background-0 border border-outline-200" />
                 <PopoverBody>
-                    <Text size="xs" className="text-white">
+                    <Text size="xs" className="text-typography-950">
                         {t('publicationVisits.tooltipIntro')}{' '}
                         <Text
                             size="xs"
                             bold
-                            className="text-white underline"
+                            className="text-typography-950 underline"
                             onPress={openHistory}
                         >
                             {t('publicationVisits.tooltipLink')}

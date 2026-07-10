@@ -395,6 +395,7 @@
     "manageSettings": "إدارة إعدادات التطبيق والحساب",
     "notifications": "الإشعارات",
     "language": "اللغة والترجمة",
+    "appearance": "المظهر",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "سياسة الخصوصية",
     "termsOfService": "شروط الخدمة",
@@ -684,5 +685,13 @@
     "usageSection": "الاستخدام",
     "usedToday": "تم تحليله اليوم",
     "viewPlans": "عرض الخطط"
+  },
+  "theme": {
+    "title": "المظهر",
+    "appTheme": "سمة التطبيق",
+    "appThemeDescription": "اختر مظهر Mera أو اتبع إعدادات جهازك.",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
   }
 }

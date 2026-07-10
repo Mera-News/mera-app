@@ -24,6 +24,7 @@ import { useFloatingChatIsExpanded, useFloatingChatFactMutationVersion } from '@
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -39,6 +40,7 @@ interface PersonaL1MeraProtocolProps {
 
 const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId }) => {
     const { userPersona, fetchUserPersona } = useUserStore();
+    const colors = useThemeColors();
     const toast = useToast();
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(true);
@@ -354,7 +356,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                     bottom: -3,
                                     borderRadius: 12,
                                     borderWidth: 2,
-                                    borderColor: '#60a5fa',
+                                    borderColor: colors.info,
                                     opacity: glowAnim,
                                 }}
                             />
@@ -373,17 +375,17 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                 </HStack>
                             ) : (
                                 <HStack space="sm" className="items-center">
-                                    <MaterialIcons name="refresh" size={16} color="#60a5fa" />
+                                    <MaterialIcons name="refresh" size={16} color={colors.info} />
                                     <ButtonText>{t('configPanel.refreshSuggestions')}</ButtonText>
                                 </HStack>
                             )}
                         </Button>
                     </View>
                     {feedNeedsRefresh && !isRefreshingSuggestions && (
-                        <Box className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
+                        <Box className="mx-4 mb-3 px-3 py-2 bg-background-info border border-info-200 rounded-lg">
                             <HStack space="xs" className="items-start">
-                                <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
-                                <Text size="xs" className="text-blue-300 flex-1">
+                                <MaterialIcons name="auto-awesome" size={14} color={colors.info} style={{ marginTop: 1 }} />
+                                <Text size="xs" className="text-info-600 flex-1">
                                     {t('configPanel.personaUpdatedRefreshHint')}
                                 </Text>
                             </HStack>
@@ -392,8 +394,8 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
 
                     {localFacts.length === 0 ? (
                         <VStack className="flex-1 items-center justify-center p-6" space="md">
-                            <MaterialIcons name="chat" size={48} color="#666666" />
-                            <Text size="md" className="text-gray-400 text-center">
+                            <MaterialIcons name="chat" size={48} color={colors.iconMuted} />
+                            <Text size="md" className="text-typography-500 text-center">
                                 {t('configPanel.emptyStateMessage')}
                             </Text>
                         </VStack>
@@ -407,14 +409,14 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                 <RefreshControl
                                     refreshing={refreshing}
                                     onRefresh={onRefresh}
-                                    tintColor="#ffffff"
-                                    colors={['#ffffff']}
+                                    tintColor={colors.icon}
+                                    colors={[colors.icon]}
                                 />
                             }
                         >
                             {/* Facts heading */}
                             <HStack className="mx-4 mb-2 items-center justify-between">
-                                <Text size="sm" className="text-gray-400 font-medium">{t('configPanel.factsHeading')}</Text>
+                                <Text size="sm" className="text-typography-500 font-medium">{t('configPanel.factsHeading')}</Text>
                                 <Pressable
                                     onPress={() => setShowPrivacyInfo(true)}
                                     hitSlop={8}
@@ -422,7 +424,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                     accessibilityLabel={t('configPanel.privacyNoticeTitle')}
                                     className="w-8 h-8 rounded-full items-center justify-center"
                                 >
-                                    <MaterialIcons name="help-outline" size={18} color="#60a5fa" />
+                                    <MaterialIcons name="help-outline" size={18} color={colors.info} />
                                 </Pressable>
                             </HStack>
 
@@ -441,7 +443,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                 return (
                                     <Box
                                         key={fact.id}
-                                        className="mx-4 mb-3 border border-gray-700 rounded-lg overflow-hidden"
+                                        className="mx-4 mb-3 border border-outline-100 rounded-lg overflow-hidden"
                                     >
                                         {/* Accordion header */}
                                         <HStack className="px-4 py-3 items-center">
@@ -450,7 +452,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                 hitSlop={8}
                                                 className="mr-3"
                                             >
-                                                <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
+                                                <MaterialIcons name="delete-outline" size={20} color={colors.error} />
                                             </Pressable>
                                             <Pressable
                                                 onPress={() => toggleFact(fact.id)}
@@ -459,7 +461,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                 <TranslatableDynamic
                                                     text={fact.statement}
                                                     size="md"
-                                                    className="text-white capitalize"
+                                                    className="text-typography-950 capitalize"
                                                     numberOfLines={2}
                                                 />
                                             </Pressable>
@@ -479,7 +481,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                     <MaterialIcons
                                                         name={isExpanded ? 'expand-less' : 'expand-more'}
                                                         size={20}
-                                                        color="#9ca3af"
+                                                        color={colors.iconMuted}
                                                     />
                                                 </Pressable>
                                             </HStack>
@@ -487,9 +489,9 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
 
                                         {/* Accordion body */}
                                         {isExpanded && (
-                                            <Box className="border-t border-gray-700 px-4 py-3">
+                                            <Box className="border-t border-outline-100 px-4 py-3">
                                                 {topicGenError ? (
-                                                    <Text className="text-red-400 text-sm">
+                                                    <Text className="text-error-500 text-sm">
                                                         {t('configPanel.topicGenFailed', { error: topicGenError })}
                                                     </Text>
                                                 ) : !topicsSettled ? (
@@ -510,10 +512,10 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                                             <TranslatableDynamic
                                                                                 text={topicText}
                                                                                 size="sm"
-                                                                                className="text-gray-200 flex-1 mr-2 capitalize"
+                                                                                className="text-typography-800 flex-1 mr-2 capitalize"
                                                                                 numberOfLines={2}
                                                                             />
-                                                                            <Text size="xs" className="text-gray-500">
+                                                                            <Text size="xs" className="text-typography-400">
                                                                                 {t('configPanel.articleCount', { count })}
                                                                             </Text>
                                                                         </HStack>
@@ -523,7 +525,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                                         hitSlop={8}
                                                                         className="ml-1"
                                                                     >
-                                                                        <MaterialIcons name="delete-outline" size={16} color="#6b7280" />
+                                                                        <MaterialIcons name="delete-outline" size={16} color={colors.iconMuted} />
                                                                     </Pressable>
                                                                 </HStack>
                                                             );
@@ -533,8 +535,8 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                             className="mt-1"
                                                         >
                                                             <HStack className="items-center" space="xs">
-                                                                <MaterialIcons name="add" size={16} color="#60a5fa" />
-                                                                <Text size="sm" className="text-blue-400">{t('configPanel.addTopic')}</Text>
+                                                                <MaterialIcons name="add" size={16} color={colors.info} />
+                                                                <Text size="sm" className="text-info-600">{t('configPanel.addTopic')}</Text>
                                                             </HStack>
                                                         </Pressable>
                                                     </VStack>
@@ -554,12 +556,12 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                 <ModalContent>
                     <ModalHeader className="pb-3">
                         <HStack className="items-center" space="xs">
-                            <MaterialIcons name="shield" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.privacyNoticeTitle')}</Text>
+                            <MaterialIcons name="shield" size={18} color={colors.iconMuted} />
+                            <Text className="text-base font-semibold text-typography-950">{t('configPanel.privacyNoticeTitle')}</Text>
                         </HStack>
                     </ModalHeader>
                     <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
+                        <Text className="text-typography-700 text-sm leading-relaxed">
                             {isOnDeviceProcessing
                                 ? t('configPanel.privacyOnDevice')
                                 : t('configPanel.privacyCloud')}{' '}
@@ -568,7 +570,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                             </Text>
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <Button
                             variant="outline"
                             action="secondary"
@@ -586,16 +588,16 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                 <ModalContent>
                     <ModalHeader className="pb-3">
                         <HStack className="items-center" space="xs">
-                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
+                            <MaterialIcons name="info-outline" size={18} color={colors.iconMuted} />
+                            <Text className="text-base font-semibold text-typography-950">{t('configPanel.articleAnalysisTitle')}</Text>
                         </HStack>
                     </ModalHeader>
                     <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
+                        <Text className="text-typography-700 text-sm leading-relaxed">
                             {t('configPanel.articleAnalysisDescription')}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <Button
                             variant="outline"
                             action="secondary"
@@ -612,10 +614,10 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader className="pb-4">
-                        <Text className="text-xl font-semibold text-white">{t('configPanel.addTopic')}</Text>
+                        <Text className="text-xl font-semibold text-typography-950">{t('configPanel.addTopic')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-4">
-                        <Text className="text-gray-400 text-sm mb-4">
+                        <Text className="text-typography-500 text-sm mb-4">
                             {t('configPanel.addTopicDescription')}
                         </Text>
                         <Input>
@@ -629,7 +631,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                             />
                         </Input>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 onPress={handleAddTopicConfirm}
@@ -655,23 +657,23 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             <Modal isOpen={factToDelete !== null} onClose={handleDeleteCancel} size="sm">
                 <ModalBackdrop />
                 <ModalContent>
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-red-400">{t('configPanel.deleteFactTitle')}</Text>
+                    <ModalHeader className="border-outline-100 pb-4">
+                        <Text className="text-xl font-semibold text-error-500">{t('configPanel.deleteFactTitle')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed mb-4">
+                        <Text className="text-typography-700 text-base leading-relaxed mb-4">
                             {t('configPanel.deleteFactConfirm')}
                         </Text>
                         {factToDelete && (
-                            <Text className="text-white text-base font-medium mb-4 capitalize">
+                            <Text className="text-typography-950 text-base font-medium mb-4 capitalize">
                                 &ldquo;{factToDelete.statement}&rdquo;
                             </Text>
                         )}
-                        <Text className="text-red-400 text-sm font-medium">
+                        <Text className="text-error-500 text-sm font-medium">
                             {t('configPanel.deleteFactWarning')}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 action="negative"

@@ -395,6 +395,7 @@
     "manageSettings": "Beheer je app-instellingen en account",
     "notifications": "Meldingen",
     "language": "Taal en vertaling",
+    "appearance": "Weergave",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Privacybeleid",
     "termsOfService": "Servicevoorwaarden",
@@ -684,5 +685,13 @@
     "usageSection": "Gebruik",
     "usedToday": "Vandaag geanalyseerd",
     "viewPlans": "Abonnementen bekijken"
+  },
+  "theme": {
+    "title": "Weergave",
+    "appTheme": "App-thema",
+    "appThemeDescription": "Kies hoe Mera eruitziet, of volg je apparaatinstellingen.",
+    "light": "Licht",
+    "dark": "Donker",
+    "system": "Systeem"
   }
 }

@@ -11,7 +11,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
         <Card
             variant="elevated"
             size="md"
-            className="mb-4 overflow-hidden bg-black border-black"
+            className="mb-4 overflow-hidden bg-background-0 border-background-0"
         >
             <Box className="w-full py-20 px-6 items-center justify-center">
                 {/* Mera Logo */}
@@ -22,7 +22,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
                 {/* Main message */}
                 <Text
                     size="xl"
-                    className="text-white text-center mb-4 font-semibold"
+                    className="text-typography-950 text-center mb-4 font-semibold"
                 >
                     {t('feed.noInterests')}
                 </Text>
@@ -30,7 +30,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
                 {/* Secondary message */}
                 <Text
                     size="md"
-                    className="text-gray-400 text-center"
+                    className="text-typography-500 text-center"
                 >
                     {t('feed.noInterestsDescription')}
                 </Text>

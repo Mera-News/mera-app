@@ -8,6 +8,7 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -26,8 +27,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ACCENT = 'rgb(231,138,83)';
-const PANEL_BG = '#1a1a1a';
 const BUBBLE_SIZE = 64; // diameter of the floating bubble the panel morphs from
 
 // Swipe-down-to-close thresholds (header grab zone only).
@@ -54,6 +53,7 @@ interface ChatPopoverProps {
 
 const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const insets = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const isExpanded = useFloatingChatIsExpanded();
@@ -241,24 +241,26 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                         top: panelTop,
                         left: 10,
                         right: 10,
+                        backgroundColor: colors.background,
+                        borderColor: colors.primary,
                     },
                     panelStyle,
                 ]}
             >
-                <Animated.View style={[styles.header, headerStyle]}>
+                <Animated.View style={[styles.header, { borderBottomColor: colors.border }, headerStyle]}>
                     {/* Grab zone (logo + title) — pans down to close. Kept off the X
                         so a swipe-down never eats a tap on the close button. */}
                     <GestureDetector gesture={swipeDownGesture}>
                         <View style={styles.headerGrab}>
                             <MeraLogo size={28} />
-                            <Text style={styles.title}>{t('floatingChat.title')}</Text>
+                            <Text style={[styles.title, { color: colors.icon }]}>{t('floatingChat.title')}</Text>
                         </View>
                     </GestureDetector>
                     {/* Gluestack Buttons (className/tva-driven), NOT Pressables with
                         function-form style props: under NativeWind v4's babel interop
                         the function form gets dropped, which erased these buttons'
-                        background fills at runtime (item-13 bug). Dark-mode tokens:
-                        primary-400 = rgb(231,138,83) (ACCENT), error-400 = #ef4444. */}
+                        background fills at runtime (item-13 bug). Fills use the
+                        semantic primary-400 / error-400 tokens (theme-aware). */}
                     <Button
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
@@ -266,7 +268,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                         action="default"
                         className="w-9 h-9 p-0 rounded-full bg-primary-400/25 data-[active=true]:bg-primary-400/40"
                     >
-                        <MaterialIcons name="add-comment" size={20} color={ACCENT} />
+                        <MaterialIcons name="add-comment" size={20} color={colors.primary} />
                     </Button>
                     <Button
                         onPress={onClosePress}
@@ -297,9 +299,7 @@ const styles = StyleSheet.create({
     panel: {
         position: 'absolute',
         borderRadius: 24,
-        backgroundColor: PANEL_BG,
         borderWidth: 1,
-        borderColor: ACCENT,
         overflow: 'hidden',
     },
     header: {
@@ -309,7 +309,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: 'rgba(255, 255, 255, 0.12)',
         zIndex: 2, // keep header (and its tappable X) above the body content
     },
     headerGrab: {
@@ -320,7 +319,6 @@ const styles = StyleSheet.create({
     },
     title: {
         flex: 1,
-        color: '#fff',
         fontSize: 17,
         fontWeight: '600',
     },

@@ -395,6 +395,7 @@
     "manageSettings": "จัดการการตั้งค่าแอปและบัญชีของคุณ",
     "notifications": "การแจ้งเตือน",
     "language": "ภาษาและการแปล",
+    "appearance": "ลักษณะที่ปรากฏ",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "นโยบายความเป็นส่วนตัว",
     "termsOfService": "ข้อกำหนดในการให้บริการ",
@@ -684,5 +685,13 @@
     "usageSection": "การใช้งาน",
     "usedToday": "วิเคราะห์แล้ววันนี้",
     "viewPlans": "ดูแผน"
+  },
+  "theme": {
+    "title": "ลักษณะที่ปรากฏ",
+    "appTheme": "ธีมแอป",
+    "appThemeDescription": "เลือกรูปลักษณ์ของ Mera หรือใช้ตามการตั้งค่าอุปกรณ์",
+    "light": "สว่าง",
+    "dark": "มืด",
+    "system": "ระบบ"
   }
 }

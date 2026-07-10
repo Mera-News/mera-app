@@ -23,7 +23,7 @@ export default function Onboarding() {
     // Show loading screen while checking auth state
     if (isPending) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center bg-background-0">
                 <Spinner size="large" />
             </Box>
         );

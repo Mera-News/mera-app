@@ -23,6 +23,7 @@ import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import LanguageWordTicker from './LanguageWordTicker';
 import PolicyPill from '@/components/custom/PolicyPill';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 interface PreferenceOption {
     id: string;
@@ -36,6 +37,7 @@ const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
     const toast = useToast();
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const { data: session } = authClient.useSession();
     const userEmail = session?.user?.email;
@@ -121,6 +123,12 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/language' as any),
         },
         {
+            id: 'appearance',
+            title: t('preferences.appearance'),
+            icon: 'palette',
+            onPress: () => routerHook.push('/logged-in/preferences/appearance' as any),
+        },
+        {
             id: 'mera-protocol',
             title: t('preferences.meraProtocol'),
             icon: 'security',
@@ -174,12 +182,12 @@ const AppPreferencesTab: React.FC = () => {
         const isDanger = option.type === 'danger';
         const isFeedback = option.type === 'feedback';
         const textColor = isDanger
-            ? 'text-red-400'
+            ? 'text-error-500'
             : isFeedback
                 ? 'text-primary-400'
-                : 'text-white';
+                : 'text-typography-950';
         // Tint the feedback row's border to match its Mera-orange label.
-        const borderColor = isFeedback ? 'border-primary-400/50' : 'border-gray-700';
+        const borderColor = isFeedback ? 'border-primary-400/50' : 'border-outline-100';
 
         return (
             <Pressable
@@ -202,16 +210,16 @@ const AppPreferencesTab: React.FC = () => {
                 <MaterialIcons
                     name="chevron-right"
                     size={20}
-                    color="#999999"
+                    color={colors.iconMuted}
                 />
             </Pressable>
         );
     };
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-0">
             <VStack className="px-5 pt-2 pb-3">
-                <Text size="sm" className="text-gray-400">
+                <Text size="sm" className="text-typography-500">
                     {t('preferences.manageSettings')}
                 </Text>
             </VStack>
@@ -228,21 +236,21 @@ const AppPreferencesTab: React.FC = () => {
                     </HStack>
                     <HStack space="lg" className="items-center mb-3">
                         <Pressable onPress={() => openInAppBrowser(GITHUB_URL)} hitSlop={8}>
-                            <FontAwesome name="github" size={22} color="#9ca3af" />
+                            <FontAwesome name="github" size={22} color={colors.iconMuted} />
                         </Pressable>
                         <Pressable onPress={() => openInAppBrowser(WEBSITE_URL)} hitSlop={8}>
-                            <MaterialIcons name="language" size={24} color="#9ca3af" />
+                            <MaterialIcons name="language" size={24} color={colors.iconMuted} />
                         </Pressable>
                     </HStack>
                     {maskedEmail && (
-                        <Text size="xs" className="text-gray-500 mb-1">
+                        <Text size="xs" className="text-typography-400 mb-1">
                             {t('preferences.user', { email: maskedEmail })}
                         </Text>
                     )}
-                    <Text size="xs" className="text-gray-500">
+                    <Text size="xs" className="text-typography-400">
                         {t('preferences.appVersion', { version: getAppVersionLabel() })}
                     </Text>
-                    <Text size="xs" className="text-gray-500 mt-1">
+                    <Text size="xs" className="text-typography-400 mt-1">
                         © {new Date().getFullYear()} Mera Labs B.V.
                     </Text>
                 </Box>
@@ -252,15 +260,15 @@ const AppPreferencesTab: React.FC = () => {
             <Modal isOpen={showLogoutModal} onClose={() => closeModal('logout')} size="sm">
                 <ModalBackdrop />
                 <ModalContent >
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-white">{t('preferences.signOutModalTitle')}</Text>
+                    <ModalHeader className="border-outline-100 pb-4">
+                        <Text className="text-xl font-semibold text-typography-950">{t('preferences.signOutModalTitle')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed">
+                        <Text className="text-typography-700 text-base leading-relaxed">
                             {t('preferences.signOutConfirm')}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 action="negative"

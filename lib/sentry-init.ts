@@ -59,16 +59,18 @@ if (SENTRY_ENABLED) {
       // init, before the user's language is applied. This integration stays
       // registered only to supply the widget's THEME (FeedbackWidget reads
       // colorScheme/themeDark via getTheme()); labels and general config
-      // (showName, enableTakeScreenshot, …) live on the component. Dark-mode-only
-      // app; the accent colors style the submit button to brand purple
-      // (Mera orange, primary-400 = rgb(231,138,83)).
+      // (showName, enableTakeScreenshot, …) live on the component. The feedback
+      // modal is deliberately dark-locked (its card + white Mera logo in
+      // FeedbackWidgetModal are dark chrome, like VideoPlayerModal), so the
+      // widget stays 'dark' regardless of the app theme. Accent = Mera orange
+      // (Toasted Almond, primary-400 = rgb(231,138,83)).
       Sentry.feedbackIntegration({
         colorScheme: 'dark',
         themeDark: {
-          background: '#000000',
-          foreground: '#ffffff',
+          background: '#1E1E24',
+          foreground: '#F9F8F4',
           accentBackground: 'rgb(231,138,83)',
-          accentForeground: '#000000',
+          accentForeground: '#1E1E24',
         },
       }),
     ],

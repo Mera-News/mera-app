@@ -20,6 +20,7 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 type DataAction =
     | 'feedCache'
@@ -53,6 +54,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
     const toast = useToast();
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [confirmAction, setConfirmAction] = useState<DataAction>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -254,13 +256,13 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             <Box
                 className={`ml-2 px-2 py-0.5 rounded-full border ${
                     isServer
-                        ? 'bg-amber-950 border-amber-700'
-                        : 'bg-green-950 border-green-800'
+                        ? 'bg-background-warning border-warning-500'
+                        : 'bg-background-success border-success-500'
                 }`}
             >
                 <Text
                     size="2xs"
-                    className={isServer ? 'text-amber-300' : 'text-green-300'}
+                    className={isServer ? 'text-warning-500' : 'text-success-500'}
                 >
                     {t(isServer ? 'manageData.locationServer' : 'manageData.locationDevice')}
                 </Text>
@@ -275,7 +277,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         return (
             <Pressable
                 key={option.id}
-                className="flex-row items-center py-4 px-4 border border-gray-700 rounded-lg"
+                className="flex-row items-center py-4 px-4 border border-outline-100 rounded-lg"
                 onPress={
                     isAccount
                         ? (option as AccountEntry).onPress
@@ -284,13 +286,13 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 disabled={isProcessing || isDeletingAccount}
             >
                 <Box className="flex-row items-center flex-1">
-                    <MaterialIcons name={option.icon} size={22} color="#ef4444" />
+                    <MaterialIcons name={option.icon} size={22} color={colors.error} />
                     <VStack className="ml-3 flex-1">
                         <Box className="flex-row items-center">
-                            <Text className="text-base text-red-400">{option.title}</Text>
+                            <Text className="text-base text-error-500">{option.title}</Text>
                             {renderLocationChip(option.location)}
                         </Box>
-                        <Text size="xs" className="text-gray-500">{option.description}</Text>
+                        <Text size="xs" className="text-typography-400">{option.description}</Text>
                     </VStack>
                 </Box>
             </Pressable>
@@ -302,25 +304,25 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         : null;
 
     return (
-        <GluestackUIProvider mode="dark">
-            <Box className="flex-1 bg-black">
+        <GluestackUIProvider>
+            <Box className="flex-1 bg-background-0">
                 {onBack && (
                     <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                         <Pressable
                             onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            className="bg-background-50 rounded-full p-3 shadow-hard-2"
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                         </Pressable>
                     </Box>
                 )}
 
                 <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">{t('manageData.title')}</Text>
+                    <Text className="text-xl font-semibold text-typography-950 text-center">{t('manageData.title')}</Text>
                 </VStack>
 
                 <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-                    <Text size="sm" className="text-gray-400 mb-5">
+                    <Text size="sm" className="text-typography-500 mb-5">
                         {t('manageData.description')}
                     </Text>
 
@@ -334,17 +336,17 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} size="sm">
                         <ModalBackdrop />
                         <ModalContent>
-                            <ModalHeader className="border-gray-700 pb-4">
-                                <Text className="text-xl font-semibold text-red-400">
+                            <ModalHeader className="border-outline-100 pb-4">
+                                <Text className="text-xl font-semibold text-error-500">
                                     {activeOption.title}
                                 </Text>
                             </ModalHeader>
                             <ModalBody className="py-6">
-                                <Text className="text-gray-300 text-base leading-relaxed">
+                                <Text className="text-typography-700 text-base leading-relaxed">
                                     {(activeOption as OptionEntry).modalDescription}
                                 </Text>
                             </ModalBody>
-                            <ModalFooter className="border-t border-gray-700 pt-4">
+                            <ModalFooter className="border-t border-outline-100 pt-4">
                                 <VStack className="w-full" space="md">
                                     <Button
                                         action="negative"
@@ -374,18 +376,18 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 <Modal isOpen={showDeleteInitial} onClose={() => closeModal('deleteAccount')} size="sm">
                     <ModalBackdrop />
                     <ModalContent>
-                        <ModalHeader className="border-gray-700 pb-4">
-                            <Text className="text-xl font-semibold text-red-400">{t('preferences.deleteAccount')}</Text>
+                        <ModalHeader className="border-outline-100 pb-4">
+                            <Text className="text-xl font-semibold text-error-500">{t('preferences.deleteAccount')}</Text>
                         </ModalHeader>
                         <ModalBody className="py-6">
-                            <Text className="text-gray-300 text-base leading-relaxed mb-4">
+                            <Text className="text-typography-700 text-base leading-relaxed mb-4">
                                 {t('preferences.deleteAccountConfirm')}
                             </Text>
-                            <Text className="text-red-400 text-sm font-medium">
+                            <Text className="text-error-500 text-sm font-medium">
                                 {t('preferences.deleteAccountWarning')}
                             </Text>
                         </ModalBody>
-                        <ModalFooter className="border-t border-gray-700 pt-4">
+                        <ModalFooter className="border-t border-outline-100 pt-4">
                             <VStack className="w-full" space="md">
                                 <Button
                                     action="negative"
@@ -410,19 +412,19 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 {/* Delete Account Final Confirmation Modal */}
                 <Modal isOpen={showDeleteConfirm} onClose={() => closeModal('deleteAccount')} size="sm">
                     <ModalBackdrop />
-                    <ModalContent className="bg-gray-900 border border-gray-700">
-                        <ModalHeader className="border-gray-700 pb-4">
-                            <Text className="text-xl font-semibold text-red-400">{t('preferences.finalConfirmation')}</Text>
+                    <ModalContent className="bg-background-50 border border-outline-100">
+                        <ModalHeader className="border-outline-100 pb-4">
+                            <Text className="text-xl font-semibold text-error-500">{t('preferences.finalConfirmation')}</Text>
                         </ModalHeader>
                         <ModalBody className="py-6">
-                            <Text className="text-gray-300 text-base leading-relaxed mb-4">
+                            <Text className="text-typography-700 text-base leading-relaxed mb-4">
                                 {t('preferences.finalConfirmationBody')}
                             </Text>
-                            <Text className="text-red-400 text-base font-semibold">
+                            <Text className="text-error-500 text-base font-semibold">
                                 {t('preferences.absolutelySure')}
                             </Text>
                         </ModalBody>
-                        <ModalFooter className="border-t border-gray-700 pt-4">
+                        <ModalFooter className="border-t border-outline-100 pt-4">
                             <VStack className="w-full" space="md">
                                 <Button
                                     action="negative"

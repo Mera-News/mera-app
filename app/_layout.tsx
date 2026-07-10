@@ -10,6 +10,9 @@ import { Stack, useNavigationContainerRef, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useColorScheme } from 'nativewind';
+import * as SystemUI from 'expo-system-ui';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import client from '../lib/apollo-client';
@@ -70,6 +73,18 @@ defineInferenceTask();
 // truly quiescent (nothing in the background).
 function AppRoot() {
   const navigationRef = useNavigationContainerRef();
+  const { colorScheme } = useColorScheme();
+  const colors = useThemeColors();
+  const isDark = colorScheme !== 'light';
+
+  // Keep the native root view's background in sync with the theme so nothing
+  // white/black flashes behind transitions, modals, or keyboard animations
+  // (expo-system-ui, per the Expo color-themes guide).
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.background).catch(() => {
+      // Non-critical cosmetic call; ignore failures (e.g. web).
+    });
+  }, [colors.background]);
 
   // Mirror the current route into a module variable so non-React code (the
   // Apollo error link) can avoid redundant navigations to the paywall.
@@ -218,11 +233,11 @@ function AppRoot() {
     >
       <DatabaseProvider database={database}>
         <ApolloProvider client={client}>
-          <StatusBar style="light" backgroundColor="#000000" />
+          <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={colors.background} />
           <Stack
             screenOptions={{
               headerShown: false,
-              contentStyle: { backgroundColor: '#000000' },
+              contentStyle: { backgroundColor: colors.background },
               animation: 'slide_from_right',
             }}
           >
@@ -262,7 +277,7 @@ export default Sentry.wrap(function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-          <GluestackUIProvider mode="dark">
+          <GluestackUIProvider>
             <NativeUpdateGate>
               <ToastInitializer />
               <OTAUpdatePrompt />

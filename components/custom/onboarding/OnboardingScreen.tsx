@@ -43,7 +43,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onComplete 
 
     if (isCheckingOnboarding) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center bg-background-0">
                 <Spinner size="large" />
             </Box>
         );

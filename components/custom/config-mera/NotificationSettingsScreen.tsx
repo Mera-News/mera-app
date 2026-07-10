@@ -18,6 +18,7 @@ import { Linking, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import NotificationHourWheel from '@/components/custom/NotificationHourWheel';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 interface NotificationSettingsScreenProps {
     onBack?: () => void;
@@ -36,6 +37,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     onHoursChange,
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [isLoading, setIsLoading] = useState(!isOnboarding);
     const [isSaving, setIsSaving] = useState(false);
     const [isEnabling, setIsEnabling] = useState(false);
@@ -271,7 +273,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         <Box className="px-5 mb-6">
             {isOnboarding && (
                 <VStack className="mb-8">
-                    <Text className="text-3xl font-bold text-white text-center mb-3">
+                    <Text className="text-3xl font-bold text-typography-950 text-center mb-3">
                         {t('notifications.title')}
                     </Text>
                     <Text className="text-base text-typography-400 text-center leading-6">
@@ -286,10 +288,10 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     <MaterialIcons
                         name={notificationsEnabled ? "notifications-active" : "notifications-off"}
                         size={24}
-                        color={notificationsEnabled ? "#10b981" : "#9ca3af"}
+                        color={notificationsEnabled ? colors.success : colors.iconMuted}
                     />
                     <VStack>
-                        <Text className="text-white text-lg font-semibold">
+                        <Text className="text-typography-950 text-lg font-semibold">
                             {t('notifications.pushNotifications')}
                         </Text>
                         {!isOnboarding && (
@@ -322,7 +324,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 <Box className="mt-4">
                     <Box className="p-4 bg-background-900 rounded-lg border border-background-700 mb-3">
                         <Text className="text-typography-400 text-sm leading-5">
-                            <MaterialIcons name="info-outline" size={16} color="#9ca3af" /> {t('notifications.permissionDenied')}
+                            <MaterialIcons name="info-outline" size={16} color={colors.iconMuted} /> {t('notifications.permissionDenied')}
                         </Text>
                     </Box>
                     <Button
@@ -331,7 +333,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                         size="md"
                         onPress={() => Linking.openSettings()}
                     >
-                        <MaterialIcons name="settings" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+                        <MaterialIcons name="settings" size={18} color={colors.iconMuted} style={{ marginRight: 8 }} />
                         <ButtonText>{t('notifications.openDeviceSettings')}</ButtonText>
                     </Button>
                 </Box>
@@ -343,10 +345,10 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     // are rendered next to the wheel (renderWheelWithSidebar).
     const renderTimeSectionHeader = () => (
         <Box className="px-5 mb-2">
-            <Text className="text-white text-lg font-semibold mb-2">
+            <Text className="text-typography-950 text-lg font-semibold mb-2">
                 {t('notifications.timeTitle')}
             </Text>
-            <Text size="md" className="text-gray-400 leading-6">
+            <Text size="md" className="text-typography-500 leading-6">
                 {t('notifications.timeDescription')}
             </Text>
         </Box>
@@ -360,7 +362,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 <Text size="sm" className="text-typography-500">
                     Selected
                 </Text>
-                <Text size="md" className="text-white font-semibold">
+                <Text size="md" className="text-typography-950 font-semibold">
                     {selectedHours.length}
                 </Text>
             </VStack>
@@ -374,20 +376,20 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     height={wheelHeight}
                 />
             </Box>
-            <HStack className="flex-1 items-center justify-center"><HStack className="bg-gray-900 rounded-full p-0.5">
+            <HStack className="flex-1 items-center justify-center"><HStack className="bg-background-50 rounded-full p-0.5">
                 <Pressable
                     onPress={() => setUse24h(true)}
-                    className={`px-3 py-1.5 rounded-full ${use24h ? 'bg-gray-700' : 'bg-transparent'}`}
+                    className={`px-3 py-1.5 rounded-full ${use24h ? 'bg-background-200' : 'bg-transparent'}`}
                 >
-                    <Text size="xs" className={`font-medium ${use24h ? 'text-white' : 'text-gray-500'}`}>
+                    <Text size="xs" className={`font-medium ${use24h ? 'text-typography-950' : 'text-typography-400'}`}>
                         {t('notifications.format24h')}
                     </Text>
                 </Pressable>
                 <Pressable
                     onPress={() => setUse24h(false)}
-                    className={`px-3 py-1.5 rounded-full ${!use24h ? 'bg-gray-700' : 'bg-transparent'}`}
+                    className={`px-3 py-1.5 rounded-full ${!use24h ? 'bg-background-200' : 'bg-transparent'}`}
                 >
-                    <Text size="xs" className={`font-medium ${!use24h ? 'text-white' : 'text-gray-500'}`}>
+                    <Text size="xs" className={`font-medium ${!use24h ? 'text-typography-950' : 'text-typography-400'}`}>
                         {t('notifications.formatAmPm')}
                     </Text>
                 </Pressable>
@@ -406,20 +408,20 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             );
         }
         return (
-            <GluestackUIProvider mode="dark">
-                <Box className="flex-1 bg-black">
+            <GluestackUIProvider>
+                <Box className="flex-1 bg-background-0">
                     {onBack && (
                         <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                             <Pressable
                                 onPress={onBack}
-                                className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                                className="bg-background-50 rounded-full p-3 shadow-hard-2"
                             >
-                                <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                                <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                             </Pressable>
                         </Box>
                     )}
                     <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                        <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
+                        <Text className="text-xl font-semibold text-typography-950 text-center">{t('notifications.title')}</Text>
                     </VStack>
                     <VStack className="flex-1 justify-center items-center">
                         <Spinner size="large" />
@@ -437,7 +439,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 {renderHeader()}
                 {notificationsEnabled && (
                     <>
-                        <Box className="mx-5 mb-4 border-b border-gray-800" />
+                        <Box className="mx-5 mb-4 border-b border-outline-50" />
                         {renderTimeSectionHeader()}
                         {renderWheelWithSidebar()}
                     </>
@@ -451,29 +453,29 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     // toggle row and the save button (no outer ScrollView). When disabled,
     // the outer ScrollView is kept so the "Open Device Settings" CTA scrolls.
     return (
-        <GluestackUIProvider mode="dark">
-            <Box className="flex-1 bg-black">
+        <GluestackUIProvider>
+            <Box className="flex-1 bg-background-0">
                 {/* Floating Back Button */}
                 {onBack && (
                     <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                         <Pressable
                             onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            className="bg-background-50 rounded-full p-3 shadow-hard-2"
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                         </Pressable>
                     </Box>
                 )}
 
                 {/* Header */}
                 <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
+                    <Text className="text-xl font-semibold text-typography-950 text-center">{t('notifications.title')}</Text>
                 </VStack>
 
                 {notificationsEnabled ? (
                     <Box className="flex-1 pt-1">
                         {renderHeader()}
-                        <Box className="mx-5 mb-4 border-b border-gray-800" />
+                        <Box className="mx-5 mb-4 border-b border-outline-50" />
                         {renderTimeSectionHeader()}
                         {renderWheelWithSidebar()}
                     </Box>

@@ -4,6 +4,7 @@ import { Pressable } from '@/components/ui/pressable';
 import AppPreferencesTab from '@/components/custom/config-mera/AppPreferencesTab';
 import { authClient } from '@/lib/auth-client';
 import { useConfigPanelActiveTab } from '@/lib/stores/config-panel-store';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -14,6 +15,7 @@ import SourcesTabContent from './SourcesTabContent';
 
 const ConfigScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
     const activeTab = useConfigPanelActiveTab();
     const { data: session } = authClient.useSession();
     const userId = session?.user?.id;
@@ -36,14 +38,14 @@ const ConfigScreen: React.FC = () => {
     };
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top }}>
             {/* Header: Back button + Tab Selector */}
             <HStack className="items-center px-4 pt-2 pb-2">
                 <Pressable
                     onPress={() => router.back()}
-                    className="p-3 rounded-full bg-gray-800"
+                    className="p-3 rounded-full bg-background-100"
                 >
-                    <MaterialIcons name="arrow-back" size={20} color="#FFFFFF" />
+                    <MaterialIcons name="arrow-back" size={20} color={colors.icon} />
                 </Pressable>
                 <Box className="flex-1 items-center">
                     <ConfigPanelTabs />

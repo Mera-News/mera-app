@@ -395,6 +395,7 @@
     "manageSettings": "Uygulama ayarlarını ve hesabını yönet",
     "notifications": "Bildirimler",
     "language": "Dil ve Çeviri",
+    "appearance": "Görünüm",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Gizlilik Politikası",
     "termsOfService": "Hizmet Şartları",
@@ -684,5 +685,13 @@
     "usageSection": "Kullanım",
     "usedToday": "Bugün analiz edilen",
     "viewPlans": "Planları görüntüle"
+  },
+  "theme": {
+    "title": "Görünüm",
+    "appTheme": "Uygulama Teması",
+    "appThemeDescription": "Mera'nın görünümünü seçin veya cihaz ayarlarınızı izleyin.",
+    "light": "Açık",
+    "dark": "Koyu",
+    "system": "Sistem"
   }
 }

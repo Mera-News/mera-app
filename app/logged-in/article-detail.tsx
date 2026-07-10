@@ -22,7 +22,7 @@ export default function ArticleDetail() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                 <ArticleDetailScreen articleId={articleId} onBack={handleBack} />
             </ErrorBoundary>

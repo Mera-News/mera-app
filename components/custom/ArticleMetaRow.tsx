@@ -4,6 +4,7 @@ import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { getArticleTranslatableStatus, getNativeLanguageName } from '@/lib/translation-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +30,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
+    const colors = useThemeColors();
 
     const formatAge = (dateString: string | null | undefined) => {
         if (!dateString) return t('feed.justNow');
@@ -49,16 +51,16 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     };
 
     const isCard = variant === 'card';
-    const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
-    const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
-    const iconColor = isCard ? '#6B7280' : '#9CA3AF';
+    const ageColor = isCard ? 'text-typography-600' : 'text-typography-500';
+    const secondaryColor = 'text-typography-500';
+    const iconColor = colors.iconMuted;
 
     const age = formatAge(pubDate);
     const language = getNativeLanguageName(languageCode) ?? '';
     const publication = publicationName ?? '';
 
     const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
-    const translateColor = translateStatus === 'not-translatable' ? '#FCA5A5' : '#86EFAC';
+    const translateColor = translateStatus === 'not-translatable' ? colors.error : colors.success;
     const showLanguageSlot = !!languageCode;
     const showPublicationSlot = !!publication;
 
@@ -71,7 +73,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     {age}
                 </Text>
                 {isCard && isNew ? (
-                    <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
+                    <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.success }}>
                         <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                             {t('feed.newBadge')}
                         </Text>
@@ -110,7 +112,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
             ) : <Box />}
 
             {/* 4. Country flag */}
-            <SourceFlag countryCode={countryCode} size="sm" iconClassName={isCard ? 'text-typography-500' : 'text-gray-400'} />
+            <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
         </HStack>
     );
 };

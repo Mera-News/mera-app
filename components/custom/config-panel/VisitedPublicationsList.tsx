@@ -10,6 +10,7 @@ import {
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -35,6 +36,7 @@ const formatRelativeAgo = (timestamp: number, t: TFunction): string => {
 
 const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -89,35 +91,35 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                 >
                     <SourceFlag countryCode={item.countryCode} size="xl" />
                     <VStack className="flex-1" space="xs">
-                        <Text size="md" className="text-white" numberOfLines={1}>
+                        <Text size="md" className="text-typography-950" numberOfLines={1}>
                             {item.publicationName}
                         </Text>
-                        <Text size="xs" className="text-gray-400">
+                        <Text size="xs" className="text-typography-500">
                             {t('publicationVisits.lastRead', { time: formatRelativeAgo(item.lastVisitedAt, t) })}
                         </Text>
                     </VStack>
-                    <Box className="px-2.5 py-1 rounded-full border border-white">
-                        <Text size="xs" bold className="text-white">
+                    <Box className="px-2.5 py-1 rounded-full border border-outline-200">
+                        <Text size="xs" bold className="text-typography-950">
                             {item.visitCount}
                         </Text>
                     </Box>
-                    <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                    <MaterialIcons name="chevron-right" size={20} color={colors.iconMuted} />
                 </HStack>
             </Pressable>
         ),
-        [handlePublicationPress, t],
+        [handlePublicationPress, t, colors.iconMuted],
     );
 
     const ListHeader = (
-        <Box className="mx-4 mt-3 mb-2 p-3 rounded-lg border border-white">
-            <Text size="xs" italic className="text-white">
+        <Box className="mx-4 mt-3 mb-2 p-3 rounded-lg border border-outline-200">
+            <Text size="xs" italic className="text-typography-950">
                 {t('publicationVisits.screenIntro')}
             </Text>
         </Box>
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-0">
             <DrillDownHeader
                 title={t('publicationVisits.visitedListTitle')}
                 subtitle={t('publicationVisits.last30Days')}
@@ -129,8 +131,8 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                 </Box>
             ) : items.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="visibility-off" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="visibility-off" size={48} color={colors.iconMuted} />
+                    <Text size="md" className="text-typography-500 text-center">
                         {t('publicationVisits.noArticlesYet')}
                     </Text>
                 </VStack>
@@ -146,8 +148,8 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#ffffff"
-                            colors={['#ffffff']}
+                            tintColor={colors.icon}
+                            colors={[colors.icon]}
                         />
                     }
                 />

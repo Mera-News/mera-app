@@ -15,6 +15,7 @@ import {
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
 import { usePinnedCountriesStore } from '@/lib/stores/pinned-countries-store';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -36,6 +37,7 @@ const GLOBAL_COUNTRY = {
 
 const SourcesL1CountryList: React.FC = () => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [countryCodes, setCountryCodes] = useState<string[]>([]);
     const [topPublications, setTopPublications] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -137,7 +139,7 @@ const SourcesL1CountryList: React.FC = () => {
             // headlines" Button is a separate touchable that fetches on tap.
             <Pressable
                 onPress={() => handleCountryPress(item)}
-                className="mx-4 mb-3 h-auto px-4 py-3 justify-start rounded-lg border border-gray-700"
+                className="mx-4 mb-3 h-auto px-4 py-3 justify-start rounded-lg border border-outline-100"
             >
                 <HStack className="items-center justify-between w-full" space="sm">
                     <HStack className="items-center flex-1 mr-3" space="md">
@@ -155,12 +157,12 @@ const SourcesL1CountryList: React.FC = () => {
                                 <MaterialCommunityIcons
                                     name={item.isPinned ? 'pin' : 'pin-outline'}
                                     size={22}
-                                    color={item.isPinned ? '#3b82f6' : '#666666'}
+                                    color={item.isPinned ? colors.primary : colors.iconMuted}
                                 />
                             </Pressable>
                         )}
                         <Text className="text-2xl">{item.flag}</Text>
-                        <Text className="text-base text-white">{item.name}</Text>
+                        <Text className="text-base text-typography-950">{item.name}</Text>
                     </HStack>
                     <HStack className="items-center" space="sm">
                         <Button
@@ -174,13 +176,13 @@ const SourcesL1CountryList: React.FC = () => {
                         <MaterialIcons
                             name="chevron-right"
                             size={20}
-                            color="#999999"
+                            color={colors.iconMuted}
                         />
                     </HStack>
                 </HStack>
             </Pressable>
         ),
-        [handleCountryPress, handleTopHeadlinesPress, togglePin, t]
+        [handleCountryPress, handleTopHeadlinesPress, togglePin, t, colors.iconMuted, colors.primary]
     );
 
     const keyExtractor = useCallback((item: CountryItem) => item.code, []);
@@ -197,16 +199,16 @@ const SourcesL1CountryList: React.FC = () => {
         <Box className="flex-1">
             <TopVisitedPublicationsCard topPublications={topPublications} />
             <Box className="mx-4 mt-3 mb-2">
-                <Input variant="outline" size="md" className="border-gray-700">
+                <Input variant="outline" size="md" className="border-outline-100">
                     <InputSlot className="pl-3">
-                        <MaterialIcons name="search" size={18} color="#999999" />
+                        <MaterialIcons name="search" size={18} color={colors.iconMuted} />
                     </InputSlot>
                     <InputField
                         placeholder={t('sources.searchCountries')}
-                        placeholderTextColor="#666666"
+                        placeholderTextColor={colors.iconMuted}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
-                        className="text-white"
+                        className="text-typography-950"
                         autoCorrect={false}
                         autoCapitalize="none"
                     />
@@ -214,8 +216,8 @@ const SourcesL1CountryList: React.FC = () => {
             </Box>
             {countryList.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="public" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="public" size={48} color={colors.iconMuted} />
+                    <Text size="md" className="text-typography-500 text-center">
                         {searchQuery ? t('sources.noCountriesMatch') : t('sources.noSourcesAvailable')}
                     </Text>
                 </VStack>
@@ -230,8 +232,8 @@ const SourcesL1CountryList: React.FC = () => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#ffffff"
-                            colors={['#ffffff']}
+                            tintColor={colors.icon}
+                            colors={[colors.icon]}
                         />
                     }
                 />

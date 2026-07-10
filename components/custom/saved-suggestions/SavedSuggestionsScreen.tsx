@@ -22,6 +22,7 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
 import { type ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -35,6 +36,7 @@ interface SavedSuggestionsScreenProps {
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const [saved, setSaved] = useState<ForYouSuggestion[]>([]);
@@ -108,14 +110,14 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
                     hitSlop={12}
                     accessibilityRole="button"
                     accessibilityLabel={t('savedSuggestions.deleteConfirmCta')}
-                    className="bg-gray-900 rounded-full p-2 shadow-hard-2"
+                    className="bg-background-50 rounded-full p-2 shadow-hard-2"
                     style={{ position: 'absolute', top: '5%', right: '5%', zIndex: 10 }}
                 >
-                    <MaterialIcons name="delete" size={20} color="#ffffff" />
+                    <MaterialIcons name="delete" size={20} color={colors.icon} />
                 </Pressable>
             </Box>
         ),
-        [handleCardPress, t],
+        [handleCardPress, t, colors.icon],
     );
 
     const keyExtractor = useCallback(
@@ -125,17 +127,17 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
 
     const ListHeader = (
         <Box
-            className="mx-4 mb-4 px-3 py-2 border border-primary-500 rounded-lg bg-gray-900"
+            className="mx-4 mb-4 px-3 py-2 border border-primary-500 rounded-lg bg-background-50"
             accessibilityRole="summary"
         >
             <HStack className="items-start" space="sm">
                 <MaterialIcons
                     name="info-outline"
                     size={16}
-                    color="#9ca3af"
+                    color={colors.iconMuted}
                     style={{ marginTop: 2 }}
                 />
-                <Text size="xs" className="text-gray-400 flex-1">
+                <Text size="xs" className="text-typography-500 flex-1">
                     {t('savedSuggestions.note')}
                 </Text>
             </HStack>
@@ -148,7 +150,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
         </Box>
     ) : (
         <Box className="items-center justify-center py-20 px-6">
-            <MaterialIcons name="bookmark-border" size={48} color="#6B7280" />
+            <MaterialIcons name="bookmark-border" size={48} color={colors.iconMuted} />
             <Text size="md" className="text-typography-400 text-center mt-4">
                 {t('savedSuggestions.empty')}
             </Text>
@@ -156,14 +158,14 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-0">
             {/* Floating Back Button */}
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                    className="bg-background-50 rounded-full p-3 shadow-hard-2"
                 >
-                    <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                    <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                 </Pressable>
             </Box>
 
@@ -171,7 +173,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
                 className="px-5 pb-2"
                 style={{ paddingTop: insets.top + 16 }}
             >
-                <Heading size="3xl" className="text-white ml-14">
+                <Heading size="3xl" className="text-typography-950 ml-14">
                     {t('savedSuggestions.title')}
                 </Heading>
             </VStack>
@@ -194,7 +196,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="md" className="text-white">
+                        <Heading size="md" className="text-typography-950">
                             {t('savedSuggestions.deleteConfirmTitle')}
                         </Heading>
                     </ModalHeader>

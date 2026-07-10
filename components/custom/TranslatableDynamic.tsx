@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { translateText } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -118,6 +119,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     showToggle = false,
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const showOriginal = useAppLanguageStore((s) => s.showOriginal);
     const cache = useAppLanguageStore((s) => s.cache);
@@ -249,7 +251,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // Inline icon — shown only in non-toggle mode.
     const translatedIndicator = isTranslated && !showToggleButton ? (
         <>
-            <MaterialIcons name="translate" size={11} color="#9ca3af" />
+            <MaterialIcons name="translate" size={11} color={colors.iconMuted} />
             {' '}
         </>
     ) : null;
@@ -309,11 +311,11 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                         paddingHorizontal: 10,
                         paddingVertical: 4,
                         borderRadius: 999,
-                        backgroundColor: '#1f2937',
+                        backgroundColor: colors.surface,
                     }}
                 >
-                    <MaterialIcons name="translate" size={12} color="#9ca3af" />
-                    <Text size="xs" style={{ color: '#9ca3af', marginLeft: 4 }}>
+                    <MaterialIcons name="translate" size={12} color={colors.iconMuted} />
+                    <Text size="xs" style={{ color: colors.iconMuted, marginLeft: 4 }}>
                         {localShowOriginal
                             ? t('clusterDetail.showTranslation')
                             : t('clusterDetail.showOriginal')}

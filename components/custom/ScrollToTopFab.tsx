@@ -1,3 +1,4 @@
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -17,6 +18,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  */
 const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress }) => {
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
 
     if (!visible) return null;
 
@@ -25,9 +27,9 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress }) => 
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(200)}
             onPress={onPress}
-            style={[styles.fab, { bottom: 20 + insets.bottom }]}
+            style={[styles.fab, { bottom: 20 + insets.bottom, backgroundColor: colors.surface }]}
         >
-            <MaterialIcons name="keyboard-arrow-up" size={28} color="#6b7280" />
+            <MaterialIcons name="keyboard-arrow-up" size={28} color={colors.icon} />
         </AnimatedPressable>
     );
 };

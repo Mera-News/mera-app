@@ -2,6 +2,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useThemeColors } from '@/lib/theme/tokens';
 import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -86,6 +87,7 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
     errorMessage = null,
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
 
     // Resolve the effective stage — prefer syncStatusMessage, fall back to stageProp
     const stage: ProcessingStage = useMemo(() => {
@@ -160,7 +162,7 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
     if (stage === 'done') {
         return (
             <HStack className="items-center" space="xs">
-                <MaterialIcons name="check-circle" size={16} color="#10B981" />
+                <MaterialIcons name="check-circle" size={16} color={colors.success} />
                 <Text size="sm" className="text-typography-300">
                     {t('feed.processing.doneFlash')}
                 </Text>
@@ -176,8 +178,8 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
             });
         return (
             <HStack className="items-center" space="xs">
-                <MaterialIcons name="error" size={16} color="#EF4444" />
-                <Text size="sm" className="text-red-400 flex-1">
+                <MaterialIcons name="error" size={16} color={colors.error} />
+                <Text size="sm" className="text-error-500 flex-1">
                     {message}
                 </Text>
             </HStack>

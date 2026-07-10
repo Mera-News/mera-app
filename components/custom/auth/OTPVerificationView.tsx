@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { authClient, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { setSetting } from '@/lib/database/services/setting-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +28,7 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
     const [resendMessage, setResendMessage] = useState('');
     const hasSubmittedRef = useRef(false);
     const { t } = useTranslation();
+    const colors = useThemeColors();
 
     useEffect(() => {
         if (resendCooldown <= 0) return;
@@ -110,9 +112,9 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                 <Box className="absolute top-16 left-5 z-10">
                     <Pressable
                         onPress={onBack}
-                        className="rounded-full bg-gray-900 p-3 shadow-hard-2"
+                        className="rounded-full bg-background-50 p-3 shadow-hard-2"
                     >
-                        <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                        <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                     </Pressable>
                 </Box>
             )}
@@ -147,7 +149,7 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                         <Pressable
                             onPress={handleVerifyOTP}
                             disabled={loading || otp.length < 6}
-                            className={`w-14 h-14 rounded-full items-center justify-center ${otp.length === 6 && !loading ? 'bg-primary-500' : 'bg-gray-700'
+                            className={`w-14 h-14 rounded-full items-center justify-center ${otp.length === 6 && !loading ? 'bg-primary-500' : 'bg-background-200'
                                 }`}
                         >
                             {loading ? (
@@ -156,7 +158,7 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                                 <MaterialIcons
                                     name="check"
                                     size={28}
-                                    color={otp.length === 6 ? '#ffffff' : '#6B7280'}
+                                    color={otp.length === 6 ? '#ffffff' : colors.iconMuted}
                                 />
                             )}
                         </Pressable>
@@ -173,7 +175,7 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                     ) : null}
                     <HStack className="items-center justify-center mt-4" space="xs">
                         {resendLoading ? (
-                            <Spinner size="small" color="#6B7280" />
+                            <Spinner size="small" color={colors.iconMuted} />
                         ) : resendCooldown > 0 ? (
                             <Text size="sm" className="text-typography-500">
                                 {t('auth.resendIn', { seconds: resendCooldown })}

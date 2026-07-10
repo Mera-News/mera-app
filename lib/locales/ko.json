@@ -395,6 +395,7 @@
     "manageSettings": "앱 설정 및 계정 관리",
     "notifications": "알림",
     "language": "언어 및 번역",
+    "appearance": "화면 모드",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "개인정보 처리방침",
     "termsOfService": "서비스 이용약관",
@@ -684,5 +685,13 @@
     "usageSection": "사용량",
     "usedToday": "오늘 분석함",
     "viewPlans": "요금제 보기"
+  },
+  "theme": {
+    "title": "화면 모드",
+    "appTheme": "앱 테마",
+    "appThemeDescription": "Mera의 모양을 선택하거나 기기 설정을 따르세요.",
+    "light": "라이트",
+    "dark": "다크",
+    "system": "시스템"
   }
 }

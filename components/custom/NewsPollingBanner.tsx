@@ -35,7 +35,7 @@ export default function NewsPollingBanner() {
                     {stage1AmberSubline}
                 </Text>
             ) : syncStatusMessage ? (
-                <Text size="sm" className="text-gray-400">
+                <Text size="sm" className="text-typography-500">
                     {t(syncStatusMessage.headlineKey as any)}
                 </Text>
             ) : null}

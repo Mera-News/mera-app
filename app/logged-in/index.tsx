@@ -77,7 +77,7 @@ export default function LoggedInIndex() {
     // Show loading while checking session or route
     if (isSessionPending || isCheckingRoute) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center bg-background-0">
                 <MeraLogo size={96} />
             </Box>
         );
@@ -86,7 +86,7 @@ export default function LoggedInIndex() {
     // If a redirect was already initiated (including offline mode), show spinner while navigating
     if (shouldRedirect) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center bg-background-0">
                 <MeraLogo size={96} />
             </Box>
         );
@@ -99,7 +99,7 @@ export default function LoggedInIndex() {
 
     // Show spinner while redirecting
     return (
-        <Box className="flex-1 justify-center items-center bg-black">
+        <Box className="flex-1 justify-center items-center bg-background-0">
             <MeraLogo size={96} />
         </Box>
     );

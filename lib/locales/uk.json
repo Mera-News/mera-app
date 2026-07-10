@@ -395,6 +395,7 @@
     "manageSettings": "Керуйте налаштуваннями застосунку та обліковим записом",
     "notifications": "Сповіщення",
     "language": "Мова та переклад",
+    "appearance": "Зовнішній вигляд",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Політика конфіденційності",
     "termsOfService": "Умови надання послуг",
@@ -684,5 +685,13 @@
     "usageSection": "Використання",
     "usedToday": "Проаналізовано сьогодні",
     "viewPlans": "Переглянути тарифи"
+  },
+  "theme": {
+    "title": "Зовнішній вигляд",
+    "appTheme": "Тема застосунку",
+    "appThemeDescription": "Виберіть вигляд Mera або дотримуйтеся налаштувань пристрою.",
+    "light": "Світла",
+    "dark": "Темна",
+    "system": "Системна"
   }
 }

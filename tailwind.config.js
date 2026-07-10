@@ -130,8 +130,8 @@ module.exports = {
           900: 'rgb(var(--color-typography-900)/<alpha-value>)',
           950: 'rgb(var(--color-typography-950)/<alpha-value>)',
           white: '#FFFFFF',
-          gray: '#D4D4D4',
-          black: '#181718',
+          gray: '#B1ADA1',
+          black: '#1E1E24',
         },
         outline: {
           0: 'rgb(var(--color-outline-0)/<alpha-value>)',
@@ -165,8 +165,8 @@ module.exports = {
           muted: 'rgb(var(--color-background-muted)/<alpha-value>)',
           success: 'rgb(var(--color-background-success)/<alpha-value>)',
           info: 'rgb(var(--color-background-info)/<alpha-value>)',
-          light: '#FBFBFB',
-          dark: '#181719',
+          light: '#F4F3EE',
+          dark: '#1E1E24',
         },
         indicator: {
           primary: 'rgb(var(--color-indicator-primary)/<alpha-value>)',

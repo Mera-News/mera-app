@@ -15,6 +15,7 @@ import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import * as Updates from 'expo-updates';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -25,6 +26,7 @@ const RTL_CODES = new Set(['ar', 'he']);
 const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
+    const colors = useThemeColors();
 
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
@@ -59,23 +61,23 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
     };
 
     return (
-        <GluestackUIProvider mode="dark">
-            <Box className="flex-1 bg-black">
+        <GluestackUIProvider>
+            <Box className="flex-1 bg-background-0">
                 {/* Floating Back Button */}
                 {onBack && (
                     <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                         <Pressable
                             onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            className="bg-background-50 rounded-full p-3 shadow-hard-2"
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                         </Pressable>
                     </Box>
                 )}
 
                 {/* Header */}
                 <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">
+                    <Text className="text-xl font-semibold text-typography-950 text-center">
                         {t('language.title')}
                     </Text>
                 </VStack>
@@ -86,9 +88,9 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                         {/* App Language */}
                         <VStack space="md">
                             <HStack space="md" className="items-center">
-                                <MaterialIcons name="language" size={24} color="#a78bfa" />
+                                <MaterialIcons name="language" size={24} color={colors.primary} />
                                 <VStack className="flex-1">
-                                    <Text className="text-white text-lg font-semibold">
+                                    <Text className="text-typography-950 text-lg font-semibold">
                                         {t('language.appLanguage')}
                                     </Text>
                                     <Text className="text-typography-500 text-sm mt-0.5">
@@ -99,17 +101,17 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
 
                             <Pressable
                                 onPress={() => setShowLangPicker(true)}
-                                className="flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg"
+                                className="flex-row items-center justify-between py-4 px-4 border border-outline-100 rounded-lg"
                             >
                                 <VStack>
-                                    <Text className="text-white text-base font-medium">
+                                    <Text className="text-typography-950 text-base font-medium">
                                         {selectedLanguage?.name ?? 'English'}
                                     </Text>
-                                    <Text className="text-gray-400 text-sm">
+                                    <Text className="text-typography-500 text-sm">
                                         {selectedLanguage?.native ?? 'English'}
                                     </Text>
                                 </VStack>
-                                <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                                <MaterialIcons name="chevron-right" size={20} color={colors.iconMuted} />
                             </Pressable>
 
                             {Platform.OS === 'ios' && (
@@ -119,10 +121,10 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                     </Text>
                                     <Pressable
                                         onPress={handleWatchGuide}
-                                        className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                                        className="flex-row items-center py-3 px-4 bg-background-100 rounded-lg border border-outline-100"
                                     >
-                                        <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
-                                        <Text className="text-violet-400 text-sm font-medium flex-1">
+                                        <MaterialIcons name="play-circle-filled" size={20} color={colors.primary} style={{ marginRight: 8 }} />
+                                        <Text className="text-primary-400 text-sm font-medium flex-1">
                                             {t('language.watchGuide')}
                                         </Text>
                                     </Pressable>
@@ -130,15 +132,15 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                             )}
                         </VStack>
 
-                        <Box className="border-b border-gray-800" />
+                        <Box className="border-b border-outline-50" />
 
                         {/* Show Original Toggle */}
                         <VStack space="md">
                             <HStack space="md" className="items-center justify-between">
                                 <HStack space="md" className="items-center flex-1">
-                                    <MaterialIcons name="translate" size={24} color="#10b981" />
+                                    <MaterialIcons name="translate" size={24} color={colors.success} />
                                     <VStack className="flex-1">
-                                        <Text className="text-white text-lg font-semibold">
+                                        <Text className="text-typography-950 text-lg font-semibold">
                                             {t('language.showOriginal')}
                                         </Text>
                                         <Text className="text-typography-500 text-sm mt-0.5">
@@ -154,28 +156,28 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                             </HStack>
                         </VStack>
 
-                        <Box className="border-b border-gray-800" />
+                        <Box className="border-b border-outline-50" />
 
                         {/* Language Packs */}
                         <VStack space="md" style={{ paddingBottom: insets.bottom + 32 }}>
                             <HStack space="md" className="items-center">
-                                <MaterialIcons name="cloud-download" size={24} color="#f59e0b" />
-                                <Text className="text-white text-lg font-semibold">
+                                <MaterialIcons name="cloud-download" size={24} color={colors.warning} />
+                                <Text className="text-typography-950 text-lg font-semibold">
                                     {t('language.languagePacks')}
                                 </Text>
                             </HStack>
 
                             <Pressable
                                 onPress={handleWatchGuide}
-                                className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                                className="flex-row items-center py-3 px-4 bg-background-100 rounded-lg border border-outline-100"
                             >
-                                <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
-                                <Text className="text-violet-400 text-sm font-medium flex-1">
+                                <MaterialIcons name="play-circle-filled" size={20} color={colors.primary} style={{ marginRight: 8 }} />
+                                <Text className="text-primary-400 text-sm font-medium flex-1">
                                     Watch translation guide
                                 </Text>
                             </Pressable>
 
-                            <Box className="p-4 bg-gray-800 rounded-lg border border-background-700">
+                            <Box className="p-4 bg-background-100 rounded-lg border border-background-700">
                                 {Platform.OS === 'ios' ? (
                                     <VStack space="sm">
                                         <Text className="text-typography-400 text-sm leading-5">
@@ -183,17 +185,17 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                         </Text>
                                         <Text className="text-typography-400 text-sm leading-5">
                                             To manage downloaded languages, go to{' '}
-                                            <Text className="text-white text-sm font-medium">
+                                            <Text className="text-typography-950 text-sm font-medium">
                                                 {t('language.languagePacksIosPath')}
                                             </Text>
                                             .
                                         </Text>
                                         <Pressable
                                             onPress={() => Linking.openURL('App-Prefs:General')}
-                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-gray-700 rounded-lg"
+                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-background-200 rounded-lg"
                                         >
-                                            <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
-                                            <Text className="text-violet-400 text-sm font-medium">
+                                            <MaterialIcons name="open-in-new" size={16} color={colors.primary} style={{ marginRight: 8 }} />
+                                            <Text className="text-primary-400 text-sm font-medium">
                                                 {t('language.openLanguageSettings')}
                                             </Text>
                                         </Pressable>
@@ -205,10 +207,10 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                         </Text>
                                         <Pressable
                                             onPress={() => Linking.sendIntent('android.settings.LOCALE_SETTINGS')}
-                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-gray-700 rounded-lg"
+                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-background-200 rounded-lg"
                                         >
-                                            <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
-                                            <Text className="text-violet-400 text-sm font-medium">
+                                            <MaterialIcons name="open-in-new" size={16} color={colors.primary} style={{ marginRight: 8 }} />
+                                            <Text className="text-primary-400 text-sm font-medium">
                                                 {t('language.openLanguageSettings')}
                                             </Text>
                                         </Pressable>
@@ -229,14 +231,14 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowLangPicker(false)}
             >
-                <GluestackUIProvider mode="dark">
-                    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                <GluestackUIProvider>
+                    <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top + 16 }}>
                         <HStack className="items-center justify-between px-5 pb-4">
-                            <Text className="text-white text-xl font-semibold">
+                            <Text className="text-typography-950 text-xl font-semibold">
                                 {t('language.appLanguage')}
                             </Text>
                             <Pressable onPress={() => setShowLangPicker(false)}>
-                                <MaterialIcons name="close" size={24} color="#ffffff" />
+                                <MaterialIcons name="close" size={24} color={colors.icon} />
                             </Pressable>
                         </HStack>
                         <FlatList
@@ -254,21 +256,21 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                             paddingVertical: 14,
                                             paddingHorizontal: 20,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#1f2937',
+                                            borderBottomColor: colors.border,
                                         }}
                                     >
                                         <VStack>
                                             <Text
-                                                className={isSelected ? 'text-violet-400 font-semibold' : 'text-white'}
+                                                className={isSelected ? 'text-primary-400 font-semibold' : 'text-typography-950'}
                                             >
                                                 {item.name}
                                             </Text>
-                                            <Text className="text-gray-400 text-sm">
+                                            <Text className="text-typography-500 text-sm">
                                                 {item.native}
                                             </Text>
                                         </VStack>
                                         {isSelected && (
-                                            <MaterialIcons name="check" size={20} color="#a78bfa" />
+                                            <MaterialIcons name="check" size={20} color={colors.primary} />
                                         )}
                                     </TouchableOpacity>
                                 );

@@ -9,6 +9,7 @@ import { VStack } from '@/components/ui/vstack';
 import { clearAuthStorage, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { clearAllStores } from '@/lib/stores';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -42,6 +43,7 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const toast = useToast();
+    const colors = useThemeColors();
 
     const [isRetrying, setIsRetrying] = useState(false);
     const [isSwitching, setIsSwitching] = useState(false);
@@ -106,25 +108,25 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                 </Box>
 
                 <VStack space="lg" className="mb-8">
-                    <Text className="text-white text-2xl font-semibold text-center">
+                    <Text className="text-typography-950 text-2xl font-semibold text-center">
                         {t('auth.previousUser.title')}
                     </Text>
-                    <Text className="text-gray-300 text-base text-center">
+                    <Text className="text-typography-700 text-base text-center">
                         {t('auth.previousUser.subtitle')}
                     </Text>
 
                     <Box className="items-center">
                         <HStack
                             space="sm"
-                            className="items-center bg-gray-800 rounded-full px-4 py-2"
+                            className="items-center bg-background-100 rounded-full px-4 py-2"
                         >
-                            <MaterialIcons name="account-circle" size={20} color="#a3a3a3" />
-                            <Text className="text-gray-100 text-sm">{email}</Text>
+                            <MaterialIcons name="account-circle" size={20} color={colors.iconMuted} />
+                            <Text className="text-typography-900 text-sm">{email}</Text>
                         </HStack>
                     </Box>
 
                     {retryError ? (
-                        <Text className="text-red-400 text-sm text-center">
+                        <Text className="text-error-500 text-sm text-center">
                             {retryError}
                         </Text>
                     ) : null}
@@ -160,7 +162,7 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                     </VStack>
                 ) : (
                     <VStack space="md">
-                        <Text className="text-red-400 text-sm leading-relaxed text-center">
+                        <Text className="text-error-500 text-sm leading-relaxed text-center">
                             {t('auth.previousUser.switchBody')}
                         </Text>
                         <Button

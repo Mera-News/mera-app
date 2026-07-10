@@ -6,6 +6,7 @@ import { BackHandler, View } from 'react-native';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 
@@ -17,6 +18,7 @@ import { openInAppBrowser } from '@/lib/web-browser-utils';
  */
 export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | null }) {
   const { t } = useTranslation();
+  const colors = useThemeColors();
 
   // Swallow the Android hardware back button so the user can't escape the gate.
   useEffect(() => {
@@ -35,21 +37,21 @@ export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | nul
   };
 
   return (
-    <View className="flex-1 bg-black items-center justify-center px-8">
-      <MaterialIcons name="system-update" size={64} color="#FFFFFF" />
-      <Text className="text-white text-2xl font-bold mt-6 text-center">
+    <View className="flex-1 bg-background-0 items-center justify-center px-8">
+      <MaterialIcons name="system-update" size={64} color={colors.icon} />
+      <Text className="text-typography-950 text-2xl font-bold mt-6 text-center">
         {t('nativeUpdate.updateRequiredTitle')}
       </Text>
-      <Text className="text-gray-400 text-base mt-3 text-center">
+      <Text className="text-typography-500 text-base mt-3 text-center">
         {t('nativeUpdate.updateRequiredBody')}
       </Text>
       <Button
         onPress={onUpdate}
         isDisabled={!storeUrl}
-        className="mt-8 bg-white rounded-full px-8"
+        className="mt-8 bg-typography-950 rounded-full px-8"
         size="lg"
       >
-        <ButtonText className="text-black">{t('nativeUpdate.updateCta')}</ButtonText>
+        <ButtonText className="text-background-0">{t('nativeUpdate.updateCta')}</ButtonText>
       </Button>
     </View>
   );

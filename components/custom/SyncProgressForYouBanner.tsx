@@ -11,6 +11,7 @@ import {
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 const HEADLINE_CYCLE_MS = 5000;
 
 function IndeterminateBar() {
+    const colors = useThemeColors();
     const translateX = useRef(new RNAnimated.Value(-1)).current;
     useEffect(() => {
         const anim = RNAnimated.loop(
@@ -41,7 +43,7 @@ function IndeterminateBar() {
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    backgroundColor: '#f97316',
+                    backgroundColor: colors.primary,
                     opacity: 0.7,
                     transform: [
                         {
@@ -139,13 +141,14 @@ export default function SyncProgressForYouBanner() {
 
 function ScoringErrorContent({ kind }: { kind: keyof typeof SCORING_ERROR_I18N_KEYS }) {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const keys = SCORING_ERROR_I18N_KEYS[kind];
     return (
         <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
             <HStack className="items-start" space="sm">
-                <MaterialIcons name="error-outline" size={16} color="#F87171" style={{ marginTop: 1 }} />
+                <MaterialIcons name="error-outline" size={16} color={colors.error} style={{ marginTop: 1 }} />
                 <VStack className="flex-1" space="xs">
-                    <Text size="sm" className="font-semibold text-red-400">
+                    <Text size="sm" className="font-semibold text-error-500">
                         {t(keys.title)}
                     </Text>
                     <Text size="xs" className="text-typography-400 leading-4">
@@ -177,6 +180,7 @@ function Stage23Content({
     deviceTotalCount,
 }: Stage23ContentProps) {
     const { t } = useTranslation();
+    const colors = useThemeColors();
 
     const stage =
         asyncJobPhase === 'reasons' ? 'reasons'
@@ -230,7 +234,7 @@ function Stage23Content({
     return (
         <VStack space="xs">
             <HStack className="items-center justify-between">
-                <Text size="sm" className="font-semibold text-white">
+                <Text size="sm" className="font-semibold text-typography-950">
                     {title}
                 </Text>
                 {totalCount > 0 && (
@@ -240,12 +244,12 @@ function Stage23Content({
                 )}
             </HStack>
 
-            <View style={{ height: 3, backgroundColor: '#1f2937', borderRadius: 2, overflow: 'hidden' }}>
+            <View style={{ height: 3, backgroundColor: colors.surface, borderRadius: 2, overflow: 'hidden' }}>
                 {totalCount > 0 ? (
                     <RNAnimated.View
                         style={{
                             height: '100%',
-                            backgroundColor: '#f97316',
+                            backgroundColor: colors.primary,
                             borderRadius: 2,
                             width: progressAnim.interpolate({
                                 inputRange: [0, 1],
@@ -275,6 +279,7 @@ function Stage23Content({
 
 function Stage1Content() {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const tAny = t as any;
     const headlines = tAny('feed.processing.stages.fetching.headlines', {
         returnObjects: true,
@@ -296,7 +301,7 @@ function Stage1Content() {
 
     return (
         <VStack space="xs">
-            <View style={{ height: 3, backgroundColor: '#1f2937', borderRadius: 2, overflow: 'hidden' }}>
+            <View style={{ height: 3, backgroundColor: colors.surface, borderRadius: 2, overflow: 'hidden' }}>
                 <IndeterminateBar />
             </View>
             {headline ? (

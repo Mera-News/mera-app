@@ -1,3 +1,4 @@
+import { useThemeColors } from '@/lib/theme/tokens';
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
@@ -14,7 +15,9 @@ interface AnimatedDotsProps {
     size?: number;
 }
 
-const AnimatedDots: React.FC<AnimatedDotsProps> = ({ color = '#FFFFFF', size = 4 }) => {
+const AnimatedDots: React.FC<AnimatedDotsProps> = ({ color, size = 4 }) => {
+    const colors = useThemeColors();
+    const dotColor = color ?? colors.icon;
     const dot1 = useSharedValue(1);
     const dot2 = useSharedValue(1);
     const dot3 = useSharedValue(1);
@@ -41,7 +44,7 @@ const AnimatedDots: React.FC<AnimatedDotsProps> = ({ color = '#FFFFFF', size = 4
     const dot2Style = useAnimatedStyle(() => ({ transform: [{ scale: dot2.value }] }));
     const dot3Style = useAnimatedStyle(() => ({ transform: [{ scale: dot3.value }] }));
 
-    const dotStyle = { width: size, height: size, borderRadius: size / 2, backgroundColor: color };
+    const dotStyle = { width: size, height: size, borderRadius: size / 2, backgroundColor: dotColor };
 
     return (
         <View style={styles.row}>

@@ -20,6 +20,19 @@ export function hydrateAllStores(): Promise<void> {
   const { useAppLanguageStore } = require('../stores/app-language-store');
   const { useAppStateStore } = require('../stores/app-state-store');
   const { useForYouPrefsStore } = require('../stores/for-you-prefs-store');
+  const { useThemeStore } = require('../stores/theme-store');
+
+  // Paint-critical: theme preference must land as early as possible so a
+  // light-theme user sees at most a brief dark flash (default is 'dark').
+  // Not awaited (first-paint design).
+  useThemeStore
+    .getState()
+    .hydrateFromDb()
+    .catch((err: unknown) => {
+      logger.captureException(err, {
+        tags: { module: 'hydrate-stores', step: 'theme-hydrate' },
+      });
+    });
 
   // Paint-critical: load cached article_suggestions and push them to the
   // store first. No metadata, no expired-cleanup, no other-store gating.

@@ -2,11 +2,13 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import PublisherArticleList from '@/components/custom/config-panel/PublisherArticleList';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PublisherArticles() {
+    const colors = useThemeColors();
     const params = useLocalSearchParams<{
         publisherId: string;
         publisherName: string;
@@ -18,8 +20,8 @@ export default function PublisherArticles() {
     }
 
     return (
-        <GluestackUIProvider mode="dark">
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+        <GluestackUIProvider>
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <PublisherArticleList
                         publisherId={params.publisherId}

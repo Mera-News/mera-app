@@ -1,6 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { useThemeColors } from '@/lib/theme/tokens';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     FlatList,
@@ -45,7 +46,9 @@ interface RowProps {
     onPress: () => void;
 }
 
-const Row: React.FC<RowProps> = React.memo(({ label, isSelected, isDisabled, onPress }) => (
+const Row: React.FC<RowProps> = React.memo(({ label, isSelected, isDisabled, onPress }) => {
+    const colors = useThemeColors();
+    return (
     <View style={{ height: ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' }}>
         <Pressable
             onPress={onPress}
@@ -61,21 +64,22 @@ const Row: React.FC<RowProps> = React.memo(({ label, isSelected, isDisabled, onP
                 justifyContent: 'center',
                 backgroundColor: 'transparent',
                 borderWidth: isSelected ? 1.5 : 0,
-                borderColor: '#d97706',
+                borderColor: colors.primary,
             }}
         >
             <Text
                 style={{
                     fontSize: 11,
                     fontWeight: isSelected ? '700' : '500',
-                    color: isSelected ? '#d97706' : '#ffffff',
+                    color: isSelected ? colors.primary : colors.icon,
                 }}
             >
                 {label}
             </Text>
         </Pressable>
     </View>
-));
+    );
+});
 Row.displayName = 'Row';
 
 const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({

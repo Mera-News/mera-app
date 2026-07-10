@@ -38,6 +38,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 type ModelConfig = {
     modelId: string;
@@ -84,6 +85,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onModeChange,
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [isLoading, setIsLoading] = useState(!isOnboarding);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
@@ -451,14 +453,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         switch (modelState) {
             case 'ready':
             case 'downloaded':
-                return '#10b981';
+                return colors.success;
             case 'downloading':
             case 'loading':
-                return '#f59e0b';
+                return colors.warning;
             case 'error':
-                return '#ef4444';
+                return colors.error;
             default:
-                return '#9ca3af';
+                return colors.iconMuted;
         }
     };
 
@@ -474,11 +476,11 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
         const baseClass = 'flex-1 rounded-lg px-4 py-3 border ';
         const stateClass = selected
-            ? 'border-emerald-500 bg-emerald-950'
-            : 'border-gray-700 bg-background-900';
+            ? 'border-success-500 bg-background-success'
+            : 'border-outline-100 bg-background-900';
 
-        const iconColor = selected ? '#34d399' : '#9ca3af';
-        const titleClass = selected ? 'text-emerald-400' : 'text-white';
+        const iconColor = selected ? colors.success : colors.iconMuted;
+        const titleClass = selected ? 'text-success-500' : 'text-typography-950';
 
         return (
             <Pressable
@@ -505,7 +507,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Header text for onboarding */}
             {isOnboarding && (
                 <VStack className="mb-8 px-5">
-                    <Text className="text-3xl font-bold text-white text-center mb-3">
+                    <Text className="text-3xl font-bold text-typography-950 text-center mb-3">
                         {t('meraProtocol.title')}
                     </Text>
                 </VStack>
@@ -514,7 +516,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Processing Mode Segmented Control */}
             <Box className="px-5 mb-6">
                 <HStack className="items-center justify-between mb-3">
-                    <Text className="text-white text-lg font-semibold">
+                    <Text className="text-typography-950 text-lg font-semibold">
                         {t('meraProtocol.processingModeTitle')}
                     </Text>
                     {isUpdatingMode && <Spinner size="small" />}
@@ -530,17 +532,17 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 whole concept is implementation detail the user shouldn't see. */}
             {onDeviceIntent && deviceSupported === true && (
                 <>
-                    <Box className="mx-5 mb-6 border-b border-gray-800" />
+                    <Box className="mx-5 mb-6 border-b border-outline-50" />
 
                     <Box className="px-5 mb-6">
                         <HStack className="items-center justify-between mb-1">
-                            <Text className="text-white text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
+                            <Text className="text-typography-950 text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
                             {(modelState === 'downloaded' || modelState === 'ready') && (
                                 <Pressable
                                     onPress={handleDeleteModel}
-                                    className="bg-red-950 rounded-full p-2"
+                                    className="bg-background-error rounded-full p-2"
                                 >
-                                    <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
+                                    <MaterialIcons name="delete-outline" size={20} color={colors.error} />
                                 </Pressable>
                             )}
                         </HStack>
@@ -587,8 +589,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     size="md"
                                     onPress={cancelModelDownload}
                                 >
-                                    <MaterialIcons name="close" size={18} color="#ef4444" style={{ marginRight: 8 }} />
-                                    <ButtonText className="text-red-400">{t('meraProtocol.cancelDownload')}</ButtonText>
+                                    <MaterialIcons name="close" size={18} color={colors.error} style={{ marginRight: 8 }} />
+                                    <ButtonText className="text-error-500">{t('meraProtocol.cancelDownload')}</ButtonText>
                                 </Button>
                             )}
 
@@ -613,8 +615,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     onPress={() => setShowUpdateModelConfirm(true)}
                                     isDisabled={isUpdatingModel}
                                 >
-                                    <MaterialIcons name="system-update" size={18} color="#a78bfa" style={{ marginRight: 8 }} />
-                                    <ButtonText className="text-purple-400">
+                                    <MaterialIcons name="system-update" size={18} color={colors.primary} style={{ marginRight: 8 }} />
+                                    <ButtonText className="text-primary-400">
                                         {isUpdatingModel ? t('common.updating') : t('meraProtocol.updateTo', { modelName: LATEST_MODEL.label })}
                                     </ButtonText>
                                 </Button>
@@ -631,10 +633,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         <MaterialIcons
                             name="history"
                             size={24}
-                            color={useLegacyPersonaUpdate ? "#10b981" : "#9ca3af"}
+                            color={useLegacyPersonaUpdate ? colors.success : colors.iconMuted}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-white text-base font-semibold">
+                            <Text className="text-typography-950 text-base font-semibold">
                                 Use Legacy persona update logic
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -674,27 +676,27 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 them via the Cloud TEE LLM regardless of device specs. */}
             {onDeviceIntent && requirementsResult && requirementsResult.supported === false && (
                 <Box className="px-5 mb-6">
-                    <Box className="p-4 rounded-lg border bg-red-950 border-red-800">
+                    <Box className="p-4 rounded-lg border bg-background-error border-error-500">
                         <Pressable onPress={() => setShowRequirements(prev => !prev)}>
                             <HStack space="md" className="items-start">
                                 <MaterialIcons
                                     name="warning"
                                     size={24}
-                                    color="#ef4444"
+                                    color={colors.error}
                                     style={{ marginTop: 2 }}
                                 />
                                 <VStack className="flex-1">
-                                    <Text className="text-base font-semibold mb-1 text-red-400">
+                                    <Text className="text-base font-semibold mb-1 text-error-500">
                                         {t('meraProtocol.deviceNotSupported')}
                                     </Text>
-                                    <Text className="text-sm leading-5 text-red-300">
+                                    <Text className="text-sm leading-5 text-error-400">
                                         {t('meraProtocol.deviceNotSupportedDescription')}
                                     </Text>
                                 </VStack>
                                 <MaterialIcons
                                     name={showRequirements ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
                                     size={24}
-                                    color="#ef4444"
+                                    color={colors.error}
                                     style={{ marginTop: 2 }}
                                 />
                             </HStack>
@@ -702,12 +704,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
                         {/* System Requirements (accordion) */}
                         {showRequirements && (
-                            <VStack space="sm" className="mt-4 pt-4 border-t" style={{ borderTopColor: '#7f1d1d' }}>
+                            <VStack space="sm" className="mt-4 pt-4 border-t" style={{ borderTopColor: colors.border }}>
                                 <HStack space="sm" className="items-center">
                                     <MaterialIcons
                                         name={requirementsResult.failedCheck === 'ram' ? 'cancel' : 'check-circle'}
                                         size={16}
-                                        color={requirementsResult.failedCheck === 'ram' ? '#ef4444' : '#10b981'}
+                                        color={requirementsResult.failedCheck === 'ram' ? colors.error : colors.success}
                                     />
                                     <Text className="text-typography-400 text-sm">
                                         {t('meraProtocol.ramLabel')}{requirementsResult.deviceInfo.ramGB != null ? ` (yours: ${requirementsResult.deviceInfo.ramGB}GB)` : ''}
@@ -717,7 +719,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     <MaterialIcons
                                         name={requirementsResult.failedCheck === 'os_version' ? 'cancel' : 'check-circle'}
                                         size={16}
-                                        color={requirementsResult.failedCheck === 'os_version' ? '#ef4444' : '#10b981'}
+                                        color={requirementsResult.failedCheck === 'os_version' ? colors.error : colors.success}
                                     />
                                     <Text className="text-typography-400 text-sm">
                                         {Platform.OS === 'ios' ? t('meraProtocol.iosVersion') : t('meraProtocol.androidVersion')}{requirementsResult.deviceInfo.osVersion ? ` (yours: ${requirementsResult.deviceInfo.osVersion})` : ''}
@@ -728,7 +730,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                         <MaterialIcons
                                             name={requirementsResult.failedCheck === 'chip' ? 'cancel' : 'check-circle'}
                                             size={16}
-                                            color={requirementsResult.failedCheck === 'chip' ? '#ef4444' : '#10b981'}
+                                            color={requirementsResult.failedCheck === 'chip' ? colors.error : colors.success}
                                         />
                                         <Text className="text-typography-400 text-sm">{t('meraProtocol.chipLabel')}</Text>
                                     </HStack>
@@ -737,7 +739,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     <MaterialIcons
                                         name={requirementsResult.failedCheck === 'storage' ? 'cancel' : 'check-circle'}
                                         size={16}
-                                        color={requirementsResult.failedCheck === 'storage' ? '#ef4444' : '#10b981'}
+                                        color={requirementsResult.failedCheck === 'storage' ? colors.error : colors.success}
                                     />
                                     <Text className="text-typography-400 text-sm">
                                         {t('meraProtocol.storageLabel')}{requirementsResult.deviceInfo.freeStorageGB != null ? ` (yours: ${requirementsResult.deviceInfo.freeStorageGB}GB free)` : ''}
@@ -753,15 +755,15 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             <Modal isOpen={showDeleteModelConfirm} onClose={() => setShowDeleteModelConfirm(false)} size="sm">
                 <ModalBackdrop />
                 <ModalContent>
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-red-400">{t('meraProtocol.deleteTitle')}</Text>
+                    <ModalHeader className="border-outline-100 pb-4">
+                        <Text className="text-xl font-semibold text-error-500">{t('meraProtocol.deleteTitle')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed">
+                        <Text className="text-typography-700 text-base leading-relaxed">
                             {t('meraProtocol.deleteDescription')}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 action="negative"
@@ -790,15 +792,15 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             <Modal isOpen={showUpdateModelConfirm} onClose={() => setShowUpdateModelConfirm(false)} size="sm">
                 <ModalBackdrop />
                 <ModalContent>
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-purple-400">{t('meraProtocol.updateTitle')}</Text>
+                    <ModalHeader className="border-outline-100 pb-4">
+                        <Text className="text-xl font-semibold text-primary-400">{t('meraProtocol.updateTitle')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed">
+                        <Text className="text-typography-700 text-base leading-relaxed">
                             {t('meraProtocol.updateDescription', { current: currentModel.label, new: LATEST_MODEL.label })}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 action="primary"
@@ -835,20 +837,20 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             );
         }
         return (
-            <GluestackUIProvider mode="dark">
-                <Box className="flex-1 bg-black">
+            <GluestackUIProvider>
+                <Box className="flex-1 bg-background-0">
                     {onBack && (
                         <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                             <Pressable
                                 onPress={onBack}
-                                className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                                className="bg-background-50 rounded-full p-3 shadow-hard-2"
                             >
-                                <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                                <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                             </Pressable>
                         </Box>
                     )}
                     <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                        <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
+                        <Text className="text-xl font-semibold text-typography-950 text-center">{t('meraProtocol.title')}</Text>
                     </VStack>
                     <VStack className="flex-1 justify-center items-center">
                         <Spinner size="large" />
@@ -874,21 +876,21 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     void isOnDevice;
 
     return (
-        <GluestackUIProvider mode="dark">
-            <Box className="flex-1 bg-black">
+        <GluestackUIProvider>
+            <Box className="flex-1 bg-background-0">
                 {onBack && (
                     <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                         <Pressable
                             onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            className="bg-background-50 rounded-full p-3 shadow-hard-2"
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                         </Pressable>
                     </Box>
                 )}
 
                 <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
+                    <Text className="text-xl font-semibold text-typography-950 text-center">{t('meraProtocol.title')}</Text>
                 </VStack>
 
                 <ScrollView className="flex-1 pt-1">

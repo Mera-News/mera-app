@@ -15,9 +15,9 @@ const PolicyPill: React.FC<PolicyPillProps> = ({ label, onPress }) => (
     <Pressable
         onPress={onPress}
         hitSlop={6}
-        className="px-4 py-2 rounded-full border border-gray-700"
+        className="px-4 py-2 rounded-full border border-outline-100"
     >
-        <Text size="xs" className="text-gray-400">
+        <Text size="xs" className="text-typography-500">
             {label}
         </Text>
     </Pressable>

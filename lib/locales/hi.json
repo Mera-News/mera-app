@@ -395,6 +395,7 @@
     "manageSettings": "अपनी ऐप सेटिंग्स और खाता प्रबंधित करें",
     "notifications": "नोटिफिकेशन",
     "language": "भाषा और अनुवाद",
+    "appearance": "दिखावट",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "गोपनीयता नीति",
     "termsOfService": "सेवा की शर्तें",
@@ -684,5 +685,13 @@
     "usageSection": "उपयोग",
     "usedToday": "आज विश्लेषित",
     "viewPlans": "प्लान देखें"
+  },
+  "theme": {
+    "title": "दिखावट",
+    "appTheme": "ऐप थीम",
+    "appThemeDescription": "चुनें कि Mera कैसा दिखे, या अपने डिवाइस की सेटिंग का पालन करें।",
+    "light": "लाइट",
+    "dark": "डार्क",
+    "system": "सिस्टम"
   }
 }

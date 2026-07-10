@@ -5,6 +5,7 @@ import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { NewsCluster } from '@/lib/generated/graphql-types';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 
@@ -21,6 +22,7 @@ export const CompactClusterCard: React.FC<CompactClusterCardProps> = ({
     timestamp,
     isNew = false
 }) => {
+    const colors = useThemeColors();
     const firstArticle = cluster.articles?.articles?.[0];
     const clusterImageUrl = firstArticle?.image_url;
 
@@ -93,7 +95,7 @@ export const CompactClusterCard: React.FC<CompactClusterCardProps> = ({
                                     <MaterialIcons
                                         name="schedule"
                                         size={12}
-                                        color="#6B7280"
+                                        color={colors.iconMuted}
                                     />
                                     <Text size="xs" className="text-typography-600 ml-1">
                                         {formatTimestamp(timestamp || cluster.createdAt)}

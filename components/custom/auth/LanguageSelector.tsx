@@ -14,6 +14,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { SUPPORTED_LANGUAGES, translateText } from '@/lib/translation-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 const RTL_CODES = new Set(['ar', 'he']);
 
@@ -45,15 +46,17 @@ const TICKER_WIDTH = 120;
 const SLIDE_DURATION_MS = 700;
 const AUTOPLAY_INTERVAL_MS = 1400;
 
-const renderTickerItem = ({ item }: { item: string }) => (
-    <View style={styles.tickerItem}>
-        <Text style={styles.tickerText}>{item}</Text>
-    </View>
-);
-
 const LanguageSelector: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
+
+    const renderTickerItem = ({ item }: { item: string }) => (
+        <View style={styles.tickerItem}>
+            <Text style={[styles.tickerText, { color: colors.icon }]}>{item}</Text>
+        </View>
+    );
+
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
     const [showPicker, setShowPicker] = useState(false);
@@ -132,39 +135,42 @@ const LanguageSelector: React.FC = () => {
                 </View>
 
                 {/* Language selector with glow */}
-                <Pressable onPress={handleOpenPicker} style={styles.selectorButton}>
+                <Pressable
+                    onPress={handleOpenPicker}
+                    style={[styles.selectorButton, { borderColor: colors.primary, shadowColor: colors.primary }]}
+                >
                     <HStack className="items-center" space="xs">
-                        <Text className="text-white text-lg">
+                        <Text className="text-typography-950 text-lg">
                             {selectedLanguage?.native ?? 'English'}
                         </Text>
-                        <MaterialIcons name="expand-more" size={22} color="rgb(237, 167, 126)" />
+                        <MaterialIcons name="expand-more" size={22} color={colors.primary} />
                     </HStack>
                 </Pressable>
             </HStack>
 
             {packMissing && (
-                <Box className="mx-5 mt-4 px-4 py-3 rounded-lg bg-red-900/30 border border-red-800/50">
+                <Box className="mx-5 mt-4 px-4 py-3 rounded-lg bg-error-900/30 border border-error-800/50">
                     <HStack space="sm" className="items-start">
                         <MaterialIcons
                             name="error-outline"
                             size={18}
-                            color="#fca5a5"
+                            color={colors.error}
                             style={{ marginTop: 2 }}
                         />
                         <VStack space="xs" className="flex-1">
-                            <Text className="text-red-300 text-sm">
+                            <Text className="text-error-500 text-sm">
                                 {t('language.packMissingBanner')}
                             </Text>
                             {Platform.OS === 'ios' && (
-                                <Text className="text-red-200 text-sm">
+                                <Text className="text-error-500 text-sm">
                                     {t('language.packMissingIosPath')}
                                 </Text>
                             )}
                             <Pressable
                                 onPress={handleRetry}
-                                className="self-start mt-1 px-3 py-1.5 rounded-md bg-red-800/50 border border-red-700"
+                                className="self-start mt-1 px-3 py-1.5 rounded-md bg-error-800/50 border border-error-700"
                             >
-                                <Text className="text-red-100 text-sm font-semibold">
+                                <Text className="text-error-500 text-sm font-semibold">
                                     {t('language.retry')}
                                 </Text>
                             </Pressable>
@@ -180,14 +186,14 @@ const LanguageSelector: React.FC = () => {
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowPicker(false)}
             >
-                <GluestackUIProvider mode="dark">
-                    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                <GluestackUIProvider>
+                    <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top + 16 }}>
                         <HStack className="items-center justify-between px-5 pb-4">
-                            <Text className="text-white text-xl font-semibold">
+                            <Text className="text-typography-950 text-xl font-semibold">
                                 {t('language.appLanguage')}
                             </Text>
                             <Pressable onPress={() => setShowPicker(false)}>
-                                <MaterialIcons name="close" size={24} color="#ffffff" />
+                                <MaterialIcons name="close" size={24} color={colors.icon} />
                             </Pressable>
                         </HStack>
                         <FlatList
@@ -205,20 +211,20 @@ const LanguageSelector: React.FC = () => {
                                             paddingVertical: 14,
                                             paddingHorizontal: 20,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#1f2937',
+                                            borderBottomColor: colors.border,
                                         }}
                                     >
                                         <VStack>
                                             <Text
                                                 className={
                                                     isSelected
-                                                        ? 'text-violet-400 font-semibold'
-                                                        : 'text-white'
+                                                        ? 'text-primary-400 font-semibold'
+                                                        : 'text-typography-950'
                                                 }
                                             >
                                                 {item.name}
                                             </Text>
-                                            <Text className="text-gray-400 text-sm">
+                                            <Text className="text-typography-500 text-sm">
                                                 {item.native}
                                             </Text>
                                         </VStack>
@@ -226,7 +232,7 @@ const LanguageSelector: React.FC = () => {
                                             <MaterialIcons
                                                 name="check"
                                                 size={20}
-                                                color="#a78bfa"
+                                                color={colors.primary}
                                             />
                                         )}
                                     </TouchableOpacity>

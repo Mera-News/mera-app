@@ -29,6 +29,7 @@ import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
@@ -57,6 +58,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const toast = useToast();
     const storeSuggestion = useForYouStore((s) =>
         s.suggestions.find((sg) => sg._id === articleSuggestionId),
@@ -227,7 +229,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-black items-center justify-center">
+            <Box className="flex-1 bg-background-0 items-center justify-center">
                 <Spinner size="large" />
             </Box>
         );
@@ -240,13 +242,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             useForYouStore.getState().removeSuggestion(articleSuggestionId);
         }
         return (
-            <Box className="flex-1 bg-black items-center justify-center p-5">
-                <MaterialIcons name="error-outline" size={48} color="#EF4444" />
-                <Text size="lg" className="text-white mt-4 text-center">
+            <Box className="flex-1 bg-background-0 items-center justify-center p-5">
+                <MaterialIcons name="error-outline" size={48} color={colors.error} />
+                <Text size="lg" className="text-typography-950 mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                <Pressable onPress={onBack} className="mt-6 bg-background-100 rounded-lg px-6 py-3">
+                    <Text size="md" className="text-typography-950">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -276,14 +278,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     } as NewsArticle);
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-0">
             {/* Floating Back Button */}
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                    className="bg-background-50 rounded-full p-3 shadow-hard-2"
                 >
-                    <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                    <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                 </Pressable>
             </Box>
 
@@ -313,8 +315,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                             action="primary"
                                             onPress={() => handleArticleUrlPress(suggestion.article_url)}
                                         >
-                                            <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                            <ButtonText className="text-white ml-2">
+                                            <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color={colors.icon} />} />
+                                            <ButtonText className="text-typography-950 ml-2">
                                                 {suggestion.publication_name
                                                     ? t('articleDetail.readOn', { publication: suggestion.publication_name })
                                                     : t('articleDetail.readArticle')}
@@ -327,12 +329,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                             hitSlop={12}
                                             accessibilityRole="button"
                                             accessibilityLabel={t('savedSuggestions.savedToastTitle')}
-                                            className="bg-gray-900 rounded-full p-2.5 shadow-hard-2"
+                                            className="bg-background-50 rounded-full p-2.5 shadow-hard-2"
                                         >
                                             <MaterialIcons
                                                 name={isSaved ? 'bookmark' : 'bookmark-border'}
                                                 size={24}
-                                                color="#ffffff"
+                                                color={colors.icon}
                                             />
                                         </Pressable>
                                     </Box>
@@ -352,12 +354,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                             <MaterialIcons
                                                 name="translate"
                                                 size={14}
-                                                color={translatable ? '#86EFAC' : '#FCA5A5'}
+                                                color={translatable ? colors.success : colors.error}
                                             />
                                             <Text
                                                 size="xs"
                                                 italic
-                                                className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
+                                                className={`flex-1 ${translatable ? 'text-success-500' : 'text-error-500'}`}
                                             >
                                                 {t(
                                                     translatable
@@ -369,7 +371,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                                     <Text
                                                         size="xs"
                                                         italic
-                                                        className="text-orange-400 underline"
+                                                        className="text-primary-400 underline"
                                                         onPress={() => setShowGuideVideo(true)}
                                                     >
                                                         {' '}{t('clusterDetail.translationGuideLink')}
@@ -388,7 +390,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             live cluster siblings from the server below. */}
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">
-                                <Heading size="md" className="text-gray-300">
+                                <Heading size="md" className="text-typography-700">
                                     {t('articleDetail.relatedArticles')}
                                 </Heading>
                                 {isLoadingRelated && related.length === 0 ? (

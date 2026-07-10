@@ -66,11 +66,13 @@ function attachFeedbackMetadata(userId: string | undefined): void {
     Sentry.setTag('app_language', appLanguage);
 }
 
-// Floating-card chrome, matched to the chat popover (components/custom/
-// floating-chat/ChatPopover.tsx): dark rounded panel over a dimmed backdrop, no
-// outline. The Mera-orange accent lives on the widget's submit button (set via
+// Floating-card chrome: dark rounded panel over a dimmed backdrop, no outline.
+// Deliberately dark-locked in both app themes — the Sentry FeedbackWidget's
+// theme is pinned to 'dark' in lib/sentry-init.ts (init runs pre-React, so it
+// can't follow the in-app theme store) and the white Mera logo needs a dark
+// surface. The Mera-orange accent lives on the widget's submit button (set via
 // the feedbackIntegration theme in lib/sentry-init.ts).
-const PANEL_BG = '#1a1a1a';
+const PANEL_BG = '#1E1E24';
 const CLOSE_RED = '#ef4444'; // error-400, same close affordance as ChatPopover
 
 /**

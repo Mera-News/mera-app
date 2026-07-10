@@ -3,6 +3,7 @@ import { Animated, StyleSheet } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 import { LANGUAGE_WORDS } from '@/lib/language-words';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 const FADE_MS = 300;
 const DISPLAY_MS = 2000;
@@ -10,6 +11,7 @@ const DISPLAY_MS = 2000;
 const LanguageWordTicker: React.FC = () => {
     const [index, setIndex] = useState(0);
     const opacity = useRef(new Animated.Value(1)).current;
+    const colors = useThemeColors();
 
     useEffect(() => {
         let cancelled = false;
@@ -45,7 +47,7 @@ const LanguageWordTicker: React.FC = () => {
 
     return (
         <Animated.View style={[styles.container, { opacity }]}>
-            <Text style={styles.text}>{LANGUAGE_WORDS[index]}</Text>
+            <Text style={[styles.text, { color: colors.icon }]}>{LANGUAGE_WORDS[index]}</Text>
         </Animated.View>
     );
 };
@@ -58,7 +60,6 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 14,
-        color: '#ffffff',
         textAlign: 'right',
     },
 });

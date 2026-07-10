@@ -6,6 +6,7 @@ import { AppVersionService } from '@/lib/app-version-service';
 import { FORCE_UPDATE_CHECK_IN_DEV } from '@/lib/config/endpoints';
 import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { getAppVersion, isVersionOlder } from '@/lib/version';
 
@@ -37,6 +38,7 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
         (__DEV__ && !FORCE_UPDATE_CHECK_IN_DEV) ||
         (Platform.OS !== 'ios' && Platform.OS !== 'android');
 
+    const colors = useThemeColors();
     const [status, setStatus] = useState<GateStatus>(skip ? 'allowed' : 'checking');
     const [storeUrl, setStoreUrl] = useState<string | null>(null);
     // Whether the first decision (allowed/blocked) has been made. Guards the
@@ -107,8 +109,8 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
         // Neutral black splash (matches the app background) while we decide,
         // so the paywall/approval flow never flashes ahead of an update.
         return (
-            <View className="flex-1 bg-black items-center justify-center">
-                <ActivityIndicator size="small" color="#FFFFFF" />
+            <View className="flex-1 bg-background-0 items-center justify-center">
+                <ActivityIndicator size="small" color={colors.icon} />
             </View>
         );
     }

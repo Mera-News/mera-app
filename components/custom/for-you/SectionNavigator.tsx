@@ -21,11 +21,11 @@ const SectionNavigator: React.FC<Props> = ({ sections, activeSection, onSelect }
         <Pressable
             key={label}
             onPress={() => onSelect(shortLabel)}
-            className={`mx-2 items-center py-2 rounded-full border ${activeSection === shortLabel ? 'border-orange-500' : 'border-gray-700'} ${sections.length <= 3 ? 'flex-1' : 'px-4'}`}
+            className={`mx-2 items-center py-2 rounded-full border ${activeSection === shortLabel ? 'border-primary-500' : 'border-outline-100'} ${sections.length <= 3 ? 'flex-1' : 'px-4'}`}
         >
             <Text
                 size="sm"
-                className={`font-medium ${activeSection === shortLabel ? 'text-orange-500' : 'text-gray-500'}`}
+                className={`font-medium ${activeSection === shortLabel ? 'text-primary-500' : 'text-typography-400'}`}
             >
                 {t(shortLabel as any)}
             </Text>

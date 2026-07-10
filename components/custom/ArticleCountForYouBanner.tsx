@@ -1,6 +1,7 @@
 import { SkeletonText } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
+import { useThemeColors } from '@/lib/theme/tokens';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text as RNText } from 'react-native';
@@ -41,10 +42,11 @@ const ArticleCountForYouBanner: React.FC<ArticleCountForYouBannerProps> = ({
     articlesImpactful,
     articlesNoiseRemoved = 0,
     injectNoiseEnabled = false,
-    className = "text-gray-400 leading-6",
+    className = "text-typography-500 leading-6",
     lastSuccessfulCompletedAt,
     isLoading = false,
 }) => {
+    const colors = useThemeColors();
     const isRecent = useMemo(() => {
         if (!lastSuccessfulCompletedAt) return false;
         return Date.now() - new Date(lastSuccessfulCompletedAt).getTime() <= 60 * 60 * 1000;
@@ -62,13 +64,13 @@ const ArticleCountForYouBanner: React.FC<ArticleCountForYouBannerProps> = ({
             <SkeletonText
                 _lines={2}
                 className="h-4 w-full rounded"
-                startColor="bg-gray-800"
+                startColor="bg-background-100"
                 gap={2}
             />
         );
     }
 
-    const dotColor = isRecent ? '#86efac' : '#fdba74';
+    const dotColor = isRecent ? colors.success : colors.warning;
 
     const showNoise = injectNoiseEnabled && articlesNoiseRemoved > 0;
 
@@ -88,7 +90,7 @@ const ArticleCountForYouBanner: React.FC<ArticleCountForYouBannerProps> = ({
                                 </Pressable>
                             )}
                         >
-                            <TooltipContent className="bg-gray-800 py-1.5 px-3 rounded-md">
+                            <TooltipContent className="bg-background-100 py-1.5 px-3 rounded-md">
                                 <TooltipText className="text-xs" style={{ color: dotColor }}>{formattedTime}</TooltipText>
                             </TooltipContent>
                         </Tooltip>

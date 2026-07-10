@@ -22,7 +22,7 @@ export default function NewsCluster() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                 <NewsClusterScreen
                     clusterId={clusterId}

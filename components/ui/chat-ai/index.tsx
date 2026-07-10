@@ -29,16 +29,10 @@ import {
   View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { useColorScheme } from 'nativewind';
 import { Button } from '@/components/ui/button';
+import { useThemeColors } from '@/lib/theme/tokens';
 
-const ACCENT = 'rgb(231, 138, 83)';
-// Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
-// the panel, user lighter still, so the two roles read apart without borders.
-const ASSISTANT_SURFACE = '#232323';
-const USER_SURFACE = '#2e2e2e';
-// Input field surface (kept distinct from the user bubble tone).
-const INPUT_SURFACE = '#262626';
-const TEXT_COLOR = 'rgb(210, 210, 210)';
 // Uniform chat type scale — assistant markdown, user bubble, and the input all
 // share this size/line-height so the conversation reads as one system.
 const CHAT_FONT_SIZE = 15;
@@ -83,6 +77,7 @@ export interface ConversationContentProps<T extends { key: string }>
 function ConversationContentInner<T extends { key: string }>(
   { items, renderItem, onLoadOlder, hasOlder, isLoadingOlder, header, ListEmptyComponent }: ConversationContentProps<T>,
 ) {
+  const colors = useThemeColors();
   // Inverted FlatList renders data[0] at the bottom. Reverse so the newest item
   // (last in `items`) sits at index 0 and therefore at the bottom of the view.
   const data = React.useMemo(() => [...items].reverse(), [items]);
@@ -104,7 +99,7 @@ function ConversationContentInner<T extends { key: string }>(
       ListFooterComponent={
         isLoadingOlder ? (
           <View style={styles.olderSpinnerRow}>
-            <MaterialIcons name="hourglass-empty" size={18} color={ACCENT} />
+            <MaterialIcons name="hourglass-empty" size={18} color={colors.primary} />
           </View>
         ) : null
       }
@@ -154,10 +149,11 @@ const MessageContent = forwardRef<View, MessageContentProps>(function MessageCon
   { role, children },
   ref,
 ) {
+  const colors = useThemeColors();
   return (
     <View
       ref={ref}
-      style={[styles.bubble, role === 'user' ? styles.bubbleUser : styles.bubbleAssistant]}
+      style={[styles.bubble, { backgroundColor: colors.surface }]}
     >
       {children}
     </View>
@@ -176,9 +172,15 @@ const MessageResponse = forwardRef<View, MessageResponseProps>(function MessageR
   { children },
   ref,
 ) {
+  const colors = useThemeColors();
+  // Body ink follows the theme; the rest of the markdown scale is static.
+  const themedMarkdownStyles = React.useMemo(
+    () => ({ ...markdownStyles, body: { ...markdownStyles.body, color: colors.icon } }),
+    [colors.icon],
+  );
   return (
     <View ref={ref}>
-      <Markdown style={markdownStyles}>{children}</Markdown>
+      <Markdown style={themedMarkdownStyles}>{children}</Markdown>
     </View>
   );
 });
@@ -236,6 +238,8 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   { onSubmit, placeholder, disabled = false },
   ref,
 ) {
+  const colors = useThemeColors();
+  const { colorScheme } = useColorScheme();
   const [text, setText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
@@ -262,15 +266,15 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         value={text}
         onChangeText={setText}
         placeholder={placeholder}
-        placeholderTextColor="#6B7280"
+        placeholderTextColor={colors.iconMuted}
         editable={!disabled}
-        keyboardAppearance="dark"
+        keyboardAppearance={colorScheme === 'light' ? 'light' : 'dark'}
         returnKeyType="send"
         // Return sends instead of inserting a newline, and keeps the keyboard up
         // so the user can keep typing. handleSend already ignores empty/disabled.
         submitBehavior="submit"
         onSubmitEditing={handleSend}
-        style={styles.textInput}
+        style={[styles.textInput, { backgroundColor: colors.surface, color: colors.icon }]}
       />
       {/* Gluestack Button (className/tva-driven) rather than a Pressable with a
           function-form style prop — NativeWind v4's babel interop drops that
@@ -331,14 +335,6 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  bubbleUser: {
-    backgroundColor: USER_SURFACE,
-  },
-  bubbleAssistant: {
-    // No border — the panel keeps the only orange outline. Role is signaled by
-    // surface tone + alignment instead.
-    backgroundColor: ASSISTANT_SURFACE,
-  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -349,9 +345,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    backgroundColor: INPUT_SURFACE,
     borderRadius: 20,
-    color: TEXT_COLOR,
     fontSize: CHAT_FONT_SIZE,
     lineHeight: CHAT_LINE_HEIGHT,
     paddingHorizontal: 14,
@@ -364,7 +358,6 @@ const styles = StyleSheet.create({
 
 const markdownStyles = StyleSheet.create({
   body: {
-    color: TEXT_COLOR,
     fontSize: CHAT_FONT_SIZE,
     lineHeight: CHAT_LINE_HEIGHT,
     textAlign: 'left',

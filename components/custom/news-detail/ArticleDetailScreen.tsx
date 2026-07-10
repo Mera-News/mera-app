@@ -17,6 +17,7 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -54,6 +55,7 @@ const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
 
 const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, onBack }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [article, setArticle] = useState<NewsArticle | null>(null);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -156,7 +158,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-black items-center justify-center">
+            <Box className="flex-1 bg-background-0 items-center justify-center">
                 <Spinner size="large" />
             </Box>
         );
@@ -164,13 +166,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
 
     if (error || !article) {
         return (
-            <Box className="flex-1 bg-black items-center justify-center p-5">
-                <MaterialIcons name="error-outline" size={48} color="#EF4444" />
-                <Text size="lg" className="text-white mt-4 text-center">
+            <Box className="flex-1 bg-background-0 items-center justify-center p-5">
+                <MaterialIcons name="error-outline" size={48} color={colors.error} />
+                <Text size="lg" className="text-typography-950 mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                <Pressable onPress={onBack} className="mt-6 bg-background-100 rounded-lg px-6 py-3">
+                    <Text size="md" className="text-typography-950">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -180,13 +182,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
     const articleUrl = article.article_url ?? null;
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-0">
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                    className="bg-background-50 rounded-full p-3 shadow-hard-2"
                 >
-                    <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                    <MaterialIcons name="arrow-back" size={24} color={colors.icon} />
                 </Pressable>
             </Box>
 
@@ -212,8 +214,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                                     action="primary"
                                     onPress={() => handleArticleUrlPress(articleUrl)}
                                 >
-                                    <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                    <ButtonText className="text-white ml-2">{t('articleDetail.readArticle')}</ButtonText>
+                                    <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color={colors.icon} />} />
+                                    <ButtonText className="text-typography-950 ml-2">{t('articleDetail.readArticle')}</ButtonText>
                                 </Button>
                                 {(() => {
                                     const status = getArticleTranslatableStatus(
@@ -230,12 +232,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                                             <MaterialIcons
                                                 name="translate"
                                                 size={14}
-                                                color={translatable ? '#86EFAC' : '#FCA5A5'}
+                                                color={translatable ? colors.success : colors.error}
                                             />
                                             <Text
                                                 size="xs"
                                                 italic
-                                                className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
+                                                className={`flex-1 ${translatable ? 'text-success-500' : 'text-error-500'}`}
                                             >
                                                 {t(
                                                     translatable
@@ -252,7 +254,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">
-                                <Heading size="md" className="text-gray-300">
+                                <Heading size="md" className="text-typography-700">
                                     {t('articleDetail.relatedArticles')}
                                 </Heading>
                                 {isLoadingRelated ? (

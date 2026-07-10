@@ -395,6 +395,7 @@
     "manageSettings": "Управление настройками приложения и учётной записью",
     "notifications": "Уведомления",
     "language": "Язык и перевод",
+    "appearance": "Внешний вид",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Политика конфиденциальности",
     "termsOfService": "Условия использования",
@@ -684,5 +685,13 @@
     "usageSection": "Использование",
     "usedToday": "Проанализировано сегодня",
     "viewPlans": "Посмотреть тарифы"
+  },
+  "theme": {
+    "title": "Внешний вид",
+    "appTheme": "Тема приложения",
+    "appThemeDescription": "Выберите, как выглядит Mera, или следуйте настройкам устройства.",
+    "light": "Светлая",
+    "dark": "Тёмная",
+    "system": "Системная"
   }
 }

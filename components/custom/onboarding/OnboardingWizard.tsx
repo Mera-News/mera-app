@@ -259,15 +259,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     // Show loading spinner while initializing userId
     if (isInitializing) {
         return (
-            <Box className="flex-1 bg-black justify-center items-center">
+            <Box className="flex-1 bg-background-0 justify-center items-center">
                 <Spinner size="large" />
-                <Text className="text-white mt-4">{t('common.loading')}</Text>
+                <Text className="text-typography-950 mt-4">{t('common.loading')}</Text>
             </Box>
         );
     }
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingBottom: insets.bottom }}>
+        <Box className="flex-1 bg-background-0" style={{ paddingBottom: insets.bottom }}>
             {/* Progress Indicator */}
             <Box className="pb-5 px-5" style={{ paddingTop: insets.top + 16 }}>
                 <Progress value={((currentStep + 1) / 3) * 100} size="sm">
@@ -293,15 +293,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
             >
                 <ModalBackdrop />
                 <ModalContent>
-                    <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-white">{t('onboarding.connectionIssue')}</Text>
+                    <ModalHeader className="border-outline-100 pb-4">
+                        <Text className="text-xl font-semibold text-typography-950">{t('onboarding.connectionIssue')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
-                        <Text className="text-gray-300 text-base leading-relaxed">
+                        <Text className="text-typography-700 text-base leading-relaxed">
                             {t('onboarding.connectionDescription')}
                         </Text>
                     </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
+                    <ModalFooter className="border-t border-outline-100 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 action="negative"

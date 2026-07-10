@@ -6,6 +6,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type { VisitedPublication } from '@/lib/database/services/publication-visit-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -17,6 +18,7 @@ interface Props {
 
 const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
 
     const handlePress = useCallback(() => {
         router.push({ pathname: '/logged-in/visited-publications' });
@@ -29,10 +31,10 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
             <Card variant="elevated" size="sm" className="mx-4 mt-3 mb-2 rounded-xl">
                 <VStack className="p-3" space="sm">
                     <HStack className="items-center justify-between">
-                        <Text size="sm" bold className="text-white">
+                        <Text size="sm" bold className="text-typography-950">
                             {t('publicationVisits.topVisitedTitle')}
                         </Text>
-                        <MaterialIcons name="chevron-right" size={18} color="#999999" />
+                        <MaterialIcons name="chevron-right" size={18} color={colors.iconMuted} />
                     </HStack>
                     <VStack space="xs">
                         {topPublications.map((p) => (
@@ -45,7 +47,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
                                     <SourceFlag countryCode={p.countryCode} size="lg" />
                                     <Text
                                         size="sm"
-                                        className="text-white flex-1"
+                                        className="text-typography-950 flex-1"
                                         numberOfLines={1}
                                     >
                                         {p.publicationName}

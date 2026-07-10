@@ -3,22 +3,19 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useThemeColors, type ThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-const GREEN = '#10b981';
-const AMBER = '#f59e0b';
-const RED = '#ef4444';
-
-// Fill color shifts green → amber → red as the daily quota is used up.
-const usageColor = (used: number, limit: number): string => {
-    if (limit <= 0) return GREEN;
+// Fill color shifts success → warning → error as the daily quota is used up.
+const usageColor = (used: number, limit: number, colors: ThemeColors): string => {
+    if (limit <= 0) return colors.success;
     const ratio = used / limit;
-    if (ratio < 0.7) return GREEN;
-    if (ratio < 0.9) return AMBER;
-    return RED;
+    if (ratio < 0.7) return colors.success;
+    if (ratio < 0.9) return colors.warning;
+    return colors.error;
 };
 
 interface UsageWidgetProps {
@@ -62,6 +59,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     className,
 }) => {
     const { i18n } = useTranslation();
+    const colors = useThemeColors();
 
     const hasLimit = typeof limit === 'number' && limit > 0;
     const pct = hasLimit ? Math.min(100, Math.round((used / (limit as number)) * 100)) : 0;
@@ -79,20 +77,20 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     })();
 
     return (
-        <Box className={`bg-gray-900 rounded-2xl p-5 border border-gray-800 ${className ?? ''}`}>
+        <Box className={`bg-background-50 rounded-2xl p-5 border border-outline-50 ${className ?? ''}`}>
             <HStack className="items-start justify-between mb-3">
                 <VStack className="flex-1">
-                    <Text className="text-white font-bold text-3xl leading-9">
+                    <Text className="text-typography-950 font-bold text-3xl leading-9">
                         {used}
                         {hasLimit ? (
-                            <Text className="text-gray-500 font-semibold text-xl"> / {limit}</Text>
+                            <Text className="text-typography-400 font-semibold text-xl"> / {limit}</Text>
                         ) : null}
                     </Text>
                     <HStack className="items-center mt-0.5" space="xs">
-                        <Text size="xs" className="text-gray-500">{usedLabel}</Text>
+                        <Text size="xs" className="text-typography-400">{usedLabel}</Text>
                         {onInfoPress ? (
                             <Pressable onPress={onInfoPress} hitSlop={8}>
-                                <MaterialIcons name="info-outline" size={14} color="#6b7280" />
+                                <MaterialIcons name="info-outline" size={14} color={colors.iconMuted} />
                             </Pressable>
                         ) : null}
                     </HStack>
@@ -120,21 +118,21 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         </HStack>
                         {resetText ? (
                             <>
-                                <Text size="xs" className="text-gray-500 mt-1">{resetLabel}</Text>
-                                <Text size="xs" className="text-gray-300">{resetText}</Text>
+                                <Text size="xs" className="text-typography-400 mt-1">{resetLabel}</Text>
+                                <Text size="xs" className="text-typography-700">{resetText}</Text>
                             </>
                         ) : null}
                     </VStack>
                 ) : null}
             </HStack>
             {hasLimit ? (
-                <View style={{ height: 8, borderRadius: 4, backgroundColor: '#1f2937', overflow: 'hidden' }}>
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: colors.surface, overflow: 'hidden' }}>
                     <View
                         style={{
                             height: 8,
                             borderRadius: 4,
                             width: `${pct}%`,
-                            backgroundColor: usageColor(used, limit as number),
+                            backgroundColor: usageColor(used, limit as number, colors),
                         }}
                     />
                 </View>

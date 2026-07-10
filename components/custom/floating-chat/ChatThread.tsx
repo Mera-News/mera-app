@@ -14,6 +14,7 @@ import {
   PromptInput,
   type PromptInputHandle,
 } from '@/components/ui/chat-ai';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useContext, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -42,6 +43,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isInputDisabled,
 }) => {
   const { t } = useTranslation();
+  const colors = useThemeColors();
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -70,7 +72,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           message.role === 'user' ? (
             <Message role="user">
               <MessageContent role="user">
-                <Text size="sm" style={styles.userText}>
+                <Text size="sm" style={[styles.userText, { color: colors.icon }]}>
                   {message.content}
                 </Text>
               </MessageContent>
@@ -96,11 +98,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'divider':
         return (
           <View style={styles.dividerRow}>
-            <View style={styles.hairline} />
-            <Text size="xs" style={styles.dividerLabel}>
+            <View style={[styles.hairline, { backgroundColor: colors.border }]} />
+            <Text size="xs" style={[styles.dividerLabel, { color: colors.iconFaint }]}>
               {item.label}
             </Text>
-            <View style={styles.hairline} />
+            <View style={[styles.hairline, { backgroundColor: colors.border }]} />
           </View>
         );
 
@@ -137,8 +139,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       {blockedMessage && (
         <View style={styles.blockedBanner}>
-          <MaterialIcons name="block" size={20} color="#F87171" />
-          <Text size="sm" style={styles.blockedText}>
+          <MaterialIcons name="block" size={20} color={colors.error} />
+          <Text size="sm" style={[styles.blockedText, { color: colors.error }]}>
             {blockedMessage}
           </Text>
         </View>
@@ -159,7 +161,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userText: {
-    color: 'rgb(210, 210, 210)',
     // Match the assistant markdown / input type scale for a uniform chat UI.
     fontSize: 15,
     lineHeight: 21,
@@ -173,10 +174,8 @@ const styles = StyleSheet.create({
   hairline: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   dividerLabel: {
-    color: 'rgb(120, 120, 120)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -192,7 +191,6 @@ const styles = StyleSheet.create({
   },
   blockedText: {
     flex: 1,
-    color: '#F87171',
   },
 });
 

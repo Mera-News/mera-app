@@ -17,6 +17,7 @@ import { VStack } from '@/components/ui/vstack';
 import logger from '@/lib/logger';
 import type { NewsPublisher, PublicationSource } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ChevronDownIcon } from 'lucide-react-native';
@@ -36,6 +37,7 @@ interface SourcesL2PublisherListProps {
 
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -119,16 +121,16 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
     const renderPublisher: ListRenderItem<NewsPublisher> = useCallback(
         ({ item }) => (
             <Box className="mx-4 mb-3">
-                <Accordion type="single" isCollapsible variant="unfilled" className="border border-gray-700 rounded-lg">
+                <Accordion type="single" isCollapsible variant="unfilled" className="border border-outline-100 rounded-lg">
                     <AccordionItem value={item._id}>
                         <AccordionHeader>
                             <AccordionTrigger className="px-4 py-3">
                                 <VStack className="flex-1 mr-3" space="xs">
-                                    <AccordionTitleText className="text-white text-base">
+                                    <AccordionTitleText className="text-typography-950 text-base">
                                         {item.name}
                                     </AccordionTitleText>
                                     {item.website_url && (
-                                        <Text size="xs" className="text-gray-500">
+                                        <Text size="xs" className="text-typography-400">
                                             {item.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                                         </Text>
                                     )}
@@ -143,13 +145,13 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                 </Button>
                                 <AccordionIcon
                                     as={ChevronDownIcon}
-                                    className="text-gray-400"
+                                    className="text-typography-500"
                                 />
                             </AccordionTrigger>
                         </AccordionHeader>
                         <AccordionContent className="px-0 pb-2 pt-0">
                             {item.publicationSources.length === 0 ? (
-                                <Text size="sm" className="text-gray-500 px-4 py-2">
+                                <Text size="sm" className="text-typography-400 px-4 py-2">
                                     {t('sources.noFeedsAvailable')}
                                 </Text>
                             ) : (
@@ -157,13 +159,13 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                     <Pressable
                                         key={feed._id}
                                         onPress={() => handleFeedPress(feed, item.name)}
-                                        className="px-4 py-2.5 border-t border-gray-800"
+                                        className="px-4 py-2.5 border-t border-outline-50"
                                     >
                                         <HStack className="items-center justify-between">
-                                            <Text className="text-white text-sm flex-1 mr-3 capitalize">
+                                            <Text className="text-typography-950 text-sm flex-1 mr-3 capitalize">
                                                 {formatCategory(feed.category)}
                                             </Text>
-                                            <MaterialIcons name="chevron-right" size={18} color="#999999" />
+                                            <MaterialIcons name="chevron-right" size={18} color={colors.iconMuted} />
                                         </HStack>
                                     </Pressable>
                                 ))
@@ -173,7 +175,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 </Accordion>
             </Box>
         ),
-        [handleFeedPress, handleTopHeadlinesPress, t]
+        [handleFeedPress, handleTopHeadlinesPress, t, colors.iconMuted]
     );
 
     const keyExtractor = useCallback(
@@ -202,8 +204,8 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 </Box>
             ) : publishers.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="newspaper" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="newspaper" size={48} color={colors.iconMuted} />
+                    <Text size="md" className="text-typography-500 text-center">
                         {t('sources.noPublishers')}
                     </Text>
                 </VStack>

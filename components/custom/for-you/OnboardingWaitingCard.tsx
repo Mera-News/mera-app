@@ -11,13 +11,13 @@ const OnboardingWaitingCard: React.FC = () => {
         <Card
             variant="elevated"
             size="md"
-            className="mb-4 overflow-hidden bg-black border-black"
+            className="mb-4 overflow-hidden bg-background-0 border-background-0"
         >
             <Box className="w-full py-12 px-6 items-center justify-center">
                 <StreamingIndicator />
                 <Text
                     size="md"
-                    className="text-gray-400 text-center mt-4"
+                    className="text-typography-500 text-center mt-4"
                 >
                     {t('onboarding.completionMessage')}
                 </Text>

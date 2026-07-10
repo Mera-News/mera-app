@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type { ArticlesForPublicationSourceResponse, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -38,6 +39,7 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
     logScope = 'PaginatedArticleList',
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -131,8 +133,8 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
                 </Box>
             ) : articles.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="article" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="article" size={48} color={colors.iconMuted} />
+                    <Text size="md" className="text-typography-500 text-center">
                         {t('sources.noArticlesFound')}
                     </Text>
                 </VStack>

@@ -50,6 +50,7 @@ export {
     useIsPremium,
     useSubscriptionTier,
 } from './subscription-store';
+export { useThemeStore, useThemePreference } from './theme-store';
 
 // Selectors
 export * from './selectors';

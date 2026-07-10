@@ -11,7 +11,7 @@ export default function SavedSuggestions() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                 <SavedSuggestionsScreen onBack={handleBack} />
             </ErrorBoundary>

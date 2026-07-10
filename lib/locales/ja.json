@@ -395,6 +395,7 @@
     "manageSettings": "アプリの設定とアカウントを管理する",
     "notifications": "通知",
     "language": "言語と翻訳",
+    "appearance": "外観",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "プライバシーポリシー",
     "termsOfService": "利用規約",
@@ -684,5 +685,13 @@
     "usageSection": "利用状況",
     "usedToday": "本日の分析数",
     "viewPlans": "プランを見る"
+  },
+  "theme": {
+    "title": "外観",
+    "appTheme": "アプリのテーマ",
+    "appThemeDescription": "Meraの外観を選択するか、デバイスの設定に従います。",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
   }
 }

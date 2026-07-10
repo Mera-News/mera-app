@@ -41,6 +41,7 @@ import {
 } from '@/lib/stores/selectors';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useIsConnected } from '@/lib/stores/network-store';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { Icon, SettingsIcon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -82,6 +83,7 @@ const SCROLL_THRESHOLD = 300; // Show FAB after scrolling 300px
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     // Local UI state only
     const [isLoading, setIsLoading] = useState(false);
     const [isMetadataLoading] = useState(false);
@@ -658,12 +660,12 @@ const MeraNewsScreen: React.FC = () => {
     }, []);
 
     return (
-        <Box className="flex-1 bg-black">
-            <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
+        <Box className="flex-1 bg-background-0">
+            <VStack className="px-5 pb-4 border-outline-50 z-10" style={{ paddingTop: insets.top + 16 }}>
                 {/* Title row — static */}
                 <HStack className="items-start justify-between mb-1">
                     <VStack className="flex-1 min-w-0 mr-3">
-                        <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.forYou')}</Heading>
+                        <Heading size="3xl" className="text-typography-950" numberOfLines={1}>{t('feed.forYou')}</Heading>
                         <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
                     </VStack>
                     <HStack className="items-center flex-shrink-0" space="sm">
@@ -674,7 +676,7 @@ const MeraNewsScreen: React.FC = () => {
                             accessibilityLabel={t('publicationVisits.visitedListTitle')}
                             className="p-3 rounded-full border border-primary-500 bg-transparent"
                         >
-                            <MaterialIcons name="history" size={22} color="#EDA77E" />
+                            <MaterialIcons name="history" size={22} color={colors.primary} />
                         </Pressable>
                         <Pressable
                             onPress={() => router.push('/logged-in/saved-suggestions')}
@@ -683,7 +685,7 @@ const MeraNewsScreen: React.FC = () => {
                             accessibilityLabel={t('savedSuggestions.title')}
                             className="p-3 rounded-full border border-primary-500 bg-transparent"
                         >
-                            <MaterialIcons name="bookmark" size={22} color="#EDA77E" />
+                            <MaterialIcons name="bookmark" size={22} color={colors.primary} />
                         </Pressable>
                         <Pressable
                             onPress={openConfigPanel}

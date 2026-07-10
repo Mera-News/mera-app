@@ -395,6 +395,7 @@
     "manageSettings": "Zarządzaj ustawieniami aplikacji i kontem",
     "notifications": "Powiadomienia",
     "language": "Język i tłumaczenie",
+    "appearance": "Wygląd",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Polityka prywatności",
     "termsOfService": "Warunki korzystania z usługi",
@@ -684,5 +685,13 @@
     "usageSection": "Wykorzystanie",
     "usedToday": "Przeanalizowano dzisiaj",
     "viewPlans": "Zobacz plany"
+  },
+  "theme": {
+    "title": "Wygląd",
+    "appTheme": "Motyw aplikacji",
+    "appThemeDescription": "Wybierz wygląd Mera lub użyj ustawień urządzenia.",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "System"
   }
 }

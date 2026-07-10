@@ -22,7 +22,7 @@ export default function SuggestionDetail() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                 <ArticleSuggestionScreen
                     articleSuggestionId={articleSuggestionId}

@@ -395,6 +395,7 @@
     "manageSettings": "Quản lý cài đặt ứng dụng và tài khoản",
     "notifications": "Thông báo",
     "language": "Ngôn ngữ & Dịch thuật",
+    "appearance": "Giao diện",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Chính sách bảo mật",
     "termsOfService": "Điều khoản dịch vụ",
@@ -684,5 +685,13 @@
     "usageSection": "Sử dụng",
     "usedToday": "Đã phân tích hôm nay",
     "viewPlans": "Xem các gói"
+  },
+  "theme": {
+    "title": "Giao diện",
+    "appTheme": "Chủ đề ứng dụng",
+    "appThemeDescription": "Chọn giao diện của Mera hoặc theo cài đặt thiết bị.",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống"
   }
 }

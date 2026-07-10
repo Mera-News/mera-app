@@ -23,7 +23,7 @@ const AllCaughtUpCard: React.FC = () => {
         <Card
             variant="elevated"
             size="md"
-            className="mb-4 overflow-hidden bg-black border-black"
+            className="mb-4 overflow-hidden bg-background-0 border-background-0"
         >
             <Box className="w-full py-20 px-6 items-center justify-center">
                 {/* Mera Logo */}
@@ -34,7 +34,7 @@ const AllCaughtUpCard: React.FC = () => {
                 {/* "You're all caught up" text */}
                 <Text
                     size="xl"
-                    className="text-white text-center mb-4 font-semibold"
+                    className="text-typography-950 text-center mb-4 font-semibold"
                 >
                     {t('feed.allCaughtUp')}
                 </Text>
@@ -42,7 +42,7 @@ const AllCaughtUpCard: React.FC = () => {
                 {/* Cycling mindfulness message */}
                 <Text
                     size="md"
-                    className="text-gray-400 text-center"
+                    className="text-typography-500 text-center"
                 >
                     {messages[currentIndex]}
                 </Text>

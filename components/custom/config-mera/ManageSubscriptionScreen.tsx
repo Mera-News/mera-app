@@ -18,32 +18,33 @@ import RevenueCatUI from 'react-native-purchases-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UsageWidget from '../UsageWidget';
 import { humanizeKey } from './observability-labels';
-
-const GREEN = '#10b981';
-const AMBER = '#f59e0b';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 const SectionHeader = ({ title }: { title: string }) => (
     <Box className="pt-6 pb-2">
-        <Text size="xs" className="text-gray-500 uppercase tracking-widest font-semibold">
+        <Text size="xs" className="text-typography-400 uppercase tracking-widest font-semibold">
             {title}
         </Text>
     </Box>
 );
 
 const StatusPill = ({ text, color }: { text: string; color: string }) => (
-    <HStack space="xs" className="items-center self-start bg-black/40 rounded-full px-2.5 py-1 mt-3">
+    <HStack space="xs" className="items-center self-start bg-background-100 rounded-full px-2.5 py-1 mt-3">
         <Box style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
-        <Text size="xs" className="text-gray-300">{text}</Text>
+        <Text size="xs" className="text-typography-700">{text}</Text>
     </HStack>
 );
 
-const InfoRow = ({ icon, label, value, isLast }: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string; isLast?: boolean }) => (
-    <HStack className={`items-center px-4 py-3 ${isLast ? '' : 'border-b border-gray-800'}`}>
-        <MaterialIcons name={icon} size={16} color="#9ca3af" />
-        <Text size="sm" className="text-gray-400 ml-3 flex-1">{label}</Text>
-        <Text size="sm" className="text-white" numberOfLines={1}>{value}</Text>
-    </HStack>
-);
+const InfoRow = ({ icon, label, value, isLast }: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: string; isLast?: boolean }) => {
+    const colors = useThemeColors();
+    return (
+        <HStack className={`items-center px-4 py-3 ${isLast ? '' : 'border-b border-outline-50'}`}>
+            <MaterialIcons name={icon} size={16} color={colors.iconMuted} />
+            <Text size="sm" className="text-typography-500 ml-3 flex-1">{label}</Text>
+            <Text size="sm" className="text-typography-950" numberOfLines={1}>{value}</Text>
+        </HStack>
+    );
+};
 
 interface ManageSubscriptionScreenProps {
     onBack?: () => void;
@@ -60,6 +61,7 @@ interface ManageSubscriptionScreenProps {
 const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onBack }) => {
     const { t, i18n } = useTranslation();
     const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [priceString, setPriceString] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -172,14 +174,14 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const statusPill: { text: string; color: string } | null = activeEntitlement
         ? (() => {
             const date = formatDate(activeEntitlement.expirationDate);
-            if (!date) return { text: t('subscription.lifetime'), color: GREEN };
+            if (!date) return { text: t('subscription.lifetime'), color: colors.success };
             const prefix = activeEntitlement.willRenew
                 ? t('subscription.renewsOn')
                 : t('subscription.expiresOn');
-            return { text: `${prefix} ${date}`, color: activeEntitlement.willRenew ? GREEN : AMBER };
+            return { text: `${prefix} ${date}`, color: activeEntitlement.willRenew ? colors.success : colors.warning };
         })()
         : isPaid
-            ? { text: t('subscription.active'), color: GREEN }
+            ? { text: t('subscription.active'), color: colors.success }
             : null;
 
     const usedToday = billing?.articlesUsedToday ?? 0;
@@ -203,12 +205,12 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         : [];
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top }}>
             <HStack className="px-4 py-3 items-center">
-                <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
-                    <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
+                <Pressable onPress={onBack} className="bg-background-50 rounded-full p-2" hitSlop={8}>
+                    <MaterialIcons name="arrow-back" size={20} color={colors.icon} />
                 </Pressable>
-                <Text className="text-white font-semibold text-base flex-1 text-center mr-9">
+                <Text className="text-typography-950 font-semibold text-base flex-1 text-center mr-9">
                     {t('subscription.managePlan')}
                 </Text>
             </HStack>
@@ -224,23 +226,23 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Hero plan card */}
-                    <Box className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4">
+                    <Box className="bg-background-50 rounded-2xl p-5 border border-outline-50 mt-4">
                         <HStack className="items-center">
-                            <Box className="bg-black/40 rounded-full p-2.5">
+                            <Box className="bg-background-100 rounded-full p-2.5">
                                 <MaterialIcons
                                     name={isPaid ? 'workspace-premium' : 'person-outline'}
                                     size={22}
-                                    color={isPaid ? AMBER : '#9ca3af'}
+                                    color={isPaid ? colors.warning : colors.iconMuted}
                                 />
                             </Box>
                             <VStack className="ml-3 flex-1">
-                                <Text size="xs" className="text-gray-500">{t('subscription.planLabel')}</Text>
-                                <Text className="text-white font-bold text-2xl leading-8">
+                                <Text size="xs" className="text-typography-400">{t('subscription.planLabel')}</Text>
+                                <Text className="text-typography-950 font-bold text-2xl leading-8">
                                     {isPaid ? planName(effectiveTier) : t('subscription.freePlan')}
                                 </Text>
                             </VStack>
                             {priceString ? (
-                                <Text className="text-white font-semibold text-lg">{priceString}</Text>
+                                <Text className="text-typography-950 font-semibold text-lg">{priceString}</Text>
                             ) : null}
                         </HStack>
                         {statusPill ? <StatusPill text={statusPill.text} color={statusPill.color} /> : null}
@@ -267,7 +269,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     {detailRows.length > 0 && (
                         <>
                             <SectionHeader title={t('subscription.detailsSection')} />
-                            <Box className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+                            <Box className="bg-background-50 rounded-2xl border border-outline-50 overflow-hidden">
                                 {detailRows.map((row, i) => (
                                     <InfoRow
                                         key={row.label}
@@ -283,11 +285,11 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
 
                     <VStack space="md" className="mt-8">
                         <Button onPress={handleViewPlans} className="w-full">
-                            <MaterialIcons name="upgrade" size={18} color="#000000" />
+                            <MaterialIcons name="upgrade" size={18} color={colors.onPrimary} />
                             <ButtonText>{t('subscription.viewPlans')}</ButtonText>
                         </Button>
                         <Button variant="outline" action="secondary" onPress={handleCustomerCenter} className="w-full">
-                            <MaterialIcons name="settings" size={18} color="#ffffff" />
+                            <MaterialIcons name="settings" size={18} color={colors.icon} />
                             <ButtonText>{t('subscription.customerCenter')}</ButtonText>
                         </Button>
                     </VStack>

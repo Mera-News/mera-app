@@ -3,14 +3,16 @@ import { View } from 'react-native';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
+import { useThemeColors } from '@/lib/theme/tokens';
 
 export default function LoggedInLayout() {
+  const colors = useThemeColors();
   return (
     <View style={{ flex: 1 }}>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#000000' },
+          contentStyle: { backgroundColor: colors.background },
           animation: 'slide_from_right',
         }}
       >

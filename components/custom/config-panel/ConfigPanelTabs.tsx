@@ -14,11 +14,11 @@ const TabButton: React.FC<{
 }> = ({ label, isActive, onPress }) => (
     <Pressable
         onPress={onPress}
-        className={`items-center px-4 py-2.5 rounded-full ${isActive ? 'bg-gray-700' : 'bg-transparent'}`}
+        className={`items-center px-4 py-2.5 rounded-full ${isActive ? 'bg-background-200' : 'bg-transparent'}`}
     >
         <Text
             size="sm"
-            className={`font-medium ${isActive ? 'text-white' : 'text-gray-500'}`}
+            className={`font-medium ${isActive ? 'text-typography-950' : 'text-typography-400'}`}
         >
             {label}
         </Text>
@@ -37,7 +37,7 @@ const ConfigPanelTabs: React.FC = () => {
     ];
 
     return (
-        <HStack className="bg-gray-900 rounded-full p-1">
+        <HStack className="bg-background-50 rounded-full p-1">
             {tabs.map((tab) => (
                 <TabButton
                     key={tab.key}

@@ -9,6 +9,7 @@ import {
 } from '@/lib/database/services/publication-visit-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -47,6 +48,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [items, setItems] = useState<VisitedArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -112,7 +114,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-0">
             <DrillDownHeader
                 title={publicationName}
                 subtitle={t('publicationVisits.articlesRead')}
@@ -124,8 +126,8 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                 </Box>
             ) : items.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="article" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="article" size={48} color={colors.iconMuted} />
+                    <Text size="md" className="text-typography-500 text-center">
                         {t('publicationVisits.noArticlesLast30Days')}
                     </Text>
                 </VStack>
@@ -140,8 +142,8 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#ffffff"
-                            colors={['#ffffff']}
+                            tintColor={colors.icon}
+                            colors={[colors.icon]}
                         />
                     }
                 />

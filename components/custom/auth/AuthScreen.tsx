@@ -3,7 +3,9 @@ import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
 import PolicyPill from '@/components/custom/PolicyPill';
+import ThemeSelector from '@/components/custom/ThemeSelector';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -37,6 +39,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
+    const colors = useThemeColors();
 
     const handlePrivacyPolicyPress = async () => {
         await openInAppBrowser(withAppLanguage(PRIVACY_URL));
@@ -142,7 +145,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                         <Pressable
                             onPress={handleSendOTP}
                             disabled={loading || !email || !validator.isEmail(email)}
-                            className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-gray-700'
+                            className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-background-200'
                                 }`}
                         >
                             {loading ? (
@@ -151,7 +154,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                                 <MaterialIcons
                                     name="arrow-forward"
                                     size={28}
-                                    color="#000000"
+                                    color={colors.onPrimary}
                                 />
                             )}
                         </Pressable>
@@ -165,10 +168,10 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                     <VStack space="sm" className="mt-4">
                         <Pressable
                             onPress={() => setShowGuideVideo(true)}
-                            className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                            className="flex-row items-center py-3 px-4 bg-background-100 rounded-lg border border-outline-100"
                         >
-                            <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
-                            <Text className="text-violet-400 text-sm font-medium flex-1">
+                            <MaterialIcons name="play-circle-filled" size={20} color={colors.primary} style={{ marginRight: 8 }} />
+                            <Text className="text-primary-400 text-sm font-medium flex-1">
                                 {t('language.watchGuide')}
                             </Text>
                         </Pressable>
@@ -185,16 +188,16 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                 </HStack>
                 <HStack space="lg" className="items-center mt-3">
                     <Pressable onPress={handleGithubPress} hitSlop={8}>
-                        <FontAwesome name="github" size={20} color="#9ca3af" />
+                        <FontAwesome name="github" size={20} color={colors.iconMuted} />
                     </Pressable>
                     <Pressable onPress={handleWebsitePress} hitSlop={8}>
-                        <MaterialIcons name="language" size={22} color="#9ca3af" />
+                        <MaterialIcons name="language" size={22} color={colors.iconMuted} />
                     </Pressable>
                 </HStack>
-                <Text size="xs" className="text-gray-500 mt-1">
+                <Text size="xs" className="text-typography-400 mt-1">
                     {getAppVersionLabel()}
                 </Text>
-                <Text size="xs" className="text-gray-500 mt-1">
+                <Text size="xs" className="text-typography-400 mt-1">
                     © {new Date().getFullYear()} Mera Labs B.V.
                 </Text>
             </Box>
@@ -204,6 +207,38 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                 uri={TRANSLATION_GUIDE_URL}
                 onClose={() => setShowGuideVideo(false)}
             />
+        </Box>
+    );
+};
+
+// Top-right theme toggle shown on every auth view. Tapping the button expands
+// the compact Light/Dark/System pill row inline; the choice persists via the
+// theme store (WatermelonDB is available pre-auth).
+const ThemeToggleOverlay: React.FC = () => {
+    const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
+    const { t } = useTranslation();
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <Box
+            className="absolute right-4 z-10 flex-row items-center"
+            style={{ top: insets.top + 8 }}
+        >
+            {expanded && <ThemeSelector compact />}
+            <Pressable
+                onPress={() => setExpanded((v) => !v)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('theme.title')}
+                className="rounded-full p-2.5 ml-2 bg-background-50 border border-outline-100"
+            >
+                <MaterialIcons
+                    name={expanded ? 'close' : 'brightness-6'}
+                    size={20}
+                    color={colors.iconMuted}
+                />
+            </Pressable>
         </Box>
     );
 };
@@ -280,6 +315,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     if (currentView === 'previous' && cachedEmail && cachedUserId) {
         return (
             <Box className="flex-1 bg-background-0">
+                <ThemeToggleOverlay />
                 <PreviousUserView
                     email={cachedEmail}
                     userId={cachedUserId}
@@ -293,6 +329,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     if (currentView === 'otp' && pendingEmail) {
         return (
             <Box className="flex-1 bg-background-0">
+                <ThemeToggleOverlay />
                 <OTPVerificationView
                     email={pendingEmail}
                     onVerificationSuccess={handleVerificationSuccess}
@@ -304,6 +341,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     return (
         <Box className="flex-1 bg-background-0">
+            <ThemeToggleOverlay />
             <EmailInputView onOTPSent={handleOTPSent} initialEmail={pendingEmail} />
         </Box>
     );

@@ -16,6 +16,7 @@ import {
     logRevenueCatDiagnostics,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
+import { useThemeColors } from "@/lib/theme/tokens";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,7 @@ export default function NotSubscribedScreen() {
     const { data: session, isPending: isSessionPending } = authClient.useSession();
     const router = useRouter();
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const presentedRef = useRef(false);
@@ -114,24 +116,24 @@ export default function NotSubscribedScreen() {
 
     if (isSessionPending) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center bg-background-0">
                 <Spinner size="large" />
             </Box>
         );
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
-            <Box className="flex-1 justify-center items-center bg-black px-6">
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+            <Box className="flex-1 justify-center items-center bg-background-0 px-6">
                 <VStack space="xl" className="items-center max-w-md">
                     <Box className="items-center mb-8">
                         <MeraLogo size={150} />
                     </Box>
-                    <Heading size="2xl" className="text-white text-center">
+                    <Heading size="2xl" className="text-typography-950 text-center">
                         {t('subscription.title')}
                     </Heading>
 
-                    <Text size="lg" className="text-gray-300 text-center leading-relaxed">
+                    <Text size="lg" className="text-typography-700 text-center leading-relaxed">
                         {t('subscription.description')}
                     </Text>
 
@@ -161,14 +163,14 @@ export default function NotSubscribedScreen() {
                                 className="border-primary-500 w-full"
                                 size="lg"
                             >
-                                <ButtonText className="text-white">
+                                <ButtonText className="text-typography-950">
                                     {busy ? t('common.checking') : t('account.refresh')}
                                 </ButtonText>
                             </Button>
                         </VStack>
                     </Box>
 
-                    <Text size="md" className="text-gray-400 text-center mt-4">
+                    <Text size="md" className="text-typography-500 text-center mt-4">
                         {t('account.enquiries')}{" "}
                         <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
                             <Text size="md" className="text-primary-400">

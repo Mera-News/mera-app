@@ -398,6 +398,7 @@
     "manageSettings": "Manage your app settings and account",
     "notifications": "Notifications",
     "language": "Language & Translation",
+    "appearance": "Appearance",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
@@ -653,5 +654,13 @@
     "dailyLimitReached": "You've reached today's article limit. More news tomorrow.",
     "storageFull": "Free up device storage and try again",
     "syncFailed": "We couldn't load the latest content. Pull to refresh."
+  },
+  "theme": {
+    "title": "Appearance",
+    "appTheme": "App Theme",
+    "appThemeDescription": "Choose how Mera looks, or follow your device settings.",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

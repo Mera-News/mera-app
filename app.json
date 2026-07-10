@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mera",
     "slug": "meraapp",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "orientation": "portrait",
     "runtimeVersion": {
       "policy": "appVersion"
@@ -24,7 +24,6 @@
       "icon": "./assets/icons/ios-dark.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIUserInterfaceStyle": "Dark",
         "UIBackgroundModes": [
           "remote-notification"
         ]

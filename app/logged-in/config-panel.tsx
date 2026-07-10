@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function ConfigPanelRoute() {
     return (
-        <GluestackUIProvider mode="dark">
+        <GluestackUIProvider>
             <ConfigScreen />
         </GluestackUIProvider>
     );

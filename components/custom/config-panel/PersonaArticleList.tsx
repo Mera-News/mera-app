@@ -7,6 +7,7 @@ import { VStack } from '@/components/ui/vstack';
 import { getArticleSuggestionsByTopicTexts } from '@/lib/database/services/article-suggestion-service';
 import type ArticleSuggestion from '@/lib/database/models/ArticleSuggestion';
 import logger from '@/lib/logger';
+import { useThemeColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -36,6 +37,7 @@ const toNewsArticle = (s: ArticleSuggestion) => ({
 
 const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, factStatement, onBack }) => {
     const { t } = useTranslation();
+    const colors = useThemeColors();
     const [articles, setArticles] = useState<ArticleSuggestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const hasFetched = useRef(false);
@@ -93,7 +95,7 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
                     <TranslatableDynamic
                         text={factStatement}
                         size="lg"
-                        className="text-white font-semibold"
+                        className="text-typography-950 font-semibold"
                         numberOfLines={0}
                     />
                 ) : undefined}
@@ -106,8 +108,8 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
                 </Box>
             ) : articles.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
-                    <MaterialIcons name="article" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
+                    <MaterialIcons name="article" size={48} color={colors.iconMuted} />
+                    <Text size="md" className="text-typography-500 text-center">
                         {t('sources.noArticlesFound')}
                     </Text>
                 </VStack>
