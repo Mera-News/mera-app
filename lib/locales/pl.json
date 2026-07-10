@@ -295,8 +295,8 @@
     "packMissingBanner": "Ten język wymaga lokalnego pakietu tłumaczeń. Mera przetwarza wszystko lokalnie, więc Twoje dane nigdy nie opuszczają urządzenia. Możesz zarządzać językami w ustawieniach telefonu.",
     "packMissingIosPath": "Ustawienia → Ogólne → Język i region",
     "retry": "Ponów",
-    "watchGuide": "Watch how to add language to your device",
-    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
+    "watchGuide": "Zobacz, jak dodać język do urządzenia",
+    "iosLanguageHint": "Samo wybranie tego języka nie wystarczy — musisz również wybrać ten język w ustawieniach języka iOS."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

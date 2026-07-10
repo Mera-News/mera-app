@@ -295,8 +295,8 @@
     "packMissingBanner": "此语言需要本地翻译包。Mera 完全在本地处理，您的数据永不离开设备。您可以在手机设置中管理语言。",
     "packMissingIosPath": "设置 → 通用 → 语言与地区",
     "retry": "重试",
-    "watchGuide": "Watch how to add language to your device",
-    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
+    "watchGuide": "观看如何为设备添加语言",
+    "iosLanguageHint": "仅选择此语言是不够的——您还需要在 iOS 语言设置中选择此语言。"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
