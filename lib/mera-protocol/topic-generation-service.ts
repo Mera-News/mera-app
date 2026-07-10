@@ -42,13 +42,15 @@ export interface RealTopicGenInputs {
   otherFacts: string[];
   useCloud: boolean;
   totalCount?: number;
+  /** Existing topics the model must not regenerate (used by "generate more"). */
+  excludeTopics?: string[];
 }
 
 const DEFAULT_TOTAL_CLOUD = 16;
 const DEFAULT_TOTAL_LOCAL = 14;
 
 function buildBaseUserPrompt(
-  inputs: Pick<RealTopicGenInputs, 'factStatement' | 'userLocation' | 'otherFacts'>,
+  inputs: Pick<RealTopicGenInputs, 'factStatement' | 'userLocation' | 'otherFacts' | 'excludeTopics'>,
   includeOthers: boolean,
 ): string {
   let prompt = `Fact: "${sanitizeForPrompt(inputs.factStatement)}"`;
@@ -57,6 +59,11 @@ function buildBaseUserPrompt(
   }
   if (includeOthers && inputs.otherFacts.length > 0) {
     prompt += `\nOther user facts:\n${inputs.otherFacts
+      .map((s) => `- ${sanitizeForPrompt(s)}`)
+      .join('\n')}`;
+  }
+  if (inputs.excludeTopics && inputs.excludeTopics.length > 0) {
+    prompt += `\nDo NOT repeat these existing topics:\n${inputs.excludeTopics
       .map((s) => `- ${sanitizeForPrompt(s)}`)
       .join('\n')}`;
   }
@@ -219,6 +226,23 @@ export async function generateTopicsForFact(
   }
 
   return mergeRealOutputsForFact(factOnlyOutput, comboOutput, inputs.factStatement);
+}
+
+/**
+ * Append newly generated topics onto an existing list, deduped
+ * case-insensitively (existing order preserved, new topics appended).
+ * Used by the "generate more topics" flow.
+ */
+export function mergeTopicsAppend(existing: string[], incoming: string[]): string[] {
+  const seen = new Set(existing.map((t) => t.toLowerCase().trim()));
+  const out = [...existing];
+  for (const t of incoming) {
+    const key = t.toLowerCase().trim();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(t);
+  }
+  return out;
 }
 
 /** Back-compat alias used by generateTopicsFromFact (local-only path). */

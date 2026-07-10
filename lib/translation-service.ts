@@ -124,16 +124,19 @@ export function translateText(
     targetLangCode: string,
 ): Promise<string | null> {
     const promise = queue.then(async () => {
-        // Auto-detect the source language on both platforms, but "auto" means
-        // something different on each: Android's Kotlin bridge treats the
-        // literal string 'auto' as a signal to run its own language-ID step
-        // first. iOS has no such special-case — 'auto' would be passed
-        // straight into `Locale.Language(identifier: "auto")`, which isn't a
-        // real BCP-47 tag and makes the Translation framework reject the
-        // request outright (even for genuinely English text). On iOS,
-        // auto-detection means omitting sourceLangCode entirely so
-        // `TranslationSession.Configuration.source` is nil.
-        const sourceLangCode = Platform.OS === 'android' ? 'auto' : undefined;
+        // Android's Kotlin bridge treats the literal string 'auto' as a
+        // signal to run its own silent language-ID step first — no user-
+        // facing UI. iOS has no equivalent: passing 'auto' isn't a real
+        // BCP-47 tag (Swift feeds it straight into `Locale.Language`) and
+        // fails outright, while omitting sourceLangCode (nil source) lets
+        // Apple's Translation framework auto-detect — but when it can't
+        // confidently detect the source, it presents its own disruptive
+        // native "select a language" bottom sheet. Since `text` is always
+        // meant to be English by this app's design (title_en, description_en,
+        // reason are all English-sourced fields), iOS always declares 'en'
+        // and lets a wrong assumption fail quietly through the retry/catch/
+        // log path below instead of surfacing OS UI.
+        const sourceLangCode = Platform.OS === 'android' ? 'auto' : 'en';
         for (let attempt = 0; attempt <= TRANSLATE_RETRY_DELAYS_MS.length; attempt++) {
             try {
                 const result = await onTranslateTask({

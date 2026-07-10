@@ -7,6 +7,7 @@ import { VStack } from '@/components/ui/vstack';
 import { getArticleSuggestionsByTopicTexts } from '@/lib/database/services/article-suggestion-service';
 import type ArticleSuggestion from '@/lib/database/models/ArticleSuggestion';
 import logger from '@/lib/logger';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,7 +24,7 @@ interface PersonaArticleListProps {
 const toNewsArticle = (s: ArticleSuggestion) => ({
     _id: s.id,
     title_en_internal_only: s.titleEn ?? null,
-    title: s.titleEn ?? '',
+    title: s.titleOriginal ?? s.titleEn ?? '',
     pubDate: s.firstPubDate ?? null,
     image_url: s.imageUrl ?? null,
     publicationSource: s.publicationName
@@ -118,6 +119,8 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
                     keyExtractor={keyExtractor}
                     contentContainerStyle={{ padding: 16, paddingBottom: 20 }}
                     showsVerticalScrollIndicator={false}
+                    onScroll={notifyScrollTick}
+                    scrollEventThrottle={16}
                 />
             )}
         </Box>

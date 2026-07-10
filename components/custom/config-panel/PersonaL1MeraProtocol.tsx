@@ -14,6 +14,10 @@ import { VStack } from '@/components/ui/vstack';
 import { PRIVACY_URL } from '@/lib/config/branding';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
+import { enqueueJob } from '@/lib/database/services/inference-job-service';
+import { inferenceQueue } from '@/lib/inference/InferenceQueue';
+import { buildTopicGenContext } from '@/lib/inference/handlers/topic-gen-handler';
+import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/topic-generation-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
@@ -37,6 +41,8 @@ interface PersonaL1MeraProtocolProps {
     readonly userId: string;
 }
 
+const GENERATE_MORE_TOPIC_COUNT = 10;
+
 const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId }) => {
     const { userPersona, fetchUserPersona } = useUserStore();
     const toast = useToast();
@@ -56,6 +62,8 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const [addTopicFact, setAddTopicFact] = useState<Fact | null>(null);
     const [addTopicText, setAddTopicText] = useState('');
     const [isAddingTopic, setIsAddingTopic] = useState(false);
+    const [generateMoreFact, setGenerateMoreFact] = useState<Fact | null>(null);
+    const [generatingMoreFactIds, setGeneratingMoreFactIds] = useState<Set<string>>(new Set());
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const glowAnim = useRef(new Animated.Value(0.3)).current;
     const isChatExpanded = useFloatingChatIsExpanded();
@@ -292,6 +300,85 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
         setAddTopicFact(null);
         setAddTopicText('');
     }, []);
+
+    const handleGenerateMorePress = useCallback((fact: Fact) => {
+        setGenerateMoreFact(fact);
+    }, []);
+
+    const handleGenerateMoreCancel = useCallback(() => {
+        setGenerateMoreFact(null);
+    }, []);
+
+    const clearGeneratingMore = useCallback((factId: string) => {
+        setGeneratingMoreFactIds(prev => {
+            if (!prev.has(factId)) return prev;
+            const next = new Set(prev);
+            next.delete(factId);
+            return next;
+        });
+    }, []);
+
+    const showGenerateMoreFailedToast = useCallback(() => {
+        toast.show({
+            placement: 'top',
+            render: () => (
+                <Toast action="error" variant="solid">
+                    <ToastTitle>{t('configPanel.generateMoreTopicsFailedTitle')}</ToastTitle>
+                    <ToastDescription>{t('configPanel.generateMoreTopicsFailedDescription')}</ToastDescription>
+                </Toast>
+            ),
+        });
+    }, [toast, t]);
+
+    const handleGenerateMoreConfirm = useCallback(async () => {
+        const fact = generateMoreFact;
+        if (!fact || generatingMoreFactIds.has(fact.id)) return;
+        setGenerateMoreFact(null);
+        setGeneratingMoreFactIds(prev => new Set(prev).add(fact.id));
+        const existingTopics = fact.metadata?.topics ?? [];
+        try {
+            if (isOnDeviceProcessing) {
+                await enqueueJob('topic_gen', {
+                    factId: fact.id,
+                    factStatement: fact.statement,
+                    useCloud: false,
+                    mode: 'append',
+                    totalCount: GENERATE_MORE_TOPIC_COUNT,
+                    excludeTopics: existingTopics,
+                });
+                // Busy state clears when the queue drains (job done or failed);
+                // the handler's notifyFactMutation() refreshes the fact list.
+                inferenceQueue.onDrain(() => clearGeneratingMore(fact.id));
+                inferenceQueue.notify();
+                return;
+            }
+            const allFacts = await getFacts();
+            const { userLocation, otherFacts } = buildTopicGenContext(allFacts, fact.id);
+            const newTopics = await generateTopicsForFact({
+                factStatement: fact.statement,
+                userLocation,
+                otherFacts,
+                useCloud: true,
+                totalCount: GENERATE_MORE_TOPIC_COUNT,
+                excludeTopics: existingTopics,
+            });
+            if (newTopics.length === 0) {
+                showGenerateMoreFailedToast();
+            } else {
+                await updateFact(fact.id, {
+                    metadata: { ...(fact.metadata ?? {}), topics: mergeTopicsAppend(existingTopics, newTopics) },
+                });
+                loadLocalFacts();
+                fetchUserPersona(userId, true);
+                useForYouStore.getState().setFeedNeedsRefresh(true);
+            }
+            clearGeneratingMore(fact.id);
+        } catch (error) {
+            logger.error('[PersonaL1MeraProtocol] generateMoreTopics failed', error, { factId: fact.id });
+            showGenerateMoreFailedToast();
+            clearGeneratingMore(fact.id);
+        }
+    }, [generateMoreFact, generatingMoreFactIds, isOnDeviceProcessing, clearGeneratingMore, showGenerateMoreFailedToast, loadLocalFacts, fetchUserPersona, userId]);
 
     const handleUpgrade = useCallback(async () => {
         try {
@@ -537,6 +624,22 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                                                 <Text size="sm" className="text-blue-400">{t('configPanel.addTopic')}</Text>
                                                             </HStack>
                                                         </Pressable>
+                                                        {generatingMoreFactIds.has(fact.id) ? (
+                                                            <HStack className="items-center mt-1" space="xs">
+                                                                <Spinner size="small" />
+                                                                <Text size="sm" className="text-typography-400">{t('configPanel.generatingMoreTopics')}</Text>
+                                                            </HStack>
+                                                        ) : (
+                                                            <Pressable
+                                                                onPress={() => handleGenerateMorePress(fact)}
+                                                                className="mt-1"
+                                                            >
+                                                                <HStack className="items-center" space="xs">
+                                                                    <MaterialIcons name="auto-awesome" size={16} color="#60a5fa" />
+                                                                    <Text size="sm" className="text-blue-400">{t('configPanel.generateMoreTopics')}</Text>
+                                                                </HStack>
+                                                            </Pressable>
+                                                        )}
                                                     </VStack>
                                                 )}
                                             </Box>
@@ -643,6 +746,38 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                 action="secondary"
                                 onPress={handleAddTopicCancel}
                                 disabled={isAddingTopic}
+                                className="w-full"
+                            >
+                                <ButtonText>{t('common.cancel')}</ButtonText>
+                            </Button>
+                        </VStack>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            <Modal isOpen={generateMoreFact !== null} onClose={handleGenerateMoreCancel} size="sm">
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader className="pb-4">
+                        <Text className="text-xl font-semibold text-white">{t('configPanel.generateMoreTopicsTitle')}</Text>
+                    </ModalHeader>
+                    <ModalBody className="py-4">
+                        <Text className="text-gray-300 text-base leading-relaxed">
+                            {t('configPanel.generateMoreTopicsWarning')}
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter className="border-t border-gray-700 pt-4">
+                        <VStack className="w-full" space="md">
+                            <Button
+                                onPress={handleGenerateMoreConfirm}
+                                className="w-full"
+                            >
+                                <ButtonText>{t('configPanel.generateMoreTopicsConfirm')}</ButtonText>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                action="secondary"
+                                onPress={handleGenerateMoreCancel}
                                 className="w-full"
                             >
                                 <ButtonText>{t('common.cancel')}</ButtonText>
