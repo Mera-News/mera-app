@@ -422,6 +422,48 @@ describe('reconcileAsyncJobResults — fetchResults paths', () => {
     expect(mockSetCycleState).toHaveBeenCalledWith('idle');
   });
 
+  it('clears job and returns stale on 401 (expired/invalid capability token)', async () => {
+    const job = makePendingJob();
+    mockGetPendingAsyncJob.mockResolvedValue(job);
+    mockExpoFetch.mockResolvedValue({
+      status: 401,
+      ok: false,
+      text: jest.fn(),
+    });
+
+    const result = await reconcileAsyncJobResults('foreground');
+
+    expect(result).toBe('stale');
+    expect(mockClearPendingAsyncJob).toHaveBeenCalled();
+    expect(mockClearCapabilityToken).toHaveBeenCalled();
+    expect(mockSetCycleState).toHaveBeenCalledWith('idle');
+    expect(mockSetAsyncJobPhase).toHaveBeenCalledWith('idle');
+    expect(mockWarn).toHaveBeenCalledWith(
+      expect.stringContaining('unauthorized'),
+    );
+  });
+
+  it('clears job and returns stale on 403 (expired/invalid capability token)', async () => {
+    const job = makePendingJob();
+    mockGetPendingAsyncJob.mockResolvedValue(job);
+    mockExpoFetch.mockResolvedValue({
+      status: 403,
+      ok: false,
+      text: jest.fn(),
+    });
+
+    const result = await reconcileAsyncJobResults('foreground');
+
+    expect(result).toBe('stale');
+    expect(mockClearPendingAsyncJob).toHaveBeenCalled();
+    expect(mockClearCapabilityToken).toHaveBeenCalled();
+    expect(mockSetCycleState).toHaveBeenCalledWith('idle');
+    expect(mockSetAsyncJobPhase).toHaveBeenCalledWith('idle');
+    expect(mockWarn).toHaveBeenCalledWith(
+      expect.stringContaining('unauthorized'),
+    );
+  });
+
   it('returns error on non-404 HTTP error', async () => {
     const job = makePendingJob();
     mockGetPendingAsyncJob.mockResolvedValue(job);

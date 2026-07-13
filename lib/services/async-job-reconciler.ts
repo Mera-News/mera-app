@@ -176,8 +176,14 @@ async function reconcileAsyncJobResultsInner(
       );
       return 'pending';
     }
-    if (res === 'not-found') {
-      logger.warn(`${TAG} fetchResults → not-found requestId=${effectiveId}`);
+    if (res === 'not-found' || res === 'unauthorized') {
+      // Both cases mean the job is unrecoverable via retry: 404 → the server
+      // no longer knows this job; 401/403 → the capability token (2h TTL)
+      // expired or was rejected. Drop the pending job + capability token and
+      // idle the cycle so the next trigger resubmits fresh.
+      logger.warn(
+        `${TAG} fetchResults → ${res} requestId=${effectiveId} — dropping job and clearing capability token`,
+      );
       await clearPendingAsyncJob().catch((err: unknown) => {
         logger.captureException(err, {
           tags: { service: 'async-job-reconciler', step: 'clear-not-found-job' },
@@ -666,7 +672,7 @@ async function pickResultsAuthHeader(
 async function fetchResults(
   requestId: string,
   context: ExecutionContext,
-): Promise<ServerResults | 'pending' | 'not-found'> {
+): Promise<ServerResults | 'pending' | 'not-found' | 'unauthorized'> {
   // Per-context auth.
   //   Foreground: prefer the keychain JWT; fall back to capability token if
   //     keychain is transiently unavailable AND a capability token exists.
@@ -683,6 +689,12 @@ async function fetchResults(
   );
 
   if (res.status === 404) return 'not-found';
+  // The capability token now carries a 2h TTL (down from 24h). A 401/403 here
+  // means the token expired or was rejected server-side — that's unrecoverable
+  // by retrying with the same token, so treat it like 404: drop the pending
+  // job + capability token and let the next trigger resubmit with a fresh
+  // job/token, rather than retrying forever as a transient error.
+  if (res.status === 401 || res.status === 403) return 'unauthorized';
   if (!res.ok) {
     let bodyStr = '';
     try {
