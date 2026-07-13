@@ -1,3 +1,4 @@
+import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -13,6 +14,8 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
+import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
+import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -20,13 +23,14 @@ import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ArticleDetailScreenProps {
     articleId: string;
     onBack: () => void;
+    backIcon?: 'back' | 'home';
 }
 
 const SCROLL_THRESHOLD = 300;
@@ -52,7 +56,11 @@ const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
         : undefined,
 } as NewsArticle);
 
-const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, onBack }) => {
+const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
+    articleId,
+    onBack,
+    backIcon = 'back',
+}) => {
     const { t } = useTranslation();
     const [article, setArticle] = useState<NewsArticle | null>(null);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
@@ -63,6 +71,22 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguage();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
+
+    // Context for the per-screen floating chat bubble (rendered as the last
+    // child of the root below). Memoized so FloatingMeraBubble doesn't re-render
+    // on every parent render.
+    const chatContext = useMemo<ChatContext | null>(
+        () =>
+            article
+                ? {
+                    kind: 'article-suggestion',
+                    articleId: article._id ?? articleId,
+                    articleTitle:
+                        article.title_en_internal_only ?? article.title ?? undefined,
+                }
+                : null,
+        [article, articleId],
+    );
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -148,7 +172,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
     };
 
     const handleRelatedPress = useCallback((relatedArticleId: string) => {
-        router.push({
+        router.replace({
             pathname: '/logged-in/article-detail',
             params: { articleId: relatedArticleId },
         });
@@ -186,7 +210,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                     onPress={onBack}
                     className="bg-gray-900 rounded-full p-3 shadow-hard-2"
                 >
-                    <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                    <MaterialIcons
+                        name={backIcon === 'home' ? 'home' : 'arrow-back'}
+                        size={24}
+                        color="#ffffff"
+                    />
                 </Pressable>
             </Box>
 
@@ -207,6 +235,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                     <>
                         {articleUrl ? (
                             <VStack space="xs">
+                                <ArticleFeedbackPrompt
+                                    articleId={article._id ?? articleId}
+                                    title={article.title_en_internal_only ?? article.title ?? ''}
+                                />
                                 <Button
                                     variant="outline"
                                     action="primary"
@@ -274,6 +306,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ articleId, on
                 }
             />
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
+
+            {/* Floating chat bubble — LAST child so it draws above the screen's
+                own content; unmounts with the screen on navigation. */}
+            {chatContext && <ScreenChatBubble context={chatContext} />}
         </Box>
     );
 };

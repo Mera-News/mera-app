@@ -14,13 +14,15 @@ import {
   PromptInput,
   type PromptInputHandle,
 } from '@/components/ui/chat-ai';
+import { hapticLight } from '@/lib/haptics';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useContext, useEffect, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
 import FactCard from './FactCard';
+import ProposalCard from './ProposalCard';
 import StarterChips from './StarterChips';
 import type { ChatThreadItem, ChatThreadProps } from './types';
 
@@ -35,6 +37,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   onLoadOlder,
   hasOlder,
   isLoadingOlder,
+  showHistoryButton,
+  onRevealHistory,
   starterChips,
   onChipPress,
   blockedMessage,
@@ -61,6 +65,16 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     (item) => item.kind === 'message' && item.message.id !== 'intro',
   );
   const showChips = !hasRealMessage && starterChips.length > 0;
+
+  // The newest proposal card is the only one that can be pending; older ones
+  // render expired. ProposalCard combines this with the store to decide status.
+  let lastProposalKey: string | null = null;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].kind === 'proposal-card') {
+      lastProposalKey = items[i].key;
+      break;
+    }
+  }
 
   const renderItem = (item: ChatThreadItem): React.ReactElement | null => {
     switch (item.kind) {
@@ -92,6 +106,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       case 'fact-card':
         return <FactCard action={item.action} statements={item.statements} />;
+
+      case 'proposal-card':
+        return <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />;
 
       case 'divider':
         return (
@@ -128,8 +145,28 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           hasOlder={hasOlder}
           isLoadingOlder={isLoadingOlder}
           header={
-            showChips ? (
-              <StarterChips chips={starterChips} onChipPress={onChipPress} />
+            showHistoryButton || showChips ? (
+              <View style={styles.header}>
+                {showHistoryButton && (
+                  <View style={styles.historyButtonRow}>
+                    <Pressable
+                      style={styles.historyButton}
+                      onPress={() => {
+                        hapticLight();
+                        onRevealHistory();
+                      }}
+                    >
+                      <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
+                      <Text size="xs" style={styles.historyButtonText}>
+                        {t('floatingChat.viewPreviousMessages')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+                {showChips && (
+                  <StarterChips chips={starterChips} onChipPress={onChipPress} />
+                )}
+              </View>
             ) : null
           }
         />
@@ -157,6 +194,27 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 const styles = StyleSheet.create({
   listWrap: {
     flex: 1,
+  },
+  header: {
+    gap: 4,
+  },
+  historyButtonRow: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  historyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  historyButtonText: {
+    color: 'rgb(160, 160, 160)',
   },
   userText: {
     color: 'rgb(210, 210, 210)',

@@ -10,13 +10,15 @@ import { useChatPersistence } from '@/lib/hooks/useChatPersistence';
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import { hapticMedium, hapticSuccess } from '@/lib/haptics';
 import type { ConversationMessage } from '@/lib/llm/types';
-import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import ChatThread from './ChatThread';
 import { deriveThreadItems } from './deriveThreadItems';
 import type { StarterChip } from './types';
+
+const noop = () => {};
 
 export interface ChatSessionViewProps {
   // Inference hook result (shared shape of useLocalLLM / useCloudPersonaChat)
@@ -26,6 +28,8 @@ export interface ChatSessionViewProps {
   isBlocked: boolean;
   blockedReason: string | null;
   error: string | null;
+  /** Current chat context — drives the intro copy, starter chips, and auto-send. */
+  context: ChatContext;
   // Session plumbing
   conversationId: string | null;
   /**
@@ -44,6 +48,7 @@ export default function ChatSessionView({
   isBlocked,
   blockedReason,
   error,
+  context,
   conversationId,
   resumeMessages,
   isLoading,
@@ -53,10 +58,16 @@ export default function ChatSessionView({
   const isStreaming = status === 'streaming';
   const resume = useMemo(() => resumeMessages ?? [], [resumeMessages]);
 
+  // Intro copy depends on the context: the article-feedback surfaces open with a
+  // "what can I do for you" line (article vs. suggestion variant); everything
+  // else keeps the persona intro.
+  const introText =
+    context.kind === 'article-suggestion'
+      ? t(context.suggestionId ? 'articleFeedback.intro' : 'articleFeedback.introArticle')
+      : t('personaChat.introMessage');
+
   // Intro pseudo-message until the first send of this session.
-  const [introMessage, setIntroMessage] = useState<string | null>(
-    t('personaChat.introMessage'),
-  );
+  const [introMessage, setIntroMessage] = useState<string | null>(introText);
 
   // Seed persistence with the resumed ids so retained cloud-store messages
   // aren't re-persisted on reopen. Stable across renders for the same session.
@@ -105,8 +116,31 @@ export default function ChatSessionView({
     prevFactCardCountRef.current = liveFactCardCount;
   }, [liveFactCardCount]);
 
-  const starterChips: StarterChip[] = useMemo(
-    () => [
+  const starterChips: StarterChip[] = useMemo(() => {
+    if (context.kind === 'article-suggestion') {
+      // A real suggestion can be explained ("why?"); a plain article can't, so
+      // it offers "more like this" instead. Both offer the "don't want" chip.
+      const firstChip: StarterChip = context.suggestionId
+        ? {
+            key: 'why',
+            label: t('articleFeedback.chipWhy'),
+            message: t('articleFeedback.chipWhyMessage'),
+          }
+        : {
+            key: 'more-like-this',
+            label: t('articleFeedback.chipMoreLikeThis'),
+            message: t('articleFeedback.chipMoreLikeThisMessage'),
+          };
+      return [
+        firstChip,
+        {
+          key: 'dont-want',
+          label: t('articleFeedback.chipDontWant'),
+          message: t('articleFeedback.chipDontWantMessage'),
+        },
+      ];
+    }
+    return [
       {
         key: 'add-location',
         label: t('floatingChat.chipAddLocation'),
@@ -122,9 +156,8 @@ export default function ChatSessionView({
         label: t('floatingChat.chipHelpSetup'),
         message: t('floatingChat.chipHelpSetupMessage'),
       },
-    ],
-    [t],
-  );
+    ];
+  }, [t, context]);
 
   const handleSend = useCallback(
     (text: string) => {
@@ -144,6 +177,29 @@ export default function ChatSessionView({
     },
     [handleSend],
   );
+
+  // Auto-send the pending initial message once per session (thumbs tap on an
+  // article detail screen seeds it). The atomic consume + ref guard ensures it
+  // fires exactly once even across re-renders; a fresh nonce remounts this view
+  // for each new thumbs tap, resetting the ref. Bubble-tap opens set no pending
+  // message, so this is a no-op there (intro + chips show instead).
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || isStreaming || autoSentRef.current) return;
+    const pending = useFloatingChatStore.getState().consumePendingInitialMessage();
+    if (pending) {
+      autoSentRef.current = true;
+      handleSend(pending);
+    }
+  }, [isLoading, isStreaming, handleSend]);
+
+  // "View previous messages" gate: history stays hidden until the user reveals
+  // it, at which point the normal scroll-up paging resumes.
+  const [historyRevealed, setHistoryRevealed] = useState(false);
+  const handleRevealHistory = useCallback(() => {
+    setHistoryRevealed(true);
+    loadOlder();
+  }, [loadOlder]);
 
   // Surface inference errors directly — there's no recovery action the user
   // can take in-app (ported from PersonaChatUI).
@@ -168,9 +224,14 @@ export default function ChatSessionView({
     <ChatThread
       items={items}
       isStreaming={isStreaming}
-      onLoadOlder={loadOlder}
-      hasOlder={hasOlder}
+      // Scroll-up paging is wired only after the history reveal; before that the
+      // pill button is the single entry point (hasOlder=false disables the
+      // FlatList's onEndReached auto-load).
+      onLoadOlder={historyRevealed ? loadOlder : noop}
+      hasOlder={historyRevealed ? hasOlder : false}
       isLoadingOlder={isLoadingOlder}
+      showHistoryButton={hasOlder && !historyRevealed}
+      onRevealHistory={handleRevealHistory}
       starterChips={starterChips}
       onChipPress={handleChipPress}
       blockedMessage={blockedMessage}

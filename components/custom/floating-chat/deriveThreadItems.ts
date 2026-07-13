@@ -5,7 +5,12 @@
 // older messages (`history`), and a few flags, and produces a flat
 // `ChatThreadItem[]` ordered newest-LAST (ChatThread inverts internally).
 
-import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
+import type {
+  ConversationMessage,
+  ProposalAction,
+  StagedProposal,
+  ToolCallRecord,
+} from '@/lib/llm/types';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
 // ---------------------------------------------------------------------------
@@ -118,6 +123,98 @@ function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
 }
 
 // ---------------------------------------------------------------------------
+// Proposal-card derivation
+// ---------------------------------------------------------------------------
+//
+// The article-feedback agent stages persona changes via a `proposeChanges`
+// tool call whose INPUT carries { explanation, expected_effects, actions[] }.
+// We rebuild a StagedProposal defensively from that input so a persisted (and
+// therefore resumed) proposal re-renders its confirm card. `applyProposal` /
+// `cancelProposal` tool calls surface nothing — they only mutate store state.
+//
+// Proposal id reconciliation: the agent generates the StagedProposal id as its
+// own nonce (executeTool never receives the tool-call id), so the tool-call id
+// does NOT equal the store proposal id. If the tool RESULT echoes an id we use
+// it (lets ProposalCard match store.proposal / resolvedProposals by id); else
+// we fall back to the tool-call id as a stable card identity. ProposalCard's
+// final pending/expired decision also uses "is this the LAST proposal card"
+// so correctness never depends on the echo. See ProposalCard.tsx.
+
+function parseProposalAction(value: unknown): ProposalAction | null {
+  const rec = asRecord(value);
+  if (!rec) return null;
+  const type = typeof rec.type === 'string' ? rec.type : '';
+  switch (type) {
+    case 'add_fact': {
+      const statement = typeof rec.statement === 'string' ? rec.statement.trim() : '';
+      return statement ? { type: 'add_fact', statement } : null;
+    }
+    case 'update_fact': {
+      const factId = typeof rec.fact_id === 'string' ? rec.fact_id : '';
+      const next = typeof rec.new_statement === 'string' ? rec.new_statement.trim() : '';
+      return factId && next ? { type: 'update_fact', fact_id: factId, new_statement: next } : null;
+    }
+    case 'delete_fact': {
+      const factId = typeof rec.fact_id === 'string' ? rec.fact_id : '';
+      return factId ? { type: 'delete_fact', fact_id: factId } : null;
+    }
+    case 'add_topics': {
+      const factId = typeof rec.fact_id === 'string' ? rec.fact_id : '';
+      const topics = toStringArray(rec.topics);
+      return factId && topics.length > 0 ? { type: 'add_topics', fact_id: factId, topics } : null;
+    }
+    case 'remove_topics': {
+      const factId = typeof rec.fact_id === 'string' ? rec.fact_id : '';
+      const topics = toStringArray(rec.topics);
+      return factId && topics.length > 0
+        ? { type: 'remove_topics', fact_id: factId, topics }
+        : null;
+    }
+    case 'submit_feature_request': {
+      const title = typeof rec.title === 'string' ? rec.title.trim() : '';
+      const summary = typeof rec.summary === 'string' ? rec.summary.trim() : '';
+      return title && summary ? { type: 'submit_feature_request', title, summary } : null;
+    }
+    default:
+      return null;
+  }
+}
+
+/** Rebuilds a StagedProposal from a completed `proposeChanges` tool call. */
+function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
+  if (toolCall.status !== 'done' || toolCall.name !== 'proposeChanges') return null;
+
+  const input = asRecord(toolCall.input) ?? {};
+  const rawActions = Array.isArray(input.actions) ? input.actions : [];
+  const actions: ProposalAction[] = [];
+  for (const raw of rawActions) {
+    const action = parseProposalAction(raw);
+    if (action) actions.push(action);
+  }
+  // A proposal with no valid action is malformed — skip it entirely.
+  if (actions.length === 0) return null;
+
+  const explanation = typeof input.explanation === 'string' ? input.explanation.trim() : '';
+  const expectedEffects =
+    typeof input.expected_effects === 'string'
+      ? input.expected_effects.trim()
+      : typeof input.expectedEffects === 'string'
+        ? input.expectedEffects.trim()
+        : '';
+
+  // Prefer an id echoed by the tool result; otherwise use the tool-call id.
+  const result = asRecord(toolCall.result);
+  const echoedId =
+    typeof result?.id === 'string'
+      ? result.id
+      : typeof result?.proposalId === 'string'
+        ? result.proposalId
+        : null;
+
+  return { id: echoedId ?? toolCall.id, explanation, expectedEffects, actions };
+}
+
+// ---------------------------------------------------------------------------
 // Message → thread items
 // ---------------------------------------------------------------------------
 
@@ -133,6 +230,17 @@ function emitMessage(
   const cards: ChatThreadItem[] = [];
   if (message.role === 'assistant' && message.toolCalls) {
     message.toolCalls.forEach((tc, idx) => {
+      // Proposal cards take precedence — a `proposeChanges` call never doubles
+      // as a fact card (and applyProposal/cancelProposal surface nothing).
+      const proposal = deriveProposal(tc);
+      if (proposal) {
+        cards.push({
+          kind: 'proposal-card',
+          key: `proposal-${message.id}-${idx}`,
+          proposal,
+        });
+        return;
+      }
       const card = deriveCard(tc);
       if (card) {
         cards.push({

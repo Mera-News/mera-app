@@ -343,6 +343,130 @@ describe('deriveThreadItems', () => {
     expect(allKeys).toContain('card-a1-0');
   });
 
+  it('emits a proposal-card from a done proposeChanges tool call (rebuilt from input)', () => {
+    const tc: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'proposeChanges',
+      status: 'done',
+      input: {
+        explanation: 'You keep seeing crypto news.',
+        expected_effects: 'Fewer crypto suggestions.',
+        actions: [
+          { type: 'add_fact', statement: 'Not interested in cryptocurrency' },
+          { type: 'delete_fact', fact_id: 'f9' },
+          { type: 'add_topics', fact_id: 'f2', topics: ['climate policy'] },
+        ],
+      },
+      result: {},
+    };
+    const items = deriveThreadItems(
+      base({ live: [assistantMsg('a1', 'Here is what I propose', [tc])] }),
+    );
+
+    expect(items[0]).toMatchObject({ kind: 'message', key: 'live-a1' });
+    const card = items.find((i) => i.kind === 'proposal-card');
+    expect(card).toMatchObject({ kind: 'proposal-card', key: 'proposal-a1-0' });
+    if (card && card.kind === 'proposal-card') {
+      expect(card.proposal.id).toBe('tc-1'); // falls back to tool-call id
+      expect(card.proposal.explanation).toBe('You keep seeing crypto news.');
+      expect(card.proposal.expectedEffects).toBe('Fewer crypto suggestions.');
+      expect(card.proposal.actions).toEqual([
+        { type: 'add_fact', statement: 'Not interested in cryptocurrency' },
+        { type: 'delete_fact', fact_id: 'f9' },
+        { type: 'add_topics', fact_id: 'f2', topics: ['climate policy'] },
+      ]);
+    }
+  });
+
+  it('prefers an id echoed by the proposeChanges result over the tool-call id', () => {
+    const tc: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'proposeChanges',
+      status: 'done',
+      input: {
+        explanation: 'x',
+        expected_effects: 'y',
+        actions: [{ type: 'add_fact', statement: 'Likes hiking' }],
+      },
+      result: { staged: true, id: 'nonce-42' },
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'ok', [tc])] }));
+    const card = items.find((i) => i.kind === 'proposal-card');
+    if (card && card.kind === 'proposal-card') {
+      expect(card.proposal.id).toBe('nonce-42');
+    } else {
+      throw new Error('expected a proposal-card');
+    }
+  });
+
+  it('skips a proposeChanges call whose actions are all malformed', () => {
+    const tc: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'proposeChanges',
+      status: 'done',
+      input: {
+        explanation: 'x',
+        expected_effects: 'y',
+        actions: [
+          { type: 'add_fact' }, // missing statement
+          { type: 'update_fact', fact_id: 'f1' }, // missing new_statement
+          { type: 'bogus' },
+        ],
+      },
+      result: {},
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'ok', [tc])] }));
+    expect(items.some((i) => i.kind === 'proposal-card')).toBe(false);
+  });
+
+  it('parses a submit_feature_request action', () => {
+    const tc: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'proposeChanges',
+      status: 'done',
+      input: {
+        explanation: 'x',
+        expected_effects: 'y',
+        actions: [
+          { type: 'submit_feature_request', title: 'Dark mode toggle', summary: 'Let me switch themes' },
+        ],
+      },
+      result: {},
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'ok', [tc])] }));
+    const card = items.find((i) => i.kind === 'proposal-card');
+    if (card && card.kind === 'proposal-card') {
+      expect(card.proposal.actions).toEqual([
+        { type: 'submit_feature_request', title: 'Dark mode toggle', summary: 'Let me switch themes' },
+      ]);
+    } else {
+      throw new Error('expected a proposal-card');
+    }
+  });
+
+  it('emits nothing for applyProposal / cancelProposal tool calls', () => {
+    const apply: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'applyProposal',
+      status: 'done',
+      input: {},
+      result: { proposalResolved: 'applied' },
+    };
+    const cancel: ToolCallRecord = {
+      id: 'tc-2',
+      name: 'cancelProposal',
+      status: 'done',
+      input: {},
+      result: { proposalResolved: 'cancelled' },
+    };
+    const items = deriveThreadItems(
+      base({ live: [assistantMsg('a1', 'Applied.', [apply, cancel])] }),
+    );
+    expect(items.some((i) => i.kind === 'proposal-card')).toBe(false);
+    expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
+    expect(keys(items)).toEqual(['live-a1']);
+  });
+
   it('normalizes persisted toolCalls: null into undefined and derives cards from history', () => {
     const tc: ToolCallRecord = {
       id: 't1',

@@ -42,6 +42,7 @@ export default function CloudPersonaChat({
       isBlocked={chat.isBlocked}
       blockedReason={chat.blockedReason}
       error={chat.error}
+      context={context}
       conversationId={conversationId}
       resumeMessages={resumeMessages}
       isLoading={isLoading}

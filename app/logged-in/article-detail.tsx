@@ -12,19 +12,32 @@ export default function ArticleDetail() {
 
     const articleId = params.articleId;
 
+    // Evaluate once on mount: a deep-linked screen with no navigation history
+    // shows a home button that jumps to For You instead of a back arrow.
+    const [canGoBack] = React.useState(() => router.canGoBack());
+
     if (!articleId || typeof articleId !== 'string') {
         router.back();
         return null;
     }
 
     const handleBack = () => {
-        router.back();
+        if (canGoBack) {
+            router.back();
+        } else {
+            router.replace('/logged-in/app_container/for_you');
+        }
     };
 
     return (
         <GluestackUIProvider mode="dark">
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <ArticleDetailScreen articleId={articleId} onBack={handleBack} />
+                <ArticleDetailScreen
+                    key={articleId}
+                    articleId={articleId}
+                    onBack={handleBack}
+                    backIcon={canGoBack ? 'back' : 'home'}
+                />
             </ErrorBoundary>
         </GluestackUIProvider>
     );

@@ -2,8 +2,10 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import AppPreferencesTab from '@/components/custom/config-mera/AppPreferencesTab';
+import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
 import { authClient } from '@/lib/auth-client';
 import { useConfigPanelActiveTab } from '@/lib/stores/config-panel-store';
+import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -11,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfigPanelTabs from './ConfigPanelTabs';
 import PersonaTabContent from './PersonaTabContent';
 import SourcesTabContent from './SourcesTabContent';
+
+const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
 
 const ConfigScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
@@ -52,6 +56,10 @@ const ConfigScreen: React.FC = () => {
 
             {/* Tab Content */}
             {renderTabContent()}
+
+            {/* Floating chat bubble — only on the Persona tab; LAST child so it
+                draws above the tab content and unmounts with the screen. */}
+            {activeTab === 'persona' && <ScreenChatBubble context={PERSONA_CONTEXT} />}
         </Box>
     );
 };

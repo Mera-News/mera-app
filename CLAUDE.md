@@ -1,5 +1,14 @@
 # CLAUDE.md
 
+## Model Usage Policy
+
+If the current model is Fable, use Fable **only for planning and orchestration** — do not implement directly. For implementation, delegate to Opus and Sonnet subagents (via the Agent tool, `model: "opus"` or `model: "sonnet"`), running them in parallel where tasks are independent:
+
+- **Opus** for complex tasks or those needing a large context (cross-cutting changes, tricky logic, large files).
+- **Sonnet** for simpler, well-scoped tasks (mechanical edits, boilerplate, isolated changes).
+
+When spawning these subagents, pass on **all relevant context** in the prompt — exact file paths, the plan/decisions already made, relevant code snippets, schema/contract details, and constraints — so the subagent can start implementing immediately instead of spending time rediscovering context.
+
 ## Project Overview
 
 Mera is a React Native/Expo news personalization app for iOS and Android (bundle ID / package: `com.mera.news`).
@@ -104,6 +113,8 @@ Schema lives in `lib/database/schema.ts`; migrations in `lib/database/migrations
 **LLM Prompt Budget**: Context window is 4096 tokens (`n_ctx`), max output 1024 — all input (system prompt + user context + conversation history) must fit in ~3072 tokens. Both local and cloud paths enforce the same budget. Target device: iPhone 15 Pro+ (8GB). When editing prompts in `lib/mera-protocol/prompts.ts`, verify token estimates via the logs.
 
 **Cloud Relevance Scoring Config**: `lib/mera-protocol/scoring-service.ts` owns `ARTICLES_PER_SCORE_PROMPT` and `SCORE_BATCH_MAX_TOKENS` — do not change these constants without running a scored comparison on a representative feed. Debug prompt dumps are gated by `EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING=true`; see `lib/mera-protocol/scoring-service.ts` for details.
+
+**Translation is always the last step.** When a task adds or changes user-facing strings, implement and verify the feature in English first (`lib/locales/en.json`), then translate to all other supported locales in `lib/locales/` (`ar`, `de`, `es`, `fr`, `hi`, `id`, `it`, `ja`, `ko`, `nl`, `pl`, `pt-BR`, `ru`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`) as the final step, once the English copy is settled. Do this by spawning up to 10 Sonnet/Haiku subagents in parallel (via the Agent tool), each given the exact new/changed keys, the English source strings, and the target locale file path, so each subagent can translate its batch of locales directly without rediscovering context. Batch multiple locales per subagent so no more than 10 subagents are spawned total.
 
 ## Design Pattern Guidelines
 

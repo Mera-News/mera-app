@@ -12,7 +12,6 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     Easing,
-    FadeIn,
     runOnJS,
     type SharedValue,
     useAnimatedStyle,
@@ -294,10 +293,7 @@ const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context }) => {
 
     return (
         <GestureDetector gesture={gesture}>
-            <Animated.View
-                style={[styles.container, containerStyle]}
-                entering={FadeIn.duration(300)}
-            >
+            <Animated.View style={[styles.container, containerStyle]}>
                 {/* Always-on subtle glow at rest. */}
                 <PulseLayer scale={ambientGlow.scale} opacity={ambientGlow.opacity} id="fcb-glow" />
                 {/* Stronger expanding rings layer on top while generating. */}

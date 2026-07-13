@@ -864,5 +864,23 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 36,
+      steps: [
+        // Local log of article feedback (like/improve/dislike) from the
+        // ArticleFeedbackPrompt widget. User-owned, long-lived history —
+        // created via createTable, never wipe-and-recreate.
+        createTable({
+          name: 'article_feedback',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'suggestion_id', type: 'string', isOptional: true },
+            { name: 'sentiment', type: 'string' },
+            { name: 'title', type: 'string' },
+            { name: 'created_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });

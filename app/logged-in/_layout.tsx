@@ -46,8 +46,7 @@ export default function LoggedInLayout() {
           name="suggestion-detail"
           options={{
             headerShown: false,
-            presentation: 'modal',
-            animation: 'slide_from_bottom'
+            animation: 'slide_from_right'
           }}
         />
         <Stack.Screen
@@ -97,8 +96,7 @@ export default function LoggedInLayout() {
           name="article-detail"
           options={{
             headerShown: false,
-            presentation: 'modal',
-            animation: 'slide_from_bottom'
+            animation: 'slide_from_right'
           }}
         />
         <Stack.Screen

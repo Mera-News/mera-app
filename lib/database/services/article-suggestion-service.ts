@@ -305,6 +305,55 @@ export async function getSuggestionByServerId(serverId: string): Promise<ForYouS
   }
 }
 
+/**
+ * Assemble the context an article-feedback agent needs: the suggestion row,
+ * the topic texts that matched it, and the facts that produced those topics.
+ * Looks up by `suggestionId` (server id) or, failing that, by `articleId`
+ * (newest matching row). Returns null when no suggestion row exists on-device
+ * (non-personalized article — the agent falls back to a generic prompt).
+ */
+export async function getSuggestionFeedbackContext(opts: {
+  suggestionId?: string;
+  articleId?: string;
+}): Promise<{
+  suggestion: ForYouSuggestion;
+  matchedTopicTexts: string[];
+  linkedFacts: { id: string; statement: string }[];
+} | null> {
+  let row: ArticleSuggestionModel | null = null;
+
+  if (opts.suggestionId) {
+    row = await articleSuggestionsCol.find(opts.suggestionId).catch(() => null);
+  }
+  if (!row && opts.articleId) {
+    const rows = await articleSuggestionsCol
+      .query(Q.where('article_id', opts.articleId), Q.sortBy('created_at', Q.desc))
+      .fetch();
+    row = rows[0] ?? null;
+  }
+  if (!row) return null;
+
+  const suggestion = toForYouSuggestion(row);
+  const matchedTopicTexts = parseTopicIds(row.matchedTopicTextsJson);
+
+  // Join article_suggestion_facts → facts (same pattern as resolveFactsByTopicTexts).
+  const links = await articleSuggestionFactsCol
+    .query(Q.where('article_suggestion_id', row.id))
+    .fetch();
+  const linkedFactIds = new Set(links.map((l) => l.factId));
+  const linkedFacts: { id: string; statement: string }[] = [];
+  if (linkedFactIds.size > 0) {
+    const facts = await getFacts();
+    for (const fact of facts) {
+      if (linkedFactIds.has(fact.id)) {
+        linkedFacts.push({ id: fact.id, statement: fact.statement });
+      }
+    }
+  }
+
+  return { suggestion, matchedTopicTexts, linkedFacts };
+}
+
 // --- Clear / TTL ---
 
 export async function clearSuggestions(): Promise<void> {

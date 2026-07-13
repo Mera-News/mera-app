@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 35,
+  version: 36,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -191,6 +191,22 @@ export default appSchema({
         { name: 'started_at', type: 'number', isOptional: true },
         { name: 'completed_at', type: 'number', isOptional: true },
         { name: 'retry_at', type: 'number', isOptional: true },
+      ],
+    }),
+
+    // Long-lived on-device log of article feedback (like/improve/dislike taps)
+    // from the `ArticleFeedbackPrompt` widget. Idempotent per (article_id,
+    // sentiment) — used to restore the "liked" button state on remount via
+    // `hasLiked`. User-owned history — never wiped on article_suggestions
+    // resync. See `article-feedback-service.ts`.
+    tableSchema({
+      name: 'article_feedback',
+      columns: [
+        { name: 'article_id', type: 'string', isIndexed: true },
+        { name: 'suggestion_id', type: 'string', isOptional: true },
+        { name: 'sentiment', type: 'string' },
+        { name: 'title', type: 'string' },
+        { name: 'created_at', type: 'number' },
       ],
     }),
 

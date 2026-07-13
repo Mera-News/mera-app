@@ -4,7 +4,7 @@
 // util, the ChatThread component, and the (parallel) data/store layer that
 // feeds it. Everything here is presentational — no data fetching, no stores.
 
-import type { ConversationMessage } from '@/lib/llm/types';
+import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 
 // ---------------------------------------------------------------------------
 // PersistedMessage
@@ -28,6 +28,7 @@ export type ChatThreadItem =
       statements: string[];
       factIds: string[];
     }
+  | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
   | { kind: 'divider'; key: string; label: string }
   | { kind: 'typing'; key: string };
 
@@ -52,6 +53,13 @@ export interface ChatThreadProps {
   onLoadOlder: () => void;
   hasOlder: boolean;
   isLoadingOlder: boolean;
+  /**
+   * When true, show a "View previous messages" pill that reveals older history
+   * on tap. Gated so a fresh conversation starts visually clean; once revealed,
+   * the normal scroll-up paging (onLoadOlder/hasOlder) takes over.
+   */
+  showHistoryButton: boolean;
+  onRevealHistory: () => void;
   /** Shown only when items contain no user/assistant messages. */
   starterChips: StarterChip[];
   onChipPress: (message: string) => void;

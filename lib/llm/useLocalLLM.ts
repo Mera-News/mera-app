@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 import { getModelState, inferStream, initBaseModel } from '../mera-protocol-toolkit';
 import { inferenceQueue } from '../inference/InferenceQueue';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
 import type { ConversationMessage, IAgent, ToolCallRecord } from './types';
 import { estimateTokens } from './tokens';
@@ -34,6 +35,10 @@ const KNOWN_TOOLS = new Set([
   'deleteUserFacts',
   'advanceQuestionnaireLevel',
   'issueWarning',
+  // Article-feedback agent — proposal confirm flow.
+  'proposeChanges',
+  'applyProposal',
+  'cancelProposal',
 ]);
 
 // Module-level counter ensures unique tool call IDs across all inference runs.
@@ -441,6 +446,12 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
             if (sideEffects?.blocked) {
               setIsBlocked(true);
               setBlockedReason(sideEffects.blocked.reason);
+            }
+            if (sideEffects?.proposal) {
+              useFloatingChatStore.getState().setProposal(sideEffects.proposal);
+            }
+            if (sideEffects?.proposalResolved) {
+              useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
             }
 
             tc.result = result;

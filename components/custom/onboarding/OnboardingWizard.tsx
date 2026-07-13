@@ -21,7 +21,11 @@ import {
     useOnboardingStore,
 } from '../../../lib/stores/onboarding-store';
 import { useModelState as useMeraModelState } from '../../../lib/stores/mera-protocol-store';
-import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
+import {
+    useFloatingChatStore,
+    type ChatContext,
+} from '../../../lib/stores/floating-chat-store';
+import ScreenChatBubble from '../floating-chat/ScreenChatBubble';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaL1MeraProtocol from '../config-panel/PersonaL1MeraProtocol';
@@ -46,6 +50,8 @@ const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
 };
 
 // OnboardingWizard now uses Zustand store for state persistence
+
+const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
 
 interface OnboardingWizardProps {
     onComplete: () => void;
@@ -325,6 +331,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
+            {/* Floating chat bubble — LAST child so it draws above the wizard
+                content; the `suppressed` store flag hides it on non-persona
+                steps, and it unmounts with the screen on navigation. */}
+            <ScreenChatBubble context={PERSONA_CONTEXT} />
         </Box>
     );
 };

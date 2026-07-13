@@ -7,7 +7,7 @@
 // append strictly older pages. The returned array stays newest-first, exactly
 // as fetched — deriveThreadItems expects history newest-first.
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fetchMessagesBefore,
   type MessageCursor,
@@ -29,15 +29,36 @@ export interface UseChatHistoryResult {
 
 export function useChatHistory(excludeConversationId?: string): UseChatHistoryResult {
   const [history, setHistory] = useState<PersistedMessage[]>([]);
-  // Optimistically true until the first fetch tells us otherwise — this is
-  // what lets the thread offer a scroll-up load before anything is fetched.
-  const [hasOlder, setHasOlder] = useState(true);
+  // Starts false and is set by a cheap size-1 probe on mount (below). The
+  // history reveal is gated behind an explicit button now, so `hasOlder` must
+  // reflect whether older history ACTUALLY exists rather than being
+  // optimistically true — an empty-history user must not see the pill.
+  const [hasOlder, setHasOlder] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   const cursorRef = useRef<MessageCursor | null>(null);
   const hasOlderRef = useRef(true);
   const inFlightRef = useRef(false);
   const seenIdsRef = useRef<Set<string>>(new Set());
+
+  // Probe: a 1-row read tells us whether any older cross-conversation message
+  // exists, so the "View previous messages" pill can appear before the first
+  // real page loads. The probe does not touch the paging cursor or seen-set, so
+  // the eventual first loadOlder() re-fetches its rows normally.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { items } = await fetchMessagesBefore(null, 1, excludeConversationId);
+        if (!cancelled) setHasOlder(items.length > 0);
+      } catch (error) {
+        logger.error('[useChatHistory] probe failed', { error: String(error) });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [excludeConversationId]);
 
   const loadOlder = useCallback(() => {
     if (inFlightRef.current || !hasOlderRef.current) return;

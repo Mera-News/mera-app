@@ -119,30 +119,7 @@ export async function handleSaveExtractedFacts(
     useFloatingChatStore.getState().notifyFactMutation();
 
     // Generate topics for all new facts
-    if (savedFactEntries.length > 0) {
-      const useCloud =
-        useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
-
-      if (useCloud) {
-        // Cloud path: single batch call for all facts
-        batchGenerateTopics(savedFactEntries).catch((err: unknown) =>
-          logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) }),
-        );
-      } else {
-        // Local path: enqueue individual jobs for sequential llama.rn access
-        for (const entry of savedFactEntries) {
-          hasPendingJob('topic_gen', 'factId', entry.id).then((exists) => {
-            if (!exists) {
-              enqueueJob('topic_gen', {
-                factId: entry.id,
-                factStatement: entry.statement,
-                useCloud: false,
-              }).then(() => inferenceQueue.notify());
-            }
-          }).catch((err: unknown) => logger.warn('Failed to enqueue topic gen', { error: String(err) }));
-        }
-      }
-    }
+    triggerTopicGeneration(savedFactEntries);
   }
 
   return {
@@ -150,6 +127,41 @@ export async function handleSaveExtractedFacts(
     factsSaved,
     savedFacts: savedFactEntries,
   };
+}
+
+/**
+ * Kicks off topic generation for newly-saved facts. Cloud mode issues one
+ * batch call; on-device mode enqueues an individual job per fact for
+ * sequential llama.rn access. Fire-and-forget — errors are logged, never
+ * thrown. Shared by chat fact-saving and the proposal executor.
+ */
+export function triggerTopicGeneration(
+  savedFactEntries: Array<{ id: string; statement: string }>,
+): void {
+  if (savedFactEntries.length === 0) return;
+
+  const useCloud =
+    useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
+
+  if (useCloud) {
+    // Cloud path: single batch call for all facts
+    batchGenerateTopics(savedFactEntries).catch((err: unknown) =>
+      logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) }),
+    );
+  } else {
+    // Local path: enqueue individual jobs for sequential llama.rn access
+    for (const entry of savedFactEntries) {
+      hasPendingJob('topic_gen', 'factId', entry.id).then((exists) => {
+        if (!exists) {
+          enqueueJob('topic_gen', {
+            factId: entry.id,
+            factStatement: entry.statement,
+            useCloud: false,
+          }).then(() => inferenceQueue.notify());
+        }
+      }).catch((err: unknown) => logger.warn('Failed to enqueue topic gen', { error: String(err) }));
+    }
+  }
 }
 
 /**

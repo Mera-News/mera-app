@@ -54,11 +54,36 @@ export interface ConversationMessage {
 // Agent types
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Proposal types (article-feedback agent — staged persona changes)
+// ---------------------------------------------------------------------------
+
+/** A single deterministic change the proposal executor can apply to the persona. */
+export type ProposalAction =
+  | { type: 'add_fact'; statement: string }
+  | { type: 'update_fact'; fact_id: string; new_statement: string }
+  | { type: 'delete_fact'; fact_id: string }
+  | { type: 'add_topics'; fact_id: string; topics: string[] }
+  | { type: 'remove_topics'; fact_id: string; topics: string[] }
+  | { type: 'submit_feature_request'; title: string; summary: string };
+
+/** A proposal staged by the LLM and awaiting user confirmation. */
+export interface StagedProposal {
+  id: string;              // tool-call id / nonce
+  explanation: string;     // why (≤2 sentences, enforced by prompt)
+  expectedEffects: string; // "you'll see fewer X…"
+  actions: ProposalAction[];
+}
+
 export interface ToolExecutionResult {
   result: Record<string, unknown>;
   sideEffects?: {
     /** If set, the chat should be blocked and no further messages accepted. */
     blocked?: { reason: string };
+    /** If set, a proposal was staged and should render as a confirm card. */
+    proposal?: StagedProposal;
+    /** If set, the pending proposal was applied or cancelled. */
+    proposalResolved?: 'applied' | 'cancelled';
   };
 }
 

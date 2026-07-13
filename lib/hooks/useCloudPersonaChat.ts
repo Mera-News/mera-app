@@ -10,6 +10,7 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL } from '../llm/constants';
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
+import { useFloatingChatStore } from '../stores/floating-chat-store';
 
 const TAG = '[CloudChat]';
 
@@ -226,6 +227,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               if (sideEffects?.blocked) {
                 useCloudChatStore.getState().setIsBlocked(true);
                 useCloudChatStore.getState().setBlockedReason(sideEffects.blocked.reason);
+              }
+              if (sideEffects?.proposal) {
+                useFloatingChatStore.getState().setProposal(sideEffects.proposal);
+              }
+              if (sideEffects?.proposalResolved) {
+                useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
               }
 
               return { index: i, result, status: 'done' as const };

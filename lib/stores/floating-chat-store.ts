@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import type { StagedProposal } from '../llm/types';
 
 export type ChatContext =
     | { kind: 'persona' }
-    | { kind: 'article-suggestion'; suggestionId: string }
+    // At least one of articleId / suggestionId must be set; the agent resolves
+    // the other (and the suggestion row) from whichever id is provided.
+    | { kind: 'article-suggestion'; articleId?: string; suggestionId?: string; articleTitle?: string }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
@@ -15,6 +18,13 @@ interface FloatingChatState {
     isGenerating: boolean;
     suppressed: boolean;
     factMutationVersion: number;
+    // Article-feedback flow. `pendingInitialMessage` is auto-sent once by
+    // ChatSessionView after the thread mounts; `proposal` is the single
+    // in-flight staged proposal; `resolvedProposals` records the terminal
+    // status of proposals by id so their cards render applied/cancelled.
+    pendingInitialMessage: string | null;
+    proposal: StagedProposal | null;
+    resolvedProposals: Record<string, 'applied' | 'cancelled'>;
     // Conversation identity for the whole APP SESSION (not per popover open).
     // In-memory only (no persist middleware) so it naturally dies on app kill,
     // giving fresh-conversation-per-launch for free. Closing/reopening the
@@ -26,6 +36,10 @@ interface FloatingChatState {
 
     // Actions
     expand: (context?: ChatContext) => void;
+    openArticleFeedback: (context: ChatContext, initialMessage: string) => void;
+    consumePendingInitialMessage: () => string | null;
+    setProposal: (p: StagedProposal | null) => void;
+    resolveProposal: (status: 'applied' | 'cancelled') => void;
     collapse: () => void;
     toggle: () => void;
     setBubblePosition: (side: 'left' | 'right', y: number) => void;
@@ -52,18 +66,75 @@ const initialState = {
     isGenerating: false,
     suppressed: false,
     factMutationVersion: 0,
+    pendingInitialMessage: null as string | null,
+    proposal: null as StagedProposal | null,
+    resolvedProposals: {} as Record<string, 'applied' | 'cancelled'>,
     conversationId: null as string | null,
     newChatNonce: 0,
 };
 
-export const useFloatingChatStore = create<FloatingChatState>((set) => ({
+/** True if two article-suggestion/persona contexts differ in kind or target id. */
+function contextDiffers(a: ChatContext, b: ChatContext): boolean {
+    if (a.kind !== b.kind) return true;
+    if (a.kind === 'article-suggestion' && b.kind === 'article-suggestion') {
+        return a.articleId !== b.articleId || a.suggestionId !== b.suggestionId;
+    }
+    return false;
+}
+
+export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     ...initialState,
 
     expand: (context) =>
+        set((state) => {
+            // Switching to a different context while a conversation already
+            // exists must start a fresh thread so a stale persona chat never
+            // bleeds into an article-feedback session (children remount via
+            // key={conversationId} on the nonce bump).
+            const shouldBump =
+                context !== undefined &&
+                state.conversationId !== null &&
+                contextDiffers(context, state.context);
+            return {
+                isExpanded: true,
+                context: context ?? state.context,
+                newChatNonce: shouldBump ? state.newChatNonce + 1 : state.newChatNonce,
+            };
+        }),
+
+    openArticleFeedback: (context, initialMessage) =>
         set((state) => ({
+            context,
+            pendingInitialMessage: initialMessage,
             isExpanded: true,
-            context: context ?? state.context,
+            proposal: null,
+            // Bump the nonce ONLY when a conversation already exists: pre-mount
+            // bumps are swallowed by MeraChatSession.tsx:158's prevNonceRef init,
+            // and when conversationId is null the init path creates the first
+            // conversation anyway (fresh thread per thumbs tap either way).
+            newChatNonce:
+                state.conversationId !== null ? state.newChatNonce + 1 : state.newChatNonce,
         })),
+
+    consumePendingInitialMessage: () => {
+        const msg = get().pendingInitialMessage;
+        if (msg !== null) set({ pendingInitialMessage: null });
+        return msg;
+    },
+
+    setProposal: (p) => set({ proposal: p }),
+
+    resolveProposal: (status) =>
+        set((state) => {
+            if (!state.proposal) return {};
+            return {
+                proposal: null,
+                resolvedProposals: {
+                    ...state.resolvedProposals,
+                    [state.proposal.id]: status,
+                },
+            };
+        }),
 
     collapse: () => set({ isExpanded: false }),
 
@@ -94,3 +165,6 @@ export const useFloatingChatIsGenerating = () => useFloatingChatStore((state) =>
 export const useFloatingChatSuppressed = () => useFloatingChatStore((state) => state.suppressed);
 export const useFloatingChatConversationId = () => useFloatingChatStore((state) => state.conversationId);
 export const useFloatingChatNewChatNonce = () => useFloatingChatStore((state) => state.newChatNonce);
+export const useFloatingChatProposal = () => useFloatingChatStore((state) => state.proposal);
+export const useFloatingChatResolvedProposals = () =>
+    useFloatingChatStore((state) => state.resolvedProposals);
