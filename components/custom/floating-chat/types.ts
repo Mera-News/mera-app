@@ -65,6 +65,19 @@ export interface ChatThreadProps {
   onChipPress: (message: string) => void;
   /** When set, show a banner and disable input. */
   blockedMessage: string | null;
+  /**
+   * True when the block is a server-authoritative LLM block (not a transient
+   * inference error) — gates the unblock-request controls beside the banner.
+   */
+  showUnblockControls: boolean;
+  /** True once an unblock request is PENDING review — swaps the CTA for a
+   * disabled "pending" label plus a refresh button. */
+  unblockPending: boolean;
+  /** Opens the RequestUnblockModal. */
+  onRequestUnblock: () => void;
+  /** Re-fetches persona to learn whether staff have lifted the block. */
+  onRefreshBlockStatus: () => void;
+  isRefreshingBlockStatus: boolean;
   onSend: (text: string) => void;
   isInputDisabled: boolean;
 }

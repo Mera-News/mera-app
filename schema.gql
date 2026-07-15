@@ -95,6 +95,12 @@ type ArticlesForTopicsByIdsResponse {
   resetAt: String
 }
 
+input ChatMessageInput {
+  content: String!
+  createdAt: String!
+  role: String!
+}
+
 type ClusterArticlesConnection {
   articles: [NewsArticle!]!
   pageInfo: CursorPageInfo!
@@ -139,10 +145,17 @@ type EmbeddingSearchResult {
   score: Float!
 }
 
+input IssueLlmWarningInput {
+  reason: String!
+  userId: ID!
+}
+
 type Mutation {
   advanceOnboardingStage(stage: OnboardingStage!, userId: ID!): UserPersona!
   deleteAllUserTopics(userId: ID!): DeleteAllUserTopicsResponse!
   deleteExpoPushToken(input: DeleteExpoPushTokenInput!): UserPersona!
+  issueLlmWarning(input: IssueLlmWarningInput!): UserPersona!
+  requestUnblock(input: RequestUnblockInput!): UnblockRequest!
   submitUserTopics(input: SubmitUserTopicsInput!): SubmitUserTopicsResponse!
   updateExpoPushToken(input: UpdateExpoPushTokenInput!): UserPersona!
   updateNotificationWindow(input: UpdateNotificationWindowInput!): UserPersona!
@@ -367,8 +380,15 @@ type Query {
     """Search text"""
     query: String!
   ): TopicSearchResponse!
+  unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
+}
+
+input RequestUnblockInput {
+  chatHistory: [ChatMessageInput!]!
+  feedback: String!
+  userId: ID!
 }
 
 input SubmitUserTopicItemInput {
@@ -416,6 +436,22 @@ type TopicSearchResponse {
 type TopicSearchResult {
   score: Float!
   topic: UserTopic!
+}
+
+type UnblockRequest {
+  _id: ID!
+  blockedReasonSnapshot: String
+  createdAt: DateTime!
+  feedback: String!
+  status: UnblockRequestStatus!
+  updatedAt: DateTime!
+  userId: String!
+}
+
+enum UnblockRequestStatus {
+  APPROVED
+  PENDING
+  REJECTED
 }
 
 input UpdateExpoPushTokenInput {

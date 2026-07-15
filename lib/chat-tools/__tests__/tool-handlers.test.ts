@@ -17,6 +17,7 @@ jest.mock('../../database/services/setting-service', () => ({
 jest.mock('../../account-service', () => ({
   AccountService: {
     updateUserConfig: jest.fn(() => Promise.resolve()),
+    issueLlmWarning: jest.fn(() => Promise.resolve()),
   },
 }));
 jest.mock('../../stores/floating-chat-store', () => ({
@@ -31,7 +32,7 @@ jest.mock('../../stores/mera-protocol-store', () => ({
 }));
 jest.mock('../../stores/user-store', () => ({
   useUserStore: {
-    getState: jest.fn(() => ({ userId: 'user-123' })),
+    getState: jest.fn(() => ({ userId: 'user-123', setUserPersona: jest.fn() })),
   },
 }));
 jest.mock('../../generated/graphql-types', () => ({
@@ -58,7 +59,7 @@ jest.mock('../../mera-protocol/questionnaire-data', () => ({
 }));
 jest.mock('../../logger', () => ({
   __esModule: true,
-  default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+  default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn(), captureException: jest.fn() },
 }));
 
 import {
@@ -98,6 +99,8 @@ const mockSetQuestionnaireLevel = setQuestionnaireLevel as jest.MockedFunction<t
 const mockGetSetting = getSetting as jest.MockedFunction<typeof getSetting>;
 const mockSetSetting = setSetting as jest.MockedFunction<typeof setSetting>;
 const mockUpdateUserConfig = AccountService.updateUserConfig as jest.MockedFunction<typeof AccountService.updateUserConfig>;
+const mockIssueLlmWarning = AccountService.issueLlmWarning as jest.MockedFunction<typeof AccountService.issueLlmWarning>;
+const mockSetUserPersona = jest.fn();
 const mockNotifyFactMutation = jest.fn();
 const mockCloudBatchComplete = cloudBatchComplete as jest.MockedFunction<typeof cloudBatchComplete>;
 const mockEnqueueJob = enqueueJob as jest.MockedFunction<typeof enqueueJob>;
@@ -121,8 +124,20 @@ beforeEach(() => {
   mockEnqueueJob.mockResolvedValue({ id: 'job-id' } as never);
   (useFloatingChatStore.getState as jest.Mock).mockReturnValue({ notifyFactMutation: mockNotifyFactMutation });
   (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
-  (useUserStore.getState as jest.Mock).mockReturnValue({ userId: 'user-123' });
+  (useUserStore.getState as jest.Mock).mockReturnValue({ userId: 'user-123', setUserPersona: mockSetUserPersona });
 });
+
+/** Builds a UserPersona-shaped object for issueLlmWarning mock returns. */
+function personaWith(overrides: Partial<Record<string, unknown>>): never {
+  return {
+    _id: 'persona-1',
+    userId: 'user-123',
+    blockedByLlm: false,
+    blockedByLlmReason: null,
+    llmWarningCount: 0,
+    ...overrides,
+  } as never;
+}
 
 // ============================================================
 // MAX_FACT_LENGTH constant
@@ -592,12 +607,12 @@ describe('handleAdvanceQuestionnaireLevel', () => {
 // ============================================================
 
 describe('handleIssueWarning', () => {
-  it('increments warning count and returns warning info when count < 3', async () => {
-    mockGetSetting.mockResolvedValueOnce('0'); // current count = 0
+  it('issues a server-authoritative warning and returns warning info when not blocked', async () => {
+    mockIssueLlmWarning.mockResolvedValueOnce(personaWith({ llmWarningCount: 1, blockedByLlm: false }));
 
     const result = await handleIssueWarning({ reason: 'Off-topic message' });
 
-    expect(mockSetSetting).toHaveBeenCalledWith('llm_warning_count', '1');
+    expect(mockIssueLlmWarning).toHaveBeenCalledWith('user-123', 'Off-topic message');
     expect(result).toMatchObject({
       blocked: false,
       warningCount: 1,
@@ -606,55 +621,61 @@ describe('handleIssueWarning', () => {
   });
 
   it('uses default reason when none provided', async () => {
-    mockGetSetting.mockResolvedValueOnce('1');
+    mockIssueLlmWarning.mockResolvedValueOnce(personaWith({ llmWarningCount: 2 }));
 
     const result = await handleIssueWarning({});
 
+    expect(mockIssueLlmWarning).toHaveBeenCalledWith('user-123', 'No reason provided');
     expect(result).toMatchObject({ blocked: false, warningCount: 2 });
   });
 
-  it('blocks user when warning count reaches 3', async () => {
-    mockGetSetting.mockResolvedValueOnce('2'); // current count = 2 → new count = 3
+  it('reports blocked when the server blocks the user', async () => {
+    mockIssueLlmWarning.mockResolvedValueOnce(
+      personaWith({ llmWarningCount: 3, blockedByLlm: true, blockedByLlmReason: 'Repeated abuse' }),
+    );
 
     const result = await handleIssueWarning({ reason: 'Third violation' });
 
     expect(result).toMatchObject({
       blocked: true,
       warningCount: 3,
-      message: expect.stringContaining('blocked'),
+      message: 'Repeated abuse',
     });
   });
 
-  it('keeps blocking when count already exceeds 3', async () => {
-    mockGetSetting.mockResolvedValueOnce('3'); // count = 3 → new count = 4
+  it('syncs the returned persona into the user store', async () => {
+    const persona = personaWith({ llmWarningCount: 1 });
+    mockIssueLlmWarning.mockResolvedValueOnce(persona);
 
-    const result = await handleIssueWarning({ reason: 'Another' });
+    await handleIssueWarning({ reason: 'reason' });
 
-    expect(result).toMatchObject({ blocked: true, warningCount: 4 });
+    expect(mockSetUserPersona).toHaveBeenCalledWith(persona);
   });
 
-  it('handles null setting (treated as 0)', async () => {
-    mockGetSetting.mockResolvedValueOnce(null);
+  it('fails OPEN (blocked:false) when the mutation throws', async () => {
+    mockIssueLlmWarning.mockRejectedValueOnce(new Error('network down'));
 
-    const result = await handleIssueWarning({ reason: 'First warning' });
+    const result = await handleIssueWarning({ reason: 'reason' });
 
-    expect(result).toMatchObject({ warningCount: 1, blocked: false });
+    expect(result).toMatchObject({ blocked: false, warningCount: 0 });
+  });
+
+  it('fails OPEN when no userId is available', async () => {
+    (useUserStore.getState as jest.Mock).mockReturnValueOnce({ userId: null, setUserPersona: mockSetUserPersona });
+    mockGetSetting.mockResolvedValueOnce(null); // cached_user_id lookup → null
+
+    const result = await handleIssueWarning({ reason: 'reason' });
+
+    expect(mockIssueLlmWarning).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ blocked: false, warningCount: 0 });
   });
 
   it('logs the warning', async () => {
-    mockGetSetting.mockResolvedValueOnce('0');
+    mockIssueLlmWarning.mockResolvedValueOnce(personaWith({ llmWarningCount: 1 }));
 
     await handleIssueWarning({ reason: 'test reason' });
 
     expect(logger.warn).toHaveBeenCalled();
-  });
-
-  it('saves the updated count to settings', async () => {
-    mockGetSetting.mockResolvedValueOnce('1');
-
-    await handleIssueWarning({ reason: 'reason' });
-
-    expect(mockSetSetting).toHaveBeenCalledWith('llm_warning_count', '2');
   });
 });
 

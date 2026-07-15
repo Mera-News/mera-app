@@ -126,6 +126,57 @@ const UPDATE_USER_CONFIG = gql`
   }
 `;
 
+// Server-authoritative LLM warning. Increments llmWarningCount; at count >= 3
+// also sets blockedByLlm + blockedByLlmReason. Returns the updated persona.
+// Selects the full field set persistUserPersona needs so the local cache stays
+// authoritative after a warning.
+const ISSUE_LLM_WARNING = gql`
+  mutation IssueLlmWarning($input: IssueLlmWarningInput!) {
+    issueLlmWarning(input: $input) {
+      _id
+      userId
+      blockedByLlm
+      blockedByLlmReason
+      llmWarningCount
+      processingMode
+      onboardingStage
+      notificationsEnabled
+      preferredNotificationWindow
+      language_codes
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const REQUEST_UNBLOCK = gql`
+  mutation RequestUnblock($input: RequestUnblockInput!) {
+    requestUnblock(input: $input) {
+      _id
+      userId
+      feedback
+      blockedReasonSnapshot
+      status
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const GET_UNBLOCK_REQUEST_STATUS = gql`
+  query UnblockRequestStatus($userId: ID!) {
+    unblockRequestStatus(userId: $userId) {
+      _id
+      userId
+      feedback
+      blockedReasonSnapshot
+      status
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 // Types
 
 export interface UserTopic {
@@ -191,6 +242,40 @@ export interface UpdateUserConfigResponse {
 
 export interface GetUserPersonaResponse {
     userPersonaByUserId: UserPersona | null;
+}
+
+// --- LLM warning / unblock-request types (hand-written; no codegen dependency,
+// server schema for these lands in parallel) ---
+
+export type UnblockRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface UnblockRequest {
+    _id: string;
+    userId: string;
+    feedback: string;
+    blockedReasonSnapshot?: string | null;
+    status: UnblockRequestStatus;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Single chat transcript entry sent with an unblock request (server input shape). */
+export interface ChatMessageInput {
+    role: string;
+    content: string;
+    createdAt: string;
+}
+
+export interface IssueLlmWarningResponse {
+    issueLlmWarning: UserPersona;
+}
+
+export interface RequestUnblockResponse {
+    requestUnblock: UnblockRequest;
+}
+
+export interface UnblockRequestStatusResponse {
+    unblockRequestStatus: UnblockRequest | null;
 }
 
 // Account Service Class
@@ -485,6 +570,87 @@ export class AccountService {
         } catch (error) {
             logger.captureException(error, {
                 tags: { service: 'account-service', method: 'updateUserConfig' },
+                extra: { userId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Issue a server-authoritative LLM warning. Increments llmWarningCount and,
+     * at count >= 3, blocks the user. Returns the updated persona so callers can
+     * refresh their local cache.
+     */
+    static async issueLlmWarning(userId: string, reason: string): Promise<UserPersona> {
+        try {
+            const { data, error } = await client.mutate<IssueLlmWarningResponse>({
+                mutation: ISSUE_LLM_WARNING,
+                variables: { input: { userId, reason } },
+            });
+            if (error) {
+                throw error;
+            }
+            const userPersona = data?.issueLlmWarning;
+            if (!userPersona) {
+                throw new Error('Failed to issue LLM warning - no data returned');
+            }
+            return userPersona;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'account-service', method: 'issueLlmWarning' },
+                extra: { userId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Submit an unblock request with the user's feedback and the chat transcript
+     * that led to the block. Server rejects (throws) if the user isn't blocked or
+     * already has a PENDING request.
+     */
+    static async requestUnblock(params: {
+        userId: string;
+        feedback: string;
+        chatHistory: ChatMessageInput[];
+    }): Promise<UnblockRequest> {
+        const { userId, feedback, chatHistory } = params;
+        try {
+            const { data, error } = await client.mutate<RequestUnblockResponse>({
+                mutation: REQUEST_UNBLOCK,
+                variables: { input: { userId, feedback, chatHistory } },
+            });
+            if (error) {
+                throw error;
+            }
+            const request = data?.requestUnblock;
+            if (!request) {
+                throw new Error('Failed to request unblock - no data returned');
+            }
+            return request;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'account-service', method: 'requestUnblock' },
+                extra: { userId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch the current PENDING unblock request for a user, or null if none.
+     */
+    static async getPendingUnblockRequest(userId: string): Promise<UnblockRequest | null> {
+        try {
+            const { data } = await client.query<UnblockRequestStatusResponse>({
+                query: GET_UNBLOCK_REQUEST_STATUS,
+                variables: { userId },
+                fetchPolicy: 'network-only',
+            });
+            return data?.unblockRequestStatus ?? null;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'account-service', method: 'getPendingUnblockRequest' },
                 extra: { userId },
             });
             throw error;

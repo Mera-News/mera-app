@@ -101,6 +101,12 @@ export type ArticlesForTopicsByIdsResponse = {
   resetAt?: Maybe<Scalars['String']['output']>;
 };
 
+export type ChatMessageInput = {
+  content: Scalars['String']['input'];
+  createdAt: Scalars['String']['input'];
+  role: Scalars['String']['input'];
+};
+
 export type ClusterArticlesConnection = {
   __typename?: 'ClusterArticlesConnection';
   articles: Array<NewsArticle>;
@@ -144,11 +150,18 @@ export type EmbeddingSearchResult = {
   score: Scalars['Float']['output'];
 };
 
+export type IssueLlmWarningInput = {
+  reason: Scalars['String']['input'];
+  userId: Scalars['ID']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   advanceOnboardingStage: UserPersona;
   deleteAllUserTopics: DeleteAllUserTopicsResponse;
   deleteExpoPushToken: UserPersona;
+  issueLlmWarning: UserPersona;
+  requestUnblock: UnblockRequest;
   submitUserTopics: SubmitUserTopicsResponse;
   updateExpoPushToken: UserPersona;
   updateNotificationWindow: UserPersona;
@@ -172,6 +185,16 @@ export type MutationDeleteAllUserTopicsArgs = {
 
 export type MutationDeleteExpoPushTokenArgs = {
   input: DeleteExpoPushTokenInput;
+};
+
+
+export type MutationIssueLlmWarningArgs = {
+  input: IssueLlmWarningInput;
+};
+
+
+export type MutationRequestUnblockArgs = {
+  input: RequestUnblockInput;
 };
 
 
@@ -342,6 +365,7 @@ export type Query = {
   searchArticlesVector: EmbeddingSearchResponse;
   /** Vector search on user topics using cosine similarity (scores 0–1). */
   searchTopicsVector: TopicSearchResponse;
+  unblockRequestStatus?: Maybe<UnblockRequest>;
   userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
 };
@@ -453,7 +477,18 @@ export type QuerySearchTopicsVectorArgs = {
 };
 
 
+export type QueryUnblockRequestStatusArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
 export type QueryUserPersonaByUserIdArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+export type RequestUnblockInput = {
+  chatHistory: Array<ChatMessageInput>;
+  feedback: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
 };
 
@@ -508,6 +543,23 @@ export type TopicSearchResult = {
   score: Scalars['Float']['output'];
   topic: UserTopic;
 };
+
+export type UnblockRequest = {
+  __typename?: 'UnblockRequest';
+  _id: Scalars['ID']['output'];
+  blockedReasonSnapshot?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  feedback: Scalars['String']['output'];
+  status: UnblockRequestStatus;
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['String']['output'];
+};
+
+export enum UnblockRequestStatus {
+  Approved = 'APPROVED',
+  Pending = 'PENDING',
+  Rejected = 'REJECTED'
+}
 
 export type UpdateExpoPushTokenInput = {
   expoPushToken: Scalars['String']['input'];

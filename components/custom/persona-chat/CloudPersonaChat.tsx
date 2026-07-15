@@ -43,6 +43,7 @@ export default function CloudPersonaChat({
       blockedReason={chat.blockedReason}
       error={chat.error}
       context={context}
+      userId={userId}
       conversationId={conversationId}
       resumeMessages={resumeMessages}
       isLoading={isLoading}

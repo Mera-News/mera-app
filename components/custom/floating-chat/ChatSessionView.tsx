@@ -5,16 +5,21 @@
 
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { AccountService } from '@/lib/account-service';
 import { useChatHistory } from '@/lib/hooks/useChatHistory';
 import { useChatPersistence } from '@/lib/hooks/useChatPersistence';
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
+import { loadUserPersona } from '@/lib/database/services/user-persona-service';
 import { hapticMedium, hapticSuccess } from '@/lib/haptics';
+import logger from '@/lib/logger';
 import type { ConversationMessage } from '@/lib/llm/types';
 import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import ChatThread from './ChatThread';
+import RequestUnblockModal from './RequestUnblockModal';
 import { deriveThreadItems } from './deriveThreadItems';
 import type { StarterChip } from './types';
 
@@ -30,6 +35,8 @@ export interface ChatSessionViewProps {
   error: string | null;
   /** Current chat context — drives the intro copy, starter chips, and auto-send. */
   context: ChatContext;
+  /** Authenticated user id — needed for server-authoritative block/unblock flows. */
+  userId: string;
   // Session plumbing
   conversationId: string | null;
   /**
@@ -49,6 +56,7 @@ export default function ChatSessionView({
   blockedReason,
   error,
   context,
+  userId,
   conversationId,
   resumeMessages,
   isLoading,
@@ -159,15 +167,92 @@ export default function ChatSessionView({
     ];
   }, [t, context]);
 
+  // --- Server-authoritative block state ---------------------------------
+  // The hook's `isBlocked` only flips mid-session (via an issueWarning side
+  // effect). To keep a block sticky across app restarts we ALSO seed from the
+  // persisted persona on mount, and let the refresh button re-derive it. The
+  // effective gate is the OR of the two: within a single session a user can only
+  // go unblocked→blocked, so a stale live flag is never a concern.
+  const [personaBlock, setPersonaBlock] = useState<{ blocked: boolean; reason: string | null }>({
+    blocked: false,
+    reason: null,
+  });
+  const [unblockPending, setUnblockPending] = useState(false);
+  const [unblockChecked, setUnblockChecked] = useState(false);
+  const [isRefreshingBlockStatus, setIsRefreshingBlockStatus] = useState(false);
+  const [unblockModalOpen, setUnblockModalOpen] = useState(false);
+
+  // Seed from the persisted persona (store first, WatermelonDB fallback) so a
+  // block from a prior session still gates the input on reopen.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void (async () => {
+      let persona = useUserStore.getState().userPersona;
+      if (!persona || persona.userId !== userId) {
+        persona = await loadUserPersona(userId).catch(() => null);
+      }
+      if (!cancelled && persona) {
+        setPersonaBlock({
+          blocked: persona.blockedByLlm,
+          reason: persona.blockedByLlmReason ?? null,
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const effectiveBlocked = isBlocked || personaBlock.blocked;
+  const effectiveBlockedReason = blockedReason ?? personaBlock.reason;
+
+  // Once blocked, check (once) whether a request is already PENDING so we show
+  // "Pending Review" instead of the "Request Unblock" CTA.
+  useEffect(() => {
+    if (!effectiveBlocked || !userId || unblockChecked) return;
+    setUnblockChecked(true);
+    AccountService.getPendingUnblockRequest(userId)
+      .then((req) => {
+        if (req && req.status === 'PENDING') setUnblockPending(true);
+      })
+      .catch((err) => logger.warn('[ChatSessionView] pending unblock check failed', { error: String(err) }));
+  }, [effectiveBlocked, userId, unblockChecked]);
+
+  // The only way a user learns staff lifted the block in v1 (no push-back):
+  // re-fetch the persona, persist it, and clear the local gate if now unblocked.
+  const handleRefreshBlockStatus = useCallback(async () => {
+    if (!userId || isRefreshingBlockStatus) return;
+    setIsRefreshingBlockStatus(true);
+    try {
+      const persona = await useUserStore.getState().fetchUserPersona(userId, true);
+      if (persona) {
+        setPersonaBlock({
+          blocked: persona.blockedByLlm,
+          reason: persona.blockedByLlmReason ?? null,
+        });
+        if (!persona.blockedByLlm) setUnblockPending(false);
+      }
+    } catch (err) {
+      logger.warn('[ChatSessionView] refresh block status failed', { error: String(err) });
+    } finally {
+      setIsRefreshingBlockStatus(false);
+    }
+  }, [userId, isRefreshingBlockStatus]);
+
+  const handleUnblockSubmitted = useCallback(() => {
+    setUnblockPending(true);
+  }, []);
+
   const handleSend = useCallback(
     (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || isStreaming || isBlocked) return;
+      if (!trimmed || isStreaming || effectiveBlocked) return;
       void hapticMedium();
       setIntroMessage(null);
       sendMessage(trimmed);
     },
-    [isStreaming, isBlocked, sendMessage],
+    [isStreaming, effectiveBlocked, sendMessage],
   );
 
   // Chips send their canned message through the same path (haptic included).
@@ -202,9 +287,10 @@ export default function ChatSessionView({
   }, [loadOlder]);
 
   // Surface inference errors directly — there's no recovery action the user
-  // can take in-app (ported from PersonaChatUI).
-  const blockedMessage = isBlocked
-    ? blockedReason
+  // can take in-app (ported from PersonaChatUI). A server block always shows a
+  // banner even when the reason is null, so the unblock controls have a host.
+  const blockedMessage = effectiveBlocked
+    ? effectiveBlockedReason ?? t('errors.accountRestricted')
     : error
       ? `${t('chat.inferenceError')} (${error})`
       : null;
@@ -221,23 +307,39 @@ export default function ChatSessionView({
   }
 
   return (
-    <ChatThread
-      items={items}
-      isStreaming={isStreaming}
-      // Scroll-up paging is wired only after the history reveal; before that the
-      // pill button is the single entry point (hasOlder=false disables the
-      // FlatList's onEndReached auto-load).
-      onLoadOlder={historyRevealed ? loadOlder : noop}
-      hasOlder={historyRevealed ? hasOlder : false}
-      isLoadingOlder={isLoadingOlder}
-      showHistoryButton={hasOlder && !historyRevealed}
-      onRevealHistory={handleRevealHistory}
-      starterChips={starterChips}
-      onChipPress={handleChipPress}
-      blockedMessage={blockedMessage}
-      onSend={handleSend}
-      isInputDisabled={isStreaming || isBlocked}
-    />
+    <>
+      <ChatThread
+        items={items}
+        isStreaming={isStreaming}
+        // Scroll-up paging is wired only after the history reveal; before that the
+        // pill button is the single entry point (hasOlder=false disables the
+        // FlatList's onEndReached auto-load).
+        onLoadOlder={historyRevealed ? loadOlder : noop}
+        hasOlder={historyRevealed ? hasOlder : false}
+        isLoadingOlder={isLoadingOlder}
+        showHistoryButton={hasOlder && !historyRevealed}
+        onRevealHistory={handleRevealHistory}
+        starterChips={starterChips}
+        onChipPress={handleChipPress}
+        blockedMessage={blockedMessage}
+        showUnblockControls={effectiveBlocked && !!userId}
+        unblockPending={unblockPending}
+        onRequestUnblock={() => setUnblockModalOpen(true)}
+        onRefreshBlockStatus={handleRefreshBlockStatus}
+        isRefreshingBlockStatus={isRefreshingBlockStatus}
+        onSend={handleSend}
+        isInputDisabled={isStreaming || effectiveBlocked}
+      />
+      {!!userId && conversationId && (
+        <RequestUnblockModal
+          isOpen={unblockModalOpen}
+          onClose={() => setUnblockModalOpen(false)}
+          conversationId={conversationId}
+          userId={userId}
+          onSubmitted={handleUnblockSubmitted}
+        />
+      )}
+    </>
   );
 }
 

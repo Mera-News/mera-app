@@ -551,7 +551,21 @@
     "thinking": "Thinking…",
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
-    "viewPreviousMessages": "View previous messages"
+    "viewPreviousMessages": "View previous messages",
+    "aiUsageNotice": "This assistant helps set up your news preferences. Attempting to manipulate or misuse it may get your account blocked pending review.",
+    "requestUnblock": {
+      "button": "Request unblock",
+      "pendingButton": "Pending review",
+      "refreshButton": "Refresh",
+      "modalTitle": "Request account unblock",
+      "warningText": "The chat history that led to this block will be sent to our team for review. If the violation is found to be severe, your account may be terminated. Please explain what happened below.",
+      "feedbackPlaceholder": "Tell us what happened and why your account should be unblocked...",
+      "submit": "Submit request",
+      "submitting": "Submitting...",
+      "submittedConfirmation": "Your request has been submitted and is pending review. We'll re-check your status when you tap Refresh.",
+      "alreadyPending": "You already have an unblock request pending review.",
+      "error": "Couldn't submit your request. Please try again."
+    }
   },
   "articleFeedback": {
     "widgetTitle": "What do you think of this article suggestion?",

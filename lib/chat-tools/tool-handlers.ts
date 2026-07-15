@@ -10,7 +10,7 @@ import {
   getQuestionnaireLevel,
   setQuestionnaireLevel,
 } from '../database/services/fact-service';
-import { getSetting, setSetting } from '../database/services/setting-service';
+import { getSetting } from '../database/services/setting-service';
 import { AccountService } from '../account-service';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -395,28 +395,68 @@ export async function handleAdvanceQuestionnaireLevel(): Promise<Record<string, 
   };
 }
 
-/** Tracks warning count locally. Blocks chat if warnings reach 3. */
+/**
+ * Issues a server-authoritative LLM warning. The server increments
+ * llmWarningCount and blocks the user at count >= 3. On success we sync the
+ * returned persona into the user store + WatermelonDB so the local cache (and
+ * the config-panel banner) stay authoritative across restarts.
+ *
+ * Fails OPEN: a network hiccup returns blocked:false so a transient error never
+ * wrongly locks a user out of the chat.
+ */
 export async function handleIssueWarning(
   args: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   const reason = (args.reason as string) ?? 'No reason provided';
-  const currentCount = parseInt(await getSetting('llm_warning_count') ?? '0', 10);
-  const newCount = currentCount + 1;
-  await setSetting('llm_warning_count', String(newCount));
+  const userId = await getStoredUserId();
 
-  logger.warn('[issueWarning] Warning issued', { reason, warningCount: newCount });
-
-  if (newCount >= 3) {
+  if (!userId) {
+    logger.warn('[issueWarning] No userId available — failing open', { reason });
     return {
-      blocked: true,
-      warningCount: newCount,
-      message: 'User has been blocked due to repeated warnings.',
+      blocked: false,
+      warningCount: 0,
+      message: `Warning issued: ${reason}`,
     };
   }
 
-  return {
-    blocked: false,
-    warningCount: newCount,
-    message: `Warning ${newCount}/3 issued: ${reason}`,
-  };
+  try {
+    const persona = await AccountService.issueLlmWarning(userId, reason);
+
+    // Sync the authoritative persona into the reactive store (config-panel
+    // banner updates live) and persist to WatermelonDB (survives restart).
+    useUserStore.getState().setUserPersona(persona);
+
+    logger.warn('[issueWarning] Warning issued', {
+      reason,
+      warningCount: persona.llmWarningCount,
+      blocked: persona.blockedByLlm,
+    });
+
+    if (persona.blockedByLlm) {
+      return {
+        blocked: true,
+        warningCount: persona.llmWarningCount,
+        message:
+          persona.blockedByLlmReason ??
+          'User has been blocked due to repeated warnings.',
+      };
+    }
+
+    return {
+      blocked: false,
+      warningCount: persona.llmWarningCount,
+      message: `Warning ${persona.llmWarningCount}/3 issued: ${reason}`,
+    };
+  } catch (error) {
+    // Fail open — never block a user because of a transient network error.
+    logger.captureException(error, {
+      tags: { service: 'tool-handlers', method: 'handleIssueWarning' },
+      extra: { userId },
+    });
+    return {
+      blocked: false,
+      warningCount: 0,
+      message: `Warning issued: ${reason}`,
+    };
+  }
 }
