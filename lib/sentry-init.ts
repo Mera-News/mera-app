@@ -47,6 +47,10 @@ export const SENTRY_ENABLED =
 if (SENTRY_ENABLED) {
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    // Separates dev-machine events (opted in via EXPO_PUBLIC_SENTRY_IN_DEV) from
+    // real production traffic in the Sentry issue stream. Without this, a local
+    // dev run with the flag set pollutes prod issues with local file paths.
+    environment: __DEV__ ? 'development' : 'production',
     // Do NOT auto-attach IP address, request headers, or OS-user identifiers to
     // events. This is a privacy/E2EE product; nothing relies on server-side PII
     // inference (logger.setUser is never called). The beforeSend scrubber below

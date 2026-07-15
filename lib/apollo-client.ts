@@ -14,6 +14,7 @@ import {
     StatusCodes,
 } from 'http-status-codes';
 import { authClient } from './auth-client';
+import { recordAuthFailure, recordAuthSuccess } from './auth-failure-breaker';
 import logger from './logger';
 import { useForYouStore } from './stores/for-you-store';
 import { toastManager } from './toast-manager';
@@ -51,11 +52,17 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             // actually reports no session; let server truth drive that, not
             // a single error response.
             if (errorCode === 'UNAUTHENTICATED') {
-                logger.captureMessage('GraphQL UNAUTHENTICATED', {
-                    level: 'warning',
-                    tags: { source: 'apollo-error-link', type: 'auth' },
-                    extra: { operationName: operation.operationName },
-                });
+                // Downgraded from a per-request Sentry capture to a breadcrumb:
+                // the auth-failure breaker's single trip event replaces the
+                // per-request storm (this used to emit ~700 events over two
+                // weeks). recordAuthFailure() drives the breaker.
+                logger.addBreadcrumb(
+                    'GraphQL UNAUTHENTICATED',
+                    'apollo-error-link',
+                    { operationName: operation.operationName },
+                    'warning',
+                );
+                recordAuthFailure();
                 return;
             }
 
@@ -106,11 +113,15 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
         // 401 is logged but does NOT auto-logout (see GraphQL UNAUTHENTICATED
         // branch above for rationale).
         if (statusCode === StatusCodes.UNAUTHORIZED) {
-            logger.captureMessage('Network 401', {
-                level: 'warning',
-                tags: { source: 'apollo-error-link', type: 'auth' },
-                extra: { operationName: operation.operationName },
-            });
+            // Downgraded to a breadcrumb — see the GraphQL UNAUTHENTICATED
+            // branch above. The breaker's single trip event is the signal.
+            logger.addBreadcrumb(
+                'Network 401',
+                'apollo-error-link',
+                { operationName: operation.operationName },
+                'warning',
+            );
+            recordAuthFailure();
             return;
         }
 
@@ -127,6 +138,25 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
         toastManager.showNetworkError();
     }
 });
+
+// Observe successful operations to reset the auth-failure breaker. Any response
+// that comes back without errors proves auth is working, so it closes the
+// breaker (and resumes feed-sync) if a transient failure had tripped it.
+const authSuccessLink = new ApolloLink((operation, forward) =>
+    new Observable((observer) => {
+        const subscription = forward(operation).subscribe({
+            next: (result) => {
+                if (!result.errors || result.errors.length === 0) {
+                    recordAuthSuccess();
+                }
+                observer.next(result);
+            },
+            error: (err) => observer.error(err),
+            complete: () => observer.complete(),
+        });
+        return () => subscription.unsubscribe();
+    }),
+);
 
 // Create retry link with exponential backoff for network errors
 // This prevents infinite error loops when network is unavailable
@@ -246,9 +276,9 @@ const cacheEvictionLink = new ApolloLink((operation, forward) => {
 
 // Initialize Apollo Client with error, retry, auth, and http links
 // NOTE: Caching is ENABLED with 10-minute TTL
-// Link chain: errorLink → retryLink → cacheEvictionLink → authLink → httpLink
+// Link chain: errorLink → authSuccessLink → retryLink → cacheEvictionLink → authLink → httpLink
 const client = new ApolloClient({
-    link: errorLink.concat(retryLink.concat(cacheEvictionLink.concat(authLink.concat(httpLink)))),
+    link: errorLink.concat(authSuccessLink.concat(retryLink.concat(cacheEvictionLink.concat(authLink.concat(httpLink))))),
     cache,
     defaultOptions: {
         watchQuery: {

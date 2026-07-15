@@ -13,6 +13,7 @@ const mockWithScope = jest.fn();
 const mockCaptureException = jest.fn();
 const mockLogInfo = jest.fn();
 const mockLogWarn = jest.fn();
+const mockLogAddBreadcrumb = jest.fn();
 const mockAppSchedulerTrigger = jest.fn();
 
 jest.mock('@/lib/scheduler/scheduler-persistence', () => ({
@@ -47,6 +48,7 @@ jest.mock('@/lib/logger', () => ({
   default: {
     info: (...args: any[]) => mockLogInfo(...args),
     warn: (...args: any[]) => mockLogWarn(...args),
+    addBreadcrumb: (...args: any[]) => mockLogAddBreadcrumb(...args),
     captureException: jest.fn(),
   },
 }));
@@ -296,6 +298,47 @@ describe('run — failure handling', () => {
 
     await jest.advanceTimersByTimeAsync(120_000);
     expect(mockAppSchedulerTrigger).not.toHaveBeenCalled();
+  });
+
+  // ── Non-retryable errors are terminal: no reschedule even with attempts left.
+  it('does NOT reschedule a non-retryable error even on attempt 1', async () => {
+    // A BAD_USER_INPUT GraphQL error (server rejected the request) — retrying
+    // just re-runs the same doomed request storm.
+    const err = { errors: [{ extensions: { code: 'BAD_USER_INPUT' } }] };
+    const job = makeJob({ attempt: 1, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    // Marked terminal (exhausted=true, no retryAt) and no timer scheduled.
+    expect(mockMarkFailed).toHaveBeenCalledWith('job-test-1', err, true, undefined);
+    expect(mockSetJobFailed).toHaveBeenCalledWith('job-test-1', true, undefined);
+    await jest.advanceTimersByTimeAsync(120_000);
+    expect(mockAppSchedulerTrigger).not.toHaveBeenCalled();
+    expect(mockLogAddBreadcrumb).toHaveBeenCalledWith(
+      expect.stringContaining('non-retryable'),
+      'scheduler',
+      expect.objectContaining({ jobId: 'job-test-1', attempt: 1 }),
+      'warning',
+    );
+  });
+
+  it('does NOT reschedule a 4xx network error', async () => {
+    const err = { statusCode: 400, message: 'Bad Request' };
+    const job = makeJob({ attempt: 1, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    expect(mockMarkFailed).toHaveBeenCalledWith('job-test-1', err, true, undefined);
+    await jest.advanceTimersByTimeAsync(120_000);
+    expect(mockAppSchedulerTrigger).not.toHaveBeenCalled();
+  });
+
+  it('still reschedules a transient (5xx) error with attempts left', async () => {
+    const err = { statusCode: 503, message: 'Service Unavailable' };
+    const job = makeJob({ attempt: 1, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    expect(mockMarkFailed).toHaveBeenCalledWith('job-test-1', err, false, expect.any(Number));
+    await jest.advanceTimersByTimeAsync(30_000);
+    expect(mockAppSchedulerTrigger).toHaveBeenCalledWith('feed-sync');
   });
 });
 

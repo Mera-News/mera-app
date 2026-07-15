@@ -373,6 +373,13 @@ export type {
     TopicPaginationInput,
 } from './generated/graphql-types';
 
+// [Flow v2] The server rejects an articleIdsForTopics request carrying more than
+// 200 topics with BAD_USER_INPUT. Users accumulate unbounded on-device topics,
+// so a single feed-sync could send hundreds at once. We chunk below the server
+// cap (with headroom) and run the batches SEQUENTIALLY — each cold topic costs
+// the server a Jina embed + vector search, so parallel batches would spike load.
+const MAX_TOPICS_PER_BATCH = 150;
+
 // Article Service Class
 export class ArticleService {
     /**
@@ -419,15 +426,28 @@ export class ArticleService {
         topics: TopicPaginationInput[],
         opts?: { limitPerTopic?: number },
     ): Promise<ArticleIdsForTopicsResponse> {
+        const limitPerTopic = opts?.limitPerTopic ?? 20;
         try {
-            const { data } = await client.query<{
-                articleIdsForTopics: ArticleIdsForTopicsResponse;
-            }>({
-                query: GET_ARTICLE_IDS_FOR_TOPICS,
-                variables: { topics, limitPerTopic: opts?.limitPerTopic ?? 20 },
-                fetchPolicy: 'no-cache',
-            });
-            return data?.articleIdsForTopics ?? { results: [] };
+            // Stay under the server's per-request topic cap. `limitPerTopic` is a
+            // per-topic bound, so batching leaves its semantics unchanged. Batches
+            // run sequentially to avoid stacking cold-topic vector searches.
+            if (topics.length <= MAX_TOPICS_PER_BATCH) {
+                return await this.queryArticleIdsBatch(topics, limitPerTopic);
+            }
+
+            const merged: ArticleIdsForTopicsResponse['results'] = [];
+            const seenTopics = new Set<string>();
+            for (let i = 0; i < topics.length; i += MAX_TOPICS_PER_BATCH) {
+                const batch = topics.slice(i, i + MAX_TOPICS_PER_BATCH);
+                const { results } = await this.queryArticleIdsBatch(batch, limitPerTopic);
+                // Preserve order; de-dup by topicText so a topic never appears twice.
+                for (const result of results) {
+                    if (seenTopics.has(result.topicText)) continue;
+                    seenTopics.add(result.topicText);
+                    merged.push(result);
+                }
+            }
+            return { results: merged };
         } catch (error) {
             // The For You feed is the sole subscription gate: when the server
             // forces subscriptions, these queries 402 (PAYMENT_REQUIRED) for
@@ -437,13 +457,32 @@ export class ArticleService {
                 navigateToPaywall();
                 throw error;
             }
-            logger.warn('[ArticleService] getArticleIdsForTopics FAILED', { topicCount: topics.length });
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticleIdsForTopics' },
-                extra: { topicCount: topics.length },
-            });
+            // The apollo-error-link already captures this to Sentry; a
+            // service-level captureException here would double-report (and, on a
+            // retried storm, multiply). Leave a breadcrumb for context instead.
+            logger.addBreadcrumb(
+                '[ArticleService] getArticleIdsForTopics FAILED',
+                'article-service',
+                { method: 'getArticleIdsForTopics', topicCount: topics.length },
+                'warning',
+            );
             throw error;
         }
+    }
+
+    /** Single-request articleIdsForTopics call (one batch of ≤ server cap topics). */
+    private static async queryArticleIdsBatch(
+        topics: TopicPaginationInput[],
+        limitPerTopic: number,
+    ): Promise<ArticleIdsForTopicsResponse> {
+        const { data } = await client.query<{
+            articleIdsForTopics: ArticleIdsForTopicsResponse;
+        }>({
+            query: GET_ARTICLE_IDS_FOR_TOPICS,
+            variables: { topics, limitPerTopic },
+            fetchPolicy: 'no-cache',
+        });
+        return data?.articleIdsForTopics ?? { results: [] };
     }
 
     /**
@@ -508,11 +547,14 @@ export class ArticleService {
                 navigateToPaywall();
                 throw error;
             }
-            logger.error('[ArticleService] getArticlesForTopicsByIds FAILED', error);
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticlesForTopicsByIds' },
-                extra: { idCount: articleIds.length },
-            });
+            // apollo-error-link already captures this to Sentry — breadcrumb only
+            // here to avoid double- (previously triple-) reporting.
+            logger.addBreadcrumb(
+                '[ArticleService] getArticlesForTopicsByIds FAILED',
+                'article-service',
+                { method: 'getArticlesForTopicsByIds', idCount: articleIds.length },
+                'error',
+            );
             throw error;
         }
     }

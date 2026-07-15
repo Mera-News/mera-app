@@ -169,6 +169,16 @@ eas branch:list
 
 > Because runtime version = `appVersion` (`1.2.0`), an OTA update is only delivered to installs whose native build has the **same** app version. After bumping `version` in `app.json`, ship a new native build before OTA updates reach it.
 
+**Source maps for OTA updates:** `eas update` does not upload source maps on its own (only the native build phases do, via Xcode/Gradle), so JS stack traces from OTA bundles arrive at Sentry unsymbolicated and get mis-grouped. Use the `npm run update:*` scripts instead of a bare `eas update` — they chain `eas update --channel <channel>` with `npx sentry-expo-upload-sourcemaps dist` (the `dist/` dir is what `eas update` writes its bundle + source maps to), so every OTA publish stays symbolicated in Sentry:
+
+```bash
+npm run update:development   # eas update --channel development + sourcemap upload
+npm run update:preview       # eas update --channel preview + sourcemap upload
+npm run update:production    # eas update --channel production + sourcemap upload
+```
+
+Requires `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` to be set (see README's Backend Requirements table).
+
 ## 9. Version Bump Checklist (new store release)
 
 1. Bump `version` in [app.json](app.json) (e.g. `1.2.0` → `1.3.0`).

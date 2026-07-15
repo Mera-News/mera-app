@@ -14,9 +14,32 @@ class _AppScheduler {
   private appStateSubscription: { remove: () => void } | null = null;
   private networkUnsubscribe: (() => void) | null = null;
   private suspended = false;
+  // Tasks temporarily paused (skipped by every trigger path) without tearing
+  // down the scheduler. Used by the auth-failure breaker to stop the feed-sync
+  // poll loop once a session looks dead, and resumed once auth recovers.
+  private pausedTasks = new Set<string>();
 
   register<T>(definition: TaskDefinition<T>): void {
     this.tasks.set(definition.name, definition as TaskDefinition);
+  }
+
+  /** Temporarily stop a task from firing (tick, foreground, network, trigger)
+   *  without disposing the scheduler. Idempotent. */
+  pauseTask(name: string): void {
+    if (this.pausedTasks.has(name)) return;
+    this.pausedTasks.add(name);
+    logger.info(`[AppScheduler] task paused — ${name}`);
+  }
+
+  /** Re-enable a paused task. Idempotent. */
+  resumeTask(name: string): void {
+    if (this.pausedTasks.delete(name)) {
+      logger.info(`[AppScheduler] task resumed — ${name}`);
+    }
+  }
+
+  isPaused(name: string): boolean {
+    return this.pausedTasks.has(name);
   }
 
   async init(): Promise<void> {
@@ -44,6 +67,12 @@ class _AppScheduler {
   async trigger(taskName: string, input?: unknown): Promise<void> {
     const task = this.tasks.get(taskName);
     if (!task) throw new Error(`Unknown task: ${taskName}`);
+    // A paused task never fires — including via the scheduler-runner retry path
+    // that re-triggers by name.
+    if (this.pausedTasks.has(taskName)) {
+      logger.info(`[AppScheduler] trigger skipped — task=${taskName} paused`);
+      return;
+    }
     // Honor exclusivity for triggered runs too (e.g. the scheduler-runner retry
     // path). A run already in progress supersedes the trigger — without this an
     // exclusive task could run concurrently with its own retry.
@@ -86,6 +115,7 @@ class _AppScheduler {
   private async _tick(): Promise<void> {
     const now = Date.now();
     for (const task of this.tasks.values()) {
+      if (this.pausedTasks.has(task.name)) continue;
       if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
 
       const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
@@ -105,7 +135,20 @@ class _AppScheduler {
   }
 
   private _onForeground(): void {
+    // Give the auth-failure breaker a chance to reset on foreground: a user who
+    // re-authenticated (or whose keychain is now unlocked) shouldn't stay stuck
+    // behind a paused feed-sync. If the session is still dead, the next run's
+    // 401s re-trip the breaker. Lazy require to avoid an import cycle.
+    try {
+      const { onAppForeground } =
+        require('@/lib/auth-failure-breaker') as typeof import('@/lib/auth-failure-breaker');
+      onAppForeground();
+    } catch {
+      // best-effort
+    }
+
     for (const task of this.tasks.values()) {
+      if (this.pausedTasks.has(task.name)) continue;
       if (!task.triggers?.includes('app-foreground')) continue;
       if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
 
@@ -120,6 +163,7 @@ class _AppScheduler {
 
   private _onNetworkReconnect(): void {
     for (const task of this.tasks.values()) {
+      if (this.pausedTasks.has(task.name)) continue;
       if (!task.triggers?.includes('network-reconnect')) continue;
       if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
       if (!this._conditionsMet(task)) continue;

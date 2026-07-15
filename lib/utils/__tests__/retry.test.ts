@@ -17,7 +17,7 @@ jest.spyOn(global, 'setTimeout').mockImplementation((fn: any, delay?: number) =>
 });
 
 import logger from '@/lib/logger';
-import { withRetry } from '../retry';
+import { isNonRetryableError, NonRetryableError, withRetry } from '../retry';
 
 const mockLoggerWarn = logger.warn as jest.Mock;
 
@@ -127,5 +127,86 @@ describe('withRetry', () => {
 
     await withRetry(op, undefined, 3);
     expect(capturedSetTimeoutDelays).toEqual([100, 200, 400]);
+  });
+
+  // ── Non-retryable errors must fail fast — no backoff loop, no wasted attempts.
+  it('does NOT retry a BAD_USER_INPUT GraphQL error (rethrows on first failure)', async () => {
+    const err = { errors: [{ extensions: { code: 'BAD_USER_INPUT' } }] };
+    const op = jest.fn().mockRejectedValue(err);
+
+    await expect(withRetry(op, undefined, 3)).rejects.toBe(err);
+    expect(op).toHaveBeenCalledTimes(1);
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
+  });
+
+  it('does NOT retry a 4xx network error', async () => {
+    const err = { statusCode: 400, message: 'Bad Request' };
+    const op = jest.fn().mockRejectedValue(err);
+
+    await expect(withRetry(op, undefined, 3)).rejects.toBe(err);
+    expect(op).toHaveBeenCalledTimes(1);
+  });
+
+  it('still retries a generic/network error (5xx-ish) until exhausted', async () => {
+    const err = { statusCode: 503, message: 'Service Unavailable' };
+    const op = jest.fn().mockRejectedValue(err);
+
+    await expect(withRetry(op, undefined, 2)).rejects.toBe(err);
+    expect(op).toHaveBeenCalledTimes(3); // 1 + 2 retries — treated as transient
+  });
+});
+
+describe('isNonRetryableError', () => {
+  it.each([
+    'BAD_USER_INPUT',
+    'UNAUTHENTICATED',
+    'FORBIDDEN',
+    'GRAPHQL_VALIDATION_FAILED',
+  ])('is true for a bare GraphQL error with code %s', (code) => {
+    expect(isNonRetryableError({ extensions: { code } })).toBe(true);
+  });
+
+  it('is true for a nested errors[] carrying a non-retryable code', () => {
+    expect(
+      isNonRetryableError({ errors: [{ extensions: { code: 'FORBIDDEN' } }] }),
+    ).toBe(true);
+  });
+
+  it.each([400, 401, 403, 404, 422, 499])('is true for 4xx status %s', (status) => {
+    expect(isNonRetryableError({ statusCode: status })).toBe(true);
+    expect(isNonRetryableError({ response: { status } })).toBe(true);
+  });
+
+  it('is true for a NonRetryableError instance', () => {
+    expect(isNonRetryableError(new NonRetryableError('nope', new Error('x')))).toBe(true);
+  });
+
+  it.each([500, 502, 503, 504])('is false for 5xx status %s (transient)', (status) => {
+    expect(isNonRetryableError({ statusCode: status })).toBe(false);
+  });
+
+  it('is false for a retryable GraphQL code (e.g. INTERNAL_SERVER_ERROR)', () => {
+    expect(isNonRetryableError({ extensions: { code: 'INTERNAL_SERVER_ERROR' } })).toBe(false);
+  });
+
+  it('is false for a plain network error with no status', () => {
+    expect(isNonRetryableError(new Error('socket hang up'))).toBe(false);
+  });
+
+  it('is false for null/undefined/non-object input', () => {
+    expect(isNonRetryableError(null)).toBe(false);
+    expect(isNonRetryableError(undefined)).toBe(false);
+    expect(isNonRetryableError('string error')).toBe(false);
+  });
+});
+
+describe('NonRetryableError', () => {
+  it('carries the originating error as cause and keeps the name', () => {
+    const cause = new Error('root');
+    const e = new NonRetryableError('wrapped', cause);
+    expect(e.name).toBe('NonRetryableError');
+    expect(e.message).toBe('wrapped');
+    expect(e.cause).toBe(cause);
+    expect(e).toBeInstanceOf(Error);
   });
 });

@@ -17,6 +17,7 @@ jest.mock('@/lib/logger', () => ({
     default: {
         captureException: jest.fn(),
         captureMessage: jest.fn(),
+        addBreadcrumb: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
         debug: jest.fn(),
@@ -229,7 +230,7 @@ describe('ArticleService.getArticleIdsForTopics', () => {
         expect(result).toEqual({ results: [] });
     });
 
-    it('re-throws on error and logs warn + captureException', async () => {
+    it('re-throws on error and leaves a breadcrumb (no duplicate captureException)', async () => {
         const err = new Error('getArticleIdsForTopics failed');
         mockQuery.mockRejectedValueOnce(err);
 
@@ -237,16 +238,71 @@ describe('ArticleService.getArticleIdsForTopics', () => {
             ArticleService.getArticleIdsForTopics([{ topicText: 'AI', cursor: null } as any]),
         ).rejects.toThrow('getArticleIdsForTopics failed');
 
-        expect((logger.warn as jest.Mock)).toHaveBeenCalledWith(
+        // The apollo-error-link is the single capture path — the service must not
+        // double-report via captureException, only leave a breadcrumb.
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
             expect.stringContaining('getArticleIdsForTopics FAILED'),
-            expect.any(Object),
+            'article-service',
+            expect.objectContaining({ topicCount: 1, method: 'getArticleIdsForTopics' }),
+            'warning',
         );
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getArticleIdsForTopics' },
-            }),
-        );
+    });
+
+    // ── Chunking: topics beyond the server's per-request cap are split into
+    //    sequential batches (≤ MAX_TOPICS_PER_BATCH = 150) and merged. ──────────
+    it('sends a single request when topics ≤ 150', async () => {
+        const topics = Array.from({ length: 150 }, (_, i) => ({ topicText: `t${i}` }));
+        mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: [] } } });
+
+        await ArticleService.getArticleIdsForTopics(topics as any);
+        expect(mockQuery).toHaveBeenCalledTimes(1);
+        expect(mockQuery.mock.calls[0][0].variables.topics).toHaveLength(150);
+    });
+
+    it('chunks 247 topics into 2 sequential requests of 150 + 97', async () => {
+        const topics = Array.from({ length: 247 }, (_, i) => ({ topicText: `t${i}` }));
+        const batch1 = topics.slice(0, 150).map((t) => ({
+            topicText: t.topicText, articleIds: ['a-shared', `a-${t.topicText}`], hasNextPage: false, nextCursor: null,
+        }));
+        const batch2 = topics.slice(150).map((t) => ({
+            topicText: t.topicText, articleIds: ['a-shared', `a-${t.topicText}`], hasNextPage: false, nextCursor: null,
+        }));
+        mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: batch1 } } });
+        mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: batch2 } } });
+
+        const result = await ArticleService.getArticleIdsForTopics(topics as any);
+
+        expect(mockQuery).toHaveBeenCalledTimes(2);
+        expect(mockQuery.mock.calls[0][0].variables.topics).toHaveLength(150);
+        expect(mockQuery.mock.calls[1][0].variables.topics).toHaveLength(97);
+        // Merged, order-preserving across both batches, de-duped by topicText.
+        expect(result.results).toHaveLength(247);
+        expect(result.results.map((r) => r.topicText)).toEqual(topics.map((t) => t.topicText));
+    });
+
+    it('de-dupes merged results by topicText across batches', async () => {
+        const topics = Array.from({ length: 200 }, (_, i) => ({ topicText: `t${i}` }));
+        // Batch 2 (index 150+) accidentally echoes a topicText already in batch 1.
+        const batch1 = [{ topicText: 't0', articleIds: ['x'], hasNextPage: false, nextCursor: null }];
+        const batch2 = [{ topicText: 't0', articleIds: ['y'], hasNextPage: false, nextCursor: null }];
+        mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: batch1 } } });
+        mockQuery.mockResolvedValueOnce({ data: { articleIdsForTopics: { results: batch2 } } });
+
+        const result = await ArticleService.getArticleIdsForTopics(topics as any);
+        const t0Entries = result.results.filter((r) => r.topicText === 't0');
+        expect(t0Entries).toHaveLength(1);
+        expect(t0Entries[0].articleIds).toEqual(['x']); // first occurrence wins
+    });
+
+    it('applies limitPerTopic to every chunk', async () => {
+        const topics = Array.from({ length: 160 }, (_, i) => ({ topicText: `t${i}` }));
+        mockQuery.mockResolvedValue({ data: { articleIdsForTopics: { results: [] } } });
+
+        await ArticleService.getArticleIdsForTopics(topics as any, { limitPerTopic: 7 });
+        expect(mockQuery).toHaveBeenCalledTimes(2);
+        expect(mockQuery.mock.calls[0][0].variables.limitPerTopic).toBe(7);
+        expect(mockQuery.mock.calls[1][0].variables.limitPerTopic).toBe(7);
     });
 });
 
@@ -364,7 +420,7 @@ describe('ArticleService.getArticlesForTopicsByIds', () => {
         expect(result.dailyLimitReached).toBe(false);
     });
 
-    it('re-throws on error and logs', async () => {
+    it('re-throws on error and leaves a breadcrumb (no duplicate captureException)', async () => {
         const err = new Error('batch fetch error');
         mockQuery.mockRejectedValueOnce(err);
 
@@ -372,15 +428,13 @@ describe('ArticleService.getArticlesForTopicsByIds', () => {
             ArticleService.getArticlesForTopicsByIds(['id1']),
         ).rejects.toThrow('batch fetch error');
 
-        expect((logger.error as jest.Mock)).toHaveBeenCalledWith(
+        // apollo-error-link is the single capture path; the service only breadcrumbs.
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
             expect.stringContaining('getArticlesForTopicsByIds FAILED'),
-            err,
-        );
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getArticlesForTopicsByIds' },
-            }),
+            'article-service',
+            expect.objectContaining({ idCount: 1, method: 'getArticlesForTopicsByIds' }),
+            'error',
         );
     });
 });

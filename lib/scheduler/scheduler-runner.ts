@@ -3,6 +3,7 @@ import type { Job, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import logger from '@/lib/logger';
+import { isNonRetryableError } from '@/lib/utils/retry';
 
 function defaultBackoff(attempt: number): number {
   return ([30_000, 60_000, 120_000][attempt - 1] ?? 120_000);
@@ -48,7 +49,19 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     try { transaction?.setStatus?.('ok'); } catch { /* best-effort */ }
 
   } catch (err) {
-    const exhausted = job.attempt >= (definition.maxAttempts ?? 3);
+    // A non-retryable error (e.g. a 4xx / BAD_USER_INPUT from the server) will
+    // never succeed on a retry — rescheduling just re-runs the same doomed
+    // request storm. Treat it as terminal: skip the maxAttempts reschedule.
+    const nonRetryable = isNonRetryableError(err);
+    if (nonRetryable) {
+      logger.addBreadcrumb(
+        `[${definition.name}] non-retryable error — skipping reschedule`,
+        'scheduler',
+        { jobId: job.id, attempt: job.attempt },
+        'warning',
+      );
+    }
+    const exhausted = nonRetryable || job.attempt >= (definition.maxAttempts ?? 3);
     const retryDelay = definition.retryDelay?.(job.attempt) ?? defaultBackoff(job.attempt);
     const retryAt = exhausted ? undefined : Date.now() + retryDelay;
 
