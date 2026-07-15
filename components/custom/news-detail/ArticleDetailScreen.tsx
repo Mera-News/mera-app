@@ -14,8 +14,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
-import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
-import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -23,7 +21,7 @@ import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -71,22 +69,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguage();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
-
-    // Context for the per-screen floating chat bubble (rendered as the last
-    // child of the root below). Memoized so FloatingMeraBubble doesn't re-render
-    // on every parent render.
-    const chatContext = useMemo<ChatContext | null>(
-        () =>
-            article
-                ? {
-                    kind: 'article-suggestion',
-                    articleId: article._id ?? articleId,
-                    articleTitle:
-                        article.title_en_internal_only ?? article.title ?? undefined,
-                }
-                : null,
-        [article, articleId],
-    );
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -306,10 +288,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 }
             />
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
-
-            {/* Floating chat bubble — LAST child so it draws above the screen's
-                own content; unmounts with the screen on navigation. */}
-            {chatContext && <ScreenChatBubble context={chatContext} />}
         </Box>
     );
 };

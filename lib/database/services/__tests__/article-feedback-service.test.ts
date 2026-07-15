@@ -14,7 +14,11 @@ jest.mock('@/lib/logger', () => ({
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import logger from '@/lib/logger';
-import { recordArticleFeedback, hasLiked } from '../article-feedback-service';
+import {
+  recordArticleFeedback,
+  removeArticleFeedback,
+  hasLiked,
+} from '../article-feedback-service';
 
 const db = database as any;
 
@@ -162,6 +166,42 @@ describe('recordArticleFeedback', () => {
     await expect(
       recordArticleFeedback({ articleId: 'a1', sentiment: 'like', title: 'Test' }),
     ).resolves.toBeUndefined();
+    expect(logger.captureException).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// removeArticleFeedback
+// ---------------------------------------------------------------------------
+
+describe('removeArticleFeedback', () => {
+  it('does nothing when articleId is empty/whitespace', async () => {
+    await removeArticleFeedback('', 'like');
+    await removeArticleFeedback('   ', 'like');
+    expect(database.write).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when no matching row exists', async () => {
+    db._setRows('article_feedback', []);
+    await removeArticleFeedback('a1', 'like');
+    expect(database.write).not.toHaveBeenCalled();
+  });
+
+  it('destroys the matching row(s) for (articleId, sentiment)', async () => {
+    const existing = makeFeedbackRecord({ articleId: 'a1', sentiment: 'like' });
+    db._setRows('article_feedback', [existing]);
+
+    await removeArticleFeedback('a1', 'like');
+
+    expect(database.write).toHaveBeenCalledTimes(1);
+    expect(existing.destroyPermanently).toHaveBeenCalledTimes(1);
+  });
+
+  it('captures and swallows exceptions', async () => {
+    db._collections['article_feedback'].query.mockImplementationOnce(() => {
+      throw new Error('DB exploded');
+    });
+    await expect(removeArticleFeedback('a1', 'like')).resolves.toBeUndefined();
     expect(logger.captureException).toHaveBeenCalledTimes(1);
   });
 });

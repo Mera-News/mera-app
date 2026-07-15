@@ -1,12 +1,14 @@
 import { HStack } from '@/components/ui/hstack';
+import MeraLogo from '@/components/custom/MeraLogo';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
 import {
     hasLiked,
     recordArticleFeedback,
+    removeArticleFeedback,
 } from '@/lib/database/services/article-feedback-service';
-import { hapticMedium, hapticSuccess } from '@/lib/haptics';
+import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -29,19 +31,25 @@ const SELECTED_ICON = '#1a1a1a';
 const ICON_SIZE = 19;
 const BUTTON_SIZE = 45;
 
-type FeedbackKind = 'like' | 'improve' | 'dislike';
+type FeedbackKind = 'like' | 'dislike';
 
 /**
  * Prominent "What do you think of this article?" widget rendered directly
  * under the reason box on the article detail screens. Single row: the title on
  * the left (wraps to 2 lines if needed) and three round, primary-orange-outlined
- * icon buttons grouped on the right:
+ * buttons grouped on the right:
+ *   - Chat with Mera → opens the floating Mera chat for this article (plain
+ *     open, no auto-sent message) — replaces the old floating chat bubble. Bare
+ *     logo button, no label (not even on long-press) — matches the old
+ *     floating chat bubble treatment.
  *   - Like → tracked locally only (no chat); persists a `like` row and shows a
- *     filled selected treatment, restored on remount via `hasLiked`.
- *   - Improve / Not for me → open the floating Mera chat with an article-feedback
- *     conversation and auto-send an initial message.
- * Each button shows its label on long-press (gluestack Tooltip) and always sets
- * an accessibilityLabel.
+ *     filled selected treatment, restored on remount via `hasLiked`. Toggleable —
+ *     re-tapping an already-liked button un-likes it, removing the row and
+ *     clearing the filled treatment.
+ *   - Dislike → opens the floating Mera chat with an article-feedback
+ *     conversation and auto-sends an initial message.
+ * The like/dislike buttons show their label on long-press (gluestack Tooltip)
+ * and always set an accessibilityLabel.
  */
 export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     articleId,
@@ -69,7 +77,12 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     }, [articleId]);
 
     const handleLike = useCallback(() => {
-        if (liked) return; // already liked — no-op
+        if (liked) {
+            hapticLight();
+            setLiked(false);
+            void removeArticleFeedback(articleId, 'like');
+            return;
+        }
         hapticSuccess();
         setLiked(true);
         void recordArticleFeedback({
@@ -81,7 +94,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     }, [liked, articleId, suggestionId, title]);
 
     const openChat = useCallback(
-        (messageKey: 'articleFeedback.improveMessage' | 'articleFeedback.thumbsDownMessage') => {
+        (messageKey: 'articleFeedback.thumbsDownMessage') => {
             hapticMedium();
             useFloatingChatStore.getState().openArticleFeedback(
                 { kind: 'article-suggestion', articleId, suggestionId, articleTitle: title },
@@ -91,9 +104,19 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         [articleId, suggestionId, title, t],
     );
 
+    const handleChatPress = useCallback(() => {
+        hapticMedium();
+        useFloatingChatStore.getState().expand({
+            kind: 'article-suggestion',
+            articleId,
+            suggestionId,
+            articleTitle: title,
+        });
+    }, [articleId, suggestionId, title]);
+
     const renderButton = (
         kind: FeedbackKind,
-        iconName: React.ComponentProps<typeof MaterialIcons>['name'],
+        icon: React.ReactNode,
         label: string,
         onPress: () => void,
         selected: boolean,
@@ -119,11 +142,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                         borderColor: PRIMARY,
                     }}
                 >
-                    <MaterialIcons
-                        name={iconName}
-                        size={ICON_SIZE}
-                        color={selected ? SELECTED_ICON : PRIMARY}
-                    />
+                    {icon}
                 </Pressable>
             )}
         >
@@ -139,23 +158,35 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 {t('articleFeedback.widgetTitle')}
             </Text>
             <HStack space="xl" className="items-center justify-end">
+                <Pressable
+                    onPress={handleChatPress}
+                    accessibilityRole="button"
+                    accessibilityLabel="Mera"
+                    className="items-center justify-center rounded-full"
+                    style={{
+                        width: BUTTON_SIZE,
+                        height: BUTTON_SIZE,
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.75,
+                        borderColor: PRIMARY,
+                    }}
+                >
+                    <MeraLogo size={28} />
+                </Pressable>
                 {renderButton(
                     'like',
-                    'thumb-up',
+                    <MaterialIcons
+                        name="thumb-up"
+                        size={ICON_SIZE}
+                        color={liked ? SELECTED_ICON : PRIMARY}
+                    />,
                     t('articleFeedback.likeLabel'),
                     handleLike,
                     liked,
                 )}
                 {renderButton(
-                    'improve',
-                    'build',
-                    t('articleFeedback.improveLabel'),
-                    () => openChat('articleFeedback.improveMessage'),
-                    false,
-                )}
-                {renderButton(
                     'dislike',
-                    'thumb-down',
+                    <MaterialIcons name="thumb-down" size={ICON_SIZE} color={PRIMARY} />,
                     t('articleFeedback.dislikeLabel'),
                     () => openChat('articleFeedback.thumbsDownMessage'),
                     false,

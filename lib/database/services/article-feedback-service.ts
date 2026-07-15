@@ -3,7 +3,8 @@
 // "liked" acknowledgment state on the suggestion/detail screens via
 // `hasLiked`, restored on remount. Idempotent per (article_id, sentiment) —
 // repeated taps of the same sentiment on the same article do not create
-// duplicate rows.
+// duplicate rows. `removeArticleFeedback` lets a sentiment be retracted
+// (e.g. re-tapping "like" to un-like), deleting the matching row(s).
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
@@ -53,6 +54,36 @@ export async function recordArticleFeedback(
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'article-feedback', method: 'record' },
+    });
+  }
+}
+
+/**
+ * Removes any feedback row(s) matching (articleId, sentiment) — e.g.
+ * un-liking by re-tapping an already-liked button. No-op if no matching row
+ * exists.
+ */
+export async function removeArticleFeedback(
+  articleId: string,
+  sentiment: ArticleFeedbackSentiment,
+): Promise<void> {
+  const id = (articleId ?? '').trim();
+  if (!id) return;
+
+  try {
+    const existing = await articleFeedbackCol
+      .query(Q.where('article_id', id), Q.where('sentiment', sentiment))
+      .fetch();
+    if (existing.length === 0) return;
+
+    await database.write(async () => {
+      for (const row of existing) {
+        await row.destroyPermanently();
+      }
+    });
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'remove' },
     });
   }
 }
