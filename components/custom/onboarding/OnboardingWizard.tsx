@@ -10,7 +10,7 @@ import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccountService } from '../../../lib/account-service';
-import { OnboardingStage, ProcessingMode } from '../../../lib/generated/graphql-types';
+import { OnboardingStage } from '../../../lib/generated/graphql-types';
 import { authClient, clearAuthStorage } from '../../../lib/auth-client';
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '../../../lib/notificationSlotUtils';
 import { ensurePushTokenRegistered } from '../../../lib/notification-service';
@@ -20,7 +20,6 @@ import {
     useOnboardingStep,
     useOnboardingStore,
 } from '../../../lib/stores/onboarding-store';
-import { useModelState as useMeraModelState } from '../../../lib/stores/mera-protocol-store';
 import {
     useFloatingChatStore,
     type ChatContext,
@@ -29,24 +28,22 @@ import ScreenChatBubble from '../floating-chat/ScreenChatBubble';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaL1MeraProtocol from '../config-panel/PersonaL1MeraProtocol';
-import MeraProtocolSettingsScreen from '../config-mera/MeraProtocolSettingsScreen';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 
-// Stage <-> step index mapping for the 3-step wizard. The server stage
+// Stage <-> step index mapping for the 2-step wizard. The server stage
 // represents the furthest stage the user has reached; on mount we seed
 // `currentStep` from it so refresh/cold-start resumes correctly.
 const STAGE_TO_STEP: Record<OnboardingStage, number> = {
     [OnboardingStage.Notifications]: 0,
     [OnboardingStage.ProcessingMode]: 1,
-    [OnboardingStage.PersonaChat]: 2,
-    [OnboardingStage.Finished]: 2,
+    [OnboardingStage.PersonaChat]: 1,
+    [OnboardingStage.Finished]: 1,
 };
 
 // Stage to advance to when the user clicks Next on a given step.
 const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
-    0: OnboardingStage.ProcessingMode,
-    1: OnboardingStage.PersonaChat,
-    2: OnboardingStage.Finished,
+    0: OnboardingStage.PersonaChat,
+    1: OnboardingStage.Finished,
 };
 
 // OnboardingWizard now uses Zustand store for state persistence
@@ -64,16 +61,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     const currentStep = useOnboardingStep();
     const userPreferences = useOnboardingPreferences();
     const isInitializing = useOnboardingIsInitializing();
-    const meraModelState = useMeraModelState();
-
-    // On step 1 (Mera Protocol), block Next when the user has opted into
-    // on-device processing but the local model isn't ready yet — they'd
-    // otherwise advance into a broken state. Cloud mode is always allowed.
-    const isMeraStepBlocked =
-        currentStep === 1 &&
-        userPreferences.processingMode === ProcessingMode.OnDevice &&
-        meraModelState !== 'downloaded' &&
-        meraModelState !== 'ready';
 
     // Get actions from store
     const { setStep, updatePreferences, setIsInitializing, resetOnboarding } = useOnboardingStore();
@@ -121,13 +108,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         initializeUserId();
     }, [updatePreferences, setIsInitializing, setStep]);
 
-    // Floating-chat orchestration: the persona step (index 2) is the only step
+    // Floating-chat orchestration: the persona step (index 1) is the only step
     // that uses the floating Mera bubble/popover. Suppress it everywhere else,
     // and auto-open the popover when the persona step becomes active. Leaving
     // the persona step collapses the popover.
     useEffect(() => {
         const store = useFloatingChatStore.getState();
-        if (currentStep === 2) {
+        if (currentStep === 1) {
             store.setSuppressed(false);
             store.expand({ kind: 'persona' });
         } else {
@@ -213,18 +200,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
                     setStep(1);
                     break;
-                case 1:
-                    if (userPreferences.processingMode !== ProcessingMode.Cloud) {
-                        await AccountService.updateProcessingMode(
-                            userId,
-                            userPreferences.processingMode,
-                        );
-                    }
+                case 1: {
                     await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
-                    setStep(2);
-                    break;
-                case 2: {
-                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2]);
                     resetOnboarding();
                     onComplete();
                     break;
@@ -247,14 +224,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 );
             case 1:
                 return (
-                    <MeraProtocolSettingsScreen
-                        isOnboarding={true}
-                        initialMode={userPreferences.processingMode}
-                        onModeChange={(mode) => updatePreferences('processingMode', mode)}
-                    />
-                );
-            case 2:
-                return (
                     <PersonaL1MeraProtocol userId={userPreferences.userId} />
                 );
             default:
@@ -276,7 +245,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         <Box className="flex-1 bg-black" style={{ paddingBottom: insets.bottom }}>
             {/* Progress Indicator */}
             <Box className="pb-5 px-5" style={{ paddingTop: insets.top + 16 }}>
-                <Progress value={((currentStep + 1) / 3) * 100} size="sm">
+                <Progress value={((currentStep + 1) / 2) * 100} size="sm">
                     <ProgressFilledTrack />
                 </Progress>
             </Box>
@@ -285,8 +254,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 onBack={currentStep > 0 ? handleBack : undefined}
                 onSkip={handleNext}
                 skipLabel={t('common.next')}
-                skipDisabled={isMeraStepBlocked}
-                stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: 3 })}
+                stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: 2 })}
             />
 
             {renderStep()}
