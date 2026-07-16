@@ -21,7 +21,9 @@
     "format:check": "prettier --check .",
     "test-news-harness-persona-management": "tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/test-news-harness-persona-management.ts",
     "test-news-harness-article-pipeline": "tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/test-news-harness-article-pipeline.ts",
-    "harness:compare": "tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/compare-runs.ts"
+    "harness:compare": "tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/compare-runs.ts",
+    "eval:golden": "node eval/eval-golden.js",
+    "eval:grouping": "npx tsx eval/sanity-grouping.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.0.5",

@@ -21,6 +21,7 @@
   ],
   "exclude": [
     "harness-local",
+    "eval",
     "node_modules"
   ]
 }

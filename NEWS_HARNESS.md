@@ -134,6 +134,18 @@ first-class row/col), kept↔discarded flips, the top-10 raw-score movers, and
 articles unique to either run. Warns loudly if the two runs don't share the same
 article set (pair with `--articles-from` for apples-to-apples).
 
+### The golden-label eval engine (`eval/`)
+
+`eval/` at the repo root is the **tracked** golden-label eval engine — it
+scores a run's `scores.json` against 1,000 persona-anchored golden labels and
+reports a confusion matrix, per-tier precision/recall, and the leak/miss
+metrics that matter for the product. `.local-test-data/` stays the disposable,
+gitignored data dir for run artifacts, the persona fixture, and the auth
+cache — only the eval engine itself (script, labels, `--config` overrides) is
+tracked in `eval/`. See `eval/README.md` for the full loop, the tier contract,
+the noise floor, and how to regenerate golden labels. Run it with
+`npm run eval:golden -- <runDir> [--verbose]`.
+
 ### Backend targets & auth
 
 Set `NEWS_HARNESS_TARGET` in `.env.harness`:
@@ -252,7 +264,11 @@ replays (zero quota, LLM cost only).
    `npm run test-news-harness-article-pipeline -- --label tweak-1 --articles-from .local-test-data/runs/<baseline-dir>`.
 6. **Compare:** `npm run harness:compare -- <baseline-dir> <tweak-1-dir>` — read
    the bucket-transition matrix, the kept↔discarded flips, and the top movers to
-   judge whether the change moved the feed the way the user wants.
+   judge whether the change moved the feed the way the user wants. If the
+   baseline run is scored against `eval/golden-labels.json` (i.e. it's a replay
+   of `20260716-190647-prod-baseline`), also run
+   `npm run eval:golden -- <tweak-1-dir>` — the confusion matrix and leak/miss
+   metrics are ground truth, not just a relative diff. See `eval/README.md`.
 7. **Repeat 4–6** until the user's stated goal is met. **Then** run the app-side
    verification, because harness code *is* app code:
    `npx tsc --noEmit`, `npx tsc --noEmit -p harness-local/tsconfig.json`, and
