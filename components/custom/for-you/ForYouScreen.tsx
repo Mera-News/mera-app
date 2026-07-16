@@ -6,6 +6,7 @@ import SyncProgressForYouBanner from '@/components/custom/SyncProgressForYouBann
 import { ArticleCard } from '@/components/custom/ArticleCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import DailyLimitForYouBanner from '@/components/custom/for-you/DailyLimitForYouBanner';
+import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
@@ -55,8 +56,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as Notifications from 'expo-notifications';
-import { AppState, AppStateStatus, FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View, ViewToken } from 'react-native';
+import { FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View, ViewToken } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -157,42 +157,16 @@ const MeraNewsScreen: React.FC = () => {
     const showSyncProgress =
         isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing || scoringError !== null;
 
+    // Any client-visible fetch/scoring work still in flight. Deliberately
+    // excludes scoringError — an error is not progress.
+    const isFeedProcessing =
+        isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing || unscoredCount > 0;
+
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes). Takes banner priority over the
     // article-count line so the "limit reached" notice is always visible.
     const isDailyLimited =
         dailyLimitResetAt != null && nowTick < dailyLimitResetAt;
-
-    // When the user backgrounds the app during article hydration, fire a local
-    // notification asking them to return. Dismiss it once they're back.
-    const syncStateRef = useRef(syncStatusMessage?.state);
-    useEffect(() => { syncStateRef.current = syncStatusMessage?.state; }, [syncStatusMessage?.state]);
-    useEffect(() => {
-        let scheduledId: string | null = null;
-        const onChange = async (next: AppStateStatus) => {
-            const st = syncStateRef.current;
-            const mustStay = st === 'hydrating' || st === 'persisting';
-            if ((next === 'background' || next === 'inactive') && mustStay) {
-                try {
-                    scheduledId = await Notifications.scheduleNotificationAsync({
-                        content: {
-                            title: t('feed.processing.mustReturnNotificationTitle'),
-                            body: t('feed.processing.mustReturnNotificationBody'),
-                            data: { type: 'mera-resume-fetch' },
-                        },
-                        trigger: null,
-                    });
-                } catch (err) {
-                    logger.captureException(err, { tags: { service: 'for-you-resume-notif' } });
-                }
-            } else if (next === 'active' && scheduledId) {
-                try { await Notifications.dismissNotificationAsync(scheduledId); } catch { /* best-effort */ }
-                scheduledId = null;
-            }
-        };
-        const sub = AppState.addEventListener('change', onChange);
-        return () => { sub.remove(); };
-    }, [t]);
 
     const { analysedCount, relevantCount } = useMemo(() => {
         const cutoffMs = Date.now() - 24 * 60 * 60 * 1000;
@@ -593,8 +567,15 @@ const MeraNewsScreen: React.FC = () => {
             return <NoGeneratedInterestsCard />;
         }
 
+        // While work is in flight — or before the very first processing run has
+        // ever completed on this device — the feed isn't "caught up", it's
+        // still being prepared.
+        if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
+            return <FeedPreparingCard />;
+        }
+
         return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty]);
+    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     const ListFooterComponent = useCallback(() => {
         if (isLoadingMore) {
@@ -608,10 +589,10 @@ const MeraNewsScreen: React.FC = () => {
         // empty — otherwise ListEmptyComponent already renders one and we'd
         // get two stacked cards (e.g. when every suggestion is filtered out).
         if (listData.length > 0 && !hasNextPage) {
-            return <AllCaughtUpCard />;
+            return isFeedProcessing ? <FeedPreparingCard /> : <AllCaughtUpCard />;
         }
         return null;
-    }, [listData.length, isLoadingMore, hasNextPage]);
+    }, [listData.length, isLoadingMore, hasNextPage, isFeedProcessing]);
 
     const keyExtractor = useCallback((item: ForYouListItem, index: number) => {
         if (item.type === 'priority-label') return `label-${item.label}`;

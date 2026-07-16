@@ -99,6 +99,7 @@
   "feed": {
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
+    "preparingFeed": "Fresh stories are being fetched and processed for you.",
     "noInterests": "Mera cannot analyze news for you",
     "noInterestsDescription": "Please create your user persona for Mera to start generating news for you.",
     "forYou": "For you",
@@ -143,8 +144,6 @@
     "processing": {
       "doneFlash": "All set — here’s your news",
       "errorFlash": "We couldn’t load the latest content. Please try again.",
-      "mustReturnNotificationTitle": "Please return to Mera",
-      "mustReturnNotificationBody": "We’re still fetching your news to your phone. Open Mera so we can finish — it only takes a few seconds.",
       "stages": {
         "fetching": {
           "headlines": [

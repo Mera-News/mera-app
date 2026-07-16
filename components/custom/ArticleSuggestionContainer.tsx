@@ -13,7 +13,7 @@ import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
-import AnimatedDots from '@/components/custom/AnimatedDots';
+import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import React, { useEffect, useState } from 'react';
@@ -194,7 +194,7 @@ export const ArticleSuggestionContainer: React.FC<ArticleSuggestionContainerProp
                 />
             ) : (
                 <Box className="ml-3 flex-1 items-end">
-                    <AnimatedDots color={reasonBoxColors.textColor} />
+                    <StreamingIndicator compact color={reasonBoxColors.textColor} />
                 </Box>
             )}
         </Box>

@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "{{time}} güncellendi",
     "allCaughtUp": "Seni etkileyen tüm haberleri okudun.",
+    "preparingFeed": "Senin için taze haberler getiriliyor ve işleniyor.",
     "noInterests": "Mera senin için haberleri analiz edemiyor",
     "noInterestsDescription": "Mera'nın sana haber üretmeye başlaması için lütfen kullanıcı profilini oluştur.",
     "forYou": "Senin İçin",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "Her şey hazır — işte haberlerin",
       "errorFlash": "En son içerik yüklenemedi. Lütfen tekrar dene.",
-      "mustReturnNotificationTitle": "Lütfen Mera'ya geri dön",
-      "mustReturnNotificationBody": "Haberlerini telefonuna çekmeye devam ediyoruz. Bitirebilmemiz için Mera'yı aç — sadece birkaç saniye sürer.",
       "stages": {
         "fetching": {
           "headlines": [

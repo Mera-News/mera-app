@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "Bijgewerkt {{time}}",
     "allCaughtUp": "Je bent helemaal bij met wat voor jou relevant is.",
+    "preparingFeed": "We halen vers nieuws voor je op en verwerken het.",
     "noInterests": "Mera kan geen nieuws voor je analyseren",
     "noInterestsDescription": "Maak je gebruikersprofiel aan zodat Mera nieuws voor je kan genereren.",
     "forYou": "Voor jou",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "Alles klaar — hier is je nieuws",
       "errorFlash": "We konden de nieuwste inhoud niet laden. Probeer het opnieuw.",
-      "mustReturnNotificationTitle": "Kom terug naar Mera",
-      "mustReturnNotificationBody": "We halen nog steeds je nieuws op naar je telefoon. Open Mera zodat we kunnen afmaken — het duurt maar een paar seconden.",
       "stages": {
         "fetching": {
           "headlines": [

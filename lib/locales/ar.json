@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "تم التحديث {{time}}",
     "allCaughtUp": "لقد اطلعت على كل ما يهمك.",
+    "preparingFeed": "يتم الآن جلب أحدث الأخبار ومعالجتها من أجلك.",
     "noInterests": "لا يمكن لـ Mera تحليل الأخبار لك",
     "noInterestsDescription": "يرجى إنشاء ملفك الشخصي ليتمكن Mera من البدء في توليد الأخبار لك.",
     "forYou": "لك",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "كل شيء جاهز — إليك أخبارك",
       "errorFlash": "تعذّر تحميل أحدث المحتوى. يرجى المحاولة مرة أخرى.",
-      "mustReturnNotificationTitle": "يرجى العودة إلى Mera",
-      "mustReturnNotificationBody": "لا يزال جهازك يجلب أخبارك. افتح Mera لإتمام العملية — لن تستغرق سوى ثوانٍ.",
       "stages": {
         "fetching": {
           "headlines": [

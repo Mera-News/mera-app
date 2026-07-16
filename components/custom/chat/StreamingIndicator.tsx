@@ -38,8 +38,20 @@ const STREAMING_LABELS = [
 
 const STREAMING_LABEL_CYCLE_MS = 2000;
 
-const StreamingIndicator: React.FC = () => {
+const DEFAULT_LABEL_COLOR = 'rgb(156, 163, 175)';
+const DEFAULT_DOT_COLOR = 'rgb(231, 138, 83)';
+
+interface StreamingIndicatorProps {
+    /** Inline variant: label + dots only, no logo, no vertical padding. */
+    compact?: boolean;
+    /** Overrides both label and dot color (defaults: gray label, orange dots). */
+    color?: string;
+}
+
+const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false, color }) => {
     const [labelIndex, setLabelIndex] = useState(0);
+    const labelColor = color ?? DEFAULT_LABEL_COLOR;
+    const dotColor = color ?? DEFAULT_DOT_COLOR;
 
     // Cycle through labels
     useEffect(() => {
@@ -77,26 +89,34 @@ const StreamingIndicator: React.FC = () => {
     const dot2Style = useAnimatedStyle(() => ({ transform: [{ scale: dot2.value }] }));
     const dot3Style = useAnimatedStyle(() => ({ transform: [{ scale: dot3.value }] }));
 
+    const labelRow = (
+        <View style={streamingIndicatorStyles.labelRow}>
+            <Animated.View
+                key={labelIndex}
+                entering={FadeIn.duration(300)}
+                exiting={FadeOut.duration(300)}
+                style={streamingIndicatorStyles.labelInner}
+            >
+                <Text size="sm" style={[streamingIndicatorStyles.label, { color: labelColor }]}>
+                    {STREAMING_LABELS[labelIndex]}
+                </Text>
+                <View style={streamingIndicatorStyles.dotsRow}>
+                    <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot1Style]} />
+                    <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot2Style]} />
+                    <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot3Style]} />
+                </View>
+            </Animated.View>
+        </View>
+    );
+
+    if (compact) {
+        return labelRow;
+    }
+
     return (
         <View style={streamingIndicatorStyles.container}>
             <MeraLogo size={48} />
-            <View style={streamingIndicatorStyles.labelRow}>
-                <Animated.View
-                    key={labelIndex}
-                    entering={FadeIn.duration(300)}
-                    exiting={FadeOut.duration(300)}
-                    style={streamingIndicatorStyles.labelInner}
-                >
-                    <Text size="sm" style={streamingIndicatorStyles.label}>
-                        {STREAMING_LABELS[labelIndex]}
-                    </Text>
-                    <View style={streamingIndicatorStyles.dotsRow}>
-                        <Animated.View style={[streamingIndicatorStyles.dot, dot1Style]} />
-                        <Animated.View style={[streamingIndicatorStyles.dot, dot2Style]} />
-                        <Animated.View style={[streamingIndicatorStyles.dot, dot3Style]} />
-                    </View>
-                </Animated.View>
-            </View>
+            {labelRow}
         </View>
     );
 };

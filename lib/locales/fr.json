@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "Mis à jour {{time}}",
     "allCaughtUp": "Vous êtes à jour avec ce qui vous concerne.",
+    "preparingFeed": "De nouvelles actualités sont en cours de récupération et de traitement pour vous.",
     "noInterests": "Mera ne peut pas analyser les actualités pour vous",
     "noInterestsDescription": "Veuillez créer votre profil utilisateur pour que Mera commence à générer des actualités pour vous.",
     "forYou": "Pour vous",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "C'est prêt — voici vos actualités",
       "errorFlash": "Nous n'avons pas pu charger les derniers contenus. Veuillez réessayer.",
-      "mustReturnNotificationTitle": "Veuillez revenir sur Mera",
-      "mustReturnNotificationBody": "Nous téléchargeons encore vos actualités sur votre téléphone. Ouvrez Mera pour que nous puissions terminer — cela ne prend que quelques secondes.",
       "stages": {
         "fetching": {
           "headlines": [

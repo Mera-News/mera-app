@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "更新于 {{time}}",
     "allCaughtUp": "您已浏览完所有与您相关的新闻。",
+    "preparingFeed": "我们正在为您获取并处理最新资讯。",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
     "forYou": "为您推荐",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "一切就绪 — 这是您的新闻",
       "errorFlash": "无法加载最新内容，请重试。",
-      "mustReturnNotificationTitle": "请返回 Mera",
-      "mustReturnNotificationBody": "我们仍在将您的新闻下载到手机上。请打开 Mera 让我们完成——只需几秒钟。",
       "stages": {
         "fetching": {
           "headlines": [

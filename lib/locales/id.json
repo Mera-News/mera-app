@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "Diperbarui {{time}}",
     "allCaughtUp": "Anda sudah membaca semua berita yang relevan untuk Anda.",
+    "preparingFeed": "Berita terbaru sedang diambil dan diproses khusus untuk Anda.",
     "noInterests": "Mera tidak dapat menganalisis berita untuk Anda",
     "noInterestsDescription": "Silakan buat persona pengguna Anda agar Mera dapat mulai menghasilkan berita untuk Anda.",
     "forYou": "Untuk Anda",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "Siap — ini berita Anda",
       "errorFlash": "Kami tidak dapat memuat konten terbaru. Silakan coba lagi.",
-      "mustReturnNotificationTitle": "Silakan kembali ke Mera",
-      "mustReturnNotificationBody": "Kami masih mengambil berita ke ponsel Anda. Buka Mera agar kami bisa menyelesaikannya — hanya butuh beberapa detik.",
       "stages": {
         "fetching": {
           "headlines": [

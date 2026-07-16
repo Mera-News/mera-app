@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "Aktualisiert {{time}}",
     "allCaughtUp": "Sie sind auf dem neuesten Stand mit allem, was Sie betrifft.",
+    "preparingFeed": "Frische Nachrichten werden gerade für Sie abgerufen und aufbereitet.",
     "noInterests": "Mera kann keine Nachrichten für Sie analysieren",
     "noInterestsDescription": "Bitte erstellen Sie Ihre Benutzerpersona, damit Mera Nachrichten für Sie generieren kann.",
     "forYou": "Für Sie",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "Alles bereit — hier sind Ihre Nachrichten",
       "errorFlash": "Die neuesten Inhalte konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
-      "mustReturnNotificationTitle": "Bitte kehren Sie zu Mera zurück",
-      "mustReturnNotificationBody": "Wir laden Ihre Nachrichten noch auf Ihr Telefon. Öffnen Sie Mera, damit wir fertig werden können — es dauert nur ein paar Sekunden.",
       "stages": {
         "fetching": {
           "headlines": [

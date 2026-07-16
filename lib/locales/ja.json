@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "{{time}}に更新",
     "allCaughtUp": "あなたに影響するすべてのニュースを確認しました。",
+    "preparingFeed": "最新のニュースを取得し、あなたのために処理しています。",
     "noInterests": "Meraはあなたのためにニュースを分析できません",
     "noInterestsDescription": "Meraがニュースの生成を開始するには、ユーザーペルソナを作成してください。",
     "forYou": "あなたへ",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "準備完了 — こちらがあなたのニュースです",
       "errorFlash": "最新コンテンツを読み込めませんでした。もう一度お試しください。",
-      "mustReturnNotificationTitle": "Meraに戻ってください",
-      "mustReturnNotificationBody": "まだあなたの端末へニュースを取得中です。Meraを開いてください — 数秒で完了します。",
       "stages": {
         "fetching": {
           "headlines": [

@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "Cập nhật lúc {{time}}",
     "allCaughtUp": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
+    "preparingFeed": "Chúng tôi đang tìm và xử lý những tin tức mới nhất dành cho bạn.",
     "noInterests": "Mera không thể phân tích tin tức cho bạn",
     "noInterestsDescription": "Vui lòng tạo hồ sơ người dùng để Mera bắt đầu tạo tin tức cho bạn.",
     "forYou": "Dành cho bạn",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "Xong rồi — đây là tin tức của bạn",
       "errorFlash": "Chúng tôi không thể tải nội dung mới nhất. Vui lòng thử lại.",
-      "mustReturnNotificationTitle": "Vui lòng quay lại Mera",
-      "mustReturnNotificationBody": "Chúng tôi vẫn đang tải tin tức về điện thoại của bạn. Hãy mở Mera để hoàn tất — chỉ mất vài giây.",
       "stages": {
         "fetching": {
           "headlines": [

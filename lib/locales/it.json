@@ -61,6 +61,7 @@
   "feed": {
     "updatedAt": "Aggiornato {{time}}",
     "allCaughtUp": "Sei aggiornato su tutto ciò che ti riguarda.",
+    "preparingFeed": "Stiamo recuperando ed elaborando le notizie più fresche per te.",
     "noInterests": "Mera non può analizzare le notizie per te",
     "noInterestsDescription": "Per favore crea il tuo profilo utente affinché Mera possa iniziare a generare notizie per te.",
     "forYou": "Per te",
@@ -100,8 +101,6 @@
     "processing": {
       "doneFlash": "Tutto pronto — ecco le tue notizie",
       "errorFlash": "Non è stato possibile caricare i contenuti più recenti. Per favore riprova.",
-      "mustReturnNotificationTitle": "Torna su Mera",
-      "mustReturnNotificationBody": "Stiamo ancora scaricando le notizie sul tuo telefono. Apri Mera per finire — ci vogliono solo pochi secondi.",
       "stages": {
         "fetching": {
           "headlines": [
