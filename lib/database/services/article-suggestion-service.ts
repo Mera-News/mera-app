@@ -41,18 +41,10 @@ export async function loadSuggestions(): Promise<ForYouSuggestion[]> {
 
 // --- Read: unscored with linked facts (scoring input) ---
 
-export interface ScoringCandidate {
-  id: string; // WMDB row id == server `_id` of ArticleSuggestion
-  titleEn: string | null;
-  descriptionEn: string | null;
-  countryCode: string | null;
-  userTopicIds: string[];
-  relatedFacts: { id: string; statement: string }[];
-  /** Already-persisted relevance. Populated only by the reason-retry query
-   *  (where the row was scored previously but the reason came back empty);
-   *  omitted for the unscored-candidates query. */
-  relevance?: number;
-}
+// Canonical home is now lib/news-harness/core/types.ts; re-exported here so
+// importers of ScoringCandidate from this service keep working unchanged.
+import type { ScoringCandidate } from '@/lib/news-harness/core/types';
+export type { ScoringCandidate };
 
 export async function getUnscoredSuggestionsWithFacts(
   limit?: number,

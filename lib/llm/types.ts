@@ -1,34 +1,24 @@
 // Shared types for agents and chat hooks.
 
 // ---------------------------------------------------------------------------
-// Batch completion types (cloud-only — used for background scoring)
+// Batch completion + tool-definition types — canonical home is now
+// lib/news-harness/core/types.ts; re-exported here so importers don't change.
 // ---------------------------------------------------------------------------
 
-export interface BatchCall {
-  id: string;
-  system: string;
-  prompt: string;
-  temperature?: number;
-  maxTokens?: number;
-  enableThinking?: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Tool definitions (OpenAI JSON Schema format — sent to cloud backend)
-// ---------------------------------------------------------------------------
-
-export interface ToolDefinition {
-  type: 'function';
-  function: {
-    name: string;
-    description: string;
-    parameters: {
-      type: 'object';
-      properties: Record<string, unknown>;
-      required?: string[];
-    };
-  };
-}
+import type {
+  BatchCall,
+  ProposalAction,
+  StagedProposal,
+  ToolDefinition,
+  ToolExecutionResult,
+} from '@/lib/news-harness/core/types';
+export type {
+  BatchCall,
+  ProposalAction,
+  StagedProposal,
+  ToolDefinition,
+  ToolExecutionResult,
+};
 
 // ---------------------------------------------------------------------------
 // Conversation message (internal state model)
@@ -53,39 +43,10 @@ export interface ConversationMessage {
 // ---------------------------------------------------------------------------
 // Agent types
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Proposal types (article-feedback agent — staged persona changes)
-// ---------------------------------------------------------------------------
-
-/** A single deterministic change the proposal executor can apply to the persona. */
-export type ProposalAction =
-  | { type: 'add_fact'; statement: string }
-  | { type: 'update_fact'; fact_id: string; new_statement: string }
-  | { type: 'delete_fact'; fact_id: string }
-  | { type: 'add_topics'; fact_id: string; topics: string[] }
-  | { type: 'remove_topics'; fact_id: string; topics: string[] }
-  | { type: 'submit_feature_request'; title: string; summary: string };
-
-/** A proposal staged by the LLM and awaiting user confirmation. */
-export interface StagedProposal {
-  id: string;              // tool-call id / nonce
-  explanation: string;     // why (≤2 sentences, enforced by prompt)
-  expectedEffects: string; // "you'll see fewer X…"
-  actions: ProposalAction[];
-}
-
-export interface ToolExecutionResult {
-  result: Record<string, unknown>;
-  sideEffects?: {
-    /** If set, the chat should be blocked and no further messages accepted. */
-    blocked?: { reason: string };
-    /** If set, a proposal was staged and should render as a confirm card. */
-    proposal?: StagedProposal;
-    /** If set, the pending proposal was applied or cancelled. */
-    proposalResolved?: 'applied' | 'cancelled';
-  };
-}
+//
+// ProposalAction, StagedProposal, and ToolExecutionResult now live in
+// lib/news-harness/core/types.ts (the article-feedback agent's portable brain)
+// and are re-exported at the top of this file.
 
 export interface ConversationHistory {
   messages: ConversationMessage[];

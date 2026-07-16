@@ -130,11 +130,10 @@ export type SseEvent =
 // Public API
 // ---------------------------------------------------------------------------
 
-export interface BatchCompletionResult {
-  id: string;
-  output: string;
-  error?: string;
-}
+// Canonical home is now lib/news-harness/core/types.ts; re-exported here so
+// importers of BatchCompletionResult from this module keep working.
+import type { BatchCompletionResult } from '@/lib/news-harness/core/types';
+export type { BatchCompletionResult };
 
 export interface CloudCompleteRequest {
   systemPrompt: string;

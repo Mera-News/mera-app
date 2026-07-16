@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "strict": true,
+    "types": ["node"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "../lib/news-harness/**/*.ts",
+    "../lib/mera-protocol-toolkit/types.ts"
+  ],
+  "exclude": [
+    "**/__tests__/**",
+    "../lib/news-harness/__tests__/**/*"
+  ]
+}

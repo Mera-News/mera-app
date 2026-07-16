@@ -81,3 +81,11 @@ prompt-dumps/
 open-source-readiness/
 
 error-logs/
+
+# harness-local: Node executor for lib/news-harness — real secrets never get
+# committed. All mutable harness state (run artifacts, auth cache, the
+# developer's own persona fixture) lives under .local-test-data/ instead of
+# inside harness-local/, so a single rule covers it all.
+# fixtures/persona.example.json stays tracked as the only committed fixture.
+harness-local/.env.harness
+.local-test-data/

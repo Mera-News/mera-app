@@ -103,6 +103,8 @@ Before contributing, read [CONTRIBUTING.md](CONTRIBUTING.md) for the versioning,
 
 OTA updates apply to JS/TS/styling/GraphQL changes only. Native builds are required for native dependency changes, SDK version bumps, `app.json` native config, or new native modules.
 
+The AI logic that builds the personalized feed — topic generation, relevance scoring, and the chat agents — lives in `lib/news-harness/`, a React Native-free, ports-and-adapters module that the app runs in production and that can also be exercised standalone from the command line via `harness-local/`. To understand or iterate on feed quality (prompts, scoring, topic generation), see [NEWS_HARNESS.md](NEWS_HARNESS.md).
+
 ## License & Trademark
 
 **This project is proprietary and confidential — not open source.** It is licensed under the proprietary terms in [LICENSE.md](LICENSE.md). Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437), all rights reserved. No license to use, copy, modify, or distribute it is granted except by separate written agreement with Mera Labs B.V.

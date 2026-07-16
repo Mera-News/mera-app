@@ -1,0 +1,81 @@
+{
+  "facts": [
+    {
+      "id": "fact-location",
+      "statement": "I live in Koramangala, Bangalore, India",
+      "metadata": {
+        "topics": [
+          "Bangalore local news",
+          "Karnataka state government",
+          "Koramangala neighborhood infrastructure"
+        ]
+      },
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+      "createdAt": "2026-06-01T09:00:00.000Z",
+      "updatedAt": "2026-06-01T09:00:00.000Z"
+    },
+    {
+      "id": "fact-profession",
+      "statement": "I work as a senior software engineer at a fintech startup",
+      "metadata": {
+        "topics": [
+          "Fintech industry news",
+          "Software engineering career trends",
+          "Indian startup ecosystem"
+        ]
+      },
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "questionnaireAttribute": "profession: job role and industry",
+      "createdAt": "2026-06-01T09:02:00.000Z",
+      "updatedAt": "2026-06-01T09:02:00.000Z"
+    },
+    {
+      "id": "fact-company",
+      "statement": "I work at Razorpay",
+      "questionnaireLevel": 2,
+      "questionnaireLevelCategory": "Professional",
+      "questionnaireAttribute": "company: employer name",
+      "createdAt": "2026-06-01T09:05:00.000Z",
+      "updatedAt": "2026-06-01T09:05:00.000Z"
+    },
+    {
+      "id": "fact-topics-interest",
+      "statement": "I'm most interested in technology, startups, and AI news",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "questionnaireAttribute": "topics: general interests",
+      "createdAt": "2026-06-01T09:07:00.000Z",
+      "updatedAt": "2026-06-01T09:07:00.000Z"
+    },
+    {
+      "id": "fact-stocks",
+      "statement": "I hold stocks in Tesla, Apple, and Infosys",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Financial",
+      "questionnaireAttribute": "stocks_held: individual stocks owned",
+      "createdAt": "2026-06-01T09:10:00.000Z",
+      "updatedAt": "2026-06-01T09:10:00.000Z"
+    },
+    {
+      "id": "fact-sports",
+      "statement": "I follow Royal Challengers Bangalore in the IPL and Manchester United in the Premier League",
+      "questionnaireLevel": 6,
+      "questionnaireLevelCategory": "Lifestyle",
+      "questionnaireAttribute": "teams_following: teams + sport",
+      "createdAt": "2026-06-01T09:12:00.000Z",
+      "updatedAt": "2026-06-01T09:12:00.000Z"
+    },
+    {
+      "id": "fact-family",
+      "statement": "My parents live in Chennai and I have a sister studying in the US",
+      "questionnaireLevel": 5,
+      "questionnaireLevelCategory": "Relationships",
+      "questionnaireAttribute": "family_locations: extended family locations",
+      "createdAt": "2026-06-01T09:15:00.000Z",
+      "updatedAt": "2026-06-01T09:15:00.000Z"
+    }
+  ]
+}

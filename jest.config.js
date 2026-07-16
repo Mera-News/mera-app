@@ -9,6 +9,10 @@ module.exports = {
     '**/__tests__/**/*.(test|spec).[jt]s?(x)',
     '**/?(*.)+(test|spec).[jt]s?(x)',
   ],
+  // harness-local/ is a standalone Node executor (tsx scripts, not jest specs) —
+  // its testMatch shape already excludes them, but this is belt-and-suspenders
+  // so a future harness-local/**/*.test.ts fixture never gets picked up here.
+  testPathIgnorePatterns: ['/node_modules/', '/harness-local/'],
   // Coverage spans the whole logic layer (lib/**). Excluded: generated GraphQL
   // types, locale data, the native DB singleton (instantiates SQLiteAdapter at
   // import — every consumer mocks it), and the three thin llama.rn/react-native-fs

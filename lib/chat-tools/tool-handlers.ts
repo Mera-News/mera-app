@@ -18,16 +18,21 @@ import { useUserStore } from '../stores/user-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import { inferenceQueue } from '../inference/InferenceQueue';
-import { getAttributeKeysForLevel, TOTAL_LEVELS, buildAttributeTextToIdMap } from '../mera-protocol/questionnaire-data';
-import { cloudBatchComplete, type BatchCompletionResult } from '../llm/cloudComplete';
-import {
-  buildCloudBatchCallsForFact,
-  mergeRealOutputsForFact,
-} from '../mera-protocol/topic-generation-service';
-import type { BatchCall } from '../llm/types';
+import { getAttributeKeysForLevel, TOTAL_LEVELS } from '../mera-protocol/questionnaire-data';
+import { cloudComplete, cloudBatchComplete } from '../llm/cloudComplete';
 import logger from '../logger';
+import {
+  filterNewFacts,
+  normalizeStatement,
+  type FactEntry,
+} from '@/lib/news-harness/persona-management/fact-rules';
+import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-management/topic-generation';
+import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
+import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 
-export const MAX_FACT_LENGTH = 200;
+// MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
+// here so existing importers of it from tool-handlers keep working.
+export { MAX_FACT_LENGTH } from '@/lib/news-harness/persona-management/fact-rules';
 
 /** Resolves userId from Zustand store (warm) or WatermelonDB (cold). */
 async function getStoredUserId(): Promise<string | null> {
@@ -36,37 +41,6 @@ async function getStoredUserId(): Promise<string | null> {
     userId = await getSetting('cached_user_id');
   }
   return userId;
-}
-
-/** A fact entry from the LLM — either a plain string (legacy) or object with questionnaire metadata. */
-type FactEntry = string | {
-  statement: string;
-  questionnaire_level?: number;
-  questionnaire_level_category?: string;
-  questionnaire_attribute?: string;
-};
-
-function normalizeFactEntry(entry: FactEntry): {
-  statement: string;
-  questionnaire?: {
-    level?: number;
-    levelCategory?: string;
-    attribute?: string;
-  };
-} {
-  if (typeof entry === 'string') {
-    return { statement: entry };
-  }
-  return {
-    statement: entry.statement ?? '',
-    questionnaire: (entry.questionnaire_level || entry.questionnaire_level_category || entry.questionnaire_attribute)
-      ? {
-          level: entry.questionnaire_level,
-          levelCategory: entry.questionnaire_level_category,
-          attribute: entry.questionnaire_attribute,
-        }
-      : undefined,
-  };
 }
 
 /** Saves extracted facts to local DB, immediately generates topics and submits to server. */
@@ -79,40 +53,30 @@ export async function handleSaveExtractedFacts(
   const savedFactEntries: Array<{ id: string; statement: string }> = [];
 
   if (Array.isArray(facts) && facts.length > 0) {
-    // Load existing facts for dedup — local LLMs often re-emit known facts
+    // Load existing facts for dedup — local LLMs often re-emit known facts.
     const existingFacts = await getFacts();
-    const normalizeStatement = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
-    const existingStatements = new Set(existingFacts.map(f => normalizeStatement(f.statement)));
+    const existingStatements = existingFacts.map((f) => normalizeStatement(f.statement));
 
-    for (const factEntry of facts) {
-      const { statement, questionnaire } = normalizeFactEntry(factEntry);
-      const trimmed = statement.trim();
-      if (!trimmed) continue;
-      if (trimmed.length > MAX_FACT_LENGTH) {
+    // The accept/reject DECISIONS are the harness's pure fact-rules; this handler
+    // keeps the side effects (logging, DB writes, notify, topic-gen trigger).
+    const { accepted, rejected } = filterNewFacts(facts, existingStatements);
+
+    for (const r of rejected) {
+      if (r.reason === 'too-long') {
         logger.warn('Rejected fact exceeding max length', {
-          length: trimmed.length,
-          preview: trimmed.substring(0, 80),
+          length: r.statement.length,
+          preview: r.statement.substring(0, 80),
         });
-        continue;
+      } else if (r.reason === 'meta') {
+        logger.debug('Rejected meta-conversational fact', { statement: r.statement });
       }
+    }
 
-      // Skip meta-conversational facts (LLM hallucinating actions as facts)
-      const lower = trimmed.toLowerCase();
-      if (/^user\s+(is|wants?|asked?|greeted|said|requested)\b/.test(lower) ||
-          /\b(setting up|update|updating|set up)\s+(persona|profile|preferences)\b/.test(lower)) {
-        logger.debug('Rejected meta-conversational fact', { statement: trimmed });
-        continue;
-      }
-
-      // Skip duplicate facts
-      if (existingStatements.has(normalizeStatement(trimmed))) {
-        continue;
-      }
-
+    for (const a of accepted) {
       // Save fact locally (Rule #1: facts never leave the device)
-      const savedFact = await addFact(trimmed, undefined, questionnaire);
+      const savedFact = await addFact(a.statement, undefined, a.questionnaire);
       factsSaved++;
-      savedFactEntries.push({ id: savedFact.id, statement: trimmed });
+      savedFactEntries.push({ id: savedFact.id, statement: a.statement });
     }
 
     // Notify once after all facts are saved (avoids WatermelonDB cache race from per-fact notifications)
@@ -165,112 +129,36 @@ export function triggerTopicGeneration(
 }
 
 /**
- * Batch-generates real topics for all facts in ONE cloud API call.
- * Each fact contributes up to 2 BatchCall entries (fact-only + combo).
- * Generated topics are saved to fact.metadata.topics locally.
+ * Batch-generates real topics for all facts in ONE cloud API call. Thin adapter
+ * over the harness `generateTopicsForFactsBatch`: builds the LLM + persona-store
+ * ports from `cloudBatchComplete` + the fact-service, runs the harness flow, then
+ * notifies the chat store. The harness owns the location lookup, call building,
+ * result decoding, and metadata writes; observable behaviour is unchanged.
  */
 async function batchGenerateTopics(
   factEntries: Array<{ id: string; statement: string }>,
 ): Promise<void> {
-  logger.debug('[topic-gen-batch] starting', { factCount: factEntries.length });
-
-  const allFacts = await getFacts();
-  const attrTextToId = buildAttributeTextToIdMap();
-  const userOwnLocationIds = new Set(['q1_location', 'q4_neighborhood']);
-  const userLocation = allFacts.find((f) => {
-    if (!f.questionnaireAttribute) return false;
-    const attrId = attrTextToId.get(f.questionnaireAttribute);
-    return attrId !== undefined && userOwnLocationIds.has(attrId);
-  });
-
-  const realCalls: BatchCall[] = [];
-  for (const entry of factEntries) {
-    const otherFacts = allFacts
-      .filter((f) => f.id !== entry.id && f.id !== userLocation?.id)
-      .map((f) => f.statement);
-    realCalls.push(
-      ...buildCloudBatchCallsForFact(
-        {
-          factStatement: entry.statement,
-          userLocation: userLocation?.statement ?? null,
-          otherFacts,
+  await generateTopicsForFactsBatch(
+    {
+      llm: {
+        batchComplete: (calls, opts) => cloudBatchComplete(calls, opts?.model),
+        complete: (req) => cloudComplete(req),
+      },
+      personaStore: {
+        getFacts: () => getFacts(),
+        updateFactMetadata: async (id, metadata) => {
+          await updateFact(id, { metadata });
         },
-        entry.id,
-      ),
-    );
-  }
-
-  logger.debug('[topic-gen-batch] calling batch-infer', {
-    callCount: realCalls.length,
-    factCount: factEntries.length,
-  });
-  let realResults: BatchCompletionResult[];
-  try {
-    realResults = await cloudBatchComplete(realCalls);
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    logger.warn('[topic-gen-batch] cloud batch threw', { error: errMsg });
-    for (const entry of factEntries) {
-      await updateFact(entry.id, { metadata: { topicGenError: [errMsg] } });
-    }
-    useFloatingChatStore.getState().notifyFactMutation();
-    return;
-  }
-  logger.debug('[topic-gen-batch] response', { resultCount: realResults.length });
-
-  // Re-key results into per-fact (factOnly, combo) buckets.
-  type RealBucket = {
-    factOnly: string | null;
-    combo: string | null;
-    halfErrors: string[];
-  };
-  const realOutputsByFactId = new Map<string, RealBucket>();
-  for (const result of realResults) {
-    const sep = result.id.lastIndexOf(':');
-    if (sep === -1) {
-      logger.warn('[topic-gen-batch] unexpected result id', { id: result.id });
-      continue;
-    }
-    const factId = result.id.slice(0, sep);
-    const half = result.id.slice(sep + 1) as 'factOnly' | 'combo';
-    const bucket: RealBucket = realOutputsByFactId.get(factId) ?? {
-      factOnly: null,
-      combo: null,
-      halfErrors: [],
-    };
-    if (result.error) {
-      bucket.halfErrors.push(`${half}: ${result.error}`);
-      logger.warn('[topic-gen-batch] half failed', { factId, half, error: result.error });
-    } else {
-      bucket[half] = result.output;
-    }
-    realOutputsByFactId.set(factId, bucket);
-  }
-
-  // Merge real topics per fact.
-  for (const entry of factEntries) {
-    const bucket = realOutputsByFactId.get(entry.id);
-    if (!bucket) {
-      await updateFact(entry.id, {
-        metadata: { topicGenError: ['No topic-gen result returned'] },
-      });
-      continue;
-    }
-    const real = mergeRealOutputsForFact(bucket.factOnly, bucket.combo, entry.statement);
-    if (real.length === 0) {
-      const errMsg =
-        bucket.halfErrors.length > 0
-          ? bucket.halfErrors.join('; ')
-          : 'Topic generation returned no usable topics';
-      logger.warn('[topic-gen-batch] no topics parsed', { factId: entry.id });
-      await updateFact(entry.id, { metadata: { topicGenError: [errMsg] } });
-      continue;
-    }
-    await updateFact(entry.id, { metadata: { topics: real } });
-  }
+      },
+      logger: appHarnessLogger,
+      // Inject the topic-generation-service builder so the app keeps a single
+      // call-building seam (prompt constants + mocks) on the call path.
+      buildCalls: buildCloudBatchCallsForFact,
+    },
+    factEntries,
+  );
 
   useFloatingChatStore.getState().notifyFactMutation();
-  logger.debug('[topic-gen-batch] done');
 }
 
 /** Updates user language config immediately on the server (settings, not PII). */
