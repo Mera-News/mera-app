@@ -7,11 +7,16 @@
 // - on-device model load with progress + stuck-loading watchdog
 // - cloud-chat store reset (fresh conversation — cloud state survives
 //   remounts by design, so it must be cleared explicitly)
-// - durable conversation row creation (createConversation)
+//
+// Conversation-row creation is NOT part of init: it's driven by a separate
+// level-triggered effect that watches the store's conversationId. A null id
+// (app launch, header "New chat", or a chat-context switch) means "a fresh
+// conversation is needed" and works identically whether the null landed while
+// this component was mounted or before it (re)mounted with the popover closed.
 //
 // Children (Local/CloudPersonaChat → ChatSessionView) are NOT rendered until
 // the conversation row exists, which also guarantees the cloud store reset in
-// the same init effect runs before any child hook touches that store.
+// the ensure-conversation effect runs before any child hook touches that store.
 
 import { AccountService } from '@/lib/account-service';
 import { authClient } from '@/lib/auth-client';
@@ -30,7 +35,6 @@ import {
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import {
   useFloatingChatConversationId,
-  useFloatingChatNewChatNonce,
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
 import {
@@ -57,7 +61,6 @@ export default function MeraChatSession() {
   // Conversation identity lives in the store (app-session scoped), so it
   // survives popover close/reopen and is shared with the header's "New chat".
   const conversationId = useFloatingChatConversationId();
-  const newChatNonce = useFloatingChatNewChatNonce();
 
   // Resumed messages for the CURRENT conversation, loaded on (re)open so the
   // thread comes back with its history even after the live session was torn
@@ -74,10 +77,11 @@ export default function MeraChatSession() {
   const context = useFloatingChatStore((state) => state.context);
 
   // --- Init (once per mount) ---
-  // Auth, surface detection, persona/model load, and — only if no conversation
-  // exists yet this app session — creating the first one. Does NOT reset the
-  // cloud store on plain reopen: retained in-memory messages resuming is now
-  // desired (cloud store is reset only when a fresh conversation is created).
+  // Auth, surface detection, and persona/model load. Conversation creation is
+  // handled separately by the level-triggered ensure-conversation effect below.
+  // Does NOT reset the cloud store on plain reopen: retained in-memory messages
+  // resuming is now desired (the cloud store is reset only when a fresh
+  // conversation is created).
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
@@ -132,15 +136,6 @@ export default function MeraChatSession() {
             }
           }
         }
-
-        // First conversation of the app session — reuse any existing store id
-        // (popover reopen), else create one and clear the cloud store so a
-        // brand-new conversation starts empty.
-        if (useFloatingChatStore.getState().conversationId === null) {
-          useCloudChatStore.getState().reset();
-          const newConversationId = await createConversation(currentSurface);
-          useFloatingChatStore.getState().setConversationId(newConversationId);
-        }
       } catch (error) {
         logger.captureException(error, {
           tags: { component: 'MeraChatSession', method: 'init' },
@@ -153,29 +148,33 @@ export default function MeraChatSession() {
     init();
   }, [t]);
 
-  // --- "New chat" button: create a fresh conversation and remount the thread ---
-  // Skips the initial nonce (mount) so only genuine button presses fire.
-  const prevNonceRef = useRef(newChatNonce);
+  // --- Ensure a conversation exists (level-triggered) ---
+  // conversationId === null means "a fresh conversation is needed": app launch,
+  // header "New chat", or a chat-context switch (different article / kind).
+  // Gated on init completion so surfaceRef is settled. Works identically for
+  // pre-mount nulls (popover was closed) and while-mounted nulls.
+  const creatingConversationRef = useRef(false);
   useEffect(() => {
-    if (prevNonceRef.current === newChatNonce) return;
-    prevNonceRef.current = newChatNonce;
-
-    let cancelled = false;
+    if (conversationId !== null || isInitLoading || creatingConversationRef.current) return;
+    creatingConversationRef.current = true;
     void (async () => {
       try {
         useCloudChatStore.getState().reset();
         const cid = await createConversation(surfaceRef.current);
-        if (!cancelled) useFloatingChatStore.getState().setConversationId(cid);
+        // Store-only write — safe across unmount, and never clobbers an id
+        // that landed some other way meanwhile.
+        if (useFloatingChatStore.getState().conversationId === null) {
+          useFloatingChatStore.getState().setConversationId(cid);
+        }
       } catch (error) {
         logger.captureException(error, {
-          tags: { component: 'MeraChatSession', method: 'newChat' },
+          tags: { component: 'MeraChatSession', method: 'ensureConversation' },
         });
+      } finally {
+        creatingConversationRef.current = false;
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [newChatNonce]);
+  }, [conversationId, isInitLoading]);
 
   // --- Resume the current conversation's persisted messages ---
   useEffect(() => {

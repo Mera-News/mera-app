@@ -28,11 +28,11 @@ interface FloatingChatState {
     // Conversation identity for the whole APP SESSION (not per popover open).
     // In-memory only (no persist middleware) so it naturally dies on app kill,
     // giving fresh-conversation-per-launch for free. Closing/reopening the
-    // popover reuses this id, so messages resume.
+    // popover reuses this id, so messages resume. `null` is the single
+    // level-triggered "a fresh conversation is needed" signal MeraChatSession
+    // watches — unlike an edge-triggered nonce it can't be swallowed by mount
+    // order (the session unmounts while the popover is closed).
     conversationId: string | null;
-    // Bumped by the header "New chat" button; MeraChatSession watches it to spin
-    // up a fresh conversation and remount the thread.
-    newChatNonce: number;
 
     // Actions
     expand: (context?: ChatContext) => void;
@@ -70,7 +70,6 @@ const initialState = {
     proposal: null as StagedProposal | null,
     resolvedProposals: {} as Record<string, 'applied' | 'cancelled'>,
     conversationId: null as string | null,
-    newChatNonce: 0,
 };
 
 /** True if two article-suggestion/persona contexts differ in kind or target id. */
@@ -87,33 +86,36 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
 
     expand: (context) =>
         set((state) => {
-            // Switching to a different context while a conversation already
-            // exists must start a fresh thread so a stale persona chat never
-            // bleeds into an article-feedback session (children remount via
-            // key={conversationId} on the nonce bump).
-            const shouldBump =
-                context !== undefined &&
-                state.conversationId !== null &&
-                contextDiffers(context, state.context);
+            // Switching to a different context must start a fresh thread so a
+            // stale persona chat never bleeds into an article-feedback session.
+            // Nulling conversationId is the level-triggered "create a
+            // conversation" signal MeraChatSession watches; unlike a nonce it
+            // can't be swallowed by mount order. Also drop any pending auto-send
+            // (a prior thumbs-down message must not leak into the new thread)
+            // and any staged proposal (must not leak across articles).
+            const switching =
+                context !== undefined && contextDiffers(context, state.context);
             return {
                 isExpanded: true,
                 context: context ?? state.context,
-                newChatNonce: shouldBump ? state.newChatNonce + 1 : state.newChatNonce,
+                ...(switching
+                    ? { conversationId: null, pendingInitialMessage: null, proposal: null }
+                    : {}),
             };
         }),
 
     openArticleFeedback: (context, initialMessage) =>
-        set((state) => ({
+        set(() => ({
             context,
             pendingInitialMessage: initialMessage,
             isExpanded: true,
             proposal: null,
-            // Bump the nonce ONLY when a conversation already exists: pre-mount
-            // bumps are swallowed by MeraChatSession.tsx:158's prevNonceRef init,
-            // and when conversationId is null the init path creates the first
-            // conversation anyway (fresh thread per thumbs tap either way).
-            newChatNonce:
-                state.conversationId !== null ? state.newChatNonce + 1 : state.newChatNonce,
+            // Null id = "create a fresh conversation" (fresh thread per thumbs
+            // tap). The zustand set is atomic, so the null id and the pending
+            // message land in one commit — the old thread unmounts before its
+            // auto-send effect could consume the message into the OLD
+            // conversation.
+            conversationId: null,
         })),
 
     consumePendingInitialMessage: () => {
@@ -152,7 +154,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
 
     setConversationId: (id) => set({ conversationId: id }),
 
-    requestNewChat: () => set((state) => ({ newChatNonce: state.newChatNonce + 1 })),
+    requestNewChat: () => set({ conversationId: null }),
 
     reset: () => set({ ...initialState }),
 }));
@@ -164,7 +166,6 @@ export const useFloatingChatFactMutationVersion = () =>
 export const useFloatingChatIsGenerating = () => useFloatingChatStore((state) => state.isGenerating);
 export const useFloatingChatSuppressed = () => useFloatingChatStore((state) => state.suppressed);
 export const useFloatingChatConversationId = () => useFloatingChatStore((state) => state.conversationId);
-export const useFloatingChatNewChatNonce = () => useFloatingChatStore((state) => state.newChatNonce);
 export const useFloatingChatProposal = () => useFloatingChatStore((state) => state.proposal);
 export const useFloatingChatResolvedProposals = () =>
     useFloatingChatStore((state) => state.resolvedProposals);

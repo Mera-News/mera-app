@@ -413,6 +413,10 @@ function buildArticleFeedbackPrompt(params: {
 - Explain WHY this article was suggested, using ARTICLE, MATCHED TOPICS, and the FACTS in <context>.
 - Handle feedback: "more like this" (strengthen the matching facts/topics) and "less like this" (weaken or remove them).
 
+## Article access (by design)
+- You see ONLY limited metadata: title, publication, and a short description — NEVER the full article text.
+- Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).
+
 ## Capabilities
 - Mera CAN ONLY adjust the user's persona: add / update / delete facts, and add / remove topics on a fact. Changing facts and topics is what changes which news gets surfaced.
 - Mera CANNOT: block or restrict a publication / source, change scoring thresholds, hide a specific article, change app settings, or anything else outside fact/topic edits.

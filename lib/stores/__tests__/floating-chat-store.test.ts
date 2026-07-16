@@ -99,6 +99,71 @@ describe('useFloatingChatStore', () => {
         expect(useFloatingChatStore.getState().suppressed).toBe(false);
     });
 
+    // ── conversationId as the fresh-conversation signal ───────────────────
+    it('expand with a different article-suggestion context nulls conversationId and clears pendingInitialMessage + proposal', () => {
+        // Seed an existing conversation on article 1 with a pending message and
+        // a staged proposal.
+        useFloatingChatStore
+            .getState()
+            .expand({ kind: 'article-suggestion', suggestionId: 'sugg-1' });
+        useFloatingChatStore.getState().setConversationId('c1');
+        useFloatingChatStore.getState().setProposal({ id: 'p1' } as never);
+        useFloatingChatStore.setState({ pendingInitialMessage: 'stale msg' });
+
+        // Switch to article 2.
+        useFloatingChatStore
+            .getState()
+            .expand({ kind: 'article-suggestion', suggestionId: 'sugg-2' });
+
+        const state = useFloatingChatStore.getState();
+        expect(state.conversationId).toBeNull();
+        expect(state.pendingInitialMessage).toBeNull();
+        expect(state.proposal).toBeNull();
+        expect(state.context).toEqual({ kind: 'article-suggestion', suggestionId: 'sugg-2' });
+    });
+
+    it('expand with the same context preserves conversationId', () => {
+        useFloatingChatStore
+            .getState()
+            .expand({ kind: 'article-suggestion', suggestionId: 'sugg-1' });
+        useFloatingChatStore.getState().setConversationId('c1');
+
+        useFloatingChatStore
+            .getState()
+            .expand({ kind: 'article-suggestion', suggestionId: 'sugg-1' });
+
+        expect(useFloatingChatStore.getState().conversationId).toBe('c1');
+    });
+
+    it('expand with undefined context preserves conversationId', () => {
+        useFloatingChatStore.getState().setConversationId('c1');
+        useFloatingChatStore.getState().expand();
+        expect(useFloatingChatStore.getState().conversationId).toBe('c1');
+    });
+
+    it('openArticleFeedback always nulls conversationId and sets pendingInitialMessage', () => {
+        useFloatingChatStore.getState().setConversationId('c1');
+        useFloatingChatStore
+            .getState()
+            .openArticleFeedback(
+                { kind: 'article-suggestion', suggestionId: 'sugg-1' },
+                'I like this',
+            );
+
+        const state = useFloatingChatStore.getState();
+        expect(state.conversationId).toBeNull();
+        expect(state.pendingInitialMessage).toBe('I like this');
+        expect(state.isExpanded).toBe(true);
+        expect(state.proposal).toBeNull();
+        expect(state.context).toEqual({ kind: 'article-suggestion', suggestionId: 'sugg-1' });
+    });
+
+    it('requestNewChat nulls conversationId', () => {
+        useFloatingChatStore.getState().setConversationId('c1');
+        useFloatingChatStore.getState().requestNewChat();
+        expect(useFloatingChatStore.getState().conversationId).toBeNull();
+    });
+
     // ── notifyFactMutation ────────────────────────────────────────────────
     it('notifyFactMutation increments factMutationVersion by 1 each call', () => {
         useFloatingChatStore.getState().notifyFactMutation();

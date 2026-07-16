@@ -265,9 +265,9 @@ export default function ChatSessionView({
 
   // Auto-send the pending initial message once per session (thumbs tap on an
   // article detail screen seeds it). The atomic consume + ref guard ensures it
-  // fires exactly once even across re-renders; a fresh nonce remounts this view
-  // for each new thumbs tap, resetting the ref. Bubble-tap opens set no pending
-  // message, so this is a no-op there (intro + chips show instead).
+  // fires exactly once even across re-renders; a fresh conversationId remounts
+  // this view for each new thumbs tap, resetting the ref. Bubble-tap opens set
+  // no pending message, so this is a no-op there (intro + chips show instead).
   const autoSentRef = useRef(false);
   useEffect(() => {
     if (isLoading || isStreaming || autoSentRef.current) return;

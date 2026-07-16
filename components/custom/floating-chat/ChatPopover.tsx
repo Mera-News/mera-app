@@ -122,9 +122,11 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         requestClose();
     }, [requestClose]);
 
-    // Start a fresh conversation without leaving the popover. MeraChatSession
-    // watches the store's newChatNonce, creates a new conversation row, resets
-    // the cloud store, and remounts the thread (intro + starter chips again).
+    // Start a fresh conversation without leaving the popover. requestNewChat
+    // nulls the store's conversationId; MeraChatSession's level-triggered
+    // ensure-conversation effect sees the null, creates a new conversation row,
+    // resets the cloud store, and remounts the thread (intro + starter chips
+    // again via key={conversationId}).
     const onNewChatPress = useCallback(() => {
         hapticLight();
         useFloatingChatStore.getState().requestNewChat();
