@@ -26,6 +26,7 @@ import {
     pickRepresentative,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     TITLE_JACCARD_DISPLAY_THRESHOLD,
+    WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { useDatabaseStore } from '@/lib/stores/database-store';
@@ -307,8 +308,11 @@ const MeraNewsScreen: React.FC = () => {
     // Story collapse runs union-find over two weak signals (shared
     // `buildStoryGroups` utility): a cluster edge when two suggestions share an
     // HDBSCAN cluster at ≥ CLUSTER_CORE_CONFIDENCE_THRESHOLD membership
-    // confidence, and a title edge when their normalized-title Jaccard is
-    // ≥ TITLE_JACCARD_DISPLAY_THRESHOLD. The title edges bridge articles
+    // confidence, a title edge when their normalized-title Jaccard is
+    // ≥ TITLE_JACCARD_DISPLAY_THRESHOLD, and (display-only) an IDF-weighted title
+    // edge at ≥ WEIGHTED_JACCARD_DISPLAY_THRESHOLD that catches same-story
+    // paraphrases sharing distinctive rare tokens but too little raw text
+    // overlap. The title edges bridge articles
     // stranded in different clustering generations — the server wipes and
     // re-inserts clusters with fresh ids every run, so the same story can carry
     // different clusterIds across sync times, and cluster edges alone would miss
@@ -352,19 +356,24 @@ const MeraNewsScreen: React.FC = () => {
             {
                 titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
                 clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+                weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
             },
         );
 
-        // Each group collapses to one representative: highest relevance so the
-        // story lands in its best-earned priority bucket. (Deliberate change
-        // from the old confidence-to-cluster choice — a story should surface at
-        // its strongest score, not at whichever member clung hardest to the
-        // cluster.) Tie-break newest publication, then smaller id (inside
-        // pickRepresentative).
+        // Each group collapses to one representative: the newest member of the
+        // story's best-earned priority bucket fronts the card — a fresh
+        // development re-fronts the story; relevance only tiebreaks. The
+        // bucket is the section the group's max relevance maps to (via
+        // getRelevanceLabel), so the chosen card's own on-card priority chip
+        // always matches the section it renders in. Tie-break relevance, then
+        // smaller id (inside pickRepresentative).
         const entries = groups.map((g) => {
+            const maxRelevance = g.reduce((max, m) => Math.max(max, m.s.relevance), -Infinity);
+            const bucketLabel = getRelevanceLabel(maxRelevance);
+            const pool = g.filter((m) => getRelevanceLabel(m.s.relevance) === bucketLabel);
             const rep = pickRepresentative(
-                g,
-                (a, b) => (b.s.relevance - a.s.relevance) || (pubDateMs(b.s) - pubDateMs(a.s)),
+                pool,
+                (a, b) => (pubDateMs(b.s) - pubDateMs(a.s)) || (b.s.relevance - a.s.relevance),
             );
             return { rep: rep.s, members: g.filter((m) => m !== rep).map((m) => m.s) };
         });

@@ -4,8 +4,10 @@ import {
     TITLE_JACCARD_DISPLAY_THRESHOLD,
     TITLE_JACCARD_PROPAGATION_THRESHOLD,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+    WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
     normalizeTitleTokens,
     titleJaccard,
+    weightedTitleJaccard,
     buildStoryGroups,
     pickRepresentative,
 } from '../story-grouping';
@@ -35,6 +37,18 @@ const PROPAGATION_OPTS: StoryGroupingOptions = {
     titleJaccardThreshold: TITLE_JACCARD_PROPAGATION_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
 };
+
+const DISPLAY_WEIGHTED_OPTS: StoryGroupingOptions = {
+    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
+    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+};
+
+/** True iff `x` and `y` land in the same group. */
+function together(groups: TestItem[][], x: string, y: string): boolean {
+    const g = groups.find((grp) => grp.some((m) => m.id === x));
+    return !!g && g.some((m) => m.id === y);
+}
 
 /** Sort groups by their smallest member id and sort ids within, for
  *  order-insensitive assertions on membership. */
@@ -100,6 +114,108 @@ describe('titleJaccard', () => {
         const a = new Set(['a', 'b', 'c']);
         const b = new Set(['b', 'c', 'd', 'e']);
         expect(titleJaccard(a, b)).toBeCloseTo(0.4, 10);
+    });
+});
+
+// --- weightedTitleJaccard --------------------------------------------------
+
+describe('weightedTitleJaccard', () => {
+    it('is 0 when both sets are empty', () => {
+        expect(weightedTitleJaccard(new Set(), new Set(), new Map(), 0)).toBe(0);
+    });
+
+    it('weights rare shared tokens above common ones', () => {
+        // Corpus of 10 docs. "rare" appears in 2, "common" in 9.
+        const df = new Map([['rare', 2], ['common', 9], ['x', 1], ['y', 1]]);
+        const n = 10;
+        // Pair 1 shares only the rare token; pair 2 shares only the common token.
+        // Same structural overlap (1 shared, 1 unique each) → identical raw
+        // Jaccard, but the rare-token pair must score strictly higher.
+        const rareShared = weightedTitleJaccard(
+            new Set(['rare', 'x']),
+            new Set(['rare', 'y']),
+            df,
+            n,
+        );
+        const commonShared = weightedTitleJaccard(
+            new Set(['common', 'x']),
+            new Set(['common', 'y']),
+            df,
+            n,
+        );
+        expect(titleJaccard(new Set(['rare', 'x']), new Set(['rare', 'y']))).toBeCloseTo(
+            titleJaccard(new Set(['common', 'x']), new Set(['common', 'y'])),
+            10,
+        );
+        expect(rareShared).toBeGreaterThan(commonShared);
+    });
+
+    it('is 1 for identical single-token sets regardless of df', () => {
+        const df = new Map([['solo', 5]]);
+        expect(weightedTitleJaccard(new Set(['solo']), new Set(['solo']), df, 10)).toBeCloseTo(1, 10);
+    });
+});
+
+// --- weighted title-edge grouping ------------------------------------------
+
+describe('buildStoryGroups — weighted title edges', () => {
+    // Two rare tokens (zephyr, qux) appear ONLY in the target pair; the rest of
+    // each title is filler tokens made common by 10 filler docs. Raw Jaccard is
+    // 0.25 (below the 0.4 bar) so only the IDF-weighted edge can merge them.
+    const fillers = Array.from({ length: 10 }, (_, i) =>
+        item(`f${i}`, `alpha beta gamma delta epsilon omega filler${i}word`),
+    );
+    const targetCorpus = [
+        item('A', 'zephyr qux alpha beta gamma'),
+        item('B', 'zephyr qux delta epsilon omega'),
+        ...fillers,
+    ];
+
+    it('merges a same-story pair via the weighted edge when raw Jaccard is below the display bar', () => {
+        expect(titleJaccard(normalizeTitleTokens('zephyr qux alpha beta gamma'), normalizeTitleTokens('zephyr qux delta epsilon omega'))).toBeLessThan(0.4);
+        const groups = buildStoryGroups(targetCorpus, DISPLAY_WEIGHTED_OPTS);
+        expect(together(groups, 'A', 'B')).toBe(true);
+    });
+
+    it('leaves the pair SEPARATE when the weighted option is absent', () => {
+        const groups = buildStoryGroups(targetCorpus, DISPLAY_OPTS);
+        expect(together(groups, 'A', 'B')).toBe(false);
+    });
+
+    it('does not merge the target pair into the common-token filler docs', () => {
+        const groups = buildStoryGroups(targetCorpus, DISPLAY_WEIGHTED_OPTS);
+        expect(together(groups, 'A', 'f0')).toBe(false);
+    });
+
+    it('merges the real Amsterdam-kidnapping pair via the weighted edge only', () => {
+        // Raw Jaccard 0.333 (shared arrested/amsterdam/kidnapping/two), below 0.4.
+        const aiFillers = Array.from({ length: 8 }, (_, i) =>
+            item(`f${i}`, `Artificial Intelligence opinion piece number${i} about cognitive abilities and work`),
+        );
+        const corpus = [
+            item('K1', 'Arrested suspects in Amsterdam kidnapping are two Rotterdammers'),
+            item('K2', 'Kidnapping in Amsterdam-Oost: two men arrested, police fired warning shots'),
+            ...aiFillers,
+        ];
+        expect(together(buildStoryGroups(corpus, DISPLAY_WEIGHTED_OPTS), 'K1', 'K2')).toBe(true);
+        expect(together(buildStoryGroups(corpus, DISPLAY_OPTS), 'K1', 'K2')).toBe(false);
+    });
+
+    it('does NOT merge AI-opinion pieces that share only high-frequency topic tokens', () => {
+        // The negative from calibration: distinct opinion pieces sharing only
+        // ubiquitous "artificial"/"intelligence"/"cognitive"-class tokens must
+        // stay separate even with the weighted edge on.
+        const aiFillers = Array.from({ length: 8 }, (_, i) =>
+            item(`f${i}`, `Artificial Intelligence opinion piece number${i} about cognitive abilities and work`),
+        );
+        const corpus = [
+            item('O1', "AI Doesn't Take Work Away From Us"),
+            item('O2', 'Does Using Artificial Intelligence Affect Human Cognitive Abilities'),
+            ...aiFillers,
+        ];
+        const groups = buildStoryGroups(corpus, DISPLAY_WEIGHTED_OPTS);
+        expect(together(groups, 'O1', 'O2')).toBe(false);
+        expect(together(groups, 'O2', 'f0')).toBe(false);
     });
 });
 

@@ -33,6 +33,7 @@ import {
     buildStoryGroups,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     TITLE_JACCARD_DISPLAY_THRESHOLD,
+    WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
@@ -103,6 +104,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             {
                 titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
                 clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+                weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
             },
         );
         const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));
