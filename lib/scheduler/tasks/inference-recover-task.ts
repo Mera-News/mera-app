@@ -7,7 +7,7 @@ AppScheduler.register({
   frequency: 0,
   triggers: ['app-foreground'],
   conditions: [{ type: 'authenticated' }, { type: 'db-ready' }],
-  timeout: 60_000,
+  timeout: 120_000,
   maxAttempts: 1,
   exclusive: true,
   handler: async (_input, ctx) => {

@@ -1,84 +1,38 @@
-// cycle-state-machine — thin wrapper that drives the inferenceCycleState
-// based on actions taken by the existing reconciler / submitter, and runs
-// crash-recovery on every app open before any new work is started.
+// cycle-state-machine — the single `recoverCycle()` entry point the app-resume
+// task calls before starting new work, so a half-finished scoring run from a
+// prior process is driven to completion before the next sync begins.
 //
-// Why a wrapper rather than a full FSM rewrite: the heavy lifting (placeholder
-// CAS, idempotent unpack writes, gateway TTL of 24h, phase-2 chain) already
-// lives in async-job-reconciler.ts and submitInferenceJob.ts. The state-
-// machine layer just gives us:
-//   1. A single persisted `inferenceCycleState` value the UI can render off.
-//   2. A single `recoverCycle()` entry point the app-resume effect calls
-//      before kicking off a new sync, so a half-finished cycle from a prior
-//      run is always driven to completion before we start the next one.
+// Since the pipelined-batch rewrite, the heavy lifting lives entirely in
+// lib/services/scoring-pipeline.ts. `recover()` self-abandons runs older than
+// 24h, reverts stuck submitters, starts the AppState-gated foreground poller,
+// and drains queued batches. This wrapper is retained only so the existing
+// `inference-recover` app-foreground task keeps a stable import; it no longer
+// touches the retired 7-state `inferenceCycleState`.
 //
-// The user's example — "reason generation phase failed, on next app open
-// finish the previous cycle before fetching new suggestions" — is the call
-// order that AppLayout's effect already implements: recoverCycle() → if
-// idle, syncFeed().
+// The call order AppLayout's effect implements is unchanged: recoverCycle() →
+// if idle, syncFeed().
 
 import logger from '@/lib/logger';
-import {
-  getCycleState,
-  getPendingAsyncJob,
-  setCycleState,
-  type InferenceCycleState,
-} from '@/lib/database/services/async-job-service';
-import { useForYouStore } from '@/lib/stores/for-you-store';
-import { reconcileAsyncJobResults } from './async-job-reconciler';
-
-const TAG = '[cycle-state-machine]';
+import * as scoringPipeline from './scoring-pipeline';
 
 /**
- * Drive any in-flight cycle to a terminal state (idle) before the caller
- * starts new work. Idempotent — safe to call from rapid AppState→active
- * fires; the reconciler's in-process single-flight collapses re-entries.
+ * Drive any in-flight scoring run to completion (or resume it) before the
+ * caller starts new work. Idempotent — safe to call from rapid AppState→active
+ * fires; the pipeline's single-flight guards collapse re-entries.
  *
- * Returns the cycle state observed AFTER recovery — `idle` means the caller
- * is free to start a new cycle, anything else means the cycle is still in
- * flight (waiting on the gateway) and we should not stack work on top of it.
+ * Returns `'idle'` when the pipeline has no non-terminal batches (the caller is
+ * free to start a fresh sync) and `'running'` when a run is still in flight.
  */
-export async function recoverCycle(): Promise<InferenceCycleState> {
-  const state = await getCycleState();
-  const pending = await getPendingAsyncJob();
-
-  if (state === 'idle' && !pending) {
-    return 'idle';
-  }
-
-  // Orphaned state: the cycle was interrupted (app kill, DB reset, migration)
-  // and the pending job was cleared, but the cycle state key wasn't reset.
-  // The reconciler returns 'completed' early when pending is null without
-  // touching cycleState, so without this guard recoverCycle would re-read the
-  // stale state and block new scoring runs indefinitely.
-  if (!pending) {
-    logger.warn(`${TAG} orphaned cycle state=${state} with no pending job — resetting to idle`);
-    await setCycleState('idle');
-    useForYouStore.getState().setAsyncJobPhase('idle');
-    return 'idle';
-  }
-
-  // For every non-idle observed state the right answer is the same: ask the
-  // reconciler to advance. It already knows how to:
-  //   - detect a placeholder requestId (submit crash window) and resubmit,
-  //   - poll /results when state is `waiting-for-*` (returns 'pending' if
-  //     gateway hasn't completed yet — that's fine, push wake will retry),
-  //   - re-run the unpack + write path for crash-window unpack states
-  //     (saveScoringResult / saveReason are upserts; idempotencyKey gate
-  //     stops the local notif from double-firing).
-  // The reconciler updates cycleState as it transitions, so on return we
-  // re-read it to decide what to tell the caller.
+export async function recoverCycle(): Promise<'idle' | 'running'> {
   try {
-    // recoverCycle is only ever called from the foreground app-resume hook.
-    await reconcileAsyncJobResults('foreground');
+    return await scoringPipeline.recover();
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'cycle-state-machine', method: 'recoverCycle' },
     });
+    // Treat an unexpected recovery failure as `idle` so the caller is not
+    // permanently blocked from starting a new sync; the pipeline record (if
+    // any) survives and the next tick retries.
+    return 'idle';
   }
-
-  const next = await getCycleState();
-  if (next !== state) {
-    logger.info(`${TAG} state ${state} → ${next}`);
-  }
-  return next;
 }

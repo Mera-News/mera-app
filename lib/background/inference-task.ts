@@ -31,20 +31,25 @@ let defined = false;
 /** Walk the variable shapes expo-notifications uses for the task body. iOS
  *  delivers `body.data.notification.request.content.data`; Android can deliver
  *  `body.data.dataString` (JSON) or `body.data.data` directly. We try them all
- *  and fall back to scanning every string field in the object. */
-function extractPushData(body: unknown): { type?: string } | undefined {
+ *  and fall back to scanning every string field in the object. The gateway's
+ *  completion push carries `{ type: 'inference-done', requestId }`; the
+ *  `requestId` routes `handlePush` to the exact batch that just completed. */
+function extractPushData(
+  body: unknown,
+): { type?: string; requestId?: string } | undefined {
   const root = (body as { data?: unknown })?.data;
   if (!root || typeof root !== 'object') return undefined;
   const r = root as Record<string, unknown>;
 
   const notif = r.notification as
-    | { request?: { content?: { data?: { type?: string } } } }
+    | { request?: { content?: { data?: { type?: string; requestId?: string } } } }
     | undefined;
   const direct = notif?.request?.content?.data;
   if (direct && typeof direct === 'object') return direct;
 
   const inner = r.data;
-  if (inner && typeof inner === 'object') return inner as { type?: string };
+  if (inner && typeof inner === 'object')
+    return inner as { type?: string; requestId?: string };
 
   if (typeof r.dataString === 'string') {
     try {
@@ -54,7 +59,12 @@ function extractPushData(body: unknown): { type?: string } | undefined {
     }
   }
 
-  if (typeof r.type === 'string') return { type: r.type };
+  if (typeof r.type === 'string' || typeof r.requestId === 'string') {
+    return {
+      type: typeof r.type === 'string' ? r.type : undefined,
+      requestId: typeof r.requestId === 'string' ? r.requestId : undefined,
+    };
+  }
   return undefined;
 }
 
@@ -84,7 +94,9 @@ export function defineInferenceTask(): void {
       // if the shape is anything else.
       const data = extractPushData(body);
       const reason = reasonForPushType(data?.type);
-      await runBackgroundCycle(reason);
+      // The gateway attaches the completed job's requestId; pass it through so
+      // handlePush advances that exact batch (≤1 GET + ≤1 POST per wake).
+      await runBackgroundCycle(reason, data?.requestId);
     } catch (err) {
       logger.captureException(err, {
         tags: { service: 'inference-task' },

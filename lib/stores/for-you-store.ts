@@ -85,17 +85,19 @@ interface ForYouState {
     deviceProcessedCount: number;
     deviceTotalCount: number;
 
-    // Cloud async-inference pipeline — tracks which phase of the two-phase
-    // flow is in flight. 'idle' = no job pending. 'relevance' = phase-1 score
-    // submission awaiting results. 'reasons' = phase-2 reason submission
-    // awaiting results. Decouples UI from `isDeviceProcessing` which only
-    // covers on-device scoring.
+    // Cloud async-inference pipeline — a coarse projection of the multi-batch
+    // scoring pipeline onto the header's two-phase model. 'idle' = no run (or
+    // every batch terminal). 'relevance' = at least one batch still owes a
+    // relevance round. 'reasons' = every remaining non-terminal batch is past
+    // relevance (only notes left). Individual batches interleave; this is the
+    // union view the header renders. Written live by scoring-pipeline as batches
+    // transition and rehydrated at boot from the persisted run. Decouples UI
+    // from `isDeviceProcessing` which only covers on-device scoring.
     asyncJobPhase: 'idle' | 'relevance' | 'reasons';
-    /** Cumulative number of candidates the sweep has finished processing.
-     *  0 when `asyncJobPhase === 'idle'`. Monotonic across batches — drives
-     *  the numerator of the "Sifting through X/Y" spinner text. */
+    /** Candidates in terminal (done/failed) batches — the numerator of the
+     *  "Sifting through X/Y" spinner text. 0 when `asyncJobPhase === 'idle'`. */
     asyncJobProcessedCount: number;
-    /** Total synced ids in the current server snapshot. Drives the
+    /** Total candidates across every batch in the current run — the
      *  denominator of the spinner text. 0 when idle. */
     asyncJobTotalCount: number;
 
@@ -403,13 +405,16 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
     hydrateMetadataFromDb: async () => {
         try {
-            const { getPendingAsyncJob } = await import(
-                '@/lib/database/services/async-job-service'
+            // Rehydrate the header's scoring phase/progress from the persisted
+            // multi-batch pipeline run (replaces the legacy single-slot
+            // getPendingAsyncJob read). idle when no run / all batches terminal.
+            const { getPipelineUiState } = await import(
+                '@/lib/services/scoring-pipeline'
             );
 
-            const [meta, pendingJob] = await Promise.all([
+            const [meta, pipelineUi] = await Promise.all([
                 loadFeedMetadata(),
-                getPendingAsyncJob(),
+                getPipelineUiState(),
             ]);
 
             const current = get().suggestions;
@@ -422,13 +427,11 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 relevantArticleCount: meta?.relevantArticleCount ?? impactfulCount,
                 hasGeneratedTopics: meta?.hasGeneratedTopics ?? true,
                 lastProcessingRunFinishedAt: meta?.lastProcessingRunFinishedAt ?? null,
-                asyncJobPhase: pendingJob
-                    ? pendingJob.phase === 'relevance'
-                        ? 'relevance'
-                        : 'reasons'
-                    : 'idle',
-                asyncJobProcessedCount: 0,
-                asyncJobTotalCount: 0,
+                asyncJobPhase: pipelineUi.phase,
+                asyncJobProcessedCount:
+                    pipelineUi.phase === 'idle' ? 0 : pipelineUi.processedCount,
+                asyncJobTotalCount:
+                    pipelineUi.phase === 'idle' ? 0 : pipelineUi.totalCount,
             });
         } catch (err) {
             // Metadata hydration failed — leave defaults in place, but surface the error.

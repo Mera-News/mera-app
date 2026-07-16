@@ -118,7 +118,7 @@ describe('runScoringPass', () => {
     });
 
     it('calls runBackgroundCycle in cloud mode and returns 0', async () => {
-      mockRunBackgroundCycle.mockResolvedValue('submitted');
+      mockRunBackgroundCycle.mockResolvedValue('running');
 
       const result = await runScoringPass();
 
@@ -126,8 +126,16 @@ describe('runScoringPass', () => {
       expect(result).toBe(0);
     });
 
-    it('clears the header scoring error when the cycle reaches the gateway', async () => {
-      mockRunBackgroundCycle.mockResolvedValue('submitted');
+    it('clears the header scoring error when the pipeline accepts the pass (running)', async () => {
+      mockRunBackgroundCycle.mockResolvedValue('running');
+
+      await runScoringPass();
+
+      expect(mockForYouState.setScoringError).toHaveBeenCalledWith(null);
+    });
+
+    it('clears the header scoring error when the pipeline has nothing left to do (idle)', async () => {
+      mockRunBackgroundCycle.mockResolvedValue('idle');
 
       await runScoringPass();
 
@@ -140,26 +148,6 @@ describe('runScoringPass', () => {
       await runScoringPass();
 
       expect(mockForYouState.setScoringError).toHaveBeenCalledWith('server');
-    });
-
-    it('does not set or clear the header error on neutral outcomes (skipped-pending)', async () => {
-      mockRunBackgroundCycle.mockResolvedValue('skipped-pending');
-
-      await runScoringPass();
-
-      expect(mockForYouState.setScoringError).not.toHaveBeenCalled();
-    });
-
-    it('logs warning and returns 0 when skipped-no-token', async () => {
-      mockRunBackgroundCycle.mockResolvedValue('skipped-no-token');
-
-      const result = await runScoringPass();
-
-      expect(mockCaptureMessage).toHaveBeenCalledWith(
-        expect.stringContaining('cloud scoring skipped'),
-        expect.any(Object),
-      );
-      expect(result).toBe(0);
     });
 
     it('logs warning and returns 0 when error result', async () => {

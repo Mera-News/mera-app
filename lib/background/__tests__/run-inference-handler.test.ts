@@ -1,9 +1,13 @@
-// run-inference-handler.test.ts — unit tests for runBackgroundCycle
+// run-inference-handler.test.ts — unit tests for the pipelined runBackgroundCycle
 
-const mockGetPendingAsyncJob = jest.fn();
-const mockSubmitInferenceJob = jest.fn();
-const mockReconcileAsyncJobResults = jest.fn();
-const mockSubmitOrphanedReasonJob = jest.fn();
+const mockHandlePush = jest.fn();
+const mockRecover = jest.fn();
+const mockGetPipelineStatus = jest.fn();
+const mockEnqueueCandidates = jest.fn();
+const mockEnqueueOrphanedReasons = jest.fn();
+const mockPollTick = jest.fn();
+const mockGetUnscored = jest.fn();
+const mockBuildRelevanceCalls = jest.fn();
 const mockContextForCycleReason = jest.fn();
 const mockCaptureException = jest.fn();
 const mockWarn = jest.fn();
@@ -20,17 +24,21 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-jest.mock('@/lib/database/services/async-job-service', () => ({
-  getPendingAsyncJob: (...args: any[]) => mockGetPendingAsyncJob(...args),
+jest.mock('@/lib/services/scoring-pipeline', () => ({
+  handlePush: (...args: any[]) => mockHandlePush(...args),
+  recover: (...args: any[]) => mockRecover(...args),
+  getPipelineStatus: (...args: any[]) => mockGetPipelineStatus(...args),
+  enqueueCandidates: (...args: any[]) => mockEnqueueCandidates(...args),
+  enqueueOrphanedReasons: (...args: any[]) => mockEnqueueOrphanedReasons(...args),
+  pollTick: (...args: any[]) => mockPollTick(...args),
 }));
 
-jest.mock('@/lib/llm/submitInferenceJob', () => ({
-  submitInferenceJob: (...args: any[]) => mockSubmitInferenceJob(...args),
+jest.mock('@/lib/database/services/article-suggestion-service', () => ({
+  getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscored(...args),
 }));
 
-jest.mock('@/lib/services/async-job-reconciler', () => ({
-  reconcileAsyncJobResults: (...args: any[]) => mockReconcileAsyncJobResults(...args),
-  submitOrphanedReasonJob: (...args: any[]) => mockSubmitOrphanedReasonJob(...args),
+jest.mock('@/lib/mera-protocol/scoring-service', () => ({
+  buildRelevanceCalls: (...args: any[]) => mockBuildRelevanceCalls(...args),
 }));
 
 jest.mock('@/lib/llm/execution-context', () => ({
@@ -38,196 +46,97 @@ jest.mock('@/lib/llm/execution-context', () => ({
 }));
 
 import { runBackgroundCycle } from '../run-inference-handler';
-import type { CycleReason } from '../run-inference-handler';
 
-function makePendingJob(overrides: Record<string, any> = {}) {
-  return {
-    requestId: 'req-abc',
-    phase: 'relevance',
-    submittedAt: Date.now() - 1000,
-    ...overrides,
-  };
+function bundleWith(ids: string[]) {
+  return { calls: [], eligibleCandidates: ids.map((id) => ({ id })) };
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockContextForCycleReason.mockReturnValue('foreground');
-  mockGetPendingAsyncJob.mockResolvedValue(null);
-  mockSubmitInferenceJob.mockResolvedValue('submitted');
-  mockReconcileAsyncJobResults.mockResolvedValue('completed');
-  mockSubmitOrphanedReasonJob.mockResolvedValue('skipped-empty');
+  mockContextForCycleReason.mockImplementation((reason: string) =>
+    reason === 'phase1-done' || reason === 'phase2-done' || reason === 'silent-push'
+      ? 'background'
+      : 'foreground',
+  );
+  mockHandlePush.mockResolvedValue(undefined);
+  mockRecover.mockResolvedValue('running');
+  mockGetPipelineStatus.mockResolvedValue('running');
+  mockEnqueueCandidates.mockResolvedValue(undefined);
+  mockEnqueueOrphanedReasons.mockResolvedValue(undefined);
+  mockPollTick.mockResolvedValue(undefined);
+  mockGetUnscored.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
+  mockBuildRelevanceCalls.mockResolvedValue(bundleWith(['a', 'b']));
 });
 
-describe('runBackgroundCycle — phase1-done', () => {
-  it('returns no-work when no pending job on phase1-done', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    const result = await runBackgroundCycle('phase1-done');
-    expect(result).toBe('no-work');
-    expect(mockReconcileAsyncJobResults).not.toHaveBeenCalled();
+describe('runBackgroundCycle — background completion pushes', () => {
+  it.each(['phase1-done', 'phase2-done', 'silent-push'] as const)(
+    'routes %s to handlePush with the requestId and background context',
+    async (reason) => {
+      mockGetPipelineStatus.mockResolvedValue('running');
+
+      const result = await runBackgroundCycle(reason, 'req-xyz');
+
+      expect(mockHandlePush).toHaveBeenCalledWith('req-xyz', 'background');
+      expect(result).toBe('running');
+      expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+      expect(mockRecover).not.toHaveBeenCalled();
+    },
+  );
+
+  it('passes undefined requestId through to handlePush when absent', async () => {
+    await runBackgroundCycle('silent-push');
+    expect(mockHandlePush).toHaveBeenCalledWith(undefined, 'background');
   });
 
-  it('reconciles pending job on phase1-done and maps completed → reconciled-new-data', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('completed');
-
-    const result = await runBackgroundCycle('phase1-done');
-
-    expect(result).toBe('reconciled-new-data');
-    expect(mockReconcileAsyncJobResults).toHaveBeenCalledWith('foreground', 'req-abc');
-  });
-
-  it('maps pending reconcile → reconciled-pending', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('pending');
-
-    const result = await runBackgroundCycle('phase1-done');
-    expect(result).toBe('reconciled-pending');
-  });
-
-  it('maps stale reconcile → reconciled-stale', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('stale');
-
-    const result = await runBackgroundCycle('phase1-done');
-    expect(result).toBe('reconciled-stale');
-  });
-
-  it('maps error reconcile → error', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('error');
-
-    const result = await runBackgroundCycle('phase1-done');
-    expect(result).toBe('error');
-  });
-});
-
-describe('runBackgroundCycle — phase2-done', () => {
-  it('returns no-work when no pending job on phase2-done', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    const result = await runBackgroundCycle('phase2-done');
-    expect(result).toBe('no-work');
-  });
-
-  it('reconciles and maps completed → reconciled-new-data on phase2-done', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('completed');
-
-    const result = await runBackgroundCycle('phase2-done');
-    expect(result).toBe('reconciled-new-data');
-  });
-});
-
-describe('runBackgroundCycle — silent-push', () => {
-  it('returns no-work when no pending job on silent-push', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    const result = await runBackgroundCycle('silent-push');
-    expect(result).toBe('no-work');
-    expect(mockSubmitInferenceJob).not.toHaveBeenCalled();
-  });
-
-  it('reconciles pending job on silent-push', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('completed');
-
-    const result = await runBackgroundCycle('silent-push');
-    expect(result).toBe('reconciled-new-data');
-    expect(mockSubmitInferenceJob).not.toHaveBeenCalled();
+  it('returns idle when the pipeline reports idle after a push', async () => {
+    mockGetPipelineStatus.mockResolvedValue('idle');
+    const result = await runBackgroundCycle('phase1-done', 'req-1');
+    expect(result).toBe('idle');
   });
 });
 
 describe('runBackgroundCycle — app-resume', () => {
-  it('returns no-work when no pending job on app-resume', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
+  it('delegates to recover() and returns its value', async () => {
+    mockRecover.mockResolvedValue('idle');
     const result = await runBackgroundCycle('app-resume');
-    expect(result).toBe('no-work');
-    expect(mockSubmitInferenceJob).not.toHaveBeenCalled();
-  });
-
-  it('reconciles pending job on app-resume', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('stale');
-
-    const result = await runBackgroundCycle('app-resume');
-    expect(result).toBe('reconciled-stale');
-    expect(mockSubmitInferenceJob).not.toHaveBeenCalled();
+    expect(mockRecover).toHaveBeenCalledTimes(1);
+    expect(result).toBe('idle');
+    expect(mockHandlePush).not.toHaveBeenCalled();
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
   });
 });
 
-describe('runBackgroundCycle — scoring-pass (submit or reconcile)', () => {
-  it('reconciles when a pending job exists', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('completed');
+describe('runBackgroundCycle — scoring-pass', () => {
+  it('enqueues eligible candidates + orphaned reasons then polls', async () => {
+    mockGetUnscored.mockResolvedValue([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+    mockBuildRelevanceCalls.mockResolvedValue(bundleWith(['a', 'c']));
+    mockGetPipelineStatus.mockResolvedValue('running');
 
     const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('reconciled-new-data');
-    expect(mockSubmitInferenceJob).not.toHaveBeenCalled();
+
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a', 'c']);
+    expect(mockEnqueueOrphanedReasons).toHaveBeenCalledTimes(1);
+    expect(mockPollTick).toHaveBeenCalledWith('foreground');
+    expect(result).toBe('running');
   });
 
-  it('submits when no pending job (submitted → submitted)', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('submitted');
+  it('skips enqueueCandidates when no eligible ids but still enqueues orphaned reasons', async () => {
+    mockBuildRelevanceCalls.mockResolvedValue(bundleWith([]));
+    mockGetPipelineStatus.mockResolvedValue('idle');
 
     const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('submitted');
-    expect(mockSubmitInferenceJob).toHaveBeenCalled();
-  });
 
-  it('tries orphaned reason job when submitInferenceJob returns skipped-empty', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('skipped-empty');
-    mockSubmitOrphanedReasonJob.mockResolvedValue('submitted');
-
-    const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('submitted');
-    expect(mockSubmitOrphanedReasonJob).toHaveBeenCalledWith('foreground');
-  });
-
-  it('returns no-work when orphaned reason job is also skipped-empty', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('skipped-empty');
-    mockSubmitOrphanedReasonJob.mockResolvedValue('skipped-empty');
-
-    const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('no-work');
-  });
-
-  it('returns skipped-no-token when submitInferenceJob returns skipped-no-token', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('skipped-no-token');
-
-    const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('skipped-no-token');
-  });
-
-  it('returns skipped-pending when submitInferenceJob returns skipped-pending', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('skipped-pending');
-
-    const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('skipped-pending');
-  });
-
-  it('returns skipped-pending when submitInferenceJob returns skipped-stale-pending', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('skipped-stale-pending');
-
-    const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('skipped-pending');
-  });
-
-  it('returns error when submitInferenceJob returns error', async () => {
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockSubmitInferenceJob.mockResolvedValue('error');
-
-    const result = await runBackgroundCycle('scoring-pass');
-    expect(result).toBe('error');
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+    expect(mockEnqueueOrphanedReasons).toHaveBeenCalledTimes(1);
+    expect(mockPollTick).toHaveBeenCalledWith('foreground');
+    expect(result).toBe('idle');
   });
 });
 
 describe('runBackgroundCycle — error handling', () => {
   it('catches exceptions and returns error', async () => {
     const err = new Error('network failure');
-    mockGetPendingAsyncJob.mockRejectedValue(err);
+    mockGetUnscored.mockRejectedValue(err);
 
     const result = await runBackgroundCycle('scoring-pass');
 
@@ -240,56 +149,26 @@ describe('runBackgroundCycle — error handling', () => {
     );
   });
 
-  it('tags keychain errors with kind=keychain-unavailable', async () => {
+  it('tags keychain errors with kind=keychain-unavailable at warning level', async () => {
     const keychainErr = new Error('SecItem errSecInteractionNotAllowed keychain locked');
-    mockGetPendingAsyncJob.mockRejectedValue(keychainErr);
+    mockHandlePush.mockRejectedValue(keychainErr);
 
-    const result = await runBackgroundCycle('silent-push');
+    const result = await runBackgroundCycle('silent-push', 'req-1');
 
     expect(result).toBe('error');
     expect(mockCaptureException).toHaveBeenCalledWith(
       keychainErr,
       expect.objectContaining({
+        level: 'warning',
         tags: expect.objectContaining({ kind: 'keychain-unavailable' }),
       }),
     );
   });
 
-  it('tags generic errors with kind=generic', async () => {
-    const genericErr = new Error('some random failure');
-    mockGetPendingAsyncJob.mockRejectedValue(genericErr);
-
-    await runBackgroundCycle('app-resume');
-
-    expect(mockCaptureException).toHaveBeenCalledWith(
-      genericErr,
-      expect.objectContaining({
-        tags: expect.objectContaining({ kind: 'generic' }),
-      }),
-    );
-  });
-
-  it('handles non-Error thrown values', async () => {
-    mockGetPendingAsyncJob.mockRejectedValue('string error');
-
-    const result = await runBackgroundCycle('phase1-done');
-    expect(result).toBe('error');
-    expect(mockCaptureException).toHaveBeenCalled();
-  });
-
-  it('reports keychain errors at warning level (recoverable on next foreground)', async () => {
-    mockGetPendingAsyncJob.mockRejectedValue(new Error('SecItem errSecInteractionNotAllowed'));
-    await runBackgroundCycle('silent-push');
-    expect(mockCaptureException).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({ level: 'warning' }),
-    );
-  });
-
-  it('reports a transient scoring-pass abort at warning level with kind=transient-network', async () => {
+  it('tags a transient abort with kind=transient-network at warning level', async () => {
     const abortErr = new Error('Aborted');
     abortErr.name = 'AbortError';
-    mockGetPendingAsyncJob.mockRejectedValue(abortErr);
+    mockGetUnscored.mockRejectedValue(abortErr);
 
     const result = await runBackgroundCycle('scoring-pass');
 
@@ -303,34 +182,32 @@ describe('runBackgroundCycle — error handling', () => {
     );
   });
 
-  it('reports genuinely unexpected errors at error level', async () => {
-    mockGetPendingAsyncJob.mockRejectedValue(new Error('some random failure'));
+  it('reports genuinely unexpected errors at error level with kind=generic', async () => {
+    mockRecover.mockRejectedValue(new Error('some random failure'));
+
     await runBackgroundCycle('app-resume');
+
     expect(mockCaptureException).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({ level: 'error', tags: expect.objectContaining({ kind: 'generic' }) }),
+      expect.objectContaining({
+        level: 'error',
+        tags: expect.objectContaining({ kind: 'generic' }),
+      }),
     );
+  });
+
+  it('handles non-Error thrown values', async () => {
+    mockHandlePush.mockRejectedValue('string error');
+    const result = await runBackgroundCycle('phase1-done', 'req-1');
+    expect(result).toBe('error');
+    expect(mockCaptureException).toHaveBeenCalled();
   });
 });
 
 describe('runBackgroundCycle — context derivation', () => {
   it('calls contextForCycleReason with the provided reason', async () => {
-    mockContextForCycleReason.mockReturnValue('background');
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-
-    await runBackgroundCycle('silent-push');
-
+    await runBackgroundCycle('silent-push', 'req-1');
     expect(mockContextForCycleReason).toHaveBeenCalledWith('silent-push');
-  });
-
-  it('uses background context for silent-push when contextForCycleReason returns background', async () => {
-    mockContextForCycleReason.mockReturnValue('background');
-    mockGetPendingAsyncJob.mockResolvedValue(makePendingJob());
-    mockReconcileAsyncJobResults.mockResolvedValue('completed');
-
-    await runBackgroundCycle('silent-push');
-
-    expect(mockReconcileAsyncJobResults).toHaveBeenCalledWith('background', 'req-abc');
   });
 });
 

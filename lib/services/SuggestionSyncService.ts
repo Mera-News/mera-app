@@ -3,8 +3,6 @@
 
 import {
   loadSuggestions,
-  getUnscoredSuggestionsWithFacts,
-  saveScoringResult,
 } from '@/lib/database/services/article-suggestion-service';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { classifyScoringError } from '@/lib/services/scoring-error';
@@ -48,17 +46,6 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
       throw err; // surface to FeedSyncMachine so the failed stage is recorded
     }
 
-    if (result === 'skipped-no-token') {
-      logger.captureMessage(
-        '[runScoringPass] cloud scoring skipped — no Expo push token on userPersona; sync will complete, next trigger will retry',
-        {
-          level: 'warning',
-          tags: { service: 'SuggestionSyncService', method: 'runScoringPass' },
-        },
-      );
-      return 0;
-    }
-
     if (result === 'error') {
       // Transient backend failure (network error, server down, expired endpoint).
       // Log it but let the sync complete so articles are at least persisted.
@@ -72,17 +59,10 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
       return 0;
     }
 
-    // Any cycle that reached the gateway (submitted a job, or fetched/decoded
-    // results) clears the error. Neutral outcomes (no-work, another cycle owns the
-    // pending job, missing push token) leave whatever the header was showing.
-    if (
-      result === 'submitted' ||
-      result === 'reconciled-new-data' ||
-      result === 'reconciled-pending'
-    ) {
-      setScoringError(null);
-    }
-
+    // `running` (batches enqueued / in flight) and `idle` (nothing left to
+    // score) both mean the pipeline accepted the pass without a hard failure —
+    // clear the header error. Set on hard failure, cleared on success/progress.
+    setScoringError(null);
     logger.info(`[runScoringPass] cloud cycle result: ${result}`);
     return 0;
   }

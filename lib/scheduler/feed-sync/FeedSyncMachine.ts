@@ -32,10 +32,13 @@ const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
   idle:                 ['fetching-topic-ids'],
   'fetching-topic-ids': ['diffing', 'paused-offline', 'failed'],
   diffing:              ['hydrating', 'scoring', 'done', 'failed'],
-  hydrating:            ['persisting', 'paused-offline', 'failed'],
-  persisting:           ['scoring', 'failed'],
+  // hydrate/persist/enqueue are merged into `hydrating`, which flows straight to
+  // `scoring` (the old `persisting` state is gone).
+  hydrating:            ['scoring', 'paused-offline', 'failed'],
   scoring:              ['done', 'failed'],
-  'paused-offline':     ['fetching-topic-ids', 'diffing', 'persisting', 'failed'],
+  // A pause during `hydrating` leaves _state at `paused-offline`; on resume the
+  // merged step finishes and the machine transitions to `scoring` from here.
+  'paused-offline':     ['fetching-topic-ids', 'diffing', 'scoring', 'failed'],
   failed:               ['idle'],
   done:                 ['idle'],
 };
@@ -119,6 +122,25 @@ class FeedSyncMachine {
     // again, and resolves on its own if scoring succeeds.
     useForYouStore.getState().setScoringError(null);
     try {
+      // Skip this cycle entirely when a scoring run is already in flight.
+      // Backend ingestion is continuous (20-25 new articles at a time); polling
+      // every 10s would keep appending fresh batches to the active run so it
+      // never finishes. Bail out here with the machine untouched (still
+      // `idle` — no transitions, no persisted state, no server calls). The
+      // pipeline self-drives via its internal poller; when it finalizes, the
+      // next 10s tick finds it idle and polls normally.
+      //
+      // Lazy require (not a static import) breaks the module-load cycle
+      // feed-sync-steps → scoring-pipeline → SuggestionSyncService → run-inference-
+      // handler → feed-sync-steps. Same pattern as lib/database/hydrate-stores.ts.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const scoringPipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
+      const pipelineStatus = await scoringPipeline.getPipelineStatus();
+      if (pipelineStatus === 'running') {
+        logger.info('[FeedSyncMachine] skipped — scoring pipeline active');
+        return;
+      }
+
       // Step 1: fetch topic IDs
       this._transitionTo('fetching-topic-ids');
       publishSyncStatus('fetching-topic-ids');
@@ -185,7 +207,7 @@ class FeedSyncMachine {
         return;
       }
 
-      // Step 3: hydrate
+      // Step 3: hydrate + persist + enqueue (merged, batched, pipelined)
       this._transitionTo('hydrating');
       publishSyncStatus('hydrating');
       await feedPersistence.updateMachineState('hydrating');
@@ -194,23 +216,20 @@ class FeedSyncMachine {
       if (ctx.signal.aborted) return;
 
       const total = diffResult.missingIds.length;
-      const hydrateResult = await steps.stepHydrate(diffResult, ctx, (completed) => {
-        ctx.reportProgress({ step: 'hydrating', current: completed, total });
-        publishSyncStatus('hydrating', { progress: { current: completed, total } });
+      const hydrateResult = await steps.stepHydratePersistEnqueue(diffResult, ctx, {
+        onProgress: (completed) => {
+          ctx.reportProgress({ step: 'hydrating', current: completed, total });
+          publishSyncStatus('hydrating', { progress: { current: completed, total } });
+        },
+        awaitResumeIfPaused: () => this._awaitResumeIfPaused(),
+        refreshStore: () => refreshSuggestionsInStoreUnsafe(),
       });
       useForYouStore.getState().resetHydrationProgress();
 
-      // Step 4: persist
-      this._transitionTo('persisting');
-      publishSyncStatus('persisting');
-      await feedPersistence.updateMachineState('persisting');
-
-      if (ctx.signal.aborted) return;
-      await steps.stepPersist(hydrateResult, ctx);
-      // Daily cap banner: if this hydrate was partially clipped, surface the
-      // "limit reached" notice now (we still delivered what fit) rather than
-      // waiting for the next fully-blocked cycle. A fully-unclipped delivery
-      // means we're under the cap — clear it.
+      // Daily cap banner: if this run was partially clipped, surface the "limit
+      // reached" notice now (we still delivered what fit) rather than waiting for
+      // the next fully-blocked cycle. A fully-unclipped delivery means we're
+      // under the cap — clear it.
       useForYouStore.getState().setDailyLimitResetAt(
         hydrateResult.dailyLimitReached
           ? hydrateResult.resetAt
@@ -218,10 +237,11 @@ class FeedSyncMachine {
             : nextUtcMidnightMs()
           : null,
       );
-      // Progressive rendering: refresh store after persist so articles appear
+      // Final refresh after all chunks (each chunk already refreshed for
+      // progressive rendering).
       await refreshSuggestionsInStoreUnsafe();
 
-      // Step 5: score
+      // Step 4: score
       this._transitionTo('scoring');
       publishSyncStatus('scoring');
       await feedPersistence.updateMachineState('scoring');

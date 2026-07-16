@@ -30,6 +30,7 @@ import {
   getUnscoredSuggestionsWithFacts,
   getScoredSuggestionsWithoutReasons,
   countUnscoredSuggestions,
+  getOldestUnscoredCreatedAt,
   deleteSuggestionsByServerIds,
   deleteSuggestionByServerId,
   deleteOldSuggestions,
@@ -311,6 +312,30 @@ describe('countUnscoredSuggestions', () => {
     // Note: fake query ignores the Q.where predicate and returns all rows,
     // but fetchCount returns the row count — we assert the call was made
     expect(count).toBe(1);
+  });
+});
+
+// ===========================================================================
+// getOldestUnscoredCreatedAt
+// ===========================================================================
+
+describe('getOldestUnscoredCreatedAt', () => {
+  it('returns null when there are no unscored rows', async () => {
+    db._setRows('article_suggestions', []);
+    const result = await getOldestUnscoredCreatedAt();
+    expect(result).toBeNull();
+  });
+
+  // The fake query ignores Q.where/Q.sortBy/Q.take and returns every row set,
+  // so a single-row fixture is what actually exercises "pick the first row's
+  // createdAt" here — real WatermelonDB does the sort+take(1) at the DB layer.
+  it("returns the row's createdAt in milliseconds", async () => {
+    const createdAt = new Date('2024-05-01T12:00:00.000Z');
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', createdAt }),
+    ]);
+    const result = await getOldestUnscoredCreatedAt();
+    expect(result).toBe(createdAt.getTime());
   });
 });
 

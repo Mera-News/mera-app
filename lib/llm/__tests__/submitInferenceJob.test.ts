@@ -1,14 +1,11 @@
-// submitInferenceJob.test.ts — unit tests for lib/llm/submitInferenceJob.ts
+// submitInferenceJob.test.ts — unit tests for the submit primitive
+// (`sendInferenceRequest`) and `bytesToHex` in lib/llm/submitInferenceJob.ts.
 
 // ---- Mocks (all before imports) ----
 
 const mockExpoFetch = jest.fn();
 jest.mock('expo/fetch', () => ({ fetch: (...args: unknown[]) => mockExpoFetch(...args) }));
 
-const mockLogger = {
-  debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn(),
-  captureMessage: jest.fn(), captureException: jest.fn(),
-};
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
@@ -22,52 +19,17 @@ jest.mock('@/lib/utils/retry', () => ({
   withRetry: (...args: unknown[]) => mockWithRetry(...args),
 }));
 
-const mockSetCapabilityToken = jest.fn();
-const mockGetCapabilityToken = jest.fn();
-jest.mock('../capability-token', () => ({
-  setCapabilityToken: (...args: unknown[]) => mockSetCapabilityToken(...args),
-  getCapabilityToken: (...args: unknown[]) => mockGetCapabilityToken(...args),
-}));
-
-const mockGetPendingAsyncJob = jest.fn();
-const mockSetPendingAsyncJob = jest.fn();
-const mockClearPendingAsyncJob = jest.fn();
-const mockSetCycleState = jest.fn();
-
-// The PendingJobStaleError MUST be the exact same class used in the instanceof check.
-// We export it from the mock and import it back for creating test instances.
-jest.mock('@/lib/database/services/async-job-service', () => {
-  class PendingJobStaleError extends Error {
-    constructor(msg = 'stale') { super(msg); this.name = 'PendingJobStaleError'; }
-  }
-  const m = {
-    getPendingAsyncJob: (...args: unknown[]) => mockGetPendingAsyncJob(...args),
-    PendingJobStaleError,
-    setCycleState: (...args: unknown[]) => mockSetCycleState(...args),
-    setPendingAsyncJob: (...args: unknown[]) => mockSetPendingAsyncJob(...args),
-    clearPendingAsyncJob: (...args: unknown[]) => mockClearPendingAsyncJob(...args),
-  };
-  return m;
-});
-
-const mockGetUnscoredSuggestionsWithFacts = jest.fn();
-jest.mock('@/lib/database/services/article-suggestion-service', () => ({
-  getUnscoredSuggestionsWithFacts: (...args: unknown[]) => mockGetUnscoredSuggestionsWithFacts(...args),
-}));
-
-const mockBuildRelevanceCalls = jest.fn();
-jest.mock('@/lib/mera-protocol/scoring-service', () => ({
-  buildRelevanceCalls: (...args: unknown[]) => mockBuildRelevanceCalls(...args),
+const mockRateLimiterAcquire = jest.fn().mockResolvedValue(undefined);
+const mockRateLimiterPauseFor = jest.fn();
+jest.mock('../gateway-rate-limiter', () => ({
+  acquire: (...args: unknown[]) => mockRateLimiterAcquire(...args),
+  pauseFor: (...args: unknown[]) => mockRateLimiterPauseFor(...args),
 }));
 
 const mockEncryptContent = jest.fn((text: string) => `enc:${text}`);
-const mockPrepareE2EEContext = jest.fn<Promise<ReturnType<typeof makeE2EEContext>>, unknown[]>();
 jest.mock('@/lib/e2ee/e2ee-service', () => ({
   encryptContent: (...args: unknown[]) => mockEncryptContent(...(args as [string])),
-  prepareE2EEContext: (...args: unknown[]) => mockPrepareE2EEContext(...args),
 }));
-
-jest.mock('../constants', () => ({ SMALL_MODEL: 'test-small-model' }));
 
 const mockGetJwtToken = jest.fn();
 jest.mock('@/lib/auth-client', () => ({
@@ -78,32 +40,17 @@ jest.mock('pako', () => ({
   gzip: jest.fn((input: string) => Buffer.from(input)),
 }));
 
-const mockDirCreate = jest.fn();
-const mockFileCreate = jest.fn();
-const mockFileWrite = jest.fn();
-
 jest.mock('expo-file-system', () => ({
   Directory: jest.fn().mockImplementation(() => ({
     exists: false,
-    create: mockDirCreate,
+    create: jest.fn(),
   })),
   File: jest.fn().mockImplementation(() => ({
     uri: '/mock/file.md',
-    create: mockFileCreate,
-    write: mockFileWrite,
+    create: jest.fn(),
+    write: jest.fn(),
   })),
   Paths: { document: '/mock/document' },
-}));
-
-const mockUserStoreGetState = jest.fn();
-jest.mock('@/lib/stores/user-store', () => ({
-  useUserStore: { getState: (...args: unknown[]) => mockUserStoreGetState(...args) },
-}));
-
-const mockForYouStoreGetState = jest.fn();
-const mockSetAsyncJobPhase = jest.fn();
-jest.mock('@/lib/stores/for-you-store', () => ({
-  useForYouStore: { getState: (...args: unknown[]) => mockForYouStoreGetState(...args) },
 }));
 
 jest.mock('@/lib/config/endpoints', () => ({
@@ -112,17 +59,11 @@ jest.mock('@/lib/config/endpoints', () => ({
 }));
 
 import {
-  submitInferenceJob,
   sendInferenceRequest,
   bytesToHex,
 } from '../submitInferenceJob';
 import type { CloudCallBundle } from '@/lib/mera-protocol/scoring-service';
 import type { E2EEContext } from '@/lib/e2ee/e2ee-service';
-import { PendingJobStaleError as RealPendingJobStaleError } from '@/lib/database/services/async-job-service';
-
-// The async-job-service module is mocked above with a 0-arg PendingJobStaleError.
-// Re-type the imported symbol so test instantiation matches the mock's signature.
-const PendingJobStaleError = RealPendingJobStaleError as unknown as new () => Error;
 
 // ---- Helpers ----
 
@@ -150,12 +91,17 @@ function makeE2EEContext(): E2EEContext {
   } as unknown as E2EEContext;
 }
 
-function makeResponse(status: number, body: unknown) {
+function makeResponse(
+  status: number,
+  body: unknown,
+  headers: Record<string, string> = {},
+) {
   return {
     status,
     ok: status >= 200 && status < 300,
     json: jest.fn().mockResolvedValue(body),
     text: jest.fn().mockResolvedValue(JSON.stringify(body)),
+    headers: { get: (name: string) => headers[name] ?? null },
   };
 }
 
@@ -173,151 +119,11 @@ describe('bytesToHex', () => {
   });
 });
 
-describe('submitInferenceJob', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockGetPendingAsyncJob.mockResolvedValue(null);
-    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([{ id: 'c1', statement: 'fact' }]);
-    mockBuildRelevanceCalls.mockResolvedValue(makeBundle());
-    mockPrepareE2EEContext.mockResolvedValue(makeE2EEContext());
-    mockSetPendingAsyncJob.mockResolvedValue(undefined);
-    mockClearPendingAsyncJob.mockResolvedValue(undefined);
-    mockSetCycleState.mockResolvedValue(undefined);
-    mockGetJwtToken.mockResolvedValue('jwt-token');
-    mockSetCapabilityToken.mockResolvedValue(undefined);
-    mockUserStoreGetState.mockReturnValue({ userPersona: null });
-    mockForYouStoreGetState.mockReturnValue({ setAsyncJobPhase: mockSetAsyncJobPhase });
-
-    // Default withRetry: just call the operation
-    mockWithRetry.mockImplementation(async (op: () => Promise<unknown>) => op());
-  });
-
-  describe('skipped states', () => {
-    it('returns "skipped-pending" when a pending job exists', async () => {
-      mockGetPendingAsyncJob.mockResolvedValue({ requestId: 'existing-job' });
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-pending');
-      expect(mockGetUnscoredSuggestionsWithFacts).not.toHaveBeenCalled();
-    });
-
-    it('returns "skipped-empty" when no unscored candidates', async () => {
-      mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-empty');
-    });
-
-    it('returns "skipped-empty" when buildRelevanceCalls produces 0 calls', async () => {
-      mockBuildRelevanceCalls.mockResolvedValue({ calls: [], eligibleCandidates: [] });
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-empty');
-    });
-
-    it('returns "skipped-empty" when buildRelevanceCalls has 0 eligibleCandidates', async () => {
-      mockBuildRelevanceCalls.mockResolvedValue({
-        calls: [{ id: 'c1', system: '', prompt: '' }],
-        eligibleCandidates: [],
-      });
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-empty');
-    });
-
-    it('returns "skipped-pending" when CAS fails (PendingJobStaleError on first setPendingAsyncJob)', async () => {
-      mockSetPendingAsyncJob.mockRejectedValueOnce(new PendingJobStaleError());
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-pending');
-    });
-  });
-
-  describe('happy path — submitted', () => {
-    it('returns "submitted" and sets phase to relevance on success', async () => {
-      const response = makeResponse(202, { requestId: 'req-123', capabilityToken: 'cap-tok' });
-      mockExpoFetch.mockResolvedValue(response);
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('submitted');
-      expect(mockSetAsyncJobPhase).toHaveBeenCalledWith('relevance');
-      expect(mockSetCapabilityToken).toHaveBeenCalledWith('cap-tok');
-    });
-
-    it('writes the final job row with the requestId from the server', async () => {
-      const response = makeResponse(202, { requestId: 'server-req-id' });
-      mockExpoFetch.mockResolvedValue(response);
-
-      await submitInferenceJob();
-
-      // Second setPendingAsyncJob call should have the real requestId
-      const secondCall = mockSetPendingAsyncJob.mock.calls[1];
-      expect(secondCall[0]).toMatchObject({ requestId: 'server-req-id' });
-    });
-
-    it('submits tokenless when no Expo push token is available', async () => {
-      mockUserStoreGetState.mockReturnValue({ userPersona: { expoPushToken: null } });
-      const response = makeResponse(202, { requestId: 'req-no-token' });
-      mockExpoFetch.mockResolvedValue(response);
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('submitted');
-    });
-
-    it('passes expoPushToken when available', async () => {
-      mockUserStoreGetState.mockReturnValue({
-        userPersona: { expoPushToken: 'ExponentPushToken[abc]' },
-      });
-      const response = makeResponse(202, { requestId: 'req-with-token' });
-      mockExpoFetch.mockResolvedValue(response);
-
-      await submitInferenceJob();
-
-      // expoFetch was called — check the body passed to withRetry contained the token
-      expect(mockExpoFetch).toHaveBeenCalled();
-    });
-  });
-
-  describe('error and stale paths', () => {
-    it('returns "skipped-stale-pending" when sendInferenceRequest returns null', async () => {
-      // sendInferenceRequest returns null (e.g. retry exhausted)
-      const response = makeResponse(500, { error: 'server error' });
-      mockExpoFetch.mockResolvedValue(response);
-      // withRetry throws after all retries
-      mockWithRetry.mockRejectedValue(new Error('retry exhausted'));
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-stale-pending');
-    });
-
-    it('returns "skipped-stale-pending" on PendingJobStaleError in outer catch', async () => {
-      const response = makeResponse(202, { requestId: 'req-xyz' });
-      mockExpoFetch.mockResolvedValue(response);
-      // Second setPendingAsyncJob (write-back) throws stale
-      mockSetPendingAsyncJob.mockResolvedValueOnce(undefined); // placeholder ok
-      mockSetPendingAsyncJob.mockRejectedValueOnce(new PendingJobStaleError());
-
-      const result = await submitInferenceJob();
-
-      expect(result).toBe('skipped-stale-pending');
-    });
-  });
-});
-
 describe('sendInferenceRequest', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetJwtToken.mockResolvedValue('jwt-token');
-    mockGetCapabilityToken.mockResolvedValue(null);
-    mockSetCapabilityToken.mockResolvedValue(undefined);
+    mockRateLimiterAcquire.mockResolvedValue(undefined);
     mockWithRetry.mockImplementation(async (op: () => Promise<unknown>) => op());
   });
 
@@ -333,15 +139,15 @@ describe('sendInferenceRequest', () => {
       context: 'foreground',
     });
 
-    expect(result).toBe('req-1');
+    expect(result).toEqual({ status: 'ok', requestId: 'req-1', capabilityToken: 'cap' });
+    expect(mockRateLimiterAcquire).toHaveBeenCalledTimes(1);
     const fetchCall = mockExpoFetch.mock.calls[0];
     const headers = fetchCall[1].headers;
     expect(headers.Authorization).toBe('Bearer jwt-token');
   });
 
-  it('falls back to capability token when JWT is null in foreground', async () => {
+  it('falls back to the passed capability token when JWT is null in foreground', async () => {
     mockGetJwtToken.mockResolvedValue(null);
-    mockGetCapabilityToken.mockResolvedValue('cap-tok-fallback');
     const response = makeResponse(202, { requestId: 'req-fb' });
     mockExpoFetch.mockResolvedValue(response);
 
@@ -351,16 +157,34 @@ describe('sendInferenceRequest', () => {
       token: null,
       model: 'test-model',
       context: 'foreground',
+      capabilityToken: 'cap-tok-fallback',
     });
 
-    expect(result).toBe('req-fb');
+    expect(result).toEqual({ status: 'ok', requestId: 'req-fb', capabilityToken: '' });
     const fetchCall = mockExpoFetch.mock.calls[0];
     expect(fetchCall[1].headers.Authorization).toBe('Bearer cap-tok-fallback');
   });
 
+  it('prefers JWT over a passed capability token in foreground', async () => {
+    mockGetJwtToken.mockResolvedValue('jwt-token');
+    const response = makeResponse(202, { requestId: 'req-jwt-first' });
+    mockExpoFetch.mockResolvedValue(response);
+
+    await sendInferenceRequest({
+      bundle: makeBundle(),
+      ctx: makeE2EEContext(),
+      token: null,
+      model: 'test-model',
+      context: 'foreground',
+      capabilityToken: 'cap-should-not-be-used',
+    });
+
+    const fetchCall = mockExpoFetch.mock.calls[0];
+    expect(fetchCall[1].headers.Authorization).toBe('Bearer jwt-token');
+  });
+
   it('throws when foreground has no JWT and no capability token', async () => {
     mockGetJwtToken.mockResolvedValue(null);
-    mockGetCapabilityToken.mockResolvedValue(null);
 
     await expect(
       sendInferenceRequest({
@@ -373,8 +197,7 @@ describe('sendInferenceRequest', () => {
     ).rejects.toThrow('foreground has no JWT and no capability token');
   });
 
-  it('uses capability token in background context', async () => {
-    mockGetCapabilityToken.mockResolvedValue('bg-cap-token');
+  it('uses the passed capability token in background context (keychain untouched)', async () => {
     const response = makeResponse(202, { requestId: 'req-bg' });
     mockExpoFetch.mockResolvedValue(response);
 
@@ -384,16 +207,16 @@ describe('sendInferenceRequest', () => {
       token: null,
       model: 'test-model',
       context: 'background',
+      capabilityToken: 'bg-cap-token',
     });
 
-    expect(result).toBe('req-bg');
+    expect(result).toEqual({ status: 'ok', requestId: 'req-bg', capabilityToken: '' });
     const fetchCall = mockExpoFetch.mock.calls[0];
     expect(fetchCall[1].headers.Authorization).toBe('Bearer bg-cap-token');
+    expect(mockGetJwtToken).not.toHaveBeenCalled();
   });
 
   it('throws when background has no capability token', async () => {
-    mockGetCapabilityToken.mockResolvedValue(null);
-
     await expect(
       sendInferenceRequest({
         bundle: makeBundle(),
@@ -405,7 +228,7 @@ describe('sendInferenceRequest', () => {
     ).rejects.toThrow('no capability token (background)');
   });
 
-  it('returns null on non-202 response', async () => {
+  it('returns failed on non-202 response', async () => {
     const response = makeResponse(400, { error: 'bad request' });
     mockExpoFetch.mockResolvedValue(response);
 
@@ -417,10 +240,10 @@ describe('sendInferenceRequest', () => {
       context: 'foreground',
     });
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ status: 'failed' });
   });
 
-  it('returns null when response has no requestId', async () => {
+  it('returns failed when response has no requestId', async () => {
     const response = makeResponse(202, { capabilityToken: 'tok' });
     mockExpoFetch.mockResolvedValue(response);
 
@@ -432,10 +255,10 @@ describe('sendInferenceRequest', () => {
       context: 'foreground',
     });
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ status: 'failed' });
   });
 
-  it('returns null when withRetry throws (retry exhausted)', async () => {
+  it('returns failed when withRetry throws (retry exhausted)', async () => {
     mockWithRetry.mockRejectedValue(new Error('network error'));
 
     const result = await sendInferenceRequest({
@@ -446,14 +269,14 @@ describe('sendInferenceRequest', () => {
       context: 'foreground',
     });
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ status: 'failed' });
   });
 
-  it('stores capability token when server returns one', async () => {
+  it('returns the capability token from the server response (caller persists it)', async () => {
     const response = makeResponse(202, { requestId: 'req-x', capabilityToken: 'new-cap' });
     mockExpoFetch.mockResolvedValue(response);
 
-    await sendInferenceRequest({
+    const result = await sendInferenceRequest({
       bundle: makeBundle(),
       ctx: makeE2EEContext(),
       token: null,
@@ -461,7 +284,41 @@ describe('sendInferenceRequest', () => {
       context: 'foreground',
     });
 
-    expect(mockSetCapabilityToken).toHaveBeenCalledWith('new-cap');
+    // sendInferenceRequest does not persist the token itself — that's the
+    // caller's responsibility now; it just returns it in the outcome.
+    expect(result).toEqual({ status: 'ok', requestId: 'req-x', capabilityToken: 'new-cap' });
+  });
+
+  it('returns throttled and pauses the rate limiter on 429 with a Retry-After header', async () => {
+    const response = makeResponse(429, { error: 'too many requests' }, { 'Retry-After': '5' });
+    mockExpoFetch.mockResolvedValue(response);
+
+    const result = await sendInferenceRequest({
+      bundle: makeBundle(),
+      ctx: makeE2EEContext(),
+      token: null,
+      model: 'test-model',
+      context: 'foreground',
+    });
+
+    expect(result).toEqual({ status: 'throttled' });
+    expect(mockRateLimiterPauseFor).toHaveBeenCalledWith(5000);
+  });
+
+  it('defaults to a 30s pause on 429 without a usable Retry-After header', async () => {
+    const response = makeResponse(429, { error: 'too many requests' });
+    mockExpoFetch.mockResolvedValue(response);
+
+    const result = await sendInferenceRequest({
+      bundle: makeBundle(),
+      ctx: makeE2EEContext(),
+      token: null,
+      model: 'test-model',
+      context: 'foreground',
+    });
+
+    expect(result).toEqual({ status: 'throttled' });
+    expect(mockRateLimiterPauseFor).toHaveBeenCalledWith(30_000);
   });
 
   it('hoists shared system to sharedSystem when all calls have the same system', async () => {
@@ -509,9 +366,8 @@ describe('sendInferenceRequest', () => {
     expect(parsed.sharedSystem).toBeUndefined();
   });
 
-  it('falls back to capability token when JWT throws in foreground', async () => {
+  it('falls back to the passed capability token when JWT throws in foreground', async () => {
     mockGetJwtToken.mockRejectedValue(new Error('keychain unavailable'));
-    mockGetCapabilityToken.mockResolvedValue('fallback-cap');
     const response = makeResponse(202, { requestId: 'req-throw-fb' });
     mockExpoFetch.mockResolvedValue(response);
 
@@ -521,8 +377,11 @@ describe('sendInferenceRequest', () => {
       token: null,
       model: 'test-model',
       context: 'foreground',
+      capabilityToken: 'fallback-cap',
     });
 
-    expect(result).toBe('req-throw-fb');
+    expect(result).toEqual({ status: 'ok', requestId: 'req-throw-fb', capabilityToken: '' });
+    const fetchCall = mockExpoFetch.mock.calls[0];
+    expect(fetchCall[1].headers.Authorization).toBe('Bearer fallback-cap');
   });
 });

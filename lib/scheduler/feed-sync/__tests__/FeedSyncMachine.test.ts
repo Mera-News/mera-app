@@ -6,8 +6,7 @@ const mockClearMachineSnapshot = jest.fn();
 const mockUpdateMachineState = jest.fn();
 const mockStepFetchTopicIds = jest.fn();
 const mockStepDiff = jest.fn();
-const mockStepHydrate = jest.fn();
-const mockStepPersist = jest.fn();
+const mockStepHydratePersistEnqueue = jest.fn();
 const mockStepScore = jest.fn();
 const mockRefreshSuggestionsInStoreUnsafe = jest.fn();
 const mockClassifyError = jest.fn();
@@ -17,6 +16,7 @@ const mockActivateKeepAwakeAsync = jest.fn();
 const mockDeactivateKeepAwake = jest.fn();
 const mockCaptureException = jest.fn();
 const mockLogInfo = jest.fn();
+const mockGetPipelineStatus = jest.fn();
 
 // Network store subscription support
 let networkSubscribeFn: ((state: any, prev: any) => void) | null = null;
@@ -62,13 +62,16 @@ jest.mock('@/lib/scheduler/feed-sync/feed-sync-persistence', () => ({
 jest.mock('@/lib/scheduler/feed-sync/feed-sync-steps', () => ({
   stepFetchTopicIds: (...args: any[]) => mockStepFetchTopicIds(...args),
   stepDiff: (...args: any[]) => mockStepDiff(...args),
-  stepHydrate: (...args: any[]) => mockStepHydrate(...args),
-  stepPersist: (...args: any[]) => mockStepPersist(...args),
+  stepHydratePersistEnqueue: (...args: any[]) => mockStepHydratePersistEnqueue(...args),
   stepScore: (...args: any[]) => mockStepScore(...args),
 }));
 
 jest.mock('@/lib/services/SuggestionSyncService', () => ({
   refreshSuggestionsInStoreUnsafe: (...args: any[]) => mockRefreshSuggestionsInStoreUnsafe(...args),
+}));
+
+jest.mock('@/lib/services/scoring-pipeline', () => ({
+  getPipelineStatus: (...args: any[]) => mockGetPipelineStatus(...args),
 }));
 
 jest.mock('@/lib/scheduler/feed-sync/feed-sync-status', () => ({
@@ -127,11 +130,11 @@ beforeEach(() => {
   mockUpdateMachineState.mockResolvedValue(undefined);
   mockStepFetchTopicIds.mockResolvedValue(defaultTopicResult);
   mockStepDiff.mockResolvedValue(defaultDiffResult);
-  mockStepHydrate.mockResolvedValue({
-    fetched: [{ id: 'art-1' }, { id: 'art-2' }],
-    articleToTopicTexts: defaultTopicResult.articleToTopicTexts,
+  mockStepHydratePersistEnqueue.mockResolvedValue({
+    insertedCount: 2,
+    enqueuedCount: 2,
+    dailyLimitReached: false,
   });
-  mockStepPersist.mockResolvedValue({ insertedCount: 2, linkedCount: 2 });
   mockStepScore.mockResolvedValue(2);
   mockRefreshSuggestionsInStoreUnsafe.mockResolvedValue(undefined);
   mockClassifyError.mockReturnValue('unknown');
@@ -143,6 +146,8 @@ beforeEach(() => {
 
   const ArticleService = require('@/lib/article-service').ArticleService;
   ArticleService.getRecentArticleCount.mockResolvedValue(10);
+
+  mockGetPipelineStatus.mockResolvedValue('idle');
 });
 
 afterEach(() => {
@@ -161,6 +166,70 @@ describe('FeedSyncMachine — isRunning', () => {
   });
 });
 
+describe('FeedSyncMachine — scoring-pipeline gate', () => {
+  it('skips the run when the pipeline is running: no fetch call, machine stays idle', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepFetchTopicIds).not.toHaveBeenCalled();
+    expect(mockStepDiff).not.toHaveBeenCalled();
+    expect(mockStepHydratePersistEnqueue).not.toHaveBeenCalled();
+    expect(mockStepScore).not.toHaveBeenCalled();
+    expect(mockPublishSyncStatus).not.toHaveBeenCalledWith('fetching-topic-ids');
+    expect(feedSyncMachine.state).toBe('idle');
+  });
+
+  it('logs the skip reason', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockLogInfo).toHaveBeenCalledWith(
+      expect.stringContaining('skipped — scoring pipeline active'),
+    );
+  });
+
+  it('does not persist machine state or clear/save a snapshot when skipped', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockUpdateMachineState).not.toHaveBeenCalled();
+    expect(mockClearMachineSnapshot).not.toHaveBeenCalled();
+  });
+
+  it('resolves without throwing when skipped (job completes normally)', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+
+    await expect(
+      feedSyncMachine.start('persona-1', makeCtx()),
+    ).resolves.toBeUndefined();
+  });
+
+  it('runs the cycle normally when the pipeline is idle', async () => {
+    mockGetPipelineStatus.mockResolvedValue('idle');
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepFetchTopicIds).toHaveBeenCalled();
+    expect(mockStepScore).toHaveBeenCalled();
+    expect(feedSyncMachine.state).toBe('done');
+  });
+});
+
 describe('FeedSyncMachine — full happy path (with new articles)', () => {
   it('transitions through all states in sequence', async () => {
     const ctx = makeCtx();
@@ -172,7 +241,8 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
     expect(states).toContain('fetching-topic-ids');
     expect(states).toContain('diffing');
     expect(states).toContain('hydrating');
-    expect(states).toContain('persisting');
+    // `persisting` is no longer a runtime state (merged into `hydrating`).
+    expect(states).not.toContain('persisting');
     expect(states).toContain('scoring');
     expect(states).toContain('done');
   });
@@ -185,8 +255,7 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
 
     expect(mockStepFetchTopicIds).toHaveBeenCalledWith('persona-1', ctx);
     expect(mockStepDiff).toHaveBeenCalled();
-    expect(mockStepHydrate).toHaveBeenCalled();
-    expect(mockStepPersist).toHaveBeenCalled();
+    expect(mockStepHydratePersistEnqueue).toHaveBeenCalled();
     expect(mockStepScore).toHaveBeenCalled();
   });
 
@@ -271,11 +340,9 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
   });
 
   it('reports hydration progress via reportProgress callback', async () => {
-    let progressCallback: ((completed: number) => void) | null = null;
-    mockStepHydrate.mockImplementation(async (_diff, _ctx, onProgress) => {
-      progressCallback = onProgress;
-      onProgress(1, 2);
-      return { fetched: [{ id: 'art-1' }], articleToTopicTexts: new Map() };
+    mockStepHydratePersistEnqueue.mockImplementation(async (_diff, _ctx, opts) => {
+      opts.onProgress(1);
+      return { insertedCount: 1, enqueuedCount: 1, dailyLimitReached: false };
     });
 
     const ctx = makeCtx();
@@ -297,14 +364,13 @@ describe('FeedSyncMachine — no new articles path (diffResult.missingIds is emp
     });
   });
 
-  it('skips hydrate and persist steps', async () => {
+  it('skips the hydrate/persist/enqueue step', async () => {
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
 
-    expect(mockStepHydrate).not.toHaveBeenCalled();
-    expect(mockStepPersist).not.toHaveBeenCalled();
+    expect(mockStepHydratePersistEnqueue).not.toHaveBeenCalled();
   });
 
   it('still runs scoring step', async () => {
@@ -425,7 +491,7 @@ describe('FeedSyncMachine — no-topics-configured is a normal terminal outcome'
 describe('FeedSyncMachine — daily-limit is a normal terminal outcome', () => {
   const RESET_AT = 1781827200000;
   beforeEach(() => {
-    mockStepHydrate.mockRejectedValue(
+    mockStepHydratePersistEnqueue.mockRejectedValue(
       Object.assign(new Error('daily-limit'), {
         code: 'daily-limit',
         resetAt: RESET_AT,
@@ -459,7 +525,7 @@ describe('FeedSyncMachine — daily-limit is a normal terminal outcome', () => {
   });
 
   it('falls back to the next UTC midnight when the error omits resetAt', async () => {
-    mockStepHydrate.mockRejectedValue(
+    mockStepHydratePersistEnqueue.mockRejectedValue(
       Object.assign(new Error('daily-limit'), { code: 'daily-limit' }),
     );
 
@@ -486,9 +552,9 @@ describe('FeedSyncMachine — clears the daily-limit banner on successful delive
 
 describe('FeedSyncMachine — partial cap surfaces the banner while still delivering', () => {
   it('sets the reset time (not null) and still persists the granted articles', async () => {
-    mockStepHydrate.mockResolvedValue({
-      fetched: [{ id: 'art-1' }],
-      articleToTopicTexts: defaultTopicResult.articleToTopicTexts,
+    mockStepHydratePersistEnqueue.mockResolvedValue({
+      insertedCount: 1,
+      enqueuedCount: 1,
       dailyLimitReached: true,
       resetAt: '2026-06-26T00:00:00.000Z',
     });
@@ -499,7 +565,7 @@ describe('FeedSyncMachine — partial cap surfaces the banner while still delive
     await startPromise;
 
     // Granted articles are still delivered (no terminal throw on a partial clip).
-    expect(mockStepPersist).toHaveBeenCalled();
+    expect(mockStepHydratePersistEnqueue).toHaveBeenCalled();
     // Banner is surfaced immediately with the server's reset time.
     expect(mockForYouStoreState.setDailyLimitResetAt).toHaveBeenCalledWith(
       Date.parse('2026-06-26T00:00:00.000Z'),
@@ -522,9 +588,9 @@ describe('FeedSyncMachine — abort signal handling', () => {
     };
 
     // Abort before scoring step runs
-    mockStepPersist.mockImplementation(async () => {
+    mockStepHydratePersistEnqueue.mockImplementation(async () => {
       controller.abort();
-      return { insertedCount: 0, linkedCount: 0 };
+      return { insertedCount: 0, enqueuedCount: 0, dailyLimitReached: false };
     });
 
     const startPromise = feedSyncMachine.start('persona-1', ctx);

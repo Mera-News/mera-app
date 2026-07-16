@@ -16,10 +16,14 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
     pruneOrphanedSuggestions: () => mockPruneOrphanedSuggestions(),
 }));
 
-// Dynamic import of async-job-service — mock so require() resolves the mock
-const mockGetPendingAsyncJob = jest.fn(() => Promise.resolve(null));
-jest.mock('@/lib/database/services/async-job-service', () => ({
-    getPendingAsyncJob: () => mockGetPendingAsyncJob(),
+// Dynamic import of scoring-pipeline — mock so require() resolves the mock.
+// (hydrateMetadataFromDb reads the header phase/progress from the multi-batch
+// pipeline via getPipelineUiState.)
+const mockGetPipelineUiState = jest.fn(() =>
+    Promise.resolve({ phase: 'idle' as const, processedCount: 0, totalCount: 0 }),
+);
+jest.mock('@/lib/services/scoring-pipeline', () => ({
+    getPipelineUiState: () => mockGetPipelineUiState(),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -647,14 +651,15 @@ describe('useForYouStore', () => {
 
     // ── hydrateMetadataFromDb ────────────────────────────────────────────────
     //
-    // NOTE: `hydrateMetadataFromDb` uses `await import('@/lib/database/services/async-job-service')`
+    // NOTE: `hydrateMetadataFromDb` uses `await import('@/lib/services/scoring-pipeline')`
     // which is a dynamic ES import(). Jest's Babel transform (without --experimental-vm-modules)
     // cannot intercept dynamic import() calls, so calling this method always throws
     // "A dynamic import callback was invoked without --experimental-vm-modules" at runtime,
     // which lands in the catch block. The tests below assert the *catch-path* behavior:
     // state is left at defaults and logger.captureException is called.
-    // The happy-path logic (setting metadata from DB + asyncJobPhase from pending job) is
-    // untestable in this environment because the dynamic import always fails.
+    // The happy-path logic (setting metadata from DB + asyncJobPhase from the pipeline run)
+    // is untestable in this environment because the dynamic import always fails. It is
+    // covered instead by scoring-pipeline.test.ts (derivePipelineUiState / getPipelineUiState).
 
     it('hydrateMetadataFromDb catches the dynamic-import error and calls captureException', async () => {
         // State before call

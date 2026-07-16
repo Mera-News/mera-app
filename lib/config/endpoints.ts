@@ -68,9 +68,9 @@ export const GRAPHQL_SERVER_ENDPOINT = requireEnv(
 // Metro-injected boolean literal that is `false` in any release/production
 // build, so the whole right-hand side dead-code-eliminates to `false` in a
 // release bundle regardless of what EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING was
-// set to at bundle time. This makes the plaintext prompt/result dump branches
-// (submitInferenceJob.ts, async-job-reconciler.ts) statically unreachable in
-// release — it can never ship enabled, only run in a dev bundle.
+// set to at bundle time. This makes the plaintext prompt dump branch
+// (submitInferenceJob.ts) statically unreachable in release — it can never
+// ship enabled, only run in a dev bundle.
 export const DUMP_QUERIES_ENABLED =
   __DEV__ && process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING === 'true';
 

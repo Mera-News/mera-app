@@ -3,6 +3,11 @@ export type FeedSyncState =
   | 'fetching-topic-ids'
   | 'diffing'
   | 'hydrating'
+  // `persisting` is no longer part of the machine's runtime flow — hydrate,
+  // persist, and enqueue are merged into the single `hydrating` state (see
+  // stepHydratePersistEnqueue). The literal is retained ONLY so existing UI
+  // status/progress components (banners, progress bars) that still branch on it
+  // keep type-checking; the machine never transitions into it.
   | 'persisting'
   | 'scoring'
   | 'done'

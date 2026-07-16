@@ -13,6 +13,12 @@ import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
 import type { TaskContext } from '../scheduler-types';
 
+/** Number of missing ids hydrated + persisted + enqueued per iteration. Kept at
+ *  25 so each `getArticlesForTopicsByIds` call is a single server query (its
+ *  internal chunk size is 50) and each enqueued batch is exactly one scoring
+ *  batch (`BATCH_SIZE = 25` in scoring-pipeline). */
+export const HYDRATE_CHUNK_SIZE = 25;
+
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
   serverArticleIds: string[];
@@ -24,23 +30,30 @@ export interface DiffResult {
   missingIds: string[];
 }
 
-export interface HydrateResult {
-  fetched: Awaited<
-    ReturnType<typeof ArticleService.getArticlesForTopicsByIds>
-  >['articles'];
-  articleToTopicTexts: Map<string, string[]>;
-  /** True when the daily delivery cap clipped this hydrate (partial or full).
-   *  On a partial clip we still deliver `fetched`; the machine surfaces the
-   *  limit banner immediately rather than waiting for the next fully-blocked
-   *  cycle. A full clip (nothing delivered) throws `daily-limit` instead. */
+/** Result of the merged hydrate + persist + enqueue step. */
+export interface HydratePersistEnqueueResult {
+  /** Total suggestion rows inserted across all chunks. */
+  insertedCount: number;
+  /** Total eligible ids handed to the scoring pipeline across all chunks. */
+  enqueuedCount: number;
+  /** True when the daily delivery cap clipped this run (partial or full). On a
+   *  partial clip we still deliver what landed; the machine surfaces the limit
+   *  banner immediately. A full clip with NOTHING delivered throws `daily-limit`
+   *  instead. */
   dailyLimitReached: boolean;
   /** ISO reset timestamp, set only when `dailyLimitReached`. */
   resetAt?: string;
 }
 
-export interface PersistResult {
-  insertedCount: number;
-  linkedCount: number;
+export interface HydratePersistEnqueueOptions {
+  /** Reports cumulative completed-ids progress over the whole missingIds set. */
+  onProgress: (completed: number) => void;
+  /** Blocks between chunks while the machine is paused offline (hydrating is a
+   *  NETWORK_DEPENDENT_STATE). Resolves immediately when not paused. */
+  awaitResumeIfPaused: () => Promise<void>;
+  /** Refreshes the For You store so freshly-persisted (still-unscored) articles
+   *  render progressively, one chunk at a time. */
+  refreshStore: () => Promise<void>;
 }
 
 export async function stepFetchTopicIds(
@@ -95,63 +108,139 @@ export async function stepDiff(
   return { serverArticleIds, articleToTopicTexts, missingIds };
 }
 
-export async function stepHydrate(
+/**
+ * Merged hydrate + persist + enqueue step (runs under the `hydrating` state).
+ *
+ * Loops over `missingIds` in `HYDRATE_CHUNK_SIZE` chunks sequentially. For each
+ * chunk it: downloads the full records (one server query), persists + links
+ * them, marks ineligible rows scored, hands the eligible ids to the scoring
+ * pipeline (which starts scoring that chunk while the next one downloads),
+ * refreshes the store for progressive rendering, and reports progress. Between
+ * chunks it honors pause (offline) and abort.
+ *
+ * Daily-limit semantics: the server charges the delivery cap here and clips the
+ * response. If the cap leaves NOTHING to deliver on the whole run, throw a
+ * terminal `daily-limit` error. If it hits after some chunks already landed,
+ * stop the loop and keep what landed (the machine surfaces the banner).
+ */
+export async function stepHydratePersistEnqueue(
   diffResult: DiffResult,
   ctx: TaskContext,
-  onProgress: (completed: number, total: number) => void,
-): Promise<HydrateResult> {
+  opts: HydratePersistEnqueueOptions,
+): Promise<HydratePersistEnqueueResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
 
   const { missingIds, articleToTopicTexts } = diffResult;
-  const response = missingIds.length
-    ? await withRetry(
-        () => ArticleService.getArticlesForTopicsByIds(missingIds, onProgress),
-        ctx.signal,
-      )
-    : { articles: [], dailyLimitReached: false as boolean, resetAt: undefined };
-  const fetched = response.articles;
+  const chunks = chunkArray(missingIds, HYDRATE_CHUNK_SIZE);
 
-  // Daily delivery cap: the server charges the cap here (the delivery point)
-  // and clips the response to what's left of the user's quota. If the cap left
-  // nothing to deliver, surface a terminal "daily limit reached" notice
-  // (resumes at the server's resetAt). A partial clip (some articles still
-  // delivered) proceeds normally — those were counted server-side, so we must
-  // persist them; the notice surfaces on the next sync once the cap is dry.
-  if (response.dailyLimitReached && fetched.length === 0) {
-    logger.info('[feed-sync-steps] daily article-delivery limit reached');
-    throw Object.assign(new Error('daily-limit'), {
-      code: 'daily-limit',
-      resetAt: response.resetAt ? Date.parse(response.resetAt) : undefined,
-    });
+  let completedSoFar = 0;
+  let insertedCount = 0;
+  let deliveredAny = false;
+  let dailyLimitReached = false;
+  let resetAt: string | undefined;
+  // Accumulated across all chunks — handed to the scoring pipeline in ONE
+  // batch-set after the loop finishes, instead of a per-chunk enqueue that
+  // keeps appending to (and never finishing) an active run while backend
+  // ingestion is continuous.
+  const allEligibleIds: string[] = [];
+
+  // Lazy require (not a static import) breaks the module-load cycle
+  // feed-sync-steps → scoring-pipeline → SuggestionSyncService → run-inference-
+  // handler → feed-sync-steps. Same pattern as lib/database/hydrate-stores.ts.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const scoringPipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
+  const { enqueueCandidates } = scoringPipeline;
+
+  for (let i = 0; i < chunks.length; i++) {
+    // Between-chunk cooperative points: pause while offline, bail on abort. A
+    // mid-run abort stops the loop gracefully and returns what already landed;
+    // the machine's post-step abort check returns before scoring.
+    await opts.awaitResumeIfPaused();
+    if (ctx.signal.aborted) break;
+
+    const chunk = chunks[i];
+    const response = await withRetry(
+      () =>
+        ArticleService.getArticlesForTopicsByIds(chunk, (chunkCompleted) => {
+          opts.onProgress(completedSoFar + chunkCompleted);
+        }),
+      ctx.signal,
+    );
+    const chunkArticles = response.articles;
+    if (response.dailyLimitReached) {
+      dailyLimitReached = true;
+      resetAt = resetAt ?? response.resetAt;
+    }
+
+    if (chunkArticles.length > 0) {
+      deliveredAny = true;
+      const { insertedCount: chunkInserted } = await persistAndLinkV2Suggestions(
+        chunkArticles,
+        articleToTopicTexts,
+      );
+      insertedCount += chunkInserted;
+
+      const chunkIds = new Set(chunkArticles.map((a) => a._id));
+      const { ineligibleCount, eligibleIds } =
+        await markIneligibleAndCollectEligible(chunkIds);
+      if (ineligibleCount > 0) {
+        ctx.log(`pre-scored ${ineligibleCount} ineligible articles`);
+      }
+
+      if (eligibleIds.length > 0) {
+        allEligibleIds.push(...eligibleIds);
+      }
+
+      // Progressive rendering: newly-persisted (unscored) articles appear now.
+      await opts.refreshStore();
+    }
+
+    completedSoFar += chunk.length;
+    opts.onProgress(completedSoFar);
+    ctx.log(
+      `chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
+    );
+    logger.info(
+      `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
+    );
+
+    // Daily cap ran dry for this chunk (nothing delivered).
+    if (dailyLimitReached && chunkArticles.length === 0) {
+      if (!deliveredAny) {
+        // Nothing delivered the entire run — terminal "daily limit reached".
+        logger.info('[feed-sync-steps] daily article-delivery limit reached');
+        throw Object.assign(new Error('daily-limit'), {
+          code: 'daily-limit',
+          resetAt: resetAt ? Date.parse(resetAt) : undefined,
+        });
+      }
+      // Some chunks already landed — stop, keep what we have, banner surfaces.
+      logger.info(
+        '[feed-sync-steps] daily limit hit mid-run — stopping loop, keeping delivered chunks',
+      );
+      break;
+    }
   }
 
-  ctx.log(`received ${fetched.length} full records`);
+  // Enqueue once, after the full hydration pass (including a partial-delivery
+  // early exit above) — one clean batch-set so the pipeline starts a single
+  // run with a stable total, instead of a per-chunk enqueue that keeps
+  // appending to (and never finishing) an active run.
+  if (allEligibleIds.length > 0) {
+    await enqueueCandidates(allEligibleIds);
+    ctx.log(`enqueued ${allEligibleIds.length} eligible ids (single batch-set)`);
+    logger.info(
+      `[feed-sync-steps] enqueued ${allEligibleIds.length} eligible ids (single batch-set)`,
+    );
+  }
+
+  ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${allEligibleIds.length}`);
   return {
-    fetched,
-    articleToTopicTexts,
-    dailyLimitReached: response.dailyLimitReached,
-    resetAt: response.resetAt,
+    insertedCount,
+    enqueuedCount: allEligibleIds.length,
+    dailyLimitReached,
+    resetAt,
   };
-}
-
-export async function stepPersist(
-  hydrateResult: HydrateResult,
-  ctx: TaskContext,
-): Promise<PersistResult> {
-  if (ctx.signal.aborted) throw new Error('aborted');
-
-  const { fetched, articleToTopicTexts } = hydrateResult;
-  const { insertedCount, linkedCount } = await persistAndLinkV2Suggestions(
-    fetched,
-    articleToTopicTexts,
-  );
-
-  const ineligibleCount = await markIneligibleArticlesAsScored();
-  if (ineligibleCount > 0) {
-    ctx.log(`pre-scored ${ineligibleCount} ineligible articles`);
-  }
-
-  return { insertedCount, linkedCount };
 }
 
 export async function stepScore(ctx: TaskContext): Promise<number> {
@@ -161,6 +250,12 @@ export async function stepScore(ctx: TaskContext): Promise<number> {
 }
 
 // --- Internal helpers ---
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
 
 async function getLocalTopicTextsForPersona(): Promise<string[]> {
   const facts = await getFacts();
@@ -174,13 +269,26 @@ async function getLocalTopicTextsForPersona(): Promise<string[]> {
   return Array.from(texts);
 }
 
-async function markIneligibleArticlesAsScored(): Promise<number> {
+/**
+ * Partition the currently-unscored suggestions: mark the ineligible ones
+ * (missing English title/description or with no linked facts) as scored so they
+ * never enter scoring, and return the eligible ids that belong to THIS chunk so
+ * they can be enqueued. Global scan (like the pre-merge `markIneligible…`), but
+ * the returned eligible set is scoped to the chunk just persisted.
+ */
+async function markIneligibleAndCollectEligible(
+  chunkIds: Set<string>,
+): Promise<{ ineligibleCount: number; eligibleIds: string[] }> {
   const candidates = await getUnscoredSuggestionsWithFacts();
   const ineligible = candidates.filter(
     (c) => !c.titleEn || !c.descriptionEn || c.relatedFacts.length === 0,
   );
-  if (ineligible.length === 0) return 0;
-  await batchMarkAsScoredByIds(ineligible.map((c) => c.id));
-  return ineligible.length;
+  if (ineligible.length > 0) {
+    await batchMarkAsScoredByIds(ineligible.map((c) => c.id));
+  }
+  const eligibleIds = candidates
+    .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
+    .filter((c) => chunkIds.has(c.id))
+    .map((c) => c.id);
+  return { ineligibleCount: ineligible.length, eligibleIds };
 }
-

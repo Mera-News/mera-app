@@ -218,6 +218,53 @@ export async function prepareE2EEContext(model: string): Promise<E2EEContext> {
   };
 }
 
+/**
+ * Rebuild an E2EEContext from a previously-minted private key so that multiple
+ * gateway submits across a long-lived run can share ONE keypair (the scoring
+ * pipeline mints a keypair at run creation and replays it on every batch
+ * submit). Unlike `prepareE2EEContext` — which generates a fresh keypair each
+ * call — this derives the client public half from the stored secret so the
+ * server encrypts responses toward the same key the run can later decrypt with.
+ *
+ * The model public key is re-fetched from the (cached) attestation; the stored
+ * `algo` governs the client-key curve. If the freshly-attested algo diverges
+ * from the stored one (NEAR fleet load-balances curves) we keep the stored algo
+ * — the keypair is bound to it — and log; a genuine divergence would fail the
+ * run's decrypt and the rows simply re-enter the next run.
+ */
+export async function rebuildE2EEContext(
+  model: string,
+  privKeyHex: string,
+  algo: SigningAlgo,
+): Promise<E2EEContext> {
+  const attestation = await fetchModelPublicKey(model);
+  if (attestation.algo !== algo) {
+    logger.warn(
+      `${TAG} rebuildE2EEContext: attested algo ${attestation.algo} != stored ${algo}; keeping stored`,
+    );
+  }
+  const privateKey = hexToBytes(privKeyHex);
+  const clientPubKeyHex =
+    algo === 'ecdsa'
+      ? bytesToHex(secp256k1.getPublicKey(privateKey, false))
+      : bytesToHex(ed25519.getPublicKey(privateKey));
+
+  const headers: E2EEHeaders = {
+    'X-Signing-Algo': algo,
+    'X-Client-Pub-Key': clientPubKeyHex,
+    'X-Model-Pub-Key': attestation.publicKey,
+    ...(algo === 'ecdsa' ? {} : { 'X-Encryption-Version': ENCRYPTION_VERSION }),
+  };
+
+  return {
+    modelPubKeyHex: attestation.publicKey,
+    privateKey,
+    clientPubKeyHex,
+    algo,
+    headers,
+  };
+}
+
 /** Encrypt every non-empty string `content` in-place and return the context. */
 export async function encryptMessages(
   messages: { role: string; content: string;[k: string]: unknown }[],

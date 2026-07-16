@@ -1,187 +1,46 @@
-// submitInferenceJob — phase-1 entry point for the two-phase async inference
-// flow. Sends score-only calls; the phase-1 reconciler decides which
-// candidates qualify for reason-generation and fires the phase-2 submit via
-// the exported `sendInferenceRequest` helper.
+// submitInferenceJob — the shared submit primitive for the cloud inference
+// flow. `sendInferenceRequest` encrypts a bundle's calls end-to-end, gzips the
+// body, POSTs it to /v1/inference/jobs, and returns the server-issued
+// requestId + capability token. The multi-batch scoring pipeline
+// (lib/services/scoring-pipeline.ts) owns all job state; this module is
+// stateless and just performs one authenticated submit.
 
 import { fetch as expoFetch } from 'expo/fetch';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
-import {
-  setCapabilityToken,
-  getCapabilityToken,
-} from './capability-token';
+import * as gatewayRateLimiter from './gateway-rate-limiter';
 import type { ExecutionContext } from './execution-context';
 import {
-  getPendingAsyncJob,
-  PendingJobStaleError,
-  setCycleState,
-  setPendingAsyncJob,
-  clearPendingAsyncJob,
-  type PendingAsyncJob,
-} from '@/lib/database/services/async-job-service';
-import {
-  getUnscoredSuggestionsWithFacts,
-} from '@/lib/database/services/article-suggestion-service';
-import {
-  buildRelevanceCalls,
   type CloudCallBundle,
 } from '@/lib/mera-protocol/scoring-service';
 import type { BatchCall } from '@/lib/llm/types';
 import {
   encryptContent,
-  prepareE2EEContext,
   type E2EEContext,
 } from '@/lib/e2ee/e2ee-service';
-import { SMALL_MODEL } from './constants';
 import { getJwtToken } from '@/lib/auth-client';
 import pako from 'pako';
 import { Directory, File, Paths } from 'expo-file-system';
-import { useUserStore } from '@/lib/stores/user-store';
-import { useForYouStore } from '@/lib/stores/for-you-store';
 import { INFERENCE_ENDPOINT, DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
 
 const TAG = '[submitInferenceJob]';
 
 const JOBS_API = `${INFERENCE_ENDPOINT}/v1/inference/jobs`;
 
-export type SubmitStatus =
-  | 'submitted'
-  | 'skipped-pending'
-  | 'skipped-empty'
-  | 'skipped-no-token'
-  | 'skipped-stale-pending';
-
-/** Phase-1 public entry — score-only submit. Called by every trigger that
- *  wants to kick off a fresh scoring pass. */
-export async function submitInferenceJob(): Promise<SubmitStatus> {
-  const pending = await getPendingAsyncJob();
-  if (pending) {
-    logger.info(`${TAG} pending job ${pending.requestId} active — skipping`);
-    return 'skipped-pending';
-  }
-
-  const candidates = await getUnscoredSuggestionsWithFacts();
-  logger.info(`${TAG} unscored candidates loaded=${candidates.length}`);
-  if (candidates.length === 0) return 'skipped-empty';
-
-  // The push token is no longer a hard gate. When present, the gateway uses it
-  // to wake the app with a silent push on completion; when absent (common on
-  // Android where FCM registration fails), the job still submits and results
-  // are retrieved by the foreground polling path (inference-recover / scoring
-  // pass reconcile). See sendInferenceRequest — the token is omitted from the
-  // body when null.
-  const token = getCachedExpoPushToken();
-  if (!token) {
-    logger.info(`${TAG} no Expo push token — submitting tokenless, will poll for results`);
-  }
-
-  const bundle = await buildRelevanceCalls(candidates);
-  if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {
-    logger.info(
-      `${TAG} buildRelevanceCalls produced 0 eligible — candidates=${candidates.length} but all filtered (missing title/desc/facts?)`,
-    );
-    return 'skipped-empty';
-  }
-  const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
-  logger.info(
-    `${TAG} relevance gen: ${eligibleIds.length} ids in ${bundle.calls.length} calls`,
-  );
-
-  const model = SMALL_MODEL;
-  const ctx = await prepareE2EEContext(model);
-
-  // Placeholder-first CAS: reserve the empty pending slot BEFORE submitting.
-  // If another trigger already inserted a pending row (cross-JS-context race
-  // between silent-push task and foreground), the CAS fails and we back off
-  // without submitting a duplicate.
-  const placeholderRequestId = `placeholder-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  // Cycle-scoped idempotency key for the eventual "X impactful articles"
-  // dispatch in phase-2. Survives the phase-1 → phase-2 swap, so a recovery
-  // re-run of `unpacking-reason` doesn't double-notify.
-  const idempotencyKey = `cycle-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-  const placeholder: PendingAsyncJob = {
-    requestId: placeholderRequestId,
-    phase: 'relevance',
-    candidateIds: bundle.eligibleCandidates.map((c) => c.id),
-    callIds: bundle.calls.map((c) => c.id),
-    submittedAt: Date.now(),
-    expoPushToken: token,
-    modelCalls: bundle.calls.length,
-    clientPrivKeyHex: bytesToHex(ctx.privateKey),
-    algo: ctx.algo,
-    idempotencyKey,
-  };
-
-  try {
-    await setPendingAsyncJob(placeholder, { expectedRequestId: null });
-  } catch (err) {
-    if (err instanceof PendingJobStaleError) {
-      logger.info(`${TAG} CAS lost — another submitter claimed the slot`);
-      return 'skipped-pending';
-    }
-    throw err;
-  }
-  await setCycleState('submitting-relevance');
-
-  try {
-    const requestId = await sendInferenceRequest({
-      bundle,
-      ctx,
-      token,
-      model,
-      // Phase-1 submit always runs in the foreground (called from syncFeed
-      // / runScoringPass on app-resume). JWT is the right credential here.
-      context: 'foreground',
-    });
-    if (!requestId) {
-      await clearPendingAsyncJob({ expectedRequestId: placeholderRequestId }).catch(
-        (err: unknown) => {
-          if (!(err instanceof PendingJobStaleError)) throw err;
-        },
-      );
-      await setCycleState('idle');
-      return 'skipped-stale-pending';
-    }
-
-    const job: PendingAsyncJob = { ...placeholder, requestId };
-    await setPendingAsyncJob(job, { expectedRequestId: placeholderRequestId });
-    await setCycleState('waiting-for-relevance');
-    useForYouStore.getState().setAsyncJobPhase('relevance');
-    logger.info(
-      `${TAG} phase=relevance submitted requestId=${requestId} calls=${bundle.calls.length}`,
-    );
-    return 'submitted';
-  } catch (err) {
-    if (err instanceof PendingJobStaleError) {
-      // The reconciler (or another submitter) advanced the pending row
-      // out from under us — typically by resubmitting our placeholder
-      // after deciding it was stuck. The job that took our slot is
-      // already in flight on the backend; clobbering it here would
-      // orphan it. Leave the DB row alone and let the normal poll
-      // cycle drive it to completion.
-      logger.warn(
-        `${TAG} CAS lost on write-back — another path advanced the job; leaving DB row intact`,
-      );
-      return 'skipped-stale-pending';
-    }
-    logger.captureException(err, { tags: { service: 'submitInferenceJob' } });
-    await clearPendingAsyncJob({ expectedRequestId: placeholderRequestId }).catch(
-      (cerr: unknown) => {
-        if (!(cerr instanceof PendingJobStaleError)) throw cerr;
-      },
-    );
-    await setCycleState('idle');
-    useForYouStore.getState().setAsyncJobPhase('idle');
-    return 'skipped-stale-pending';
-  }
-}
+/** Outcome of a single `sendInferenceRequest` call. `throttled` means the
+ *  gateway returned 429 — the caller should treat this as a transient,
+ *  non-terminal condition (the gateway-rate-limiter has already been told to
+ *  back off via `pauseFor`); it is not a permanent failure. */
+export type SendInferenceOutcome =
+  | { status: 'ok'; requestId: string; capabilityToken: string }
+  | { status: 'throttled' }
+  | { status: 'failed' };
 
 /**
  * Shared submit primitive: encrypt the bundle's calls end-to-end, gzip the
- * body, POST to /v1/inference/jobs, return the server-issued requestId.
- * Reused by phase-1 above and by the phase-2 reason submit inside the
- * reconciler. Caller is responsible for persisting the PendingAsyncJob row
- * after getting the requestId.
+ * body, POST to /v1/inference/jobs, return the server-issued requestId +
+ * capability token. Caller is responsible for persisting whatever job state it
+ * needs from the outcome.
  */
 export async function sendInferenceRequest(args: {
   bundle: CloudCallBundle;
@@ -191,13 +50,20 @@ export async function sendInferenceRequest(args: {
   token: string | null;
   model: string;
   /** Required. Foreground submits use the keychain JWT (only the user's
-   *  active device can mint one). Background submits — phase-2 chain from
-   *  a silent-push wake — use the cycle's capability token from
-   *  AsyncStorage so the keychain is never read while the device may be
-   *  locked. No silent fallback either direction. */
+   *  active device can mint one), falling back to `capabilityToken` if the
+   *  keychain is transiently unavailable. Background submits — e.g. a reasons
+   *  submit driven from a silent-push wake — use `capabilityToken` ONLY, so
+   *  the keychain is never read while the device may be locked. */
   context: ExecutionContext;
-}): Promise<string | null> {
-  const { bundle, ctx, token, model, context } = args;
+  /** Gateway capability token from a previously-completed job (scope
+   *  `jobs:submit-followup` covers submitting a NEW job — this is how a
+   *  background reasons submit chains off its finished relevance job). The
+   *  scoring pipeline persists one per batch and passes the batch's own token
+   *  here. Required for background submits; optional JWT fallback in
+   *  foreground. */
+  capabilityToken?: string | null;
+}): Promise<SendInferenceOutcome> {
+  const { bundle, ctx, token, model, context, capabilityToken } = args;
 
   if (DUMP_QUERIES_ENABLED) {
     dumpPromptsForDev(bundle.calls).catch((err: unknown) => {
@@ -270,11 +136,12 @@ export async function sendInferenceRequest(args: {
   // Per-context auth.
   //   Foreground: prefer the keychain JWT. If `getJwtToken` throws or
   //     returns null (keychain transiently unavailable, session expired,
-  //     etc.) AND a capability token from a previous cycle is present in
-  //     AsyncStorage, fall back to that — beats failing the whole call.
-  //   Background: capability token only. Never read the keychain from a
-  //     silent-push wake; the device may be locked and SecureStore items
-  //     pinned to AfterFirstUnlock would throw `keychain-unavailable`.
+  //     etc.) AND the caller passed a capability token, fall back to that —
+  //     beats failing the whole call.
+  //   Background: caller-supplied capability token only. Never read the
+  //     keychain from a silent-push wake; the device may be locked and
+  //     SecureStore items pinned to AfterFirstUnlock would throw
+  //     `keychain-unavailable`.
   let authHeader: string;
   if (context === 'foreground') {
     let jwt: string | null = null;
@@ -288,8 +155,7 @@ export async function sendInferenceRequest(args: {
     if (jwt) {
       authHeader = `Bearer ${jwt}`;
     } else {
-      const cap = await getCapabilityToken();
-      if (!cap) {
+      if (!capabilityToken) {
         throw new Error(
           'sendInferenceRequest: foreground has no JWT and no capability token',
         );
@@ -297,15 +163,19 @@ export async function sendInferenceRequest(args: {
       logger.warn(
         `${TAG} foreground using capability-token fallback (JWT unavailable)`,
       );
-      authHeader = `Bearer ${cap}`;
+      authHeader = `Bearer ${capabilityToken}`;
     }
   } else {
-    const cap = await getCapabilityToken();
-    if (!cap) {
+    if (!capabilityToken) {
       throw new Error('sendInferenceRequest: no capability token (background)');
     }
-    authHeader = `Bearer ${cap}`;
+    authHeader = `Bearer ${capabilityToken}`;
   }
+
+  // Serial FIFO gate shared by every inference-gateway HTTP call (submits and
+  // polls) — enforces the gateway's per-IP throttle (30 req/60s counting
+  // both) well under the limit before we even attempt the POST.
+  await gatewayRateLimiter.acquire();
 
   let res: Response;
   try {
@@ -338,7 +208,26 @@ export async function sendInferenceRequest(args: {
       tags: { service: 'submitInferenceJob', status: 'retry-exhausted' },
       extra: { url: JOBS_API },
     });
-    return null;
+    return { status: 'failed' };
+  }
+
+  if (res.status === 429) {
+    // Transient, non-terminal — the gateway is asking us to back off, not
+    // reporting a permanent failure. Don't let withRetry burn attempts on
+    // it (it already didn't — only >=500 throws inside the retry closure);
+    // instead push the shared rate limiter's next grant out and let the
+    // caller decide whether/when to resubmit.
+    const retryAfterHeader = res.headers.get('Retry-After');
+    const retryAfterSec = retryAfterHeader ? Number(retryAfterHeader) : NaN;
+    const retryAfterMs =
+      Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? retryAfterSec * 1000
+        : 30_000;
+    gatewayRateLimiter.pauseFor(retryAfterMs);
+    logger.warn(
+      `${TAG} throttled (429) — pausing gateway calls for ${retryAfterMs}ms`,
+    );
+    return { status: 'throttled' };
   }
 
   if (res.status !== 202) {
@@ -353,13 +242,14 @@ export async function sendInferenceRequest(args: {
         extra: { url: JOBS_API, status: res.status, body: text.slice(0, 500) },
       },
     );
-    return null;
+    return { status: 'failed' };
   }
 
-  const { requestId, capabilityToken } = (await res.json()) as {
-    requestId: string;
-    capabilityToken?: string;
-  };
+  const { requestId, capabilityToken: issuedCapabilityToken } =
+    (await res.json()) as {
+      requestId: string;
+      capabilityToken?: string;
+    };
   if (!requestId) {
     logger.captureException(
       new Error(`${TAG} submit succeeded but no requestId`),
@@ -368,33 +258,24 @@ export async function sendInferenceRequest(args: {
         extra: { url: JOBS_API, status: res.status },
       },
     );
-    return null;
+    return { status: 'failed' };
   }
 
-  // Stash the gateway-issued capability token. Bound to (userId, requestId,
-  // exp=24h, scopes={results:read, jobs:submit-followup}); covers both the
-  // /results GET and the phase-2 follow-up POST so neither ever needs the
-  // keychain JWT. Cleared by the state machine when the cycle returns to
-  // `idle`.
-  if (capabilityToken) {
-    await setCapabilityToken(capabilityToken);
-  } else {
+  // The gateway-issued capability token is bound to (userId, requestId,
+  // exp=24h, scopes={results:read, jobs:submit-followup}); it covers both
+  // the /results GET and the phase-2 follow-up POST so neither ever needs
+  // the keychain JWT. Storing it is the caller's responsibility.
+  if (!issuedCapabilityToken) {
     logger.warn(
       `${TAG} gateway returned no capabilityToken — falling back to JWT auth on subsequent calls`,
     );
   }
 
-  return requestId;
-}
-
-/**
- * Read the Expo push token from the hydrated persona. The boot-time
- * `ensurePushTokenRegistered` in _layout.tsx is responsible for populating
- * this. If missing (cold-start race before that runs), the caller returns
- * 'skipped-no-token' and the next trigger picks it up.
- */
-function getCachedExpoPushToken(): string | null {
-  return useUserStore.getState().userPersona?.expoPushToken ?? null;
+  return {
+    status: 'ok',
+    requestId,
+    capabilityToken: issuedCapabilityToken ?? '',
+  };
 }
 
 /**

@@ -102,6 +102,22 @@ export async function countUnscoredSuggestions(): Promise<number> {
     .fetchCount();
 }
 
+/**
+ * Returns the created-at timestamp (ms) of the oldest still-unscored row, or
+ * null when no unscored rows exist. Backs the scoring-pipeline min-run-size
+ * gate's 30-minute escape (a slow trickle shouldn't hide news indefinitely).
+ */
+export async function getOldestUnscoredCreatedAt(): Promise<number | null> {
+  const rows = await articleSuggestionsCol
+    .query(
+      Q.where('status', ArticleSuggestionStatus.Unscored),
+      Q.sortBy('created_at', Q.asc),
+      Q.take(1),
+    )
+    .fetch();
+  return rows[0]?.createdAt.getTime() ?? null;
+}
+
 // --- Read: scored rows with empty reason (reason-retry input) ---
 
 export async function getScoredSuggestionsWithoutReasons(

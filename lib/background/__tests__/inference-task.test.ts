@@ -151,68 +151,91 @@ describe('task callback — extractPushData + reasonForPushType routing', () => 
     if (!capturedTaskCallback) return;
     const body = { data: { notification: { request: { content: { data: { type: 'phase1-done' } } } } } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase1-done');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase1-done', undefined);
   });
 
   it('passes phase2-done reason when data.type = phase2-done', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { notification: { request: { content: { data: { type: 'phase2-done' } } } } } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase2-done');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase2-done', undefined);
   });
 
   it('falls back to silent-push for inference-done type', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { notification: { request: { content: { data: { type: 'inference-done' } } } } } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', undefined);
+  });
+
+  it('forwards the gateway requestId alongside the inference-done reason', async () => {
+    if (!capturedTaskCallback) return;
+    const body = {
+      data: { notification: { request: { content: { data: { type: 'inference-done', requestId: 'req-42' } } } } },
+    };
+    await capturedTaskCallback(body);
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', 'req-42');
+  });
+
+  it('extracts requestId from the top-level body.data.requestId field', async () => {
+    if (!capturedTaskCallback) return;
+    const body = { data: { type: 'inference-done', requestId: 'req-99' } };
+    await capturedTaskCallback(body);
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', 'req-99');
+  });
+
+  it('extracts requestId from body.data.dataString JSON', async () => {
+    if (!capturedTaskCallback) return;
+    const body = { data: { dataString: JSON.stringify({ type: 'inference-done', requestId: 'req-77' }) } };
+    await capturedTaskCallback(body);
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', 'req-77');
   });
 
   it('falls back to silent-push for process-clusters type', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { notification: { request: { content: { data: { type: 'process-clusters' } } } } } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', undefined);
   });
 
   it('falls back to silent-push for unknown push type', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { notification: { request: { content: { data: { type: 'unknown-type' } } } } } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', undefined);
   });
 
   it('falls back to silent-push when body.data is missing', async () => {
     if (!capturedTaskCallback) return;
     await capturedTaskCallback({});
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', undefined);
   });
 
   it('falls back to silent-push when notification structure is absent', async () => {
     if (!capturedTaskCallback) return;
     await capturedTaskCallback({ data: {} });
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', undefined);
   });
 
   it('extracts type from body.data.data when notification path absent', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { data: { type: 'phase1-done' } } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase1-done');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase1-done', undefined);
   });
 
   it('extracts type from body.data.dataString (JSON) when other paths absent', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { dataString: JSON.stringify({ type: 'phase2-done' }) } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase2-done');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase2-done', undefined);
   });
 
   it('extracts type directly from body.data.type field', async () => {
     if (!capturedTaskCallback) return;
     const body = { data: { type: 'phase1-done' } };
     await capturedTaskCallback(body);
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase1-done');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('phase1-done', undefined);
   });
 
   it('catches exceptions from runBackgroundCycle and calls captureException', async () => {
@@ -232,7 +255,7 @@ describe('task callback — extractPushData + reasonForPushType routing', () => 
     const body = { data: { dataString: 'not-valid-json' } };
     await capturedTaskCallback(body);
     // Should not throw; reason is silent-push due to no valid type extraction
-    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push');
+    expect(mockRunBackgroundCycle).toHaveBeenCalledWith('silent-push', undefined);
   });
 });
 
