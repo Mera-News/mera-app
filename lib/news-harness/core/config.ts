@@ -80,7 +80,12 @@ export interface HarnessConfig {
 export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
   articlePipeline: {
     articlesPerScorePrompt: 5,
-    scoreBatchMaxTokens: 80,
+    // 5 articles × {"k":"…","s":0.xx} objects + array overhead. The tiered
+    // relevance output (stake tag + score, decoder-clamped per band) needs
+    // ~4× the budget of the old bare-numbers array; 320 leaves headroom so a
+    // verbose model never truncates mid-array (truncation = whole batch falls
+    // back to fallbackRelevance).
+    scoreBatchMaxTokens: 320,
     scoreTemperature: 0.1,
     reasonTemperature: 0.2,
     reasonMaxTokens: 64,

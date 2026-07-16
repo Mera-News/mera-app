@@ -878,6 +878,59 @@ describe('parseBatchRelevanceResponse (via decodeCloudBatchResults)', () => {
     expect(scoreMap.get('a')).toBe(0.9); // only first value used
   });
 
+  it('parses the tiered {"k","s"} object format', () => {
+    const c1 = makeCandidate('a');
+    const c2 = makeCandidate('b');
+    const c3 = makeCandidate('c');
+    const { scoreMap } = decodeCloudBatchResults({
+      batchResults: [
+        {
+          id: 'score:0',
+          output:
+            '[{"k":"domain","s":0.62},{"k":"none","s":0.12},{"k":"interest","s":0.33}]',
+        },
+      ],
+      promptsById: new Map(),
+      chunkIdToCandidates: new Map([['score:0', [c1, c2, c3]]]),
+    });
+    expect(scoreMap.get('a')).toBe(0.62);
+    expect(scoreMap.get('b')).toBe(0.12);
+    expect(scoreMap.get('c')).toBe(0.33);
+  });
+
+  it('clamps a tiered score into the band its stake tag declares', () => {
+    const c1 = makeCandidate('a');
+    const c2 = makeCandidate('b');
+    const c3 = makeCandidate('c');
+    const { scoreMap } = decodeCloudBatchResults({
+      batchResults: [
+        {
+          id: 'score:0',
+          // scores drifted outside their declared bands
+          output:
+            '[{"k":"none","s":0.60},{"k":"family","s":0.20},{"k":"interest","s":0.50}]',
+        },
+      ],
+      promptsById: new Map(),
+      chunkIdToCandidates: new Map([['score:0', [c1, c2, c3]]]),
+    });
+    expect(scoreMap.get('a')).toBe(0.24); // none capped below TANGENTIAL
+    expect(scoreMap.get('b')).toBe(0.4); // FEED stake floored into FEED band
+    expect(scoreMap.get('c')).toBe(0.39); // interest capped below FEED
+  });
+
+  it('plain-clamps a tiered score with an unknown stake tag', () => {
+    const c1 = makeCandidate('a');
+    const { scoreMap } = decodeCloudBatchResults({
+      batchResults: [
+        { id: 'score:0', output: '[{"k":"whatever","s":1.4}]' },
+      ],
+      promptsById: new Map(),
+      chunkIdToCandidates: new Map([['score:0', [c1]]]),
+    });
+    expect(scoreMap.get('a')).toBe(1.1); // 0–1.1 clamp only
+  });
+
   it('clamps negative values to 0', () => {
     const { scoreMap } = decodeCloudBatchResults({
       batchResults: [{ id: 'score:0', output: '[-0.5]' }],

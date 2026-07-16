@@ -18,7 +18,9 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
 
   it('pins the scoring literals', () => {
     expect(a.articlesPerScorePrompt).toBe(5);
-    expect(a.scoreBatchMaxTokens).toBe(80);
+    // 80 → 320 with the tiered {"k","s"} relevance output (2026-07-16 prompt
+    // rework, validated against the golden-labeled 1000-article prod run).
+    expect(a.scoreBatchMaxTokens).toBe(320);
     expect(a.scoreTemperature).toBe(0.1);
     expect(a.reasonTemperature).toBe(0.2);
     expect(a.reasonMaxTokens).toBe(64);

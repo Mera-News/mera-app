@@ -289,10 +289,35 @@ function clampRelevance(n: number): number {
 }
 
 /**
- * Parse a batched relevance response — expects a JSON array of N floats in
- * 0.0–1.1 input order. Falls back to extracting any numbers via regex if the
- * output isn't valid JSON. Always returns exactly `expectedCount` scores,
- * padding with the fallback relevance if the LLM returned fewer.
+ * Product-tier bands keyed by the stake tag the model outputs alongside each
+ * score (`{"k":"family","s":0.72}`): FEED stakes 0.40–1.10, interest-only
+ * 0.25–0.39, none 0.05–0.24. The decoder clamps a score into its declared
+ * band, so a right classification with a drifted score still lands in the
+ * right tier. Unknown tags fall back to plain 0–1.1 clamping.
+ */
+const STAKE_SCORE_BANDS: Record<string, [number, number]> = {
+  home: [0.4, 1.1],
+  family: [0.4, 1.1],
+  travel: [0.4, 1.1],
+  domain: [0.4, 1.1],
+  attend: [0.4, 1.1],
+  interest: [0.25, 0.39],
+  none: [0.05, 0.24],
+};
+
+function clampToStakeBand(s: number, k: unknown): number {
+  const band = typeof k === 'string' ? STAKE_SCORE_BANDS[k] : undefined;
+  if (!band) return clampRelevance(s);
+  return Math.max(band[0], Math.min(band[1], clampRelevance(s)));
+}
+
+/**
+ * Parse a batched relevance response — a JSON array of N entries in input
+ * order, where each entry is either a float in 0.0–1.1 (legacy format) or a
+ * `{"k":"<stake>","s":<float>}` object (tiered format; `s` is clamped into
+ * the band declared by `k`). Falls back to extracting any numbers via regex
+ * if the output isn't valid JSON. Always returns exactly `expectedCount`
+ * scores, padding with the fallback relevance if the LLM returned fewer.
  */
 export function parseBatchRelevanceResponse(
   output: string,
@@ -308,9 +333,20 @@ export function parseBatchRelevanceResponse(
   try {
     const parsed: unknown = JSON.parse(trimmed);
     if (Array.isArray(parsed)) {
-      const numbers = parsed.map((v) =>
-        typeof v === 'number' ? clampRelevance(v) : NaN,
-      );
+      const numbers = parsed.map((v) => {
+        if (typeof v === 'number') return clampRelevance(v);
+        if (
+          typeof v === 'object' &&
+          v !== null &&
+          typeof (v as { s?: unknown }).s === 'number'
+        ) {
+          return clampToStakeBand(
+            (v as { s: number }).s,
+            (v as { k?: unknown }).k,
+          );
+        }
+        return NaN;
+      });
       if (numbers.every((n) => !isNaN(n))) {
         if (numbers.length === expectedCount) return numbers;
         logger.warn(

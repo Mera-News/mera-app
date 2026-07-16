@@ -411,96 +411,126 @@ ${knownFactsList}
 // ============================================================
 
 /**
- * Shared scoring context — scale definition, anchor examples, priority rules.
+ * Shared scoring context — tier definitions, decision procedure, anchors.
  * Used as the base for both relevance scoring and reason generation prompts.
  *
  * DESIGN NOTE (for humans — do NOT explain this to the model):
- * We want output scores to spread smoothly across the FULL 0.10–1.10 range,
- * not pile up at the bottom. The prior tuning skewed everything to 0.10–0.30
- * and starved MEDIUM/HIGH buckets. The fix is symmetric:
- *   (a) anchor examples spread across the whole range (low, mid, high),
- *   (b) tier gates loosened so country/industry/profession ties earn MEDIUM
- *       (named employer/exact investment is no longer required for 0.50+),
- *   (c) hard caps retained ONLY for foreign-domestic stories (the original
- *       failure mode worth preserving),
- *   (d) explicit instruction to USE the full range with fine-grained values.
- * If you tune this prompt, keep anchor density even — that is what pulls
- * distribution into shape, not meta-instructions.
+ * The score encodes a three-tier product contract, tuned against a golden-
+ * labeled 1000-article prod run (2026-07-16, see .local-test-data eval):
+ *   FEED       raw ≥ 0.40  — direct/indirect impact → For You page
+ *   TANGENTIAL 0.25–0.39   — interest-category match, no stake → future
+ *                            "Discover" surface (not For You)
+ *   EXCLUDE    < 0.25      — no stake, no interest match → never shown
+ * The decision procedure is stake-first (not location-first) because the
+ * audited failure modes were: (a) generic industry chatter clearing FEED,
+ * (b) family-city safety news discarded, (c) bare country keywords treated
+ * as stakes, (d) stock/market content scored despite no holdings. Each hard
+ * rule below maps to one of those observed failures — don't remove one
+ * without re-running the golden eval. Anchors carry the calibration; keep
+ * their density even across all three tiers.
  */
-const CLOUD_SCORING_BASE_PROMPT = `Score and explain news relevance for one user.
+const CLOUD_SCORING_BASE_PROMPT = `Score news relevance for one user. Every article lands in exactly one of three product tiers; the score encodes the tier and the strength within it.
+
+## Product tiers (hard boundaries — the tier decision matters more than the exact value)
+- **FEED — 0.40 to 1.10.** The article affects the user's life directly or indirectly: their city or country, their family's cities, an active trip, their professional/venture domain, or an event they could attend.
+- **TANGENTIAL — 0.25 to 0.39.** Matches one of the user's interest categories but changes nothing for them personally — no stake, nothing to act on or track.
+- **EXCLUDE — 0.05 to 0.24.** No stake AND no interest-category match. Never shown to the user.
 
 ## Input (in user message)
-- **[User facts]** — the broader fact bank (location, profession, family, employer, industry, investments, interests, etc.). Background context — supports judgement across the whole batch.
+- **[User facts]** — the fact bank (location, profession, family, interests, investments, travel plans). Background context for the whole batch.
 - **===== Article N =====** blocks, each with:
   - **News Title** / **News Description** — article content (English).
   - **Article Country** — publication's country. Use as the article's scope ONLY when the title/description names no country/region/city. Local outlets often omit their own country (e.g. a ZAF source saying "Government approves draft AI policy" = South Africa, not global).
-  - **Related User Fact** — the specific user fact(s) that linked this article to the user (the topic match). Treat this as the primary connection to evaluate; the broader [User facts] bank is supplementary.
+  - **Related User Fact** — the specific user fact(s) that linked this article to the user (the topic match).
 
-A topic match is why the article was retrieved. Identify the concrete bridge — industry, profession, location, family, investment, or hobby — and score by how directly that bridge connects this specific article to the user's life. Most articles retrieved by topic-match have at least a real bridge; rate them by how strong it is, not by treating every bridge as suspect.
+## Decision procedure (run for EVERY article, in order)
 
-## Score gates (each tier requires its named evidence — no evidence, no tier)
-- **0.40+** requires a named topic tie — the article's subject matches the user's industry, profession, hobby, investment theme, or follows-area. A retrieved topic match without contradictory signals clears 0.40 by default.
-- **0.55+** requires EITHER (i) the article names the user's country / current city / employer industry / exact profession / active-investment area, OR (ii) it is a global-by-nature story (borderless tech, global market, global standard) in the user's exact professional or interest area.
-- **0.70+** requires a structural change in the user's jurisdiction or industry this week — named regulation, policy, market event, employer-sector move, or city-level change that the user would need to react to or track.
-- **0.85+** requires a direct change to the user's exact work / home / family / holdings (named employer, named investment, current city policy directly affecting profession).
-- **0.95+** requires an immediate, time-sensitive personal stake (employer announcement today, city emergency, exact-holding market move).
-- Absent any bridge, score 0.10–0.25. With only a continent-level or unrelated-country bridge, score 0.15–0.30.
+**Step 1 — Anchor on the Related User Fact.** It names why this article was retrieved. Ask: does the ARTICLE actually deliver on that connection, or does it merely share keywords with it? Score the delivered bridge, never the keyword overlap.
 
-## Step 0 — Location Gate (do BEFORE anything else)
-1. **Resolve the article's place.** Use the explicit place named in the title/description. If none is named, fall back to **Article Country**. This is the article's scope — not the user's.
-2. **Match against the user's CURRENT-LIFE place set:** current city, current country, family city, employer country, planned-travel city. Origin / former residence / "expat from X" / "born in X" do **NOT** belong to this set — they only re-enter consideration for class B (structural) inside Step 1, never for class C (lifestyle) and never for the Step 0 gate.
-3. **Branch:**
-   - **No match** AND the article is domestic-to-another-country (a foreign country's own policy / crime / weather / transit / local politics / local tech / local business / local lifestyle) → **HARD CAP 0.30.** Skip Step 1's classification entirely and go straight to scoring within 0.15–0.30 (raise the score within this band if the topic still matches the user's industry/profession/interest; keep it low otherwise). Write the reason as a topic-only link that names the gap. Do **NOT** bridge via "both in Europe", "both in the EU", "nearby in Europe", "European context", "shared EU framework", "regional implications", "EU-wide trends", "broader industry trends", "global implications", or any similar phrase. These bridges produce phantom relevance and are forbidden at this gate, not just later.
-   - **Match found**, OR the article is plausibly global-by-nature (borderless tech release, global market move, global standard, global sports) → proceed to Step 1.
+**Step 2 — Stake test (decides FEED).** The user has a stake when at least one of these holds. Each stake has a PRECISE RADIUS — applying it wider or narrower than written is the main failure mode.
+- **Home:** the article names the user's current city with PRACTICAL substance (safety, transit, closures, housing rules, policy, major events) OR its SUBSTANCE is national-structural for their current country — a policy/tax/health/energy/water/infrastructure change, national weather or safety alert, nationwide disruption, or a national dispute involving that country's government. This INCLUDES mundane-sounding national stories ("water shortage declared", "heatwave excess deaths", "budget tax change") — if the nation's conditions changed, it's a stake. It EXCLUDES: stories really about something else with the country mentioned in passing (bilateral admin treaties, the country named in a list); and the city's lifestyle/culture content — food guides, restaurant listicles, personality interviews, exhibitions, human-interest features are TANGENTIAL even in the user's own city.
+- **Family:** a story about a city where the user's family lives or is right now. Radius: (a) the family city itself — ANY substantive story: safety, crime, health, weather, civic/municipal changes, local infrastructure (check the description too: local stories often name the city only in the body, or name a neighbourhood of it); (b) state/region-wide stories that cover that city (state weather updates, state infrastructure programs, state-level alerts); (c) the island group/archipelago the family place belongs to. NOT included: neighboring states/provinces; a DIFFERENT specific city in the same state; name-lookalike places. Worked examples: family in Porto Santo → Madeira and Funchal count (same archipelago) but the mainland city of Porto does NOT (different place entirely); family in Bhopal, Madhya Pradesh → "Madhya Pradesh monsoon update" counts, but "no rain in Indore" (different MP city) and "Chhattisgarh monsoon" (neighboring state) do NOT.
+- **Travel:** the user has a named upcoming trip. The stake covers (a) the TRIP CITY itself, visitor-practical — transit changes and outages, strikes, closures, weather there, events around the trip dates, and safety incidents in the city's transit system or visitor areas — and (b) concrete service disruptions on the home↔trip-city route around those dates (nationwide rail strike in either country, closure of the connecting corridor). NOT trip information: border/visa/Schengen POLICY debates (the user is an EU resident traveling inside Schengen), customs anecdotes, passport/vacation tips listicles, the trip country's other regions' weather, country-wide weather stories that do not name the trip city or its region, other cities' incidents, and the trip city's own politics, elections, budgets, or history features — those are local news, not visitor information.
+- **Professional/venture domain:** the article's subject is a CONCRETE event in the user's product space or named interest areas: a model/tool release a builder in the field could use or must respond to (frontier or open-weight model launches, developer-facing platforms); a lawsuit or ruling about AI training data, AI-generated content, or news content; regulation enforceable in the user's own jurisdiction; a platform-access change affecting how AI products are built or distributed; or substantive findings squarely inside a named interest area (e.g. AI-privacy research when privacy-safe AI is a named interest). NOT a stake (TANGENTIAL at best): consumer-gadget AI features (phone assistants, Siri-style upgrades), "best AI tools" listicles and usage tips, corporate feuds and rivalry stories, "country X leads the AI race" pieces, executives' opinions/warnings/predictions, other countries' national AI strategies, corporate AI-adoption stories, funding rounds and company launches outside the news/media/model space, social-platform regulation unrelated to the user's product type.
+- **Attendable:** a conference/workshop in the user's interest areas they could realistically attend: in their city/country, their trip city, nearby in their region, or a MAJOR international event in their exact field. NOT attendable: local trainings, internships, student programs, university courses, and small national summits on other continents — a journalism workshop in another hemisphere is not his event, regardless of topic (at most Step 3).
+A stake → score 0.40–1.10 using the FEED gates below. No stake → Step 3.
 
-**Step 0 is a floor, not a ceiling.** A city/country match unlocks Step 1 — but tier still depends on impact. A lifestyle/architecture/restaurant/events article in the user's own city without anything to act on lands in 0.45–0.60 (not HIGH). "It's in Amsterdam" alone does not earn HIGH — structural / professional / action-this-week impact does. The Pakistan-domestic article never becomes a "Dutch govt" story for an Amsterdam user. The Sweden-domestic tech story never becomes "EU-wide" for a Dutch dev. If the article's place isn't in the user's place set and the article isn't truly borderless, the gate fires — period.
+**Step 3 — Interest test (decides TANGENTIAL).** No stake, but the SUBJECT matches one of the user's interest categories (their industry in general, their origin country in general, profession-adjacent think pieces) → 0.25–0.39. Higher in-band = closer to their named interest areas.
 
-## Step 1 — Impact Check (only if Step 0 did not cap)
-1. **Identify scope:** named location in title/description, else fall back to Article Country.
-2. **Classify the article subject** into ONE of three classes:
-   - **A) Global-by-nature** — inherently borderless (OpenAI release, global chip shortage, ASML earnings, F1 race, a specific stock, a global standard). Geography is irrelevant.
-   - **B) Locally-scoped, structural** — policy, regulation, tax, elections, immigration/visa, safety/crime, weather emergencies, public health, transport infrastructure, employer/industry-affecting events. The article changes conditions for people connected to that place.
-   - **C) Locally-scoped, lifestyle/consumption** — events listings ("what's on this weekend"), concert/festival lineups, restaurant openings, local sports fixtures, attractions, neighbourhood guides, local hobby happenings. The article only matters if the reader can actually attend / consume it.
-3. **What counts as "direct location overlap"** depends on the class:
-   - For **B (structural)**: current residence, origin / former residence, family/friends currently there, employer or industry country, active investment country, country/community the user actively follows.
-   - For **C (lifestyle)**: ONLY current residence, OR active/planned travel to that place, OR family currently there that the user visits. **Origin / former residence / "expat from X" / "born in X" do NOT count** — a user in Amsterdam does not attend a Mumbai concert just because they were born in India. The "expat from X" identity anchors the user to their CURRENT city, not to X.
-4. **For B and C: no qualifying overlap → HARD CAP 0.30.** Topic adjacency is not connection. A Mumbai weekend-events listing for an Amsterdam-based "expat from India" does NOT clear 0.3 — the user can't go. **Another country's domestic story is NOT a bloc/continent story** — applies to ALL subjects: emergencies, fires, crime, weather, accidents, transit, local politics, tech, policy, business. Sweden domestic tech for an Amsterdam dev → 0.20–0.30. Manchester UK building fire for an Amsterdam user → 0.18–0.25. (Forbidden bridges are listed in Step 0 — they apply here too.)
-5. **A (global) bypasses geography.** A global story in the user's professional/interest area earns 0.55–0.70 (industry-relevant). A global story that names the user's exact employer / investment / profession reaches 0.75+. Pure topic match outside the user's professional/interest scope caps at 0.35.
-6. **When the cap fires, the reason MUST state the topic-only link plainly and name the gap.** Do not claim life/city/country impact. Never frame an origin/former-city tie as a current-life impact. Never bridge a foreign domestic story via "EU-wide trends", "broader industry trends", "global implications", or similar hand-waving.
+**Step 4 — Otherwise EXCLUDE** → 0.05–0.24.
 
-## Relevance Scale (anchors for a software engineer in Amsterdam, AI + startups)
-USE THE FULL RANGE. Distribute scores smoothly from 0.10 to 1.10 — do not cluster everything at the bottom. A topic-matched article with a real bridge belongs in 0.40–0.75, not 0.20–0.30.
+## Hard rules (apply before finalizing — they override optimism)
+- **No holdings ⇒ no market relevance.** If the user facts list no investments, stock/market/investor content (market wraps, index moves, stock picks, earnings-as-investment-news, pre-market notes) is EXCLUDE. An earnings story from a company in the user's industry is at most TANGENTIAL (industry signal). It reaches FEED only if the underlying event itself changes the user's own work, product, or city.
+- **Foreign-domestic ⇒ EXCLUDE.** Another country's domestic story (its own policy, politics, crime, weather, transit, local business, local startups) with no stake is EXCLUDE — unless its SUBJECT squarely matches a user interest category, which makes it TANGENTIAL, never FEED. Do NOT bridge via "both in Europe", "both in the EU", "regional implications", "EU-wide trends", "broader industry trends", "global implications", or any similar phrase — these produce phantom relevance and are forbidden.
+- **Origin ≠ residence.** The user's origin country creates interest-category matches at most (TANGENTIAL) — except the named family cities, which are a real Family stake (Step 2). An Amsterdam-based "expat from India" does not attend a Mumbai concert and is not affected by an India-wide scheme.
+- **A place keyword alone is not a stake.** The story's substance must be about that place changing something for people there. "Netherlands" appearing in a Bosnia-Netherlands administrative treaty is not Dutch national-structural news.
+- **Digests and junk ⇒ EXCLUDE.** Wire digests ("Top News at 3:43 p.m."), single-word or unintelligible titles, roundups with no subject of their own. EXCEPTION: a live-blog or rolling update about ONE event ("LIVE | Water shortage in the Netherlands") is not a digest — score its underlying event normally.
+- **Island/metro radius.** When a family or trip place is part of an island group, archipelago, or metro area, the WHOLE group counts as that place: family in Porto Santo means every Madeira-archipelago story counts (Madeira island, Funchal), and a locality or suburb of a family city IS that city. But a name-lookalike is not the place: the mainland city of Porto is NOT Porto Santo.
+- **Flagship-industry disputes are national-structural.** A trade fight, export-control move, or geopolitical dispute centered on the user's country's flagship companies (its chip champion, its critical industries) counts as Home-country structural news even when the actors are foreign governments.
 
-- 1.10 "Flooding evacuation ordered in Amsterdam" — danger at user's city, act NOW
-- 0.95 "Major layoffs at user's exact employer" — direct, today
-- 0.88 "ASML cuts guidance" (user holds ASML) — exact investment hit
-- 0.82 "Amsterdam council votes on startup tax incentives" — city + profession, this week
-- 0.75 "EU passes new AI regulation bill" — applies directly to user's jurisdiction + industry
-- 0.68 "Netherlands tightens startup visa rules" — country + profession structural
-- 0.62 "Google releases major AI framework update" — global, user's exact professional area
-- 0.58 "Netherlands housing investors pulling out of holiday-home market" — user's country structural
-- 0.55 "Major OpenAI funding round" — global, user's industry, no exact tie
-- 0.50 "Netherlands economy report shows growth" — user's country, broad
-- 0.48 "New glass-block house by Studioninedots in Amsterdam Centrumeiland" — user's city, lifestyle, nothing to act on but local
-- 0.42 "New coworking spaces opening in Rotterdam" — nearby Dutch city, profession-adjacent
-- 0.35 "South Africa draft AI policy" (ZAF source, no SA ties) — topic match in industry, scope unrelated
-- 0.30 "Sweden's tech scene faces policy headwinds" (SE source, no SE ties) — another EU country's domestic story, industry-adjacent
-- 0.22 "Mumbai this weekend: concerts, exhibits, heritage walks" (Amsterdam-based "expat from India") — origin doesn't count for lifestyle
-- 0.20 "Bulgaria approves new digital ID" (BG source, no BG ties) — foreign-domestic policy
-- 0.18 "Building fire in Heald Green, Manchester UK" (Amsterdam user) — foreign-city emergency, no overlap
-- 0.12 "Cricket World Cup results" — no interest
-- 0.05 "Obvious spam or clickbait"
+## FEED gates (within 0.40–1.10; each band needs its named evidence)
+- **0.40–0.59** — real stake, minor or ambient: local color in the user's city, an attendable event, mild venture-domain relevance.
+- **0.60–0.79** — substantive: structural change with the user's country/city named, a global story squarely in the user's venture domain, family-city safety/weather/health events, trip-critical info — something to track or react to.
+- **0.80–0.94** — direct: a change to the user's exact work, product, home, or family (violent crime or disaster in a family city, city policy hitting their profession, regulation their product must comply with now).
+- **0.95–1.10** — immediate, time-sensitive personal stake: danger at the user's or family's city NOW, act today. 1.0+ ONLY for immediate danger + user/family city + action required.
 
-Use the FULL continuous range with fine-grained variation between anchors (e.g. 0.47, 0.63, 0.71). Never round to .05/.10 increments. Spread scores — if a batch of 5 articles all comes out within 0.05 of each other, you are under-using the range.
+## Anchors (example user: software engineer in Amsterdam building an AI news app; parents in Bhopal and currently traveling in Chhindwara; partner's family in Porto Santo; Berlin trip next weekend; interests: journalism+AI, privacy-safe AI, on-device small language models, tech/journalism conferences; NO investments)
+FEED:
+- 1.05 "Flooding evacuation ordered in Amsterdam Nieuw-West" — home danger, act now
+- 0.85 "Double murder investigated in Bhopal" — family-city violent crime
+- 0.75 "EU AI Act enforcement begins for consumer AI apps" — compliance for his own product
+- 0.72 "Heavy-rain alert for Madhya Pradesh, incl. Chhindwara district" — region alert covering family city
+- 0.68 "EU forces Google to open AI services to competitors" — structural platform ruling in his field
+- 0.66 "Berlin public transport strike announced for the weekend" — trip city, trip dates
+- 0.65 "Netherlands officially declares water shortage, measures needed" — national structural
+- 0.62 "900 excess deaths during Netherlands heatwave, RIVM warns" — national structural health alert
+- 0.62 "Publishers sue Google and Meta over AI training data" — AI-content legal terrain, his product space
+- 0.60 "Startup lab founded by ex-OpenAI CTO releases first open-weight model" — usable release in his field
+- 0.58 "Your AI chats may be exposed to other users, researchers find" — privacy-safe AI, named interest
+- 0.58 "Madhya Pradesh monsoon update: heavy rain returns to the state" — state-wide weather covering family cities
+- 0.55 "Berlin district Mitte bans mobile trade in the historic center" — trip-city rule a visitor meets
+- 0.55 "June was hotter and drier than usual in Madeira" — family archipelago conditions
+- 0.52 "Funchal praises canoe crossing between Porto Santo and Madeira" — family island region
+- 0.48 "New glass-block house completed in Amsterdam Centrumeiland" — his city, ambient, nothing to act on
+- 0.45 "Bhopal traders petition for mixed land-use change" — family-city civic news, minor
+- 0.42 "Dutch developer conference announces speaker lineup" — attendable, minor
+TANGENTIAL:
+- 0.38 "How AI is transforming banking" — industry-category chatter, no stake
+- 0.36 "Apple finally fixed Siri — your new favorite AI tool" — consumer-gadget AI feature, not his product space
+- 0.35 "ASML raises forecasts as AI demand booms" — industry signal, no holdings, nothing to act on
+- 0.35 "DeepMind CEO warns AGI is near, calls for global oversight body" — executive opinion, no concrete change
+- 0.33 "EU accepts X's transparency plan after fine" — platform regulation, not his product type
+- 0.32 "Indian AI startup becomes a unicorn" — origin + industry categories, no stake
+- 0.32 "Five AI tools you can use from your phone" — tool listicle, no concrete change in his field
+- 0.32 "5x fried chicken in Amsterdam to lick your fingers at" — own-city lifestyle listicle, nothing practical
+- 0.30 "Berlin election poll shows shifting coalition" — trip city's domestic politics, not visitor info
+- 0.30 "Berlin police get new forensic institute for 190 million" — trip city's local news, not visitor info
+- 0.28 "Rotterdam council unexpectedly votes out alderman" — his country, but another city's local politics
+- 0.28 "US DOJ subpoenas New York Times reporters" — journalism-category news, no AI/product/place stake
+- 0.26 "Why founders burn out — an essay" — profession-adjacent think piece
+EXCLUDE:
+- 0.22 "Thunderstorm warning for Bavaria and Hesse" — trip is to Berlin; other regions' weather is not trip info
+- 0.20 "Slovakia late transposing five EU directives" — foreign-domestic, no interest match
+- 0.20 "Germany and Austria continue border controls" — border POLICY story, not a trip disruption
+- 0.18 "EU commissioner calls for end to German border controls" — policy debate, no service change
+- 0.18 "Country X passes national AI implementation framework" — another country's domestic AI policy, no stake
+- 0.15 "Porto launches free public-transport card" — mainland Porto is NOT Porto Santo; no family tie
+- 0.15 "Wall Street rises on tech gains" — market wrap, no holdings
+- 0.12 "Ten passport errors that can ruin your vacation" — travel-tips listicle, not trip-specific
+- 0.12 "Monsoon returns to Uttar Pradesh and Bihar" — origin country, NOT the family cities or their state
+- 0.12 "Monsoon strengthens again in Chhattisgarh" — NEIGHBORING state of the family cities — does not cover them
+- 0.10 "Building fire in Heald Green, Manchester UK" — foreign-city incident, no overlap
+- 0.05 "AP Top Technology News at 3:43 p.m. EDT" — wire digest
+
+Use the full continuous range with fine-grained values between anchors (0.47, 0.63, 0.71) — never round to .05/.10 increments. When torn between two tiers, re-run the stake test: a real stake means ≥ 0.40, no stake means < 0.40.
 
 ## Priority
-City > region > country. Family locations stricter (specific city only). Exact profession > industry. Exact hobby > category.
+City > region > country. Family locations: the named city only. Exact interest area > interest category > generic tech.
 
 ## Critical
 - Don't override an explicit location in the body with the publication's country.
 - Multi-location users count multiply ("from Johannesburg, now in London" = both matter; "parents in New York" = connected).
-- Tabloid/clickbait −0.1 to −0.2. Spam −0.3 to −0.5.
-- 1.1 ONLY = immediate danger + user/family city + action required.`;
+- Tabloid/clickbait −0.1. Spam → EXCLUDE.`;
 
 /**
  * Pass 1 — Relevance score only.
@@ -509,11 +539,13 @@ City > region > country. Family locations stricter (specific city only). Exact p
 export const CLOUD_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
 ## Task
-You will be given N articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … Score each one independently using Step 0 + Step 1 + the Relevance Scale.
+You will be given N articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) and output one object \`{"k":"…","s":0.00}\`:
+- \`"k"\` — the finding that decided the tier: \`"home"\` | \`"family"\` | \`"travel"\` | \`"domain"\` | \`"attend"\` (a FEED stake from Step 2 → \`s\` in 0.40–1.10), \`"interest"\` (no stake, interest-category match from Step 3 → \`s\` in 0.25–0.39), or \`"none"\` (Step 4 → \`s\` in 0.05–0.24).
+- \`"s"\` — the score, which MUST lie inside the band of the \`"k"\` you chose. If your score wants to leave the band, your \`"k"\` is wrong — redo the stake test for that article.
 
-Output: a JSON array of N numbers between 0.0 and 1.1, in input order. Use the FULL continuous range — never round to .05/.10 increments. The array length MUST equal the number of input articles. No prose, no keys, no extra fields — array only.
+Output: a JSON array of exactly N such objects, in input order. No prose, no extra fields. Use fine-grained values — never round to .05/.10 increments.
 
-Example for 5 articles: [0.73, 0.22, 0.91, 0.45, 0.18]`;
+Example for 3 articles: [{"k":"domain","s":0.62},{"k":"none","s":0.12},{"k":"interest","s":0.33}]`;
 
 /**
  * Pass 2 (cloud) — Reason generation for relevant articles (relevance > 0.3).
