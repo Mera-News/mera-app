@@ -214,16 +214,16 @@ describe('buildCloudBatchCallsForFact', () => {
     expect(combo.system).toBe('cloud-combo-sys');
   });
 
-  it('splits count roughly 50/50 when otherFacts exist', () => {
+  it('biases count ~60/40 toward factOnly when otherFacts exist', () => {
     const calls = buildCloudBatchCallsForFact(
       { ...baseInputs, totalCount: 16, otherFacts: ['a fact'] },
       'f',
     );
     const factOnly = calls.find((c) => c.id === 'f:factOnly')!;
     const combo = calls.find((c) => c.id === 'f:combo')!;
-    // factOnly = floor(16/2) = 8, combo = 16 - 8 = 8
-    expect(factOnly.prompt).toContain('Generate 8 topics');
-    expect(combo.prompt).toContain('Generate 8 topics');
+    // 2026-07-16: combo = floor(16*0.4) = 6, factOnly = 16 - 6 = 10.
+    expect(factOnly.prompt).toContain('Generate 10 topics');
+    expect(combo.prompt).toContain('Generate 6 topics');
   });
 
   it('uses full count for factOnly when no others exist', () => {
@@ -239,12 +239,13 @@ describe('buildCloudBatchCallsForFact', () => {
     calls.forEach((c) => expect(c.temperature).toBe(0.3));
   });
 
-  it('uses default total of 16 when totalCount is not provided', () => {
+  it('uses default total of 10 when totalCount is not provided', () => {
     const calls = buildCloudBatchCallsForFact(
       { factStatement: 'Works in AI', userLocation: null, otherFacts: [] },
       'f',
     );
-    expect(calls[0].prompt).toContain('Generate 16 topics');
+    // 2026-07-16: default totalCloud reduced 16→10.
+    expect(calls[0].prompt).toContain('Generate 10 topics');
   });
 
   it('includes userLocation in prompt when provided', () => {

@@ -71,8 +71,12 @@ export function splitCount(
   hasOthers: boolean,
 ): { factOnly: number; combo: number } {
   if (!hasOthers) return { factOnly: total, combo: 0 };
-  const factOnly = Math.floor(total / 2);
-  const combo = total - factOnly;
+  // 2026-07-16: bias ~60/40 toward fact-only. Fact-only anchored topics
+  // (home/city/family) were the best feed-worthy performers in the prod
+  // baseline, while the combo path produced most of the wasted-quota noise
+  // (country-level fact-bleed, near-synonym variants). At total=10 → 6/4.
+  const combo = Math.floor(total * 0.4);
+  const factOnly = total - combo;
   return { factOnly, combo };
 }
 

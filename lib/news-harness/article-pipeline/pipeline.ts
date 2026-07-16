@@ -25,6 +25,8 @@ import {
 } from '../core/ports';
 import type { Fact, HarnessArticle, ScoringCandidate } from '../core/types';
 import {
+  applyFeedVerifierDecisions,
+  buildFeedVerifierCalls,
   buildReasonCallsForSubset,
   buildRelevanceCalls,
   bucketScores,
@@ -47,6 +49,7 @@ export type PipelineStage =
   | 'articles'
   | 'candidates'
   | 'relevance'
+  | 'verifier'
   | 'scores'
   | 'reasons'
   | 'done';
@@ -227,17 +230,63 @@ export async function runArticlePipeline(
     config,
     logger,
   );
+  tick('relevance');
+  emit('relevance', {
+    rawScores: Object.fromEntries(decodedScores.scoreMap),
+    failedIds: [...decodedScores.failedIds],
+  });
+
+  // --- second-pass FEED verifier (fail-open) ---
+  // Audit only the first-pass FEED candidates (raw ≥ discardFloor); demote the
+  // clear false positives to config.feedVerifierDemoteScore IN the raw score map
+  // (before the snapshot below), so they fall out of FEED, out of reason
+  // generation (< reasonRelevanceThreshold), and out of the app's visibility
+  // cutoff. Any error leaves scores unchanged.
+  let verifierDemoted = 0;
+  if (config.feedVerifierEnabled) {
+    const feedCandidates = scoreBundle.eligibleCandidates.filter(
+      (c) => (decodedScores.scoreMap.get(c.id) ?? 0) >= config.discardFloor,
+    );
+    if (feedCandidates.length > 0) {
+      try {
+        const { calls, verifyIdToCandidates } = buildFeedVerifierCalls(
+          feedCandidates,
+          factStatements,
+          config,
+          logger,
+        );
+        if (calls.length > 0) {
+          const verifyResults = await ports.llm.batchComplete(calls, {
+            model: config.model,
+          });
+          verifierDemoted = applyFeedVerifierDecisions(
+            decodedScores.scoreMap,
+            verifyIdToCandidates,
+            verifyResults,
+            config,
+            logger,
+          );
+        }
+      } catch (err) {
+        logger.warn('[article-pipeline] feed verifier failed — scores unchanged', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    logger.info('[article-pipeline] feed verifier', {
+      audited: feedCandidates.length,
+      demoted: verifierDemoted,
+    });
+  }
+  tick('verifier');
+  emit('verifier', { demoted: verifierDemoted });
+
   // Raw scores are needed for reason prompts + reporting; bucketing mutates the
-  // map in place, so snapshot the raw values first.
+  // map in place, so snapshot the raw values first (post-verifier).
   const rawScoreMap = new Map(decodedScores.scoreMap);
   const bucketedScoreMap = decodedScores.scoreMap;
   bucketScores(bucketedScoreMap, config);
   const failedIds = decodedScores.failedIds;
-  tick('relevance');
-  emit('relevance', {
-    rawScores: Object.fromEntries(rawScoreMap),
-    failedIds: [...failedIds],
-  });
 
   // --- persist scores (skip chunks that failed to score) ---
   const relevanceMap: Record<string, number> = {};

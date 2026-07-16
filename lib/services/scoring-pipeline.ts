@@ -43,6 +43,7 @@ import {
   buildReasonCallsForSubset,
   buildRelevanceCalls,
   decodeResults,
+  runFeedVerifierPass,
   CLOUD_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/mera-protocol/scoring-service';
@@ -853,6 +854,29 @@ async function handleRelevanceResults(
     promptsById: new Map(),
     chunkIdToCandidates,
   });
+
+  // --- second-pass FEED verifier (foreground only; fail-open) ---
+  // Runs after the first-pass decode, before bucketing/persist, demoting clear
+  // first-pass false positives out of FEED (raw → feedVerifierDemoteScore).
+  // Foreground-only: cloudBatchComplete authenticates with the keychain JWT,
+  // which is off-limits on a locked-device background wake — on background
+  // ticks we skip the verifier (conservative keep) rather than touch the
+  // keychain. Fail-open: runFeedVerifierPass swallows its own errors and
+  // returns 0, so a verifier failure never blocks scoring. The rows are still
+  // Unscored here, so getUnscoredSuggestionsWithFacts returns them with their
+  // title/description/facts (needed to build the verifier prompt).
+  if (context === 'foreground') {
+    try {
+      const allUnscored = await getUnscoredSuggestionsWithFacts();
+      const idSet = new Set(batch.candidateIds);
+      const verifierCandidates = allUnscored.filter((c) => idSet.has(c.id));
+      await runFeedVerifierPass(verifierCandidates, scoreMap);
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'feed-verifier' },
+      });
+    }
+  }
 
   // Preserve raw pre-bucket scores for the reason prompts; storage + gating use
   // the bucketed values.

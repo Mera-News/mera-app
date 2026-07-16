@@ -257,6 +257,7 @@ describe('runArticlePipeline — happy path', () => {
       'articles',
       'candidates',
       'relevance',
+      'verifier',
       'scores',
       'reasons',
       'done',

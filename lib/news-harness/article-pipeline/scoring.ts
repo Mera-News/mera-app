@@ -11,6 +11,7 @@ import countries from 'i18n-iso-countries';
 import en from 'i18n-iso-countries/langs/en.json';
 import {
   buildBatchScoringUserMessage,
+  buildFeedVerifierUserMessage,
   buildReasonUserMessage,
 } from '../prompts/prompts';
 import {
@@ -217,6 +218,163 @@ export function buildReasonCallsForSubset(
     chunkIdToCandidates: new Map(),
     eligibleCandidates: subset,
   };
+}
+
+// --- Second-pass FEED verifier -------------------------------------------
+//
+// A precision pass over ONLY the first-pass FEED candidates (raw ≥ discardFloor).
+// It answers a terse per-article yes/no ("does this materially affect THIS
+// user?"); "no" articles are demoted to config.feedVerifierDemoteScore so they
+// drop out of FEED (and, being < reasonRelevanceThreshold, out of reason
+// generation). Validated 2026-07-16 — see CLOUD_FEED_VERIFIER_SYSTEM_PROMPT.
+//
+// buildFeedVerifierCalls mirrors buildRelevanceCalls (same fact + article-block
+// framing) but ids its calls `verify:N` and uses the verifier system prompt.
+// The port call + demotion live in the pipeline (llm.batchComplete) / the app
+// shim (cloudBatchComplete); parseFeedVerifierResponse + applyFeedVerifierDecisions
+// are the shared pure decode.
+
+/** A yes/no keep/demote decision, one per verified article. */
+export type FeedVerifierLabel = 'yes' | 'no';
+
+/**
+ * Build the verifier BatchCalls from the pre-selected FEED candidates (the
+ * caller filters to raw ≥ discardFloor). Chunks by config.feedVerifierBatchSize,
+ * ids each call `verify:N`, and returns the id→candidates lookup the applier
+ * needs to map decisions back to candidate ids. Pure — facts supplied by caller.
+ */
+export function buildFeedVerifierCalls(
+  feedCandidates: ScoringCandidate[],
+  factStatements: string[],
+  config: ArticlePipelineConfig = ARTICLE_CFG,
+  _logger: HarnessLogger = NOOP_LOGGER,
+): { calls: BatchCall[]; verifyIdToCandidates: Map<string, ScoringCandidate[]> } {
+  const eligible = feedCandidates.filter(isEligible);
+  const chunks = chunk(eligible, config.feedVerifierBatchSize);
+  const calls: BatchCall[] = [];
+  const verifyIdToCandidates = new Map<string, ScoringCandidate[]>();
+  const userContext = buildUserContext(factStatements);
+
+  chunks.forEach((chunkCandidates, idx) => {
+    const prompt = buildFeedVerifierUserMessage({
+      userContext,
+      articles: chunkCandidates.map((c) => ({
+        title: c.titleEn ?? '',
+        description: c.descriptionEn ?? '',
+        country: resolveCountryName(c.countryCode),
+        relatedFacts: c.relatedFacts.map((f) => f.statement),
+      })),
+    });
+    const verifyId = `verify:${idx}`;
+    verifyIdToCandidates.set(verifyId, chunkCandidates);
+    calls.push({
+      id: verifyId,
+      system: config.feedVerifierSystemPrompt,
+      prompt,
+      temperature: config.scoreTemperature,
+      maxTokens: config.feedVerifierMaxTokens,
+    });
+  });
+
+  return { calls, verifyIdToCandidates };
+}
+
+/**
+ * Parse a verifier batch response — a JSON array of N `{"v":"yes"|"no"}` objects
+ * (bare "yes"/"no" strings also accepted). Returns exactly `expectedCount`
+ * labels. CONSERVATIVE by contract: on parse failure, length mismatch, or any
+ * non-"no" token, the article is KEPT ("yes") — the verifier only ever demotes
+ * on an explicit, well-formed "no". (This is the failure mode the experiment
+ * measured at ~1–2 of 14 batches, handled as a keep.)
+ */
+export function parseFeedVerifierResponse(
+  output: string,
+  expectedCount: number,
+  logger: HarnessLogger = NOOP_LOGGER,
+  id?: string,
+): FeedVerifierLabel[] {
+  const keepAll = (): FeedVerifierLabel[] =>
+    new Array<FeedVerifierLabel>(expectedCount).fill('yes');
+
+  const trimmed = output.trim();
+  const jsonMatch = trimmed.match(/\[[\s\S]*\]/);
+  if (jsonMatch) {
+    try {
+      const parsed: unknown = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed)) {
+        const labels: FeedVerifierLabel[] = parsed.map((v) => {
+          let s = '';
+          if (typeof v === 'string') s = v;
+          else if (v && typeof v === 'object') {
+            const o = v as Record<string, unknown>;
+            s = String(o.v ?? o.a ?? o.decision ?? o.label ?? o.keep ?? '');
+          }
+          // Only an explicit "no" demotes; everything else keeps (conservative).
+          return s.toLowerCase().trim() === 'no' ? 'no' : 'yes';
+        });
+        if (labels.length === expectedCount) return labels;
+        logger.warn(
+          'Feed verifier: array length mismatch — conservative keep for batch',
+          { expected: expectedCount, got: labels.length, id },
+        );
+        return keepAll();
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  logger.warn('Feed verifier: failed to parse output — conservative keep', {
+    output: trimmed.slice(0, 200),
+    expected: expectedCount,
+    id,
+  });
+  return keepAll();
+}
+
+/**
+ * Apply verifier decisions to a raw score map IN PLACE: for each `verify:N`
+ * result, parse its labels and set every "no" article to
+ * config.feedVerifierDemoteScore (only when its current raw score is above that,
+ * so nothing is ever raised). A per-chunk error → conservative keep for that
+ * chunk. Returns the number of articles demoted. Pure — the LLM call is the
+ * caller's responsibility.
+ */
+export function applyFeedVerifierDecisions(
+  scoreMap: Map<string, number>,
+  verifyIdToCandidates: Map<string, ScoringCandidate[]>,
+  batchResults: BatchCompletionResult[],
+  config: ArticlePipelineConfig = ARTICLE_CFG,
+  logger: HarnessLogger = NOOP_LOGGER,
+): number {
+  let demoted = 0;
+  for (const result of batchResults) {
+    if (!result.id.startsWith('verify:')) continue;
+    const chunkCandidates = verifyIdToCandidates.get(result.id) ?? [];
+    if (result.error) {
+      logger.warn('[applyFeedVerifierDecisions] verify chunk failed — keeping', {
+        chunkId: result.id,
+        error: result.error,
+        chunkSize: chunkCandidates.length,
+      });
+      continue; // conservative: keep every article in a failed chunk
+    }
+    const labels = parseFeedVerifierResponse(
+      result.output,
+      chunkCandidates.length,
+      logger,
+      result.id,
+    );
+    chunkCandidates.forEach((c, i) => {
+      if (labels[i] !== 'no') return;
+      const cur = scoreMap.get(c.id);
+      if (typeof cur === 'number' && cur > config.feedVerifierDemoteScore) {
+        scoreMap.set(c.id, config.feedVerifierDemoteScore);
+        demoted += 1;
+      }
+    });
+  }
+  return demoted;
 }
 
 /**

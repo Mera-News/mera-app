@@ -575,6 +575,52 @@ Never fabricate a connection. The reason must match the article — if the artic
 
 Output: single plain string, no prefixes, no markdown.`;
 
+/**
+ * Second-pass FEED verifier (cloud). Runs ONLY over the articles the first pass
+ * scored into the FEED band (raw ≥ discardFloor, ~200/1000). Its narrow job is
+ * precision: strike the CLEAR first-pass false positives — articles that only
+ * share a keyword / place name / topic with the user but carry no real stake —
+ * and KEEP everything else. Default is KEEP; it demotes ("no") only on a clear
+ * NO-pattern. Batched (feedVerifierBatchSize/article), terse yes/no output.
+ *
+ * DESIGN NOTE (for humans — do NOT explain to the model): validated 2026-07-16
+ * against the golden-labeled 1000-article prod run (multistage experiment,
+ * "Design A2 — tuned"). Two stable runs lifted FEED precision 73.2%→80.4% and
+ * cut unrelated(EXCLUDE)-in-FEED 19→13 for +3.8% tokens, at a small recall cost
+ * (78.5%→~76%). This is the GENERALIZED form of that experiment's persona-
+ * hardcoded VERIFIER2_SYSTEM: every rule now references the [User facts] block
+ * generically and mirrors CLOUD_SCORING_BASE_PROMPT's hard rules (no-holdings ⇒
+ * no market relevance, foreign-domestic ⇒ demote, origin ≠ residence, place-
+ * keyword-alone, lifestyle filler, exec-opinion / AI-race chatter, digests,
+ * flagship-industry disputes = home-structural). Removing a NO pattern or
+ * flipping the KEEP default requires re-running the golden eval.
+ */
+export const CLOUD_FEED_VERIFIER_SYSTEM_PROMPT = `You are a precision auditor for a personalized news feed. Each article below already passed a first-pass scorer that judged it a FEED-worthy stake for ONE specific user, whose life is described in the [User facts] block of the user message. Your job is NOT to re-score the article. Your job is narrow: catch the CLEAR false positives — articles that only share a keyword, place name, or topic with the user but carry no real stake for them — and demote ONLY those. When an article plausibly has ANY real stake for this user, KEEP it. Default to "yes" (keep); answer "no" (demote) ONLY when the article clearly matches one of the NO patterns below.
+
+Read the [User facts] to learn THIS user's home city/country, family locations, any active trip, professional/venture domain, named interest areas, and whether they hold investments. Judge every article against those facts — not against a generic reader. Most first-pass FEED candidates ARE real stakes: demote sparingly. Before demoting, first resolve every place named in the article (title AND description) against the user's places — a suburb, locality, district, neighbourhood, island, or state/region of one of the user's places IS that place (e.g. a district of the family city, or another island/town of the family's archipelago, counts as the family location).
+
+KEEP ("yes") — real stakes; never demote these:
+- ANY national- or city-structural story about the user's home country or current city: policy, tax, law, courts, immigration/asylum, safety, crime, weather, heat/health alerts, water/energy/infrastructure, cost-of-living, or a national dispute or diplomatic move by that government. This INCLUDES mundane-sounding national stories (heatwave excess deaths, a warm sea, price rises, a new law). A trade fight, export-control move, or dispute centred on the user's country's flagship industry or companies counts here too (home-structural), even when the actors are foreign governments.
+- ANY story about a city, town, district, or region where the user's family lives (or its state / province / island group) — KEEP it even when it is ROUTINE or LOW-stakes: municipal or city-council decisions, local infrastructure or roadworks, a station or bus terminal, local weather, local health or cancer-society events, a single crime / murder / assault / arrest / court case / police investigation, a protest about a local case, land-use or civic petitions. These are low-priority FEED but still a family stake — do NOT demote them as "lifestyle", "foreign-domestic", or "individual crime". Family-place news is the single easiest thing to over-demote; when a family place (or its locality/region) is the subject, default hard to KEEP.
+- Travel-practical news for the user's active trip city: transit / rail / bus disruptions, outages, strikes, closures, fires, weather, safety incidents, or events on or around the trip dates, or a concrete service disruption on the home↔trip-city route.
+- The user's professional/venture domain as a CONCRETE event: a model or developer-tool release they could use or must respond to, a lawsuit or ruling on AI training data / AI-generated content / news content, regulation enforceable in the user's own jurisdiction, a platform-access ruling affecting how AI products are built, or substantive findings squarely inside a named interest area.
+- A conference or workshop in the user's field they could realistically attend — in their city/country, their trip city, or a major international event in their exact field.
+
+DEMOTE ("no") — ONLY when the article clearly is one of these AND carries no KEEP stake above (in particular, it does NOT name the user's home country/city, a family place or its region, or the trip city):
+- Market / stock / index / earnings-as-investment / investor content, when the [User facts] list NO investments.
+- Another country's purely domestic story (its own politics, crime, weather, transit, local business or startups) whose place is NOT the user's home country and NOT a family place or its region — and whose subject is not the user's professional domain. Never bridge via "both in Europe / the EU", "regional implications", "industry-wide trends", or "global implications".
+- The user's origin country in general, or a place there that is NOT a family location and NOT part of a family location's state/region — origin ≠ residence.
+- Pure lifestyle / culture / entertainment filler in the user's OWN residence city ONLY (never a family place): food or restaurant listicles, personality interviews, art exhibitions or installations, festivals/parades as entertainment, human-interest "eye-catcher" features, weekend-tips. (Civic, municipal, council, infrastructure, weather, health, safety, and crime stories are NEWS, not filler — keep those.)
+- Generic AI-industry chatter with no concrete usable event: "country X leads the AI race", executives' opinions / warnings / predictions, "best AI tools" listicles, consumer-gadget AI features (phone assistants, Siri-style upgrades), corporate feuds, other countries' national AI strategies, corporate AI-adoption pieces, or funding rounds outside the news/media/model space.
+- The trip city's OWN local politics, elections, budgets, or history, or border / visa POLICY debates — not a concrete trip disruption.
+- Wire digests ("Top News at 3 p.m."), contentless roundups, single-word or unintelligible titles.
+
+When genuinely unsure, answer "yes" (keep) — the first pass already found a plausible stake, and "no" is reserved for CLEAR noise with no tie to the user's places or domain.
+
+## Task
+You will receive N articles as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article output one object \`{"v":"yes"}\` (keep) or \`{"v":"no"}\` (demote). Output a JSON array of exactly N such objects, in input order. No prose, no extra fields.
+Example for 3 articles: [{"v":"yes"},{"v":"no"},{"v":"yes"}]`;
+
 // ---------------------------------------------------------------------------
 // LOCAL prompts — Qwen3.5-4B on-device (architecture: qwen35, base
 // `Qwen/Qwen3.5-4B`, GGUF `unsloth/Qwen3.5-4B-GGUF` Q4_K_M).
@@ -721,6 +767,36 @@ export function buildBatchScoringUserMessage(params: {
 }
 
 /**
+ * Builds the user message for the second-pass FEED verifier.
+ * Pairs with CLOUD_FEED_VERIFIER_SYSTEM_PROMPT. Uses the SAME article-block
+ * format as buildBatchScoringUserMessage (so the model sees identical framing),
+ * but the trailing instruction asks for a yes/no keep/demote array instead of
+ * numeric scores.
+ */
+export function buildFeedVerifierUserMessage(params: {
+  userContext: string;
+  articles: {
+    title: string;
+    description: string;
+    country?: string;
+    relatedFacts?: string[];
+  }[];
+}): string {
+  const { userContext, articles } = params;
+  const blocks = articles.map((a, i) => {
+    const country = sanitizeForPrompt(a.country ?? '', 60);
+    const hasCountry = country.length > 0 && country.toUpperCase() !== 'GLOBAL';
+    const countryLine = hasCountry ? `\nArticle Country: ${country}` : '';
+    const related = (a.relatedFacts ?? [])
+      .map((f) => sanitizeForPrompt(f, 200))
+      .filter((f) => f.length > 0)
+      .join('; ') || 'none';
+    return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}${countryLine}\nRelated User Fact: ${related}`;
+  });
+  return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\nReturn a JSON array of ${articles.length} objects ({"v":"yes"} to keep or {"v":"no"} to demote), one per article, in order.`;
+}
+
+/**
  * Builds the user message for reason generation (Pass 2).
  * Includes the already-computed relevance score for context.
  */
@@ -769,7 +845,9 @@ You will NEVER receive Other user facts in this prompt. A sibling prompt handles
 
 ## Step 1 — Anchoring (decide in order)
 - **(a-1)** Fact contains the USER's OWN location (lives/works/studies in X, expat in X) → anchor to THAT location, expand full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location.
-- **(a-2)** Fact contains a RELATIONAL location — someone OTHER than the user is at X (partner's parents live in X, family from X, in-laws in X, sibling moved to X, friend in X) → anchor to X and STAY there. Do NOT ladder up to its state, country, or continent. The user's daily life isn't in X — only that exact place matters to them. No "X-country news", no "X-continent regulation".
+  **Residence requirement:** for this case ONLY, always include ≥1 city-level public-transport topic and ≥1 country-level public-services/rail topic (e.g. "Amsterdam public transport updates", "Netherlands rail strikes", "Netherlands public services disruptions") — practical daily-life coverage residents need, alongside the standard chain above.
+- **(a-2)** Fact contains a RELATIONAL or TEMPORARY location — someone OTHER than the user is at X, or someone is only briefly there (partner's parents live in X, family from X, in-laws in X, sibling moved to X, friend in X, parents traveling/visiting/on holiday in X, staying in X) → anchor to X and STAY there. Do NOT ladder up to its state, country, or continent. Only that exact place matters. No "X-state politics", no "X-country news", no "X-continent regulation". "Traveling/visiting X" is NOT a travel-logistics fact — the person is simply present in X, so generate the SAME local-news set you would for living there (local news, safety, weather, transport, civic issues). Do NOT switch the subject to visas/flights/travel advisories/monsoon-disruption.
+  - **Micro-location exception:** if X is a very small locality/island/village with near-zero dedicated news coverage, you MAY take exactly ONE step up — to its named archipelago / metro area / immediate region ONLY (never its state or country). E.g. Porto Santo (tiny island) → "Madeira news" / "Funchal news" OK, "Portugal news" ✗. A district town like Chhindwara has enough local news — stay put, no ladder.
 - **(b)** No Fact location, User location given, Fact is personal/local (residency, family role, school, commute, shopping, weather, neighborhood, expat/immigrant life, parenting, student life) → anchor to User location, full chain. No location-less variants.
 - **(c)** Fact is global/professional ("works in AI", "invested in ASML", "follows Formula 1", "Middle East politics") → unanchored. Never use User location.
 - **(d)** Ambiguous → default to (c).
@@ -785,25 +863,36 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 
 ## Other rules
 - Expand region/category to specific entities: "Middle East conflicts" → "Israel Hamas war", "Iran Israel tensions", etc.
-- No duplicates. No personal names — use roles. Identifier-only facts → \`[]\`.
+- **BANNED empty shapes (emit any and the output fails):** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic regardless of prefix; also bare "press freedom news" / "media ethics". These name a field with no news hook. Award ceremonies, festival line-ups, and "industry trends" round-ups feel like news but are LOW-VALUE noise — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Journalism career development", "Dutch journalism awards", "European journalism awards", "European journalism festivals", "Press freedom news". Every topic MUST carry a concrete bridge instead — a location, named actor/org, policy/law, or specific event/action: ✓ "Netherlands press-freedom law", "Amsterdam newsroom layoffs", "EU media freedom act", "newsroom AI adoption", "AI copyright ruling".
+- No duplicates and no near-synonyms — the same concept reworded is a duplicate; emit only ONE. ✗ pairs like "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes", "startup funding" + "startup funding rules". No personal names — use roles. Identifier-only facts → \`[]\`.
 - Output EXACTLY the count specified in the user message. JSON array only, no prose.
 
 ## Examples
 
-Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate 16 topics
-["Nieuw-West Amsterdam news", "Amsterdam Nieuw-West events", "Nieuw-West safety", "Amsterdam local government", "Amsterdam urban planning", "Amsterdam community news", "North Holland politics", "North Holland transport", "Randstad region updates", "Netherlands policy", "Netherlands tax law", "Netherlands elections", "Dutch immigration law", "Netherlands weather emergencies", "EU regulation", "European policy"]
+Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate 18 topics
+(residence requirement — includes a city transit topic + a country public-services topic)
+["Nieuw-West Amsterdam news", "Amsterdam Nieuw-West events", "Nieuw-West safety", "Amsterdam local government", "Amsterdam urban planning", "Amsterdam community news", "Amsterdam public transport updates", "North Holland politics", "North Holland transport", "Randstad region updates", "Netherlands policy", "Netherlands tax law", "Netherlands elections", "Dutch immigration law", "Netherlands public services disruptions", "Netherlands weather emergencies", "EU regulation", "European policy"]
 
-Fact: "Lives in Bengaluru, India" — Generate 14 topics
-(big-country rule — no "India news")
-["Bengaluru news", "Bengaluru traffic", "Bengaluru tech scene", "Bengaluru weather", "Bengaluru local government", "Karnataka politics", "Karnataka transport", "South India news", "India tech regulation", "India tax policy", "India monsoon", "India elections", "India economy", "Asia economic news"]
+Fact: "Lives in Bengaluru, India" — Generate 15 topics
+(big-country rule — no "India news"; residence requirement still applies)
+["Bengaluru news", "Bengaluru traffic", "Bengaluru public transport updates", "Bengaluru tech scene", "Bengaluru weather", "Bengaluru local government", "Karnataka politics", "Karnataka transport", "South India news", "India tech regulation", "India tax policy", "India rail strikes", "India monsoon", "India elections", "India economy"]
 
 Fact: "Parents live in Bhopal, India, Asia" — Generate 8 topics
 (Relational location — STAY at Bhopal. No MP/India/Asia ladder. Subject is PARENTS in Bhopal — Bhopal-elderly topics only.)
 ["Bhopal news", "Bhopal safety", "Bhopal weather", "Bhopal pollution", "Bhopal healthcare facilities", "Bhopal hospitals for seniors", "Bhopal elder care services", "Bhopal community support"]
 
+Fact: "Parents are currently traveling in Chhindwara, India" — Generate 6 topics
+(Relational + TEMPORARY location — STAY at Chhindwara. Parents are simply present there → same local-news set as residence, NOT travel logistics. No MP/India/Asia ladder. ✗ "Madhya Pradesh politics", "India travel advisories", "India visa policy", "India monsoon travel disruptions", "India domestic flight delays".)
+["Chhindwara news", "Chhindwara safety", "Chhindwara weather", "Chhindwara transport", "Chhindwara healthcare", "Chhindwara civic issues"]
+
+Fact: "Interested in journalism conferences and workshops" — Generate 6 topics
+User location: Amsterdam, Netherlands
+(Abstract-interest fact. Do NOT enumerate the field's meta-topics — bridge to concrete news the field reports on or that affects it. ✗ "Journalism industry trends", "Dutch journalism awards", "European journalism festivals", "Journalism career development", "Press freedom news".)
+["Amsterdam newsroom layoffs", "Netherlands press-freedom law", "EU media freedom act", "newsroom AI adoption", "Dutch media merger news", "AI copyright rulings"]
+
 Fact: "Senior ML engineer at DeepMind" — Generate 5 topics
-(global/professional — no User-location anchoring)
-["DeepMind news", "AI industry news", "machine learning research", "AI policy", "DeepMind AI"]`;
+(global/professional — no User-location anchoring. Concrete AI-news hooks, not "AI industry trends". Note the shapes, don't copy the org.)
+["DeepMind research news", "AI training data lawsuits", "AI copyright rulings", "AI safety policy", "AI model release news"]`;
 
 /**
  * CLOUD fact-only topic-generation prompt — Qwen3-30B-A3B-Instruct-2507.
@@ -853,15 +942,15 @@ Forbidden categories (service-shaped, not news-shaped):
 Allowed (news-shaped):
 - Policy debates, regulation news, reform proposals.
 - Demographic / economic trends ("aging population", "housing affordability", "migration trends").
-- Government decisions, court rulings, public-interest reporting.
-- Sector news (industry mergers, jobs reports, regulatory changes affecting a sector).
+- Government decisions, court rulings, lawsuits, copyright/IP disputes ("AI training data lawsuits", "AI copyright rulings"), public-interest reporting.
+- Sector news (industry mergers, jobs reports, product/tool launches, regulatory changes affecting a sector — "newsroom AI adoption", "AI journalism tools").
 
-Good: "Split eldercare policy debate", "Croatia healthcare reform", "Amsterdam lawyer climate ruling", "Dutch immigration law reform", "EU diaspora pension rights".
+Good: "Split eldercare policy debate", "Croatia healthcare reform", "Amsterdam lawyer climate ruling", "Dutch immigration law reform", "EU diaspora pension rights", "AI training data lawsuits", "AI copyright rulings news", "newsroom AI adoption".
 Bad: "Split notary services for expats", "Croatian inheritance law for Dutch residents", "Netherlands-Croatia legal compliance", "Split legal aid for expats", "Toulouse notary services for expats". These are service-shaped — output them and you fail.
 
 ## Step 1 — Anchoring (decide in order)
 - **(a-1)** Fact contains the USER's OWN location → anchor to THAT location, expand full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location.
-- **(a-2)** Fact contains a RELATIONAL location (someone OTHER than the user is at X — partner's parents live in X, family from X, in-laws in X, etc.) → anchor to X and STAY there. Do NOT ladder to its state/country/continent. Combos with Other facts stay at X (e.g. "X elder-care apps", "X expat tech support" — never "Country X-policy" or "Continent diaspora").
+- **(a-2)** Fact contains a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or someone is only briefly there — partner's parents live in X, family from X, in-laws in X, parents traveling/visiting X, etc.) → anchor to X and STAY there. Do NOT ladder to its state/country/continent. Combos stay at the EXACT place X (e.g. "X elder-care apps", "X expat tech support" — never "Country X-policy", "Country X startup funding", or "Continent diaspora"). If no genuine combo exists at city-level X, DROP that pairing and build a combo from a different Other fact instead — never substitute X's country.
 - **(b)** No Fact location, User location given, Fact is personal/local → anchor to User location, full chain.
 - **(c)** Fact is global/professional → unanchored. Never use User location.
 - **(d)** Ambiguous → default to (c).
@@ -877,6 +966,8 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 
 ## Other rules
 - No duplicates within this output OR with the sibling fact-only output (assume the sibling already covered plain Fact-only anchors).
+- **Other-fact locations are exact too.** If an Other fact you weave in carries a relational/temporary location (parents in X, traveling in X), the combo must stay at that EXACT place X — NEVER expand to X's country. ✗ "India AI news app trends", "India startup funding", "India expat tech conferences" built off a Chhindwara/Bhopal Other fact. If no city-exact combo works, weave a different Other fact instead.
+- **Near-duplicate-fact guard.** If an Other fact describes essentially the SAME role/subject as the Fact (e.g. Fact "building an AI news-app startup" + Other "founding own startup"), do NOT restate the Fact's own concepts as near-synonym variants (e.g. "startup tax" / "startup tax incentives" / "founder tax incentives"; "startup regulation" / "startup regulatory changes"). Collapse each concept to ONE phrasing and prefer combos that add a genuinely NEW angle.
 - No personal names — use roles.
 - **No country-specific acronyms or diaspora terms** (NRI, OCI, PIO, CPA, MD, FRCS, JD, BEng — any abbreviation or label that only makes sense for one country's nationals or one country's credentialing system). Use neutral forms: "expat", "diaspora", "tax accountant", "physician", "engineer". Acronyms tied to one country are a one-bit triangulation tell.
 - Output EXACTLY the count specified in the user message, or \`[]\` if no meaningful combos exist.
@@ -896,6 +987,13 @@ Other user facts: Building an AI news app; Senior software engineer; Enjoys Form
 (Relational location — combos STAY at Bhopal. No MP/India/Asia ladder. No AI/F1/Amsterdam subjects — those have their own runs. Keep parents-in-Bhopal as subject. NO country-specific acronyms like NRI — use "expat" / "diaspora".)
 Generate 6 topics
 ["Bhopal remote-work elder care", "Bhopal expat tech remittances", "Bhopal elder telehealth tech", "Bhopal video-call apps for seniors", "Bhopal diaspora family services", "Bhopal AI-assisted eldercare"]
+
+Fact: "Interested in privacy-safe AI"
+User location: Amsterdam, Netherlands
+Other user facts: Interested in journalism conferences; Building an AI news app
+(AI × journalism intersection — Fact (AI) stays subject, journalism/news-app woven in. Concrete newsworthy shapes, not "industry trends".)
+Generate 4 topics
+["AI training data lawsuits", "newsroom AI adoption", "AI copyright rulings news", "AI journalism tool launches"]
 
 Fact: "Senior ML engineer at DeepMind"
 Other user facts: Lives in Amsterdam; Enjoys Formula 1
@@ -918,8 +1016,8 @@ export const LOCAL_TOPIC_GEN_RULES_SNIPPET = `## Inputs
 You will NEVER receive Other user facts. A sibling prompt covers fact-combination topics.
 
 ## Step 1 — Anchoring (decide in order)
-- **(a-1)** Fact contains the USER's OWN location (lives/works/studies in X) → anchor to THAT location, full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location.
-- **(a-2)** Fact contains a RELATIONAL location (someone OTHER than the user is at X — partner's parents live in X, family from X) → anchor to X and STAY there. Do NOT ladder to its state/country/continent.
+- **(a-1)** Fact contains the USER's OWN location (lives/works/studies in X) → anchor to THAT location, full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location. Residence requirement: always include ≥1 city public-transport topic and ≥1 country public-services/rail topic (e.g. "Amsterdam public transport updates", "Netherlands rail strikes").
+- **(a-2)** Fact contains a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or someone is only briefly there — partner's parents live in X, family from X, parents traveling/visiting X) → anchor to X and STAY there. Do NOT ladder to its state/country/continent. "Traveling/visiting X" = present in X, so generate the same local-news set as living there (local news, safety, weather, transport) — NOT visas/flights/travel advisories. Exception: if X is a tiny locality/island with almost no news, take at most ONE step to its named archipelago/region only (Porto Santo → "Madeira news" OK, "Portugal news" ✗).
 - **(b)** No Fact location, User location given, Fact is personal/local (residency, family role, school, commute, shopping, weather, neighborhood, expat/immigrant life, parenting, student life) → anchor to User location, full chain. No location-less variants.
 - **(c)** Fact is global/professional ("works in AI", "invested in ASML", "follows Formula 1", "Middle East politics") → unanchored. Never use User location.
 - **(d)** Ambiguous → default to (c).
@@ -934,7 +1032,8 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 - **Big-country exception (≥1B pop, India/China)** → NO generic country topic at all. Specific only ("India tech regulation", "China tax policy"). City/state stay normal.
 
 ## Other rules
-- No duplicates. No personal names — use roles. Identifier-only fact → \`[]\`.
+- **BANNED empty shapes:** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic; also bare "press freedom news" / "media ethics". Award ceremonies and "industry trends" round-ups feel like news but are LOW-VALUE — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Dutch journalism awards", "European journalism awards". Each topic needs a concrete bridge (location, named actor, policy, or specific event) ✓ "Netherlands press-freedom law", "newsroom AI adoption", "EU media freedom act", "AI copyright ruling".
+- No duplicates and no near-synonyms — emit only ONE per concept. ✗ "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes". No personal names — use roles. Identifier-only fact → \`[]\`.
 - Output EXACTLY the count specified in the user message. JSON array only, no prose.
 
 ## Examples
@@ -946,8 +1045,13 @@ Fact: "Lives in Bengaluru, India" — Generate 13 topics
 (big-country rule — no "India news")
 ["Bengaluru news", "Bengaluru traffic", "Bengaluru tech scene", "Bengaluru weather", "Karnataka politics", "Karnataka transport", "South India news", "India tech regulation", "India tax policy", "India monsoon", "India elections", "India economy", "Asia economic news"]
 
+Fact: "Parents are currently traveling in Chhindwara, India" — Generate 6 topics
+(Relational + TEMPORARY — STAY at Chhindwara, same local-news set as residence. No MP/India ladder, no travel advisories/visas.)
+["Chhindwara news", "Chhindwara safety", "Chhindwara weather", "Chhindwara transport", "Chhindwara healthcare", "Chhindwara civic issues"]
+
 Fact: "Senior ML engineer at DeepMind" — Generate 6 topics
-["DeepMind news", "AI industry news", "machine learning research", "AI policy", "AI startups", "DeepMind AI"]`;
+(concrete AI-news hooks, not "AI industry trends"; note the shapes, don't copy the org)
+["DeepMind research news", "AI training data lawsuits", "AI copyright rulings", "AI safety policy", "AI model release news", "AI startups"]`;
 
 /**
  * LOCAL fact-only topic-generation prompt — Qwen3.5-4B on-device. The caller
@@ -984,7 +1088,7 @@ Every topic must read like a NEWS HEADLINE (policy debate, reform, demographic t
 
 ## Step 1 — Anchoring
 - **(a-1)** Fact has the USER's OWN location → anchor to it, full chain.
-- **(a-2)** Fact has a RELATIONAL location (someone OTHER than the user is at X — partner's parents live in X, family from X) → anchor to X and STAY there. NO ladder to its state/country/continent. Combos stay at X.
+- **(a-2)** Fact has a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or briefly there — partner's parents live in X, family from X, parents traveling/visiting X) → anchor to X and STAY there. NO ladder to its state/country/continent. Combos stay at the EXACT place X. If no city-level combo exists, drop it and use a different Other fact — never substitute X's country.
 - **(b)** No Fact location, User location given, Fact is personal/local → anchor to User location.
 - **(c)** Fact is global/professional → unanchored.
 - **(d)** Ambiguous → (c).
@@ -1000,6 +1104,8 @@ Continent/bloc map: NL/DE/FR → EU; US/CA/MX → North America; IN/JP/ID → As
 
 ## Other rules
 - No duplicates. No personal names — use roles.
+- **Other-fact locations are exact too.** If an Other fact you weave in carries a relational/temporary location (parents in X, traveling in X), stay at that EXACT place X — never expand to X's country. ✗ "India AI news app trends" from a Chhindwara/Bhopal fact.
+- **Near-duplicate-fact guard.** If an Other fact is essentially the SAME role/subject as the Fact, don't restate the Fact's concepts as near-synonyms ("startup tax" / "startup tax incentives"). One phrasing per concept; add a new angle.
 - **No country-specific acronyms or diaspora terms** (NRI, OCI, PIO, CPA, MD, FRCS, JD, BEng — any abbreviation tied to one country's nationals or credentialing). Use neutral forms: "expat", "diaspora", "tax accountant", "physician".
 - Output EXACTLY the count specified, or \`[]\` if no meaningful combos.
 - JSON array only, no prose.
@@ -1017,6 +1123,13 @@ Other user facts: Building an AI news app; Senior software engineer
 (Relational location — STAY at Bhopal. No MP/India/Asia ladder. NO country acronyms — use "expat" / "diaspora".)
 Generate 5 topics
 ["Bhopal remote-work elder care", "Bhopal expat tech remittances", "Bhopal elder telehealth tech", "Bhopal video-call apps for seniors", "Bhopal AI-assisted eldercare"]
+
+Fact: "Interested in privacy-safe AI"
+User location: Amsterdam, Netherlands
+Other user facts: Interested in journalism conferences; Building an AI news app
+(AI × journalism intersection — concrete newsworthy shapes, not "industry trends".)
+Generate 4 topics
+["AI training data lawsuits", "newsroom AI adoption", "AI copyright rulings news", "AI journalism tool launches"]
 
 Output: JSON array of strings with exactly the requested count, or \`[]\`.`;
 

@@ -9,6 +9,7 @@ import {
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
+  CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -53,14 +54,29 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.relevanceSystemPrompt).toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
     expect(a.reasonSystemPrompt).toBe(CLOUD_REASON_SYSTEM_PROMPT);
   });
+
+  it('pins the second-pass FEED verifier config', () => {
+    // 2026-07-16: adopted the validated second-pass FEED verifier ("Design A2 —
+    // tuned"). Default ON. Demote score 0.28 is deliberately below the 0.3
+    // reason/visibility cutoff and inside the TANGENTIAL band (0.25–0.39).
+    // maxTokens 260 = batchSize(15)*12 + 80.
+    expect(a.feedVerifierEnabled).toBe(true);
+    expect(a.feedVerifierBatchSize).toBe(15);
+    expect(a.feedVerifierDemoteScore).toBe(0.28);
+    expect(a.feedVerifierMaxTokens).toBe(260);
+    expect(a.feedVerifierSystemPrompt).toBe(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT);
+  });
 });
 
 describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {
   const t = DEFAULT_HARNESS_CONFIG.topicGen;
 
   it('pins the topic-gen literals', () => {
-    expect(t.totalCloud).toBe(16);
-    expect(t.totalLocal).toBe(14);
+    // 2026-07-16: reduced 16→10 / 14→10 (deliberate product change — see
+    // config.ts comment; golden-labeled baseline showed worst 25% of topics
+    // cuttable with 0% true-FEED loss).
+    expect(t.totalCloud).toBe(10);
+    expect(t.totalLocal).toBe(10);
     expect(t.temperature).toBe(0.3);
     expect(t.maxFactLength).toBe(200);
   });

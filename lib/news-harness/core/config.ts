@@ -9,6 +9,7 @@
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
+  CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -55,6 +56,33 @@ export interface ArticlePipelineConfig {
   reasonSystemPrompt: string;
   /** Cloud model used for scoring + reason generation. */
   model: string;
+  // --- Second-pass FEED verifier (validated 2026-07-16 multistage experiment,
+  //     "Design A2 — tuned"; see CLOUD_FEED_VERIFIER_SYSTEM_PROMPT) -----------
+  /** Enable the second-pass FEED verifier. A precision pass over only the
+   *  first-pass FEED candidates (raw ≥ discardFloor) that demotes clear false
+   *  positives out of FEED. Default ON — adopted from the experiment (+7.2pt
+   *  FEED precision, unrelated-in-FEED 19→13, +3.8% tokens). */
+  feedVerifierEnabled: boolean;
+  /** Articles bundled into one verifier prompt. 15 amortizes the terse prompt
+   *  across the batch; matches the validated experiment batch size. */
+  feedVerifierBatchSize: number;
+  /** Raw score a verifier-demoted ("no") article is set to. 0.28 is chosen so a
+   *  demoted article: (a) sits BELOW reasonRelevanceThreshold (0.3) → it never
+   *  gets a reason generated (noise gets no reason); (b) sits below the app's
+   *  For-You visibility cutoff (rows render only when relevance > 0.3) → it
+   *  never takes a For-You slot; (c) still lands inside the TANGENTIAL band
+   *  (0.25–0.39) → a future Discover surface can still show it. NOTE: this is
+   *  deliberately BELOW the experiment's 0.35 — 0.35 would still clear the 0.3
+   *  reason/visibility cutoffs. This 0.28 encodes the product rule "noise gets
+   *  no reason and no For-You slot." */
+  feedVerifierDemoteScore: number;
+  /** Output token ceiling for one verifier batch call. Derived from batch size:
+   *  feedVerifierBatchSize*12 + 80 (the {"v":"yes"}/{"v":"no"} array is tiny;
+   *  80 is array/format headroom). At batchSize 15 → 260, which the experiment
+   *  confirmed never truncated. Keep consistent with feedVerifierBatchSize. */
+  feedVerifierMaxTokens: number;
+  /** System prompt for the second-pass FEED verifier. */
+  feedVerifierSystemPrompt: string;
 }
 
 export interface TopicGenConfig {
@@ -105,10 +133,21 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     relevanceSystemPrompt: CLOUD_RELEVANCE_SYSTEM_PROMPT,
     reasonSystemPrompt: CLOUD_REASON_SYSTEM_PROMPT,
     model: SMALL_MODEL,
+    feedVerifierEnabled: true,
+    feedVerifierBatchSize: 15,
+    feedVerifierDemoteScore: 0.28,
+    feedVerifierMaxTokens: 260, // 15*12 + 80
+    feedVerifierSystemPrompt: CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   },
   topicGen: {
-    totalCloud: 16,
-    totalLocal: 14,
+    // 2026-07-16: reduced 16→10 (cloud) / 14→10 (local). Golden-labeled
+    // analysis of the 186-topic prod baseline showed the worst 25% of topics
+    // could be cut with 0% loss of true-FEED articles (19/186 fetched zero;
+    // worst 55 topics consumed 23.8% of the daily article quota for zero
+    // feed-worthy yield). Fewer, better-targeted topics per fact → less quota
+    // waste. Deliberate product change (config.test.ts pins updated to match).
+    totalCloud: 10,
+    totalLocal: 10,
     temperature: 0.3,
     maxFactLength: 200,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,

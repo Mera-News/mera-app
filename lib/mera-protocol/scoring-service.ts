@@ -44,6 +44,8 @@ import {
   parseBatchRelevanceResponse,
   parseReasonResponse,
   decodeCloudBatchResults as harnessDecodeCloudBatchResults,
+  buildFeedVerifierCalls,
+  applyFeedVerifierDecisions,
   CLOUD_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/news-harness/article-pipeline/scoring';
@@ -450,6 +452,60 @@ export function decodeCloudBatchResults(params: {
 
 /** Exported alias so the reconciler can import a canonical helper name. */
 export const decodeResults = decodeCloudBatchResults;
+
+// --- Second-pass FEED verifier (cloud) ---
+//
+// Runs the validated second-pass FEED verifier over a batch's freshly-decoded
+// RAW scores, demoting clear first-pass false positives out of FEED. Mutates
+// `scoreMap` IN PLACE (raw scores) and returns the number of articles demoted.
+//
+// This is the production wiring point for the pipelined cloud path
+// (scoring-pipeline.ts::handleRelevanceResults calls it after score decode,
+// before bucketing/persist). The verifier LLM call goes through the SAME E2EE
+// primitive as the first pass (`cloudBatchComplete`) — article content + facts
+// are encrypted client-side, so the privacy model is preserved. FAIL-OPEN: any
+// error (LLM failure, empty facts) leaves every score untouched. Gated by
+// config.feedVerifierEnabled. `candidates` must carry title/description/facts
+// (as returned by getUnscoredSuggestionsWithFacts).
+export async function runFeedVerifierPass(
+  candidates: ScoringCandidate[],
+  scoreMap: Map<string, number>,
+): Promise<number> {
+  if (!ARTICLE_CFG.feedVerifierEnabled) return 0;
+  const feedCandidates = candidates.filter(
+    (c) => (scoreMap.get(c.id) ?? 0) >= ARTICLE_CFG.discardFloor,
+  );
+  if (feedCandidates.length === 0) return 0;
+
+  try {
+    const allFactStatements = await loadAllFactStatements();
+    const { calls, verifyIdToCandidates } = buildFeedVerifierCalls(
+      feedCandidates,
+      allFactStatements,
+      ARTICLE_CFG,
+      appHarnessLogger,
+    );
+    if (calls.length === 0) return 0;
+    const results = await cloudBatchComplete(calls, SMALL_MODEL);
+    const demoted = applyFeedVerifierDecisions(
+      scoreMap,
+      verifyIdToCandidates,
+      results,
+      ARTICLE_CFG,
+      appHarnessLogger,
+    );
+    logger.info('[runFeedVerifierPass] verified batch', {
+      audited: feedCandidates.length,
+      demoted,
+    });
+    return demoted;
+  } catch (err) {
+    logger.warn('[runFeedVerifierPass] verifier failed — scores unchanged', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return 0;
+  }
+}
 
 // --- Main entry: score every unscored row ---
 

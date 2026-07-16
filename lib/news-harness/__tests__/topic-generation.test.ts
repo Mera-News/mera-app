@@ -34,9 +34,12 @@ describe('splitCount', () => {
   it('gives all to factOnly when there are no other facts', () => {
     expect(splitCount(16, false)).toEqual({ factOnly: 16, combo: 0 });
   });
-  it('splits ~50/50 when others exist', () => {
-    expect(splitCount(16, true)).toEqual({ factOnly: 8, combo: 8 });
-    expect(splitCount(15, true)).toEqual({ factOnly: 7, combo: 8 });
+  it('biases ~60/40 toward factOnly when others exist', () => {
+    // 2026-07-16: combo = floor(total*0.4), factOnly = remainder (fact-only is
+    // the higher-quality path; combo produced most wasted-quota noise).
+    expect(splitCount(10, true)).toEqual({ factOnly: 6, combo: 4 });
+    expect(splitCount(16, true)).toEqual({ factOnly: 10, combo: 6 });
+    expect(splitCount(15, true)).toEqual({ factOnly: 9, combo: 6 });
   });
 });
 

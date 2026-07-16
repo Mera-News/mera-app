@@ -24,6 +24,9 @@ const mockBucketScores = jest.fn();
 const mockBuildRelevanceCalls = jest.fn();
 const mockBuildReasonCallsForSubset = jest.fn();
 const mockDecodeResults = jest.fn();
+// Verifier is a no-op in these orchestrator tests (its own unit tests cover
+// behaviour) — returns 0 demoted, leaving the decoded scoreMap untouched.
+const mockRunFeedVerifierPass = jest.fn().mockResolvedValue(0);
 const mockRefresh = jest.fn();
 const mockFetchResults = jest.fn();
 const mockDiscardLowRelevance = jest.fn();
@@ -87,6 +90,7 @@ jest.mock('@/lib/mera-protocol/scoring-service', () => ({
   buildRelevanceCalls: (...args: any[]) => mockBuildRelevanceCalls(...args),
   buildReasonCallsForSubset: (...args: any[]) => mockBuildReasonCallsForSubset(...args),
   decodeResults: (...args: any[]) => mockDecodeResults(...args),
+  runFeedVerifierPass: (...args: any[]) => mockRunFeedVerifierPass(...args),
   CLOUD_SCORE_CHUNK_SIZE: 5,
   REASON_MIN_RAW_SCORE: 0.3,
 }));
