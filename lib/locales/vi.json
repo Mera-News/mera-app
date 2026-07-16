@@ -200,7 +200,9 @@
     "storyUnavailable": "Câu chuyện này không còn khả dụng",
     "failedToLoad": "Không thể tải bài viết",
     "articleNotFound": "Không tìm thấy bài viết",
-    "readOn": "Đọc trên {{publication}}"
+    "readOn": "Đọc trên {{publication}}",
+    "share": "Chia sẻ",
+    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Xem tin nhắn trước đó"
   },
   "articleFeedback": {
-    "widgetTitle": "Bạn nghĩ gì về gợi ý bài viết này?",
     "thumbsUp": "Tôi thích",
     "thumbsDown": "Không dành cho tôi",
     "thumbsUpMessage": "Tôi thích bài viết này: \"{{title}}\". Tôi muốn xem thêm gợi ý như thế này.",

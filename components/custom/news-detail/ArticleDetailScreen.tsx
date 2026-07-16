@@ -220,10 +220,17 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
+                                    share={{
+                                        url: articleUrl,
+                                        titleEnglish: article.title_en_internal_only ?? article.title,
+                                        titleOriginal: article.title,
+                                        sourceLanguage: article.original_language_code,
+                                    }}
                                 />
                                 <Button
                                     variant="outline"
                                     action="primary"
+                                    className="rounded-full"
                                     onPress={() => handleArticleUrlPress(articleUrl)}
                                 >
                                     <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />

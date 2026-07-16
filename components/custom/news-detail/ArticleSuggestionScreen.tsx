@@ -310,45 +310,34 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 }
                 footer={
                     <>
-                        {/* Read Article CTA — 80% read button, 20% save toggle */}
+                        {/* Read Article CTA */}
                         {suggestion.article_url ? (
                             <VStack space="xs">
                                 <ArticleFeedbackPrompt
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}
+                                    save={{ saved: isSaved, onToggle: handleToggleSave }}
+                                    share={{
+                                        url: suggestion.article_url,
+                                        titleEnglish: suggestion.title_en,
+                                        titleOriginal: suggestion.title_original,
+                                        sourceLanguage: suggestion.language_code,
+                                    }}
                                 />
-                                <HStack space="sm" className="items-center">
-                                    <Box className="flex-[4]">
-                                        <Button
-                                            variant="outline"
-                                            action="primary"
-                                            onPress={() => handleArticleUrlPress(suggestion.article_url)}
-                                        >
-                                            <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                            <ButtonText className="text-white ml-2">
-                                                {suggestion.publication_name
-                                                    ? t('articleDetail.readOn', { publication: suggestion.publication_name })
-                                                    : t('articleDetail.readArticle')}
-                                            </ButtonText>
-                                        </Button>
-                                    </Box>
-                                    <Box className="flex-1 items-center justify-center">
-                                        <Pressable
-                                            onPress={handleToggleSave}
-                                            hitSlop={12}
-                                            accessibilityRole="button"
-                                            accessibilityLabel={t('savedSuggestions.savedToastTitle')}
-                                            className="bg-gray-900 rounded-full p-2.5 shadow-hard-2"
-                                        >
-                                            <MaterialIcons
-                                                name={isSaved ? 'bookmark' : 'bookmark-border'}
-                                                size={24}
-                                                color="#ffffff"
-                                            />
-                                        </Pressable>
-                                    </Box>
-                                </HStack>
+                                <Button
+                                    variant="outline"
+                                    action="primary"
+                                    className="rounded-full"
+                                    onPress={() => handleArticleUrlPress(suggestion.article_url)}
+                                >
+                                    <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
+                                    <ButtonText className="text-white ml-2">
+                                        {suggestion.publication_name
+                                            ? t('articleDetail.readOn', { publication: suggestion.publication_name })
+                                            : t('articleDetail.readArticle')}
+                                    </ButtonText>
+                                </Button>
                                 {(() => {
                                     const status = getArticleTranslatableStatus(
                                         sourceLanguage,

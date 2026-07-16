@@ -200,7 +200,9 @@
     "storyUnavailable": "هذه القصة لم تعد متاحة",
     "failedToLoad": "فشل تحميل المقال",
     "articleNotFound": "المقال غير موجود",
-    "readOn": "اقرأ على {{publication}}"
+    "readOn": "اقرأ على {{publication}}",
+    "share": "مشاركة",
+    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "عرض الرسائل السابقة"
   },
   "articleFeedback": {
-    "widgetTitle": "ما رأيك في هذا المقال المقترح؟",
     "thumbsUp": "أعجبني",
     "thumbsDown": "ليس لي",
     "thumbsUpMessage": "أعجبني هذا المقال: \"{{title}}\". أود رؤية اقتراحات أخرى مثل هذا.",

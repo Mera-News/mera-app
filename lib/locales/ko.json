@@ -200,7 +200,9 @@
     "storyUnavailable": "이 스토리는 더 이상 이용할 수 없습니다",
     "failedToLoad": "기사를 불러오지 못했습니다",
     "articleNotFound": "기사를 찾을 수 없습니다",
-    "readOn": "{{publication}}에서 읽기"
+    "readOn": "{{publication}}에서 읽기",
+    "share": "공유",
+    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "이전 메시지 보기"
   },
   "articleFeedback": {
-    "widgetTitle": "이 기사 추천을 어떻게 생각하시나요?",
     "thumbsUp": "좋아요",
     "thumbsDown": "관심 없어요",
     "thumbsUpMessage": "이 기사가 마음에 들었어요: \"{{title}}\". 이런 추천을 더 보고 싶어요.",

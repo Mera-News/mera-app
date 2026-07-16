@@ -200,7 +200,9 @@
     "storyUnavailable": "Questa storia non è più disponibile",
     "failedToLoad": "Caricamento dell'articolo non riuscito",
     "articleNotFound": "Articolo non trovato",
-    "readOn": "Leggi su {{publication}}"
+    "readOn": "Leggi su {{publication}}",
+    "share": "Condividi",
+    "shareVia": "Condiviso tramite Mera News — notizie personalizzate per te. Scarica l'app: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Caricamento dei dettagli del gruppo non riuscito",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Visualizza messaggi precedenti"
   },
   "articleFeedback": {
-    "widgetTitle": "Cosa ne pensi di questo suggerimento di articolo?",
     "thumbsUp": "Mi piace",
     "thumbsDown": "Non fa per me",
     "thumbsUpMessage": "Mi è piaciuto questo articolo: \"{{title}}\". Vorrei vedere altri suggerimenti come questo.",

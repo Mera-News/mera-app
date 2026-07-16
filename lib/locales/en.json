@@ -203,7 +203,9 @@
     "articleUnavailable": "This article is no longer available",
     "storyUnavailable": "This story is no longer available",
     "failedToLoad": "Failed to load article",
-    "articleNotFound": "Article not found"
+    "articleNotFound": "Article not found",
+    "share": "Share",
+    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
@@ -568,7 +570,6 @@
     }
   },
   "articleFeedback": {
-    "widgetTitle": "What do you think of this article suggestion?",
     "thumbsUp": "I like it",
     "thumbsDown": "Not for me",
     "likeLabel": "I like it",

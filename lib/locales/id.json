@@ -200,7 +200,9 @@
     "storyUnavailable": "Berita ini sudah tidak tersedia",
     "failedToLoad": "Gagal memuat artikel",
     "articleNotFound": "Artikel tidak ditemukan",
-    "readOn": "Baca di {{publication}}"
+    "readOn": "Baca di {{publication}}",
+    "share": "Bagikan",
+    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Lihat pesan sebelumnya"
   },
   "articleFeedback": {
-    "widgetTitle": "Bagaimana pendapatmu tentang saran artikel ini?",
     "thumbsUp": "Saya suka",
     "thumbsDown": "Bukan untuk saya",
     "thumbsUpMessage": "Saya suka artikel ini: \"{{title}}\". Saya ingin melihat lebih banyak saran seperti ini.",

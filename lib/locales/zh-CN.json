@@ -200,7 +200,9 @@
     "storyUnavailable": "该新闻已不再可用",
     "failedToLoad": "文章加载失败",
     "articleNotFound": "文章未找到",
-    "readOn": "在 {{publication}} 上阅读"
+    "readOn": "在 {{publication}} 上阅读",
+    "share": "分享",
+    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "查看之前的消息"
   },
   "articleFeedback": {
-    "widgetTitle": "你觉得这篇推荐文章怎么样？",
     "thumbsUp": "喜欢",
     "thumbsDown": "不适合我",
     "thumbsUpMessage": "我喜欢这篇文章:「{{title}}」。我想看到更多类似的推荐。",

@@ -200,7 +200,9 @@
     "storyUnavailable": "Ця новина більше недоступна",
     "failedToLoad": "Не вдалося завантажити статтю",
     "articleNotFound": "Статтю не знайдено",
-    "readOn": "Читати на {{publication}}"
+    "readOn": "Читати на {{publication}}",
+    "share": "Поділитися",
+    "shareVia": "Надіслано через Mera News — новини, підібрані спеціально для вас. Завантажте застосунок: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Не вдалося завантажити деталі кластера",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Переглянути попередні повідомлення"
   },
   "articleFeedback": {
-    "widgetTitle": "Що ви думаєте про цю рекомендовану статтю?",
     "thumbsUp": "Подобається",
     "thumbsDown": "Не для мене",
     "thumbsUpMessage": "Мені сподобалася ця стаття: «{{title}}». Хотів би бачити більше подібних пропозицій.",

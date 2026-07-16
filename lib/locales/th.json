@@ -200,7 +200,9 @@
     "storyUnavailable": "เรื่องราวนี้ไม่มีให้อ่านแล้ว",
     "failedToLoad": "โหลดบทความไม่สำเร็จ",
     "articleNotFound": "ไม่พบบทความ",
-    "readOn": "อ่านต่อที่ {{publication}}"
+    "readOn": "อ่านต่อที่ {{publication}}",
+    "share": "แชร์",
+    "shareVia": "แชร์ผ่าน Mera News — ข่าวที่คัดสรรมาเพื่อคุณโดยเฉพาะ ดาวน์โหลดแอปได้ที่: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "โหลดรายละเอียดกลุ่มข่าวไม่สำเร็จ",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "ดูข้อความก่อนหน้า"
   },
   "articleFeedback": {
-    "widgetTitle": "คุณคิดอย่างไรกับบทความที่แนะนำนี้?",
     "thumbsUp": "ถูกใจ",
     "thumbsDown": "ไม่ใช่สำหรับฉัน",
     "thumbsUpMessage": "ฉันชอบบทความนี้: \"{{title}}\" ฉันอยากเห็นคำแนะนำแบบนี้อีก",

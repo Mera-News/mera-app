@@ -200,7 +200,9 @@
     "storyUnavailable": "यह स्टोरी अब उपलब्ध नहीं है",
     "failedToLoad": "लेख लोड करने में विफल",
     "articleNotFound": "लेख नहीं मिला",
-    "readOn": "{{publication}} पर पढ़ें"
+    "readOn": "{{publication}} पर पढ़ें",
+    "share": "साझा करें",
+    "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "पिछले संदेश देखें"
   },
   "articleFeedback": {
-    "widgetTitle": "आपको यह लेख सुझाव कैसा लगा?",
     "thumbsUp": "मुझे पसंद है",
     "thumbsDown": "मेरे लिए नहीं",
     "thumbsUpMessage": "मुझे यह लेख पसंद आया: \"{{title}}\"। मैं इस तरह के और सुझाव देखना चाहूँगा।",

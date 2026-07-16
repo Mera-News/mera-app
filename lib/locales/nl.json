@@ -200,7 +200,9 @@
     "storyUnavailable": "Dit verhaal is niet meer beschikbaar",
     "failedToLoad": "Artikel laden mislukt",
     "articleNotFound": "Artikel niet gevonden",
-    "readOn": "Lezen op {{publication}}"
+    "readOn": "Lezen op {{publication}}",
+    "share": "Delen",
+    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Eerdere berichten bekijken"
   },
   "articleFeedback": {
-    "widgetTitle": "Wat vind je van deze artikelsuggestie?",
     "thumbsUp": "Ik vind het leuk",
     "thumbsDown": "Niets voor mij",
     "thumbsUpMessage": "Ik vond dit artikel leuk: \"{{title}}\". Ik zou graag meer van dit soort suggesties zien.",

@@ -200,7 +200,9 @@
     "storyUnavailable": "このストーリーはもう利用できません",
     "failedToLoad": "記事の読み込みに失敗しました",
     "articleNotFound": "記事が見つかりません",
-    "readOn": "{{publication}}で読む"
+    "readOn": "{{publication}}で読む",
+    "share": "共有",
+    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "以前のメッセージを表示"
   },
   "articleFeedback": {
-    "widgetTitle": "この記事の提案についてどう思いますか？",
     "thumbsUp": "いいね",
     "thumbsDown": "興味なし",
     "thumbsUpMessage": "この記事が気に入りました:「{{title}}」。このような提案をもっと見たいです。",

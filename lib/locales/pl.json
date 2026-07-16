@@ -200,7 +200,9 @@
     "storyUnavailable": "Ta historia nie jest już dostępna",
     "failedToLoad": "Nie udało się załadować artykułu",
     "articleNotFound": "Nie znaleziono artykułu",
-    "readOn": "Czytaj w {{publication}}"
+    "readOn": "Czytaj w {{publication}}",
+    "share": "Udostępnij",
+    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Zobacz poprzednie wiadomości"
   },
   "articleFeedback": {
-    "widgetTitle": "Co sądzisz o tej sugestii artykułu?",
     "thumbsUp": "Podoba mi się",
     "thumbsDown": "To nie dla mnie",
     "thumbsUpMessage": "Podobał mi się ten artykuł: \"{{title}}\". Chciałbym widzieć więcej takich sugestii.",

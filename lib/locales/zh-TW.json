@@ -200,7 +200,9 @@
     "storyUnavailable": "此報導已不再提供",
     "failedToLoad": "文章載入失敗",
     "articleNotFound": "找不到文章",
-    "readOn": "在 {{publication}} 上閱讀"
+    "readOn": "在 {{publication}} 上閱讀",
+    "share": "分享",
+    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "查看先前的訊息"
   },
   "articleFeedback": {
-    "widgetTitle": "你覺得這篇推薦文章怎麼樣？",
     "thumbsUp": "喜歡",
     "thumbsDown": "不適合我",
     "thumbsUpMessage": "我喜歡這篇文章:「{{title}}」。我想看到更多類似的建議。",

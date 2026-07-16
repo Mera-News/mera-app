@@ -200,7 +200,9 @@
     "storyUnavailable": "Bu haber artık mevcut değil",
     "failedToLoad": "Makale yüklenemedi",
     "articleNotFound": "Makale bulunamadı",
-    "readOn": "{{publication}} üzerinde oku"
+    "readOn": "{{publication}} üzerinde oku",
+    "share": "Paylaş",
+    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -550,7 +552,6 @@
     "viewPreviousMessages": "Önceki mesajları görüntüle"
   },
   "articleFeedback": {
-    "widgetTitle": "Bu makale önerisi hakkında ne düşünüyorsun?",
     "thumbsUp": "Beğendim",
     "thumbsDown": "Bana göre değil",
     "thumbsUpMessage": "Bu makaleyi beğendim: \"{{title}}\". Bunun gibi daha fazla öneri görmek isterim.",
