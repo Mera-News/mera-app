@@ -17,6 +17,9 @@ interface ArticleMetaRowProps {
     countryCode?: string | null;
     variant: ArticleMetaRowVariant;
     isNew?: boolean;
+    /** Number of additional source publications collapsed into this story card;
+     *  renders a "+N sources" pill next to the NEW badge (card variant only). */
+    moreSourcesCount?: number;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -26,6 +29,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     countryCode,
     variant,
     isNew = false,
+    moreSourcesCount,
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
@@ -74,6 +78,13 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
                         <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                             {t('feed.newBadge')}
+                        </Text>
+                    </Box>
+                ) : null}
+                {isCard && moreSourcesCount && moreSourcesCount > 0 ? (
+                    <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#6366F1' }}>
+                        <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                            {t('feed.moreSources', { count: moreSourcesCount })}
                         </Text>
                     </Box>
                 ) : null}

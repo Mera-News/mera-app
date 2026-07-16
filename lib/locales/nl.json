@@ -183,7 +183,9 @@
       "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden morgen ontgrendeld.",
       "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden om {{time}} ontgrendeld.",
       "title": "Daglimiet voor artikelen bereikt"
-    }
+    },
+    "moreSources_one": "+{{count}} bron",
+    "moreSources_other": "+{{count}} bronnen"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -202,7 +204,8 @@
     "articleNotFound": "Artikel niet gevonden",
     "readOn": "Lezen op {{publication}}",
     "share": "Delen",
-    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}"
+    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}",
+    "moreCoverage": "Meer berichtgeving"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",

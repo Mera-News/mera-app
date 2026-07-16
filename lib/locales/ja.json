@@ -183,7 +183,8 @@
       "body": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は明日解放されます。",
       "bodyWithTime": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は{{time}}に解放されます。",
       "title": "1日の記事上限に達しました"
-    }
+    },
+    "moreSources_other": "+{{count}}件のソース"
   },
   "relevance": {
     "emergency": "緊急",
@@ -202,7 +203,8 @@
     "articleNotFound": "記事が見つかりません",
     "readOn": "{{publication}}で読む",
     "share": "共有",
-    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}"
+    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}",
+    "moreCoverage": "その他の報道"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",

@@ -67,6 +67,11 @@ import {
   type PipelineRun,
 } from '@/lib/database/services/scoring-pipeline-store';
 import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';
+// Static import is safe: score-propagation imports only the DB service + the
+// pure story-grouping utility + the logger — it never imports scoring-pipeline,
+// so there is no cycle (this module already statically imports the same DB
+// service). In-flight ids are passed IN, so it never reaches back here.
+import { propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagation';
 
 const TAG = '[scoring-pipeline]';
 
@@ -155,13 +160,25 @@ function makeQueuedBatch(
   };
 }
 
-function nonTerminalCandidateIds(run: PipelineRun): Set<string> {
+export function nonTerminalCandidateIds(run: PipelineRun): Set<string> {
   const s = new Set<string>();
   for (const b of run.batches) {
     if (isTerminal(b.phase)) continue;
     for (const id of b.candidateIds) s.add(id);
   }
   return s;
+}
+
+/**
+ * Async convenience for callers OUTSIDE this module (feed-sync, the sibling
+ * propagation hook below): read the current run and return the ids sitting in a
+ * non-terminal batch. Empty set when no run exists. Behaviour is identical to
+ * `nonTerminalCandidateIds(run)` — this just does the `getPipeline()` for you so
+ * the pipeline's run shape stays private.
+ */
+export async function getNonTerminalCandidateIds(): Promise<Set<string>> {
+  const snap = await getPipeline();
+  return snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
 }
 
 async function refreshUi(): Promise<void> {
@@ -866,6 +883,20 @@ async function handleRelevanceResults(
     }
   }
   await refreshUi();
+
+  // The rows just scored are fresh donors — copy their scores onto any unscored
+  // siblings (held-back same-sync duplicates from the feed-sync gate, or rows
+  // stranded in a different clustering generation). Fail-open (returns 0) so a
+  // propagation error never blocks the pipeline; refresh again only if it wrote.
+  try {
+    const inFlight = await getNonTerminalCandidateIds();
+    const propagated = await propagateToUnscoredSiblings(inFlight);
+    if (propagated > 0) await refreshUi();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'propagate-siblings' },
+    });
+  }
 
   const impactfulIds = Object.keys(relevanceMap).filter(
     (id) =>

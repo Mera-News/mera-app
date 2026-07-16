@@ -183,7 +183,9 @@
       "body": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo — novos artigos serão liberados amanhã.",
       "bodyWithTime": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo — novos artigos serão liberados às {{time}}.",
       "title": "Limite diário de artigos atingido"
-    }
+    },
+    "moreSources_one": "+{{count}} fonte",
+    "moreSources_other": "+{{count}} fontes"
   },
   "relevance": {
     "emergency": "Emergência",
@@ -202,7 +204,8 @@
     "articleNotFound": "Artigo não encontrado",
     "readOn": "Ler no {{publication}}",
     "share": "Compartilhar",
-    "shareVia": "Compartilhado via Mera News — notícias personalizadas para você. Baixe o app: {{downloadUrl}}"
+    "shareVia": "Compartilhado via Mera News — notícias personalizadas para você. Baixe o app: {{downloadUrl}}",
+    "moreCoverage": "Mais cobertura"
   },
   "newsCluster": {
     "failedToLoad": "Falha ao carregar detalhes do grupo",

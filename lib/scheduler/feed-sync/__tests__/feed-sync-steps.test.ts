@@ -10,6 +10,8 @@ const mockGetArticlesForTopicsByIds = jest.fn();
 const mockWithRetry = jest.fn();
 const mockRunScoringPass = jest.fn();
 const mockEnqueueCandidates = jest.fn();
+const mockGetNonTerminalCandidateIds = jest.fn();
+const mockGateUnscoredForScoring = jest.fn();
 const mockLogInfo = jest.fn();
 
 jest.mock('@/lib/database/services/fact-service', () => ({
@@ -40,6 +42,11 @@ jest.mock('@/lib/services/SuggestionSyncService', () => ({
 
 jest.mock('@/lib/services/scoring-pipeline', () => ({
   enqueueCandidates: (...args: any[]) => mockEnqueueCandidates(...args),
+  getNonTerminalCandidateIds: (...args: any[]) => mockGetNonTerminalCandidateIds(...args),
+}));
+
+jest.mock('@/lib/feed-grouping/score-propagation', () => ({
+  gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -102,6 +109,14 @@ beforeEach(() => {
   mockGetArticlesForTopicsByIds.mockResolvedValue({ articles: [], dailyLimitReached: false });
   mockRunScoringPass.mockResolvedValue(5);
   mockEnqueueCandidates.mockResolvedValue(undefined);
+  mockGetNonTerminalCandidateIds.mockResolvedValue(new Set());
+  // Default gate: no propagation/election, enqueue nothing. Tests that exercise
+  // enqueue configure it to return the ids the gate elected for this sync.
+  mockGateUnscoredForScoring.mockResolvedValue({
+    enqueueIds: [],
+    propagatedCount: 0,
+    heldBackCount: 0,
+  });
 });
 
 // ── stepFetchTopicIds ─────────────────────────────────────────────────────────
@@ -353,6 +368,12 @@ describe('stepHydratePersistEnqueue', () => {
       { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
     ]);
     const topicMap = new Map([['art-1', ['topic-a']]]);
+    // The gate elects art-1 for scoring (donor-less singleton).
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-1'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: ['art-1'],
       articleToTopicTexts: topicMap,
@@ -388,6 +409,11 @@ describe('stepHydratePersistEnqueue', () => {
       { id: 'good', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
       { id: 'bad', titleEn: null, descriptionEn: 'd', relatedFacts: [] },
     ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['good'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: ['good', 'bad'],
       articleToTopicTexts: new Map(),
@@ -413,6 +439,11 @@ describe('stepHydratePersistEnqueue', () => {
       { id: 'chunk-id', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
       { id: 'other-chunk-id', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
     ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['chunk-id'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: ['chunk-id'],
       articleToTopicTexts: new Map(),
@@ -460,6 +491,11 @@ describe('stepHydratePersistEnqueue', () => {
     mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
       { id: 'art-0', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
     ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-0'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
       articleToTopicTexts: new Map(),
@@ -500,6 +536,12 @@ describe('stepHydratePersistEnqueue', () => {
         chunk2Ids.map((id) => ({ id, titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] })),
       );
 
+    // The gate elects every eligible id this sync (no donors, all singletons).
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: missingIds,
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
       articleToTopicTexts: new Map(),
@@ -530,6 +572,11 @@ describe('stepHydratePersistEnqueue', () => {
     mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
       { id: 'art-0', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
     ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-0'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
       articleToTopicTexts: new Map(),
@@ -654,6 +701,92 @@ describe('stepHydratePersistEnqueue', () => {
     await stepHydratePersistEnqueue(diffResult, makeCtx(), opts);
 
     expect(opts.awaitResumeIfPaused).toHaveBeenCalled();
+  });
+
+  it('runs the skip gate over the in-flight set and enqueues only its elected ids', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'a' }, { _id: 'b' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 2, linkedCount: 2 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'a', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+      { id: 'b', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+    mockGetNonTerminalCandidateIds.mockResolvedValue(new Set(['in-flight-id']));
+    // a and b are same-sync duplicates → gate elects only 'a', holds 'b' back.
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['a'],
+      propagatedCount: 0,
+      heldBackCount: 1,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['a', 'b'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['a', 'b'],
+    };
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // Gate received the in-flight set produced by getNonTerminalCandidateIds.
+    expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight-id']));
+    // Only the elected representative is enqueued; the held-back sibling is not.
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a']);
+    expect(result.enqueuedCount).toBe(1);
+  });
+
+  it('refreshes the store when the gate propagated scores, and does not enqueue when it elected nothing', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'a' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'a', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+    // Gate propagated a donor's score onto 'a' (nothing left to enqueue).
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: [],
+      propagatedCount: 1,
+      heldBackCount: 0,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['a'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['a'],
+    };
+    const opts = makeOpts();
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), opts);
+
+    // Propagated rows are terminal Complete — surfaced via an extra refreshStore
+    // (one for the hydration chunk + one for the propagation).
+    expect((opts.refreshStore as jest.Mock).mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+    expect(result.enqueuedCount).toBe(0);
+  });
+
+  it('skips the gate entirely when no eligible ids were collected this sync', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'a' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    // Persisted row is ineligible (no facts) → allEligibleIds empty → gate skipped.
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'a', titleEn: 't', descriptionEn: 'd', relatedFacts: [] },
+    ]);
+    const diffResult: DiffResult = {
+      serverArticleIds: ['a'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['a'],
+    };
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockGateUnscoredForScoring).not.toHaveBeenCalled();
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+    expect(result.enqueuedCount).toBe(0);
   });
 });
 

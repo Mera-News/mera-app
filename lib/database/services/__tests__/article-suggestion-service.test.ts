@@ -37,6 +37,10 @@ import {
   saveScoringResult,
   batchMarkAsScoredByIds,
   batchMarkReasonSkipped,
+  batchPropagateScores,
+  getGroupingRowsByIds,
+  getUnscoredGroupingRows,
+  getScoredDonorRows,
   saveReason,
   getSuggestionByServerId,
   clearSuggestions,
@@ -681,6 +685,46 @@ describe('batchMarkReasonSkipped', () => {
 
 
 // ===========================================================================
+// batchPropagateScores
+// ===========================================================================
+
+describe('batchPropagateScores', () => {
+  it('does nothing for empty entries array', async () => {
+    await batchPropagateScores([]);
+    expect(database.write).not.toHaveBeenCalled();
+  });
+
+  it('writes relevance, reason, and status=complete for each entry in one batch', async () => {
+    const sug1 = makeSuggestion({ id: 'sug-1', relevance: 0, reason: '', status: 'unscored' });
+    const sug2 = makeSuggestion({ id: 'sug-2', relevance: 0, reason: '', status: 'unscored' });
+    db._setRows('article_suggestions', [sug1, sug2]);
+
+    await batchPropagateScores([
+      { id: 'sug-1', relevance: 0.72, reason: 'Same story as your donor article' },
+      { id: 'sug-2', relevance: 0.72, reason: 'Same story as your donor article' },
+    ]);
+
+    expect(database.write).toHaveBeenCalledTimes(1);
+    expect(database.batch).toHaveBeenCalledTimes(1);
+    expect(sug1.relevance).toBe(0.72);
+    expect(sug1.reason).toBe('Same story as your donor article');
+    expect(sug1.status).toBe('complete');
+    expect(sug2.relevance).toBe(0.72);
+    expect(sug2.status).toBe('complete');
+  });
+
+  it('always sets status=complete, never reason_pending, even with an empty reason', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+
+    await batchPropagateScores([{ id: 'sug-1', relevance: 0.1, reason: '' }]);
+
+    expect(sug.reason).toBe('');
+    expect(sug.status).toBe('complete');
+  });
+});
+
+// ===========================================================================
 // saveReason
 // ===========================================================================
 
@@ -985,6 +1029,155 @@ describe('getTotalArticleSuggestionCount', () => {
     ]);
     const count = await getTotalArticleSuggestionCount();
     expect(count).toBe(3);
+  });
+});
+
+// ===========================================================================
+// getGroupingRowsByIds / getUnscoredGroupingRows / getScoredDonorRows
+// ===========================================================================
+
+describe('getGroupingRowsByIds', () => {
+  it('returns [] for an empty ids array without querying', async () => {
+    const result = await getGroupingRowsByIds([]);
+    expect(result).toEqual([]);
+  });
+
+  it('maps titleEn ?? titleOriginal and parses cluster memberships', async () => {
+    const clustersJson = JSON.stringify([{ clusterId: 'c1', confidence: 0.8 }]);
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        titleEn: 'English Title',
+        titleOriginal: 'Original Title',
+        clusterMembershipsJson: clustersJson,
+        relevance: 0.6,
+        reason: 'because',
+        status: 'complete',
+      }),
+    ]);
+    const [row] = await getGroupingRowsByIds(['s1']);
+    expect(row.title).toBe('English Title');
+    expect(row.clusters).toEqual([{ clusterId: 'c1', confidence: 0.8 }]);
+    expect(row.relevance).toBe(0.6);
+    expect(row.reason).toBe('because');
+    expect(row.status).toBe('complete');
+  });
+
+  it('falls back to titleOriginal when titleEn is null', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', titleEn: null, titleOriginal: 'Original Only' }),
+    ]);
+    const [row] = await getGroupingRowsByIds(['s1']);
+    expect(row.title).toBe('Original Only');
+  });
+
+  it('sets hasDescription from descriptionEn presence', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', descriptionEn: null }),
+      makeSuggestion({ id: 's2', descriptionEn: 'has one' }),
+    ]);
+    const rows = await getGroupingRowsByIds(['s1', 's2']);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    expect(byId.get('s1')!.hasDescription).toBe(false);
+    expect(byId.get('s2')!.hasDescription).toBe(true);
+  });
+
+  it('only returns rows matching the requested ids', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1' }),
+      makeSuggestion({ id: 's2' }),
+    ]);
+    const rows = await getGroupingRowsByIds(['s1']);
+    expect(rows.map((r) => r.id)).toEqual(['s1']);
+  });
+});
+
+describe('getUnscoredGroupingRows', () => {
+  it('returns only rows with status=unscored', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'unscored' }),
+      makeSuggestion({ id: 's2', status: 'reason_pending' }),
+      makeSuggestion({ id: 's3', status: 'complete' }),
+    ]);
+    const rows = await getUnscoredGroupingRows();
+    expect(rows.map((r) => r.id)).toEqual(['s1']);
+  });
+
+  it('returns [] when there are no unscored rows', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'complete' }),
+    ]);
+    const rows = await getUnscoredGroupingRows();
+    expect(rows).toEqual([]);
+  });
+});
+
+describe('getScoredDonorRows', () => {
+  const sinceMs = new Date('2024-06-01T00:00:00.000Z').getTime();
+
+  it('excludes rows with status=unscored', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'unscored',
+        relevance: 0.8,
+        createdAt: new Date(sinceMs + 1000),
+      }),
+      makeSuggestion({
+        id: 's2',
+        status: 'complete',
+        relevance: 0.8,
+        createdAt: new Date(sinceMs + 1000),
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['s2']);
+  });
+
+  it('excludes relevance=0 tombstones (ineligible rows carry no real signal)', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'complete',
+        relevance: 0,
+        createdAt: new Date(sinceMs + 1000),
+      }),
+      makeSuggestion({
+        id: 's2',
+        status: 'complete',
+        relevance: 0.5,
+        createdAt: new Date(sinceMs + 1000),
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['s2']);
+  });
+
+  it('excludes rows created before sinceMs', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'complete',
+        relevance: 0.5,
+        createdAt: new Date(sinceMs - 1000),
+      }),
+      makeSuggestion({
+        id: 's2',
+        status: 'complete',
+        relevance: 0.5,
+        createdAt: new Date(sinceMs),
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['s2']);
+  });
+
+  it('returns [] when no rows satisfy all three conditions', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'unscored', relevance: 0, createdAt: new Date(sinceMs - 1) }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows).toEqual([]);
   });
 });
 

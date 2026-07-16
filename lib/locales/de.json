@@ -183,7 +183,9 @@
       "body": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden morgen freigeschaltet.",
       "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden um {{time}} freigeschaltet.",
       "title": "Tägliches Artikellimit erreicht"
-    }
+    },
+    "moreSources_one": "+{{count}} Quelle",
+    "moreSources_other": "+{{count}} Quellen"
   },
   "relevance": {
     "emergency": "Notfall",
@@ -202,7 +204,8 @@
     "articleNotFound": "Artikel nicht gefunden",
     "readOn": "Auf {{publication}} lesen",
     "share": "Teilen",
-    "shareVia": "Geteilt über Mera News — Nachrichten, die auf dich zugeschnitten sind. Lade die App herunter: {{downloadUrl}}"
+    "shareVia": "Geteilt über Mera News — Nachrichten, die auf dich zugeschnitten sind. Lade die App herunter: {{downloadUrl}}",
+    "moreCoverage": "Weitere Berichterstattung"
   },
   "newsCluster": {
     "failedToLoad": "Cluster-Details konnten nicht geladen werden",

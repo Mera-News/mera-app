@@ -183,7 +183,8 @@
       "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
       "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
       "title": "일일 기사 한도에 도달했습니다"
-    }
+    },
+    "moreSources_other": "+{{count}}개 출처"
   },
   "relevance": {
     "emergency": "긴급",
@@ -202,7 +203,8 @@
     "articleNotFound": "기사를 찾을 수 없습니다",
     "readOn": "{{publication}}에서 읽기",
     "share": "공유",
-    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}"
+    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}",
+    "moreCoverage": "추가 보도"
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",

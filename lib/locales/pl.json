@@ -183,7 +183,11 @@
       "body": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu — nowe artykuły odblokują się jutro.",
       "bodyWithTime": "Na razie nie można pobrać nowych artykułów. Przeglądaj artykuły już zapisane na urządzeniu — nowe artykuły odblokują się o {{time}}.",
       "title": "Osiągnięto dzienny limit artykułów"
-    }
+    },
+    "moreSources_one": "+{{count}} źródło",
+    "moreSources_few": "+{{count}} źródła",
+    "moreSources_many": "+{{count}} źródeł",
+    "moreSources_other": "+{{count}} źródła"
   },
   "relevance": {
     "emergency": "Pilne",
@@ -202,7 +206,8 @@
     "articleNotFound": "Nie znaleziono artykułu",
     "readOn": "Czytaj w {{publication}}",
     "share": "Udostępnij",
-    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}"
+    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}",
+    "moreCoverage": "Więcej relacji"
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",

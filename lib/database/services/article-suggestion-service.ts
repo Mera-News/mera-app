@@ -157,6 +157,82 @@ export async function getScoredSuggestionsWithoutReasons(
   }));
 }
 
+// --- Read: story-grouping projections (skip-gate / sibling propagation) ---
+
+/** Minimal projection of a suggestion row for story-grouping decisions
+ *  (structurally compatible with feed-grouping's GroupableItem). */
+export interface SuggestionGroupingRow {
+  id: string;
+  title: string | null; // titleEn ?? titleOriginal
+  clusters: { clusterId: string; confidence: number }[]; // parsed memberships
+  relevance: number;
+  reason: string;
+  status: ArticleSuggestionStatus;
+  firstPubDateMs: number; // epoch ms, 0 if invalid
+  hasDescription: boolean; // !!descriptionEn — used for representative election
+}
+
+function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
+  const pubMs = row.firstPubDate?.getTime?.();
+  return {
+    id: row.id,
+    title: row.titleEn ?? row.titleOriginal,
+    clusters: parseClusterMemberships(row.clusterMembershipsJson),
+    relevance: row.relevance,
+    reason: row.reason,
+    status: row.status,
+    firstPubDateMs: Number.isFinite(pubMs) ? (pubMs as number) : 0,
+    hasDescription: !!row.descriptionEn,
+  };
+}
+
+/** Grouping rows for specific suggestion ids (skip-gate candidates). */
+export async function getGroupingRowsByIds(ids: string[]): Promise<SuggestionGroupingRow[]> {
+  if (ids.length === 0) return [];
+  const idSet = new Set(ids);
+  const rows = await articleSuggestionsCol
+    .query(Q.where('id', Q.oneOf(ids)))
+    .fetch();
+  // The unit-test fake DB layer doesn't evaluate Q.where predicates (see
+  // mockDatabase.ts), so re-assert the id filter in memory too.
+  return rows.filter((r) => idSet.has(r.id)).map(toGroupingRow);
+}
+
+/** All currently-unscored rows as grouping rows. */
+export async function getUnscoredGroupingRows(): Promise<SuggestionGroupingRow[]> {
+  const rows = await articleSuggestionsCol
+    .query(Q.where('status', ArticleSuggestionStatus.Unscored))
+    .fetch();
+  return rows
+    .filter((r) => r.status === ArticleSuggestionStatus.Unscored)
+    .map(toGroupingRow);
+}
+
+/**
+ * Score donors for sibling propagation: status != Unscored, created_at >= sinceMs,
+ * relevance > 0. The relevance > 0 filter excludes the ineligible tombstones
+ * written by `batchMarkAsScoredByIds` (relevance=0), which carry no real
+ * scoring signal and would otherwise look like a confident "not relevant" donor.
+ */
+export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGroupingRow[]> {
+  const rows = await articleSuggestionsCol
+    .query(
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.Unscored)),
+      Q.where('created_at', Q.gte(sinceMs)),
+      Q.where('relevance', Q.gt(0)),
+    )
+    .fetch();
+  // Same defensive re-filter as above — the fake query() ignores Q.where.
+  return rows
+    .filter(
+      (r) =>
+        r.status !== ArticleSuggestionStatus.Unscored &&
+        r.createdAt.getTime() >= sinceMs &&
+        r.relevance > 0,
+    )
+    .map(toGroupingRow);
+}
+
 // --- Write: delete by server ids (cascades to fact links) ---
 
 export async function deleteSuggestionsByServerIds(
@@ -276,6 +352,32 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
           r.status = ArticleSuggestionStatus.Complete;
         }),
       ),
+    );
+  });
+}
+
+/**
+ * One batched write applying propagated scores (sibling stories inheriting a
+ * donor's relevance + reason). Status is ALWAYS Complete — never ReasonPending,
+ * or the orphaned-reasons sweep would re-spend the LLM calls this propagation
+ * just saved. Mirrors batchMarkAsScoredByIds's prepareUpdate+batch shape.
+ */
+export async function batchPropagateScores(
+  entries: { id: string; relevance: number; reason: string }[],
+): Promise<void> {
+  if (entries.length === 0) return;
+  const rows = await Promise.all(entries.map((e) => articleSuggestionsCol.find(e.id)));
+  const entryById = new Map(entries.map((e) => [e.id, e]));
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) => {
+        const entry = entryById.get(row.id)!;
+        return row.prepareUpdate((r) => {
+          r.relevance = entry.relevance;
+          r.reason = entry.reason;
+          r.status = ArticleSuggestionStatus.Complete;
+        });
+      }),
     );
   });
 }

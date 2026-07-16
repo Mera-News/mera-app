@@ -29,13 +29,18 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
+import {
+    buildStoryGroups,
+    CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+    TITLE_JACCARD_DISPLAY_THRESHOLD,
+} from '@/lib/feed-grouping/story-grouping';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -49,10 +54,18 @@ const SCROLL_THRESHOLD = 300;
 
 /**
  * Detail screen for a single ArticleSuggestion. Header shows the primary
- * article from the local DB row; "Related articles" calls
- * relatedArticles(articleId) lazily on mount via Apollo (no-cache). Sibling
- * articles in the live cluster appear there — never previewed on the feed
- * card.
+ * article from the local DB row. Sibling coverage of the same story is shown
+ * in the footer from two sources, deduped by article id:
+ *   1. "More coverage" — locally-derived siblings, computed in-screen by
+ *      running `buildStoryGroups` over ALL store suggestions (not just the
+ *      feed-visible ones). These are the user's own personalized cards for the
+ *      same story that the feed collapsed away, so they surface even when
+ *      low-relevance or unscored. Superset signal vs. the server join below.
+ *   2. "Related articles" — `relatedArticles(articleId)`, fetched lazily on
+ *      mount via Apollo (no-cache). Limited to the CURRENT clustering
+ *      generation on the server, so it can miss cross-generation siblings that
+ *      the local title-Jaccard grouping catches; rows already shown as local
+ *      siblings (or the opened article itself) are filtered out.
  */
 const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     articleSuggestionId,
@@ -67,6 +80,36 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [suggestion, setSuggestion] = useState<ForYouSuggestion | null>(
         storeSuggestion ?? null,
     );
+    const suggestions = useForYouStore((s) => s.suggestions);
+
+    // Locally-derived "More coverage" siblings: the user's other personalized
+    // cards for the same story that the feed collapsed away. We deliberately
+    // group over the ENTIRE store pool (not just feed-visible rows) so that
+    // low-relevance or still-unscored coverage of the same story surfaces here.
+    const localSiblings = useMemo<ForYouSuggestion[]>(() => {
+        if (!suggestion) return [];
+        // The DB-fallback-loaded row (deep link before hydration) may not be in
+        // the store yet — include it so its group can form.
+        const pool = suggestions.some((x) => x._id === suggestion._id)
+            ? suggestions
+            : [...suggestions, suggestion];
+        const groups = buildStoryGroups(
+            pool.map((s) => ({
+                id: s._id,
+                title: s.title_en ?? s.title_original,
+                clusters: s.clusters,
+                s,
+            })),
+            {
+                titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
+                clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+            },
+        );
+        const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));
+        return (mine ?? [])
+            .filter((m) => m.id !== suggestion._id)
+            .map((m) => m.s);
+    }, [suggestions, suggestion]);
     const [isSaved, setIsSaved] = useState(false);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [isLoading, setIsLoading] = useState(!storeSuggestion);
@@ -148,10 +191,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         };
     }, [suggestion?.articleId]);
 
-    // Sibling articles sharing a cluster with this article (the user's other
-    // cards for the same story) are fetched live from the server via
-    // `relatedArticles(articleId)` above — the feed's collapse keeps only one
-    // representative card per story, so siblings are surfaced here on demand.
+    // Same-story siblings are surfaced two ways: `localSiblings` (above) groups
+    // the user's own store rows that the feed collapsed, and
+    // `relatedArticles(articleId)` (above) joins the server's current clustering
+    // generation. Both render in the footer, deduped by article id.
 
     // Reflect whether this suggestion is already saved for later.
     useEffect(() => {
@@ -278,6 +321,40 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             : undefined,
     } as NewsArticle);
 
+    // Map a local ForYouSuggestion → NewsArticle-shaped object for
+    // CompactPublisherNewsCard (mirrors toNewsArticle above). `_id` is the
+    // ARTICLE id so dedupe against server related rows works by article id.
+    const suggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
+        _id: s.articleId,
+        title: s.title_en ?? s.title_original ?? '',
+        title_en_internal_only: s.title_en ?? undefined,
+        description: s.description_en ?? undefined,
+        description_en_internal_only: s.description_en ?? undefined,
+        pubDate: s.firstPubDate ?? s.createdAt,
+        article_url: s.article_url ?? undefined,
+        image_url: s.image_url ?? undefined,
+        original_language_code: s.language_code ?? undefined,
+        publicationSource: s.publication_name || s.country_code
+            ? ({
+                _id: s.articleId,
+                publication_name: s.publication_name,
+                country_code: s.country_code,
+            } as NewsArticle['publicationSource'])
+            : undefined,
+    } as NewsArticle);
+
+    // Article ids already shown as local "More coverage" siblings, plus the
+    // opened article's own id — server related rows matching any of these are
+    // filtered out so the footer never lists a story twice or itself.
+    const localSiblingArticleIds = new Set<string>(
+        localSiblings.map((s) => s.articleId),
+    );
+    const serverRelated = related.filter(
+        (a) =>
+            a._id !== suggestion.articleId &&
+            !localSiblingArticleIds.has(a._id),
+    );
+
     return (
         <Box className="flex-1 bg-black">
             {/* Floating Back Button */}
@@ -383,22 +460,46 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             </VStack>
                         ) : null}
 
-                        {/* Related Articles — sibling ArticleSuggestions
-                            (the user's other personalized cards for this
-                            story) render first as compact cards, then the
-                            live cluster siblings from the server below. */}
-                        {(isLoadingRelated || related.length > 0) && (
+                        {/* More coverage — locally-derived sibling
+                            ArticleSuggestions (the user's own personalized
+                            cards for this story that the feed collapsed).
+                            Rendered first because it's a superset of the
+                            server join below. Tapping opens the richer
+                            personalized suggestion-detail row. */}
+                        {localSiblings.length > 0 && (
+                            <VStack space="md">
+                                <Heading size="md" className="text-gray-300">
+                                    {t('articleDetail.moreCoverage')}
+                                </Heading>
+                                {localSiblings.map((sibling, index) => (
+                                    <CompactPublisherNewsCard
+                                        key={sibling._id || `sibling-${index}`}
+                                        article={suggestionToNewsArticle(sibling)}
+                                        onPress={() => router.replace({
+                                            pathname: '/logged-in/suggestion-detail',
+                                            params: { articleSuggestionId: sibling._id },
+                                        })}
+                                    />
+                                ))}
+                            </VStack>
+                        )}
+
+                        {/* Related Articles — live cluster siblings from the
+                            server for the current clustering generation, minus
+                            any already shown as local siblings above (and the
+                            opened article itself). */}
+                        {(isLoadingRelated || serverRelated.length > 0) && (
                             <VStack space="md">
                                 <Heading size="md" className="text-gray-300">
                                     {t('articleDetail.relatedArticles')}
                                 </Heading>
-                                {isLoadingRelated && related.length === 0 ? (
+                                {isLoadingRelated && serverRelated.length === 0 ? (
                                     <Box className="items-center justify-center py-4">
                                         <Spinner size="small" />
                                     </Box>
                                 ) : (
                                     <>
-                                        {related.map((a, index) => (
+                                        {serverRelated.map((a, index) => (
                                             <CompactPublisherNewsCard
                                                 key={a._id || `related-${index}`}
                                                 article={toNewsArticle(a)}

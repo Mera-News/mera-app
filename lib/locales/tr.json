@@ -183,7 +183,9 @@
       "body": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler yarın açılır.",
       "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler {{time}} saatinde açılır.",
       "title": "Günlük makale sınırına ulaşıldı"
-    }
+    },
+    "moreSources_one": "+{{count}} kaynak",
+    "moreSources_other": "+{{count}} kaynak"
   },
   "relevance": {
     "emergency": "Acil",
@@ -202,7 +204,8 @@
     "articleNotFound": "Makale bulunamadı",
     "readOn": "{{publication}} üzerinde oku",
     "share": "Paylaş",
-    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}"
+    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}",
+    "moreCoverage": "Diğer kaynaklar"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",

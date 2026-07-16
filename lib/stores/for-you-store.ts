@@ -28,10 +28,12 @@ import type { ScoringErrorKind } from '@/lib/services/scoring-error';
  *  its HDBSCAN membership confidence (0.0–1.0), refreshed every sync
  *  (overwritten unconditionally, including when empty). An article can be in
  *  multiple clusters via `cluster-article-link`. The For-You feed collapses
- *  suggestions whose dense (high-confidence) cluster cores overlap into a
- *  single representative card. The detail screen's "related articles" panel
- *  still calls `relatedArticles(articleId)` for the authoritative live
- *  cluster siblings. */
+ *  suggestions into a single representative card via union-find over two edge
+ *  types (see `lib/feed-grouping/story-grouping.ts`): a shared high-confidence
+ *  cluster, OR a high title-token Jaccard (the latter bridges the same story
+ *  across the server's per-run clustering generations). The detail screen's
+ *  "related articles" panel still calls `relatedArticles(articleId)` for the
+ *  authoritative live cluster siblings. */
 export type ClusterMembership = {
     clusterId: string;
     confidence: number;

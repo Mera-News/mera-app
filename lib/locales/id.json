@@ -183,7 +183,8 @@
       "body": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka besok.",
       "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka pada {{time}}.",
       "title": "Batas artikel harian tercapai"
-    }
+    },
+    "moreSources_other": "+{{count}} sumber"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -202,7 +203,8 @@
     "articleNotFound": "Artikel tidak ditemukan",
     "readOn": "Baca di {{publication}}",
     "share": "Bagikan",
-    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}"
+    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}",
+    "moreCoverage": "Liputan lainnya"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",

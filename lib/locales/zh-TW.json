@@ -183,7 +183,8 @@
       "body": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於明天解鎖。",
       "bodyWithTime": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於 {{time}} 解鎖。",
       "title": "已達每日文章上限"
-    }
+    },
+    "moreSources_other": "+{{count}} 個來源"
   },
   "relevance": {
     "emergency": "緊急",
@@ -202,7 +203,8 @@
     "articleNotFound": "找不到文章",
     "readOn": "在 {{publication}} 上閱讀",
     "share": "分享",
-    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}"
+    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}",
+    "moreCoverage": "更多報導"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",

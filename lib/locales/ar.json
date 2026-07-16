@@ -183,7 +183,13 @@
       "body": "لا يمكن جلب مقالات جديدة في الوقت الحالي. تصفّح المقالات الموجودة على جهازك — تُتاح مقالات جديدة غدًا.",
       "bodyWithTime": "لا يمكن جلب مقالات جديدة في الوقت الحالي. تصفّح المقالات الموجودة على جهازك — تُتاح مقالات جديدة في {{time}}.",
       "title": "تم بلوغ الحد اليومي للمقالات"
-    }
+    },
+    "moreSources_zero": "+{{count}} مصدر",
+    "moreSources_one": "+{{count}} مصدر",
+    "moreSources_two": "+{{count}} مصدران",
+    "moreSources_few": "+{{count}} مصادر",
+    "moreSources_many": "+{{count}} مصدرًا",
+    "moreSources_other": "+{{count}} مصدر"
   },
   "relevance": {
     "emergency": "طارئ",
@@ -202,7 +208,8 @@
     "articleNotFound": "المقال غير موجود",
     "readOn": "اقرأ على {{publication}}",
     "share": "مشاركة",
-    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}"
+    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}",
+    "moreCoverage": "مزيد من التغطية"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",

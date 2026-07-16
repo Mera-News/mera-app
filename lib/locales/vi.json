@@ -183,7 +183,8 @@
       "body": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào ngày mai.",
       "bodyWithTime": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào lúc {{time}}.",
       "title": "Đã đạt giới hạn bài viết hằng ngày"
-    }
+    },
+    "moreSources_other": "+{{count}} nguồn"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -202,7 +203,8 @@
     "articleNotFound": "Không tìm thấy bài viết",
     "readOn": "Đọc trên {{publication}}",
     "share": "Chia sẻ",
-    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}"
+    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}",
+    "moreCoverage": "Nguồn tin khác"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",

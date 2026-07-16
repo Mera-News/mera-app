@@ -9,6 +9,7 @@ import {
   persistAndLinkV2Suggestions,
 } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
+import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
 import type { TaskContext } from '../scheduler-types';
@@ -149,7 +150,7 @@ export async function stepHydratePersistEnqueue(
   // handler → feed-sync-steps. Same pattern as lib/database/hydrate-stores.ts.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const scoringPipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
-  const { enqueueCandidates } = scoringPipeline;
+  const { enqueueCandidates, getNonTerminalCandidateIds } = scoringPipeline;
 
   for (let i = 0; i < chunks.length; i++) {
     // Between-chunk cooperative points: pause while offline, bail on abort. A
@@ -226,18 +227,44 @@ export async function stepHydratePersistEnqueue(
   // early exit above) — one clean batch-set so the pipeline starts a single
   // run with a stable total, instead of a per-chunk enqueue that keeps
   // appending to (and never finishing) an active run.
+  //
+  // But first run the scoring skip gate + same-sync election. Instead of
+  // enqueueing every freshly-eligible id, the gate (a) copies an already-scored
+  // sibling story's score onto its still-unscored duplicates and (b) elects a
+  // single representative per same-sync duplicate group, holding the siblings
+  // back. Crucially the gate re-derives its candidates from ALL unscored,
+  // not-in-flight rows — not just THIS sync's `allEligibleIds` — so any sibling
+  // held back or missed by a failed batch on a prior sync is re-considered here.
+  // That makes the whole scheme self-healing with no persisted held-back state:
+  // a held-back sibling is either propagated (its rep scored) or re-enqueued
+  // next sync. `enqueueCandidates` dedupes in-flight ids internally, so feeding
+  // it the wider set is safe, and MIN_RUN_CANDIDATES semantics (inside
+  // enqueueCandidates) are untouched.
+  let enqueuedCount = 0;
   if (allEligibleIds.length > 0) {
-    await enqueueCandidates(allEligibleIds);
-    ctx.log(`enqueued ${allEligibleIds.length} eligible ids (single batch-set)`);
+    const inFlight = await getNonTerminalCandidateIds();
+    const gate = await gateUnscoredForScoring(inFlight);
+    // Propagated rows are now terminal `Complete` — surface them immediately,
+    // the same way each hydration chunk refreshes for progressive rendering.
+    if (gate.propagatedCount > 0) {
+      await opts.refreshStore();
+    }
+    if (gate.enqueueIds.length > 0) {
+      await enqueueCandidates(gate.enqueueIds);
+    }
+    enqueuedCount = gate.enqueueIds.length;
+    ctx.log(
+      `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${enqueuedCount}`,
+    );
     logger.info(
-      `[feed-sync-steps] enqueued ${allEligibleIds.length} eligible ids (single batch-set)`,
+      `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${enqueuedCount}`,
     );
   }
 
-  ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${allEligibleIds.length}`);
+  ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}`);
   return {
     insertedCount,
-    enqueuedCount: allEligibleIds.length,
+    enqueuedCount,
     dailyLimitReached,
     resetAt,
   };

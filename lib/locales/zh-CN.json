@@ -183,7 +183,8 @@
       "body": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于明天解锁。",
       "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于 {{time}} 解锁。",
       "title": "已达每日文章上限"
-    }
+    },
+    "moreSources_other": "+{{count}} 个来源"
   },
   "relevance": {
     "emergency": "紧急",
@@ -202,7 +203,8 @@
     "articleNotFound": "文章未找到",
     "readOn": "在 {{publication}} 上阅读",
     "share": "分享",
-    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}"
+    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}",
+    "moreCoverage": "更多报道"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",

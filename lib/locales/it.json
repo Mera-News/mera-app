@@ -183,7 +183,9 @@
       "body": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano domani.",
       "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano alle {{time}}.",
       "title": "Limite giornaliero di articoli raggiunto"
-    }
+    },
+    "moreSources_one": "+{{count}} fonte",
+    "moreSources_other": "+{{count}} fonti"
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -202,7 +204,8 @@
     "articleNotFound": "Articolo non trovato",
     "readOn": "Leggi su {{publication}}",
     "share": "Condividi",
-    "shareVia": "Condiviso tramite Mera News — notizie personalizzate per te. Scarica l'app: {{downloadUrl}}"
+    "shareVia": "Condiviso tramite Mera News — notizie personalizzate per te. Scarica l'app: {{downloadUrl}}",
+    "moreCoverage": "Altra copertura"
   },
   "newsCluster": {
     "failedToLoad": "Caricamento dei dettagli del gruppo non riuscito",

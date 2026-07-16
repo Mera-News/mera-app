@@ -186,7 +186,9 @@
       "onDeviceTitle": "Scoring on your phone",
       "completedTitle": "All done",
       "completedMessage": "Your feed is ready"
-    }
+    },
+    "moreSources_one": "+{{count}} source",
+    "moreSources_other": "+{{count}} sources"
   },
   "relevance": {
     "emergency": "Emergency",
@@ -205,7 +207,8 @@
     "failedToLoad": "Failed to load article",
     "articleNotFound": "Article not found",
     "share": "Share",
-    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}"
+    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}",
+    "moreCoverage": "More coverage"
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
