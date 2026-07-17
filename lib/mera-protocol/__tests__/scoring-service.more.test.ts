@@ -9,6 +9,14 @@ jest.mock('../../llm/cloudComplete', () => ({
   cloudComplete: jest.fn(),
   cloudBatchComplete: jest.fn(),
 }));
+const mockComputeAndJudge = jest.fn();
+jest.mock('../stage-scoring', () => ({
+  computeAndJudgeForCandidates: (...a: any[]) => mockComputeAndJudge(...a),
+  computeMathStage: jest.fn(),
+  loadPersonaScoringContext: jest.fn(),
+  buildStageCandidates: jest.fn(),
+  getScoringLlmPort: jest.fn(),
+}));
 jest.mock('../../llm/constants', () => ({ SMALL_MODEL: 'test-small-model' }));
 jest.mock('../../logger', () => ({
   __esModule: true,
@@ -92,6 +100,20 @@ function makeCandidate(
     userTopicIds: [],
     relatedFacts: [{ id: `f-${id}`, statement: 'user fact statement' }],
     ...opts,
+  };
+}
+
+/** Builds a StageResult (as returned by computeAndJudgeForCandidates) from a
+ *  plain score map + optional reason map. */
+function stageResult(scores: Record<string, number>, reasons: Record<string, string> = {}) {
+  return {
+    rawScoreMap: new Map(Object.entries(scores)),
+    computedScoreMap: new Map(Object.entries(scores)),
+    componentsMap: new Map(Object.keys(scores).map((id) => [id, {}])),
+    modeMap: new Map(Object.keys(scores).map((id) => [id, 'math'])),
+    reasonMap: new Map(Object.entries(reasons)),
+    overrideMap: new Map(),
+    adjustedIds: new Set(),
   };
 }
 
@@ -354,63 +376,75 @@ describe('batchScoreAndReason — ineligible candidates', () => {
 describe('batchScoreAndReason — cloud path', () => {
   beforeEach(() => {
     mockGetState.mockReturnValue({ processingMode: 'CLOUD' } as ReturnType<typeof useMeraProtocolStore.getState>);
+    mockComputeAndJudge.mockReset();
   });
 
-  it('calls cloudBatchComplete for phase-1 scoring', async () => {
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.75]' }]) // phase-1
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'Because it affects your area.' }]); // phase-2
+  it('scores via computeAndJudgeForCandidates, then runs a reason pass for survivors the judge left uncaptioned', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.75 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([{ id: 'reason:a', output: 'Because...' }]);
 
     const c = makeCandidate('a');
-    const { scoreMap } = await batchScoreAndReason([c]);
+    const { scoreMap, reasonMap } = await batchScoreAndReason([c]);
 
-    expect(mockCloudBatchComplete).toHaveBeenCalledTimes(2);
+    expect(mockComputeAndJudge).toHaveBeenCalledWith([c]);
     expect(scoreMap.get('a')).toBe(0.75);
+    // 0.75 >= 0.3 and the stage result carried no reason → exactly one reason
+    // pass call (not a separate score-phase call).
+    expect(mockCloudBatchComplete).toHaveBeenCalledTimes(1);
+    expect(reasonMap.get('a')).toBe('Because...');
   });
 
-  it('maps phase-2 reason output into reasonMap', async () => {
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.75]' }])
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'Relevant to your work.' }]);
+  it('uses the judge-provided reason and skips the reason pass entirely when already captioned', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.75 }, { a: 'judge reason' }));
 
-    const { reasonMap } = await batchScoreAndReason([makeCandidate('a')]);
-    expect(reasonMap.get('a')).toBe('Relevant to your work.');
+    const { scoreMap, reasonMap } = await batchScoreAndReason([makeCandidate('a')]);
+
+    expect(scoreMap.get('a')).toBe(0.75);
+    expect(reasonMap.get('a')).toBe('judge reason');
+    expect(mockCloudBatchComplete).not.toHaveBeenCalled();
   });
 
-  it('adds to failedIds when chunk score fails', async () => {
-    // Phase-2 still runs because the fallback score (0.3) >= REASON_THRESHOLD (0).
-    // Provide a second mock so it doesn't throw.
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '', error: 'timeout' }]) // phase-1 fails
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'reason' }]); // phase-2 succeeds
+  it('skips the reason pass when the stage score is below the reason threshold (0.3)', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.25 }));
 
-    const { failedIds, scoreMap } = await batchScoreAndReason([makeCandidate('a')]);
+    const { scoreMap, reasonMap } = await batchScoreAndReason([makeCandidate('a')]);
+
+    expect(scoreMap.get('a')).toBe(0.25);
+    expect(reasonMap.has('a')).toBe(false);
+    expect(mockCloudBatchComplete).not.toHaveBeenCalled();
+  });
+
+  it('falls back to FALLBACK_RELEVANCE and marks failedIds when computeAndJudgeForCandidates throws', async () => {
+    mockComputeAndJudge.mockRejectedValue(new Error('x'));
+
+    const { scoreMap, failedIds } = await batchScoreAndReason([makeCandidate('a')]);
+
     expect(failedIds.has('a')).toBe(true);
-    expect(scoreMap.get('a')).toBe(0.3); // FALLBACK_RELEVANCE
+    expect(scoreMap.get('a')).toBe(0.3);
+    expect(mockCloudBatchComplete).not.toHaveBeenCalled();
   });
 
-  it('both phase-1 and phase-2 are called even when phase-1 fails (REASON_THRESHOLD = 0)', async () => {
-    // REASON_THRESHOLD = 0 means every scored candidate (including fallbacks) is a
-    // "survivor", so phase-2 always runs even on error paths.
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '', error: 'fail' }]) // phase-1
-      .mockResolvedValueOnce([]); // phase-2 (survivors cleared)
+  it('falls back to FALLBACK_RELEVANCE and marks failedIds when the stage rawScoreMap omits the candidate', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({}));
 
-    await batchScoreAndReason([makeCandidate('a')]);
-    expect(mockCloudBatchComplete).toHaveBeenCalledTimes(2);
+    const { scoreMap, failedIds } = await batchScoreAndReason([makeCandidate('a')]);
+
+    expect(failedIds.has('a')).toBe(true);
+    expect(scoreMap.get('a')).toBe(0.3);
   });
 
   it('mixes eligible and ineligible candidates correctly', async () => {
     const eligible = makeCandidate('e');
     const ineligible = makeCandidate('i', { relatedFacts: [] });
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.6]' }])
-      .mockResolvedValueOnce([{ id: 'reason:e', output: 'Reason text.' }]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ e: 0.6 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([{ id: 'reason:e', output: 'Reason text.' }]);
 
     const { scoreMap } = await batchScoreAndReason([eligible, ineligible]);
     expect(scoreMap.get('e')).toBe(0.6);
     expect(scoreMap.get('i')).toBe(0.2); // ineligible
+    // Only the eligible candidate is passed to the stage.
+    expect(mockComputeAndJudge).toHaveBeenCalledWith([eligible]);
   });
 });
 
@@ -421,58 +455,48 @@ describe('batchScoreAndReason — cloud path', () => {
 describe('batchScoreAndReason — on-device path', () => {
   beforeEach(() => {
     mockGetState.mockReturnValue({ processingMode: 'ON_DEVICE' } as ReturnType<typeof useMeraProtocolStore.getState>);
+    mockComputeAndJudge.mockReset();
   });
 
-  it('calls completeLocal for scoring (not cloudBatchComplete)', async () => {
-    mockCompleteLocal
-      .mockResolvedValueOnce('[0.65]')  // score call
-      .mockResolvedValueOnce('Good reason.'); // reason call
+  it('scores via computeAndJudgeForCandidates, then runs the reason pass via completeLocal (not cloudBatchComplete)', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.7 }));
+    mockCompleteLocal.mockResolvedValueOnce('Local reason.');
 
     const c = makeCandidate('a');
-    const { scoreMap } = await batchScoreAndReason([c]);
+    const { scoreMap, reasonMap } = await batchScoreAndReason([c]);
+
+    expect(mockComputeAndJudge).toHaveBeenCalledWith([c]);
+    expect(scoreMap.get('a')).toBe(0.7);
     expect(mockCompleteLocal).toHaveBeenCalled();
     expect(mockCloudBatchComplete).not.toHaveBeenCalled();
-    expect(scoreMap.get('a')).toBe(0.65);
+    expect(reasonMap.get('a')).toBe('Local reason.');
   });
 
-  it('stores reason from local call in reasonMap', async () => {
-    mockCompleteLocal
-      .mockResolvedValueOnce('[0.7]')
-      .mockResolvedValueOnce('Local reason text.');
-
-    const { reasonMap } = await batchScoreAndReason([makeCandidate('a')]);
-    expect(reasonMap.get('a')).toBe('Local reason text.');
-  });
-
-  it('adds to failedIds on local score error and uses FALLBACK_RELEVANCE', async () => {
-    mockCompleteLocal.mockRejectedValueOnce(new Error('local failure'));
+  it('falls back to FALLBACK_RELEVANCE and marks failedIds when computeAndJudgeForCandidates throws', async () => {
+    mockComputeAndJudge.mockRejectedValue(new Error('local stage failure'));
 
     const { failedIds, scoreMap } = await batchScoreAndReason([makeCandidate('a')]);
     expect(failedIds.has('a')).toBe(true);
     expect(scoreMap.get('a')).toBe(0.3);
+    expect(mockCompleteLocal).not.toHaveBeenCalled();
   });
 
-  it('continues to next chunk if one chunk fails', async () => {
-    // chunk size = 1 for local; 2 candidates → 2 chunks
-    mockCompleteLocal
-      .mockRejectedValueOnce(new Error('chunk 0 fail'))
-      .mockResolvedValueOnce('[0.7]') // chunk 1 score
-      .mockResolvedValueOnce('reason for b');
-
-    const { scoreMap, failedIds } = await batchScoreAndReason([makeCandidate('a'), makeCandidate('b')]);
-    expect(failedIds.has('a')).toBe(true);
-    expect(scoreMap.get('b')).toBe(0.7);
-  });
-
-  it('logs warning when local reason fails but does not fail the candidate', async () => {
-    mockCompleteLocal
-      .mockResolvedValueOnce('[0.6]')
-      .mockRejectedValueOnce(new Error('reason error'));
+  it('logs a warning when the local reason call fails, but the candidate keeps its score and no reason is stored', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.6 }));
+    mockCompleteLocal.mockRejectedValueOnce(new Error('reason error'));
 
     const { scoreMap, reasonMap } = await batchScoreAndReason([makeCandidate('a')]);
     expect(scoreMap.get('a')).toBe(0.6);
     expect(reasonMap.has('a')).toBe(false);
     expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('uses the judge-provided reason and skips completeLocal entirely when already captioned', async () => {
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.7 }, { a: 'judge reason' }));
+
+    const { reasonMap } = await batchScoreAndReason([makeCandidate('a')]);
+    expect(reasonMap.get('a')).toBe('judge reason');
+    expect(mockCompleteLocal).not.toHaveBeenCalled();
   });
 });
 
@@ -481,6 +505,10 @@ describe('batchScoreAndReason — on-device path', () => {
 // ============================================================
 
 describe('processAllUnscored', () => {
+  beforeEach(() => {
+    mockComputeAndJudge.mockReset();
+  });
+
   it('returns 0 immediately when there are no unscored suggestions', async () => {
     mockCountUnscored.mockResolvedValue(0);
     const onProgress = jest.fn();
@@ -496,31 +524,34 @@ describe('processAllUnscored', () => {
       .mockResolvedValue([]);
     mockGetScoredWithoutReasons.mockResolvedValue([]);
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.5, 0.6]' }])
-      .mockResolvedValueOnce([
-        { id: 'reason:a', output: 'reason a' },
-        { id: 'reason:b', output: 'reason b' },
-      ]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.5, b: 0.6 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'reason:a', output: 'reason a' },
+      { id: 'reason:b', output: 'reason b' },
+    ]);
 
     const onProgress = jest.fn();
     await processAllUnscored(onProgress);
     expect(onProgress).toHaveBeenCalledWith(0, 2);
   });
 
-  it('calls saveScoringResult for each succeeded candidate', async () => {
+  it('calls saveScoringResult for each succeeded candidate with the relevance, computedScore, rawScore and scoreComponentsJson fields', async () => {
     mockCountUnscored.mockResolvedValue(1);
     mockGetUnscored
       .mockResolvedValueOnce([makeCandidate('a')])
       .mockResolvedValue([]);
     mockGetScoredWithoutReasons.mockResolvedValue([]);
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.7]' }])
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'A reason.' }]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.7 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([{ id: 'reason:a', output: 'A reason.' }]);
 
     await processAllUnscored();
-    expect(mockSaveScoringResult).toHaveBeenCalledWith('a', expect.objectContaining({ relevance: expect.any(Number) }));
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a', expect.objectContaining({
+      relevance: expect.any(Number),
+      computedScore: 0.7,
+      rawScore: 0.7,
+      scoreComponentsJson: expect.any(String),
+    }));
   });
 
   it('calls onBatchComplete with succeeded updates', async () => {
@@ -530,9 +561,8 @@ describe('processAllUnscored', () => {
       .mockResolvedValue([]);
     mockGetScoredWithoutReasons.mockResolvedValue([]);
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.7]' }])
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'A reason.' }]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.7 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([{ id: 'reason:a', output: 'A reason.' }]);
 
     const onBatchComplete = jest.fn();
     await processAllUnscored(undefined, 20, onBatchComplete);
@@ -548,17 +578,14 @@ describe('processAllUnscored', () => {
       .mockResolvedValue([]);
     mockGetScoredWithoutReasons.mockResolvedValue([]);
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '', error: 'fail' }])
-      .mockResolvedValueOnce([]);
+    // computeAndJudgeForCandidates throwing marks 'a' as failed → excluded from
+    // saveScoringResult → succeeded stays empty → onBatchComplete never fires.
+    mockComputeAndJudge.mockRejectedValue(new Error('stage failed'));
 
-    mockSaveScoringResult.mockRejectedValueOnce(new Error('save failed'));
     const onBatchComplete = jest.fn();
     await processAllUnscored(undefined, 20, onBatchComplete);
-    // onBatchComplete only fires when succeeded.length > 0
-    // With a save error the candidate may still succeed; let's test the break path:
-    // Re-test: with failedIds having 'a', saveScoringResult is NOT called for 'a'
-    // so succeeded is empty → onBatchComplete not called
+    expect(onBatchComplete).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
   });
 
   it('stops looping when batch comes back empty', async () => {
@@ -568,6 +595,7 @@ describe('processAllUnscored', () => {
 
     const result = await processAllUnscored();
     expect(result).toBe(0);
+    expect(mockComputeAndJudge).not.toHaveBeenCalled();
     expect(mockCloudBatchComplete).not.toHaveBeenCalled();
   });
 
@@ -580,11 +608,12 @@ describe('processAllUnscored', () => {
     mockGetScoredWithoutReasons.mockResolvedValue([]);
 
     // Batch 1
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.7]' }])
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'reason a' }])
+    mockComputeAndJudge
+      .mockResolvedValueOnce(stageResult({ a: 0.7 }))
       // Batch 2
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.6]' }])
+      .mockResolvedValueOnce(stageResult({ b: 0.6 }));
+    mockCloudBatchComplete
+      .mockResolvedValueOnce([{ id: 'reason:a', output: 'reason a' }])
       .mockResolvedValueOnce([{ id: 'reason:b', output: 'reason b' }]);
 
     const result = await processAllUnscored();
@@ -738,15 +767,18 @@ describe('buildUserContext — fallback to candidate facts when bank is empty', 
 // ============================================================
 
 describe('processAllUnscored — saveScoringResult error paths', () => {
+  beforeEach(() => {
+    mockComputeAndJudge.mockReset();
+  });
+
   it('logs error and excludes candidate from succeeded when saveScoringResult throws', async () => {
     mockCountUnscored.mockResolvedValue(1);
     mockGetUnscored
       .mockResolvedValueOnce([makeCandidate('a')])
       .mockResolvedValue([]);
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.7]' }])
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'A reason.' }]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.7 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([{ id: 'reason:a', output: 'A reason.' }]);
 
     mockSaveScoringResult.mockRejectedValueOnce(new Error('db write error'));
 
@@ -764,9 +796,8 @@ describe('processAllUnscored — saveScoringResult error paths', () => {
       .mockResolvedValueOnce([makeCandidate('a')])
       .mockResolvedValue([]);
 
-    mockCloudBatchComplete
-      .mockResolvedValueOnce([{ id: 'score:0', output: '[0.7]' }])
-      .mockResolvedValueOnce([{ id: 'reason:a', output: 'reason' }]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.7 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([{ id: 'reason:a', output: 'reason' }]);
 
     // retryMissingReasons is called after the main loop; getScoredSuggestionsWithoutReasons
     // throws → retryMissingReasons throws → processAllUnscored catches it

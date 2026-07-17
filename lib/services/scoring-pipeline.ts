@@ -35,6 +35,7 @@ import {
   getUnscoredSuggestionsWithFacts,
   saveReason,
   saveScoringResult,
+  batchSaveComputedScores,
   batchMarkReasonSkipped,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
@@ -43,10 +44,16 @@ import {
   buildReasonCallsForSubset,
   buildRelevanceCalls,
   decodeResults,
-  runFeedVerifierPass,
   CLOUD_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
+  type CloudCallBundle,
 } from '@/lib/mera-protocol/scoring-service';
+import { computeMathStage } from '@/lib/mera-protocol/stage-scoring';
+import {
+  buildJudgeCalls,
+  decodeJudgeResults,
+} from '@/lib/news-harness/scoring-engine';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { useUserStore } from '@/lib/stores/user-store';
 import {
   discardLowRelevance,
@@ -75,6 +82,17 @@ import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';
 import { propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagation';
 
 const TAG = '[scoring-pipeline]';
+
+// PipelineBatch is a plain persisted JSON object; the judge-mode flag rides
+// along as an extra field without a store-side type change (the store owns that
+// type and is off-limits here). Read/write it through this cast.
+type BatchWithJudge = PipelineBatch & { judgeMode?: boolean };
+
+// TODO(wave8-deck): in-order chunk release queue + ~90s head-chunk release
+// timeout (force-release on math scores) + onChunkReleased(chunkCardIds) store
+// event for the swipe deck (M-P5 / A3.3). The swipe deck (Browse tab) ships in
+// wave 8; the sectioned For You feed (wave 7) renders progressively on the
+// existing per-batch refreshUi, so the release queue is not required yet.
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -571,17 +589,15 @@ async function doSubmitRelevance(
   const all = await getUnscoredSuggestionsWithFacts();
   const idSet = new Set(batch.candidateIds);
   const subset = all.filter((c) => idSet.has(c.id));
-  const bundle = await buildRelevanceCalls(subset);
-  if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {
-    logger.info(
-      `${TAG} batch ${batch.batchId} relevance bundle empty — marking done`,
-    );
-    // Terminal transition inside the drain loop; doDrain's maybeFinalize handles
-    // the run finalize (calling afterTerminal here would re-enter drain).
-    await markBatchDone(batch.batchId);
-    return;
-  }
-  const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
+
+  // Run the deterministic math on-device NOW (no LLM). This partitions the
+  // batch into math-mode (tagged metadata → judge job) vs backstop (untagged →
+  // legacy tiered LLM relevance), and — for the judge path — gives us the
+  // computed scores we persist so a judge failure fail-opens to the math.
+  const math = await computeMathStage(subset);
+  const backstop = math.stage.filter(
+    (c) => math.modeMap.get(c.input.id) === 'backstop',
+  );
 
   // Push-token policy (a): attach the run's token only when this is the LAST
   // relevance-needing batch — no other relevance batch is queued or submitting.
@@ -593,9 +609,93 @@ async function doSubmitRelevance(
   );
   const token = otherRelevancePending ? null : run.expoPushToken;
 
+  // --- BACKSTOP PATH (any untagged candidate) — unchanged legacy flow. ------
+  // Mixed/untagged batches keep the two-phase tiered LLM scoring exactly as
+  // before (the plan's backstop path). No math audit is persisted here.
+  if (backstop.length > 0) {
+    const bundle = await buildRelevanceCalls(subset);
+    if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {
+      logger.info(
+        `${TAG} batch ${batch.batchId} relevance bundle empty — marking done`,
+      );
+      // Terminal transition inside the drain loop; doDrain's maybeFinalize
+      // handles the run finalize (calling afterTerminal here would re-enter
+      // drain).
+      await markBatchDone(batch.batchId);
+      return;
+    }
+    const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
+
+    const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+    logger.info(
+      `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
+    );
+    const outcome = await sendInferenceRequest({
+      bundle,
+      ctx,
+      token,
+      model: SMALL_MODEL,
+      context,
+    });
+
+    if (outcome.status === 'ok') {
+      // judgeMode stays false (default) — decode routes to the legacy path.
+      await transitionToWaitingRelevance(batch.batchId, outcome, eligibleIds);
+      logger.info(
+        `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
+      );
+    } else if (outcome.status === 'throttled') {
+      await requeueThrottled(batch.batchId, 'submitting-relevance');
+    } else {
+      // Inside the drain loop — doDrain's maybeFinalize covers the terminal case.
+      await failOrRetrySubmit(batch.batchId, 'submitting-relevance');
+    }
+    return;
+  }
+
+  // --- JUDGE MODE (all candidates are math-mode) ---------------------------
+  // Persist the math NOW (rawScore initialized to computed; overwritten at
+  // decode) so a judge failure/timeout fail-opens to the persisted math score.
+  await batchSaveComputedScores(
+    math.stage.map((c) => ({
+      id: c.input.id,
+      computedScore: math.computedScoreMap.get(c.input.id)!,
+      rawScore: math.computedScoreMap.get(c.input.id)!,
+      scoreComponentsJson: JSON.stringify(math.componentsMap.get(c.input.id)!),
+    })),
+  );
+
+  // Combined judge+reason calls, chunked at judgeChunkSize. chunkIds order is
+  // reconstructed at decode time from batch.candidateIds (same order).
+  const { calls } = buildJudgeCalls(
+    math.stage,
+    math.computedScoreMap,
+    math.componentsMap,
+    math.persona,
+    DEFAULT_HARNESS_CONFIG,
+  );
+  if (calls.length === 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} judge bundle empty — marking done`,
+    );
+    await markBatchDone(batch.batchId);
+    return;
+  }
+
+  // CRITICAL: the decode join re-chunks batch.candidateIds in THIS order to
+  // rebuild `judge:${i}` → ids, so candidateIds MUST be the order buildJudgeCalls
+  // chunked (math.stage order).
+  const eligibleIds = math.stage.map((c) => c.input.id);
+  const bundle: CloudCallBundle = {
+    calls,
+    promptsById: new Map(),
+    chunkIdToCandidates: new Map(),
+    eligibleCandidates: subset,
+  };
+
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
   logger.info(
-    `${TAG} batch ${batch.batchId} submit relevance: ${eligibleIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
+    `${TAG} batch ${batch.batchId} submit judge: ${eligibleIds.length} ids in ${calls.length} calls (token=${token ? 'yes' : 'no'})`,
   );
   const outcome = await sendInferenceRequest({
     bundle,
@@ -606,9 +706,18 @@ async function doSubmitRelevance(
   });
 
   if (outcome.status === 'ok') {
-    await transitionToWaitingRelevance(batch.batchId, outcome, eligibleIds);
+    // Carry the computed scores forward on the batch via rawRelevanceMap so the
+    // decode fail-open can read them without recomputing (persona could differ).
+    const computedRecord: Record<string, number> = {};
+    for (const id of eligibleIds) {
+      computedRecord[id] = math.computedScoreMap.get(id)!;
+    }
+    await transitionToWaitingRelevance(batch.batchId, outcome, eligibleIds, {
+      judgeMode: true,
+      computedScoreMap: computedRecord,
+    });
     logger.info(
-      `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
+      `${TAG} batch ${batch.batchId} → waiting-relevance (judge) requestId=${outcome.requestId}`,
     );
   } else if (outcome.status === 'throttled') {
     await requeueThrottled(batch.batchId, 'submitting-relevance');
@@ -681,6 +790,7 @@ async function transitionToWaitingRelevance(
   batchId: number,
   outcome: { requestId: string; capabilityToken: string },
   eligibleIds: string[],
+  judge?: { judgeMode: boolean; computedScoreMap: Record<string, number> },
 ): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -690,6 +800,13 @@ async function transitionToWaitingRelevance(
     b.capabilityToken = outcome.capabilityToken || undefined;
     b.candidateIds = eligibleIds; // eligible/submit order = decode join key
     b.submittedAt = Date.now();
+    if (judge) {
+      // Judge-mode batch: flag it so decode routes to handleJudgeResults, and
+      // stash the computed (math) scores on rawRelevanceMap — the decode-time
+      // fail-open carrier (reusing the existing persisted field).
+      (b as BatchWithJudge).judgeMode = judge.judgeMode;
+      b.rawRelevanceMap = judge.computedScoreMap;
+    }
     return true;
   });
 }
@@ -832,11 +949,133 @@ async function decodeBatch(
   return { batchResults };
 }
 
+/**
+ * Decode a JUDGE-MODE batch (combined judge+reason job). The math was persisted
+ * at submit (computed_score/score_components_json) and the computed scores were
+ * stashed on batch.rawRelevanceMap as the fail-open carrier. This:
+ *   - reconstructs the `judge:${i}` chunk map by re-chunking candidateIds,
+ *   - decodes judge decisions (missing/failed chunk → math stands),
+ *   - demote-only reconciles (judge may only LOWER the math score here),
+ *   - buckets, persists relevance + reason + rawScore, propagates to siblings,
+ *   - terminates the batch (no reasons sub-phase — reasons rode the same call).
+ */
+async function handleJudgeResults(
+  batch: PipelineBatch,
+  server: ServerResults,
+  context: ExecutionContext,
+): Promise<void> {
+  const { batchResults } = await decodeBatch(batch, server);
+
+  // Rebuild chunkIds: the judge calls were `judge:${i}`, chunked at
+  // judgeChunkSize over batch.candidateIds IN ORDER (the submit-time order).
+  const size = DEFAULT_HARNESS_CONFIG.articlePipeline.judgeChunkSize;
+  const judgeChunkIds = new Map<string, string[]>();
+  chunkIds(batch.candidateIds, size).forEach((ids, i) => {
+    judgeChunkIds.set(`judge:${i}`, ids);
+  });
+
+  // Computed (math) scores carried on the batch at submit — the fail-open base.
+  const computedScoreMap = new Map<string, number>(
+    Object.entries(batch.rawRelevanceMap ?? {}),
+  );
+
+  const { rawScoreMap, reasonMap } = decodeJudgeResults(
+    batchResults,
+    judgeChunkIds,
+    computedScoreMap,
+    DEFAULT_HARNESS_CONFIG,
+    undefined,
+  );
+
+  // Demote-only reconciliation: in the E2EE/background path the judge may only
+  // LOWER the shown/math score, never promote (M-P5 background contract).
+  const finalRawById = new Map<string, number>();
+  for (const id of batch.candidateIds) {
+    const computed = computedScoreMap.get(id) ?? 0;
+    const judged = rawScoreMap.get(id) ?? computed;
+    finalRawById.set(id, Math.min(judged, computed));
+  }
+
+  // Snapshot raw, then bucket a copy (storage/gating use bucketed values).
+  const bucketed = new Map(finalRawById);
+  bucketScores(bucketed);
+
+  const bucketedRecord: Record<string, number> = {};
+  for (const id of batch.candidateIds) {
+    const raw = finalRawById.get(id);
+    const bucket = bucketed.get(id);
+    if (raw === undefined || bucket === undefined) continue;
+    bucketedRecord[id] = bucket;
+    const reason = reasonMap.get(id) ?? '';
+    // reason present → Complete. absent but bucketed ≥ floor → ReasonPending
+    // (orphan-reasons sweep captions it). absent + below floor → reasonSkipped
+    // (terminal). saveScoringResult derives status from reason/reasonSkipped.
+    const reasonSkipped =
+      reason.length === 0 ? bucket < REASON_RELEVANCE_THRESHOLD : false;
+    try {
+      await saveScoringResult(id, {
+        relevance: bucket,
+        reason,
+        reasonSkipped,
+        rawScore: raw,
+        // computedScore + scoreComponentsJson already persisted at submit.
+      });
+    } catch (err) {
+      if (isRecordNotFoundError(err)) continue;
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'save-judge' },
+        extra: { candidateId: id },
+      });
+    }
+  }
+  await refreshUi();
+
+  // Sibling propagation (identical to the legacy relevance path): fresh donors
+  // copy their scores onto held-back unscored siblings. Fail-open.
+  try {
+    const inFlight = await getNonTerminalCandidateIds();
+    const propagated = await propagateToUnscoredSiblings(inFlight);
+    if (propagated > 0) await refreshUi();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'propagate-siblings' },
+    });
+  }
+
+  logger.info(
+    `${TAG} batch ${batch.batchId} judge decoded: scored=${Object.keys(bucketedRecord).length} reasons=${reasonMap.size}`,
+  );
+
+  // Judge mode carries reasons in the SAME call → NO reasons sub-phase. Mark
+  // the batch terminal, discard low-relevance rows, finalize via afterTerminal.
+  await mutatePipeline((run) => {
+    const b = run.batches.find((x) => x.batchId === batch.batchId);
+    if (!b || b.phase !== 'waiting-relevance') return null;
+    b.relevanceMap = bucketedRecord;
+    b.phase = 'done';
+    return true;
+  });
+  const discarded = await discardLowRelevance(
+    batch.candidateIds,
+    bucketedRecord,
+  );
+  if (discarded > 0) await refreshUi();
+  await afterTerminal(context);
+}
+
 async function handleRelevanceResults(
   batch: PipelineBatch,
   server: ServerResults,
   context: ExecutionContext,
 ): Promise<void> {
+  // Judge-mode batches carry the combined judge+reason result — decode + save +
+  // terminate in one pass (no reasons sub-phase). Backstop/legacy batches fall
+  // through to the tiered relevance→reasons flow below.
+  if ((batch as BatchWithJudge).judgeMode === true) {
+    await handleJudgeResults(batch, server, context);
+    return;
+  }
+
   const { batchResults } = await decodeBatch(batch, server);
 
   const nChunks = Math.max(
@@ -855,28 +1094,7 @@ async function handleRelevanceResults(
     chunkIdToCandidates,
   });
 
-  // --- second-pass FEED verifier (foreground only; fail-open) ---
-  // Runs after the first-pass decode, before bucketing/persist, demoting clear
-  // first-pass false positives out of FEED (raw → feedVerifierDemoteScore).
-  // Foreground-only: cloudBatchComplete authenticates with the keychain JWT,
-  // which is off-limits on a locked-device background wake — on background
-  // ticks we skip the verifier (conservative keep) rather than touch the
-  // keychain. Fail-open: runFeedVerifierPass swallows its own errors and
-  // returns 0, so a verifier failure never blocks scoring. The rows are still
-  // Unscored here, so getUnscoredSuggestionsWithFacts returns them with their
-  // title/description/facts (needed to build the verifier prompt).
-  if (context === 'foreground') {
-    try {
-      const allUnscored = await getUnscoredSuggestionsWithFacts();
-      const idSet = new Set(batch.candidateIds);
-      const verifierCandidates = allUnscored.filter((c) => idSet.has(c.id));
-      await runFeedVerifierPass(verifierCandidates, scoreMap);
-    } catch (err) {
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'feed-verifier' },
-      });
-    }
-  }
+  // (verifier pass removed — absorbed into the judge, Wave 7b M-P5)
 
   // Preserve raw pre-bucket scores for the reason prompts; storage + gating use
   // the bucketed values.

@@ -827,6 +827,76 @@ export function buildReasonUserMessage(params: {
 }
 
 // ============================================================
+// Cloud JUDGE — bounded LLM check over the deterministic math score
+// ============================================================
+//
+// Wave 7b replaces the two-pass stake-anchor scorer + separate FEED verifier
+// with ONE combined judge+reason pass over the math engine's score. The math
+// (lib/news-harness/scoring-engine) already ran on-device; the judge only sees
+// the article + the computed score + the top components (never the fact bank —
+// a privacy + token win). USER DECISION (2026-07-17): the judge may FULLY
+// OVERRIDE the math (no ±clamp) but is prompt-constrained to override only on a
+// clear error. Failure/unparseable → the math score stands (fail-open). The
+// verifier's NO-patterns are absorbed here as the "clear over-rate" cases.
+//
+// DESIGN NOTE (humans only — do NOT explain to the model): the override rate and
+// |judge−computed|>0.3 flag feed the calibration loop (M-P5c). Removing a
+// demote pattern or loosening the "clear error" leash requires a fresh
+// eval:golden --engine=pipeline run.
+export const CLOUD_JUDGE_SYSTEM_PROMPT = `You are the precision gate on a personalized news feed. A deterministic engine already scored each article (0.00–1.10) for ONE user from their explicit interests and places, and it OVER-INCLUDES — it puts many borderline stories at the FEED line on a shallow topic or place match. Your job is to catch those and demote them. You see the article, the computed score, and why it scored that way (the matched topic; the matched location's TIER and ROLE — home / family / travel / interest place; popularity; freshness). Answer "ok" to accept the score, or "adj" with a corrected score.
+
+Score bands: FEED ≥ 0.40 (a REAL personal stake) · TANGENTIAL 0.25–0.39 (interest-adjacent, no stake) · EXCLUDE < 0.25 (unrelated).
+
+A "real stake" means the story concretely affects THIS user's life, work, safety, money, or family — not merely that it mentions a place or topic they follow. When in doubt about a FEED-band score, demote: over-inclusion is the failure mode you exist to fix.
+
+DEMOTE (set "s" to 0.10–0.24 for EXCLUDE, 0.25–0.39 for TANGENTIAL) whenever the story is one of these, EVEN IF it names or is set in one of the user's places:
+- Lifestyle / entertainment / culture / human-interest filler: restaurants, food listicles, recipes, festivals, concerts, art/exhibitions, celebrity or personality profiles, memes, "5 things to do", weekend tips, sports fandom, holiday/tourism preferences, architecture or neighbourhood colour pieces. A story merely SET in the user's city with no civic, structural, safety, money, or professional stake is filler → EXCLUDE.
+- Another country's routine domestic story (its own national politics, party manoeuvres, elections, local business, culture) when the location match is COUNTRY-level to a FAMILY or INTEREST place (not the user's HOME place). Family/interest places count only when the story is about that specific city/region or has a concrete personal impact. Never bridge via "both in Europe/EU", "regional", "industry-wide", or "global implications".
+- Market / stock / index / earnings-as-investment content with no direct tie to the user's own work.
+- Generic industry chatter with no concrete usable event: "country X leads the AI race", executives' opinions/predictions/warnings, "best tools" listicles, consumer-gadget features, corporate feuds, funding rounds outside the user's domain.
+- Wire digests ("Top News at 3pm"), contentless roundups, unintelligible or single-word titles.
+
+KEEP at FEED (answer "ok" on a ≥0.40 score) when there is a genuine stake:
+- A structural / civic story (policy, tax, law, safety, crime, weather or health emergency, infrastructure, transit, cost-of-living) about the user's HOME place or the specific city/region of a FAMILY place — including routine municipal items for those places.
+- A concrete, usable event in the user's exact professional domain (a model/tool release, an enforceable regulation, a ruling that changes how they work).
+- Travel-practical news (disruptions, strikes, closures, weather, safety) for a TRAVEL place.
+
+OVERRIDE UP (set "s" ≥ 0.40 on a sub-0.40 score) ONLY when the article is plainly one of the KEEP cases above and the math clearly under-rated it. This is rare — do not lift borderline stories.
+
+Task: you receive N articles as \`===== Article 0 =====\`, … For EACH output one object, in input order:
+- \`{"j":"ok"}\` to accept the computed score, or \`{"j":"adj","s":0.NN}\` to correct it.
+- When the computed score shown is ≥ 0.15, ALSO include \`"r"\`: one plain sentence (≤22 words) naming a specific article detail and the concrete user bridge, tone matched to the final score. Below 0.15, omit \`"r"\`.
+Output a JSON array of exactly N objects. No prose, no extra fields.
+Example (3): [{"j":"ok","r":"Bhopal heatwave alert affects your family's city."},{"j":"adj","s":0.14},{"j":"adj","s":0.3,"r":"Amsterdam restaurant roundup is local lifestyle filler, no real stake."}]`;
+
+/**
+ * Builds the user message for the combined judge+reason pass (Wave 7b).
+ * Pairs with CLOUD_JUDGE_SYSTEM_PROMPT. Each article block carries the article
+ * text, its computed score, and a compact "why it scored" component phrase (the
+ * top signals in words) — NO fact bank. The model returns a JSON array of
+ * {"j","s"?,"r"?} objects in input order.
+ */
+export function buildJudgeUserMessage(params: {
+  articles: {
+    title: string;
+    description: string;
+    country?: string;
+    computedScore: number;
+    componentSummary: string;
+  }[];
+}): string {
+  const { articles } = params;
+  const blocks = articles.map((a, i) => {
+    const country = sanitizeForPrompt(a.country ?? '', 60);
+    const hasCountry = country.length > 0 && country.toUpperCase() !== 'GLOBAL';
+    const countryLine = hasCountry ? `\nArticle Country: ${country}` : '';
+    const why = sanitizeForPrompt(a.componentSummary, 200) || 'no strong signal';
+    return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}${countryLine}\nComputed Score: ${a.computedScore.toFixed(2)}\nWhy: ${why}`;
+  });
+  return `${blocks.join('\n\n')}\n\nReturn a JSON array of ${articles.length} objects ({"j":"ok"|"adj","s"?,"r"?}), one per article, in order.`;
+}
+
+// ============================================================
 // Topic Generation Prompt — On-device topic generation from user facts
 // ============================================================
 

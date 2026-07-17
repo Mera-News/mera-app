@@ -51,7 +51,10 @@ import {
   getArticleSuggestionsByTopicTexts,
   getTotalArticleSuggestionCount,
   persistAndLinkV2Suggestions,
+  buildStageCandidateInput,
+  type TopicWeightInfo,
 } from '../article-suggestion-service';
+import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 
 const db = database as any;
 
@@ -1377,5 +1380,87 @@ describe('persistAndLinkV2Suggestions', () => {
     const pubTs = prepared.firstPubDate.getTime();
     expect(pubTs).toBeGreaterThanOrEqual(before);
     expect(pubTs).toBeLessThanOrEqual(after);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildStageCandidateInput — pure mapper (Persona v3)
+// ---------------------------------------------------------------------------
+
+describe('buildStageCandidateInput', () => {
+  const baseRow: StageCandidateRow = {
+    id: 'art-1',
+    titleEn: 'A title',
+    descriptionEn: 'A desc',
+    publicationName: 'The Paper',
+    countryCode: 'DE',
+    firstPubDateMs: 1_700_000_000_000,
+    maxClusterSize: 12,
+    eventType: 'weather',
+    category: 'news',
+    geoTagsJson: JSON.stringify([{ city: 'Berlin', region: 'BE', countryCode: 'DE' }]),
+    entitiesJson: JSON.stringify(['Angela', 'Bundestag']),
+    matchedTopicsJson: JSON.stringify([
+      { topicId: 't1', text: 'german politics', vectorScore: 0.9 },
+      { topicId: null, text: 'top headline · country' },
+    ]),
+    headlineScope: 'COUNTRY',
+    stableClusterId: 'sc-1',
+  };
+
+  const weights = new Map<string, TopicWeightInfo>([
+    ['t1', { effectiveWeight: 0.72, highPriority: true, locationId: 'loc-9' }],
+  ]);
+
+  it('parses JSON columns + enriches matched topics with live weights', () => {
+    const input = buildStageCandidateInput(baseRow, weights);
+    expect(input.id).toBe('art-1');
+    expect(input.pubDateMs).toBe(1_700_000_000_000);
+    expect(input.maxClusterSize).toBe(12);
+    expect(input.eventType).toBe('weather');
+    expect(input.geoTags).toEqual([{ city: 'Berlin', region: 'BE', countryCode: 'DE' }]);
+    expect(input.entities).toEqual(['Angela', 'Bundestag']);
+    expect(input.headlineScope).toBe('COUNTRY');
+    expect(input.stableClusterId).toBe('sc-1');
+
+    const t1 = input.matchedTopics.find((m) => m.topicId === 't1')!;
+    expect(t1.effectiveWeight).toBe(0.72);
+    expect(t1.highPriority).toBe(true);
+    expect(t1.locationId).toBe('loc-9');
+    expect(t1.vectorScore).toBe(0.9);
+  });
+
+  it('resolves missing/synthetic topics to effectiveWeight 0', () => {
+    const input = buildStageCandidateInput(baseRow, weights);
+    const synthetic = input.matchedTopics.find((m) => m.topicId === null)!;
+    expect(synthetic.effectiveWeight).toBe(0);
+    expect(synthetic.highPriority).toBe(false);
+  });
+
+  it('produces a backstop-shaped input when metadata columns are null', () => {
+    const bare: StageCandidateRow = {
+      ...baseRow,
+      geoTagsJson: null,
+      entitiesJson: null,
+      eventType: null,
+      matchedTopicsJson: null,
+      headlineScope: null,
+    };
+    const input = buildStageCandidateInput(bare, new Map());
+    expect(input.geoTags).toEqual([]);
+    expect(input.entities).toEqual([]);
+    expect(input.matchedTopics).toEqual([]);
+    expect(input.headlineScope).toBeNull();
+  });
+
+  it('drops geo tags missing a countryCode + tolerates malformed JSON', () => {
+    const row: StageCandidateRow = {
+      ...baseRow,
+      geoTagsJson: JSON.stringify([{ city: 'Nowhere' }, { countryCode: 'FR' }]),
+      entitiesJson: 'not json',
+    };
+    const input = buildStageCandidateInput(row, weights);
+    expect(input.geoTags).toEqual([{ city: undefined, region: undefined, countryCode: 'FR' }]);
+    expect(input.entities).toEqual([]);
   });
 });

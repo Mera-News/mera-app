@@ -10,6 +10,7 @@ import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  CLOUD_JUDGE_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -83,6 +84,22 @@ export interface ArticlePipelineConfig {
   feedVerifierMaxTokens: number;
   /** System prompt for the second-pass FEED verifier. */
   feedVerifierSystemPrompt: string;
+  // --- Combined JUDGE + reason pass (Wave 7b — replaces the two-pass scorer +
+  //     verifier for math-mode candidates; see CLOUD_JUDGE_SYSTEM_PROMPT) ------
+  /** Math-mode candidates bundled into one judge prompt. Larger than the
+   *  score batch (5) because the judge prompt is ~1/5 the size (no fact bank,
+   *  no anchor table) and each output object is tiny ({"j","s"?,"r"?}). */
+  judgeChunkSize: number;
+  /** Output token ceiling for one judge batch call. ≈ judgeChunkSize × (reason
+   *  ≤22 words ~34 tok + object overhead ~8) + array headroom. */
+  judgeMaxTokens: number;
+  /** Computed-score floor at/above which a reason ("r") is requested in the
+   *  combined call. 0.15 = reasonRelevanceThreshold(0.3) − OVERRIDE_DELTA(0.15
+   *  legacy leash); below it a maximal judge lift still can't clear the reason
+   *  cutoff, so the token is never spent. */
+  judgeReasonFloor: number;
+  /** System prompt for the combined judge+reason pass. */
+  judgeSystemPrompt: string;
 }
 
 export interface TopicGenConfig {
@@ -112,8 +129,15 @@ export interface TopicGenConfig {
  */
 export interface ScoringEngineConfig {
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
-  /** Explicit topic interest — the strongest, always-present signal. */
+  /** Explicit topic interest (magnitude of the strongest matched topic). */
   W_TOPIC: number;
+  /** Topic BREADTH — how many distinct active topics matched. Golden analysis:
+   *  EXCLUDE articles match ~1.26 topics on average, FEED ~2.85. A single-topic
+   *  match is mostly spurious (only ~14% are FEED); breadth is the strongest
+   *  cheap discriminator the math has. Carved out of W_TOPIC (0.42→0.32) so a
+   *  solo topic lands at the FEED boundary (judge decides) while a multi-topic
+   *  story clears FEED on its own. */
+  W_BREADTH: number;
   /** Location alignment (home/family/travel city/region/country match). */
   W_GEO: number;
   /** Key-entity interest match. */
@@ -148,6 +172,18 @@ export interface ScoringEngineConfig {
   // --- topic weighting -----------------------------------------------------
   /** high_priority multiplier (score-only; effective weight re-clamped |w|≤1). */
   HP_MULT: number;
+  // --- breadth saturation --------------------------------------------------
+  /** breadthComp = clamp((distinctPositiveMatchedTopics − 1) / BREADTH_SAT, 0, 1).
+   *  BREADTH_SAT=2 → 1 topic 0.0, 2 topics 0.5, 3+ topics saturate at 1.0. */
+  BREADTH_SAT: number;
+  // --- vectorScore modulation ---------------------------------------------
+  /** When a matched topic carries a server vectorScore, its positive weight is
+   *  scaled by smoothstep(vectorScore, VS_LO, VS_HI): a low-similarity semantic
+   *  match is suppressed toward 0, a strong one passes through. Below VS_LO → 0,
+   *  above VS_HI → 1. ABSENT vectorScore (offline eval, warm-path rows) → neutral
+   *  1.0 (no modulation) so the math is unchanged where the signal is missing. */
+  VS_LO: number;
+  VS_HI: number;
   // --- popularity saturation ----------------------------------------------
   /** popComp = clamp(log2(1+maxClusterSize)/log2(1+POP_SAT), 0, 1). */
   POP_SAT: number;
@@ -170,6 +206,17 @@ export interface ScoringEngineConfig {
    *  apply, so suppressed/wrong-city headlines still die. */
   HEADLINE_BASE_FLOOR: number;
   HEADLINE_POP_LIFT: number;
+  // --- headline SECTION pseudo-weights (feed-select/sections.ts, Wave 7b-core
+  //     M-P5b — order the fact-sectioned For-You feed's synthetic headline
+  //     sections against real fact sections on ONE weight axis) --------------
+  /** Synthetic CITY/COUNTRY headline section weight = HEADLINE_SECTION_BASE ×
+   *  location.weight. Seed 0.55 so a full-weight home location (→0.55) outranks
+   *  a down-weighted fact, while default-weight (1.0) fact sections stay above
+   *  every headline section. */
+  HEADLINE_SECTION_BASE: number;
+  /** GLOBAL "Top stories · Worldwide" synthetic section — fixed pseudo-weight
+   *  (no owning location). Seed 0.35 sits it below CITY/COUNTRY headlines. */
+  GLOBAL_SECTION_WEIGHT: number;
 }
 
 export interface HarnessConfig {
@@ -206,11 +253,18 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     relevanceSystemPrompt: CLOUD_RELEVANCE_SYSTEM_PROMPT,
     reasonSystemPrompt: CLOUD_REASON_SYSTEM_PROMPT,
     model: SMALL_MODEL,
-    feedVerifierEnabled: true,
+    // Wave 7b: verifier absorbed into the judge; flag-off one release then
+    // deleted (its NO-patterns live in CLOUD_JUDGE_SYSTEM_PROMPT). Code stays.
+    feedVerifierEnabled: false,
     feedVerifierBatchSize: 15,
     feedVerifierDemoteScore: 0.28,
     feedVerifierMaxTokens: 260, // 15*12 + 80
     feedVerifierSystemPrompt: CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+    // Combined judge+reason pass (math-mode candidates).
+    judgeChunkSize: 12,
+    judgeMaxTokens: 560, // 12*(34+8) + ~56 headroom
+    judgeReasonFloor: 0.15,
+    judgeSystemPrompt: CLOUD_JUDGE_SYSTEM_PROMPT,
   },
   topicGen: {
     // 2026-07-16: reduced 16→10 (cloud) / 14→10 (local). Golden-labeled
@@ -227,8 +281,14 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },
   scoringEngine: {
-    // affinity component weights (positives sum to ≈ 1.0 at full saturation)
-    W_TOPIC: 0.42,
+    // affinity component weights (positives sum to ≈ 1.0 at full saturation).
+    // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH. Both are
+    // explicit-interest signals (magnitude vs. breadth of the match); the shift
+    // stops a single seed-weight topic from single-handedly landing an article
+    // in FEED (the dominant over-inclusion mode) while keeping the positives sum
+    // at 1.0. All other weights unchanged.
+    W_TOPIC: 0.32,
+    W_BREADTH: 0.1,
     W_GEO: 0.2,
     W_ENTITY: 0.08,
     W_EVENT: 0.05,
@@ -248,6 +308,11 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     P_SEEN: 0.08,
     // topic weighting
     HP_MULT: 1.25,
+    // breadth saturation (3+ distinct positive topics saturate)
+    BREADTH_SAT: 2,
+    // vectorScore modulation knees (production-only; eval rows have no vector)
+    VS_LO: 0.78,
+    VS_HI: 0.9,
     // popularity saturation
     POP_SAT: 32,
     // freshness knees
@@ -262,5 +327,8 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // headline floor
     HEADLINE_BASE_FLOOR: 0.35,
     HEADLINE_POP_LIFT: 0.15,
+    // headline section pseudo-weights (feed-select sectioning)
+    HEADLINE_SECTION_BASE: 0.55,
+    GLOBAL_SECTION_WEIGHT: 0.35,
   },
 };

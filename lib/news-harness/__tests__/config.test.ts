@@ -10,6 +10,7 @@ import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  CLOUD_JUDGE_SYSTEM_PROMPT,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -55,16 +56,21 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.reasonSystemPrompt).toBe(CLOUD_REASON_SYSTEM_PROMPT);
   });
 
-  it('pins the second-pass FEED verifier config', () => {
-    // 2026-07-16: adopted the validated second-pass FEED verifier ("Design A2 —
-    // tuned"). Default ON. Demote score 0.28 is deliberately below the 0.3
-    // reason/visibility cutoff and inside the TANGENTIAL band (0.25–0.39).
-    // maxTokens 260 = batchSize(15)*12 + 80.
-    expect(a.feedVerifierEnabled).toBe(true);
+  it('pins the second-pass FEED verifier config (Wave 7b: flag-off, absorbed into judge)', () => {
+    // Wave 7b: verifier absorbed into CLOUD_JUDGE_SYSTEM_PROMPT; flag-off one
+    // release then deleted. Code + constants stay for the fallback release.
+    expect(a.feedVerifierEnabled).toBe(false);
     expect(a.feedVerifierBatchSize).toBe(15);
     expect(a.feedVerifierDemoteScore).toBe(0.28);
     expect(a.feedVerifierMaxTokens).toBe(260);
     expect(a.feedVerifierSystemPrompt).toBe(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT);
+  });
+
+  it('pins the combined judge+reason config (Wave 7b)', () => {
+    expect(a.judgeChunkSize).toBe(12);
+    expect(a.judgeMaxTokens).toBe(560);
+    expect(a.judgeReasonFloor).toBe(0.15);
+    expect(a.judgeSystemPrompt).toBe(CLOUD_JUDGE_SYSTEM_PROMPT);
   });
 });
 
@@ -91,15 +97,23 @@ describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
   const e = DEFAULT_HARNESS_CONFIG.scoringEngine;
 
   it('pins the affinity component weights (positives sum ≈ 1.0)', () => {
-    expect(e.W_TOPIC).toBe(0.42);
+    expect(e.W_TOPIC).toBe(0.32);
+    expect(e.W_BREADTH).toBe(0.1);
     expect(e.W_GEO).toBe(0.2);
     expect(e.W_ENTITY).toBe(0.08);
     expect(e.W_EVENT).toBe(0.05);
     expect(e.W_PUB).toBe(0.07);
     expect(e.W_POP).toBe(0.1);
     expect(e.W_FRESH).toBe(0.08);
-    const sum = e.W_TOPIC + e.W_GEO + e.W_ENTITY + e.W_EVENT + e.W_PUB + e.W_POP + e.W_FRESH;
+    const sum =
+      e.W_TOPIC + e.W_BREADTH + e.W_GEO + e.W_ENTITY + e.W_EVENT + e.W_PUB + e.W_POP + e.W_FRESH;
     expect(Number(sum.toFixed(6))).toBe(1.0);
+  });
+
+  it('pins breadth saturation + vectorScore modulation knees', () => {
+    expect(e.BREADTH_SAT).toBe(2);
+    expect(e.VS_LO).toBe(0.78);
+    expect(e.VS_HI).toBe(0.9);
   });
 
   it('pins the affinity → raw band mapping', () => {
@@ -132,6 +146,15 @@ describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
     expect(e.GEO_COUNTRY).toBe(0.3);
     expect(e.HEADLINE_BASE_FLOOR).toBe(0.35);
     expect(e.HEADLINE_POP_LIFT).toBe(0.15);
+  });
+
+  it('pins the headline section pseudo-weights (feed-select M-P5b)', () => {
+    // Added Wave 7b-core M-P5b for the fact-sectioned feed selector
+    // (feed-select/sections.ts). Synthetic headline sections order against real
+    // fact sections on one weight axis: CITY/COUNTRY = 0.55 × location.weight,
+    // GLOBAL = fixed 0.35. Deliberate literal additions — see config.ts.
+    expect(e.HEADLINE_SECTION_BASE).toBe(0.55);
+    expect(e.GLOBAL_SECTION_WEIGHT).toBe(0.35);
   });
 });
 

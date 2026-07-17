@@ -7,8 +7,15 @@ import {
   getLocalSuggestionServerIds,
   getUnscoredSuggestionsWithFacts,
   persistAndLinkV2Suggestions,
+  getFactWeightById,
+  type PersonaPersistMeta,
+  type MatchedTopicMeta,
 } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
+import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
+import { getAll as getAllLocations } from '@/lib/database/services/location-service';
+import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
+import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
@@ -23,12 +30,16 @@ export const HYDRATE_CHUNK_SIZE = 25;
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
   serverArticleIds: string[];
+  /** Persona-v3 metadata (present on the persona path; absent on the empty-
+   *  topics-table fallback, which routes persist + scoring to the legacy path). */
+  personaMeta?: PersonaPersistMeta;
 }
 
 export interface DiffResult {
   serverArticleIds: string[];
   articleToTopicTexts: Map<string, string[]>;
   missingIds: string[];
+  personaMeta?: PersonaPersistMeta;
 }
 
 /** Result of the merged hydrate + persist + enqueue step. */
@@ -63,12 +74,144 @@ export async function stepFetchTopicIds(
 ): Promise<FetchTopicIdsResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
 
+  // Self-gating cutover: once the persona-v3 `topics` table is populated (the
+  // one-time silent migration ran), use the privacy-lean persona retrieval;
+  // until then fall back end-to-end to the legacy metadata.topics path so the
+  // feed degrades gracefully on devices that haven't migrated yet.
+  const activeTopics = await getActiveTopics();
+  if (activeTopics.length === 0) {
+    return fetchTopicIdsLegacy(ctx);
+  }
+  return fetchTopicIdsPersona(activeTopics, ctx);
+}
+
+/** Persona-v3 privacy-lean retrieval: build the retrieval profile from weighted
+ *  topics + locations, call articleIdsForPersona, and invert the per-topic
+ *  matchMeta + headline results into the persist metadata. */
+async function fetchTopicIdsPersona(
+  activeTopics: Awaited<ReturnType<typeof getActiveTopics>>,
+  ctx: TaskContext,
+): Promise<FetchTopicIdsResult> {
+  const [factWeights, locations] = await Promise.all([
+    getFactWeightById(),
+    getAllLocations(),
+  ]);
+
+  const profile = buildRetrievalProfile({
+    topics: activeTopics.map((t) => ({
+      topicId: t.id,
+      text: t.text,
+      weight: t.weight,
+      highPriority: t.highPriority,
+      factWeight: t.factId ? factWeights.get(t.factId) ?? 1 : 1,
+    })),
+    locations: locations.map((l) => ({
+      countryCode: l.countryCode,
+      role: l.role,
+      weight: l.weight,
+      validUntilMs: l.validUntil ?? undefined,
+    })),
+  });
+
+  if (profile.topics.length === 0) {
+    // Topics exist but none has a positive effective weight → nothing to
+    // retrieve (all negative/suppressed). Terminal, same as no-topics.
+    throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
+  }
+
+  const textToTopicId = new Map<string, string>();
+  for (const t of profile.topics) {
+    if (!textToTopicId.has(t.text)) textToTopicId.set(t.text, t.topicId);
+  }
+
+  const query: PersonaQueryInput = {
+    topics: profile.topics.map((t) => ({ text: t.text, limit: t.limit })),
+    limitPerTopic: 20,
+    topHeadlines: {
+      scopes: profile.headlineScopes.map((s) => ({
+        scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
+        countryCode: s.countryCode ?? null,
+      })),
+      limitPerScope: profile.headlineLimitPerScope,
+    },
+  };
+
+  ctx.log(`fetching persona ids for ${profile.topics.length} topics + ${profile.headlineScopes.length} scopes`);
+  logger.info(
+    `[feed-sync-steps] calling articleIdsForPersona: ${profile.topics.length} topics, ${profile.headlineScopes.length} headline scopes`,
+  );
+
+  const res = await withRetry(() => ArticleService.getArticleIdsForPersona(query), ctx.signal);
+
+  const articleToTopicTexts = new Map<string, string[]>();
+  const matchedTopics = new Map<string, MatchedTopicMeta[]>();
+  const headlineScope = new Map<string, string>();
+  const stableClusterId = new Map<string, string>();
+
+  const pushMatched = (articleId: string, entry: MatchedTopicMeta) => {
+    const bucket = matchedTopics.get(articleId) ?? [];
+    bucket.push(entry);
+    matchedTopics.set(articleId, bucket);
+    const texts = articleToTopicTexts.get(articleId) ?? [];
+    if (entry.text && !texts.includes(entry.text)) texts.push(entry.text);
+    articleToTopicTexts.set(articleId, texts);
+  };
+
+  // Invert per-topic results → per-article matched topics.
+  for (const tr of res.topicResults ?? []) {
+    const topicId = textToTopicId.get(tr.topicText) ?? null;
+    const metaByArticle = new Map(
+      (tr.matchMeta ?? []).map((m) => [m.articleId, m]),
+    );
+    for (const articleId of tr.articleIds ?? []) {
+      const mm = metaByArticle.get(articleId);
+      pushMatched(articleId, {
+        topicId,
+        text: tr.topicText,
+        vectorScore: mm?.vectorScore ?? null,
+        stableClusterId: mm?.stableClusterId ?? null,
+      });
+      if (mm?.stableClusterId && !stableClusterId.has(articleId)) {
+        stableClusterId.set(articleId, mm.stableClusterId);
+      }
+    }
+  }
+
+  // Headline injection: synthetic matched-topic (topicId null) + headline_scope.
+  for (const hr of res.headlineResults ?? []) {
+    const scopeLabel = hr.scope === HeadlineScope.Country ? 'COUNTRY' : 'GLOBAL';
+    const label = `top headline · ${scopeLabel.toLowerCase()}`;
+    const ids = hr.articleIds ?? [];
+    const stableIds = hr.stableClusterIds ?? [];
+    ids.forEach((articleId, i) => {
+      pushMatched(articleId, { topicId: null, text: label, vectorScore: null, stableClusterId: stableIds[i] ?? null });
+      // Topic-retrieved match wins over a headline scope when both apply.
+      if (!headlineScope.has(articleId)) headlineScope.set(articleId, scopeLabel);
+      const sid = stableIds[i];
+      if (sid && !stableClusterId.has(articleId)) stableClusterId.set(articleId, sid);
+    });
+  }
+
+  const serverArticleIds = [...matchedTopics.keys()];
+  logger.info(`[feed-sync-steps] articleIdsForPersona returned ${serverArticleIds.length} article ids`);
+  ctx.log(`server returned ${serverArticleIds.length} article ids (persona path)`);
+
+  return {
+    articleToTopicTexts,
+    serverArticleIds,
+    personaMeta: { matchedTopics, headlineScope, stableClusterId },
+  };
+}
+
+/** Legacy fallback: the pre-persona metadata.topics retrieval path, used until
+ *  the persona-v3 migration has populated the `topics` table on this device. */
+async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResult> {
   const topicTexts = await getLocalTopicTextsForPersona();
   if (topicTexts.length === 0) {
     throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
-  ctx.log(`fetching ids for ${topicTexts.length} topics`);
-  logger.info(`[feed-sync-steps] calling getArticleIdsForTopics with ${topicTexts.length} topics`);
+  ctx.log(`fetching ids for ${topicTexts.length} topics (legacy path)`);
+  logger.info(`[feed-sync-steps] calling getArticleIdsForTopics with ${topicTexts.length} topics (legacy)`);
 
   const idsResponse = await withRetry(
     () =>
@@ -100,13 +243,13 @@ export async function stepDiff(
 ): Promise<DiffResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
 
-  const { serverArticleIds, articleToTopicTexts } = result;
+  const { serverArticleIds, articleToTopicTexts, personaMeta } = result;
   const localIds = await getLocalSuggestionServerIds();
   const localIdSet = new Set(localIds);
   const missingIds = serverArticleIds.filter((id) => !localIdSet.has(id));
   ctx.log(`${missingIds.length} missing ids to hydrate`);
 
-  return { serverArticleIds, articleToTopicTexts, missingIds };
+  return { serverArticleIds, articleToTopicTexts, missingIds, personaMeta };
 }
 
 /**
@@ -131,7 +274,7 @@ export async function stepHydratePersistEnqueue(
 ): Promise<HydratePersistEnqueueResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
 
-  const { missingIds, articleToTopicTexts } = diffResult;
+  const { missingIds, articleToTopicTexts, personaMeta } = diffResult;
   const chunks = chunkArray(missingIds, HYDRATE_CHUNK_SIZE);
 
   let completedSoFar = 0;
@@ -178,6 +321,7 @@ export async function stepHydratePersistEnqueue(
       const { insertedCount: chunkInserted } = await persistAndLinkV2Suggestions(
         chunkArticles,
         articleToTopicTexts,
+        personaMeta,
       );
       insertedCount += chunkInserted;
 

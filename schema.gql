@@ -62,11 +62,16 @@ type ArticleSummary {
 type ArticleWithClusters {
   _id: ID!
   article_url: String
+  category: String
   clusters: [ClusterMembership!]!
   country_code: String
   description_en: String
+  entities: [String!]
+  event_type: String
+  geo_tags: [GeoTagDto!]
   image_url: String
   language_code: String
+  maxClusterSize: Int
   pubDate: DateTime!
   publication_name: String
   title: String
@@ -113,6 +118,100 @@ type ClusterMembership {
   clusterId: ID!
   confidence: Float!
   stableClusterId: String
+}
+
+"""
+A geo tag on an article (written by the tagging pipeline). city/region are optional; countryCode is always present.
+"""
+type GeoTagDto {
+  city: String
+  countryCode: String!
+  region: String
+}
+
+"""Top-headlines scope. COUNTRY requires countryCode; GLOBAL takes none."""
+enum HeadlineScope {
+  COUNTRY
+  GLOBAL
+}
+
+"""
+A single top-headlines scope. COUNTRY requires countryCode; GLOBAL takes none.
+"""
+input HeadlineScopeInput {
+  countryCode: String
+  scope: HeadlineScope!
+}
+
+"""
+Top-headline article ids for one scope. clusterSizes and stableClusterIds are positionally aligned with articleIds.
+"""
+type HeadlineScopeResult {
+  articleIds: [ID!]!
+  clusterSizes: [Int!]!
+  countryCode: String
+  scope: HeadlineScope!
+  stableClusterIds: [String]!
+}
+
+"""
+Optional top-headlines block. Up to 6 scopes; limitPerScope capped at 25.
+"""
+input TopHeadlinesInput {
+  limitPerScope: Int! = 10
+  scopes: [HeadlineScopeInput!]!
+}
+
+"""
+Per-article match metadata. textScore is ALWAYS null in v1. stableClusterId is the id of the article's largest-clusterSize linked cluster, null when the article is a singleton/unclustered.
+"""
+type PersonaMatchMeta {
+  articleId: ID!
+  stableClusterId: String
+  textScore: Float
+  vectorScore: Float!
+}
+
+"""
+Privacy-lean persona query: topic texts + optional top-headlines scopes. No locations, weights, or exclude-topics are ever accepted here (deliberate).
+"""
+input PersonaQueryInput {
+  limitPerTopic: Int! = 20
+
+  """
+  Optional hard cap on total ids across topicResults; the lowest-priority (last) topics are truncated first once the cap is reached.
+  """
+  maxArticles: Int
+  topHeadlines: TopHeadlinesInput
+
+  """Up to MAX_TOPICS_PER_REQUEST (default 200); topicText ≤ 512."""
+  topics: [PersonaTopicInput!]!
+}
+
+"""
+Privacy-lean persona query result: per-topic article ids + match metadata, plus optional per-scope top headlines.
+"""
+type PersonaQueryResult {
+  headlineResults: [HeadlineScopeResult!]!
+  topicResults: [PersonaTopicResult!]!
+}
+
+"""
+A single persona topic. `limit` overrides the query-level limitPerTopic; `afterCursor` is the articleId of the last item on the previous page.
+"""
+input PersonaTopicInput {
+  afterCursor: ID
+  limit: Int
+  text: String!
+}
+
+"""Resolved article ids + match metadata for one persona topic."""
+type PersonaTopicResult {
+  articleIds: [ID!]!
+  hasNextPage: Boolean!
+  matchMeta: [PersonaMatchMeta!]!
+  nextCursor: ID
+  topicText: String!
 }
 
 type CursorPageInfo {
@@ -298,6 +397,7 @@ type Query {
   Fetch a single article by ID. Returns null if not found (e.g. TTL’d out).
   """
   articleById(id: ID!): NewsArticle
+  articleIdsForPersona(query: PersonaQueryInput!): PersonaQueryResult!
   articleIdsForTopics(limitPerTopic: Int! = 20, topics: [TopicPaginationInput!]!): ArticleIdsForTopicsResponse!
 
   """

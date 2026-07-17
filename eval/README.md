@@ -128,15 +128,41 @@ run is established) — labels are anchored to both. Process:
 5. Update the "current benchmark numbers" section below once you have a new
    baseline to compare future runs against.
 
+### Full-pipeline mode (`--engine=pipeline`, Wave 7b)
+
+`--engine=pipeline` runs the deterministic math engine AND the REAL combined
+judge over the NEAR AI LlmPort (needs the repo-root `.env` `NEAR_AI_DEVELOPMENT_KEY`
+or `harness-local/.env.harness`). It writes `eval-scores-pipeline.json` +
+`judge-calls.json` and reports tokens/latency/overrides. This is the wave gate.
+
+The gate metric is **"FEED precision" = of predicted-FEED, the fraction that are
+NOT golden-EXCLUDE** (a legitimately related story — no unrelated leak). It is
+printed on the `GATE:` line and reconciles the old 2-pass system's ~76–80%. The
+strict FEED-only precision (predicted-FEED that are golden-FEED) is a separate,
+much lower number, also printed. Run `node eval/normalize-golden-tags.js` once
+if `golden-tags.json` still carries alpha-3 country codes.
+
 ## Current benchmark numbers (as of 2026-07-17)
 
 Against `golden-labels.json` (1,000 articles, `20260716-190647-prod-baseline`
-persona/article-set):
+persona/article-set; `golden-tags.json` alpha-2-normalized):
+
+| Path | GATE FEED prec (non-EXCL) | tier acc | wrong-loc leaks | EXCLUDE→FEED |
+|---|---|---|---|---|
+| old 2-pass LLM (`--engine=backstop`) | 77.8% | 48.3% | 11 | 85 |
+| math-only (`--engine=math`, Wave 7b) | 66.9% | 34.4% | 0 | 149 |
+| **full pipeline (`--engine=pipeline`)** | **90.4%** | **56.6%** | **0** | **11** |
+
+Wave-7b gate: full-pipeline FEED precision ≥ 76.2% AND 0 wrong-location leaks —
+**both met (90.4%, 0 leaks)**. The math engine alone over-includes single-topic
+matches (by design — it can't read the article); the judge is what recovers
+precision and drives wrong-location + foreign-domestic leaks to near-zero. The
+precision gain trades against FEED recall (judge is intentionally demote-biased;
+recall ~38% on this label set) — headline injection + the backstop add feed
+volume that this labeled-topic-match set does not measure.
+
+The single-stage / verifier tier-accuracy figures below are the pre-Wave-7b
+2-pass numbers, kept for provenance:
 
 - **Single-stage v7:** 73.5% tier accuracy, 19 unrelated-in-FEED
 - **With feed verifier:** 74.1% tier accuracy, 13 unrelated-in-FEED
-
-The feed verifier reduces unrelated-in-FEED leakage (the more product-critical
-metric) more than the headline accuracy number suggests — read the CRITICAL
-lines in `eval-golden.js` output, not just the overall accuracy, when judging
-a change.

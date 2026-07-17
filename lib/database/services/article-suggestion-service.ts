@@ -9,8 +9,16 @@ import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type ArticleSuggestionModel from '../models/ArticleSuggestion';
 import type ArticleSuggestionFactModel from '../models/ArticleSuggestionFact';
 import type FactModel from '../models/Fact';
+import type TopicModel from '../models/Topic';
 import type { ArticleWithClusters } from '../../generated/graphql-types';
 import type { ForYouSuggestion, ClusterMembership } from '../../stores/for-you-store';
+import type { StageCandidateRow } from '@/lib/news-harness/core/types';
+import type {
+  ScoredCandidateInput,
+  MatchedTopicInput,
+  ArticleGeoTag,
+  HeadlineScope,
+} from '@/lib/news-harness/scoring-engine';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
 import logger from '../../logger';
@@ -18,6 +26,142 @@ import logger from '../../logger';
 const articleSuggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
 const articleSuggestionFactsCol = database.get<ArticleSuggestionFactModel>('article_suggestion_facts');
 const factsCol = database.get<FactModel>('facts');
+const topicsCol = database.get<TopicModel>('topics');
+
+/** Effective-weight resolver for one topic id, supplied by the orchestrator
+ *  (built from live topics × fact weights). */
+export interface TopicWeightInfo {
+  effectiveWeight: number;
+  highPriority: boolean;
+  locationId?: string | null;
+}
+
+function parseJsonArray<T>(json: string | null | undefined): T[] {
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Pure mapper: a persona-v3 suggestion row's raw metadata columns + a live
+ * topic-weight resolver → the ScoredCandidateInput the math engine scores.
+ * Missing/deleted topics (or synthetic headline entries with topicId null)
+ * resolve to effectiveWeight 0. Absent geo/entities/event_type ⇒ the engine
+ * routes the candidate to the backstop LLM path (isBackstop in relevance.ts).
+ */
+export function buildStageCandidateInput(
+  row: StageCandidateRow,
+  topicWeights: Map<string, TopicWeightInfo>,
+): ScoredCandidateInput {
+  const geoTags = parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(
+    row.geoTagsJson,
+  )
+    .filter((g) => g && typeof g.countryCode === 'string' && g.countryCode.length > 0)
+    .map<ArticleGeoTag>((g) => ({
+      city: g.city ?? undefined,
+      region: g.region ?? undefined,
+      countryCode: g.countryCode as string,
+    }));
+
+  const entities = parseJsonArray<string>(row.entitiesJson).filter(
+    (e): e is string => typeof e === 'string' && e.length > 0,
+  );
+
+  const rawMatched = parseJsonArray<{
+    topicId?: string | null;
+    text?: string;
+    vectorScore?: number | null;
+  }>(row.matchedTopicsJson);
+  const matchedTopics: MatchedTopicInput[] = rawMatched.map((m) => {
+    const info = m.topicId ? topicWeights.get(m.topicId) : undefined;
+    return {
+      topicId: m.topicId ?? null,
+      text: m.text,
+      effectiveWeight: info?.effectiveWeight ?? 0,
+      highPriority: info?.highPriority ?? false,
+      locationId: info?.locationId ?? undefined,
+      vectorScore: m.vectorScore ?? undefined,
+    };
+  });
+
+  const headlineScope: HeadlineScope | null =
+    row.headlineScope === 'CITY' ||
+    row.headlineScope === 'COUNTRY' ||
+    row.headlineScope === 'GLOBAL'
+      ? (row.headlineScope as HeadlineScope)
+      : null;
+
+  return {
+    id: row.id,
+    titleEn: row.titleEn,
+    descriptionEn: row.descriptionEn,
+    publicationName: row.publicationName,
+    countryCode: row.countryCode,
+    pubDateMs: row.firstPubDateMs,
+    maxClusterSize: row.maxClusterSize,
+    eventType: row.eventType,
+    category: row.category,
+    geoTags,
+    entities,
+    matchedTopics,
+    headlineScope,
+    stableClusterId: row.stableClusterId,
+  };
+}
+
+/** factId → fact-level weight multiplier (null/undefined ⇒ 1.0). Used by the
+ *  orchestrators to compute topic effectiveWeight = topic.weight × factWeight. */
+export async function getFactWeightById(): Promise<Map<string, number>> {
+  const facts = await factsCol.query().fetch();
+  const m = new Map<string, number>();
+  for (const f of facts) m.set(f.id, f.weight ?? 1);
+  return m;
+}
+
+/** Snapshot the persona-v3 scorer-input columns of a row (raw JSON). */
+function toStageRow(row: ArticleSuggestionModel): StageCandidateRow {
+  const pubMs = row.firstPubDate?.getTime?.();
+  return {
+    id: row.id,
+    titleEn: row.titleEn,
+    descriptionEn: row.descriptionEn,
+    publicationName: row.publicationName,
+    countryCode: row.countryCode,
+    firstPubDateMs: Number.isFinite(pubMs) ? (pubMs as number) : null,
+    maxClusterSize: row.maxClusterSize,
+    eventType: row.eventType,
+    category: row.category,
+    geoTagsJson: row.geoTagsJson,
+    entitiesJson: row.entitiesJson,
+    matchedTopicsJson: row.matchedTopicsJson,
+    headlineScope: row.headlineScope,
+    stableClusterId: row.stableClusterId,
+  };
+}
+
+/**
+ * Resolve the owning fact for each topic id via the persona-v3 `topics` table
+ * (topics.fact_id), replacing the old `resolveFactsByTopicTexts` scan of
+ * fact.metadata.topics for the persona-v3 path. Returns topicId → factId for
+ * topics that have an owning fact (headline/global topics with no fact_id are
+ * simply absent → no fact link, which the reason path handles via the headline
+ * label).
+ */
+async function resolveFactsByTopicIds(
+  topicIds: string[],
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (topicIds.length === 0) return result;
+  const rows = await topicsCol.query(Q.where('id', Q.oneOf(topicIds))).fetch();
+  for (const t of rows) {
+    if (t.factId) result.set(t.id, t.factId);
+  }
+  return result;
+}
 
 // --- Read: server ids only ---
 
@@ -85,6 +229,7 @@ export async function getUnscoredSuggestionsWithFacts(
     countryCode: row.countryCode,
     userTopicIds: parseTopicIds(row.matchedTopicTextsJson),
     relatedFacts: factsBySuggestionId.get(row.id) ?? [],
+    meta: toStageRow(row),
   }));
 }
 
@@ -154,6 +299,7 @@ export async function getScoredSuggestionsWithoutReasons(
     userTopicIds: parseTopicIds(row.matchedTopicTextsJson),
     relatedFacts: factsBySuggestionId.get(row.id) ?? [],
     relevance: row.relevance,
+    meta: toStageRow(row),
   }));
 }
 
@@ -300,19 +446,63 @@ export async function deleteOldSuggestions(cutoffMs: number): Promise<number> {
  */
 export async function saveScoringResult(
   localSuggestionId: string,
-  params: { relevance: number; reason: string; reasonSkipped: boolean },
+  params: {
+    relevance: number;
+    reason: string;
+    reasonSkipped: boolean;
+    /** Persona-v3 audit: pre-judge deterministic math score. */
+    computedScore?: number;
+    /** Persona-v3 audit: final post-judge raw score (section ordering). */
+    rawScore?: number;
+    /** Persona-v3 audit: RelevanceComponents breakdown, JSON-encoded. */
+    scoreComponentsJson?: string;
+  },
 ): Promise<void> {
-  const { relevance, reason, reasonSkipped } = params;
+  const { relevance, reason, reasonSkipped, computedScore, rawScore, scoreComponentsJson } = params;
   const row = await articleSuggestionsCol.find(localSuggestionId);
   await database.write(async () => {
     await row.update((r) => {
       r.relevance = relevance;
       r.reason = reason;
+      if (computedScore !== undefined) r.computedScore = computedScore;
+      if (rawScore !== undefined) r.rawScore = rawScore;
+      if (scoreComponentsJson !== undefined) r.scoreComponentsJson = scoreComponentsJson;
       r.status =
         reason.length > 0 || reasonSkipped
           ? ArticleSuggestionStatus.Complete
           : ArticleSuggestionStatus.ReasonPending;
     });
+  });
+}
+
+/**
+ * Persist the persona-v3 math audit columns for a batch of rows WITHOUT
+ * touching relevance/reason/status. Used by the E2EE pipeline at submit time
+ * (doSubmitRelevance): the math (computed_score/components) runs on-device
+ * before the judge job is sent, so a later judge failure fail-opens to
+ * computed_score as the source of truth. One batched write.
+ */
+export async function batchSaveComputedScores(
+  entries: { id: string; computedScore: number; rawScore: number; scoreComponentsJson: string }[],
+): Promise<void> {
+  if (entries.length === 0) return;
+  const rows = await Promise.all(
+    entries.map((e) => articleSuggestionsCol.find(e.id).catch(() => null)),
+  );
+  const entryById = new Map(entries.map((e) => [e.id, e]));
+  const present = rows.filter((r): r is ArticleSuggestionModel => r != null);
+  if (present.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      present.map((row) => {
+        const e = entryById.get(row.id)!;
+        return row.prepareUpdate((r) => {
+          r.computedScore = e.computedScore;
+          r.rawScore = e.rawScore;
+          r.scoreComponentsJson = e.scoreComponentsJson;
+        });
+      }),
+    );
   });
 }
 
@@ -693,15 +883,56 @@ function parseDate(value: unknown): Date | null {
 
 // --- Flow v2: persist ArticleWithClusters rows (keyed by articleId) ---
 
+/** One inverted matchMeta entry for an article (persona-v3 path). */
+export interface MatchedTopicMeta {
+  topicId: string | null;
+  text: string;
+  vectorScore?: number | null;
+  stableClusterId?: string | null;
+}
+
 /**
- * [Flow v2] Persist articles returned by the stateless `articlesForTopicsByIds`
- * query. WMDB row id == articleId (no server-side suggestion document). Facts
- * are linked via fact metadata topic texts using the topic texts that matched
- * each article (supplied by the caller from the `articleIdsForTopics` response).
+ * Persona-v3 per-article metadata (supplied by feed-sync from the
+ * `articleIdsForPersona` response, inverted per article). Present ⇒ the new
+ * persona path: facts link via `topics.fact_id`, and matched_topics_json /
+ * stable_cluster_id / headline_scope are persisted. Absent ⇒ the legacy
+ * fallback path (metadata.topics fact-linking).
+ */
+export interface PersonaPersistMeta {
+  /** articleId → inverted matchMeta [{ topicId, text, vectorScore? }]. */
+  matchedTopics: Map<string, MatchedTopicMeta[]>;
+  /** articleId → 'CITY' | 'COUNTRY' | 'GLOBAL' (top-headline injection). */
+  headlineScope?: Map<string, string>;
+  /** articleId → stable cluster id (server's largest-cluster rule). */
+  stableClusterId?: Map<string, string>;
+}
+
+/** Pick the article's stable cluster id: prefer the server's largest-cluster
+ *  rule (matchMeta / headline), else the first non-empty membership stable id. */
+function pickStableClusterId(
+  a: ArticleWithClusters,
+  fromMeta: string | undefined,
+): string | null {
+  if (fromMeta) return fromMeta;
+  for (const c of a.clusters ?? []) {
+    if (c.stableClusterId) return c.stableClusterId;
+  }
+  return null;
+}
+
+/**
+ * [Flow v2 + Persona v3] Persist articles returned by the stateless hydration
+ * query. WMDB row id == articleId. When `personaMeta` is supplied (persona-v3
+ * path), facts link via `topics.fact_id` and the persona scorer-input columns
+ * (geo/entities/event_type/category/max_cluster_size/matched_topics/
+ * stable_cluster_id/headline_scope) are persisted. Without it (fallback path),
+ * facts link via fact metadata topic texts. Hydration metadata columns are
+ * ALWAYS persisted from the row when the server sent them (nullable).
  */
 export async function persistAndLinkV2Suggestions(
   fetched: ArticleWithClusters[],
   articleToTopicTexts: Map<string, string[]>,
+  personaMeta?: PersonaPersistMeta,
 ): Promise<{ insertedCount: number; linkedCount: number }> {
   if (fetched.length === 0) return { insertedCount: 0, linkedCount: 0 };
 
@@ -726,10 +957,26 @@ export async function persistAndLinkV2Suggestions(
     return { insertedCount: 0, linkedCount: 0 };
   }
 
-  const allTopicTexts = Array.from(
-    new Set(toInsert.flatMap((a) => articleToTopicTexts.get(a._id) ?? [])),
-  );
-  const factsByTopicText = await resolveFactsByTopicTexts(allTopicTexts);
+  // --- Fact resolution: persona path uses topics.fact_id; fallback uses texts.
+  let factsByTopicText: Map<string, string[]> | null = null;
+  let factByTopicId: Map<string, string> | null = null;
+  if (personaMeta) {
+    const allTopicIds = Array.from(
+      new Set(
+        toInsert.flatMap((a) =>
+          (personaMeta.matchedTopics.get(a._id) ?? [])
+            .map((m) => m.topicId)
+            .filter((id): id is string => !!id),
+        ),
+      ),
+    );
+    factByTopicId = await resolveFactsByTopicIds(allTopicIds);
+  } else {
+    const allTopicTexts = Array.from(
+      new Set(toInsert.flatMap((a) => articleToTopicTexts.get(a._id) ?? [])),
+    );
+    factsByTopicText = await resolveFactsByTopicTexts(allTopicTexts);
+  }
 
   let insertedCount = 0;
   let linkedCount = 0;
@@ -743,7 +990,16 @@ export async function persistAndLinkV2Suggestions(
     }
 
     for (const a of toInsert) {
-      const topicTexts = articleToTopicTexts.get(a._id) ?? [];
+      const matched = personaMeta?.matchedTopics.get(a._id) ?? [];
+      // Topic texts: persona path derives them from matchMeta entries; fallback
+      // uses the caller-supplied text map. Kept for matched_topic_texts_json
+      // (getArticleSuggestionsByTopicTexts / pruneOrphanedSuggestions readers).
+      const topicTexts = personaMeta
+        ? Array.from(new Set(matched.map((m) => m.text).filter((t) => t && t.length > 0)))
+        : articleToTopicTexts.get(a._id) ?? [];
+      const scope = personaMeta?.headlineScope?.get(a._id) ?? null;
+      const stableId = pickStableClusterId(a, personaMeta?.stableClusterId?.get(a._id));
+
       const prepared = articleSuggestionsCol.prepareCreate((r) => {
         r._raw.id = a._id;
         r.articleId = a._id;
@@ -768,16 +1024,54 @@ export async function persistAndLinkV2Suggestions(
         r.articleUrl = a.article_url ?? null;
         r.imageUrl = a.image_url ?? null;
         r.matchedTopicTextsJson = JSON.stringify(topicTexts);
+        // ── Persona v3 scorer-input columns (hydration metadata always; the
+        //    persona-specific ones only on the persona path) ──
+        r.geoTagsJson = a.geo_tags && a.geo_tags.length > 0
+          ? JSON.stringify(
+              a.geo_tags.map((g) => ({
+                city: g.city ?? undefined,
+                region: g.region ?? undefined,
+                countryCode: g.countryCode,
+              })),
+            )
+          : null;
+        r.entitiesJson = a.entities && a.entities.length > 0 ? JSON.stringify(a.entities) : null;
+        r.eventType = a.event_type ?? null;
+        r.category = a.category ?? null;
+        r.maxClusterSize = a.maxClusterSize ?? null;
+        r.stableClusterId = stableId;
+        r.headlineScope = scope;
+        r.matchedTopicsJson = personaMeta
+          ? JSON.stringify(
+              matched.map((m) => ({
+                topicId: m.topicId,
+                text: m.text,
+                ...(m.vectorScore != null ? { vectorScore: m.vectorScore } : {}),
+              })),
+            )
+          : null;
+        r.computedScore = null;
+        r.rawScore = null;
+        r.scoreComponentsJson = null;
         r.createdAt = now;
         r.firstPubDate = parseDate(a.pubDate) ?? now;
       });
       ops.push(prepared);
       insertedCount++;
 
+      // --- Fact links ---
       const linkedFactIds = new Set<string>();
-      for (const topicText of topicTexts) {
-        for (const factId of factsByTopicText.get(topicText) ?? []) {
-          linkedFactIds.add(factId);
+      if (personaMeta && factByTopicId) {
+        for (const m of matched) {
+          if (!m.topicId) continue; // synthetic headline entry → no fact
+          const factId = factByTopicId.get(m.topicId);
+          if (factId) linkedFactIds.add(factId);
+        }
+      } else if (factsByTopicText) {
+        for (const topicText of topicTexts) {
+          for (const factId of factsByTopicText.get(topicText) ?? []) {
+            linkedFactIds.add(factId);
+          }
         }
       }
       for (const factId of linkedFactIds) {

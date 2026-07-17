@@ -6,9 +6,13 @@
 // change. The LLM judge (later wave) only confirms/adjusts this number; here the
 // math stands alone.
 //
-// Formula (SUB-PLAN M §2.2 + A6):
-//   affinity = W_TOPIC·topicComp + W_GEO·geoComp + W_ENTITY·entityComp
-//            + W_EVENT·eventComp + W_PUB·pubComp + W_POP·popComp + W_FRESH·freshComp
+// Formula (SUB-PLAN M §2.2 + A6, Wave 7b breadth + vectorScore modulation):
+//   topicComp: strongest matched topic's weight, each positive weight first
+//              scaled by smoothstep(vectorScore, VS_LO, VS_HI) (absent → ×1).
+//   breadthComp = clamp((#distinct positive matched topics − 1)/BREADTH_SAT, 0,1)
+//   affinity = W_TOPIC·topicComp + W_BREADTH·breadthComp + W_GEO·geoComp
+//            + W_ENTITY·entityComp + W_EVENT·eventComp + W_PUB·pubComp
+//            + W_POP·popComp + W_FRESH·freshComp
 //   mathBase = clamp(BASE_OFFSET + BASE_SLOPE·clampPos(affinity), BASE_MIN, BASE_MAX)
 //   base     = headlineScope ? max(mathBase, HEADLINE_BASE_FLOOR + HEADLINE_POP_LIFT·popComp)
 //                            : mathBase                                   (before penalties)
@@ -36,6 +40,9 @@ export type HeadlineScope = 'CITY' | 'COUNTRY' | 'GLOBAL';
  *  applied here (score-only) via HP_MULT. */
 export interface MatchedTopicInput {
   topicId: string | null;
+  /** Human topic text — surfaced to the judge's "why" phrase (never used in
+   *  the math). Optional; absent for synthetic headline entries. */
+  text?: string;
   effectiveWeight: number;
   highPriority?: boolean;
   /** Set when the topic is location-anchored → drives wrong-location. */
@@ -66,6 +73,7 @@ export interface ScoredCandidateInput {
 
 export interface RelevanceComponents {
   topicComp: number;
+  breadthComp: number;
   geoComp: number;
   geoAlignment: GeoAlignment;
   entityComp: number;
@@ -96,6 +104,13 @@ export interface RelevanceResult {
 const clampPos = (x: number): number => (x > 0 ? x : 0);
 const clamp = (x: number, lo: number, hi: number): number =>
   x < lo ? lo : x > hi ? hi : x;
+
+/** Smooth Hermite step: 0 below `lo`, 1 above `hi`, S-curve between. */
+function smoothstep(x: number, lo: number, hi: number): number {
+  if (hi <= lo) return x >= hi ? 1 : 0;
+  const t = clamp((x - lo) / (hi - lo), 0, 1);
+  return t * t * (3 - 2 * t);
+}
 
 /** Event types that are personally actionable when tied to an interest — a
  *  small nudge (breaking local weather/disaster/crime/etc.). */
@@ -234,14 +249,30 @@ export function computeRelevance(
   const mode: ScoringMode = isBackstop(candidate) ? 'backstop' : 'math';
 
   // --- topicComp (score-only HP lift, re-clamped to |w|≤1) ----------------
-  const weighted = candidate.matchedTopics.map((t) =>
-    clamp(t.effectiveWeight * (t.highPriority ? config.HP_MULT : 1), -1, 1),
-  );
+  // Positive weights are additionally scaled by the topic's vectorScore via
+  // smoothstep (a weak semantic match is suppressed); a missing vectorScore is
+  // neutral (×1). Negative weights pass through unmodulated so a learned
+  // negative topic still demotes regardless of retrieval similarity.
+  const weighted = candidate.matchedTopics.map((t) => {
+    const w = clamp(t.effectiveWeight * (t.highPriority ? config.HP_MULT : 1), -1, 1);
+    if (w > 0 && t.vectorScore != null) {
+      return w * smoothstep(t.vectorScore, config.VS_LO, config.VS_HI);
+    }
+    return w;
+  });
   const topicComp = signedMaxByMagnitude(weighted);
   const maxNegativeMatchedWeight = candidate.matchedTopics.reduce(
     (mx, t) => Math.max(mx, t.effectiveWeight < 0 ? -t.effectiveWeight : 0),
     0,
   );
+
+  // --- breadthComp: distinct positive matched topics discriminate FEED from
+  //     the single-spurious-topic tail (EXCL≈1.26 vs FEED≈2.85 matched topics).
+  const positiveMatchCount = candidate.matchedTopics.reduce(
+    (n, t) => n + (t.effectiveWeight > 0 ? 1 : 0),
+    0,
+  );
+  const breadthComp = clamp((positiveMatchCount - 1) / config.BREADTH_SAT, 0, 1);
 
   // --- geo ----------------------------------------------------------------
   const anchoredLocationIds = new Set(
@@ -266,6 +297,7 @@ export function computeRelevance(
 
   const affinity =
     config.W_TOPIC * topicComp +
+    config.W_BREADTH * breadthComp +
     config.W_GEO * geoComp +
     config.W_ENTITY * entityComp +
     config.W_EVENT * eventComp +
@@ -309,6 +341,7 @@ export function computeRelevance(
     mode,
     components: {
       topicComp,
+      breadthComp,
       geoComp,
       geoAlignment: geo.alignment,
       entityComp,

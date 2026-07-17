@@ -5,17 +5,29 @@ const mockGetLocalSuggestionServerIds = jest.fn();
 const mockGetUnscoredSuggestionsWithFacts = jest.fn();
 const mockBatchMarkAsScoredByIds = jest.fn();
 const mockPersistAndLinkV2Suggestions = jest.fn();
+const mockGetFactWeightById = jest.fn();
 const mockGetArticleIdsForTopics = jest.fn();
 const mockGetArticlesForTopicsByIds = jest.fn();
+const mockGetArticleIdsForPersona = jest.fn();
 const mockWithRetry = jest.fn();
 const mockRunScoringPass = jest.fn();
 const mockEnqueueCandidates = jest.fn();
 const mockGetNonTerminalCandidateIds = jest.fn();
 const mockGateUnscoredForScoring = jest.fn();
 const mockLogInfo = jest.fn();
+const mockGetActive = jest.fn();
+const mockGetAllLocations = jest.fn();
 
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFacts: (...args: any[]) => mockGetFacts(...args),
+}));
+
+jest.mock('@/lib/database/services/topic-service', () => ({
+  getActive: (...args: any[]) => mockGetActive(...args),
+}));
+
+jest.mock('@/lib/database/services/location-service', () => ({
+  getAll: (...args: any[]) => mockGetAllLocations(...args),
 }));
 
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
@@ -23,12 +35,14 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscoredSuggestionsWithFacts(...args),
   batchMarkAsScoredByIds: (...args: any[]) => mockBatchMarkAsScoredByIds(...args),
   persistAndLinkV2Suggestions: (...args: any[]) => mockPersistAndLinkV2Suggestions(...args),
+  getFactWeightById: (...args: any[]) => mockGetFactWeightById(...args),
 }));
 
 jest.mock('@/lib/article-service', () => ({
   ArticleService: {
     getArticleIdsForTopics: (...args: any[]) => mockGetArticleIdsForTopics(...args),
     getArticlesForTopicsByIds: (...args: any[]) => mockGetArticlesForTopicsByIds(...args),
+    getArticleIdsForPersona: (...args: any[]) => mockGetArticleIdsForPersona(...args),
   },
 }));
 
@@ -101,6 +115,9 @@ beforeEach(() => {
   // Default: withRetry calls the fn and returns its result
   mockWithRetry.mockImplementation((fn: () => any) => fn());
   mockGetFacts.mockResolvedValue([]);
+  mockGetActive.mockResolvedValue([]);
+  mockGetAllLocations.mockResolvedValue([]);
+  mockGetFactWeightById.mockResolvedValue(new Map());
   mockGetLocalSuggestionServerIds.mockResolvedValue([]);
   mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
   mockBatchMarkAsScoredByIds.mockResolvedValue(undefined);
@@ -258,6 +275,38 @@ describe('stepFetchTopicIds', () => {
     );
   });
 
+  it('routes through the persona path when topic-service has active topics, and builds matchedTopics/stableClusterId metadata', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: 'f1', locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [
+        {
+          topicText: 'ai',
+          articleIds: ['art-1'],
+          matchMeta: [{ articleId: 'art-1', vectorScore: 0.9, textScore: null, stableClusterId: 'sc1' }],
+          nextCursor: null,
+          hasNextPage: false,
+        },
+      ],
+      headlineResults: [],
+    });
+
+    const ctx = makeCtx();
+    const result = await stepFetchTopicIds('p-1', ctx);
+
+    expect(result.serverArticleIds).toContain('art-1');
+    expect(result.articleToTopicTexts.get('art-1')).toContain('ai');
+    expect(result.personaMeta?.matchedTopics.get('art-1')?.[0]).toMatchObject({
+      topicId: 't1',
+      text: 'ai',
+    });
+    expect(result.personaMeta?.stableClusterId?.get('art-1')).toBe('sc1');
+    expect(mockGetArticleIdsForPersona).toHaveBeenCalled();
+    expect(mockGetArticleIdsForTopics).not.toHaveBeenCalled();
+  });
+
 });
 
 // ── stepDiff ──────────────────────────────────────────────────────────────────
@@ -391,6 +440,7 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockPersistAndLinkV2Suggestions).toHaveBeenCalledWith(
       [{ _id: 'art-1' }],
       topicMap,
+      undefined,
     );
     expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1']);
     expect(opts.refreshStore).toHaveBeenCalled();

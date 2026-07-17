@@ -74,11 +74,16 @@ export type ArticleWithClusters = {
   __typename?: 'ArticleWithClusters';
   _id: Scalars['ID']['output'];
   article_url?: Maybe<Scalars['String']['output']>;
+  category?: Maybe<Scalars['String']['output']>;
   clusters: Array<ClusterMembership>;
   country_code?: Maybe<Scalars['String']['output']>;
   description_en?: Maybe<Scalars['String']['output']>;
+  entities?: Maybe<Array<Scalars['String']['output']>>;
+  event_type?: Maybe<Scalars['String']['output']>;
+  geo_tags?: Maybe<Array<GeoTagDto>>;
   image_url?: Maybe<Scalars['String']['output']>;
   language_code?: Maybe<Scalars['String']['output']>;
+  maxClusterSize?: Maybe<Scalars['Int']['output']>;
   pubDate: Scalars['DateTime']['output'];
   publication_name?: Maybe<Scalars['String']['output']>;
   title?: Maybe<Scalars['String']['output']>;
@@ -149,6 +154,36 @@ export type EmbeddingSearchResult = {
   __typename?: 'EmbeddingSearchResult';
   article: NewsArticle;
   score: Scalars['Float']['output'];
+};
+
+/** A geo tag on an article (written by the tagging pipeline). city/region are optional; countryCode is always present. */
+export type GeoTagDto = {
+  __typename?: 'GeoTagDto';
+  city?: Maybe<Scalars['String']['output']>;
+  countryCode: Scalars['String']['output'];
+  region?: Maybe<Scalars['String']['output']>;
+};
+
+/** Top-headlines scope. COUNTRY requires countryCode; GLOBAL takes none. */
+export enum HeadlineScope {
+  Country = 'COUNTRY',
+  Global = 'GLOBAL'
+}
+
+/** A single top-headlines scope. COUNTRY requires countryCode; GLOBAL takes none. */
+export type HeadlineScopeInput = {
+  countryCode?: InputMaybe<Scalars['String']['input']>;
+  scope: HeadlineScope;
+};
+
+/** Top-headline article ids for one scope. clusterSizes and stableClusterIds are positionally aligned with articleIds. */
+export type HeadlineScopeResult = {
+  __typename?: 'HeadlineScopeResult';
+  articleIds: Array<Scalars['ID']['output']>;
+  clusterSizes: Array<Scalars['Int']['output']>;
+  countryCode?: Maybe<Scalars['String']['output']>;
+  scope: HeadlineScope;
+  stableClusterIds: Array<Maybe<Scalars['String']['output']>>;
 };
 
 export type IssueLlmWarningInput = {
@@ -320,6 +355,49 @@ export enum OnboardingStage {
   ProcessingMode = 'PROCESSING_MODE'
 }
 
+/** Per-article match metadata. textScore is ALWAYS null in v1. stableClusterId is the id of the article's largest-clusterSize linked cluster, null when the article is a singleton/unclustered. */
+export type PersonaMatchMeta = {
+  __typename?: 'PersonaMatchMeta';
+  articleId: Scalars['ID']['output'];
+  stableClusterId?: Maybe<Scalars['String']['output']>;
+  textScore?: Maybe<Scalars['Float']['output']>;
+  vectorScore: Scalars['Float']['output'];
+};
+
+/** Privacy-lean persona query: topic texts + optional top-headlines scopes. No locations, weights, or exclude-topics are ever accepted here (deliberate). */
+export type PersonaQueryInput = {
+  limitPerTopic?: Scalars['Int']['input'];
+  /** Optional hard cap on total ids across topicResults; the lowest-priority (last) topics are truncated first once the cap is reached. */
+  maxArticles?: InputMaybe<Scalars['Int']['input']>;
+  topHeadlines?: InputMaybe<TopHeadlinesInput>;
+  /** Up to MAX_TOPICS_PER_REQUEST (default 200); topicText ≤ 512. */
+  topics: Array<PersonaTopicInput>;
+};
+
+/** Privacy-lean persona query result: per-topic article ids + match metadata, plus optional per-scope top headlines. */
+export type PersonaQueryResult = {
+  __typename?: 'PersonaQueryResult';
+  headlineResults: Array<HeadlineScopeResult>;
+  topicResults: Array<PersonaTopicResult>;
+};
+
+/** A single persona topic. `limit` overrides the query-level limitPerTopic; `afterCursor` is the articleId of the last item on the previous page. */
+export type PersonaTopicInput = {
+  afterCursor?: InputMaybe<Scalars['ID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  text: Scalars['String']['input'];
+};
+
+/** Resolved article ids + match metadata for one persona topic. */
+export type PersonaTopicResult = {
+  __typename?: 'PersonaTopicResult';
+  articleIds: Array<Scalars['ID']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  matchMeta: Array<PersonaMatchMeta>;
+  nextCursor?: Maybe<Scalars['ID']['output']>;
+  topicText: Scalars['String']['output'];
+};
+
 /** Which inference backend handles Mera Protocol work for this user. ON_DEVICE runs fully offline on the user device; CLOUD uses end-to-end encrypted inference. */
 export enum ProcessingMode {
   Cloud = 'CLOUD',
@@ -371,6 +449,7 @@ export type Query = {
   appVersionInfo: AppVersionInfo;
   /** Fetch a single article by ID. Returns null if not found (e.g. TTL’d out). */
   articleById?: Maybe<NewsArticle>;
+  articleIdsForPersona: PersonaQueryResult;
   articleIdsForTopics: ArticleIdsForTopicsResponse;
   /** A country's last-24h articles across all its sources, sorted by largest cluster size (top headlines). A null or "GLOBAL" countryCode spans all countries. */
   articlesForCountry: ArticlesForPublicationSourceResponse;
@@ -404,6 +483,11 @@ export type QueryAppVersionInfoArgs = {
 
 export type QueryArticleByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryArticleIdsForPersonaArgs = {
+  query: PersonaQueryInput;
 };
 
 
@@ -540,6 +624,12 @@ export type SubmittedUserTopic = {
   status: Scalars['String']['output'];
   text: Scalars['String']['output'];
   topicId?: Maybe<Scalars['ID']['output']>;
+};
+
+/** Optional top-headlines block. Up to 6 scopes; limitPerScope capped at 25. */
+export type TopHeadlinesInput = {
+  limitPerScope?: Scalars['Int']['input'];
+  scopes: Array<HeadlineScopeInput>;
 };
 
 export type TopicArticleIdsResult = {

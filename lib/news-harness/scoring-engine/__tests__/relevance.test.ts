@@ -37,7 +37,11 @@ const candidate = (over: Partial<ScoredCandidateInput> = {}): ScoredCandidateInp
 });
 
 describe('computeRelevance — core band', () => {
-  it('a solo 0.8-weight topic lands at the FEED floor (~0.40 base)', () => {
+  // Wave 7b breadth cutover: a SOLO topic no longer self-lands in FEED. Breadth
+  // (W_TOPIC 0.42→0.32, +W_BREADTH 0.10) intentionally drops a single-topic
+  // match to the TANGENTIAL band so the judge decides it — single-topic matches
+  // are mostly spurious (golden: only ~14% of solo matches are FEED).
+  it('a solo 0.8-weight topic lands BELOW FEED (breadth demotes it to TANGENTIAL)', () => {
     const r = computeRelevance(
       candidate({ matchedTopics: [{ topicId: 't1', effectiveWeight: 0.8 }], pubDateMs: OLD }),
       emptyPersona(),
@@ -46,9 +50,45 @@ describe('computeRelevance — core band', () => {
     );
     expect(r.mode).toBe('backstop'); // no tags → backstop (still math-scored here)
     expect(r.components.topicComp).toBeCloseTo(0.8, 6);
-    expect(r.components.mathBase).toBeGreaterThanOrEqual(0.4);
-    expect(r.components.mathBase).toBeLessThan(0.43);
+    expect(r.components.breadthComp).toBe(0); // solo → no breadth
+    expect(r.components.mathBase).toBeGreaterThanOrEqual(0.25);
+    expect(r.components.mathBase).toBeLessThan(0.4);
+    expect(isFeed(r.score)).toBe(false);
+  });
+
+  it('breadth lifts a multi-topic (3×0.8) match back into FEED', () => {
+    const r = computeRelevance(
+      candidate({
+        matchedTopics: [
+          { topicId: 't1', effectiveWeight: 0.8 },
+          { topicId: 't2', effectiveWeight: 0.8 },
+          { topicId: 't3', effectiveWeight: 0.8 },
+        ],
+        pubDateMs: OLD,
+      }),
+      emptyPersona(),
+      cfg,
+      NOW,
+    );
+    expect(r.components.breadthComp).toBe(1); // 3 topics saturate BREADTH_SAT=2
     expect(isFeed(r.score)).toBe(true);
+  });
+
+  it('vectorScore modulation suppresses a high-weight but weak-similarity topic', () => {
+    const strong = computeRelevance(
+      candidate({ matchedTopics: [{ topicId: 't1', effectiveWeight: 0.8, vectorScore: 0.95 }] }),
+      emptyPersona(),
+      cfg,
+      NOW,
+    );
+    const weak = computeRelevance(
+      candidate({ matchedTopics: [{ topicId: 't1', effectiveWeight: 0.8, vectorScore: 0.7 }] }),
+      emptyPersona(),
+      cfg,
+      NOW,
+    );
+    expect(strong.components.topicComp).toBeCloseTo(0.8, 6); // vs≥VS_HI → full
+    expect(weak.components.topicComp).toBe(0); // vs<VS_LO → suppressed to 0
   });
 
   it('a −1 matched topic guts the score to EXCLUDE', () => {
@@ -143,7 +183,13 @@ describe('computeRelevance — EMERGENCY reachability', () => {
     candidate({
       id: 'e1',
       publicationName: 'Fav Times',
-      matchedTopics: [{ topicId: 't1', effectiveWeight: 1.0, locationId: 'loc-amsterdam' }],
+      // EMERGENCY now also needs breadth (Wave 7b) — a saturated breaking story
+      // is multi-topic by nature; 3 anchored topics saturate BREADTH_SAT.
+      matchedTopics: [
+        { topicId: 't1', effectiveWeight: 1.0, locationId: 'loc-amsterdam' },
+        { topicId: 't2', effectiveWeight: 1.0, locationId: 'loc-amsterdam' },
+        { topicId: 't3', effectiveWeight: 1.0, locationId: 'loc-amsterdam' },
+      ],
       geoTags: [{ city: 'amsterdam', region: 'noord-holland', countryCode: 'NL' }],
       entities: ['ajax'],
       eventType: 'disaster',

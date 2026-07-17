@@ -47,6 +47,29 @@ export interface BatchCompletionResult {
 // Scoring pipeline types (moved from article-suggestion-service + scoring-service)
 // ---------------------------------------------------------------------------
 
+/** The persona-v3 scorer-input metadata columns of an article_suggestion row,
+ *  as raw (still-JSON) strings. Plain/self-contained — buildStageCandidateInput
+ *  (in the RN service) parses these into a ScoredCandidateInput. Populated by
+ *  the persona-v3 hydration path; absent/null on old rows → backstop routing. */
+export interface StageCandidateRow {
+  id: string;
+  titleEn: string | null;
+  descriptionEn: string | null;
+  publicationName: string | null;
+  countryCode: string | null;
+  firstPubDateMs: number | null;
+  maxClusterSize: number | null;
+  eventType: string | null;
+  category: string | null;
+  geoTagsJson: string | null;
+  entitiesJson: string | null;
+  /** [{ topicId, text, vectorScore? }] — inverted per-topic matchMeta. */
+  matchedTopicsJson: string | null;
+  /** null | 'CITY' | 'COUNTRY' | 'GLOBAL'. */
+  headlineScope: string | null;
+  stableClusterId: string | null;
+}
+
 /** A single article_suggestion joined with its linked facts — the input to
  *  relevance scoring. WMDB row id == server `_id`. */
 export interface ScoringCandidate {
@@ -60,6 +83,11 @@ export interface ScoringCandidate {
    *  (where the row was scored previously but the reason came back empty);
    *  omitted for the unscored-candidates query. */
   relevance?: number;
+  /** Persona-v3 scorer-input metadata (raw JSON columns). Attached by
+   *  getUnscoredSuggestionsWithFacts / getScoredSuggestionsWithoutReasons so the
+   *  orchestrators can build a StageCandidate.input via buildStageCandidateInput.
+   *  Absent on rows that predate the persona-v3 path. */
+  meta?: StageCandidateRow;
 }
 
 /** Output of a single scoring pass for one candidate. */

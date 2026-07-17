@@ -329,7 +329,10 @@ describe('runArticlePipeline — FEED verifier stage', () => {
       personaStore: makePersonaStore(facts),
       sink,
     };
-    const report = await runArticlePipeline(ports, ARTICLE_CFG);
+    // Wave 7b flipped the default feedVerifierEnabled → false (verifier absorbed
+    // into the judge). The verifier code is retained for one release; this test
+    // explicitly enables it to keep exercising that retained code path.
+    const report = await runArticlePipeline(ports, { ...ARTICLE_CFG, feedVerifierEnabled: true });
 
     const a2 = report.scores.find((s) => s.id === 'a2')!;
     expect(a2.rawScore).toBe(ARTICLE_CFG.feedVerifierDemoteScore); // 0.28
@@ -359,7 +362,7 @@ describe('runArticlePipeline — FEED verifier stage', () => {
         personaStore: makePersonaStore(facts),
         sink,
       },
-      ARTICLE_CFG,
+      { ...ARTICLE_CFG, feedVerifierEnabled: true }, // Wave 7b: default now off; enable to test fail-open.
     );
     expect(report.scores.find((s) => s.id === 'a1')!.rawScore).toBe(0.85);
     expect(report.scores.find((s) => s.id === 'a2')!.rawScore).toBe(0.62);

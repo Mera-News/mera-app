@@ -39,6 +39,25 @@ export default class ArticleSuggestion extends Model {
   @field('article_url') articleUrl!: string | null;
   @field('image_url') imageUrl!: string | null;
   @field('matched_topic_texts_json') matchedTopicTextsJson!: string | null;
+  // ── Persona v3 (schema v37) scorer inputs + audit ──────────────
+  // Hydration-carried article metadata (nullable until the server tagging
+  // pipeline backfills; absence routes the engine to the backstop path).
+  @field('geo_tags_json') geoTagsJson!: string | null;
+  @field('entities_json') entitiesJson!: string | null;
+  @field('event_type') eventType!: string | null;
+  @field('category') category!: string | null;
+  @field('max_cluster_size') maxClusterSize!: number | null;
+  @field('stable_cluster_id') stableClusterId!: string | null;
+  // null = topic-retrieved; 'CITY'|'COUNTRY'|'GLOBAL' for top-headline injection.
+  @field('headline_scope') headlineScope!: string | null;
+  // [{ topicId, text, vectorScore? }] — inverted per-topic matchMeta.
+  @field('matched_topics_json') matchedTopicsJson!: string | null;
+  // Deterministic engine raw score (pre-judge) — the fail-open source of truth.
+  @field('computed_score') computedScore!: number | null;
+  // Final post-judge raw score (for within-section ordering / audit).
+  @field('raw_score') rawScore!: number | null;
+  // Full RelevanceComponents breakdown (audit + judge context).
+  @field('score_components_json') scoreComponentsJson!: string | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
 

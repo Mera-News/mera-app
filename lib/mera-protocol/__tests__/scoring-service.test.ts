@@ -20,6 +20,16 @@ jest.mock('../../database/services/article-suggestion-service', () => ({
 jest.mock('../../database/services/fact-service', () => ({
   getFacts: jest.fn(() => Promise.resolve([])),
 }));
+// stage-scoring pulls in the persona DB services (topic/location/etc.) at import
+// time; mock it so the module loads without native deps. These tests exercise
+// the pure decoder + verifier, not the math+judge stage.
+jest.mock('../stage-scoring', () => ({
+  computeAndJudgeForCandidates: jest.fn(),
+  computeMathStage: jest.fn(),
+  loadPersonaScoringContext: jest.fn(),
+  buildStageCandidates: jest.fn(),
+  getScoringLlmPort: jest.fn(),
+}));
 jest.mock('../../stores/mera-protocol-store', () => ({
   useMeraProtocolStore: { getState: jest.fn(() => ({ processingMode: 'CLOUD' })) },
 }));
@@ -180,9 +190,11 @@ describe('runFeedVerifierPass (app shim — second-pass FEED verifier)', () => {
   // getFacts implementation, breaking loadAllFactStatements.
   beforeEach(() => mockCloudBatch.mockReset());
 
-  it('audits only FEED candidates and demotes "no" articles to 0.28', async () => {
+  // Wave 7b cutover: the verifier is absorbed into the judge and its flag
+  // (feedVerifierEnabled) ships OFF for one release, so runFeedVerifierPass is a
+  // no-op — it returns 0 and never hits the LLM regardless of the FEED scores.
+  it('is a no-op while the verifier flag is off (absorbed into the judge)', async () => {
     const cands = [candidate('a'), candidate('b'), candidate('c')];
-    // a, b are FEED (>= discardFloor 0.4); c is not, so it is never audited.
     const scoreMap = new Map([
       ['a', 0.9],
       ['b', 0.6],
@@ -194,13 +206,11 @@ describe('runFeedVerifierPass (app shim — second-pass FEED verifier)', () => {
 
     const demoted = await runFeedVerifierPass(cands, scoreMap);
 
-    expect(demoted).toBe(1);
-    expect(scoreMap.get('a')).toBe(0.9); // kept
-    expect(scoreMap.get('b')).toBe(0.28); // demoted
-    expect(scoreMap.get('c')).toBe(0.2); // untouched (not FEED)
-    // Only the two FEED candidates were sent, in one verify: chunk.
-    const sentCalls = mockCloudBatch.mock.calls[0][0];
-    expect(sentCalls.map((c) => c.id)).toEqual(['verify:0']);
+    expect(demoted).toBe(0);
+    expect(scoreMap.get('a')).toBe(0.9); // unchanged (verifier disabled)
+    expect(scoreMap.get('b')).toBe(0.6); // unchanged (was 0.28 when enabled)
+    expect(scoreMap.get('c')).toBe(0.2);
+    expect(mockCloudBatch).not.toHaveBeenCalled();
   });
 
   it('fail-open: a verifier LLM error leaves every score unchanged', async () => {

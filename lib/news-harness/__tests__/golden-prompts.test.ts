@@ -26,6 +26,15 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   saveScoringResult: jest.fn(),
 }));
 jest.mock('@/lib/database/services/fact-service', () => ({ getFacts: jest.fn() }));
+// scoring-service now imports stage-scoring, which pulls in the persona DB
+// services at load time; mock it so scoring-service loads without native deps.
+jest.mock('@/lib/mera-protocol/stage-scoring', () => ({
+  computeAndJudgeForCandidates: jest.fn(),
+  computeMathStage: jest.fn(),
+  loadPersonaScoringContext: jest.fn(),
+  buildStageCandidates: jest.fn(),
+  getScoringLlmPort: jest.fn(),
+}));
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
   useMeraProtocolStore: { getState: jest.fn(() => ({ processingMode: 'CLOUD' })) },
 }));

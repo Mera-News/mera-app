@@ -31,8 +31,8 @@ if (engineArg) {
   engine = engineArg.includes('=')
     ? engineArg.split('=')[1]
     : process.argv[process.argv.indexOf(engineArg) + 1];
-  if (engine !== 'math' && engine !== 'backstop') {
-    console.error(`bad --engine "${engine}" (expected math|backstop)`);
+  if (engine !== 'math' && engine !== 'backstop' && engine !== 'pipeline') {
+    console.error(`bad --engine "${engine}" (expected math|backstop|pipeline)`);
     process.exit(1);
   }
 }
@@ -124,6 +124,20 @@ const exclTotal = rowSum('EXCLUDE');
 const feedMiss = matrix.FEED.EXCLUDE;
 console.log(`\nCRITICAL: unrelated leaking into product: ${matrix.EXCLUDE.FEED} into FEED + ${matrix.EXCLUDE.TANGENTIAL} into TANGENTIAL of ${exclTotal} (${((100 * exclLeak) / (exclTotal || 1)).toFixed(1)}% leak)`);
 console.log(`CRITICAL: impactful articles fully hidden (FEED->EXCLUDE): ${feedMiss} of ${rowSum('FEED')}`);
+
+// GATE metric — "FEED precision" as the plan/old-system measured it: of the
+// articles shown in FEED, the fraction that are NOT golden-EXCLUDE (i.e. FEED or
+// TANGENTIAL — a legitimately related story, no unrelated leak). This is the
+// number the redesign is gated on (target ≥76.2%); it reconciles the old
+// 2-pass system's measured ~76–80% (the strict FEED-only precision above is a
+// separate, stricter metric). Also reported: strict FEED precision.
+const predFeed = col('FEED');
+const feedNonExcl = matrix.FEED.FEED + matrix.TANGENTIAL.FEED;
+const feedNonExclPrec = predFeed ? (100 * feedNonExcl) / predFeed : 0;
+console.log(
+  `\nGATE: FEED precision (non-EXCLUDE of predicted-FEED): ${feedNonExclPrec.toFixed(1)}%  ` +
+    `(${feedNonExcl}/${predFeed})   [strict FEED-only precision: ${(predFeed ? (100 * matrix.FEED.FEED) / predFeed : 0).toFixed(1)}%]`,
+);
 
 // NEW product metric: wrong-location leak (the Chhindwara/Dindori + Bhopal-
 // sibling class). A FEED-predicted article whose geo resolves to a sibling city

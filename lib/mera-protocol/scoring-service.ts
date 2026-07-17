@@ -15,7 +15,6 @@ import logger from '../logger';
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
-  LOCAL_RELEVANCE_SYSTEM_PROMPT,
   LOCAL_REASON_SYSTEM_PROMPT,
   buildBatchScoringUserMessage,
   buildReasonUserMessage,
@@ -41,7 +40,6 @@ import {
   isEligible,
   chunk,
   bucketScores,
-  parseBatchRelevanceResponse,
   parseReasonResponse,
   decodeCloudBatchResults as harnessDecodeCloudBatchResults,
   buildFeedVerifierCalls,
@@ -54,6 +52,7 @@ import type {
   DecodedResults,
   ScoringResult,
 } from '@/lib/news-harness/article-pipeline/scoring';
+import { computeAndJudgeForCandidates } from './stage-scoring';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
@@ -73,9 +72,6 @@ export type { CloudCallBundle, DecodedResults, ScoringResult };
 
 /** Articles bundled into one batched relevance prompt (cloud). */
 const ARTICLES_PER_SCORE_PROMPT = ARTICLE_CFG.articlesPerScorePrompt;
-
-/** Local (Qwen3.5-4B on-device) batch size — score one article per call. */
-const LOCAL_ARTICLES_PER_SCORE_PROMPT = 1;
 
 /** Relevance threshold — generate reasons for every scored candidate. */
 const REASON_THRESHOLD = 0;
@@ -156,70 +152,100 @@ async function generateReasonForCandidate(
   return parseReasonResponse(output, candidate.id, userMessage, appHarnessLogger);
 }
 
+export interface BatchScoreResult {
+  /** Raw score per id (pre-bucket). Ineligible rows get INELIGIBLE_RELEVANCE. */
+  scoreMap: Map<string, number>;
+  reasonMap: Map<string, string>;
+  failedIds: Set<string>;
+  /** Persona-v3 audit: pre-judge deterministic math score per id. */
+  computedMap: Map<string, number>;
+  /** Persona-v3 audit: JSON-encoded RelevanceComponents per id. */
+  componentsJsonMap: Map<string, string>;
+}
+
+/**
+ * Persona-v3 (Wave 7b M-P5): score a batch through the SINGLE math + judge stage
+ * (computeAndJudge, via stage-scoring), then run the reason pass for any
+ * survivor that still lacks a reason. Returns RAW scores (bucketing is the
+ * caller's job) plus the computed_score / components audit maps.
+ *
+ * `scoreMap` values are the FINAL raw score (post-judge for math candidates,
+ * legacy LLM for backstop). `reasonMap` carries the judge's combined reasons;
+ * the reason pass below fills in survivors the judge didn't caption (backstop
+ * rows + math rows the judge left below the reason floor but that still bucket
+ * into FEED).
+ */
 export async function batchScoreAndReason(
   candidates: ScoringCandidate[],
-): Promise<{ scoreMap: Map<string, number>; reasonMap: Map<string, string>; failedIds: Set<string> }> {
+): Promise<BatchScoreResult> {
   const useOnDevice = isOnDeviceMode();
 
   const scoreMap = new Map<string, number>();
   const reasonMap = new Map<string, string>();
   const failedIds = new Set<string>();
+  const computedMap = new Map<string, number>();
+  const componentsJsonMap = new Map<string, string>();
 
-  // Bucket candidates: ineligible ones get a fixed low score, never hit the LLM.
+  // Ineligible ones get a fixed low score, never hit the engine/LLM.
   const eligible: ScoringCandidate[] = [];
   for (const c of candidates) {
     if (isEligible(c)) eligible.push(c);
     else scoreMap.set(c.id, INELIGIBLE_RELEVANCE);
   }
+  if (eligible.length === 0) {
+    return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+  }
 
-  if (eligible.length === 0) return { scoreMap, reasonMap, failedIds };
+  // ---- ONE math + judge stage (shared by both orchestrators) ----
+  let stage;
+  try {
+    stage = await computeAndJudgeForCandidates(eligible);
+  } catch (err) {
+    logger.warn('[batchScoreAndReason] computeAndJudge failed — fallback relevance', {
+      error: err instanceof Error ? err.message : String(err),
+      count: eligible.length,
+    });
+    eligible.forEach((c) => {
+      scoreMap.set(c.id, FALLBACK_RELEVANCE);
+      failedIds.add(c.id);
+    });
+    return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+  }
 
-  const chunkSize = useOnDevice ? LOCAL_ARTICLES_PER_SCORE_PROMPT : ARTICLES_PER_SCORE_PROMPT;
-  const chunks = chunk(eligible, chunkSize);
-  const allFactStatements = await loadAllFactStatements();
-  const fullUserContext = buildUserContext(allFactStatements);
+  for (const c of eligible) {
+    const raw = stage.rawScoreMap.get(c.id);
+    if (raw === undefined) {
+      scoreMap.set(c.id, FALLBACK_RELEVANCE);
+      failedIds.add(c.id);
+      continue;
+    }
+    scoreMap.set(c.id, raw);
+    const computed = stage.computedScoreMap.get(c.id);
+    if (computed !== undefined) computedMap.set(c.id, computed);
+    const comps = stage.componentsMap.get(c.id);
+    if (comps) componentsJsonMap.set(c.id, JSON.stringify(comps));
+    const reason = stage.reasonMap.get(c.id);
+    if (reason) reasonMap.set(c.id, reason);
+  }
 
-  // ---- Local path: one batched score call per chunk, then sequential reasons ----
-  if (useOnDevice) {
-    for (const chunkCandidates of chunks) {
-      const { prompt, system } = buildScoreCallForChunk(
-        chunkCandidates,
-        allFactStatements,
-        LOCAL_RELEVANCE_SYSTEM_PROMPT,
-      );
-      let scores: number[];
-      try {
-        const output = await completeLocal({
-          systemPrompt: system,
-          prompt,
-          maxTokens: SCORE_BATCH_MAX_TOKENS,
-          temperature: ARTICLE_CFG.scoreTemperature,
-          responseFormat: 'json',
-        });
-        scores = parseBatchRelevanceResponse(
-          output,
-          chunkCandidates.length,
-          chunkCandidates[0].id,
-          prompt,
-          ARTICLE_CFG,
-          appHarnessLogger,
-        );
-      } catch (err) {
-        logger.warn('[batchScoreAndReason] local chunk score failed', {
-          error: err instanceof Error ? err.message : String(err),
-          chunkSize: chunkCandidates.length,
-        });
-        chunkCandidates.forEach((c) => {
-          scoreMap.set(c.id, FALLBACK_RELEVANCE);
-          failedIds.add(c.id);
-        });
-        continue;
-      }
-      for (let i = 0; i < chunkCandidates.length; i++) {
-        const c = chunkCandidates[i];
-        const relevance = scores[i];
-        scoreMap.set(c.id, relevance);
-        if (relevance < REASON_THRESHOLD) continue;
+  // ---- Reason pass: only survivors ≥ reasonRelevanceThreshold that the judge
+  //      didn't already caption (backstop rows + un-captioned math rows). ----
+  const survivors = eligible.filter((c) => {
+    const r = scoreMap.get(c.id);
+    return (
+      typeof r === 'number' &&
+      r >= ARTICLE_CFG.reasonRelevanceThreshold &&
+      !reasonMap.has(c.id) &&
+      !failedIds.has(c.id)
+    );
+  });
+
+  if (survivors.length > 0) {
+    const allFactStatements = await loadAllFactStatements();
+    const fullUserContext = buildUserContext(allFactStatements);
+    if (useOnDevice) {
+      for (const c of survivors) {
+        const relevance = scoreMap.get(c.id)!;
         try {
           const reason = await generateReasonForCandidate(c, fullUserContext, relevance);
           if (reason) reasonMap.set(c.id, reason);
@@ -230,48 +256,20 @@ export async function batchScoreAndReason(
           });
         }
       }
+    } else {
+      const phase2 = buildReasonCallsForSurvivors(survivors, scoreMap, allFactStatements);
+      const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
+      const decodedReasons = decodeCloudBatchResults({
+        batchResults: reasonResults,
+        promptsById: phase2.promptsById,
+        chunkIdToCandidates: phase2.chunkIdToCandidates,
+      });
+      for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
+      for (const id of decodedReasons.failedIds) failedIds.add(id);
     }
-    return { scoreMap, reasonMap, failedIds };
   }
 
-  // ---- Cloud path: two-phase. Phase-1 sends only score chunks; phase-2 sends
-  //      reason calls *only* for candidates whose decoded score >= threshold. ----
-  const phase1 = buildScoreOnlyCloudCalls(chunks, allFactStatements);
-  const scoreResults = await cloudBatchComplete(phase1.calls, SMALL_MODEL);
-
-  const decodedScores = decodeCloudBatchResults({
-    batchResults: scoreResults,
-    promptsById: phase1.promptsById,
-    chunkIdToCandidates: phase1.chunkIdToCandidates,
-  });
-
-  for (const [id, score] of decodedScores.scoreMap) scoreMap.set(id, score);
-  for (const id of decodedScores.failedIds) failedIds.add(id);
-
-  // Phase-2: only candidates clearing REASON_THRESHOLD get a reason call, and
-  // each call carries the *actual* decoded score so the reason tone matches.
-  const survivors = eligible.filter((c) => {
-    const r = scoreMap.get(c.id);
-    return typeof r === 'number' && r >= REASON_THRESHOLD;
-  });
-
-  if (survivors.length > 0) {
-    const phase2 = buildReasonCallsForSurvivors(
-      survivors,
-      scoreMap,
-      allFactStatements,
-    );
-    const reasonResults = await cloudBatchComplete(phase2.calls, SMALL_MODEL);
-    const decodedReasons = decodeCloudBatchResults({
-      batchResults: reasonResults,
-      promptsById: phase2.promptsById,
-      chunkIdToCandidates: phase2.chunkIdToCandidates,
-    });
-    for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
-    for (const id of decodedReasons.failedIds) failedIds.add(id);
-  }
-
-  return { scoreMap, reasonMap, failedIds };
+  return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
 }
 
 // ---------------------------------------------------------------------------
@@ -279,36 +277,6 @@ export async function batchScoreAndReason(
 // user's full fact bank (loaded from WatermelonDB), the default config, and the
 // app logger. Signatures are UNCHANGED from before the harness split.
 // ---------------------------------------------------------------------------
-
-/**
- * Sync cloud phase-1: build score-only BatchCalls from pre-chunked candidates.
- */
-function buildScoreOnlyCloudCalls(
-  candidateChunks: ScoringCandidate[][],
-  allFactStatements: string[],
-): CloudCallBundle {
-  const calls: BatchCall[] = [];
-  const promptsById = new Map<string, string>();
-  const chunkIdToCandidates = new Map<string, ScoringCandidate[]>();
-  const eligibleCandidates: ScoringCandidate[] = [];
-
-  candidateChunks.forEach((chunkCandidates, idx) => {
-    eligibleCandidates.push(...chunkCandidates);
-    const { prompt, system } = buildScoreCallForChunk(chunkCandidates, allFactStatements);
-    const scoreId = `score:${idx}`;
-    promptsById.set(scoreId, prompt);
-    chunkIdToCandidates.set(scoreId, chunkCandidates);
-    calls.push({
-      id: scoreId,
-      system,
-      prompt,
-      temperature: ARTICLE_CFG.scoreTemperature,
-      maxTokens: SCORE_BATCH_MAX_TOKENS,
-    });
-  });
-
-  return { calls, promptsById, chunkIdToCandidates, eligibleCandidates };
-}
 
 /**
  * Sync cloud phase-2: build reason BatchCalls for the survivors — candidates
@@ -527,8 +495,12 @@ export async function processAllUnscored(
     const batch = await getUnscoredSuggestionsWithFacts(batchSize);
     if (batch.length === 0) break;
 
-    const { scoreMap, reasonMap, failedIds } = await batchScoreAndReason(batch);
+    const { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap } =
+      await batchScoreAndReason(batch);
 
+    // Snapshot RAW (post-judge) scores before bucketing — persisted as
+    // raw_score for within-section ordering (the bucketed value is `relevance`).
+    const rawMap = new Map(scoreMap);
     // Bucket qualifying raw scores into LOW (0.4) / MEDIUM (0.6) / HIGH (0.8) /
     // EMERGENCY (1.1). Below-threshold rows stay untouched and are discarded.
     bucketScores(scoreMap);
@@ -544,7 +516,14 @@ export async function processAllUnscored(
         // phase-2 was bypassed entirely.
         const reasonSkipped = relevance < REASON_THRESHOLD;
         try {
-          await saveScoringResult(candidate.id, { relevance, reason, reasonSkipped });
+          await saveScoringResult(candidate.id, {
+            relevance,
+            reason,
+            reasonSkipped,
+            computedScore: computedMap.get(candidate.id),
+            rawScore: rawMap.get(candidate.id),
+            scoreComponentsJson: componentsJsonMap.get(candidate.id),
+          });
           succeeded.push({ id: candidate.id, relevance, reason: reason || null });
         } catch (err) {
           logger.error('[processAllUnscored] saveScoringResult failed', err, { id: candidate.id });

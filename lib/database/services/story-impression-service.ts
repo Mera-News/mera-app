@@ -86,6 +86,55 @@ export async function getAll(): Promise<StoryImpressionModel[]> {
   return impressionsCollection.query().fetch();
 }
 
+/**
+ * OPENS-ONLY seen set (USER DECISION, master plan §41c + addendum A2.3): a story
+ * counts as "seen" ONLY when it was explicitly OPENED/read (`opened=true`), NEVER
+ * on a mere impression. This one set feeds BOTH:
+ *   (a) swipe-deck exclusion — the deck drops any suggestion whose article_id OR
+ *       stable_cluster_id is in here (the deck never drains from scrolling); and
+ *   (b) the P_SEEN demotion — passed to `PersonaScoringContext.seenStoryIds`.
+ * Both surfaces are opens-only by construction: there is no impression-keyed
+ * path, so tab-1 scrolling can only demote (via P_SEEN if the article is later
+ * opened) — it can never exclude a story from the deck.
+ *
+ * Returns article_ids ∪ non-null stable_cluster_ids of opened rows. The
+ * `Q.where('opened', true)` is the production filter; the JS `r.opened === true`
+ * guard keeps the set opens-only even under the predicate-ignoring test mock.
+ */
+export async function getOpenedSeenSet(): Promise<Set<string>> {
+  const rows = await impressionsCollection
+    .query(Q.where('opened', true))
+    .fetch();
+  const seen = new Set<string>();
+  for (const r of rows) {
+    if (r.opened !== true) continue;
+    if (r.articleId) seen.add(r.articleId);
+    if (r.stableClusterId) seen.add(r.stableClusterId);
+  }
+  return seen;
+}
+
+/**
+ * Snapshotted normalized titles of OPENED rows only — the title-Jaccard dedup
+ * fallback (addendum A2.2) for when a fresh suggestion has neither a matching
+ * article_id nor a stable_cluster_id in `getOpenedSeenSet()`. The store compares
+ * a candidate's normalized title against these via `titleJaccard ≥
+ * TITLE_JACCARD_PROPAGATION_THRESHOLD` (0.55); fail-open (no match ⇒ not seen).
+ * Opens-only for parity with `getOpenedSeenSet`.
+ */
+export async function getOpenedTitleNorms(): Promise<string[]> {
+  const rows = await impressionsCollection
+    .query(Q.where('opened', true))
+    .fetch();
+  const out: string[] = [];
+  for (const r of rows) {
+    if (r.opened !== true) continue;
+    const t = (r.titleNorm ?? '').trim();
+    if (t) out.push(t);
+  }
+  return out;
+}
+
 /** Deletes impressions first seen before the cutoff. Returns deleted count. */
 export async function deleteOlderThan(cutoffMs: number): Promise<number> {
   const old = await impressionsCollection

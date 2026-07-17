@@ -9,6 +9,8 @@ import {
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
+    PersonaQueryInput,
+    PersonaQueryResult,
     TopicPaginationInput,
 } from './generated/graphql-types';
 import logger from './logger';
@@ -355,9 +357,49 @@ const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
         publication_name
         language_code
         pubDate
+        geo_tags {
+          city
+          region
+          countryCode
+        }
+        entities
+        event_type
+        category
+        maxClusterSize
       }
       dailyLimitReached
       resetAt
+    }
+  }
+`;
+
+// [Persona v3] Privacy-lean candidate listing: topic texts + limits +
+// COUNTRY/GLOBAL headline scopes only (NO locations/weights/negatives ever leave
+// the device). The server stores nothing and charges no quota here (quota is
+// charged at hydration). Response carries per-topic matchMeta (vectorScore +
+// stableClusterId) and separate per-scope headlineResults.
+const GET_ARTICLE_IDS_FOR_PERSONA = gql`
+  query GetArticleIdsForPersona($query: PersonaQueryInput!) {
+    articleIdsForPersona(query: $query) {
+      topicResults {
+        topicText
+        articleIds
+        matchMeta {
+          articleId
+          vectorScore
+          textScore
+          stableClusterId
+        }
+        nextCursor
+        hasNextPage
+      }
+      headlineResults {
+        scope
+        countryCode
+        articleIds
+        clusterSizes
+        stableClusterIds
+      }
     }
   }
 `;
@@ -465,6 +507,44 @@ export class ArticleService {
                 '[ArticleService] getArticleIdsForTopics FAILED',
                 'article-service',
                 { method: 'getArticleIdsForTopics', topicCount: topics.length },
+                'warning',
+            );
+            throw error;
+        }
+    }
+
+    /**
+     * [Persona v3] Fetch candidate article ids for the privacy-lean persona
+     * query: topic texts + per-topic limits + COUNTRY/GLOBAL headline scopes.
+     * Returns per-topic results (with matchMeta) + per-scope headline results.
+     * The daily-delivery cap is NOT charged here (candidate listing is free —
+     * it is charged at hydration via getArticlesForTopicsByIds).
+     */
+    static async getArticleIdsForPersona(
+        query: PersonaQueryInput,
+    ): Promise<PersonaQueryResult> {
+        try {
+            const { data } = await client.query<{
+                articleIdsForPersona: PersonaQueryResult;
+            }>({
+                query: GET_ARTICLE_IDS_FOR_PERSONA,
+                variables: { query },
+                fetchPolicy: 'no-cache',
+            });
+            return (
+                data?.articleIdsForPersona ?? { topicResults: [], headlineResults: [] }
+            );
+        } catch (error) {
+            // The For You feed is the sole subscription gate — surface the paywall
+            // here, scoped to For You (mirrors getArticleIdsForTopics).
+            if (isNotSubscribedError(error)) {
+                navigateToPaywall();
+                throw error;
+            }
+            logger.addBreadcrumb(
+                '[ArticleService] getArticleIdsForPersona FAILED',
+                'article-service',
+                { method: 'getArticleIdsForPersona', topicCount: query.topics.length },
                 'warning',
             );
             throw error;

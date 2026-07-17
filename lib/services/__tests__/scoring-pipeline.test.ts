@@ -20,6 +20,17 @@ const mockGetScoredWithoutReasons = jest.fn();
 const mockSaveScoringResult = jest.fn();
 const mockSaveReason = jest.fn();
 const mockBatchMarkReasonSkipped = jest.fn();
+const mockBatchSaveComputedScores = jest.fn();
+// Persona-v3: computeMathStage runs at submit. Default = ALL backstop so the
+// pipeline takes the legacy relevance+reasons path these tests already assert;
+// individual judge-mode tests override this to return math-mode candidates.
+const mockComputeMathStage = jest.fn(async (candidates: any[] = []) => ({
+  persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+  stage: candidates.map((c) => ({ input: { id: c.id } })),
+  computedScoreMap: new Map(),
+  componentsMap: new Map(),
+  modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+}));
 const mockBucketScores = jest.fn();
 const mockBuildRelevanceCalls = jest.fn();
 const mockBuildReasonCallsForSubset = jest.fn();
@@ -83,6 +94,14 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   saveScoringResult: (...args: any[]) => mockSaveScoringResult(...args),
   saveReason: (...args: any[]) => mockSaveReason(...args),
   batchMarkReasonSkipped: (...args: any[]) => mockBatchMarkReasonSkipped(...args),
+  batchSaveComputedScores: (...args: any[]) => mockBatchSaveComputedScores(...args),
+}));
+
+// stage-scoring pulls in the persona DB services + auth chain at import time;
+// mock it so the pipeline module loads without native deps. Default drives the
+// legacy backstop path (see mockComputeMathStage above).
+jest.mock('@/lib/mera-protocol/stage-scoring', () => ({
+  computeMathStage: (...args: any[]) => mockComputeMathStage(...args),
 }));
 
 jest.mock('@/lib/mera-protocol/scoring-service', () => ({
