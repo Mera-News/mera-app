@@ -805,7 +805,8 @@
       "reassignTopic": "Reassigned topic",
       "mergeFacts": "Merged interests",
       "revertChange": "Reverted a change",
-      "unknown": "Persona change"
+      "unknown": "Persona change",
+      "hygieneDeleteFact": "Removed fact"
     }
   },
   "calibration": {
@@ -838,5 +839,62 @@
     "seenAck": "Got it — we'll show fewer you've seen",
     "nudgeSubscribe": "Subscribing to {{publication}} unlocks full articles",
     "nudgeBrowse": "Look for related coverage from other sources"
+  },
+  "topicPlan": {
+    "title": "Topics I'll track",
+    "loading": "Loading topics…",
+    "generating": "Generating topics…",
+    "generateMore": "Generate more",
+    "generatingMore": "Generating…",
+    "acceptAll": "Looks good",
+    "delete": "Remove topic",
+    "undo": "Undo",
+    "highPriority": "Prioritize topic",
+    "settledTitle": "Topics saved",
+    "settledSummary": "{{count}} topics active for this fact."
+  },
+  "conflict": {
+    "title": "Possible conflict",
+    "newLabel": "New",
+    "existingLabel": "Existing",
+    "keepBoth": "Keep both",
+    "keepBothPreview": "Both facts stay in your profile.",
+    "replaceOld": "Replace the old one",
+    "replaceOldPreview": "Removes: {{statement}}",
+    "merge": "Merge into one",
+    "mergePreview": "One fact: {{statement}}",
+    "dismiss": "Dismiss",
+    "dismissPreview": "No changes.",
+    "mergeEditLabel": "Edit the merged fact",
+    "mergePlaceholder": "Merged statement",
+    "mergeCancel": "Cancel",
+    "mergeApply": "Apply merge",
+    "statusKeptBoth": "Kept both facts",
+    "statusReplaced": "Replaced the old fact",
+    "statusMerged": "Merged into one fact",
+    "statusDismissed": "Dismissed"
+  },
+  "hygiene": {
+    "notificationTitle": "Tidy up your interests?",
+    "notificationBody_one": "Mera found {{count}} cleanup for your profile.",
+    "notificationBody_other": "Mera found {{count}} cleanups for your profile.",
+    "reviewChip": "Review",
+    "title": "Persona health",
+    "subtitle": "Suggested cleanups",
+    "intro": "Mera found a few things worth tidying up. Accept the ones you agree with.",
+    "empty": "Your persona looks healthy",
+    "accept": "Accept",
+    "reject": "Dismiss",
+    "reversibleNote": "Reversible from the change log",
+    "effectDuplicate": "Removes the duplicate and keeps the stronger one.",
+    "effectTooBroad": "Lowers this interest's weight so it pulls in fewer off-topic stories.",
+    "effectStaleTopic": "Retires this quiet topic. You can restore it from the change log.",
+    "effectStaleFact": "Removes this fact — none of its topics are active anymore.",
+    "appliedTitle": "Cleanup applied",
+    "appliedBody": "Your profile was tidied up. See the change log to review.",
+    "applyFailedTitle": "Couldn't apply cleanup",
+    "applyFailedBody": "Please try again later.",
+    "profileRow_one": "Persona health · {{count}} suggestion",
+    "profileRow_other": "Persona health · {{count}} suggestions"
   }
 }

@@ -27,8 +27,10 @@ import {
   type FactEntry,
 } from '@/lib/news-harness/persona-management/fact-rules';
 import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-management/topic-generation';
+import { detectFactConflicts } from '@/lib/news-harness/persona-management/fact-conflict';
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
+import { syncLlmTopicsForFact } from '../database/services/topic-service';
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -51,6 +53,14 @@ export async function handleSaveExtractedFacts(
 
   let factsSaved = 0;
   const savedFactEntries: Array<{ id: string; statement: string }> = [];
+  // Enriched with the questionnaire attribute so save-time conflict detection can
+  // match on the attribute key (see detectFactConflicts).
+  const savedFactsForConflict: Array<{
+    id: string;
+    statement: string;
+    questionnaireAttribute?: string | null;
+  }> = [];
+  let conflicts: ReturnType<typeof detectFactConflicts> = [];
 
   if (Array.isArray(facts) && facts.length > 0) {
     // Load existing facts for dedup — local LLMs often re-emit known facts.
@@ -77,7 +87,24 @@ export async function handleSaveExtractedFacts(
       const savedFact = await addFact(a.statement, undefined, a.questionnaire);
       factsSaved++;
       savedFactEntries.push({ id: savedFact.id, statement: a.statement });
+      savedFactsForConflict.push({
+        id: savedFact.id,
+        statement: a.statement,
+        questionnaireAttribute: a.questionnaire?.attribute ?? null,
+      });
     }
+
+    // Save-time conflict detection (U-B1) — deterministic, no LLM call. Compares
+    // the just-saved facts against the PRE-existing bank so the chat can surface a
+    // ConflictResolutionCard when the user seems to be correcting an earlier fact.
+    conflicts = detectFactConflicts(
+      savedFactsForConflict,
+      existingFacts.map((f) => ({
+        id: f.id,
+        statement: f.statement,
+        questionnaireAttribute: f.questionnaireAttribute ?? null,
+      })),
+    );
 
     // Notify once after all facts are saved (avoids WatermelonDB cache race from per-fact notifications)
     useFloatingChatStore.getState().notifyFactMutation();
@@ -90,6 +117,7 @@ export async function handleSaveExtractedFacts(
     success: true,
     factsSaved,
     savedFacts: savedFactEntries,
+    conflicts,
   };
 }
 
@@ -147,7 +175,20 @@ async function batchGenerateTopics(
       personaStore: {
         getFacts: () => getFacts(),
         updateFactMetadata: async (id, metadata) => {
+          // Legacy dual-write: keep the fact.metadata.topics string list exactly
+          // as before (older code paths + the config panel still read it).
           await updateFact(id, { metadata });
+          // Wave 11 gap-fix: ALSO mint `topics` rows so generated topics reach the
+          // wave-7 feed retrieval (which reads the topics TABLE, not metadata).
+          // Deduped per fact so re-generation never duplicates.
+          if (Array.isArray(metadata.topics) && metadata.topics.length > 0) {
+            await syncLlmTopicsForFact(id, metadata.topics).catch((err: unknown) =>
+              logger.warn('[saveExtractedFacts] topic-row minting failed', {
+                factId: id,
+                error: String(err),
+              }),
+            );
+          }
         },
       },
       logger: appHarnessLogger,

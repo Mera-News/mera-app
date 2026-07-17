@@ -104,6 +104,17 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy
         },
       },
     });
+    tools.push({
+      type: 'function',
+      function: {
+        name: 'runCalibration',
+        description: 'Run the scoring recalibration the user was invited to. ONLY call when the user explicitly confirms recalibrating.',
+        parameters: {
+          type: 'object',
+          properties: {},
+        },
+      },
+    });
   }
 
   return tools;
@@ -234,7 +245,8 @@ export function buildPersonaUpdateStaticPrompt(params: {
   const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
-- DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.`;
+- DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
+- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.`;
 
   const conversationGuide = useLegacy
     ? `## Rules
@@ -315,7 +327,7 @@ function buildPersonaUpdateLocalPrompt(params: {
 
   const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
 
-  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.';
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.';
 
   const rulesSection = useLegacy
     ? `## Rules

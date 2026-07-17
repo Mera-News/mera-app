@@ -10,6 +10,7 @@ import {
   mergeTopicsAppend,
   parseTopicsFromOutput,
   generateTopicsForFactsBatch,
+  planLlmTopicRows,
 } from '../persona-management/topic-generation';
 import {
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
@@ -269,6 +270,44 @@ describe('generateTopicsForFactsBatch', () => {
 // ---------------------------------------------------------------------------
 // NOOP_LOGGER coverage
 // ---------------------------------------------------------------------------
+
+describe('planLlmTopicRows (Wave 11 topic-row minting dedupe)', () => {
+  it('plans all incoming rows when the fact owns none', () => {
+    const planned = planLlmTopicRows([], ['AI policy', 'ML safety']);
+    expect(planned).toEqual([
+      { text: 'AI policy', normalizedText: 'ai policy' },
+      { text: 'ML safety', normalizedText: 'ml safety' },
+    ]);
+  });
+
+  it('skips incoming rows whose normalized text already exists on the fact', () => {
+    const planned = planLlmTopicRows(['ai policy'], ['AI Policy', 'Robotics']);
+    expect(planned).toEqual([{ text: 'Robotics', normalizedText: 'robotics' }]);
+  });
+
+  it('dedupes within the incoming batch (case/whitespace-insensitive)', () => {
+    const planned = planLlmTopicRows([], ['AI  policy', 'ai policy', 'Chips']);
+    expect(planned).toEqual([
+      { text: 'AI  policy', normalizedText: 'ai policy' },
+      { text: 'Chips', normalizedText: 'chips' },
+    ]);
+  });
+
+  it('drops empty / whitespace-only incoming texts', () => {
+    const planned = planLlmTopicRows([], ['', '   ', 'Real']);
+    expect(planned).toEqual([{ text: 'Real', normalizedText: 'real' }]);
+  });
+
+  it('returns nothing when re-generation only repeats existing topics', () => {
+    expect(planLlmTopicRows(['a', 'b'], ['A', 'B'])).toEqual([]);
+  });
+
+  it('honors an injected normalize function (existing pre-normalized with the same fn)', () => {
+    const planned = planLlmTopicRows(['X'], ['x', 'Y'], (s) => s.toUpperCase());
+    // 'x' normalizes to 'X' (already present) → skipped; 'Y' → 'Y'.
+    expect(planned).toEqual([{ text: 'Y', normalizedText: 'Y' }]);
+  });
+});
 
 describe('NOOP_LOGGER', () => {
   it('every method is a silent no-op', () => {

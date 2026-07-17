@@ -15,6 +15,7 @@ import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Dimensions, ScrollView, View } from 'react-native';
@@ -178,6 +179,13 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
             // Stage the calibration context (not the raw chip label) into chat.
             const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
             openChatWith(resolveText('calibration.chatIntro', params));
+            return;
+        }
+        if (action.id === 'review-hygiene') {
+            // Deterministic review sheet (no chat, no LLM) — close the panel and
+            // push the dedicated hygiene-review route.
+            onClose();
+            router.push('/logged-in/hygiene-review');
             return;
         }
         const chipLabel = action.labelKey

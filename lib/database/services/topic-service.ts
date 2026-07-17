@@ -8,6 +8,8 @@ import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type TopicModel from '../models/Topic';
 import type { TopicProvenance, TopicStatus } from '../models/Topic';
+import { planLlmTopicRows } from '../../news-harness/persona-management/topic-generation';
+import { DEFAULT_HARNESS_CONFIG } from '../../news-harness/core/config';
 
 const topicsCollection = database.get<TopicModel>('topics');
 
@@ -88,6 +90,34 @@ export async function getActiveTopicSnapshots(): Promise<ActiveTopicSnapshot[]> 
   }));
 }
 
+/** Persona-hygiene snapshot for one topic row (ALL statuses). Carries the
+ *  fields the fact-hygiene analyzer reads: owning fact, normalized text (dupe
+ *  key), weight, status, and last-signal (stale detector). Kept RN-free-shaped
+ *  so the pure analyzer never touches a WatermelonDB model. */
+export interface TopicHygieneSnapshot {
+  id: string;
+  factId: string | null;
+  text: string;
+  normalizedText: string;
+  weight: number;
+  status: TopicStatus;
+  lastSignalAtMs: number | null;
+}
+
+/** All topic rows (any status) projected to the hygiene snapshot shape. */
+export async function getAllTopicSnapshots(): Promise<TopicHygieneSnapshot[]> {
+  const rows = await topicsCollection.query().fetch();
+  return rows.map((t) => ({
+    id: t.id,
+    factId: t.factId ?? null,
+    text: t.text,
+    normalizedText: t.normalizedText,
+    weight: t.weight,
+    status: t.status,
+    lastSignalAtMs: t.lastSignalAt ?? null,
+  }));
+}
+
 /** Count of all topic rows (any status) — the gate for the sectioned feed:
  *  an empty topics table means the persona-v3 migration hasn't run yet, so the
  *  screen renders the legacy priority-bucket layout. */
@@ -146,4 +176,67 @@ export async function suppress(topicId: string): Promise<void> {
 /** Reactivate a suppressed/retired topic. */
 export async function reactivate(topicId: string): Promise<void> {
   await setStatus(topicId, 'active');
+}
+
+/**
+ * Wave 11 — mint `topics` rows for the texts an LLM topic-generation run produced
+ * for a fact. This is the gap-fix: live fact-saves used to land topics only in
+ * `fact.metadata.topics`, so they never reached the wave-7 feed retrieval (which
+ * reads the `topics` TABLE). Deduped per fact against the fact's existing rows by
+ * normalized text (so re-generation / "generate more" never duplicates). Rows are
+ * `active`, provenance `llm`, seed weight from config, not high-priority.
+ *
+ * NOTE: intentionally does NOT append a persona_change_log row. Bulk LLM minting
+ * is not a user mutation (mirrors the migration precedent, which logged only
+ * because it seeded a brand-new persona). User-facing topic edits DO log — those
+ * route through mutation-rails / persona-action-executor.
+ */
+export async function syncLlmTopicsForFact(
+  factId: string,
+  topicTexts: string[],
+): Promise<TopicModel[]> {
+  if (topicTexts.length === 0) return [];
+  const existing = await getByFact(factId);
+  const planned = planLlmTopicRows(
+    existing.map((t) => t.normalizedText),
+    topicTexts,
+    normalizeTopicText,
+  );
+  if (planned.length === 0) return [];
+  return createTopics(
+    planned.map((p) => ({
+      factId,
+      text: p.text,
+      normalizedText: p.normalizedText,
+      weight: DEFAULT_HARNESS_CONFIG.topicGen.llmTopicWeight,
+      status: 'active' as const,
+      provenance: 'llm' as const,
+      highPriority: false,
+    })),
+  );
+}
+
+/**
+ * Re-parent every topic row owned by `fromFactId` onto `toFactId`. Used by the
+ * conflict-resolution "merge" flow (the old fact is deleted; its topics follow
+ * the surviving fact). Single write. NOT invertible — no change-log row is
+ * appended (there is no reassign_topic inverse yet).
+ */
+export async function reassignTopics(
+  fromFactId: string,
+  toFactId: string,
+): Promise<number> {
+  const rows = await getByFact(fromFactId);
+  if (rows.length === 0) return 0;
+  await database.write(async () => {
+    const now = new Date();
+    const batch = rows.map((r) =>
+      r.prepareUpdate((t) => {
+        t.factId = toFactId;
+        t.updatedAt = now;
+      }),
+    );
+    await database.batch(batch);
+  });
+  return rows.length;
 }

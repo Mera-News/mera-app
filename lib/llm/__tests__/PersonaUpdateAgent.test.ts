@@ -26,6 +26,12 @@ jest.mock('../../database/services/fact-service', () => ({
   setQuestionnaireLevel: (...args: unknown[]) => mockSetQuestionnaireLevel(...args),
 }));
 
+const mockRunCalibration = jest.fn();
+
+jest.mock('../../database/services/calibration-service', () => ({
+  runCalibration: (...args: unknown[]) => mockRunCalibration(...args),
+}));
+
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn(), info: jest.fn() };
 
 jest.mock('../../logger', () => ({
@@ -544,6 +550,36 @@ describe('PersonaUpdateAgent', () => {
         const result = await agent.executeTool('issueWarning', {});
 
         expect(result.sideEffects?.blocked?.reason).toBe('Blocked due to repeated warnings');
+      });
+    });
+
+    describe('runCalibration', () => {
+      it('calls calibrationService.runCalibration and returns outcome + a human summary (applied)', async () => {
+        mockRunCalibration.mockResolvedValue({ status: 'applied', applied: { W_TOPIC: 0.1 } });
+        const agent = makeAgent();
+        const result = await agent.executeTool('runCalibration', {});
+
+        expect(mockRunCalibration).toHaveBeenCalled();
+        expect(result.result).toMatchObject({
+          status: 'applied',
+          summary: expect.stringContaining('applied'),
+        });
+      });
+
+      it('surfaces a no_change summary', async () => {
+        mockRunCalibration.mockResolvedValue({ status: 'no_change' });
+        const agent = makeAgent();
+        const result = await agent.executeTool('runCalibration', {});
+        expect(result.result).toMatchObject({ status: 'no_change' });
+        expect(String(result.result.summary)).toMatch(/no changes/i);
+      });
+
+      it('surfaces a failed summary', async () => {
+        mockRunCalibration.mockResolvedValue({ status: 'failed' });
+        const agent = makeAgent();
+        const result = await agent.executeTool('runCalibration', {});
+        expect(result.result).toMatchObject({ status: 'failed' });
+        expect(String(result.result.summary)).toMatch(/could not/i);
       });
     });
 

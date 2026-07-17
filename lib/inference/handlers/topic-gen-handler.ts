@@ -10,6 +10,7 @@ import {
   generateTopicsForFact,
   mergeTopicsAppend,
 } from '../../mera-protocol/topic-generation-service';
+import { syncLlmTopicsForFact } from '../../database/services/topic-service';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
 import type { Fact } from '../../mera-protocol-toolkit/types';
@@ -95,6 +96,15 @@ export async function handleTopicGenJob(
   } else {
     await updateFact(payload.factId, { metadata: { topics: realTopics } });
   }
+  // Wave 11 gap-fix: mint `topics` rows alongside the legacy metadata dual-write
+  // so on-device-generated topics reach the wave-7 feed retrieval. Deduped per
+  // fact, so this is safe across regeneration + append runs.
+  await syncLlmTopicsForFact(payload.factId, realTopics).catch((err: unknown) =>
+    logger.warn('[topic-gen] topic-row minting failed', {
+      factId: payload.factId,
+      error: String(err),
+    }),
+  );
   useFloatingChatStore.getState().notifyFactMutation();
   return { topics: realTopics };
 }

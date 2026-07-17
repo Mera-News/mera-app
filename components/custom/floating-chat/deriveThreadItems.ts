@@ -11,6 +11,7 @@ import type {
   StagedProposal,
   ToolCallRecord,
 } from '@/lib/llm/types';
+import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
 // ---------------------------------------------------------------------------
@@ -215,6 +216,59 @@ function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
 }
 
 // ---------------------------------------------------------------------------
+// Topic-plan-card + conflict-card derivation (Wave 11)
+// ---------------------------------------------------------------------------
+//
+// Both are derived from a completed `saveExtractedFacts` tool RESULT (the same
+// persistence-friendly pattern as the proposal card) so a resumed thread
+// re-renders them without re-inference:
+//   - topic-plan-card: one per saved fact that has an id (the card subscribes to
+//     that fact's live topic rows via observeByFact inside the component).
+//   - conflict-card: one per detected conflict in result.conflicts.
+
+/** Saved facts with a stable id — the seed for the per-fact topic-plan card. */
+function savedFactsWithIds(result: Record<string, unknown>): Array<{ id: string; statement: string }> {
+  const value = result.savedFacts;
+  if (!Array.isArray(value)) return [];
+  const out: Array<{ id: string; statement: string }> = [];
+  for (const entry of value) {
+    const rec = asRecord(entry);
+    const id = typeof rec?.id === 'string' ? rec.id : '';
+    const statement = typeof rec?.statement === 'string' ? rec.statement.trim() : '';
+    if (id && statement) out.push({ id, statement });
+  }
+  return out;
+}
+
+/** Defensively validate the FactConflict[] echoed by the save result. */
+function conflictsFromResult(result: Record<string, unknown>): FactConflict[] {
+  const value = result.conflicts;
+  if (!Array.isArray(value)) return [];
+  const out: FactConflict[] = [];
+  for (const entry of value) {
+    const rec = asRecord(entry);
+    if (!rec) continue;
+    const newFactId = typeof rec.newFactId === 'string' ? rec.newFactId : '';
+    const newStatement = typeof rec.newStatement === 'string' ? rec.newStatement : '';
+    const existingFactId = typeof rec.existingFactId === 'string' ? rec.existingFactId : '';
+    const existingStatement = typeof rec.existingStatement === 'string' ? rec.existingStatement : '';
+    const kind = rec.kind === 'attribute' || rec.kind === 'contradiction' ? rec.kind : null;
+    const suggestedMerge = typeof rec.suggestedMerge === 'string' ? rec.suggestedMerge : '';
+    if (!newFactId || !newStatement || !existingFactId || !existingStatement || !kind) continue;
+    out.push({
+      newFactId,
+      newStatement,
+      existingFactId,
+      existingStatement,
+      kind,
+      ...(typeof rec.attributeKey === 'string' ? { attributeKey: rec.attributeKey } : {}),
+      suggestedMerge: suggestedMerge || newStatement,
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Message → thread items
 // ---------------------------------------------------------------------------
 
@@ -249,6 +303,28 @@ function emitMessage(
           action: card.action,
           statements: card.statements,
           factIds: card.factIds,
+        });
+      }
+
+      // Wave 11: after the saved fact-card, surface the conflict resolution
+      // card(s) then the per-fact topic-planning widget(s). Additive — the
+      // fact-card behaviour above is unchanged.
+      if (tc.status === 'done' && tc.name === 'saveExtractedFacts') {
+        const result = tc.result ?? {};
+        conflictsFromResult(result).forEach((conflict, cIdx) => {
+          cards.push({
+            kind: 'conflict-card',
+            key: `conflict-${message.id}-${idx}-${cIdx}`,
+            conflict,
+          });
+        });
+        savedFactsWithIds(result).forEach((fact) => {
+          cards.push({
+            kind: 'topic-plan-card',
+            key: `topic-plan-${message.id}-${idx}-${fact.id}`,
+            factId: fact.id,
+            factStatement: fact.statement,
+          });
         });
       }
     });

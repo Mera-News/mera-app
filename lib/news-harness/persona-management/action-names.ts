@@ -27,6 +27,10 @@ export const ACTION_NAMES = {
   NUDGE_BROWSE_RELATED: 'nudge_browse_related',
   REASSIGN_TOPIC: 'reassign_topic',
   MERGE_FACTS: 'merge_facts',
+  // Persona-hygiene fact removal (Wave 11 U-B3/N6). A destructive cleanup
+  // (fact + cascaded topics deleted) — logged for audit visibility but NOT
+  // invertible (see action-display.isRevertible + persona-change-log-service).
+  HYGIENE_DELETE_FACT: 'hygiene_delete_fact',
   REVERT_CHANGE: 'revert_change',
 } as const;
 

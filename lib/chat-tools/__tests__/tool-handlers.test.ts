@@ -52,6 +52,9 @@ jest.mock('../../mera-protocol/topic-generation-service', () => ({
   buildCloudBatchCallsForFact: jest.fn(() => []),
   mergeRealOutputsForFact: jest.fn(() => []),
 }));
+jest.mock('../../database/services/topic-service', () => ({
+  syncLlmTopicsForFact: jest.fn(() => Promise.resolve([])),
+}));
 jest.mock('../../mera-protocol/questionnaire-data', () => ({
   getAttributeKeysForLevel: jest.fn(() => ['location', 'profession', 'topics']),
   TOTAL_LEVELS: 10,
@@ -87,7 +90,10 @@ import { useUserStore } from '../../stores/user-store';
 import { enqueueJob, hasPendingJob } from '../../database/services/inference-job-service';
 import { inferenceQueue } from '../../inference/InferenceQueue';
 import { cloudBatchComplete } from '../../llm/cloudComplete';
+import { syncLlmTopicsForFact } from '../../database/services/topic-service';
 import logger from '../../logger';
+
+const mockSyncLlmTopicsForFact = syncLlmTopicsForFact as jest.MockedFunction<typeof syncLlmTopicsForFact>;
 
 const mockAddFact = addFact as jest.MockedFunction<typeof addFact>;
 const mockDeleteFact = deleteFact as jest.MockedFunction<typeof deleteFact>;
@@ -122,6 +128,7 @@ beforeEach(() => {
   mockCloudBatchComplete.mockResolvedValue([]);
   mockHasPendingJob.mockResolvedValue(false);
   mockEnqueueJob.mockResolvedValue({ id: 'job-id' } as never);
+  mockSyncLlmTopicsForFact.mockResolvedValue([] as never);
   (useFloatingChatStore.getState as jest.Mock).mockReturnValue({ notifyFactMutation: mockNotifyFactMutation });
   (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
   (useUserStore.getState as jest.Mock).mockReturnValue({ userId: 'user-123', setUserPersona: mockSetUserPersona });
@@ -156,13 +163,13 @@ describe('MAX_FACT_LENGTH', () => {
 describe('handleSaveExtractedFacts', () => {
   it('returns success with factsSaved=0 when no facts provided', async () => {
     const result = await handleSaveExtractedFacts({ extracted_user_information: [] });
-    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [] });
+    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [], conflicts: [] });
     expect(mockAddFact).not.toHaveBeenCalled();
   });
 
   it('returns success with factsSaved=0 when extracted_user_information is missing', async () => {
     const result = await handleSaveExtractedFacts({});
-    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [] });
+    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [], conflicts: [] });
   });
 
   it('saves a new fact and increments factsSaved', async () => {
@@ -323,6 +330,32 @@ describe('handleSaveExtractedFacts', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockEnqueueJob).not.toHaveBeenCalled();
+  });
+
+  it('Wave 11: returns an empty conflicts array when nothing conflicts', async () => {
+    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Likes cycling' } as never);
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: ['Likes cycling'],
+    });
+    expect(result).toMatchObject({ conflicts: [] });
+  });
+
+  it('Wave 11: surfaces a save-time conflict against a same-subject existing fact', async () => {
+    // Pre-existing residence fact; the new one is a same-key correction.
+    mockGetFacts.mockResolvedValueOnce([
+      { id: 'e1', statement: 'Lives in Paris, France', questionnaireAttribute: 'location: residence' } as never,
+    ]);
+    mockAddFact.mockResolvedValueOnce({ id: 'n1', statement: 'Lives in Berlin, Germany' } as never);
+
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: [
+        { statement: 'Lives in Berlin, Germany', questionnaire_attribute: 'location: city' },
+      ],
+    });
+
+    expect(result.conflicts).toMatchObject([
+      { newFactId: 'n1', existingFactId: 'e1', kind: 'attribute' },
+    ]);
   });
 
   it('handles a mix of new and duplicate facts correctly', async () => {
@@ -715,6 +748,35 @@ describe('batchGenerateTopics (via handleSaveExtractedFacts cloud path)', () => 
     await saveAndFlush('Works in AI');
 
     expect(mockUpdateFact).toHaveBeenCalledWith('f1', { metadata: { topics: ['AI news', 'ML policy'] } });
+  });
+
+  it('Wave 11: mints topic ROWS (syncLlmTopicsForFact) alongside the metadata dual-write', async () => {
+    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Works in AI' } as never);
+    buildCloudBatchCallsForFact.mockReturnValueOnce([
+      { id: 'f1:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+    ]);
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'f1:factOnly', output: '["AI news", "ML policy"]' },
+    ]);
+    mergeRealOutputsForFact.mockReturnValueOnce(['AI news', 'ML policy']);
+
+    await saveAndFlush('Works in AI');
+
+    // Legacy dual-write preserved AND rows minted from the same texts.
+    expect(mockUpdateFact).toHaveBeenCalledWith('f1', { metadata: { topics: ['AI news', 'ML policy'] } });
+    expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f1', ['AI news', 'ML policy']);
+  });
+
+  it('Wave 11: does NOT mint rows when generation yields only a topicGenError', async () => {
+    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Works in AI' } as never);
+    buildCloudBatchCallsForFact.mockReturnValueOnce([
+      { id: 'f1:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+    ]);
+    mockCloudBatchComplete.mockRejectedValueOnce(new Error('network error'));
+
+    await saveAndFlush('Works in AI');
+
+    expect(mockSyncLlmTopicsForFact).not.toHaveBeenCalled();
   });
 
   it('calls updateFact with topicGenError when cloudBatchComplete throws', async () => {

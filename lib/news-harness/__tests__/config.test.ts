@@ -85,6 +85,8 @@ describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {
     expect(t.totalLocal).toBe(10);
     expect(t.temperature).toBe(0.3);
     expect(t.maxFactLength).toBe(200);
+    // Wave 11: seed weight for LLM-minted `topics` rows.
+    expect(t.llmTopicWeight).toBe(0.75);
   });
 
   it('wires the cloud topic-gen prompts', () => {

@@ -245,17 +245,19 @@ describe('getPersonaToolDefinitions', () => {
     expect(result).toEqual([{ type: 'function', function: { name: 'x' } }]);
   });
 
-  it('defaults to the real harness builder, including deleteUserFacts for CONFIG', () => {
+  it('defaults to the real harness builder, including deleteUserFacts + runCalibration for CONFIG', () => {
     const defs = getPersonaToolDefinitions('CONFIG', false);
     const names = defs.map((d) => d.function.name);
     expect(names).toContain('saveExtractedFacts');
     expect(names).toContain('deleteUserFacts');
+    expect(names).toContain('runCalibration');
   });
 
-  it('defaults exclude deleteUserFacts and advanceQuestionnaireLevel for ONBOARDING + non-legacy', () => {
+  it('defaults exclude deleteUserFacts, advanceQuestionnaireLevel + runCalibration for ONBOARDING + non-legacy', () => {
     const defs = getPersonaToolDefinitions('ONBOARDING', false);
     const names = defs.map((d) => d.function.name);
     expect(names).not.toContain('deleteUserFacts');
     expect(names).not.toContain('advanceQuestionnaireLevel');
+    expect(names).not.toContain('runCalibration');
   });
 });

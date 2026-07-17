@@ -28,6 +28,12 @@ jest.mock('../../stores/floating-chat-store', () => ({
   },
 }));
 
+const mockSyncLlmTopicsForFact = jest.fn((..._args: unknown[]) => Promise.resolve([]));
+
+jest.mock('../../database/services/topic-service', () => ({
+  syncLlmTopicsForFact: (...args: unknown[]) => mockSyncLlmTopicsForFact(...args),
+}));
+
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: {
@@ -72,7 +78,20 @@ describe('handleTopicGenJob', () => {
     expect(mockUpdateFact).toHaveBeenCalledWith('f1', {
       metadata: { topics: ['topic A', 'topic B'] },
     });
+    // Wave 11: mints topic ROWS alongside the legacy metadata dual-write.
+    expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f1', ['topic A', 'topic B']);
     expect(mockNotifyFactMutation).toHaveBeenCalled();
+  });
+
+  it('does NOT mint topic rows when no topics were generated', async () => {
+    mockGetFacts.mockResolvedValue([
+      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
+    ]);
+    mockGenerateTopicsForFact.mockResolvedValue([]);
+
+    await handleTopicGenJob({ factId: 'f1', factStatement: 'the target fact' });
+
+    expect(mockSyncLlmTopicsForFact).not.toHaveBeenCalled();
   });
 
   it('returns empty topics and skips updateFact when no topics generated', async () => {

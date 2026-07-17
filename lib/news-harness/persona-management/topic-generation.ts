@@ -160,6 +160,53 @@ export function mergeTopicsAppend(existing: string[], incoming: string[]): strin
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// LLM topic-row minting plan (Wave 11 — closes the "metadata.topics never reach
+// the feed" gap). PURE: given the normalized texts already owned by a fact and
+// the freshly generated topic texts, returns the rows to create (deduped vs the
+// existing rows AND vs each other). The RN caller (topic-service) turns each
+// entry into a `topics` row. Kept here so the dedupe is unit-tested without a DB.
+// ---------------------------------------------------------------------------
+
+/** Default normalize — MUST stay byte-identical to
+ *  lib/database/services/topic-service.ts::normalizeTopicText so a text minted
+ *  here dedupes against a stored row's `normalized_text`. The RN caller passes
+ *  its own normalizeTopicText to guarantee the production path never drifts. */
+function defaultNormalizeTopicText(s: string): string {
+  return s.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+export interface PlannedTopicRow {
+  text: string;
+  normalizedText: string;
+}
+
+/**
+ * Plan the NEW topic rows to mint for a fact. Skips any incoming text whose
+ * normalized form already exists on the fact (so re-generation / "generate more"
+ * never duplicates) or repeats earlier in the same incoming batch. Empty texts
+ * are dropped. Order follows the incoming list.
+ */
+export function planLlmTopicRows(
+  existingNormalizedTexts: Iterable<string>,
+  incomingTexts: string[],
+  normalize: (s: string) => string = defaultNormalizeTopicText,
+): PlannedTopicRow[] {
+  const seen = new Set<string>();
+  for (const n of existingNormalizedTexts) seen.add(n);
+
+  const out: PlannedTopicRow[] = [];
+  for (const raw of incomingTexts) {
+    const text = raw.trim();
+    if (!text) continue;
+    const normalizedText = normalize(text);
+    if (!normalizedText || seen.has(normalizedText)) continue;
+    seen.add(normalizedText);
+    out.push({ text, normalizedText });
+  }
+  return out;
+}
+
 export function parseTopicsFromOutput(
   output: string,
   factStatement: string,

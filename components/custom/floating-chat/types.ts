@@ -5,6 +5,7 @@
 // feeds it. Everything here is presentational — no data fetching, no stores.
 
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
+import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 
 // ---------------------------------------------------------------------------
 // PersistedMessage
@@ -29,6 +30,11 @@ export type ChatThreadItem =
       factIds: string[];
     }
   | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
+  // Wave 11 U-B2 — in-chat topic-planning widget for one saved fact. Subscribes
+  // to the fact's live topic rows (observeByFact) inside the component.
+  | { kind: 'topic-plan-card'; key: string; factId: string; factStatement: string }
+  // Wave 11 U-B1 — save-time fact-conflict resolution card.
+  | { kind: 'conflict-card'; key: string; conflict: FactConflict }
   | { kind: 'divider'; key: string; label: string }
   | { kind: 'typing'; key: string };
 

@@ -132,7 +132,8 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Saved!', [tc])] }),
     );
 
-    expect(items).toHaveLength(2);
+    // message + fact-card + one topic-plan-card per saved fact (Wave 11).
+    expect(items).toHaveLength(4);
     expect(items[0]).toMatchObject({ kind: 'message', key: 'live-a1' });
     expect(items[1]).toMatchObject({
       kind: 'fact-card',
@@ -140,6 +141,18 @@ describe('deriveThreadItems', () => {
       action: 'saved',
       statements: ['Lives in Berlin', 'Likes cycling'],
       factIds: ['f1', 'f2'],
+    });
+    expect(items[2]).toMatchObject({
+      kind: 'topic-plan-card',
+      key: 'topic-plan-a1-0-f1',
+      factId: 'f1',
+      factStatement: 'Lives in Berlin',
+    });
+    expect(items[3]).toMatchObject({
+      kind: 'topic-plan-card',
+      key: 'topic-plan-a1-0-f2',
+      factId: 'f2',
+      factStatement: 'Likes cycling',
     });
   });
 
@@ -316,8 +329,8 @@ describe('deriveThreadItems', () => {
     const items = deriveThreadItems(
       base({ live: [assistantMsg('a1', '', [tc])] }),
     );
-    // Message is skipped (empty content) but the card survives.
-    expect(keys(items)).toEqual(['card-a1-0']);
+    // Message is skipped (empty content) but the fact-card + topic-plan survive.
+    expect(keys(items)).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
   });
 
   it('produces stable, unique keys across history and live', () => {
@@ -341,6 +354,76 @@ describe('deriveThreadItems', () => {
     expect(allKeys).toContain('div-live');
     expect(allKeys).toContain('live-intro');
     expect(allKeys).toContain('card-a1-0');
+  });
+
+  it('Wave 11: does not emit topic-plan cards for saved facts without ids', () => {
+    const tc: ToolCallRecord = {
+      id: 't1',
+      name: 'saveExtractedFacts',
+      input: { extracted_user_information: ['Works in tech'] },
+      status: 'done',
+      result: { success: true, factsSaved: 1 }, // no savedFacts ids
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Done', [tc])] }));
+    expect(items.some((i) => i.kind === 'topic-plan-card')).toBe(false);
+  });
+
+  it('Wave 11: emits a conflict-card from result.conflicts (before the topic-plan card)', () => {
+    const tc: ToolCallRecord = {
+      id: 't1',
+      name: 'saveExtractedFacts',
+      input: {},
+      status: 'done',
+      result: {
+        savedFacts: [{ id: 'n1', statement: 'Lives in Berlin' }],
+        conflicts: [
+          {
+            newFactId: 'n1',
+            newStatement: 'Lives in Berlin',
+            existingFactId: 'e1',
+            existingStatement: 'Lives in Paris',
+            kind: 'attribute',
+            attributeKey: 'location',
+            suggestedMerge: 'Lives in Berlin; Lives in Paris',
+          },
+        ],
+      },
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Saved', [tc])] }));
+    const conflictIdx = items.findIndex((i) => i.kind === 'conflict-card');
+    const topicIdx = items.findIndex((i) => i.kind === 'topic-plan-card');
+    expect(conflictIdx).toBeGreaterThan(-1);
+    expect(topicIdx).toBeGreaterThan(conflictIdx);
+    const conflictCard = items[conflictIdx];
+    expect(conflictCard).toMatchObject({
+      kind: 'conflict-card',
+      key: 'conflict-a1-0-0',
+    });
+    if (conflictCard.kind === 'conflict-card') {
+      expect(conflictCard.conflict).toMatchObject({
+        newFactId: 'n1',
+        existingFactId: 'e1',
+        kind: 'attribute',
+      });
+    }
+  });
+
+  it('Wave 11: skips malformed conflict entries', () => {
+    const tc: ToolCallRecord = {
+      id: 't1',
+      name: 'saveExtractedFacts',
+      input: {},
+      status: 'done',
+      result: {
+        savedFacts: [],
+        conflicts: [
+          { newFactId: 'n1' }, // missing required fields
+          { kind: 'bogus', newFactId: 'n2', newStatement: 'x', existingFactId: 'e2', existingStatement: 'y' },
+        ],
+      },
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Saved', [tc])] }));
+    expect(items.some((i) => i.kind === 'conflict-card')).toBe(false);
   });
 
   it('emits a proposal-card from a done proposeChanges tool call (rebuilt from input)', () => {

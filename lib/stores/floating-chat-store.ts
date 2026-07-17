@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import type { StagedProposal } from '../llm/types';
 
+/** Terminal resolution of a save-time fact conflict (U-B1). */
+export type ConflictResolution = 'kept-both' | 'replaced' | 'merged' | 'dismissed';
+
 export type ChatContext =
     | { kind: 'persona' }
     // At least one of articleId / suggestionId must be set; the agent resolves
@@ -25,6 +28,13 @@ interface FloatingChatState {
     pendingInitialMessage: string | null;
     proposal: StagedProposal | null;
     resolvedProposals: Record<string, 'applied' | 'cancelled'>;
+    // Wave 11 in-chat card settlement (mirrors resolvedProposals — in-memory
+    // only, so a settled card re-opens "fresh" on app restart, which is
+    // harmless: topic rows are already active and conflicts re-derive from the
+    // persisted tool result). `settledTopicPlans` is keyed by factId (the
+    // TopicPlanCard's Accept-all); `resolvedConflicts` by `${newFactId}:${existingFactId}`.
+    settledTopicPlans: Record<string, boolean>;
+    resolvedConflicts: Record<string, ConflictResolution>;
     // Conversation identity for the whole APP SESSION (not per popover open).
     // In-memory only (no persist middleware) so it naturally dies on app kill,
     // giving fresh-conversation-per-launch for free. Closing/reopening the
@@ -40,6 +50,8 @@ interface FloatingChatState {
     consumePendingInitialMessage: () => string | null;
     setProposal: (p: StagedProposal | null) => void;
     resolveProposal: (status: 'applied' | 'cancelled') => void;
+    setTopicPlanSettled: (factId: string) => void;
+    resolveConflict: (conflictKey: string, resolution: ConflictResolution) => void;
     collapse: () => void;
     toggle: () => void;
     setBubblePosition: (side: 'left' | 'right', y: number) => void;
@@ -69,6 +81,8 @@ const initialState = {
     pendingInitialMessage: null as string | null,
     proposal: null as StagedProposal | null,
     resolvedProposals: {} as Record<string, 'applied' | 'cancelled'>,
+    settledTopicPlans: {} as Record<string, boolean>,
+    resolvedConflicts: {} as Record<string, ConflictResolution>,
     conversationId: null as string | null,
 };
 
@@ -138,6 +152,16 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             };
         }),
 
+    setTopicPlanSettled: (factId) =>
+        set((state) => ({
+            settledTopicPlans: { ...state.settledTopicPlans, [factId]: true },
+        })),
+
+    resolveConflict: (conflictKey, resolution) =>
+        set((state) => ({
+            resolvedConflicts: { ...state.resolvedConflicts, [conflictKey]: resolution },
+        })),
+
     collapse: () => set({ isExpanded: false }),
 
     toggle: () => set((state) => ({ isExpanded: !state.isExpanded })),
@@ -169,3 +193,7 @@ export const useFloatingChatConversationId = () => useFloatingChatStore((state) 
 export const useFloatingChatProposal = () => useFloatingChatStore((state) => state.proposal);
 export const useFloatingChatResolvedProposals = () =>
     useFloatingChatStore((state) => state.resolvedProposals);
+export const useFloatingChatSettledTopicPlans = () =>
+    useFloatingChatStore((state) => state.settledTopicPlans);
+export const useFloatingChatResolvedConflicts = () =>
+    useFloatingChatStore((state) => state.resolvedConflicts);

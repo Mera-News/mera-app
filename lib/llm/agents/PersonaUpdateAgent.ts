@@ -10,6 +10,7 @@ import {
   handleUpdateUserConfig,
 } from '../../chat-tools/tool-handlers';
 import { getCoveredAttributeKeys, getFacts, getQuestionnaireLevel, setQuestionnaireLevel } from '../../database/services/fact-service';
+import { runCalibration } from '../../database/services/calibration-service';
 import logger from '../../logger';
 import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '../../mera-protocol/prompts';
 import {
@@ -225,6 +226,21 @@ export class PersonaUpdateAgent implements IAgent {
                 }
               : undefined,
         };
+      }
+
+      case 'runCalibration': {
+        // The user was invited to recalibrate scoring (calibration notification)
+        // and confirmed in chat. Self-contained — makes ONE gateway round-trip and
+        // persists the tuned overrides. Include a human summary so the agent can
+        // report the outcome in its reply.
+        const outcome = await runCalibration();
+        const summary =
+          outcome.status === 'applied'
+            ? 'Recalibration applied — your scoring has been tuned.'
+            : outcome.status === 'no_change'
+              ? 'Recalibration ran, but no changes were needed.'
+              : 'Recalibration could not be completed right now — please try again later.';
+        return { result: { ...outcome, summary } };
       }
 
       default:

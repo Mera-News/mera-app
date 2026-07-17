@@ -23,6 +23,8 @@ import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
 import FactCard from './FactCard';
 import ProposalCard from './ProposalCard';
+import TopicPlanCard from './TopicPlanCard';
+import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
 import type { ChatThreadItem, ChatThreadProps } from './types';
 
@@ -114,6 +116,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       case 'proposal-card':
         return <ProposalCard proposal={item.proposal} isLast={item.key === lastProposalKey} />;
+
+      case 'topic-plan-card':
+        return <TopicPlanCard factId={item.factId} factStatement={item.factStatement} />;
+
+      case 'conflict-card':
+        return <ConflictResolutionCard conflict={item.conflict} />;
 
       case 'divider':
         return (

@@ -20,6 +20,7 @@ import { buildTopicGenContext } from '@/lib/inference/handlers/topic-gen-handler
 import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/topic-generation-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling } from '@/lib/billing-service';
+import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
@@ -32,7 +33,7 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, View } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
@@ -68,6 +69,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const glowAnim = useRef(new Animated.Value(0.3)).current;
     const isChatExpanded = useFloatingChatIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
+    const [hygieneCount, setHygieneCount] = useState(0);
     const knownFactIdsRef = useRef<Set<string>>(new Set());
     const isInitialLoadRef = useRef(true);
     const wasChatExpandedRef = useRef(false);
@@ -150,6 +152,28 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
         await Promise.all([loadLocalFacts(), fetchUserPersona(userId, true)]);
         setRefreshing(false);
     }, [userId, fetchUserPersona, loadLocalFacts]);
+
+    // Pending persona-hygiene proposal count — drives the small indicator row.
+    // Refreshed on change (sweep/accept/reject) and whenever the screen regains
+    // focus (e.g. returning from the review sheet).
+    const refreshHygieneCount = useCallback(() => {
+        getPendingCount()
+            .then(setHygieneCount)
+            .catch(() => {
+                /* non-fatal — leave the last count */
+            });
+    }, []);
+
+    useEffect(() => {
+        refreshHygieneCount();
+        return subscribeHygieneChange(refreshHygieneCount);
+    }, [refreshHygieneCount]);
+
+    useFocusEffect(
+        useCallback(() => {
+            refreshHygieneCount();
+        }, [refreshHygieneCount]),
+    );
 
     const toggleFact = useCallback((factId: string) => {
         setExpandedFactIds(prev => {
@@ -442,6 +466,28 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                         </HStack>
                         <MaterialIcons name="chevron-right" size={20} color="#6b7280" />
                     </Pressable>
+
+                    {/* Persona-health indicator — only when the weekly hygiene
+                        sweep has pending cleanup suggestions. Opens the same
+                        deterministic review sheet as the notification chip. */}
+                    {hygieneCount > 0 && (
+                        <Pressable
+                            onPress={() => router.push('/logged-in/hygiene-review')}
+                            accessibilityRole="button"
+                            className="mx-4 mb-3 flex-row items-center justify-between px-3 py-3 border border-amber-700/60 rounded-lg bg-amber-950/30"
+                        >
+                            <HStack className="items-center" space="sm">
+                                <MaterialIcons name="cleaning-services" size={18} color="#EDA77E" />
+                                <Text size="sm" className="text-gray-200">
+                                    {t('hygiene.profileRow', {
+                                        count: hygieneCount,
+                                        defaultValue: 'Persona health · {{count}} suggestions',
+                                    })}
+                                </Text>
+                            </HStack>
+                            <MaterialIcons name="chevron-right" size={20} color="#6b7280" />
+                        </Pressable>
+                    )}
 
                     <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
                         {feedNeedsRefresh && !isRefreshingSuggestions && (

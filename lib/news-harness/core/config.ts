@@ -111,6 +111,11 @@ export interface TopicGenConfig {
   temperature: number;
   /** Maximum accepted fact statement length. */
   maxFactLength: number;
+  /** Seed weight for an LLM-minted `topics` row (Wave 11 — the topic-row
+   *  minting that closes the "metadata.topics never reach the feed" gap). A
+   *  moderate-positive value: below a default user/fact weight but comfortably
+   *  retrievable + positively scored by the math engine. */
+  llmTopicWeight: number;
   /** System prompt for the fact-only topic-generation call. */
   factOnlySystemPrompt: string;
   /** System prompt for the fact+others combo topic-generation call. */
@@ -296,6 +301,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     totalLocal: 10,
     temperature: 0.3,
     maxFactLength: 200,
+    llmTopicWeight: 0.75,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },
