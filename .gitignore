@@ -89,3 +89,4 @@ error-logs/
 # fixtures/persona.example.json stays tracked as the only committed fixture.
 harness-local/.env.harness
 .local-test-data/
+logs.md

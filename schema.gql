@@ -112,6 +112,7 @@ Membership of an article in a cluster, with the HDBSCAN confidence (0.0–1.0)
 type ClusterMembership {
   clusterId: ID!
   confidence: Float!
+  stableClusterId: String
 }
 
 type CursorPageInfo {
@@ -168,21 +169,31 @@ type Mutation {
 type NewsArticle {
   _id: ID!
   article_url: String!
+  category: String
   clusterConfidence: Float
+  country: String
   createdAt: DateTime!
   creator: String
   description: String!
-  description_en_internal_only: String
-  fetchPublicationId: ID
+  description_en: String
+  description_en_internal_only: String @deprecated(reason: "Use description_en instead. Superseded by the v3 pipeline.")
+  embedding_attempts: Int
+  embedding_status: String
+  fetchPublicationId: ID @deprecated(reason: "v1-only link to the fetch state machine; unused by the v3 pipeline.")
   image_url: String
   original_language_code: String
-  processingStatus: ArticleProcessingStatus
+  processingStatus: ArticleProcessingStatus @deprecated(reason: "v1-only pipeline state; in v3 an article present in the DB is complete.")
   pubDate: DateTime!
   publicationSource: PublicationSource
   publicationSourceId: ID!
   source_uri: String!
   title: String!
-  title_en_internal_only: String
+  title_en: String
+  title_en_internal_only: String @deprecated(reason: "Use title_en instead. Superseded by the v3 pipeline.")
+  translation_attempts: Int
+  translation_skip_reason: String
+  translation_skipped: Boolean
+  translation_status: String
   type: String!
   updatedAt: DateTime!
 }
@@ -198,6 +209,7 @@ type NewsCluster {
   ): ClusterArticlesConnection!
   clusterSize: Int
   createdAt: DateTime!
+  stableClusterId: String
   topicConfidence: Float
   updatedAt: DateTime!
 }
@@ -245,13 +257,23 @@ enum ProcessingMode {
 type PublicationSource {
   _id: ID!
   category: String!
+  codegen_checked_at: DateTime
+  codegen_status: String
+  consecutive_fetch_failures: Float
   country_code: String!
   country_name: String
   createdAt: DateTime!
   detected_language_code: String
   feed_language_code: String
   feed_url: String!
+  gated: Boolean!
   is_active: Boolean!
+  is_active_codegen: Boolean
+  is_active_user: Boolean
+  last_fetch_error: String
+  last_fetch_http_status: Float
+  last_fetch_status: String
+  last_fetched_at: DateTime
   newsPublisherId: ID
   publication_name: String!
   publication_url: String
@@ -356,9 +378,6 @@ type Query {
     """Minimum cosine similarity score (0–1)"""
     minScore: Float = 0
 
-    """Which embedding index to search: DATA_RETRIEVAL or TEXT_MATCHING"""
-    mode: VectorSearchMode = DATA_RETRIEVAL
-
     """Number of candidates for vector search pre-filter"""
     numCandidates: Int = 5000
 
@@ -448,6 +467,9 @@ type UnblockRequest {
   userId: String!
 }
 
+"""
+Review state of an LLM unblock request. PENDING awaits manual review; APPROVED/REJECTED are terminal.
+"""
 enum UnblockRequestStatus {
   APPROVED
   PENDING
@@ -525,21 +547,6 @@ type UserTopic {
   is_canonical: Boolean!
   news_topic_text: String!
   updatedAt: DateTime!
-}
-
-"""
-Which embedding index to use for vector search. DATA_RETRIEVAL uses asymmetric retrieval embeddings (query→article). TEXT_MATCHING uses symmetric text-matching embeddings (article→article clustering).
-"""
-enum VectorSearchMode {
-  """
-  Asymmetric search: query embedding (retrieval.query) vs article embedding (retrieval.passage). Best for user-facing search.
-  """
-  DATA_RETRIEVAL
-
-  """
-  Symmetric search: text-matching embeddings. Best for finding similar/duplicate articles (clustering).
-  """
-  TEXT_MATCHING
 }
 
 input WithdrawUserTopicsInput {

@@ -10,8 +10,21 @@
  * so there is no stable story key. Already-synced app rows freeze at whichever
  * clustering generation was live when their article id was last fetched — a real
  * 1410-suggestion dump (2026-07) had 6 generations coexisting, and the same
- * OpenAI-speaker story appeared as 8 articles in 8 different clusterIds. We
- * therefore group by the UNION of weak signals:
+ * OpenAI-speaker story appeared as 8 articles in 8 different clusterIds.
+ *
+ * The server now also emits a `stableClusterId` (UUID) on multi-member
+ * memberships that is STABLE ACROSS clustering runs, so when present it is the
+ * authoritative same-story key and supersedes the weak signals below. It is null
+ * for singletons/unclustered articles and absent on rows persisted before it
+ * existed, so the weak signals remain the fallback. We therefore group by the
+ * UNION of:
+ *   0. Same non-null `stableClusterId` — the strongest edge (cross-run story
+ *      identity), gated on the SAME membership-confidence bar as signal (1)
+ *      (within one run a shared stable id implies a shared cluster, so an
+ *      ungated edge would re-admit the < 0.3-confidence fringe that (1)
+ *      deliberately rejects). A rare id RESET (crashed clustering generation)
+ *      just yields new ids that group among themselves: a new story, never a
+ *      crash.
  *   1. Same clusterId at high membership confidence (catches paraphrases that
  *      share little title text — 205/273 same-cluster pairs had title Jaccard
  *      < 0.35, e.g. the ASML earnings pairs at 0.12–0.18).
@@ -284,8 +297,18 @@ function union(parent: number[], a: number, b: number): void {
 }
 
 /**
- * Group items into stories via union-find over up to three edge types:
+ * Group items into stories via union-find over up to four edge types:
  *
+ *   0. Stable-cluster edges — items sharing the same non-null `stableClusterId`
+ *      via memberships whose confidence is ≥ `opts.clusterConfidenceThreshold`
+ *      are unioned. STRONGEST edge: this server-assigned id is stable ACROSS
+ *      clustering runs, so it is the authoritative same-story key and supersedes
+ *      the heuristics below. The confidence gate reuses the edge-(1) bar because
+ *      within one run a shared stable id implies a shared cluster — ungated, it
+ *      would re-merge the low-confidence fringe edge (1) deliberately excludes.
+ *      Always on (not gated by an option), so both display and score-propagation
+ *      use it. Null/absent ids contribute no edge, leaving the fallback edges to
+ *      do their work for items without a stable id.
  *   1. Cluster edges — items sharing a clusterId whose membership confidence is
  *      ≥ `opts.clusterConfidenceThreshold` are unioned. Built from a
  *      clusterId → indices map in O(total memberships).
@@ -323,6 +346,58 @@ export function buildStoryGroups<T extends GroupableItem>(
     const parent: number[] = new Array(n);
     for (let i = 0; i < n; i += 1) {
         parent[i] = i;
+    }
+
+    // --- 0. Stable-cluster edges (STRONGEST — cross-run story identity) ------
+    // Two items sharing the same non-null `stableClusterId` are the SAME story
+    // even when their per-run `clusterId`s differ (server wipes+reinserts cluster
+    // ids each run) or one was fetched under an older generation. This is the
+    // authoritative same-story key; it runs FIRST and supersedes the clusterId-
+    // core (1) and title (2/3) heuristics, which stay as fallbacks for items that
+    // lack a stable id (singletons, unclustered, pre-existing rows). Absent/null
+    // stable ids contribute no edge. A rare id RESET just groups the reset items
+    // among themselves — a new story, never a crash. Always active (not gated by
+    // an option) so score-propagation gets it too: same stable story = same
+    // story, matching the existing same-cluster propagation semantics.
+    //
+    // CONFIDENCE GATE: a membership contributes its stableClusterId only when its
+    // own `confidence >= opts.clusterConfidenceThreshold` — the EXACT same bar
+    // the clusterId-core edge (1) uses (CLUSTER_CORE_CONFIDENCE_THRESHOLD = 0.3;
+    // deliberately no second threshold). The gate exists because of same-run
+    // equivalence with the core edge: within a single clustering run, two items
+    // sharing a stableClusterId are by definition in the same cluster, so an
+    // UNGATED stable edge would re-merge the low-confidence fringe members
+    // (confidence < 0.3, incl. HDBSCAN near-zero noise artifacts) that the tuned
+    // core edge deliberately rejects — 0.3 was calibrated in the feed-quality
+    // wave with dump-verified zero false merges, and the fringe was excluded on
+    // purpose. Cross-run grouping is unaffected: confident members of the same
+    // story in different runs still share the stable id and merge; the fringe
+    // stays excluded exactly as before this edge existed.
+    const stableToIndices = new Map<string, number[]>();
+    for (let i = 0; i < n; i += 1) {
+        const clusters = items[i].clusters;
+        if (!clusters) {
+            continue;
+        }
+        for (const membership of clusters) {
+            if (
+                membership &&
+                membership.confidence >= opts.clusterConfidenceThreshold &&
+                membership.stableClusterId
+            ) {
+                let bucket = stableToIndices.get(membership.stableClusterId);
+                if (!bucket) {
+                    bucket = [];
+                    stableToIndices.set(membership.stableClusterId, bucket);
+                }
+                bucket.push(i);
+            }
+        }
+    }
+    for (const indices of stableToIndices.values()) {
+        for (let k = 1; k < indices.length; k += 1) {
+            union(parent, indices[0], indices[k]);
+        }
     }
 
     // --- 1. Cluster edges ---------------------------------------------------

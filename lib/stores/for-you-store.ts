@@ -37,6 +37,14 @@ import type { ScoringErrorKind } from '@/lib/services/scoring-error';
 export type ClusterMembership = {
     clusterId: string;
     confidence: number;
+    /** Cross-run stable story id (UUID) assigned by the server to multi-member
+     *  clusters and carried ACROSS clustering runs. Null/absent for singletons,
+     *  unclustered articles, and rows persisted before this field existed. When
+     *  present it is the authoritative same-story key (see story-grouping.ts);
+     *  the per-run `clusterId` + title heuristics are fallbacks for items lacking
+     *  it. May rarely RESET (crashed clustering generation) → treated as a new
+     *  story, never a crash. */
+    stableClusterId?: string | null;
 };
 
 export type ForYouSuggestion = {
@@ -474,9 +482,12 @@ function dumpFeedForClusterAnalysis(rows: ForYouSuggestion[]): void {
                 relevance: s.relevance,
                 status: s.status,
                 firstPubDate: s.firstPubDate,
+                // stableClusterId included so dumps show the cross-run story key
+                // alongside the per-run clusterId.
                 clusters: s.clusters.map((c) => ({
                     clusterId: c.clusterId,
                     confidence: c.confidence,
+                    stableClusterId: c.stableClusterId ?? null,
                 })),
             }));
             console.log(

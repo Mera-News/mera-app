@@ -54,6 +54,17 @@ export interface GateResult {
     heldBackCount: number;
 }
 
+// Propagation deliberately omits the IDF-weighted title edge (no
+// `weightedJaccardThreshold`) — a wrong score copy mis-ranks/hides an article,
+// so it keeps the stricter cluster + raw-title signals only. The stable-cluster
+// edge (same non-null `stableClusterId`) is NOT an option — it is always on
+// inside `buildStoryGroups`, so propagation gets it for free, including its
+// membership-confidence gate (the stable edge only counts memberships whose
+// confidence ≥ `clusterConfidenceThreshold`, i.e. the same 0.3 bar passed
+// below — the < 0.3 fringe stays excluded from propagation too). That is correct
+// and intended: a shared stable id means the same cross-run story, exactly the
+// same-story guarantee the existing same-cluster propagation already relies on,
+// so copying a donor's relevance/reason across it is sound (not merely cosmetic).
 const PROPAGATION_OPTIONS = {
     titleJaccardThreshold: TITLE_JACCARD_PROPAGATION_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,

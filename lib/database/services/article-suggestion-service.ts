@@ -164,7 +164,7 @@ export async function getScoredSuggestionsWithoutReasons(
 export interface SuggestionGroupingRow {
   id: string;
   title: string | null; // titleEn ?? titleOriginal
-  clusters: { clusterId: string; confidence: number }[]; // parsed memberships
+  clusters: { clusterId: string; confidence: number; stableClusterId?: string | null }[]; // parsed memberships
   relevance: number;
   reason: string;
   status: ArticleSuggestionStatus;
@@ -585,7 +585,14 @@ function toClusterMemberships(
   clusters: ArticleWithClusters['clusters'] | null | undefined,
 ): ClusterMembership[] {
   if (!clusters) return [];
-  return clusters.map((c) => ({ clusterId: c.clusterId, confidence: c.confidence }));
+  return clusters.map((c) => {
+    const m: ClusterMembership = { clusterId: c.clusterId, confidence: c.confidence };
+    // Only carry stableClusterId when the server actually set it (multi-member
+    // clusters). Singletons/unclustered → omitted, keeping the persisted JSON
+    // (and its canonical equality key) minimal and unchanged for those rows.
+    if (c.stableClusterId) m.stableClusterId = c.stableClusterId;
+    return m;
+  });
 }
 
 function parseClusterMemberships(
@@ -595,13 +602,25 @@ function parseClusterMemberships(
   try {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (m): m is ClusterMembership =>
-        m != null &&
-        typeof m.clusterId === 'string' &&
-        m.clusterId.length > 0 &&
-        typeof m.confidence === 'number',
-    );
+    return parsed
+      .filter(
+        (m): m is ClusterMembership =>
+          m != null &&
+          typeof m.clusterId === 'string' &&
+          m.clusterId.length > 0 &&
+          typeof m.confidence === 'number',
+      )
+      .map((m) => {
+        // Normalize: keep stableClusterId only when it's a non-empty string.
+        // Old rows (persisted before this field existed) simply lack it → the
+        // grouping path treats absence as "no stable id" (falls back to
+        // clusterId/title edges), never crashes.
+        const out: ClusterMembership = { clusterId: m.clusterId, confidence: m.confidence };
+        if (typeof m.stableClusterId === 'string' && m.stableClusterId.length > 0) {
+          out.stableClusterId = m.stableClusterId;
+        }
+        return out;
+      });
   } catch {
     return [];
   }
@@ -613,7 +632,13 @@ function canonicalClusterMembershipsJson(
   memberships: ClusterMembership[],
 ): string {
   const normalized = memberships
-    .map((m) => ({ clusterId: m.clusterId, confidence: m.confidence }))
+    .map((m) => {
+      const out: ClusterMembership = { clusterId: m.clusterId, confidence: m.confidence };
+      // Thread stableClusterId through the persisted shape (omitted when absent
+      // so rows without one keep their exact prior canonical encoding).
+      if (m.stableClusterId) out.stableClusterId = m.stableClusterId;
+      return out;
+    })
     .sort((a, b) => (a.clusterId < b.clusterId ? -1 : a.clusterId > b.clusterId ? 1 : 0));
   return JSON.stringify(normalized);
 }

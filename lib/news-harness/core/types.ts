@@ -102,7 +102,7 @@ export interface HarnessArticle {
   publication_name?: string | null;
   language_code?: string | null;
   pubDate: string;
-  clusters: { clusterId: string; confidence: number }[];
+  clusters: { clusterId: string; confidence: number; stableClusterId?: string | null }[];
 }
 
 // ---------------------------------------------------------------------------

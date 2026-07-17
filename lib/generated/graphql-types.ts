@@ -118,6 +118,7 @@ export type ClusterMembership = {
   __typename?: 'ClusterMembership';
   clusterId: Scalars['ID']['output'];
   confidence: Scalars['Float']['output'];
+  stableClusterId?: Maybe<Scalars['String']['output']>;
 };
 
 export type CursorPageInfo = {
@@ -236,21 +237,35 @@ export type NewsArticle = {
   __typename?: 'NewsArticle';
   _id: Scalars['ID']['output'];
   article_url: Scalars['String']['output'];
+  category?: Maybe<Scalars['String']['output']>;
   clusterConfidence?: Maybe<Scalars['Float']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   creator?: Maybe<Scalars['String']['output']>;
   description: Scalars['String']['output'];
+  description_en?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use description_en instead. Superseded by the v3 pipeline. */
   description_en_internal_only?: Maybe<Scalars['String']['output']>;
+  embedding_attempts?: Maybe<Scalars['Int']['output']>;
+  embedding_status?: Maybe<Scalars['String']['output']>;
+  /** @deprecated v1-only link to the fetch state machine; unused by the v3 pipeline. */
   fetchPublicationId?: Maybe<Scalars['ID']['output']>;
   image_url?: Maybe<Scalars['String']['output']>;
   original_language_code?: Maybe<Scalars['String']['output']>;
+  /** @deprecated v1-only pipeline state; in v3 an article present in the DB is complete. */
   processingStatus?: Maybe<ArticleProcessingStatus>;
   pubDate: Scalars['DateTime']['output'];
   publicationSource?: Maybe<PublicationSource>;
   publicationSourceId: Scalars['ID']['output'];
   source_uri: Scalars['String']['output'];
   title: Scalars['String']['output'];
+  title_en?: Maybe<Scalars['String']['output']>;
+  /** @deprecated Use title_en instead. Superseded by the v3 pipeline. */
   title_en_internal_only?: Maybe<Scalars['String']['output']>;
+  translation_attempts?: Maybe<Scalars['Int']['output']>;
+  translation_skip_reason?: Maybe<Scalars['String']['output']>;
+  translation_skipped?: Maybe<Scalars['Boolean']['output']>;
+  translation_status?: Maybe<Scalars['String']['output']>;
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -261,6 +276,7 @@ export type NewsCluster = {
   articles: ClusterArticlesConnection;
   clusterSize?: Maybe<Scalars['Int']['output']>;
   createdAt: Scalars['DateTime']['output'];
+  stableClusterId?: Maybe<Scalars['String']['output']>;
   topicConfidence?: Maybe<Scalars['Float']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -314,13 +330,23 @@ export type PublicationSource = {
   __typename?: 'PublicationSource';
   _id: Scalars['ID']['output'];
   category: Scalars['String']['output'];
+  codegen_checked_at?: Maybe<Scalars['DateTime']['output']>;
+  codegen_status?: Maybe<Scalars['String']['output']>;
+  consecutive_fetch_failures?: Maybe<Scalars['Float']['output']>;
   country_code: Scalars['String']['output'];
   country_name?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   detected_language_code?: Maybe<Scalars['String']['output']>;
   feed_language_code?: Maybe<Scalars['String']['output']>;
   feed_url: Scalars['String']['output'];
+  gated: Scalars['Boolean']['output'];
   is_active: Scalars['Boolean']['output'];
+  is_active_codegen?: Maybe<Scalars['Boolean']['output']>;
+  is_active_user?: Maybe<Scalars['Boolean']['output']>;
+  last_fetch_error?: Maybe<Scalars['String']['output']>;
+  last_fetch_http_status?: Maybe<Scalars['Float']['output']>;
+  last_fetch_status?: Maybe<Scalars['String']['output']>;
+  last_fetched_at?: Maybe<Scalars['DateTime']['output']>;
   newsPublisherId?: Maybe<Scalars['ID']['output']>;
   publication_name: Scalars['String']['output'];
   publication_url?: Maybe<Scalars['String']['output']>;
@@ -463,7 +489,6 @@ export type QuerySearchArticlesVectorArgs = {
   cutoffHours?: InputMaybe<Scalars['Int']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   minScore?: InputMaybe<Scalars['Float']['input']>;
-  mode?: InputMaybe<VectorSearchMode>;
   numCandidates?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
 };
@@ -555,6 +580,7 @@ export type UnblockRequest = {
   userId: Scalars['String']['output'];
 };
 
+/** Review state of an LLM unblock request. PENDING awaits manual review; APPROVED/REJECTED are terminal. */
 export enum UnblockRequestStatus {
   Approved = 'APPROVED',
   Pending = 'PENDING',
@@ -630,14 +656,6 @@ export type UserTopic = {
   news_topic_text: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
-
-/** Which embedding index to use for vector search. DATA_RETRIEVAL uses asymmetric retrieval embeddings (query→article). TEXT_MATCHING uses symmetric text-matching embeddings (article→article clustering). */
-export enum VectorSearchMode {
-  /** Asymmetric search: query embedding (retrieval.query) vs article embedding (retrieval.passage). Best for user-facing search. */
-  DataRetrieval = 'DATA_RETRIEVAL',
-  /** Symmetric search: text-matching embeddings. Best for finding similar/duplicate articles (clustering). */
-  TextMatching = 'TEXT_MATCHING'
-}
 
 export type WithdrawUserTopicsInput = {
   topicIds: Array<Scalars['ID']['input']>;
