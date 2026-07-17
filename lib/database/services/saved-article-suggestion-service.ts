@@ -138,6 +138,12 @@ function toForYouSuggestion(row: SavedArticleSuggestionModel): ForYouSuggestion 
     userTopicIds: parseStringArray(row.matchedTopicTextsJson),
     createdAt: row.createdAt.toISOString(),
     firstPubDate: row.firstPubDate.toISOString(),
+    // The saved table predates persona-v3 sectioning fields and doesn't persist
+    // them — saved cards render via the priority chip, not the sectioned feed.
+    rawScore: null,
+    eventType: null,
+    headlineScope: null,
+    matchedTopics: [],
   };
 }
 

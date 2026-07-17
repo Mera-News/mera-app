@@ -766,7 +766,34 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
     userTopicIds: parseTopicIds(row.matchedTopicTextsJson),
     createdAt: row.createdAt.toISOString(),
     firstPubDate: row.firstPubDate.toISOString(),
+    // Persona v3 fields for the fact-sectioned feed selector (nullable).
+    rawScore: row.rawScore,
+    eventType: row.eventType,
+    headlineScope:
+      row.headlineScope === 'CITY' ||
+      row.headlineScope === 'COUNTRY' ||
+      row.headlineScope === 'GLOBAL'
+        ? row.headlineScope
+        : null,
+    matchedTopics: parseMatchedTopicRefs(row.matchedTopicsJson),
   };
+}
+
+/** Parse `matched_topics_json` → [{topicId, text}] refs for the feed selector.
+ *  Malformed / absent JSON yields an empty list (legacy rows). */
+function parseMatchedTopicRefs(
+  json: string | null | undefined,
+): { topicId: string | null; text: string }[] {
+  const raw = parseJsonArray<{ topicId?: string | null; text?: string }>(json);
+  const out: { topicId: string | null; text: string }[] = [];
+  for (const m of raw) {
+    if (!m) continue;
+    out.push({
+      topicId: typeof m.topicId === 'string' && m.topicId.length > 0 ? m.topicId : null,
+      text: typeof m.text === 'string' ? m.text : '',
+    });
+  }
+  return out;
 }
 
 /** Strip GraphQL `__typename` from the hydrated `clusters` field down to the

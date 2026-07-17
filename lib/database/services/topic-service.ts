@@ -68,6 +68,33 @@ export async function getActive(): Promise<TopicModel[]> {
   return topicsCollection.query(Q.where('status', 'active')).fetch();
 }
 
+/** Persona-v3 active-topic snapshot for the fact-sectioned feed selector:
+ *  the fields `resolveOwningFact` reads (topic → owning fact + effective
+ *  weight). Only `active` topics own sections, so this loads just those. */
+export interface ActiveTopicSnapshot {
+  id: string;
+  factId: string | null;
+  weight: number;
+  highPriority: boolean;
+}
+
+export async function getActiveTopicSnapshots(): Promise<ActiveTopicSnapshot[]> {
+  const rows = await getActive();
+  return rows.map((t) => ({
+    id: t.id,
+    factId: t.factId ?? null,
+    weight: t.weight,
+    highPriority: t.highPriority,
+  }));
+}
+
+/** Count of all topic rows (any status) — the gate for the sectioned feed:
+ *  an empty topics table means the persona-v3 migration hasn't run yet, so the
+ *  screen renders the legacy priority-bucket layout. */
+export async function countAllTopics(): Promise<number> {
+  return topicsCollection.query().fetchCount();
+}
+
 /** All topics sharing a normalized text (dedup + cross-fact overlap detection). */
 export async function getAllByNormalizedText(normalizedText: string): Promise<TopicModel[]> {
   return topicsCollection

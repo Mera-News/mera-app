@@ -235,6 +235,25 @@
     "settings": "Settings",
     "gotIt": "Got it"
   },
+  "forYou": {
+    "sectionPrefix": "News about:",
+    "alsoForYou": "Also for you",
+    "breaking": "Breaking",
+    "showMore": "Show {{count}} more",
+    "whySection": "Why this section"
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "gotIt": "Got it",
+    "sectionsTitle": "A feed organized around you",
+    "sectionsBody": "For You now groups stories into sections built from what matters to you.",
+    "storiesTitle": "Stories stay together",
+    "storiesBody": "The same story from multiple sources is grouped into one card, even as it develops.",
+    "tabsTitle": "Profile & Settings tabs",
+    "tabsBody": "Your profile and settings now live in their own tabs at the bottom.",
+    "resyncTitle": "Your feed is re-syncing",
+    "resyncBody": "We're rebuilding your feed with the new engine — it'll fill in shortly."
+  },
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",
     "notTranslatable": "This article is in {{language}} and may not be translated",

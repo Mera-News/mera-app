@@ -41,6 +41,10 @@ function makeSuggestion(overrides: Partial<ForYouSuggestion> = {}): ForYouSugges
     userTopicIds: ['berlin'],
     createdAt: new Date(NOW).toISOString(),
     firstPubDate: new Date(NOW - 1000).toISOString(),
+    rawScore: null,
+    eventType: null,
+    headlineScope: null,
+    matchedTopics: [],
     ...overrides,
   };
 }

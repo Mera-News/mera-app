@@ -128,6 +128,10 @@ describe('selectors/index', () => {
             userTopicIds: [],
             createdAt: '2024-01-01',
             firstPubDate: '2024-01-01',
+            rawScore: null,
+            eventType: null,
+            headlineScope: null,
+            matchedTopics: [],
         };
         useForYouStore.setState({ suggestions: [suggestion] });
         const { result } = renderHook(() => useForYouSuggestions());

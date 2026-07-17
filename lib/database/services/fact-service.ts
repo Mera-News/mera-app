@@ -98,6 +98,40 @@ export async function markOrphanedFactsAsFailed(
   return orphaned.length;
 }
 
+/** Persona-v3 fact snapshot for the fact-sectioned feed selector: carries the
+ *  fact-level `weight` and `metadata_json.section_title` that the public `Fact`
+ *  DTO drops. `sectionTitle` is null until the (deferred) title-generation
+ *  piggyback lands — callers fall back to the statement. */
+export interface FactSectionSnapshot {
+  id: string;
+  weight: number | null;
+  createdAtMs: number;
+  statement: string;
+  sectionTitle: string | null;
+}
+
+export async function getFactSectionSnapshots(): Promise<FactSectionSnapshot[]> {
+  const records = await factsCollection.query().fetch();
+  return records.map((r) => {
+    // metadata is Record<string, string[]>; section_title (when generated) is a
+    // single-element string list. Defensive extraction — absent today.
+    const rawTitle = (r.metadata as Record<string, unknown> | undefined)?.section_title;
+    let sectionTitle: string | null = null;
+    if (Array.isArray(rawTitle) && typeof rawTitle[0] === 'string' && rawTitle[0].trim()) {
+      sectionTitle = rawTitle[0].trim();
+    } else if (typeof rawTitle === 'string' && rawTitle.trim()) {
+      sectionTitle = rawTitle.trim();
+    }
+    return {
+      id: r.id,
+      weight: r.weight ?? null,
+      createdAtMs: r.createdAt?.getTime?.() ?? 0,
+      statement: r.statement,
+      sectionTitle,
+    };
+  });
+}
+
 export async function getFacts(): Promise<Fact[]> {
   const records = await factsCollection
     .query(Q.sortBy('created_at', Q.desc))

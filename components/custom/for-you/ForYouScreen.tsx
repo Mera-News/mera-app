@@ -10,7 +10,17 @@ import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
-import SectionNavigator, { SectionItem } from '@/components/custom/for-you/SectionNavigator';
+import SectionNavigator, { NavSection } from '@/components/custom/for-you/SectionNavigator';
+import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
+import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
+import ShowMoreRow from '@/components/custom/for-you/ShowMoreRow';
+import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
+import {
+    buildSectionedFeed,
+    loadSectionSnapshots,
+    type SectionSnapshots,
+    type SectionedListItem,
+} from '@/lib/stores/feed-sections-selector';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -62,11 +72,18 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// ── Legacy (pre-persona-v3-migration) priority-bucket layout items. Kept as the
+//    fallback path when the on-device `topics` table is still empty. ──
 type PriorityLabelItem = { type: 'priority-label'; label: string; relevance: number };
 // `members` = the other suggestions collapsed into this story card (group minus
 // representative). Present only when the group has more than one member.
 type SuggestionItem = { type: 'suggestion'; data: ForYouSuggestion; members?: ForYouSuggestion[] };
-type ForYouListItem = PriorityLabelItem | SuggestionItem;
+type LegacyListItem = PriorityLabelItem | SuggestionItem;
+
+// The unified FlatList item type: legacy priority-bucket items OR the new
+// fact-sectioned items (Wave 7c N2). renderItem/keyExtractor discriminate on
+// `type`; only one family is present at a time depending on the migration gate.
+type ForYouListItem = LegacyListItem | SectionedListItem;
 
 // Number of additional source publications a collapsed story carries, for the
 // "+N sources" chip. Count the distinct member publication names (trimmed,
@@ -197,6 +214,38 @@ const MeraNewsScreen: React.FC = () => {
     const loadingRef = useRef(false);
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
+
+    // ── Fact-sectioned feed (Wave 7c N2) ──
+    // Persona-v3 snapshots (topics/facts/locations). Null while loading; when
+    // loaded with `hasTopics === false` the screen renders the LEGACY layout.
+    const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
+    // Per-section expand state for "Show N more" — survives re-render, resets
+    // on unmount (tab switch) and when a new sync replaces the feed.
+    const [expandedSectionKeys, setExpandedSectionKeys] = useState<Set<string>>(() => new Set());
+
+    // Load the persona snapshots when interests exist or the feed size changes
+    // (facts/topics/locations are tiny tables; a new sync's insert/remove is the
+    // coarse trigger — live fact-weight edits are picked up on the next change).
+    useEffect(() => {
+        let cancelled = false;
+        loadSectionSnapshots()
+            .then((s) => { if (!cancelled) setSnapshots(s); })
+            .catch((err: unknown) => {
+                logger.captureException(err, {
+                    tags: { screen: 'ForYouScreen', method: 'loadSectionSnapshots' },
+                });
+            });
+        return () => { cancelled = true; };
+    }, [hasGeneratedInterests, suggestions.length]);
+
+    // A new sync (feed size changed) invalidates the expand state.
+    const prevFeedSizeRef = useRef(suggestions.length);
+    useEffect(() => {
+        if (prevFeedSizeRef.current !== suggestions.length) {
+            prevFeedSizeRef.current = suggestions.length;
+            setExpandedSectionKeys((prev) => (prev.size > 0 ? new Set() : prev));
+        }
+    }, [suggestions.length]);
 
     // Initial load — fetch if store is empty (first visit or after logout).
     useEffect(() => {
@@ -398,9 +447,9 @@ const MeraNewsScreen: React.FC = () => {
         return items;
     }, [suggestions]);
 
-    const availableSections = useMemo((): SectionItem[] => {
+    const legacyAvailableSections = useMemo((): { label: string; shortLabel: string }[] => {
         const seen = new Set<string>();
-        const result: SectionItem[] = [];
+        const result: { label: string; shortLabel: string }[] = [];
         for (const item of listData) {
             if (item.type !== 'priority-label') continue;
             const shortLabel = getDisplaySectionLabel(item.label);
@@ -412,12 +461,39 @@ const MeraNewsScreen: React.FC = () => {
         return result;
     }, [listData]);
 
+    // ── Fact-sectioned build (Wave 7c N2). Null ⇒ legacy path in effect. ──
+    const useSectioned = snapshots?.hasTopics === true;
+    const sectioned = useMemo(() => {
+        if (!useSectioned || !snapshots) return null;
+        return buildSectionedFeed(suggestions, snapshots, expandedSectionKeys);
+    }, [useSectioned, snapshots, suggestions, expandedSectionKeys]);
+
+    // The list the FlatList actually renders — sectioned when available, else legacy.
+    const activeListData: ForYouListItem[] = sectioned ? sectioned.items : listData;
+
+    // Navigator chips: dynamic section titles (sectioned) or translated priority
+    // labels (legacy). translatable:true → TranslatableDynamic; false → t()'d.
+    const navSections = useMemo((): NavSection[] => {
+        if (sectioned) {
+            return sectioned.result.sections.map((s) => ({
+                key: s.key,
+                title: s.title,
+                translatable: s.kind !== 'also', // "Also for you" is a static string
+            }));
+        }
+        return legacyAvailableSections.map((s) => ({
+            key: s.shortLabel,
+            title: t(s.shortLabel as any),
+            translatable: false,
+        }));
+    }, [sectioned, legacyAvailableSections, t]);
+
     // Hide the onboarding waiting card once the first scored, relevant card is ready.
     useEffect(() => {
-        if (showOnboardingWait && listData.length > 0) {
+        if (showOnboardingWait && activeListData.length > 0) {
             setShowOnboardingWait(false);
         }
-    }, [showOnboardingWait, listData.length]);
+    }, [showOnboardingWait, activeListData.length]);
 
     // Clear the watchdog error when a new sync cycle becomes active or when
     // cloud async scoring starts. Without this, stuckOnEmpty persists while
@@ -444,7 +520,7 @@ const MeraNewsScreen: React.FC = () => {
     // state, and break the spinner loop in ListEmptyComponent so the user
     // sees a recoverable card instead of a forever-spinner.
     useEffect(() => {
-        if (listData.length > 0) {
+        if (activeListData.length > 0) {
             if (stuckOnEmpty) setStuckOnEmpty(false);
             return;
         }
@@ -491,7 +567,7 @@ const MeraNewsScreen: React.FC = () => {
         // store snapshots read inside are pulled via getState() at fire time, so
         // they are intentionally excluded from the dep array.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, listData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
+    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, activeListData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
         const userPersonaId = useUserStore.getState().userPersona?._id || '';
@@ -505,19 +581,57 @@ const MeraNewsScreen: React.FC = () => {
         });
     }, [session?.user?.id]);
 
+    const toggleSection = useCallback((sectionKey: string) => {
+        setExpandedSectionKeys((prev) => {
+            const next = new Set(prev);
+            if (next.has(sectionKey)) next.delete(sectionKey);
+            else next.add(sectionKey);
+            return next;
+        });
+    }, []);
+
     const renderItem: ListRenderItem<ForYouListItem> = useCallback(({ item }) => {
-        if (item.type === 'priority-label') {
-            return <PriorityLabelCard label={item.label} relevance={item.relevance} />;
+        switch (item.type) {
+            // ── Legacy priority-bucket items ──
+            case 'priority-label':
+                return <PriorityLabelCard label={item.label} relevance={item.relevance} />;
+            case 'suggestion': {
+                const moreSourcesCount = item.members ? computeMoreSourcesCount(item.data, item.members) : 0;
+                return (
+                    <ArticleCard
+                        suggestion={item.data}
+                        moreSourcesCount={moreSourcesCount}
+                        onPress={() => handleSuggestionPress(item.data)}
+                    />
+                );
+            }
+            // ── Fact-sectioned items (Wave 7c N2) ──
+            case 'breaking-strip':
+                return <BreakingStrip items={item.items} onPressItem={handleSuggestionPress} />;
+            case 'fact-header':
+                return (
+                    <FactSectionHeader
+                        section={item.section}
+                        eventType={item.eventType}
+                        factStatement={item.factStatement}
+                    />
+                );
+            case 'suggestion-card': {
+                const moreSourcesCount = item.members.length > 0 ? computeMoreSourcesCount(item.data, item.members) : 0;
+                return (
+                    <ArticleCard
+                        suggestion={item.data}
+                        moreSourcesCount={moreSourcesCount}
+                        onPress={() => handleSuggestionPress(item.data)}
+                    />
+                );
+            }
+            case 'show-more':
+                return <ShowMoreRow remaining={item.remaining} onPress={() => toggleSection(item.sectionKey)} />;
+            default:
+                return null;
         }
-        const moreSourcesCount = item.members ? computeMoreSourcesCount(item.data, item.members) : 0;
-        return (
-            <ArticleCard
-                suggestion={item.data}
-                moreSourcesCount={moreSourcesCount}
-                onPress={() => handleSuggestionPress(item.data)}
-            />
-        );
-    }, [handleSuggestionPress]);
+    }, [handleSuggestionPress, toggleSection]);
 
     const ListEmptyComponent = useCallback(() => {
         if (showOnboardingWait) {
@@ -591,15 +705,22 @@ const MeraNewsScreen: React.FC = () => {
         // Only show the footer "caught up" card when the visible list isn't
         // empty — otherwise ListEmptyComponent already renders one and we'd
         // get two stacked cards (e.g. when every suggestion is filtered out).
-        if (listData.length > 0 && !hasNextPage) {
+        if (activeListData.length > 0 && !hasNextPage) {
             return isFeedProcessing ? <FeedPreparingCard /> : <AllCaughtUpCard />;
         }
         return null;
-    }, [listData.length, isLoadingMore, hasNextPage, isFeedProcessing]);
+    }, [activeListData.length, isLoadingMore, hasNextPage, isFeedProcessing]);
 
     const keyExtractor = useCallback((item: ForYouListItem, index: number) => {
-        if (item.type === 'priority-label') return `label-${item.label}`;
-        return item.data._id || `suggestion-${index}`;
+        switch (item.type) {
+            case 'priority-label':
+                return `label-${item.label}`;
+            case 'suggestion':
+                return item.data._id || `suggestion-${index}`;
+            default:
+                // Sectioned items all carry a stable, unique `key`.
+                return item.key;
+        }
     }, []);
 
     const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -614,6 +735,25 @@ const MeraNewsScreen: React.FC = () => {
 
     const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
         if (viewableItems.length === 0) return;
+        if (sectioned) {
+            // Sectioned: the topmost visible fact-header names the active section;
+            // if none is visible, scan backwards for the owning header.
+            const header = viewableItems.find((vi) => vi.item?.type === 'fact-header');
+            if (header) {
+                setActiveSection((header.item as Extract<SectionedListItem, { type: 'fact-header' }>).section.key);
+                return;
+            }
+            const firstIdx = viewableItems[0]?.index ?? 0;
+            for (let i = firstIdx; i >= 0; i--) {
+                const it = activeListData[i];
+                if (it?.type === 'fact-header') {
+                    setActiveSection(it.section.key);
+                    return;
+                }
+            }
+            return;
+        }
+        // Legacy priority-bucket sections.
         const firstLabel = viewableItems.find((vi) => vi.item?.type === 'priority-label');
         if (firstLabel) {
             setActiveSection(getDisplaySectionLabel((firstLabel.item as PriorityLabelItem).label));
@@ -621,21 +761,29 @@ const MeraNewsScreen: React.FC = () => {
         }
         const firstIdx = viewableItems[0]?.index ?? 0;
         for (let i = firstIdx - 1; i >= 0; i--) {
-            if (listData[i]?.type === 'priority-label') {
-                setActiveSection(getDisplaySectionLabel((listData[i] as PriorityLabelItem).label));
+            if (activeListData[i]?.type === 'priority-label') {
+                setActiveSection(getDisplaySectionLabel((activeListData[i] as PriorityLabelItem).label));
                 return;
             }
         }
-    }, [listData]);
+    }, [sectioned, activeListData]);
 
-    const scrollToSection = useCallback((shortLabel: string) => {
-        const index = listData.findIndex(
-            (item) => item.type === 'priority-label' && getDisplaySectionLabel(item.label) === shortLabel,
-        );
+    const scrollToSection = useCallback((key: string) => {
+        const index = sectioned
+            ? activeListData.findIndex((item) => item.type === 'fact-header' && item.section.key === key)
+            : activeListData.findIndex(
+                (item) => item.type === 'priority-label' && getDisplaySectionLabel(item.label) === key,
+            );
         if (index !== -1) {
             flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
         }
-    }, [listData]);
+    }, [sectioned, activeListData]);
+
+    // Overflow chip → jump to the 9th section (first one hidden by the cap).
+    const scrollToOverflow = useCallback(() => {
+        const ninth = sectioned?.result.sections[8];
+        if (ninth) scrollToSection(ninth.key);
+    }, [sectioned, scrollToSection]);
 
     const onScrollToIndexFailed = useCallback((info: { index: number; averageItemLength: number }) => {
         flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
@@ -694,12 +842,13 @@ const MeraNewsScreen: React.FC = () => {
                         />
                     )}
                 </View>
-                {availableSections.length > 0 && (
+                {navSections.length > 0 && (
                     <Box className="mt-2 mb-1">
                         <SectionNavigator
-                            sections={availableSections}
-                            activeSection={activeSection}
+                            sections={navSections}
+                            activeKey={activeSection}
                             onSelect={scrollToSection}
+                            onOverflow={scrollToOverflow}
                         />
                     </Box>
                 )}
@@ -712,7 +861,7 @@ const MeraNewsScreen: React.FC = () => {
             </VStack>
             <AnimatedFlatList
                 ref={flatListRef}
-                data={listData}
+                data={activeListData}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 contentContainerStyle={{ paddingVertical: 20, paddingBottom: 100 }}
@@ -737,6 +886,9 @@ const MeraNewsScreen: React.FC = () => {
             <GestureDetector gesture={edgeSwipeGesture}>
                 <View style={styles.edgeSwipeHitbox} />
             </GestureDetector>
+
+            {/* One-time "What's new" sheet (existing users, first launch post-OTA). */}
+            <WhatsNewSheet />
 
         </Box>
     );

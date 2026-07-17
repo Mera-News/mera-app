@@ -47,6 +47,14 @@ export type ClusterMembership = {
     stableClusterId?: string | null;
 };
 
+/** One matched topic on a suggestion (parsed from `matched_topics_json`).
+ *  `topicId` is null for synthetic headline matches. Consumed by the
+ *  fact-sectioned feed selector (`selectSections`). */
+export type MatchedTopicRef = {
+    topicId: string | null;
+    text: string;
+};
+
 export type ForYouSuggestion = {
     _id: string;
     articleId: string;
@@ -65,6 +73,17 @@ export type ForYouSuggestion = {
     userTopicIds: string[];
     createdAt: string;
     firstPubDate: string;
+    // ── Persona v3 (schema v37) fields for the fact-sectioned feed selector ──
+    // Absent/null on legacy rows (pre-migration) → the screen falls back to the
+    // priority-bucket layout. All nullable so old rows hydrate cleanly.
+    /** Final post-judge raw score (article_suggestions.raw_score); null unscored. */
+    rawScore: number | null;
+    /** Controlled event-type value (breaking extraction + section/card icons). */
+    eventType: string | null;
+    /** null = topic-retrieved; else the top-headline injection scope. */
+    headlineScope: 'CITY' | 'COUNTRY' | 'GLOBAL' | null;
+    /** Inverted per-topic matchMeta — resolves the owning fact/section. */
+    matchedTopics: MatchedTopicRef[];
 };
 
 /** @deprecated Use syncStatusMessage instead */

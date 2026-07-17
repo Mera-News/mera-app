@@ -80,6 +80,10 @@ function makeSuggestion(
         userTopicIds: [],
         createdAt: new Date().toISOString(),
         firstPubDate: new Date().toISOString(),
+        rawScore: null,
+        eventType: null,
+        headlineScope: null,
+        matchedTopics: [],
         ...rest,
     };
 }
