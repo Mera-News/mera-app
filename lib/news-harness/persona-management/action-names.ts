@@ -31,6 +31,12 @@ export const ACTION_NAMES = {
   // (fact + cascaded topics deleted) — logged for audit visibility but NOT
   // invertible (see action-display.isRevertible + persona-change-log-service).
   HYGIENE_DELETE_FACT: 'hygiene_delete_fact',
+  // Location management (Wave 12 U-F2). Both are logged for audit visibility but
+  // are NOT invertible this wave — `add` has no revert (delete the row from the
+  // locations screen) and `delete` is destroyPermanently (nothing to restore).
+  // See action-display.isRevertible + persona-change-log-service (no inverse).
+  ADD_LOCATION: 'add_location',
+  DELETE_LOCATION: 'delete_location',
   REVERT_CHANGE: 'revert_change',
 } as const;
 

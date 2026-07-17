@@ -35,6 +35,8 @@ const ACTION_DISPLAY: Record<string, ActionDisplay> = {
     [ACTION_NAMES.REASSIGN_TOPIC]: { icon: 'swap-horiz', labelKey: 'reassignTopic' },
     [ACTION_NAMES.MERGE_FACTS]: { icon: 'merge-type', labelKey: 'mergeFacts' },
     [ACTION_NAMES.HYGIENE_DELETE_FACT]: { icon: 'delete-sweep', labelKey: 'hygieneDeleteFact' },
+    [ACTION_NAMES.ADD_LOCATION]: { icon: 'add-location-alt', labelKey: 'addLocation' },
+    [ACTION_NAMES.DELETE_LOCATION]: { icon: 'wrong-location', labelKey: 'deleteLocation' },
     [ACTION_NAMES.REVERT_CHANGE]: { icon: 'undo', labelKey: 'revertChange' },
 };
 
@@ -53,10 +55,14 @@ export function actionDisplay(actionType: string): ActionDisplay {
 export function isRevertible(actionType: string): boolean {
     // `revert_change` rows have no inverse. Hygiene fact deletes are destructive
     // (the fact + its topics are gone) — there is nothing to restore, so no
-    // Revert affordance is offered.
+    // Revert affordance is offered. Location add/delete rows are audit-only this
+    // wave (add/delete are managed directly from the locations screen; the
+    // change-log service has no inverse for them).
     return (
         actionType !== ACTION_NAMES.REVERT_CHANGE &&
-        actionType !== ACTION_NAMES.HYGIENE_DELETE_FACT
+        actionType !== ACTION_NAMES.HYGIENE_DELETE_FACT &&
+        actionType !== ACTION_NAMES.ADD_LOCATION &&
+        actionType !== ACTION_NAMES.DELETE_LOCATION
     );
 }
 

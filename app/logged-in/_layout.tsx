@@ -121,6 +121,20 @@ export default function LoggedInLayout() {
           }}
         />
         <Stack.Screen
+          name="facts"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right'
+          }}
+        />
+        <Stack.Screen
+          name="publication-preferences"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right'
+          }}
+        />
+        <Stack.Screen
           name="visited-publications"
           options={{
             headerShown: false,

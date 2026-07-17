@@ -806,7 +806,9 @@
       "mergeFacts": "Merged interests",
       "revertChange": "Reverted a change",
       "unknown": "Persona change",
-      "hygieneDeleteFact": "Removed fact"
+      "hygieneDeleteFact": "Removed fact",
+      "addLocation": "Added location",
+      "deleteLocation": "Removed location"
     }
   },
   "calibration": {
@@ -896,5 +898,83 @@
     "applyFailedBody": "Please try again later.",
     "profileRow_one": "Persona health · {{count}} suggestion",
     "profileRow_other": "Persona health · {{count}} suggestions"
+  },
+  "locations": {
+    "title": "Your places",
+    "subtitle": "Locations that shape your feed",
+    "empty": "Add the places you care about",
+    "add": "Add a place",
+    "addFirst": "Add a place",
+    "addTitle": "Add a place",
+    "addManualTitle": "Add manually",
+    "searchPlaceholder": "Search for a city",
+    "searchCountries": "Search countries",
+    "noMatches": "No matching places found",
+    "addManuallyCta": "Can't find it? Add manually",
+    "cityLabel": "City",
+    "cityPlaceholder": "Enter a city name",
+    "countryLabel": "Country",
+    "selectCountry": "Select a country",
+    "roleLabel": "What is this place to you?",
+    "weightLabel": "How much should it shape your feed?",
+    "change": "Change",
+    "saveCta": "Save place",
+    "pinForWeather": "Pin for weather",
+    "pinnedBadge": "Weather",
+    "until": "Until {{date}}",
+    "roles": {
+      "home": "Home",
+      "travel": "Travel",
+      "family": "Family",
+      "partnerFamily": "Partner's family",
+      "interest": "Interest"
+    },
+    "weight": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "toastUpdatedTitle": "Updated existing place",
+    "toastUpdatedBody": "That place was already saved — we updated it.",
+    "saveFailedTitle": "Couldn't save place",
+    "saveFailedBody": "Please try again.",
+    "deleteConfirmTitle": "Remove this place?",
+    "deleteConfirmBody": "It will no longer shape your feed or appear in Explore.",
+    "deleteFailedTitle": "Couldn't remove place",
+    "deleteFailedBody": "Please try again."
+  },
+  "profileHub": {
+    "facts": "Facts",
+    "factsCount_one": "{{count}} fact shaping your feed",
+    "factsCount_other": "{{count}} facts shaping your feed",
+    "factsEmpty": "Tap to add what Mera should know",
+    "locations": "Locations",
+    "locationsSubtitle": "Places that shape your feed",
+    "saved": "Saved",
+    "savedSubtitle": "Articles you saved for later",
+    "preferences": "Source preferences",
+    "prefsCount_one": "{{count}} source adjusted",
+    "prefsCount_other": "{{count}} sources adjusted",
+    "prefsEmpty": "Boost, downrank or mute sources",
+    "activity": "Activity",
+    "activitySubtitle": "Your persona change history",
+    "personaHealth": "Persona health",
+    "healthPending_one": "{{count}} cleanup suggestion",
+    "healthPending_other": "{{count}} cleanup suggestions",
+    "healthAllHealthy": "All healthy"
+  },
+  "facts": {
+    "screenTitle": "Your facts",
+    "screenSubtitle": "What Mera knows about you"
+  },
+  "publicationPrefs": {
+    "title": "Source preferences",
+    "subtitle": "Boost, downrank or mute publications",
+    "kindBoost": "Boost",
+    "kindDeprioritize": "Downrank",
+    "kindMute": "Mute",
+    "clear": "Clear",
+    "clearA11y": "Clear preference",
+    "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here."
   }
 }

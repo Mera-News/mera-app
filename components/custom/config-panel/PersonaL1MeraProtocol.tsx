@@ -1,3 +1,6 @@
+// DEPRECATED(wave-12): replaced by the Profile hub; delete in wave-13 cleanup.
+// No longer mounted in the live tree — ProfileTabScreen renders ProfileHubScreen
+// and the facts UX moved to components/custom/facts/FactsScreen.
 import BlockedBanner from '@/components/custom/BlockedBanner';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import UsageWidget from '@/components/custom/UsageWidget';

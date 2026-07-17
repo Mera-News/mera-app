@@ -143,8 +143,8 @@ const ExploreScreen: React.FC = () => {
             </Box>
 
             {/* No-locations nudge — the device country + World chips still work;
-                this points the user at where to add their places (locations
-                screen ships a later wave; profile for now). */}
+                this points the user at the dedicated locations management screen
+                (Wave 12 U-F2) to add their places. */}
             {hasNoLocations ? (
                 <VStack className="mx-5 mb-2 rounded-xl border border-gray-800 p-3" space="xs">
                     <HStack className="items-center" space="sm">
@@ -160,7 +160,7 @@ const ExploreScreen: React.FC = () => {
                         size="xs"
                         variant="outline"
                         className="self-start mt-1 rounded-full border-primary-500"
-                        onPress={() => router.push('/logged-in/app_container/profile')}
+                        onPress={() => router.push('/logged-in/locations')}
                     >
                         <ButtonText className="text-primary-400">{t('explore.addLocation')}</ButtonText>
                     </Button>
