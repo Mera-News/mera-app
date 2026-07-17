@@ -81,3 +81,67 @@ export async function retirePreference(preferenceId: string): Promise<void> {
     });
   });
 }
+
+// ---------------------------------------------------------------------------
+// Pref-kind surface (feedback tree / persona-action executor)
+//
+// The feedback tree and agent speak in coarse KINDS ('boost' / 'deprioritize' /
+// 'mute') rather than raw weights. These map each kind to a canonical stored
+// weight (and back), so a leaf can set/read/revert a publication preference
+// without knowing the weight arithmetic.
+// ---------------------------------------------------------------------------
+
+export type PublicationPrefKind = 'boost' | 'deprioritize' | 'mute';
+
+/** Canonical weight each pref kind writes. `mute` ≈ block (-1). */
+export const PUBLICATION_PREF_WEIGHT: Record<PublicationPrefKind, number> = {
+  boost: 0.5,
+  deprioritize: -0.5,
+  mute: -1,
+};
+
+/** Classify a stored weight back into the pref kind it represents (null ≈ neutral). */
+export function weightToPrefKind(weight: number): PublicationPrefKind | null {
+  if (weight <= -0.9) return 'mute';
+  if (weight < 0) return 'deprioritize';
+  if (weight > 0) return 'boost';
+  return null;
+}
+
+/** The current pref kind for a publication (matched by normalized name), or 'none'. */
+export async function getPreferenceKind(
+  publicationName: string,
+): Promise<PublicationPrefKind | 'none'> {
+  const all = await prefsCollection.query().fetch();
+  const existing = all.find(
+    (p) =>
+      p.status === 'active' &&
+      normalizePublicationName(p.publicationName) === normalizePublicationName(publicationName),
+  );
+  if (!existing) return 'none';
+  return weightToPrefKind(existing.weight) ?? 'none';
+}
+
+/**
+ * Set (or clear) the pref kind for a publication. `'none'` retires any active
+ * preference; a concrete kind upserts its canonical weight. Additive wrapper
+ * over upsertPreference/retirePreference used by the persona-action executor
+ * (apply + revert paths).
+ */
+export async function setPreferenceKind(
+  publicationName: string,
+  kind: PublicationPrefKind | 'none',
+  provenance: PublicationPreferenceProvenance = 'feedback',
+): Promise<void> {
+  if (kind === 'none') {
+    const all = await prefsCollection.query().fetch();
+    const existing = all.find(
+      (p) =>
+        p.status === 'active' &&
+        normalizePublicationName(p.publicationName) === normalizePublicationName(publicationName),
+    );
+    if (existing) await retirePreference(existing.id);
+    return;
+  }
+  await upsertPreference({ publicationName, weight: PUBLICATION_PREF_WEIGHT[kind], provenance });
+}

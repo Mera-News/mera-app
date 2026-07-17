@@ -139,14 +139,32 @@ export interface HarnessArticle {
 // re-exports these so no importer changes.
 // ---------------------------------------------------------------------------
 
-/** A single deterministic change the proposal executor can apply to the persona. */
+/** A single deterministic change the proposal executor can apply to the persona.
+ *
+ *  The first group is the legacy fact/topic-CRUD set (applied directly against
+ *  fact-service). The second group is the Wave-9 rails-backed set — routed
+ *  through `applyPersonaAction` so each mints an invertible persona_change_log
+ *  row. These reference topics by TEXT and publications by NAME (the feedback
+ *  context only exposes those, never ids); the RN executor resolves text→id. */
 export type ProposalAction =
+  // -- Legacy fact/topic CRUD (applied directly against fact-service) --
   | { type: 'add_fact'; statement: string }
   | { type: 'update_fact'; fact_id: string; new_statement: string }
   | { type: 'delete_fact'; fact_id: string }
   | { type: 'add_topics'; fact_id: string; topics: string[] }
   | { type: 'remove_topics'; fact_id: string; topics: string[] }
-  | { type: 'submit_feature_request'; title: string; summary: string };
+  | { type: 'submit_feature_request'; title: string; summary: string }
+  // -- Wave-9 rails-backed persona mutations (via applyPersonaAction) --
+  /** Nudge a matched topic's weight (negative delta = "show me less"). */
+  | { type: 'set_topic_weight'; topicText: string; delta: number }
+  /** Mint a down-ranking negative topic ("wrong place / wrong angle"). */
+  | { type: 'add_negative_topic'; topicText: string; weight?: number }
+  /** Boost / deprioritize / mute a named publication. */
+  | { type: 'set_publication_pref'; publicationId: string; publicationPref: 'boost' | 'deprioritize' | 'mute' }
+  /** Add a soft/hard suppression rule (a phrase to filter out). */
+  | { type: 'add_suppression'; suppressionPattern: string; suppressionKeywords?: string[]; suppressionStrength?: number }
+  /** Pin / unpin a matched topic as high-priority. */
+  | { type: 'set_high_priority'; topicText: string; highPriority: boolean };
 
 /** A proposal staged by the LLM and awaiting user confirmation. */
 export interface StagedProposal {

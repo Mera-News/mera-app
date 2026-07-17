@@ -120,6 +120,51 @@ type ClusterMembership {
   stableClusterId: String
 }
 
+type CursorPageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  pageSize: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DeleteAllUserTopicsResponse {
+  removedCount: Int!
+  success: Boolean!
+}
+
+input DeleteExpoPushTokenInput {
+  userId: ID!
+}
+
+type EmbeddingSearchResponse {
+  query: String!
+  results: [EmbeddingSearchResult!]!
+  totalResults: Float!
+}
+
+type EmbeddingSearchResult {
+  article: NewsArticle!
+  score: Float!
+}
+
+"""
+Versioned feedback-tree config. When the client already holds the current version, treeJson is "" (not-modified) and only the version metadata is sent.
+"""
+type FeedbackTreeResponse {
+  minAppSchema: Int!
+
+  """
+  Opaque JSON string of the feedback tree; "" when currentVersion matches the stored version (not-modified).
+  """
+  treeJson: String!
+  updatedAt: DateTime!
+  version: Int!
+}
+
 """
 A geo tag on an article (written by the tagging pipeline). city/region are optional; countryCode is always present.
 """
@@ -152,97 +197,6 @@ type HeadlineScopeResult {
   countryCode: String
   scope: HeadlineScope!
   stableClusterIds: [String]!
-}
-
-"""
-Optional top-headlines block. Up to 6 scopes; limitPerScope capped at 25.
-"""
-input TopHeadlinesInput {
-  limitPerScope: Int! = 10
-  scopes: [HeadlineScopeInput!]!
-}
-
-"""
-Per-article match metadata. textScore is ALWAYS null in v1. stableClusterId is the id of the article's largest-clusterSize linked cluster, null when the article is a singleton/unclustered.
-"""
-type PersonaMatchMeta {
-  articleId: ID!
-  stableClusterId: String
-  textScore: Float
-  vectorScore: Float!
-}
-
-"""
-Privacy-lean persona query: topic texts + optional top-headlines scopes. No locations, weights, or exclude-topics are ever accepted here (deliberate).
-"""
-input PersonaQueryInput {
-  limitPerTopic: Int! = 20
-
-  """
-  Optional hard cap on total ids across topicResults; the lowest-priority (last) topics are truncated first once the cap is reached.
-  """
-  maxArticles: Int
-  topHeadlines: TopHeadlinesInput
-
-  """Up to MAX_TOPICS_PER_REQUEST (default 200); topicText ≤ 512."""
-  topics: [PersonaTopicInput!]!
-}
-
-"""
-Privacy-lean persona query result: per-topic article ids + match metadata, plus optional per-scope top headlines.
-"""
-type PersonaQueryResult {
-  headlineResults: [HeadlineScopeResult!]!
-  topicResults: [PersonaTopicResult!]!
-}
-
-"""
-A single persona topic. `limit` overrides the query-level limitPerTopic; `afterCursor` is the articleId of the last item on the previous page.
-"""
-input PersonaTopicInput {
-  afterCursor: ID
-  limit: Int
-  text: String!
-}
-
-"""Resolved article ids + match metadata for one persona topic."""
-type PersonaTopicResult {
-  articleIds: [ID!]!
-  hasNextPage: Boolean!
-  matchMeta: [PersonaMatchMeta!]!
-  nextCursor: ID
-  topicText: String!
-}
-
-type CursorPageInfo {
-  endCursor: String
-  hasNextPage: Boolean!
-  pageSize: Int!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
-type DeleteAllUserTopicsResponse {
-  removedCount: Int!
-  success: Boolean!
-}
-
-input DeleteExpoPushTokenInput {
-  userId: ID!
-}
-
-type EmbeddingSearchResponse {
-  query: String!
-  results: [EmbeddingSearchResult!]!
-  totalResults: Float!
-}
-
-type EmbeddingSearchResult {
-  article: NewsArticle!
-  score: Float!
 }
 
 input IssueLlmWarningInput {
@@ -346,6 +300,68 @@ enum OnboardingStage {
 }
 
 """
+Per-article match metadata. textScore is ALWAYS null in v1. stableClusterId is the id of the article's largest-clusterSize linked cluster, null when the article is a singleton/unclustered.
+"""
+type PersonaMatchMeta {
+  articleId: ID!
+  stableClusterId: String
+  textScore: Float
+  vectorScore: Float!
+}
+
+"""
+Privacy-lean persona query: topic texts + optional top-headlines scopes. No locations, weights, or exclude-topics are ever accepted here (deliberate).
+"""
+input PersonaQueryInput {
+  limitPerTopic: Int! = 20
+
+  """
+  Optional hard cap on total ids across topicResults; the lowest-priority (last) topics are truncated first once the cap is reached.
+  """
+  maxArticles: Int
+  topHeadlines: TopHeadlinesInput
+
+  """Up to MAX_TOPICS_PER_REQUEST (default 200); topicText ≤ 512."""
+  topics: [PersonaTopicInput!]!
+}
+
+"""
+Privacy-lean persona query result: per-topic article ids + match metadata, plus optional per-scope top headlines.
+"""
+type PersonaQueryResult {
+  headlineResults: [HeadlineScopeResult!]!
+  topicResults: [PersonaTopicResult!]!
+}
+
+"""
+A single persona topic. `limit` overrides the query-level limitPerTopic; `afterCursor` is the articleId of the last item on the previous page.
+"""
+input PersonaTopicInput {
+  afterCursor: ID
+  limit: Int
+  text: String!
+}
+
+"""Resolved article ids + match metadata for one persona topic."""
+type PersonaTopicResult {
+  articleIds: [ID!]!
+  hasNextPage: Boolean!
+  matchMeta: [PersonaMatchMeta!]!
+  nextCursor: ID
+  topicText: String!
+}
+
+type Place {
+  _id: ID!
+  city: String!
+  countryCode: String!
+  displayName: String!
+  normalized: String!
+  population: Int
+  region: String
+}
+
+"""
 Which inference backend handles Mera Protocol work for this user. ON_DEVICE runs fully offline on the user device; CLOUD uses end-to-end encrypted inference.
 """
 enum ProcessingMode {
@@ -434,6 +450,11 @@ type Query {
     newsPublisherId: ID!
   ): ArticlesForPublicationSourceResponse!
   articlesForTopicsByIds(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
+
+  """
+  The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response.
+  """
+  feedbackTree(currentVersion: Int): FeedbackTreeResponse
   newsClusterForUser(clusterId: ID!): NewsCluster!
   newsClusters(
     """Cursor to fetch items after"""
@@ -453,6 +474,11 @@ type Query {
     """Number of items to fetch"""
     first: Int = 20
   ): NewsPublishersResponse!
+
+  """
+  Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15.
+  """
+  placeSearch(limit: Int! = 8, query: String!): [Place!]!
   publicationSources(
     """Cursor to fetch items after"""
     after: String
@@ -531,6 +557,14 @@ type SubmittedUserTopic {
   status: String!
   text: String!
   topicId: ID
+}
+
+"""
+Optional top-headlines block. Up to 6 scopes; limitPerScope capped at 25.
+"""
+input TopHeadlinesInput {
+  limitPerScope: Int! = 10
+  scopes: [HeadlineScopeInput!]!
 }
 
 type TopicArticleIdsResult {

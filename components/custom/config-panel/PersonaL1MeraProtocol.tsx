@@ -429,6 +429,20 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                         onInfoPress={() => setShowArticleCountInfo(true)}
                     />
 
+                    {/* Persona change-log audit trail (every automated/explicit
+                        persona mutation, with per-row revert). */}
+                    <Pressable
+                        onPress={() => router.push('/logged-in/persona-audit')}
+                        accessibilityRole="button"
+                        className="mx-4 mb-3 flex-row items-center justify-between px-3 py-3 border border-gray-700 rounded-lg"
+                    >
+                        <HStack className="items-center" space="sm">
+                            <MaterialIcons name="history" size={18} color="#60a5fa" />
+                            <Text size="sm" className="text-gray-200">{t('personaAudit.entryRow')}</Text>
+                        </HStack>
+                        <MaterialIcons name="chevron-right" size={20} color="#6b7280" />
+                    </Pressable>
+
                     <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
                         {feedNeedsRefresh && !isRefreshingSuggestions && (
                             <Animated.View

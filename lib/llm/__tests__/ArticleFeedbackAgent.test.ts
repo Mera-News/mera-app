@@ -92,7 +92,7 @@ describe('ArticleFeedbackAgent', () => {
       setProposal: jest.fn(),
       resolveProposal: jest.fn(),
     });
-    mockExecuteProposalActions.mockResolvedValue({ applied: 1, errors: [] });
+    mockExecuteProposalActions.mockResolvedValue({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   describe('constructor', () => {
@@ -316,7 +316,7 @@ describe('ArticleFeedbackAgent', () => {
       });
       const result = await makeAgent().executeTool('applyProposal', {});
       expect(mockExecuteProposalActions).toHaveBeenCalled();
-      expect(result.result).toEqual({ applied: 1, errors: [] });
+      expect(result.result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
       expect(result.sideEffects?.proposalResolved).toBe('applied');
     });
 

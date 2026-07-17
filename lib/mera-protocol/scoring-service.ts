@@ -53,6 +53,8 @@ import type {
   ScoringResult,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import { computeAndJudgeForCandidates } from './stage-scoring';
+import { recordOverrides } from '@/lib/database/services/calibration-service';
+import { buildCalibrationCase } from '@/lib/news-harness/scoring-engine';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
@@ -212,6 +214,13 @@ export async function batchScoreAndReason(
     return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
   }
 
+  // M-P5c: capture LARGE judge overrides (stage.overrideMap) for the on-device
+  // calibration loop. Cheap on the hot path — just shape the numeric
+  // computed/judge/components (NO article text) into a CalibrationCase; the
+  // tally + persistent counter + threshold notification are all handled
+  // asynchronously (fire-and-forget) by the calibration service below.
+  const overrideCases: import('@/lib/news-harness/scoring-engine').CalibrationCase[] = [];
+
   for (const c of eligible) {
     const raw = stage.rawScoreMap.get(c.id);
     if (raw === undefined) {
@@ -226,6 +235,19 @@ export async function batchScoreAndReason(
     if (comps) componentsJsonMap.set(c.id, JSON.stringify(comps));
     const reason = stage.reasonMap.get(c.id);
     if (reason) reasonMap.set(c.id, reason);
+    if (stage.overrideMap.get(c.id) && computed !== undefined && comps) {
+      overrideCases.push(buildCalibrationCase(c.id, computed, raw, comps));
+    }
+  }
+
+  // Off the critical path: tally overrides toward the 7-day calibration counter
+  // and (if the threshold + rails allow) produce the recalibration notification.
+  if (overrideCases.length > 0) {
+    void recordOverrides(overrideCases).catch((err) => {
+      logger.warn('[batchScoreAndReason] recordOverrides failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
   }
 
   // ---- Reason pass: only survivors ≥ reasonRelevanceThreshold that the judge

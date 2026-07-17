@@ -8,6 +8,10 @@ jest.mock('@/lib/llm/cloudComplete', () => ({
   cloudComplete: jest.fn(),
 }));
 jest.mock('@/lib/llm/completeLocal', () => ({ completeLocal: jest.fn() }));
+jest.mock('@/lib/database/services/calibration-service', () => ({
+  getScoringOverrides: jest.fn().mockResolvedValue({}),
+  recordOverrides: jest.fn().mockResolvedValue({ count: 0, notified: false }),
+}));
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
   useMeraProtocolStore: { getState: () => ({ processingMode: 'CLOUD' }) },
 }));

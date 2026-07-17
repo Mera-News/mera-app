@@ -156,6 +156,11 @@ describe('buildFeedbackContext', () => {
         { type: 'add_topics', fact_id: 'f1', topics: ['ML'] },
         { type: 'remove_topics', fact_id: 'f1', topics: ['crypto'] },
         { type: 'submit_feature_request', title: 'Mute publications', summary: 'Mute a source.' },
+        { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+        { type: 'add_negative_topic', topicText: 'Delhi crime' },
+        { type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' },
+        { type: 'add_suppression', suppressionPattern: 'lottery results' },
+        { type: 'set_high_priority', topicText: 'AI policy', highPriority: true },
       ],
     };
     const ctx = buildFeedbackContext({ facts: [], context: null, fallbackTitle: 'T', proposal });
@@ -165,6 +170,11 @@ describe('buildFeedbackContext', () => {
     expect(ctx).toContain('add topics to [f1]: ML');
     expect(ctx).toContain('remove topics from [f1]: crypto');
     expect(ctx).toContain('send feature request "Mute publications" to the Mera team');
+    expect(ctx).toContain('show less of "cricket"');
+    expect(ctx).toContain('down-rank "Delhi crime"');
+    expect(ctx).toContain('mute publication "Times of India"');
+    expect(ctx).toContain('suppress "lottery results"');
+    expect(ctx).toContain('pin topic "AI policy"');
   });
 
   it('drops the ALL-FACTS block when the context exceeds the token budget', () => {
@@ -223,7 +233,23 @@ describe('getArticleFeedbackToolDefinitions', () => {
       'add_topics',
       'remove_topics',
       'submit_feature_request',
+      'set_topic_weight',
+      'add_negative_topic',
+      'set_publication_pref',
+      'add_suppression',
+      'set_high_priority',
     ]);
+  });
+
+  it('declares the Wave-9 rails params on the proposeChanges action schema', () => {
+    const propose = getArticleFeedbackToolDefinitions()[0];
+    const props = (propose.function.parameters.properties.actions as {
+      items: { properties: Record<string, unknown> };
+    }).items.properties;
+    for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'highPriority']) {
+      expect(props[key]).toBeDefined();
+    }
+    expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'deprioritize', 'mute']);
   });
 });
 
@@ -370,6 +396,79 @@ describe('decideProposeChanges', () => {
       new Set(),
     );
     expect(result.result.error).toContain('statement');
+  });
+
+  it('maps each Wave-9 rails action to its ProposalAction shape', () => {
+    const result = decideProposeChanges(
+      {
+        explanation: 'x',
+        expected_effects: 'y',
+        actions: [
+          { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+          { type: 'add_negative_topic', topicText: 'Delhi crime' },
+          { type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' },
+          { type: 'add_suppression', suppressionPattern: 'lottery results' },
+          { type: 'set_high_priority', topicText: 'AI policy', highPriority: true },
+        ],
+      },
+      new Set(),
+    );
+    const actions = result.sideEffects?.proposal?.actions;
+    expect(actions).toHaveLength(5);
+    expect(actions?.[0]).toEqual({ type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 });
+    expect(actions?.[1]).toEqual({ type: 'add_negative_topic', topicText: 'Delhi crime' });
+    expect(actions?.[2]).toEqual({ type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' });
+    expect(actions?.[3]).toEqual({ type: 'add_suppression', suppressionPattern: 'lottery results' });
+    expect(actions?.[4]).toEqual({ type: 'set_high_priority', topicText: 'AI policy', highPriority: true });
+  });
+
+  it('clamps an over-large set_topic_weight delta to the gentle-nudge bound', () => {
+    const result = decideProposeChanges(
+      { explanation: 'x', expected_effects: 'y', actions: [{ type: 'set_topic_weight', topicText: 'cricket', delta: -5 }] },
+      new Set(),
+    );
+    expect(result.sideEffects?.proposal?.actions[0]).toEqual({ type: 'set_topic_weight', topicText: 'cricket', delta: -0.5 });
+  });
+
+  it('carries an explicit add_negative_topic weight when provided', () => {
+    const result = decideProposeChanges(
+      { explanation: 'x', expected_effects: 'y', actions: [{ type: 'add_negative_topic', topicText: 'crypto', weight: -0.8 }] },
+      new Set(),
+    );
+    expect(result.sideEffects?.proposal?.actions[0]).toEqual({ type: 'add_negative_topic', topicText: 'crypto', weight: -0.8 });
+  });
+
+  it('rejects invalid Wave-9 rails actions', () => {
+    expect(
+      decideProposeChanges(
+        { explanation: 'x', expected_effects: 'y', actions: [{ type: 'set_topic_weight', topicText: '', delta: -0.3 }] },
+        new Set(),
+      ).result.error,
+    ).toContain('topicText');
+    expect(
+      decideProposeChanges(
+        { explanation: 'x', expected_effects: 'y', actions: [{ type: 'set_topic_weight', topicText: 'cricket', delta: 0 }] },
+        new Set(),
+      ).result.error,
+    ).toContain('delta');
+    expect(
+      decideProposeChanges(
+        { explanation: 'x', expected_effects: 'y', actions: [{ type: 'set_publication_pref', publicationId: 'X', publicationPref: 'ban' }] },
+        new Set(),
+      ).result.error,
+    ).toContain('publicationPref');
+    expect(
+      decideProposeChanges(
+        { explanation: 'x', expected_effects: 'y', actions: [{ type: 'add_suppression', suppressionPattern: '  ' }] },
+        new Set(),
+      ).result.error,
+    ).toContain('suppressionPattern');
+    expect(
+      decideProposeChanges(
+        { explanation: 'x', expected_effects: 'y', actions: [{ type: 'set_high_priority', topicText: 'AI', highPriority: 'yes' }] },
+        new Set(),
+      ).result.error,
+    ).toContain('highPriority');
   });
 
   it('rejects a non-object action and an unknown action type', () => {

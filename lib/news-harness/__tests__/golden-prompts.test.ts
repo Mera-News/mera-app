@@ -3,6 +3,10 @@
 // mocked (real); only the shim's RN dependencies (LLM, DB, store, logger) are.
 
 jest.mock('@/lib/llm/completeLocal', () => ({ completeLocal: jest.fn() }));
+jest.mock('@/lib/database/services/calibration-service', () => ({
+  recordOverrides: jest.fn().mockResolvedValue({ count: 0, notified: false }),
+  getScoringOverrides: jest.fn().mockResolvedValue({}),
+}));
 jest.mock('@/lib/llm/cloudComplete', () => ({
   cloudComplete: jest.fn(),
   cloudBatchComplete: jest.fn(),

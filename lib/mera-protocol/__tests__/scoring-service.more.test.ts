@@ -5,6 +5,10 @@
 // batchScoreAndReason (cloud + on-device), processAllUnscored, retryMissingReasons.
 
 jest.mock('../../llm/completeLocal', () => ({ completeLocal: jest.fn() }));
+jest.mock('../../database/services/calibration-service', () => ({
+  recordOverrides: jest.fn().mockResolvedValue({ count: 0, notified: false }),
+  getScoringOverrides: jest.fn().mockResolvedValue({}),
+}));
 jest.mock('../../llm/cloudComplete', () => ({
   cloudComplete: jest.fn(),
   cloudBatchComplete: jest.fn(),

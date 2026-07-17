@@ -156,6 +156,16 @@ export type EmbeddingSearchResult = {
   score: Scalars['Float']['output'];
 };
 
+/** Versioned feedback-tree config. When the client already holds the current version, treeJson is "" (not-modified) and only the version metadata is sent. */
+export type FeedbackTreeResponse = {
+  __typename?: 'FeedbackTreeResponse';
+  minAppSchema: Scalars['Int']['output'];
+  /** Opaque JSON string of the feedback tree; "" when currentVersion matches the stored version (not-modified). */
+  treeJson: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  version: Scalars['Int']['output'];
+};
+
 /** A geo tag on an article (written by the tagging pipeline). city/region are optional; countryCode is always present. */
 export type GeoTagDto = {
   __typename?: 'GeoTagDto';
@@ -398,6 +408,17 @@ export type PersonaTopicResult = {
   topicText: Scalars['String']['output'];
 };
 
+export type Place = {
+  __typename?: 'Place';
+  _id: Scalars['ID']['output'];
+  city: Scalars['String']['output'];
+  countryCode: Scalars['String']['output'];
+  displayName: Scalars['String']['output'];
+  normalized: Scalars['String']['output'];
+  population?: Maybe<Scalars['Int']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+};
+
 /** Which inference backend handles Mera Protocol work for this user. ON_DEVICE runs fully offline on the user device; CLOUD uses end-to-end encrypted inference. */
 export enum ProcessingMode {
   Cloud = 'CLOUD',
@@ -457,10 +478,14 @@ export type Query = {
   /** A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines). */
   articlesForPublisher: ArticlesForPublicationSourceResponse;
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
+  /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
+  feedbackTree?: Maybe<FeedbackTreeResponse>;
   newsClusterForUser: NewsCluster;
   newsClusters: NewsClustersResponse;
   newsClustersForTopicText: NewsClustersResponse;
   newsPublishers: NewsPublishersResponse;
+  /** Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15. */
+  placeSearch: Array<Place>;
   /** @deprecated Use newsPublishers and publicationSourcesForNewsPublisher queries instead */
   publicationSources: PublicationSourcesResponse;
   publicationSourcesForNewsPublisher: PublicationSourcesForPublisherResponse;
@@ -523,6 +548,11 @@ export type QueryArticlesForTopicsByIdsArgs = {
 };
 
 
+export type QueryFeedbackTreeArgs = {
+  currentVersion?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryNewsClusterForUserArgs = {
   clusterId: Scalars['ID']['input'];
 };
@@ -547,6 +577,12 @@ export type QueryNewsPublishersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   countryCode?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryPlaceSearchArgs = {
+  limit?: Scalars['Int']['input'];
+  query: Scalars['String']['input'];
 };
 
 

@@ -1,6 +1,10 @@
 // Exercise only the pure decoder (decodeCloudBatchResults). Mock the LLM,
 // database, store, and prompt imports so the module loads without native deps.
 jest.mock('../../llm/completeLocal', () => ({ completeLocal: jest.fn() }));
+jest.mock('../../database/services/calibration-service', () => ({
+  recordOverrides: jest.fn().mockResolvedValue({ count: 0, notified: false }),
+  getScoringOverrides: jest.fn().mockResolvedValue({}),
+}));
 jest.mock('../../llm/cloudComplete', () => ({
   cloudComplete: jest.fn(),
   cloudBatchComplete: jest.fn(),

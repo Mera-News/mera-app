@@ -22,6 +22,14 @@ jest.mock('../../logger', () => ({
 jest.mock('../../feedback', () => ({
   submitFeatureRequest: jest.fn(),
 }));
+jest.mock('../../database/services/topic-service', () => ({
+  getAllByNormalizedText: jest.fn(() => Promise.resolve([])),
+}));
+jest.mock('../../database/services/persona-action-executor', () => ({
+  applyPersonaAction: jest.fn(() =>
+    Promise.resolve({ applied: true, changeLogId: 'cl-1', summary: 'ok' }),
+  ),
+}));
 
 import { executeProposalActions } from '../proposal-handlers';
 import { submitFeatureRequest } from '../../feedback';
@@ -31,9 +39,15 @@ import {
   getFacts,
   updateFact,
 } from '../../database/services/fact-service';
+import { getAllByNormalizedText } from '../../database/services/topic-service';
+import { applyPersonaAction } from '../../database/services/persona-action-executor';
+import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { triggerTopicGeneration } from '../tool-handlers';
 import type { ProposalAction } from '../../llm/types';
+
+const mockGetAllByNormalizedText = getAllByNormalizedText as jest.MockedFunction<typeof getAllByNormalizedText>;
+const mockApplyPersonaAction = applyPersonaAction as jest.MockedFunction<typeof applyPersonaAction>;
 
 const mockAddFact = addFact as jest.MockedFunction<typeof addFact>;
 const mockDeleteFact = deleteFact as jest.MockedFunction<typeof deleteFact>;
@@ -50,6 +64,8 @@ beforeEach(() => {
   mockDeleteFact.mockResolvedValue(undefined as never);
   mockUpdateFact.mockResolvedValue(undefined as never);
   mockSubmitFeatureRequest.mockReturnValue(true);
+  mockGetAllByNormalizedText.mockResolvedValue([]);
+  mockApplyPersonaAction.mockResolvedValue({ applied: true, changeLogId: 'cl-1', summary: 'ok' });
   (useFloatingChatStore.getState as jest.Mock).mockReturnValue({
     notifyFactMutation: mockNotifyFactMutation,
   });
@@ -66,7 +82,7 @@ describe('executeProposalActions — happy paths', () => {
     expect(mockTriggerTopicGeneration).toHaveBeenCalledWith([
       { id: 'f-new', statement: 'Likes AI news' },
     ]);
-    expect(result).toEqual({ applied: 1, errors: [] });
+    expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   it('update_fact updates the statement of an existing fact', async () => {
@@ -77,7 +93,7 @@ describe('executeProposalActions — happy paths', () => {
     ]);
 
     expect(mockUpdateFact).toHaveBeenCalledWith('f1', { statement: 'new statement' });
-    expect(result).toEqual({ applied: 1, errors: [] });
+    expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   it('delete_fact deletes an existing fact', async () => {
@@ -86,7 +102,7 @@ describe('executeProposalActions — happy paths', () => {
     const result = await executeProposalActions([{ type: 'delete_fact', fact_id: 'f1' }]);
 
     expect(mockDeleteFact).toHaveBeenCalledWith('f1');
-    expect(result).toEqual({ applied: 1, errors: [] });
+    expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   it('add_topics merges and dedupes topics onto the fact metadata', async () => {
@@ -101,7 +117,7 @@ describe('executeProposalActions — happy paths', () => {
     expect(mockUpdateFact).toHaveBeenCalledWith('f1', {
       metadata: { topics: ['a', 'b', 'c'] },
     });
-    expect(result).toEqual({ applied: 1, errors: [] });
+    expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   it('remove_topics drops matching topics; a non-existent topic is a no-op', async () => {
@@ -116,7 +132,7 @@ describe('executeProposalActions — happy paths', () => {
     expect(mockUpdateFact).toHaveBeenCalledWith('f1', {
       metadata: { topics: ['a', 'c'] },
     });
-    expect(result).toEqual({ applied: 1, errors: [] });
+    expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   it('notifies fact mutation once after all actions', async () => {
@@ -135,7 +151,7 @@ describe('executeProposalActions — submit_feature_request', () => {
     ]);
 
     expect(mockSubmitFeatureRequest).toHaveBeenCalledWith('Dark mode widgets', 'Add a dark widget option.');
-    expect(result).toEqual({ applied: 1, errors: [] });
+    expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
   it('records an error when submitFeatureRequest returns false (Sentry disabled)', async () => {
@@ -227,5 +243,122 @@ describe('executeProposalActions — partial failure', () => {
     expect(result.applied).toBe(1);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('db boom');
+  });
+});
+
+describe('executeProposalActions — Wave-9 rails-backed actions', () => {
+  it('add_negative_topic routes through the executor with source "user"', async () => {
+    mockApplyPersonaAction.mockResolvedValueOnce({
+      applied: true,
+      changeLogId: 'cl-neg',
+      summary: 'Added negative topic: Delhi crime',
+    });
+
+    const result = await executeProposalActions([
+      { type: 'add_negative_topic', topicText: 'Delhi crime' },
+    ]);
+
+    expect(mockApplyPersonaAction).toHaveBeenCalledWith(
+      { action_type: ACTION_NAMES.ADD_NEGATIVE_TOPIC, topicText: 'Delhi crime' },
+      'user',
+    );
+    expect(result.applied).toBe(1);
+    expect(result.summaries).toEqual(['Added negative topic: Delhi crime']);
+    expect(result.changeLogIds).toEqual(['cl-neg']);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('set_publication_pref maps publication NAME + pref to the executor', async () => {
+    mockApplyPersonaAction.mockResolvedValueOnce({
+      applied: true,
+      changeLogId: 'cl-pub',
+      summary: 'Set publication preference: Times of India → mute',
+    });
+
+    await executeProposalActions([
+      { type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' },
+    ]);
+
+    expect(mockApplyPersonaAction).toHaveBeenCalledWith(
+      {
+        action_type: ACTION_NAMES.SET_PUBLICATION_PREF,
+        publicationId: 'Times of India',
+        publicationPref: 'mute',
+      },
+      'user',
+    );
+  });
+
+  it('add_suppression forwards pattern (+ optional strength/keywords)', async () => {
+    await executeProposalActions([
+      {
+        type: 'add_suppression',
+        suppressionPattern: 'lottery results',
+        suppressionKeywords: ['lottery'],
+        suppressionStrength: 0.9,
+      },
+    ]);
+
+    expect(mockApplyPersonaAction).toHaveBeenCalledWith(
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'lottery results',
+        suppressionKeywords: ['lottery'],
+        suppressionStrength: 0.9,
+      },
+      'user',
+    );
+  });
+
+  it('set_topic_weight resolves the topic TEXT to an active id, then nudges', async () => {
+    mockGetAllByNormalizedText.mockResolvedValueOnce([
+      { id: 't-retired', status: 'retired', weight: 0.9 } as never,
+      { id: 't-active', status: 'active', weight: 0.4 } as never,
+    ]);
+    mockApplyPersonaAction.mockResolvedValueOnce({
+      applied: true,
+      summary: 'Nudged topic weight to 0.10',
+    });
+
+    const result = await executeProposalActions([
+      { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+    ]);
+
+    expect(mockApplyPersonaAction).toHaveBeenCalledWith(
+      { action_type: ACTION_NAMES.SET_TOPIC_WEIGHT, topicId: 't-active', delta: -0.3 },
+      'user',
+    );
+    expect(result.applied).toBe(1);
+  });
+
+  it('set_high_priority errors (no executor call) when the topic text has no active topic', async () => {
+    mockGetAllByNormalizedText.mockResolvedValueOnce([]);
+
+    const result = await executeProposalActions([
+      { type: 'set_high_priority', topicText: 'unknown topic', highPriority: true },
+    ]);
+
+    expect(mockApplyPersonaAction).not.toHaveBeenCalled();
+    expect(result.applied).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('no active topic');
+  });
+
+  it('surfaces a non-applied executor result as an error (e.g. budget exhausted)', async () => {
+    mockGetAllByNormalizedText.mockResolvedValueOnce([
+      { id: 't-active', status: 'active', weight: 0.4 } as never,
+    ]);
+    mockApplyPersonaAction.mockResolvedValueOnce({
+      applied: false,
+      summary: 'Nudge budget exhausted; topic weight unchanged',
+    });
+
+    const result = await executeProposalActions([
+      { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+    ]);
+
+    expect(result.applied).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('budget exhausted');
   });
 });

@@ -201,6 +201,11 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ suggestion, onOpenDetail }) => {
           articleId={suggestion.articleId}
           suggestionId={suggestion._id}
           title={suggestion.title_en ?? ''}
+          feedbackContext={{
+            publicationName: suggestion.publication_name,
+            countryCode: suggestion.country_code,
+            matchedTopics: suggestion.matchedTopics,
+          }}
           save={{ saved, onToggle: onToggleSave }}
           share={{
             url: suggestion.article_url,

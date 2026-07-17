@@ -1,23 +1,37 @@
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
+import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';
 import { Pressable } from '@/components/ui/pressable';
 import {
     hasLiked,
     recordArticleFeedback,
     removeArticleFeedback,
 } from '@/lib/database/services/article-feedback-service';
+import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
+import logger from '@/lib/logger';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 
+/** Local-context fields a caller can supply so the feedback tree can gate nodes
+ *  and resolve leaf placeholders (publication mute, topic downweight, geo, etc).
+ *  All optional — missing fields simply hide the nodes that need them. */
+export type ArticleFeedbackContext = Pick<
+    LocalFeedbackContext,
+    'publicationName' | 'countryCode' | 'matchedTopics' | 'clusterSize' | 'hasGeoMismatch' | 'geoText'
+>;
+
 interface ArticleFeedbackPromptProps {
     articleId: string;
     suggestionId?: string;
     title: string;
+    /** Optional on-device context for the dislike → feedback-tree overlay. */
+    feedbackContext?: ArticleFeedbackContext;
     save?: {
         saved: boolean;
         onToggle: () => void;
@@ -60,11 +74,17 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     articleId,
     suggestionId,
     title,
+    feedbackContext,
     save,
     share,
 }) => {
     const { t } = useTranslation();
     const [liked, setLiked] = useState(false);
+    // Dislike → server-owned feedback-tree overlay. Context is snapshotted at
+    // press time (with the live publication-visit count folded in) so the tree
+    // can gate nodes + resolve leaf-action placeholders.
+    const [overlayOpen, setOverlayOpen] = useState(false);
+    const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({ articleTitle: title });
     const handleShare = useShareArticle(share);
 
     // Restore the "liked" acknowledgment across remounts (e.g. leaving and
@@ -100,16 +120,32 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         });
     }, [liked, articleId, suggestionId, title]);
 
-    const openChat = useCallback(
-        (messageKey: 'articleFeedback.thumbsDownMessage') => {
-            hapticMedium();
-            useFloatingChatStore.getState().openArticleFeedback(
-                { kind: 'article-suggestion', articleId, suggestionId, articleTitle: title },
-                t(messageKey, { title }),
-            );
-        },
-        [articleId, suggestionId, title, t],
-    );
+    // Dislike opens the branching feedback-tree overlay (fast-path
+    // "not important" + "tell me more" descends the tree). Snapshot the local
+    // context and enrich it with the live publication-visit count first.
+    const handleDislike = useCallback(() => {
+        hapticMedium();
+        void (async () => {
+            let publicationVisits = 0;
+            const pub = feedbackContext?.publicationName?.trim();
+            if (pub) {
+                try {
+                    publicationVisits = await getVisitCountForPublication(
+                        pub,
+                        feedbackContext?.countryCode ?? null,
+                    );
+                } catch (err) {
+                    logger.captureException(err, {
+                        tags: { component: 'ArticleFeedbackPrompt', method: 'visitCount' },
+                    });
+                }
+            }
+            setOverlayCtx({ ...feedbackContext, articleTitle: title, publicationVisits });
+            setOverlayOpen(true);
+        })();
+    }, [feedbackContext, title]);
+
+    const closeOverlay = useCallback(() => setOverlayOpen(false), []);
 
     const handleChatPress = useCallback(() => {
         hapticMedium();
@@ -150,6 +186,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     );
 
     return (
+        <>
         <HStack className="items-center justify-evenly px-1 py-3">
             <Pressable
                 onPress={handleChatPress}
@@ -179,7 +216,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             {renderButton(
                 <MaterialIcons name="thumb-down" size={ICON_SIZE} color={PRIMARY} />,
                 t('articleFeedback.dislikeLabel'),
-                () => openChat('articleFeedback.thumbsDownMessage'),
+                handleDislike,
                 false,
             )}
             {save ? renderButton(
@@ -203,6 +240,14 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 false,
             ) : null}
         </HStack>
+        <FeedbackTreeOverlay
+            visible={overlayOpen}
+            onClose={closeOverlay}
+            context={overlayCtx}
+            chatContext={{ kind: 'article-suggestion', articleId, suggestionId, articleTitle: title }}
+            chatMessage={t('articleFeedback.thumbsDownMessage', { title })}
+        />
+        </>
     );
 };
 

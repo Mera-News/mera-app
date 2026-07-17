@@ -13,19 +13,68 @@ import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { triggerTopicGeneration } from './tool-handlers';
 import type { ProposalAction } from '../llm/types';
 import { submitFeatureRequest } from '../feedback';
+import { getAllByNormalizedText } from '../database/services/topic-service';
+import {
+  applyPersonaAction,
+  type PersonaAction,
+} from '../database/services/persona-action-executor';
+import { ACTION_NAMES } from '../news-harness/persona-management/action-names';
 import logger from '../logger';
 
+/** Outcome of one executed proposal — richer than a bare count so the chat can
+ *  render "what changed" and offer undo (changeLogIds power `revert_change`). */
+export interface ExecuteProposalResult {
+  applied: number;
+  errors: string[];
+  /** Human-readable summaries of every APPLIED rails-backed mutation. */
+  summaries: string[];
+  /** Change-log row ids of applied rails-backed mutations (undo handles). */
+  changeLogIds: string[];
+}
+
 /**
- * Executes staged proposal actions in order. Fact ids are validated upfront in
- * a single `getFacts()` pass — an action referencing a missing id fails with a
- * descriptive error but the remaining actions still run. Never throws; all
+ * Resolve a matched-topic TEXT (all the feedback context exposes) to an ACTIVE
+ * topic id for the weight/high-priority executor actions. Prefers the
+ * highest-|weight| active row when several share a normalized text.
+ */
+async function resolveActiveTopicId(topicText: string): Promise<string | null> {
+  const rows = await getAllByNormalizedText(topicText);
+  const active = rows.filter((t) => t.status === 'active');
+  if (active.length === 0) return null;
+  active.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
+  return active[0].id;
+}
+
+/**
+ * Executes staged proposal actions in order. Legacy fact/topic-CRUD actions are
+ * applied directly against fact-service (fact ids validated upfront in a single
+ * `getFacts()` pass). The Wave-9 rails-backed actions (topic-weight nudges,
+ * negative topics, publication prefs, suppressions, high-priority pins) route
+ * through `applyPersonaAction` with source `'user'` — which mints its own
+ * invertible persona_change_log row (so we never double-log here). Never throws;
  * failures are collected into `errors`. Finishes with a fact-mutation notify.
  */
 export async function executeProposalActions(
   actions: ProposalAction[],
-): Promise<{ applied: number; errors: string[] }> {
+): Promise<ExecuteProposalResult> {
   const errors: string[] = [];
+  const summaries: string[] = [];
+  const changeLogIds: string[] = [];
   let applied = 0;
+
+  // Route a rails-backed action through the executor and fold its result in.
+  const runRails = async (personaAction: PersonaAction, label: string): Promise<void> => {
+    const r = await applyPersonaAction(personaAction, 'user');
+    if (r.applied) {
+      applied++;
+      summaries.push(r.summary);
+      if (r.changeLogId) changeLogIds.push(r.changeLogId);
+    } else {
+      // The executor never throws — a non-applied result is a skip/no-op we
+      // surface as an error line (e.g. "Nudge budget exhausted").
+      errors.push(`${label}: ${r.summary}`);
+    }
+  };
 
   // One pass to resolve current facts for id validation + topic rewrites.
   const facts = await getFacts();
@@ -109,6 +158,67 @@ export async function executeProposalActions(
           applied++;
           break;
         }
+        // -- Wave-9 rails-backed actions (routed through applyPersonaAction) --
+        case 'set_topic_weight': {
+          const topicId = await resolveActiveTopicId(action.topicText);
+          if (!topicId) {
+            errors.push(`set_topic_weight: no active topic matching "${action.topicText}"`);
+            break;
+          }
+          await runRails(
+            { action_type: ACTION_NAMES.SET_TOPIC_WEIGHT, topicId, delta: action.delta },
+            'set_topic_weight',
+          );
+          break;
+        }
+        case 'add_negative_topic': {
+          await runRails(
+            {
+              action_type: ACTION_NAMES.ADD_NEGATIVE_TOPIC,
+              topicText: action.topicText,
+              ...(typeof action.weight === 'number' ? { weight: action.weight } : {}),
+            },
+            'add_negative_topic',
+          );
+          break;
+        }
+        case 'set_publication_pref': {
+          await runRails(
+            {
+              action_type: ACTION_NAMES.SET_PUBLICATION_PREF,
+              publicationId: action.publicationId,
+              publicationPref: action.publicationPref,
+            },
+            'set_publication_pref',
+          );
+          break;
+        }
+        case 'add_suppression': {
+          await runRails(
+            {
+              action_type: ACTION_NAMES.ADD_SUPPRESSION,
+              suppressionPattern: action.suppressionPattern,
+              ...(action.suppressionKeywords ? { suppressionKeywords: action.suppressionKeywords } : {}),
+              ...(typeof action.suppressionStrength === 'number'
+                ? { suppressionStrength: action.suppressionStrength }
+                : {}),
+            },
+            'add_suppression',
+          );
+          break;
+        }
+        case 'set_high_priority': {
+          const topicId = await resolveActiveTopicId(action.topicText);
+          if (!topicId) {
+            errors.push(`set_high_priority: no active topic matching "${action.topicText}"`);
+            break;
+          }
+          await runRails(
+            { action_type: ACTION_NAMES.SET_HIGH_PRIORITY, topicId, highPriority: action.highPriority },
+            'set_high_priority',
+          );
+          break;
+        }
         default: {
           // Exhaustiveness guard — unreachable if ProposalAction is respected.
           errors.push(`unknown action type: ${(action as { type: string }).type}`);
@@ -126,5 +236,5 @@ export async function executeProposalActions(
 
   useFloatingChatStore.getState().notifyFactMutation();
 
-  return { applied, errors };
+  return { applied, errors, summaries, changeLogIds };
 }

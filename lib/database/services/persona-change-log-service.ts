@@ -17,6 +17,8 @@ import type FactModel from '../models/Fact';
 import * as topicService from './topic-service';
 import * as locationService from './location-service';
 import * as suppressionService from './suppression-service';
+import * as publicationPreferenceService from './publication-preference-service';
+import type { PublicationPrefKind } from './publication-preference-service';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 
 const changeLogCollection = database.get<PersonaChangeLogModel>('persona_change_log');
@@ -130,6 +132,7 @@ function requireBooleanBefore(action: ChangeLogAction, rowId: string): boolean {
  *   add_negative_topic → retire the created (negative) topic
  *   add_suppression    → retire the created suppression
  *   suppress_topic     → reactivate the topic (forward-compat)
+ *   set_publication_pref → restore the prior pref kind (or clear if it was none)
  * Anything else throws — later waves extend this switch as new action types
  * gain rails.
  */
@@ -196,6 +199,22 @@ export async function revertChange(changeLogId: string): Promise<void> {
       // Forward-compat: undo a topic suppression by reactivating it.
       const targetId = requireTargetId(action, row.id);
       await topicService.reactivate(targetId);
+      break;
+    }
+    case ACTION_NAMES.SET_PUBLICATION_PREF: {
+      // `before` is the PRIOR pref kind ('boost'|'deprioritize'|'mute') or
+      // 'none' (no prior preference). Restoring 'none' retires the row.
+      const targetId = requireTargetId(action, row.id);
+      const before = action.before;
+      if (before !== 'none' && before !== 'boost' && before !== 'deprioritize' && before !== 'mute') {
+        throw new Error(
+          `persona_change_log ${row.id}: 'before' must be a publication pref kind for set_publication_pref`,
+        );
+      }
+      await publicationPreferenceService.setPreferenceKind(
+        targetId,
+        before as PublicationPrefKind | 'none',
+      );
       break;
     }
     default:

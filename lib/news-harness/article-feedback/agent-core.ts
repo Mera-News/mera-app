@@ -29,13 +29,25 @@ const TOPICS_PER_FACT_PREVIEW = 3;
 const CONTEXT_TOKEN_BUDGET = 1800;
 
 const VALID_ACTION_TYPES = new Set([
+  // legacy fact/topic CRUD
   'add_fact',
   'update_fact',
   'delete_fact',
   'add_topics',
   'remove_topics',
   'submit_feature_request',
+  // Wave-9 rails-backed persona mutations
+  'set_topic_weight',
+  'add_negative_topic',
+  'set_publication_pref',
+  'add_suppression',
+  'set_high_priority',
 ]);
+
+/** Publication-preference kinds the agent may set on a named publication. */
+const VALID_PUBLICATION_PREFS = new Set(['boost', 'deprioritize', 'mute']);
+/** Clamp bound for a topic-weight nudge delta — keeps "show less/more" gentle. */
+const MAX_TOPIC_WEIGHT_DELTA = 0.5;
 
 const FEATURE_REQUEST_TITLE_MAX = 80;
 const FEATURE_REQUEST_SUMMARY_MAX = 500;
@@ -90,14 +102,21 @@ export function buildArticleFeedbackSystemPrompt(params: {
 - You see ONLY limited metadata: title, publication, and a short description — NEVER the full article text.
 - Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).
 
-## Capabilities
-- Mera CAN ONLY adjust the user's persona: add / update / delete facts, and add / remove topics on a fact. Changing facts and topics is what changes which news gets surfaced.
-- Mera CANNOT: block or restrict a publication / source, change scoring thresholds, hide a specific article, change app settings, or anything else outside fact/topic edits.
-- If the user asks for something Mera cannot do (e.g. "I don't like this publication"), clearly say Mera can't do that today, and ask if they'd like to send a feature request to the Mera team. If they agree, stage it via proposeChanges with a single submit_feature_request action: title = short feature name (do NOT include any prefix), summary = 2–4 sentences describing the capability, written in English, with NO personal info (no names, emails, locations, or the user's facts — describe it generically, e.g. "ability to mute a publication"). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
+## Capabilities — what proposeChanges can do
+Persona edits (reference facts by the [id] in <context>):
+- add_fact / update_fact / delete_fact — the user's facts.
+- add_topics / remove_topics — interest topics on a fact.
+Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publications by NAME):
+- set_topic_weight — "show me less/more of <topic>": nudge a MATCHED topic's weight by a small delta (negative to see less, positive to see more; keep |delta| ≤ 0.5).
+- add_negative_topic — this article is the wrong topic/place/angle: mint a down-ranking negative topic (topicText, e.g. "Delhi crime").
+- set_publication_pref — boost / deprioritize / mute a NAMED publication (publicationId = the publication name, publicationPref = boost|deprioritize|mute). Use mute only for a clear "stop showing me <source>".
+- add_suppression — filter out a specific phrase the user never wants (suppressionPattern).
+- set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
+- submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
 
 ## Rules
 - NEVER change anything directly. ALWAYS stage changes via the proposeChanges tool — a ≤2-sentence explanation, a ≤2-sentence expected_effects, and a MINIMAL action list.
-- Action types: add_fact, update_fact, delete_fact, add_topics, remove_topics (persona edits), and submit_feature_request (for capabilities Mera lacks). Reference facts by the [id] shown in <context>.
+- Pick the LEAST drastic action that fits: "less cricket" → set_topic_weight (small negative delta), not a mute. "Mute Times of India" → set_publication_pref mute. "Wrong Delhi — I meant Delhi Ohio" → add_negative_topic.
 - For a vague "less of this", ask ONE clarifying question FIRST — is it the topic, the publication, or the angle? — before proposing.
 - When a PENDING PROPOSAL is shown and the user confirms (yes / ok / do it, in any language) call applyProposal; if they decline call cancelProposal. If they say anything else, leave the proposal pending and answer normally.
 - Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
@@ -115,12 +134,12 @@ function buildArticleFeedbackToolFormat(): string {
 Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
-- proposeChanges: {"explanation": string, "expected_effects": string, "actions": [{"type": string, "statement"?: string, "fact_id"?: string, "new_statement"?: string, "topics"?: string[], "title"?: string, "summary"?: string}]}
+- proposeChanges: {"explanation": string, "expected_effects": string, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "highPriority"?: boolean}]}
 - applyProposal: {}
 - cancelProposal: {}
 
 ## Example (format only)
-<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You wanted less startup-funding news.", "expected_effects": "You'll see fewer startup-funding stories.", "actions": [{"type": "remove_topics", "fact_id": "abc123", "topics": ["startup funding"]}]}}</tool_call>`;
+<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You wanted less cricket news.", "expected_effects": "You'll see fewer cricket stories.", "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -236,7 +255,19 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
                 properties: {
                   type: {
                     type: 'string',
-                    enum: ['add_fact', 'update_fact', 'delete_fact', 'add_topics', 'remove_topics', 'submit_feature_request'],
+                    enum: [
+                      'add_fact',
+                      'update_fact',
+                      'delete_fact',
+                      'add_topics',
+                      'remove_topics',
+                      'submit_feature_request',
+                      'set_topic_weight',
+                      'add_negative_topic',
+                      'set_publication_pref',
+                      'add_suppression',
+                      'set_high_priority',
+                    ],
                     description: 'Action kind.',
                   },
                   statement: { type: 'string', description: 'add_fact: the new fact (English).' },
@@ -245,6 +276,13 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
                   topics: { type: 'array', items: { type: 'string' }, description: 'add_topics/remove_topics: topic texts.' },
                   title: { type: 'string', description: 'submit_feature_request: short feature name (≤80 chars, no "[Feature Request]" prefix).' },
                   summary: { type: 'string', description: 'submit_feature_request: 2–4 sentence description, English, NO personal info.' },
+                  topicText: { type: 'string', description: 'set_topic_weight/set_high_priority: a MATCHED topic text. add_negative_topic: the topic/place to down-rank.' },
+                  delta: { type: 'number', description: 'set_topic_weight: weight nudge; negative = show less, positive = show more (|delta| ≤ 0.5).' },
+                  weight: { type: 'number', description: 'add_negative_topic: optional explicit weight (defaults to a down-ranking value).' },
+                  publicationId: { type: 'string', description: 'set_publication_pref: the publication NAME to adjust.' },
+                  publicationPref: { type: 'string', enum: ['boost', 'deprioritize', 'mute'], description: 'set_publication_pref: boost, deprioritize, or mute the named publication.' },
+                  suppressionPattern: { type: 'string', description: 'add_suppression: the phrase to filter out of the feed.' },
+                  highPriority: { type: 'boolean', description: 'set_high_priority: true to pin the topic, false to unpin.' },
                 },
                 required: ['type'],
               },
@@ -291,6 +329,16 @@ function describeAction(a: ProposalAction): string {
       return `remove topics from [${a.fact_id}]: ${a.topics.join(', ')}`;
     case 'submit_feature_request':
       return `send feature request "${trunc(a.title, 60)}" to the Mera team`;
+    case 'set_topic_weight':
+      return `${a.delta < 0 ? 'show less' : 'show more'} of "${trunc(a.topicText, 60)}"`;
+    case 'add_negative_topic':
+      return `down-rank "${trunc(a.topicText, 60)}"`;
+    case 'set_publication_pref':
+      return `${a.publicationPref} publication "${trunc(a.publicationId, 60)}"`;
+    case 'add_suppression':
+      return `suppress "${trunc(a.suppressionPattern, 60)}"`;
+    case 'set_high_priority':
+      return `${a.highPriority ? 'pin' : 'unpin'} topic "${trunc(a.topicText, 60)}"`;
   }
 }
 
@@ -336,6 +384,58 @@ function validateAction(raw: unknown, factIds: Set<string>): ValidatedAction {
         : [];
       if (topics.length === 0) return { error: `${type} requires a non-empty topics array` };
       return { action: { type, fact_id: o.fact_id, topics } };
+    }
+    case 'set_topic_weight': {
+      const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
+      if (topicText.length === 0) return { error: 'set_topic_weight requires a non-empty topicText' };
+      if (typeof o.delta !== 'number' || !Number.isFinite(o.delta) || o.delta === 0) {
+        return { error: 'set_topic_weight requires a non-zero numeric delta' };
+      }
+      // Clamp to a gentle nudge so a single confirm can't zero out a topic.
+      const delta = Math.max(-MAX_TOPIC_WEIGHT_DELTA, Math.min(MAX_TOPIC_WEIGHT_DELTA, o.delta));
+      return { action: { type: 'set_topic_weight', topicText, delta } };
+    }
+    case 'add_negative_topic': {
+      const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
+      if (topicText.length === 0) return { error: 'add_negative_topic requires a non-empty topicText' };
+      if (typeof o.weight === 'number' && Number.isFinite(o.weight)) {
+        return { action: { type: 'add_negative_topic', topicText, weight: o.weight } };
+      }
+      return { action: { type: 'add_negative_topic', topicText } };
+    }
+    case 'set_publication_pref': {
+      const publicationId = typeof o.publicationId === 'string' ? o.publicationId.trim() : '';
+      if (publicationId.length === 0) return { error: 'set_publication_pref requires a non-empty publicationId' };
+      const pref = typeof o.publicationPref === 'string' ? o.publicationPref.trim() : '';
+      if (!VALID_PUBLICATION_PREFS.has(pref)) {
+        return { error: `set_publication_pref requires publicationPref ∈ boost|deprioritize|mute (got: ${String(o.publicationPref)})` };
+      }
+      return {
+        action: {
+          type: 'set_publication_pref',
+          publicationId,
+          publicationPref: pref as 'boost' | 'deprioritize' | 'mute',
+        },
+      };
+    }
+    case 'add_suppression': {
+      const pattern = typeof o.suppressionPattern === 'string' ? o.suppressionPattern.trim() : '';
+      if (pattern.length === 0) return { error: 'add_suppression requires a non-empty suppressionPattern' };
+      const keywords = Array.isArray(o.suppressionKeywords)
+        ? o.suppressionKeywords.filter((k): k is string => typeof k === 'string' && k.trim().length > 0).map((k) => k.trim())
+        : undefined;
+      const action: ProposalAction = { type: 'add_suppression', suppressionPattern: pattern };
+      if (keywords && keywords.length > 0) action.suppressionKeywords = keywords;
+      if (typeof o.suppressionStrength === 'number' && Number.isFinite(o.suppressionStrength)) {
+        action.suppressionStrength = o.suppressionStrength;
+      }
+      return { action };
+    }
+    case 'set_high_priority': {
+      const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
+      if (topicText.length === 0) return { error: 'set_high_priority requires a non-empty topicText' };
+      if (typeof o.highPriority !== 'boolean') return { error: 'set_high_priority requires a boolean highPriority' };
+      return { action: { type: 'set_high_priority', topicText, highPriority: o.highPriority } };
     }
     case 'submit_feature_request': {
       const title = typeof o.title === 'string' ? o.title.trim() : '';

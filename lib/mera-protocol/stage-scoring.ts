@@ -20,11 +20,13 @@ import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import type { LlmPort } from '@/lib/news-harness/core/ports';
 import type { ScoringCandidate, StageCandidateRow } from '@/lib/news-harness/core/types';
-import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
+import { getScoringOverrides } from '@/lib/database/services/calibration-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
   computeAndJudge,
   computeRelevance,
+  applyScoringOverrides,
   buildPubPrefs,
   normalizeLocation,
   type StageCandidate,
@@ -215,6 +217,25 @@ async function loadAllFactStatements(): Promise<string[]> {
     .filter((s) => typeof s === 'string' && s.trim().length > 0);
 }
 
+/**
+ * M-P5c: layer the persisted `scoringEngineOverrides` (the self-tuning deltas the
+ * calibration loop produced) over the base ScoringEngineConfig. Loaded once per
+ * scoring batch. When there are no overrides, applyScoringOverrides returns the
+ * SAME base reference, so we hand back DEFAULT_HARNESS_CONFIG untouched (no
+ * allocation). Any read failure fail-opens to the base config.
+ */
+async function effectiveHarnessConfig(): Promise<HarnessConfig> {
+  try {
+    const overrides = await getScoringOverrides();
+    const eng = applyScoringOverrides(DEFAULT_HARNESS_CONFIG.scoringEngine, overrides);
+    return eng === DEFAULT_HARNESS_CONFIG.scoringEngine
+      ? DEFAULT_HARNESS_CONFIG
+      : { ...DEFAULT_HARNESS_CONFIG, scoringEngine: eng };
+  } catch {
+    return DEFAULT_HARNESS_CONFIG;
+  }
+}
+
 export interface MathStageResult {
   persona: PersonaScoringContext;
   stage: StageCandidate[];
@@ -233,7 +254,10 @@ export async function computeMathStage(
   candidates: ScoringCandidate[],
   nowMs: number = Date.now(),
 ): Promise<MathStageResult> {
-  const { persona, topicWeights } = await loadPersonaScoringContext(nowMs);
+  const [{ persona, topicWeights }, config] = await Promise.all([
+    loadPersonaScoringContext(nowMs),
+    effectiveHarnessConfig(),
+  ]);
   const stage = buildStageCandidates(candidates, topicWeights);
   const computedScoreMap = new Map<string, number>();
   const componentsMap = new Map<string, RelevanceComponents>();
@@ -242,7 +266,7 @@ export async function computeMathStage(
     const r = computeRelevance(
       c.input,
       persona,
-      DEFAULT_HARNESS_CONFIG.scoringEngine,
+      config.scoringEngine,
       nowMs,
     );
     computedScoreMap.set(c.input.id, r.score);
@@ -262,10 +286,13 @@ export async function computeAndJudgeForCandidates(
   candidates: ScoringCandidate[],
   opts?: { skipJudge?: boolean; nowMs?: number },
 ): Promise<StageResult> {
-  const { persona, topicWeights } = await loadPersonaScoringContext(opts?.nowMs);
+  const [{ persona, topicWeights }, factStatements, config] = await Promise.all([
+    loadPersonaScoringContext(opts?.nowMs),
+    loadAllFactStatements(),
+    effectiveHarnessConfig(),
+  ]);
   const stage = buildStageCandidates(candidates, topicWeights);
-  const factStatements = await loadAllFactStatements();
-  return computeAndJudge(stage, persona, getScoringLlmPort(), DEFAULT_HARNESS_CONFIG, {
+  return computeAndJudge(stage, persona, getScoringLlmPort(), config, {
     nowMs: opts?.nowMs,
     factStatements,
     logger: appHarnessLogger,

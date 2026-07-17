@@ -109,6 +109,34 @@ export async function nudgeTopic(
 }
 
 /**
+ * Set a topic's weight to an ABSOLUTE value (no per-day budget leash — used by
+ * the feedback tree / agent when a slider or explicit choice picks a target
+ * weight rather than nudging). Reads the prior weight, clamps + writes the new
+ * one, and appends an invertible `set_topic_weight` row. A no-op (before===after)
+ * writes nothing. Returns the change-log id so the dispatcher can surface it.
+ */
+export async function setTopicWeightAbsolute(
+  topicId: string,
+  weight: number,
+  source: PersonaChangeLogSource,
+): Promise<{ applied: boolean; before: number; after: number; changeLogId?: string }> {
+  const topic = await topicsCollection.find(topicId);
+  const before = topic.weight;
+  const after = clampWeight(weight);
+  if (before === after) {
+    return { applied: false, before, after };
+  }
+  await topicService.setWeight(topicId, after);
+  const row = await changeLogService.append({
+    actionType: ACTION_NAMES.SET_TOPIC_WEIGHT,
+    action: { targetId: topicId, before, after },
+    source,
+    summary: `Set topic weight ${fmt(before)} → ${fmt(after)}`,
+  });
+  return { applied: true, before, after, changeLogId: row.id };
+}
+
+/**
  * Set a topic's high-priority flag (score-only boost; no weight delta). Records
  * the prior boolean so `revertChange` can restore it.
  */

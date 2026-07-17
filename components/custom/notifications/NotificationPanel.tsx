@@ -160,7 +160,11 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
     };
 
     // wave 9 wires real deterministic executors keyed on action.id; here we
-    // only mark the notification actioned and pre-stage the chat.
+    // mark the notification actioned and pre-stage the chat with the right
+    // context. The `recalibrate` chip (calibration notifications, M-P5c) opens
+    // the floating Mera chat pre-staged with the calibration invitation so the
+    // in-chat "Recalibrate now" affordance can call
+    // calibrationService.runCalibration() on explicit confirm.
     const onChipPress = async (n: NotificationModel, action: NotificationAction) => {
         void hapticLight();
         try {
@@ -169,6 +173,12 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
             logger.captureException(err, {
                 tags: { component: 'NotificationPanel', method: 'markActioned' },
             });
+        }
+        if (action.id === 'recalibrate') {
+            // Stage the calibration context (not the raw chip label) into chat.
+            const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
+            openChatWith(resolveText('calibration.chatIntro', params));
+            return;
         }
         const chipLabel = action.labelKey
             ? resolveText(action.labelKey)

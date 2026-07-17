@@ -130,8 +130,13 @@ export class ArticleFeedbackAgent implements IAgent {
       case 'applyProposal': {
         const proposal = useFloatingChatStore.getState().proposal;
         if (!proposal) return { result: { error: 'no pending proposal' } };
-        const { applied, errors } = await executeProposalActions(proposal.actions);
-        return { result: { applied, errors }, sideEffects: { proposalResolved: 'applied' } };
+        const { applied, errors, summaries, changeLogIds } =
+          await executeProposalActions(proposal.actions);
+        // summaries + changeLogIds surface what changed and power undo (revert_change).
+        return {
+          result: { applied, errors, summaries, changeLogIds },
+          sideEffects: { proposalResolved: 'applied' },
+        };
       }
 
       case 'cancelProposal':
