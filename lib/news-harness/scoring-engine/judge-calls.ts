@@ -56,6 +56,7 @@ export function buildJudgeCalls(
           componentsMap.get(c.input.id)!,
           c.input.matchedTopics,
           persona.locations,
+          config.scoringEngine,
         ),
       })),
     });

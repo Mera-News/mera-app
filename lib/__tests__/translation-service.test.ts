@@ -313,6 +313,11 @@ describe('translateText', () => {
         expect((logger.error as jest.Mock)).toHaveBeenCalledWith(
             expect.stringContaining('Translation failed'),
             expect.any(Error),
+            expect.objectContaining({
+                sourceLangCode: 'en',
+                targetLangCode: 'fr',
+                textPreview: 'Hello',
+            }),
         );
     });
 

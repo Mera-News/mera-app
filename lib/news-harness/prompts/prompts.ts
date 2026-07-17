@@ -855,7 +855,24 @@ export function buildReasonUserMessage(params: {
 // |judge−computed|>0.3 flag feed the calibration loop (M-P5c). Removing a
 // demote pattern or loosening the "clear error" leash requires a fresh
 // eval:golden --engine=pipeline run.
-export const CLOUD_JUDGE_SYSTEM_PROMPT = `You are the precision gate on a personalized news feed. A deterministic engine already scored each article (0.00–1.10) for ONE user from their explicit interests and places, and it OVER-INCLUDES — it puts many borderline stories at the FEED line on a shallow topic or place match. Your job is to catch those and demote them. You see the article, the computed score, and why it scored that way (the matched topic; the matched location's TIER and ROLE — home / family / travel / interest place; popularity; freshness). Answer "ok" to accept the score, or "adj" with a corrected score.
+/**
+ * Builds the combined judge+reason system prompt (Wave 7b). `reasonFloor` is the
+ * computed-score floor at/above which a reason ("r") is requested — it MUST be
+ * config.articlePipeline.judgeReasonFloor (config wires both from one literal;
+ * config.test pins the pair).
+ *
+ * Wave 14 NOTE (recall watch-item): three demote-floor variants were live-eval
+ * tested to lift FEED recall (~38-41% baseline) — plain ≥0.60, plain ≥0.65,
+ * geo-scoped ≥0.60. None held the ≥83% FEED-precision gate robustly across
+ * repeated runs (plain 0.60: 88.7/82.4; 0.65: 89.5 but recall flat at 38.7;
+ * geo-scoped 0.60: 84.2/80.8) for at most ~+3pt recall. All were REVERTED —
+ * the demote-when-in-doubt rule below is the wave-7b original. Re-attempts
+ * need a bigger lever than this prompt knob (e.g. label-set rebalance or a
+ * math-side floor) and a fresh --engine=pipeline gate.
+ */
+export function buildJudgeSystemPrompt(reasonFloor: number): string {
+  const floor = String(reasonFloor);
+  return `You are the precision gate on a personalized news feed. A deterministic engine already scored each article (0.00–1.10) for ONE user from their explicit interests and places, and it OVER-INCLUDES — it puts many borderline stories at the FEED line on a shallow topic or place match. Your job is to catch those and demote them. You see the article, the computed score, and why it scored that way (the matched topic; the matched location's TIER and ROLE — home / family / travel / interest place; popularity; freshness). Answer "ok" to accept the score, or "adj" with a corrected score.
 
 Score bands: FEED ≥ 0.40 (a REAL personal stake) · TANGENTIAL 0.25–0.39 (interest-adjacent, no stake) · EXCLUDE < 0.25 (unrelated).
 
@@ -877,9 +894,14 @@ OVERRIDE UP (set "s" ≥ 0.40 on a sub-0.40 score) ONLY when the article is plai
 
 Task: you receive N articles as \`===== Article 0 =====\`, … For EACH output one object, in input order:
 - \`{"j":"ok"}\` to accept the computed score, or \`{"j":"adj","s":0.NN}\` to correct it.
-- When the computed score shown is ≥ 0.15, ALSO include \`"r"\`: one plain sentence (≤22 words) naming a specific article detail and the concrete user bridge, tone matched to the final score. Below 0.15, omit \`"r"\`.
+- When the computed score shown is ≥ ${floor}, ALSO include \`"r"\`: one plain sentence (≤22 words) naming a specific article detail and the concrete user bridge, tone matched to the final score. Below ${floor}, omit \`"r"\`.
 Output a JSON array of exactly N objects. No prose, no extra fields.
 Example (3): [{"j":"ok","r":"Bhopal heatwave alert affects your family's city."},{"j":"adj","s":0.14},{"j":"adj","s":0.3,"r":"Amsterdam restaurant roundup is local lifestyle filler, no real stake."}]`;
+}
+
+/** Default judge system prompt, built at the default judgeReasonFloor (0.15).
+ *  Kept as a const for config wiring + the config.test pin. */
+export const CLOUD_JUDGE_SYSTEM_PROMPT = buildJudgeSystemPrompt(0.15);
 
 /**
  * Builds the user message for the combined judge+reason pass (Wave 7b).

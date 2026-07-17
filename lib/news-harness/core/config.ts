@@ -10,7 +10,7 @@ import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
-  CLOUD_JUDGE_SYSTEM_PROMPT,
+  buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -18,6 +18,11 @@ import {
 /** SMALL_MODEL literal — mirrored from lib/llm/constants.ts (kept out of the
  *  harness import graph on purpose so the harness stays RN-free). */
 const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
+
+/** Single source for the judge reason-emit floor: wired into BOTH
+ *  judgeReasonFloor and the judge system prompt (Wave 14 — was previously a
+ *  duplicated 0.15 literal in the prompt text, a silent-drift risk). */
+const JUDGE_REASON_FLOOR = 0.15;
 
 export interface ArticlePipelineConfig {
   /** Articles bundled into one batched relevance prompt (cloud). */
@@ -287,8 +292,8 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // Combined judge+reason pass (math-mode candidates).
     judgeChunkSize: 12,
     judgeMaxTokens: 560, // 12*(34+8) + ~56 headroom
-    judgeReasonFloor: 0.15,
-    judgeSystemPrompt: CLOUD_JUDGE_SYSTEM_PROMPT,
+    judgeReasonFloor: JUDGE_REASON_FLOOR,
+    judgeSystemPrompt: buildJudgeSystemPrompt(JUDGE_REASON_FLOOR),
   },
   topicGen: {
     // 2026-07-16: reduced 16→10 (cloud) / 14→10 (local). Golden-labeled

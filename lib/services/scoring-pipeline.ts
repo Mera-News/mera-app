@@ -48,12 +48,12 @@ import {
   REASON_MIN_RAW_SCORE,
   type CloudCallBundle,
 } from '@/lib/mera-protocol/scoring-service';
-import { computeMathStage } from '@/lib/mera-protocol/stage-scoring';
+import { computeMathStage, effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import {
   buildJudgeCalls,
   decodeJudgeResults,
 } from '@/lib/news-harness/scoring-engine';
-import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { useUserStore } from '@/lib/stores/user-store';
 import {
   discardLowRelevance,
@@ -814,6 +814,21 @@ async function doSubmit(
   await doSubmitRelevance(run, batch, privKeyHex, context);
 }
 
+/**
+ * Wave 14: the calibration-overrides-aware config for judge call build/decode —
+ * the SAME effective config computeMathStage scores with, so the judge sees
+ * post-override computed scores against post-override constants. One lookup per
+ * batch. Fail-opens to DEFAULT_HARNESS_CONFIG (also covers tests that mock
+ * stage-scoring without this export).
+ */
+async function judgeHarnessConfig(): Promise<HarnessConfig> {
+  try {
+    return (await effectiveHarnessConfig()) ?? DEFAULT_HARNESS_CONFIG;
+  } catch {
+    return DEFAULT_HARNESS_CONFIG;
+  }
+}
+
 async function doSubmitRelevance(
   run: PipelineRun,
   batch: PipelineBatch,
@@ -906,7 +921,7 @@ async function doSubmitRelevance(
     math.computedScoreMap,
     math.componentsMap,
     math.persona,
-    DEFAULT_HARNESS_CONFIG,
+    await judgeHarnessConfig(),
   );
   if (calls.length === 0) {
     logger.info(
@@ -1200,9 +1215,15 @@ async function handleJudgeResults(
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
 
+  // Wave 14: decode against the same calibration-overrides-aware config the
+  // submit path built with. NOTE: judgeChunkSize must equal the submit-time
+  // value for the chunk rebuild — articlePipeline is never override-tunable
+  // (TUNABLE_CONSTANTS is scoringEngine-only), so this holds by construction.
+  const judgeConfig = await judgeHarnessConfig();
+
   // Rebuild chunkIds: the judge calls were `judge:${i}`, chunked at
   // judgeChunkSize over batch.candidateIds IN ORDER (the submit-time order).
-  const size = DEFAULT_HARNESS_CONFIG.articlePipeline.judgeChunkSize;
+  const size = judgeConfig.articlePipeline.judgeChunkSize;
   const judgeChunkIds = new Map<string, string[]>();
   chunkIds(batch.candidateIds, size).forEach((ids, i) => {
     judgeChunkIds.set(`judge:${i}`, ids);
@@ -1217,7 +1238,7 @@ async function handleJudgeResults(
     batchResults,
     judgeChunkIds,
     computedScoreMap,
-    DEFAULT_HARNESS_CONFIG,
+    judgeConfig,
     undefined,
   );
 

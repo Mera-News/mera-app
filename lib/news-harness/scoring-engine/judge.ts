@@ -14,7 +14,11 @@
 import type { HarnessLogger } from '../core/ports';
 import { NOOP_LOGGER } from '../core/ports';
 import type { ScoringEngineConfig } from '../core/config';
-import type { MatchedTopicInput, RelevanceComponents } from './relevance';
+import {
+  modulatedTopicWeight,
+  type MatchedTopicInput,
+  type RelevanceComponents,
+} from './relevance';
 import type { PersonaLocationSnapshot } from './persona-context';
 
 /** |judge − computed| beyond this magnitude counts as a real override (fed to
@@ -47,17 +51,24 @@ export function summarizeComponents(
   components: RelevanceComponents,
   matchedTopics: MatchedTopicInput[],
   locations?: PersonaLocationSnapshot[],
+  config?: ScoringEngineConfig,
 ): string {
   const parts: string[] = [];
 
   // Winning matched topic (strongest by magnitude) + its text + weight bucket.
+  // Wave 14: rank + bucket by the SAME HP/vectorScore-modulated weight the math
+  // scores with (modulatedTopicWeight), so the "why" phrase names the topic
+  // that actually dominates topicComp. Without a config (legacy callers) fall
+  // back to the raw effectiveWeight.
+  const weightOf = (t: MatchedTopicInput): number =>
+    config ? modulatedTopicWeight(t, config) : t.effectiveWeight;
   const positive = matchedTopics.filter((t) => t.effectiveWeight > 0);
   if (positive.length > 0) {
     const winner = positive.reduce((a, b) =>
-      Math.abs(b.effectiveWeight) > Math.abs(a.effectiveWeight) ? b : a,
+      Math.abs(weightOf(b)) > Math.abs(weightOf(a)) ? b : a,
     );
-    const strength =
-      winner.effectiveWeight >= 0.7 ? 'strong' : winner.effectiveWeight >= 0.4 ? 'moderate' : 'weak';
+    const w = weightOf(winner);
+    const strength = w >= 0.7 ? 'strong' : w >= 0.4 ? 'moderate' : 'weak';
     const label = winner.text ? `'${winner.text}'` : 'a topic';
     parts.push(`matched ${label} (${strength})`);
     if (positive.length > 1) parts.push(`${positive.length} topics matched`);

@@ -223,8 +223,13 @@ async function loadAllFactStatements(): Promise<string[]> {
  * scoring batch. When there are no overrides, applyScoringOverrides returns the
  * SAME base reference, so we hand back DEFAULT_HARNESS_CONFIG untouched (no
  * allocation). Any read failure fail-opens to the base config.
+ *
+ * Exported (Wave 14) so the E2EE scoring pipeline builds/decodes its judge
+ * calls against the SAME effective config computeMathStage scored with —
+ * previously it hardcoded DEFAULT_HARNESS_CONFIG there, which was safe only
+ * because no judge-touched field is currently tunable.
  */
-async function effectiveHarnessConfig(): Promise<HarnessConfig> {
+export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
     const overrides = await getScoringOverrides();
     const eng = applyScoringOverrides(DEFAULT_HARNESS_CONFIG.scoringEngine, overrides);

@@ -11,6 +11,7 @@ import {
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   CLOUD_JUDGE_SYSTEM_PROMPT,
+  buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -70,7 +71,21 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.judgeChunkSize).toBe(12);
     expect(a.judgeMaxTokens).toBe(560);
     expect(a.judgeReasonFloor).toBe(0.15);
+    // Wave 14: the prompt is BUILT from judgeReasonFloor (single source) — the
+    // wired prompt must equal the builder applied to the config's own floor,
+    // and the default const must match.
+    expect(a.judgeSystemPrompt).toBe(buildJudgeSystemPrompt(a.judgeReasonFloor));
     expect(a.judgeSystemPrompt).toBe(CLOUD_JUDGE_SYSTEM_PROMPT);
+    // The floor is genuinely injected, not a coincidental literal:
+    expect(buildJudgeSystemPrompt(0.22)).toContain('≥ 0.22');
+    expect(buildJudgeSystemPrompt(0.22)).not.toContain('≥ 0.15,');
+    // Wave 14: the demote-floor recall experiments were REVERTED (see the
+    // buildJudgeSystemPrompt doc note) — the demote-when-in-doubt rule must
+    // remain the unqualified wave-7b original.
+    expect(a.judgeSystemPrompt).toContain(
+      'over-inclusion is the failure mode you exist to fix.',
+    );
+    expect(a.judgeSystemPrompt).not.toContain('EXCEPTION');
   });
 });
 

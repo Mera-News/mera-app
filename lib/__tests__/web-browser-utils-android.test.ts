@@ -18,6 +18,19 @@ jest.mock('expo-web-browser', () => ({
 // Isolate from branding.ts (which evaluates Platform.OS at module load).
 jest.mock('../config/branding', () => ({ REFERRER_SOURCE: 'mera.news' }));
 
+// web-browser-utils.ts reads useAppLanguageStore.getState() non-reactively.
+// The real store module transitively pulls in setting-service → the real
+// WatermelonDB (lib/database/index.ts, jsi: true) plus expo-translate-text
+// (via translation-service), both of which crash at import time under jest.
+// Mock the store directly at its module boundary, matching the convention in
+// lib/llm/__tests__/ArticleFeedbackAgent.test.ts and
+// lib/database/__tests__/hydrate-stores.test.ts (non-reactive getState() usage).
+jest.mock('../stores/app-language-store', () => ({
+  useAppLanguageStore: {
+    getState: jest.fn(() => ({ appLanguage: 'en' })),
+  },
+}));
+
 import * as WebBrowser from 'expo-web-browser';
 import { openInAppBrowser } from '../web-browser-utils';
 

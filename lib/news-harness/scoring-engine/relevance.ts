@@ -144,6 +144,26 @@ function signedMaxByMagnitude(values: number[]): number {
   return best;
 }
 
+/**
+ * The exact per-topic weight the math scores with: effectiveWeight × HP_MULT
+ * (high-priority, re-clamped to [-1,1]), positives additionally scaled by
+ * smoothstep(vectorScore, VS_LO, VS_HI) (absent vectorScore → ×1; negatives
+ * pass through unmodulated). Shared with summarizeComponents (judge.ts) so the
+ * judge's "why" phrase names the SAME winning topic + strength the math used
+ * (Wave 14 — previously the summary ranked by raw effectiveWeight and could
+ * mislabel the dominant topic).
+ */
+export function modulatedTopicWeight(
+  t: MatchedTopicInput,
+  cfg: ScoringEngineConfig,
+): number {
+  const w = clamp(t.effectiveWeight * (t.highPriority ? cfg.HP_MULT : 1), -1, 1);
+  if (w > 0 && t.vectorScore != null) {
+    return w * smoothstep(t.vectorScore, cfg.VS_LO, cfg.VS_HI);
+  }
+  return w;
+}
+
 /** popComp = clamp(log2(1+n)/log2(1+POP_SAT), 0, 1); 0 when size unknown. */
 function popularity(maxClusterSize: number | null | undefined, cfg: ScoringEngineConfig): number {
   if (!maxClusterSize || maxClusterSize <= 1) return 0;
@@ -253,13 +273,7 @@ export function computeRelevance(
   // smoothstep (a weak semantic match is suppressed); a missing vectorScore is
   // neutral (×1). Negative weights pass through unmodulated so a learned
   // negative topic still demotes regardless of retrieval similarity.
-  const weighted = candidate.matchedTopics.map((t) => {
-    const w = clamp(t.effectiveWeight * (t.highPriority ? config.HP_MULT : 1), -1, 1);
-    if (w > 0 && t.vectorScore != null) {
-      return w * smoothstep(t.vectorScore, config.VS_LO, config.VS_HI);
-    }
-    return w;
-  });
+  const weighted = candidate.matchedTopics.map((t) => modulatedTopicWeight(t, config));
   const topicComp = signedMaxByMagnitude(weighted);
   const maxNegativeMatchedWeight = candidate.matchedTopics.reduce(
     (mx, t) => Math.max(mx, t.effectiveWeight < 0 ? -t.effectiveWeight : 0),

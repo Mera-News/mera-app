@@ -118,7 +118,12 @@ export async function computeAndJudge(
             description: c.input.descriptionEn ?? '',
             country: resolveCountryName(c.input.countryCode),
             computedScore: computed,
-            componentSummary: summarizeComponents(comps, c.input.matchedTopics, persona.locations),
+            componentSummary: summarizeComponents(
+              comps,
+              c.input.matchedTopics,
+              persona.locations,
+              eng,
+            ),
           };
         }),
       });
