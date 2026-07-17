@@ -232,7 +232,10 @@ type NewsArticle {
   description_en_internal_only: String @deprecated(reason: "Use description_en instead. Superseded by the v3 pipeline.")
   embedding_attempts: Int
   embedding_status: String
+  entities: [String!]
+  event_type: String
   fetchPublicationId: ID @deprecated(reason: "v1-only link to the fetch state machine; unused by the v3 pipeline.")
+  geo_tags: [GeoTagDto!]
   image_url: String
   original_language_code: String
   processingStatus: ArticleProcessingStatus @deprecated(reason: "v1-only pipeline state; in v3 an article present in the DB is complete.")

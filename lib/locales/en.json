@@ -230,10 +230,23 @@
   "tabs": {
     "browse": "Browse",
     "forYou": "For You",
-    "around": "Around",
+    "around": "Explore",
     "profile": "Profile",
     "settings": "Settings",
     "gotIt": "Got it"
+  },
+  "explore": {
+    "title": "Explore",
+    "sources": "Sources",
+    "scopeWorld": "World",
+    "noArticles": "No articles found",
+    "thinContentTitle": "Want more {{place}} news?",
+    "thinContentBody": "Add {{place}} as a location to get more stories from here.",
+    "addLocation": "Add a location",
+    "noLocationsTitle": "See news from your places",
+    "noLocationsBody": "Add the places you care about to explore local news from them here.",
+    "sheetTitle": "Manage sources",
+    "close": "Close"
   },
   "forYou": {
     "sectionPrefix": "News about:",

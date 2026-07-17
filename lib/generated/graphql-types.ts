@@ -293,8 +293,11 @@ export type NewsArticle = {
   description_en_internal_only?: Maybe<Scalars['String']['output']>;
   embedding_attempts?: Maybe<Scalars['Int']['output']>;
   embedding_status?: Maybe<Scalars['String']['output']>;
+  entities?: Maybe<Array<Scalars['String']['output']>>;
+  event_type?: Maybe<Scalars['String']['output']>;
   /** @deprecated v1-only link to the fetch state machine; unused by the v3 pipeline. */
   fetchPublicationId?: Maybe<Scalars['ID']['output']>;
+  geo_tags?: Maybe<Array<GeoTagDto>>;
   image_url?: Maybe<Scalars['String']['output']>;
   original_language_code?: Maybe<Scalars['String']['output']>;
   /** @deprecated v1-only pipeline state; in v3 an article present in the DB is complete. */

@@ -16,12 +16,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const TOOLTIP_SEEN_KEY = 'tabs_tooltip_seen';
 const ACCENT = 'rgb(231, 138, 83)';
 
-// Only the currently-visible tabs (browse + around ship hidden this wave —
-// see app_container/_layout.tsx's `href: null`). `as const` keeps labelKey as
-// a literal string type so it type-checks against react-i18next's typed
+// All five bottom tabs, in tab order (browse revealed Wave 8, around/Explore
+// revealed Wave 10 — see app_container/_layout.tsx). `as const` keeps labelKey
+// as a literal string type so it type-checks against react-i18next's typed
 // `t()` keys (lib/i18n/types.ts).
 const VISIBLE_TABS = [
+    { icon: 'style', labelKey: 'tabs.browse' },
     { icon: 'home', labelKey: 'tabs.forYou' },
+    { icon: 'explore', labelKey: 'tabs.around' },
     { icon: 'person', labelKey: 'tabs.profile' },
     { icon: 'settings', labelKey: 'tabs.settings' },
 ] as const satisfies readonly { icon: keyof typeof MaterialIcons.glyphMap; labelKey: string }[];

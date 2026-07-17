@@ -119,6 +119,13 @@ const GET_ARTICLES_FOR_COUNTRY = gql`
         creator
         source_uri
         original_language_code
+        geo_tags {
+          city
+          region
+          countryCode
+        }
+        event_type
+        entities
         publicationSource {
           _id
           publication_name

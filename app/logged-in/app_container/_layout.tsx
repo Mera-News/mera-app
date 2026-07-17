@@ -111,11 +111,10 @@ export default function AppLayout() {
                         }}
                         listeners={longPressListener('for_you')}
                     />
-                    {/* Around — later wave. Hidden via href:null. */}
+                    {/* Explore (route `around`) — revealed in Wave 10 (N5). */}
                     <Tabs.Screen
                         name="around"
                         options={{
-                            href: null,
                             tabBarIcon: tabIcon('around'),
                             tabBarAccessibilityLabel: t(TAB_LABEL_KEY.around),
                         }}
