@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 36,
+  version: 37,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -13,6 +13,10 @@ export default appSchema({
         { name: 'questionnaire_level', type: 'number', isOptional: true },
         { name: 'questionnaire_level_category', type: 'string', isOptional: true },
         { name: 'questionnaire_attribute', type: 'string', isOptional: true },
+        // Persona v3 (schema v37): fact-level relevance multiplier. null ⇒
+        // treated as 1.0 by the scoring engine. Additive; the silent persona
+        // migration sets this to 1.0 for existing facts.
+        { name: 'weight', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],
@@ -72,6 +76,23 @@ export default appSchema({
         { name: 'article_url', type: 'string', isOptional: true },
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+        // ── Persona v3 (schema v37) scorer inputs + audit ──────────────
+        // Populated by the persona-v3 hydration/scoring path (later waves);
+        // nothing reads these yet. article_suggestions is ephemeral, so these
+        // ride the drop/recreate. See lib/database/migrations.ts v37.
+        { name: 'geo_tags_json', type: 'string', isOptional: true },
+        { name: 'entities_json', type: 'string', isOptional: true },
+        { name: 'event_type', type: 'string', isOptional: true },
+        { name: 'category', type: 'string', isOptional: true },
+        { name: 'max_cluster_size', type: 'number', isOptional: true },
+        { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'headline_scope', type: 'string', isOptional: true },
+        { name: 'matched_topics_json', type: 'string', isOptional: true },
+        // Deterministic engine raw score (pre-judge) — audit.
+        { name: 'computed_score', type: 'number', isOptional: true },
+        // Final post-judge raw score used for within-section ordering.
+        { name: 'raw_score', type: 'number', isOptional: true },
+        { name: 'score_components_json', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
       ],
@@ -223,6 +244,122 @@ export default appSchema({
         { name: 'max_attempts', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
+      ],
+    }),
+
+    // ── Persona v3 (schema v37) — structured on-device persona ─────
+    // Long-lived, user-owned tables. Populated by the silent persona
+    // migration; the feed still runs on `fact.metadata.topics` until a
+    // later wave cuts over. Never wipe-and-recreate.
+
+    // The weighted granular topic — replaces `fact.metadata.topics` strings.
+    tableSchema({
+      name: 'topics',
+      columns: [
+        { name: 'fact_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'text', type: 'string' },
+        { name: 'normalized_text', type: 'string', isIndexed: true },
+        { name: 'weight', type: 'number' },
+        { name: 'status', type: 'string', isIndexed: true },
+        { name: 'provenance', type: 'string' },
+        { name: 'high_priority', type: 'boolean' },
+        { name: 'location_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'last_signal_at', type: 'number', isOptional: true },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ],
+    }),
+
+    // Role-tagged place entities. Never sent in retrieval (privacy-lean).
+    tableSchema({
+      name: 'locations',
+      columns: [
+        { name: 'city', type: 'string', isOptional: true },
+        { name: 'region', type: 'string', isOptional: true },
+        { name: 'country_code', type: 'string', isIndexed: true },
+        { name: 'role', type: 'string' },
+        { name: 'weight', type: 'number' },
+        { name: 'valid_until', type: 'number', isOptional: true },
+        { name: 'pinned_for_weather', type: 'boolean' },
+        { name: 'provenance', type: 'string' },
+        { name: 'source_fact_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ],
+    }),
+
+    // Preferred / blocked publications. Weights written explicitly only.
+    tableSchema({
+      name: 'publication_preferences',
+      columns: [
+        { name: 'publication_name', type: 'string', isIndexed: true },
+        { name: 'source_country_code', type: 'string', isOptional: true },
+        { name: 'weight', type: 'number' },
+        { name: 'status', type: 'string' },
+        { name: 'provenance', type: 'string' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+      ],
+    }),
+
+    // Negative preferences / show-less escalations.
+    tableSchema({
+      name: 'persona_suppressions',
+      columns: [
+        { name: 'pattern', type: 'string' },
+        { name: 'keywords_json', type: 'string' },
+        { name: 'strength', type: 'number' },
+        { name: 'source', type: 'string' },
+        { name: 'status', type: 'string' },
+        { name: 'expires_at', type: 'number', isOptional: true },
+        { name: 'created_at', type: 'number' },
+      ],
+    }),
+
+    // Audit / revert log for EVERY persona mutation.
+    tableSchema({
+      name: 'persona_change_log',
+      columns: [
+        { name: 'action_type', type: 'string' },
+        { name: 'action_json', type: 'string' },
+        { name: 'source', type: 'string' },
+        { name: 'summary', type: 'string' },
+        { name: 'reverted', type: 'boolean' },
+        { name: 'created_at', type: 'number', isIndexed: true },
+      ],
+    }),
+
+    // Seen-state tracking (presentation/dedup only — never mutates persona
+    // weights). One row per article_id; TTL 30d, pruned by data-cleanup-task.
+    tableSchema({
+      name: 'story_impressions',
+      columns: [
+        { name: 'article_id', type: 'string', isIndexed: true },
+        { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'suggestion_id', type: 'string', isOptional: true },
+        { name: 'title_norm', type: 'string', isOptional: true },
+        { name: 'surface', type: 'string' },
+        { name: 'opened', type: 'boolean' },
+        { name: 'first_seen_at', type: 'number', isIndexed: true },
+        { name: 'last_seen_at', type: 'number' },
+        { name: 'seen_count', type: 'number' },
+      ],
+    }),
+
+    // Notification center — one surface for all app-side notifications.
+    // TTL 90d, pruned by data-cleanup-task.
+    tableSchema({
+      name: 'notifications',
+      columns: [
+        { name: 'type', type: 'string' },
+        { name: 'title', type: 'string' },
+        { name: 'body', type: 'string' },
+        { name: 'icon', type: 'string', isOptional: true },
+        { name: 'context_json', type: 'string', isOptional: true },
+        { name: 'actions_json', type: 'string', isOptional: true },
+        { name: 'status', type: 'string', isIndexed: true },
+        { name: 'source', type: 'string' },
+        { name: 'created_at', type: 'number', isIndexed: true },
       ],
     }),
   ],

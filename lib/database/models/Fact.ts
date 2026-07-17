@@ -11,6 +11,8 @@ export default class Fact extends Model {
   @field('questionnaire_level') questionnaireLevel?: number;
   @text('questionnaire_level_category') questionnaireLevelCategory?: string;
   @text('questionnaire_attribute') questionnaireAttribute?: string;
+  // Persona v3 fact-level weight multiplier. null ⇒ treated as 1.0.
+  @field('weight') weight?: number | null;
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
 

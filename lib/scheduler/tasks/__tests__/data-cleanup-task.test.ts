@@ -22,6 +22,14 @@ jest.mock('@/lib/services/SuggestionSyncService', () => ({
   refreshSuggestionsInStoreUnsafe: jest.fn(),
 }));
 
+jest.mock('@/lib/database/services/story-impression-service', () => ({
+  deleteOlderThan: jest.fn(),
+}));
+
+jest.mock('@/lib/database/services/notification-service', () => ({
+  deleteOlderThan: jest.fn(),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
@@ -39,6 +47,8 @@ const { AppScheduler: { register: mockRegister } } = jest.requireMock('@/lib/sch
 const { pruneOldJobs: mockPruneOldJobs } = jest.requireMock('@/lib/scheduler/scheduler-persistence') as any;
 const { deleteOldSuggestions: mockDeleteOldSuggestions } = jest.requireMock('@/lib/database/services/article-suggestion-service') as any;
 const { refreshSuggestionsInStoreUnsafe: mockRefreshSuggestionsInStoreUnsafe } = jest.requireMock('@/lib/services/SuggestionSyncService') as any;
+const { deleteOlderThan: mockDeleteOldImpressions } = jest.requireMock('@/lib/database/services/story-impression-service') as any;
+const { deleteOlderThan: mockDeleteOldNotifications } = jest.requireMock('@/lib/database/services/notification-service') as any;
 
 const registeredDef = mockRegister.mock.calls[0]?.[0];
 
@@ -91,6 +101,8 @@ describe('data-cleanup-task handler', () => {
     mockPruneOldJobs.mockResolvedValue(undefined);
     mockDeleteOldSuggestions.mockResolvedValue(0);
     mockRefreshSuggestionsInStoreUnsafe.mockResolvedValue(undefined);
+    mockDeleteOldImpressions.mockResolvedValue(0);
+    mockDeleteOldNotifications.mockResolvedValue(0);
   });
 
   it('calls pruneOldJobs', async () => {
@@ -149,6 +161,41 @@ describe('data-cleanup-task handler', () => {
     mockDeleteOldSuggestions.mockRejectedValueOnce(new Error('delete error'));
 
     await expect(registeredDef.handler(undefined, makeCtx())).rejects.toThrow('delete error');
+  });
+
+  it('prunes story impressions older than 30d', async () => {
+    const before = Date.now();
+    await registeredDef.handler(undefined, makeCtx());
+    const after = Date.now();
+
+    expect(mockDeleteOldImpressions).toHaveBeenCalledTimes(1);
+    const IMPRESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = mockDeleteOldImpressions.mock.calls[0][0];
+    expect(cutoff).toBeGreaterThanOrEqual(before - IMPRESSION_TTL_MS - 100);
+    expect(cutoff).toBeLessThanOrEqual(after - IMPRESSION_TTL_MS + 100);
+  });
+
+  it('prunes notifications older than 90d', async () => {
+    const before = Date.now();
+    await registeredDef.handler(undefined, makeCtx());
+    const after = Date.now();
+
+    expect(mockDeleteOldNotifications).toHaveBeenCalledTimes(1);
+    const NOTIFICATION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+    const cutoff = mockDeleteOldNotifications.mock.calls[0][0];
+    expect(cutoff).toBeGreaterThanOrEqual(before - NOTIFICATION_TTL_MS - 100);
+    expect(cutoff).toBeLessThanOrEqual(after - NOTIFICATION_TTL_MS + 100);
+  });
+
+  it('logs pruned impression/notification counts when > 0', async () => {
+    mockDeleteOldImpressions.mockResolvedValue(7);
+    mockDeleteOldNotifications.mockResolvedValue(2);
+
+    const ctx = makeCtx();
+    await registeredDef.handler(undefined, ctx);
+
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('7 story impressions'));
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('2 notifications'));
   });
 });
 

@@ -882,5 +882,178 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 37,
+      steps: [
+        // ── Persona v3 data model ──────────────────────────────────────
+        // Six long-lived, user-owned tables + `notifications` (7 total),
+        // an additive `facts.weight` column, and a drop/recreate of the
+        // ephemeral `article_suggestions` (+ join) with the scorer/audit
+        // columns. Nothing reads the new tables yet — the feed still runs
+        // on `fact.metadata.topics`; the silent persona migration only
+        // POPULATES these tables. FORWARD-FIX-ONLY from this schema on
+        // (WatermelonDB cannot roll back).
+
+        // The weighted granular topic — replaces `fact.metadata.topics`.
+        createTable({
+          name: 'topics',
+          columns: [
+            { name: 'fact_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'text', type: 'string' },
+            { name: 'normalized_text', type: 'string', isIndexed: true },
+            { name: 'weight', type: 'number' },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'provenance', type: 'string' },
+            { name: 'high_priority', type: 'boolean' },
+            { name: 'location_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'last_signal_at', type: 'number', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+
+        // Role-tagged place entities.
+        createTable({
+          name: 'locations',
+          columns: [
+            { name: 'city', type: 'string', isOptional: true },
+            { name: 'region', type: 'string', isOptional: true },
+            { name: 'country_code', type: 'string', isIndexed: true },
+            { name: 'role', type: 'string' },
+            { name: 'weight', type: 'number' },
+            { name: 'valid_until', type: 'number', isOptional: true },
+            { name: 'pinned_for_weather', type: 'boolean' },
+            { name: 'provenance', type: 'string' },
+            { name: 'source_fact_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+
+        // Preferred / blocked publications.
+        createTable({
+          name: 'publication_preferences',
+          columns: [
+            { name: 'publication_name', type: 'string', isIndexed: true },
+            { name: 'source_country_code', type: 'string', isOptional: true },
+            { name: 'weight', type: 'number' },
+            { name: 'status', type: 'string' },
+            { name: 'provenance', type: 'string' },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+
+        // Negative preferences / show-less escalations.
+        createTable({
+          name: 'persona_suppressions',
+          columns: [
+            { name: 'pattern', type: 'string' },
+            { name: 'keywords_json', type: 'string' },
+            { name: 'strength', type: 'number' },
+            { name: 'source', type: 'string' },
+            { name: 'status', type: 'string' },
+            { name: 'expires_at', type: 'number', isOptional: true },
+            { name: 'created_at', type: 'number' },
+          ],
+        }),
+
+        // Audit / revert log for every persona mutation.
+        createTable({
+          name: 'persona_change_log',
+          columns: [
+            { name: 'action_type', type: 'string' },
+            { name: 'action_json', type: 'string' },
+            { name: 'source', type: 'string' },
+            { name: 'summary', type: 'string' },
+            { name: 'reverted', type: 'boolean' },
+            { name: 'created_at', type: 'number', isIndexed: true },
+          ],
+        }),
+
+        // Seen-state (presentation/dedup only). TTL 30d.
+        createTable({
+          name: 'story_impressions',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'suggestion_id', type: 'string', isOptional: true },
+            { name: 'title_norm', type: 'string', isOptional: true },
+            { name: 'surface', type: 'string' },
+            { name: 'opened', type: 'boolean' },
+            { name: 'first_seen_at', type: 'number', isIndexed: true },
+            { name: 'last_seen_at', type: 'number' },
+            { name: 'seen_count', type: 'number' },
+          ],
+        }),
+
+        // Notification center. TTL 90d.
+        createTable({
+          name: 'notifications',
+          columns: [
+            { name: 'type', type: 'string' },
+            { name: 'title', type: 'string' },
+            { name: 'body', type: 'string' },
+            { name: 'icon', type: 'string', isOptional: true },
+            { name: 'context_json', type: 'string', isOptional: true },
+            { name: 'actions_json', type: 'string', isOptional: true },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'source', type: 'string' },
+            { name: 'created_at', type: 'number', isIndexed: true },
+          ],
+        }),
+
+        // Additive fact-level weight multiplier (null ⇒ 1.0).
+        addColumns({
+          table: 'facts',
+          columns: [{ name: 'weight', type: 'number', isOptional: true }],
+        }),
+
+        // Recreate the ephemeral article_suggestions (+ join) with the
+        // persona-v3 scorer/audit columns. Data re-syncs from the server.
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestion_facts;'),
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestions;'),
+        createTable({
+          name: 'article_suggestions',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'cluster_memberships_json', type: 'string', isOptional: true },
+            { name: 'relevance', type: 'number' },
+            { name: 'reason', type: 'string' },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'country_code', type: 'string', isOptional: true },
+            { name: 'language_code', type: 'string', isOptional: true },
+            { name: 'publication_name', type: 'string', isOptional: true },
+            { name: 'title_en', type: 'string', isOptional: true },
+            { name: 'title_original', type: 'string', isOptional: true },
+            { name: 'description_en', type: 'string', isOptional: true },
+            { name: 'article_url', type: 'string', isOptional: true },
+            { name: 'image_url', type: 'string', isOptional: true },
+            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+            { name: 'geo_tags_json', type: 'string', isOptional: true },
+            { name: 'entities_json', type: 'string', isOptional: true },
+            { name: 'event_type', type: 'string', isOptional: true },
+            { name: 'category', type: 'string', isOptional: true },
+            { name: 'max_cluster_size', type: 'number', isOptional: true },
+            { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'headline_scope', type: 'string', isOptional: true },
+            { name: 'matched_topics_json', type: 'string', isOptional: true },
+            { name: 'computed_score', type: 'number', isOptional: true },
+            { name: 'raw_score', type: 'number', isOptional: true },
+            { name: 'score_components_json', type: 'string', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'first_pub_date', type: 'number' },
+          ],
+        }),
+        createTable({
+          name: 'article_suggestion_facts',
+          columns: [
+            { name: 'article_suggestion_id', type: 'string', isIndexed: true },
+            { name: 'fact_id', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });

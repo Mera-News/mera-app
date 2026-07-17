@@ -55,6 +55,7 @@ import '@/lib/scheduler/tasks/inference-recover-task';
 import '@/lib/scheduler/tasks/apollo-cache-evict-task';
 import '@/lib/scheduler/tasks/push-token-check-task';
 import '@/lib/scheduler/tasks/data-cleanup-task';
+import '@/lib/scheduler/tasks/persona-migration-task';
 
 // Register the inference TaskManager task at module load so the
 // expo-notifications silent-push wake (phase-1-done / phase-2-done from the

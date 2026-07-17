@@ -17,6 +17,13 @@ import UserPersona from './models/UserPersona';
 import PublicationVisit from './models/PublicationVisit';
 import SavedArticleSuggestion from './models/SavedArticleSuggestion';
 import ArticleFeedback from './models/ArticleFeedback';
+import Topic from './models/Topic';
+import Location from './models/Location';
+import PublicationPreference from './models/PublicationPreference';
+import PersonaSuppression from './models/PersonaSuppression';
+import PersonaChangeLog from './models/PersonaChangeLog';
+import StoryImpression from './models/StoryImpression';
+import Notification from './models/Notification';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -46,6 +53,13 @@ const database = new Database({
     Setting,
     InferenceJob,
     SchedulerJob,
+    Topic,
+    Location,
+    PublicationPreference,
+    PersonaSuppression,
+    PersonaChangeLog,
+    StoryImpression,
+    Notification,
   ],
 });
 
