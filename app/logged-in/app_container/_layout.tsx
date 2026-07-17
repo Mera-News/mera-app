@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
+import NotificationBellOverlay from '@/components/custom/notifications/NotificationBellOverlay';
 import TabsTooltipStrip from '@/components/custom/tabs/TabsTooltipStrip';
 import { toastManager } from '@/lib/toast-manager';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -76,7 +77,7 @@ export default function AppLayout() {
                 FallbackComponent={FullScreenErrorFallback}
             >
                 <Tabs
-                    initialRouteName="for_you"
+                    initialRouteName="browse"
                     screenOptions={{
                         headerShown: false,
                         tabBarShowLabel: false,
@@ -92,12 +93,11 @@ export default function AppLayout() {
                         },
                     }}
                 >
-                    {/* Browse — Wave 6+. Hidden via href:null; route exists so it can
-                        become the initial tab without a file move later. */}
+                    {/* Browse (swipe deck) — revealed in Wave 8; the app's initial
+                        route (For You is one tab over). */}
                     <Tabs.Screen
                         name="browse"
                         options={{
-                            href: null,
                             tabBarIcon: tabIcon('browse'),
                             tabBarAccessibilityLabel: t(TAB_LABEL_KEY.browse),
                         }}
@@ -139,6 +139,9 @@ export default function AppLayout() {
                     />
                 </Tabs>
             </ErrorBoundary>
+            {/* Shared notification bell — absolutely positioned top-right, above
+                all 5 tab screens (same position on every tab). */}
+            <NotificationBellOverlay />
             <TabsTooltipStrip />
             <ModelDownloadBanner />
         </View>

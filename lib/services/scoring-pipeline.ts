@@ -85,14 +85,17 @@ const TAG = '[scoring-pipeline]';
 
 // PipelineBatch is a plain persisted JSON object; the judge-mode flag rides
 // along as an extra field without a store-side type change (the store owns that
-// type and is off-limits here). Read/write it through this cast.
-type BatchWithJudge = PipelineBatch & { judgeMode?: boolean };
-
-// TODO(wave8-deck): in-order chunk release queue + ~90s head-chunk release
-// timeout (force-release on math scores) + onChunkReleased(chunkCardIds) store
-// event for the swipe deck (M-P5 / A3.3). The swipe deck (Browse tab) ships in
-// wave 8; the sectioned For You feed (wave 7) renders progressively on the
-// existing per-batch refreshUi, so the release queue is not required yet.
+// type and is off-limits here). Read/write it through this cast. `scored` /
+// `released` (Wave 8 swipe-deck release queue, below) ride along the same way.
+type BatchWithJudge = PipelineBatch & {
+  judgeMode?: boolean;
+  /** True once this batch's relevance/raw scores are PERSISTED to the DB — the
+   *  gate for the swipe-deck release queue. Only ever set when Browse is active
+   *  (hasReleaseListeners()). */
+  scored?: boolean;
+  /** True once this batch's card ids have been emitted to the swipe deck. */
+  released?: boolean;
+};
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -116,6 +119,11 @@ const RUN_ABANDON_MS = 24 * 3600_000;
 const POLL_INTERVAL_MS = 7_000;
 const MIN_POLL_AGE_MS = 15_000;
 const PER_BATCH_POLL_SPACING_MS = 20_000;
+/** Head-of-line force-release timeout for the swipe-deck release queue: if the
+ *  lowest-batchId unreleased ("head") batch hasn't been scored within this
+ *  window, force-release it (its computed/math scores — persisted at submit —
+ *  stand) so a slow head can't stall the whole in-order deck feed. */
+const HEAD_CHUNK_RELEASE_TIMEOUT_MS = 90_000;
 
 // ---------------------------------------------------------------------------
 // Phase predicates
@@ -154,6 +162,227 @@ const lastPolledAt = new Map<number, number>();
 let pollerTimer: ReturnType<typeof setInterval> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
+
+// ---------------------------------------------------------------------------
+// Swipe-deck chunk release queue (Wave 8, Browse tab)
+//
+// PURELY ADDITIVE and fully gated behind "at least one chunk-release listener is
+// registered" (i.e. the Browse swipe deck is mounted). When no listener is
+// registered NONE of this runs — no timers arm, no extra CAS writes, and the
+// existing For-You progressive-render path (refreshUi) is untouched.
+//
+// Contract: batches release to the deck in strict batchId order. A batch is
+// eligible once it is `scored` (its relevance/raw scores are persisted) or
+// terminal. tryReleaseInOrder walks from the front and stops at the first
+// unreleased batch that isn't yet scored/terminal (the reorder buffer: a
+// later-finishing batch waits for the ones before it). A ~90s head timeout
+// force-releases a stuck head so it can't stall the queue.
+// ---------------------------------------------------------------------------
+
+type ChunkReleaseListener = (cardIds: string[]) => void;
+const chunkReleaseListeners = new Set<ChunkReleaseListener>();
+
+// Single force-release timer, keyed to the current head (lowest unreleased
+// batchId). Re-armed whenever the head advances; cleared on finalize/reset.
+let headReleaseTimer: ReturnType<typeof setTimeout> | null = null;
+let headReleaseBatchId: number | null = null;
+
+/**
+ * Register a listener that receives each in-order chunk release (the card ids
+ * — article_suggestion server ids — that just became releasable). Returns an
+ * unsubscribe. Registering the first listener is what turns the release queue
+ * ON; unsubscribing the last turns it OFF (and any pending head timer is
+ * cleared on the next release attempt / reset).
+ */
+export function registerChunkReleaseListener(
+  fn: ChunkReleaseListener,
+): () => void {
+  chunkReleaseListeners.add(fn);
+  return () => {
+    chunkReleaseListeners.delete(fn);
+    if (chunkReleaseListeners.size === 0) clearHeadReleaseTimer();
+  };
+}
+
+/** Release machinery gate — true only while the Browse deck is mounted. */
+function hasReleaseListeners(): boolean {
+  return chunkReleaseListeners.size > 0;
+}
+
+/** Fan out a chunk release to every listener. Never throws into the pipeline
+ *  flow (a listener error is logged, not propagated). No-op for an empty set. */
+function emitChunkReleased(cardIds: string[]): void {
+  if (cardIds.length === 0) return;
+  for (const fn of chunkReleaseListeners) {
+    try {
+      fn(cardIds);
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'emit-chunk-released' },
+      });
+    }
+  }
+}
+
+/** Minimal per-batch view the pure ordering helper needs. */
+export interface ReleasableBatchView {
+  batchId: number;
+  released: boolean;
+  scored: boolean;
+  terminal: boolean;
+}
+
+/**
+ * PURE, unit-tested ordering decision: given the batches, return the batchIds
+ * that may be released NOW, in ascending batchId order. Walk from the front:
+ * skip already-released batches (they're ahead in the order), release each
+ * scored-or-terminal batch, and STOP at the first unreleased batch that is
+ * neither scored nor terminal — that batch (and everything after it) waits, so
+ * the deck only ever grows contiguously from the front (in-order guarantee).
+ */
+export function computeReleasableBatchIds(
+  batches: ReleasableBatchView[],
+): number[] {
+  const sorted = [...batches].sort((a, b) => a.batchId - b.batchId);
+  const out: number[] = [];
+  for (const b of sorted) {
+    if (b.released) continue;
+    if (b.scored || b.terminal) {
+      out.push(b.batchId);
+      continue;
+    }
+    break;
+  }
+  return out;
+}
+
+/** The card ids a batch releases to the deck: the ids that actually scored
+ *  (persisted `relevanceMap` keys when present, else the batch's candidateIds).
+ *  A `failed` batch releases nothing (it persisted no scores). The store applies
+ *  its own scored/seen filter, so an over-broad candidateIds fallback is safe. */
+function releasableCardIds(batch: PipelineBatch): string[] {
+  if (batch.phase === 'failed') return [];
+  const relMap = batch.relevanceMap;
+  if (relMap && Object.keys(relMap).length > 0) return Object.keys(relMap);
+  return batch.candidateIds;
+}
+
+/**
+ * Release every contiguous-from-front eligible batch to the deck, in order.
+ * Gated behind hasReleaseListeners(); a no-op (and zero cost) otherwise. After
+ * releasing, (re)arms the head force-release timer for the new head.
+ */
+async function tryReleaseInOrder(): Promise<void> {
+  if (!hasReleaseListeners()) return;
+  const snap = await getPipeline();
+  if (!snap) {
+    clearHeadReleaseTimer();
+    return;
+  }
+  const { run } = snap;
+  const views: ReleasableBatchView[] = run.batches.map((b) => ({
+    batchId: b.batchId,
+    released: (b as BatchWithJudge).released === true,
+    scored: (b as BatchWithJudge).scored === true,
+    terminal: isTerminal(b.phase),
+  }));
+  const toRelease = computeReleasableBatchIds(views);
+  for (const batchId of toRelease) {
+    const batch = run.batches.find((b) => b.batchId === batchId);
+    if (!batch) continue;
+    emitChunkReleased(releasableCardIds(batch));
+    await mutatePipeline((r) => {
+      const b = r.batches.find((x) => x.batchId === batchId);
+      if (!b || (b as BatchWithJudge).released === true) return null;
+      (b as BatchWithJudge).released = true;
+      return true;
+    });
+  }
+  await armHeadReleaseTimer();
+}
+
+/** Mark a batch `scored` (relevance/raw scores persisted) and try to release.
+ *  Gated: does nothing unless the Browse deck is active. */
+async function markBatchScored(batchId: number): Promise<void> {
+  if (!hasReleaseListeners()) return;
+  await mutatePipeline((run) => {
+    const b = run.batches.find((x) => x.batchId === batchId);
+    if (!b || (b as BatchWithJudge).scored === true) return null;
+    (b as BatchWithJudge).scored = true;
+    return true;
+  });
+  await tryReleaseInOrder();
+}
+
+function clearHeadReleaseTimer(): void {
+  if (headReleaseTimer) {
+    clearTimeout(headReleaseTimer);
+    headReleaseTimer = null;
+  }
+  headReleaseBatchId = null;
+}
+
+/**
+ * (Re)arm the ~90s head force-release timer. The head is the lowest-batchId
+ * unreleased batch; if it is already scored/terminal it will have been released
+ * by tryReleaseInOrder (so no timer needed). Only arm for an unreleased,
+ * not-yet-scored head; keep the existing timer if it's already for this head.
+ */
+async function armHeadReleaseTimer(): Promise<void> {
+  if (!hasReleaseListeners()) {
+    clearHeadReleaseTimer();
+    return;
+  }
+  const snap = await getPipeline();
+  if (!snap) {
+    clearHeadReleaseTimer();
+    return;
+  }
+  const sorted = [...snap.run.batches].sort((a, b) => a.batchId - b.batchId);
+  const head = sorted.find((b) => (b as BatchWithJudge).released !== true);
+  if (!head) {
+    clearHeadReleaseTimer();
+    return;
+  }
+  const headScored =
+    (head as BatchWithJudge).scored === true || isTerminal(head.phase);
+  if (headScored) {
+    // tryReleaseInOrder handles it; nothing to time out on.
+    clearHeadReleaseTimer();
+    return;
+  }
+  if (headReleaseBatchId === head.batchId && headReleaseTimer) return; // already armed
+  clearHeadReleaseTimer();
+  headReleaseBatchId = head.batchId;
+  headReleaseTimer = setTimeout(() => {
+    void forceReleaseHead(head.batchId);
+  }, HEAD_CHUNK_RELEASE_TIMEOUT_MS);
+}
+
+/** Head-timeout fired: force the head `scored` (its computed/math scores,
+ *  persisted at submit, stand) and re-run the in-order release so the queue
+ *  advances past a stuck head. */
+async function forceReleaseHead(batchId: number): Promise<void> {
+  headReleaseTimer = null;
+  headReleaseBatchId = null;
+  if (!hasReleaseListeners()) return;
+  logger.info(
+    `${TAG} head-chunk force-release: batch ${batchId} timed out (${HEAD_CHUNK_RELEASE_TIMEOUT_MS}ms) — releasing on computed scores`,
+  );
+  await mutatePipeline((run) => {
+    const b = run.batches.find((x) => x.batchId === batchId);
+    if (
+      !b ||
+      (b as BatchWithJudge).released === true ||
+      (b as BatchWithJudge).scored === true
+    ) {
+      return null;
+    }
+    (b as BatchWithJudge).scored = true;
+    return true;
+  });
+  await tryReleaseInOrder();
+}
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -536,6 +765,11 @@ async function doDrain(context: ExecutionContext): Promise<void> {
   // A submit inside the loop may have flipped the last batch terminal (empty
   // bundle / submit failure). Never calls drain, so no re-entrancy.
   await maybeFinalize();
+
+  // A drain can flip batches terminal (empty bundle) or admit fresh batches
+  // (advancing the release head) — try an in-order release + (re)arm the head
+  // timer. Self-guarded: a no-op when the Browse deck isn't mounted.
+  await tryReleaseInOrder();
 }
 
 /**
@@ -1055,6 +1289,9 @@ async function handleJudgeResults(
     b.phase = 'done';
     return true;
   });
+  // Swipe-deck release: judge decode persisted relevance + reasons in one pass,
+  // so mark the batch scored (releasable) — no-op unless Browse is mounted.
+  await markBatchScored(batch.batchId);
   const discarded = await discardLowRelevance(
     batch.candidateIds,
     bucketedRecord,
@@ -1160,6 +1397,8 @@ async function handleRelevanceResults(
       b.phase = 'done';
       return true;
     });
+    // Swipe-deck release: relevance is persisted (no reasons owed) → releasable.
+    await markBatchScored(batch.batchId);
     const discarded = await discardLowRelevance(
       batch.candidateIds,
       relevanceMap,
@@ -1178,6 +1417,10 @@ async function handleRelevanceResults(
     b.phase = 'needs-reasons-submit';
     return true;
   });
+
+  // Swipe-deck release: relevance is persisted now — release to the deck even
+  // though reasons are still owed (the deck shows the reason when it lands).
+  await markBatchScored(batch.batchId);
 
   // Immediately try the reasons submit this cycle.
   await submitNeedsReasons(batch.batchId, context);
@@ -1410,6 +1653,9 @@ async function requeueWaitingOrFail(
  */
 async function afterTerminal(context: ExecutionContext): Promise<void> {
   await drain(context);
+  // A batch just went terminal — a terminal batch is releasable (a failed one
+  // releases nothing, but must still un-block the in-order head). Self-guarded.
+  await tryReleaseInOrder();
 }
 
 async function finalize(run: PipelineRun): Promise<void> {
@@ -1432,6 +1678,8 @@ async function doFinalize(run: PipelineRun): Promise<void> {
   await refreshUi();
   await clearPipeline();
   stopPoller();
+  // The run is gone — no head to force-release.
+  clearHeadReleaseTimer();
 }
 
 // ---------------------------------------------------------------------------
@@ -1608,6 +1856,10 @@ function stopPoller(): void {
     appStateSub.remove();
     appStateSub = null;
   }
+  // Swipe-deck release queue is independent of the poller lifecycle — do NOT
+  // clear listeners here (they belong to the mounted Browse screen). Only the
+  // head timer is cleared, since it's re-armed on the next release attempt.
+  clearHeadReleaseTimer();
 }
 
 async function runPollerTick(): Promise<void> {
@@ -1651,4 +1903,7 @@ export function _resetForTests(): void {
     appStateSub.remove();
     appStateSub = null;
   }
+  // Swipe-deck release queue — full reset for tests.
+  chunkReleaseListeners.clear();
+  clearHeadReleaseTimer();
 }

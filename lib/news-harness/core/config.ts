@@ -219,10 +219,29 @@ export interface ScoringEngineConfig {
   GLOBAL_SECTION_WEIGHT: number;
 }
 
+/**
+ * Bounded persona-mutation rails (Wave 8 M-P6). The signal → weight-delta
+ * budgets that gate every on-device persona nudge. HP_MULT is NOT here — it
+ * already lives in `scoringEngine` (1.25); the rails reference it, never
+ * duplicate it. Every value is a SEED; config.test.ts pins each literal so
+ * drift fails loudly.
+ */
+export interface MutationRailsConfig {
+  /** Per-topic per-day nudge budget: |Σ deltas today| ≤ this. */
+  NUDGE_DAY_BUDGET: number; // 0.3
+  /** "Show less" signal delta on matched topics. */
+  SHOW_LESS: number; // -0.15
+  /** Thumbs-down signal delta. */
+  THUMBS_DOWN: number; // -0.1
+  /** Weight of the location-anchored NEGATIVE topic minted on a wrong-location signal. */
+  WRONG_LOCATION_NEG_TOPIC: number; // -0.6
+}
+
 export interface HarnessConfig {
   articlePipeline: ArticlePipelineConfig;
   topicGen: TopicGenConfig;
   scoringEngine: ScoringEngineConfig;
+  mutationRails: MutationRailsConfig;
 }
 
 export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
@@ -330,5 +349,11 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // headline section pseudo-weights (feed-select sectioning)
     HEADLINE_SECTION_BASE: 0.55,
     GLOBAL_SECTION_WEIGHT: 0.35,
+  },
+  mutationRails: {
+    NUDGE_DAY_BUDGET: 0.3,
+    SHOW_LESS: -0.15,
+    THUMBS_DOWN: -0.1,
+    WRONG_LOCATION_NEG_TOPIC: -0.6,
   },
 };

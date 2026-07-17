@@ -1,5 +1,7 @@
-// Browse tab — placeholder route. Hidden via `options={{ href: null }}` in
-// app_container/_layout.tsx until its Wave ships the Explore/Browse surface.
+// Browse tab — routing only. The orchestrator flips initialRouteName to
+// `browse` and removes the `href: null` hiding in app_container/_layout.tsx.
+import BrowseFeedScreen from '@/components/custom/swipe-feed/BrowseFeedScreen';
+
 export default function BrowseTab() {
-    return null;
+    return <BrowseFeedScreen />;
 }

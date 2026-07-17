@@ -16,6 +16,8 @@ import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
 import type FactModel from '../models/Fact';
 import * as topicService from './topic-service';
 import * as locationService from './location-service';
+import * as suppressionService from './suppression-service';
+import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 
 const changeLogCollection = database.get<PersonaChangeLogModel>('persona_change_log');
 const factsCollection = database.get<FactModel>('facts');
@@ -109,14 +111,25 @@ function requireNumericBefore(action: ChangeLogAction, rowId: string): number {
   return action.before;
 }
 
+function requireBooleanBefore(action: ChangeLogAction, rowId: string): boolean {
+  if (typeof action.before !== 'boolean') {
+    throw new Error(`persona_change_log ${rowId}: action_json has no boolean 'before'`);
+  }
+  return action.before;
+}
+
 /**
  * Reverts a logged persona mutation by applying its inverse, marks the row
  * `reverted`, and appends a `revert_change` entry (source 'user').
  *
- * Implemented inversions (this wave):
+ * Implemented inversions:
  *   set_topic_weight / set_fact_weight / set_location_weight → restore `before`
- *   add_topic    → retire the created topic
- *   retire_topic → reactivate the topic
+ *   add_topic          → retire the created topic
+ *   retire_topic       → reactivate the topic
+ *   set_high_priority  → restore the prior boolean flag
+ *   add_negative_topic → retire the created (negative) topic
+ *   add_suppression    → retire the created suppression
+ *   suppress_topic     → reactivate the topic (forward-compat)
  * Anything else throws — later waves extend this switch as new action types
  * gain rails.
  */
@@ -159,6 +172,28 @@ export async function revertChange(changeLogId: string): Promise<void> {
       break;
     }
     case 'retire_topic': {
+      const targetId = requireTargetId(action, row.id);
+      await topicService.reactivate(targetId);
+      break;
+    }
+    case ACTION_NAMES.SET_HIGH_PRIORITY: {
+      const targetId = requireTargetId(action, row.id);
+      await topicService.setHighPriority(targetId, requireBooleanBefore(action, row.id));
+      break;
+    }
+    case ACTION_NAMES.ADD_NEGATIVE_TOPIC: {
+      // Inverse of creation is retirement (mirrors add_topic).
+      const targetId = requireTargetId(action, row.id);
+      await topicService.retire(targetId);
+      break;
+    }
+    case ACTION_NAMES.ADD_SUPPRESSION: {
+      const targetId = requireTargetId(action, row.id);
+      await suppressionService.retireSuppression(targetId);
+      break;
+    }
+    case ACTION_NAMES.SUPPRESS_TOPIC: {
+      // Forward-compat: undo a topic suppression by reactivating it.
       const targetId = requireTargetId(action, row.id);
       await topicService.reactivate(targetId);
       break;

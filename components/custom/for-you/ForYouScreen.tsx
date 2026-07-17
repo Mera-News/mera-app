@@ -29,6 +29,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
+import { recordOpen } from '@/lib/database/services/story-impression-service';
 import logger from '@/lib/logger';
 import { getDisplaySectionLabel, getRelevanceLabel } from '@/lib/relevance-utils';
 import { ForYouSuggestion, useForYouStore } from '@/lib/stores/for-you-store';
@@ -570,6 +571,17 @@ const MeraNewsScreen: React.FC = () => {
     }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, activeListData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
+        // Record the open into story-impression seen-state (fire-and-forget —
+        // never blocks navigation). For-You is the sectioned surface.
+        void recordOpen({
+            articleId: suggestion.articleId,
+            suggestionId: suggestion._id,
+            stableClusterId:
+                suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null,
+            titleNorm:
+                (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
+            surface: 'sectioned',
+        });
         const userPersonaId = useUserStore.getState().userPersona?._id || '';
         router.push({
             pathname: '/logged-in/suggestion-detail',
@@ -801,7 +813,10 @@ const MeraNewsScreen: React.FC = () => {
                         <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.forYou')}</Heading>
                         <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
                     </VStack>
-                    <HStack className="items-center flex-shrink-0" space="sm">
+                    {/* Reserve ~56px on the right so the global notification bell
+                        overlay (rendered by the tabs _layout at right:20, ~44px
+                        wide) never overlaps this cluster. */}
+                    <HStack className="items-center flex-shrink-0" space="sm" style={{ marginRight: 52 }}>
                         <Pressable
                             onPress={() => router.push('/logged-in/visited-publications')}
                             hitSlop={12}

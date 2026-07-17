@@ -158,11 +158,23 @@ describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
   });
 });
 
+describe('DEFAULT_HARNESS_CONFIG.mutationRails', () => {
+  const m = DEFAULT_HARNESS_CONFIG.mutationRails;
+
+  it('pins the bounded-mutation rail literals (Wave 8 M-P6)', () => {
+    expect(m.NUDGE_DAY_BUDGET).toBe(0.3);
+    expect(m.SHOW_LESS).toBe(-0.15);
+    expect(m.THUMBS_DOWN).toBe(-0.1);
+    expect(m.WRONG_LOCATION_NEG_TOPIC).toBe(-0.6);
+  });
+});
+
 describe('HarnessConfig shape', () => {
   it('exposes all sub-configs', () => {
     const cfg: HarnessConfig = DEFAULT_HARNESS_CONFIG;
     expect(cfg.articlePipeline).toBeDefined();
     expect(cfg.topicGen).toBeDefined();
     expect(cfg.scoringEngine).toBeDefined();
+    expect(cfg.mutationRails).toBeDefined();
   });
 });

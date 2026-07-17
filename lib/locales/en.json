@@ -254,6 +254,19 @@
     "resyncTitle": "Your feed is re-syncing",
     "resyncBody": "We're rebuilding your feed with the new engine — it'll fill in shortly."
   },
+  "notificationCenter": {
+    "title": "Notifications",
+    "bellA11y": "Notifications",
+    "empty": "You're all caught up",
+    "close": "Close",
+    "markAllRead": "Mark all read",
+    "migrationDoneTitle": "Your interests are ready",
+    "migrationDoneBody": "Mera organized your profile into topics and locations.",
+    "syncFailedTitle": "Couldn't refresh your feed",
+    "syncFailedBody": "We'll try again shortly.",
+    "dailyLimitTitle": "Daily news limit reached",
+    "dailyLimitBody": "You've reached today's article limit. It resets soon."
+  },
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",
     "notTranslatable": "This article is in {{language}} and may not be translated",

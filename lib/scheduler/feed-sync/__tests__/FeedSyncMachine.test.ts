@@ -85,6 +85,14 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: (...args: any[]) => mockDeactivateKeepAwake(...args),
 }));
 
+// The machine emits notification-center-backed toasts on failure/daily-limit.
+// Those go through the real toast-manager (DB write + toast render), which is
+// out of scope for this unit test — stub it so it neither touches WatermelonDB
+// nor logs to Sentry.
+jest.mock('@/lib/toast-manager', () => ({
+  toastManager: { showNotifiedToast: jest.fn(() => Promise.resolve()) },
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {

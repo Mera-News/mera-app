@@ -3,6 +3,7 @@ import logger from '@/lib/logger';
 import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { ArticleService } from '@/lib/article-service';
+import { toastManager } from '@/lib/toast-manager';
 import type { TaskContext } from '../scheduler-types';
 import * as feedPersistence from './feed-sync-persistence';
 import * as steps from './feed-sync-steps';
@@ -303,6 +304,14 @@ class FeedSyncMachine {
         // passes. Fall back to the next UTC midnight if the server omitted it.
         useForYouStore.getState().setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
         publishSyncError('daily-limit', resetAt, this._state);
+        void toastManager.showNotifiedToast({
+          type: 'feed_info',
+          source: 'feed-sync',
+          title: 'notificationCenter.dailyLimitTitle',
+          body: 'notificationCenter.dailyLimitBody',
+          action: 'info',
+          icon: 'hourglass-empty',
+        });
         this._state = 'idle';
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -318,6 +327,18 @@ class FeedSyncMachine {
       if (this._state !== 'failed' && this._state !== 'done') {
         this._transitionTo('failed');
         publishSyncError(errorCode, undefined, failedAtState);
+        // Generic (non-terminal, non-daily-limit) sync failure — surface a
+        // notification-center-backed toast. The `no-topics-configured` and
+        // `daily-limit` outcomes returned earlier, so this only fires for real
+        // failures.
+        void toastManager.showNotifiedToast({
+          type: 'sync_event',
+          source: 'feed-sync',
+          title: 'notificationCenter.syncFailedTitle',
+          body: 'notificationCenter.syncFailedBody',
+          action: 'error',
+          icon: 'sync-problem',
+        });
         await feedPersistence.saveMachineSnapshot({
           state: 'failed',
           startedAt: Date.now(),
