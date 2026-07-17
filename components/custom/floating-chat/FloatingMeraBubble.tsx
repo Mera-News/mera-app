@@ -144,6 +144,13 @@ function usePulseAnimation(delay: number, active: boolean) {
 interface FloatingMeraBubbleProps {
     /** Default chat context to open with, derived from the current route. */
     readonly context: ChatContext;
+    /**
+     * Extra clearance to reserve below the bubble's drag range, on top of
+     * `insets.bottom` — for a bottom tab bar that sits outside this
+     * component's own layout tree (see lib/navigation/tab-bar.ts). 0 for
+     * screens with no tab bar (the previous, unchanged behavior).
+     */
+    readonly extraBottomInset?: number;
 }
 
 /**
@@ -151,7 +158,7 @@ interface FloatingMeraBubbleProps {
  * nearest horizontal edge on release, taps to expand the chat. All motion runs
  * on the UI thread via Reanimated worklets.
  */
-const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context }) => {
+const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context, extraBottomInset = 0 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -161,7 +168,7 @@ const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context }) => {
     const leftX = EDGE_MARGIN;
     const rightX = windowWidth - EDGE_MARGIN - BUBBLE_SIZE;
     const minY = insets.top + TOP_CLAMP_OFFSET;
-    const maxY = windowHeight - insets.bottom - BOTTOM_CLAMP_OFFSET;
+    const maxY = windowHeight - insets.bottom - extraBottomInset - BOTTOM_CLAMP_OFFSET;
 
     // Default position: horizontally centered, 10% up from the bottom. This is
     // where the bubble first appears; dragging it afterwards snaps to an edge.

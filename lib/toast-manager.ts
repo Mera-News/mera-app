@@ -146,6 +146,34 @@ class ToastManager {
     }
 
     /**
+     * Show a neutral informational toast (e.g. a tab-name hint on long-press).
+     * Not debounced — these are short-lived, low-frequency UI hints, not error
+     * spam. `message` is optional since some hints are label-only.
+     */
+    showInfo(title: string, message?: string) {
+        if (!this.toastInstance) {
+            logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
+            return;
+        }
+
+        const React = require('react');
+        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
+
+        this.toastInstance.show({
+            placement: 'bottom',
+            duration: 1500,
+            render: ({ id }: { id: string }) => {
+                return React.createElement(
+                    Toast,
+                    { action: 'info', variant: 'solid' },
+                    React.createElement(ToastTitle, null, title),
+                    message ? React.createElement(ToastDescription, null, message) : null,
+                );
+            },
+        });
+    }
+
+    /**
      * Reset debounce timer (useful for testing)
      */
     resetDebounce() {

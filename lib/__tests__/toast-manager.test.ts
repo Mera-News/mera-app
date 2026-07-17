@@ -67,6 +67,13 @@ describe('ToastManager — no instance', () => {
       expect.stringContaining('not initialized'),
     );
   });
+
+  it('showInfo logs warn when not initialized', () => {
+    toastManager.showInfo('For You');
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      expect.stringContaining('not initialized'),
+    );
+  });
 });
 
 describe('ToastManager — with instance', () => {
@@ -169,6 +176,32 @@ describe('ToastManager — with instance', () => {
 
     it('render function is a function (deferred rendering)', () => {
       toastManager.showSuccess('OK', 'Great');
+      const [opts] = toast.show.mock.calls[0];
+      expect(typeof opts.render).toBe('function');
+    });
+  });
+
+  describe('showInfo', () => {
+    it('calls toast.show with a title (message optional)', () => {
+      toastManager.showInfo('For You');
+      expect(toast.show).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows with placement "bottom" and 1.5s duration', () => {
+      toastManager.showInfo('For You');
+      const [opts] = toast.show.mock.calls[0];
+      expect(opts.placement).toBe('bottom');
+      expect(opts.duration).toBe(1500);
+    });
+
+    it('is NOT debounced — shows even after an error toast', () => {
+      toastManager.showNetworkError(); // consumes debounce
+      toastManager.showInfo('For You');
+      expect(toast.show).toHaveBeenCalledTimes(2);
+    });
+
+    it('render function is a function (deferred rendering)', () => {
+      toastManager.showInfo('For You');
       const [opts] = toast.show.mock.calls[0];
       expect(typeof opts.render).toBe('function');
     });

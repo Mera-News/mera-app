@@ -7,6 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface ScrollToTopFabProps {
     visible: boolean;
     onPress: () => void;
+    /**
+     * Extra bottom clearance on top of `insets.bottom` — set this to
+     * TAB_BAR_HEIGHT (lib/navigation/tab-bar.ts) when the host screen sits
+     * inside the bottom tab shell, so the FAB doesn't sit under the tab bar.
+     */
+    extraBottomOffset?: number;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -15,7 +21,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  * Floating Action Button for scrolling to top of a list
  * Positioned at bottom-right, above the native tab bar
  */
-const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress }) => {
+const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress, extraBottomOffset = 0 }) => {
     const insets = useSafeAreaInsets();
 
     if (!visible) return null;
@@ -25,7 +31,7 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress }) => 
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(200)}
             onPress={onPress}
-            style={[styles.fab, { bottom: 20 + insets.bottom }]}
+            style={[styles.fab, { bottom: 20 + insets.bottom + extraBottomOffset }]}
         >
             <MaterialIcons name="keyboard-arrow-up" size={28} color="#6b7280" />
         </AnimatedPressable>

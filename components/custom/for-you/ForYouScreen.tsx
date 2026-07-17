@@ -50,7 +50,8 @@ import {
 import { useUserStore } from '@/lib/stores/user-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import { Icon, SettingsIcon, AlertCircleIcon } from '@/components/ui/icon';
+import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -84,7 +85,9 @@ function computeMoreSourcesCount(rep: ForYouSuggestion, members: ForYouSuggestio
     return distinct.size > 0 ? distinct.size : members.length;
 }
 
-const openConfigPanel = () => router.push('/logged-in/config-panel');
+// Profile is now a bottom tab — the right-edge swipe still opens it directly
+// (the header gear icon that used to open the config panel is removed).
+const openConfigPanel = () => router.push('/logged-in/app_container/profile');
 
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<ForYouListItem>);
@@ -669,13 +672,6 @@ const MeraNewsScreen: React.FC = () => {
                         >
                             <MaterialIcons name="bookmark" size={22} color="#EDA77E" />
                         </Pressable>
-                        <Pressable
-                            onPress={openConfigPanel}
-                            hitSlop={12}
-                            className="p-3 rounded-full bg-primary-500"
-                        >
-                            <Icon as={SettingsIcon} size="xl" className="text-white" />
-                        </Pressable>
                     </HStack>
                 </HStack>
 
@@ -735,7 +731,7 @@ const MeraNewsScreen: React.FC = () => {
                 viewabilityConfig={viewabilityConfig.current}
                 onScrollToIndexFailed={onScrollToIndexFailed}
             />
-            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
+            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} extraBottomOffset={TAB_BAR_HEIGHT} />
 
             {/* Right edge swipe hitbox */}
             <GestureDetector gesture={edgeSwipeGesture}>

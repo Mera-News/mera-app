@@ -218,4 +218,48 @@ describe('ToastManager render callback bodies', () => {
       expect(descElement.children[0]).toBe('Everything is fine');
     });
   });
+
+  describe('showInfo render function', () => {
+    it('render function does not throw and returns a value', () => {
+      toastManager.showInfo('For You');
+      const [opts] = toast.show.mock.calls[0];
+      let result: unknown;
+      expect(() => { result = opts.render({ id: 'toast-15' }); }).not.toThrow();
+      expect(result).toBeTruthy();
+    });
+
+    it('render function root has type MockToast and action=info', () => {
+      toastManager.showInfo('For You');
+      const [opts] = toast.show.mock.calls[0];
+      const result = opts.render({ id: 'toast-16' }) as any;
+      expect(result.type).toBe('MockToast');
+      expect((result.props as any).action).toBe('info');
+    });
+
+    it('render function includes ToastTitle with the provided title', () => {
+      toastManager.showInfo('For You');
+      const [opts] = toast.show.mock.calls[0];
+      const result = opts.render({ id: 'toast-17' }) as any;
+      const titleElement = result.children.find((c: any) => c?.type === 'MockToastTitle');
+      expect(titleElement).toBeDefined();
+      expect(titleElement.children[0]).toBe('For You');
+    });
+
+    it('render function omits ToastDescription when no message is given', () => {
+      toastManager.showInfo('For You');
+      const [opts] = toast.show.mock.calls[0];
+      const result = opts.render({ id: 'toast-18' }) as any;
+      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
+      expect(descElement).toBeUndefined();
+    });
+
+    it('render function includes ToastDescription when a message is given', () => {
+      toastManager.showInfo('For You', 'Long-press hint');
+      const [opts] = toast.show.mock.calls[0];
+      const result = opts.render({ id: 'toast-19' }) as any;
+      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
+      expect(descElement).toBeDefined();
+      expect(descElement.children[0]).toBe('Long-press hint');
+    });
+  });
 });

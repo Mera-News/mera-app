@@ -227,6 +227,14 @@
     "topHeadlines": "Top headlines",
     "togglePin": "Toggle pin"
   },
+  "tabs": {
+    "browse": "Browse",
+    "forYou": "For You",
+    "around": "Around",
+    "profile": "Profile",
+    "settings": "Settings",
+    "gotIt": "Got it"
+  },
   "clusterDetail": {
     "translatable": "This article is in {{language}} and can be translated into your language",
     "notTranslatable": "This article is in {{language}} and may not be translated",
@@ -432,6 +440,9 @@
     "loggingOut": "Logging Out...",
     "user": "User: {{email}}",
     "appVersion": "App Version: {{version}}"
+  },
+  "settings": {
+    "sources": "Sources"
   },
   "configPanel": {
     "tabPersona": "Persona",

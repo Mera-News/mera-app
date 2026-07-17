@@ -10,6 +10,12 @@ import { StyleSheet, View } from 'react-native';
 interface ScreenChatBubbleProps {
     /** Chat context this screen opens the bubble with. */
     readonly context: ChatContext;
+    /**
+     * Extra bottom clearance to pass through to FloatingMeraBubble — set this
+     * to TAB_BAR_HEIGHT (lib/navigation/tab-bar.ts) when the host screen sits
+     * inside the bottom tab shell. Omit for screens with no tab bar.
+     */
+    readonly extraBottomOffset?: number;
 }
 
 /**
@@ -30,7 +36,7 @@ interface ScreenChatBubbleProps {
  * Visibility is gated on the same store flags the old app-level host used:
  * hidden while the popover is expanded or while chat is suppressed.
  */
-const ScreenChatBubble: React.FC<ScreenChatBubbleProps> = ({ context }) => {
+const ScreenChatBubble: React.FC<ScreenChatBubbleProps> = ({ context, extraBottomOffset }) => {
     const isExpanded = useFloatingChatIsExpanded();
     const suppressed = useFloatingChatSuppressed();
 
@@ -41,7 +47,7 @@ const ScreenChatBubble: React.FC<ScreenChatBubbleProps> = ({ context }) => {
         // bubble's own absolute positioning / drag translation isn't clipped
         // and the screen's content stays fully interactive underneath.
         <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-            <FloatingMeraBubble context={context} />
+            <FloatingMeraBubble context={context} extraBottomInset={extraBottomOffset} />
         </View>
     );
 };
