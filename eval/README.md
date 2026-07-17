@@ -23,6 +23,21 @@ only the engine (script + labels + configs) lives here, tracked in git.
   320`).
 - `overrides-strict.json` — `--config` overrides for a stricter discard floor
   (`discardFloor: 0.7`).
+- `persona-v3.json` — the golden-label fixture persona re-expressed as the v3
+  structured persona (weighted `topics` at seed 0.75 + role-tagged `locations` +
+  empty suppressions/pubPrefs) the deterministic math engine
+  (`lib/news-harness/scoring-engine/`) consumes. Regenerate with
+  `node eval/build-persona-v3.js` (deterministic, from `.local-test-data/persona.json`).
+- `golden-tags.json` — `{articleId: {geo_tags, entities, event_type}}` from a
+  one-time offline Gemini tagging pass over the 1000 golden articles, run through
+  the SAME prompt/schema/normalization the server ships. Replayable/committed.
+  Regenerate (≈$0.05) with:
+  `GEMINI_API_KEY=$(gcloud secrets versions access latest --secret=GEMINI_API_KEY) node eval/tag-golden-articles.js`.
+- `build-persona-v3.js` / `tag-golden-articles.js` — the two generators above.
+- `lib/build-eval-scores.ts` — engine-aware scorer used by `--engine`; emits a
+  unified `<runDir>/eval-scores-<engine>.json` (rawScore + wrong-location + comp
+  breakdown). `math` re-scores via `computeRelevance()` (fake judge = ok);
+  `backstop` reads the run's recorded scores.json (today's LLM path, untouched).
 - `sanity-grouping.ts` — offline story-grouping sanity check; replays a feed
   dump (`logs.md` in the cwd, containing `feed dump chunk N/M [...]` log lines)
   through `lib/feed-grouping/story-grouping.ts` and reports group/dedup counts.
@@ -54,6 +69,25 @@ only the engine (script + labels + configs) lives here, tracked in git.
    ```bash
    npm run harness:compare -- <runDirA> <runDirB>
    ```
+
+### Deterministic math engine mode (`--engine`)
+
+`eval-golden.js` can score the NEW deterministic engine instead of a run's
+recorded LLM scores. The run dir must carry `candidates.json` + `articles.json`
+(both come free from any replay run):
+
+```bash
+# math: re-score via lib/news-harness/scoring-engine (persona-v3 + golden-tags)
+node eval/eval-golden.js <runDir> --engine=math
+# backstop: the run's recorded LLM scores, plus the wrong-location leak counter
+node eval/eval-golden.js <runDir> --engine=backstop
+```
+
+`--engine` adds a **wrong-location leak counter** (FEED-predicted articles whose
+geo resolves to a sibling city of a persona location — the Chhindwara/Dindori
+class) and, in `math` mode, the top-10 scoring disagreements with component
+breakdowns for tuning. With no `--engine`, the legacy `scores.json` path is
+unchanged.
 
 Repeat 1–3 until the aggregate metrics move the way you want, then follow
 NEWS_HARNESS.md §4 step 7 for the full `tsc`/`jest` verification before calling

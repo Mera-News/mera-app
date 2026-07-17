@@ -100,9 +100,82 @@ export interface TopicGenConfig {
   comboSystemPrompt: string;
 }
 
+/**
+ * Deterministic math-relevance engine constants (Wave 7a — `scoring-engine/`).
+ *
+ * Property names use the plan's UPPER_SNAKE identifiers verbatim (W_*, P_*,
+ * HP_MULT, POP_SAT, HEADLINE_*) so the config surface reads 1:1 against
+ * SUB-PLAN M §2.2 / §2.3 / A6. Every value is a SEED to be tuned against
+ * `eval:golden`; config.test.ts pins each literal so drift fails loudly. These
+ * do NOT touch the tier/bucket cutoffs in `articlePipeline` — the engine emits a
+ * raw score into the same 0.05–1.10 band the existing buckets/eval consume.
+ */
+export interface ScoringEngineConfig {
+  // --- affinity component weights (positive contributors sum ≈ 1) ---------
+  /** Explicit topic interest — the strongest, always-present signal. */
+  W_TOPIC: number;
+  /** Location alignment (home/family/travel city/region/country match). */
+  W_GEO: number;
+  /** Key-entity interest match. */
+  W_ENTITY: number;
+  /** Event-type affinity (small). */
+  W_EVENT: number;
+  /** Publication preference. */
+  W_PUB: number;
+  /** Popularity — widely-covered stories (top-headline path leans here). */
+  W_POP: number;
+  /** Freshness. */
+  W_FRESH: number;
+  // --- affinity → raw band mapping ----------------------------------------
+  /** base = clamp(BASE_OFFSET + BASE_SLOPE·clampPos(affinity), BASE_MIN, BASE_MAX). */
+  BASE_OFFSET: number;
+  BASE_SLOPE: number;
+  BASE_MIN: number;
+  BASE_MAX: number;
+  // --- penalties (subtractive, after the band map) ------------------------
+  /** Negative matched-topic demotion (a −1 topic guts the score). */
+  P_NEG: number;
+  /** Per soft-suppression strength unit. */
+  P_SUP: number;
+  /** Cap on the summed suppression penalty. */
+  P_SUP_CAP: number;
+  /** Wrong-location — HEAVY (user directive): a sibling-city match single-
+   *  handedly drops a would-be-FEED into EXCLUDE. */
+  P_WRONG: number;
+  /** Already-seen story demotion — small (sinks a repeat below a fresh
+   *  sibling, never flips FEED→EXCLUDE alone). */
+  P_SEEN: number;
+  // --- topic weighting -----------------------------------------------------
+  /** high_priority multiplier (score-only; effective weight re-clamped |w|≤1). */
+  HP_MULT: number;
+  // --- popularity saturation ----------------------------------------------
+  /** popComp = clamp(log2(1+maxClusterSize)/log2(1+POP_SAT), 0, 1). */
+  POP_SAT: number;
+  // --- freshness knees -----------------------------------------------------
+  /** ≤ this age (hours) → 1.0. */
+  FRESH_FULL_HOURS: number;
+  /** At this age (hours) → FRESH_MID_SCORE; linear from FRESH_FULL_HOURS. */
+  FRESH_DECAY_HOURS: number;
+  /** Freshness value at FRESH_DECAY_HOURS. */
+  FRESH_MID_SCORE: number;
+  /** Freshness value beyond FRESH_DECAY_HOURS. */
+  FRESH_OLD_SCORE: number;
+  // --- geo alignment multipliers (× location.weight) ----------------------
+  GEO_CITY: number;
+  GEO_REGION: number;
+  GEO_COUNTRY: number;
+  // --- headline floor (applied to headline-scope rows BEFORE penalties) ---
+  /** base = max(mathBase, HEADLINE_BASE_FLOOR + HEADLINE_POP_LIFT·popComp)
+   *  so COUNTRY/GLOBAL headlines clear the 0.3 render gate; penalties still
+   *  apply, so suppressed/wrong-city headlines still die. */
+  HEADLINE_BASE_FLOOR: number;
+  HEADLINE_POP_LIFT: number;
+}
+
 export interface HarnessConfig {
   articlePipeline: ArticlePipelineConfig;
   topicGen: TopicGenConfig;
+  scoringEngine: ScoringEngineConfig;
 }
 
 export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
@@ -152,5 +225,42 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     maxFactLength: 200,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
+  },
+  scoringEngine: {
+    // affinity component weights (positives sum to ≈ 1.0 at full saturation)
+    W_TOPIC: 0.42,
+    W_GEO: 0.2,
+    W_ENTITY: 0.08,
+    W_EVENT: 0.05,
+    W_PUB: 0.07,
+    W_POP: 0.1,
+    W_FRESH: 0.08,
+    // affinity → raw band
+    BASE_OFFSET: 0.05,
+    BASE_SLOPE: 1.05,
+    BASE_MIN: 0.05,
+    BASE_MAX: 1.1,
+    // penalties
+    P_NEG: 0.45,
+    P_SUP: 0.3,
+    P_SUP_CAP: 0.6,
+    P_WRONG: 0.55,
+    P_SEEN: 0.08,
+    // topic weighting
+    HP_MULT: 1.25,
+    // popularity saturation
+    POP_SAT: 32,
+    // freshness knees
+    FRESH_FULL_HOURS: 6,
+    FRESH_DECAY_HOURS: 24,
+    FRESH_MID_SCORE: 0.3,
+    FRESH_OLD_SCORE: 0.1,
+    // geo alignment multipliers
+    GEO_CITY: 1.0,
+    GEO_REGION: 0.6,
+    GEO_COUNTRY: 0.3,
+    // headline floor
+    HEADLINE_BASE_FLOOR: 0.35,
+    HEADLINE_POP_LIFT: 0.15,
   },
 };

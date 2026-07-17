@@ -1,0 +1,1688 @@
+{
+  "provenance": "build-persona-v3.js over .local-test-data/persona.json",
+  "seedWeight": 0.75,
+  "facts": [
+    {
+      "id": "fact-location",
+      "weight": 1
+    },
+    {
+      "id": "fact-travel-berlin",
+      "weight": 1
+    },
+    {
+      "id": "fact-journalism-conferences",
+      "weight": 1
+    },
+    {
+      "id": "fact-tech-conferences",
+      "weight": 1
+    },
+    {
+      "id": "fact-privacy-ai",
+      "weight": 1
+    },
+    {
+      "id": "fact-local-slm",
+      "weight": 1
+    },
+    {
+      "id": "fact-expat",
+      "weight": 1
+    },
+    {
+      "id": "fact-parents-traveling",
+      "weight": 1
+    },
+    {
+      "id": "fact-gf-parents",
+      "weight": 1
+    },
+    {
+      "id": "fact-parents-bhopal",
+      "weight": 1
+    },
+    {
+      "id": "fact-startup-builder",
+      "weight": 1
+    },
+    {
+      "id": "fact-founder",
+      "weight": 1
+    }
+  ],
+  "locations": [
+    {
+      "id": "loc-amsterdam",
+      "city": "amsterdam",
+      "region": "noord-holland",
+      "countryCode": "NL",
+      "role": "home",
+      "weight": 1
+    },
+    {
+      "id": "loc-bhopal",
+      "city": "bhopal",
+      "region": "madhya pradesh",
+      "countryCode": "IN",
+      "role": "family",
+      "weight": 0.7
+    },
+    {
+      "id": "loc-chhindwara",
+      "city": "chhindwara",
+      "region": "madhya pradesh",
+      "countryCode": "IN",
+      "role": "family_travel",
+      "weight": 0.6
+    },
+    {
+      "id": "loc-portosanto",
+      "city": "porto santo",
+      "region": "madeira",
+      "countryCode": "PT",
+      "role": "partner_family",
+      "weight": 0.6
+    },
+    {
+      "id": "loc-berlin",
+      "city": "berlin",
+      "region": "berlin",
+      "countryCode": "DE",
+      "role": "travel",
+      "weight": 0.5
+    }
+  ],
+  "topics": [
+    {
+      "id": "topic-1",
+      "text": "Nieuw-West Amsterdam news",
+      "normalizedText": "nieuw-west amsterdam news",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-2",
+      "text": "Amsterdam Nieuw-West events",
+      "normalizedText": "amsterdam nieuw-west events",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-3",
+      "text": "Nieuw-West safety",
+      "normalizedText": "nieuw-west safety",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-4",
+      "text": "Amsterdam local government",
+      "normalizedText": "amsterdam local government",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-5",
+      "text": "Amsterdam urban planning",
+      "normalizedText": "amsterdam urban planning",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-6",
+      "text": "Amsterdam community news",
+      "normalizedText": "amsterdam community news",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-7",
+      "text": "North Holland politics",
+      "normalizedText": "north holland politics",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active"
+    },
+    {
+      "id": "topic-8",
+      "text": "Netherlands policy",
+      "normalizedText": "netherlands policy",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active"
+    },
+    {
+      "id": "topic-9",
+      "text": "Nieuw-West startup funding rules",
+      "normalizedText": "nieuw-west startup funding rules",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-10",
+      "text": "Amsterdam expat tech visa news",
+      "normalizedText": "amsterdam expat tech visa news",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-11",
+      "text": "Netherlands AI privacy regulation",
+      "normalizedText": "netherlands ai privacy regulation",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active"
+    },
+    {
+      "id": "topic-12",
+      "text": "Berlin journalism conference news",
+      "normalizedText": "berlin journalism conference news",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-13",
+      "text": "India expat remittance policy",
+      "normalizedText": "india expat remittance policy",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active"
+    },
+    {
+      "id": "topic-14",
+      "text": "Nieuw-West local housing news",
+      "normalizedText": "nieuw-west local housing news",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-15",
+      "text": "EU small language model policy",
+      "normalizedText": "eu small language model policy",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active"
+    },
+    {
+      "id": "topic-16",
+      "text": "Portugal Porto Santo tourism news",
+      "normalizedText": "portugal porto santo tourism news",
+      "weight": 0.75,
+      "factId": "fact-location",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-17",
+      "text": "Berlin travel news",
+      "normalizedText": "berlin travel news",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-18",
+      "text": "Berlin weather forecast",
+      "normalizedText": "berlin weather forecast",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-19",
+      "text": "Berlin transport updates",
+      "normalizedText": "berlin transport updates",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-20",
+      "text": "Berlin events next weekend",
+      "normalizedText": "berlin events next weekend",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-21",
+      "text": "Berlin safety alerts",
+      "normalizedText": "berlin safety alerts",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-22",
+      "text": "Germany travel regulations",
+      "normalizedText": "germany travel regulations",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active"
+    },
+    {
+      "id": "topic-23",
+      "text": "Schengen border news",
+      "normalizedText": "schengen border news",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active"
+    },
+    {
+      "id": "topic-24",
+      "text": "Europe travel advisories",
+      "normalizedText": "europe travel advisories",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active"
+    },
+    {
+      "id": "topic-25",
+      "text": "Berlin tech conference schedule",
+      "normalizedText": "berlin tech conference schedule",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-26",
+      "text": "Berlin journalism workshop events",
+      "normalizedText": "berlin journalism workshop events",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-27",
+      "text": "Berlin AI privacy regulations",
+      "normalizedText": "berlin ai privacy regulations",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-28",
+      "text": "Berlin startup funding news",
+      "normalizedText": "berlin startup funding news",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-29",
+      "text": "Berlin small language model research",
+      "normalizedText": "berlin small language model research",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-30",
+      "text": "Berlin expat tech community",
+      "normalizedText": "berlin expat tech community",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-31",
+      "text": "Berlin travel advisory updates",
+      "normalizedText": "berlin travel advisory updates",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-32",
+      "text": "Berlin innovation hub news",
+      "normalizedText": "berlin innovation hub news",
+      "weight": 0.75,
+      "factId": "fact-travel-berlin",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-33",
+      "text": "Amsterdam journalism conferences",
+      "normalizedText": "amsterdam journalism conferences",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-34",
+      "text": "Netherlands media workshops",
+      "normalizedText": "netherlands media workshops",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-35",
+      "text": "Dutch journalism awards",
+      "normalizedText": "dutch journalism awards",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-36",
+      "text": "European journalism festivals",
+      "normalizedText": "european journalism festivals",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-37",
+      "text": "Journalism industry trends",
+      "normalizedText": "journalism industry trends",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-38",
+      "text": "Media ethics regulation",
+      "normalizedText": "media ethics regulation",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-39",
+      "text": "Press freedom news",
+      "normalizedText": "press freedom news",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-40",
+      "text": "Journalism career development",
+      "normalizedText": "journalism career development",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-41",
+      "text": "Amsterdam journalism workshops",
+      "normalizedText": "amsterdam journalism workshops",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-42",
+      "text": "Berlin tech journalism events",
+      "normalizedText": "berlin tech journalism events",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-43",
+      "text": "Netherlands AI media regulation",
+      "normalizedText": "netherlands ai media regulation",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-44",
+      "text": "EU privacy-safe AI news",
+      "normalizedText": "eu privacy-safe ai news",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-45",
+      "text": "India expat tech conferences",
+      "normalizedText": "india expat tech conferences",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-46",
+      "text": "Berlin startup journalism grants",
+      "normalizedText": "berlin startup journalism grants",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-47",
+      "text": "Netherlands local AI media",
+      "normalizedText": "netherlands local ai media",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-48",
+      "text": "Amsterdam small language model news",
+      "normalizedText": "amsterdam small language model news",
+      "weight": 0.75,
+      "factId": "fact-journalism-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-49",
+      "text": "Amsterdam tech conferences",
+      "normalizedText": "amsterdam tech conferences",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-50",
+      "text": "Nieuw-West events",
+      "normalizedText": "nieuw-west events",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-51",
+      "text": "Amsterdam tech scene",
+      "normalizedText": "amsterdam tech scene",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-52",
+      "text": "Netherlands tech industry",
+      "normalizedText": "netherlands tech industry",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-53",
+      "text": "Netherlands innovation policy",
+      "normalizedText": "netherlands innovation policy",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-54",
+      "text": "EU tech regulation",
+      "normalizedText": "eu tech regulation",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-55",
+      "text": "European tech conferences",
+      "normalizedText": "european tech conferences",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-56",
+      "text": "Global tech trends",
+      "normalizedText": "global tech trends",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-57",
+      "text": "Amsterdam tech conference schedule",
+      "normalizedText": "amsterdam tech conference schedule",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-58",
+      "text": "Berlin tech event next weekend",
+      "normalizedText": "berlin tech event next weekend",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-59",
+      "text": "India startup founder visa",
+      "normalizedText": "india startup founder visa",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-60",
+      "text": "Chhindwara local tech adoption",
+      "normalizedText": "chhindwara local tech adoption",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-61",
+      "text": "Porto Santo digital nomad visa",
+      "normalizedText": "porto santo digital nomad visa",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-62",
+      "text": "Bhopal AI news app market",
+      "normalizedText": "bhopal ai news app market",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-63",
+      "text": "Small language model developers",
+      "normalizedText": "small language model developers",
+      "weight": 0.75,
+      "factId": "fact-tech-conferences",
+      "status": "active"
+    },
+    {
+      "id": "topic-64",
+      "text": "privacy-safe AI",
+      "normalizedText": "privacy-safe ai",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-65",
+      "text": "AI data protection",
+      "normalizedText": "ai data protection",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-66",
+      "text": "EU AI Act",
+      "normalizedText": "eu ai act",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-67",
+      "text": "AI privacy regulation",
+      "normalizedText": "ai privacy regulation",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-68",
+      "text": "Dutch AI policy",
+      "normalizedText": "dutch ai policy",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-69",
+      "text": "Amsterdam AI ethics",
+      "normalizedText": "amsterdam ai ethics",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-70",
+      "text": "Netherlands tech law",
+      "normalizedText": "netherlands tech law",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-71",
+      "text": "European AI standards",
+      "normalizedText": "european ai standards",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-72",
+      "text": "Amsterdam AI privacy regulations",
+      "normalizedText": "amsterdam ai privacy regulations",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-73",
+      "text": "EU AI Act enforcement news",
+      "normalizedText": "eu ai act enforcement news",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-74",
+      "text": "Berlin tech conference privacy",
+      "normalizedText": "berlin tech conference privacy",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-75",
+      "text": "Netherlands startup AI compliance",
+      "normalizedText": "netherlands startup ai compliance",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-76",
+      "text": "India AI data protection laws",
+      "normalizedText": "india ai data protection laws",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-77",
+      "text": "Portugal tech event privacy",
+      "normalizedText": "portugal tech event privacy",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-78",
+      "text": "Chhindwara digital privacy awareness",
+      "normalizedText": "chhindwara digital privacy awareness",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-79",
+      "text": "Small language model security",
+      "normalizedText": "small language model security",
+      "weight": 0.75,
+      "factId": "fact-privacy-ai",
+      "status": "active"
+    },
+    {
+      "id": "topic-80",
+      "text": "small language models news",
+      "normalizedText": "small language models news",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-81",
+      "text": "local LLM development",
+      "normalizedText": "local llm development",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-82",
+      "text": "open source AI models",
+      "normalizedText": "open source ai models",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-83",
+      "text": "edge AI computing",
+      "normalizedText": "edge ai computing",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-84",
+      "text": "privacy-focused AI",
+      "normalizedText": "privacy-focused ai",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-85",
+      "text": "AI model optimization",
+      "normalizedText": "ai model optimization",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-86",
+      "text": "Netherlands AI startups",
+      "normalizedText": "netherlands ai startups",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-87",
+      "text": "European AI regulation",
+      "normalizedText": "european ai regulation",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-88",
+      "text": "Nieuw-West AI startup hubs",
+      "normalizedText": "nieuw-west ai startup hubs",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-89",
+      "text": "Amsterdam small language model events",
+      "normalizedText": "amsterdam small language model events",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-90",
+      "text": "Netherlands expat tech conferences",
+      "normalizedText": "netherlands expat tech conferences",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-91",
+      "text": "India AI news app trends",
+      "normalizedText": "india ai news app trends",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-92",
+      "text": "Portugal Porto Santo tech events",
+      "normalizedText": "portugal porto santo tech events",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-93",
+      "text": "EU small model policy debate",
+      "normalizedText": "eu small model policy debate",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active"
+    },
+    {
+      "id": "topic-94",
+      "text": "Amsterdam privacy-safe AI forums",
+      "normalizedText": "amsterdam privacy-safe ai forums",
+      "weight": 0.75,
+      "factId": "fact-local-slm",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-95",
+      "text": "Amsterdam expat community",
+      "normalizedText": "amsterdam expat community",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-96",
+      "text": "Netherlands immigration policy",
+      "normalizedText": "netherlands immigration policy",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-97",
+      "text": "Dutch tax for expats",
+      "normalizedText": "dutch tax for expats",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-98",
+      "text": "Netherlands housing market",
+      "normalizedText": "netherlands housing market",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-99",
+      "text": "Amsterdam local events",
+      "normalizedText": "amsterdam local events",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-100",
+      "text": "EU regulation",
+      "normalizedText": "eu regulation",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-101",
+      "text": "Netherlands weather",
+      "normalizedText": "netherlands weather",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-102",
+      "text": "Amsterdam expat tech visa rules",
+      "normalizedText": "amsterdam expat tech visa rules",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-103",
+      "text": "Netherlands startup founder tax incentives",
+      "normalizedText": "netherlands startup founder tax incentives",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-104",
+      "text": "Berlin expat tech conference access",
+      "normalizedText": "berlin expat tech conference access",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-105",
+      "text": "EU AI Act impact on startups",
+      "normalizedText": "eu ai act impact on startups",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-106",
+      "text": "Netherlands privacy laws for AI",
+      "normalizedText": "netherlands privacy laws for ai",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-107",
+      "text": "Indian diaspora remittance trends",
+      "normalizedText": "indian diaspora remittance trends",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active"
+    },
+    {
+      "id": "topic-108",
+      "text": "Chhindwara travel safety advisories",
+      "normalizedText": "chhindwara travel safety advisories",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-109",
+      "text": "Porto Santo tourism infrastructure",
+      "normalizedText": "porto santo tourism infrastructure",
+      "weight": 0.75,
+      "factId": "fact-expat",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-110",
+      "text": "Chhindwara news",
+      "normalizedText": "chhindwara news",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-111",
+      "text": "Chhindwara safety",
+      "normalizedText": "chhindwara safety",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-112",
+      "text": "Chhindwara weather",
+      "normalizedText": "chhindwara weather",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-113",
+      "text": "Chhindwara transport",
+      "normalizedText": "chhindwara transport",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-114",
+      "text": "Madhya Pradesh news",
+      "normalizedText": "madhya pradesh news",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-115",
+      "text": "Madhya Pradesh politics",
+      "normalizedText": "madhya pradesh politics",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-116",
+      "text": "India travel advisories",
+      "normalizedText": "india travel advisories",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-117",
+      "text": "India visa policy",
+      "normalizedText": "india visa policy",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-118",
+      "text": "Chhindwara travel safety alerts",
+      "normalizedText": "chhindwara travel safety alerts",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-119",
+      "text": "India monsoon travel disruptions",
+      "normalizedText": "india monsoon travel disruptions",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-120",
+      "text": "Chhindwara local emergency services",
+      "normalizedText": "chhindwara local emergency services",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-121",
+      "text": "Madhya Pradesh tourism infrastructure",
+      "normalizedText": "madhya pradesh tourism infrastructure",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-122",
+      "text": "Chhindwara weather travel advisories",
+      "normalizedText": "chhindwara weather travel advisories",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-123",
+      "text": "India domestic flight delays",
+      "normalizedText": "india domestic flight delays",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-124",
+      "text": "Chhindwara health facilities access",
+      "normalizedText": "chhindwara health facilities access",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-125",
+      "text": "India rural connectivity issues",
+      "normalizedText": "india rural connectivity issues",
+      "weight": 0.75,
+      "factId": "fact-parents-traveling",
+      "status": "active"
+    },
+    {
+      "id": "topic-126",
+      "text": "Porto Santo news",
+      "normalizedText": "porto santo news",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-127",
+      "text": "Porto Santo weather",
+      "normalizedText": "porto santo weather",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-128",
+      "text": "Porto Santo tourism",
+      "normalizedText": "porto santo tourism",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-129",
+      "text": "Porto Santo transport",
+      "normalizedText": "porto santo transport",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-130",
+      "text": "Porto Santo accommodation",
+      "normalizedText": "porto santo accommodation",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-131",
+      "text": "Porto Santo local events",
+      "normalizedText": "porto santo local events",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-132",
+      "text": "Porto Santo safety",
+      "normalizedText": "porto santo safety",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-133",
+      "text": "Porto Santo healthcare",
+      "normalizedText": "porto santo healthcare",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-134",
+      "text": "Porto Santo tourism policy",
+      "normalizedText": "porto santo tourism policy",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-135",
+      "text": "Porto Santo expat residency",
+      "normalizedText": "porto santo expat residency",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-136",
+      "text": "Porto Santo infrastructure news",
+      "normalizedText": "porto santo infrastructure news",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-137",
+      "text": "Porto Santo housing market",
+      "normalizedText": "porto santo housing market",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-138",
+      "text": "Porto Santo local economy",
+      "normalizedText": "porto santo local economy",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-139",
+      "text": "Porto Santo environmental rules",
+      "normalizedText": "porto santo environmental rules",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-140",
+      "text": "Porto Santo community events",
+      "normalizedText": "porto santo community events",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-141",
+      "text": "Porto Santo business regulations",
+      "normalizedText": "porto santo business regulations",
+      "weight": 0.75,
+      "factId": "fact-gf-parents",
+      "status": "active",
+      "locationId": "loc-portosanto"
+    },
+    {
+      "id": "topic-142",
+      "text": "Bhopal news",
+      "normalizedText": "bhopal news",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-143",
+      "text": "Bhopal safety",
+      "normalizedText": "bhopal safety",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-144",
+      "text": "Bhopal weather",
+      "normalizedText": "bhopal weather",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-145",
+      "text": "Bhopal pollution",
+      "normalizedText": "bhopal pollution",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-146",
+      "text": "Bhopal healthcare facilities",
+      "normalizedText": "bhopal healthcare facilities",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-147",
+      "text": "Bhopal hospitals for seniors",
+      "normalizedText": "bhopal hospitals for seniors",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-148",
+      "text": "Bhopal elder care services",
+      "normalizedText": "bhopal elder care services",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-149",
+      "text": "Bhopal community support",
+      "normalizedText": "bhopal community support",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-150",
+      "text": "Bhopal diaspora remittance news",
+      "normalizedText": "bhopal diaspora remittance news",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-151",
+      "text": "Bhopal elder-care tech trends",
+      "normalizedText": "bhopal elder-care tech trends",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-152",
+      "text": "Bhopal AI-assisted senior services",
+      "normalizedText": "bhopal ai-assisted senior services",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-153",
+      "text": "Bhopal telehealth infrastructure updates",
+      "normalizedText": "bhopal telehealth infrastructure updates",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-154",
+      "text": "Bhopal digital literacy for seniors",
+      "normalizedText": "bhopal digital literacy for seniors",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-155",
+      "text": "Bhopal expat family communication tools",
+      "normalizedText": "bhopal expat family communication tools",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-bhopal"
+    },
+    {
+      "id": "topic-156",
+      "text": "Chhindwara local news updates",
+      "normalizedText": "chhindwara local news updates",
+      "weight": 0.75,
+      "factId": "fact-parents-bhopal",
+      "status": "active",
+      "locationId": "loc-chhindwara"
+    },
+    {
+      "id": "topic-157",
+      "text": "AI news app development",
+      "normalizedText": "ai news app development",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-158",
+      "text": "AI startup funding",
+      "normalizedText": "ai startup funding",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-159",
+      "text": "software engineering trends",
+      "normalizedText": "software engineering trends",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-160",
+      "text": "AI news aggregation",
+      "normalizedText": "ai news aggregation",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-161",
+      "text": "startup news in Amsterdam",
+      "normalizedText": "startup news in amsterdam",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-162",
+      "text": "Netherlands tech startups",
+      "normalizedText": "netherlands tech startups",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-163",
+      "text": "EU AI regulation",
+      "normalizedText": "eu ai regulation",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-164",
+      "text": "European tech policy",
+      "normalizedText": "european tech policy",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-165",
+      "text": "Berlin AI startup visa",
+      "normalizedText": "berlin ai startup visa",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-166",
+      "text": "Netherlands AI news regulation",
+      "normalizedText": "netherlands ai news regulation",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-167",
+      "text": "EU privacy-safe AI rules",
+      "normalizedText": "eu privacy-safe ai rules",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-168",
+      "text": "Berlin tech conference news",
+      "normalizedText": "berlin tech conference news",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-169",
+      "text": "Amsterdam expat startup tax",
+      "normalizedText": "amsterdam expat startup tax",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-170",
+      "text": "India small language model",
+      "normalizedText": "india small language model",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-171",
+      "text": "Portugal tech event news",
+      "normalizedText": "portugal tech event news",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active"
+    },
+    {
+      "id": "topic-172",
+      "text": "Berlin journalism workshop news",
+      "normalizedText": "berlin journalism workshop news",
+      "weight": 0.75,
+      "factId": "fact-startup-builder",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-173",
+      "text": "Nieuw-West startup resources",
+      "normalizedText": "nieuw-west startup resources",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-174",
+      "text": "Amsterdam startup ecosystem",
+      "normalizedText": "amsterdam startup ecosystem",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-175",
+      "text": "Amsterdam startup funding",
+      "normalizedText": "amsterdam startup funding",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-176",
+      "text": "North Holland startup policy",
+      "normalizedText": "north holland startup policy",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-177",
+      "text": "Netherlands startup tax",
+      "normalizedText": "netherlands startup tax",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-178",
+      "text": "Netherlands startup regulation",
+      "normalizedText": "netherlands startup regulation",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-179",
+      "text": "EU startup regulation",
+      "normalizedText": "eu startup regulation",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-180",
+      "text": "European startup funding",
+      "normalizedText": "european startup funding",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-181",
+      "text": "Amsterdam startup visa rules",
+      "normalizedText": "amsterdam startup visa rules",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active",
+      "locationId": "loc-amsterdam"
+    },
+    {
+      "id": "topic-182",
+      "text": "Netherlands startup tax incentives",
+      "normalizedText": "netherlands startup tax incentives",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-183",
+      "text": "Berlin startup ecosystem news",
+      "normalizedText": "berlin startup ecosystem news",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active",
+      "locationId": "loc-berlin"
+    },
+    {
+      "id": "topic-184",
+      "text": "EU startup regulatory changes",
+      "normalizedText": "eu startup regulatory changes",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-185",
+      "text": "Netherlands AI privacy laws",
+      "normalizedText": "netherlands ai privacy laws",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    },
+    {
+      "id": "topic-186",
+      "text": "India startup funding trends",
+      "normalizedText": "india startup funding trends",
+      "weight": 0.75,
+      "factId": "fact-founder",
+      "status": "active"
+    }
+  ],
+  "suppressions": [],
+  "pubPrefs": []
+}

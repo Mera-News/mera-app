@@ -18,3 +18,4 @@ export * from './article-pipeline/scoring';
 export * from './article-pipeline/candidates';
 export * from './article-pipeline/pipeline';
 export * from './article-feedback/agent-core';
+export * from './scoring-engine';
