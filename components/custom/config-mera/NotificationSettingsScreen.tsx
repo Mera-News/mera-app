@@ -320,7 +320,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             {/* Device Settings Note - preferences mode only, when disabled */}
             {!notificationsEnabled && !isOnboarding && (
                 <Box className="mt-4">
-                    <Box className="p-4 bg-background-900 rounded-lg border border-background-700 mb-3">
+                    <Box className="p-4 bg-background-50 rounded-lg border border-background-100 mb-3">
                         <Text className="text-typography-400 text-sm leading-5">
                             <MaterialIcons name="info-outline" size={16} color="#9ca3af" /> {t('notifications.permissionDenied')}
                         </Text>

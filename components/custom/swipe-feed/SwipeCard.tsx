@@ -133,7 +133,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ suggestion, onOpenDetail }) => {
 
   return (
     <Box
-      className="self-center overflow-hidden rounded-2xl bg-background-900 border border-outline-800"
+      className="self-center overflow-hidden rounded-2xl bg-background-50 border border-outline-100"
       style={{ width: size, height: size }}
     >
       {/* Card BODY → opens detail. Nested pressables (sources pill) capture
@@ -196,7 +196,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({ suggestion, onOpenDetail }) => {
       </Pressable>
 
       {/* Action row — reused VERBATIM (like/dislike/share/save/Mera chat). */}
-      <Box className="px-1 border-t border-outline-800">
+      <Box className="px-1 border-t border-outline-100">
         <ArticleFeedbackPrompt
           articleId={suggestion.articleId}
           suggestionId={suggestion._id}

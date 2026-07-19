@@ -51,7 +51,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
                                         {p.publicationName}
                                     </Text>
                                 </HStack>
-                                <Box className="px-2 py-0.5 rounded-full bg-background-800">
+                                <Box className="px-2 py-0.5 rounded-full bg-background-50">
                                     <Text size="xs" className="text-typography-400">
                                         {t('publicationVisits.countShort', { count: p.visitCount })}
                                     </Text>

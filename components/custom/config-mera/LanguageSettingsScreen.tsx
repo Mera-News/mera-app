@@ -148,7 +148,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                 </Text>
                             </Pressable>
 
-                            <Box className="p-4 bg-gray-800 rounded-lg border border-background-700">
+                            <Box className="p-4 bg-gray-800 rounded-lg border border-gray-700">
                                 {Platform.OS === 'ios' ? (
                                     <VStack space="sm">
                                         <Text className="text-typography-400 text-sm leading-5">

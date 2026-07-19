@@ -209,10 +209,10 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         <View style={styles.buttonRow}>
           <Button
             onPress={handleCancel}
-            className="flex-1 rounded-full bg-background-700"
+            className="flex-1 rounded-full bg-background-100"
             size="sm"
           >
-            <ButtonText className="text-typography-300 text-sm">
+            <ButtonText className="text-typography-700 text-sm">
               {t('articleFeedback.proposalCancel')}
             </ButtonText>
           </Button>

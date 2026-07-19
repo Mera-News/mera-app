@@ -252,10 +252,10 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         <Button
           onPress={handleGenerateMore}
           isDisabled={isGenerating}
-          className="flex-1 rounded-full bg-background-700"
+          className="flex-1 rounded-full bg-background-100"
           size="sm"
         >
-          <ButtonText className="text-typography-300 text-sm">
+          <ButtonText className="text-typography-700 text-sm">
             {isGenerating ? t('topicPlan.generatingMore') : t('topicPlan.generateMore')}
           </ButtonText>
         </Button>

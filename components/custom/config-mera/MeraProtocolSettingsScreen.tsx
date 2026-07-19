@@ -475,7 +475,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         const baseClass = 'flex-1 rounded-lg px-4 py-3 border ';
         const stateClass = selected
             ? 'border-emerald-500 bg-emerald-950'
-            : 'border-gray-700 bg-background-900';
+            : 'border-gray-700 bg-background-50';
 
         const iconColor = selected ? '#34d399' : '#9ca3af';
         const titleClass = selected ? 'text-emerald-400' : 'text-white';
