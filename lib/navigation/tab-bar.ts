@@ -10,8 +10,15 @@ import { Platform } from 'react-native';
  * tab bar renders icon-only, `tabBarShowLabel: false`) and because
  * screen-level overlays that render OUTSIDE the Tabs navigator (the floating
  * chat bubble, the scroll-to-top FAB) need to compute an accurate bottom
- * clearance without a ref into the navigator. `app_container/_layout.tsx`
- * sets `tabBarStyle.height` to this same value (+ insets.bottom) so the two
- * never drift apart.
+ * clearance without a ref into the navigator.
+ *
+ * NOTE: since the tab bar switched to `NativeTabs` (expo-router
+ * unstable-native-tabs / liquid-glass) in `app_container/_layout.tsx`, the
+ * native bar owns its own height and no longer reads this constant — the real
+ * native height isn't exposed to JS. This value is now purely a conservative
+ * bottom-clearance estimate for the OUTSIDE-the-navigator overlays above, so
+ * it may not exactly match the rendered native bar. Kept because those
+ * overlays (BrowseFeedScreen, ForYouScreen, ExploreScreen, the FABs and chat
+ * bubbles) still rely on it for padding/clearance.
  */
 export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;

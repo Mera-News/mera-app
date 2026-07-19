@@ -1,147 +1,82 @@
-import { Tabs } from 'expo-router';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
 import NotificationBellOverlay from '@/components/custom/notifications/NotificationBellOverlay';
-import TabsTooltipStrip from '@/components/custom/tabs/TabsTooltipStrip';
-import { toastManager } from '@/lib/toast-manager';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTranslation } from 'react-i18next';
 
 // Foreground polling, AppState listening, and recoverCycle calls have moved
 // to AppScheduler (lib/scheduler/AppScheduler.ts) and its registered tasks:
 //   - feed-sync-task.ts   — syncs the feed on a 5-minute cadence + foreground
 //   - inference-recover-task.ts — calls recoverCycle on foreground
 
-// House dark-mode tokens (components/ui/gluestack-ui-provider/config.ts dark
-// palette): primary-400 = rgb(231, 138, 83) (accent), typography-500 = rgb(163,
-// 163, 163) (muted inactive), border matches the app's black/gray-800 chrome
-// used elsewhere (DrillDownHeader, Stack contentStyle).
+// House dark-mode accent (components/ui/gluestack-ui-provider/config.ts dark
+// palette): primary-400 = rgb(231, 138, 83). Applied as the NativeTabs
+// `tintColor` so the selected tab picks up the app accent; everything else
+// (blur/liquid-glass on iOS 26, Material on Android) is left to the native
+// appearance — no custom tabBarStyle.
 const ACCENT = 'rgb(231, 138, 83)';
-const INACTIVE = 'rgb(163, 163, 163)';
-const BAR_BACKGROUND = '#000000';
-const BAR_BORDER = '#1f2937'; // gray-800
 
-type TabIconName = 'browse' | 'for_you' | 'around' | 'profile' | 'settings';
-
-const TAB_ICON: Record<TabIconName, keyof typeof MaterialIcons.glyphMap> = {
-    browse: 'style',
-    for_you: 'home',
-    around: 'explore',
-    profile: 'person',
-    settings: 'settings',
-};
-
-// i18n keys for tabBarAccessibilityLabel + the long-press name toast.
-// `as const satisfies` keeps the values as literal string types (rather than
-// widened to `string`) so they type-check against react-i18next's typed `t()`
-// keys (lib/i18n/types.ts) — see components/custom/floating-chat/FactCard.tsx
-// for the same pattern.
-const TAB_LABEL_KEY = {
-    browse: 'tabs.browse',
-    for_you: 'tabs.forYou',
-    around: 'tabs.around',
-    profile: 'tabs.profile',
-    settings: 'tabs.settings',
-} as const satisfies Record<TabIconName, string>;
-
-function tabIcon(name: TabIconName) {
-    function TabBarIcon({ color, size }: { color: string; size: number }) {
-        return <MaterialIcons name={TAB_ICON[name]} size={size} color={color} />;
-    }
-    return TabBarIcon;
-}
+const { Icon, Label, VectorIcon } = NativeTabs.Trigger;
 
 export default function AppLayout() {
-    const insets = useSafeAreaInsets();
     const { t } = useTranslation();
 
-    // Long-press a tab to hear/see its name — a lightweight substitute for the
-    // (hidden) text label, surfaced via the app's global toast manager so it
-    // works from inside the tab-bar's own gesture handling without extra
-    // popover plumbing.
-    const longPressListener = (name: TabIconName) => () => ({
-        tabLongPress: () => {
-            toastManager.showInfo(t(TAB_LABEL_KEY[name]));
-        },
-    });
-
+    // Trigger order defines both the tab order AND the initial route — the first
+    // trigger (`browse`) is the one selected on first mount, replacing the old
+    // JS-Tabs `initialRouteName="browse"`.
     return (
         <View style={{ flex: 1 }}>
             <ErrorBoundary
                 level="screen"
                 FallbackComponent={FullScreenErrorFallback}
             >
-                <Tabs
-                    initialRouteName="browse"
-                    screenOptions={{
-                        headerShown: false,
-                        tabBarShowLabel: false,
-                        tabBarActiveTintColor: ACCENT,
-                        tabBarInactiveTintColor: INACTIVE,
-                        tabBarStyle: {
-                            backgroundColor: BAR_BACKGROUND,
-                            borderTopColor: BAR_BORDER,
-                            borderTopWidth: StyleSheet.hairlineWidth,
-                            height: TAB_BAR_HEIGHT + insets.bottom,
-                            paddingTop: 8,
-                            paddingBottom: insets.bottom,
-                        },
-                    }}
-                >
-                    {/* Browse (swipe deck) — revealed in Wave 8; the app's initial
-                        route (For You is one tab over). */}
-                    <Tabs.Screen
-                        name="browse"
-                        options={{
-                            tabBarIcon: tabIcon('browse'),
-                            tabBarAccessibilityLabel: t(TAB_LABEL_KEY.browse),
-                        }}
-                        listeners={longPressListener('browse')}
-                    />
-                    <Tabs.Screen
-                        name="for_you"
-                        options={{
-                            tabBarIcon: tabIcon('for_you'),
-                            tabBarAccessibilityLabel: t(TAB_LABEL_KEY.for_you),
-                        }}
-                        listeners={longPressListener('for_you')}
-                    />
-                    {/* Explore (route `around`) — revealed in Wave 10 (N5). */}
-                    <Tabs.Screen
-                        name="around"
-                        options={{
-                            tabBarIcon: tabIcon('around'),
-                            tabBarAccessibilityLabel: t(TAB_LABEL_KEY.around),
-                        }}
-                        listeners={longPressListener('around')}
-                    />
-                    <Tabs.Screen
-                        name="profile"
-                        options={{
-                            tabBarIcon: tabIcon('profile'),
-                            tabBarAccessibilityLabel: t(TAB_LABEL_KEY.profile),
-                        }}
-                        listeners={longPressListener('profile')}
-                    />
-                    <Tabs.Screen
-                        name="settings"
-                        options={{
-                            tabBarIcon: tabIcon('settings'),
-                            tabBarAccessibilityLabel: t(TAB_LABEL_KEY.settings),
-                        }}
-                        listeners={longPressListener('settings')}
-                    />
-                </Tabs>
+                <NativeTabs tintColor={ACCENT}>
+                    {/* Browse (swipe deck) — the app's initial route. */}
+                    <NativeTabs.Trigger name="browse">
+                        <Label>{t('tabs.browse')}</Label>
+                        <Icon
+                            sf="square.stack"
+                            src={<VectorIcon family={MaterialIcons} name="style" />}
+                        />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger name="for_you">
+                        <Label>{t('tabs.forYou')}</Label>
+                        <Icon
+                            sf="house.fill"
+                            src={<VectorIcon family={MaterialIcons} name="home" />}
+                        />
+                    </NativeTabs.Trigger>
+                    {/* Explore (route `around`). */}
+                    <NativeTabs.Trigger name="around">
+                        <Label>{t('tabs.around')}</Label>
+                        <Icon
+                            sf="safari.fill"
+                            src={<VectorIcon family={MaterialIcons} name="explore" />}
+                        />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger name="profile">
+                        <Label>{t('tabs.profile')}</Label>
+                        <Icon
+                            sf="person.fill"
+                            src={<VectorIcon family={MaterialIcons} name="person" />}
+                        />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger name="settings">
+                        <Label>{t('tabs.settings')}</Label>
+                        <Icon
+                            sf="gearshape.fill"
+                            src={<VectorIcon family={MaterialIcons} name="settings" />}
+                        />
+                    </NativeTabs.Trigger>
+                </NativeTabs>
             </ErrorBoundary>
             {/* Shared notification bell — absolutely positioned top-right, above
                 all 5 tab screens (same position on every tab). */}
             <NotificationBellOverlay />
-            <TabsTooltipStrip />
             <ModelDownloadBanner />
         </View>
     );
