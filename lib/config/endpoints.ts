@@ -19,7 +19,7 @@
 // connect failures that look like server outages. We capture to Sentry on
 // the way out (sentry-init runs first in every entry point) and re-throw.
 //
-// Cache-bust marker (bump when env values change): 2026-06-30
+// Cache-bust marker (bump when env values change): 2026-07-18b (dev .env back to prod endpoints)
 
 import * as Sentry from '@sentry/react-native';
 
