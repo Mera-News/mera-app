@@ -1,6 +1,9 @@
 import { useNetworkStore } from '@/lib/stores/network-store';
 import logger from '@/lib/logger';
-import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
+import {
+  requestSuggestionsRefresh,
+  flushSuggestionsRefresh,
+} from '@/lib/services/SuggestionSyncService';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { ArticleService } from '@/lib/article-service';
 import { toastManager } from '@/lib/toast-manager';
@@ -110,6 +113,10 @@ class FeedSyncMachine {
     try {
       await this._run(personaId, ctx);
     } finally {
+      // Terminal exactness across EVERY exit path (completion, mid-run abort
+      // return, error throw): flush any pending coalesced refresh so the store
+      // reflects the final DB state before teardown.
+      await flushSuggestionsRefresh();
       deactivateKeepAwake(KEEP_AWAKE_TAG);
       this._networkUnsubscribe?.();
       this._networkUnsubscribe = null;
@@ -187,7 +194,7 @@ class FeedSyncMachine {
         if (ctx.signal.aborted) return;
         await steps.stepScore(ctx);
 
-        await refreshSuggestionsInStoreUnsafe();
+        await flushSuggestionsRefresh();
         this._transitionTo('done');
         publishSyncStatus('done');
         useForYouStore.getState().setLastSyncAt(Date.now());
@@ -223,7 +230,9 @@ class FeedSyncMachine {
           publishSyncStatus('hydrating', { progress: { current: completed, total } });
         },
         awaitResumeIfPaused: () => this._awaitResumeIfPaused(),
-        refreshStore: () => refreshSuggestionsInStoreUnsafe(),
+        // A1: coalesce the per-chunk store refreshes into a leading+trailing
+        // throttle instead of a full reload after every 25-item chunk.
+        refreshStore: () => requestSuggestionsRefresh(),
       });
       useForYouStore.getState().resetHydrationProgress();
 
@@ -238,9 +247,9 @@ class FeedSyncMachine {
             : nextUtcMidnightMs()
           : null,
       );
-      // Final refresh after all chunks (each chunk already refreshed for
-      // progressive rendering).
-      await refreshSuggestionsInStoreUnsafe();
+      // Final refresh after all chunks (each chunk already requested a
+      // throttled refresh) — flush guarantees the last chunk landed exactly.
+      await flushSuggestionsRefresh();
 
       // Step 4: score
       this._transitionTo('scoring');
@@ -251,7 +260,7 @@ class FeedSyncMachine {
       await steps.stepScore(ctx);
 
       // Done
-      await refreshSuggestionsInStoreUnsafe();
+      await flushSuggestionsRefresh();
       this._transitionTo('done');
       publishSyncStatus('done');
       useForYouStore.getState().setLastSyncAt(Date.now());

@@ -35,7 +35,7 @@ jest.mock('@/lib/translation-service', () => ({
     ],
 }));
 
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { useAppLanguageStore, useAppLanguage } from '../app-language-store';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -46,6 +46,7 @@ const resetState = {
     appLanguage: 'en',
     cache: new Map<string, string>(),
     pending: new Set<string>(),
+    cacheVersion: 0,
 };
 
 describe('useAppLanguageStore', () => {
@@ -146,6 +147,64 @@ describe('useAppLanguageStore', () => {
             useAppLanguageStore.getState().cacheTranslation('not-pending', 'translated');
         }).not.toThrow();
         expect(useAppLanguageStore.getState().cache.get('not-pending')).toBe('translated');
+    });
+
+    // ── in-place mutation + cacheVersion (A4 perf contract) ────────────────────
+
+    it('cacheTranslation mutates the cache in place (stable Map reference)', () => {
+        const before = useAppLanguageStore.getState().cache;
+        useAppLanguageStore.getState().cacheTranslation('hello', 'bonjour');
+        const after = useAppLanguageStore.getState().cache;
+        // Reference must be stable — consumers subscribe per-key, not by Map identity.
+        expect(after).toBe(before);
+        expect(after.get('hello')).toBe('bonjour');
+    });
+
+    it('cacheTranslation bumps cacheVersion exactly once per call', () => {
+        const v0 = useAppLanguageStore.getState().cacheVersion;
+        useAppLanguageStore.getState().cacheTranslation('a', '1');
+        expect(useAppLanguageStore.getState().cacheVersion).toBe(v0 + 1);
+        useAppLanguageStore.getState().cacheTranslation('b', '2');
+        expect(useAppLanguageStore.getState().cacheVersion).toBe(v0 + 2);
+    });
+
+    it('addPending and removePending mutate pending in place and bump cacheVersion', () => {
+        const pendingRef = useAppLanguageStore.getState().pending;
+        const v0 = useAppLanguageStore.getState().cacheVersion;
+
+        useAppLanguageStore.getState().addPending('hello');
+        expect(useAppLanguageStore.getState().pending).toBe(pendingRef); // in place
+        expect(useAppLanguageStore.getState().pending.has('hello')).toBe(true);
+        expect(useAppLanguageStore.getState().cacheVersion).toBe(v0 + 1);
+
+        useAppLanguageStore.getState().removePending('hello');
+        expect(useAppLanguageStore.getState().pending).toBe(pendingRef); // in place
+        expect(useAppLanguageStore.getState().pending.has('hello')).toBe(false);
+        expect(useAppLanguageStore.getState().cacheVersion).toBe(v0 + 2);
+    });
+
+    it('per-key selector updates only for the key that landed', () => {
+        // Two subscribers, each keyed to a different text.
+        const hookA = renderHook(() => useAppLanguageStore((s) => s.cache.get('a')));
+        const hookB = renderHook(() => useAppLanguageStore((s) => s.cache.get('b')));
+
+        expect(hookA.result.current).toBeUndefined();
+        expect(hookB.result.current).toBeUndefined();
+
+        act(() => {
+            useAppLanguageStore.getState().cacheTranslation('a', 'translated-a');
+        });
+
+        // Only 'a' resolves; 'b' stays undefined (Object.is → no value change).
+        expect(hookA.result.current).toBe('translated-a');
+        expect(hookB.result.current).toBeUndefined();
+
+        act(() => {
+            useAppLanguageStore.getState().cacheTranslation('b', 'translated-b');
+        });
+
+        expect(hookA.result.current).toBe('translated-a');
+        expect(hookB.result.current).toBe('translated-b');
     });
 
     // ── addPending / removePending ────────────────────────────────────────────

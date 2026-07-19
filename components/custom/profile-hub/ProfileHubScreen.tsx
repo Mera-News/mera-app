@@ -1,4 +1,5 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
+import FocusFreeze from '@/components/custom/FocusFreeze';
 import UsageWidget from '@/components/custom/UsageWidget';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
@@ -85,17 +86,18 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
         init();
     }, [userId, userPersona, fetchUserPersona, refreshCounts, refreshHygieneCount]);
 
-    // Hygiene count reacts to sweep/accept/reject changes.
-    useEffect(() => {
-        refreshHygieneCount();
-        return subscribeHygieneChange(refreshHygieneCount);
-    }, [refreshHygieneCount]);
-
-    // Refresh counts + hygiene whenever the tab regains focus.
+    // Refresh counts + hygiene whenever the tab regains focus, and keep the
+    // hygiene subscription live only while focused. `subscribeHygieneChange`
+    // triggers a WatermelonDB read (getPendingCount) on every sweep/accept/
+    // reject event, so gating it by focus avoids querying the DB while this
+    // tab is backgrounded/frozen (Freeze only pauses re-renders, not
+    // subscriptions — see FocusFreeze). Unsubscribes on blur, resubscribes on
+    // focus, preserving the current on-focus live-update behavior.
     useFocusEffect(
         useCallback(() => {
             refreshCounts();
             refreshHygieneCount();
+            return subscribeHygieneChange(refreshHygieneCount);
         }, [refreshCounts, refreshHygieneCount]),
     );
 
@@ -183,161 +185,165 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
 
     if (isLoading) {
         return (
-            <Box className="flex-1 items-center justify-center">
-                <Spinner size="large" />
-            </Box>
+            <FocusFreeze>
+                <Box className="flex-1 items-center justify-center">
+                    <Spinner size="large" />
+                </Box>
+            </FocusFreeze>
         );
     }
 
     return (
-        <Box className="flex-1">
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingTop: 12, paddingBottom: 120 }}
-                onScroll={notifyScrollTick}
-                scrollEventThrottle={16}
-            >
-                {isBlocked && <BlockedBanner reason={userPersona?.blockedByLlmReason} />}
+        <FocusFreeze>
+            <Box className="flex-1">
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingTop: 12, paddingBottom: 120 }}
+                    onScroll={notifyScrollTick}
+                    scrollEventThrottle={16}
+                >
+                    {isBlocked && <BlockedBanner reason={userPersona?.blockedByLlmReason} />}
 
-                {/* Metrics card — server-side delivery tally (user-daily-usage);
-                    local count is only an offline fallback. */}
-                <UsageWidget
-                    className="mx-4 mb-3"
-                    used={billing?.articlesUsedToday ?? totalArticleCount}
-                    limit={billing?.dailyArticleLimit ?? null}
-                    usedLabel={t('configPanel.articlesAnalyzedLast24h')}
-                    planLabel={
-                        billing?.subscriptionTier === 'professional'
-                            ? t('configPanel.professionalPlan')
-                            : billing?.subscriptionTier === 'individual'
-                                ? t('configPanel.individualPlan')
-                                : t('configPanel.promoPlan')
-                    }
-                    onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
-                    upgradeLabel={t('subscription.upgrade')}
-                    resetAt={billing?.resetAt}
-                    resetLabel={t('configPanel.resetsOn')}
-                    onInfoPress={() => setShowArticleCountInfo(true)}
-                />
+                    {/* Metrics card — server-side delivery tally (user-daily-usage);
+                        local count is only an offline fallback. */}
+                    <UsageWidget
+                        className="mx-4 mb-3"
+                        used={billing?.articlesUsedToday ?? totalArticleCount}
+                        limit={billing?.dailyArticleLimit ?? null}
+                        usedLabel={t('configPanel.articlesAnalyzedLast24h')}
+                        planLabel={
+                            billing?.subscriptionTier === 'professional'
+                                ? t('configPanel.professionalPlan')
+                                : billing?.subscriptionTier === 'individual'
+                                    ? t('configPanel.individualPlan')
+                                    : t('configPanel.promoPlan')
+                        }
+                        onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
+                        upgradeLabel={t('subscription.upgrade')}
+                        resetAt={billing?.resetAt}
+                        resetLabel={t('configPanel.resetsOn')}
+                        onInfoPress={() => setShowArticleCountInfo(true)}
+                    />
 
-                {/* Refresh-suggestions button (compact) with stale-feed glow. */}
-                <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
-                    {feedNeedsRefresh && !isRefreshingSuggestions && (
-                        <Animated.View
-                            pointerEvents="none"
-                            style={{
-                                position: 'absolute',
-                                top: -3,
-                                left: -3,
-                                right: -3,
-                                bottom: -3,
-                                borderRadius: 12,
-                                borderWidth: 2,
-                                borderColor: '#60a5fa',
-                                opacity: glowAnim,
-                            }}
-                        />
-                    )}
-                    <Button
-                        variant="outline"
-                        action="primary"
-                        size="sm"
-                        onPress={handleRefreshSuggestions}
-                        disabled={isRefreshingSuggestions}
-                    >
-                        {isRefreshingSuggestions ? (
-                            <HStack space="sm" className="items-center">
-                                <Spinner size="small" />
-                                <ButtonText>{t('configPanel.refreshingSuggestions')}</ButtonText>
-                            </HStack>
-                        ) : (
-                            <HStack space="sm" className="items-center">
-                                <MaterialIcons name="refresh" size={16} color="#60a5fa" />
-                                <ButtonText>{t('configPanel.refreshSuggestions')}</ButtonText>
-                            </HStack>
+                    {/* Refresh-suggestions button (compact) with stale-feed glow. */}
+                    <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
+                        {feedNeedsRefresh && !isRefreshingSuggestions && (
+                            <Animated.View
+                                pointerEvents="none"
+                                style={{
+                                    position: 'absolute',
+                                    top: -3,
+                                    left: -3,
+                                    right: -3,
+                                    bottom: -3,
+                                    borderRadius: 12,
+                                    borderWidth: 2,
+                                    borderColor: '#60a5fa',
+                                    opacity: glowAnim,
+                                }}
+                            />
                         )}
-                    </Button>
-                </View>
-                {feedNeedsRefresh && !isRefreshingSuggestions && (
-                    <Box className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
-                        <HStack space="xs" className="items-start">
-                            <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
-                            <Text size="xs" className="text-blue-300 flex-1">
-                                {t('configPanel.personaUpdatedRefreshHint')}
-                            </Text>
-                        </HStack>
-                    </Box>
-                )}
-
-                {/* Hub rows */}
-                <Box className="px-4">
-                    <HubRow
-                        icon="psychology"
-                        label={t('profileHub.facts', { defaultValue: 'Facts' })}
-                        subtitle={factsSubtitle}
-                        onPress={() => router.push('/logged-in/facts')}
-                    />
-                    <HubRow
-                        icon="place"
-                        label={t('profileHub.locations', { defaultValue: 'Locations' })}
-                        subtitle={t('profileHub.locationsSubtitle', { defaultValue: 'Places that shape your feed' })}
-                        onPress={() => router.push('/logged-in/locations')}
-                    />
-                    <HubRow
-                        icon="bookmark"
-                        label={t('profileHub.saved', { defaultValue: 'Saved' })}
-                        subtitle={t('profileHub.savedSubtitle', { defaultValue: 'Articles you saved for later' })}
-                        onPress={() => router.push('/logged-in/saved-suggestions')}
-                    />
-                    <HubRow
-                        icon="tune"
-                        label={t('profileHub.preferences', { defaultValue: 'Source preferences' })}
-                        subtitle={prefsSubtitle}
-                        onPress={() => router.push('/logged-in/publication-preferences')}
-                    />
-                    <HubRow
-                        icon="history"
-                        label={t('profileHub.activity', { defaultValue: 'Activity' })}
-                        subtitle={t('profileHub.activitySubtitle', { defaultValue: 'Your persona change history' })}
-                        onPress={() => router.push('/logged-in/persona-audit')}
-                    />
-                    <HubRow
-                        icon="cleaning-services"
-                        label={t('profileHub.personaHealth', { defaultValue: 'Persona health' })}
-                        subtitle={hygieneSubtitle}
-                        badgeCount={hygieneCount}
-                        onPress={() => router.push('/logged-in/hygiene-review')}
-                    />
-                </Box>
-            </ScrollView>
-
-            <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="pb-3">
-                        <HStack className="items-center" space="xs">
-                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
-                        </HStack>
-                    </ModalHeader>
-                    <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
-                            {t('configPanel.articleAnalysisDescription')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
                         <Button
                             variant="outline"
-                            action="secondary"
-                            onPress={() => setShowArticleCountInfo(false)}
-                            className="w-full"
+                            action="primary"
+                            size="sm"
+                            onPress={handleRefreshSuggestions}
+                            disabled={isRefreshingSuggestions}
                         >
-                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                            {isRefreshingSuggestions ? (
+                                <HStack space="sm" className="items-center">
+                                    <Spinner size="small" />
+                                    <ButtonText>{t('configPanel.refreshingSuggestions')}</ButtonText>
+                                </HStack>
+                            ) : (
+                                <HStack space="sm" className="items-center">
+                                    <MaterialIcons name="refresh" size={16} color="#60a5fa" />
+                                    <ButtonText>{t('configPanel.refreshSuggestions')}</ButtonText>
+                                </HStack>
+                            )}
                         </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </Box>
+                    </View>
+                    {feedNeedsRefresh && !isRefreshingSuggestions && (
+                        <Box className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
+                            <HStack space="xs" className="items-start">
+                                <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
+                                <Text size="xs" className="text-blue-300 flex-1">
+                                    {t('configPanel.personaUpdatedRefreshHint')}
+                                </Text>
+                            </HStack>
+                        </Box>
+                    )}
+
+                    {/* Hub rows */}
+                    <Box className="px-4">
+                        <HubRow
+                            icon="psychology"
+                            label={t('profileHub.facts', { defaultValue: 'Facts' })}
+                            subtitle={factsSubtitle}
+                            onPress={() => router.push('/logged-in/facts')}
+                        />
+                        <HubRow
+                            icon="place"
+                            label={t('profileHub.locations', { defaultValue: 'Locations' })}
+                            subtitle={t('profileHub.locationsSubtitle', { defaultValue: 'Places that shape your feed' })}
+                            onPress={() => router.push('/logged-in/locations')}
+                        />
+                        <HubRow
+                            icon="bookmark"
+                            label={t('profileHub.saved', { defaultValue: 'Saved' })}
+                            subtitle={t('profileHub.savedSubtitle', { defaultValue: 'Articles you saved for later' })}
+                            onPress={() => router.push('/logged-in/saved-suggestions')}
+                        />
+                        <HubRow
+                            icon="tune"
+                            label={t('profileHub.preferences', { defaultValue: 'Source preferences' })}
+                            subtitle={prefsSubtitle}
+                            onPress={() => router.push('/logged-in/publication-preferences')}
+                        />
+                        <HubRow
+                            icon="history"
+                            label={t('profileHub.activity', { defaultValue: 'Activity' })}
+                            subtitle={t('profileHub.activitySubtitle', { defaultValue: 'Your persona change history' })}
+                            onPress={() => router.push('/logged-in/persona-audit')}
+                        />
+                        <HubRow
+                            icon="cleaning-services"
+                            label={t('profileHub.personaHealth', { defaultValue: 'Persona health' })}
+                            subtitle={hygieneSubtitle}
+                            badgeCount={hygieneCount}
+                            onPress={() => router.push('/logged-in/hygiene-review')}
+                        />
+                    </Box>
+                </ScrollView>
+
+                <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
+                    <ModalBackdrop />
+                    <ModalContent>
+                        <ModalHeader className="pb-3">
+                            <HStack className="items-center" space="xs">
+                                <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
+                                <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
+                            </HStack>
+                        </ModalHeader>
+                        <ModalBody className="py-4">
+                            <Text className="text-gray-300 text-sm leading-relaxed">
+                                {t('configPanel.articleAnalysisDescription')}
+                            </Text>
+                        </ModalBody>
+                        <ModalFooter className="border-t border-gray-700 pt-4">
+                            <Button
+                                variant="outline"
+                                action="secondary"
+                                onPress={() => setShowArticleCountInfo(false)}
+                                className="w-full"
+                            >
+                                <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+            </Box>
+        </FocusFreeze>
     );
 };
 

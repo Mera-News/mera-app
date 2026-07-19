@@ -380,7 +380,8 @@ describe('AppScheduler — foreground trigger', () => {
     mockCreateJob.mockResolvedValue(makeJob({ taskName: 'fg-task' }));
 
     AppScheduler.onStoresHydrated();
-    await jest.advanceTimersByTimeAsync(0);
+    // A6: onStoresHydrated defers the kick past interactions + a ~1s settle.
+    await jest.advanceTimersByTimeAsync(1_100);
 
     expect(mockCreateJob).toHaveBeenCalled();
   });
@@ -421,7 +422,7 @@ describe('AppScheduler — foreground trigger', () => {
     mockSchedulerStore.isRunning.mockReturnValue(true);
 
     AppScheduler.onStoresHydrated();
-    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(1_100);
 
     expect(mockCreateJob).not.toHaveBeenCalled();
   });
@@ -437,7 +438,7 @@ describe('AppScheduler — foreground trigger', () => {
     mockSchedulerStore.getLastRun.mockReturnValue(NOW - 1000);
 
     AppScheduler.onStoresHydrated();
-    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(1_100);
 
     expect(mockCreateJob).not.toHaveBeenCalled();
   });
@@ -453,7 +454,7 @@ describe('AppScheduler — foreground trigger', () => {
     mockDbStore.ready = false;
 
     AppScheduler.onStoresHydrated();
-    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(1_100);
 
     expect(mockCreateJob).not.toHaveBeenCalled();
   });

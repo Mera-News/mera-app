@@ -121,7 +121,6 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
-    const cache = useAppLanguageStore((s) => s.cache);
 
     // Local toggle state: lets the user flip between original and translated
     // text on the detail screen (only when `showToggle` is set).
@@ -139,7 +138,16 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         && !!appLanguage
         && appLanguage !== 'en'
         && !originalIsTargetLang;
-    const cachedTranslation = needsTranslation ? cache.get(text) : undefined;
+
+    // Per-key subscription (NOT the whole cache Map). The store mutates the
+    // cache in place and bumps `cacheVersion`, so zustand re-runs this selector
+    // on every translation completion — but Object.is on the returned string
+    // means only the node whose key just landed actually re-renders. Selecting
+    // the whole Map here would re-render every mounted TranslatableDynamic on
+    // every translation anywhere (2+ per feed card).
+    const cachedTranslation = useAppLanguageStore((s) =>
+        needsTranslation ? s.cache.get(text) : undefined,
+    );
 
     const nodeRef = useRef<MeasurableNode | null>(null);
     const setNodeRef = useCallback((node: unknown) => {

@@ -99,17 +99,28 @@ jest.mock('expo-keep-awake', () => ({
   deactivateKeepAwake: (...args: any[]) => mockDeactivateKeepAwake(...args),
 }));
 
-import { runScoringPass, refreshSuggestionsInStoreUnsafe } from '../SuggestionSyncService';
+import {
+  runScoringPass,
+  refreshSuggestionsInStoreUnsafe,
+  requestSuggestionsRefresh,
+  flushSuggestionsRefresh,
+  __resetSuggestionsRefreshThrottleForTests,
+  REFRESH_MIN_INTERVAL_MS,
+} from '../SuggestionSyncService';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 
 describe('runScoringPass', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    __resetSuggestionsRefreshThrottleForTests();
     mockActivateKeepAwakeAsync.mockResolvedValue(undefined);
     mockDeactivateKeepAwake.mockReturnValue(undefined);
     mockForYouState.articleCount = 5;
     mockForYouState.relevantArticleCount = 2;
+    // The identity-merge reads the store's previous suggestions; reset it so a
+    // prior test's setState() (Object.assign) doesn't leak stale rows.
+    delete (mockForYouState as { suggestions?: unknown }).suggestions;
   });
 
   describe('cloud mode (non on-device)', () => {
@@ -320,8 +331,10 @@ describe('runScoringPass', () => {
 describe('refreshSuggestionsInStoreUnsafe', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    __resetSuggestionsRefreshThrottleForTests();
     mockForYouState.articleCount = 10;
     mockForYouState.relevantArticleCount = 3;
+    delete (mockForYouState as { suggestions?: unknown }).suggestions;
   });
 
   it('loads suggestions and updates store state', async () => {
@@ -412,5 +425,171 @@ describe('refreshSuggestionsInStoreUnsafe', () => {
     // Both unscored → both -Infinity → sort returns 0, order preserved
     expect(callArg.suggestions).toHaveLength(2);
     expect(callArg.suggestions.every((s: any) => s.status === ArticleSuggestionStatus.Unscored)).toBe(true);
+  });
+});
+
+// A1 — leading+trailing coalesced refresh throttle.
+describe('requestSuggestionsRefresh / flushSuggestionsRefresh — throttle semantics', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    __resetSuggestionsRefreshThrottleForTests();
+    mockForYouState.articleCount = 5;
+    mockForYouState.relevantArticleCount = 2;
+    delete (mockForYouState as { suggestions?: unknown }).suggestions;
+    mockLoadSuggestions.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('runs the first (leading) call immediately', async () => {
+    await requestSuggestionsRefresh();
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(1);
+  });
+
+  it('coalesces multiple in-window calls into a single trailing execution', async () => {
+    await requestSuggestionsRefresh(); // leading → runs now
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(1);
+
+    // Three more within the window → exactly one trailing pass.
+    void requestSuggestionsRefresh();
+    void requestSuggestionsRefresh();
+    void requestSuggestionsRefresh();
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(1); // still pending
+
+    await jest.advanceTimersByTimeAsync(REFRESH_MIN_INTERVAL_MS);
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(2); // one trailing, not three
+  });
+
+  it('flush cancels the pending trailing timer and refreshes immediately', async () => {
+    await requestSuggestionsRefresh(); // leading
+    void requestSuggestionsRefresh();  // schedules trailing
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(1);
+
+    await flushSuggestionsRefresh();   // runs the pending work now
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(2);
+
+    // The cancelled timer must not fire an extra refresh.
+    await jest.advanceTimersByTimeAsync(REFRESH_MIN_INTERVAL_MS);
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(2);
+  });
+
+  it('flush is a no-op when nothing is pending', async () => {
+    await requestSuggestionsRefresh(); // leading, nothing scheduled after
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(1);
+
+    await flushSuggestionsRefresh();
+    expect(mockLoadSuggestions).toHaveBeenCalledTimes(1);
+  });
+
+  it('never rejects when the underlying refresh throws — logs instead', async () => {
+    const err = new Error('db read error');
+    mockLoadSuggestions.mockRejectedValue(err);
+
+    await expect(requestSuggestionsRefresh()).resolves.toBeUndefined();
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      err,
+      expect.objectContaining({
+        tags: expect.objectContaining({ service: 'SuggestionSyncService' }),
+      }),
+    );
+  });
+});
+
+// A1 — identity-preserving merge inside refreshSuggestionsInStore.
+describe('refreshSuggestionsInStore — identity-preserving merge', () => {
+  function makeSuggestion(overrides: Record<string, unknown> = {}): any {
+    return {
+      _id: 'x',
+      articleId: 'a-x',
+      clusters: [{ clusterId: 'c1', confidence: 0.9, stableClusterId: 's1' }],
+      relevance: 0.7,
+      reason: 'because',
+      status: ArticleSuggestionStatus.Complete,
+      country_code: 'US',
+      language_code: 'en',
+      publication_name: 'Pub',
+      title_en: 'Title',
+      title_original: 'Titel',
+      description_en: 'Desc',
+      article_url: 'http://x',
+      image_url: 'http://img',
+      userTopicIds: ['t1', 't2'],
+      createdAt: '2026-01-01',
+      firstPubDate: '2026-01-01',
+      rawScore: 0.72,
+      eventType: null,
+      headlineScope: null,
+      matchedTopics: [{ topicId: 't1', text: 'ai' }],
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    __resetSuggestionsRefreshThrottleForTests();
+    mockForYouState.articleCount = 5;
+    mockForYouState.relevantArticleCount = 2;
+    delete (mockForYouState as { suggestions?: unknown }).suggestions;
+  });
+
+  it('reuses the previous object reference when all display fields are unchanged', async () => {
+    const prevRow = makeSuggestion();
+    (mockForYouState as { suggestions?: unknown }).suggestions = [prevRow];
+    const freshRow = makeSuggestion(); // deep-equal, different reference
+    expect(freshRow).not.toBe(prevRow);
+    mockLoadSuggestions.mockResolvedValue([freshRow]);
+
+    await refreshSuggestionsInStoreUnsafe();
+
+    const { useForYouStore } = require('@/lib/stores/for-you-store');
+    const callArg = useForYouStore.setState.mock.calls.at(-1)[0];
+    expect(callArg.suggestions[0]).toBe(prevRow);
+  });
+
+  it('uses the fresh object when a scalar display field changed', async () => {
+    const prevRow = makeSuggestion({ relevance: 0.7 });
+    (mockForYouState as { suggestions?: unknown }).suggestions = [prevRow];
+    const freshRow = makeSuggestion({ relevance: 0.9 });
+    mockLoadSuggestions.mockResolvedValue([freshRow]);
+
+    await refreshSuggestionsInStoreUnsafe();
+
+    const { useForYouStore } = require('@/lib/stores/for-you-store');
+    const callArg = useForYouStore.setState.mock.calls.at(-1)[0];
+    expect(callArg.suggestions[0]).toBe(freshRow);
+    expect(callArg.suggestions[0]).not.toBe(prevRow);
+  });
+
+  it('detects a change in the nested cluster signature (stableClusterId)', async () => {
+    const prevRow = makeSuggestion();
+    (mockForYouState as { suggestions?: unknown }).suggestions = [prevRow];
+    const freshRow = makeSuggestion({
+      clusters: [{ clusterId: 'c1', confidence: 0.9, stableClusterId: 's2' }],
+    });
+    mockLoadSuggestions.mockResolvedValue([freshRow]);
+
+    await refreshSuggestionsInStoreUnsafe();
+
+    const { useForYouStore } = require('@/lib/stores/for-you-store');
+    const callArg = useForYouStore.setState.mock.calls.at(-1)[0];
+    expect(callArg.suggestions[0]).toBe(freshRow);
+  });
+
+  it('detects a change in the matched-topics signature', async () => {
+    const prevRow = makeSuggestion();
+    (mockForYouState as { suggestions?: unknown }).suggestions = [prevRow];
+    const freshRow = makeSuggestion({
+      matchedTopics: [{ topicId: 't1', text: 'ai' }, { topicId: 't2', text: 'sports' }],
+    });
+    mockLoadSuggestions.mockResolvedValue([freshRow]);
+
+    await refreshSuggestionsInStoreUnsafe();
+
+    const { useForYouStore } = require('@/lib/stores/for-you-store');
+    const callArg = useForYouStore.setState.mock.calls.at(-1)[0];
+    expect(callArg.suggestions[0]).toBe(freshRow);
   });
 });

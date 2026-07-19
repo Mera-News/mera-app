@@ -1,3 +1,4 @@
+import FocusFreeze from '@/components/custom/FocusFreeze';
 import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -14,8 +15,8 @@ import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScopeArticleList from './ScopeArticleList';
@@ -51,19 +52,25 @@ const ExploreScreen: React.FC = () => {
     const deviceCountry = useMemo(() => getDeviceCountryAlpha2(), []);
 
     // Reactive locations (weight-desc). Explore is the first UI consumer.
-    useEffect(() => {
-        const sub = observeAllLocations().subscribe((rows) => {
-            setLocations(
-                rows.map((l) => ({
-                    city: l.city,
-                    region: l.region,
-                    countryCode: l.countryCode,
-                    weight: l.weight,
-                })),
-            );
-        });
-        return () => sub.unsubscribe();
-    }, []);
+    // Focus-gated: this WatermelonDB observable would otherwise stay live
+    // forever once mounted, even while the tab is frozen/blurred (Freeze only
+    // pauses re-renders, not subscriptions — see FocusFreeze). Unsubscribes
+    // on blur and resubscribes on focus, preserving current on-focus behavior.
+    useFocusEffect(
+        useCallback(() => {
+            const sub = observeAllLocations().subscribe((rows) => {
+                setLocations(
+                    rows.map((l) => ({
+                        city: l.city,
+                        region: l.region,
+                        countryCode: l.countryCode,
+                        weight: l.weight,
+                    })),
+                );
+            });
+            return () => sub.unsubscribe();
+        }, []),
+    );
 
     const scopes = useMemo(
         () => deriveExploreScopes(locations, deviceCountry),
@@ -116,66 +123,68 @@ const ExploreScreen: React.FC = () => {
     const hasNoLocations = locations.length === 0;
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
-            {/* Header — title + Sources action. The right cluster reserves ~52px
-                for the global notification bell overlay (rendered by the tabs
-                _layout at right:20), same precedent as ForYouScreen. */}
-            <HStack className="items-start justify-between px-5 mb-2">
-                <Heading size="3xl" className="text-white" numberOfLines={1}>
-                    {t('explore.title')}
-                </Heading>
-                <HStack className="items-center flex-shrink-0" space="sm" style={{ marginRight: 52 }}>
-                    <Pressable
-                        onPress={() => setSourcesOpen(true)}
-                        hitSlop={12}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('explore.sources')}
-                        className="p-3 rounded-full border border-primary-500 bg-transparent"
-                    >
-                        <MaterialIcons name="tune" size={22} color="#EDA77E" />
-                    </Pressable>
-                </HStack>
-            </HStack>
-
-            {/* Scope chips */}
-            <Box className="mb-2">
-                <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
-            </Box>
-
-            {/* No-locations nudge — the device country + World chips still work;
-                this points the user at the dedicated locations management screen
-                (Wave 12 U-F2) to add their places. */}
-            {hasNoLocations ? (
-                <VStack className="mx-5 mb-2 rounded-xl border border-gray-800 p-3" space="xs">
-                    <HStack className="items-center" space="sm">
-                        <MaterialIcons name="place" size={18} color="#EDA77E" />
-                        <Text size="sm" bold className="text-white">
-                            {t('explore.noLocationsTitle')}
-                        </Text>
+        <FocusFreeze>
+            <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                {/* Header — title + Sources action. The right cluster reserves ~52px
+                    for the global notification bell overlay (rendered by the tabs
+                    _layout at right:20), same precedent as ForYouScreen. */}
+                <HStack className="items-start justify-between px-5 mb-2">
+                    <Heading size="3xl" className="text-white" numberOfLines={1}>
+                        {t('explore.title')}
+                    </Heading>
+                    <HStack className="items-center flex-shrink-0" space="sm" style={{ marginRight: 52 }}>
+                        <Pressable
+                            onPress={() => setSourcesOpen(true)}
+                            hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('explore.sources')}
+                            className="p-3 rounded-full border border-primary-500 bg-transparent"
+                        >
+                            <MaterialIcons name="tune" size={22} color="#EDA77E" />
+                        </Pressable>
                     </HStack>
-                    <Text size="xs" className="text-typography-400">
-                        {t('explore.noLocationsBody')}
-                    </Text>
-                    <Button
-                        size="xs"
-                        variant="outline"
-                        className="self-start mt-1 rounded-full border-primary-500"
-                        onPress={() => router.push('/logged-in/locations')}
-                    >
-                        <ButtonText className="text-primary-400">{t('explore.addLocation')}</ButtonText>
-                    </Button>
-                </VStack>
-            ) : null}
+                </HStack>
 
-            {/* Article list for the active scope — remounts on scope switch. */}
-            <Box className="flex-1">
-                <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
+                {/* Scope chips */}
+                <Box className="mb-2">
+                    <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
+                </Box>
+
+                {/* No-locations nudge — the device country + World chips still work;
+                    this points the user at the dedicated locations management screen
+                    (Wave 12 U-F2) to add their places. */}
+                {hasNoLocations ? (
+                    <VStack className="mx-5 mb-2 rounded-xl border border-gray-800 p-3" space="xs">
+                        <HStack className="items-center" space="sm">
+                            <MaterialIcons name="place" size={18} color="#EDA77E" />
+                            <Text size="sm" bold className="text-white">
+                                {t('explore.noLocationsTitle')}
+                            </Text>
+                        </HStack>
+                        <Text size="xs" className="text-typography-400">
+                            {t('explore.noLocationsBody')}
+                        </Text>
+                        <Button
+                            size="xs"
+                            variant="outline"
+                            className="self-start mt-1 rounded-full border-primary-500"
+                            onPress={() => router.push('/logged-in/locations')}
+                        >
+                            <ButtonText className="text-primary-400">{t('explore.addLocation')}</ButtonText>
+                        </Button>
+                    </VStack>
+                ) : null}
+
+                {/* Article list for the active scope — remounts on scope switch. */}
+                <Box className="flex-1">
+                    <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
+                </Box>
+
+                <SourcesFab onPress={() => setSourcesOpen(true)} />
+                <SourcesSheet open={sourcesOpen} onClose={() => setSourcesOpen(false)} />
+                <ScreenChatBubble context={EXPLORE_CHAT_CONTEXT} extraBottomOffset={TAB_BAR_HEIGHT} />
             </Box>
-
-            <SourcesFab onPress={() => setSourcesOpen(true)} />
-            <SourcesSheet open={sourcesOpen} onClose={() => setSourcesOpen(false)} />
-            <ScreenChatBubble context={EXPLORE_CHAT_CONTEXT} extraBottomOffset={TAB_BAR_HEIGHT} />
-        </Box>
+        </FocusFreeze>
     );
 };
 

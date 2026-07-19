@@ -5,6 +5,7 @@
 // `deleteOlderThan` (data-cleanup-task).
 
 import { Q } from '@nozbe/watermelondb';
+import { distinctUntilChanged } from 'rxjs';
 import database from '../index';
 import type NotificationModel from '../models/Notification';
 
@@ -65,7 +66,10 @@ export async function dismiss(notificationId: string): Promise<void> {
 
 /** Reactive unread count — drives the bell badge. */
 export function observeUnreadCount() {
-  return notificationsCollection.query(Q.where('status', 'unread')).observeCount();
+  return notificationsCollection
+    .query(Q.where('status', 'unread'))
+    .observeCount()
+    .pipe(distinctUntilChanged());
 }
 
 /** Reactive list, newest first — drives the notification panel. */

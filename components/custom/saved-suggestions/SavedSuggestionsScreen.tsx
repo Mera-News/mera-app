@@ -102,7 +102,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
     const renderItem: ListRenderItem<ForYouSuggestion> = useCallback(
         ({ item }) => (
             <Box className="relative">
-                <ArticleCard suggestion={item} onPress={() => handleCardPress(item)} />
+                <ArticleCard suggestion={item} onPress={handleCardPress} />
                 <Pressable
                     onPress={() => setConfirmTarget(item)}
                     hitSlop={12}

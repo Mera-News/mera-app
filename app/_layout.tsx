@@ -11,8 +11,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { enableFreeze } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import client from '../lib/apollo-client';
+
+// Enables react-freeze-based screen freezing (perf item A7) so tab screens
+// stop re-rendering while blurred — see components/custom/FocusFreeze.tsx.
+enableFreeze(true);
 
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';

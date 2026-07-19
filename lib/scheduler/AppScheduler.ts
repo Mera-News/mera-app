@@ -6,6 +6,7 @@ import type { Job, TaskCondition, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import * as runner from './scheduler-runner';
+import { yieldToInteractions } from './idle';
 import logger from '@/lib/logger';
 
 class _AppScheduler {
@@ -109,7 +110,14 @@ class _AppScheduler {
    *  immediately on cold start without waiting for the user to background
    *  and re-foreground the app. */
   onStoresHydrated(): void {
-    void this._onForeground();
+    // A6: let hydration + first paint win the JS thread on cold start. Defer the
+    // initial foreground task kick past pending interactions AND a ~1s settle so
+    // the first render is smooth before feed-sync/inference-recover fire.
+    void yieldToInteractions().then(() => {
+      setTimeout(() => {
+        this._onForeground();
+      }, 1_000);
+    });
   }
 
   private async _tick(): Promise<void> {
@@ -147,18 +155,23 @@ class _AppScheduler {
       // best-effort
     }
 
-    for (const task of this.tasks.values()) {
-      if (this.pausedTasks.has(task.name)) continue;
-      if (!task.triggers?.includes('app-foreground')) continue;
-      if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
+    // A6: defer the task-enqueue kick past in-flight interactions so a
+    // foreground transition's animations/gestures aren't janked by the sync
+    // work. The auth-breaker reset above stays synchronous.
+    void yieldToInteractions().then(() => {
+      for (const task of this.tasks.values()) {
+        if (this.pausedTasks.has(task.name)) continue;
+        if (!task.triggers?.includes('app-foreground')) continue;
+        if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
 
-      const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
-      const isDue = task.frequency === 0 || (Date.now() - lastRun) >= task.frequency;
-      if (!isDue) continue;
+        const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
+        const isDue = task.frequency === 0 || (Date.now() - lastRun) >= task.frequency;
+        if (!isDue) continue;
 
-      if (!this._conditionsMet(task)) continue;
-      void this._enqueueAndRun(task);
-    }
+        if (!this._conditionsMet(task)) continue;
+        void this._enqueueAndRun(task);
+      }
+    });
   }
 
   private _onNetworkReconnect(): void {

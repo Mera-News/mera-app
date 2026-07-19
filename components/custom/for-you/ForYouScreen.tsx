@@ -68,7 +68,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View, ViewToken } from 'react-native';
+import { FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, Platform, StyleSheet, View, ViewToken } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import FocusFreeze from '@/components/custom/FocusFreeze';
+import { computeGroupingFingerprint } from '@/components/custom/for-you/story-fingerprint';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -124,6 +127,10 @@ const MeraNewsScreen: React.FC = () => {
     const [showOnboardingWait, setShowOnboardingWait] = useState(false);
     const [stuckOnEmpty, setStuckOnEmpty] = useState(false);
     const dbReady = useDatabaseStore((s) => s.ready);
+    // Real navigator focus — used to pause the 30s timers (nowTick + empty-feed
+    // watchdog) while this tab is blurred, since FocusFreeze only stops renders,
+    // not effects/intervals.
+    const isFocused = useIsFocused();
     const edgeSwipeGesture = useMemo(() => Gesture.Pan()
         .activeOffsetX(-20)
         .failOffsetX(20)
@@ -151,10 +158,16 @@ const MeraNewsScreen: React.FC = () => {
     const [nowTick, setNowTick] = useState(() => Date.now());
 
     useEffect(() => {
+        // Pause the ticking clock while the tab is blurred — nothing on-screen is
+        // reading it, and it would otherwise re-render the (frozen) screen every
+        // 30s. Re-arm on focus and snap `nowTick` forward so the relative-time
+        // label is correct the instant the tab is shown again.
+        if (!isFocused) return;
         if (!lastProcessingRunFinishedAt && !dailyLimitResetAt) return;
+        setNowTick(Date.now());
         const id = setInterval(() => setNowTick(Date.now()), 30_000);
         return () => clearInterval(id);
-    }, [lastProcessingRunFinishedAt, dailyLimitResetAt]);
+    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt]);
 
     const lastProcessedLabel = useMemo(() => {
         if (!lastProcessingRunFinishedAt) return null;
@@ -213,6 +226,10 @@ const MeraNewsScreen: React.FC = () => {
 
     const flatListRef = useRef<FlatList<ForYouListItem>>(null);
     const loadingRef = useRef(false);
+    // Story-grouping cache for the legacy listData memo — reused across
+    // score/reason-only feed updates whose grouping fingerprint is unchanged
+    // (perf A3). Stores groups as arrays of `_id`s, never object refs.
+    const groupCacheRef = useRef<{ fp: string; idGroups: string[][] } | null>(null);
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 });
 
@@ -372,21 +389,38 @@ const MeraNewsScreen: React.FC = () => {
             return true;
         });
 
-        // Union-find over cluster + title edges (see the block comment above).
-        const groups = buildStoryGroups(
-            visible.map((s) => ({
-                id: s._id,
-                title: s.title_en ?? s.title_original,
-                clusters: s.clusters,
-                s,
-            })),
-            {
-                titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-                clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-                weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-            },
-        );
+        // ── Expensive stage (union-find over cluster + title edges) — GATED. ──
+        // buildStoryGroups is O(n²)-ish and depends ONLY on identity + cluster
+        // memberships + titles, never on relevance/reason/score. A score-only or
+        // reason-only feed update (the common case — the pipeline scores rows in
+        // place) yields a NEW `suggestions` array but an IDENTICAL grouping
+        // fingerprint, so we reuse the cached id-groups and skip the union-find.
+        // Groups are cached as arrays of `_id`s (never object refs) so the cheap
+        // stage below always re-binds to the CURRENT objects and reflects fresh
+        // scores (perf A3). See story-fingerprint.ts for the fp definition.
+        const fp = computeGroupingFingerprint(visible);
+        let idGroups: string[][];
+        if (groupCacheRef.current && groupCacheRef.current.fp === fp) {
+            idGroups = groupCacheRef.current.idGroups;
+        } else {
+            const groups = buildStoryGroups(
+                visible.map((s) => ({
+                    id: s._id,
+                    title: s.title_en ?? s.title_original,
+                    clusters: s.clusters,
+                    s,
+                })),
+                {
+                    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
+                    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+                    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+                },
+            );
+            idGroups = groups.map((g) => g.map((m) => m.id));
+            groupCacheRef.current = { fp, idGroups };
+        }
 
+        // ── Cheap stage (ALWAYS runs) — bind id-groups to the current objects. ──
         // Each group collapses to one representative: the newest member of the
         // story's best-earned priority bucket fronts the card — a fresh
         // development re-fronts the story; relevance only tiebreaks. The
@@ -394,22 +428,26 @@ const MeraNewsScreen: React.FC = () => {
         // getRelevanceLabel), so the chosen card's own on-card priority chip
         // always matches the section it renders in. Tie-break relevance, then
         // smaller id (inside pickRepresentative).
-        const entries = groups.map((g) => {
-            const maxRelevance = g.reduce((max, m) => Math.max(max, m.s.relevance), -Infinity);
+        const byId = new Map<string, ForYouSuggestion>(visible.map((s) => [s._id, s]));
+        const entries = idGroups.map((idGroup) => {
+            const members = idGroup
+                .map((id) => byId.get(id))
+                .filter((s): s is ForYouSuggestion => s !== undefined);
+            const maxRelevance = members.reduce((max, m) => Math.max(max, m.relevance), -Infinity);
             const bucketLabel = getRelevanceLabel(maxRelevance);
-            const pool = g.filter((m) => getRelevanceLabel(m.s.relevance) === bucketLabel);
+            const pool = members.filter((m) => getRelevanceLabel(m.relevance) === bucketLabel);
             const rep = pickRepresentative(
-                pool,
+                pool.map((s) => ({ id: s._id, title: s.title_en ?? s.title_original, clusters: s.clusters, s })),
                 (a, b) => (pubDateMs(b.s) - pubDateMs(a.s)) || (b.s.relevance - a.s.relevance),
             );
-            return { rep: rep.s, members: g.filter((m) => m !== rep).map((m) => m.s) };
+            return { rep: rep.s, members: members.filter((m) => m !== rep.s) };
         });
 
         if (__DEV__) {
             const multiMember = entries.filter((e) => e.members.length > 0).length;
-            const collapsed = visible.length - groups.length;
+            const collapsed = visible.length - idGroups.length;
             console.log(
-                `[ForYou] story groups: ${groups.length} groups, ${multiMember} multi-member, ${collapsed} cards collapsed`,
+                `[ForYou] story groups: ${idGroups.length} groups, ${multiMember} multi-member, ${collapsed} cards collapsed`,
             );
         }
 
@@ -526,6 +564,11 @@ const MeraNewsScreen: React.FC = () => {
             return;
         }
         const shouldArm =
+            // Don't run the 30s watchdog while the tab is blurred — the user
+            // isn't looking at the (frozen) feed, and it would fire a spurious
+            // Sentry event for a screen nobody is waiting on. Re-arms cleanly on
+            // refocus (isFocused is in the dep array).
+            isFocused &&
             !!session?.user?.id &&
             dbReady &&
             hasGeneratedInterests &&
@@ -568,7 +611,7 @@ const MeraNewsScreen: React.FC = () => {
         // store snapshots read inside are pulled via getState() at fire time, so
         // they are intentionally excluded from the dep array.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, activeListData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
+    }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, activeListData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
         // Record the open into story-impression seen-state (fire-and-forget —
@@ -613,7 +656,7 @@ const MeraNewsScreen: React.FC = () => {
                     <ArticleCard
                         suggestion={item.data}
                         moreSourcesCount={moreSourcesCount}
-                        onPress={() => handleSuggestionPress(item.data)}
+                        onPress={handleSuggestionPress}
                     />
                 );
             }
@@ -634,7 +677,7 @@ const MeraNewsScreen: React.FC = () => {
                     <ArticleCard
                         suggestion={item.data}
                         moreSourcesCount={moreSourcesCount}
-                        onPress={() => handleSuggestionPress(item.data)}
+                        onPress={handleSuggestionPress}
                     />
                 );
             }
@@ -805,6 +848,7 @@ const MeraNewsScreen: React.FC = () => {
     }, []);
 
     return (
+        <FocusFreeze>
         <Box className="flex-1 bg-black">
             <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
                 {/* Title row — static */}
@@ -885,6 +929,15 @@ const MeraNewsScreen: React.FC = () => {
                 onScroll={handleScroll}
                 onEndReached={loadMoreArticles}
                 onEndReachedThreshold={0.5}
+                // Virtualization tuning (perf A2). Cards are variable-height so
+                // NO getItemLayout; these keep the render/retain window small.
+                // removeClippedSubviews is Android-only (it causes blank-cell
+                // glitches on iOS and buys little there).
+                windowSize={7}
+                maxToRenderPerBatch={6}
+                initialNumToRender={6}
+                updateCellsBatchingPeriod={50}
+                removeClippedSubviews={Platform.OS === 'android'}
                 ListEmptyComponent={ListEmptyComponent}
                 ListFooterComponent={ListFooterComponent}
                 maintainVisibleContentPosition={{
@@ -906,6 +959,7 @@ const MeraNewsScreen: React.FC = () => {
             <WhatsNewSheet />
 
         </Box>
+        </FocusFreeze>
     );
 };
 

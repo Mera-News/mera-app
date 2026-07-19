@@ -9,6 +9,8 @@ const mockStepDiff = jest.fn();
 const mockStepHydratePersistEnqueue = jest.fn();
 const mockStepScore = jest.fn();
 const mockRefreshSuggestionsInStoreUnsafe = jest.fn();
+const mockRequestSuggestionsRefresh = jest.fn();
+const mockFlushSuggestionsRefresh = jest.fn();
 const mockClassifyError = jest.fn();
 const mockPublishSyncStatus = jest.fn();
 const mockPublishSyncError = jest.fn();
@@ -68,6 +70,8 @@ jest.mock('@/lib/scheduler/feed-sync/feed-sync-steps', () => ({
 
 jest.mock('@/lib/services/SuggestionSyncService', () => ({
   refreshSuggestionsInStoreUnsafe: (...args: any[]) => mockRefreshSuggestionsInStoreUnsafe(...args),
+  requestSuggestionsRefresh: (...args: any[]) => mockRequestSuggestionsRefresh(...args),
+  flushSuggestionsRefresh: (...args: any[]) => mockFlushSuggestionsRefresh(...args),
 }));
 
 jest.mock('@/lib/services/scoring-pipeline', () => ({
@@ -145,6 +149,8 @@ beforeEach(() => {
   });
   mockStepScore.mockResolvedValue(2);
   mockRefreshSuggestionsInStoreUnsafe.mockResolvedValue(undefined);
+  mockRequestSuggestionsRefresh.mockResolvedValue(undefined);
+  mockFlushSuggestionsRefresh.mockResolvedValue(undefined);
   mockClassifyError.mockReturnValue('unknown');
   mockActivateKeepAwakeAsync.mockResolvedValue(undefined);
   mockDeactivateKeepAwake.mockReturnValue(undefined);
@@ -286,13 +292,16 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
     expect(mockNetworkUnsubscribe).toHaveBeenCalled();
   });
 
-  it('refreshes suggestions store after persisting and after scoring', async () => {
+  it('flushes the coalesced suggestions refresh after persisting, after scoring, and on teardown', async () => {
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
 
-    expect(mockRefreshSuggestionsInStoreUnsafe).toHaveBeenCalledTimes(2);
+    // A1: the direct refreshes became terminal flushes — one after the hydrate
+    // step, one after scoring (before `done`), and one in the `_start` finally
+    // teardown for exactness across every exit path.
+    expect(mockFlushSuggestionsRefresh).toHaveBeenCalledTimes(3);
   });
 
   it('calls setLastSyncAt on completion', async () => {

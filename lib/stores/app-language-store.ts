@@ -35,8 +35,23 @@ interface AppLanguageState {
 
     // Reactive translation cache — keyed by English source text.
     // Cache is flushed whenever appLanguage changes, so no need to key by target.
+    //
+    // WHY in-place mutation + cacheVersion: the cache is mutated in place (NOT
+    // cloned) on every translation completion, and `cacheVersion` is bumped so
+    // zustand notifies subscribers. Consumers MUST subscribe per-key
+    // (`useAppLanguageStore((s) => s.cache.get(myText))`) — the per-key selector
+    // + Object.is means only the node whose key just landed re-renders, instead
+    // of every mounted TranslatableDynamic re-rendering on every translation
+    // anywhere. CONTRACT: never snapshot the Map for diffing (e.g.
+    // `const prev = s.cache; ...later... prev !== s.cache`) — the reference is
+    // stable across cache writes, so a snapshot would never register a change.
+    // Read via `.get(key)`; treat the Map as append-only until a full
+    // invalidation (setAppLanguage / clearCache) replaces the reference.
     cache: Map<string, string>;
     pending: Set<string>;
+    // Monotonic counter bumped on every in-place cache/pending mutation so
+    // zustand re-runs selectors (the Map/Set references stay stable).
+    cacheVersion: number;
 
     setAppLanguage: (lang: string) => Promise<void>;
     cacheTranslation: (original: string, translated: string) => void;
@@ -50,34 +65,37 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
     appLanguage: 'en',
     cache: new Map(),
     pending: new Set(),
+    cacheVersion: 0,
 
     setAppLanguage: async (lang) => {
         const normalized = normalizeCode(lang) ?? 'en';
+        // Full invalidation: replace the Map/Set references (a language switch
+        // means every cached translation is now stale).
         set({ appLanguage: normalized, cache: new Map(), pending: new Set() });
         applyLanguage(normalized);
         await setSetting(APP_LANGUAGE_KEY, normalized);
     },
 
     cacheTranslation: (original, translated) => {
-        const cache = new Map(get().cache);
+        // Mutate the existing Map/Set in place — no new references — then bump
+        // cacheVersion so zustand notifies. Exactly one bump per call.
+        const { cache, pending } = get();
         cache.set(original, translated);
-        const pending = new Set(get().pending);
         pending.delete(original);
-        set({ cache, pending });
+        set({ cacheVersion: get().cacheVersion + 1 });
     },
 
     addPending: (text) => {
-        const pending = new Set(get().pending);
-        pending.add(text);
-        set({ pending });
+        get().pending.add(text);
+        set({ cacheVersion: get().cacheVersion + 1 });
     },
 
     removePending: (text) => {
-        const pending = new Set(get().pending);
-        pending.delete(text);
-        set({ pending });
+        get().pending.delete(text);
+        set({ cacheVersion: get().cacheVersion + 1 });
     },
 
+    // Full invalidation: replace the Map/Set references.
     clearCache: () => set({ cache: new Map(), pending: new Set() }),
 
     hydrateFromDb: async () => {

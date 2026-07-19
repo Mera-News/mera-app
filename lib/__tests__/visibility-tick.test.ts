@@ -1,24 +1,19 @@
-// visibility-tick uses requestAnimationFrame — polyfill it in the test env.
-
-let rafCallback: FrameRequestCallback | null = null;
+// visibility-tick throttles scroll notifications on a wall-clock window
+// (leading + trailing edge). Fake timers drive both setTimeout AND Date.now.
 
 beforeEach(() => {
-  rafCallback = null;
   jest.clearAllMocks();
-  // Reset module state between tests by re-requiring
+  // Reset module state (lastFireAt / trailingTimer) between tests.
   jest.resetModules();
-
-  // Polyfill requestAnimationFrame so the module can be imported in Node
-  global.requestAnimationFrame = jest.fn((cb: FrameRequestCallback) => {
-    rafCallback = cb;
-    return 1;
-  });
+  jest.useFakeTimers();
+  // Anchor the fake clock well past THROTTLE_MS so the very first
+  // notifyScrollTick in each test is always a fresh leading-edge fire.
+  jest.setSystemTime(1_000_000);
 });
 
 afterEach(() => {
-  // Clean up global polyfill
-  // @ts-ignore
-  delete global.requestAnimationFrame;
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 function loadModule() {
@@ -33,19 +28,18 @@ describe('subscribeScrollTick', () => {
     unsub();
   });
 
-  it('adds a listener that is called when a scroll tick is triggered', () => {
+  it('adds a listener that is called on the leading-edge tick', () => {
     const { subscribeScrollTick, notifyScrollTick } = loadModule();
     const listener = jest.fn();
     subscribeScrollTick(listener);
 
     notifyScrollTick();
-    // flush the rAF
-    if (rafCallback) rafCallback(0);
 
+    // Leading edge fires synchronously — no timer flush needed.
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it('multiple listeners are all called on scroll tick', () => {
+  it('multiple listeners are all called on a tick', () => {
     const { subscribeScrollTick, notifyScrollTick } = loadModule();
     const l1 = jest.fn();
     const l2 = jest.fn();
@@ -53,7 +47,6 @@ describe('subscribeScrollTick', () => {
     subscribeScrollTick(l2);
 
     notifyScrollTick();
-    if (rafCallback) rafCallback(0);
 
     expect(l1).toHaveBeenCalledTimes(1);
     expect(l2).toHaveBeenCalledTimes(1);
@@ -66,7 +59,6 @@ describe('subscribeScrollTick', () => {
     unsub();
 
     notifyScrollTick();
-    if (rafCallback) rafCallback(0);
 
     expect(listener).not.toHaveBeenCalled();
   });
@@ -81,37 +73,79 @@ describe('subscribeScrollTick', () => {
   });
 });
 
-describe('notifyScrollTick', () => {
-  it('coalesces multiple rapid calls into one rAF (pending flag)', () => {
+describe('notifyScrollTick throttling', () => {
+  it('fires the first call immediately (leading edge)', () => {
     const { subscribeScrollTick, notifyScrollTick } = loadModule();
     const listener = jest.fn();
     subscribeScrollTick(listener);
 
     notifyScrollTick();
-    notifyScrollTick();
-    notifyScrollTick();
-
-    // Only one rAF should have been scheduled
-    expect(global.requestAnimationFrame).toHaveBeenCalledTimes(1);
-
-    // flush the rAF
-    if (rafCallback) rafCallback(0);
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it('allows a second tick after the first rAF fires', () => {
+  it('coalesces a burst inside the window into ONE trailing fire', () => {
     const { subscribeScrollTick, notifyScrollTick } = loadModule();
     const listener = jest.fn();
     subscribeScrollTick(listener);
 
+    // Leading fire.
     notifyScrollTick();
-    if (rafCallback) rafCallback(0);
+    expect(listener).toHaveBeenCalledTimes(1);
 
-    // Second round
-    rafCallback = null;
+    // A burst of rapid calls, all inside the 150ms window.
+    jest.advanceTimersByTime(20);
     notifyScrollTick();
-    if (rafCallback) (rafCallback as FrameRequestCallback)(0);
+    jest.advanceTimersByTime(20);
+    notifyScrollTick();
+    jest.advanceTimersByTime(20);
+    notifyScrollTick();
 
+    // No extra synchronous fires — the burst is still queued as ONE trailing.
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    // Advance past the end of the window → the single trailing fire lands.
+    jest.advanceTimersByTime(150);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it('trailing fire gives the LAST scroll position a tick', () => {
+    const { subscribeScrollTick, notifyScrollTick } = loadModule();
+    const listener = jest.fn();
+    subscribeScrollTick(listener);
+
+    notifyScrollTick(); // leading
+    jest.advanceTimersByTime(10);
+    notifyScrollTick(); // schedules trailing (final position)
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    // Trailing fires ~140ms later (THROTTLE_MS - elapsed).
+    jest.advanceTimersByTime(140);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it('enforces a minimum 150ms gap between fires', () => {
+    const { subscribeScrollTick, notifyScrollTick } = loadModule();
+    const listener = jest.fn();
+    subscribeScrollTick(listener);
+
+    notifyScrollTick(); // t=0 leading fire
+    // Still inside the window — must not fire again.
+    jest.advanceTimersByTime(149);
+    notifyScrollTick();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('fires immediately again once the window has fully elapsed', () => {
+    const { subscribeScrollTick, notifyScrollTick } = loadModule();
+    const listener = jest.fn();
+    subscribeScrollTick(listener);
+
+    notifyScrollTick(); // leading fire at t=0
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    // Idle past the window, then scroll again → fresh leading fire.
+    jest.advanceTimersByTime(200);
+    notifyScrollTick();
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
@@ -119,7 +153,7 @@ describe('notifyScrollTick', () => {
     const { notifyScrollTick } = loadModule();
     expect(() => {
       notifyScrollTick();
-      if (rafCallback) rafCallback(0);
+      jest.advanceTimersByTime(200);
     }).not.toThrow();
   });
 });

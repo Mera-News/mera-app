@@ -55,6 +55,7 @@ import type {
 import { computeAndJudgeForCandidates } from './stage-scoring';
 import { recordOverrides } from '@/lib/database/services/calibration-service';
 import { buildCalibrationCase } from '@/lib/news-harness/scoring-engine';
+import { yieldToInteractions } from '@/lib/scheduler/idle';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
@@ -564,6 +565,11 @@ export async function processAllUnscored(
       });
       break;
     }
+
+    // A6: yield to interactions between scoring batches so the on-device pass
+    // (which runs entirely on the JS thread) doesn't starve rendering/touch —
+    // the just-scored batch can paint before the next batch is fetched + scored.
+    await yieldToInteractions();
   }
 
   onProgress?.(totalProcessed, totalUnscored);

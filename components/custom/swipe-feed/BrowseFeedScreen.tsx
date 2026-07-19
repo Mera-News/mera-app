@@ -12,7 +12,8 @@
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
-import SwipeCard from '@/components/custom/swipe-feed/SwipeCard';
+import FocusFreeze from '@/components/custom/FocusFreeze';
+import SwipeDeckRow from '@/components/custom/swipe-feed/SwipeDeckRow';
 import { useReduceMotion } from '@/components/custom/swipe-feed/useReduceMotion';
 import { recordImpression, recordOpen } from '@/lib/database/services/story-impression-service';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -27,6 +28,7 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
   FlatList,
+  Platform,
   useWindowDimensions,
   View,
   type NativeScrollEvent,
@@ -160,37 +162,30 @@ const BrowseFeedScreen: React.FC = () => {
     });
   }, [deck, ITEM_HEIGHT]);
 
+  // Stable across renders — SwipeDeckRow closes over it per-row via a `(id) =>
+  // void` wrapper instead of a fresh inline arrow per item.
+  const onOpenDetail = useCallback((id: string) => {
+    const s = useSwipeFeedStore.getState().suggestionsById.get(id);
+    if (!s) return;
+    void recordOpen({
+      articleId: s.articleId,
+      suggestionId: s._id,
+      stableClusterId:
+        s.clusters.find((c) => c.stableClusterId)?.stableClusterId ?? null,
+      titleNorm: titleNormOf(s.title_en),
+      surface: 'swipe',
+    });
+    router.push({
+      pathname: '/logged-in/suggestion-detail',
+      params: { articleSuggestionId: s._id },
+    });
+  }, []);
+
   const renderItem = useCallback(
-    ({ item }: { item: DeckCard }) => {
-      const s = useSwipeFeedStore.getState().suggestionsById.get(item.id);
-      return (
-        <View
-          style={{ height: ITEM_HEIGHT, justifyContent: 'center' }}
-        >
-          {s ? (
-            <SwipeCard
-              suggestion={s}
-              onOpenDetail={() => {
-                void recordOpen({
-                  articleId: s.articleId,
-                  suggestionId: s._id,
-                  stableClusterId:
-                    s.clusters.find((c) => c.stableClusterId)?.stableClusterId ??
-                    null,
-                  titleNorm: titleNormOf(s.title_en),
-                  surface: 'swipe',
-                });
-                router.push({
-                  pathname: '/logged-in/suggestion-detail',
-                  params: { articleSuggestionId: s._id },
-                });
-              }}
-            />
-          ) : null}
-        </View>
-      );
-    },
-    [ITEM_HEIGHT],
+    ({ item }: { item: DeckCard }) => (
+      <SwipeDeckRow id={item.id} height={ITEM_HEIGHT} onOpenDetail={onOpenDetail} />
+    ),
+    [ITEM_HEIGHT, onOpenDetail],
   );
 
   const getItemLayout = useCallback(
@@ -205,54 +200,63 @@ const BrowseFeedScreen: React.FC = () => {
   // Empty state (also the "all caught up" end when the deck is empty).
   if (initialized && deck.length === 0) {
     return (
-      <Box className="flex-1 bg-black">
-        <VStack
-          className="flex-1 items-center justify-center px-4"
-          style={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom }}
-        >
-          <AllCaughtUpCard />
-        </VStack>
-      </Box>
+      <FocusFreeze>
+        <Box className="flex-1 bg-black">
+          <VStack
+            className="flex-1 items-center justify-center px-4"
+            style={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom }}
+          >
+            <AllCaughtUpCard />
+          </VStack>
+        </Box>
+      </FocusFreeze>
     );
   }
 
   return (
-    <Box className="flex-1 bg-black">
-      <FlatList
-        ref={flatListRef}
-        data={deck}
-        keyExtractor={(c) => c.id}
-        renderItem={renderItem}
-        getItemLayout={getItemLayout}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={ITEM_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate={reduceMotion ? 'normal' : 'fast'}
-        disableIntervalMomentum
-        scrollEventThrottle={16}
-        onScroll={onScroll}
-        onMomentumScrollEnd={onScroll}
-        onScrollToIndexFailed={() => {
-          /* getItemLayout is O(1) so this shouldn't fire; no-op fallback. */
-        }}
-        contentContainerStyle={{
-          paddingTop: verticalPad,
-          paddingBottom: verticalPad,
-        }}
-        // The last real card is followed by the "all caught up" end card, so
-        // paging past the final story lands on the mindful end state.
-        ListFooterComponent={
-          deck.length > 0 ? (
-            <View
-              style={{ height: ITEM_HEIGHT, justifyContent: 'center' }}
-              className="px-1"
-            >
-              <AllCaughtUpCard />
-            </View>
-          ) : null
-        }
-      />
-    </Box>
+    <FocusFreeze>
+      <Box className="flex-1 bg-black">
+        <FlatList
+          ref={flatListRef}
+          data={deck}
+          keyExtractor={(c) => c.id}
+          renderItem={renderItem}
+          getItemLayout={getItemLayout}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={ITEM_HEIGHT}
+          snapToAlignment="start"
+          decelerationRate={reduceMotion ? 'normal' : 'fast'}
+          disableIntervalMomentum
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+          onMomentumScrollEnd={onScroll}
+          onScrollToIndexFailed={() => {
+            /* getItemLayout is O(1) so this shouldn't fire; no-op fallback. */
+          }}
+          // Fixed getItemLayout + snap-to-interval paging make it safe to cap
+          // the mounted window and clip offscreen rows — only ~5 screens'
+          // worth of rows stay mounted around the snap-centered card.
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
+          contentContainerStyle={{
+            paddingTop: verticalPad,
+            paddingBottom: verticalPad,
+          }}
+          // The last real card is followed by the "all caught up" end card, so
+          // paging past the final story lands on the mindful end state.
+          ListFooterComponent={
+            deck.length > 0 ? (
+              <View
+                style={{ height: ITEM_HEIGHT, justifyContent: 'center' }}
+                className="px-1"
+              >
+                <AllCaughtUpCard />
+              </View>
+            ) : null
+          }
+        />
+      </Box>
+    </FocusFreeze>
   );
 };
 

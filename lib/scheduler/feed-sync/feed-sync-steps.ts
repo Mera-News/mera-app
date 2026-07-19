@@ -19,6 +19,7 @@ import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-t
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
+import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 
 /** Number of missing ids hydrated + persisted + enqueued per iteration. Kept at
@@ -338,6 +339,9 @@ export async function stepHydratePersistEnqueue(
 
       // Progressive rendering: newly-persisted (unscored) articles appear now.
       await opts.refreshStore();
+      // A6: yield the JS thread between chunks so the just-rendered chunk can
+      // paint (and touches process) before the next server fetch + persist.
+      await yieldToEventLoop();
     }
 
     completedSoFar += chunk.length;
