@@ -186,7 +186,7 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
     if (isLoading) {
         return (
             <FocusFreeze>
-                <Box className="flex-1 items-center justify-center">
+                <Box className="flex-1 items-center justify-center bg-black">
                     <Spinner size="large" />
                 </Box>
             </FocusFreeze>
@@ -195,7 +195,7 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
 
     return (
         <FocusFreeze>
-            <Box className="flex-1">
+            <Box className="flex-1 bg-black">
                 <ScrollView
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingTop: 12, paddingBottom: 120 }}

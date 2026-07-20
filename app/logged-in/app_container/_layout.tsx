@@ -29,7 +29,7 @@ export default function AppLayout() {
     // trigger (`browse`) is the one selected on first mount, replacing the old
     // JS-Tabs `initialRouteName="browse"`.
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
             <ErrorBoundary
                 level="screen"
                 FallbackComponent={FullScreenErrorFallback}

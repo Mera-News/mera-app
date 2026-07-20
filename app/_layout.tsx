@@ -6,7 +6,9 @@ import '@/lib/sentry-init';
 import 'react-native-get-random-values';
 import { ApolloProvider } from '@apollo/client/react';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
+import { ThemeProvider } from '@react-navigation/native';
 import { Stack, useNavigationContainerRef, usePathname } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -40,6 +42,7 @@ import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { setCurrentPathname } from '@/lib/nav-state';
+import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import {
@@ -77,6 +80,13 @@ defineInferenceTask();
 // truly quiescent (nothing in the background).
 function AppRoot() {
   const navigationRef = useNavigationContainerRef();
+
+  // react-navigation theme, tracked to the app's color scheme (pinned dark
+  // today via GluestackUIProvider mode="dark"). Supplies dark surfaces so the
+  // NativeTabs per-tab wrapper never paints react-navigation's default light
+  // background — the white flash on tab switch.
+  const { colorScheme } = useColorScheme();
+  const navigationTheme = getNavigationTheme(colorScheme === 'light' ? 'light' : 'dark');
 
   // Mirror the current route into a module variable so non-React code (the
   // Apollo error link) can avoid redundant navigations to the paywall.
@@ -226,35 +236,37 @@ function AppRoot() {
       <DatabaseProvider database={database}>
         <ApolloProvider client={client}>
           <StatusBar style="light" backgroundColor="#000000" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: '#000000' },
-              animation: 'slide_from_right',
-            }}
-          >
-            <Stack.Screen
-              name="index"
-              options={{
+          <ThemeProvider value={navigationTheme}>
+            <Stack
+              screenOptions={{
                 headerShown: false,
-                animation: 'fade'
+                contentStyle: { backgroundColor: '#000000' },
+                animation: 'slide_from_right',
               }}
-            />
-            <Stack.Screen
-              name="login"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_left'
-              }}
-            />
-            <Stack.Screen
-              name="logged-in"
-              options={{
-                headerShown: false,
-                animation: 'fade'
-              }}
-            />
-          </Stack>
+            >
+              <Stack.Screen
+                name="index"
+                options={{
+                  headerShown: false,
+                  animation: 'fade'
+                }}
+              />
+              <Stack.Screen
+                name="login"
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_left'
+                }}
+              />
+              <Stack.Screen
+                name="logged-in"
+                options={{
+                  headerShown: false,
+                  animation: 'fade'
+                }}
+              />
+            </Stack>
+          </ThemeProvider>
         </ApolloProvider>
       </DatabaseProvider>
     </ErrorBoundary>
