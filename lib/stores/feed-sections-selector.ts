@@ -464,6 +464,37 @@ export function buildTwoZoneListData(
   return items;
 }
 
+/** True when a suggestion's article_id OR top stable cluster id is in the opened
+ *  set — the dimming predicate for zone-1 cards. Mirrors the internal Earlier
+ *  rule so both zones dim consistently. */
+export function isSuggestionOpened(s: ForYouSuggestion, openedSet: Set<string>): boolean {
+  return isOpened(s, openedSet);
+}
+
+/** Convenience: snapshots + rows → two-zone list items in one call (screen use).
+ *  Returns the raw selector result too (for the SectionNavigator descriptors). */
+export function buildTwoZoneFeed(
+  suggestions: ForYouSuggestion[],
+  snapshots: SectionSnapshots,
+  expandedKeys: Set<string>,
+  watermarkMs: number,
+  openedSet: Set<string>,
+  nowMs: number = Date.now(),
+): { result: SelectSectionsResult; items: SectionedListItem[] } {
+  const input = buildSelectSectionsInput(suggestions, snapshots, nowMs);
+  const result = selectSections(input);
+  const byId = new Map(suggestions.map((s) => [s._id, s]));
+  const items = buildTwoZoneListData(
+    result,
+    expandedKeys,
+    byId,
+    snapshots.factStatements,
+    watermarkMs,
+    openedSet,
+  );
+  return { result, items };
+}
+
 /** A zone-1 section as the SectionNavigator chips need it (post-watermark). */
 export interface ZoneSectionDescriptor {
   key: string;

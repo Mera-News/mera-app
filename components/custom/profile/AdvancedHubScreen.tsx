@@ -301,6 +301,12 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                         />
                         <HubRow
                             icon="history"
+                            label={t('publicationVisits.visitedListTitle')}
+                            subtitle={t('profileHub.visitedSubtitle', { defaultValue: 'Publications you opened recently' })}
+                            onPress={() => router.push('/logged-in/visited-publications')}
+                        />
+                        <HubRow
+                            icon="history"
                             label={t('profileHub.activity', { defaultValue: 'Activity' })}
                             subtitle={t('profileHub.activitySubtitle', { defaultValue: 'Your persona change history' })}
                             onPress={() => router.push('/logged-in/persona-audit')}

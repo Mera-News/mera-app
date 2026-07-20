@@ -79,6 +79,11 @@ function CompletionToast({ nativeID }: { nativeID?: string }) {
     );
 }
 
+/**
+ * @deprecated Superseded by FeedStatusShimmer + FeedStatusSheet (2026-07-20).
+ * The For-You header no longer renders this banner (its CompletionToast retires
+ * with it — user-approved). Kept for reference; not mounted by any live screen.
+ */
 export default function SyncProgressForYouBanner() {
     const toast = useToast();
     const asyncJobPhase = useForYouAsyncJobPhase();

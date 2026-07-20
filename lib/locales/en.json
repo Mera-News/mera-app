@@ -254,7 +254,35 @@
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
     "whySection": "Why this section",
-    "triageEntry": "Review one at a time"
+    "triageEntry": "Review one at a time",
+    "subTabFeed": "Feed",
+    "subTabStories": "Stories",
+    "subTabSaved": "Saved",
+    "newStoriesPill_one": "{{count}} new story",
+    "newStoriesPill_other": "{{count}} new stories",
+    "caughtUp": "You're all caught up",
+    "caughtUpHint": "Here's everything from before",
+    "earlier": "Earlier",
+    "earlierShowMore": "Show {{count}} more earlier"
+  },
+  "feedStatus": {
+    "title": "Feed status",
+    "idle": "Up to date",
+    "stage": "Stage",
+    "cloudProgress": "Cloud scoring",
+    "deviceProgress": "On-device scoring",
+    "processed": "Articles pulled",
+    "analysed": "Analysed",
+    "relevant": "Relevant to you",
+    "noiseRemoved": "Noise removed",
+    "lastProcessed": "Last processed",
+    "errorTitle": "Scoring problem",
+    "openA11y": "Open feed status",
+    "close": "Close"
+  },
+  "trackedStories": {
+    "emptyTitle": "No stories followed yet",
+    "emptyBody": "Follow a story to see every new development gathered here as it unfolds."
   },
   "triage": {
     "title": "Review",

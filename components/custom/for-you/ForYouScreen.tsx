@@ -1,12 +1,9 @@
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
-import ArticleCountForYouBanner from '@/components/custom/ArticleCountForYouBanner';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
-import NewsPollingBanner from '@/components/custom/NewsPollingBanner';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
-import SyncProgressForYouBanner from '@/components/custom/SyncProgressForYouBanner';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
+import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import DailyLimitForYouBanner from '@/components/custom/for-you/DailyLimitForYouBanner';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import PriorityLabelCard from '@/components/custom/PriorityLabelCard';
@@ -16,9 +13,20 @@ import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
 import ShowMoreRow from '@/components/custom/for-you/ShowMoreRow';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
+import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
+import NewStoriesPill from '@/components/custom/for-you/NewStoriesPill';
+import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
+import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
+import CaughtUpDivider from '@/components/custom/for-you/CaughtUpDivider';
+import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import {
     buildSectionedFeed,
+    buildTwoZoneFeed,
+    isSuggestionOpened,
+    zoneOneSectionDescriptors,
     loadSectionSnapshots,
+    EARLIER_EXPANSION_KEY,
     type SectionSnapshots,
     type SectionedListItem,
 } from '@/lib/stores/feed-sections-selector';
@@ -65,13 +73,14 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, Platform, StyleSheet, View, ViewToken } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import { useFocusCoalescedValue } from '@/lib/hooks/use-focus-coalesced-value';
+import { useHeldFeedSuggestions } from '@/lib/hooks/use-held-feed-suggestions';
+import { useFeedWatermarkStore } from '@/lib/stores/feed-watermark-store';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { computeGroupingFingerprint } from '@/components/custom/for-you/story-fingerprint';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
@@ -120,7 +129,6 @@ const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
     // Local UI state only
     const [isLoading, setIsLoading] = useState(false);
-    const [isMetadataLoading] = useState(false);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const [isLoadingMore] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -142,12 +150,46 @@ const MeraNewsScreen: React.FC = () => {
             }
         }), []);
 
+    // Sub-tab state — Feed / Stories / Saved. All three are kept mounted after
+    // their first visit (display-toggled) so FlatList scroll state survives a
+    // switch; Stories/Saved mount lazily on first visit.
+    const [activeSubTab, setActiveSubTab] = useState<ForYouSubTab>('feed');
+    const [storiesVisited, setStoriesVisited] = useState(false);
+    const [savedVisited, setSavedVisited] = useState(false);
+    const selectSubTab = useCallback((tab: ForYouSubTab) => {
+        setActiveSubTab(tab);
+        if (tab === 'stories') setStoriesVisited(true);
+        if (tab === 'saved') setSavedVisited(true);
+    }, []);
+
+    // Feed-status detail sheet (opened from the header status line + shimmer).
+    const [statusSheetOpen, setStatusSheetOpen] = useState(false);
+    const openStatusSheet = useCallback(() => setStatusSheetOpen(true), []);
+
     // Optimized Zustand selectors (granular subscriptions to prevent unnecessary re-renders).
-    // The suggestions array drives the O(n²)-ish story-grouping memo below, so it
-    // is focus-coalesced: while this tab is blurred, store churn recomputes the
-    // feed at most once every ~5s (offscreen, kept warm) instead of on every
-    // update; while focused it tracks live. See use-focus-coalesced-value.ts.
-    const suggestions = useFocusCoalescedValue(useForYouSuggestions());
+    // The LIVE store array (used directly by the analysed/relevant counts and the
+    // empty-feed watchdog). The RENDERED feed goes through useHeldFeedSuggestions,
+    // which holds insertions as a "N new stories" pill instead of injecting them
+    // mid-scroll (and coalesces offscreen work while blurred).
+    const liveSuggestions = useForYouSuggestions();
+    const { suggestions, pendingNewCount, adoptPending } = useHeldFeedSuggestions(liveSuggestions);
+
+    // Two-zone presentation state: the watermark (null until hydrated) splits the
+    // feed into a "new" zone and an "Earlier" zone; the opened-story id set dims
+    // already-read rows.
+    const watermarkMs = useFeedWatermarkStore((s) => s.watermarkMs);
+    const openedIds = useOpenedStoriesStore((s) => s.ids);
+
+    // Hydrate the watermark + opened-story stores once on mount; refresh the
+    // opened set on refocus so opens recorded on other surfaces dim here too.
+    useEffect(() => {
+        void useFeedWatermarkStore.getState().hydrate();
+        void useOpenedStoriesStore.getState().hydrate();
+    }, []);
+    useEffect(() => {
+        if (isFocused) void useOpenedStoriesStore.getState().hydrate();
+    }, [isFocused]);
+
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
     const { articleCount } = useForYouCounts();
     const { hasNextPage } = useForYouPagination();
@@ -193,9 +235,6 @@ const MeraNewsScreen: React.FC = () => {
         syncStatusMessage.state !== 'failed' &&
         syncStatusMessage.state !== 'paused-offline';
 
-    const showSyncProgress =
-        isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing || scoringError !== null;
-
     // Any client-visible fetch/scoring work still in flight. Deliberately
     // excludes scoringError — an error is not progress.
     const isFeedProcessing =
@@ -207,11 +246,13 @@ const MeraNewsScreen: React.FC = () => {
     const isDailyLimited =
         dailyLimitResetAt != null && nowTick < dailyLimitResetAt;
 
+    // Read the LIVE store (not the held/rendered array) — these header counts
+    // reflect everything scored this cycle, including still-held new arrivals.
     const { analysedCount, relevantCount } = useMemo(() => {
         const cutoffMs = Date.now() - 24 * 60 * 60 * 1000;
         let analysed = 0;
         let relevant = 0;
-        for (const s of suggestions) {
+        for (const s of liveSuggestions) {
             if (s.status === ArticleSuggestionStatus.Unscored) continue;
             const t = Date.parse(s.firstPubDate);
             if (!Number.isFinite(t) || t < cutoffMs) continue;
@@ -219,11 +260,11 @@ const MeraNewsScreen: React.FC = () => {
             if (s.relevance > 0.3) relevant++;
         }
         return { analysedCount: analysed, relevantCount: relevant };
-    }, [suggestions]);
+    }, [liveSuggestions]);
 
     const { setHasGeneratedTopics } = getForYouActions();
 
-    const { userPersona, fetchUserPersona } = useUserStore();
+    const { fetchUserPersona } = useUserStore();
 
     const { data: session } = authClient.useSession();
     const isConnected = useIsConnected();
@@ -505,12 +546,18 @@ const MeraNewsScreen: React.FC = () => {
         return result;
     }, [listData]);
 
-    // ── Fact-sectioned build (Wave 7c N2). Null ⇒ legacy path in effect. ──
+    // ── Fact-sectioned build (Wave 7c N2 → two-zone). Null ⇒ legacy path. ──
+    // Two-zone splits the feed around the presentation watermark once it has
+    // hydrated (watermarkMs !== null); until then we fall back to the flat
+    // single-zone build so the feed still renders on a cold start.
     const useSectioned = snapshots?.hasTopics === true;
     const sectioned = useMemo(() => {
         if (!useSectioned || !snapshots) return null;
-        return buildSectionedFeed(suggestions, snapshots, expandedSectionKeys);
-    }, [useSectioned, snapshots, suggestions, expandedSectionKeys]);
+        if (watermarkMs === null) {
+            return buildSectionedFeed(suggestions, snapshots, expandedSectionKeys);
+        }
+        return buildTwoZoneFeed(suggestions, snapshots, expandedSectionKeys, watermarkMs, openedIds);
+    }, [useSectioned, snapshots, suggestions, expandedSectionKeys, watermarkMs, openedIds]);
 
     // The list the FlatList actually renders — sectioned when available, else legacy.
     const activeListData: ForYouListItem[] = sectioned ? sectioned.items : listData;
@@ -519,6 +566,17 @@ const MeraNewsScreen: React.FC = () => {
     // labels (legacy). translatable:true → TranslatableDynamic; false → t()'d.
     const navSections = useMemo((): NavSection[] => {
         if (sectioned) {
+            // Two-zone: chips reflect only the NEW (zone-1) sections, in the same
+            // order/watermark rule buildTwoZoneFeed uses. Pre-hydration fallback
+            // uses the full section set.
+            if (watermarkMs !== null) {
+                const byId = new Map(suggestions.map((s) => [s._id, s]));
+                return zoneOneSectionDescriptors(sectioned.result, byId, watermarkMs).map((d) => ({
+                    key: d.key,
+                    title: d.title,
+                    translatable: d.kind !== 'also',
+                }));
+            }
             return sectioned.result.sections.map((s) => ({
                 key: s.key,
                 title: s.title,
@@ -530,7 +588,7 @@ const MeraNewsScreen: React.FC = () => {
             title: t(s.shortLabel as any),
             translatable: false,
         }));
-    }, [sectioned, legacyAvailableSections, t]);
+    }, [sectioned, watermarkMs, suggestions, legacyAvailableSections, t]);
 
     // Hide the onboarding waiting card once the first scored, relevant card is ready.
     useEffect(() => {
@@ -619,6 +677,12 @@ const MeraNewsScreen: React.FC = () => {
     }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, activeListData.length, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
 
     const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
+        // Optimistically dim the row immediately (Earlier + zone-1 dimming reads
+        // this store) — the DB open row is still written below.
+        useOpenedStoriesStore.getState().markOpened(
+            suggestion.articleId,
+            suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null,
+        );
         // Record the open into story-impression seen-state (fire-and-forget —
         // never blocks navigation). For-You is the sectioned surface.
         void recordOpen({
@@ -650,6 +714,19 @@ const MeraNewsScreen: React.FC = () => {
         });
     }, []);
 
+    // "N new stories" pill press: adopt the held arrivals (advancing the
+    // watermark over the outgoing rows) then snap to the top.
+    const handleAdoptPending = useCallback(() => {
+        adoptPending();
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }, [adoptPending]);
+
+    // Zone-1 dimming predicate — an opened story's card renders dimmed.
+    const isRowOpened = useCallback(
+        (s: ForYouSuggestion) => isSuggestionOpened(s, openedIds),
+        [openedIds],
+    );
+
     const renderItem: ListRenderItem<ForYouListItem> = useCallback(({ item }) => {
         switch (item.type) {
             // ── Legacy priority-bucket items ──
@@ -664,6 +741,7 @@ const MeraNewsScreen: React.FC = () => {
                         onPress={handleSuggestionPress}
                         showActions
                         surface="for_you"
+                        dimmed={isRowOpened(item.data)}
                     />
                 );
             }
@@ -687,15 +765,32 @@ const MeraNewsScreen: React.FC = () => {
                         onPress={handleSuggestionPress}
                         showActions
                         surface="for_you"
+                        dimmed={isRowOpened(item.data)}
                     />
                 );
             }
             case 'show-more':
                 return <ShowMoreRow remaining={item.remaining} onPress={() => toggleSection(item.sectionKey)} />;
+            // ── Two-zone items ──
+            case 'caught-up-divider':
+                return <CaughtUpDivider variant={item.variant} earlierCount={item.earlierCount} />;
+            case 'earlier-card':
+                return (
+                    <ArticleSuggestionCompactCard
+                        suggestion={item.data}
+                        onPress={handleSuggestionPress}
+                        surface="for_you"
+                        dimmed={item.opened}
+                    />
+                );
+            case 'earlier-show-more':
+                return (
+                    <ShowMoreRow remaining={item.count} onPress={() => toggleSection(EARLIER_EXPANSION_KEY)} />
+                );
             default:
                 return null;
         }
-    }, [handleSuggestionPress, toggleSection]);
+    }, [handleSuggestionPress, toggleSection, isRowOpened]);
 
     const ListEmptyComponent = useCallback(() => {
         if (showOnboardingWait) {
@@ -807,6 +902,18 @@ const MeraNewsScreen: React.FC = () => {
                 setActiveSection((header.item as Extract<SectionedListItem, { type: 'fact-header' }>).section.key);
                 return;
             }
+            // Viewport in the Earlier zone (past the caught-up divider) → no active
+            // section chip (the Earlier zone is flat, section-less).
+            const inZoneTwo = viewableItems.some(
+                (vi) =>
+                    vi.item?.type === 'caught-up-divider' ||
+                    vi.item?.type === 'earlier-card' ||
+                    vi.item?.type === 'earlier-show-more',
+            );
+            if (inZoneTwo) {
+                setActiveSection(null);
+                return;
+            }
             const firstIdx = viewableItems[0]?.index ?? 0;
             for (let i = firstIdx; i >= 0; i--) {
                 const it = activeListData[i];
@@ -858,71 +965,43 @@ const MeraNewsScreen: React.FC = () => {
 
     return (
         <Box className="flex-1 bg-black">
-            <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
-                {/* Title row — static */}
-                <HStack className="items-start justify-between mb-1">
+            <VStack className="px-5 pb-2 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
+                {/* Title row — heading + tappable last-update line (opens the feed
+                    status sheet) + the inline notification bell. */}
+                <HStack className="items-start justify-between mb-2">
                     <VStack className="flex-1 min-w-0 mr-3">
                         <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.forYou')}</Heading>
-                        <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
+                        {lastProcessedLabel && (
+                            <Pressable
+                                onPress={openStatusSheet}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('feedStatus.openA11y')}
+                            >
+                                <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
+                            </Pressable>
+                        )}
                     </VStack>
-                    {/* Header icon cluster — history, saved, and (app-rethink wave)
-                        the inline notification bell, which replaces the old
-                        absolutely-positioned overlay reservation. */}
                     <HStack className="items-center flex-shrink-0" space="sm">
-                        <Pressable
-                            onPress={() => router.push('/logged-in/visited-publications')}
-                            hitSlop={12}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('publicationVisits.visitedListTitle')}
-                            className="p-3 rounded-full border border-primary-500 bg-transparent"
-                        >
-                            <MaterialIcons name="history" size={22} color="#EDA77E" />
-                        </Pressable>
-                        <Pressable
-                            onPress={() => router.push('/logged-in/saved-suggestions')}
-                            hitSlop={12}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('savedSuggestions.title')}
-                            className="p-3 rounded-full border border-primary-500 bg-transparent"
-                        >
-                            <MaterialIcons name="bookmark" size={22} color="#EDA77E" />
-                        </Pressable>
                         <NotificationBellButton />
                     </HStack>
                 </HStack>
 
-                {/* Banner area — polling status + progress/article-count in one compact slot */}
-                <View className="mb-2" style={{ minHeight: 70 }}>
-                    <NewsPollingBanner />
-                    {isDailyLimited ? (
-                        <DailyLimitForYouBanner />
-                    ) : showSyncProgress ? (
-                        <SyncProgressForYouBanner />
-                    ) : (
-                        <ArticleCountForYouBanner
-                            articlesProcessed={articleCount}
-                            articlesAnalysed={analysedCount}
-                            articlesImpactful={relevantCount}
-                            articlesNoiseRemoved={noisyDiscardedCount}
-                            injectNoiseEnabled={injectNoiseEnabled}
-                            lastSuccessfulCompletedAt={userPersona?.lastSuccessfulCompletedAt}
-                            isLoading={isMetadataLoading}
-                        />
-                    )}
+                {/* Sub-tab pills — Feed / Stories / Saved. */}
+                <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+
+                {/* Feed-status shimmer directly under the pill row. */}
+                <View className="mt-2">
+                    <FeedStatusShimmer
+                        processing={isFeedProcessing}
+                        error={scoringError !== null}
+                        dailyLimited={isDailyLimited}
+                        onPress={openStatusSheet}
+                    />
                 </View>
-                {/* Triage entry — full-width pill into the one-card review. */}
-                <Pressable
-                    onPress={() => router.push('/logged-in/triage')}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('forYou.triageEntry')}
-                    className="flex-row items-center justify-center rounded-full border border-primary-500 bg-transparent px-4 py-2.5 mt-1"
-                >
-                    <MaterialIcons name="style" size={18} color="#EDA77E" />
-                    <Text size="sm" className="text-primary-500 font-semibold ml-2">
-                        {t('forYou.triageEntry')}
-                    </Text>
-                </Pressable>
-                {navSections.length > 0 && (
+
+                {/* Section navigator + offline notice — Feed sub-tab only. */}
+                {activeSubTab === 'feed' && navSections.length > 0 && (
                     <Box className="mt-2 mb-1">
                         <SectionNavigator
                             sections={navSections}
@@ -932,44 +1011,70 @@ const MeraNewsScreen: React.FC = () => {
                         />
                     </Box>
                 )}
-                {!isConnected && (
+                {activeSubTab === 'feed' && !isConnected && (
                     <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
                         <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
                         <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
                     </HStack>
                 )}
             </VStack>
-            <AnimatedFlatList
-                ref={flatListRef}
-                data={activeListData}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                contentContainerStyle={{ paddingVertical: 20, paddingBottom: 100 }}
-                showsVerticalScrollIndicator={false}
-                scrollEventThrottle={16}
-                onScroll={handleScroll}
-                onEndReached={loadMoreArticles}
-                onEndReachedThreshold={0.5}
-                // Virtualization tuning (perf A2). Cards are variable-height so
-                // NO getItemLayout; these keep the render/retain window small.
-                // removeClippedSubviews is Android-only (it causes blank-cell
-                // glitches on iOS and buys little there).
-                windowSize={7}
-                maxToRenderPerBatch={6}
-                initialNumToRender={6}
-                updateCellsBatchingPeriod={50}
-                removeClippedSubviews={Platform.OS === 'android'}
-                ListEmptyComponent={ListEmptyComponent}
-                ListFooterComponent={ListFooterComponent}
-                maintainVisibleContentPosition={{
-                    minIndexForVisible: 0,
-                    autoscrollToTopThreshold: 10,
-                }}
-                onViewableItemsChanged={onViewableItemsChanged}
-                viewabilityConfig={viewabilityConfig.current}
-                onScrollToIndexFailed={onScrollToIndexFailed}
-            />
-            <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} extraBottomOffset={TAB_BAR_HEIGHT} />
+
+            {/* Keep-mounted sub-tab content — each tab's tree survives a switch
+                (display-toggled) so FlatList/scroll state is preserved. Stories
+                and Saved mount lazily on first visit. */}
+            <View style={{ flex: 1 }}>
+                {/* Feed */}
+                <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
+                    <AnimatedFlatList
+                        ref={flatListRef}
+                        data={activeListData}
+                        renderItem={renderItem}
+                        keyExtractor={keyExtractor}
+                        contentContainerStyle={{ paddingVertical: 20, paddingBottom: 100 }}
+                        showsVerticalScrollIndicator={false}
+                        scrollEventThrottle={16}
+                        onScroll={handleScroll}
+                        onEndReached={loadMoreArticles}
+                        onEndReachedThreshold={0.5}
+                        // Virtualization tuning (perf A2). Cards are variable-height so
+                        // NO getItemLayout; these keep the render/retain window small.
+                        // removeClippedSubviews is Android-only (it causes blank-cell
+                        // glitches on iOS and buys little there).
+                        windowSize={7}
+                        maxToRenderPerBatch={6}
+                        initialNumToRender={6}
+                        updateCellsBatchingPeriod={50}
+                        removeClippedSubviews={Platform.OS === 'android'}
+                        ListEmptyComponent={ListEmptyComponent}
+                        ListFooterComponent={ListFooterComponent}
+                        maintainVisibleContentPosition={{
+                            minIndexForVisible: 0,
+                            autoscrollToTopThreshold: 10,
+                        }}
+                        onViewableItemsChanged={onViewableItemsChanged}
+                        viewabilityConfig={viewabilityConfig.current}
+                        onScrollToIndexFailed={onScrollToIndexFailed}
+                    />
+                    {activeSubTab === 'feed' && pendingNewCount > 0 && (
+                        <NewStoriesPill count={pendingNewCount} onPress={handleAdoptPending} />
+                    )}
+                    <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} extraBottomOffset={TAB_BAR_HEIGHT} />
+                </View>
+
+                {/* Stories (lazy-mounted on first visit) */}
+                {storiesVisited && (
+                    <View style={{ flex: 1, display: activeSubTab === 'stories' ? 'flex' : 'none' }}>
+                        <StoriesSlotPlaceholder />
+                    </View>
+                )}
+
+                {/* Saved (lazy-mounted on first visit) */}
+                {savedVisited && (
+                    <View style={{ flex: 1, display: activeSubTab === 'saved' ? 'flex' : 'none' }}>
+                        <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} />
+                    </View>
+                )}
+            </View>
 
             {/* Right edge swipe hitbox */}
             <GestureDetector gesture={edgeSwipeGesture}>
@@ -979,6 +1084,17 @@ const MeraNewsScreen: React.FC = () => {
             {/* One-time "What's new" sheet (existing users, first launch post-OTA). */}
             <WhatsNewSheet />
 
+            {/* Feed-status detail sheet. */}
+            <FeedStatusSheet
+                isOpen={statusSheetOpen}
+                onClose={() => setStatusSheetOpen(false)}
+                processedCount={articleCount}
+                analysedCount={analysedCount}
+                relevantCount={relevantCount}
+                noiseRemovedCount={noisyDiscardedCount ?? 0}
+                injectNoiseEnabled={injectNoiseEnabled}
+                lastProcessedLabel={lastProcessedLabel}
+            />
         </Box>
     );
 };

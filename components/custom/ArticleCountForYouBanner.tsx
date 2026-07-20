@@ -35,6 +35,11 @@ function formatDateTime(dateStr: string): string {
     return `Last processed: ${displayHours}:${minutes} ${ampm}, ${day}${suffix} ${months[date.getMonth()]}`;
 }
 
+/**
+ * @deprecated Superseded by FeedStatusShimmer + FeedStatusSheet (2026-07-20).
+ * The counts it showed now live in the feed-status sheet. Kept for reference;
+ * not mounted by any live screen.
+ */
 const ArticleCountForYouBanner: React.FC<ArticleCountForYouBannerProps> = ({
     articlesProcessed,
     articlesAnalysed,

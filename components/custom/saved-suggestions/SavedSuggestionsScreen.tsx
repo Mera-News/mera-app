@@ -32,13 +32,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SavedSuggestionsScreenProps {
     onBack: () => void;
+    /** When embedded inside another screen (e.g. the For-You "Saved" sub-tab),
+     *  the floating back button is hidden and the header padding is tightened —
+     *  the host already owns the top chrome. Route usage leaves this unset. */
+    embedded?: boolean;
 }
 
 /** The WMDB row id backing a saved item (suggestion `_id` or the article's savedId). */
 const itemId = (item: SavedItem): string =>
     item.origin === 'suggestion' ? item.suggestion._id : item.savedId;
 
-const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack }) => {
+const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack, embedded = false }) => {
     const { t } = useTranslation();
     const toast = useToast();
     const insets = useSafeAreaInsets();
@@ -182,21 +186,23 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
 
     return (
         <Box className="flex-1 bg-black">
-            {/* Floating Back Button */}
-            <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
-                <Pressable
-                    onPress={onBack}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                >
-                    <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                </Pressable>
-            </Box>
+            {/* Floating Back Button — hidden when embedded (host owns navigation). */}
+            {!embedded && (
+                <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
+                    <Pressable
+                        onPress={onBack}
+                        className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                    >
+                        <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                    </Pressable>
+                </Box>
+            )}
 
             <VStack
                 className="px-5 pb-2"
-                style={{ paddingTop: insets.top + 16 }}
+                style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
             >
-                <Heading size="3xl" className="text-white ml-14">
+                <Heading size="3xl" className={embedded ? 'text-white' : 'text-white ml-14'}>
                     {t('savedSuggestions.title')}
                 </Heading>
             </VStack>

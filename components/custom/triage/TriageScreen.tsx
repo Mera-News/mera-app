@@ -1,3 +1,8 @@
+// NOTE: No entry point by design (product decision 2026-07-20) — the For-You
+// triage entry pill was removed in favour of the Feed/Stories/Saved sub-tabs.
+// This screen (and its route) are kept intact for future re-exposure; do not
+// delete.
+//
 // TriageScreen — the For-You "triage" one-card review surface.
 //
 // A single centered card (TriageCard) with the five verdict buttons below

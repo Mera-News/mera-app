@@ -16,6 +16,11 @@ import { useTranslation } from 'react-i18next';
  * when a sync is fully blocked, cleared when a sync delivers again). Self-hides
  * once the reset time has passed.
  */
+/**
+ * @deprecated Superseded by FeedStatusShimmer (amber tint) + FeedStatusSheet
+ * (2026-07-20). The daily-limit notice now lives in the feed-status sheet. Kept
+ * for reference; not mounted by any live screen.
+ */
 export default function DailyLimitForYouBanner() {
     const { t } = useTranslation();
     const resetAt = useForYouDailyLimitResetAt();

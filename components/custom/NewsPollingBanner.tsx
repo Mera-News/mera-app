@@ -7,6 +7,11 @@ import { useTranslation } from 'react-i18next';
 
 const BANNER_HEIGHT = 32;
 
+/**
+ * @deprecated Superseded by FeedStatusShimmer + FeedStatusSheet (2026-07-20).
+ * The For-You header no longer renders this banner; kept for reference / possible
+ * re-use. Not mounted by any live screen.
+ */
 export default function NewsPollingBanner() {
     const { t } = useTranslation();
     const syncStatusMessage = useForYouSyncStatusMessage();
