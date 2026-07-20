@@ -1100,5 +1100,37 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Stories wave (schema v39) ──────────────────────────────────
+      // NOTE: this is the ONE shared v39 migration block for the stories wave.
+      // Concurrent commits in this wave add their steps here rather than
+      // minting a second v39. This commit contributes the tracked_stories
+      // table only.
+      toVersion: 39,
+      steps: [
+        // Tracked "followed stories". Long-lived, user-owned — created (never
+        // wiped). The follow UI + reconcile poll land in later waves; this
+        // migration only stands up the table + backing model/service.
+        createTable({
+          name: 'tracked_stories',
+          columns: [
+            { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'member_article_ids_json', type: 'string' },
+            { name: 'llm_headline', type: 'string', isOptional: true },
+            { name: 'fallback_title', type: 'string' },
+            { name: 'latest_article_id', type: 'string', isOptional: true },
+            { name: 'latest_title', type: 'string', isOptional: true },
+            { name: 'origin_surface', type: 'string', isOptional: true },
+            { name: 'last_update_at', type: 'number', isOptional: true },
+            { name: 'unseen_count', type: 'number' },
+            { name: 'last_checked_at', type: 'number', isOptional: true },
+            { name: 'miss_count', type: 'number' },
+            { name: 'status', type: 'string' },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });

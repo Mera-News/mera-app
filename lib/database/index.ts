@@ -25,6 +25,7 @@ import PersonaChangeLog from './models/PersonaChangeLog';
 import StoryImpression from './models/StoryImpression';
 import Notification from './models/Notification';
 import PersonaSummaryString from './models/PersonaSummaryString';
+import TrackedStory from './models/TrackedStory';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -62,6 +63,7 @@ const database = new Database({
     StoryImpression,
     Notification,
     PersonaSummaryString,
+    TrackedStory,
   ],
 });
 

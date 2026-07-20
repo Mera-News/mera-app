@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 38,
+  version: 39,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -394,6 +394,37 @@ export default appSchema({
         { name: 'generated_at', type: 'number' },
         { name: 'persona_version', type: 'string', isOptional: true },
         { name: 'stale', type: 'boolean', isOptional: true },
+      ],
+    }),
+
+    // ── Tracked Stories (schema v39) ──────────────────────────────────
+    // User-owned "follow this story" state. One row per followed story, keyed
+    // (once resolved) to a server stable_cluster_id so the reconcile poll can
+    // find new member articles for it. Long-lived — migrate, NEVER wipe.
+    // `member_article_ids_json` is a JSON string[] of the article ids in the
+    // story, newest-first, capped at 30. `llm_headline` is the generated
+    // English one-liner (rendered via TranslatableDynamic); `fallback_title`
+    // is the title captured at track time and always renders until a headline
+    // exists. `unseen_count`/`last_update_at` drive the "new updates" badge and
+    // ordering; `miss_count`/`last_checked_at` drive auto-end after a run of
+    // reconcile polls find nothing new. `status` is 'active' | 'ended'.
+    tableSchema({
+      name: 'tracked_stories',
+      columns: [
+        { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'member_article_ids_json', type: 'string' },
+        { name: 'llm_headline', type: 'string', isOptional: true },
+        { name: 'fallback_title', type: 'string' },
+        { name: 'latest_article_id', type: 'string', isOptional: true },
+        { name: 'latest_title', type: 'string', isOptional: true },
+        { name: 'origin_surface', type: 'string', isOptional: true },
+        { name: 'last_update_at', type: 'number', isOptional: true },
+        { name: 'unseen_count', type: 'number' },
+        { name: 'last_checked_at', type: 'number', isOptional: true },
+        { name: 'miss_count', type: 'number' },
+        { name: 'status', type: 'string' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
       ],
     }),
   ],

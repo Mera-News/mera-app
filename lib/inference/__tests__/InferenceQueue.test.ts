@@ -36,6 +36,11 @@ jest.mock('../handlers/persona-summary-handler', () => ({
   handlePersonaSummaryJob: (...args: unknown[]) => mockHandlePersonaSummaryJob(...args),
 }));
 
+const mockHandleStoryHeadlineJob = jest.fn();
+jest.mock('../handlers/story-headline-handler', () => ({
+  handleStoryHeadlineJob: (...args: unknown[]) => mockHandleStoryHeadlineJob(...args),
+}));
+
 const mockResetContext = jest.fn();
 
 jest.mock('../../mera-protocol-toolkit', () => ({

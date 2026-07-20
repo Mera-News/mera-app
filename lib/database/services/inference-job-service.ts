@@ -13,6 +13,9 @@ const DEFAULT_PRIORITY: Record<InferenceJobType, number> = {
   // Lower priority than topic_gen (summary depends on topics existing, and it's
   // a background nicety — never block topic generation on it).
   persona_summary: 20,
+  // Naming a followed story — a background nicety like persona_summary. Runs at
+  // the same low priority so it never contends with topic generation.
+  story_headline: 20,
 };
 
 const DEFAULT_MAX_ATTEMPTS = 3;
