@@ -2,11 +2,18 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback } from 'react';
+import { router } from 'expo-router';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem } from 'react-native';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+
+/** Trailing ghost "+" chip id — a sentinel appended after the real scopes,
+ *  never selectable/selected, navigates to the locations screen. */
+const ADD_PLACES_ID = 'add-places';
+
+type ChipItem = ExploreScope | { readonly id: typeof ADD_PLACES_ID };
 
 interface ScopeChipRowProps {
     readonly scopes: readonly ExploreScope[];
@@ -24,18 +31,36 @@ interface ScopeChipRowProps {
 const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelect }) => {
     const { t } = useTranslation();
 
-    const renderItem: ListRenderItem<ExploreScope> = useCallback(
+    // Trailing ghost "+" chip, appended as a sentinel item so it rides the
+    // same FlatList/renderItem as the real scope chips — never selectable.
+    const data = useMemo<ChipItem[]>(() => [...scopes, { id: ADD_PLACES_ID }], [scopes]);
+
+    const renderItem: ListRenderItem<ChipItem> = useCallback(
         ({ item }) => {
-            const active = item.id === selectedId;
+            if (item.id === ADD_PLACES_ID) {
+                return (
+                    <Pressable
+                        onPress={() => router.push('/logged-in/locations')}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('explore.addPlaces')}
+                        className="flex-row items-center justify-center rounded-full border px-4 py-2 mr-2 border-gray-700 bg-transparent"
+                    >
+                        <MaterialIcons name="add" size={16} color={ACCENT} />
+                    </Pressable>
+                );
+            }
+
+            const scope = item as ExploreScope;
+            const active = scope.id === selectedId;
             const label =
-                item.kind === 'top'
+                scope.kind === 'top'
                     ? t('explore.scopeTopStories')
-                    : item.kind === 'world'
+                    : scope.kind === 'world'
                       ? t('explore.scopeWorld')
-                      : item.label;
+                      : scope.label;
             return (
                 <Pressable
-                    onPress={() => onSelect(item)}
+                    onPress={() => onSelect(scope)}
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
                     accessibilityLabel={label}
@@ -43,11 +68,11 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
                         active ? 'bg-primary-400 border-primary-400' : 'border-gray-700 bg-transparent'
                     }`}
                 >
-                    {item.kind === 'country' && item.flagEmoji ? (
-                        <Text className="text-base mr-1.5">{item.flagEmoji}</Text>
+                    {scope.kind === 'country' && scope.flagEmoji ? (
+                        <Text className="text-base mr-1.5">{scope.flagEmoji}</Text>
                     ) : (
                         <MaterialIcons
-                            name={item.icon}
+                            name={scope.icon}
                             size={16}
                             color={active ? '#000000' : ACCENT}
                             style={{ marginRight: 6 }}
@@ -69,7 +94,7 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
     return (
         <FlatList
             horizontal
-            data={scopes as ExploreScope[]}
+            data={data}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}

@@ -1,17 +1,13 @@
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { getSetting, setSetting } from '@/lib/database/services/setting-service';
+import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
 import logger from '@/lib/logger';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,7 +37,8 @@ const ExploreScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
-    const [selectedId, setSelectedId] = useState<string>('world');
+    // Cold-mount always opens on Top stories; the persisted LAST_SCOPE_KEY is intentionally not read for the initial selection (taps still persist below, for potential future use).
+    const [selectedId, setSelectedId] = useState<string>('top-stories');
     const [restoredSelection, setRestoredSelection] = useState(false);
 
     // Device country is stable for the session.
@@ -73,24 +70,9 @@ const ExploreScreen: React.FC = () => {
         [locations, deviceCountry],
     );
 
-    // Restore the last-selected scope once (best-effort).
+    // No restore step needed anymore (selectedId already defaults to 'top-stories' above) — just clear the gate that guards the snap-back effect below.
     useEffect(() => {
-        let cancelled = false;
-        getSetting(LAST_SCOPE_KEY)
-            .then((stored) => {
-                if (!cancelled && stored) setSelectedId(stored);
-            })
-            .catch((err: unknown) => {
-                logger.captureException(err, {
-                    tags: { component: 'ExploreScreen', method: 'restoreScope' },
-                });
-            })
-            .finally(() => {
-                if (!cancelled) setRestoredSelection(true);
-            });
-        return () => {
-            cancelled = true;
-        };
+        setRestoredSelection(true);
     }, []);
 
     // Resolve the active scope: the persisted/selected id when still available,
@@ -121,8 +103,6 @@ const ExploreScreen: React.FC = () => {
         });
     };
 
-    const hasNoLocations = locations.length === 0;
-
     return (
         <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
                 {/* Header — title + notification bell (app-rethink wave: takes the
@@ -138,31 +118,6 @@ const ExploreScreen: React.FC = () => {
                 <Box className="mb-2">
                     <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
                 </Box>
-
-                {/* No-locations nudge — the device country + World chips still work;
-                    this points the user at the dedicated locations management screen
-                    (Wave 12 U-F2) to add their places. */}
-                {hasNoLocations ? (
-                    <VStack className="mx-5 mb-2 rounded-xl border border-gray-800 p-3" space="xs">
-                        <HStack className="items-center" space="sm">
-                            <MaterialIcons name="place" size={18} color="#EDA77E" />
-                            <Text size="sm" bold className="text-white">
-                                {t('explore.noLocationsTitle')}
-                            </Text>
-                        </HStack>
-                        <Text size="xs" className="text-typography-400">
-                            {t('explore.noLocationsBody')}
-                        </Text>
-                        <Button
-                            size="xs"
-                            variant="outline"
-                            className="self-start mt-1 rounded-full border-primary-500"
-                            onPress={() => router.push('/logged-in/locations')}
-                        >
-                            <ButtonText className="text-primary-400">{t('explore.addLocation')}</ButtonText>
-                        </Button>
-                    </VStack>
-                ) : null}
 
                 {/* Article list for the active scope — remounts on scope switch. */}
                 <Box className="flex-1">

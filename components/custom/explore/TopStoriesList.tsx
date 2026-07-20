@@ -204,6 +204,17 @@ const TopStoriesList: React.FC<TopStoriesListProps> = ({ homeCountryAlpha3 }) =>
         return null;
     }, [isLoadingMore]);
 
+    // Scrolls with the list (not sticky) — same horizontal padding as the
+    // cards below via the FlatList's contentContainerStyle.
+    const ListHeaderComponent = useCallback(
+        () => (
+            <Text size="xs" className="text-typography-400 mb-3">
+                {t('explore.topStoriesIntro')}
+            </Text>
+        ),
+        [t],
+    );
+
     if (isLoading) {
         return (
             <Box className="flex-1 items-center justify-center">
@@ -234,6 +245,7 @@ const TopStoriesList: React.FC<TopStoriesListProps> = ({ homeCountryAlpha3 }) =>
             scrollEventThrottle={16}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
+            ListHeaderComponent={ListHeaderComponent}
             ListFooterComponent={ListFooterComponent}
         />
     );

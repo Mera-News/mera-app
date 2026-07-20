@@ -18,6 +18,11 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+const mockRouterPush = jest.fn();
+jest.mock('expo-router', () => ({
+    router: { push: (...args: any[]) => mockRouterPush(...args) },
+}));
+
 // Render FlatList as a plain fragment of its items. jest-expo mis-transforms
 // RN's internal horizontal-ScrollView native-component file, so rendering a real
 // FlatList throws "Unexpected token 'export'". A Proxy over the actual module
@@ -73,6 +78,10 @@ const scopes: ExploreScope[] = [
 ];
 
 describe('ScopeChipRow', () => {
+    beforeEach(() => {
+        mockRouterPush.mockClear();
+    });
+
     it('renders a chip per scope (Top stories/World use the translated label keys)', () => {
         const { getByText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} />,
@@ -97,5 +106,25 @@ describe('ScopeChipRow', () => {
             <ScopeChipRow scopes={scopes} selectedId="country:IND" onSelect={jest.fn()} />,
         );
         expect(getByLabelText('India').props.accessibilityState).toMatchObject({ selected: true });
+    });
+
+    it('renders a trailing "+" chip after the last scope', () => {
+        const { getByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} />,
+        );
+        expect(getByLabelText('explore.addPlaces')).toBeTruthy();
+    });
+
+    it('the "+" chip is never marked selected and navigates to the locations screen on tap, without firing onSelect', () => {
+        const onSelect = jest.fn();
+        const { getByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} />,
+        );
+        const addChip = getByLabelText('explore.addPlaces');
+        expect(addChip.props.accessibilityState).not.toMatchObject({ selected: true });
+
+        fireEvent.press(addChip);
+        expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/locations');
+        expect(onSelect).not.toHaveBeenCalled();
     });
 });

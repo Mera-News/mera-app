@@ -247,7 +247,9 @@
     "noLocationsTitle": "See news from your places",
     "noLocationsBody": "Add the places you care about to explore local news from them here.",
     "sheetTitle": "Manage sources",
-    "close": "Close"
+    "close": "Close",
+    "topStoriesIntro": "What people are talking about right now — sorted for what matters to you.",
+    "addPlaces": "Add places"
   },
   "forYou": {
     "sectionPrefix": "News about:",
