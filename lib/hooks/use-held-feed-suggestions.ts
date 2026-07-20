@@ -11,7 +11,11 @@
 // Focus model (mirrors use-focus-coalesced-value's timer logic):
 //   • FIRST MOUNT — adopt everything (cold start shows the whole feed, no pill).
 //   • FOCUSED     — re-derive from live promptly (in a transition); new ids stay
-//                   held (pill grows), adopted rows update/remove in place.
+//                   held (pill grows), adopted rows update/remove in place. But
+//                   if that would render an EMPTY screen while live is non-empty
+//                   (e.g. cold start: tab mounts before the store hydrates, so
+//                   the first-mount adopt saw []), adopt everything instead —
+//                   holding only makes sense when there are rows to disturb.
 //   • BLUR (edge) — advance the watermark over the outgoing rendered rows and
 //                   adopt every live id (leaving the tab clears the pill).
 //   • BLURRED     — trailing-coalesce the rendered value at `blurredIntervalMs`
@@ -140,7 +144,14 @@ export function useHeldFeedSuggestions(
       } else {
         // Focused live update: re-derive with the CURRENT adopted set — new ids
         // stay held (pill grows), adopted rows update/remove in place.
-        startTransition(() => setRendered(deriveRendered(latestRef.current)));
+        const derived = deriveRendered(latestRef.current);
+        if (derived.length === 0 && latestRef.current.length > 0) {
+          // Empty screen while live is non-empty (cold-start hydration, post-
+          // logout store repopulation): holding disturbs nothing, so adopt all.
+          adoptAll(latestRef.current);
+        } else {
+          startTransition(() => setRendered(derived));
+        }
       }
       return;
     }

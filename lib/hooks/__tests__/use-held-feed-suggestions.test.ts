@@ -92,6 +92,31 @@ describe('useHeldFeedSuggestions', () => {
     expect(result.current.pendingNewCount).toBe(1);
   });
 
+  it('focused: cold-start hydration (empty mount → rows land) adopts immediately', () => {
+    // Tab mounts before the store hydrates, so first-mount adopt saw []. Rows
+    // then land while focused — they must render, not be held as an empty screen.
+    const { result, rerender } = setup({ live: [], focused: true });
+    expect(ids(result.current.suggestions)).toEqual([]);
+    act(() => rerender({ live: [sugg('a'), sugg('b')], focused: true }));
+    expect(ids(result.current.suggestions)).toEqual(['a', 'b']);
+    expect(result.current.pendingNewCount).toBe(0);
+  });
+
+  it('focused: cold-start rows older than 24h still render (were the invisible case)', () => {
+    // firstPubDate older than the pending window: previously these were both held
+    // AND pill-invisible → a permanently blank feed. Empty-screen adopt fixes it.
+    const old = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    const { result, rerender } = setup({ live: [], focused: true });
+    act(() =>
+      rerender({
+        live: [sugg('a', { firstPubDate: old }), sugg('b', { firstPubDate: old })],
+        focused: true,
+      }),
+    );
+    expect(ids(result.current.suggestions)).toEqual(['a', 'b']);
+    expect(result.current.pendingNewCount).toBe(0);
+  });
+
   it('focused: in-place update of an adopted row flows through', () => {
     const { result, rerender } = setup({ live: [sugg('a', { relevance: 0.6 })], focused: true });
     const updated = sugg('a', { relevance: 0.95, reason: 'rescored' });
