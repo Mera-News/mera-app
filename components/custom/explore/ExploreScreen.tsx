@@ -1,4 +1,3 @@
-import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -11,8 +10,6 @@ import { observeAll as observeAllLocations } from '@/lib/database/services/locat
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
-import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -22,7 +19,6 @@ import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
 import TopStoriesList from './TopStoriesList';
 
-const EXPLORE_CHAT_CONTEXT: ChatContext = { kind: 'generic', route: 'explore' };
 /** Persisted last-selected scope id (setting-service KV — same store as other flags). */
 const LAST_SCOPE_KEY = 'explore_last_scope';
 
@@ -37,8 +33,8 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
  *
  * Sources management now lives in Profile (app-rethink wave) — the header
  * Sources action, the FAB, and the bottom sheet are removed; the header slot
- * they occupied now hosts the notification bell. The floating Mera bubble
- * stays visible (only Browse suppresses it).
+ * they occupied now hosts the notification bell. The floating Mera bubble is
+ * not rendered on this screen.
  */
 const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -176,8 +172,6 @@ const ExploreScreen: React.FC = () => {
                         <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
                     )}
                 </Box>
-
-                <ScreenChatBubble context={EXPLORE_CHAT_CONTEXT} extraBottomOffset={TAB_BAR_HEIGHT} />
             </Box>
     );
 };
