@@ -215,6 +215,48 @@ function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
   return { id: echoedId ?? toolCall.id, explanation, expectedEffects, actions };
 }
 
+/**
+ * Rebuilds a track StagedProposal from a completed `proposeTrack` tool call. The
+ * tool INPUT carries only `{ track }`; the confirmable origin `subject` is
+ * echoed in the RESULT (see decideProposeTrack), so we recover the full
+ * `track_story` action from input + result. On resume without a result the card
+ * still renders (dimmed, no confirm) from the track text alone.
+ */
+function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | null {
+  if (toolCall.status !== 'done' || toolCall.name !== 'proposeTrack') return null;
+
+  const input = asRecord(toolCall.input) ?? {};
+  const result = asRecord(toolCall.result);
+  const trackText =
+    (typeof input.track === 'string' && input.track.trim()) ||
+    (typeof result?.track === 'string' && result.track.trim()) ||
+    '';
+  if (!trackText) return null;
+
+  // Subject is only load-bearing on Confirm (live session, result present). A
+  // resumed card is dimmed, so an empty subject is harmless there.
+  const subject = asRecord(result?.subject);
+  const actions: ProposalAction[] = [
+    {
+      type: 'track_story',
+      trackText,
+      subject: {
+        origin: subject?.origin === 'article' ? 'article' : 'suggestion',
+        surface: typeof subject?.surface === 'string' ? subject.surface : 'detail',
+        articleId: typeof subject?.articleId === 'string' ? subject.articleId : '',
+        title: typeof subject?.title === 'string' ? subject.title : '',
+        stableClusterId:
+          typeof subject?.stableClusterId === 'string' ? subject.stableClusterId : null,
+        publicationName:
+          typeof subject?.publicationName === 'string' ? subject.publicationName : null,
+      },
+    },
+  ];
+
+  const echoedId = typeof result?.proposalId === 'string' ? result.proposalId : null;
+  return { id: echoedId ?? toolCall.id, explanation: '', expectedEffects: '', actions };
+}
+
 // ---------------------------------------------------------------------------
 // Topic-plan-card + conflict-card derivation (Wave 11)
 // ---------------------------------------------------------------------------
@@ -286,7 +328,7 @@ function emitMessage(
     message.toolCalls.forEach((tc, idx) => {
       // Proposal cards take precedence — a `proposeChanges` call never doubles
       // as a fact card (and applyProposal/cancelProposal surface nothing).
-      const proposal = deriveProposal(tc);
+      const proposal = deriveProposal(tc) ?? deriveTrackProposal(tc);
       if (proposal) {
         cards.push({
           kind: 'proposal-card',

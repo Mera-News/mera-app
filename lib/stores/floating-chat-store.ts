@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { StagedProposal } from '../llm/types';
+import type { TrackFeedbackSubject } from '../news-harness/core/types';
 
 /** Terminal resolution of a save-time fact conflict (U-B1). */
 export type ConflictResolution = 'kept-both' | 'replaced' | 'merged' | 'dismissed';
@@ -8,7 +9,15 @@ export type ChatContext =
     | { kind: 'persona' }
     // At least one of articleId / suggestionId must be set; the agent resolves
     // the other (and the suggestion row) from whichever id is provided.
-    | { kind: 'article-suggestion'; articleId?: string; suggestionId?: string; articleTitle?: string }
+    | {
+          kind: 'article-suggestion';
+          articleId?: string;
+          suggestionId?: string;
+          articleTitle?: string;
+          // Present when the chat was opened from a "Track" tap — the origin
+          // snapshot the agent's proposeTrack tool follows against.
+          trackSubject?: TrackFeedbackSubject;
+      }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {

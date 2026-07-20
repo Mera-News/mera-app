@@ -38,6 +38,7 @@ const KNOWN_TOOLS = new Set([
   'runCalibration',
   // Article-feedback agent — proposal confirm flow.
   'proposeChanges',
+  'proposeTrack',
   'applyProposal',
   'cancelProposal',
 ]);

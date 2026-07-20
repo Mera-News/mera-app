@@ -30,6 +30,9 @@ jest.mock('../../database/services/persona-action-executor', () => ({
     Promise.resolve({ applied: true, changeLogId: 'cl-1', summary: 'ok' }),
   ),
 }));
+jest.mock('../../tracking/track-actions', () => ({
+  trackStoryWithProposal: jest.fn(() => Promise.resolve()),
+}));
 
 import { executeProposalActions } from '../proposal-handlers';
 import { submitFeatureRequest } from '../../feedback';
@@ -44,7 +47,11 @@ import { applyPersonaAction } from '../../database/services/persona-action-execu
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { triggerTopicGeneration } from '../tool-handlers';
+import { trackStoryWithProposal } from '../../tracking/track-actions';
 import type { ProposalAction } from '../../llm/types';
+
+const mockTrackStoryWithProposal =
+  trackStoryWithProposal as jest.MockedFunction<typeof trackStoryWithProposal>;
 
 const mockGetAllByNormalizedText = getAllByNormalizedText as jest.MockedFunction<typeof getAllByNormalizedText>;
 const mockApplyPersonaAction = applyPersonaAction as jest.MockedFunction<typeof applyPersonaAction>;
@@ -360,5 +367,56 @@ describe('executeProposalActions — Wave-9 rails-backed actions', () => {
     expect(result.applied).toBe(0);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('budget exhausted');
+  });
+});
+
+describe('executeProposalActions — track_story (follow-in-chat)', () => {
+  const subject = {
+    origin: 'suggestion' as const,
+    surface: 'detail',
+    articleId: 'a-1',
+    title: 'Protest escalates in Sonbhadra',
+    stableClusterId: 'sc-1',
+    publicationName: 'The Hindu',
+  };
+
+  it('follows the story via trackStoryWithProposal with the embedded subject', async () => {
+    const result = await executeProposalActions([
+      {
+        type: 'track_story',
+        trackText: 'Updates on the student protest in Sonbhadra over exam results',
+        subject,
+      },
+    ]);
+
+    expect(mockTrackStoryWithProposal).toHaveBeenCalledWith(
+      subject,
+      'Updates on the student protest in Sonbhadra over exam results',
+    );
+    expect(result.applied).toBe(1);
+    expect(result.summaries).toHaveLength(1);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('records an error (no track call) when trackText is empty', async () => {
+    const result = await executeProposalActions([
+      { type: 'track_story', trackText: '   ', subject },
+    ]);
+
+    expect(mockTrackStoryWithProposal).not.toHaveBeenCalled();
+    expect(result.applied).toBe(0);
+    expect(result.errors).toHaveLength(1);
+  });
+
+  it('collects an error but keeps going when the follow throws', async () => {
+    mockTrackStoryWithProposal.mockRejectedValueOnce(new Error('mint boom'));
+
+    const result = await executeProposalActions([
+      { type: 'track_story', trackText: 'Follow this', subject },
+    ]);
+
+    expect(result.applied).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('mint boom');
   });
 });

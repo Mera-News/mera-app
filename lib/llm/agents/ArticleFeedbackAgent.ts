@@ -23,13 +23,19 @@ import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
+import { isSubjectTracked } from '../../tracking/track-actions';
 import {
   buildArticleFeedbackSystemPrompt,
   buildFeedbackContext,
   decideProposeChanges,
+  decideProposeTrack,
   getArticleFeedbackToolDefinitions,
 } from '../../news-harness/article-feedback/agent-core';
-import type { SuggestionFeedbackContext } from '../../news-harness/core/types';
+import type {
+  SuggestionFeedbackContext,
+  TrackFeedbackSubject,
+} from '../../news-harness/core/types';
+import type { FeedbackSubject } from '../../../components/custom/cards/feedback-subject';
 import type { IAgent, ToolDefinition, ToolExecutionResult } from '../types';
 
 export class ArticleFeedbackAgent implements IAgent {
@@ -38,8 +44,25 @@ export class ArticleFeedbackAgent implements IAgent {
   constructor(
     private readonly userId: string,
     private readonly target: { articleId?: string; suggestionId?: string },
+    /** Origin snapshot for the "follow this story" (proposeTrack) tool. Present
+     *  only when the chat was opened from a Track tap; absent for a plain
+     *  thumbs-down feedback chat (then the tool falls back to a minimal subject
+     *  built from the target + article title, or refuses if it can't). */
+    private readonly trackSubject?: TrackFeedbackSubject | null,
   ) {
     this.id = `article-feedback-${target.suggestionId ?? target.articleId}`;
+  }
+
+  /** Resolve the subject the follow tool tracks against: the explicit
+   *  trackSubject, else a minimal one built from the target + store title. */
+  private resolveTrackSubject(): TrackFeedbackSubject | null {
+    if (this.trackSubject) return this.trackSubject;
+    const articleId = this.target.articleId;
+    if (!articleId) return null;
+    const storeContext = useFloatingChatStore.getState().context;
+    const title =
+      storeContext.kind === 'article-suggestion' ? storeContext.articleTitle : undefined;
+    return { origin: 'suggestion', surface: 'detail', articleId, title: title ?? '' };
   }
 
   // --- IAgent: system prompt (static — cacheable by KV cache) ---
@@ -104,7 +127,18 @@ export class ArticleFeedbackAgent implements IAgent {
         }
       : null;
 
-    return buildFeedbackContext({ facts, context, fallbackTitle, proposal });
+    // Follow-state so the agent can decline a duplicate track (best-effort).
+    let isTracked: boolean | undefined;
+    const trackSubject = this.resolveTrackSubject();
+    if (trackSubject) {
+      try {
+        isTracked = await isSubjectTracked(trackSubject as FeedbackSubject);
+      } catch {
+        /* non-fatal — leave undefined (no TRACK STATE line) */
+      }
+    }
+
+    return buildFeedbackContext({ facts, context, fallbackTitle, proposal, isTracked });
   }
 
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---
@@ -125,6 +159,25 @@ export class ArticleFeedbackAgent implements IAgent {
         const facts = await getFacts();
         const factIds = new Set(facts.map((f) => f.id));
         return decideProposeChanges(args, factIds);
+      }
+
+      case 'proposeTrack': {
+        // "Follow this story" — stage a track_story proposal. Guard against a
+        // duplicate follow up front (deterministic, not left to the LLM).
+        const subject = this.resolveTrackSubject();
+        if (!subject) {
+          return { result: { error: 'no article to follow in this context' } };
+        }
+        try {
+          if (await isSubjectTracked(subject as FeedbackSubject)) {
+            return {
+              result: { alreadyTracked: true, message: 'Already following this story.' },
+            };
+          }
+        } catch {
+          /* non-fatal — proceed to propose */
+        }
+        return decideProposeTrack(args, subject);
       }
 
       case 'applyProposal': {

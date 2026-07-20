@@ -765,7 +765,9 @@
     "noLocationsTitle": "あなたの場所のニュースを見る",
     "noLocationsBody": "気になる場所を追加すると、そこからのローカルニュースをここで探索できます。",
     "sheetTitle": "ソースを管理",
-    "close": "閉じる"
+    "close": "閉じる",
+    "topStoriesIntro": "今、みんなが話題にしていることをご紹介します — あなたにとって重要なことでソートされています。",
+    "addPlaces": "場所を追加"
   },
   "forYou": {
     "sectionPrefix": "関連ニュース：",
@@ -796,7 +798,9 @@
     "lastProcessed": "最終処理",
     "errorTitle": "スコアリングの問題",
     "openA11y": "フィードの状態を開く",
-    "close": "閉じる"
+    "close": "閉じる",
+    "expandA11y": "フィード状態の詳細を表示",
+    "collapseA11y": "フィード状態の詳細を隠す"
   },
   "trackedStories": {
     "emptyTitle": "まだフォローしているストーリーはありません",
@@ -810,7 +814,9 @@
     "timelineQuietNote": "まだ新しい報道は集まっていません。このストーリーが進展するたびに、ここに追加していきます。",
     "railTitle": "フォロー中",
     "untrackConfirmTitle": "フォローを解除しますか？",
-    "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。"
+    "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
+    "trackChatSeed": "このストーリーをフォローしたいです。",
+    "trackProposalTitle": "このストーリーをフォローしますか？"
   },
   "triage": {
     "title": "確認",
@@ -1066,12 +1072,16 @@
       "refine": "Meraと調整する",
       "refineSeed": "これについて話しましょう —「{{text}}」",
       "remove": "これを削除",
-      "removeConfirm": "もう一度タップして削除"
+      "removeConfirm": "もう一度タップして削除",
+      "limitReached": "日次調整上限に達しました — 変更は明日も続きます。"
     }
   },
   "facts": {
     "screenTitle": "あなたのファクト",
-    "screenSubtitle": "Meraがあなたについて知っていること"
+    "screenSubtitle": "Meraがあなたについて知っていること",
+    "influence": "影響",
+    "moreInfluence": "より大きな影響",
+    "lessInfluence": "より小さな影響"
   },
   "publicationPrefs": {
     "title": "ソースの設定",

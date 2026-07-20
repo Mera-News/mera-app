@@ -765,7 +765,9 @@
     "noLocationsTitle": "Xem tin tức từ những nơi của bạn",
     "noLocationsBody": "Thêm những địa điểm bạn quan tâm để khám phá tin tức địa phương từ đó tại đây.",
     "sheetTitle": "Quản lý nguồn",
-    "close": "Đóng"
+    "close": "Đóng",
+    "topStoriesIntro": "Mọi người đang nói gì ngay bây giờ — được sắp xếp theo những gì quan trọng với bạn.",
+    "addPlaces": "Thêm địa điểm"
   },
   "forYou": {
     "sectionPrefix": "Tin tức về:",
@@ -796,7 +798,9 @@
     "lastProcessed": "Xử lý lần cuối",
     "errorTitle": "Sự cố chấm điểm",
     "openA11y": "Mở trạng thái bản tin",
-    "close": "Đóng"
+    "close": "Đóng",
+    "expandA11y": "Hiển thị chi tiết trạng thái bản tin",
+    "collapseA11y": "Ẩn chi tiết trạng thái bản tin"
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",
@@ -810,7 +814,9 @@
     "timelineQuietNote": "Chưa có tin tức mới nào được tổng hợp. Chúng tôi sẽ thêm diễn biến tại đây khi câu chuyện này tiếp diễn.",
     "railTitle": "Đang theo dõi",
     "untrackConfirmTitle": "Ngừng theo dõi?",
-    "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa."
+    "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa.",
+    "trackChatSeed": "Tôi muốn theo dõi câu chuyện này.",
+    "trackProposalTitle": "Theo dõi câu chuyện này?"
   },
   "triage": {
     "title": "Xem xét",
@@ -1066,12 +1072,16 @@
       "refine": "Tinh chỉnh cùng Mera",
       "refineSeed": "Hãy nói về điều này — \"{{text}}\"",
       "remove": "Xóa mục này",
-      "removeConfirm": "Chạm lại để xóa"
+      "removeConfirm": "Chạm lại để xóa",
+      "limitReached": "Đã đạt giới hạn điều chỉnh hàng ngày — các thay đổi sẽ tiếp tục vào ngày mai."
     }
   },
   "facts": {
     "screenTitle": "Thông tin của bạn",
-    "screenSubtitle": "Những gì Mera biết về bạn"
+    "screenSubtitle": "Những gì Mera biết về bạn",
+    "influence": "Ảnh hưởng",
+    "moreInfluence": "Ảnh hưởng nhiều hơn",
+    "lessInfluence": "Ảnh hưởng ít hơn"
   },
   "publicationPrefs": {
     "title": "Tùy chọn nguồn",

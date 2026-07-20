@@ -766,7 +766,9 @@
     "noLocationsTitle": "Veja notícias dos seus lugares",
     "noLocationsBody": "Adicione os lugares com os quais você se importa para explorar notícias locais deles aqui.",
     "sheetTitle": "Gerenciar fontes",
-    "close": "Fechar"
+    "close": "Fechar",
+    "topStoriesIntro": "Sobre o que as pessoas estão falando agora — ordenado pelo que importa para você.",
+    "addPlaces": "Adicionar lugares"
   },
   "forYou": {
     "sectionPrefix": "Notícias sobre:",
@@ -798,7 +800,9 @@
     "lastProcessed": "Última atualização",
     "errorTitle": "Problema de pontuação",
     "openA11y": "Abrir status do feed",
-    "close": "Fechar"
+    "close": "Fechar",
+    "expandA11y": "Mostrar detalhes do status do feed",
+    "collapseA11y": "Ocultar detalhes do status do feed"
   },
   "trackedStories": {
     "emptyTitle": "Nenhuma história seguida ainda",
@@ -812,7 +816,9 @@
     "timelineQuietNote": "Ainda não há nova cobertura reunida. Adicionaremos os desenvolvimentos aqui conforme esta história avança.",
     "railTitle": "Seguindo",
     "untrackConfirmTitle": "Deixar de seguir?",
-    "untrackConfirmBody": "Você não verá mais novos desenvolvimentos desta história."
+    "untrackConfirmBody": "Você não verá mais novos desenvolvimentos desta história.",
+    "trackChatSeed": "Quero seguir esta história.",
+    "trackProposalTitle": "Seguir esta história?"
   },
   "triage": {
     "bad": "Não é para mim",
@@ -1073,12 +1079,16 @@
       "refine": "Refinar com a Mera",
       "refineSeed": "Vamos falar sobre isso — \"{{text}}\"",
       "remove": "Remover isto",
-      "removeConfirm": "Toque novamente para remover"
+      "removeConfirm": "Toque novamente para remover",
+      "limitReached": "Limite diário de ajustes atingido — as alterações continuarão amanhã."
     }
   },
   "facts": {
     "screenTitle": "Seus fatos",
-    "screenSubtitle": "O que a Mera sabe sobre você"
+    "screenSubtitle": "O que a Mera sabe sobre você",
+    "influence": "Influência",
+    "moreInfluence": "Mais influência",
+    "lessInfluence": "Menos influência"
   },
   "publicationPrefs": {
     "title": "Preferências de fontes",

@@ -16,10 +16,6 @@ const DEFAULT_PRIORITY: Record<InferenceJobType, number> = {
   // Naming a followed story — a background nicety like persona_summary. Runs at
   // the same low priority so it never contends with topic generation.
   story_headline: 20,
-  // Track proposals are normally run interactively (direct complete primitive
-  // from the sheet), not via the queue; this default only applies if one is
-  // ever enqueued. Same low background priority.
-  track_proposal: 20,
 };
 
 const DEFAULT_MAX_ATTEMPTS = 3;

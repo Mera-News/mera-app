@@ -149,6 +149,12 @@ export interface HarnessArticle {
 export type ProposalAction =
   // -- Legacy fact/topic CRUD (applied directly against fact-service) --
   | { type: 'add_fact'; statement: string }
+  // -- Follow-a-story (the article-feedback agent's `proposeTrack` tool) --
+  /** Follow the tapped article's unfolding story as a durable topic. `trackText`
+   *  is the accepted one-sentence topic; `subject` is the self-contained origin
+   *  snapshot the executor hands to trackStoryWithProposal (embedded so the
+   *  confirm is reconstructable from the persisted tool call, with no store read). */
+  | { type: 'track_story'; trackText: string; subject: TrackFeedbackSubject }
   | { type: 'update_fact'; fact_id: string; new_statement: string }
   | { type: 'delete_fact'; fact_id: string }
   | { type: 'add_topics'; fact_id: string; topics: string[] }
@@ -165,6 +171,19 @@ export type ProposalAction =
   | { type: 'add_suppression'; suppressionPattern: string; suppressionKeywords?: string[]; suppressionStrength?: number }
   /** Pin / unpin a matched topic as high-priority. */
   | { type: 'set_high_priority'; topicText: string; highPriority: boolean };
+
+/** Serializable origin snapshot for a `track_story` action — the minimal subset
+ *  of the RN `FeedbackSubject` that trackStoryWithProposal needs. Kept here (not
+ *  imported from components/) so the harness stays RN-free; structurally
+ *  assignable from a full FeedbackSubject. */
+export interface TrackFeedbackSubject {
+  origin: 'suggestion' | 'article';
+  surface: string;
+  articleId: string;
+  title: string;
+  stableClusterId?: string | null;
+  publicationName?: string | null;
+}
 
 /** A proposal staged by the LLM and awaiting user confirmation. */
 export interface StagedProposal {
@@ -227,4 +246,7 @@ export interface FeedbackContextInput {
   fallbackTitle?: string;
   /** The single in-flight staged proposal, or null. */
   proposal: StagedProposal | null;
+  /** True when this article's story is already being followed — lets the agent
+   *  say so instead of proposing a duplicate track. Undefined = unknown/N-A. */
+  isTracked?: boolean;
 }

@@ -770,7 +770,9 @@
     "noLocationsTitle": "اطّلع على أخبار أماكنك",
     "noLocationsBody": "أضف الأماكن التي تهمك لاستكشاف الأخبار المحلية منها هنا.",
     "sheetTitle": "إدارة المصادر",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "topStoriesIntro": "ما يتحدث عنه الناس الآن — مُرتّبة حسب ما يهمك",
+    "addPlaces": "إضافة أماكن"
   },
   "forYou": {
     "sectionPrefix": "أخبار عن:",
@@ -806,7 +808,9 @@
     "lastProcessed": "آخر معالجة",
     "errorTitle": "مشكلة في التقييم",
     "openA11y": "فتح حالة الخلاصة",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "expandA11y": "عرض تفاصيل حالة الخلاصة",
+    "collapseA11y": "إخفاء تفاصيل حالة الخلاصة"
   },
   "trackedStories": {
     "emptyTitle": "لا توجد قصص متابَعة بعد",
@@ -825,7 +829,9 @@
     "timelineQuietNote": "لا تغطية جديدة بعد. سنضيف التطورات هنا مع تطوّر هذه القصة.",
     "railTitle": "المتابَعة",
     "untrackConfirmTitle": "إيقاف المتابعة؟",
-    "untrackConfirmBody": "لن ترى بعد الآن التطورات الجديدة لهذه القصة."
+    "untrackConfirmBody": "لن ترى بعد الآن التطورات الجديدة لهذه القصة.",
+    "trackChatSeed": "أريد متابعة هذه القصة.",
+    "trackProposalTitle": "متابعة هذه القصة؟"
   },
   "triage": {
     "title": "مراجعة",
@@ -1106,12 +1112,16 @@
       "refine": "تحسين مع Mera",
       "refineSeed": "لنتحدث عن هذا — \"{{text}}\"",
       "remove": "إزالة هذا",
-      "removeConfirm": "اضغط مرة أخرى للإزالة"
+      "removeConfirm": "اضغط مرة أخرى للإزالة",
+      "limitReached": "تم بلوغ حد التعديل اليومي — التغييرات تستمر غدًا"
     }
   },
   "facts": {
     "screenTitle": "حقائقك",
-    "screenSubtitle": "ما يعرفه Mera عنك"
+    "screenSubtitle": "ما يعرفه Mera عنك",
+    "influence": "التأثير",
+    "moreInfluence": "تأثير أكثر",
+    "lessInfluence": "تأثير أقل"
   },
   "publicationPrefs": {
     "title": "تفضيلات المصادر",

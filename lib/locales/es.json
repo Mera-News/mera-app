@@ -766,7 +766,9 @@
     "noLocationsTitle": "Ve noticias de tus lugares",
     "noLocationsBody": "Añade los lugares que te importan para explorar noticias locales de ellos aquí.",
     "sheetTitle": "Gestionar fuentes",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "topStoriesIntro": "De qué habla la gente ahora — ordenado por lo que te importa",
+    "addPlaces": "Añadir lugares"
   },
   "forYou": {
     "sectionPrefix": "Noticias sobre:",
@@ -798,7 +800,9 @@
     "lastProcessed": "Último procesamiento",
     "errorTitle": "Problema de puntuación",
     "openA11y": "Abrir estado del feed",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "expandA11y": "Mostrar detalles del estado del feed",
+    "collapseA11y": "Ocultar detalles del estado del feed"
   },
   "trackedStories": {
     "emptyTitle": "Aún no sigues ninguna historia",
@@ -812,7 +816,9 @@
     "timelineQuietNote": "Todavía no se ha reunido nueva cobertura. Añadiremos aquí los desarrollos a medida que esta historia evolucione.",
     "railTitle": "Siguiendo",
     "untrackConfirmTitle": "¿Dejar de seguir?",
-    "untrackConfirmBody": "Ya no verás nuevos desarrollos de esta historia."
+    "untrackConfirmBody": "Ya no verás nuevos desarrollos de esta historia.",
+    "trackChatSeed": "Quiero seguir esta historia.",
+    "trackProposalTitle": "¿Seguir esta historia?"
   },
   "triage": {
     "title": "Revisión",
@@ -1073,12 +1079,16 @@
       "refine": "Refinar con Mera",
       "refineSeed": "Hablemos de esto — \"{{text}}\"",
       "remove": "Eliminar esto",
-      "removeConfirm": "Toca de nuevo para eliminar"
+      "removeConfirm": "Toca de nuevo para eliminar",
+      "limitReached": "Límite de ajuste diario alcanzado — los cambios continúan mañana"
     }
   },
   "facts": {
     "screenTitle": "Tus hechos",
-    "screenSubtitle": "Lo que Mera sabe sobre ti"
+    "screenSubtitle": "Lo que Mera sabe sobre ti",
+    "influence": "Influencia",
+    "moreInfluence": "Más influencia",
+    "lessInfluence": "Menos influencia"
   },
   "publicationPrefs": {
     "title": "Preferencias de fuentes",

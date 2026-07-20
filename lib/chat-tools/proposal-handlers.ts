@@ -19,6 +19,8 @@ import {
   type PersonaAction,
 } from '../database/services/persona-action-executor';
 import { ACTION_NAMES } from '../news-harness/persona-management/action-names';
+import { trackStoryWithProposal } from '../tracking/track-actions';
+import type { FeedbackSubject } from '../../components/custom/cards/feedback-subject';
 import logger from '../logger';
 
 /** Outcome of one executed proposal — richer than a bare count so the chat can
@@ -217,6 +219,21 @@ export async function executeProposalActions(
             { action_type: ACTION_NAMES.SET_HIGH_PRIORITY, topicId, highPriority: action.highPriority },
             'set_high_priority',
           );
+          break;
+        }
+        case 'track_story': {
+          // Follow the tapped article's story as a topic. The origin snapshot is
+          // embedded in the action (staged by decideProposeTrack), so this stays
+          // self-contained — no store read. trackStoryWithProposal mints the
+          // topic + local TrackedStory row and fires archive backfill.
+          const text = action.trackText.trim();
+          if (!text) {
+            errors.push('track_story: empty trackText');
+            break;
+          }
+          await trackStoryWithProposal(action.subject as FeedbackSubject, text);
+          summaries.push(`Following "${text}"`);
+          applied++;
           break;
         }
         default: {

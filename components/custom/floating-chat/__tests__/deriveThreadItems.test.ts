@@ -461,6 +461,33 @@ describe('deriveThreadItems', () => {
     }
   });
 
+  it('emits a track proposal-card from a done proposeTrack call (subject rebuilt from result)', () => {
+    const subject = {
+      origin: 'suggestion',
+      surface: 'detail',
+      articleId: 'art-1',
+      title: 'Protest escalates',
+      stableClusterId: 'sc-1',
+      publicationName: 'The Hindu',
+    };
+    const tc: ToolCallRecord = {
+      id: 'tc-track',
+      name: 'proposeTrack',
+      status: 'done',
+      input: { track: 'Updates on the student protest in Sonbhadra' },
+      result: { staged: true, proposalId: 'track-nonce', track: 'Updates on the student protest in Sonbhadra', subject },
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Want to follow this?', [tc])] }));
+    const card = items.find((i) => i.kind === 'proposal-card');
+    expect(card).toMatchObject({ kind: 'proposal-card' });
+    if (card && card.kind === 'proposal-card') {
+      expect(card.proposal.id).toBe('track-nonce'); // echoed proposalId wins
+      expect(card.proposal.actions).toEqual([
+        { type: 'track_story', trackText: 'Updates on the student protest in Sonbhadra', subject },
+      ]);
+    }
+  });
+
   it('prefers an id echoed by the proposeChanges result over the tool-call id', () => {
     const tc: ToolCallRecord = {
       id: 'tc-1',

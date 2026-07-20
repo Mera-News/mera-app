@@ -3,7 +3,6 @@ import { View } from 'react-native';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
-import TrackProposalSheet from '@/components/custom/tracked-stories/TrackProposalSheet';
 
 export default function LoggedInLayout() {
   return (
@@ -187,7 +186,6 @@ export default function LoggedInLayout() {
       </Stack>
       <FloatingChatHost />
       <FeedbackWidgetModal />
-      <TrackProposalSheet />
     </View>
   );
 }

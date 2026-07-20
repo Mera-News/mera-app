@@ -766,7 +766,9 @@
     "noLocationsTitle": "Vedi le notizie dai tuoi luoghi",
     "noLocationsBody": "Aggiungi i luoghi che ti interessano per esplorare qui le notizie locali che li riguardano.",
     "sheetTitle": "Gestisci fonti",
-    "close": "Chiudi"
+    "close": "Chiudi",
+    "topStoriesIntro": "Di cosa stanno parlando ora — ordinato per ciò che conta per te.",
+    "addPlaces": "Aggiungi luoghi"
   },
   "forYou": {
     "sectionPrefix": "Notizie su:",
@@ -798,7 +800,9 @@
     "lastProcessed": "Ultima elaborazione",
     "errorTitle": "Problema di punteggio",
     "openA11y": "Apri stato del feed",
-    "close": "Chiudi"
+    "close": "Chiudi",
+    "expandA11y": "Mostra dettagli stato del feed",
+    "collapseA11y": "Nascondi dettagli stato del feed"
   },
   "trackedStories": {
     "emptyTitle": "Ancora nessuna storia seguita",
@@ -812,7 +816,9 @@
     "timelineQuietNote": "Nessuna nuova copertura raccolta ancora. Aggiungeremo qui gli sviluppi man mano che questa storia si evolve.",
     "railTitle": "Seguiti",
     "untrackConfirmTitle": "Smettere di seguire?",
-    "untrackConfirmBody": "Non vedrai più nuovi sviluppi per questa storia."
+    "untrackConfirmBody": "Non vedrai più nuovi sviluppi per questa storia.",
+    "trackChatSeed": "Voglio seguire questa storia.",
+    "trackProposalTitle": "Seguire questa storia?"
   },
   "triage": {
     "bad": "Non fa per me",
@@ -1073,12 +1079,16 @@
       "refine": "Affina con Mera",
       "refineSeed": "Parliamone — \"{{text}}\"",
       "remove": "Rimuovi questo",
-      "removeConfirm": "Tocca di nuovo per rimuovere"
+      "removeConfirm": "Tocca di nuovo per rimuovere",
+      "limitReached": "Limite di regolazione giornaliero raggiunto — le modifiche continueranno domani."
     }
   },
   "facts": {
     "screenTitle": "I tuoi fatti",
-    "screenSubtitle": "Cosa sa Mera di te"
+    "screenSubtitle": "Cosa sa Mera di te",
+    "influence": "Influenza",
+    "moreInfluence": "Più influenza",
+    "lessInfluence": "Meno influenza"
   },
   "publicationPrefs": {
     "title": "Preferenze delle fonti",

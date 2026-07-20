@@ -768,7 +768,9 @@
     "noLocationsTitle": "Zobacz wiadomości z Twoich miejsc",
     "noLocationsBody": "Dodaj miejsca, na których Ci zależy, aby odkrywać lokalne wiadomości stamtąd.",
     "sheetTitle": "Zarządzaj źródłami",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "topStoriesIntro": "O czym ludzie mówią teraz — posortowane według tego, co dla Ciebie ważne.",
+    "addPlaces": "Dodaj miejsca"
   },
   "forYou": {
     "sectionPrefix": "Wiadomości o:",
@@ -802,7 +804,9 @@
     "lastProcessed": "Ostatnio przetworzono",
     "errorTitle": "Problem z ocenianiem",
     "openA11y": "Otwórz stan kanału",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "expandA11y": "Pokaż szczegóły stanu kanału",
+    "collapseA11y": "Ukryj szczegóły stanu kanału"
   },
   "trackedStories": {
     "emptyTitle": "Nie śledzisz jeszcze żadnych historii",
@@ -816,7 +820,9 @@
     "timelineQuietNote": "Nie zebrano jeszcze nowych informacji. Będziemy dodawać tu rozwój wydarzeń w miarę rozwoju tej historii.",
     "railTitle": "Śledzone",
     "untrackConfirmTitle": "Przestać śledzić?",
-    "untrackConfirmBody": "Nie będziesz już widzieć nowych wydarzeń dotyczących tej historii."
+    "untrackConfirmBody": "Nie będziesz już widzieć nowych wydarzeń dotyczących tej historii.",
+    "trackChatSeed": "Chcę śledzić tę historię.",
+    "trackProposalTitle": "Śledzić tę historię?"
   },
   "triage": {
     "bad": "To nie dla mnie",
@@ -1087,12 +1093,16 @@
       "refine": "Dopracuj z Mera",
       "refineSeed": "Porozmawiajmy o tym — \"{{text}}\"",
       "remove": "Usuń to",
-      "removeConfirm": "Dotknij ponownie, aby usunąć"
+      "removeConfirm": "Dotknij ponownie, aby usunąć",
+      "limitReached": "Osiągnięto limit dzienny regulacji — zmiany będą kontynuowane jutro."
     }
   },
   "facts": {
     "screenTitle": "Twoje fakty",
-    "screenSubtitle": "Co Mera o Tobie wie"
+    "screenSubtitle": "Co Mera o Tobie wie",
+    "influence": "Wpływ",
+    "moreInfluence": "Większy wpływ",
+    "lessInfluence": "Mniejszy wpływ"
   },
   "publicationPrefs": {
     "title": "Preferencje źródeł",

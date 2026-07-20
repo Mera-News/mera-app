@@ -104,6 +104,13 @@ function actionToRow(action: ProposalAction): ActionRow {
         heading: action.title,
         detail: action.summary,
       };
+    case 'track_story':
+      return {
+        icon: 'track-changes',
+        labelKey: 'trackedStories.trackAction',
+        labelDefault: 'Follow story',
+        detail: action.trackText,
+      };
     default:
       // Exhaustiveness guard — a future action type still renders a bare row.
       return { icon: 'tune', labelKey: 'articleFeedback.proposalTitle' };
@@ -122,6 +129,11 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   const isGenerating = useFloatingChatIsGenerating();
   const [localResolved, setLocalResolved] = useState<'applied' | 'cancelled' | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+
+  // A pure "follow this story" proposal (single track_story action) gets its own
+  // header wording; every other proposal keeps the generic "Proposed changes".
+  const isTrackProposal =
+    proposal.actions.length === 1 && proposal.actions[0].type === 'track_story';
 
   const resolved = localResolved ?? resolvedProposals[proposal.id] ?? null;
   const isPending =
@@ -156,9 +168,15 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       style={[styles.card, dimmed && styles.cardDimmed]}
     >
       <View style={styles.headerRow}>
-        <MaterialIcons name="auto-fix-high" size={18} color={ACCENT} />
+        <MaterialIcons
+          name={isTrackProposal ? 'track-changes' : 'auto-fix-high'}
+          size={18}
+          color={ACCENT}
+        />
         <Text size="sm" bold style={styles.title}>
-          {t('articleFeedback.proposalTitle')}
+          {isTrackProposal
+            ? t('trackedStories.trackProposalTitle', { defaultValue: 'Follow this story?' })
+            : t('articleFeedback.proposalTitle')}
         </Text>
       </View>
 

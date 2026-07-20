@@ -766,7 +766,9 @@
     "noLocationsTitle": "Voir les actualités de vos lieux",
     "noLocationsBody": "Ajoutez les lieux qui vous intéressent pour explorer leurs actualités locales ici.",
     "sheetTitle": "Gérer les sources",
-    "close": "Fermer"
+    "close": "Fermer",
+    "topStoriesIntro": "Ce dont parlent les gens en ce moment — trié selon ce qui compte pour vous.",
+    "addPlaces": "Ajouter des lieux"
   },
   "forYou": {
     "sectionPrefix": "Actualités sur :",
@@ -798,7 +800,9 @@
     "lastProcessed": "Dernier traitement",
     "errorTitle": "Problème d'évaluation",
     "openA11y": "Ouvrir l'état du fil",
-    "close": "Fermer"
+    "close": "Fermer",
+    "expandA11y": "Afficher les détails de l'état du fil",
+    "collapseA11y": "Masquer les détails de l'état du fil"
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",
@@ -812,7 +816,9 @@
     "timelineQuietNote": "Aucune nouvelle couverture pour le moment. Nous ajouterons les développements ici au fur et à mesure.",
     "railTitle": "Suivi",
     "untrackConfirmTitle": "Arrêter de suivre ?",
-    "untrackConfirmBody": "Vous ne verrez plus les nouveaux développements de cette actualité."
+    "untrackConfirmBody": "Vous ne verrez plus les nouveaux développements de cette actualité.",
+    "trackChatSeed": "Je veux suivre cette actualité.",
+    "trackProposalTitle": "Suivre cette actualité ?"
   },
   "triage": {
     "title": "Examen",
@@ -1073,12 +1079,16 @@
       "refine": "Affiner avec Mera",
       "refineSeed": "Parlons-en — « {{text}} »",
       "remove": "Supprimer",
-      "removeConfirm": "Appuyez à nouveau pour supprimer"
+      "removeConfirm": "Appuyez à nouveau pour supprimer",
+      "limitReached": "Limite d'ajustement quotidienne atteinte — les changements continueront demain."
     }
   },
   "facts": {
     "screenTitle": "Vos faits",
-    "screenSubtitle": "Ce que Mera sait de vous"
+    "screenSubtitle": "Ce que Mera sait de vous",
+    "influence": "Influence",
+    "moreInfluence": "Plus d'influence",
+    "lessInfluence": "Moins d'influence"
   },
   "publicationPrefs": {
     "title": "Préférences de sources",

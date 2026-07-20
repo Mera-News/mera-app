@@ -298,13 +298,8 @@
     "railTitle": "Following",
     "untrackConfirmTitle": "Stop following?",
     "untrackConfirmBody": "You'll no longer see new developments for this story.",
-    "proposeThinking": "Mera is figuring out what to track…",
-    "proposeLabel": "Track this",
-    "proposeTweakPlaceholder": "Track something else about this article…",
-    "proposeTrack": "Track",
-    "proposeCancel": "Cancel",
-    "proposeError": "Couldn't come up with something to track.",
-    "proposeRetry": "Try again"
+    "trackChatSeed": "I want to follow this story.",
+    "trackProposalTitle": "Follow this story?"
   },
   "triage": {
     "title": "Review",

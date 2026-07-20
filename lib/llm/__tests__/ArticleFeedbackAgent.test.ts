@@ -18,6 +18,12 @@ jest.mock('../../chat-tools/proposal-handlers', () => ({
   executeProposalActions: (...args: unknown[]) => mockExecuteProposalActions(...args),
 }));
 
+const mockIsSubjectTracked = jest.fn();
+
+jest.mock('../../tracking/track-actions', () => ({
+  isSubjectTracked: (...args: unknown[]) => mockIsSubjectTracked(...args),
+}));
+
 const mockFloatingChatGetState = jest.fn();
 
 jest.mock('../../stores/floating-chat-store', () => ({
@@ -93,6 +99,7 @@ describe('ArticleFeedbackAgent', () => {
       resolveProposal: jest.fn(),
     });
     mockExecuteProposalActions.mockResolvedValue({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
+    mockIsSubjectTracked.mockResolvedValue(false);
   });
 
   describe('constructor', () => {
@@ -225,9 +232,66 @@ describe('ArticleFeedbackAgent', () => {
   });
 
   describe('getToolDefinitions', () => {
-    it('exposes the three proposal tools', () => {
+    it('exposes the proposal + follow tools', () => {
       const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
-      expect(names).toEqual(['proposeChanges', 'applyProposal', 'cancelProposal']);
+      expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal']);
+    });
+  });
+
+  describe('executeTool — proposeTrack (follow this story)', () => {
+    const trackSubject = {
+      origin: 'suggestion' as const,
+      surface: 'detail',
+      articleId: 'art-1',
+      title: 'Protest escalates in Sonbhadra',
+      stableClusterId: 'sc-1',
+      publicationName: 'The Hindu',
+    };
+
+    function makeTrackAgent() {
+      return new ArticleFeedbackAgent('user-1', { articleId: 'art-1' }, trackSubject);
+    }
+
+    it('stages a track_story proposal carrying the embedded subject', async () => {
+      mockIsSubjectTracked.mockResolvedValueOnce(false);
+      const result = await makeTrackAgent().executeTool('proposeTrack', {
+        track: 'Updates on the student protest in Sonbhadra over exam results',
+      });
+
+      expect(result.sideEffects?.proposal?.actions).toEqual([
+        {
+          type: 'track_story',
+          trackText: 'Updates on the student protest in Sonbhadra over exam results',
+          subject: trackSubject,
+        },
+      ]);
+      // proposalId + subject echoed so deriveThreadItems can rebuild the card.
+      expect(result.result.proposalId).toBe(result.sideEffects?.proposal?.id);
+      expect(result.result.subject).toEqual(trackSubject);
+    });
+
+    it('declines (no proposal) when the story is already followed', async () => {
+      mockIsSubjectTracked.mockResolvedValueOnce(true);
+      const result = await makeTrackAgent().executeTool('proposeTrack', {
+        track: 'Updates on the protest',
+      });
+
+      expect(result.result.alreadyTracked).toBe(true);
+      expect(result.sideEffects).toBeUndefined();
+    });
+
+    it('errors when there is no article subject to follow', async () => {
+      // suggestionId-only agent with no trackSubject and no articleId → no subject.
+      const result = await makeAgent().executeTool('proposeTrack', { track: 'x' });
+      expect(result.result.error).toContain('no article to follow');
+      expect(mockIsSubjectTracked).not.toHaveBeenCalled();
+    });
+
+    it('rejects an empty track sentence', async () => {
+      mockIsSubjectTracked.mockResolvedValueOnce(false);
+      const result = await makeTrackAgent().executeTool('proposeTrack', { track: '   ' });
+      expect(result.result.error).toContain('track is required');
+      expect(result.sideEffects).toBeUndefined();
     });
   });
 

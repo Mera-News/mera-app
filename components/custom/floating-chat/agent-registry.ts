@@ -15,10 +15,11 @@ export function createAgentForContext(
 ): IAgent {
   switch (context.kind) {
     case 'article-suggestion':
-      return new ArticleFeedbackAgent(userId, {
-        articleId: context.articleId,
-        suggestionId: context.suggestionId,
-      });
+      return new ArticleFeedbackAgent(
+        userId,
+        { articleId: context.articleId, suggestionId: context.suggestionId },
+        context.trackSubject ?? null,
+      );
 
     case 'generic':
       // FUTURE: return a route-aware generic assistant agent seeded with

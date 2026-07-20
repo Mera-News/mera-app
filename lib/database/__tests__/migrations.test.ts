@@ -179,6 +179,19 @@ describe('specific migration versions', () => {
     expect(m!.steps.length).toBeGreaterThan(0);
   });
 
+  it('v40 adds topic-linked columns to tracked_stories', () => {
+    const m = byVersion.get(40);
+    expect(m).toBeDefined();
+    const addStep = m!.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'tracked_stories',
+    );
+    expect(addStep).toBeDefined();
+    const colNames = addStep.columns.map((c: any) => c.name);
+    expect(colNames).toContain('topic_id');
+    expect(colNames).toContain('topic_text');
+    expect(colNames).toContain('member_snapshots_json');
+  });
+
   it('v32 creates article_suggestions with cluster_memberships_json', () => {
     const m = byVersion.get(32);
     expect(m).toBeDefined();

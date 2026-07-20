@@ -762,6 +762,8 @@
     "thinContentTitle": "想看更多{{place}}的新聞？",
     "thinContentBody": "將{{place}}新增為地點，即可取得更多相關報導。",
     "addLocation": "新增地點",
+    "topStoriesIntro": "人們現在正在談論的話題 — 按對你重要的內容排序。",
+    "addPlaces": "新增地點",
     "noLocationsTitle": "查看你所在地的新聞",
     "noLocationsBody": "新增你關心的地點，即可在這裡探索來自當地的新聞。",
     "sheetTitle": "管理來源",
@@ -796,6 +798,8 @@
     "lastProcessed": "上次處理",
     "errorTitle": "評分發生問題",
     "openA11y": "開啟動態狀態",
+    "expandA11y": "顯示動態狀態詳情",
+    "collapseA11y": "隱藏動態狀態詳情",
     "close": "關閉"
   },
   "trackedStories": {
@@ -810,7 +814,9 @@
     "timelineQuietNote": "目前還沒有新的報導。隨著事態發展，我們會持續在這裡更新。",
     "railTitle": "追蹤中",
     "untrackConfirmTitle": "確定要取消追蹤嗎？",
-    "untrackConfirmBody": "你將不再看到這則報導的最新進展。"
+    "untrackConfirmBody": "你將不再看到這則報導的最新進展。",
+    "trackChatSeed": "我想追蹤這則報導。",
+    "trackProposalTitle": "追蹤這則報導？"
   },
   "triage": {
     "title": "審閱",
@@ -1066,12 +1072,16 @@
       "refine": "與 Mera 一起調整",
       "refineSeed": "我們來聊聊這個吧 — 「{{text}}」",
       "remove": "移除",
-      "removeConfirm": "再次點按即可移除"
+      "removeConfirm": "再次點按即可移除",
+      "limitReached": "每日調整上限已達 — 變更將於明天繼續。"
     }
   },
   "facts": {
     "screenTitle": "你的事實",
-    "screenSubtitle": "Mera 了解你的哪些資訊"
+    "screenSubtitle": "Mera 了解你的哪些資訊",
+    "influence": "影響力",
+    "moreInfluence": "更多影響",
+    "lessInfluence": "減少影響"
   },
   "publicationPrefs": {
     "title": "來源偏好",

@@ -218,7 +218,8 @@ export async function trackStoryFromSubject(subject: FeedbackSubject): Promise<v
 
 /**
  * Follow the story described by `subject` as a TOPIC, using the proposal the
- * user accepted in the TrackProposalSheet. Mints a `topics` row (the continuous
+ * user accepted in the floating Mera chat (the proposeTrack tool → ProposalCard
+ * Confirm → executeProposalActions). Mints a `topics` row (the continuous
  * server-side link), creates the local TrackedStory carrying that topic id +
  * the proposal as its headline, seeds the originating article snapshot, then
  * enriches the originating cluster in the background for archive backfill (but

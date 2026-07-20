@@ -6,9 +6,15 @@ import {
   buildArticleFeedbackSystemPrompt,
   buildFeedbackContext,
   decideProposeChanges,
+  decideProposeTrack,
   getArticleFeedbackToolDefinitions,
 } from '../article-feedback/agent-core';
-import type { Fact, SuggestionFeedbackContext, StagedProposal } from '../core/types';
+import type {
+  Fact,
+  SuggestionFeedbackContext,
+  StagedProposal,
+  TrackFeedbackSubject,
+} from '../core/types';
 
 function fact(id: string, statement: string, topics?: string[]): Fact {
   return {
@@ -215,9 +221,9 @@ describe('buildFeedbackContext', () => {
 });
 
 describe('getArticleFeedbackToolDefinitions', () => {
-  it('exposes the three proposal tools in order', () => {
+  it('exposes the proposal + follow tools in order', () => {
     const names = getArticleFeedbackToolDefinitions().map((t) => t.function.name);
-    expect(names).toEqual(['proposeChanges', 'applyProposal', 'cancelProposal']);
+    expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal']);
   });
 
   it('declares the proposeChanges required params and action enum', () => {
@@ -483,5 +489,49 @@ describe('decideProposeChanges', () => {
       new Set(),
     );
     expect(badType.result.error).toContain('invalid action type');
+  });
+});
+
+describe('decideProposeTrack', () => {
+  const subject: TrackFeedbackSubject = {
+    origin: 'suggestion',
+    surface: 'detail',
+    articleId: 'art-1',
+    title: 'Protest escalates',
+    stableClusterId: 'sc-1',
+    publicationName: 'The Hindu',
+  };
+
+  it('stages a single track_story action carrying the embedded subject', () => {
+    const out = decideProposeTrack(
+      { track: 'Updates on the student protest in Sonbhadra over exam results' },
+      subject,
+    );
+    expect(out.sideEffects?.proposal?.actions).toEqual([
+      {
+        type: 'track_story',
+        trackText: 'Updates on the student protest in Sonbhadra over exam results',
+        subject,
+      },
+    ]);
+    // Echoes id + subject so deriveThreadItems can rebuild the confirm card.
+    expect(out.result.proposalId).toBe(out.sideEffects?.proposal?.id);
+    expect(out.result.subject).toEqual(subject);
+  });
+
+  it('errors on empty track text', () => {
+    const out = decideProposeTrack({ track: '   ' }, subject);
+    expect(out.result.error).toContain('track is required');
+    expect(out.sideEffects).toBeUndefined();
+  });
+
+  it('trims overly long track text', () => {
+    const long = 'a'.repeat(400);
+    const out = decideProposeTrack({ track: long }, subject);
+    const action = out.sideEffects?.proposal?.actions[0] as {
+      type: 'track_story';
+      trackText: string;
+    };
+    expect(action.trackText.length).toBeLessThanOrEqual(200);
   });
 });

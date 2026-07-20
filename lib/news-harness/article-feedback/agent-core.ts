@@ -15,6 +15,7 @@ import type {
   StagedProposal,
   ToolDefinition,
   ToolExecutionResult,
+  TrackFeedbackSubject,
 } from '../core/types';
 
 // --- Context caps (named so the budget is auditable) ---
@@ -51,6 +52,11 @@ const MAX_TOPIC_WEIGHT_DELTA = 0.5;
 
 const FEATURE_REQUEST_TITLE_MAX = 80;
 const FEATURE_REQUEST_SUMMARY_MAX = 500;
+
+/** Target ceiling on a proposed follow-topic sentence (prompt guidance). */
+const MAX_TRACK_WORDS = 18;
+/** Hard cap on the accepted track text we stage (defensive trim). */
+const MAX_TRACK_CHARS = 200;
 
 function trunc(text: string, max: number): string {
   const t = (text ?? '').trim();
@@ -114,6 +120,15 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
 - submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
 
+## Following a story (the proposeTrack tool)
+When the user wants to FOLLOW / TRACK this unfolding story, call proposeTrack with ONE durable sentence (${MAX_TRACK_WORDS} words or fewer) describing what to keep following:
+- Describe the CONTINUING story (the protest, the trial, the negotiation, the outbreak…), NOT this single article, so future developments also match.
+- Include the concrete who / what / where anchors that keep it specific. Do not invent details absent from the ARTICLE.
+- Plain, neutral language. No clickbait, no ALL CAPS, no trailing punctuation.
+- If the user redirects ("track the protest itself, not this article"), call proposeTrack AGAIN with the re-scoped topic.
+- If TRACK STATE says already following, do NOT propose — just tell them it's already being followed.
+Example: proposeTrack {"track": "Updates on the student protest in Sonbhadra over exam results"}
+
 ## Rules
 - NEVER change anything directly. ALWAYS stage changes via the proposeChanges tool — a ≤2-sentence explanation, a ≤2-sentence expected_effects, and a MINIMAL action list.
 - Pick the LEAST drastic action that fits: "less cricket" → set_topic_weight (small negative delta), not a mute. "Mute Times of India" → set_publication_pref mute. "Wrong Delhi — I meant Delhi Ohio" → add_negative_topic.
@@ -135,11 +150,13 @@ Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
 - proposeChanges: {"explanation": string, "expected_effects": string, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "highPriority"?: boolean}]}
+- proposeTrack: {"track": string}
 - applyProposal: {}
 - cancelProposal: {}
 
 ## Example (format only)
-<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You wanted less cricket news.", "expected_effects": "You'll see fewer cricket stories.", "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}]}}</tool_call>`;
+<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You wanted less cricket news.", "expected_effects": "You'll see fewer cricket stories.", "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}]}}</tool_call>
+<tool_call>{"name": "proposeTrack", "arguments": {"track": "Updates on the student protest in Sonbhadra over exam results"}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -153,7 +170,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked } = input;
 
   // --- ARTICLE ---
   let articleBlock: string;
@@ -206,6 +223,16 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
   const allFactsBlock =
     '## ALL YOUR FACTS\n' + (allFactsRows.length > 0 ? allFactsRows.join('\n') : 'Nothing yet.');
 
+  // --- TRACK STATE (only when the caller knows the follow state) ---
+  const trackStateBlock =
+    typeof isTracked === 'boolean'
+      ? `## TRACK STATE\n${
+          isTracked
+            ? 'You are ALREADY following this story — do not propose to track it again.'
+            : 'You are not yet following this story.'
+        }`
+      : null;
+
   // --- PENDING PROPOSAL ---
   const pendingBlock = proposal
     ? '## PENDING PROPOSAL\n'
@@ -215,6 +242,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     : null;
 
   const alwaysBlocks = [articleBlock, statusBlock, matchedTopicsBlock, producingBlock];
+  if (trackStateBlock) alwaysBlocks.push(trackStateBlock);
   const trailing = pendingBlock ? [pendingBlock] : [];
 
   const withAllFacts = [...alwaysBlocks, allFactsBlock, ...trailing];
@@ -295,6 +323,24 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
     {
       type: 'function',
       function: {
+        name: 'proposeTrack',
+        description:
+          'Propose following this article\'s unfolding story as a durable topic. Never tracks directly — stages a confirm card. track = ONE plain sentence (≤18 words) describing the continuing story (who/what/where), not this single article.',
+        parameters: {
+          type: 'object',
+          properties: {
+            track: {
+              type: 'string',
+              description: 'The durable follow-topic sentence (≤18 words).',
+            },
+          },
+          required: ['track'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
         name: 'applyProposal',
         description: 'Apply the pending proposal when the user confirms.',
         parameters: { type: 'object', properties: {} },
@@ -339,6 +385,8 @@ function describeAction(a: ProposalAction): string {
       return `suppress "${trunc(a.suppressionPattern, 60)}"`;
     case 'set_high_priority':
       return `${a.highPriority ? 'pin' : 'unpin'} topic "${trunc(a.topicText, 60)}"`;
+    case 'track_story':
+      return `follow "${trunc(a.trackText, 80)}"`;
   }
 }
 
@@ -493,6 +541,39 @@ export function decideProposeChanges(
   // proposal card to store.proposal / resolvedProposals.
   return {
     result: { staged: true, actionCount: actions.length, proposalId: proposal.id },
+    sideEffects: { proposal },
+  };
+}
+
+/**
+ * Pure decision for the `proposeTrack` tool: validates the LLM's one-sentence
+ * `track` text and stages a single `track_story` action carrying the caller's
+ * origin `subject` snapshot. The subject is embedded in the action (not read
+ * from a store at confirm time) so the staged proposal is fully reconstructable
+ * from the persisted tool call. Returns an error result on empty text.
+ *
+ * The already-tracked guard lives in the RN adapter (it needs an async DB read);
+ * this function assumes the caller decided a proposal is warranted.
+ */
+export function decideProposeTrack(
+  args: Record<string, unknown>,
+  subject: TrackFeedbackSubject,
+): ToolExecutionResult {
+  const raw = typeof args.track === 'string' ? args.track.trim() : '';
+  if (!raw) return { result: { error: 'track is required' } };
+  const trackText = raw.length > MAX_TRACK_CHARS ? `${raw.slice(0, MAX_TRACK_CHARS - 1)}…` : raw;
+
+  const proposal: StagedProposal = {
+    id: `track-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    explanation: '',
+    expectedEffects: '',
+    actions: [{ type: 'track_story', trackText, subject }],
+  };
+
+  // subject is echoed so deriveThreadItems can rebuild the confirmable action
+  // from the persisted tool result (the tool INPUT carries only `track`).
+  return {
+    result: { staged: true, proposalId: proposal.id, track: trackText, subject },
     sideEffects: { proposal },
   };
 }

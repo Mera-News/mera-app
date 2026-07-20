@@ -766,7 +766,9 @@
     "noLocationsTitle": "Yerlerinden haberleri gör",
     "noLocationsBody": "Önemsediğin yerleri ekleyerek buradan yerel haberleri keşfet.",
     "sheetTitle": "Kaynakları yönet",
-    "close": "Kapat"
+    "close": "Kapat",
+    "topStoriesIntro": "İnsanların şu anda konuştuğu şeyler — sizin için önemli olanlar için sıralanmış.",
+    "addPlaces": "Yerleri ekle"
   },
   "forYou": {
     "sectionPrefix": "Haberler:",
@@ -798,7 +800,9 @@
     "lastProcessed": "Son işlenme",
     "errorTitle": "Puanlama sorunu",
     "openA11y": "Akış durumunu aç",
-    "close": "Kapat"
+    "close": "Kapat",
+    "expandA11y": "Akış durumu ayrıntılarını göster",
+    "collapseA11y": "Akış durumu ayrıntılarını gizle"
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",
@@ -813,7 +817,9 @@
     "timelineQuietNote": "Henüz yeni bir gelişme yok. Bu haber ilerledikçe gelişmeleri buraya ekleyeceğiz.",
     "railTitle": "Takip edilenler",
     "untrackConfirmTitle": "Takibi bırakılsın mı?",
-    "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin."
+    "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin.",
+    "trackChatSeed": "Bu haberi takip etmek istiyorum.",
+    "trackProposalTitle": "Bu haberi takip et?"
   },
   "triage": {
     "title": "İncele",
@@ -1074,12 +1080,16 @@
       "refine": "Mera ile netleştir",
       "refineSeed": "Bunun hakkında konuşalım — \"{{text}}\"",
       "remove": "Bunu kaldır",
-      "removeConfirm": "Kaldırmak için tekrar dokun"
+      "removeConfirm": "Kaldırmak için tekrar dokun",
+      "limitReached": "Günlük ayarlama sınırına ulaşıldı — değişiklikler yarın devam edecek."
     }
   },
   "facts": {
     "screenTitle": "Bilgilerin",
-    "screenSubtitle": "Mera'nın senin hakkında bildikleri"
+    "screenSubtitle": "Mera'nın senin hakkında bildikleri",
+    "influence": "Etki",
+    "moreInfluence": "Daha fazla etki",
+    "lessInfluence": "Daha az etki"
   },
   "publicationPrefs": {
     "title": "Kaynak tercihleri",

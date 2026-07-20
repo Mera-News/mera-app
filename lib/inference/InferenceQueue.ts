@@ -14,7 +14,6 @@ import { markOrphanedFactsAsFailed } from '../database/services/fact-service';
 import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
-import { handleTrackProposalJob } from './handlers/track-proposal-handler';
 import { resetContext } from '../mera-protocol-toolkit';
 import type { InferenceJobType } from '../database/models/InferenceJob';
 import logger from '../logger';
@@ -36,7 +35,6 @@ const JOB_HANDLERS: Record<InferenceJobType, JobHandler> = {
   topic_gen: adaptHandler(handleTopicGenJob),
   persona_summary: adaptHandler(handlePersonaSummaryJob),
   story_headline: adaptHandler(handleStoryHeadlineJob),
-  track_proposal: adaptHandler(handleTrackProposalJob),
 };
 
 /** Delay between queue polls when no jobs are available (ms). */

@@ -766,7 +766,9 @@
     "noLocationsTitle": "Bekijk nieuws uit jouw plaatsen",
     "noLocationsBody": "Voeg de plaatsen toe die je belangrijk vindt om hier lokaal nieuws te verkennen.",
     "sheetTitle": "Bronnen beheren",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "topStoriesIntro": "Waarover mensen nu spreken — gesorteerd op wat voor jou belangrijk is.",
+    "addPlaces": "Plaatsen toevoegen"
   },
   "forYou": {
     "sectionPrefix": "Nieuws over:",
@@ -798,7 +800,9 @@
     "lastProcessed": "Laatst verwerkt",
     "errorTitle": "Probleem bij scoren",
     "openA11y": "Feedstatus openen",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "expandA11y": "Feedstatus-details tonen",
+    "collapseA11y": "Feedstatus-details verbergen"
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",
@@ -812,7 +816,9 @@
     "timelineQuietNote": "Nog geen nieuwe berichtgeving verzameld. We voegen hier ontwikkelingen toe zodra dit verhaal zich ontvouwt.",
     "railTitle": "Volgend",
     "untrackConfirmTitle": "Stoppen met volgen?",
-    "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal."
+    "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal.",
+    "trackChatSeed": "Ik wil dit verhaal volgen.",
+    "trackProposalTitle": "Dit verhaal volgen?"
   },
   "triage": {
     "title": "Beoordelen",
@@ -1073,12 +1079,16 @@
       "refine": "Verfijnen met Mera",
       "refineSeed": "Laten we het hierover hebben — \"{{text}}\"",
       "remove": "Verwijderen",
-      "removeConfirm": "Tik nogmaals om te verwijderen"
+      "removeConfirm": "Tik nogmaals om te verwijderen",
+      "limitReached": "Dagelijkse aanpassingslimiet bereikt — wijzigingen gaan morgen door."
     }
   },
   "facts": {
     "screenTitle": "Jouw feiten",
-    "screenSubtitle": "Wat Mera over jou weet"
+    "screenSubtitle": "Wat Mera over jou weet",
+    "influence": "Invloed",
+    "moreInfluence": "Meer invloed",
+    "lessInfluence": "Minder invloed"
   },
   "publicationPrefs": {
     "title": "Bronvoorkeuren",

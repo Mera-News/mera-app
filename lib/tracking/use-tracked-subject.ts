@@ -5,9 +5,10 @@
 // triplicated boilerplate (the specific friction it pays for).
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { FeedbackSubject } from '../../components/custom/cards/feedback-subject';
 import { hapticLight } from '../haptics';
-import { useTrackProposalStore } from '../stores/track-proposal-store';
+import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { isSubjectTracked, untrackStoryFromSubject } from './track-actions';
 
 export interface UseTrackedSubject {
@@ -24,6 +25,7 @@ export function useTrackedSubject(
   subject: FeedbackSubject,
   active: boolean = true,
 ): UseTrackedSubject {
+  const { t } = useTranslation();
   const [tracked, setTracked] = useState(false);
 
   useEffect(() => {
@@ -50,11 +52,30 @@ export function useTrackedSubject(
       setTracked(false);
       void untrackStoryFromSubject(subject);
     } else {
-      // Track now opens the AI proposal sheet; the story is only minted once the
-      // user accepts a proposal. Flip our optimistic state via the onTracked
-      // callback so the button doesn't show "tracked" while the sheet is open.
+      // Track now happens INSIDE the floating Mera chat: open it on the
+      // article-feedback context (carrying the origin snapshot the proposeTrack
+      // tool follows against), seeded with an auto-sent "follow this story"
+      // message. The story is minted only once the user accepts the in-chat
+      // proposal — so we do NOT flip optimistic state here; the button re-reads
+      // isSubjectTracked on its next mount.
       hapticLight();
-      useTrackProposalStore.getState().open(subject, () => setTracked(true));
+      useFloatingChatStore.getState().openArticleFeedback(
+        {
+          kind: 'article-suggestion',
+          articleId: subject.articleId,
+          suggestionId: subject.suggestionId,
+          articleTitle: subject.title,
+          trackSubject: {
+            origin: subject.origin,
+            surface: subject.surface,
+            articleId: subject.articleId,
+            title: subject.title,
+            stableClusterId: subject.stableClusterId ?? null,
+            publicationName: subject.publicationName ?? null,
+          },
+        },
+        t('trackedStories.trackChatSeed'),
+      );
     }
     // Toggle keyed on the identity fields + current state.
     // eslint-disable-next-line react-hooks/exhaustive-deps

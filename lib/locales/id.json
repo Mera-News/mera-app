@@ -765,7 +765,9 @@
     "noLocationsTitle": "Lihat berita dari tempat Anda",
     "noLocationsBody": "Tambahkan tempat yang Anda pedulikan untuk menjelajahi berita lokal dari sana di sini.",
     "sheetTitle": "Kelola sumber",
-    "close": "Tutup"
+    "close": "Tutup",
+    "topStoriesIntro": "Apa yang sedang dibicarakan orang — diurutkan sesuai dengan apa yang penting bagi Anda.",
+    "addPlaces": "Tambah tempat"
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
@@ -796,7 +798,9 @@
     "lastProcessed": "Terakhir diproses",
     "errorTitle": "Masalah penilaian",
     "openA11y": "Buka status feed",
-    "close": "Tutup"
+    "close": "Tutup",
+    "expandA11y": "Tampilkan detail status feed",
+    "collapseA11y": "Sembunyikan detail status feed"
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
@@ -810,7 +814,9 @@
     "timelineQuietNote": "Belum ada liputan baru yang terkumpul. Kami akan menambahkan perkembangan di sini seiring cerita ini berlangsung.",
     "railTitle": "Diikuti",
     "untrackConfirmTitle": "Berhenti mengikuti?",
-    "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini."
+    "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini.",
+    "trackChatSeed": "Saya ingin mengikuti cerita ini.",
+    "trackProposalTitle": "Ikuti cerita ini?"
   },
   "triage": {
     "title": "Tinjau",
@@ -1066,12 +1072,16 @@
       "refine": "Sempurnakan bersama Mera",
       "refineSeed": "Mari kita bahas ini — \"{{text}}\"",
       "remove": "Hapus ini",
-      "removeConfirm": "Ketuk lagi untuk menghapus"
+      "removeConfirm": "Ketuk lagi untuk menghapus",
+      "limitReached": "Batas penyesuaian harian tercapai — perubahan akan berlanjut besok."
     }
   },
   "facts": {
     "screenTitle": "Fakta Anda",
-    "screenSubtitle": "Apa yang Mera ketahui tentang Anda"
+    "screenSubtitle": "Apa yang Mera ketahui tentang Anda",
+    "influence": "Pengaruh",
+    "moreInfluence": "Pengaruh lebih besar",
+    "lessInfluence": "Pengaruh lebih kecil"
   },
   "publicationPrefs": {
     "title": "Preferensi sumber",
