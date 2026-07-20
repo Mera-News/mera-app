@@ -70,7 +70,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, Platform, StyleSheet, View, ViewToken } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import FocusFreeze from '@/components/custom/FocusFreeze';
+import { useFocusCoalescedValue } from '@/lib/hooks/use-focus-coalesced-value';
 import { computeGroupingFingerprint } from '@/components/custom/for-you/story-fingerprint';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
@@ -128,8 +128,8 @@ const MeraNewsScreen: React.FC = () => {
     const [stuckOnEmpty, setStuckOnEmpty] = useState(false);
     const dbReady = useDatabaseStore((s) => s.ready);
     // Real navigator focus — used to pause the 30s timers (nowTick + empty-feed
-    // watchdog) while this tab is blurred, since FocusFreeze only stops renders,
-    // not effects/intervals.
+    // watchdog) while this tab is blurred. Tabs stay mounted (no freeze), so
+    // effects/intervals keep running unless focus-gated; this pauses them.
     const isFocused = useIsFocused();
     const edgeSwipeGesture = useMemo(() => Gesture.Pan()
         .activeOffsetX(-20)
@@ -141,8 +141,12 @@ const MeraNewsScreen: React.FC = () => {
             }
         }), []);
 
-    // Optimized Zustand selectors (granular subscriptions to prevent unnecessary re-renders)
-    const suggestions = useForYouSuggestions();
+    // Optimized Zustand selectors (granular subscriptions to prevent unnecessary re-renders).
+    // The suggestions array drives the O(n²)-ish story-grouping memo below, so it
+    // is focus-coalesced: while this tab is blurred, store churn recomputes the
+    // feed at most once every ~5s (offscreen, kept warm) instead of on every
+    // update; while focused it tracks live. See use-focus-coalesced-value.ts.
+    const suggestions = useFocusCoalescedValue(useForYouSuggestions());
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
     const { articleCount } = useForYouCounts();
     const { hasNextPage } = useForYouPagination();
@@ -159,7 +163,7 @@ const MeraNewsScreen: React.FC = () => {
 
     useEffect(() => {
         // Pause the ticking clock while the tab is blurred — nothing on-screen is
-        // reading it, and it would otherwise re-render the (frozen) screen every
+        // reading it, and it would otherwise re-render the offscreen screen every
         // 30s. Re-arm on focus and snap `nowTick` forward so the relative-time
         // label is correct the instant the tab is shown again.
         if (!isFocused) return;
@@ -565,7 +569,7 @@ const MeraNewsScreen: React.FC = () => {
         }
         const shouldArm =
             // Don't run the 30s watchdog while the tab is blurred — the user
-            // isn't looking at the (frozen) feed, and it would fire a spurious
+            // isn't looking at the offscreen feed, and it would fire a spurious
             // Sentry event for a screen nobody is waiting on. Re-arms cleanly on
             // refocus (isFocused is in the dep array).
             isFocused &&
@@ -848,7 +852,6 @@ const MeraNewsScreen: React.FC = () => {
     }, []);
 
     return (
-        <FocusFreeze>
         <Box className="flex-1 bg-black">
             <VStack className="px-5 pb-4 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
                 {/* Title row — static */}
@@ -959,7 +962,6 @@ const MeraNewsScreen: React.FC = () => {
             <WhatsNewSheet />
 
         </Box>
-        </FocusFreeze>
     );
 };
 

@@ -1,3 +1,12 @@
+/**
+ * @deprecated Tabs now stay mounted (Instagram model) — expo-router NativeTabs
+ * mounts every tab eagerly, so there is nothing to freeze at switch time and
+ * unfreezing is what caused the re-render burst on tab switch. Offscreen WORK
+ * (subscriptions, timers, polling) is gated by focus via `useFocusEffect` /
+ * `useFocusCoalescedValue` (lib/hooks/use-focus-coalesced-value.ts); offscreen
+ * RENDERS are cheap and allowed. Do not add new usages of FocusFreeze. Kept only
+ * so its existing test stays green while callers are unwrapped.
+ */
 import { useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Freeze } from 'react-freeze';

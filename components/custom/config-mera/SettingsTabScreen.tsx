@@ -1,4 +1,3 @@
-import FocusFreeze from '@/components/custom/FocusFreeze';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -27,30 +26,28 @@ const SettingsTabScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
 
     return (
-        <FocusFreeze>
-            <ScrollView
-                className="flex-1 bg-black"
-                style={{ paddingTop: insets.top }}
-                contentContainerStyle={{ flexGrow: 1 }}
-                showsVerticalScrollIndicator={false}
-            >
-                <Box className="px-5 pt-2">
-                    <Pressable
-                        onPress={() => router.push('/logged-in/sources')}
-                        className="flex-row items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg"
-                        accessibilityRole="button"
-                        accessibilityLabel={t('settings.sources')}
-                    >
-                        <HStack className="items-center" space="md">
-                            <MaterialIcons name="tune" size={20} color="#EDA77E" />
-                            <Text className="text-base text-white">{t('settings.sources')}</Text>
-                        </HStack>
-                        <MaterialIcons name="chevron-right" size={20} color="#999999" />
-                    </Pressable>
-                </Box>
-                <AppPreferencesTab />
-            </ScrollView>
-        </FocusFreeze>
+        <ScrollView
+            className="flex-1 bg-black"
+            style={{ paddingTop: insets.top }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={false}
+        >
+            <Box className="px-5 pt-2">
+                <Pressable
+                    onPress={() => router.push('/logged-in/sources')}
+                    className="flex-row items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg"
+                    accessibilityRole="button"
+                    accessibilityLabel={t('settings.sources')}
+                >
+                    <HStack className="items-center" space="md">
+                        <MaterialIcons name="tune" size={20} color="#EDA77E" />
+                        <Text className="text-base text-white">{t('settings.sources')}</Text>
+                    </HStack>
+                    <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                </Pressable>
+            </Box>
+            <AppPreferencesTab />
+        </ScrollView>
     );
 };
 

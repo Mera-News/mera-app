@@ -1,5 +1,4 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
-import FocusFreeze from '@/components/custom/FocusFreeze';
 import UsageWidget from '@/components/custom/UsageWidget';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
@@ -58,6 +57,12 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
     const factMutationVersion = useFloatingChatFactMutationVersion();
     const glowAnim = useRef(new Animated.Value(0.3)).current;
 
+    // Timestamp of the last hub-count refresh. Tabs stay mounted now (no freeze),
+    // so this tab regains focus on every switch back — gate the WatermelonDB
+    // count reads to at most once per 30s so rapid tab-hopping doesn't re-query
+    // on every focus. Stamped by every path that actually runs a refresh.
+    const lastCountsRefreshRef = useRef(0);
+
     // Lightweight counts for the hub-row subtitles/badges. Refreshed on focus so
     // returning from a sub-screen (or the chat) reflects the latest state.
     const refreshCounts = useCallback(() => {
@@ -75,6 +80,7 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
     useEffect(() => {
         const init = async () => {
             setIsLoading(true);
+            lastCountsRefreshRef.current = Date.now();
             await Promise.all([
                 fetchUserBilling().then(setBilling).catch(() => { /* offline fallback */ }),
                 !userPersona && userId ? fetchUserPersona(userId) : Promise.resolve(),
@@ -86,17 +92,20 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
         init();
     }, [userId, userPersona, fetchUserPersona, refreshCounts, refreshHygieneCount]);
 
-    // Refresh counts + hygiene whenever the tab regains focus, and keep the
-    // hygiene subscription live only while focused. `subscribeHygieneChange`
-    // triggers a WatermelonDB read (getPendingCount) on every sweep/accept/
-    // reject event, so gating it by focus avoids querying the DB while this
-    // tab is backgrounded/frozen (Freeze only pauses re-renders, not
-    // subscriptions — see FocusFreeze). Unsubscribes on blur, resubscribes on
-    // focus, preserving the current on-focus live-update behavior.
+    // Keep the hygiene subscription live only while focused, and refresh counts
+    // on focus — but no more than once per 30s, since tabs stay mounted and this
+    // tab regains focus on every switch back. `subscribeHygieneChange` triggers a
+    // WatermelonDB read (getPendingCount) on every sweep/accept/reject event, so
+    // gating it by focus avoids querying the DB while this tab is backgrounded.
+    // The subscription itself is always (re)armed on focus so live changes still
+    // land; only the eager count re-read is throttled.
     useFocusEffect(
         useCallback(() => {
-            refreshCounts();
-            refreshHygieneCount();
+            if (Date.now() - lastCountsRefreshRef.current > 30_000) {
+                lastCountsRefreshRef.current = Date.now();
+                refreshCounts();
+                refreshHygieneCount();
+            }
             return subscribeHygieneChange(refreshHygieneCount);
         }, [refreshCounts, refreshHygieneCount]),
     );
@@ -104,6 +113,7 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
     // On-device LLM fact mutations bump the fact count + mark the feed stale.
     useEffect(() => {
         if (factMutationVersion > 0) {
+            lastCountsRefreshRef.current = Date.now();
             refreshCounts();
         }
     }, [factMutationVersion, refreshCounts]);
@@ -185,16 +195,13 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
 
     if (isLoading) {
         return (
-            <FocusFreeze>
-                <Box className="flex-1 items-center justify-center bg-black">
-                    <Spinner size="large" />
-                </Box>
-            </FocusFreeze>
+            <Box className="flex-1 items-center justify-center bg-black">
+                <Spinner size="large" />
+            </Box>
         );
     }
 
     return (
-        <FocusFreeze>
             <Box className="flex-1 bg-black">
                 <ScrollView
                     showsVerticalScrollIndicator={false}
@@ -343,7 +350,6 @@ const ProfileHubScreen: React.FC<ProfileHubScreenProps> = ({ userId }) => {
                     </ModalContent>
                 </Modal>
             </Box>
-        </FocusFreeze>
     );
 };
 

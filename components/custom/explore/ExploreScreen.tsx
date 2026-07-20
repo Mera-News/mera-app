@@ -1,4 +1,3 @@
-import FocusFreeze from '@/components/custom/FocusFreeze';
 import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -52,10 +51,10 @@ const ExploreScreen: React.FC = () => {
     const deviceCountry = useMemo(() => getDeviceCountryAlpha2(), []);
 
     // Reactive locations (weight-desc). Explore is the first UI consumer.
-    // Focus-gated: this WatermelonDB observable would otherwise stay live
-    // forever once mounted, even while the tab is frozen/blurred (Freeze only
-    // pauses re-renders, not subscriptions — see FocusFreeze). Unsubscribes
-    // on blur and resubscribes on focus, preserving current on-focus behavior.
+    // Focus-gated: tabs stay mounted, so this WatermelonDB observable would
+    // otherwise stay live forever once mounted, even while the tab is blurred.
+    // Unsubscribes on blur and resubscribes on focus, preserving current
+    // on-focus behavior.
     useFocusEffect(
         useCallback(() => {
             const sub = observeAllLocations().subscribe((rows) => {
@@ -123,8 +122,7 @@ const ExploreScreen: React.FC = () => {
     const hasNoLocations = locations.length === 0;
 
     return (
-        <FocusFreeze>
-            <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
                 {/* Header — title + Sources action. The right cluster reserves ~52px
                     for the global notification bell overlay (rendered by the tabs
                     _layout at right:20), same precedent as ForYouScreen. */}
@@ -184,7 +182,6 @@ const ExploreScreen: React.FC = () => {
                 <SourcesSheet open={sourcesOpen} onClose={() => setSourcesOpen(false)} />
                 <ScreenChatBubble context={EXPLORE_CHAT_CONTEXT} extraBottomOffset={TAB_BAR_HEIGHT} />
             </Box>
-        </FocusFreeze>
     );
 };
 
