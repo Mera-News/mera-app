@@ -48,11 +48,36 @@ jest.mock('@/components/ui/button', () => {
     const { Pressable, Text } = require('react-native');
     return { Button: (p: any) => <Pressable {...p} />, ButtonText: (p: any) => <Text {...p} /> };
 });
+jest.mock('@/components/ui/modal', () => {
+    const { View } = require('react-native');
+    const Passthrough = (p: any) => <View {...p} />;
+    const Modal = ({ isOpen, children, ...rest }: any) => (isOpen ? <View {...rest}>{children}</View> : null);
+    return {
+        Modal,
+        ModalBackdrop: Passthrough,
+        ModalContent: Passthrough,
+        ModalHeader: Passthrough,
+        ModalBody: Passthrough,
+        ModalFooter: Passthrough,
+    };
+});
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
 
 // --- child components → light stubs ----------------------------------------
 jest.mock('@/components/custom/BlockedBanner', () => { const { Text } = require('react-native'); return { __esModule: true, default: () => <Text>blocked-banner</Text> }; });
-jest.mock('@/components/custom/MeraLogo', () => { const { View } = require('react-native'); return { __esModule: true, default: () => <View testID="mera-logo" /> }; });
+jest.mock('@/components/custom/UsageWidget', () => {
+    const { View, Text, Pressable } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ used, limit, onUpgrade, onInfoPress }: any) => (
+            <View testID="usage-widget">
+                <Text>{`usage:${used}/${limit ?? '-'}`}</Text>
+                {onUpgrade ? <Pressable accessibilityLabel="upgrade" onPress={onUpgrade} /> : null}
+                {onInfoPress ? <Pressable accessibilityLabel="usage-info" onPress={onInfoPress} /> : null}
+            </View>
+        ),
+    };
+});
 jest.mock('@/components/custom/TranslatableDynamic', () => {
     const { Text } = require('react-native');
     return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
@@ -69,6 +94,18 @@ jest.mock('@/components/custom/profile/PersonaStringSheet', () => {
 // --- services / stores ------------------------------------------------------
 const mockGetFacts = jest.fn();
 jest.mock('@/lib/database/services/fact-service', () => ({ getFacts: (...a: unknown[]) => mockGetFacts(...a) }));
+
+const mockFetchUserBilling = jest.fn();
+jest.mock('@/lib/billing-service', () => ({ fetchUserBilling: (...a: unknown[]) => mockFetchUserBilling(...a) }));
+
+jest.mock('@/lib/database/services/article-suggestion-service', () => ({
+    getTotalArticleSuggestionCount: () => Promise.resolve(0),
+}));
+
+const mockPresentPaywall = jest.fn();
+jest.mock('react-native-purchases-ui', () => ({ __esModule: true, default: { presentPaywall: (...a: unknown[]) => mockPresentPaywall(...a) } }));
+jest.mock('@/lib/revenuecat', () => ({ getOfferingSafe: () => Promise.resolve(null) }));
+jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
 let mockObservedRows: any[] = [];
 jest.mock('@/lib/database/services/persona-summary-service', () => ({
@@ -98,15 +135,24 @@ import ProfileScreen from '../ProfileScreen';
 beforeEach(() => {
     jest.clearAllMocks();
     mockObservedRows = [];
+    mockFetchUserBilling.mockResolvedValue(null);
 });
 
 describe('ProfileScreen', () => {
-    it('empty persona → shows the empty-state CTA and no About-you rows', async () => {
+    it('renders the usage card at the top and the Advanced row', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId, getByText } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('usage-widget')).toBeTruthy());
+        expect(getByText('Advanced')).toBeTruthy();
+    });
+
+    it('empty persona → shows the Start-talking CTA and no About-you rows', async () => {
         mockGetFacts.mockResolvedValue([]);
-        const { getByText, queryByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText("I don't know you yet")).toBeTruthy());
+        const { getByText, queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByText('Start talking')).toBeTruthy());
         expect(queryByText('ABOUT YOU')).toBeNull();
-        // Advanced row still present.
+        // Usage card + Advanced row still present.
+        expect(getByTestId('usage-widget')).toBeTruthy();
         expect(getByText('Advanced')).toBeTruthy();
     });
 
@@ -117,18 +163,25 @@ describe('ProfileScreen', () => {
         ];
         const { getByText } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('Lives in Pune with family')).toBeTruthy());
-        expect(getByText('Talk to Mera')).toBeTruthy();
 
         fireEvent.press(getByText('Lives in Pune with family'));
         expect(getByText('sheet:Lives in Pune with family')).toBeTruthy();
     });
 
-    it('mirror CTA opens the persona chat', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByLabelText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(mockGetFacts).toHaveBeenCalled());
-        fireEvent.press(getByLabelText('Talk to Mera'));
+    it('empty-persona Start-talking CTA opens the persona chat', async () => {
+        mockGetFacts.mockResolvedValue([]);
+        const { getByText } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByText('Start talking')).toBeTruthy());
+        fireEvent.press(getByText('Start talking'));
         expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
+    });
+
+    it('usage-card info icon opens the article-count explainer modal', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByLabelText, getByText } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByLabelText('usage-info')).toBeTruthy());
+        fireEvent.press(getByLabelText('usage-info'));
+        expect(getByText('configPanel.articleAnalysisTitle')).toBeTruthy();
     });
 
     it('regenerates the summary on focus', async () => {

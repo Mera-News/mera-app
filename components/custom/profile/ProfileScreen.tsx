@@ -1,15 +1,18 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
-import MeraLogo from '@/components/custom/MeraLogo';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import UsageWidget from '@/components/custom/UsageWidget';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import PersonaStringSheet from '@/components/custom/profile/PersonaStringSheet';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
+import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { fetchUserBilling } from '@/lib/billing-service';
+import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import {
     observeSummaryStrings,
@@ -17,7 +20,10 @@ import {
     type PersonaSummaryStringRow,
 } from '@/lib/database/services/persona-summary-service';
 import { maybeRegeneratePersonaSummary } from '@/lib/database/services/persona-summary-trigger';
+import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import { hapticMedium } from '@/lib/haptics';
+import logger from '@/lib/logger';
+import { getOfferingSafe } from '@/lib/revenuecat';
 import { useFloatingChatFactMutationVersion, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -26,6 +32,7 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
+import RevenueCatUI from 'react-native-purchases-ui';
 
 interface ProfileScreenProps {
     readonly userId: string;
@@ -33,9 +40,11 @@ interface ProfileScreenProps {
 
 /**
  * Mirror-first Profile tab (redesign). A completely non-technical user sees:
- *   1. The Mera "mirror" CTA — tap to start/continue talking to Mera.
+ *   1. The daily-usage card (articles analyzed today, plan + upgrade, reset
+ *      time) — moved here from the Advanced hub so usage is always visible.
  *   2. "About you" — plain-language strings the LLM generated from the full
  *      persona; tap one to nudge importance, refine with Mera, or remove it.
+ *      (A brand-new user with no persona instead sees a "Start talking" CTA.)
  *   3. One "Advanced" row → the full power-user hub (AdvancedHubScreen).
  *
  * Strings are generated canonically in English and rendered via
@@ -50,6 +59,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const [strings, setStrings] = useState<PersonaSummaryStringRow[]>([]);
     const [factCount, setFactCount] = useState<number | null>(null);
     const [sheetRow, setSheetRow] = useState<PersonaSummaryStringRow | null>(null);
+    const [billing, setBilling] = useState<UserBillingInfo | null>(null);
+    const [totalArticleCount, setTotalArticleCount] = useState(0);
+    const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
 
     const lastRegenRef = useRef(0);
 
@@ -71,6 +83,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         refreshFactCount();
         if (!userPersona && userId) fetchUserPersona(userId).catch(() => { /* offline */ });
     }, [userId, userPersona, fetchUserPersona, refreshFactCount]);
+
+    // Billing + on-device article count drive the daily-usage card. Both are
+    // best-effort — the widget falls back to the local count when offline.
+    useEffect(() => {
+        fetchUserBilling().then(setBilling).catch(() => { /* offline fallback */ });
+        getTotalArticleSuggestionCount().then(setTotalArticleCount).catch(() => { /* keep last */ });
+    }, []);
 
     // Debounced regeneration on focus (tabs stay mounted → focus fires on every
     // switch back; gate to once/30s). Also refresh the fact count on focus.
@@ -101,6 +120,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         useFloatingChatStore.getState().expand({ kind: 'persona' });
     }, []);
 
+    const handleUpgrade = useCallback(async () => {
+        try {
+            const offering = await getOfferingSafe();
+            await RevenueCatUI.presentPaywall({
+                ...(offering ? { offering } : {}),
+                displayCloseButton: true,
+            });
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { component: 'ProfileScreen', method: 'upgrade' },
+            });
+        }
+    }, []);
+
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
     const isUpdating = strings.some((s) => s.stale);
@@ -115,42 +148,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
             >
                 {isBlocked && <BlockedBanner reason={userPersona?.blockedByLlmReason} />}
 
-                {/* 1 — The Mera mirror CTA */}
-                <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t('profile.talkToMera', { defaultValue: 'Talk to Mera' })}
-                    onPress={openChat}
-                    className="mx-4 mt-2 mb-5 items-center px-5 py-7 rounded-3xl border border-gray-800"
-                    style={{ backgroundColor: '#0e0e0e' }}
-                >
-                    <MeraLogo size={84} />
-                    {isEmptyPersona ? (
-                        <>
-                            <Text className="text-white text-center mt-4" style={{ fontSize: 18, fontWeight: '700' }}>
-                                {t('profile.emptyTitle', { defaultValue: "I don't know you yet" })}
-                            </Text>
-                            <Text className="text-gray-400 text-center mt-1.5" style={{ fontSize: 14 }}>
-                                {t('profile.emptyBody', { defaultValue: 'Tell me about yourself so I can find news that matters to you.' })}
-                            </Text>
-                        </>
-                    ) : (
-                        <>
-                            <Text className="text-white text-center mt-4" style={{ fontSize: 18, fontWeight: '700' }}>
-                                {t('profile.talkToMera', { defaultValue: 'Talk to Mera' })}
-                            </Text>
-                            <Text className="text-gray-400 text-center mt-1.5" style={{ fontSize: 14 }}>
-                                {t('profile.talkToMeraSubtitle', { defaultValue: 'This is how I see you. Tap to keep the conversation going.' })}
-                            </Text>
-                        </>
-                    )}
-                    <Box className="mt-4 px-5 py-2.5 rounded-full" style={{ backgroundColor: '#EDA77E' }}>
-                        <Text style={{ color: '#111', fontSize: 15, fontWeight: '700' }}>
-                            {isEmptyPersona
-                                ? t('profile.startTalking', { defaultValue: 'Start talking' })
-                                : t('profile.continueTalking', { defaultValue: 'Continue' })}
-                        </Text>
-                    </Box>
-                </Pressable>
+                {/* 1 — Daily-usage card (moved from the Advanced hub) */}
+                <UsageWidget
+                    className="mx-4 mt-2 mb-5"
+                    used={billing?.articlesUsedToday ?? totalArticleCount}
+                    limit={billing?.dailyArticleLimit ?? null}
+                    usedLabel={t('configPanel.articlesAnalyzedLast24h')}
+                    planLabel={
+                        billing?.subscriptionTier === 'professional'
+                            ? t('configPanel.professionalPlan')
+                            : billing?.subscriptionTier === 'individual'
+                                ? t('configPanel.individualPlan')
+                                : t('configPanel.promoPlan')
+                    }
+                    onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
+                    upgradeLabel={t('subscription.upgrade')}
+                    resetAt={billing?.resetAt}
+                    resetLabel={t('configPanel.resetsOn')}
+                    onInfoPress={() => setShowArticleCountInfo(true)}
+                />
 
                 {/* 2 — About you */}
                 {!isEmptyPersona && (
@@ -231,6 +247,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 onClose={() => setSheetRow(null)}
                 onRemoved={() => setSheetRow(null)}
             />
+
+            <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader className="pb-3">
+                        <HStack className="items-center" space="xs">
+                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
+                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
+                        </HStack>
+                    </ModalHeader>
+                    <ModalBody className="py-4">
+                        <Text className="text-gray-300 text-sm leading-relaxed">
+                            {t('configPanel.articleAnalysisDescription')}
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter className="border-t border-gray-700 pt-4">
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={() => setShowArticleCountInfo(false)}
+                            className="w-full"
+                        >
+                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 };

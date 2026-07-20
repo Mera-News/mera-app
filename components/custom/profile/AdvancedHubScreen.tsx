@@ -1,22 +1,15 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import UsageWidget from '@/components/custom/UsageWidget';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { fetchUserBilling } from '@/lib/billing-service';
-import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive } from '@/lib/database/services/publication-preference-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
-import type { UserBillingInfo } from '@/lib/generated/graphql-types';
-import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -27,7 +20,6 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, ScrollView, View } from 'react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
 
 interface AdvancedHubScreenProps {
     readonly userId: string;
@@ -36,24 +28,21 @@ interface AdvancedHubScreenProps {
 
 /**
  * Advanced persona hub (mirror-first redesign). This is the former Profile-tab
- * ProfileHubScreen — the blocked banner, daily-usage widget (with its
- * upgrade/paywall handling), the refresh-suggestions button, and the focused
- * hub rows (Facts / Locations / Sources / Saved / Source preferences /
- * Activity / Persona health) — now pushed as a dedicated sub-screen from the
- * single "Advanced" row on the new mirror-first ProfileScreen. Everything power
- * users need lives here; the tab itself stays approachable.
+ * ProfileHubScreen — the blocked banner, the refresh-suggestions button, and
+ * the focused hub rows (Facts / Locations / Sources / Saved / Source
+ * preferences / Activity / Persona health) — now pushed as a dedicated
+ * sub-screen from the single "Advanced" row on the new mirror-first
+ * ProfileScreen. (The daily-usage card now lives at the top of ProfileScreen.)
+ * Everything power users need lives here; the tab itself stays approachable.
  */
 const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack }) => {
     const { t } = useTranslation();
     const toast = useToast();
     const { userPersona, fetchUserPersona } = useUserStore();
     const [isLoading, setIsLoading] = useState(true);
-    const [billing, setBilling] = useState<UserBillingInfo | null>(null);
-    const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [factCount, setFactCount] = useState(0);
     const [prefCount, setPrefCount] = useState(0);
     const [hygieneCount, setHygieneCount] = useState(0);
-    const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
 
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
@@ -65,7 +54,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
     const refreshCounts = useCallback(() => {
         getFacts().then(f => setFactCount(f.length)).catch(() => { /* keep last */ });
         getActive().then(p => setPrefCount(p.length)).catch(() => { /* keep last */ });
-        getTotalArticleSuggestionCount().then(setTotalArticleCount).catch(() => { /* keep last */ });
     }, []);
 
     const refreshHygieneCount = useCallback(() => {
@@ -79,7 +67,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
             setIsLoading(true);
             lastCountsRefreshRef.current = Date.now();
             await Promise.all([
-                fetchUserBilling().then(setBilling).catch(() => { /* offline fallback */ }),
                 !userPersona && userId ? fetchUserPersona(userId) : Promise.resolve(),
                 Promise.resolve(refreshCounts()),
                 Promise.resolve(refreshHygieneCount()),
@@ -155,20 +142,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
         }
     }, [userPersona, isRefreshingSuggestions, toast, t]);
 
-    const handleUpgrade = useCallback(async () => {
-        try {
-            const offering = await getOfferingSafe();
-            await RevenueCatUI.presentPaywall({
-                ...(offering ? { offering } : {}),
-                displayCloseButton: true,
-            });
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { component: 'AdvancedHubScreen', method: 'upgrade' },
-            });
-        }
-    }, []);
-
     const isBlocked = userPersona?.blockedByLlm ?? false;
 
     const factsSubtitle = factCount > 0
@@ -200,26 +173,7 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                 >
                     {isBlocked && <BlockedBanner reason={userPersona?.blockedByLlmReason} />}
 
-                    <UsageWidget
-                        className="mx-4 mb-3"
-                        used={billing?.articlesUsedToday ?? totalArticleCount}
-                        limit={billing?.dailyArticleLimit ?? null}
-                        usedLabel={t('configPanel.articlesAnalyzedLast24h')}
-                        planLabel={
-                            billing?.subscriptionTier === 'professional'
-                                ? t('configPanel.professionalPlan')
-                                : billing?.subscriptionTier === 'individual'
-                                    ? t('configPanel.individualPlan')
-                                    : t('configPanel.promoPlan')
-                        }
-                        onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
-                        upgradeLabel={t('subscription.upgrade')}
-                        resetAt={billing?.resetAt}
-                        resetLabel={t('configPanel.resetsOn')}
-                        onInfoPress={() => setShowArticleCountInfo(true)}
-                    />
-
-                    <View style={{ marginHorizontal: 16, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
+                    <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
                         {feedNeedsRefresh && !isRefreshingSuggestions && (
                             <Animated.View
                                 pointerEvents="none"
@@ -321,33 +275,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                     </Box>
                 </ScrollView>
             )}
-
-            <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="pb-3">
-                        <HStack className="items-center" space="xs">
-                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
-                        </HStack>
-                    </ModalHeader>
-                    <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
-                            {t('configPanel.articleAnalysisDescription')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
-                        <Button
-                            variant="outline"
-                            action="secondary"
-                            onPress={() => setShowArticleCountInfo(false)}
-                            className="w-full"
-                        >
-                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
         </Box>
     );
 };
