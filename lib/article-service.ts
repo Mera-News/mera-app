@@ -11,7 +11,9 @@ import {
     NewsClustersResponse,
     PersonaQueryInput,
     PersonaQueryResult,
+    TopHeadlinesForCountryResponse,
     TopicPaginationInput,
+    TrackedStoryArchive,
 } from './generated/graphql-types';
 import logger from './logger';
 import { isNotSubscribedError } from './subscription/not-subscribed-error';
@@ -137,6 +139,52 @@ const GET_ARTICLES_FOR_COUNTRY = gql`
         hasNextPage
         pageSize
       }
+    }
+  }
+`;
+
+// GraphQL Query for a country's precomputed, cluster-deduplicated top
+// headlines (each big story appears once), paged over the materialized
+// edition. A null/"GLOBAL" countryCode spans all countries. Falls back to the
+// live path (editionBuiltAt: null) when no edition exists yet. Mirrors
+// GET_ARTICLES_FOR_COUNTRY's article field set inside each headline slot.
+const GET_TOP_HEADLINES_FOR_COUNTRY = gql`
+  query GetTopHeadlinesForCountry($countryCode: String, $first: Int, $after: String) {
+    topHeadlinesForCountry(countryCode: $countryCode, first: $first, after: $after) {
+      headlines {
+        stableClusterId
+        clusterSize
+        article {
+          _id
+          title
+          title_en_internal_only
+          description
+          description_en_internal_only
+          pubDate
+          article_url
+          image_url
+          creator
+          source_uri
+          original_language_code
+          geo_tags {
+            city
+            region
+            countryCode
+          }
+          event_type
+          entities
+          publicationSource {
+            _id
+            publication_name
+            country_code
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      editionBuiltAt
     }
   }
 `;
@@ -294,6 +342,100 @@ const GET_NEWS_CLUSTER_FOR_USER = gql`
   }
 `;
 
+// GraphQL Query for the live cluster an article currently belongs to (via its
+// newest cluster-article-link). Null when the article is unclustered or its
+// cluster has aged out. Used as the live fallback when a story isn't archived
+// (trackStory/trackedStory returned null). Mirrors GET_NEWS_CLUSTER_FOR_USER's
+// selection, plus the cluster's own stableClusterId/clusterSize.
+const GET_NEWS_CLUSTER_FOR_ARTICLE = gql`
+  query GetNewsClusterForArticle($articleId: ID!, $first: Int, $after: String) {
+    newsClusterForArticle(articleId: $articleId) {
+      _id
+      stableClusterId
+      clusterSize
+      createdAt
+      updatedAt
+      articles(first: $first, after: $after) {
+        articles {
+          _id
+          title
+          title_en_internal_only
+          description
+          description_en_internal_only
+          pubDate
+          article_url
+          image_url
+          creator
+          source_uri
+          original_language_code
+          clusterConfidence
+          publicationSource {
+            _id
+            publication_name
+            publication_url
+            country_code
+            country_name
+            category
+            detected_language_code
+            feed_language_code
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+          pageSize
+        }
+      }
+    }
+  }
+`;
+
+// GraphQL Mutation to start (or refresh) tracking a story by its
+// stableClusterId. Seeds a durable archive from the live cluster on first
+// track, or slides an existing archive's 90-day retention forward. Returns
+// null when no live cluster exists to seed from — the caller then falls back
+// to newsClusterForArticle.
+const TRACK_STORY = gql`
+  mutation TrackStory($stableClusterId: String!) {
+    trackStory(stableClusterId: $stableClusterId) {
+      stableClusterId
+      clusterSize
+      lastRefreshedAt
+      articles {
+        articleId
+        title_en
+        pubDate
+        image_url
+        publication_name
+        article_url
+        country_code
+      }
+    }
+  }
+`;
+
+// GraphQL Query to read a tracked story's archive by stableClusterId. Reading
+// it slides the 90-day retention forward. Returns null when the story is not
+// (or no longer) tracked.
+const GET_TRACKED_STORY = gql`
+  query GetTrackedStory($stableClusterId: String!) {
+    trackedStory(stableClusterId: $stableClusterId) {
+      stableClusterId
+      clusterSize
+      lastRefreshedAt
+      articles {
+        articleId
+        title_en
+        pubDate
+        image_url
+        publication_name
+        article_url
+        country_code
+      }
+    }
+  }
+`;
+
 // (removed: GET_SERVER_PROCESSING_METADATA_FOR_USER — serverProcessingMetadataForUser no longer exists)
 
 // Placeholder to keep line reference intact
@@ -419,8 +561,12 @@ export type {
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
+    TopHeadline,
+    TopHeadlinesForCountryResponse,
     TopicArticleIdsResult,
     TopicPaginationInput,
+    TrackedStoryArchive,
+    TrackedStoryArticleSnapshot,
 } from './generated/graphql-types';
 
 // [Flow v2] The server rejects an articleIdsForTopics request carrying more than
@@ -785,6 +931,42 @@ export class ArticleService {
     }
 
     /**
+     * Get a country's precomputed, cluster-deduplicated "top headlines" with
+     * pagination — each big story appears once, ranked over the materialized
+     * edition. Pass 'GLOBAL' (or omit) for all countries. `editionBuiltAt` is
+     * null when no edition exists yet (server fell back to the live path).
+     */
+    static async getTopHeadlinesForCountry(
+        countryCode: string | null | undefined,
+        options: { first?: number; after?: string }
+    ): Promise<TopHeadlinesForCountryResponse> {
+        try {
+            const { data } = await client.query<{ topHeadlinesForCountry: TopHeadlinesForCountryResponse }>({
+                query: GET_TOP_HEADLINES_FOR_COUNTRY,
+                variables: {
+                    countryCode: countryCode === 'GLOBAL' ? null : countryCode,
+                    first: options?.first ?? 20,
+                    after: options?.after,
+                },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.topHeadlinesForCountry || {
+                articles: [],
+                headlines: [],
+                editionBuiltAt: null,
+                pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
+            };
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getTopHeadlinesForCountry' },
+                extra: { countryCode },
+            });
+            throw error;
+        }
+    }
+
+    /**
      * Get a publisher's "top headlines" with pagination — last-24h articles
      * aggregated across all the publisher's feeds, sorted by largest cluster
      * size on the server.
@@ -922,6 +1104,86 @@ export class ArticleService {
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getNewsClusterForUser' },
                 extra: { clusterId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Get the live cluster an article currently belongs to (via its newest
+     * cluster-article-link). Returns null when the article is unclustered or
+     * its cluster has aged out. Used as the live fallback when a story isn't
+     * archived (trackStory/getTrackedStory returned null).
+     */
+    static async getNewsClusterForArticle(
+        articleId: string,
+        options?: { first?: number; after?: string }
+    ): Promise<NewsCluster | null> {
+        try {
+            const { data } = await client.query<{ newsClusterForArticle: NewsCluster | null }>({
+                query: GET_NEWS_CLUSTER_FOR_ARTICLE,
+                variables: {
+                    articleId,
+                    first: options?.first ?? 10,
+                    after: options?.after,
+                },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.newsClusterForArticle ?? null;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getNewsClusterForArticle' },
+                extra: { articleId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Start (or refresh) tracking a story by its stableClusterId. Seeds a
+     * durable archive from the live cluster on first track, or slides an
+     * existing archive's 90-day retention forward. Returns null when no live
+     * cluster exists to seed from — the caller should then fall back to
+     * getNewsClusterForArticle.
+     */
+    static async trackStory(stableClusterId: string): Promise<TrackedStoryArchive | null> {
+        try {
+            const { data, error } = await client.mutate<{ trackStory: TrackedStoryArchive | null }>({
+                mutation: TRACK_STORY,
+                variables: { stableClusterId },
+            });
+            if (error) {
+                throw error;
+            }
+            return data?.trackStory ?? null;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'trackStory' },
+                extra: { stableClusterId },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Read a tracked story's archive by stableClusterId. Reading it slides
+     * the 90-day retention forward. Returns null when the story is not (or
+     * no longer) tracked.
+     */
+    static async getTrackedStory(stableClusterId: string): Promise<TrackedStoryArchive | null> {
+        try {
+            const { data } = await client.query<{ trackedStory: TrackedStoryArchive | null }>({
+                query: GET_TRACKED_STORY,
+                variables: { stableClusterId },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.trackedStory ?? null;
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'article-service', method: 'getTrackedStory' },
+                extra: { stableClusterId },
             });
             throw error;
         }

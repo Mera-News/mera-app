@@ -211,6 +211,11 @@ type Mutation {
   issueLlmWarning(input: IssueLlmWarningInput!): UserPersona!
   requestUnblock(input: RequestUnblockInput!): UnblockRequest!
   submitUserTopics(input: SubmitUserTopicsInput!): SubmitUserTopicsResponse!
+
+  """
+  Start (or refresh) tracking a story by its stableClusterId. Seeds a durable archive from the live cluster on first track, or slides an existing archive's 90-day retention forward. Returns null when no live cluster exists to seed from — the client then falls back to newsClusterForArticle.
+  """
+  trackStory(stableClusterId: String!): TrackedStoryArchive
   updateExpoPushToken(input: UpdateExpoPushTokenInput!): UserPersona!
   updateNotificationWindow(input: UpdateNotificationWindowInput!): UserPersona!
   updateNotificationsEnabled(input: UpdateNotificationsEnabledInput!): UserPersona!
@@ -458,6 +463,10 @@ type Query {
   The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response.
   """
   feedbackTree(currentVersion: Int): FeedbackTreeResponse
+  """
+  The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. Used as the live fallback when a story isn't archived (trackStory returned null).
+  """
+  newsClusterForArticle(articleId: ID!): NewsCluster
   newsClusterForUser(clusterId: ID!): NewsCluster!
   newsClusters(
     """Cursor to fetch items after"""
@@ -528,6 +537,25 @@ type Query {
     """Search text"""
     query: String!
   ): TopicSearchResponse!
+
+  """
+  A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet.
+  """
+  topHeadlinesForCountry(
+    """Cursor to fetch items after"""
+    after: String
+
+    """ISO country code, or null/"GLOBAL" for all countries"""
+    countryCode: String
+
+    """Number of items to fetch"""
+    first: Int = 20
+  ): TopHeadlinesForCountryResponse!
+
+  """
+  A tracked story's archive by stableClusterId. Reading it slides the 90-day retention forward. Returns null when the story is not (or no longer) tracked.
+  """
+  trackedStory(stableClusterId: String!): TrackedStoryArchive
   unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
@@ -563,6 +591,28 @@ type SubmittedUserTopic {
 }
 
 """
+One top-headline slot: the representative article plus its cluster metadata (stableClusterId, clusterSize). Both are null/0 for an unclustered singleton.
+"""
+type TopHeadline {
+  article: NewsArticle!
+
+  """Global cluster size across the clustering window; 0 for a singleton."""
+  clusterSize: Int!
+
+  """
+  Stable cross-run identity of this headline's cluster; null for a singleton.
+  """
+  stableClusterId: String
+}
+
+type TopHeadlinesForCountryResponse {
+  articles: [NewsArticle!]! @deprecated(reason: "Use headlines")
+  editionBuiltAt: DateTime
+  headlines: [TopHeadline!]!
+  pageInfo: CursorPageInfo!
+}
+
+"""
 Optional top-headlines block. Up to 6 scopes; limitPerScope capped at 25.
 """
 input TopHeadlinesInput {
@@ -592,6 +642,29 @@ type TopicSearchResponse {
 type TopicSearchResult {
   score: Float!
   topic: UserTopic!
+}
+
+"""
+A durable, self-contained archive of one stable cluster's coverage, returned by trackStory (seed/refresh) and trackedStory (read). Carries its own trimmed article snapshots so it renders even after the underlying NewsArticle rows TTL out.
+"""
+type TrackedStoryArchive {
+  articles: [TrackedStoryArticleSnapshot!]!
+  clusterSize: Int!
+  lastRefreshedAt: DateTime!
+  stableClusterId: String!
+}
+
+"""
+A trimmed, denormalized article snapshot inside a tracked-story archive: only the fields the archive screen renders (no vectors or bodies). All content fields are nullable.
+"""
+type TrackedStoryArticleSnapshot {
+  articleId: ID!
+  article_url: String
+  country_code: String
+  image_url: String
+  pubDate: DateTime
+  publication_name: String
+  title_en: String
 }
 
 type UnblockRequest {

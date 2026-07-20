@@ -776,6 +776,89 @@ describe('ArticleService.getNewsClustersForTopicText', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// getTopHeadlinesForCountry
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.getTopHeadlinesForCountry', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('returns data on success', async () => {
+        const serverResp = {
+            articles: [],
+            headlines: [{ stableClusterId: 'sc-1', clusterSize: 5, article: makeArticle() }],
+            pageInfo: { endCursor: 'cursor-1', hasNextPage: true, pageSize: 20 },
+            editionBuiltAt: '2024-01-01T00:00:00Z',
+        };
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: serverResp } });
+
+        const result = await ArticleService.getTopHeadlinesForCountry('USA', {});
+        expect(result).toEqual(serverResp);
+    });
+
+    it('returns default empty structure on null data', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: null } });
+        const result = await ArticleService.getTopHeadlinesForCountry('USA', {});
+        expect(result.headlines).toEqual([]);
+        expect(result.editionBuiltAt).toBeNull();
+        expect(result.pageInfo.hasNextPage).toBe(false);
+    });
+
+    it('maps the GLOBAL sentinel to null countryCode', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: null } });
+        await ArticleService.getTopHeadlinesForCountry('GLOBAL', {});
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ variables: expect.objectContaining({ countryCode: null }) }),
+        );
+    });
+
+    it('passes null/undefined countryCode through as null', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: null } });
+        await ArticleService.getTopHeadlinesForCountry(null, {});
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ variables: expect.objectContaining({ countryCode: null }) }),
+        );
+    });
+
+    it('passes default first=20', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: null } });
+        await ArticleService.getTopHeadlinesForCountry('USA', {});
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ variables: expect.objectContaining({ first: 20 }) }),
+        );
+    });
+
+    it('respects custom first and after options', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: null } });
+        await ArticleService.getTopHeadlinesForCountry('USA', { first: 5, after: 'cur' });
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: expect.objectContaining({ first: 5, after: 'cur' }),
+            }),
+        );
+    });
+
+    it('uses no-cache fetchPolicy', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: null } });
+        await ArticleService.getTopHeadlinesForCountry('USA', {});
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ fetchPolicy: 'no-cache' }),
+        );
+    });
+
+    it('re-throws on error', async () => {
+        const err = new Error('top headlines error');
+        mockQuery.mockRejectedValueOnce(err);
+        await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow('top headlines error');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
+            err,
+            expect.objectContaining({
+                tags: { service: 'article-service', method: 'getTopHeadlinesForCountry' },
+            }),
+        );
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // getNewsClusterForUser
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -833,6 +916,192 @@ describe('ArticleService.getNewsClusterForUser', () => {
             err,
             expect.objectContaining({
                 tags: { service: 'article-service', method: 'getNewsClusterForUser' },
+            }),
+        );
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getNewsClusterForArticle
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.getNewsClusterForArticle', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('returns the live cluster on success', async () => {
+        const cluster = {
+            _id: 'cl-1',
+            stableClusterId: 'sc-1',
+            clusterSize: 4,
+            createdAt: '2024-01-01',
+            updatedAt: '2024-01-02',
+            articles: { articles: [makeArticle()], pageInfo: { endCursor: null, hasNextPage: false, pageSize: 10 } },
+        };
+        mockQuery.mockResolvedValueOnce({ data: { newsClusterForArticle: cluster } });
+        const result = await ArticleService.getNewsClusterForArticle('art-1');
+        expect(result).toEqual(cluster);
+    });
+
+    it('returns null when the article is unclustered', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { newsClusterForArticle: null } });
+        const result = await ArticleService.getNewsClusterForArticle('art-1');
+        expect(result).toBeNull();
+    });
+
+    it('returns null when data itself is null', async () => {
+        mockQuery.mockResolvedValueOnce({ data: null });
+        const result = await ArticleService.getNewsClusterForArticle('art-1');
+        expect(result).toBeNull();
+    });
+
+    it('passes articleId and default first=10', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { newsClusterForArticle: null } });
+        await ArticleService.getNewsClusterForArticle('art-1');
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: expect.objectContaining({ articleId: 'art-1', first: 10 }),
+            }),
+        );
+    });
+
+    it('respects custom first and after options', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { newsClusterForArticle: null } });
+        await ArticleService.getNewsClusterForArticle('art-1', { first: 5, after: 'page-2' });
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: expect.objectContaining({ first: 5, after: 'page-2' }),
+            }),
+        );
+    });
+
+    it('re-throws on error', async () => {
+        const err = new Error('cluster for article failed');
+        mockQuery.mockRejectedValueOnce(err);
+        await expect(ArticleService.getNewsClusterForArticle('art-1')).rejects.toThrow('cluster for article failed');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
+            err,
+            expect.objectContaining({
+                tags: { service: 'article-service', method: 'getNewsClusterForArticle' },
+            }),
+        );
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// trackStory
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.trackStory', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('returns the archive on success', async () => {
+        const archive = {
+            stableClusterId: 'sc-1',
+            clusterSize: 3,
+            lastRefreshedAt: '2024-01-01T00:00:00Z',
+            articles: [{ articleId: 'a1', title_en: 'T', pubDate: null, image_url: null, publication_name: 'Pub', article_url: 'https://x.com', country_code: 'US' }],
+        };
+        mockMutate.mockResolvedValueOnce({ data: { trackStory: archive }, error: undefined });
+        const result = await ArticleService.trackStory('sc-1');
+        expect(result).toEqual(archive);
+    });
+
+    it('returns null when no live cluster exists to seed from', async () => {
+        mockMutate.mockResolvedValueOnce({ data: { trackStory: null }, error: undefined });
+        const result = await ArticleService.trackStory('sc-missing');
+        expect(result).toBeNull();
+    });
+
+    it('returns null when data itself is null', async () => {
+        mockMutate.mockResolvedValueOnce({ data: null, error: undefined });
+        const result = await ArticleService.trackStory('sc-1');
+        expect(result).toBeNull();
+    });
+
+    it('passes stableClusterId as variable', async () => {
+        mockMutate.mockResolvedValueOnce({ data: { trackStory: null }, error: undefined });
+        await ArticleService.trackStory('the-cluster-id');
+        expect(mockMutate).toHaveBeenCalledWith(
+            expect.objectContaining({ variables: { stableClusterId: 'the-cluster-id' } }),
+        );
+    });
+
+    it('throws when the mutate result carries an error', async () => {
+        const err = new Error('mutation error');
+        mockMutate.mockResolvedValueOnce({ data: null, error: err });
+        await expect(ArticleService.trackStory('sc-1')).rejects.toThrow('mutation error');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
+            err,
+            expect.objectContaining({
+                tags: { service: 'article-service', method: 'trackStory' },
+            }),
+        );
+    });
+
+    it('re-throws on rejected mutate', async () => {
+        const err = new Error('network down');
+        mockMutate.mockRejectedValueOnce(err);
+        await expect(ArticleService.trackStory('sc-1')).rejects.toThrow('network down');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
+            err,
+            expect.objectContaining({
+                tags: { service: 'article-service', method: 'trackStory' },
+                extra: { stableClusterId: 'sc-1' },
+            }),
+        );
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getTrackedStory
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.getTrackedStory', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('returns the archive on success', async () => {
+        const archive = {
+            stableClusterId: 'sc-1',
+            clusterSize: 3,
+            lastRefreshedAt: '2024-01-01T00:00:00Z',
+            articles: [],
+        };
+        mockQuery.mockResolvedValueOnce({ data: { trackedStory: archive } });
+        const result = await ArticleService.getTrackedStory('sc-1');
+        expect(result).toEqual(archive);
+    });
+
+    it('returns null when the story is not (or no longer) tracked', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { trackedStory: null } });
+        const result = await ArticleService.getTrackedStory('sc-1');
+        expect(result).toBeNull();
+    });
+
+    it('returns null when data itself is null', async () => {
+        mockQuery.mockResolvedValueOnce({ data: null });
+        const result = await ArticleService.getTrackedStory('sc-1');
+        expect(result).toBeNull();
+    });
+
+    it('passes stableClusterId as variable with no-cache policy', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { trackedStory: null } });
+        await ArticleService.getTrackedStory('sc-1');
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: { stableClusterId: 'sc-1' },
+                fetchPolicy: 'no-cache',
+            }),
+        );
+    });
+
+    it('re-throws on error', async () => {
+        const err = new Error('tracked story failed');
+        mockQuery.mockRejectedValueOnce(err);
+        await expect(ArticleService.getTrackedStory('sc-1')).rejects.toThrow('tracked story failed');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
+            err,
+            expect.objectContaining({
+                tags: { service: 'article-service', method: 'getTrackedStory' },
             }),
         );
     });
