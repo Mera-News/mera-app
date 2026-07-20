@@ -6,10 +6,25 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
+import { hapticLight } from '@/lib/haptics';
+import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+/** Per-tap influence nudge and the clamped UI range (a fact's weight dampens
+ *  its topics — 100% default; this control never drives it to 0/negative). */
+const INFLUENCE_STEP = 0.1;
+const INFLUENCE_MIN = 0.1;
+const INFLUENCE_MAX = 1.0;
+
+/** Round to a single decimal so repeated ±0.1 taps don't accrue float drift. */
+function round1(n: number): number {
+    return Math.round(n * 10) / 10;
+}
 
 interface FactAccordionProps {
     readonly fact: Fact;
@@ -48,6 +63,39 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     onGenerateMore,
 }) => {
     const { t } = useTranslation();
+
+    // Optimistic mirror of the fact's influence weight (null ⇒ 1.0 baseline).
+    // nudgeFactWeight reads the stored value fresh each call, so the UI value
+    // and the DB value move by the same delta and stay in sync.
+    const [influence, setInfluence] = useState<number>(round1(fact.weight ?? 1));
+    useEffect(() => {
+        setInfluence(round1(fact.weight ?? 1));
+    }, [fact.id, fact.weight]);
+
+    const influenceMinReached = influence <= INFLUENCE_MIN + 1e-6;
+    const influenceMaxReached = influence >= INFLUENCE_MAX - 1e-6;
+
+    const handleInfluence = useCallback(
+        async (direction: 1 | -1) => {
+            const delta = INFLUENCE_STEP * direction;
+            const next = round1(Math.max(INFLUENCE_MIN, Math.min(INFLUENCE_MAX, influence + delta)));
+            if (next === influence) return; // at a bound — nothing to do
+            const prev = influence;
+            setInfluence(next);
+            void hapticLight();
+            try {
+                await nudgeFactWeight(fact.id, delta, 'user');
+                useForYouStore.getState().setFeedNeedsRefresh(true);
+            } catch (err) {
+                setInfluence(prev); // revert optimistic update on failure
+                logger.warn('[fact-accordion] influence nudge failed', {
+                    factId: fact.id,
+                    error: String(err),
+                });
+            }
+        },
+        [influence, fact.id],
+    );
 
     const factTopics = fact.metadata?.topics ?? [];
     const expectedTopicCount = factTopics.length;
@@ -98,6 +146,43 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
             {/* Accordion body */}
             {isExpanded && (
                 <Box className="border-t border-gray-700 px-4 py-3">
+                    {/* Influence — how strongly this fact dampens its topics */}
+                    <HStack className="items-center justify-between pb-3 mb-3 border-b border-gray-700">
+                        <Text size="sm" className="text-gray-400 font-medium">
+                            {t('facts.influence', { defaultValue: 'Influence' })}
+                        </Text>
+                        <HStack space="md" className="items-center">
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={t('facts.lessInfluence', { defaultValue: 'Less influence' })}
+                                disabled={influenceMinReached}
+                                onPress={() => handleInfluence(-1)}
+                                hitSlop={8}
+                            >
+                                <MaterialIcons
+                                    name="remove-circle-outline"
+                                    size={22}
+                                    color={influenceMinReached ? '#374151' : '#60a5fa'}
+                                />
+                            </Pressable>
+                            <Text size="sm" className="text-gray-200" style={{ minWidth: 44, textAlign: 'center' }}>
+                                {Math.round(influence * 100)}%
+                            </Text>
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={t('facts.moreInfluence', { defaultValue: 'More influence' })}
+                                disabled={influenceMaxReached}
+                                onPress={() => handleInfluence(1)}
+                                hitSlop={8}
+                            >
+                                <MaterialIcons
+                                    name="add-circle-outline"
+                                    size={22}
+                                    color={influenceMaxReached ? '#374151' : '#60a5fa'}
+                                />
+                            </Pressable>
+                        </HStack>
+                    </HStack>
                     {topicGenError ? (
                         <Text className="text-red-400 text-sm">
                             {t('configPanel.topicGenFailed', { error: topicGenError })}

@@ -14,6 +14,7 @@ function toFact(record: FactModel): Fact {
   return {
     id: record.id,
     statement: record.statement,
+    weight: record.weight ?? null,
     metadata: record.metadata,
     questionnaireLevel: record.questionnaireLevel ?? undefined,
     questionnaireLevelCategory: record.questionnaireLevelCategory ?? undefined,

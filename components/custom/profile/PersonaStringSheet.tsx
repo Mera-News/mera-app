@@ -4,8 +4,8 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
-import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
-import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
+import { nudgeTopic } from '@/lib/database/services/mutation-rails-service';
+import { getWeightsByIds } from '@/lib/database/services/topic-service';
 import { deleteSummaryString, type PersonaSummaryStringRow } from '@/lib/database/services/persona-summary-service';
 import { handleDeleteUserFacts } from '@/lib/chat-tools/tool-handlers';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
@@ -13,7 +13,7 @@ import logger from '@/lib/logger';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from 'react-native';
 
@@ -22,6 +22,11 @@ const ACCENT = '#EDA77E';
 /** Per-tap weight nudge applied to every topic behind a string (leashed by the
  *  mutation-rails budget). Small so the stepper is a gentle "more/less". */
 const IMPORTANCE_STEP = 0.05;
+
+/** Number of segments in the visual importance level meter. */
+const IMPORTANCE_SEGMENTS = 5;
+
+type ResolvedTopic = { id: string; weight: number };
 
 interface PersonaStringSheetProps {
     readonly visible: boolean;
@@ -47,39 +52,98 @@ export const PersonaStringSheet: React.FC<PersonaStringSheetProps> = ({
     const { t } = useTranslation();
     const [busy, setBusy] = useState(false);
     const [confirmRemove, setConfirmRemove] = useState(false);
+    // Linked topic ids resolved to the rows that still EXIST (+ their weights).
+    // Stale ids are dropped, so the stepper only shows for live topics.
+    const [resolvedTopics, setResolvedTopics] = useState<ResolvedTopic[]>([]);
+    const [topicsLoaded, setTopicsLoaded] = useState(false);
+    // True after a tap where the per-day nudge budget was exhausted (nothing
+    // written) — surfaces the "limit reached" hint under the stepper.
+    const [limitReached, setLimitReached] = useState(false);
 
     // Reset the two-tap confirm whenever the sheet (re)opens on a new row.
     useEffect(() => {
         if (visible) setConfirmRemove(false);
     }, [visible, row?.id]);
 
-    const hasTopics = (row?.linkedTopicIds.length ?? 0) > 0;
+    // Resolve linked topic ids to existing rows on open. Missing ids drop out;
+    // if none resolve we hide the stepper (avoids dead buttons on stale ids).
+    useEffect(() => {
+        if (!visible || !row) return;
+        let cancelled = false;
+        setTopicsLoaded(false);
+        setLimitReached(false);
+        (async () => {
+            try {
+                const rows = await getWeightsByIds(row.linkedTopicIds);
+                if (cancelled) return;
+                setResolvedTopics(rows);
+                if (rows.length === 0 && row.linkedTopicIds.length > 0) {
+                    logger.warn('[persona-string-sheet] no linked topics resolved', {
+                        rowId: row.id,
+                        linkedTopicIds: row.linkedTopicIds.length,
+                    });
+                }
+            } catch (err) {
+                if (cancelled) return;
+                setResolvedTopics([]);
+                logger.warn('[persona-string-sheet] resolve linked topics failed', { error: String(err) });
+            } finally {
+                if (!cancelled) setTopicsLoaded(true);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, row?.id]);
+
+    const hasTopics = topicsLoaded && resolvedTopics.length > 0;
     const hasFacts = (row?.linkedFactIds.length ?? 0) > 0;
+
+    // Average resolved weight → a 0..IMPORTANCE_SEGMENTS filled-segment count.
+    // Weights here are typically 0..1; negatives clamp to 0 for display.
+    const filledSegments = useMemo(() => {
+        if (resolvedTopics.length === 0) return 0;
+        const avg = resolvedTopics.reduce((s, tp) => s + Math.max(0, tp.weight), 0) / resolvedTopics.length;
+        return Math.round(Math.max(0, Math.min(1, avg)) * IMPORTANCE_SEGMENTS);
+    }, [resolvedTopics]);
 
     const handleImportance = useCallback(
         async (direction: 1 | -1) => {
-            if (!row || busy || !hasTopics) return;
+            if (!row || busy || resolvedTopics.length === 0) return;
             setBusy(true);
+            setLimitReached(false);
             void hapticLight();
+            let appliedAny = false;
+            const next = [...resolvedTopics];
             try {
-                for (const topicId of row.linkedTopicIds) {
-                    await applyPersonaAction(
-                        {
-                            action_type: ACTION_NAMES.SET_TOPIC_WEIGHT,
-                            topicId,
-                            delta: IMPORTANCE_STEP * direction,
-                        },
-                        'user',
-                    );
+                for (let i = 0; i < next.length; i++) {
+                    try {
+                        const res = await nudgeTopic(next[i].id, IMPORTANCE_STEP * direction, 'user');
+                        // `after` is the new weight when applied, or the unchanged
+                        // weight when the budget is exhausted — safe either way.
+                        next[i] = { ...next[i], weight: res.after };
+                        if (res.applied) appliedAny = true;
+                    } catch (err) {
+                        // A stale id (deleted between open and tap) must not abort
+                        // the whole loop — the other topics still get nudged.
+                        logger.warn('[persona-string-sheet] topic nudge failed', {
+                            topicId: next[i].id,
+                            error: String(err),
+                        });
+                    }
                 }
-                useForYouStore.getState().setFeedNeedsRefresh(true);
-            } catch (err) {
-                logger.warn('[persona-string-sheet] importance nudge failed', { error: String(err) });
+                setResolvedTopics(next);
+                if (appliedAny) {
+                    void hapticSuccess();
+                    useForYouStore.getState().setFeedNeedsRefresh(true);
+                } else {
+                    setLimitReached(true);
+                }
             } finally {
                 setBusy(false);
             }
         },
-        [row, busy, hasTopics],
+        [row, busy, resolvedTopics],
     );
 
     const handleRefine = useCallback(() => {
@@ -140,33 +204,64 @@ export const PersonaStringSheet: React.FC<PersonaStringSheetProps> = ({
                             style={{ marginBottom: 16 }}
                         />
 
-                        {/* Importance stepper */}
+                        {/* Importance stepper + visual level meter */}
                         {hasTopics ? (
-                            <HStack className="items-center justify-between mb-2 px-2 py-2 rounded-2xl" style={{ backgroundColor: '#1f1f1f' }}>
-                                <Text className="text-gray-300" style={{ fontSize: 15 }}>
-                                    {t('profile.sheet.importance', { defaultValue: 'Importance' })}
-                                </Text>
-                                <HStack space="lg" className="items-center">
-                                    <Pressable
-                                        accessibilityRole="button"
-                                        accessibilityLabel={t('profile.sheet.lessImportant', { defaultValue: 'Less important' })}
-                                        disabled={busy}
-                                        onPress={() => handleImportance(-1)}
-                                        className="rounded-full p-1"
-                                    >
-                                        <MaterialIcons name="remove-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
-                                    </Pressable>
-                                    <Pressable
-                                        accessibilityRole="button"
-                                        accessibilityLabel={t('profile.sheet.moreImportant', { defaultValue: 'More important' })}
-                                        disabled={busy}
-                                        onPress={() => handleImportance(1)}
-                                        className="rounded-full p-1"
-                                    >
-                                        <MaterialIcons name="add-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
-                                    </Pressable>
+                            <>
+                                <HStack className="items-center justify-between mb-2 px-2 py-2 rounded-2xl" style={{ backgroundColor: '#1f1f1f' }}>
+                                    <Text className="text-gray-300" style={{ fontSize: 15 }}>
+                                        {t('profile.sheet.importance', { defaultValue: 'Importance' })}
+                                    </Text>
+                                    <HStack space="md" className="items-center">
+                                        <Pressable
+                                            accessibilityRole="button"
+                                            accessibilityLabel={t('profile.sheet.lessImportant', { defaultValue: 'Less important' })}
+                                            disabled={busy}
+                                            onPress={() => handleImportance(-1)}
+                                            className="rounded-full p-1"
+                                        >
+                                            <MaterialIcons name="remove-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
+                                        </Pressable>
+                                        {/* 5-segment level: filled = avg resolved weight */}
+                                        <HStack
+                                            space="xs"
+                                            className="items-center"
+                                            accessibilityLabel={t('profile.sheet.importanceLevel', {
+                                                level: filledSegments,
+                                                total: IMPORTANCE_SEGMENTS,
+                                                defaultValue: 'Importance level {{level}} of {{total}}',
+                                            })}
+                                        >
+                                            {Array.from({ length: IMPORTANCE_SEGMENTS }).map((_, i) => (
+                                                <Box
+                                                    key={i}
+                                                    style={{
+                                                        width: 8,
+                                                        height: 8,
+                                                        borderRadius: 4,
+                                                        backgroundColor: i < filledSegments ? ACCENT : '#3a3a3a',
+                                                    }}
+                                                />
+                                            ))}
+                                        </HStack>
+                                        <Pressable
+                                            accessibilityRole="button"
+                                            accessibilityLabel={t('profile.sheet.moreImportant', { defaultValue: 'More important' })}
+                                            disabled={busy}
+                                            onPress={() => handleImportance(1)}
+                                            className="rounded-full p-1"
+                                        >
+                                            <MaterialIcons name="add-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
+                                        </Pressable>
+                                    </HStack>
                                 </HStack>
-                            </HStack>
+                                {limitReached ? (
+                                    <Text className="text-gray-500 mb-2 px-2" style={{ fontSize: 12 }}>
+                                        {t('profile.sheet.limitReached', {
+                                            defaultValue: 'Daily adjustment limit reached — changes continue tomorrow.',
+                                        })}
+                                    </Text>
+                                ) : null}
+                            </>
                         ) : null}
 
                         {/* Refine with Mera */}

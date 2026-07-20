@@ -8,6 +8,7 @@
 export type Fact = {
   id: string; // UUID
   statement: string; // e.g., "I live in Berlin"
+  weight?: number | null; // Persona-v3 fact-level influence multiplier; null ⇒ 1.0 baseline
   metadata?: Record<string, string[]>; // App-defined derived fields
   questionnaireLevel?: number; // Questionnaire level number (1-10)
   questionnaireLevelCategory?: string; // e.g., "Core", "Professional"

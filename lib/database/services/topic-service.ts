@@ -125,6 +125,16 @@ export async function countAllTopics(): Promise<number> {
   return topicsCollection.query().fetchCount();
 }
 
+/** Resolve topic ids to the {id, weight} of the rows that still EXIST (any
+ *  status). Missing / stale ids are silently dropped (`Q.oneOf` returns only
+ *  present rows). Used by the persona-string sheet's importance stepper to keep
+ *  only live topics and read their current weight for the level display. */
+export async function getWeightsByIds(ids: string[]): Promise<{ id: string; weight: number }[]> {
+  if (ids.length === 0) return [];
+  const rows = await topicsCollection.query(Q.where('id', Q.oneOf(ids))).fetch();
+  return rows.map((t) => ({ id: t.id, weight: t.weight }));
+}
+
 /** All topics sharing a normalized text (dedup + cross-fact overlap detection). */
 export async function getAllByNormalizedText(normalizedText: string): Promise<TopicModel[]> {
   return topicsCollection

@@ -1038,12 +1038,16 @@
       "refine": "Refine with Mera",
       "refineSeed": "Let's talk about this — \"{{text}}\"",
       "remove": "Remove this",
-      "removeConfirm": "Tap again to remove"
+      "removeConfirm": "Tap again to remove",
+      "limitReached": "Daily adjustment limit reached — changes continue tomorrow."
     }
   },
   "facts": {
     "screenTitle": "Your facts",
-    "screenSubtitle": "What Mera knows about you"
+    "screenSubtitle": "What Mera knows about you",
+    "influence": "Influence",
+    "moreInfluence": "More influence",
+    "lessInfluence": "Less influence"
   },
   "publicationPrefs": {
     "title": "Source preferences",
