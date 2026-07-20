@@ -18,7 +18,7 @@ import { Platform } from 'react-native';
  * native height isn't exposed to JS. This value is now purely a conservative
  * bottom-clearance estimate for the OUTSIDE-the-navigator overlays above, so
  * it may not exactly match the rendered native bar. Kept because those
- * overlays (BrowseFeedScreen, ForYouScreen, ExploreScreen, the FABs and chat
- * bubbles) still rely on it for padding/clearance.
+ * overlays (ForYouScreen, ExploreScreen, the FABs and chat bubbles) still rely
+ * on it for padding/clearance.
  */
 export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;

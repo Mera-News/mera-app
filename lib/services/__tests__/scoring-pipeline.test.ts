@@ -121,7 +121,7 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
 }));
 
 // Round-3: fact-grouping snapshot loader (lazy-required in planFactBatches).
-jest.mock('@/lib/stores/feed-sections-selector', () => ({
+jest.mock('@/lib/stores/section-snapshots', () => ({
   loadSectionSnapshots: (...args: any[]) => mockLoadSectionSnapshots(...args),
 }));
 

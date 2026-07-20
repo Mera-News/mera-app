@@ -3,7 +3,7 @@
 //
 // Each candidate is assigned its PRIMARY (strongest owning) fact by reusing the
 // exact ownership semantics + deterministic tie-breaks the feed selector uses
-// (resolveOwningFact / resolveOwnership in feed-select/sections.ts). Candidates
+// (resolveOwningFact / resolveOwnership in feed-select/ownership.ts). Candidates
 // whose owning fact has fewer than MIN_FACT_GROUP candidates — plus genuine
 // orphans (no positive owning fact) — collapse into a single `factId: null`
 // tail so a slow trickle of one-off facts never spawns a swarm of tiny gateway

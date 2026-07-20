@@ -261,17 +261,10 @@
     "alsoForYou": "Also for you",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
-    "whySection": "Why this section",
-    "triageEntry": "Review one at a time",
+    "openFactFeed": "See all stories for this topic",
     "subTabFeed": "Feed",
     "subTabStories": "Stories",
-    "subTabSaved": "Saved",
-    "newStoriesPill_one": "{{count}} new story",
-    "newStoriesPill_other": "{{count}} new stories",
-    "caughtUp": "You're all caught up",
-    "caughtUpHint": "Here's everything from before",
-    "earlier": "Earlier",
-    "earlierShowMore": "Show {{count}} more earlier"
+    "subTabSaved": "Saved"
   },
   "feedStatus": {
     "title": "Feed status",
@@ -305,18 +298,6 @@
     "untrackConfirmBody": "You'll no longer see new developments for this story.",
     "trackChatSeed": "I want to follow this story.",
     "trackProposalTitle": "Follow this story?"
-  },
-  "triage": {
-    "title": "Review",
-    "progress": "{{current}} / {{total}}",
-    "close": "Close",
-    "upNext": "Up next",
-    "read": "Read",
-    "good": "Good",
-    "bad": "Not for me",
-    "tellWhy": "Tell us why",
-    "save": "Save",
-    "skip": "Skip"
   },
   "whatsNew": {
     "title": "What's new",

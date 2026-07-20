@@ -64,6 +64,23 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     expect(prompt).toContain('source of truth');
   });
 
+  it('documents retire_topic, choose_one, and the suppression-strength scale', () => {
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    expect(prompt).toContain('retire_topic');
+    expect(prompt).toContain('choose_one');
+    expect(prompt).toContain('0.9');
+    expect(prompt).toContain('0.5');
+  });
+
+  it('stays within the ≤250-token prompt-delta budget (heuristic ceiling)', () => {
+    // The XML-format path (local) is the larger of the two; keep the whole thing
+    // comfortably under the ~3072 input budget.
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    // ~4 chars/token heuristic — the assembled prompt should stay well under 900
+    // tokens (base ≈ 1580 chars-region measured; guardrail against runaway growth).
+    expect(prompt.length).toBeLessThan(8000);
+  });
+
   it('pins the language name when provided', () => {
     const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'French' });
     expect(prompt).toContain('**French**');
@@ -167,9 +184,11 @@ describe('buildFeedbackContext', () => {
         { type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' },
         { type: 'add_suppression', suppressionPattern: 'lottery results' },
         { type: 'set_high_priority', topicText: 'AI policy', highPriority: true },
+        { type: 'retire_topic', topicText: 'cricket' },
       ],
     };
     const ctx = buildFeedbackContext({ facts: [], context: null, fallbackTitle: 'T', proposal });
+    expect(ctx).toContain('retire topic "cricket"');
     expect(ctx).toContain('add fact "Likes AI"');
     expect(ctx).toContain('update [f1] → "Staff engineer"');
     expect(ctx).toContain('delete [f2]');
@@ -198,6 +217,50 @@ describe('buildFeedbackContext', () => {
     // essential blocks survive
     expect(ctx).toContain('## ARTICLE');
     expect(ctx).toContain('## SUGGESTION STATUS');
+  });
+
+  it('renders the ARTICLE category + entities lines when present', () => {
+    const ctx = buildFeedbackContext({
+      facts: [],
+      context: {
+        suggestion: scoredContext().suggestion,
+        matchedTopicTexts: [],
+        linkedFacts: [],
+        category: 'Politics',
+        entities: ['Narendra Modi', 'BJP', 'Lok Sabha', 'a', 'b', 'c', 'd', 'e', 'DROPPED'],
+      },
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).toContain('Category: Politics');
+    expect(ctx).toContain('Entities: Narendra Modi, BJP, Lok Sabha');
+    // capped at 8 entities
+    expect(ctx).not.toContain('DROPPED');
+  });
+
+  it('renders a RELATED COVERAGE block (≤5 titles) when provided', () => {
+    const ctx = buildFeedbackContext({
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+      relatedCoverage: ['Protest spreads', 'Exam board responds', 'a', 'b', 'c', 'SIXTH'],
+    });
+    expect(ctx).toContain('## RELATED COVERAGE');
+    expect(ctx).toContain('- Protest spreads');
+    expect(ctx).toContain('- Exam board responds');
+    expect(ctx).not.toContain('SIXTH');
+  });
+
+  it('omits the RELATED COVERAGE block when empty', () => {
+    const ctx = buildFeedbackContext({
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+      relatedCoverage: [],
+    });
+    expect(ctx).not.toContain('## RELATED COVERAGE');
   });
 
   it('caps matched topics and producing facts to their limits', () => {
@@ -244,6 +307,7 @@ describe('getArticleFeedbackToolDefinitions', () => {
       'set_publication_pref',
       'add_suppression',
       'set_high_priority',
+      'retire_topic',
     ]);
   });
 
@@ -252,10 +316,18 @@ describe('getArticleFeedbackToolDefinitions', () => {
     const props = (propose.function.parameters.properties.actions as {
       items: { properties: Record<string, unknown> };
     }).items.properties;
-    for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'highPriority']) {
+    for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'suppressionKeywords', 'suppressionStrength', 'highPriority']) {
       expect(props[key]).toBeDefined();
     }
     expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'deprioritize', 'mute']);
+  });
+
+  it('declares the choose_one flag on proposeChanges and options[] on proposeTrack', () => {
+    const [propose, track] = getArticleFeedbackToolDefinitions();
+    expect(propose.function.parameters.properties.choose_one).toBeDefined();
+    expect((propose.function.parameters.properties.choose_one as { type: string }).type).toBe('boolean');
+    expect(track.function.parameters.properties.options).toBeDefined();
+    expect((track.function.parameters.properties.options as { type: string }).type).toBe('array');
   });
 });
 
@@ -428,6 +500,50 @@ describe('decideProposeChanges', () => {
     expect(actions?.[4]).toEqual({ type: 'set_high_priority', topicText: 'AI policy', highPriority: true });
   });
 
+  it('validates a retire_topic action', () => {
+    const ok = decideProposeChanges(
+      { explanation: 'x', expected_effects: 'y', actions: [{ type: 'retire_topic', topicText: 'cricket' }] },
+      new Set(),
+    );
+    expect(ok.sideEffects?.proposal?.actions[0]).toEqual({ type: 'retire_topic', topicText: 'cricket' });
+    const bad = decideProposeChanges(
+      { explanation: 'x', expected_effects: 'y', actions: [{ type: 'retire_topic', topicText: '  ' }] },
+      new Set(),
+    );
+    expect(bad.result.error).toContain('topicText');
+  });
+
+  it('marks the proposal chooseOne when choose_one is set with ≥2 alternatives', () => {
+    const result = decideProposeChanges(
+      {
+        explanation: 'Less of this?',
+        expected_effects: 'Pick one.',
+        choose_one: true,
+        actions: [
+          { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+          { type: 'retire_topic', topicText: 'cricket' },
+        ],
+      },
+      new Set(),
+    );
+    expect(result.sideEffects?.proposal?.chooseOne).toBe(true);
+    expect(result.result.chooseOne).toBe(true);
+  });
+
+  it('does NOT mark chooseOne when choose_one is set but only ONE action', () => {
+    const result = decideProposeChanges(
+      {
+        explanation: 'x',
+        expected_effects: 'y',
+        choose_one: true,
+        actions: [{ type: 'retire_topic', topicText: 'cricket' }],
+      },
+      new Set(),
+    );
+    expect(result.sideEffects?.proposal?.chooseOne).toBeUndefined();
+    expect(result.result.chooseOne).toBeUndefined();
+  });
+
   it('clamps an over-large set_topic_weight delta to the gentle-nudge bound', () => {
     const result = decideProposeChanges(
       { explanation: 'x', expected_effects: 'y', actions: [{ type: 'set_topic_weight', topicText: 'cricket', delta: -5 }] },
@@ -523,6 +639,41 @@ describe('decideProposeTrack', () => {
     const out = decideProposeTrack({ track: '   ' }, subject);
     expect(out.result.error).toContain('track is required');
     expect(out.sideEffects).toBeUndefined();
+  });
+
+  it('stages a single-select proposal of track_story actions when ≥2 options', () => {
+    const out = decideProposeTrack(
+      {
+        track: 'The Sonbhadra exam protest',
+        options: [
+          'The Sonbhadra exam-result protest',
+          'The wider UP student exam-reform movement',
+          'The Sonbhadra exam-result protest', // dup — deduped
+        ],
+      },
+      subject,
+    );
+    const proposal = out.sideEffects?.proposal;
+    expect(proposal?.chooseOne).toBe(true);
+    expect(proposal?.actions).toHaveLength(2);
+    expect(proposal?.actions.every((a) => a.type === 'track_story' && a.subject === subject)).toBe(true);
+    expect(out.result.chooseOne).toBe(true);
+    expect(out.result.options).toEqual([
+      'The Sonbhadra exam-result protest',
+      'The wider UP student exam-reform movement',
+    ]);
+  });
+
+  it('falls back to the single-option flow when fewer than 2 valid options', () => {
+    const out = decideProposeTrack(
+      { track: 'The Sonbhadra exam protest', options: ['only one'] },
+      subject,
+    );
+    const proposal = out.sideEffects?.proposal;
+    expect(proposal?.chooseOne).toBeUndefined();
+    expect(proposal?.actions).toEqual([
+      { type: 'track_story', trackText: 'The Sonbhadra exam protest', subject },
+    ]);
   });
 
   it('trims overly long track text', () => {

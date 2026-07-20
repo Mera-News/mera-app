@@ -1,5 +1,6 @@
-// feed-select — pure selector layer for the fact-sectioned For-You feed and the
-// swipe deck (Wave 7b-core M-P5b). RN-free; consumes plain projections.
+// feed-select — pure fact-ownership + display-bucket cores for the fact-rows
+// For-You feed and the per-fact scoring batcher (Round-3). RN-free; consumes
+// plain projections. (The Wave-7 sectioned selector + swipe-deck contract were
+// removed in Round-3 C3; only the ownership cores remain here.)
 
-export * from './sections';
-export * from './deck';
+export * from './ownership';

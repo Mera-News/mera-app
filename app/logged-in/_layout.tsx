@@ -149,7 +149,7 @@ export default function LoggedInLayout() {
           }}
         />
         <Stack.Screen
-          name="triage"
+          name="fact-feed"
           options={{
             headerShown: false,
             animation: 'slide_from_right'

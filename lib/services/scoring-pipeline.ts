@@ -156,26 +156,6 @@ let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
 
 // ---------------------------------------------------------------------------
-// Chunk-release listener — DEPRECATED no-op stub (Round-3)
-//
-// The Wave-8 swipe-deck in-order chunk-release queue was deleted in Round-3
-// (its only consumer, the Browse swipe deck, is removed in Part C). This stub
-// remains ONLY so `lib/stores/swipe-feed-store.ts` still compiles until the C
-// agent deletes swipe-feed + this export. It registers nothing and never fires.
-// ---------------------------------------------------------------------------
-
-type ChunkReleaseListener = (cardIds: string[]) => void;
-
-/** @deprecated No-op. Returns an unsubscribe that does nothing. Removed with
- *  swipe-feed in Part C. */
-export function registerChunkReleaseListener(
-  _fn: ChunkReleaseListener,
-): () => void {
-  return () => {};
-}
-
-
-// ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
 
@@ -223,10 +203,10 @@ async function planFactBatches(freshIds: string[]): Promise<FactBatchSpec[]> {
         relatedFacts: c.relatedFacts,
       });
     }
-    // Lazy require: feed-sections-selector pulls the persona DB services, kept
-    // off the module load path (and mockable in tests).
+    // Lazy require: section-snapshots pulls the persona DB services, kept off
+    // the module load path (and mockable in tests).
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { loadSectionSnapshots } = require('@/lib/stores/feed-sections-selector') as typeof import('@/lib/stores/feed-sections-selector');
+    const { loadSectionSnapshots } = require('@/lib/stores/section-snapshots') as typeof import('@/lib/stores/section-snapshots');
     const snap = await loadSectionSnapshots();
     topics = snap.topics;
     facts = snap.facts;

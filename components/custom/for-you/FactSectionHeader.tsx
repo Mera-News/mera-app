@@ -5,57 +5,58 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { eventTypeIcon } from '@/components/custom/for-you/event-type-icons';
-import type { FeedSection } from '@/lib/news-harness/feed-select';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 interface FactSectionHeaderProps {
-  section: FeedSection;
-  /** event_type of the section's top item — drives the icon prefix. */
+  /** `fact` rows show the "News about:" prefix + the fact title; `also` renders
+   *  the static "Also for you" string. */
+  kind: 'fact' | 'also';
+  /** The fact's display title (fact rows only — ignored for `also`). */
+  title: string;
+  /** event_type of the row's top item — drives the icon prefix. */
   eventType: string | null;
-  /** The owning fact's real statement — revealed on tap ("why this section"). */
-  factStatement: string | null;
+  /** When set, the whole header is tappable and opens the full fact feed. */
+  onPress?: () => void;
 }
 
 /**
- * Section header for the fact-sectioned For You feed (Wave 7c N2).
+ * Row header for the fact-rows For You feed (Round-3 C2).
  *
- * Fact sections render a "News about:" prefix + the section title (dynamic, so
- * translated via TranslatableDynamic — NOT a static i18n key), an event-type
- * icon prefix when the top item carries one, and a tap affordance that reveals
- * the owning fact's statement inline (the why-this-section loop). Headline and
- * "also for you" sections render just their title (no prefix / reveal).
+ * Fact rows render a "News about:" prefix + the fact title (dynamic, so
+ * translated via TranslatableDynamic), an optional event-type icon, and — when
+ * `onPress` is supplied — a chevron affordance whose tap opens the fact's full
+ * feed (`FactFeedScreen`). The "Also for you" catch-all header renders just its
+ * static title (no prefix / navigation).
  */
 const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
-  section,
+  kind,
+  title,
   eventType,
-  factStatement,
+  onPress,
 }) => {
   const { t } = useTranslation();
-  const [revealed, setRevealed] = useState(false);
 
-  const isFact = section.kind === 'fact';
-  const isAlso = section.kind === 'also';
+  const isFact = kind === 'fact';
   const icon = eventTypeIcon(eventType);
-  const canReveal = isFact && !!factStatement;
+  const canPress = isFact && !!onPress;
 
-  // "Also for you" is a static UI string; fact/headline titles are dynamic.
-  const titleNode = isAlso ? (
-    <Text size="lg" bold numberOfLines={1} className="text-white">
-      {t('forYou.alsoForYou')}
-    </Text>
-  ) : (
+  const titleNode = isFact ? (
     <TranslatableDynamic
-      text={section.title}
+      text={title}
       as="heading"
       size="lg"
       bold
       numberOfLines={1}
       className="text-white"
     />
+  ) : (
+    <Text size="lg" bold numberOfLines={1} className="text-white">
+      {t('forYou.alsoForYou')}
+    </Text>
   );
 
   const HeaderInner = (
@@ -68,33 +69,22 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       <HStack className="items-center" space="sm">
         {icon && <MaterialIcons name={icon} size={20} color={ACCENT} />}
         <Box className="flex-1 min-w-0">{titleNode}</Box>
-        {canReveal && (
-          <MaterialIcons
-            name={revealed ? 'expand-less' : 'help-outline'}
-            size={18}
-            color="rgb(163, 163, 163)"
-          />
+        {canPress && (
+          <MaterialIcons name="chevron-right" size={22} color="rgb(163, 163, 163)" />
         )}
       </HStack>
-      {canReveal && revealed && (
-        <Box className="mt-2 rounded-lg bg-gray-900 border border-gray-800 px-3 py-2">
-          <Text size="xs" className="text-typography-400">
-            {factStatement}
-          </Text>
-        </Box>
-      )}
     </VStack>
   );
 
-  if (!canReveal) {
+  if (!canPress) {
     return HeaderInner;
   }
 
   return (
     <Pressable
-      onPress={() => setRevealed((v) => !v)}
+      onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={t('forYou.whySection')}
+      accessibilityLabel={t('forYou.openFactFeed')}
     >
       {HeaderInner}
     </Pressable>
