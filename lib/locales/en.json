@@ -281,6 +281,8 @@
     "lastProcessed": "Last processed",
     "errorTitle": "Scoring problem",
     "openA11y": "Open feed status",
+    "expandA11y": "Show feed status details",
+    "collapseA11y": "Hide feed status details",
     "close": "Close"
   },
   "trackedStories": {
@@ -295,7 +297,14 @@
     "timelineQuietNote": "No new coverage gathered yet. We'll add developments here as this story unfolds.",
     "railTitle": "Following",
     "untrackConfirmTitle": "Stop following?",
-    "untrackConfirmBody": "You'll no longer see new developments for this story."
+    "untrackConfirmBody": "You'll no longer see new developments for this story.",
+    "proposeThinking": "Mera is figuring out what to track…",
+    "proposeLabel": "Track this",
+    "proposeTweakPlaceholder": "Track something else about this article…",
+    "proposeTrack": "Track",
+    "proposeCancel": "Cancel",
+    "proposeError": "Couldn't come up with something to track.",
+    "proposeRetry": "Try again"
   },
   "triage": {
     "title": "Review",

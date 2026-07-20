@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 39,
+  version: 40,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -423,6 +423,18 @@ export default appSchema({
         { name: 'last_checked_at', type: 'number', isOptional: true },
         { name: 'miss_count', type: 'number' },
         { name: 'status', type: 'string' },
+        // ── Topic-linked tracking (schema v40) ─────────────────────────
+        // A tracked story is a user-owned TOPIC continuously linked server-side
+        // every pipeline cycle. `topic_id`/`topic_text` point at the minted
+        // `topics` row; the reconcile matches suggestions whose matchedTopics
+        // carry `topic_id`. `member_snapshots_json` is a capped (50), newest-
+        // first-by-pubDate JSON array of lean card snapshots
+        // [{articleId, title, pubDateMs, imageUrl?, publicationName?}] so the
+        // timeline renders locally-discovered members without a server round
+        // trip. All optional — legacy (cluster-id) rows leave them null.
+        { name: 'topic_id', type: 'string', isOptional: true },
+        { name: 'topic_text', type: 'string', isOptional: true },
+        { name: 'member_snapshots_json', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],

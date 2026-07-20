@@ -8,12 +8,40 @@ import { Q } from '@nozbe/watermelondb';
 import { map } from 'rxjs';
 import database from '../index';
 import type TrackedStoryModel from '../models/TrackedStory';
+import type { TrackedStoryMemberSnapshot } from '../models/TrackedStory';
 import logger from '../../logger';
+
+export type { TrackedStoryMemberSnapshot } from '../models/TrackedStory';
 
 const collection = database.get<TrackedStoryModel>('tracked_stories');
 
 /** Newest-first cap on a story's remembered member article ids. */
 const MAX_MEMBER_IDS = 30;
+
+/** Newest-first (by pubDate) cap on a story's remembered member snapshots. */
+const MAX_MEMBER_SNAPSHOTS = 50;
+
+/**
+ * Merge new member snapshots into an existing set: new snapshots win on id
+ * collision, the result is sorted strictly newest-first by `pubDateMs`, and
+ * capped at {@link MAX_MEMBER_SNAPSHOTS}. Pure — shared by seed + applyUpdates.
+ */
+export function mergeMemberSnapshots(
+  existing: TrackedStoryMemberSnapshot[],
+  incoming: TrackedStoryMemberSnapshot[],
+): TrackedStoryMemberSnapshot[] {
+  const byId = new Map<string, TrackedStoryMemberSnapshot>();
+  for (const s of existing) {
+    if (s && typeof s.articleId === 'string' && s.articleId) byId.set(s.articleId, s);
+  }
+  // Incoming overwrites existing on the same article id (freshest fields win).
+  for (const s of incoming) {
+    if (s && typeof s.articleId === 'string' && s.articleId) byId.set(s.articleId, s);
+  }
+  return [...byId.values()]
+    .sort((a, b) => (b.pubDateMs ?? 0) - (a.pubDateMs ?? 0))
+    .slice(0, MAX_MEMBER_SNAPSHOTS);
+}
 
 /**
  * Consecutive reconcile misses before a story auto-ends. The reconcile poll
@@ -27,12 +55,24 @@ export interface TrackStoryInput {
   articleId: string;
   title: string;
   originSurface: string;
+  // ── Topic-linked tracking (v40) ──
+  /** The minted `topics` row this story follows (topic-linked stories). */
+  topicId?: string | null;
+  /** The accepted proposal text (the topic's text). */
+  topicText?: string | null;
+  /** When set, the headline is written directly (topic-linked stories skip the
+   *  separate story_headline job — the accepted proposal IS the headline). */
+  llmHeadline?: string | null;
+  /** Snapshot of the originating article, seeded into member_snapshots_json. */
+  initialSnapshot?: TrackedStoryMemberSnapshot | null;
 }
 
 export interface ApplyUpdatesInput {
   newMemberIds: string[];
   latestArticleId?: string | null;
   latestTitle?: string | null;
+  /** Lean card snapshots for the new members (merged newest-first, capped 50). */
+  newSnapshots?: TrackedStoryMemberSnapshot[];
 }
 
 /** Lean projection for the reconcile poll (avoids passing live models around). */
@@ -41,6 +81,13 @@ export interface TrackedStoryReconcileRow {
   stableClusterId: string;
   memberArticleIds: string[];
   latestArticleId: string | null;
+}
+
+/** Lean projection for the topic-linked reconcile path (v40). */
+export interface TrackedStoryTopicReconcileRow {
+  id: string;
+  topicId: string;
+  memberArticleIds: string[];
 }
 
 /**
@@ -72,12 +119,20 @@ export async function trackStory(input: TrackStoryInput): Promise<TrackedStoryMo
   const stableClusterId = input.stableClusterId?.trim() || null;
   const originSurface = input.originSurface?.trim() || null;
 
+  const topicId = input.topicId?.trim() || null;
+  const topicText = input.topicText?.trim() || null;
+  const llmHeadline = input.llmHeadline?.trim() || null;
+  const initialSnapshot =
+    input.initialSnapshot && input.initialSnapshot.articleId
+      ? [input.initialSnapshot]
+      : [];
+
   let created!: TrackedStoryModel;
   await database.write(async () => {
     created = await collection.create((m) => {
       m.stableClusterId = stableClusterId;
       m.memberArticleIds = articleId ? [articleId] : [];
-      m.llmHeadline = null;
+      m.llmHeadline = llmHeadline;
       m.fallbackTitle = title;
       m.latestArticleId = articleId || null;
       m.latestTitle = title || null;
@@ -87,6 +142,9 @@ export async function trackStory(input: TrackStoryInput): Promise<TrackedStoryMo
       m.lastCheckedAt = null;
       m.missCount = 0;
       m.status = 'active';
+      m.topicId = topicId;
+      m.topicText = topicText;
+      m.memberSnapshots = initialSnapshot;
     });
   });
   return created;
@@ -184,6 +242,12 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
         m.unseenCount = (m.unseenCount ?? 0) + newIds.length;
         m.lastUpdateAt = new Date();
         m.missCount = 0;
+        if (updates.newSnapshots && updates.newSnapshots.length > 0) {
+          m.memberSnapshots = mergeMemberSnapshots(
+            m.memberSnapshots ?? [],
+            updates.newSnapshots,
+          );
+        }
         if (updates.latestArticleId) m.latestArticleId = updates.latestArticleId;
         if (updates.latestTitle) m.latestTitle = updates.latestTitle;
       });
@@ -331,12 +395,32 @@ export async function getActiveForReconcile(): Promise<TrackedStoryReconcileRow[
     .query(Q.where('status', 'active'), Q.where('stable_cluster_id', Q.notEq(null)))
     .fetch();
   return rows
-    .filter((r) => r.status === 'active' && !!r.stableClusterId) // JS guard for test mock
+    // Legacy (cluster-id) path only: topic-linked stories (v40) reconcile via
+    // `getActiveForTopicReconcile` instead — excluded here so they aren't
+    // double-processed / double-notified.
+    .filter((r) => r.status === 'active' && !!r.stableClusterId && !r.topicId)
     .map((r) => ({
       id: r.id,
       stableClusterId: r.stableClusterId as string,
       memberArticleIds: r.memberArticleIds ?? [],
       latestArticleId: r.latestArticleId ?? null,
+    }));
+}
+
+/**
+ * Active TOPIC-linked stories (v40) — the topic reconcile path's work list.
+ * A story is topic-linked once it carries a `topic_id`; the reconcile matches
+ * fresh suggestions whose `matched_topics` contain that id. Returns a lean
+ * projection so the reconcile never holds live models.
+ */
+export async function getActiveForTopicReconcile(): Promise<TrackedStoryTopicReconcileRow[]> {
+  const rows = await collection.query(Q.where('status', 'active')).fetch();
+  return rows
+    .filter((r) => r.status === 'active' && !!r.topicId) // JS guard for test mock
+    .map((r) => ({
+      id: r.id,
+      topicId: r.topicId as string,
+      memberArticleIds: r.memberArticleIds ?? [],
     }));
 }
 

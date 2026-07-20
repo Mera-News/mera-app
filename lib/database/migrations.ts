@@ -1132,5 +1132,25 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Topic-linked tracked stories (schema v40) ──────────────────
+      // A tracked story becomes a user-owned TOPIC (continuously linked
+      // server-side each cycle). Additive columns on the long-lived,
+      // user-owned `tracked_stories` table — migrate with addColumns, NEVER
+      // wipe. `topic_id`/`topic_text` reference the minted `topics` row;
+      // `member_snapshots_json` is a capped, newest-first array of lean card
+      // snapshots so the timeline can render locally-discovered members.
+      toVersion: 40,
+      steps: [
+        addColumns({
+          table: 'tracked_stories',
+          columns: [
+            { name: 'topic_id', type: 'string', isOptional: true },
+            { name: 'topic_text', type: 'string', isOptional: true },
+            { name: 'member_snapshots_json', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

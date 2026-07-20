@@ -16,7 +16,10 @@ import {
   resolveStableId,
   seedMembers,
   findActiveTrackedId,
+  getTrackedStoryById,
+  type TrackedStoryMemberSnapshot,
 } from '../database/services/tracked-story-service';
+import { createTopics, retire } from '../database/services/topic-service';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import {
   handleStoryHeadlineJob,
@@ -30,6 +33,22 @@ import logger from '../logger';
 
 /** Newest-first cap on the titles we hand the headline LLM (keeps the prompt small). */
 const MAX_HEADLINE_TITLES = 12;
+
+/** Seed weight for a topic minted from "Track story" — high enough to retrieve
+ *  strongly (see retrieval-profile), below a hand-pinned 1.0. */
+const TRACKED_TOPIC_WEIGHT = 0.85;
+
+/** Build the lean member snapshot for the originating (tapped) article. The
+ *  subject carries no pub date/image, so we stamp "now" and let the reconcile /
+ *  server archive supply richer fields for the same id later. */
+function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapshot {
+  return {
+    articleId: subject.articleId,
+    title: subject.title ?? '',
+    pubDateMs: Date.now(),
+    publicationName: subject.publicationName ?? undefined,
+  };
+}
 
 interface SeededCoverage {
   /** The stable cluster id, if the archive/cluster resolved one. */
@@ -135,6 +154,7 @@ async function triggerHeadline(trackedStoryId: string, titles: string[]): Promis
 async function enrichTrackedStory(
   trackedStoryId: string,
   subject: FeedbackSubject,
+  opts?: { skipHeadline?: boolean },
 ): Promise<void> {
   try {
     let coverage: SeededCoverage = EMPTY_COVERAGE;
@@ -164,9 +184,13 @@ async function enrichTrackedStory(
       await seedMembers(trackedStoryId, coverage.memberIds, coverage.latest ?? undefined);
     }
 
-    // Headline titles: server coverage when we have it, else the tapped title.
-    const titles = coverage.titles.length > 0 ? coverage.titles : [subject.title];
-    await triggerHeadline(trackedStoryId, titles);
+    // Topic-linked stories set their headline directly (the accepted proposal),
+    // so they skip the separate headline job. Legacy toggle-track stories still
+    // derive one from the seeded coverage titles.
+    if (!opts?.skipHeadline) {
+      const titles = coverage.titles.length > 0 ? coverage.titles : [subject.title];
+      await triggerHeadline(trackedStoryId, titles);
+    }
   } catch (err) {
     logger.warn('[track-actions] enrich failed', {
       trackedStoryId,
@@ -192,13 +216,74 @@ export async function trackStoryFromSubject(subject: FeedbackSubject): Promise<v
   void enrichTrackedStory(created.id, subject);
 }
 
-/** Unfollow the active story matching `subject` (no-op when none matches). */
+/**
+ * Follow the story described by `subject` as a TOPIC, using the proposal the
+ * user accepted in the TrackProposalSheet. Mints a `topics` row (the continuous
+ * server-side link), creates the local TrackedStory carrying that topic id +
+ * the proposal as its headline, seeds the originating article snapshot, then
+ * enriches the originating cluster in the background for archive backfill (but
+ * NOT a headline job — the accepted proposal IS the headline). Returns once the
+ * row exists; enrichment is fire-and-forget.
+ */
+export async function trackStoryWithProposal(
+  subject: FeedbackSubject,
+  proposalText: string,
+): Promise<void> {
+  const text = (proposalText ?? '').trim();
+  if (!text) return;
+
+  // 1. Mint the topic — the durable server-side link. Continue even if this
+  //    fails; the story still tracks locally against its origin cluster.
+  let topicId: string | null = null;
+  try {
+    const [topic] = await createTopics([
+      {
+        text,
+        weight: TRACKED_TOPIC_WEIGHT,
+        status: 'active',
+        provenance: 'tracked',
+        highPriority: true,
+      },
+    ]);
+    topicId = topic?.id ?? null;
+  } catch (err) {
+    logger.warn('[track-actions] topic mint failed', { error: String(err) });
+  }
+
+  // 2. Create the local story row (headline = the accepted proposal).
+  const created = await trackStory({
+    stableClusterId: subject.stableClusterId ?? null,
+    articleId: subject.articleId,
+    title: subject.title,
+    originSurface: subject.surface,
+    topicId,
+    topicText: text,
+    llmHeadline: text,
+    initialSnapshot: snapshotFromSubject(subject),
+  });
+
+  // 3. Background enrichment for the originating cluster (archive/members),
+  //    skipping the headline job.
+  void enrichTrackedStory(created.id, subject, { skipHeadline: true });
+}
+
+/** Unfollow the active story matching `subject` (no-op when none matches).
+ *  Also retires the minted topic so it stops linking server-side (dedup/history
+ *  only — mirrors how chat retires a topic; never a hard delete). */
 export async function untrackStoryFromSubject(subject: FeedbackSubject): Promise<void> {
   const id = await findActiveTrackedId({
     stableClusterId: subject.stableClusterId ?? null,
     articleId: subject.articleId,
   });
-  if (id) await untrackStory(id);
+  if (!id) return;
+  try {
+    const row = await getTrackedStoryById(id);
+    const topicId = row?.topicId ?? null;
+    if (topicId) await retire(topicId);
+  } catch (err) {
+    logger.warn('[track-actions] topic retire failed', { id, error: String(err) });
+  }
+  await untrackStory(id);
 }
 
 /** Is the story described by `subject` already followed (active only)? */

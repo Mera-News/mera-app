@@ -13,6 +13,12 @@ jest.mock('../../database/services/tracked-story-service', () => ({
   resolveStableId: jest.fn(),
   seedMembers: jest.fn(),
   findActiveTrackedId: jest.fn(),
+  getTrackedStoryById: jest.fn(),
+}));
+
+jest.mock('../../database/services/topic-service', () => ({
+  createTopics: jest.fn(),
+  retire: jest.fn(),
 }));
 
 jest.mock('../../article-service', () => ({
@@ -56,12 +62,15 @@ import {
   resolveStableId,
   seedMembers,
   findActiveTrackedId,
+  getTrackedStoryById,
 } from '../../database/services/tracked-story-service';
+import { createTopics, retire } from '../../database/services/topic-service';
 import { enqueueJob, hasPendingJob } from '../../database/services/inference-job-service';
 import { handleStoryHeadlineJob } from '../../inference/handlers/story-headline-handler';
 import { inferenceQueue } from '../../inference/InferenceQueue';
 import {
   trackStoryFromSubject,
+  trackStoryWithProposal,
   untrackStoryFromSubject,
   isSubjectTracked,
   __test,
@@ -85,6 +94,8 @@ beforeEach(() => {
   asMock(trackStory).mockResolvedValue({ id: 'row-1' });
   asMock(hasPendingJob).mockResolvedValue(false);
   asMock(handleStoryHeadlineJob).mockResolvedValue({ ok: true });
+  asMock(createTopics).mockResolvedValue([{ id: 'top-1' }]);
+  asMock(getTrackedStoryById).mockResolvedValue(null);
 });
 
 describe('trackStoryFromSubject', () => {
@@ -203,6 +214,48 @@ describe('enrichTrackedStory — archive-null fallback', () => {
   });
 });
 
+describe('trackStoryWithProposal', () => {
+  it('mints a tracked topic and creates the story with headline + snapshot', async () => {
+    await trackStoryWithProposal(SUBJECT, '  Updates on the protest  ');
+
+    expect(createTopics).toHaveBeenCalledWith([
+      expect.objectContaining({
+        text: 'Updates on the protest',
+        status: 'active',
+        provenance: 'tracked',
+        highPriority: true,
+        weight: 0.85,
+      }),
+    ]);
+    expect(trackStory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        articleId: 'art-1',
+        topicId: 'top-1',
+        topicText: 'Updates on the protest',
+        llmHeadline: 'Updates on the protest',
+        initialSnapshot: expect.objectContaining({ articleId: 'art-1' }),
+      }),
+    );
+  });
+
+  it('does not enqueue a separate headline job (headline is the proposal)', async () => {
+    asMock(ArticleService.trackStory).mockResolvedValue({
+      stableClusterId: 'clu-1',
+      articles: [{ articleId: 'art-1', title_en: 'Title one' }],
+    });
+    await trackStoryWithProposal(SUBJECT, 'Track this topic');
+    // Enrichment still runs for backfill, but skips the headline job.
+    expect(enqueueJob).not.toHaveBeenCalled();
+    expect(handleStoryHeadlineJob).not.toHaveBeenCalled();
+  });
+
+  it('no-ops on a blank proposal', async () => {
+    await trackStoryWithProposal(SUBJECT, '   ');
+    expect(createTopics).not.toHaveBeenCalled();
+    expect(trackStory).not.toHaveBeenCalled();
+  });
+});
+
 describe('untrackStoryFromSubject / isSubjectTracked', () => {
   it('untracks the matched active row', async () => {
     asMock(findActiveTrackedId).mockResolvedValue('row-7');
@@ -210,10 +263,19 @@ describe('untrackStoryFromSubject / isSubjectTracked', () => {
     expect(untrackStory).toHaveBeenCalledWith('row-7');
   });
 
+  it('retires the minted topic before untracking a topic-linked story', async () => {
+    asMock(findActiveTrackedId).mockResolvedValue('row-7');
+    asMock(getTrackedStoryById).mockResolvedValue({ id: 'row-7', topicId: 'top-9' });
+    await untrackStoryFromSubject(SUBJECT);
+    expect(retire).toHaveBeenCalledWith('top-9');
+    expect(untrackStory).toHaveBeenCalledWith('row-7');
+  });
+
   it('no-ops when nothing matches', async () => {
     asMock(findActiveTrackedId).mockResolvedValue(null);
     await untrackStoryFromSubject(SUBJECT);
     expect(untrackStory).not.toHaveBeenCalled();
+    expect(retire).not.toHaveBeenCalled();
   });
 
   it('delegates isSubjectTracked to the service', async () => {

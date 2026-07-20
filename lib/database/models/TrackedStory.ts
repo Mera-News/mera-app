@@ -3,9 +3,42 @@ import { field, date, json } from '@nozbe/watermelondb/decorators';
 
 export type TrackedStoryStatus = 'active' | 'ended';
 
+/**
+ * A lean, card-renderable snapshot of one member article, remembered so the
+ * timeline can render locally-discovered members without a server round trip.
+ * `pubDateMs` drives the strict newest-first ordering; the rest degrade
+ * gracefully when absent.
+ */
+export interface TrackedStoryMemberSnapshot {
+  articleId: string;
+  title: string;
+  pubDateMs: number;
+  imageUrl?: string;
+  publicationName?: string;
+}
+
 /** Coerce the persisted JSON column into a clean string[] (defensive). */
 const sanitizeIds = (raw: unknown): string[] =>
   Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : [];
+
+/** Coerce the persisted member-snapshot JSON column into a clean array. */
+const sanitizeSnapshots = (raw: unknown): TrackedStoryMemberSnapshot[] =>
+  Array.isArray(raw)
+    ? raw
+        .filter((x): x is TrackedStoryMemberSnapshot => !!x && typeof x === 'object')
+        .map((x) => ({
+          articleId: String((x as any).articleId ?? ''),
+          title: typeof (x as any).title === 'string' ? (x as any).title : '',
+          pubDateMs: Number((x as any).pubDateMs) || 0,
+          imageUrl:
+            typeof (x as any).imageUrl === 'string' ? (x as any).imageUrl : undefined,
+          publicationName:
+            typeof (x as any).publicationName === 'string'
+              ? (x as any).publicationName
+              : undefined,
+        }))
+        .filter((x) => x.articleId.length > 0)
+    : [];
 
 /**
  * A user-followed ("tracked") news story (schema v39). Long-lived, user-owned
@@ -34,6 +67,14 @@ export default class TrackedStory extends Model {
   @date('last_checked_at') lastCheckedAt!: Date | null;
   @field('miss_count') missCount!: number;
   @field('status') status!: TrackedStoryStatus;
+  // ── Topic-linked tracking (schema v40) ──────────────────────────────
+  // The minted `topics` row this story follows. When set, the reconcile
+  // matches suggestions by `topic_id` (not cluster id) and the story never
+  // auto-ends via cluster misses — the topic keeps linking server-side.
+  @field('topic_id') topicId!: string | null;
+  @field('topic_text') topicText!: string | null;
+  @json('member_snapshots_json', sanitizeSnapshots)
+  memberSnapshots!: TrackedStoryMemberSnapshot[];
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
 }

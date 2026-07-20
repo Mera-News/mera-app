@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
+import type { TrackedStoryMemberSnapshot } from '@/lib/database/models/TrackedStory';
 import {
     getTrackedStoryById,
     markSeen,
@@ -25,24 +26,95 @@ interface StoryTimelineScreenProps {
     onBack: () => void;
 }
 
-/** Map a durable archive snapshot onto the NewsArticle shape the compact card
- *  expects. Snapshots are lean (no descriptions / language), so unmappable
- *  fields are left undefined — the card degrades gracefully. */
-function snapshotToNewsArticle(snap: TrackedStoryArticleSnapshot): NewsArticle {
+/** The card shape both the local member snapshots and the server archive
+ *  snapshots are normalized into before rendering. `pubDateMs` drives the
+ *  strict newest-first ordering that applies regardless of source. */
+interface TimelineCard {
+    articleId: string;
+    title: string;
+    pubDateMs: number;
+    imageUrl?: string;
+    publicationName?: string;
+    countryCode?: string;
+    articleUrl?: string;
+}
+
+function serverToCard(snap: TrackedStoryArticleSnapshot): TimelineCard {
     return {
-        _id: snap.articleId,
-        title: snap.title_en,
-        title_en_internal_only: snap.title_en,
-        pubDate: snap.pubDate,
-        image_url: snap.image_url ?? undefined,
-        article_url: snap.article_url ?? undefined,
+        articleId: snap.articleId,
+        title: snap.title_en ?? '',
+        pubDateMs: snap.pubDate ? Date.parse(snap.pubDate) || 0 : 0,
+        imageUrl: snap.image_url ?? undefined,
+        publicationName: snap.publication_name ?? undefined,
+        countryCode: snap.country_code ?? undefined,
+        articleUrl: snap.article_url ?? undefined,
+    };
+}
+
+function localToCard(snap: TrackedStoryMemberSnapshot): TimelineCard {
+    return {
+        articleId: snap.articleId,
+        title: snap.title ?? '',
+        pubDateMs: snap.pubDateMs ?? 0,
+        imageUrl: snap.imageUrl,
+        publicationName: snap.publicationName,
+    };
+}
+
+/**
+ * Merge the local member snapshots with the server archive snapshots, deduped
+ * by articleId (local wins — it carries the freshest, reconcile-discovered
+ * fields), then sorted strictly newest-first by pubDate. When a local snapshot's
+ * title is empty we fall back to the server title (the server title-bug fix is
+ * landing in parallel), and vice-versa — so the card never renders blank when
+ * either source has a title.
+ */
+function mergeTimeline(
+    local: TrackedStoryMemberSnapshot[],
+    server: TrackedStoryArticleSnapshot[],
+): TimelineCard[] {
+    const byId = new Map<string, TimelineCard>();
+    for (const s of server) {
+        if (s.articleId) byId.set(s.articleId, serverToCard(s));
+    }
+    for (const l of local) {
+        if (!l.articleId) continue;
+        const base = byId.get(l.articleId);
+        const localCard = localToCard(l);
+        byId.set(l.articleId, {
+            ...base,
+            ...localCard,
+            // Title / media fall back to the server snapshot when the local one
+            // is missing them.
+            title: localCard.title || base?.title || '',
+            imageUrl: localCard.imageUrl ?? base?.imageUrl,
+            publicationName: localCard.publicationName ?? base?.publicationName,
+            countryCode: base?.countryCode,
+            articleUrl: base?.articleUrl,
+            pubDateMs: localCard.pubDateMs || base?.pubDateMs || 0,
+        });
+    }
+    return [...byId.values()].sort((a, b) => b.pubDateMs - a.pubDateMs);
+}
+
+/** Map a merged timeline card onto the NewsArticle shape the compact card
+ *  expects. Cards are lean (no descriptions / language), so unmappable fields
+ *  are left undefined — the card degrades gracefully. */
+function cardToNewsArticle(card: TimelineCard): NewsArticle {
+    return {
+        _id: card.articleId,
+        title: card.title,
+        title_en_internal_only: card.title,
+        pubDate: card.pubDateMs ? new Date(card.pubDateMs).toISOString() : undefined,
+        image_url: card.imageUrl,
+        article_url: card.articleUrl,
         original_language_code: undefined,
         publicationSource:
-            snap.publication_name || snap.country_code
+            card.publicationName || card.countryCode
                 ? ({
-                      _id: snap.articleId,
-                      publication_name: snap.publication_name,
-                      country_code: snap.country_code,
+                      _id: card.articleId,
+                      publication_name: card.publicationName,
+                      country_code: card.countryCode,
                   } as NewsArticle['publicationSource'])
                 : undefined,
     } as NewsArticle;
@@ -60,7 +132,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const insets = useSafeAreaInsets();
     const [headline, setHeadline] = useState<string>('');
     const [stableClusterId, setStableClusterId] = useState<string | null>(null);
-    const [snapshots, setSnapshots] = useState<TrackedStoryArticleSnapshot[]>([]);
+    const [cards, setCards] = useState<TimelineCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -78,13 +150,17 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 }
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
 
+                const localSnapshots = story.memberSnapshots ?? [];
                 const sid = story.stableClusterId;
                 setStableClusterId(sid ?? null);
+
+                let serverSnapshots: TrackedStoryArticleSnapshot[] = [];
                 if (sid) {
                     const archive = await ArticleService.getTrackedStory(sid);
                     if (cancelled) return;
-                    setSnapshots(archive?.articles ?? []);
+                    serverSnapshots = archive?.articles ?? [];
                 }
+                setCards(mergeTimeline(localSnapshots, serverSnapshots));
             } catch (err) {
                 logger.captureException(err, {
                     tags: { screen: 'StoryTimelineScreen', method: 'load' },
@@ -112,9 +188,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         [],
     );
 
-    const renderItem: ListRenderItem<TrackedStoryArticleSnapshot> = useCallback(
+    const renderItem: ListRenderItem<TimelineCard> = useCallback(
         ({ item }) => {
-            const article = snapshotToNewsArticle(item);
+            const article = cardToNewsArticle(item);
             return (
                 <ArticleStandaloneCompactCard
                     article={article}
@@ -131,7 +207,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     );
 
     const keyExtractor = useCallback(
-        (item: TrackedStoryArticleSnapshot, index: number) => item.articleId || `snap-${index}`,
+        (item: TimelineCard, index: number) => item.articleId || `snap-${index}`,
         [],
     );
 
@@ -176,7 +252,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
             </VStack>
 
             <FlatList
-                data={snapshots}
+                data={cards}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmpty}

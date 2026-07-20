@@ -6,12 +6,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { FeedbackSubject } from '../../components/custom/cards/feedback-subject';
-import { hapticLight, hapticSuccess } from '../haptics';
-import {
-  isSubjectTracked,
-  trackStoryFromSubject,
-  untrackStoryFromSubject,
-} from './track-actions';
+import { hapticLight } from '../haptics';
+import { useTrackProposalStore } from '../stores/track-proposal-store';
+import { isSubjectTracked, untrackStoryFromSubject } from './track-actions';
 
 export interface UseTrackedSubject {
   tracked: boolean;
@@ -48,13 +45,16 @@ export function useTrackedSubject(
 
   const toggle = useCallback(() => {
     if (tracked) {
+      // Untrack stays immediate (confirm-then-untrack lives in the caller).
       hapticLight();
       setTracked(false);
       void untrackStoryFromSubject(subject);
     } else {
-      hapticSuccess();
-      setTracked(true);
-      void trackStoryFromSubject(subject);
+      // Track now opens the AI proposal sheet; the story is only minted once the
+      // user accepts a proposal. Flip our optimistic state via the onTracked
+      // callback so the button doesn't show "tracked" while the sheet is open.
+      hapticLight();
+      useTrackProposalStore.getState().open(subject, () => setTracked(true));
     }
     // Toggle keyed on the identity fields + current state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
