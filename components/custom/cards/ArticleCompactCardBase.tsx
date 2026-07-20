@@ -66,7 +66,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   const displayTitle = titleEnglish || titleOriginal || '';
 
   return (
-    <Pressable onPress={onPress} onLongPress={onLongPress} style={dimmed ? { opacity: 0.55 } : undefined}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       <Card variant="elevated" size="sm" className="mb-3 overflow-hidden rounded-xl">
         <Box className="flex-row h-24">
           {/* Image Section - 1/4 width (25%) */}

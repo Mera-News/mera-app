@@ -367,6 +367,21 @@ export function buildTwoZoneListData(
   openedSet: Set<string> = new Set(),
   topN: number = SECTION_TOP_N,
 ): SectionedListItem[] {
+  // Nothing genuinely new above the watermark ⇒ render the CLASSIC single-zone
+  // sectioned feed (full-size cards, section grouping, no caught-up divider, no
+  // compact "Earlier" collapse). The two-zone treatment (new zone + divider +
+  // compact Earlier) is reserved for when at least one new group exists — in the
+  // nothing-new state the divider + collapsed/dimmed Earlier zone read as an
+  // empty, broken page (the reported regression), and the section navigator
+  // would vanish (no zone-1 sections). Opened-row dimming is applied by the
+  // caller (renderItem) in BOTH layouts, so it is unaffected by this branch.
+  const hasNewGroup = result.sections.some((section) =>
+    section.groups.some((g) => groupEarliestCreatedMs(g.memberIds, byId) > watermarkMs),
+  );
+  if (!hasNewGroup) {
+    return buildSectionedListData(result, expandedKeys, byId, factStatements, topN);
+  }
+
   const items: SectionedListItem[] = [];
 
   // Breaking strip — always the full set, independent of the watermark.

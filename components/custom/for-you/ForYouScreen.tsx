@@ -568,15 +568,21 @@ const MeraNewsScreen: React.FC = () => {
     const navSections = useMemo((): NavSection[] => {
         if (sectioned) {
             // Two-zone: chips reflect only the NEW (zone-1) sections, in the same
-            // order/watermark rule buildTwoZoneFeed uses. Pre-hydration fallback
-            // uses the full section set.
+            // order/watermark rule buildTwoZoneFeed uses. When nothing is new the
+            // feed falls back to the CLASSIC single-zone layout (zone-1 descriptors
+            // are empty) — so the navigator must reflect ALL sections, matching the
+            // classic feed the selector now renders. Pre-hydration (watermark null)
+            // also uses the full set.
             if (watermarkMs !== null) {
                 const byId = new Map(suggestions.map((s) => [s._id, s]));
-                return zoneOneSectionDescriptors(sectioned.result, byId, watermarkMs).map((d) => ({
-                    key: d.key,
-                    title: d.title,
-                    translatable: d.kind !== 'also',
-                }));
+                const zoneDescriptors = zoneOneSectionDescriptors(sectioned.result, byId, watermarkMs);
+                if (zoneDescriptors.length > 0) {
+                    return zoneDescriptors.map((d) => ({
+                        key: d.key,
+                        title: d.title,
+                        translatable: d.kind !== 'also',
+                    }));
+                }
             }
             return sectioned.result.sections.map((s) => ({
                 key: s.key,
@@ -991,15 +997,21 @@ const MeraNewsScreen: React.FC = () => {
                 {/* Sub-tab pills — Feed / Stories / Saved. */}
                 <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
 
-                {/* Feed-status shimmer directly under the pill row. */}
-                <View className="mt-2">
-                    <FeedStatusShimmer
-                        processing={isFeedProcessing}
-                        error={scoringError !== null}
-                        dailyLimited={isDailyLimited}
-                        onPress={openStatusSheet}
-                    />
-                </View>
+                {/* Feed-status shimmer directly under the pill row — a thin
+                    indeterminate/tinted bar with an inline expand accordion that
+                    reveals the same detail the status sheet shows. Renders nothing
+                    when idle. */}
+                <FeedStatusShimmer
+                    processing={isFeedProcessing}
+                    error={scoringError !== null}
+                    dailyLimited={isDailyLimited}
+                    processedCount={articleCount}
+                    analysedCount={analysedCount}
+                    relevantCount={relevantCount}
+                    noiseRemovedCount={noisyDiscardedCount ?? 0}
+                    injectNoiseEnabled={injectNoiseEnabled}
+                    lastProcessedLabel={lastProcessedLabel}
+                />
 
                 {/* Section navigator + offline notice — Feed sub-tab only. */}
                 {activeSubTab === 'feed' && navSections.length > 0 && (

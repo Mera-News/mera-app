@@ -68,7 +68,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   const showImage = !!imageUrl && !imageFailed;
 
   return (
-    <Pressable onPress={onPress} style={dimmed ? { opacity: 0.55 } : undefined}>
+    <Pressable onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       <Card variant="elevated" size="md" className="mb-4 overflow-hidden">
         {showImage && (
           <Box className="w-full h-48 overflow-hidden rounded-t-lg">

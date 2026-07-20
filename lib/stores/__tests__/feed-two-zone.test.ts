@@ -10,17 +10,22 @@ jest.mock('@/lib/database/index', () => {
 
 import {
   buildTwoZoneListData,
+  buildTwoZoneFeed,
+  buildSelectSectionsInput,
   zoneOneSectionDescriptors,
   EARLIER_TOP_N,
   EARLIER_EXPANSION_KEY,
+  type SectionSnapshots,
 } from '../feed-sections-selector';
-import type { ForYouSuggestion, ClusterMembership } from '../for-you-store';
+import type { ForYouSuggestion, ClusterMembership, MatchedTopicRef } from '../for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type {
   SelectSectionsResult,
   SectionGroup,
   FeedSection,
   BreakingItem,
+  TopicSnapshot,
+  FactSnapshot,
 } from '@/lib/news-harness/feed-select';
 
 const WM = Date.parse('2024-06-15T00:00:00.000Z');
@@ -91,20 +96,51 @@ describe('buildTwoZoneListData — earliest-member watermark rule', () => {
   });
 
   it('sends a NEW sibling of an already-seen story to Earlier (earliest member wins)', () => {
-    // Group g has an OLD member + a NEW member → earliest = OLD < watermark → Earlier.
-    const rows = [row('old', { createdAt: OLD_ISO }), row('new', { createdAt: NEW_ISO })];
+    // A genuinely-new group keeps the two-zone treatment active; the mixed group
+    // (OLD member + NEW member → earliest = OLD < watermark) must still fall to
+    // Earlier despite its fresh sibling.
+    const rows = [
+      row('fresh', { createdAt: NEW_ISO }),
+      row('old', { createdAt: OLD_ISO }),
+      row('new', { createdAt: NEW_ISO }),
+    ];
     const result: SelectSectionsResult = {
       breaking: [],
-      sections: [factSection('fact:f1', [grp('old', ['old', 'new'])])],
+      sections: [factSection('fact:f1', [grp('fresh', ['fresh']), grp('old', ['old', 'new'])])],
     };
     const items = buildTwoZoneListData(result, new Set(), byIdOf(rows), new Map(), WM, new Set());
 
-    expect(items.some((i) => i.type === 'suggestion-card')).toBe(false); // nothing new in zone 1
+    // Zone 1: only the genuinely-new group.
+    const cards = items.filter((i) => i.type === 'suggestion-card');
+    expect(cards.map((c) => (c.type === 'suggestion-card' ? c.data._id : ''))).toEqual(['fresh']);
     const divider = items.find((i) => i.type === 'caught-up-divider');
-    // No new section cards → empty-new variant.
-    expect(divider && divider.type === 'caught-up-divider' && divider.variant).toBe('empty-new');
+    expect(divider && divider.type === 'caught-up-divider' && divider.variant).toBe('normal');
     const earlier = items.filter((i) => i.type === 'earlier-card');
     expect(earlier.map((e) => e.key)).toEqual(['earlier:old']);
+  });
+
+  it('renders the CLASSIC single-zone feed (no divider, no Earlier) when nothing is new', () => {
+    // Every group is OLD (watermark ahead of all) → ZERO new groups. The feed must
+    // fall back to the classic sectioned layout: a fact-header + full-size
+    // suggestion-cards, and crucially NO caught-up-divider and NO compact
+    // earlier-cards — the empty-new "broken page" regression. (Reproduced here to
+    // pin it: the selector never emits a stray/empty item in this state either.)
+    const rows = [row('a', { createdAt: OLD_ISO }), row('b', { createdAt: OLD_ISO })];
+    const result: SelectSectionsResult = {
+      breaking: [],
+      sections: [factSection('fact:f1', [grp('a', ['a']), grp('b', ['b'])])],
+    };
+    const items = buildTwoZoneListData(result, new Set(), byIdOf(rows), new Map(), WM, new Set());
+
+    expect(items.some((i) => i.type === 'fact-header')).toBe(true);
+    const cards = items.filter((i) => i.type === 'suggestion-card');
+    expect(cards.map((c) => (c.type === 'suggestion-card' ? c.data._id : ''))).toEqual(['a', 'b']);
+    expect(items.some((i) => i.type === 'caught-up-divider')).toBe(false);
+    expect(items.some((i) => i.type === 'earlier-card')).toBe(false);
+    // No empty / stray item types slipped into the stream.
+    for (const it of items) {
+      expect(['fact-header', 'suggestion-card', 'show-more', 'breaking-strip']).toContain(it.type);
+    }
   });
 });
 
@@ -139,8 +175,10 @@ describe('buildTwoZoneListData — breaking + divider', () => {
 
 describe('buildTwoZoneListData — Earlier zone ordering, top-N, expansion', () => {
   function earlierResult(): { result: SelectSectionsResult; byId: Map<string, ForYouSuggestion> } {
-    // 12 earlier groups with ascending-then-scrambled rawScore; all OLD.
-    const rows: ForYouSuggestion[] = [];
+    // 12 earlier groups with ascending-then-scrambled rawScore; all OLD. A single
+    // genuinely-NEW group (in its own section) keeps the two-zone treatment active
+    // — otherwise "nothing new" now falls back to the classic single-zone feed.
+    const rows: ForYouSuggestion[] = [row('zNew', { createdAt: NEW_ISO, rawScore: 0.99 })];
     const groups: SectionGroup[] = [];
     for (let i = 0; i < 12; i++) {
       const id = `e${i}`;
@@ -148,7 +186,13 @@ describe('buildTwoZoneListData — Earlier zone ordering, top-N, expansion', () 
       groups.push(grp(id, [id], i / 100));
     }
     return {
-      result: { breaking: [], sections: [factSection('fact:f1', groups)] },
+      result: {
+        breaking: [],
+        sections: [
+          factSection('fact:new', [grp('zNew', ['zNew'], 0.99)]),
+          factSection('fact:f1', groups),
+        ],
+      },
       byId: byIdOf(rows),
     };
   }
@@ -187,13 +231,17 @@ describe('buildTwoZoneListData — Earlier zone ordering, top-N, expansion', () 
 describe('buildTwoZoneListData — opened flags', () => {
   it('flags an earlier card opened via article id OR stable cluster id', () => {
     const rows = [
+      row('nw', { createdAt: NEW_ISO }), // keeps two-zone active (genuinely new)
       row('x', { createdAt: OLD_ISO }), // opened by article id
       row('y', { createdAt: OLD_ISO, clusters: [clu('SY')] }), // opened by stable cluster id
       row('z', { createdAt: OLD_ISO }), // not opened
     ];
     const result: SelectSectionsResult = {
       breaking: [],
-      sections: [factSection('fact:f1', [grp('x', ['x']), grp('y', ['y']), grp('z', ['z'])])],
+      sections: [
+        factSection('fact:new', [grp('nw', ['nw'])]),
+        factSection('fact:f1', [grp('x', ['x']), grp('y', ['y']), grp('z', ['z'])]),
+      ],
     };
     const openedSet = new Set(['art-x', 'SY']);
     const items = buildTwoZoneListData(result, new Set(), byIdOf(rows), new Map(), WM, openedSet);
@@ -226,5 +274,98 @@ describe('zoneOneSectionDescriptors', () => {
     };
     const descriptors = zoneOneSectionDescriptors(result, byIdOf(rows), WM);
     expect(descriptors).toEqual([{ key: 'fact:new', title: 'fact:new', kind: 'fact', count: 2 }]);
+  });
+});
+
+// ── Render-gate integrity (dump-modeled) ──────────────────────────────────
+// Regression guard for the device report where the rendered feed showed only
+// low-relevance / reason_pending rows while every high-relevance `complete` row
+// (the Moonshot/Kimi/Alibaba AI cluster) was dropped. This drives the WHOLE pure
+// chain — buildSelectSectionsInput → selectSections → buildTwoZoneFeed — over a
+// fixture modeled on that dump, and asserts the gate is NOT inverted:
+//   (a) every `complete` row with relevance > 0.3 (in-window) renders,
+//   (b) scored rows (complete OR reason_pending) with relevance ≤ 0.3 never render,
+//   (c) unscored rows render regardless of relevance (progressive), and a
+//       reason_pending row > 0.3 renders (it is "scored" and above the gate).
+describe('render-gate integrity (dump-modeled feed)', () => {
+  const GATE_NOW = Date.parse('2026-07-20T14:00:00.000Z');
+  const FRESH = '2026-07-20T09:00:00.000Z'; // in-window (< 24h before GATE_NOW)
+
+  function mt(): MatchedTopicRef {
+    return { topicId: 't1', text: 'ai' };
+  }
+  // Every row shares one active, positive-weight fact so section-assignment is a
+  // constant — the ONLY variable under test is the status/relevance render gate.
+  function gateRow(id: string, relevance: number, status: ArticleSuggestionStatus): ForYouSuggestion {
+    return row(id, {
+      relevance,
+      status,
+      rawScore: status === ArticleSuggestionStatus.Unscored ? null : relevance,
+      createdAt: FRESH,
+      firstPubDate: FRESH,
+      matchedTopics: [mt()],
+    });
+  }
+
+  const RENDER = [
+    gateRow('complete_060a', 0.6, ArticleSuggestionStatus.Complete),
+    gateRow('complete_060b', 0.6, ArticleSuggestionStatus.Complete),
+    gateRow('complete_036', 0.36, ArticleSuggestionStatus.Complete),
+    gateRow('reasonpending_060', 0.6, ArticleSuggestionStatus.ReasonPending),
+    gateRow('unscored', 0, ArticleSuggestionStatus.Unscored),
+  ];
+  const DROP = [
+    gateRow('complete_030', 0.3, ArticleSuggestionStatus.Complete), // == gate → out
+    gateRow('complete_015', 0.15, ArticleSuggestionStatus.Complete),
+    gateRow('reasonpending_018', 0.18, ArticleSuggestionStatus.ReasonPending), // scored ≤ 0.3
+  ];
+  const ALL = [...RENDER, ...DROP];
+  const renderIds = RENDER.map((r) => r._id).sort();
+  const dropIds = DROP.map((r) => r._id);
+
+  const snapshots: SectionSnapshots = {
+    topics: new Map<string, TopicSnapshot>([
+      ['t1', { factId: 'f1', weight: 0.8, highPriority: false, status: 'active' }],
+    ]),
+    facts: new Map<string, FactSnapshot>([['f1', { weight: 1, createdAtMs: 100, statement: 'AI' }]]),
+    locations: new Map(),
+    factStatements: new Map([['f1', 'AI']]),
+    hasTopics: true,
+  };
+
+  it('projection keeps complete>0.3 + reason_pending>0.3 + unscored, drops scored ≤0.3', () => {
+    const projected = buildSelectSectionsInput(ALL, snapshots, GATE_NOW).suggestions.map((s) => s.id);
+    expect(projected.slice().sort()).toEqual(renderIds);
+    for (const id of dropIds) expect(projected).not.toContain(id);
+  });
+
+  it('the two-zone / classic feed renders every complete>0.3 row and never a scored ≤0.3 row', () => {
+    // Watermark far ahead of every row ⇒ nothing is "new" ⇒ the classic single-
+    // zone fallback renders (full-size suggestion-cards, no Earlier compaction).
+    // Expand the fact section so top-N never hides a renderable row.
+    const { items } = buildTwoZoneFeed(
+      ALL,
+      snapshots,
+      new Set(['fact:f1']),
+      GATE_NOW + 60_000,
+      new Set(),
+      GATE_NOW,
+    );
+
+    const rendered = items
+      .filter((i) => i.type === 'suggestion-card')
+      .map((i) => (i.type === 'suggestion-card' ? i.data._id : ''));
+
+    // (a) + (c): every renderable row is present as a full-size card.
+    for (const id of renderIds) expect(rendered).toContain(id);
+    // (b): no sub-gate scored row anywhere in the stream (not even behind show-more).
+    const allIds = items.map((i) => ('data' in i ? (i as any).data?._id : undefined));
+    for (const id of dropIds) {
+      expect(rendered).not.toContain(id);
+      expect(allIds).not.toContain(id);
+    }
+    // Classic fallback shape: no two-zone chrome when nothing is new.
+    expect(items.some((i) => i.type === 'caught-up-divider')).toBe(false);
+    expect(items.some((i) => i.type === 'earlier-card')).toBe(false);
   });
 });
