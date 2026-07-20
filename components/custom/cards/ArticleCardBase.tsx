@@ -36,6 +36,9 @@ export interface ArticleCardBaseProps {
   isNew?: boolean;
   moreSourcesCount?: number;
   recyclingKey?: string;
+  /** Dims the whole card (~0.55 opacity) — used to fade already-opened rows in
+   *  the Earlier zone. No visual change when undefined. */
+  dimmed?: boolean;
   onPress?: () => void;
   children?: React.ReactNode;
   metaAccessory?: React.ReactNode;
@@ -53,6 +56,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   isNew = false,
   moreSourcesCount,
   recyclingKey,
+  dimmed = false,
   onPress,
   children,
   metaAccessory,
@@ -64,7 +68,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   const showImage = !!imageUrl && !imageFailed;
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} style={dimmed ? { opacity: 0.55 } : undefined}>
       <Card variant="elevated" size="md" className="mb-4 overflow-hidden">
         {showImage && (
           <Box className="w-full h-48 overflow-hidden rounded-t-lg">

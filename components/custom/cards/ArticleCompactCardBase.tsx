@@ -36,6 +36,9 @@ export interface ArticleCompactCardBaseProps {
   isNew?: boolean;
   hideSource?: boolean;
   recyclingKey?: string;
+  /** Dims the whole row (~0.55 opacity) — used to fade already-opened rows in
+   *  the Earlier zone. No visual change when undefined. */
+  dimmed?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
   metaAccessory?: React.ReactNode;
@@ -54,6 +57,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   isNew = false,
   hideSource = false,
   recyclingKey,
+  dimmed = false,
   onPress,
   onLongPress,
   metaAccessory,
@@ -62,7 +66,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   const displayTitle = titleEnglish || titleOriginal || '';
 
   return (
-    <Pressable onPress={onPress} onLongPress={onLongPress}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} style={dimmed ? { opacity: 0.55 } : undefined}>
       <Card variant="elevated" size="sm" className="mb-3 overflow-hidden rounded-xl">
         <Box className="flex-row h-24">
           {/* Image Section - 1/4 width (25%) */}

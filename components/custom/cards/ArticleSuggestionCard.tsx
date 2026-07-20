@@ -33,6 +33,8 @@ interface ArticleCardProps {
   // Saved) stay pixel-identical. Future surfaces (e.g. triage) opt in.
   showActions?: boolean;
   surface?: FeedbackSurface;
+  /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
+  dimmed?: boolean;
 }
 
 export type { ArticleCardProps };
@@ -53,6 +55,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   moreSourcesCount,
   showActions = false,
   surface = 'for_you',
+  dimmed = false,
 }) => {
   const [facts, setFacts] = useState<Fact[]>([]);
 
@@ -175,6 +178,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       isNew={isNew}
       moreSourcesCount={moreSourcesCount}
       recyclingKey={suggestion._id}
+      dimmed={dimmed}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}
     >

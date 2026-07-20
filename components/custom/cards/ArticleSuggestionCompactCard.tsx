@@ -15,6 +15,8 @@ interface ArticleSuggestionCompactCardProps {
   onPress: (suggestion: ForYouSuggestion) => void;
   hideSource?: boolean;
   surface?: FeedbackSurface;
+  /** Dims the row (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
+  dimmed?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   onPress,
   hideSource = false,
   surface = 'triage',
+  dimmed = false,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -87,6 +90,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         countryCode={suggestion.country_code}
         hideSource={hideSource}
         recyclingKey={suggestion._id}
+        dimmed={dimmed}
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
         metaAccessory={metaAccessory}
