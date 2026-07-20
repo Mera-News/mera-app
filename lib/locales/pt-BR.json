@@ -184,7 +184,12 @@
       "title": "Limite diário de artigos atingido"
     },
     "moreSources_one": "+{{count}} fonte",
-    "moreSources_other": "+{{count}} fontes"
+    "moreSources_other": "+{{count}} fontes",
+    "factStages": {
+      "reading": "Lendo artigos sobre {{fact}}…",
+      "writing": "Escrevendo notas sobre {{fact}}…",
+      "otherStories": "outras histórias"
+    }
   },
   "relevance": {
     "emergency": "Emergência",
@@ -282,7 +287,14 @@
     "saveFailedTitle": "Falha ao Salvar",
     "saveFailedDescription": "Falha ao salvar suas preferências. Por favor, tente novamente.",
     "trackedStoryUpdateTitle": "Atualização da história",
-    "trackedStoryUpdateBody": "{{count}} novos artigos em uma história que você segue"
+    "trackedStoryUpdateBody": "{{count}} novos artigos em uma história que você segue",
+    "timeDescriptionOnboarding": "Escolha quando você gostaria de se atualizar com suas notícias",
+    "timeNudges": [
+      "As notícias funcionam melhor em um ou dois momentos focados por dia.",
+      "Você não precisa checar o tempo todo — deixaremos tudo pronto quando você quiser.",
+      "Menos verificações, mais tranquilas, são melhores do que um fluxo constante o dia todo.",
+      "Escolha horários que combinem com o seu dia — o Mera cuida da busca pelas notícias."
+    ]
   },
   "language": {
     "title": "Idioma",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Remover fato",
     "actionAddTopics": "Adicionar tópicos",
     "actionRemoveTopics": "Remover tópicos",
-    "actionFeatureRequest": "Enviar solicitação de recurso para a equipe da Mera"
+    "actionFeatureRequest": "Enviar solicitação de recurso para a equipe da Mera",
+    "actionShowLessTopic": "Mostrar menos de um tópico",
+    "actionShowMoreTopic": "Mostrar mais de um tópico",
+    "actionDownRank": "Diminuir a prioridade de um tópico",
+    "actionPublicationPref": "Ajustar uma publicação",
+    "actionSuppress": "Filtrar uma frase",
+    "actionPinTopic": "Fixar um tópico",
+    "actionUnpinTopic": "Desafixar um tópico",
+    "actionRetireTopic": "Encerrar um tópico",
+    "chooseOneHint": "Escolha uma opção"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publicações que você tem lido",
@@ -775,17 +796,10 @@
     "alsoForYou": "Também para você",
     "breaking": "Urgente",
     "showMore": "Mostrar mais {{count}}",
-    "whySection": "Por que esta seção",
-    "triageEntry": "Revisar um de cada vez",
     "subTabFeed": "Feed",
     "subTabStories": "Histórias",
     "subTabSaved": "Salvos",
-    "newStoriesPill_one": "{{count}} nova história",
-    "newStoriesPill_other": "{{count}} novas histórias",
-    "caughtUp": "Você está em dia",
-    "caughtUpHint": "Aqui está tudo de antes",
-    "earlier": "Antes",
-    "earlierShowMore": "Mostrar mais {{count}} anteriores"
+    "openFactFeed": "Ver todas as histórias sobre este tópico"
   },
   "feedStatus": {
     "title": "Status do feed",
@@ -819,18 +833,6 @@
     "untrackConfirmBody": "Você não verá mais novos desenvolvimentos desta história.",
     "trackChatSeed": "Quero seguir esta história.",
     "trackProposalTitle": "Seguir esta história?"
-  },
-  "triage": {
-    "bad": "Não é para mim",
-    "close": "Fechar",
-    "good": "Bom",
-    "progress": "{{current}} / {{total}}",
-    "read": "Ler",
-    "save": "Salvar",
-    "skip": "Pular",
-    "tellWhy": "Diga-nos por quê",
-    "title": "Revisar",
-    "upNext": "A seguir"
   },
   "whatsNew": {
     "title": "Novidades",

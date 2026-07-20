@@ -46,6 +46,27 @@ article-pipeline/
   scoring.ts     — batched relevance calls, reason calls, response parsing, bucketing
   candidates.ts  — deriveTopicTexts, buildCandidatesFromArticles
   pipeline.ts    — runArticlePipeline: facts→topics→ids→articles→candidates→scores→reasons
+scoring-engine/
+  relevance.ts       — deterministic math affinity/penalty engine; ALWAYS the
+                       persisted score authority. No freshness/age-decay term
+                       (removed Round 3 — see Config philosophy below).
+  judge.ts / judge-calls.ts — LLM judge over the math score. ADVISORY ONLY
+                       (Round 3): authors the user-facing note; its returned
+                       score is never applied, only recorded (+ the >0.3-delta
+                       `override` flag) as a `CalibrationCase`.
+  calibration.ts     — rolling-window override tracking + the user-gated
+                       gateway constant-tuning loop; unchanged by the
+                       advisory-judge move, still fed by the override flag.
+  run-stage.ts       — computeAndJudge: compute math → persist math → judge
+                       (advisory) → note.
+feed-select/
+  ownership.ts   — resolveOwnership / resolveOwningFact + bucketOf: the shared
+                   ownership + display-tier cores, used by both the fact-rows
+                   feed selector (`lib/stores/fact-rows-selector.ts`) and the
+                   per-fact scoring batcher (`lib/services/fact-batching.ts`).
+                   The old sectioned/two-zone `sections.ts` and swipe-deck
+                   `deck.ts` were deleted in Round 3 — only these ownership
+                   cores (+ `fact-stats.ts`) remain here.
 article-feedback/
   agent-core.ts  — ArticleFeedbackAgent brain (system prompt, context, tools, propose/confirm)
 index.ts         — public surface (re-exports every module above)
@@ -77,6 +98,17 @@ change** and will fail that test until the test is updated deliberately. For
 local experiments, do **not** edit the defaults — pass a per-run
 `--config overrides.json` that is merged over the defaults for that run only.
 
+`scoringEngine` (the math affinity engine, `relevance.ts`) has **no
+freshness/age-decay component** — `W_FRESH` was removed in Round 3 and the
+remaining seven positive weights (`W_TOPIC`/`W_BREADTH`/`W_GEO`/`W_ENTITY`/
+`W_EVENT`/`W_PUB`/`W_POP`) were renormalized proportionally so full-saturation
+affinity still lands ≈1.0; current values are in `core/config.ts`. The math
+score is **always** what gets persisted — the LLM judge (`judge.ts`) is
+advisory only: it authors the user-facing note, and its own score is recorded
+solely as a calibration signal (the existing >0.3-delta `override` flag),
+never applied to the live relevance. The calibration loop itself is
+unchanged and stays user-gated.
+
 ### How the app consumes the same code (shim list)
 
 These app-side files are thin adapters/re-exports over the harness — they keep
@@ -92,6 +124,26 @@ behavior (the golden-prompt test guards this):
 
 > Local (llama.rn) on-device prompts are **not** exercised by harness-local —
 > it drives the cloud prompts only.
+
+### Feed assembly & per-fact cloud scoring (app-side, Round 3)
+
+Two app-side files (outside `lib/news-harness/`, so not harness-pure, but
+built directly on the `feed-select/ownership.ts` cores above) replaced the
+old sectioned/two-zone For-You view and its single-shot cloud scoring job:
+
+- **`lib/stores/fact-rows-selector.ts`** — the pure selector behind the
+  For-You view. There is no more sectioned/watermark/two-zone/deck view: the
+  feed is per-fact horizontal rows (+ a trailing "Also for you" catch-all),
+  built from the render-gated 24h suggestion pool via `resolveOwnership`. A
+  card enters its row once its note exists (or is deliberately reason-skipped).
+- **`lib/services/fact-batching.ts`** + **`lib/services/scoring-pipeline.ts`**
+  — cloud scoring is per-fact batched. Candidates are grouped by their
+  primary (strongest owning) fact — `groupCandidatesByPrimaryFact`, reusing
+  `resolveOwningFact` — chunked per fact (facts with <3 candidates merge into
+  a `factId: null` tail). Per batch: the math score is computed and persisted
+  **immediately**; then ONE combined judge+notes cloud job runs per batch,
+  whose only effect is filling in notes — the judge never rewrites the
+  already-persisted math score (advisory-only, see Config philosophy below).
 
 ## 3. Running locally
 

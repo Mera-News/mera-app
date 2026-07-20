@@ -184,7 +184,12 @@
       "title": "Günlük makale sınırına ulaşıldı"
     },
     "moreSources_one": "+{{count}} kaynak",
-    "moreSources_other": "+{{count}} kaynak"
+    "moreSources_other": "+{{count}} kaynak",
+    "factStages": {
+      "reading": "{{fact}} için makaleler okunuyor…",
+      "writing": "{{fact}} için notlar yazılıyor…",
+      "otherStories": "diğer haberler"
+    }
   },
   "relevance": {
     "emergency": "Acil",
@@ -282,7 +287,14 @@
     "saveFailedTitle": "Kaydetme Başarısız",
     "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
     "trackedStoryUpdateTitle": "Haber güncellendi",
-    "trackedStoryUpdateBody": "Takip ettiğin bir haberde {{count}} yeni makale"
+    "trackedStoryUpdateBody": "Takip ettiğin bir haberde {{count}} yeni makale",
+    "timeDescriptionOnboarding": "Haberlerine ne zaman göz atmak istediğini seç",
+    "timeNudges": [
+      "Haberler, günde bir ya da iki odaklanmış anda en iyi şekilde işler.",
+      "Sürekli kontrol etmene gerek yok — sen hazır olduğunda biz de hazır olacağız.",
+      "Daha az ve sakin kontroller, gün boyu süren bilgi akışından daha iyidir.",
+      "Gününe uyan saatleri seç — toplama işini Mera halleder."
+    ]
   },
   "language": {
     "title": "Dil",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Bilgiyi kaldır",
     "actionAddTopics": "Konu ekle",
     "actionRemoveTopics": "Konu kaldır",
-    "actionFeatureRequest": "Mera ekibine özellik talebi gönder"
+    "actionFeatureRequest": "Mera ekibine özellik talebi gönder",
+    "actionShowLessTopic": "Konuyu daha az göster",
+    "actionShowMoreTopic": "Konuyu daha çok göster",
+    "actionDownRank": "Konunun önceliğini düşür",
+    "actionPublicationPref": "Bir yayını ayarla",
+    "actionSuppress": "Bir ifadeyi filtrele",
+    "actionPinTopic": "Konuyu sabitle",
+    "actionUnpinTopic": "Konunun sabitini kaldır",
+    "actionRetireTopic": "Konuyu emekliye ayır",
+    "chooseOneHint": "Bir seçenek seç"
   },
   "publicationVisits": {
     "topVisitedTitle": "Okuduğun yayınlar",
@@ -775,17 +796,10 @@
     "alsoForYou": "Senin için de",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
-    "whySection": "Bu bölüm neden burada",
-    "triageEntry": "Tek tek incele",
     "subTabFeed": "Akış",
     "subTabStories": "Haberler",
     "subTabSaved": "Kaydedilenler",
-    "newStoriesPill_one": "{{count}} yeni haber",
-    "newStoriesPill_other": "{{count}} yeni haber",
-    "caughtUp": "Her şeyi gördün",
-    "caughtUpHint": "Öncekilerin hepsi burada",
-    "earlier": "Daha önce",
-    "earlierShowMore": "{{count}} tane daha eski göster"
+    "openFactFeed": "Bu konuyla ilgili tüm haberleri gör"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -820,18 +834,6 @@
     "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin.",
     "trackChatSeed": "Bu haberi takip etmek istiyorum.",
     "trackProposalTitle": "Bu haberi takip et?"
-  },
-  "triage": {
-    "title": "İncele",
-    "progress": "{{current}} / {{total}}",
-    "close": "Kapat",
-    "upNext": "Sırada",
-    "read": "Oku",
-    "good": "İyi",
-    "bad": "Bana göre değil",
-    "tellWhy": "Nedenini söyle",
-    "save": "Kaydet",
-    "skip": "Geç"
   },
   "whatsNew": {
     "title": "Yenilikler",

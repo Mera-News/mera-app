@@ -184,7 +184,12 @@
       "title": "Daglimiet voor artikelen bereikt"
     },
     "moreSources_one": "+{{count}} bron",
-    "moreSources_other": "+{{count}} bronnen"
+    "moreSources_other": "+{{count}} bronnen",
+    "factStages": {
+      "reading": "Artikelen lezen voor {{fact}}…",
+      "writing": "Notities schrijven voor {{fact}}…",
+      "otherStories": "andere verhalen"
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -282,7 +287,14 @@
     "saveFailedTitle": "Opslaan mislukt",
     "saveFailedDescription": "Voorkeuren opslaan mislukt. Probeer het opnieuw.",
     "trackedStoryUpdateTitle": "Verhaalupdate",
-    "trackedStoryUpdateBody": "{{count}} nieuwe artikelen in een verhaal dat je volgt"
+    "trackedStoryUpdateBody": "{{count}} nieuwe artikelen in een verhaal dat je volgt",
+    "timeDescriptionOnboarding": "Kies wanneer je wilt bijlezen over het nieuws",
+    "timeNudges": [
+      "Nieuws werkt het best op een of twee vaste momenten per dag.",
+      "Je hoeft niet constant te checken — we zorgen dat het klaarstaat wanneer jij dat bent.",
+      "Minder, rustigere check-ins zijn beter dan de hele dag door een beetje.",
+      "Kies tijden die bij je dag passen — Mera doet het verzamelen."
+    ]
   },
   "language": {
     "title": "Taal",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Feit verwijderen",
     "actionAddTopics": "Onderwerpen toevoegen",
     "actionRemoveTopics": "Onderwerpen verwijderen",
-    "actionFeatureRequest": "Functieverzoek naar het Mera-team sturen"
+    "actionFeatureRequest": "Functieverzoek naar het Mera-team sturen",
+    "actionShowLessTopic": "Minder van een onderwerp tonen",
+    "actionShowMoreTopic": "Meer van een onderwerp tonen",
+    "actionDownRank": "Een onderwerp naar beneden plaatsen",
+    "actionPublicationPref": "Een publicatie aanpassen",
+    "actionSuppress": "Een zin uitfilteren",
+    "actionPinTopic": "Een onderwerp vastzetten",
+    "actionUnpinTopic": "Een onderwerp losmaken",
+    "actionRetireTopic": "Een onderwerp verwijderen",
+    "chooseOneHint": "Kies één optie"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publicaties die je leest",
@@ -775,17 +796,10 @@
     "alsoForYou": "Ook voor jou",
     "breaking": "Breaking",
     "showMore": "Toon {{count}} meer",
-    "whySection": "Waarom deze sectie",
-    "triageEntry": "Eén voor één beoordelen",
     "subTabFeed": "Feed",
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen",
-    "newStoriesPill_one": "{{count}} nieuw verhaal",
-    "newStoriesPill_other": "{{count}} nieuwe verhalen",
-    "caughtUp": "Je bent helemaal bij",
-    "caughtUpHint": "Hier is alles van eerder",
-    "earlier": "Eerder",
-    "earlierShowMore": "Toon {{count}} meer eerdere"
+    "openFactFeed": "Bekijk alle verhalen over dit onderwerp"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -819,18 +833,6 @@
     "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal.",
     "trackChatSeed": "Ik wil dit verhaal volgen.",
     "trackProposalTitle": "Dit verhaal volgen?"
-  },
-  "triage": {
-    "title": "Beoordelen",
-    "progress": "{{current}} / {{total}}",
-    "close": "Sluiten",
-    "upNext": "Hierna",
-    "read": "Lezen",
-    "good": "Goed",
-    "bad": "Niets voor mij",
-    "tellWhy": "Vertel ons waarom",
-    "save": "Opslaan",
-    "skip": "Overslaan"
   },
   "whatsNew": {
     "title": "Wat is er nieuw",

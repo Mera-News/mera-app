@@ -183,7 +183,12 @@
       "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka pada {{time}}.",
       "title": "Batas artikel harian tercapai"
     },
-    "moreSources_other": "+{{count}} sumber"
+    "moreSources_other": "+{{count}} sumber",
+    "factStages": {
+      "reading": "Membaca artikel untuk {{fact}}…",
+      "writing": "Menulis catatan untuk {{fact}}…",
+      "otherStories": "cerita lainnya"
+    }
   },
   "relevance": {
     "emergency": "Darurat",
@@ -281,7 +286,14 @@
     "saveFailedTitle": "Gagal Menyimpan",
     "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
     "trackedStoryUpdateTitle": "Pembaruan cerita",
-    "trackedStoryUpdateBody": "{{count}} artikel baru dalam cerita yang Anda ikuti"
+    "trackedStoryUpdateBody": "{{count}} artikel baru dalam cerita yang Anda ikuti",
+    "timeDescriptionOnboarding": "Pilih kapan Anda ingin mengejar ketinggalan berita Anda",
+    "timeNudges": [
+      "Berita bekerja paling baik dalam satu atau dua momen fokus sehari.",
+      "Anda tidak perlu memeriksa terus-menerus — kami akan menyiapkannya saat Anda siap.",
+      "Pengecekan yang lebih sedikit dan tenang lebih baik daripada notifikasi sepanjang hari.",
+      "Pilih waktu yang sesuai dengan hari Anda — Mera yang akan mengumpulkannya."
+    ]
   },
   "language": {
     "title": "Bahasa",
@@ -598,7 +610,16 @@
     "actionDeleteFact": "Hapus fakta",
     "actionAddTopics": "Tambah topik",
     "actionRemoveTopics": "Hapus topik",
-    "actionFeatureRequest": "Kirim permintaan fitur ke tim Mera"
+    "actionFeatureRequest": "Kirim permintaan fitur ke tim Mera",
+    "actionShowLessTopic": "Tampilkan lebih sedikit dari suatu topik",
+    "actionShowMoreTopic": "Tampilkan lebih banyak dari suatu topik",
+    "actionDownRank": "Turunkan peringkat suatu topik",
+    "actionPublicationPref": "Sesuaikan suatu publikasi",
+    "actionSuppress": "Saring suatu frasa",
+    "actionPinTopic": "Sematkan suatu topik",
+    "actionUnpinTopic": "Lepas sematan suatu topik",
+    "actionRetireTopic": "Hentikan suatu topik",
+    "chooseOneHint": "Pilih salah satu opsi"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publikasi yang Anda baca",
@@ -774,16 +795,10 @@
     "alsoForYou": "Juga untuk Anda",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
-    "whySection": "Mengapa bagian ini",
-    "triageEntry": "Tinjau satu per satu",
     "subTabFeed": "Feed",
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan",
-    "newStoriesPill_other": "{{count}} cerita baru",
-    "caughtUp": "Anda sudah mengikuti semuanya",
-    "caughtUpHint": "Berikut semua dari sebelumnya",
-    "earlier": "Sebelumnya",
-    "earlierShowMore": "Tampilkan {{count}} lagi dari sebelumnya"
+    "openFactFeed": "Lihat semua cerita untuk topik ini"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -817,18 +832,6 @@
     "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini.",
     "trackChatSeed": "Saya ingin mengikuti cerita ini.",
     "trackProposalTitle": "Ikuti cerita ini?"
-  },
-  "triage": {
-    "title": "Tinjau",
-    "progress": "{{current}} / {{total}}",
-    "close": "Tutup",
-    "upNext": "Berikutnya",
-    "read": "Baca",
-    "good": "Bagus",
-    "bad": "Bukan untuk saya",
-    "tellWhy": "Beri tahu kami alasannya",
-    "save": "Simpan",
-    "skip": "Lewati"
   },
   "whatsNew": {
     "title": "Yang baru",

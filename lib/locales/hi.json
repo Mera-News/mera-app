@@ -184,7 +184,12 @@
       "title": "दैनिक लेख सीमा पूरी हो गई"
     },
     "moreSources_one": "+{{count}} स्रोत",
-    "moreSources_other": "+{{count}} स्रोत"
+    "moreSources_other": "+{{count}} स्रोत",
+    "factStages": {
+      "reading": "{{fact}} के लिए लेख पढ़े जा रहे हैं…",
+      "writing": "{{fact}} के लिए नोट्स लिखे जा रहे हैं…",
+      "otherStories": "अन्य स्टोरीज़"
+    }
   },
   "relevance": {
     "emergency": "आपातकालीन",
@@ -282,7 +287,14 @@
     "saveFailedTitle": "सहेजना विफल",
     "saveFailedDescription": "आपकी प्राथमिकताएं सहेजने में विफल। कृपया पुनः प्रयास करें।",
     "trackedStoryUpdateTitle": "स्टोरी अपडेट",
-    "trackedStoryUpdateBody": "आपके द्वारा फ़ॉलो की जा रही स्टोरी में {{count}} नए लेख"
+    "trackedStoryUpdateBody": "आपके द्वारा फ़ॉलो की जा रही स्टोरी में {{count}} नए लेख",
+    "timeDescriptionOnboarding": "चुनें कि आप अपने समाचार से कब अपडेट होना चाहते हैं",
+    "timeNudges": [
+      "समाचार दिन में एक या दो केंद्रित पलों में सबसे बेहतर काम करते हैं।",
+      "आपको लगातार जांचते रहने की ज़रूरत नहीं — जब आप तैयार होंगे, तब तक यह तैयार रहेगा।",
+      "कम और शांत चेक-इन, दिन भर की लगातार सूचनाओं से बेहतर हैं।",
+      "ऐसे समय चुनें जो आपके दिन में फिट बैठें — बाकी जुटाने का काम Mera करेगा।"
+    ]
   },
   "language": {
     "title": "भाषा",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "तथ्य हटाएँ",
     "actionAddTopics": "विषय जोड़ें",
     "actionRemoveTopics": "विषय हटाएँ",
-    "actionFeatureRequest": "Mera टीम को फ़ीचर अनुरोध भेजें"
+    "actionFeatureRequest": "Mera टीम को फ़ीचर अनुरोध भेजें",
+    "actionShowLessTopic": "किसी विषय को कम दिखाएं",
+    "actionShowMoreTopic": "किसी विषय को अधिक दिखाएं",
+    "actionDownRank": "किसी विषय को डाउनरैंक करें",
+    "actionPublicationPref": "किसी प्रकाशन को समायोजित करें",
+    "actionSuppress": "किसी वाक्यांश को फ़िल्टर करें",
+    "actionPinTopic": "किसी विषय को पिन करें",
+    "actionUnpinTopic": "किसी विषय को अनपिन करें",
+    "actionRetireTopic": "किसी विषय को रिटायर करें",
+    "chooseOneHint": "एक विकल्प चुनें"
   },
   "publicationVisits": {
     "topVisitedTitle": "आप जो प्रकाशन पढ़ रहे हैं",
@@ -775,17 +796,10 @@
     "alsoForYou": "आपके लिए ये भी",
     "breaking": "ब्रेकिंग",
     "showMore": "{{count}} और दिखाएं",
-    "whySection": "यह सेक्शन क्यों",
-    "triageEntry": "एक-एक करके समीक्षा करें",
     "subTabFeed": "फ़ीड",
     "subTabStories": "स्टोरीज़",
     "subTabSaved": "सहेजे गए",
-    "newStoriesPill_one": "{{count}} नई स्टोरी",
-    "newStoriesPill_other": "{{count}} नई स्टोरीज़",
-    "caughtUp": "आप पूरी तरह अपडेट हैं",
-    "caughtUpHint": "यहां पहले की सभी ख़बरें हैं",
-    "earlier": "पहले की",
-    "earlierShowMore": "{{count}} और पहले की दिखाएं"
+    "openFactFeed": "इस विषय की सभी स्टोरीज़ देखें"
   },
   "feedStatus": {
     "title": "फ़ीड स्थिति",
@@ -820,18 +834,6 @@
     "untrackConfirmBody": "अब आपको इस स्टोरी के नए घटनाक्रम नहीं दिखेंगे।",
     "trackChatSeed": "मैं इस स्टोरी को फ़ॉलो करना चाहता हूँ।",
     "trackProposalTitle": "इस स्टोरी को फ़ॉलो करें?"
-  },
-  "triage": {
-    "title": "समीक्षा",
-    "progress": "{{current}} / {{total}}",
-    "close": "बंद करें",
-    "upNext": "अगला",
-    "read": "पढ़ें",
-    "good": "अच्छा",
-    "bad": "मेरे लिए नहीं",
-    "tellWhy": "हमें कारण बताएं",
-    "save": "सहेजें",
-    "skip": "छोड़ें"
   },
   "whatsNew": {
     "title": "नया क्या है",

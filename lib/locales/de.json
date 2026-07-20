@@ -184,7 +184,12 @@
       "title": "Tägliches Artikellimit erreicht"
     },
     "moreSources_one": "+{{count}} Quelle",
-    "moreSources_other": "+{{count}} Quellen"
+    "moreSources_other": "+{{count}} Quellen",
+    "factStages": {
+      "reading": "Artikel für {{fact}} werden gelesen…",
+      "writing": "Notizen für {{fact}} werden verfasst…",
+      "otherStories": "andere Geschichten"
+    }
   },
   "relevance": {
     "emergency": "Notfall",
@@ -282,7 +287,14 @@
     "saveFailedTitle": "Speichern fehlgeschlagen",
     "saveFailedDescription": "Ihre Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
     "trackedStoryUpdateTitle": "Story-Update",
-    "trackedStoryUpdateBody": "{{count}} neue Artikel in einer Geschichte, der Sie folgen"
+    "trackedStoryUpdateBody": "{{count}} neue Artikel in einer Geschichte, der Sie folgen",
+    "timeDescriptionOnboarding": "Wählen Sie, wann Sie sich über Ihre Nachrichten informieren möchten",
+    "timeNudges": [
+      "Nachrichten funktionieren am besten in ein oder zwei fokussierten Momenten am Tag.",
+      "Sie müssen nicht ständig nachsehen — wir halten es bereit, wenn Sie so weit sind.",
+      "Weniger, ruhigere Check-ins sind besser als ein ganztägiges Rinnsal an Nachrichten.",
+      "Wählen Sie Zeiten, die zu Ihrem Tag passen — Mera übernimmt das Sammeln."
+    ]
   },
   "language": {
     "title": "Sprache",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Fakt entfernen",
     "actionAddTopics": "Themen hinzufügen",
     "actionRemoveTopics": "Themen entfernen",
-    "actionFeatureRequest": "Feature-Wunsch an das Mera-Team senden"
+    "actionFeatureRequest": "Feature-Wunsch an das Mera-Team senden",
+    "actionShowLessTopic": "Weniger von einem Thema anzeigen",
+    "actionShowMoreTopic": "Mehr von einem Thema anzeigen",
+    "actionDownRank": "Ein Thema herabstufen",
+    "actionPublicationPref": "Eine Publikation anpassen",
+    "actionSuppress": "Eine Phrase herausfiltern",
+    "actionPinTopic": "Ein Thema anheften",
+    "actionUnpinTopic": "Ein Thema loslösen",
+    "actionRetireTopic": "Ein Thema stilllegen",
+    "chooseOneHint": "Eine Option auswählen"
   },
   "publicationVisits": {
     "topVisitedTitle": "Zuletzt gelesene Publikationen",
@@ -775,17 +796,10 @@
     "alsoForYou": "Auch für Sie",
     "breaking": "Eilmeldung",
     "showMore": "{{count}} weitere anzeigen",
-    "whySection": "Warum dieser Abschnitt",
-    "triageEntry": "Einzeln durchsehen",
     "subTabFeed": "Feed",
     "subTabStories": "Geschichten",
     "subTabSaved": "Gespeichert",
-    "newStoriesPill_one": "{{count}} neue Geschichte",
-    "newStoriesPill_other": "{{count}} neue Geschichten",
-    "caughtUp": "Sie sind auf dem neuesten Stand",
-    "caughtUpHint": "Hier ist alles von vorher",
-    "earlier": "Früher",
-    "earlierShowMore": "{{count}} weitere frühere anzeigen"
+    "openFactFeed": "Alle Geschichten zu diesem Thema anzeigen"
   },
   "feedStatus": {
     "title": "Feed-Status",
@@ -819,18 +833,6 @@
     "untrackConfirmBody": "Sie sehen keine neuen Entwicklungen mehr zu dieser Geschichte.",
     "trackChatSeed": "Ich möchte dieser Geschichte folgen.",
     "trackProposalTitle": "Dieser Geschichte folgen?"
-  },
-  "triage": {
-    "title": "Überprüfung",
-    "progress": "{{current}} / {{total}}",
-    "close": "Schließen",
-    "upNext": "Als Nächstes",
-    "read": "Lesen",
-    "good": "Gut",
-    "bad": "Nichts für mich",
-    "tellWhy": "Sagen Sie uns warum",
-    "save": "Speichern",
-    "skip": "Überspringen"
   },
   "whatsNew": {
     "title": "Neuigkeiten",

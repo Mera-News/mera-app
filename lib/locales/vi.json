@@ -178,6 +178,11 @@
       "completedTitle": "Hoàn tất",
       "completedMessage": "Bản tin của bạn đã sẵn sàng"
     },
+    "factStages": {
+      "reading": "Đang đọc bài viết về {{fact}}…",
+      "writing": "Đang viết ghi chú cho {{fact}}…",
+      "otherStories": "các tin khác"
+    },
     "dailyLimit": {
       "body": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào ngày mai.",
       "bodyWithTime": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào lúc {{time}}.",
@@ -261,6 +266,13 @@
     "format24h": "24h",
     "formatAmPm": "SA/CH",
     "timeDescription": "Chọn thời điểm bạn muốn nhận thông báo để xử lý tin tức",
+    "timeDescriptionOnboarding": "Chọn thời điểm bạn muốn cập nhật tin tức",
+    "timeNudges": [
+      "Tin tức hiệu quả nhất khi bạn tập trung đọc vào một hoặc hai thời điểm trong ngày.",
+      "Bạn không cần kiểm tra liên tục — chúng tôi sẽ chuẩn bị sẵn khi bạn cần.",
+      "Ít lần kiểm tra hơn, nhẹ nhàng hơn, tốt hơn là nhận tin rải rác cả ngày.",
+      "Chọn thời điểm phù hợp với ngày của bạn — Mera sẽ lo phần thu thập tin tức."
+    ],
     "savePreferences": "Lưu tùy chọn",
     "loadFailedTitle": "Tải thất bại",
     "loadFailedDescription": "Không thể tải cài đặt thông báo.",
@@ -598,7 +610,16 @@
     "actionDeleteFact": "Xóa thông tin",
     "actionAddTopics": "Thêm chủ đề",
     "actionRemoveTopics": "Xóa chủ đề",
-    "actionFeatureRequest": "Gửi yêu cầu tính năng đến nhóm Mera"
+    "actionFeatureRequest": "Gửi yêu cầu tính năng đến nhóm Mera",
+    "actionShowLessTopic": "Hiện ít hơn về một chủ đề",
+    "actionShowMoreTopic": "Hiện nhiều hơn về một chủ đề",
+    "actionDownRank": "Giảm ưu tiên một chủ đề",
+    "actionPublicationPref": "Điều chỉnh một ấn phẩm",
+    "actionSuppress": "Lọc bỏ một cụm từ",
+    "actionPinTopic": "Ghim một chủ đề",
+    "actionUnpinTopic": "Bỏ ghim một chủ đề",
+    "actionRetireTopic": "Ngừng theo dõi một chủ đề",
+    "chooseOneHint": "Chọn một tùy chọn"
   },
   "publicationVisits": {
     "topVisitedTitle": "Ấn phẩm bạn đang đọc",
@@ -774,16 +795,10 @@
     "alsoForYou": "Cũng dành cho bạn",
     "breaking": "Nóng",
     "showMore": "Hiện thêm {{count}}",
-    "whySection": "Vì sao có mục này",
-    "triageEntry": "Xem lần lượt từng mục",
+    "openFactFeed": "Xem tất cả bài viết về chủ đề này",
     "subTabFeed": "Bản tin",
     "subTabStories": "Câu chuyện",
-    "subTabSaved": "Đã lưu",
-    "newStoriesPill_other": "{{count}} tin mới",
-    "caughtUp": "Bạn đã xem hết rồi",
-    "caughtUpHint": "Đây là mọi thứ từ trước đó",
-    "earlier": "Trước đó",
-    "earlierShowMore": "Hiện thêm {{count}} tin trước đó"
+    "subTabSaved": "Đã lưu"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
@@ -817,18 +832,6 @@
     "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa.",
     "trackChatSeed": "Tôi muốn theo dõi câu chuyện này.",
     "trackProposalTitle": "Theo dõi câu chuyện này?"
-  },
-  "triage": {
-    "title": "Xem xét",
-    "progress": "{{current}} / {{total}}",
-    "close": "Đóng",
-    "upNext": "Tiếp theo",
-    "read": "Đọc",
-    "good": "Tốt",
-    "bad": "Không hợp với tôi",
-    "tellWhy": "Cho chúng tôi biết lý do",
-    "save": "Lưu",
-    "skip": "Bỏ qua"
   },
   "whatsNew": {
     "title": "Có gì mới",

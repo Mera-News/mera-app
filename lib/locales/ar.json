@@ -188,7 +188,12 @@
     "moreSources_two": "+{{count}} مصدران",
     "moreSources_few": "+{{count}} مصادر",
     "moreSources_many": "+{{count}} مصدرًا",
-    "moreSources_other": "+{{count}} مصدر"
+    "moreSources_other": "+{{count}} مصدر",
+    "factStages": {
+      "reading": "جارٍ قراءة المقالات عن {{fact}}…",
+      "writing": "جارٍ كتابة ملاحظات عن {{fact}}…",
+      "otherStories": "قصص أخرى"
+    }
   },
   "relevance": {
     "emergency": "طارئ",
@@ -286,7 +291,14 @@
     "saveFailedTitle": "فشل الحفظ",
     "saveFailedDescription": "فشل حفظ تفضيلاتك. يرجى المحاولة مرة أخرى.",
     "trackedStoryUpdateTitle": "تحديث القصة",
-    "trackedStoryUpdateBody": "{{count}} مقالات جديدة في قصة تتابعها"
+    "trackedStoryUpdateBody": "{{count}} مقالات جديدة في قصة تتابعها",
+    "timeDescriptionOnboarding": "اختر الوقت الذي تودّ فيه متابعة أخبارك",
+    "timeNudges": [
+      "تعمل الأخبار بشكل أفضل في لحظة أو لحظتين مركّزتين يوميًا.",
+      "لا داعي للتحقق المستمر — سنجهزها لك عندما تكون مستعدًا.",
+      "تسجيلات دخول أقل وأهدأ أفضل من تدفق مستمر طوال اليوم.",
+      "اختر الأوقات التي تناسب يومك — يتولى Mera عملية التجميع."
+    ]
   },
   "language": {
     "title": "اللغة",
@@ -603,7 +615,16 @@
     "actionDeleteFact": "إزالة معلومة",
     "actionAddTopics": "إضافة مواضيع",
     "actionRemoveTopics": "إزالة مواضيع",
-    "actionFeatureRequest": "إرسال طلب ميزة إلى فريق Mera"
+    "actionFeatureRequest": "إرسال طلب ميزة إلى فريق Mera",
+    "actionShowLessTopic": "عرض أقل من موضوع",
+    "actionShowMoreTopic": "عرض المزيد من موضوع",
+    "actionDownRank": "خفض ترتيب موضوع",
+    "actionPublicationPref": "ضبط منشور",
+    "actionSuppress": "تصفية عبارة",
+    "actionPinTopic": "تثبيت موضوع",
+    "actionUnpinTopic": "إلغاء تثبيت موضوع",
+    "actionRetireTopic": "إنهاء موضوع",
+    "chooseOneHint": "اختر خيارًا واحدًا"
   },
   "publicationVisits": {
     "topVisitedTitle": "المنشورات التي كنت تقرأها",
@@ -779,21 +800,10 @@
     "alsoForYou": "أيضًا لك",
     "breaking": "عاجل",
     "showMore": "عرض {{count}} أخرى",
-    "whySection": "لماذا هذا القسم",
-    "triageEntry": "راجع واحدة تلو الأخرى",
     "subTabFeed": "الخلاصة",
     "subTabStories": "القصص",
     "subTabSaved": "المحفوظات",
-    "newStoriesPill_zero": "{{count}} قصة جديدة",
-    "newStoriesPill_one": "{{count}} قصة جديدة",
-    "newStoriesPill_two": "{{count}} قصتان جديدتان",
-    "newStoriesPill_few": "{{count}} قصص جديدة",
-    "newStoriesPill_many": "{{count}} قصةً جديدةً",
-    "newStoriesPill_other": "{{count}} قصة جديدة",
-    "caughtUp": "لقد اطّلعت على كل شيء",
-    "caughtUpHint": "إليك كل ما سبق",
-    "earlier": "سابقًا",
-    "earlierShowMore": "عرض {{count}} أخرى سابقًا"
+    "openFactFeed": "عرض كل القصص لهذا الموضوع"
   },
   "feedStatus": {
     "title": "حالة الخلاصة",
@@ -832,18 +842,6 @@
     "untrackConfirmBody": "لن ترى بعد الآن التطورات الجديدة لهذه القصة.",
     "trackChatSeed": "أريد متابعة هذه القصة.",
     "trackProposalTitle": "متابعة هذه القصة؟"
-  },
-  "triage": {
-    "title": "مراجعة",
-    "progress": "{{current}} / {{total}}",
-    "close": "إغلاق",
-    "upNext": "التالي",
-    "read": "قراءة",
-    "good": "جيد",
-    "bad": "ليس لي",
-    "tellWhy": "أخبرنا بالسبب",
-    "save": "حفظ",
-    "skip": "تخطي"
   },
   "whatsNew": {
     "title": "ما الجديد",

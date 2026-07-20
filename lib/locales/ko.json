@@ -183,7 +183,12 @@
       "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
       "title": "일일 기사 한도에 도달했습니다"
     },
-    "moreSources_other": "+{{count}}개 출처"
+    "moreSources_other": "+{{count}}개 출처",
+    "factStages": {
+      "reading": "{{fact}}에 대한 기사를 읽는 중…",
+      "writing": "{{fact}}에 대한 메모를 작성하는 중…",
+      "otherStories": "다른 소식"
+    }
   },
   "relevance": {
     "emergency": "긴급",
@@ -281,7 +286,14 @@
     "saveFailedTitle": "저장 실패",
     "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요.",
     "trackedStoryUpdateTitle": "스토리 업데이트",
-    "trackedStoryUpdateBody": "팔로우 중인 스토리에 새 기사 {{count}}건이 있습니다"
+    "trackedStoryUpdateBody": "팔로우 중인 스토리에 새 기사 {{count}}건이 있습니다",
+    "timeDescriptionOnboarding": "뉴스를 확인하고 싶은 시간을 선택해 주세요",
+    "timeNudges": [
+      "뉴스는 하루에 한두 번, 집중된 시간에 확인할 때 가장 효과적입니다.",
+      "계속 확인할 필요는 없어요 — 준비되면 저희가 알려드릴게요.",
+      "하루 종일 조금씩 확인하는 것보다 차분하게 몇 번 확인하는 것이 더 낫습니다.",
+      "하루 일정에 맞는 시간을 선택하세요 — 정보 수집은 Mera가 대신합니다."
+    ]
   },
   "language": {
     "title": "언어",
@@ -598,7 +610,16 @@
     "actionDeleteFact": "정보 삭제",
     "actionAddTopics": "주제 추가",
     "actionRemoveTopics": "주제 삭제",
-    "actionFeatureRequest": "Mera 팀에 기능 요청 보내기"
+    "actionFeatureRequest": "Mera 팀에 기능 요청 보내기",
+    "actionShowLessTopic": "주제 덜 보기",
+    "actionShowMoreTopic": "주제 더 보기",
+    "actionDownRank": "주제 순위 낮추기",
+    "actionPublicationPref": "발행사 조정",
+    "actionSuppress": "문구 필터링",
+    "actionPinTopic": "주제 고정",
+    "actionUnpinTopic": "주제 고정 해제",
+    "actionRetireTopic": "주제 제거",
+    "chooseOneHint": "옵션 하나 선택"
   },
   "publicationVisits": {
     "topVisitedTitle": "읽고 계신 발행사",
@@ -774,16 +795,10 @@
     "alsoForYou": "이런 소식도 있어요",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
-    "whySection": "이 섹션을 보여드리는 이유",
-    "triageEntry": "하나씩 검토하기",
     "subTabFeed": "피드",
     "subTabStories": "스토리",
     "subTabSaved": "저장됨",
-    "newStoriesPill_other": "새 소식 {{count}}개",
-    "caughtUp": "모두 확인하셨습니다",
-    "caughtUpHint": "이전 소식은 여기에 있습니다",
-    "earlier": "이전 소식",
-    "earlierShowMore": "이전 소식 {{count}}개 더 보기"
+    "openFactFeed": "이 토픽에 대한 모든 소식 보기"
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -817,18 +832,6 @@
     "untrackConfirmBody": "이 스토리의 새로운 진행 상황을 더 이상 확인할 수 없습니다.",
     "trackChatSeed": "이 스토리를 팔로우하고 싶어요.",
     "trackProposalTitle": "이 스토리를 팔로우할까요?"
-  },
-  "triage": {
-    "title": "검토",
-    "progress": "{{current}} / {{total}}",
-    "close": "닫기",
-    "upNext": "다음",
-    "read": "읽기",
-    "good": "좋아요",
-    "bad": "관심 없음",
-    "tellWhy": "이유를 알려주세요",
-    "save": "저장",
-    "skip": "건너뛰기"
   },
   "whatsNew": {
     "title": "새로운 기능",

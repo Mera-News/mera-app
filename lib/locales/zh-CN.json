@@ -178,6 +178,11 @@
       "completedTitle": "全部完成",
       "completedMessage": "您的资讯已准备就绪"
     },
+    "factStages": {
+      "reading": "正在阅读关于{{fact}}的文章…",
+      "writing": "正在为{{fact}}撰写笔记…",
+      "otherStories": "其他报道"
+    },
     "dailyLimit": {
       "body": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于明天解锁。",
       "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于 {{time}} 解锁。",
@@ -261,6 +266,13 @@
     "format24h": "24小时制",
     "formatAmPm": "AM/PM",
     "timeDescription": "选择您希望接收新闻推送通知的时间",
+    "timeDescriptionOnboarding": "选择您希望接收新闻更新的时间",
+    "timeNudges": [
+      "新闻最好在一天中一两个专注的时刻集中阅读。",
+      "您无需一直查看——我们会在您需要时准备好。",
+      "偶尔从容地查看，胜过一整天零散地接收信息。",
+      "选择适合您日常安排的时间——收集新闻的事交给 Mera。"
+    ],
     "savePreferences": "保存偏好设置",
     "loadFailedTitle": "加载失败",
     "loadFailedDescription": "无法加载通知设置。",
@@ -598,7 +610,16 @@
     "actionDeleteFact": "移除信息",
     "actionAddTopics": "添加主题",
     "actionRemoveTopics": "移除主题",
-    "actionFeatureRequest": "向 Mera 团队发送功能请求"
+    "actionFeatureRequest": "向 Mera 团队发送功能请求",
+    "actionShowLessTopic": "减少显示某个主题",
+    "actionShowMoreTopic": "增加显示某个主题",
+    "actionDownRank": "降低某个主题的优先级",
+    "actionPublicationPref": "调整某个媒体源",
+    "actionSuppress": "过滤掉某个短语",
+    "actionPinTopic": "置顶某个主题",
+    "actionUnpinTopic": "取消置顶某个主题",
+    "actionRetireTopic": "停用某个主题",
+    "chooseOneHint": "请选择一项"
   },
   "publicationVisits": {
     "topVisitedTitle": "您正在阅读的媒体",
@@ -774,16 +795,10 @@
     "alsoForYou": "也为你推荐",
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
-    "whySection": "为什么有这个板块",
-    "triageEntry": "逐条查看",
+    "openFactFeed": "查看关于此主题的所有报道",
     "subTabFeed": "资讯",
     "subTabStories": "报道",
-    "subTabSaved": "已保存",
-    "newStoriesPill_other": "{{count}} 条新报道",
-    "caughtUp": "您已浏览完所有内容",
-    "caughtUpHint": "这里是之前的所有内容",
-    "earlier": "更早之前",
-    "earlierShowMore": "显示更早的 {{count}} 条"
+    "subTabSaved": "已保存"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -817,18 +832,6 @@
     "untrackConfirmBody": "你将不再看到这则报道的最新进展。",
     "trackChatSeed": "我想关注这则报道。",
     "trackProposalTitle": "关注这则报道？"
-  },
-  "triage": {
-    "title": "审阅",
-    "progress": "{{current}} / {{total}}",
-    "close": "关闭",
-    "upNext": "接下来",
-    "read": "阅读",
-    "good": "喜欢",
-    "bad": "不感兴趣",
-    "tellWhy": "告诉我们原因",
-    "save": "保存",
-    "skip": "跳过"
   },
   "whatsNew": {
     "title": "更新内容",

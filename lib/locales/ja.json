@@ -178,6 +178,11 @@
       "completedTitle": "完了しました",
       "completedMessage": "フィードの準備ができました"
     },
+    "factStages": {
+      "reading": "{{fact}}に関する記事を読んでいます…",
+      "writing": "{{fact}}のためのメモを作成しています…",
+      "otherStories": "その他のストーリー"
+    },
     "dailyLimit": {
       "body": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は明日解放されます。",
       "bodyWithTime": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は{{time}}に解放されます。",
@@ -261,6 +266,13 @@
     "format24h": "24時間制",
     "formatAmPm": "AM/PM",
     "timeDescription": "ニュースを処理するための通知を受け取る時間を選択してください",
+    "timeDescriptionOnboarding": "ニュースをまとめて確認したい時間を選択してください",
+    "timeNudges": [
+      "ニュースは1日に1〜2回、集中して読むのが最も効果的です。",
+      "常にチェックする必要はありません — あなたの準備ができた時に、いつでも用意しておきます。",
+      "こまめに確認するより、少なく落ち着いてチェックする方が効果的です。",
+      "あなたの一日に合った時間を選んでください — 情報収集はMeraにお任せです。"
+    ],
     "savePreferences": "設定を保存",
     "loadFailedTitle": "読み込みに失敗しました",
     "loadFailedDescription": "通知設定を読み込めませんでした。",
@@ -598,7 +610,16 @@
     "actionDeleteFact": "情報を削除",
     "actionAddTopics": "トピックを追加",
     "actionRemoveTopics": "トピックを削除",
-    "actionFeatureRequest": "Meraチームに機能リクエストを送信"
+    "actionFeatureRequest": "Meraチームに機能リクエストを送信",
+    "actionShowLessTopic": "トピックの表示を減らす",
+    "actionShowMoreTopic": "トピックの表示を増やす",
+    "actionDownRank": "トピックを格下げする",
+    "actionPublicationPref": "出版社を調整する",
+    "actionSuppress": "フレーズを除外する",
+    "actionPinTopic": "トピックをピン留めする",
+    "actionUnpinTopic": "トピックのピン留めを解除する",
+    "actionRetireTopic": "トピックを停止する",
+    "chooseOneHint": "1つ選んでください"
   },
   "publicationVisits": {
     "topVisitedTitle": "読んでいた出版社",
@@ -774,16 +795,10 @@
     "alsoForYou": "あなたへのその他のおすすめ",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
-    "whySection": "このセクションについて",
-    "triageEntry": "1件ずつ確認する",
+    "openFactFeed": "このトピックのすべてのストーリーを見る",
     "subTabFeed": "フィード",
     "subTabStories": "ストーリー",
-    "subTabSaved": "保存済み",
-    "newStoriesPill_other": "新着{{count}}件",
-    "caughtUp": "すべて確認済みです",
-    "caughtUpHint": "これまでの記事はこちらです",
-    "earlier": "これまでの記事",
-    "earlierShowMore": "以前の記事をあと{{count}}件表示"
+    "subTabSaved": "保存済み"
   },
   "feedStatus": {
     "title": "フィードの状態",
@@ -817,18 +832,6 @@
     "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
     "trackChatSeed": "このストーリーをフォローしたいです。",
     "trackProposalTitle": "このストーリーをフォローしますか？"
-  },
-  "triage": {
-    "title": "確認",
-    "progress": "{{current}} / {{total}}",
-    "close": "閉じる",
-    "upNext": "次はこちら",
-    "read": "読む",
-    "good": "いいね",
-    "bad": "興味なし",
-    "tellWhy": "理由を教えてください",
-    "save": "保存",
-    "skip": "スキップ"
   },
   "whatsNew": {
     "title": "新機能",

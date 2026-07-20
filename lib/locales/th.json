@@ -183,7 +183,12 @@
       "bodyWithTime": "ไม่สามารถดึงบทความใหม่ได้ในขณะนี้ เรียกดูบทความที่มีอยู่แล้วบนอุปกรณ์ของคุณ — บทความใหม่จะปลดล็อกเวลา {{time}}",
       "title": "ถึงขีดจำกัดบทความรายวันแล้ว"
     },
-    "moreSources_other": "+{{count}} แหล่งข่าว"
+    "moreSources_other": "+{{count}} แหล่งข่าว",
+    "factStages": {
+      "reading": "กำลังอ่านบทความสำหรับ {{fact}}…",
+      "writing": "กำลังเขียนบันทึกสำหรับ {{fact}}…",
+      "otherStories": "เรื่องอื่น ๆ"
+    }
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -281,7 +286,14 @@
     "saveFailedTitle": "บันทึกไม่สำเร็จ",
     "saveFailedDescription": "ไม่สามารถบันทึกการตั้งค่าของคุณได้ กรุณาลองอีกครั้ง",
     "trackedStoryUpdateTitle": "อัปเดตเรื่องราว",
-    "trackedStoryUpdateBody": "มีบทความใหม่ {{count}} รายการในเรื่องราวที่คุณติดตาม"
+    "trackedStoryUpdateBody": "มีบทความใหม่ {{count}} รายการในเรื่องราวที่คุณติดตาม",
+    "timeDescriptionOnboarding": "เลือกเวลาที่คุณต้องการติดตามข่าวสารให้ทันเหตุการณ์",
+    "timeNudges": [
+      "ข่าวสารได้ผลดีที่สุดเมื่อคุณโฟกัสแค่หนึ่งหรือสองช่วงเวลาต่อวัน",
+      "คุณไม่จำเป็นต้องเช็กตลอดเวลา — เราจะเตรียมทุกอย่างไว้ให้พร้อมเมื่อคุณพร้อม",
+      "เช็กน้อยครั้งแต่สงบใจ ดีกว่าการรับข่าวหยดติ๋ง ๆ ตลอดทั้งวัน",
+      "เลือกเวลาที่เหมาะกับวันของคุณ — Mera จะรวบรวมข่าวสารให้เอง"
+    ]
   },
   "language": {
     "title": "ภาษา",
@@ -598,7 +610,16 @@
     "actionDeleteFact": "ลบข้อมูล",
     "actionAddTopics": "เพิ่มหัวข้อ",
     "actionRemoveTopics": "ลบหัวข้อ",
-    "actionFeatureRequest": "ส่งคำขอฟีเจอร์ไปยังทีม Mera"
+    "actionFeatureRequest": "ส่งคำขอฟีเจอร์ไปยังทีม Mera",
+    "actionShowLessTopic": "แสดงหัวข้อนี้น้อยลง",
+    "actionShowMoreTopic": "แสดงหัวข้อนี้มากขึ้น",
+    "actionDownRank": "ลดลำดับความสำคัญของหัวข้อ",
+    "actionPublicationPref": "ปรับการตั้งค่าสำนักพิมพ์",
+    "actionSuppress": "กรองวลีออก",
+    "actionPinTopic": "ปักหมุดหัวข้อ",
+    "actionUnpinTopic": "เลิกปักหมุดหัวข้อ",
+    "actionRetireTopic": "ปิดใช้งานหัวข้อ",
+    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก"
   },
   "publicationVisits": {
     "topVisitedTitle": "สำนักพิมพ์ที่คุณกำลังอ่าน",
@@ -774,16 +795,10 @@
     "alsoForYou": "อาจสนใจด้วย",
     "breaking": "ข่าวด่วน",
     "showMore": "แสดงอีก {{count}} รายการ",
-    "whySection": "ทำไมถึงมีหมวดนี้",
-    "triageEntry": "ตรวจทีละรายการ",
     "subTabFeed": "ฟีด",
     "subTabStories": "เรื่องราว",
     "subTabSaved": "บันทึกไว้",
-    "newStoriesPill_other": "{{count}} เรื่องใหม่",
-    "caughtUp": "คุณตามทันทุกอย่างแล้ว",
-    "caughtUpHint": "นี่คือทั้งหมดจากก่อนหน้านี้",
-    "earlier": "ก่อนหน้านี้",
-    "earlierShowMore": "แสดงอีก {{count}} รายการก่อนหน้านี้"
+    "openFactFeed": "ดูเรื่องราวทั้งหมดในหัวข้อนี้"
   },
   "feedStatus": {
     "title": "สถานะฟีด",
@@ -817,18 +832,6 @@
     "untrackConfirmBody": "คุณจะไม่เห็นความคืบหน้าใหม่ของเรื่องราวนี้อีกต่อไป",
     "trackChatSeed": "ฉันต้องการติดตามเรื่องราวนี้",
     "trackProposalTitle": "ติดตามเรื่องราวนี้?"
-  },
-  "triage": {
-    "title": "ตรวจสอบ",
-    "progress": "{{current}} / {{total}}",
-    "close": "ปิด",
-    "upNext": "ถัดไป",
-    "read": "อ่าน",
-    "good": "ดี",
-    "bad": "ไม่ใช่สำหรับฉัน",
-    "tellWhy": "บอกเหตุผลให้เราทราบ",
-    "save": "บันทึก",
-    "skip": "ข้าม"
   },
   "whatsNew": {
     "title": "มีอะไรใหม่",

@@ -183,6 +183,11 @@
       "bodyWithTime": "Por ahora no se pueden obtener nuevos artículos. Explora los artículos que ya tienes en tu dispositivo; los nuevos se desbloquean a las {{time}}.",
       "title": "Límite diario de artículos alcanzado"
     },
+    "factStages": {
+      "reading": "Leyendo artículos para {{fact}}…",
+      "writing": "Escribiendo notas para {{fact}}…",
+      "otherStories": "otras historias"
+    },
     "moreSources_one": "+{{count}} fuente",
     "moreSources_other": "+{{count}} fuentes"
   },
@@ -262,6 +267,13 @@
     "format24h": "24h",
     "formatAmPm": "AM/PM",
     "timeDescription": "Elige cuándo te gustaría recibir notificaciones para el procesamiento de tus noticias",
+    "timeDescriptionOnboarding": "Elige cuándo te gustaría ponerte al día con tus noticias",
+    "timeNudges": [
+      "Las noticias funcionan mejor en uno o dos momentos concentrados al día.",
+      "No necesitas revisar constantemente — lo tendremos listo cuando tú lo estés.",
+      "Menos revisiones, más tranquilas, superan un goteo durante todo el día.",
+      "Elige horarios que se ajusten a tu día — Mera se encarga de reunir las noticias."
+    ],
     "savePreferences": "Guardar preferencias",
     "loadFailedTitle": "Error al cargar",
     "loadFailedDescription": "No se pudieron cargar los ajustes de notificaciones.",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Eliminar dato",
     "actionAddTopics": "Añadir temas",
     "actionRemoveTopics": "Eliminar temas",
-    "actionFeatureRequest": "Enviar solicitud de función al equipo de Mera"
+    "actionFeatureRequest": "Enviar solicitud de función al equipo de Mera",
+    "actionShowLessTopic": "Mostrar menos de un tema",
+    "actionShowMoreTopic": "Mostrar más de un tema",
+    "actionDownRank": "Bajar la prioridad de un tema",
+    "actionPublicationPref": "Ajustar una publicación",
+    "actionSuppress": "Filtrar una frase",
+    "actionPinTopic": "Fijar un tema",
+    "actionUnpinTopic": "Dejar de fijar un tema",
+    "actionRetireTopic": "Retirar un tema",
+    "chooseOneHint": "Elige una opción"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publicaciones que has estado leyendo",
@@ -775,17 +796,10 @@
     "alsoForYou": "También para ti",
     "breaking": "Última hora",
     "showMore": "Mostrar {{count}} más",
-    "whySection": "Por qué esta sección",
-    "triageEntry": "Revisar uno por uno",
+    "openFactFeed": "Ver todas las historias sobre este tema",
     "subTabFeed": "Feed",
     "subTabStories": "Historias",
-    "subTabSaved": "Guardados",
-    "newStoriesPill_one": "{{count}} historia nueva",
-    "newStoriesPill_other": "{{count}} historias nuevas",
-    "caughtUp": "Estás al día",
-    "caughtUpHint": "Aquí está todo lo anterior",
-    "earlier": "Anteriores",
-    "earlierShowMore": "Mostrar {{count}} más anteriores"
+    "subTabSaved": "Guardados"
   },
   "feedStatus": {
     "title": "Estado del feed",
@@ -819,18 +833,6 @@
     "untrackConfirmBody": "Ya no verás nuevos desarrollos de esta historia.",
     "trackChatSeed": "Quiero seguir esta historia.",
     "trackProposalTitle": "¿Seguir esta historia?"
-  },
-  "triage": {
-    "title": "Revisión",
-    "progress": "{{current}} / {{total}}",
-    "close": "Cerrar",
-    "upNext": "A continuación",
-    "read": "Leer",
-    "good": "Bien",
-    "bad": "No es para mí",
-    "tellWhy": "Dinos por qué",
-    "save": "Guardar",
-    "skip": "Omitir"
   },
   "whatsNew": {
     "title": "Novedades",

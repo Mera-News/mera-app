@@ -183,6 +183,11 @@
       "bodyWithTime": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil — de nouveaux articles seront débloqués à {{time}}.",
       "title": "Limite quotidienne d'articles atteinte"
     },
+    "factStages": {
+      "reading": "Lecture des articles pour {{fact}}…",
+      "writing": "Rédaction de notes pour {{fact}}…",
+      "otherStories": "autres actualités"
+    },
     "moreSources_one": "+{{count}} source",
     "moreSources_other": "+{{count}} sources"
   },
@@ -262,6 +267,13 @@
     "format24h": "24h",
     "formatAmPm": "AM/PM",
     "timeDescription": "Choisissez quand vous souhaitez recevoir des notifications pour le traitement de vos actualités",
+    "timeDescriptionOnboarding": "Choisissez quand vous aimeriez faire le point sur vos actualités",
+    "timeNudges": [
+      "Les actualités fonctionnent mieux en un ou deux moments dédiés par jour.",
+      "Pas besoin de vérifier sans cesse — tout sera prêt quand vous le serez.",
+      "Moins de vérifications, plus sereines, valent mieux qu'un flux continu toute la journée.",
+      "Choisissez des horaires adaptés à votre journée — Mera se charge de tout rassembler."
+    ],
     "savePreferences": "Enregistrer les préférences",
     "loadFailedTitle": "Échec du chargement",
     "loadFailedDescription": "Impossible de charger les paramètres de notification.",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Supprimer le fait",
     "actionAddTopics": "Ajouter des sujets",
     "actionRemoveTopics": "Supprimer des sujets",
-    "actionFeatureRequest": "Envoyer une demande de fonctionnalité à l'équipe Mera"
+    "actionFeatureRequest": "Envoyer une demande de fonctionnalité à l'équipe Mera",
+    "actionShowLessTopic": "Afficher moins d'un sujet",
+    "actionShowMoreTopic": "Afficher plus d'un sujet",
+    "actionDownRank": "Rétrograder un sujet",
+    "actionPublicationPref": "Ajuster une publication",
+    "actionSuppress": "Filtrer une expression",
+    "actionPinTopic": "Épingler un sujet",
+    "actionUnpinTopic": "Désépingler un sujet",
+    "actionRetireTopic": "Retirer un sujet",
+    "chooseOneHint": "Choisissez une option"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publications que vous lisez",
@@ -775,17 +796,10 @@
     "alsoForYou": "Aussi pour vous",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
-    "whySection": "Pourquoi cette section",
-    "triageEntry": "Examiner un par un",
+    "openFactFeed": "Voir toutes les actualités sur ce sujet",
     "subTabFeed": "Fil",
     "subTabStories": "Actualités",
-    "subTabSaved": "Enregistrés",
-    "newStoriesPill_one": "{{count}} nouvelle actualité",
-    "newStoriesPill_other": "{{count}} nouvelles actualités",
-    "caughtUp": "Vous êtes à jour",
-    "caughtUpHint": "Voici tout ce qu'il y avait avant",
-    "earlier": "Plus tôt",
-    "earlierShowMore": "Afficher {{count}} de plus"
+    "subTabSaved": "Enregistrés"
   },
   "feedStatus": {
     "title": "État du fil",
@@ -819,18 +833,6 @@
     "untrackConfirmBody": "Vous ne verrez plus les nouveaux développements de cette actualité.",
     "trackChatSeed": "Je veux suivre cette actualité.",
     "trackProposalTitle": "Suivre cette actualité ?"
-  },
-  "triage": {
-    "title": "Examen",
-    "progress": "{{current}} / {{total}}",
-    "close": "Fermer",
-    "upNext": "À suivre",
-    "read": "Lire",
-    "good": "Bien",
-    "bad": "Pas pour moi",
-    "tellWhy": "Dites-nous pourquoi",
-    "save": "Enregistrer",
-    "skip": "Passer"
   },
   "whatsNew": {
     "title": "Nouveautés",

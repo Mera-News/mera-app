@@ -186,7 +186,12 @@
     "moreSources_one": "+{{count}} источник",
     "moreSources_few": "+{{count}} источника",
     "moreSources_many": "+{{count}} источников",
-    "moreSources_other": "+{{count}} источника"
+    "moreSources_other": "+{{count}} источника",
+    "factStages": {
+      "reading": "Читаем статьи по теме «{{fact}}»…",
+      "writing": "Готовим заметки по теме «{{fact}}»…",
+      "otherStories": "другие истории"
+    }
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -284,7 +289,14 @@
     "saveFailedTitle": "Ошибка сохранения",
     "saveFailedDescription": "Не удалось сохранить ваши настройки. Пожалуйста, попробуйте ещё раз.",
     "trackedStoryUpdateTitle": "Обновление истории",
-    "trackedStoryUpdateBody": "{{count}} новых статей в истории, за которой вы следите"
+    "trackedStoryUpdateBody": "{{count}} новых статей в истории, за которой вы следите",
+    "timeDescriptionOnboarding": "Выберите, когда вам удобно знакомиться с новостями",
+    "timeNudges": [
+      "Новости работают лучше всего в один-два сосредоточенных момента в день.",
+      "Вам не нужно проверять их постоянно — всё будет готово, когда вы будете готовы.",
+      "Меньше, но спокойнее — лучше, чем непрерывный поток новостей весь день.",
+      "Выбирайте время, которое подходит вашему дню, — сбор новостей Mera берёт на себя."
+    ]
   },
   "language": {
     "title": "Язык",
@@ -601,7 +613,16 @@
     "actionDeleteFact": "Удалить факт",
     "actionAddTopics": "Добавить темы",
     "actionRemoveTopics": "Удалить темы",
-    "actionFeatureRequest": "Отправить запрос на функцию команде Mera"
+    "actionFeatureRequest": "Отправить запрос на функцию команде Mera",
+    "actionShowLessTopic": "Показывать тему реже",
+    "actionShowMoreTopic": "Показывать тему чаще",
+    "actionDownRank": "Понизить приоритет темы",
+    "actionPublicationPref": "Настроить издание",
+    "actionSuppress": "Подавить фразу",
+    "actionPinTopic": "Закрепить тему",
+    "actionUnpinTopic": "Открепить тему",
+    "actionRetireTopic": "Отключить тему",
+    "chooseOneHint": "Выберите один вариант"
   },
   "publicationVisits": {
     "topVisitedTitle": "Издания, которые вы читаете",
@@ -777,19 +798,10 @@
     "alsoForYou": "Также для вас",
     "breaking": "Срочно",
     "showMore": "Показать ещё {{count}}",
-    "whySection": "Почему этот раздел",
-    "triageEntry": "Просматривать по одной",
     "subTabFeed": "Лента",
     "subTabStories": "Истории",
     "subTabSaved": "Сохранённое",
-    "newStoriesPill_one": "{{count}} новая история",
-    "newStoriesPill_few": "{{count}} новые истории",
-    "newStoriesPill_many": "{{count}} новых историй",
-    "newStoriesPill_other": "{{count}} новой истории",
-    "caughtUp": "Вы всё просмотрели",
-    "caughtUpHint": "Вот всё, что было раньше",
-    "earlier": "Раньше",
-    "earlierShowMore": "Показать ещё {{count}} более ранних"
+    "openFactFeed": "Смотреть все истории по этой теме"
   },
   "feedStatus": {
     "title": "Статус ленты",
@@ -823,18 +835,6 @@
     "untrackConfirmBody": "Вы больше не будете видеть новые события по этой истории.",
     "trackChatSeed": "Я хочу отслеживать эту историю.",
     "trackProposalTitle": "Отслеживать эту историю?"
-  },
-  "triage": {
-    "bad": "Не для меня",
-    "close": "Закрыть",
-    "good": "Хорошо",
-    "progress": "{{current}} / {{total}}",
-    "read": "Читать",
-    "save": "Сохранить",
-    "skip": "Пропустить",
-    "tellWhy": "Расскажите почему",
-    "title": "Обзор",
-    "upNext": "Далее"
   },
   "whatsNew": {
     "title": "Что нового",

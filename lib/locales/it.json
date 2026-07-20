@@ -178,6 +178,11 @@
       "completedTitle": "Tutto fatto",
       "completedMessage": "Il tuo feed è pronto"
     },
+    "factStages": {
+      "reading": "Sto leggendo gli articoli per {{fact}}…",
+      "writing": "Sto scrivendo note per {{fact}}…",
+      "otherStories": "altre storie"
+    },
     "dailyLimit": {
       "body": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano domani.",
       "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano alle {{time}}.",
@@ -262,6 +267,13 @@
     "format24h": "24h",
     "formatAmPm": "AM/PM",
     "timeDescription": "Scegli quando vuoi ricevere le notifiche per l'elaborazione delle tue notizie",
+    "timeDescriptionOnboarding": "Scegli quando vuoi metterti al passo con le tue notizie",
+    "timeNudges": [
+      "Le notizie funzionano meglio se dedicate a uno o due momenti mirati al giorno.",
+      "Non serve controllare di continuo — sarà tutto pronto quando lo sarai anche tu.",
+      "Meno controlli, più tranquilli, battono un flusso continuo per tutto il giorno.",
+      "Scegli gli orari più adatti alla tua giornata — al resto pensa Mera."
+    ],
     "savePreferences": "Salva preferenze",
     "loadFailedTitle": "Caricamento non riuscito",
     "loadFailedDescription": "Impossibile caricare le impostazioni delle notifiche.",
@@ -599,7 +611,16 @@
     "actionDeleteFact": "Rimuovi informazione",
     "actionAddTopics": "Aggiungi argomenti",
     "actionRemoveTopics": "Rimuovi argomenti",
-    "actionFeatureRequest": "Invia una richiesta di funzionalità al team Mera"
+    "actionFeatureRequest": "Invia una richiesta di funzionalità al team Mera",
+    "actionShowLessTopic": "Mostra meno di un argomento",
+    "actionShowMoreTopic": "Mostra più di un argomento",
+    "actionDownRank": "Declassa un argomento",
+    "actionPublicationPref": "Modifica una pubblicazione",
+    "actionSuppress": "Filtra una frase",
+    "actionPinTopic": "Fissa un argomento",
+    "actionUnpinTopic": "Rimuovi il fissaggio di un argomento",
+    "actionRetireTopic": "Ritira un argomento",
+    "chooseOneHint": "Scegli un'opzione"
   },
   "publicationVisits": {
     "topVisitedTitle": "Pubblicazioni che stai leggendo",
@@ -775,17 +796,10 @@
     "alsoForYou": "Anche per te",
     "breaking": "Ultim'ora",
     "showMore": "Mostra altri {{count}}",
-    "whySection": "Perché questa sezione",
-    "triageEntry": "Rivedi una alla volta",
+    "openFactFeed": "Vedi tutte le storie su questo argomento",
     "subTabFeed": "Feed",
     "subTabStories": "Storie",
-    "subTabSaved": "Salvati",
-    "newStoriesPill_one": "{{count}} nuova storia",
-    "newStoriesPill_other": "{{count}} nuove storie",
-    "caughtUp": "Sei aggiornato",
-    "caughtUpHint": "Ecco tutto quello di prima",
-    "earlier": "Prima",
-    "earlierShowMore": "Mostra altri {{count}} precedenti"
+    "subTabSaved": "Salvati"
   },
   "feedStatus": {
     "title": "Stato del feed",
@@ -819,18 +833,6 @@
     "untrackConfirmBody": "Non vedrai più nuovi sviluppi per questa storia.",
     "trackChatSeed": "Voglio seguire questa storia.",
     "trackProposalTitle": "Seguire questa storia?"
-  },
-  "triage": {
-    "bad": "Non fa per me",
-    "close": "Chiudi",
-    "good": "Bene",
-    "progress": "{{current}} / {{total}}",
-    "read": "Leggi",
-    "save": "Salva",
-    "skip": "Salta",
-    "tellWhy": "Dicci perché",
-    "title": "Rivedi",
-    "upNext": "Prossimo"
   },
   "whatsNew": {
     "title": "Novità",

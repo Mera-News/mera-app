@@ -186,7 +186,12 @@
     "moreSources_one": "+{{count}} джерело",
     "moreSources_few": "+{{count}} джерела",
     "moreSources_many": "+{{count}} джерел",
-    "moreSources_other": "+{{count}} джерела"
+    "moreSources_other": "+{{count}} джерела",
+    "factStages": {
+      "reading": "Читаємо статті за темою «{{fact}}»…",
+      "writing": "Пишемо нотатки за темою «{{fact}}»…",
+      "otherStories": "інші історії"
+    }
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -284,7 +289,14 @@
     "saveFailedTitle": "Не вдалося зберегти",
     "saveFailedDescription": "Не вдалося зберегти ваші налаштування. Будь ласка, спробуйте ще раз.",
     "trackedStoryUpdateTitle": "Оновлення історії",
-    "trackedStoryUpdateBody": "{{count}} нових статей в історії, яку ви відстежуєте"
+    "trackedStoryUpdateBody": "{{count}} нових статей в історії, яку ви відстежуєте",
+    "timeDescriptionOnboarding": "Оберіть, коли ви хочете бути в курсі новин",
+    "timeNudges": [
+      "Новини працюють найкраще в один-два зосереджені моменти протягом дня.",
+      "Вам не потрібно перевіряти постійно — ми підготуємо все саме до того часу, коли ви будете готові.",
+      "Кілька спокійних перевірок кращі, ніж безперервний потік сповіщень цілий день.",
+      "Оберіть час, який підходить вашому дню, — збір новин Mera візьме на себе."
+    ]
   },
   "language": {
     "title": "Мова",
@@ -601,7 +613,16 @@
     "actionDeleteFact": "Видалити факт",
     "actionAddTopics": "Додати теми",
     "actionRemoveTopics": "Видалити теми",
-    "actionFeatureRequest": "Надіслати запит на функцію команді Mera"
+    "actionFeatureRequest": "Надіслати запит на функцію команді Mera",
+    "actionShowLessTopic": "Показувати тему рідше",
+    "actionShowMoreTopic": "Показувати тему частіше",
+    "actionDownRank": "Знизити тему",
+    "actionPublicationPref": "Налаштувати видання",
+    "actionSuppress": "Відфільтрувати фразу",
+    "actionPinTopic": "Закріпити тему",
+    "actionUnpinTopic": "Відкріпити тему",
+    "actionRetireTopic": "Деактивувати тему",
+    "chooseOneHint": "Оберіть один варіант"
   },
   "publicationVisits": {
     "topVisitedTitle": "Видання, які ви читаєте",
@@ -777,19 +798,10 @@
     "alsoForYou": "Також для вас",
     "breaking": "Термінові новини",
     "showMore": "Показати ще {{count}}",
-    "whySection": "Чому цей розділ",
-    "triageEntry": "Переглядати по одній",
     "subTabFeed": "Стрічка",
     "subTabStories": "Історії",
     "subTabSaved": "Збережене",
-    "newStoriesPill_one": "{{count}} нова історія",
-    "newStoriesPill_few": "{{count}} нові історії",
-    "newStoriesPill_many": "{{count}} нових історій",
-    "newStoriesPill_other": "{{count}} нові історії",
-    "caughtUp": "Ви переглянули все",
-    "caughtUpHint": "Ось усе, що було раніше",
-    "earlier": "Раніше",
-    "earlierShowMore": "Показати ще {{count}} раніших"
+    "openFactFeed": "Переглянути всі історії за цією темою"
   },
   "feedStatus": {
     "title": "Стан стрічки",
@@ -826,18 +838,6 @@
     "untrackConfirmBody": "Ви більше не бачитимете нових подій за цією історією.",
     "trackChatSeed": "Я хочу відстежувати цю історію.",
     "trackProposalTitle": "Відстежувати цю історю?"
-  },
-  "triage": {
-    "title": "Огляд",
-    "progress": "{{current}} / {{total}}",
-    "close": "Закрити",
-    "upNext": "Далі",
-    "read": "Читати",
-    "good": "Добре",
-    "bad": "Не для мене",
-    "tellWhy": "Розкажіть чому",
-    "save": "Зберегти",
-    "skip": "Пропустити"
   },
   "whatsNew": {
     "title": "Що нового",
