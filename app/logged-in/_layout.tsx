@@ -135,6 +135,20 @@ export default function LoggedInLayout() {
           }}
         />
         <Stack.Screen
+          name="tracked-stories"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right'
+          }}
+        />
+        <Stack.Screen
+          name="story-timeline"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right'
+          }}
+        />
+        <Stack.Screen
           name="triage"
           options={{
             headerShown: false,

@@ -1,25 +1,17 @@
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
-import ArticleDetailScreen from '@/components/custom/news-detail/ArticleDetailScreen';
+import StoryTimelineScreen from '@/components/custom/tracked-stories/StoryTimelineScreen';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
-export default function ArticleDetail() {
-    const params = useLocalSearchParams<{
-        articleId?: string;
-        stableClusterId?: string;
-    }>();
+export default function StoryTimeline() {
+    const params = useLocalSearchParams<{ trackedStoryId?: string }>();
+    const trackedStoryId = params.trackedStoryId;
 
-    const articleId = params.articleId;
-    const stableClusterId =
-        typeof params.stableClusterId === 'string' ? params.stableClusterId : undefined;
-
-    // Evaluate once on mount: a deep-linked screen with no navigation history
-    // shows a home button that jumps to For You instead of a back arrow.
     const [canGoBack] = React.useState(() => router.canGoBack());
 
-    if (!articleId || typeof articleId !== 'string') {
+    if (!trackedStoryId || typeof trackedStoryId !== 'string') {
         router.back();
         return null;
     }
@@ -35,12 +27,10 @@ export default function ArticleDetail() {
     return (
         <GluestackUIProvider mode="dark">
             <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <ArticleDetailScreen
-                    key={articleId}
-                    articleId={articleId}
-                    stableClusterId={stableClusterId}
+                <StoryTimelineScreen
+                    key={trackedStoryId}
+                    trackedStoryId={trackedStoryId}
                     onBack={handleBack}
-                    backIcon={canGoBack ? 'back' : 'home'}
                 />
             </ErrorBoundary>
         </GluestackUIProvider>

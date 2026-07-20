@@ -13,6 +13,8 @@ import {
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
+import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
+import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -39,6 +41,11 @@ interface ArticleFeedbackPromptProps {
         saved: boolean;
         onToggle: () => void;
     };
+    /** When present, renders a self-managing "Track story" button. The subject
+     *  carries the stable cluster id when the caller already knows it (suggestion
+     *  clusters); otherwise `trackStoryFromSubject` resolves it lazily at track
+     *  time via `getNewsClusterForArticle`. */
+    track?: FeedbackSubject;
     share?: ShareArticleParams;
 }
 
@@ -79,10 +86,19 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     title,
     feedbackContext,
     save,
+    track,
     share,
 }) => {
     const { t } = useTranslation();
     const [liked, setLiked] = useState(false);
+    // Self-managing track state. `track` carries the stable id when known; the
+    // fallback subject keeps the hook happy when the button is absent.
+    const trackSubject: FeedbackSubject =
+        track ?? { origin: 'article', surface: 'detail', articleId, title };
+    const { tracked: storyTracked, toggle: toggleTrack } = useTrackedSubject(
+        trackSubject,
+        !!track,
+    );
     // Dislike → server-owned feedback-tree overlay. Context is snapshotted at
     // press time (with the live publication-visit count folded in) so the tree
     // can gate nodes + resolve leaf-action placeholders.
@@ -231,6 +247,16 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 t('savedSuggestions.savedToastTitle'),
                 save.onToggle,
                 save.saved,
+            ) : null}
+            {track ? renderButton(
+                <MaterialIcons
+                    name="track-changes"
+                    size={ICON_SIZE}
+                    color={storyTracked ? SELECTED_ICON : PRIMARY}
+                />,
+                t(storyTracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
+                toggleTrack,
+                storyTracked,
             ) : null}
             {share?.url ? renderButton(
                 <MaterialIcons

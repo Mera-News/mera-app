@@ -22,6 +22,7 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
+import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
 import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -76,6 +77,8 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     articleTitle: subject.title,
   });
   const handleShare = useShareArticle(share);
+  // Restore the tracked state only while the sheet is open (matches like/saved).
+  const { tracked, toggle: toggleTrack } = useTrackedSubject(subject, visible);
 
   const savedId = subject.suggestionId ?? subject.articleId;
 
@@ -188,6 +191,11 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     void handleShare();
   }, [handleShare, onClose]);
 
+  const handleTrack = useCallback(() => {
+    toggleTrack();
+    onClose();
+  }, [toggleTrack, onClose]);
+
   const closeOverlay = useCallback(() => setOverlayOpen(false), []);
 
   const Row = ({
@@ -248,6 +256,11 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
                     icon={<MaterialIcons name={saved ? 'bookmark' : 'bookmark-border'} size={22} color={ACCENT} />}
                     label={t('savedSuggestions.savedToastTitle')}
                     onPress={handleSave}
+                  />
+                  <Row
+                    icon={<MaterialIcons name="track-changes" size={22} color={tracked ? '#22c55e' : ACCENT} />}
+                    label={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
+                    onPress={handleTrack}
                   />
                   {share?.url ? (
                     <Row

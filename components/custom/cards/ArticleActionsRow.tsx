@@ -19,6 +19,7 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
+import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
 import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -84,6 +85,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     articleTitle: subject.title,
   });
   const handleShare = useShareArticle(share);
+  const { tracked, toggle: toggleTrack } = useTrackedSubject(subject);
 
   // The save/like restore keys off the same id used to persist them.
   const savedId = subject.suggestionId ?? subject.articleId;
@@ -279,6 +281,16 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t('savedSuggestions.savedToastTitle'),
           handleSave,
           saved,
+        )}
+        {renderButton(
+          <MaterialIcons
+            name="track-changes"
+            size={ICON_SIZE}
+            color={tracked ? SELECTED_ICON : PRIMARY}
+          />,
+          t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
+          toggleTrack,
+          tracked,
         )}
         {share?.url ? renderButton(
           <MaterialIcons

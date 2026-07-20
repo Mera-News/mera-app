@@ -117,6 +117,12 @@ jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
 jest.mock('@/lib/database/services/publication-visit-service', () => ({
   getVisitCountForPublication: jest.fn(() => Promise.resolve(0)),
 }));
+// The universal actions row now hosts a "Track story" button backed by the
+// tracking layer (which reaches Apollo + WatermelonDB). Stub the hook so these
+// pure-render tests don't drag the native DB/network stack into the graph.
+jest.mock('@/lib/tracking/use-tracked-subject', () => ({
+  useTrackedSubject: () => ({ tracked: false, toggle: jest.fn() }),
+}));
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFactsForTopicTexts: jest.fn(() => Promise.resolve([])),
 }));

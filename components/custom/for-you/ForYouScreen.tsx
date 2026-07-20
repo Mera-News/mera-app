@@ -15,6 +15,7 @@ import ShowMoreRow from '@/components/custom/for-you/ShowMoreRow';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
+import TrackedStoriesRail from '@/components/custom/tracked-stories/TrackedStoriesRail';
 import NewStoriesPill from '@/components/custom/for-you/NewStoriesPill';
 import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
@@ -1025,6 +1026,10 @@ const MeraNewsScreen: React.FC = () => {
             <View style={{ flex: 1 }}>
                 {/* Feed */}
                 <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
+                    {/* Followed-stories rail — self-contained; renders null unless
+                        an active tracked story has unseen developments. Sits
+                        directly above the feed list, inside the Feed pane only. */}
+                    <TrackedStoriesRail />
                     <AnimatedFlatList
                         ref={flatListRef}
                         data={activeListData}

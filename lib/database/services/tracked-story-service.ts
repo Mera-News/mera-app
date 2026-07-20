@@ -193,6 +193,82 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
   }
 }
 
+/**
+ * Seed a freshly-tracked story with the member articles discovered at track
+ * time (from the server archive or the live cluster). UNLIKE {@link applyUpdates}
+ * this does NOT bump `unseen_count` or stamp `last_update_at` — the user is
+ * actively following the story right now, so its initial coverage is "seen".
+ * Merges the seeds after any ids already present (the tapped article stays
+ * first), de-dupes, and caps newest-first at 30. Optionally refreshes the
+ * "latest" pointer. Never throws.
+ */
+export async function seedMembers(
+  id: string,
+  memberIds: string[],
+  latest?: { latestArticleId?: string | null; latestTitle?: string | null },
+): Promise<void> {
+  const seeds = (memberIds ?? []).filter(
+    (x): x is string => typeof x === 'string' && x.trim().length > 0,
+  );
+  try {
+    const record = await collection.find(id);
+    await database.write(async () => {
+      await record.update((m) => {
+        const existing = m.memberArticleIds ?? [];
+        const merged: string[] = [];
+        const seen = new Set<string>();
+        for (const idv of [...existing, ...seeds]) {
+          if (seen.has(idv)) continue;
+          seen.add(idv);
+          merged.push(idv);
+        }
+        m.memberArticleIds = merged.slice(0, MAX_MEMBER_IDS);
+        if (latest?.latestArticleId) m.latestArticleId = latest.latestArticleId;
+        if (latest?.latestTitle) m.latestTitle = latest.latestTitle;
+      });
+    });
+  } catch (err) {
+    logger.warn('[tracked-story] seedMembers failed', { id, error: String(err) });
+  }
+}
+
+/**
+ * Resolve the row id of the ACTIVE story matching a subject (by stable cluster
+ * id or member article id) — the seam the follow UI uses to untrack from a card
+ * subject. Returns null when nothing matches. Mirrors {@link isTracked}'s match
+ * rules. Never throws.
+ */
+export async function findActiveTrackedId(query: {
+  stableClusterId?: string | null;
+  articleId?: string | null;
+}): Promise<string | null> {
+  const stableClusterId = query.stableClusterId?.trim() || null;
+  const articleId = query.articleId?.trim() || null;
+  if (!stableClusterId && !articleId) return null;
+  try {
+    const rows = await collection.query(Q.where('status', 'active')).fetch();
+    const match = rows.find((r) => {
+      if (r.status !== 'active') return false; // JS guard (test mock ignores predicate)
+      if (stableClusterId && r.stableClusterId === stableClusterId) return true;
+      if (articleId && (r.memberArticleIds ?? []).includes(articleId)) return true;
+      return false;
+    });
+    return match?.id ?? null;
+  } catch (err) {
+    logger.warn('[tracked-story] findActiveTrackedId failed', { error: String(err) });
+    return null;
+  }
+}
+
+/** One-shot read of a single story row by id (any status). Null when missing. */
+export async function getTrackedStoryById(id: string): Promise<TrackedStoryModel | null> {
+  try {
+    return await collection.find(id);
+  } catch {
+    return null;
+  }
+}
+
 /** Bind a resolved server stable_cluster_id to a story. Never throws. */
 export async function resolveStableId(id: string, stableClusterId: string): Promise<void> {
   const sid = (stableClusterId ?? '').trim();

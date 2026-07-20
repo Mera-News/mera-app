@@ -71,6 +71,7 @@ jest.mock('@better-auth/expo/client', () => ({
 
 jest.mock('better-auth/client/plugins', () => ({
   emailOTPClient: jest.fn(() => ({})),
+  jwtClient: jest.fn(() => ({})),
 }));
 
 // Mock expo-device

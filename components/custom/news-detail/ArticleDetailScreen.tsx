@@ -29,6 +29,9 @@ interface ArticleDetailScreenProps {
     articleId: string;
     onBack: () => void;
     backIcon?: 'back' | 'home';
+    /** Stable story id from nav params, when the caller already knows it. When
+     *  absent, the track flow resolves it lazily via getNewsClusterForArticle. */
+    stableClusterId?: string;
 }
 
 const SCROLL_THRESHOLD = 300;
@@ -58,6 +61,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     articleId,
     onBack,
     backIcon = 'back',
+    stableClusterId,
 }) => {
     const { t } = useTranslation();
     const [article, setArticle] = useState<NewsArticle | null>(null);
@@ -220,6 +224,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
+                                    track={{
+                                        origin: 'article',
+                                        surface: 'detail',
+                                        articleId: article._id ?? articleId,
+                                        title: article.title_en_internal_only ?? article.title ?? '',
+                                        publicationName: article.publicationSource?.publication_name,
+                                        countryCode: article.publicationSource?.country_code,
+                                        stableClusterId,
+                                    }}
                                     share={{
                                         url: articleUrl,
                                         titleEnglish: article.title_en_internal_only ?? article.title,

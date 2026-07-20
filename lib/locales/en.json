@@ -283,7 +283,17 @@
   },
   "trackedStories": {
     "emptyTitle": "No stories followed yet",
-    "emptyBody": "Follow a story to see every new development gathered here as it unfolds."
+    "emptyBody": "Follow a story to see every new development gathered here as it unfolds.",
+    "title": "Followed stories",
+    "trackAction": "Track story",
+    "untrackAction": "Untrack story",
+    "trackedToast": "Now following this story",
+    "updatesBadge": "{{count}} new",
+    "endedLabel": "Ended",
+    "timelineQuietNote": "No new coverage gathered yet. We'll add developments here as this story unfolds.",
+    "railTitle": "Following",
+    "untrackConfirmTitle": "Stop following?",
+    "untrackConfirmBody": "You'll no longer see new developments for this story."
   },
   "triage": {
     "title": "Review",
