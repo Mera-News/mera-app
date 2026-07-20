@@ -114,16 +114,17 @@ describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
   const e = DEFAULT_HARNESS_CONFIG.scoringEngine;
 
   it('pins the affinity component weights (positives sum ≈ 1.0)', () => {
-    expect(e.W_TOPIC).toBe(0.32);
-    expect(e.W_BREADTH).toBe(0.1);
-    expect(e.W_GEO).toBe(0.2);
-    expect(e.W_ENTITY).toBe(0.08);
-    expect(e.W_EVENT).toBe(0.05);
-    expect(e.W_PUB).toBe(0.07);
-    expect(e.W_POP).toBe(0.1);
-    expect(e.W_FRESH).toBe(0.08);
+    // Round-3 A2: freshness (W_FRESH 0.08) removed; the seven remaining positive
+    // weights renormalized ÷0.92 so full-saturation affinity stays ≈1.0.
+    expect(e.W_TOPIC).toBe(0.348);
+    expect(e.W_BREADTH).toBe(0.109);
+    expect(e.W_GEO).toBe(0.217);
+    expect(e.W_ENTITY).toBe(0.087);
+    expect(e.W_EVENT).toBe(0.054);
+    expect(e.W_PUB).toBe(0.076);
+    expect(e.W_POP).toBe(0.109);
     const sum =
-      e.W_TOPIC + e.W_BREADTH + e.W_GEO + e.W_ENTITY + e.W_EVENT + e.W_PUB + e.W_POP + e.W_FRESH;
+      e.W_TOPIC + e.W_BREADTH + e.W_GEO + e.W_ENTITY + e.W_EVENT + e.W_PUB + e.W_POP;
     expect(Number(sum.toFixed(6))).toBe(1.0);
   });
 
@@ -148,13 +149,10 @@ describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
     expect(e.P_SEEN).toBe(0.08);
   });
 
-  it('pins topic weighting, popularity + freshness knees', () => {
+  it('pins topic weighting + popularity saturation', () => {
+    // Round-3 A2 removed the freshness knees (FRESH_FULL/DECAY/MID/OLD).
     expect(e.HP_MULT).toBe(1.25);
     expect(e.POP_SAT).toBe(32);
-    expect(e.FRESH_FULL_HOURS).toBe(6);
-    expect(e.FRESH_DECAY_HOURS).toBe(24);
-    expect(e.FRESH_MID_SCORE).toBe(0.3);
-    expect(e.FRESH_OLD_SCORE).toBe(0.1);
   });
 
   it('pins geo alignment multipliers + headline floor', () => {

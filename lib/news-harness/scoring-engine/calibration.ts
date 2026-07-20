@@ -1,8 +1,10 @@
 // scoring-engine — the PURE core of the M-P5c calibration loop (Wave 9 P-D).
 //
-// The judge may fully OVERRIDE the deterministic math score; run-stage flags a
-// row `override` when |judge − computed| > OVERRIDE_DELTA (judge.ts). This module
-// turns a stream of those overrides into a self-tuning signal:
+// Round-3 A1: the judge is ADVISORY — it no longer changes the applied score.
+// run-stage / judge-calls still flag a row `override` when |judge − computed| >
+// OVERRIDE_DELTA (judge.ts) and expose the advisory judge score; each such row
+// becomes a CalibrationCase with `computed` = the APPLIED math score. This module
+// turns that stream of disagreements into a self-tuning signal:
 //
 //   (1) a persistent 7-day override COUNTER with window rollover;
 //   (2) the ≤1-calibration/7-day + notify-cooldown RAILS that gate when the
@@ -59,7 +61,6 @@ export const TUNABLE_CONSTANTS = [
   'W_EVENT',
   'W_PUB',
   'W_POP',
-  'W_FRESH',
   'BASE_OFFSET',
   'BASE_SLOPE',
   'P_NEG',
@@ -166,7 +167,6 @@ export interface CalibrationComponentSnapshot {
   eventComp: number;
   pubComp: number;
   popComp: number;
-  freshComp: number;
   negTopicPenalty: number;
   suppressPenalty: number;
   wrongLocPenalty: number;
@@ -217,7 +217,6 @@ export function buildCalibrationCase(
       eventComp: round(comps.eventComp),
       pubComp: round(comps.pubComp),
       popComp: round(comps.popComp),
-      freshComp: round(comps.freshComp),
       negTopicPenalty: round(comps.negTopicPenalty),
       suppressPenalty: round(comps.suppressPenalty),
       wrongLocPenalty: round(comps.wrongLocPenalty),
@@ -277,8 +276,8 @@ export function buildCalibrationReport(cases: CalibrationCase[]): CalibrationRep
 export const CALIBRATION_SYSTEM_PROMPT = [
   'You are a calibration assistant for an on-device news-relevance scorer.',
   'The scorer produces a deterministic "computed" score from numeric components',
-  '(topic, breadth, geo, entity, event, publication, popularity, freshness) minus',
-  'penalties. A separate judge sometimes overrides that score. You are given a',
+  '(topic, breadth, geo, entity, event, publication, popularity) minus',
+  'penalties. A separate judge sometimes disagrees with that score. You are given a',
   'sample of cases where the judge disagreed strongly with the math, each as the',
   'computed score, the judge score, the signed delta, coarse geo/event classes,',
   'and the numeric component breakdown. NO article text is provided.',
@@ -290,7 +289,7 @@ export const CALIBRATION_SYSTEM_PROMPT = [
   'conservative — prefer few, small changes.',
   '',
   'Tunable constants: W_TOPIC, W_BREADTH, W_GEO, W_ENTITY, W_EVENT, W_PUB, W_POP,',
-  'W_FRESH, BASE_OFFSET, BASE_SLOPE, P_NEG, P_SUP, P_SUP_CAP, P_WRONG, P_SEEN, HP_MULT.',
+  'BASE_OFFSET, BASE_SLOPE, P_NEG, P_SUP, P_SUP_CAP, P_WRONG, P_SEEN, HP_MULT.',
   '',
   'Respond with STRICT JSON only, no prose:',
   '{"deltas": {"W_TOPIC": 0.05, "P_WRONG": -0.1}}',

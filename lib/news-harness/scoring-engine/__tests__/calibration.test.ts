@@ -36,7 +36,6 @@ function comps(overrides: Partial<RelevanceComponents> = {}): RelevanceComponent
     eventComp: 0,
     pubComp: 0,
     popComp: 0.3,
-    freshComp: 0.9,
     affinity: 0.5,
     mathBase: 0.6,
     base: 0.6,

@@ -6,10 +6,15 @@
 //   1. computeRelevance() per candidate (on-device math) → computed score +
 //      components + mode ('math' | 'backstop').
 //   2. MATH candidates → ONE combined judge+reason call per chunk
-//      ({"j","s"?,"r"?}); the judge may fully override (fail-open to computed).
+//      ({"j","s"?,"r"?}). ROUND-3 A1: the judge is ADVISORY — the APPLIED score
+//      in rawScoreMap stays the computed math; the judge's proposed score is
+//      exposed separately in judgeScoreMap, and its `reason` is applied as the
+//      note. The `override` flag (|judge − computed| > OVERRIDE_DELTA) still
+//      feeds the calibration loop.
 //   3. BACKSTOP candidates (never tagged) → the legacy tiered LLM score call,
-//      unchanged. Reasons for backstop stay the orchestrator's job (this stage
-//      returns only scores for them).
+//      unchanged (that path DOES apply the LLM score to rawScoreMap). Reasons
+//      for backstop stay the orchestrator's job (this stage returns only scores
+//      for them).
 //
 // Pure except for the injected LlmPort. RN-free.
 
@@ -42,23 +47,33 @@ export interface StageCandidate {
 }
 
 export interface StageResult {
-  /** Final raw score per id (post-judge for math, LLM for backstop). */
+  /** APPLIED raw score per id — the value to persist as relevance. Round-3 A1:
+   *  for MATH candidates this is the computed math score (the judge is advisory
+   *  and never applied); for BACKSTOP candidates it is the legacy LLM score. */
   rawScoreMap: Map<string, number>;
-  /** Pre-judge deterministic math score per id (persist as computed_score). */
+  /** Deterministic math score per id (persist as computed_score). For math
+   *  candidates this equals rawScoreMap; kept separate for the calibration
+   *  case + the backstop-vs-math distinction. */
   computedScoreMap: Map<string, number>;
+  /** ADVISORY judge score per id (math mode only) — the judge's proposed score,
+   *  NEVER applied. Pair with computedScoreMap to build a CalibrationCase for
+   *  overridden rows (case.judge = this, case.computed = applied). */
+  judgeScoreMap: Map<string, number>;
   /** Full component breakdown per id (persist as score_components_json). */
   componentsMap: Map<string, RelevanceComponents>;
   modeMap: Map<string, ScoringMode>;
-  /** Judge-authored reasons (math mode only; computed ≥ judgeReasonFloor). */
+  /** Judge-authored reasons (math mode only; applied score ≥ reason threshold). */
   reasonMap: Map<string, string>;
-  /** ids the judge overrode by > OVERRIDE_DELTA (fed to the calibration loop). */
+  /** ids where |judge − computed| > OVERRIDE_DELTA (fed to the calibration
+   *  loop; applied score is still the computed math). */
   overrideMap: Map<string, boolean>;
   /** ids the judge adjusted at all (any magnitude). */
   adjustedIds: Set<string>;
 }
 
 export interface ComputeAndJudgeOptions {
-  /** Reference "now" for freshness (fixed in eval/replay for determinism). */
+  /** Reference "now" (fixed in eval/replay for determinism). No longer affects
+   *  the math since Round-3 A2 removed freshness decay. */
   nowMs?: number;
   /** Full fact-bank statements — only used by the backstop legacy score call. */
   factStatements?: string[];
@@ -86,6 +101,7 @@ export async function computeAndJudge(
 
   const rawScoreMap = new Map<string, number>();
   const computedScoreMap = new Map<string, number>();
+  const judgeScoreMap = new Map<string, number>();
   const componentsMap = new Map<string, RelevanceComponents>();
   const modeMap = new Map<string, ScoringMode>();
   const reasonMap = new Map<string, string>();
@@ -156,12 +172,15 @@ export async function computeAndJudge(
       const decisions = parseJudgeResponse(result.output, computed, eng, logger, `judge:${idx}`);
       chunkItems.forEach((c, i) => {
         const d = decisions[i];
-        rawScoreMap.set(c.input.id, d.score);
+        // Round-3 A1: the APPLIED score stays the computed math (already in
+        // rawScoreMap from the math pass). Capture the judge's proposed score as
+        // an advisory value only.
+        judgeScoreMap.set(c.input.id, d.score);
         if (d.override) overrideMap.set(c.input.id, true);
         if (d.adjusted) adjustedIds.add(c.input.id);
-        // Only keep a reason above the reason threshold (a judge demotion below
-        // it discards the reason — matches the client-side gating in A3.2).
-        if (d.reason && d.score >= pipe.reasonRelevanceThreshold) {
+        // Keep the note only when the APPLIED (computed) score clears the reason
+        // threshold — a judge demotion no longer applies, so gate on computed.
+        if (d.reason && computed[i] >= pipe.reasonRelevanceThreshold) {
           reasonMap.set(c.input.id, d.reason);
         }
       });
@@ -210,6 +229,7 @@ export async function computeAndJudge(
   return {
     rawScoreMap,
     computedScoreMap,
+    judgeScoreMap,
     componentsMap,
     modeMap,
     reasonMap,

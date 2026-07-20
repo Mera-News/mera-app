@@ -113,6 +113,7 @@ function stageResult(scores: Record<string, number>, reasons: Record<string, str
   return {
     rawScoreMap: new Map(Object.entries(scores)),
     computedScoreMap: new Map(Object.entries(scores)),
+    judgeScoreMap: new Map(Object.entries(scores)),
     componentsMap: new Map(Object.keys(scores).map((id) => [id, {}])),
     modeMap: new Map(Object.keys(scores).map((id) => [id, 'math'])),
     reasonMap: new Map(Object.entries(reasons)),

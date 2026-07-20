@@ -220,6 +220,11 @@ export async function batchScoreAndReason(
   // computed/judge/components (NO article text) into a CalibrationCase; the
   // tally + persistent counter + threshold notification are all handled
   // asynchronously (fire-and-forget) by the calibration service below.
+  //
+  // Round-3 A1: the judge is ADVISORY — `raw` here is the APPLIED math score
+  // (stage.rawScoreMap == computed for math rows), so the calibration case is
+  // built as (computed, judgeScore) with the ADVISORY judge score from
+  // stage.judgeScoreMap. applied = computed in every case.
   const overrideCases: import('@/lib/news-harness/scoring-engine').CalibrationCase[] = [];
 
   for (const c of eligible) {
@@ -237,7 +242,10 @@ export async function batchScoreAndReason(
     const reason = stage.reasonMap.get(c.id);
     if (reason) reasonMap.set(c.id, reason);
     if (stage.overrideMap.get(c.id) && computed !== undefined && comps) {
-      overrideCases.push(buildCalibrationCase(c.id, computed, raw, comps));
+      const judgeScore = stage.judgeScoreMap.get(c.id);
+      if (judgeScore !== undefined) {
+        overrideCases.push(buildCalibrationCase(c.id, computed, judgeScore, comps));
+      }
     }
   }
 

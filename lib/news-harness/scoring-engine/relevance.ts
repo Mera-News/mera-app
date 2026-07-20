@@ -12,7 +12,9 @@
 //   breadthComp = clamp((#distinct positive matched topics − 1)/BREADTH_SAT, 0,1)
 //   affinity = W_TOPIC·topicComp + W_BREADTH·breadthComp + W_GEO·geoComp
 //            + W_ENTITY·entityComp + W_EVENT·eventComp + W_PUB·pubComp
-//            + W_POP·popComp + W_FRESH·freshComp
+//            + W_POP·popComp
+//   (Round-3 A2: age/freshness decay removed — recency is honored by the
+//    fact-rows view's pubDate ordering, not the score.)
 //   mathBase = clamp(BASE_OFFSET + BASE_SLOPE·clampPos(affinity), BASE_MIN, BASE_MAX)
 //   base     = headlineScope ? max(mathBase, HEADLINE_BASE_FLOOR + HEADLINE_POP_LIFT·popComp)
 //                            : mathBase                                   (before penalties)
@@ -80,7 +82,6 @@ export interface RelevanceComponents {
   eventComp: number;
   pubComp: number;
   popComp: number;
-  freshComp: number;
   affinity: number;
   /** base before the headline floor. */
   mathBase: number;
@@ -171,21 +172,6 @@ function popularity(maxClusterSize: number | null | undefined, cfg: ScoringEngin
   return clamp(v, 0, 1);
 }
 
-/** freshness: 1.0 ≤ FRESH_FULL_HOURS, linear → FRESH_MID_SCORE at
- *  FRESH_DECAY_HOURS, FRESH_OLD_SCORE beyond. Unknown date → FRESH_OLD_SCORE. */
-function freshness(
-  pubDateMs: number | null | undefined,
-  nowMs: number,
-  cfg: ScoringEngineConfig,
-): number {
-  if (pubDateMs == null || Number.isNaN(pubDateMs)) return cfg.FRESH_OLD_SCORE;
-  const ageH = (nowMs - pubDateMs) / 3_600_000;
-  if (ageH <= cfg.FRESH_FULL_HOURS) return 1.0;
-  if (ageH >= cfg.FRESH_DECAY_HOURS) return cfg.FRESH_OLD_SCORE;
-  const t = (ageH - cfg.FRESH_FULL_HOURS) / (cfg.FRESH_DECAY_HOURS - cfg.FRESH_FULL_HOURS);
-  return 1.0 + t * (cfg.FRESH_MID_SCORE - 1.0);
-}
-
 /** entityComp = max persona interest over the article's entities (0 if none). */
 function maxEntityInterest(
   entities: string[] | undefined,
@@ -257,8 +243,9 @@ function isBackstop(candidate: ScoredCandidateInput): boolean {
 /**
  * Compute the deterministic relevance for one candidate.
  *
- * @param nowMs reference "now" for freshness (defaults to Date.now()); pass a
- *        fixed value in replays/eval for determinism.
+ * @param nowMs reference "now" (defaults to Date.now()). Retained for signature
+ *        stability / deterministic replays; no longer consumed by the math since
+ *        Round-3 A2 removed freshness decay.
  */
 export function computeRelevance(
   candidate: ScoredCandidateInput,
@@ -307,7 +294,6 @@ export function computeRelevance(
   const eventComp = eventTypeAffinity(candidate.eventType, candidate.matchedTopics);
   const pubComp = pubPref(candidate.publicationName, persona.pubPrefs);
   const popComp = popularity(candidate.maxClusterSize, config);
-  const freshComp = freshness(candidate.pubDateMs, nowMs, config);
 
   const affinity =
     config.W_TOPIC * topicComp +
@@ -316,8 +302,7 @@ export function computeRelevance(
     config.W_ENTITY * entityComp +
     config.W_EVENT * eventComp +
     config.W_PUB * pubComp +
-    config.W_POP * popComp +
-    config.W_FRESH * freshComp;
+    config.W_POP * popComp;
 
   const mathBase = clamp(
     config.BASE_OFFSET + config.BASE_SLOPE * clampPos(affinity),
@@ -362,7 +347,6 @@ export function computeRelevance(
       eventComp,
       pubComp,
       popComp,
-      freshComp,
       affinity,
       mathBase,
       base,

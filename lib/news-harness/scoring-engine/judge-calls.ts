@@ -72,17 +72,30 @@ export function buildJudgeCalls(
 }
 
 export interface JudgeDecodeResult {
-  /** Final raw score per id (judge decision; computed on fail-open). */
+  /** APPLIED raw score per id. Round-3 A1: the judge is advisory, so this is
+   *  ALWAYS the computed (math) score — the E2EE pipeline persists it directly
+   *  (its former demote-only min(judge, computed) now resolves to computed). */
   rawScoreMap: Map<string, number>;
+  /** ADVISORY judge score per id (only for rows in successfully-decoded chunks).
+   *  NEVER applied. Pair with computedScoreMap to build a CalibrationCase for
+   *  overridden rows: `handleJudgeResults` should, for every id in overrideMap,
+   *  record buildCalibrationCase(id, computed, judgeScore, components) so the
+   *  cloud path feeds the calibration loop (it currently does not). */
+  judgeScoreMap: Map<string, number>;
   reasonMap: Map<string, string>;
+  /** ids where |judge − computed| > OVERRIDE_DELTA (calibration signal). */
   overrideMap: Map<string, boolean>;
   adjustedIds: Set<string>;
 }
 
 /**
  * Decode judge BatchCompletionResults back into per-id maps. A missing/failed
- * chunk fails open — the persisted computed (math) score stands for that chunk.
- * Reasons are kept only for rows whose final score ≥ reasonRelevanceThreshold
+ * chunk fails open — the computed (math) score stands for that chunk.
+ *
+ * Round-3 A1 — ADVISORY judge: `rawScoreMap` carries the computed math score for
+ * EVERY id (never the judge's proposed value); the judge's proposed score is
+ * returned separately in `judgeScoreMap` for calibration only. Reasons are kept
+ * only for rows whose APPLIED (computed) score ≥ reasonRelevanceThreshold
  * (mirrors computeAndJudge).
  */
 export function decodeJudgeResults(
@@ -95,6 +108,7 @@ export function decodeJudgeResults(
   const eng = config.scoringEngine;
   const pipe = config.articlePipeline;
   const rawScoreMap = new Map<string, number>();
+  const judgeScoreMap = new Map<string, number>();
   const reasonMap = new Map<string, string>();
   const overrideMap = new Map<string, boolean>();
   const adjustedIds = new Set<string>();
@@ -103,8 +117,10 @@ export function decodeJudgeResults(
   for (const [callId, ids] of chunkIds) {
     const computed = ids.map((id) => computedScoreMap.get(id) ?? 0);
     const result = resultById.get(callId);
+    // Applied score is the computed math for every id (A1), regardless of the
+    // judge outcome — set it up front so fail-open needs no extra work.
+    ids.forEach((id, i) => rawScoreMap.set(id, computed[i]));
     if (!result || result.error) {
-      ids.forEach((id, i) => rawScoreMap.set(id, computed[i]));
       if (result?.error) {
         logger.warn('[decodeJudgeResults] judge chunk failed — math stands', {
           callId,
@@ -116,14 +132,15 @@ export function decodeJudgeResults(
     const decisions = parseJudgeResponse(result.output, computed, eng, logger, callId);
     ids.forEach((id, i) => {
       const d = decisions[i];
-      rawScoreMap.set(id, d.score);
+      // Advisory only — the applied rawScoreMap entry stays the computed math.
+      judgeScoreMap.set(id, d.score);
       if (d.override) overrideMap.set(id, true);
       if (d.adjusted) adjustedIds.add(id);
-      if (d.reason && d.score >= pipe.reasonRelevanceThreshold) {
+      if (d.reason && computed[i] >= pipe.reasonRelevanceThreshold) {
         reasonMap.set(id, d.reason);
       }
     });
   }
 
-  return { rawScoreMap, reasonMap, overrideMap, adjustedIds };
+  return { rawScoreMap, judgeScoreMap, reasonMap, overrideMap, adjustedIds };
 }

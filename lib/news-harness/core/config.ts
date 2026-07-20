@@ -158,8 +158,6 @@ export interface ScoringEngineConfig {
   W_PUB: number;
   /** Popularity — widely-covered stories (top-headline path leans here). */
   W_POP: number;
-  /** Freshness. */
-  W_FRESH: number;
   // --- affinity → raw band mapping ----------------------------------------
   /** base = clamp(BASE_OFFSET + BASE_SLOPE·clampPos(affinity), BASE_MIN, BASE_MAX). */
   BASE_OFFSET: number;
@@ -197,15 +195,6 @@ export interface ScoringEngineConfig {
   // --- popularity saturation ----------------------------------------------
   /** popComp = clamp(log2(1+maxClusterSize)/log2(1+POP_SAT), 0, 1). */
   POP_SAT: number;
-  // --- freshness knees -----------------------------------------------------
-  /** ≤ this age (hours) → 1.0. */
-  FRESH_FULL_HOURS: number;
-  /** At this age (hours) → FRESH_MID_SCORE; linear from FRESH_FULL_HOURS. */
-  FRESH_DECAY_HOURS: number;
-  /** Freshness value at FRESH_DECAY_HOURS. */
-  FRESH_MID_SCORE: number;
-  /** Freshness value beyond FRESH_DECAY_HOURS. */
-  FRESH_OLD_SCORE: number;
   // --- geo alignment multipliers (× location.weight) ----------------------
   GEO_CITY: number;
   GEO_REGION: number;
@@ -312,19 +301,20 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
   },
   scoringEngine: {
     // affinity component weights (positives sum to ≈ 1.0 at full saturation).
-    // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH. Both are
-    // explicit-interest signals (magnitude vs. breadth of the match); the shift
-    // stops a single seed-weight topic from single-handedly landing an article
-    // in FEED (the dominant over-inclusion mode) while keeping the positives sum
-    // at 1.0. All other weights unchanged.
-    W_TOPIC: 0.32,
-    W_BREADTH: 0.1,
-    W_GEO: 0.2,
-    W_ENTITY: 0.08,
-    W_EVENT: 0.05,
-    W_PUB: 0.07,
-    W_POP: 0.1,
-    W_FRESH: 0.08,
+    // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH.
+    // Round-3 A2: freshness decay removed (W_FRESH 0.08 deleted). The remaining
+    // seven positive weights are RENORMALIZED proportionally (÷0.92, the pre-A2
+    // positive sum) so full-saturation affinity stays ≈1.0 and no borderline
+    // article slips under the 0.3 render gate from a ~0.08-raw drop. Pre-A2 →
+    // post-A2: 0.32→0.348, 0.10→0.109, 0.20→0.217, 0.08→0.087, 0.05→0.054,
+    // 0.07→0.076, 0.10→0.109 (3dp; the seven sum to exactly 1.000).
+    W_TOPIC: 0.348,
+    W_BREADTH: 0.109,
+    W_GEO: 0.217,
+    W_ENTITY: 0.087,
+    W_EVENT: 0.054,
+    W_PUB: 0.076,
+    W_POP: 0.109,
     // affinity → raw band
     BASE_OFFSET: 0.05,
     BASE_SLOPE: 1.05,
@@ -345,11 +335,6 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     VS_HI: 0.9,
     // popularity saturation
     POP_SAT: 32,
-    // freshness knees
-    FRESH_FULL_HOURS: 6,
-    FRESH_DECAY_HOURS: 24,
-    FRESH_MID_SCORE: 0.3,
-    FRESH_OLD_SCORE: 0.1,
     // geo alignment multipliers
     GEO_CITY: 1.0,
     GEO_REGION: 0.6,

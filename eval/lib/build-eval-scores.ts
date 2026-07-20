@@ -176,7 +176,6 @@ async function main(): Promise<void> {
         entity: +r.components.entityComp.toFixed(3),
         event: +r.components.eventComp.toFixed(3),
         pop: +r.components.popComp.toFixed(3),
-        fresh: +r.components.freshComp.toFixed(3),
         base: +r.components.base.toFixed(3),
         negP: +r.components.negTopicPenalty.toFixed(3),
         wrongP: +r.components.wrongLocPenalty.toFixed(3),

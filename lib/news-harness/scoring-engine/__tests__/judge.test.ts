@@ -91,7 +91,7 @@ describe('parseJudgeResponse — conservative decode + full override', () => {
 describe('summarizeComponents', () => {
   const base: RelevanceComponents = {
     topicComp: 0.8, breadthComp: 0.5, geoComp: 0.3, geoAlignment: 'COUNTRY',
-    entityComp: 0, eventComp: 0, pubComp: 0, popComp: 0, freshComp: 0.5,
+    entityComp: 0, eventComp: 0, pubComp: 0, popComp: 0,
     affinity: 0, mathBase: 0.4, base: 0.4, negTopicPenalty: 0, suppressPenalty: 0,
     wrongLocPenalty: 0, seenPenalty: 0, wrongLocationFlag: 0, matchedLocationId: 'loc-1',
   };

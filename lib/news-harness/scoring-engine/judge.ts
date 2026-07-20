@@ -6,10 +6,17 @@
 //       the winning matched-topic text). NO fact bank leaves the device.
 //   (2) parseJudgeResponse() — decodes the combined {"j","s"?,"r"?} array with
 //       the SAME conservative discipline as parseFeedVerifierResponse: on parse
-//       failure / length mismatch / a malformed entry, the article KEEPS its
-//       computed math score (fail-open). USER DECISION (2026-07-17): the judge
-//       may FULLY OVERRIDE (no ±clamp) — s is accepted across the whole band;
-//       an override = |s − computed| > OVERRIDE_DELTA (0.3) is flagged per row.
+//       failure / length mismatch / a malformed entry, the row falls back to its
+//       computed math score (fail-open). "s" is still decoded across the whole
+//       band (no ±clamp, per the 2026-07-17 decision).
+//
+// ROUND-3 A1 — the judge is ADVISORY. Its returned score (JudgeDecision.score)
+// is NEVER applied: the callers (run-stage.computeAndJudge,
+// judge-calls.decodeJudgeResults) persist the COMPUTED math score and expose the
+// judge score only as an advisory value + the `override` flag (|judge −
+// computed| > OVERRIDE_DELTA 0.3) that still feeds the calibration loop. The
+// judge's `reason` remains the user-facing note. parseJudgeResponse itself is
+// unchanged — the "never apply" rule lives in how the callers consume it.
 
 import type { HarnessLogger } from '../core/ports';
 import { NOOP_LOGGER } from '../core/ports';
@@ -26,8 +33,10 @@ import type { PersonaLocationSnapshot } from './persona-context';
 export const OVERRIDE_DELTA = 0.3;
 
 export interface JudgeDecision {
-  /** Final raw score after the judge (computed if "ok"/failed, else the
-   *  override). Always in [BASE_MIN, BASE_MAX]. */
+  /** The judge's proposed score (ADVISORY — Round-3 A1). Equals `computed` on
+   *  "ok" / fail-open, or the decoded "adj" value otherwise. Always in
+   *  [BASE_MIN, BASE_MAX]. Callers NEVER apply this as the relevance; it only
+   *  drives the `override` flag + the calibration case. */
   score: number;
   /** Judge-authored reason, when it returned one (computed ≥ 0.15 gate). */
   reason?: string;
@@ -87,10 +96,9 @@ export function summarizeComponents(
     parts.push(`location ${components.geoAlignment}-level match${role}`);
   }
 
-  // Popularity / freshness (only when notable).
+  // Popularity (only when notable). Round-3 A2 removed the freshness clause
+  // (age decay no longer contributes to the score).
   if (components.popComp >= 0.6) parts.push('widely covered');
-  if (components.freshComp >= 0.9) parts.push('breaking/fresh');
-  else if (components.freshComp <= 0.15) parts.push('older story');
 
   // Entity / publication signals.
   if (components.entityComp >= 0.4) parts.push('followed entity');

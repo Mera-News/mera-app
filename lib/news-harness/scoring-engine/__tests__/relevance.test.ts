@@ -7,8 +7,10 @@ import type { PersonaScoringContext, PersonaLocationSnapshot } from '../persona-
 
 const cfg = DEFAULT_HARNESS_CONFIG.scoringEngine;
 const NOW = 1_700_000_000_000;
-const OLD = NOW - 100 * 3_600_000; // > 24h → freshness floor
-const FRESH = NOW - 1 * 3_600_000; // ≤ 6h → freshness 1.0
+// Round-3 A2 removed freshness decay — pubDate no longer affects the score.
+// These are kept only to exercise the (now score-neutral) pubDateMs field.
+const OLD = NOW - 100 * 3_600_000;
+const FRESH = NOW - 1 * 3_600_000;
 
 // tier helpers (the eval contract: FEED ≥0.40, TANGENTIAL 0.25–0.40, EXCLUDE <0.25)
 const isFeed = (s: number) => s >= 0.4;
