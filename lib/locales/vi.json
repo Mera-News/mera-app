@@ -279,7 +279,9 @@
     "savedTitle": "Đã lưu tùy chọn",
     "savedDescription": "Cài đặt thông báo của bạn đã được cập nhật.",
     "saveFailedTitle": "Lưu thất bại",
-    "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại."
+    "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại.",
+    "trackedStoryUpdateTitle": "Cập nhật câu chuyện",
+    "trackedStoryUpdateBody": "{{count}} bài viết mới trong một câu chuyện bạn đang theo dõi"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -755,6 +757,7 @@
     "title": "Khám phá",
     "sources": "Nguồn",
     "scopeWorld": "Thế giới",
+    "scopeTopStories": "Tin nổi bật",
     "noArticles": "Không tìm thấy bài viết nào",
     "thinContentTitle": "Muốn thêm tin tức về {{place}}?",
     "thinContentBody": "Thêm {{place}} làm một địa điểm để có thêm tin tức từ đây.",
@@ -769,7 +772,57 @@
     "alsoForYou": "Cũng dành cho bạn",
     "breaking": "Nóng",
     "showMore": "Hiện thêm {{count}}",
-    "whySection": "Vì sao có mục này"
+    "whySection": "Vì sao có mục này",
+    "triageEntry": "Xem lần lượt từng mục",
+    "subTabFeed": "Bản tin",
+    "subTabStories": "Câu chuyện",
+    "subTabSaved": "Đã lưu",
+    "newStoriesPill_other": "{{count}} tin mới",
+    "caughtUp": "Bạn đã xem hết rồi",
+    "caughtUpHint": "Đây là mọi thứ từ trước đó",
+    "earlier": "Trước đó",
+    "earlierShowMore": "Hiện thêm {{count}} tin trước đó"
+  },
+  "feedStatus": {
+    "title": "Trạng thái bản tin",
+    "idle": "Đã cập nhật",
+    "stage": "Giai đoạn",
+    "cloudProgress": "Chấm điểm trên đám mây",
+    "deviceProgress": "Chấm điểm trên thiết bị",
+    "processed": "Bài viết đã lấy",
+    "analysed": "Đã phân tích",
+    "relevant": "Liên quan đến bạn",
+    "noiseRemoved": "Đã lọc nhiễu",
+    "lastProcessed": "Xử lý lần cuối",
+    "errorTitle": "Sự cố chấm điểm",
+    "openA11y": "Mở trạng thái bản tin",
+    "close": "Đóng"
+  },
+  "trackedStories": {
+    "emptyTitle": "Chưa theo dõi câu chuyện nào",
+    "emptyBody": "Theo dõi một câu chuyện để xem mọi diễn biến mới được tổng hợp tại đây khi nó xảy ra.",
+    "title": "Câu chuyện đang theo dõi",
+    "trackAction": "Theo dõi câu chuyện",
+    "untrackAction": "Bỏ theo dõi câu chuyện",
+    "trackedToast": "Đã bắt đầu theo dõi câu chuyện này",
+    "updatesBadge": "{{count}} mới",
+    "endedLabel": "Đã kết thúc",
+    "timelineQuietNote": "Chưa có tin tức mới nào được tổng hợp. Chúng tôi sẽ thêm diễn biến tại đây khi câu chuyện này tiếp diễn.",
+    "railTitle": "Đang theo dõi",
+    "untrackConfirmTitle": "Ngừng theo dõi?",
+    "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa."
+  },
+  "triage": {
+    "title": "Xem xét",
+    "progress": "{{current}} / {{total}}",
+    "close": "Đóng",
+    "upNext": "Tiếp theo",
+    "read": "Đọc",
+    "good": "Tốt",
+    "bad": "Không hợp với tôi",
+    "tellWhy": "Cho chúng tôi biết lý do",
+    "save": "Lưu",
+    "skip": "Bỏ qua"
   },
   "whatsNew": {
     "title": "Có gì mới",
@@ -981,6 +1034,8 @@
     "factsEmpty": "Chạm để thêm điều Mera nên biết",
     "locations": "Địa điểm",
     "locationsSubtitle": "Địa điểm định hình bản tin của bạn",
+    "sources": "Nguồn",
+    "sourcesSubtitle": "Duyệt và theo dõi nguồn tin",
     "saved": "Đã lưu",
     "savedSubtitle": "Bài viết bạn đã lưu để xem sau",
     "preferences": "Tùy chọn nguồn",
@@ -991,6 +1046,28 @@
     "personaHealth": "Tình trạng hồ sơ",
     "healthPending_other": "{{count}} đề xuất dọn dẹp",
     "healthAllHealthy": "Tất cả đều ổn"
+  },
+  "profile": {
+    "talkToMera": "Trò chuyện với Mera",
+    "talkToMeraSubtitle": "Đây là cách tôi nhìn nhận về bạn. Chạm để tiếp tục cuộc trò chuyện.",
+    "continueTalking": "Tiếp tục",
+    "emptyTitle": "Tôi chưa biết gì về bạn",
+    "emptyBody": "Hãy kể cho tôi nghe về bạn để tôi có thể tìm tin tức phù hợp với bạn.",
+    "startTalking": "Bắt đầu trò chuyện",
+    "aboutYou": "Về bạn",
+    "gettingToKnowYou": "Tôi vẫn đang tìm hiểu về bạn — hãy quay lại sau một chút.",
+    "updating": "Đang cập nhật…",
+    "advanced": "Nâng cao",
+    "advancedSubtitle": "Thông tin, nguồn, đã lưu, hoạt động và hơn thế nữa",
+    "sheet": {
+      "importance": "Mức độ quan trọng",
+      "moreImportant": "Quan trọng hơn",
+      "lessImportant": "Ít quan trọng hơn",
+      "refine": "Tinh chỉnh cùng Mera",
+      "refineSeed": "Hãy nói về điều này — \"{{text}}\"",
+      "remove": "Xóa mục này",
+      "removeConfirm": "Chạm lại để xóa"
+    }
   },
   "facts": {
     "screenTitle": "Thông tin của bạn",

@@ -280,7 +280,9 @@
     "savedTitle": "Preferencias guardadas",
     "savedDescription": "Tus ajustes de notificaciones han sido actualizados.",
     "saveFailedTitle": "Error al guardar",
-    "saveFailedDescription": "No se pudieron guardar tus preferencias. Por favor, inténtalo de nuevo."
+    "saveFailedDescription": "No se pudieron guardar tus preferencias. Por favor, inténtalo de nuevo.",
+    "trackedStoryUpdateTitle": "Actualización de la historia",
+    "trackedStoryUpdateBody": "{{count}} artículos nuevos en una historia que sigues"
   },
   "language": {
     "title": "Idioma",
@@ -756,6 +758,7 @@
     "title": "Explorar",
     "sources": "Fuentes",
     "scopeWorld": "Mundo",
+    "scopeTopStories": "Titulares principales",
     "noArticles": "No se encontraron artículos",
     "thinContentTitle": "¿Quieres más noticias de {{place}}?",
     "thinContentBody": "Añade {{place}} como lugar para ver más noticias de allí.",
@@ -770,7 +773,58 @@
     "alsoForYou": "También para ti",
     "breaking": "Última hora",
     "showMore": "Mostrar {{count}} más",
-    "whySection": "Por qué esta sección"
+    "whySection": "Por qué esta sección",
+    "triageEntry": "Revisar uno por uno",
+    "subTabFeed": "Feed",
+    "subTabStories": "Historias",
+    "subTabSaved": "Guardados",
+    "newStoriesPill_one": "{{count}} historia nueva",
+    "newStoriesPill_other": "{{count}} historias nuevas",
+    "caughtUp": "Estás al día",
+    "caughtUpHint": "Aquí está todo lo anterior",
+    "earlier": "Anteriores",
+    "earlierShowMore": "Mostrar {{count}} más anteriores"
+  },
+  "feedStatus": {
+    "title": "Estado del feed",
+    "idle": "Al día",
+    "stage": "Etapa",
+    "cloudProgress": "Puntuación en la nube",
+    "deviceProgress": "Puntuación en el dispositivo",
+    "processed": "Artículos obtenidos",
+    "analysed": "Analizados",
+    "relevant": "Relevantes para ti",
+    "noiseRemoved": "Ruido eliminado",
+    "lastProcessed": "Último procesamiento",
+    "errorTitle": "Problema de puntuación",
+    "openA11y": "Abrir estado del feed",
+    "close": "Cerrar"
+  },
+  "trackedStories": {
+    "emptyTitle": "Aún no sigues ninguna historia",
+    "emptyBody": "Sigue una historia para ver aquí cada nuevo desarrollo a medida que ocurre.",
+    "title": "Historias seguidas",
+    "trackAction": "Seguir historia",
+    "untrackAction": "Dejar de seguir",
+    "trackedToast": "Ahora sigues esta historia",
+    "updatesBadge": "{{count}} nuevo",
+    "endedLabel": "Finalizada",
+    "timelineQuietNote": "Todavía no se ha reunido nueva cobertura. Añadiremos aquí los desarrollos a medida que esta historia evolucione.",
+    "railTitle": "Siguiendo",
+    "untrackConfirmTitle": "¿Dejar de seguir?",
+    "untrackConfirmBody": "Ya no verás nuevos desarrollos de esta historia."
+  },
+  "triage": {
+    "title": "Revisión",
+    "progress": "{{current}} / {{total}}",
+    "close": "Cerrar",
+    "upNext": "A continuación",
+    "read": "Leer",
+    "good": "Bien",
+    "bad": "No es para mí",
+    "tellWhy": "Dinos por qué",
+    "save": "Guardar",
+    "skip": "Omitir"
   },
   "whatsNew": {
     "title": "Novedades",
@@ -985,6 +1039,8 @@
     "factsEmpty": "Toca para añadir lo que Mera debería saber",
     "locations": "Lugares",
     "locationsSubtitle": "Lugares que dan forma a tu feed",
+    "sources": "Fuentes",
+    "sourcesSubtitle": "Explora y sigue fuentes de noticias",
     "saved": "Guardados",
     "savedSubtitle": "Artículos que guardaste para después",
     "preferences": "Preferencias de fuentes",
@@ -997,6 +1053,28 @@
     "healthPending_one": "{{count}} sugerencia de limpieza",
     "healthPending_other": "{{count}} sugerencias de limpieza",
     "healthAllHealthy": "Todo saludable"
+  },
+  "profile": {
+    "talkToMera": "Habla con Mera",
+    "talkToMeraSubtitle": "Así es como te veo. Toca para seguir la conversación.",
+    "continueTalking": "Continuar",
+    "emptyTitle": "Todavía no te conozco",
+    "emptyBody": "Cuéntame sobre ti para que pueda encontrar noticias que te importen.",
+    "startTalking": "Empezar a hablar",
+    "aboutYou": "Sobre ti",
+    "gettingToKnowYou": "Todavía te estoy conociendo — vuelve en un momento.",
+    "updating": "Actualizando…",
+    "advanced": "Avanzado",
+    "advancedSubtitle": "Hechos, fuentes, guardados, actividad y más",
+    "sheet": {
+      "importance": "Importancia",
+      "moreImportant": "Más importante",
+      "lessImportant": "Menos importante",
+      "refine": "Refinar con Mera",
+      "refineSeed": "Hablemos de esto — \"{{text}}\"",
+      "remove": "Eliminar esto",
+      "removeConfirm": "Toca de nuevo para eliminar"
+    }
   },
   "facts": {
     "screenTitle": "Tus hechos",

@@ -279,7 +279,9 @@
     "savedTitle": "Preferensi Tersimpan",
     "savedDescription": "Pengaturan notifikasi Anda telah diperbarui.",
     "saveFailedTitle": "Gagal Menyimpan",
-    "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi."
+    "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
+    "trackedStoryUpdateTitle": "Pembaruan cerita",
+    "trackedStoryUpdateBody": "{{count}} artikel baru dalam cerita yang Anda ikuti"
   },
   "language": {
     "title": "Bahasa",
@@ -755,6 +757,7 @@
     "title": "Eksplor",
     "sources": "Sumber",
     "scopeWorld": "Dunia",
+    "scopeTopStories": "Berita utama",
     "noArticles": "Tidak ada artikel yang ditemukan",
     "thinContentTitle": "Ingin lebih banyak berita {{place}}?",
     "thinContentBody": "Tambahkan {{place}} sebagai lokasi untuk mendapatkan lebih banyak cerita dari sini.",
@@ -769,7 +772,57 @@
     "alsoForYou": "Juga untuk Anda",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
-    "whySection": "Mengapa bagian ini"
+    "whySection": "Mengapa bagian ini",
+    "triageEntry": "Tinjau satu per satu",
+    "subTabFeed": "Feed",
+    "subTabStories": "Cerita",
+    "subTabSaved": "Tersimpan",
+    "newStoriesPill_other": "{{count}} cerita baru",
+    "caughtUp": "Anda sudah mengikuti semuanya",
+    "caughtUpHint": "Berikut semua dari sebelumnya",
+    "earlier": "Sebelumnya",
+    "earlierShowMore": "Tampilkan {{count}} lagi dari sebelumnya"
+  },
+  "feedStatus": {
+    "title": "Status feed",
+    "idle": "Terkini",
+    "stage": "Tahap",
+    "cloudProgress": "Penilaian cloud",
+    "deviceProgress": "Penilaian di perangkat",
+    "processed": "Artikel diambil",
+    "analysed": "Dianalisis",
+    "relevant": "Relevan untuk Anda",
+    "noiseRemoved": "Noise dihapus",
+    "lastProcessed": "Terakhir diproses",
+    "errorTitle": "Masalah penilaian",
+    "openA11y": "Buka status feed",
+    "close": "Tutup"
+  },
+  "trackedStories": {
+    "emptyTitle": "Belum ada cerita yang diikuti",
+    "emptyBody": "Ikuti sebuah cerita untuk melihat setiap perkembangan baru yang terkumpul di sini seiring berjalannya.",
+    "title": "Cerita yang diikuti",
+    "trackAction": "Ikuti cerita",
+    "untrackAction": "Berhenti mengikuti cerita",
+    "trackedToast": "Kini mengikuti cerita ini",
+    "updatesBadge": "{{count}} baru",
+    "endedLabel": "Berakhir",
+    "timelineQuietNote": "Belum ada liputan baru yang terkumpul. Kami akan menambahkan perkembangan di sini seiring cerita ini berlangsung.",
+    "railTitle": "Diikuti",
+    "untrackConfirmTitle": "Berhenti mengikuti?",
+    "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini."
+  },
+  "triage": {
+    "title": "Tinjau",
+    "progress": "{{current}} / {{total}}",
+    "close": "Tutup",
+    "upNext": "Berikutnya",
+    "read": "Baca",
+    "good": "Bagus",
+    "bad": "Bukan untuk saya",
+    "tellWhy": "Beri tahu kami alasannya",
+    "save": "Simpan",
+    "skip": "Lewati"
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -981,6 +1034,8 @@
     "factsEmpty": "Ketuk untuk menambahkan apa yang harus diketahui Mera",
     "locations": "Lokasi",
     "locationsSubtitle": "Tempat yang membentuk feed Anda",
+    "sources": "Sumber",
+    "sourcesSubtitle": "Jelajahi dan ikuti sumber berita",
     "saved": "Tersimpan",
     "savedSubtitle": "Artikel yang Anda simpan untuk nanti",
     "preferences": "Preferensi sumber",
@@ -991,6 +1046,28 @@
     "personaHealth": "Kesehatan profil",
     "healthPending_other": "{{count}} saran perapian",
     "healthAllHealthy": "Semua sehat"
+  },
+  "profile": {
+    "talkToMera": "Bicara dengan Mera",
+    "talkToMeraSubtitle": "Begini cara saya melihat Anda. Ketuk untuk melanjutkan percakapan.",
+    "continueTalking": "Lanjutkan",
+    "emptyTitle": "Saya belum mengenal Anda",
+    "emptyBody": "Ceritakan tentang diri Anda agar saya bisa menemukan berita yang penting bagi Anda.",
+    "startTalking": "Mulai bicara",
+    "aboutYou": "Tentang Anda",
+    "gettingToKnowYou": "Saya masih dalam proses mengenal Anda — coba lagi sebentar lagi.",
+    "updating": "Memperbarui…",
+    "advanced": "Lanjutan",
+    "advancedSubtitle": "Fakta, sumber, tersimpan, aktivitas, dan lainnya",
+    "sheet": {
+      "importance": "Tingkat kepentingan",
+      "moreImportant": "Lebih penting",
+      "lessImportant": "Kurang penting",
+      "refine": "Sempurnakan bersama Mera",
+      "refineSeed": "Mari kita bahas ini — \"{{text}}\"",
+      "remove": "Hapus ini",
+      "removeConfirm": "Ketuk lagi untuk menghapus"
+    }
   },
   "facts": {
     "screenTitle": "Fakta Anda",

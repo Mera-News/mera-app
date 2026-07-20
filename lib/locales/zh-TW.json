@@ -279,7 +279,9 @@
     "savedTitle": "偏好設定已儲存",
     "savedDescription": "您的通知設定已更新。",
     "saveFailedTitle": "儲存失敗",
-    "saveFailedDescription": "無法儲存您的偏好設定，請再試一次。"
+    "saveFailedDescription": "無法儲存您的偏好設定，請再試一次。",
+    "trackedStoryUpdateTitle": "報導更新",
+    "trackedStoryUpdateBody": "您追蹤的報導有 {{count}} 篇新文章"
   },
   "language": {
     "title": "語言",
@@ -755,6 +757,7 @@
     "title": "探索",
     "sources": "來源",
     "scopeWorld": "全球",
+    "scopeTopStories": "頭條新聞",
     "noArticles": "找不到文章",
     "thinContentTitle": "想看更多{{place}}的新聞？",
     "thinContentBody": "將{{place}}新增為地點，即可取得更多相關報導。",
@@ -769,7 +772,57 @@
     "alsoForYou": "也為你推薦",
     "breaking": "突發",
     "showMore": "顯示更多 {{count}} 則",
-    "whySection": "為什麼有這個版塊"
+    "whySection": "為什麼有這個版塊",
+    "triageEntry": "逐則查看",
+    "subTabFeed": "動態",
+    "subTabStories": "報導",
+    "subTabSaved": "已儲存",
+    "newStoriesPill_other": "{{count}} 則新報導",
+    "caughtUp": "您已瀏覽完所有內容",
+    "caughtUpHint": "這裡是之前的所有內容",
+    "earlier": "更早之前",
+    "earlierShowMore": "顯示更早的 {{count}} 則"
+  },
+  "feedStatus": {
+    "title": "動態狀態",
+    "idle": "已是最新",
+    "stage": "階段",
+    "cloudProgress": "雲端評分",
+    "deviceProgress": "裝置端評分",
+    "processed": "已擷取文章",
+    "analysed": "已分析",
+    "relevant": "與你相關",
+    "noiseRemoved": "已過濾干擾",
+    "lastProcessed": "上次處理",
+    "errorTitle": "評分發生問題",
+    "openA11y": "開啟動態狀態",
+    "close": "關閉"
+  },
+  "trackedStories": {
+    "emptyTitle": "還沒有追蹤任何報導",
+    "emptyBody": "追蹤一則報導，即可在這裡看到它的每一次最新進展。",
+    "title": "已追蹤的報導",
+    "trackAction": "追蹤報導",
+    "untrackAction": "取消追蹤",
+    "trackedToast": "已追蹤這則報導",
+    "updatesBadge": "{{count}} 則更新",
+    "endedLabel": "已結束",
+    "timelineQuietNote": "目前還沒有新的報導。隨著事態發展，我們會持續在這裡更新。",
+    "railTitle": "追蹤中",
+    "untrackConfirmTitle": "確定要取消追蹤嗎？",
+    "untrackConfirmBody": "你將不再看到這則報導的最新進展。"
+  },
+  "triage": {
+    "title": "審閱",
+    "progress": "{{current}} / {{total}}",
+    "close": "關閉",
+    "upNext": "接下來",
+    "read": "閱讀",
+    "good": "喜歡",
+    "bad": "不感興趣",
+    "tellWhy": "告訴我們原因",
+    "save": "儲存",
+    "skip": "略過"
   },
   "whatsNew": {
     "title": "更新內容",
@@ -981,6 +1034,8 @@
     "factsEmpty": "點按新增 Mera 應該了解的資訊",
     "locations": "地點",
     "locationsSubtitle": "影響你動態的地點",
+    "sources": "來源",
+    "sourcesSubtitle": "瀏覽並追蹤新聞來源",
     "saved": "已儲存",
     "savedSubtitle": "你儲存供稍後閱讀的文章",
     "preferences": "來源偏好",
@@ -991,6 +1046,28 @@
     "personaHealth": "人物誌健康度",
     "healthPending_other": "{{count}} 項整理建議",
     "healthAllHealthy": "一切正常"
+  },
+  "profile": {
+    "talkToMera": "和 Mera 聊聊",
+    "talkToMeraSubtitle": "這是我眼中的你。點按繼續聊下去。",
+    "continueTalking": "繼續",
+    "emptyTitle": "我還不了解你",
+    "emptyBody": "告訴我一些關於你的事，這樣我就能為你找到重要的新聞。",
+    "startTalking": "開始聊天",
+    "aboutYou": "關於你",
+    "gettingToKnowYou": "我還在慢慢了解你——稍後再回來看看吧。",
+    "updating": "更新中…",
+    "advanced": "進階設定",
+    "advancedSubtitle": "事實、來源、已儲存、活動等",
+    "sheet": {
+      "importance": "重要程度",
+      "moreImportant": "更重要",
+      "lessImportant": "不太重要",
+      "refine": "與 Mera 一起調整",
+      "refineSeed": "我們來聊聊這個吧 — 「{{text}}」",
+      "remove": "移除",
+      "removeConfirm": "再次點按即可移除"
+    }
   },
   "facts": {
     "screenTitle": "你的事實",

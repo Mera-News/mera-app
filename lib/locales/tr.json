@@ -280,7 +280,9 @@
     "savedTitle": "Tercihler Kaydedildi",
     "savedDescription": "Bildirim ayarların güncellendi.",
     "saveFailedTitle": "Kaydetme Başarısız",
-    "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene."
+    "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
+    "trackedStoryUpdateTitle": "Haber güncellendi",
+    "trackedStoryUpdateBody": "Takip ettiğin bir haberde {{count}} yeni makale"
   },
   "language": {
     "title": "Dil",
@@ -756,6 +758,7 @@
     "title": "Keşfet",
     "sources": "Kaynaklar",
     "scopeWorld": "Dünya",
+    "scopeTopStories": "Öne çıkan haberler",
     "noArticles": "Makale bulunamadı",
     "thinContentTitle": "{{place}} hakkında daha fazla haber ister misin?",
     "thinContentBody": "Buradan daha fazla haber almak için {{place}}'i konum olarak ekle.",
@@ -770,7 +773,59 @@
     "alsoForYou": "Senin için de",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
-    "whySection": "Bu bölüm neden burada"
+    "whySection": "Bu bölüm neden burada",
+    "triageEntry": "Tek tek incele",
+    "subTabFeed": "Akış",
+    "subTabStories": "Haberler",
+    "subTabSaved": "Kaydedilenler",
+    "newStoriesPill_one": "{{count}} yeni haber",
+    "newStoriesPill_other": "{{count}} yeni haber",
+    "caughtUp": "Her şeyi gördün",
+    "caughtUpHint": "Öncekilerin hepsi burada",
+    "earlier": "Daha önce",
+    "earlierShowMore": "{{count}} tane daha eski göster"
+  },
+  "feedStatus": {
+    "title": "Akış durumu",
+    "idle": "Güncel",
+    "stage": "Aşama",
+    "cloudProgress": "Bulut puanlama",
+    "deviceProgress": "Cihaz üzerinde puanlama",
+    "processed": "Çekilen makaleler",
+    "analysed": "Analiz edildi",
+    "relevant": "Senin için alakalı",
+    "noiseRemoved": "Kaldırılan gürültü",
+    "lastProcessed": "Son işlenme",
+    "errorTitle": "Puanlama sorunu",
+    "openA11y": "Akış durumunu aç",
+    "close": "Kapat"
+  },
+  "trackedStories": {
+    "emptyTitle": "Henüz takip edilen haber yok",
+    "emptyBody": "Ortaya çıkan her yeni gelişmeyi burada görmek için bir haberi takip et.",
+    "title": "Takip edilen haberler",
+    "trackAction": "Haberi takip et",
+    "untrackAction": "Haberi takipten çık",
+    "trackedToast": "Artık bu haberi takip ediyorsun",
+    "updatesBadge_one": "{{count}} yeni",
+    "updatesBadge_other": "{{count}} yeni",
+    "endedLabel": "Sona erdi",
+    "timelineQuietNote": "Henüz yeni bir gelişme yok. Bu haber ilerledikçe gelişmeleri buraya ekleyeceğiz.",
+    "railTitle": "Takip edilenler",
+    "untrackConfirmTitle": "Takibi bırakılsın mı?",
+    "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin."
+  },
+  "triage": {
+    "title": "İncele",
+    "progress": "{{current}} / {{total}}",
+    "close": "Kapat",
+    "upNext": "Sırada",
+    "read": "Oku",
+    "good": "İyi",
+    "bad": "Bana göre değil",
+    "tellWhy": "Nedenini söyle",
+    "save": "Kaydet",
+    "skip": "Geç"
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -985,6 +1040,8 @@
     "factsEmpty": "Mera'nın bilmesi gerekenleri eklemek için dokun",
     "locations": "Konumlar",
     "locationsSubtitle": "Akışını şekillendiren yerler",
+    "sources": "Kaynaklar",
+    "sourcesSubtitle": "Haber kaynaklarına göz at ve takip et",
     "saved": "Kaydedilenler",
     "savedSubtitle": "Daha sonrası için kaydettiğin makaleler",
     "preferences": "Kaynak tercihleri",
@@ -997,6 +1054,28 @@
     "healthPending_one": "{{count}} temizlik önerisi",
     "healthPending_other": "{{count}} temizlik önerisi",
     "healthAllHealthy": "Her şey sağlıklı"
+  },
+  "profile": {
+    "talkToMera": "Mera ile konuş",
+    "talkToMeraSubtitle": "Seni böyle görüyorum. Sohbete devam etmek için dokun.",
+    "continueTalking": "Devam et",
+    "emptyTitle": "Seni henüz tanımıyorum",
+    "emptyBody": "Senin için önemli olan haberleri bulabilmem için kendinden bahset.",
+    "startTalking": "Konuşmaya başla",
+    "aboutYou": "Senin hakkında",
+    "gettingToKnowYou": "Seni hâlâ tanıyorum — birazdan tekrar bak.",
+    "updating": "Güncelleniyor…",
+    "advanced": "Gelişmiş",
+    "advancedSubtitle": "Bilgiler, kaynaklar, kaydedilenler, etkinlik ve daha fazlası",
+    "sheet": {
+      "importance": "Önem",
+      "moreImportant": "Daha önemli",
+      "lessImportant": "Daha az önemli",
+      "refine": "Mera ile netleştir",
+      "refineSeed": "Bunun hakkında konuşalım — \"{{text}}\"",
+      "remove": "Bunu kaldır",
+      "removeConfirm": "Kaldırmak için tekrar dokun"
+    }
   },
   "facts": {
     "screenTitle": "Bilgilerin",

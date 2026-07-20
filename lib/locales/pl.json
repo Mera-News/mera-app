@@ -282,7 +282,9 @@
     "savedTitle": "Preferencje zapisane",
     "savedDescription": "Twoje ustawienia powiadomień zostały zaktualizowane.",
     "saveFailedTitle": "Zapis nieudany",
-    "saveFailedDescription": "Nie udało się zapisać preferencji. Spróbuj ponownie."
+    "saveFailedDescription": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
+    "trackedStoryUpdateTitle": "Aktualizacja historii",
+    "trackedStoryUpdateBody": "{{count}} nowych artykułów w historii, którą śledzisz"
   },
   "language": {
     "title": "Język",
@@ -758,6 +760,7 @@
     "title": "Odkrywaj",
     "sources": "Źródła",
     "scopeWorld": "Świat",
+    "scopeTopStories": "Najważniejsze wiadomości",
     "noArticles": "Nie znaleziono artykułów",
     "thinContentTitle": "Chcesz więcej wiadomości z {{place}}?",
     "thinContentBody": "Dodaj {{place}} jako lokalizację, aby otrzymywać więcej wiadomości stamtąd.",
@@ -772,7 +775,60 @@
     "alsoForYou": "Także dla Ciebie",
     "breaking": "Pilne",
     "showMore": "Pokaż {{count}} więcej",
-    "whySection": "Dlaczego ta sekcja"
+    "whySection": "Dlaczego ta sekcja",
+    "triageEntry": "Przeglądaj po kolei",
+    "subTabFeed": "Kanał",
+    "subTabStories": "Historie",
+    "subTabSaved": "Zapisane",
+    "newStoriesPill_one": "{{count}} nowa historia",
+    "newStoriesPill_few": "{{count}} nowe historie",
+    "newStoriesPill_many": "{{count}} nowych historii",
+    "newStoriesPill_other": "{{count}} nowej historii",
+    "caughtUp": "Jesteś na bieżąco",
+    "caughtUpHint": "Oto wszystko sprzed tego czasu",
+    "earlier": "Wcześniej",
+    "earlierShowMore": "Pokaż {{count}} więcej wcześniejszych"
+  },
+  "feedStatus": {
+    "title": "Stan kanału",
+    "idle": "Aktualne",
+    "stage": "Etap",
+    "cloudProgress": "Ocenianie w chmurze",
+    "deviceProgress": "Ocenianie na urządzeniu",
+    "processed": "Pobrane artykuły",
+    "analysed": "Przeanalizowane",
+    "relevant": "Trafne dla Ciebie",
+    "noiseRemoved": "Usunięty szum",
+    "lastProcessed": "Ostatnio przetworzono",
+    "errorTitle": "Problem z ocenianiem",
+    "openA11y": "Otwórz stan kanału",
+    "close": "Zamknij"
+  },
+  "trackedStories": {
+    "emptyTitle": "Nie śledzisz jeszcze żadnych historii",
+    "emptyBody": "Śledź historię, aby zobaczyć tutaj każdy nowy rozwój wydarzeń.",
+    "title": "Śledzone historie",
+    "trackAction": "Śledź historię",
+    "untrackAction": "Przestań śledzić",
+    "trackedToast": "Teraz śledzisz tę historię",
+    "updatesBadge": "{{count}} nowych",
+    "endedLabel": "Zakończona",
+    "timelineQuietNote": "Nie zebrano jeszcze nowych informacji. Będziemy dodawać tu rozwój wydarzeń w miarę rozwoju tej historii.",
+    "railTitle": "Śledzone",
+    "untrackConfirmTitle": "Przestać śledzić?",
+    "untrackConfirmBody": "Nie będziesz już widzieć nowych wydarzeń dotyczących tej historii."
+  },
+  "triage": {
+    "bad": "To nie dla mnie",
+    "close": "Zamknij",
+    "good": "Dobre",
+    "progress": "{{current}} / {{total}}",
+    "read": "Czytaj",
+    "save": "Zapisz",
+    "skip": "Pomiń",
+    "tellWhy": "Powiedz nam dlaczego",
+    "title": "Przegląd",
+    "upNext": "Następne"
   },
   "whatsNew": {
     "title": "Co nowego",
@@ -993,6 +1049,8 @@
     "factsEmpty": "Dotknij, aby dodać to, co Mera powinna wiedzieć",
     "locations": "Lokalizacje",
     "locationsSubtitle": "Miejsca, które kształtują Twój kanał",
+    "sources": "Źródła",
+    "sourcesSubtitle": "Przeglądaj i obserwuj źródła wiadomości",
     "saved": "Zapisane",
     "savedSubtitle": "Artykuły zapisane na później",
     "preferences": "Preferencje źródeł",
@@ -1009,6 +1067,28 @@
     "healthPending_many": "{{count}} sugestii porządkowania",
     "healthPending_other": "{{count}} sugestii porządkowania",
     "healthAllHealthy": "Wszystko w porządku"
+  },
+  "profile": {
+    "talkToMera": "Porozmawiaj z Mera",
+    "talkToMeraSubtitle": "Tak Cię widzę. Dotknij, aby kontynuować rozmowę.",
+    "continueTalking": "Kontynuuj",
+    "emptyTitle": "Jeszcze Cię nie znam",
+    "emptyBody": "Opowiedz mi o sobie, abym mogła znaleźć wiadomości, które mają dla Ciebie znaczenie.",
+    "startTalking": "Zacznij rozmowę",
+    "aboutYou": "O Tobie",
+    "gettingToKnowYou": "Wciąż Cię poznaję — zajrzyj tu za chwilę.",
+    "updating": "Aktualizowanie…",
+    "advanced": "Zaawansowane",
+    "advancedSubtitle": "Fakty, źródła, zapisane, aktywność i więcej",
+    "sheet": {
+      "importance": "Ważność",
+      "moreImportant": "Ważniejsze",
+      "lessImportant": "Mniej ważne",
+      "refine": "Dopracuj z Mera",
+      "refineSeed": "Porozmawiajmy o tym — \"{{text}}\"",
+      "remove": "Usuń to",
+      "removeConfirm": "Dotknij ponownie, aby usunąć"
+    }
   },
   "facts": {
     "screenTitle": "Twoje fakty",

@@ -280,7 +280,9 @@
     "savedTitle": "Voorkeuren opgeslagen",
     "savedDescription": "Je meldingsinstellingen zijn bijgewerkt.",
     "saveFailedTitle": "Opslaan mislukt",
-    "saveFailedDescription": "Voorkeuren opslaan mislukt. Probeer het opnieuw."
+    "saveFailedDescription": "Voorkeuren opslaan mislukt. Probeer het opnieuw.",
+    "trackedStoryUpdateTitle": "Verhaalupdate",
+    "trackedStoryUpdateBody": "{{count}} nieuwe artikelen in een verhaal dat je volgt"
   },
   "language": {
     "title": "Taal",
@@ -756,6 +758,7 @@
     "title": "Verkennen",
     "sources": "Bronnen",
     "scopeWorld": "Wereld",
+    "scopeTopStories": "Topnieuws",
     "noArticles": "Geen artikelen gevonden",
     "thinContentTitle": "Meer nieuws uit {{place}} willen?",
     "thinContentBody": "Voeg {{place}} toe als locatie om meer verhalen van hier te krijgen.",
@@ -770,7 +773,58 @@
     "alsoForYou": "Ook voor jou",
     "breaking": "Breaking",
     "showMore": "Toon {{count}} meer",
-    "whySection": "Waarom deze sectie"
+    "whySection": "Waarom deze sectie",
+    "triageEntry": "Eén voor één beoordelen",
+    "subTabFeed": "Feed",
+    "subTabStories": "Verhalen",
+    "subTabSaved": "Opgeslagen",
+    "newStoriesPill_one": "{{count}} nieuw verhaal",
+    "newStoriesPill_other": "{{count}} nieuwe verhalen",
+    "caughtUp": "Je bent helemaal bij",
+    "caughtUpHint": "Hier is alles van eerder",
+    "earlier": "Eerder",
+    "earlierShowMore": "Toon {{count}} meer eerdere"
+  },
+  "feedStatus": {
+    "title": "Feedstatus",
+    "idle": "Actueel",
+    "stage": "Fase",
+    "cloudProgress": "Cloudscoring",
+    "deviceProgress": "Scoren op apparaat",
+    "processed": "Opgehaalde artikelen",
+    "analysed": "Geanalyseerd",
+    "relevant": "Relevant voor jou",
+    "noiseRemoved": "Ruis verwijderd",
+    "lastProcessed": "Laatst verwerkt",
+    "errorTitle": "Probleem bij scoren",
+    "openA11y": "Feedstatus openen",
+    "close": "Sluiten"
+  },
+  "trackedStories": {
+    "emptyTitle": "Nog geen verhalen gevolgd",
+    "emptyBody": "Volg een verhaal om elke nieuwe ontwikkeling hier te zien zodra deze zich voordoet.",
+    "title": "Gevolgde verhalen",
+    "trackAction": "Verhaal volgen",
+    "untrackAction": "Verhaal niet meer volgen",
+    "trackedToast": "Je volgt dit verhaal nu",
+    "updatesBadge": "{{count}} nieuw",
+    "endedLabel": "Beëindigd",
+    "timelineQuietNote": "Nog geen nieuwe berichtgeving verzameld. We voegen hier ontwikkelingen toe zodra dit verhaal zich ontvouwt.",
+    "railTitle": "Volgend",
+    "untrackConfirmTitle": "Stoppen met volgen?",
+    "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal."
+  },
+  "triage": {
+    "title": "Beoordelen",
+    "progress": "{{current}} / {{total}}",
+    "close": "Sluiten",
+    "upNext": "Hierna",
+    "read": "Lezen",
+    "good": "Goed",
+    "bad": "Niets voor mij",
+    "tellWhy": "Vertel ons waarom",
+    "save": "Opslaan",
+    "skip": "Overslaan"
   },
   "whatsNew": {
     "title": "Wat is er nieuw",
@@ -985,6 +1039,8 @@
     "factsEmpty": "Tik om toe te voegen wat Mera moet weten",
     "locations": "Locaties",
     "locationsSubtitle": "Plaatsen die je feed bepalen",
+    "sources": "Bronnen",
+    "sourcesSubtitle": "Nieuwsbronnen bekijken en volgen",
     "saved": "Opgeslagen",
     "savedSubtitle": "Artikelen die je voor later hebt opgeslagen",
     "preferences": "Bronvoorkeuren",
@@ -997,6 +1053,28 @@
     "healthPending_one": "{{count}} opschoningssuggestie",
     "healthPending_other": "{{count}} opschoningssuggesties",
     "healthAllHealthy": "Alles gezond"
+  },
+  "profile": {
+    "talkToMera": "Praat met Mera",
+    "talkToMeraSubtitle": "Zo zie ik jou. Tik om het gesprek voort te zetten.",
+    "continueTalking": "Verder",
+    "emptyTitle": "Ik ken je nog niet",
+    "emptyBody": "Vertel me iets over jezelf, zodat ik nieuws kan vinden dat voor jou belangrijk is.",
+    "startTalking": "Begin een gesprek",
+    "aboutYou": "Over jou",
+    "gettingToKnowYou": "Ik ben je nog aan het leren kennen — kom zo weer terug.",
+    "updating": "Bijwerken…",
+    "advanced": "Geavanceerd",
+    "advancedSubtitle": "Feiten, bronnen, opgeslagen items, activiteit en meer",
+    "sheet": {
+      "importance": "Belang",
+      "moreImportant": "Belangrijker",
+      "lessImportant": "Minder belangrijk",
+      "refine": "Verfijnen met Mera",
+      "refineSeed": "Laten we het hierover hebben — \"{{text}}\"",
+      "remove": "Verwijderen",
+      "removeConfirm": "Tik nogmaals om te verwijderen"
+    }
   },
   "facts": {
     "screenTitle": "Jouw feiten",

@@ -279,7 +279,9 @@
     "savedTitle": "환경설정 저장됨",
     "savedDescription": "알림 설정이 업데이트되었습니다.",
     "saveFailedTitle": "저장 실패",
-    "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요."
+    "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요.",
+    "trackedStoryUpdateTitle": "스토리 업데이트",
+    "trackedStoryUpdateBody": "팔로우 중인 스토리에 새 기사 {{count}}건이 있습니다"
   },
   "language": {
     "title": "언어",
@@ -755,6 +757,7 @@
     "title": "탐색",
     "sources": "소스",
     "scopeWorld": "전 세계",
+    "scopeTopStories": "주요 뉴스",
     "noArticles": "기사를 찾을 수 없습니다",
     "thinContentTitle": "{{place}} 뉴스를 더 보고 싶으신가요?",
     "thinContentBody": "{{place}}을(를) 위치로 추가하면 이곳 소식을 더 많이 받아볼 수 있습니다.",
@@ -769,7 +772,57 @@
     "alsoForYou": "이런 소식도 있어요",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
-    "whySection": "이 섹션을 보여드리는 이유"
+    "whySection": "이 섹션을 보여드리는 이유",
+    "triageEntry": "하나씩 검토하기",
+    "subTabFeed": "피드",
+    "subTabStories": "스토리",
+    "subTabSaved": "저장됨",
+    "newStoriesPill_other": "새 소식 {{count}}개",
+    "caughtUp": "모두 확인하셨습니다",
+    "caughtUpHint": "이전 소식은 여기에 있습니다",
+    "earlier": "이전 소식",
+    "earlierShowMore": "이전 소식 {{count}}개 더 보기"
+  },
+  "feedStatus": {
+    "title": "피드 상태",
+    "idle": "최신 상태입니다",
+    "stage": "단계",
+    "cloudProgress": "클라우드 채점",
+    "deviceProgress": "기기 내 점수 계산",
+    "processed": "가져온 기사",
+    "analysed": "분석됨",
+    "relevant": "나와 관련됨",
+    "noiseRemoved": "제거된 디코이",
+    "lastProcessed": "마지막 처리",
+    "errorTitle": "점수 계산 문제",
+    "openA11y": "피드 상태 열기",
+    "close": "닫기"
+  },
+  "trackedStories": {
+    "emptyTitle": "아직 팔로우한 스토리가 없습니다",
+    "emptyBody": "스토리를 팔로우하면 새로운 진행 상황이 이곳에 모아서 표시됩니다.",
+    "title": "팔로우한 스토리",
+    "trackAction": "스토리 팔로우",
+    "untrackAction": "팔로우 취소",
+    "trackedToast": "이 스토리를 팔로우했습니다",
+    "updatesBadge": "새 소식 {{count}}개",
+    "endedLabel": "종료됨",
+    "timelineQuietNote": "아직 새로운 보도가 없습니다. 이 스토리가 진행되는 대로 이곳에 소식을 추가해 드리겠습니다.",
+    "railTitle": "팔로우 중",
+    "untrackConfirmTitle": "팔로우를 취소할까요?",
+    "untrackConfirmBody": "이 스토리의 새로운 진행 상황을 더 이상 확인할 수 없습니다."
+  },
+  "triage": {
+    "title": "검토",
+    "progress": "{{current}} / {{total}}",
+    "close": "닫기",
+    "upNext": "다음",
+    "read": "읽기",
+    "good": "좋아요",
+    "bad": "관심 없음",
+    "tellWhy": "이유를 알려주세요",
+    "save": "저장",
+    "skip": "건너뛰기"
   },
   "whatsNew": {
     "title": "새로운 기능",
@@ -981,6 +1034,8 @@
     "factsEmpty": "Mera가 알아야 할 내용을 탭하여 추가하세요",
     "locations": "위치",
     "locationsSubtitle": "피드에 영향을 주는 장소",
+    "sources": "소스",
+    "sourcesSubtitle": "뉴스 소스를 둘러보고 팔로우하세요",
     "saved": "저장됨",
     "savedSubtitle": "나중에 볼 기사",
     "preferences": "소스 선호도",
@@ -991,6 +1046,28 @@
     "personaHealth": "페르소나 상태",
     "healthPending_other": "정리 제안 {{count}}개",
     "healthAllHealthy": "모두 양호"
+  },
+  "profile": {
+    "talkToMera": "Mera와 대화하기",
+    "talkToMeraSubtitle": "이것이 제가 보는 당신의 모습이에요. 탭해서 대화를 이어가 보세요.",
+    "continueTalking": "계속하기",
+    "emptyTitle": "아직 당신에 대해 잘 몰라요",
+    "emptyBody": "자신에 대해 알려 주시면 당신에게 중요한 뉴스를 찾아 드릴게요.",
+    "startTalking": "대화 시작하기",
+    "aboutYou": "당신에 대해",
+    "gettingToKnowYou": "아직 당신을 알아가는 중이에요 — 잠시 후 다시 확인해 주세요.",
+    "updating": "업데이트 중…",
+    "advanced": "고급 설정",
+    "advancedSubtitle": "정보, 소스, 저장됨, 활동 등",
+    "sheet": {
+      "importance": "중요도",
+      "moreImportant": "더 중요하게",
+      "lessImportant": "덜 중요하게",
+      "refine": "Mera와 함께 다듬기",
+      "refineSeed": "이것에 대해 이야기해 봐요 — \"{{text}}\"",
+      "remove": "삭제",
+      "removeConfirm": "다시 탭하면 삭제됩니다"
+    }
   },
   "facts": {
     "screenTitle": "내 정보",

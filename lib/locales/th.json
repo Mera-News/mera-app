@@ -279,7 +279,9 @@
     "savedTitle": "บันทึกการตั้งค่าแล้ว",
     "savedDescription": "การตั้งค่าการแจ้งเตือนของคุณได้รับการอัปเดตแล้ว",
     "saveFailedTitle": "บันทึกไม่สำเร็จ",
-    "saveFailedDescription": "ไม่สามารถบันทึกการตั้งค่าของคุณได้ กรุณาลองอีกครั้ง"
+    "saveFailedDescription": "ไม่สามารถบันทึกการตั้งค่าของคุณได้ กรุณาลองอีกครั้ง",
+    "trackedStoryUpdateTitle": "อัปเดตเรื่องราว",
+    "trackedStoryUpdateBody": "มีบทความใหม่ {{count}} รายการในเรื่องราวที่คุณติดตาม"
   },
   "language": {
     "title": "ภาษา",
@@ -755,6 +757,7 @@
     "title": "สำรวจ",
     "sources": "แหล่งข่าว",
     "scopeWorld": "โลก",
+    "scopeTopStories": "ข่าวเด่น",
     "noArticles": "ไม่พบบทความ",
     "thinContentTitle": "ต้องการข่าว {{place}} เพิ่มเติมไหม?",
     "thinContentBody": "เพิ่ม {{place}} เป็นสถานที่เพื่อรับเรื่องราวจากที่นี่มากขึ้น",
@@ -769,7 +772,57 @@
     "alsoForYou": "อาจสนใจด้วย",
     "breaking": "ข่าวด่วน",
     "showMore": "แสดงอีก {{count}} รายการ",
-    "whySection": "ทำไมถึงมีหมวดนี้"
+    "whySection": "ทำไมถึงมีหมวดนี้",
+    "triageEntry": "ตรวจทีละรายการ",
+    "subTabFeed": "ฟีด",
+    "subTabStories": "เรื่องราว",
+    "subTabSaved": "บันทึกไว้",
+    "newStoriesPill_other": "{{count}} เรื่องใหม่",
+    "caughtUp": "คุณตามทันทุกอย่างแล้ว",
+    "caughtUpHint": "นี่คือทั้งหมดจากก่อนหน้านี้",
+    "earlier": "ก่อนหน้านี้",
+    "earlierShowMore": "แสดงอีก {{count}} รายการก่อนหน้านี้"
+  },
+  "feedStatus": {
+    "title": "สถานะฟีด",
+    "idle": "อัปเดตล่าสุด",
+    "stage": "ขั้นตอน",
+    "cloudProgress": "การให้คะแนนบนคลาวด์",
+    "deviceProgress": "การให้คะแนนบนอุปกรณ์",
+    "processed": "บทความที่ดึงมา",
+    "analysed": "วิเคราะห์แล้ว",
+    "relevant": "เกี่ยวข้องกับคุณ",
+    "noiseRemoved": "ตัดข้อมูลรบกวนออก",
+    "lastProcessed": "ประมวลผลล่าสุด",
+    "errorTitle": "ปัญหาการให้คะแนน",
+    "openA11y": "เปิดสถานะฟีด",
+    "close": "ปิด"
+  },
+  "trackedStories": {
+    "emptyTitle": "ยังไม่ได้ติดตามเรื่องราวใด",
+    "emptyBody": "ติดตามเรื่องราวเพื่อดูทุกความคืบหน้าใหม่ที่รวบรวมไว้ที่นี่เมื่อมันเกิดขึ้น",
+    "title": "เรื่องราวที่ติดตาม",
+    "trackAction": "ติดตามเรื่องราว",
+    "untrackAction": "เลิกติดตามเรื่องราว",
+    "trackedToast": "กำลังติดตามเรื่องราวนี้แล้ว",
+    "updatesBadge": "{{count}} ใหม่",
+    "endedLabel": "สิ้นสุดแล้ว",
+    "timelineQuietNote": "ยังไม่มีการรายงานใหม่ที่รวบรวมไว้ เราจะเพิ่มความคืบหน้าที่นี่เมื่อเรื่องราวนี้ดำเนินไป",
+    "railTitle": "กำลังติดตาม",
+    "untrackConfirmTitle": "เลิกติดตามหรือไม่?",
+    "untrackConfirmBody": "คุณจะไม่เห็นความคืบหน้าใหม่ของเรื่องราวนี้อีกต่อไป"
+  },
+  "triage": {
+    "title": "ตรวจสอบ",
+    "progress": "{{current}} / {{total}}",
+    "close": "ปิด",
+    "upNext": "ถัดไป",
+    "read": "อ่าน",
+    "good": "ดี",
+    "bad": "ไม่ใช่สำหรับฉัน",
+    "tellWhy": "บอกเหตุผลให้เราทราบ",
+    "save": "บันทึก",
+    "skip": "ข้าม"
   },
   "whatsNew": {
     "title": "มีอะไรใหม่",
@@ -981,6 +1034,8 @@
     "factsEmpty": "แตะเพื่อเพิ่มสิ่งที่ Mera ควรรู้",
     "locations": "สถานที่",
     "locationsSubtitle": "สถานที่ที่กำหนดฟีดของคุณ",
+    "sources": "แหล่งข่าว",
+    "sourcesSubtitle": "เรียกดูและติดตามแหล่งข่าว",
     "saved": "บันทึกแล้ว",
     "savedSubtitle": "บทความที่คุณบันทึกไว้อ่านภายหลัง",
     "preferences": "การตั้งค่าแหล่งข่าว",
@@ -991,6 +1046,28 @@
     "personaHealth": "สุขภาพโปรไฟล์",
     "healthPending_other": "{{count}} รายการแนะนำในการจัดระเบียบ",
     "healthAllHealthy": "ทุกอย่างเรียบร้อยดี"
+  },
+  "profile": {
+    "talkToMera": "คุยกับ Mera",
+    "talkToMeraSubtitle": "นี่คือสิ่งที่ฉันเข้าใจเกี่ยวกับคุณ แตะเพื่อสนทนาต่อ",
+    "continueTalking": "ดำเนินการต่อ",
+    "emptyTitle": "ฉันยังไม่รู้จักคุณ",
+    "emptyBody": "เล่าเกี่ยวกับตัวคุณให้ฉันฟัง เพื่อที่ฉันจะได้หาข่าวที่สำคัญสำหรับคุณ",
+    "startTalking": "เริ่มพูดคุย",
+    "aboutYou": "เกี่ยวกับคุณ",
+    "gettingToKnowYou": "ฉันยังอยู่ระหว่างทำความรู้จักคุณ — กลับมาดูอีกครั้งในอีกสักครู่",
+    "updating": "กำลังอัปเดต…",
+    "advanced": "ขั้นสูง",
+    "advancedSubtitle": "ข้อเท็จจริง แหล่งข่าว รายการบันทึก กิจกรรม และอื่น ๆ",
+    "sheet": {
+      "importance": "ความสำคัญ",
+      "moreImportant": "สำคัญมากขึ้น",
+      "lessImportant": "สำคัญน้อยลง",
+      "refine": "ปรับแต่งร่วมกับ Mera",
+      "refineSeed": "มาคุยเรื่องนี้กัน — \"{{text}}\"",
+      "remove": "ลบสิ่งนี้",
+      "removeConfirm": "แตะอีกครั้งเพื่อลบ"
+    }
   },
   "facts": {
     "screenTitle": "ข้อเท็จจริงของคุณ",

@@ -280,7 +280,9 @@
     "savedTitle": "प्राथमिकताएं सहेजी गईं",
     "savedDescription": "आपकी नोटिफिकेशन सेटिंग्स अपडेट कर दी गई हैं।",
     "saveFailedTitle": "सहेजना विफल",
-    "saveFailedDescription": "आपकी प्राथमिकताएं सहेजने में विफल। कृपया पुनः प्रयास करें।"
+    "saveFailedDescription": "आपकी प्राथमिकताएं सहेजने में विफल। कृपया पुनः प्रयास करें।",
+    "trackedStoryUpdateTitle": "स्टोरी अपडेट",
+    "trackedStoryUpdateBody": "आपके द्वारा फ़ॉलो की जा रही स्टोरी में {{count}} नए लेख"
   },
   "language": {
     "title": "भाषा",
@@ -756,6 +758,7 @@
     "title": "एक्सप्लोर",
     "sources": "स्रोत",
     "scopeWorld": "विश्व",
+    "scopeTopStories": "प्रमुख ख़बरें",
     "noArticles": "कोई लेख नहीं मिला",
     "thinContentTitle": "{{place}} की और खबरें चाहिए?",
     "thinContentBody": "यहां से और खबरें पाने के लिए {{place}} को एक स्थान के रूप में जोड़ें।",
@@ -770,7 +773,59 @@
     "alsoForYou": "आपके लिए ये भी",
     "breaking": "ब्रेकिंग",
     "showMore": "{{count}} और दिखाएं",
-    "whySection": "यह सेक्शन क्यों"
+    "whySection": "यह सेक्शन क्यों",
+    "triageEntry": "एक-एक करके समीक्षा करें",
+    "subTabFeed": "फ़ीड",
+    "subTabStories": "स्टोरीज़",
+    "subTabSaved": "सहेजे गए",
+    "newStoriesPill_one": "{{count}} नई स्टोरी",
+    "newStoriesPill_other": "{{count}} नई स्टोरीज़",
+    "caughtUp": "आप पूरी तरह अपडेट हैं",
+    "caughtUpHint": "यहां पहले की सभी ख़बरें हैं",
+    "earlier": "पहले की",
+    "earlierShowMore": "{{count}} और पहले की दिखाएं"
+  },
+  "feedStatus": {
+    "title": "फ़ीड स्थिति",
+    "idle": "अप टू डेट",
+    "stage": "चरण",
+    "cloudProgress": "क्लाउड स्कोरिंग",
+    "deviceProgress": "ऑन-डिवाइस स्कोरिंग",
+    "processed": "लेख प्राप्त हुए",
+    "analysed": "विश्लेषित",
+    "relevant": "आपके लिए प्रासंगिक",
+    "noiseRemoved": "शोर हटाया गया",
+    "lastProcessed": "आख़िरी बार प्रोसेस किया गया",
+    "errorTitle": "स्कोरिंग में समस्या",
+    "openA11y": "फ़ीड स्थिति खोलें",
+    "close": "बंद करें"
+  },
+  "trackedStories": {
+    "emptyTitle": "अभी तक कोई स्टोरी फ़ॉलो नहीं की गई",
+    "emptyBody": "किसी स्टोरी को फ़ॉलो करें ताकि इसके सामने आने वाले हर नए घटनाक्रम को यहां देख सकें।",
+    "title": "फ़ॉलो की गई स्टोरीज़",
+    "trackAction": "स्टोरी फ़ॉलो करें",
+    "untrackAction": "स्टोरी अनफ़ॉलो करें",
+    "trackedToast": "अब आप इस स्टोरी को फ़ॉलो कर रहे हैं",
+    "updatesBadge_one": "{{count}} नया",
+    "updatesBadge_other": "{{count}} नए",
+    "endedLabel": "समाप्त",
+    "timelineQuietNote": "अभी तक कोई नई कवरेज नहीं मिली। जैसे-जैसे यह स्टोरी आगे बढ़ेगी, हम यहां घटनाक्रम जोड़ेंगे।",
+    "railTitle": "फ़ॉलो की जा रही",
+    "untrackConfirmTitle": "फ़ॉलो करना बंद करें?",
+    "untrackConfirmBody": "अब आपको इस स्टोरी के नए घटनाक्रम नहीं दिखेंगे।"
+  },
+  "triage": {
+    "title": "समीक्षा",
+    "progress": "{{current}} / {{total}}",
+    "close": "बंद करें",
+    "upNext": "अगला",
+    "read": "पढ़ें",
+    "good": "अच्छा",
+    "bad": "मेरे लिए नहीं",
+    "tellWhy": "हमें कारण बताएं",
+    "save": "सहेजें",
+    "skip": "छोड़ें"
   },
   "whatsNew": {
     "title": "नया क्या है",
@@ -985,6 +1040,8 @@
     "factsEmpty": "Mera को क्या जानना चाहिए, यह जोड़ने के लिए टैप करें",
     "locations": "स्थान",
     "locationsSubtitle": "वे जगहें जो आपकी फ़ीड को आकार देती हैं",
+    "sources": "स्रोत",
+    "sourcesSubtitle": "समाचार स्रोत ब्राउज़ करें और फ़ॉलो करें",
     "saved": "सहेजे गए",
     "savedSubtitle": "बाद के लिए सहेजे गए लेख",
     "preferences": "स्रोत प्राथमिकताएं",
@@ -997,6 +1054,28 @@
     "healthPending_one": "{{count}} सफ़ाई सुझाव",
     "healthPending_other": "{{count}} सफ़ाई सुझाव",
     "healthAllHealthy": "सब स्वस्थ है"
+  },
+  "profile": {
+    "talkToMera": "Mera से बात करें",
+    "talkToMeraSubtitle": "मैं आपको इस तरह देखता हूं। बातचीत जारी रखने के लिए टैप करें।",
+    "continueTalking": "जारी रखें",
+    "emptyTitle": "मैं अभी तक आपको नहीं जानता",
+    "emptyBody": "अपने बारे में बताएं ताकि मैं आपके लिए ज़रूरी ख़बरें ढूंढ सकूं।",
+    "startTalking": "बात शुरू करें",
+    "aboutYou": "आपके बारे में",
+    "gettingToKnowYou": "मैं अभी भी आपको जान रहा हूं — थोड़ी देर बाद फिर देखें।",
+    "updating": "अपडेट हो रहा है…",
+    "advanced": "एडवांस्ड",
+    "advancedSubtitle": "तथ्य, स्रोत, सहेजे गए, गतिविधि और अधिक",
+    "sheet": {
+      "importance": "महत्व",
+      "moreImportant": "अधिक महत्वपूर्ण",
+      "lessImportant": "कम महत्वपूर्ण",
+      "refine": "Mera के साथ परिष्कृत करें",
+      "refineSeed": "चलिए इस बारे में बात करते हैं — \"{{text}}\"",
+      "remove": "इसे हटाएं",
+      "removeConfirm": "हटाने के लिए फिर से टैप करें"
+    }
   },
   "facts": {
     "screenTitle": "आपके तथ्य",

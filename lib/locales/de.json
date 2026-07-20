@@ -280,7 +280,9 @@
     "savedTitle": "Einstellungen gespeichert",
     "savedDescription": "Ihre Benachrichtigungseinstellungen wurden aktualisiert.",
     "saveFailedTitle": "Speichern fehlgeschlagen",
-    "saveFailedDescription": "Ihre Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    "saveFailedDescription": "Ihre Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "trackedStoryUpdateTitle": "Story-Update",
+    "trackedStoryUpdateBody": "{{count}} neue Artikel in einer Geschichte, der Sie folgen"
   },
   "language": {
     "title": "Sprache",
@@ -756,6 +758,7 @@
     "title": "Entdecken",
     "sources": "Quellen",
     "scopeWorld": "Welt",
+    "scopeTopStories": "Top-Meldungen",
     "noArticles": "Keine Artikel gefunden",
     "thinContentTitle": "Mehr Nachrichten aus {{place}}?",
     "thinContentBody": "Fügen Sie {{place}} als Ort hinzu, um mehr Geschichten von dort zu erhalten.",
@@ -770,7 +773,58 @@
     "alsoForYou": "Auch für Sie",
     "breaking": "Eilmeldung",
     "showMore": "{{count}} weitere anzeigen",
-    "whySection": "Warum dieser Abschnitt"
+    "whySection": "Warum dieser Abschnitt",
+    "triageEntry": "Einzeln durchsehen",
+    "subTabFeed": "Feed",
+    "subTabStories": "Geschichten",
+    "subTabSaved": "Gespeichert",
+    "newStoriesPill_one": "{{count}} neue Geschichte",
+    "newStoriesPill_other": "{{count}} neue Geschichten",
+    "caughtUp": "Sie sind auf dem neuesten Stand",
+    "caughtUpHint": "Hier ist alles von vorher",
+    "earlier": "Früher",
+    "earlierShowMore": "{{count}} weitere frühere anzeigen"
+  },
+  "feedStatus": {
+    "title": "Feed-Status",
+    "idle": "Aktuell",
+    "stage": "Phase",
+    "cloudProgress": "Cloud-Bewertung",
+    "deviceProgress": "Bewertung auf dem Gerät",
+    "processed": "Abgerufene Artikel",
+    "analysed": "Analysiert",
+    "relevant": "Relevant für Sie",
+    "noiseRemoved": "Rauschen entfernt",
+    "lastProcessed": "Zuletzt verarbeitet",
+    "errorTitle": "Problem bei der Bewertung",
+    "openA11y": "Feed-Status öffnen",
+    "close": "Schließen"
+  },
+  "trackedStories": {
+    "emptyTitle": "Noch keine gefolgten Geschichten",
+    "emptyBody": "Folgen Sie einer Geschichte, um jede neue Entwicklung hier zu sehen, sobald sie passiert.",
+    "title": "Gefolgte Geschichten",
+    "trackAction": "Geschichte folgen",
+    "untrackAction": "Nicht mehr folgen",
+    "trackedToast": "Sie folgen dieser Geschichte jetzt",
+    "updatesBadge": "{{count}} neu",
+    "endedLabel": "Beendet",
+    "timelineQuietNote": "Noch keine neue Berichterstattung gesammelt. Wir fügen hier Entwicklungen hinzu, sobald sich diese Geschichte weiterentwickelt.",
+    "railTitle": "Gefolgt",
+    "untrackConfirmTitle": "Nicht mehr folgen?",
+    "untrackConfirmBody": "Sie sehen keine neuen Entwicklungen mehr zu dieser Geschichte."
+  },
+  "triage": {
+    "title": "Überprüfung",
+    "progress": "{{current}} / {{total}}",
+    "close": "Schließen",
+    "upNext": "Als Nächstes",
+    "read": "Lesen",
+    "good": "Gut",
+    "bad": "Nichts für mich",
+    "tellWhy": "Sagen Sie uns warum",
+    "save": "Speichern",
+    "skip": "Überspringen"
   },
   "whatsNew": {
     "title": "Neuigkeiten",
@@ -985,6 +1039,8 @@
     "factsEmpty": "Tippen Sie, um hinzuzufügen, was Mera wissen soll",
     "locations": "Orte",
     "locationsSubtitle": "Orte, die Ihren Feed prägen",
+    "sources": "Quellen",
+    "sourcesSubtitle": "Nachrichtenquellen durchsuchen und folgen",
     "saved": "Gespeichert",
     "savedSubtitle": "Artikel, die Sie für später gespeichert haben",
     "preferences": "Quellenpräferenzen",
@@ -997,6 +1053,28 @@
     "healthPending_one": "{{count}} Bereinigungsvorschlag",
     "healthPending_other": "{{count}} Bereinigungsvorschläge",
     "healthAllHealthy": "Alles in Ordnung"
+  },
+  "profile": {
+    "talkToMera": "Mit Mera sprechen",
+    "talkToMeraSubtitle": "So sehe ich Sie. Tippen Sie, um das Gespräch fortzusetzen.",
+    "continueTalking": "Weiter",
+    "emptyTitle": "Ich kenne Sie noch nicht",
+    "emptyBody": "Erzählen Sie mir etwas über sich, damit ich Nachrichten finden kann, die für Sie wichtig sind.",
+    "startTalking": "Gespräch beginnen",
+    "aboutYou": "Über Sie",
+    "gettingToKnowYou": "Ich lerne Sie noch kennen — schauen Sie gleich wieder vorbei.",
+    "updating": "Wird aktualisiert…",
+    "advanced": "Erweitert",
+    "advancedSubtitle": "Fakten, Quellen, Gespeichertes, Aktivität und mehr",
+    "sheet": {
+      "importance": "Wichtigkeit",
+      "moreImportant": "Wichtiger",
+      "lessImportant": "Weniger wichtig",
+      "refine": "Mit Mera verfeinern",
+      "refineSeed": "Lassen Sie uns darüber sprechen — „{{text}}“",
+      "remove": "Entfernen",
+      "removeConfirm": "Zum Entfernen erneut tippen"
+    }
   },
   "facts": {
     "screenTitle": "Ihre Fakten",

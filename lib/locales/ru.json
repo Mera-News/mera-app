@@ -282,7 +282,9 @@
     "savedTitle": "Настройки сохранены",
     "savedDescription": "Настройки уведомлений обновлены.",
     "saveFailedTitle": "Ошибка сохранения",
-    "saveFailedDescription": "Не удалось сохранить ваши настройки. Пожалуйста, попробуйте ещё раз."
+    "saveFailedDescription": "Не удалось сохранить ваши настройки. Пожалуйста, попробуйте ещё раз.",
+    "trackedStoryUpdateTitle": "Обновление истории",
+    "trackedStoryUpdateBody": "{{count}} новых статей в истории, за которой вы следите"
   },
   "language": {
     "title": "Язык",
@@ -758,6 +760,7 @@
     "title": "Обзор",
     "sources": "Источники",
     "scopeWorld": "Мир",
+    "scopeTopStories": "Главные новости",
     "noArticles": "Статьи не найдены",
     "thinContentTitle": "Хотите больше новостей о {{place}}?",
     "thinContentBody": "Добавьте {{place}} как место, чтобы получать больше историй оттуда.",
@@ -772,7 +775,60 @@
     "alsoForYou": "Также для вас",
     "breaking": "Срочно",
     "showMore": "Показать ещё {{count}}",
-    "whySection": "Почему этот раздел"
+    "whySection": "Почему этот раздел",
+    "triageEntry": "Просматривать по одной",
+    "subTabFeed": "Лента",
+    "subTabStories": "Истории",
+    "subTabSaved": "Сохранённое",
+    "newStoriesPill_one": "{{count}} новая история",
+    "newStoriesPill_few": "{{count}} новые истории",
+    "newStoriesPill_many": "{{count}} новых историй",
+    "newStoriesPill_other": "{{count}} новой истории",
+    "caughtUp": "Вы всё просмотрели",
+    "caughtUpHint": "Вот всё, что было раньше",
+    "earlier": "Раньше",
+    "earlierShowMore": "Показать ещё {{count}} более ранних"
+  },
+  "feedStatus": {
+    "title": "Статус ленты",
+    "idle": "Обновлено",
+    "stage": "Этап",
+    "cloudProgress": "Оценка в облаке",
+    "deviceProgress": "Оценка на устройстве",
+    "processed": "Загружено статей",
+    "analysed": "Проанализировано",
+    "relevant": "Актуально для вас",
+    "noiseRemoved": "Шум удалён",
+    "lastProcessed": "Последняя обработка",
+    "errorTitle": "Проблема с оценкой",
+    "openA11y": "Открыть статус ленты",
+    "close": "Закрыть"
+  },
+  "trackedStories": {
+    "emptyTitle": "Вы пока не отслеживаете истории",
+    "emptyBody": "Отслеживайте историю, чтобы видеть здесь каждое новое развитие событий.",
+    "title": "Отслеживаемые истории",
+    "trackAction": "Отслеживать историю",
+    "untrackAction": "Перестать отслеживать",
+    "trackedToast": "Теперь вы отслеживаете эту историю",
+    "updatesBadge": "{{count}} новых",
+    "endedLabel": "Завершено",
+    "timelineQuietNote": "Пока нет новых материалов. Мы будем добавлять сюда развитие событий по мере того, как эта история будет разворачиваться.",
+    "railTitle": "Отслеживаемое",
+    "untrackConfirmTitle": "Перестать отслеживать?",
+    "untrackConfirmBody": "Вы больше не будете видеть новые события по этой истории."
+  },
+  "triage": {
+    "bad": "Не для меня",
+    "close": "Закрыть",
+    "good": "Хорошо",
+    "progress": "{{current}} / {{total}}",
+    "read": "Читать",
+    "save": "Сохранить",
+    "skip": "Пропустить",
+    "tellWhy": "Расскажите почему",
+    "title": "Обзор",
+    "upNext": "Далее"
   },
   "whatsNew": {
     "title": "Что нового",
@@ -990,6 +1046,8 @@
     "factsEmpty": "Нажмите, чтобы добавить то, что должна знать Mera",
     "locations": "Места",
     "locationsSubtitle": "Места, которые формируют вашу ленту",
+    "sources": "Источники",
+    "sourcesSubtitle": "Просматривайте и отслеживайте источники новостей",
     "saved": "Сохранённое",
     "savedSubtitle": "Статьи, которые вы сохранили на потом",
     "preferences": "Настройки источников",
@@ -1004,6 +1062,28 @@
     "healthPending_few": "{{count}} предложения по очистке",
     "healthPending_many": "{{count}} предложений по очистке",
     "healthAllHealthy": "Всё в порядке"
+  },
+  "profile": {
+    "talkToMera": "Поговорить с Mera",
+    "talkToMeraSubtitle": "Вот как я вас вижу. Нажмите, чтобы продолжить разговор.",
+    "continueTalking": "Продолжить",
+    "emptyTitle": "Я вас пока не знаю",
+    "emptyBody": "Расскажите о себе, чтобы я могла подбирать важные для вас новости.",
+    "startTalking": "Начать разговор",
+    "aboutYou": "О вас",
+    "gettingToKnowYou": "Я всё ещё узнаю вас — загляните сюда чуть позже.",
+    "updating": "Обновление…",
+    "advanced": "Дополнительно",
+    "advancedSubtitle": "Факты, источники, сохранённое, активность и многое другое",
+    "sheet": {
+      "importance": "Важность",
+      "moreImportant": "Более важно",
+      "lessImportant": "Менее важно",
+      "refine": "Уточнить с Mera",
+      "refineSeed": "Давайте обсудим это — «{{text}}»",
+      "remove": "Удалить это",
+      "removeConfirm": "Нажмите ещё раз, чтобы удалить"
+    }
   },
   "facts": {
     "screenTitle": "Ваши факты",

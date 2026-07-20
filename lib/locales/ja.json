@@ -279,7 +279,9 @@
     "savedTitle": "設定を保存しました",
     "savedDescription": "通知設定が更新されました。",
     "saveFailedTitle": "保存に失敗しました",
-    "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。"
+    "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。",
+    "trackedStoryUpdateTitle": "ストーリーの更新",
+    "trackedStoryUpdateBody": "フォロー中のストーリーに{{count}}件の新着記事があります"
   },
   "language": {
     "title": "言語",
@@ -755,6 +757,7 @@
     "title": "探索",
     "sources": "ソース",
     "scopeWorld": "世界",
+    "scopeTopStories": "トップニュース",
     "noArticles": "記事が見つかりません",
     "thinContentTitle": "{{place}}のニュースをもっと見たいですか？",
     "thinContentBody": "{{place}}を場所として追加すると、ここからもっとニュースが届きます。",
@@ -769,7 +772,57 @@
     "alsoForYou": "あなたへのその他のおすすめ",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
-    "whySection": "このセクションについて"
+    "whySection": "このセクションについて",
+    "triageEntry": "1件ずつ確認する",
+    "subTabFeed": "フィード",
+    "subTabStories": "ストーリー",
+    "subTabSaved": "保存済み",
+    "newStoriesPill_other": "新着{{count}}件",
+    "caughtUp": "すべて確認済みです",
+    "caughtUpHint": "これまでの記事はこちらです",
+    "earlier": "これまでの記事",
+    "earlierShowMore": "以前の記事をあと{{count}}件表示"
+  },
+  "feedStatus": {
+    "title": "フィードの状態",
+    "idle": "最新の状態です",
+    "stage": "段階",
+    "cloudProgress": "クラウドでのスコアリング",
+    "deviceProgress": "端末でのスコアリング",
+    "processed": "取得した記事",
+    "analysed": "分析済み",
+    "relevant": "あなたに関連",
+    "noiseRemoved": "除外されたおとり",
+    "lastProcessed": "最終処理",
+    "errorTitle": "スコアリングの問題",
+    "openA11y": "フィードの状態を開く",
+    "close": "閉じる"
+  },
+  "trackedStories": {
+    "emptyTitle": "まだフォローしているストーリーはありません",
+    "emptyBody": "ストーリーをフォローすると、新しい進展がここにまとめて表示されます。",
+    "title": "フォロー中のストーリー",
+    "trackAction": "ストーリーをフォロー",
+    "untrackAction": "フォロー解除",
+    "trackedToast": "このストーリーをフォローしました",
+    "updatesBadge": "新着{{count}}件",
+    "endedLabel": "終了",
+    "timelineQuietNote": "まだ新しい報道は集まっていません。このストーリーが進展するたびに、ここに追加していきます。",
+    "railTitle": "フォロー中",
+    "untrackConfirmTitle": "フォローを解除しますか？",
+    "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。"
+  },
+  "triage": {
+    "title": "確認",
+    "progress": "{{current}} / {{total}}",
+    "close": "閉じる",
+    "upNext": "次はこちら",
+    "read": "読む",
+    "good": "いいね",
+    "bad": "興味なし",
+    "tellWhy": "理由を教えてください",
+    "save": "保存",
+    "skip": "スキップ"
   },
   "whatsNew": {
     "title": "新機能",
@@ -981,6 +1034,8 @@
     "factsEmpty": "Meraが知っておくべきことを追加するにはタップしてください",
     "locations": "場所",
     "locationsSubtitle": "フィードを形作る場所",
+    "sources": "ソース",
+    "sourcesSubtitle": "ニュースソースを閲覧してフォロー",
     "saved": "保存済み",
     "savedSubtitle": "後で読むために保存した記事",
     "preferences": "ソースの設定",
@@ -991,6 +1046,28 @@
     "personaHealth": "プロフィールの健全性",
     "healthPending_other": "{{count}}件の整理提案",
     "healthAllHealthy": "すべて健全です"
+  },
+  "profile": {
+    "talkToMera": "Meraと話す",
+    "talkToMeraSubtitle": "これが私から見たあなたです。タップして会話を続けましょう。",
+    "continueTalking": "続ける",
+    "emptyTitle": "まだあなたのことを知りません",
+    "emptyBody": "自己紹介をしていただければ、あなたに大切なニュースを見つけられます。",
+    "startTalking": "会話を始める",
+    "aboutYou": "あなたについて",
+    "gettingToKnowYou": "まだあなたのことを知っている途中です — 少し経ってからまた確認してください。",
+    "updating": "更新中…",
+    "advanced": "詳細設定",
+    "advancedSubtitle": "ファクト、ソース、保存済み、アクティビティなど",
+    "sheet": {
+      "importance": "重要度",
+      "moreImportant": "重要度を上げる",
+      "lessImportant": "重要度を下げる",
+      "refine": "Meraと調整する",
+      "refineSeed": "これについて話しましょう —「{{text}}」",
+      "remove": "これを削除",
+      "removeConfirm": "もう一度タップして削除"
+    }
   },
   "facts": {
     "screenTitle": "あなたのファクト",

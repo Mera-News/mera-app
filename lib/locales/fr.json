@@ -280,7 +280,9 @@
     "savedTitle": "Préférences enregistrées",
     "savedDescription": "Vos paramètres de notification ont été mis à jour.",
     "saveFailedTitle": "Échec de l'enregistrement",
-    "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer."
+    "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer.",
+    "trackedStoryUpdateTitle": "Mise à jour de l'actualité",
+    "trackedStoryUpdateBody": "{{count}} nouveaux articles dans une actualité que vous suivez"
   },
   "language": {
     "title": "Langue",
@@ -756,6 +758,7 @@
     "title": "Explorer",
     "sources": "Sources",
     "scopeWorld": "Monde",
+    "scopeTopStories": "À la une",
     "noArticles": "Aucun article trouvé",
     "thinContentTitle": "Plus d'actualités de {{place}} ?",
     "thinContentBody": "Ajoutez {{place}} comme lieu pour voir plus d'articles de cet endroit.",
@@ -770,7 +773,58 @@
     "alsoForYou": "Aussi pour vous",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
-    "whySection": "Pourquoi cette section"
+    "whySection": "Pourquoi cette section",
+    "triageEntry": "Examiner un par un",
+    "subTabFeed": "Fil",
+    "subTabStories": "Actualités",
+    "subTabSaved": "Enregistrés",
+    "newStoriesPill_one": "{{count}} nouvelle actualité",
+    "newStoriesPill_other": "{{count}} nouvelles actualités",
+    "caughtUp": "Vous êtes à jour",
+    "caughtUpHint": "Voici tout ce qu'il y avait avant",
+    "earlier": "Plus tôt",
+    "earlierShowMore": "Afficher {{count}} de plus"
+  },
+  "feedStatus": {
+    "title": "État du fil",
+    "idle": "À jour",
+    "stage": "Étape",
+    "cloudProgress": "Évaluation dans le cloud",
+    "deviceProgress": "Évaluation sur l'appareil",
+    "processed": "Articles récupérés",
+    "analysed": "Analysés",
+    "relevant": "Pertinents pour vous",
+    "noiseRemoved": "Bruit supprimé",
+    "lastProcessed": "Dernier traitement",
+    "errorTitle": "Problème d'évaluation",
+    "openA11y": "Ouvrir l'état du fil",
+    "close": "Fermer"
+  },
+  "trackedStories": {
+    "emptyTitle": "Aucune actualité suivie pour l'instant",
+    "emptyBody": "Suivez une actualité pour voir ici chaque nouveau développement au fur et à mesure.",
+    "title": "Actualités suivies",
+    "trackAction": "Suivre l'actualité",
+    "untrackAction": "Ne plus suivre",
+    "trackedToast": "Vous suivez maintenant cette actualité",
+    "updatesBadge": "{{count}} nouveau(x)",
+    "endedLabel": "Terminée",
+    "timelineQuietNote": "Aucune nouvelle couverture pour le moment. Nous ajouterons les développements ici au fur et à mesure.",
+    "railTitle": "Suivi",
+    "untrackConfirmTitle": "Arrêter de suivre ?",
+    "untrackConfirmBody": "Vous ne verrez plus les nouveaux développements de cette actualité."
+  },
+  "triage": {
+    "title": "Examen",
+    "progress": "{{current}} / {{total}}",
+    "close": "Fermer",
+    "upNext": "À suivre",
+    "read": "Lire",
+    "good": "Bien",
+    "bad": "Pas pour moi",
+    "tellWhy": "Dites-nous pourquoi",
+    "save": "Enregistrer",
+    "skip": "Passer"
   },
   "whatsNew": {
     "title": "Nouveautés",
@@ -985,6 +1039,8 @@
     "factsEmpty": "Appuyez pour ajouter ce que Mera devrait savoir",
     "locations": "Lieux",
     "locationsSubtitle": "Lieux qui façonnent votre fil",
+    "sources": "Sources",
+    "sourcesSubtitle": "Parcourez et suivez des sources d'actualités",
     "saved": "Enregistrés",
     "savedSubtitle": "Articles que vous avez enregistrés pour plus tard",
     "preferences": "Préférences de sources",
@@ -997,6 +1053,28 @@
     "healthPending_one": "{{count}} suggestion de nettoyage",
     "healthPending_other": "{{count}} suggestions de nettoyage",
     "healthAllHealthy": "Tout va bien"
+  },
+  "profile": {
+    "talkToMera": "Parler à Mera",
+    "talkToMeraSubtitle": "Voici comment je vous vois. Appuyez pour poursuivre la conversation.",
+    "continueTalking": "Continuer",
+    "emptyTitle": "Je ne vous connais pas encore",
+    "emptyBody": "Parlez-moi de vous pour que je puisse trouver des actualités qui comptent pour vous.",
+    "startTalking": "Commencer à discuter",
+    "aboutYou": "À propos de vous",
+    "gettingToKnowYou": "J'apprends encore à vous connaître — revenez dans un instant.",
+    "updating": "Mise à jour…",
+    "advanced": "Avancé",
+    "advancedSubtitle": "Faits, sources, éléments enregistrés, activité et plus",
+    "sheet": {
+      "importance": "Importance",
+      "moreImportant": "Plus important",
+      "lessImportant": "Moins important",
+      "refine": "Affiner avec Mera",
+      "refineSeed": "Parlons-en — « {{text}} »",
+      "remove": "Supprimer",
+      "removeConfirm": "Appuyez à nouveau pour supprimer"
+    }
   },
   "facts": {
     "screenTitle": "Vos faits",
