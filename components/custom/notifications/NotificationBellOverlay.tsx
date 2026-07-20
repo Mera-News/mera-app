@@ -1,3 +1,4 @@
+// DEPRECATED(app-rethink wave): replaced by NotificationBellButton + NotificationsScreen route
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';

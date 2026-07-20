@@ -1,3 +1,6 @@
+// DEPRECATED(app-rethink wave): Sources management moved to Profile; this FAB
+// is no longer rendered by ExploreScreen. SourcesTabContent stays live via
+// the config-panel SourcesScreen.
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';

@@ -1,9 +1,9 @@
 import ScreenChatBubble from '@/components/custom/floating-chat/ScreenChatBubble';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
@@ -20,8 +20,6 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
-import SourcesFab from './SourcesFab';
-import SourcesSheet from './SourcesSheet';
 
 const EXPLORE_CHAT_CONTEXT: ChatContext = { kind: 'generic', route: 'explore' };
 /** Persisted last-selected scope id (setting-service KV — same store as other flags). */
@@ -34,9 +32,10 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
  * nothing persisted. Compact cards only. City/region scopes filter the country
  * pages on-device by `geo_tags` (see ScopeArticleList).
  *
- * Sources management is reachable from two redundant entries here — the header
- * action and the FAB — both opening the same bottom SourcesSheet. The floating
- * Mera bubble stays visible (only Browse suppresses it).
+ * Sources management now lives in Profile (app-rethink wave) — the header
+ * Sources action, the FAB, and the bottom sheet are removed; the header slot
+ * they occupied now hosts the notification bell. The floating Mera bubble
+ * stays visible (only Browse suppresses it).
  */
 const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -45,7 +44,6 @@ const ExploreScreen: React.FC = () => {
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
     const [selectedId, setSelectedId] = useState<string>('world');
     const [restoredSelection, setRestoredSelection] = useState(false);
-    const [sourcesOpen, setSourcesOpen] = useState(false);
 
     // Device country is stable for the session.
     const deviceCountry = useMemo(() => getDeviceCountryAlpha2(), []);
@@ -123,24 +121,13 @@ const ExploreScreen: React.FC = () => {
 
     return (
         <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
-                {/* Header — title + Sources action. The right cluster reserves ~52px
-                    for the global notification bell overlay (rendered by the tabs
-                    _layout at right:20), same precedent as ForYouScreen. */}
+                {/* Header — title + notification bell (app-rethink wave: takes the
+                    header slot the Sources button used to occupy). */}
                 <HStack className="items-start justify-between px-5 mb-2">
                     <Heading size="3xl" className="text-white" numberOfLines={1}>
                         {t('explore.title')}
                     </Heading>
-                    <HStack className="items-center flex-shrink-0" space="sm" style={{ marginRight: 52 }}>
-                        <Pressable
-                            onPress={() => setSourcesOpen(true)}
-                            hitSlop={12}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('explore.sources')}
-                            className="p-3 rounded-full border border-primary-500 bg-transparent"
-                        >
-                            <MaterialIcons name="tune" size={22} color="#EDA77E" />
-                        </Pressable>
-                    </HStack>
+                    <NotificationBellButton />
                 </HStack>
 
                 {/* Scope chips */}
@@ -178,8 +165,6 @@ const ExploreScreen: React.FC = () => {
                     <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
                 </Box>
 
-                <SourcesFab onPress={() => setSourcesOpen(true)} />
-                <SourcesSheet open={sourcesOpen} onClose={() => setSourcesOpen(false)} />
                 <ScreenChatBubble context={EXPLORE_CHAT_CONTEXT} extraBottomOffset={TAB_BAR_HEIGHT} />
             </Box>
     );

@@ -1,8 +1,9 @@
 // Tracks the notification bell's on-screen center in a module variable so
 // non-React code (the toast-manager singleton) can read it and fly the
 // "notified" toast toward the bell. Mirrors the simple singleton style of
-// lib/nav-state.ts — set by NotificationBellOverlay on layout, read by the
-// toast manager at show time.
+// lib/nav-state.ts — set by NotificationBellButton on layout (was
+// NotificationBellOverlay, now deprecated), read by the toast manager at
+// show time.
 
 export interface BellAnchor {
   x: number;

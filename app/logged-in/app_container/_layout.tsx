@@ -5,7 +5,6 @@ import { View } from 'react-native';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ModelDownloadBanner from '@/components/custom/ModelDownloadBanner';
-import NotificationBellOverlay from '@/components/custom/notifications/NotificationBellOverlay';
 import { useTranslation } from 'react-i18next';
 
 // Foreground polling, AppState listening, and recoverCycle calls have moved
@@ -26,7 +25,7 @@ export default function AppLayout() {
     const { t } = useTranslation();
 
     // Trigger order defines both the tab order AND the initial route — the first
-    // trigger (`browse`) is the one selected on first mount, replacing the old
+    // trigger (`for_you`) is the one selected on first mount, replacing the old
     // JS-Tabs `initialRouteName="browse"`.
     return (
         <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -34,15 +33,7 @@ export default function AppLayout() {
                 level="screen"
                 FallbackComponent={FullScreenErrorFallback}
             >
-                <NativeTabs tintColor={ACCENT}>
-                    {/* Browse (swipe deck) — the app's initial route. */}
-                    <NativeTabs.Trigger name="browse">
-                        <Label>{t('tabs.browse')}</Label>
-                        <Icon
-                            sf="square.stack"
-                            src={<VectorIcon family={MaterialIcons} name="style" />}
-                        />
-                    </NativeTabs.Trigger>
+                <NativeTabs tintColor={ACCENT} minimizeBehavior="onScrollDown">
                     <NativeTabs.Trigger name="for_you">
                         <Label>{t('tabs.forYou')}</Label>
                         <Icon
@@ -74,9 +65,9 @@ export default function AppLayout() {
                     </NativeTabs.Trigger>
                 </NativeTabs>
             </ErrorBoundary>
-            {/* Shared notification bell — absolutely positioned top-right, above
-                all 5 tab screens (same position on every tab). */}
-            <NotificationBellOverlay />
+            {/* The shared notification bell overlay is gone (app-rethink wave) —
+                For You and Explore each render an inline NotificationBellButton
+                in their own header row; Profile and Settings have none. */}
             <ModelDownloadBanner />
         </View>
     );

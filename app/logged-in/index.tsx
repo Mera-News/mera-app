@@ -49,7 +49,7 @@ export default function LoggedInIndex() {
                     return;
                 }
 
-                router.replace('/logged-in/app_container/browse');
+                router.replace('/logged-in/app_container/for_you');
             } catch {
                 // The subscription paywall is no longer triggered here — the
                 // server never gates login/onboarding. It's owned by the For You
@@ -62,7 +62,7 @@ export default function LoggedInIndex() {
                 // is the source of truth for "is the user signed in"; if
                 // the session is genuinely invalid, the next render cycle
                 // will reflect that and the gate above will redirect.
-                router.replace('/logged-in/app_container/browse');
+                router.replace('/logged-in/app_container/for_you');
             } finally {
                 setShouldRedirect(true);
                 setIsCheckingRoute(false);

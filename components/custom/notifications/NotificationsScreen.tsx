@@ -1,8 +1,7 @@
-// DEPRECATED(app-rethink wave): replaced by NotificationBellButton + NotificationsScreen route
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import MeraLogo from '@/components/custom/MeraLogo';
-import { Heading } from '@/components/ui/heading';
+import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
-import { Modal, ModalBackdrop } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -17,15 +16,9 @@ import logger from '@/lib/logger';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Dimensions, ScrollView, View } from 'react-native';
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlatList, View } from 'react-native';
 
 const ACCENT = '#EDA77E';
 
@@ -71,22 +64,20 @@ function parseJson<T>(raw: string | null): T | null {
     }
 }
 
-interface NotificationPanelProps {
-    open: boolean;
-    onClose: () => void;
+interface NotificationsScreenProps {
+    readonly onBack: () => void;
 }
 
-const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) => {
+/**
+ * Pushed notifications screen (app-rethink wave). Replaces the
+ * NotificationPanel slide-over modal — same WatermelonDB observable data
+ * source + Q.take(100) cap (see notification-service.observeAll) and the same
+ * row rendering/interaction logic (mark-read, chip actions, chat hand-off),
+ * ported here as a virtualized FlatList instead of a ScrollView + .map.
+ */
+const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const insets = useSafeAreaInsets();
     const [items, setItems] = useState<NotificationModel[]>([]);
-    const [reduceMotion, setReduceMotion] = useState(false);
-
-    const panelWidth = useMemo(
-        () => Math.min(Dimensions.get('window').width * 0.85, 380),
-        [],
-    );
-    const translateX = useSharedValue(panelWidth);
 
     // i18n-key-or-raw resolver: tries t(key, params) and falls back to the raw
     // string when the key is unknown (i18next returns the key itself on a miss,
@@ -105,53 +96,26 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
         [t],
     );
 
-    // Reduce-motion probe (inline pattern from TabsTooltipStrip).
+    // Reactive newest-first list — drives the screen body.
     useEffect(() => {
-        let cancelled = false;
-        AccessibilityInfo.isReduceMotionEnabled()
-            .then((enabled) => {
-                if (!cancelled) setReduceMotion(enabled);
-            })
-            .catch(() => {
-                /* default: motion enabled */
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
-    // Slide the drawer in from the right when opened. Reduce-motion → instant.
-    useEffect(() => {
-        if (!open) return;
-        translateX.value = reduceMotion ? 0 : withTiming(0, { duration: 250 });
-    }, [open, reduceMotion, translateX]);
-
-    // Reactive newest-first list — drives the panel body.
-    useEffect(() => {
-        if (!open) return;
         const sub = observeAll().subscribe(setItems);
         return () => sub.unsubscribe();
-    }, [open]);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: translateX.value }],
-    }));
+    }, []);
 
     /** Opens the floating Mera chat pre-staged with a synthesized message. */
-    const openChatWith = (message: string) => {
+    const openChatWith = useCallback((message: string) => {
         useFloatingChatStore
             .getState()
             .openArticleFeedback({ kind: 'persona' }, message);
-        onClose();
-    };
+    }, []);
 
-    const onRowPress = async (n: NotificationModel) => {
+    const onRowPress = useCallback(async (n: NotificationModel) => {
         void hapticLight();
         try {
             await markRead(n.id);
         } catch (err) {
             logger.captureException(err, {
-                tags: { component: 'NotificationPanel', method: 'markRead' },
+                tags: { component: 'NotificationsScreen', method: 'markRead' },
             });
         }
         const hasFollowUp = Boolean(n.contextJson) || Boolean(n.actionsJson);
@@ -159,7 +123,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
         const params =
             parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
         openChatWith(resolveText(n.body, params));
-    };
+    }, [openChatWith, resolveText]);
 
     // wave 9 wires real deterministic executors keyed on action.id; here we
     // mark the notification actioned and pre-stage the chat with the right
@@ -167,13 +131,13 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
     // the floating Mera chat pre-staged with the calibration invitation so the
     // in-chat "Recalibrate now" affordance can call
     // calibrationService.runCalibration() on explicit confirm.
-    const onChipPress = async (n: NotificationModel, action: NotificationAction) => {
+    const onChipPress = useCallback(async (n: NotificationModel, action: NotificationAction) => {
         void hapticLight();
         try {
             await markActioned(n.id);
         } catch (err) {
             logger.captureException(err, {
-                tags: { component: 'NotificationPanel', method: 'markActioned' },
+                tags: { component: 'NotificationsScreen', method: 'markActioned' },
             });
         }
         if (action.id === 'recalibrate') {
@@ -183,9 +147,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
             return;
         }
         if (action.id === 'review-hygiene') {
-            // Deterministic review sheet (no chat, no LLM) — close the panel and
-            // push the dedicated hygiene-review route.
-            onClose();
+            // Deterministic review sheet (no chat, no LLM) — push the dedicated
+            // hygiene-review route.
             router.push('/logged-in/hygiene-review');
             return;
         }
@@ -193,9 +156,9 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
             ? resolveText(action.labelKey)
             : action.label ?? action.id;
         openChatWith(chipLabel);
-    };
+    }, [openChatWith, resolveText]);
 
-    const renderRow = (n: NotificationModel) => {
+    const renderItem = useCallback(({ item: n }: { item: NotificationModel }) => {
         const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
         const title = resolveText(n.title, params);
         const body = resolveText(n.body, params);
@@ -204,7 +167,6 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
 
         return (
             <Pressable
-                key={n.id}
                 onPress={() => onRowPress(n)}
                 accessibilityRole="button"
                 className="flex-row px-4 py-3 border-b border-gray-800"
@@ -249,59 +211,32 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ open, onClose }) 
                 </VStack>
             </Pressable>
         );
-    };
+    }, [onRowPress, onChipPress, resolveText]);
+
+    const keyExtractor = useCallback((item: NotificationModel) => item.id, []);
 
     return (
-        <Modal isOpen={open} onClose={onClose} size="full">
-            <ModalBackdrop />
-            <Animated.View
-                style={[
-                    {
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
-                        right: 0,
-                        width: panelWidth,
-                    },
-                    animatedStyle,
-                ]}
-                className="bg-gray-950 border-l border-gray-800"
-                pointerEvents="auto"
-            >
-                <VStack className="flex-1" style={{ paddingTop: insets.top + 12 }}>
-                    {/* Header */}
-                    <HStack className="items-center justify-between px-4 pb-3 border-b border-gray-800">
-                        <Heading size="lg" className="text-white">
-                            {t('notificationCenter.title')}
-                        </Heading>
-                        <Pressable
-                            onPress={onClose}
-                            hitSlop={12}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('notificationCenter.close')}
-                            className="p-2 rounded-full"
-                        >
-                            <MaterialIcons name="close" size={22} color={ACCENT} />
-                        </Pressable>
-                    </HStack>
-
-                    {/* Body */}
-                    {items.length === 0 ? (
-                        <VStack className="flex-1 items-center justify-center px-6" space="md">
-                            <MeraLogo size={72} />
-                            <Text className="text-center" style={{ color: 'rgb(163,163,163)' }}>
-                                {t('notificationCenter.empty')}
-                            </Text>
-                        </VStack>
-                    ) : (
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            {items.map(renderRow)}
-                        </ScrollView>
-                    )}
+        <Box className="flex-1 bg-black">
+            <DrillDownHeader title={t('notificationCenter.title')} onBack={onBack} />
+            {items.length === 0 ? (
+                <VStack className="flex-1 items-center justify-center px-6" space="md">
+                    <MeraLogo size={72} />
+                    <Text className="text-center" style={{ color: 'rgb(163,163,163)' }}>
+                        {t('notificationCenter.empty')}
+                    </Text>
                 </VStack>
-            </Animated.View>
-        </Modal>
+            ) : (
+                <FlatList
+                    data={items}
+                    keyExtractor={keyExtractor}
+                    renderItem={renderItem}
+                    initialNumToRender={12}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 48 }}
+                />
+            )}
+        </Box>
     );
 };
 
-export default NotificationPanel;
+export default NotificationsScreen;

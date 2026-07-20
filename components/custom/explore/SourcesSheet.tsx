@@ -1,3 +1,6 @@
+// DEPRECATED(app-rethink wave): Sources management moved to Profile; this
+// sheet is no longer opened by ExploreScreen. SourcesTabContent stays live via
+// the config-panel SourcesScreen.
 import SourcesTabContent from '@/components/custom/config-panel/SourcesTabContent';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';

@@ -2,6 +2,7 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ArticleCountForYouBanner from '@/components/custom/ArticleCountForYouBanner';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import NewsPollingBanner from '@/components/custom/NewsPollingBanner';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import SyncProgressForYouBanner from '@/components/custom/SyncProgressForYouBanner';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
@@ -864,10 +865,10 @@ const MeraNewsScreen: React.FC = () => {
                         <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.forYou')}</Heading>
                         <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
                     </VStack>
-                    {/* Reserve ~56px on the right so the global notification bell
-                        overlay (rendered by the tabs _layout at right:20, ~44px
-                        wide) never overlaps this cluster. */}
-                    <HStack className="items-center flex-shrink-0" space="sm" style={{ marginRight: 52 }}>
+                    {/* Header icon cluster — history, saved, and (app-rethink wave)
+                        the inline notification bell, which replaces the old
+                        absolutely-positioned overlay reservation. */}
+                    <HStack className="items-center flex-shrink-0" space="sm">
                         <Pressable
                             onPress={() => router.push('/logged-in/visited-publications')}
                             hitSlop={12}
@@ -886,6 +887,7 @@ const MeraNewsScreen: React.FC = () => {
                         >
                             <MaterialIcons name="bookmark" size={22} color="#EDA77E" />
                         </Pressable>
+                        <NotificationBellButton />
                     </HStack>
                 </HStack>
 
