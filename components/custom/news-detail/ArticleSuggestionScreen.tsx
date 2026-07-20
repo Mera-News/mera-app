@@ -1,6 +1,6 @@
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -479,13 +479,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     {t('articleDetail.moreCoverage')}
                                 </Heading>
                                 {localSiblings.map((sibling, index) => (
-                                    <CompactPublisherNewsCard
+                                    <ArticleStandaloneCompactCard
                                         key={sibling._id || `sibling-${index}`}
                                         article={suggestionToNewsArticle(sibling)}
                                         onPress={() => router.replace({
                                             pathname: '/logged-in/suggestion-detail',
                                             params: { articleSuggestionId: sibling._id },
                                         })}
+                                        subjectExtras={{ surface: 'detail' }}
                                     />
                                 ))}
                             </VStack>
@@ -507,13 +508,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                 ) : (
                                     <>
                                         {serverRelated.map((a, index) => (
-                                            <CompactPublisherNewsCard
+                                            <ArticleStandaloneCompactCard
                                                 key={a._id || `related-${index}`}
                                                 article={toNewsArticle(a)}
                                                 onPress={() => router.replace({
                                                     pathname: '/logged-in/article-detail',
                                                     params: { articleId: a._id },
                                                 })}
+                                                subjectExtras={{ surface: 'detail' }}
                                             />
                                         ))}
                                     </>

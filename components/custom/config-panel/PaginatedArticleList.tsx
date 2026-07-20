@@ -1,4 +1,4 @@
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -97,9 +97,10 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
 
     const renderItem: ListRenderItem<NewsArticle> = useCallback(
         ({ item }) => (
-            <CompactPublisherNewsCard
+            <ArticleStandaloneCompactCard
                 article={item}
                 onPress={() => handleArticlePress(item)}
+                subjectExtras={{ surface: 'detail' }}
             />
         ),
         [handleArticlePress]

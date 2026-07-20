@@ -1,6 +1,6 @@
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -282,10 +282,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     </Box>
                                 ) : (
                                     related.map((a, index) => (
-                                        <CompactPublisherNewsCard
+                                        <ArticleStandaloneCompactCard
                                             key={a._id || `related-${index}`}
                                             article={summaryToNewsArticle(a)}
                                             onPress={() => handleRelatedPress(a._id)}
+                                            subjectExtras={{ surface: 'detail' }}
                                         />
                                     ))
                                 )}

@@ -1,3 +1,4 @@
+// DEPRECATED(app-rethink wave): replaced by components/custom/cards/; no live consumers.
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';

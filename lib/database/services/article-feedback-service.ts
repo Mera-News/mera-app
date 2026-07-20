@@ -20,6 +20,13 @@ export interface RecordArticleFeedbackInput {
   suggestionId?: string | null;
   sentiment: ArticleFeedbackSentiment;
   title: string;
+  // ── Origin-aware feedback (schema v38) — all optional & backward-compatible.
+  // The legacy ArticleFeedbackPrompt callers omit these (persisted as null);
+  // the universal ArticleActionsRow fills them from its FeedbackSubject.
+  origin?: 'suggestion' | 'article' | null;
+  surface?: string | null;
+  /** JSON snapshot of FeedbackSubject extras (scopeKey, stableClusterId, …). */
+  contextJson?: string | null;
 }
 
 /**
@@ -48,6 +55,9 @@ export async function recordArticleFeedback(
         r.suggestionId = input.suggestionId ?? null;
         r.sentiment = input.sentiment;
         r.title = input.title;
+        r.origin = input.origin ?? null;
+        r.surface = input.surface ?? null;
+        r.contextJson = input.contextJson ?? null;
         r.createdAt = new Date();
       });
     });

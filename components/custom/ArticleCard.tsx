@@ -1,3 +1,4 @@
+// DEPRECATED(app-rethink wave): replaced by components/custom/cards/ArticleSuggestionCard; no live consumers.
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React from 'react';

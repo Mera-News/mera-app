@@ -1,4 +1,5 @@
-import { ArticleCard } from '@/components/custom/ArticleCard';
+import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
+import { ArticleStandaloneCard } from '@/components/custom/cards/ArticleStandaloneCard';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
@@ -18,10 +19,10 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import {
     deleteSavedSuggestion,
-    loadSavedSuggestions,
+    loadSavedItems,
+    type SavedItem,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
-import { type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -33,21 +34,25 @@ interface SavedSuggestionsScreenProps {
     onBack: () => void;
 }
 
+/** The WMDB row id backing a saved item (suggestion `_id` or the article's savedId). */
+const itemId = (item: SavedItem): string =>
+    item.origin === 'suggestion' ? item.suggestion._id : item.savedId;
+
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const toast = useToast();
     const insets = useSafeAreaInsets();
-    const [saved, setSaved] = useState<ForYouSuggestion[]>([]);
+    const [saved, setSaved] = useState<SavedItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    // The suggestion pending deletion — non-null opens the confirm dialog.
-    const [confirmTarget, setConfirmTarget] = useState<ForYouSuggestion | null>(null);
+    // The row pending deletion — non-null opens the confirm dialog.
+    const [confirmTarget, setConfirmTarget] = useState<SavedItem | null>(null);
 
     // Reload on focus so a save made elsewhere (detail screen) shows up when
     // the user navigates back here.
     useFocusEffect(
         useCallback(() => {
             let cancelled = false;
-            loadSavedSuggestions()
+            loadSavedItems()
                 .then((rows) => {
                     if (!cancelled) setSaved(rows);
                 })
@@ -65,20 +70,28 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
         }, []),
     );
 
-    const handleCardPress = useCallback((suggestion: ForYouSuggestion) => {
+    const handleSuggestionPress = useCallback((suggestionId: string) => {
         router.push({
             pathname: '/logged-in/suggestion-detail',
-            params: { articleSuggestionId: suggestion._id },
+            params: { articleSuggestionId: suggestionId },
+        });
+    }, []);
+
+    const handleArticlePress = useCallback((articleId: string) => {
+        router.push({
+            pathname: '/logged-in/article-detail',
+            params: { articleId },
         });
     }, []);
 
     const handleConfirmDelete = useCallback(async () => {
         if (!confirmTarget) return;
         const target = confirmTarget;
+        const targetId = itemId(target);
         setConfirmTarget(null);
         try {
-            await deleteSavedSuggestion(target._id);
-            setSaved((prev) => prev.filter((s) => s._id !== target._id));
+            await deleteSavedSuggestion(targetId);
+            setSaved((prev) => prev.filter((s) => itemId(s) !== targetId));
             toast.show({
                 placement: 'top',
                 duration: 3000,
@@ -94,15 +107,27 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
         } catch (err) {
             logger.captureException(err, {
                 tags: { screen: 'SavedSuggestionsScreen', method: 'delete' },
-                extra: { id: target._id },
+                extra: { id: targetId },
             });
         }
     }, [confirmTarget, toast, t]);
 
-    const renderItem: ListRenderItem<ForYouSuggestion> = useCallback(
+    const renderItem: ListRenderItem<SavedItem> = useCallback(
         ({ item }) => (
             <Box className="relative">
-                <ArticleCard suggestion={item} onPress={handleCardPress} />
+                {item.origin === 'article' ? (
+                    <ArticleStandaloneCard
+                        article={item.article}
+                        onPress={() => handleArticlePress(item.article._id)}
+                        subjectExtras={{ surface: 'saved' }}
+                    />
+                ) : (
+                    <ArticleSuggestionCard
+                        suggestion={item.suggestion}
+                        onPress={(s) => handleSuggestionPress(s._id)}
+                        surface="saved"
+                    />
+                )}
                 <Pressable
                     onPress={() => setConfirmTarget(item)}
                     hitSlop={12}
@@ -115,11 +140,11 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack 
                 </Pressable>
             </Box>
         ),
-        [handleCardPress, t],
+        [handleArticlePress, handleSuggestionPress, t],
     );
 
     const keyExtractor = useCallback(
-        (item: ForYouSuggestion, index: number) => item._id || `saved-${index}`,
+        (item: SavedItem, index: number) => itemId(item) || `saved-${index}`,
         [],
     );
 

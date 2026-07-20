@@ -3,7 +3,7 @@ import ArticleCountForYouBanner from '@/components/custom/ArticleCountForYouBann
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import NewsPollingBanner from '@/components/custom/NewsPollingBanner';
 import SyncProgressForYouBanner from '@/components/custom/SyncProgressForYouBanner';
-import { ArticleCard } from '@/components/custom/ArticleCard';
+import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import DailyLimitForYouBanner from '@/components/custom/for-you/DailyLimitForYouBanner';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
@@ -657,7 +657,7 @@ const MeraNewsScreen: React.FC = () => {
             case 'suggestion': {
                 const moreSourcesCount = item.members ? computeMoreSourcesCount(item.data, item.members) : 0;
                 return (
-                    <ArticleCard
+                    <ArticleSuggestionCard
                         suggestion={item.data}
                         moreSourcesCount={moreSourcesCount}
                         onPress={handleSuggestionPress}
@@ -678,7 +678,7 @@ const MeraNewsScreen: React.FC = () => {
             case 'suggestion-card': {
                 const moreSourcesCount = item.members.length > 0 ? computeMoreSourcesCount(item.data, item.members) : 0;
                 return (
-                    <ArticleCard
+                    <ArticleSuggestionCard
                         suggestion={item.data}
                         moreSourcesCount={moreSourcesCount}
                         onPress={handleSuggestionPress}

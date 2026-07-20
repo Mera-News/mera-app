@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 37,
+  version: 38,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -131,6 +131,13 @@ export default appSchema({
         { name: 'article_url', type: 'string', isOptional: true },
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+        // Origin discriminator (schema v38): 'suggestion' (default semantics —
+        // a saved ForYouSuggestion) or 'article' (a standalone NewsArticle saved
+        // from a non-personalized surface). Null on rows saved before v38 ⇒
+        // treated as 'suggestion'. Every card-renderable column above already
+        // tolerates a standalone article snapshot, so no extra columns are
+        // needed for the 'article' origin.
+        { name: 'origin', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
         { name: 'saved_at', type: 'number', isIndexed: true },
@@ -227,6 +234,16 @@ export default appSchema({
         { name: 'suggestion_id', type: 'string', isOptional: true },
         { name: 'sentiment', type: 'string' },
         { name: 'title', type: 'string' },
+        // ── Origin-aware feedback (schema v38) ──────────────────────────
+        // Where the feedback came from so a later wave can weight it: `origin`
+        // = 'suggestion' | 'article', `surface` = the on-screen surface
+        // (for_you | explore | triage | detail | saved | …), `context_json` =
+        // a JSON snapshot of the FeedbackSubject extras (scopeKey,
+        // stableClusterId, eventType, relevance, matchedTopics). All optional —
+        // rows written by the legacy ArticleFeedbackPrompt leave them null.
+        { name: 'origin', type: 'string', isOptional: true },
+        { name: 'surface', type: 'string', isOptional: true },
+        { name: 'context_json', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
       ],
     }),
@@ -360,6 +377,23 @@ export default appSchema({
         { name: 'status', type: 'string', isIndexed: true },
         { name: 'source', type: 'string' },
         { name: 'created_at', type: 'number', isIndexed: true },
+      ],
+    }),
+
+    // ── Persona v3 — natural-language persona summary strings (schema v38) ──
+    // Human-readable one-liners derived from the structured persona (facts +
+    // topics), each linked back to the facts/topics that produced it. Long-lived,
+    // user-owned — created via createTable, never wipe-and-recreate. A later wave
+    // builds the generation pipeline; this wave only creates the table + model.
+    tableSchema({
+      name: 'persona_summary_strings',
+      columns: [
+        { name: 'text', type: 'string' },
+        { name: 'linked_fact_ids_json', type: 'string' },
+        { name: 'linked_topic_ids_json', type: 'string' },
+        { name: 'generated_at', type: 'number' },
+        { name: 'persona_version', type: 'string', isOptional: true },
+        { name: 'stale', type: 'boolean', isOptional: true },
       ],
     }),
   ],

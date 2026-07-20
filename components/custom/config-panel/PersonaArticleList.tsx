@@ -1,4 +1,4 @@
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -73,9 +73,10 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
 
     const renderItem: ListRenderItem<ArticleSuggestion> = useCallback(
         ({ item }) => (
-            <CompactPublisherNewsCard
+            <ArticleStandaloneCompactCard
                 article={toNewsArticle(item) as any}
                 onPress={() => handleArticlePress(item)}
+                subjectExtras={{ surface: 'detail' }}
             />
         ),
         [handleArticlePress],

@@ -1,4 +1,4 @@
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -123,7 +123,13 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
     }, []);
 
     const renderItem: ListRenderItem<NewsArticle> = useCallback(
-        ({ item }) => <CompactPublisherNewsCard article={item} onPress={() => handlePress(item)} />,
+        ({ item }) => (
+            <ArticleStandaloneCompactCard
+                article={item}
+                onPress={() => handlePress(item)}
+                subjectExtras={{ surface: 'explore' }}
+            />
+        ),
         [handlePress],
     );
 

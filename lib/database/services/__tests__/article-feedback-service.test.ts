@@ -138,6 +138,52 @@ describe('recordArticleFeedback', () => {
     expect(capturedRecord.createdAt).toBeInstanceOf(Date);
   });
 
+  it('persists origin, surface, and context_json when provided (schema v38)', async () => {
+    db._setRows('article_feedback', []);
+    const capturedRecord: Record<string, unknown> = {};
+    db._collections['article_feedback'].create.mockImplementationOnce(
+      async (fn: (r: any) => void) => {
+        const rec = makeRecord();
+        fn(rec);
+        Object.assign(capturedRecord, rec);
+        return rec;
+      },
+    );
+
+    await recordArticleFeedback({
+      articleId: 'a1',
+      suggestionId: 's1',
+      sentiment: 'dislike',
+      title: 'Test',
+      origin: 'article',
+      surface: 'explore',
+      contextJson: '{"scopeKey":"city:IND:mumbai"}',
+    });
+
+    expect(capturedRecord.origin).toBe('article');
+    expect(capturedRecord.surface).toBe('explore');
+    expect(capturedRecord.contextJson).toBe('{"scopeKey":"city:IND:mumbai"}');
+  });
+
+  it('defaults origin/surface/context_json to null when omitted (legacy callers)', async () => {
+    db._setRows('article_feedback', []);
+    const capturedRecord: Record<string, unknown> = {};
+    db._collections['article_feedback'].create.mockImplementationOnce(
+      async (fn: (r: any) => void) => {
+        const rec = makeRecord();
+        fn(rec);
+        Object.assign(capturedRecord, rec);
+        return rec;
+      },
+    );
+
+    await recordArticleFeedback({ articleId: 'a1', sentiment: 'like', title: 'Test' });
+
+    expect(capturedRecord.origin).toBeNull();
+    expect(capturedRecord.surface).toBeNull();
+    expect(capturedRecord.contextJson).toBeNull();
+  });
+
   it('defaults suggestionId to null when not provided', async () => {
     db._setRows('article_feedback', []);
     const capturedRecord: Record<string, unknown> = {};

@@ -1,4 +1,4 @@
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { FormattedDate } from '@/components/custom/FormattedDate';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import SmoothFlatList, { SmoothFlatListRef } from '@/components/custom/SmoothFlatList';
@@ -263,9 +263,10 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                     // 'md' gap (12) from the previous row (or the Coverage heading for
                     // the first row), matching the original inner VStack space="md".
                     <Box className="px-5" style={{ marginTop: 12 }}>
-                        <CompactPublisherNewsCard
+                        <ArticleStandaloneCompactCard
                             article={article}
                             onPress={() => handleArticlePress(article)}
+                            subjectExtras={{ surface: 'detail' }}
                         />
                     </Box>
                 )}

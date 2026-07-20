@@ -1,3 +1,6 @@
+// NOTE(app-rethink wave): still LIVE on the article/suggestion detail screens.
+// New card/feed code should use components/custom/cards/ArticleActionsRow (the
+// origin-aware universal actions row) instead of this widget.
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';

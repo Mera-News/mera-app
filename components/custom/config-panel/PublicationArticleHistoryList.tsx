@@ -1,4 +1,4 @@
-import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
+import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -101,10 +101,11 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     const renderItem: ListRenderItem<VisitedArticle> = useCallback(
         ({ item }) => (
             <Box className="mx-4">
-                <CompactPublisherNewsCard
+                <ArticleStandaloneCompactCard
                     article={visitedToNewsArticle(item)}
                     onPress={() => handleArticlePress(item.articleUrl)}
                     hideSource
+                    subjectExtras={{ surface: 'detail' }}
                 />
             </Box>
         ),

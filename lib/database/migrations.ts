@@ -1055,5 +1055,50 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      toVersion: 38,
+      steps: [
+        // ── Card-hierarchy / origin-aware feedback (app-rethink wave) ──────
+        // Three additive, non-destructive parts. All tables touched here are
+        // long-lived, user-owned state — NEVER wipe-and-recreate.
+
+        // 1. Origin-aware feedback columns on article_feedback so a like/dislike
+        //    knows where it came from (origin/surface) + carries a JSON context
+        //    snapshot. Additive + optional — existing rows keep null.
+        addColumns({
+          table: 'article_feedback',
+          columns: [
+            { name: 'origin', type: 'string', isOptional: true },
+            { name: 'surface', type: 'string', isOptional: true },
+            { name: 'context_json', type: 'string', isOptional: true },
+          ],
+        }),
+
+        // 2. Origin discriminator on saved_article_suggestions so a standalone
+        //    NewsArticle (origin='article') can be saved alongside saved
+        //    ForYouSuggestions (origin='suggestion'). Null ⇒ 'suggestion'. Every
+        //    other card-renderable column already tolerates an article snapshot,
+        //    so no further columns are needed.
+        addColumns({
+          table: 'saved_article_suggestions',
+          columns: [{ name: 'origin', type: 'string', isOptional: true }],
+        }),
+
+        // 3. Natural-language persona summary strings. Long-lived, user-owned —
+        //    created (never wiped). The generation pipeline lands in a later
+        //    wave; this migration only stands up the table.
+        createTable({
+          name: 'persona_summary_strings',
+          columns: [
+            { name: 'text', type: 'string' },
+            { name: 'linked_fact_ids_json', type: 'string' },
+            { name: 'linked_topic_ids_json', type: 'string' },
+            { name: 'generated_at', type: 'number' },
+            { name: 'persona_version', type: 'string', isOptional: true },
+            { name: 'stale', type: 'boolean', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

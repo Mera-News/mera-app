@@ -1,3 +1,4 @@
+// DEPRECATED(app-rethink wave): replaced by components/custom/cards/ArticleStandaloneCompactCard; no live consumers.
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';

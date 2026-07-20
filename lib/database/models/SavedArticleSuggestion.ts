@@ -31,6 +31,9 @@ export default class SavedArticleSuggestion extends Model {
   @field('article_url') articleUrl!: string | null;
   @field('image_url') imageUrl!: string | null;
   @field('matched_topic_texts_json') matchedTopicTextsJson!: string | null;
+  // Origin discriminator (schema v38): 'suggestion' (a saved ForYouSuggestion)
+  // or 'article' (a standalone NewsArticle). Null on pre-v38 rows ⇒ 'suggestion'.
+  @field('origin') origin!: string | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
   @date('saved_at') savedAt!: Date;
