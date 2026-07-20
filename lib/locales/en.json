@@ -239,6 +239,7 @@
     "title": "Explore",
     "sources": "Sources",
     "scopeWorld": "World",
+    "scopeTopStories": "Top stories",
     "noArticles": "No articles found",
     "thinContentTitle": "Want more {{place}} news?",
     "thinContentBody": "Add {{place}} as a location to get more stories from here.",

@@ -15,10 +15,11 @@ interface ScopeChipRowProps {
 }
 
 /**
- * Horizontal, icon-first scope selector for the Explore tab. World/country/
- * city/region chips derived from the user's locations + device country (see
- * lib/explore/scopes). Country chips lead with the flag emoji; the rest use a
- * MaterialIcon. The active chip fills with the accent.
+ * Horizontal, icon-first scope selector for the Explore tab. Top stories/
+ * World/country/city/region chips derived from the user's locations + device
+ * country (see lib/explore/scopes). Country chips lead with the flag emoji;
+ * the rest (Top stories, World, city, region) use a MaterialIcon. The active
+ * chip fills with the accent.
  */
 const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelect }) => {
     const { t } = useTranslation();
@@ -26,7 +27,12 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
     const renderItem: ListRenderItem<ExploreScope> = useCallback(
         ({ item }) => {
             const active = item.id === selectedId;
-            const label = item.kind === 'world' ? t('explore.scopeWorld') : item.label;
+            const label =
+                item.kind === 'top'
+                    ? t('explore.scopeTopStories')
+                    : item.kind === 'world'
+                      ? t('explore.scopeWorld')
+                      : item.label;
             return (
                 <Pressable
                     onPress={() => onSelect(item)}

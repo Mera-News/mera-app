@@ -5,14 +5,22 @@
 // tab. Each scope drives a DIRECT server-paginated article query — there is no
 // scoring, no LLM, and nothing persisted (see components/custom/explore).
 //
-// Chips are COUNTRY + World only (app-rethink wave, 2026-07-20): city/region
-// derivation was removed because geo-tags are dormant in prod (all null), so
-// those chips showed ~nothing. Each location still contributes its country.
-// The `'city'|'region'` scope-kind members and their builder functions are
-// kept — see the DEPRECATED markers below — purely for type compatibility
-// with any already-persisted `explore_last_scope` id; ExploreScreen already
-// falls back to World when a persisted id no longer resolves, so no data
-// migration is needed here.
+// Chips are TOP STORIES + COUNTRY + World (app-rethink wave, 2026-07-20 +
+// top-stories-blend wave): city/region derivation was removed because
+// geo-tags are dormant in prod (all null), so those chips showed ~nothing.
+// Each location still contributes its country. The `'city'|'region'`
+// scope-kind members and their builder functions are kept — see the
+// DEPRECATED markers below — purely for type compatibility with any
+// already-persisted `explore_last_scope` id; ExploreScreen already falls back
+// to World when a persisted id no longer resolves, so no data migration is
+// needed here.
+//
+// The 'top' scope (id 'top-stories') is a blended GLOBAL+home feed (see
+// lib/explore/top-stories.ts) — it carries no country code of its own.
+// "Home" is the device-locale country when mappable, else the highest-weight
+// location country; it's promoted to the 2nd chip (right after Top stories,
+// ahead of World) and de-duped out of the location-derived tail so it never
+// appears twice.
 //
 // Country-code formats (subtle — three different conventions collide here):
 //   • WatermelonDB `locations.countryCode` and `NewsArticle.geo_tags.countryCode`
@@ -25,19 +33,19 @@
 import countries from 'i18n-iso-countries';
 import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
 
-export type ExploreScopeKind = 'world' | 'country' | 'city' | 'region';
+export type ExploreScopeKind = 'top' | 'world' | 'country' | 'city' | 'region';
 
 export interface ExploreScope {
     /** Stable identity (also the FlatList key + persisted selection). */
     readonly id: string;
     readonly kind: ExploreScopeKind;
     /**
-     * Display label for country/city/region scopes. Empty for `world` — the
-     * chip renders the translated `explore.scopeWorld` instead (this module is
-     * i18n-free so it stays a pure, testable function).
+     * Display label for country/city/region scopes. Empty for `world`/`top` —
+     * those chips render translated labels instead (this module is i18n-free
+     * so it stays a pure, testable function).
      */
     readonly label: string;
-    readonly icon: 'public' | 'location-city' | 'map' | 'flag';
+    readonly icon: 'public' | 'location-city' | 'map' | 'flag' | 'trending-up';
     /** Flag emoji for country chips (empty for other kinds). */
     readonly flagEmoji?: string;
     /**
@@ -62,7 +70,7 @@ export interface ScopeLocationInput {
     readonly weight: number;
 }
 
-/** Hard cap on visible scope chips (World + up to 5 more). */
+/** Hard cap on visible scope chips (Top stories + World + up to 4 more). */
 export const MAX_SCOPES = 6;
 
 /** ISO alpha-2 → alpha-3, or null when unmappable. */
@@ -83,6 +91,10 @@ function titleCase(s: string): string {
 
 function worldScope(): ExploreScope {
     return { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null };
+}
+
+function topScope(): ExploreScope {
+    return { id: 'top-stories', kind: 'top', label: '', icon: 'trending-up', countryCodeAlpha3: null };
 }
 
 function countryScope(alpha2: string, alpha3: string): ExploreScope {
@@ -127,40 +139,45 @@ function regionScope(alpha2: string, alpha3: string, region: string): ExploreSco
 /**
  * Build the Explore scope chips.
  *
- * Order (also the cap priority — World always survives, lowest-priority tail is
- * dropped past {@link MAX_SCOPES}):
- *   1. World (always first).
- *   2. Location-derived country scopes, in the locations' own weight-desc
- *      order: each distinct location country → a country scope. (City/region
- *      scopes are no longer derived — see the module header.)
- *   3. The device-locale country (if not already present from a location).
+ * Order (also the cap priority — Top stories, home, and World always survive;
+ * the lowest-priority tail is dropped past {@link MAX_SCOPES}):
+ *   1. Top stories (always first — the blended GLOBAL+home feed).
+ *   2. Home — the device-locale country when mappable, else the
+ *      highest-weight location country (locations arrive pre-sorted
+ *      weight-desc). Omitted when neither resolves.
+ *   3. World.
+ *   4. The remaining location-derived country scopes (weight-desc, home
+ *      excluded so it never appears twice). City/region scopes are no longer
+ *      derived — see the module header.
  *
- * De-duped by scope id; capped at {@link MAX_SCOPES}. `locations` is expected
- * pre-sorted weight-desc (as `location-service.getAll/observeAll` returns it).
+ * De-duped by scope id; capped at {@link MAX_SCOPES}.
  */
 export function deriveExploreScopes(
     locations: readonly ScopeLocationInput[],
     deviceCountryAlpha2: string | null | undefined,
 ): ExploreScope[] {
-    const ordered: ExploreScope[] = [];
-    const seen = new Set<string>();
-    const push = (scope: ExploreScope) => {
-        if (seen.has(scope.id)) return;
-        seen.add(scope.id);
-        ordered.push(scope);
-    };
-
+    const locationScopes: ExploreScope[] = [];
+    const seenAlpha3 = new Set<string>();
     for (const loc of locations) {
         const alpha3 = alpha2ToAlpha3(loc.countryCode);
-        if (!alpha3) continue;
+        if (!alpha3 || seenAlpha3.has(alpha3)) continue;
+        seenAlpha3.add(alpha3);
         const alpha2 = loc.countryCode.trim().toUpperCase();
-        push(countryScope(alpha2, alpha3));
+        locationScopes.push(countryScope(alpha2, alpha3));
     }
 
     const deviceAlpha3 = alpha2ToAlpha3(deviceCountryAlpha2);
-    if (deviceAlpha3) {
-        push(countryScope((deviceCountryAlpha2 ?? '').trim().toUpperCase(), deviceAlpha3));
+    const home: ExploreScope | null = deviceAlpha3
+        ? countryScope((deviceCountryAlpha2 ?? '').trim().toUpperCase(), deviceAlpha3)
+        : (locationScopes[0] ?? null);
+
+    const ordered: ExploreScope[] = [topScope()];
+    if (home) ordered.push(home);
+    ordered.push(worldScope());
+    for (const scope of locationScopes) {
+        if (home && scope.id === home.id) continue;
+        ordered.push(scope);
     }
 
-    return [worldScope(), ...ordered].slice(0, MAX_SCOPES);
+    return ordered.slice(0, MAX_SCOPES);
 }

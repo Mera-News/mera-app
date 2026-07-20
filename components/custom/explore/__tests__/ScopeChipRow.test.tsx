@@ -66,16 +66,18 @@ jest.mock('@expo/vector-icons', () => {
 import ScopeChipRow from '../ScopeChipRow';
 
 const scopes: ExploreScope[] = [
+    { id: 'top-stories', kind: 'top', label: '', icon: 'trending-up', countryCodeAlpha3: null },
     { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null },
     { id: 'country:IND', kind: 'country', label: 'India', icon: 'flag', flagEmoji: '🇮🇳', countryCodeAlpha3: 'IND' },
     { id: 'city:IND:mumbai', kind: 'city', label: 'Mumbai', icon: 'location-city', countryCodeAlpha3: 'IND', city: 'mumbai' },
 ];
 
 describe('ScopeChipRow', () => {
-    it('renders a chip per scope (World uses the translated label key)', () => {
+    it('renders a chip per scope (Top stories/World use the translated label keys)', () => {
         const { getByText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} />,
         );
+        expect(getByText('explore.scopeTopStories')).toBeTruthy();
         expect(getByText('explore.scopeWorld')).toBeTruthy();
         expect(getByText('India')).toBeTruthy();
         expect(getByText('Mumbai')).toBeTruthy();
@@ -87,7 +89,7 @@ describe('ScopeChipRow', () => {
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} />,
         );
         fireEvent.press(getByText('Mumbai'));
-        expect(onSelect).toHaveBeenCalledWith(scopes[2]);
+        expect(onSelect).toHaveBeenCalledWith(scopes[3]);
     });
 
     it('marks the selected chip via accessibilityState', () => {

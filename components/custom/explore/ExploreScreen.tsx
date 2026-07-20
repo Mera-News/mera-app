@@ -20,17 +20,20 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
+import TopStoriesList from './TopStoriesList';
 
 const EXPLORE_CHAT_CONTEXT: ChatContext = { kind: 'generic', route: 'explore' };
 /** Persisted last-selected scope id (setting-service KV — same store as other flags). */
 const LAST_SCOPE_KEY = 'explore_last_scope';
 
 /**
- * Explore tab (Wave 10, N5). Scope chips derived from the user's on-device
- * locations + device country; each scope is a DIRECT server-paginated
- * `articlesForCountry` query — no article_suggestions, no scoring, no LLM,
- * nothing persisted. Compact cards only. City/region scopes filter the country
- * pages on-device by `geo_tags` (see ScopeArticleList).
+ * Explore tab (Wave 10, N5; top-stories-blend wave adds the 'top' chip).
+ * Scope chips derived from the user's on-device locations + device country
+ * (see lib/explore/scopes); World/country scopes are DIRECT server-paginated
+ * `topHeadlinesForCountry` queries (ScopeArticleList) — no article_suggestions,
+ * no scoring, no LLM, nothing persisted. The 'top' scope instead renders
+ * TopStoriesList, which blends the GLOBAL + home-country editions client-side
+ * (lib/explore/top-stories.ts). Compact cards only.
  *
  * Sources management now lives in Profile (app-rethink wave) — the header
  * Sources action, the FAB, and the bottom sheet are removed; the header slot
@@ -99,6 +102,11 @@ const ExploreScreen: React.FC = () => {
     const selectedScope: ExploreScope =
         scopes.find((s) => s.id === selectedId) ?? scopes[0];
 
+    // Home is always the 2nd chip when present (order guaranteed by
+    // deriveExploreScopes: [top, home?, world, ...]) — TopStoriesList needs
+    // its alpha-3 code to fetch the home edition alongside GLOBAL.
+    const homeCountryAlpha3 = scopes[1]?.kind === 'country' ? scopes[1].countryCodeAlpha3 : null;
+
     // If the selection is no longer valid (e.g. a location was removed), snap
     // back to World so the chip row and list stay consistent.
     useEffect(() => {
@@ -162,7 +170,11 @@ const ExploreScreen: React.FC = () => {
 
                 {/* Article list for the active scope — remounts on scope switch. */}
                 <Box className="flex-1">
-                    <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
+                    {selectedScope.kind === 'top' ? (
+                        <TopStoriesList key={selectedScope.id} homeCountryAlpha3={homeCountryAlpha3} />
+                    ) : (
+                        <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
+                    )}
                 </Box>
 
                 <ScreenChatBubble context={EXPLORE_CHAT_CONTEXT} extraBottomOffset={TAB_BAR_HEIGHT} />

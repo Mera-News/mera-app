@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import ArticleService from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
-import type { NewsArticle } from '@/lib/generated/graphql-types';
+import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -24,10 +24,12 @@ interface ScopeArticleListProps {
 
 /**
  * The Explore tab's article list for one scope. DIRECT server-paginated
- * `articlesForCountry` — no scoring, no suggestions, nothing persisted.
- * Every scope (World or country) fetches a single `articlesForCountry` page
- * per load, straight through — no client-side geo filtering (see
- * lib/explore/geo-scope-filter.ts, deprecated).
+ * `topHeadlinesForCountry` — no scoring, no suggestions, nothing persisted.
+ * Every scope (World or country) fetches a single `topHeadlinesForCountry`
+ * page per load, straight through — no client-side geo filtering (see
+ * lib/explore/geo-scope-filter.ts, deprecated). Each row keeps its headline's
+ * `stableClusterId`/`clusterSize` metadata so downstream feedback actions can
+ * carry the story's cross-run identity (see `subjectExtras` in renderItem).
  *
  * Mounted with a `key={scope.id}` by the parent, so switching scope resets all
  * state via remount.
@@ -35,7 +37,7 @@ interface ScopeArticleListProps {
 const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
-    const [articles, setArticles] = useState<NewsArticle[]>([]);
+    const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
@@ -44,14 +46,14 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
 
     // Fetch one page for this scope's country (or GLOBAL for World).
     const loadFrom = useCallback(
-        async (after?: string): Promise<{ rows: NewsArticle[]; cursor: string | null; more: boolean }> => {
+        async (after?: string): Promise<{ rows: TopHeadline[]; cursor: string | null; more: boolean }> => {
             const fetchArg = scope.countryCodeAlpha3 ?? 'GLOBAL';
-            const page = await ArticleService.getArticlesForCountry(fetchArg, {
+            const page = await ArticleService.getTopHeadlinesForCountry(fetchArg, {
                 first: PAGE_SIZE,
                 after,
             });
             return {
-                rows: page.articles as NewsArticle[],
+                rows: page.headlines,
                 cursor: page.pageInfo.endCursor ?? null,
                 more: page.pageInfo.hasNextPage,
             };
@@ -66,7 +68,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
             try {
                 setIsLoading(true);
                 const { rows, cursor, more } = await loadFrom();
-                setArticles(rows);
+                setHeadlines(rows);
                 setEndCursor(cursor);
                 setHasNextPage(more);
             } catch (error) {
@@ -84,7 +86,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         try {
             setIsLoadingMore(true);
             const { rows, cursor, more } = await loadFrom(endCursor);
-            setArticles((prev) => [...prev, ...rows]);
+            setHeadlines((prev) => [...prev, ...rows]);
             setEndCursor(cursor);
             setHasNextPage(more);
         } catch (error) {
@@ -100,20 +102,25 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         router.push({ pathname: '/logged-in/article-detail', params: { articleId: article._id } });
     }, []);
 
-    const renderItem: ListRenderItem<NewsArticle> = useCallback(
+    const renderItem: ListRenderItem<TopHeadline> = useCallback(
         ({ item }) => (
             <ArticleStandaloneCompactCard
-                article={item}
-                onPress={() => handlePress(item)}
+                article={item.article}
+                onPress={() => handlePress(item.article)}
                 showActions
-                subjectExtras={{ origin: 'article', surface: 'explore', scopeKey: scope.id }}
+                subjectExtras={{
+                    origin: 'article',
+                    surface: 'explore',
+                    scopeKey: scope.id,
+                    stableClusterId: item.stableClusterId ?? undefined,
+                }}
             />
         ),
         [handlePress, scope.id],
     );
 
     const keyExtractor = useCallback(
-        (item: NewsArticle, index: number) => item._id || `article-${index}`,
+        (item: TopHeadline, index: number) => item.article._id || `article-${index}`,
         [],
     );
 
@@ -136,7 +143,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         );
     }
 
-    if (articles.length === 0) {
+    if (headlines.length === 0) {
         return (
             <VStack className="flex-1 items-center justify-center p-6" space="md">
                 <MaterialIcons name="article" size={48} color="#666666" />
@@ -149,7 +156,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
 
     return (
         <FlatList
-            data={articles}
+            data={headlines}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}
