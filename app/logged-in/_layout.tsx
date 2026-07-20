@@ -121,6 +121,13 @@ export default function LoggedInLayout() {
           }}
         />
         <Stack.Screen
+          name="profile-advanced"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right'
+          }}
+        />
+        <Stack.Screen
           name="saved-suggestions"
           options={{
             headerShown: false,

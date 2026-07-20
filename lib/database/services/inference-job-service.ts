@@ -10,6 +10,9 @@ const jobsCollection = database.get<InferenceJobModel>('inference_jobs');
 /** Default priority: lower = higher priority. */
 const DEFAULT_PRIORITY: Record<InferenceJobType, number> = {
   topic_gen: 10,
+  // Lower priority than topic_gen (summary depends on topics existing, and it's
+  // a background nicety — never block topic generation on it).
+  persona_summary: 20,
 };
 
 const DEFAULT_MAX_ATTEMPTS = 3;

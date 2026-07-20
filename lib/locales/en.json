@@ -963,6 +963,8 @@
     "factsEmpty": "Tap to add what Mera should know",
     "locations": "Locations",
     "locationsSubtitle": "Places that shape your feed",
+    "sources": "Sources",
+    "sourcesSubtitle": "Browse and follow news sources",
     "saved": "Saved",
     "savedSubtitle": "Articles you saved for later",
     "preferences": "Source preferences",
@@ -975,6 +977,28 @@
     "healthPending_one": "{{count}} cleanup suggestion",
     "healthPending_other": "{{count}} cleanup suggestions",
     "healthAllHealthy": "All healthy"
+  },
+  "profile": {
+    "talkToMera": "Talk to Mera",
+    "talkToMeraSubtitle": "This is how I see you. Tap to keep the conversation going.",
+    "continueTalking": "Continue",
+    "emptyTitle": "I don't know you yet",
+    "emptyBody": "Tell me about yourself so I can find news that matters to you.",
+    "startTalking": "Start talking",
+    "aboutYou": "About you",
+    "gettingToKnowYou": "I'm still getting to know you — check back in a moment.",
+    "updating": "Updating…",
+    "advanced": "Advanced",
+    "advancedSubtitle": "Facts, sources, saved, activity and more",
+    "sheet": {
+      "importance": "Importance",
+      "moreImportant": "More important",
+      "lessImportant": "Less important",
+      "refine": "Refine with Mera",
+      "refineSeed": "Let's talk about this — \"{{text}}\"",
+      "remove": "Remove this",
+      "removeConfirm": "Tap again to remove"
+    }
   },
   "facts": {
     "screenTitle": "Your facts",
