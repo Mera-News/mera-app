@@ -7,8 +7,8 @@ const mockStampChecked = jest.fn();
 const mockNotify = jest.fn();
 const mockCaptureException = jest.fn();
 const mockFetch = jest.fn();
-const mockQuery = jest.fn(() => ({ fetch: (...args: any[]) => mockFetch(...args) }));
-const mockGet = jest.fn(() => ({ query: (...args: any[]) => mockQuery(...args) }));
+const mockQuery = jest.fn((..._args: any[]) => ({ fetch: (...args: any[]) => mockFetch(...args) }));
+const mockGet = jest.fn((..._args: any[]) => ({ query: (...args: any[]) => mockQuery(...args) }));
 
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
   getActiveForReconcile: (...args: any[]) => mockGetActiveForReconcile(...args),
