@@ -376,6 +376,13 @@
     "format24h": "24h",
     "formatAmPm": "AM/PM",
     "timeDescription": "Choose when you'd like to receive notifications for processing your news",
+    "timeDescriptionOnboarding": "Choose when you'd like to catch up on your news",
+    "timeNudges": [
+      "News works best in one or two focused moments a day.",
+      "You don't need to check constantly — we'll have it ready when you are.",
+      "Fewer, calmer check-ins beat an all-day drip.",
+      "Pick times that fit your day — Mera does the gathering."
+    ],
     "savePreferences": "Save Preferences",
     "loadFailedTitle": "Load Failed",
     "loadFailedDescription": "Failed to load notification settings.",

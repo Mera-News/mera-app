@@ -43,8 +43,23 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [selectedHours, setSelectedHours] = useState<number[]>(initialHours);
     const [use24h, setUse24h] = useState(false);
+    const [nudgeIndex, setNudgeIndex] = useState(0);
     const toast = useToast();
     const insets = useSafeAreaInsets();
+    const timeNudges = t('notifications.timeNudges', { returnObjects: true }) as string[];
+
+    // Cycle the onboarding-only wellbeing nudge every 3s (same pattern as
+    // AllCaughtUpCard's mindfulness messages).
+    useEffect(() => {
+        if (!isOnboarding) {
+            return;
+        }
+        const interval = setInterval(() => {
+            setNudgeIndex((prevIndex) => (prevIndex + 1) % timeNudges.length);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [isOnboarding, timeNudges.length]);
 
     // Load all notification settings on mount (preferences mode only)
     useEffect(() => {
@@ -341,14 +356,24 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
 
     // Time section header: title + description only. AM/PM toggle and counter
     // are rendered next to the wheel (renderWheelWithSidebar).
+    // Onboarding mode drops the heading (it's not a "section" yet, just the
+    // next step) and swaps in a shorter description plus a cycling wellbeing
+    // nudge below it; settings mode keeps the heading and original copy.
     const renderTimeSectionHeader = () => (
         <Box className="px-5 mb-2">
-            <Text className="text-white text-lg font-semibold mb-2">
-                {t('notifications.timeTitle')}
-            </Text>
+            {!isOnboarding && (
+                <Text className="text-white text-lg font-semibold mb-2">
+                    {t('notifications.timeTitle')}
+                </Text>
+            )}
             <Text size="md" className="text-gray-400 leading-6">
-                {t('notifications.timeDescription')}
+                {isOnboarding ? t('notifications.timeDescriptionOnboarding') : t('notifications.timeDescription')}
             </Text>
+            {isOnboarding && (
+                <Text size="sm" className="text-typography-500 leading-5 mt-2">
+                    {timeNudges[nudgeIndex]}
+                </Text>
+            )}
         </Box>
     );
 
