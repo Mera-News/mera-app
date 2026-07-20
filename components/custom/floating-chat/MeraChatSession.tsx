@@ -26,6 +26,7 @@ import {
   type PersistedMessage,
 } from '@/lib/database/services/conversation-service';
 import { getFacts } from '@/lib/database/services/fact-service';
+import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import logger from '@/lib/logger';
 import {
   disposeModel,
@@ -75,6 +76,12 @@ export default function MeraChatSession() {
   const isOnDevice = useIsOnDeviceProcessing();
   const modelState = useModelState();
   const context = useFloatingChatStore((state) => state.context);
+
+  // Warm the cloud-chat critical path (attestation + JWT) on session mount, so
+  // the first message isn't gated on the cold fetches. No-op under on-device.
+  useEffect(() => {
+    prewarmCloudChat();
+  }, []);
 
   // --- Init (once per mount) ---
   // Auth, surface detection, and persona/model load. Conversation creation is

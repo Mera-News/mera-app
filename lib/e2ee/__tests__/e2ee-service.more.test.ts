@@ -12,14 +12,20 @@ jest.mock('../../auth-client', () => ({
   getJwtToken: (...args: unknown[]) => mockGetJwtToken(...args),
 }));
 
-const mockLogger = {
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  captureException: jest.fn(),
-};
-jest.mock('../../logger', () => ({ __esModule: true, default: mockLogger }));
+// Inline the logger object in the factory: ESM import hoisting evaluates this
+// mock factory (at logger's first require) BEFORE a top-level `const mockLogger`
+// would initialize, so an external variable resolves to undefined here. The
+// sibling e2ee-service.test.ts uses the same inline pattern for the same reason.
+jest.mock('../../logger', () => ({
+  __esModule: true,
+  default: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    captureException: jest.fn(),
+  },
+}));
 
 const mockGetCachedAttestation = jest.fn((..._args: any[]) => null as null | import('../e2ee-service').ModelAttestation);
 const mockSetCachedAttestation = jest.fn();

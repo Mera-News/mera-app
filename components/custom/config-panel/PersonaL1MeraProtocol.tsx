@@ -1,8 +1,10 @@
-// DEPRECATED(wave-12): replaced by the Profile hub on the Profile tab —
+// DEPRECATED(wave-12, r3): replaced by the Profile hub on the Profile tab —
 // ProfileTabScreen renders ProfileHubScreen and the facts UX moved to
-// components/custom/facts/FactsScreen. STILL LIVE in one place: the persona
-// step of OnboardingWizard (its only remaining consumer). Delete only after
-// onboarding is reworked to use the hub/facts screens.
+// components/custom/facts/FactsScreen. As of Round 3, the onboarding persona
+// step was reworked to an inline chat (components/custom/onboarding/
+// PersonaUpdateChatStep), which was this component's LAST remaining consumer —
+// so it now has NO live consumers. Retained (not deleted) per the r3 plan;
+// safe to remove once confirmed nothing references it.
 import BlockedBanner from '@/components/custom/BlockedBanner';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import UsageWidget from '@/components/custom/UsageWidget';

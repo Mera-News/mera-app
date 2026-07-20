@@ -400,7 +400,11 @@ export async function* cloudChatStream(
     model,
   );
 
+  // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss =
+  // real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
+  const jwtStartMs = Date.now();
   const baseHeaders = await getAuthHeaders();
+  logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
   const allHeaders = { ...baseHeaders, ...ctx.headers };
 
   const body: Record<string, unknown> = {
@@ -423,10 +427,18 @@ export async function* cloudChatStream(
 
   logger.debug(`${TAG} cloudChatStream POST`, { url: CHAT_API });
 
+  // Dev-only timing: per-request POST→response wall time (includes model time +
+  // the non-streaming double-turn when a tool fires). Tagged for first-chat
+  // latency attribution.
+  const postStartMs = Date.now();
   const response = await authFetch(CHAT_API, {
     method: 'POST',
     headers: allHeaders,
     body: JSON.stringify(body),
+  });
+  logger.debug('[chat-timing] chat POST→response', {
+    ms: Date.now() - postStartMs,
+    status: response.status,
   });
 
   if (!response.ok) {

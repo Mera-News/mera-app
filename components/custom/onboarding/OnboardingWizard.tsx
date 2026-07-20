@@ -20,14 +20,10 @@ import {
     useOnboardingStep,
     useOnboardingStore,
 } from '../../../lib/stores/onboarding-store';
-import {
-    useFloatingChatStore,
-    type ChatContext,
-} from '../../../lib/stores/floating-chat-store';
-import ScreenChatBubble from '../floating-chat/ScreenChatBubble';
+import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
-import PersonaL1MeraProtocol from '../config-panel/PersonaL1MeraProtocol';
+import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 
 // Stage <-> step index mapping for the 2-step wizard. The server stage
@@ -47,8 +43,6 @@ const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
 };
 
 // OnboardingWizard now uses Zustand store for state persistence
-
-const PERSONA_CONTEXT: ChatContext = { kind: 'persona' };
 
 interface OnboardingWizardProps {
     onComplete: () => void;
@@ -108,22 +102,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         initializeUserId();
     }, [updatePreferences, setIsInitializing, setStep]);
 
-    // Floating-chat orchestration: the persona step (index 1) is the only step
-    // that uses the floating Mera bubble/popover. Suppress it everywhere else,
-    // and auto-open the popover when the persona step becomes active. Leaving
-    // the persona step collapses the popover.
-    useEffect(() => {
-        const store = useFloatingChatStore.getState();
-        if (currentStep === 1) {
-            store.setSuppressed(false);
-            store.expand({ kind: 'persona' });
-        } else {
-            store.collapse();
-            store.setSuppressed(true);
-        }
-    }, [currentStep]);
-
-    // On wizard unmount/completion, restore the default floating-chat state.
+    // The persona step is now an inline chat (PersonaUpdateChatStep), so the
+    // wizard no longer orchestrates the floating bubble/popover. This defensive
+    // unmount-restore effect stays: if some earlier flow left the floating chat
+    // suppressed or expanded, leaving onboarding restores the default state.
     useEffect(() => {
         return () => {
             const store = useFloatingChatStore.getState();
@@ -224,7 +206,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 );
             case 1:
                 return (
-                    <PersonaL1MeraProtocol userId={userPreferences.userId} />
+                    <PersonaUpdateChatStep userId={userPreferences.userId} />
                 );
             default:
                 return null;
@@ -299,11 +281,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     </ModalFooter>
                 </ModalContent>
             </Modal>
-
-            {/* Floating chat bubble — LAST child so it draws above the wizard
-                content; the `suppressed` store flag hides it on non-persona
-                steps, and it unmounts with the screen on navigation. */}
-            <ScreenChatBubble context={PERSONA_CONTEXT} />
         </Box>
     );
 };

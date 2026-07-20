@@ -121,6 +121,9 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
   const cached = getCachedAttestation(model);
   if (cached) return cached;
 
+  // Dev-only timing: this is the uncached NEAR pass-through — the dominant
+  // first-chat-latency hop we prewarm against. Cache hits above never reach here.
+  const attestStartMs = Date.now();
   const token = await getJwtToken();
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -174,6 +177,12 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
     signingId: (mas?.[0]?.signing_address as string | undefined) ?? undefined,
   };
   setCachedAttestation(model, attestation);
+  logger.debug('[chat-timing] attestation fetch', {
+    ms: Date.now() - attestStartMs,
+    model,
+    algo,
+    cache: 'miss',
+  });
   return attestation;
 }
 

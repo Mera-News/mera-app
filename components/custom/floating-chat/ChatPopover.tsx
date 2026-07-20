@@ -7,6 +7,7 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
+import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react';
@@ -164,6 +165,10 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     // Drive the phase machine from the store's isExpanded flag.
     useEffect(() => {
         if (isExpanded && (phase === 'closed' || phase === 'closing')) {
+            // Earliest single hook on the expand path: warm the cloud-chat
+            // critical path (attestation + JWT) the instant the panel starts
+            // opening, before MeraChatSession mounts. Idempotent + no-op on-device.
+            prewarmCloudChat();
             const { bubbleCenter } = useFloatingChatStore.getState();
             originX.value = bubbleCenter.x;
             originY.value = bubbleCenter.y;
