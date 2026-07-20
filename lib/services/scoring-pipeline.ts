@@ -35,10 +35,17 @@ import {
   getUnscoredSuggestionsWithFacts,
   saveReason,
   saveScoringResult,
-  batchSaveComputedScores,
+  batchSaveMathScores,
+  getComputedComponentsByIds,
   batchMarkReasonSkipped,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
+import {
+  groupCandidatesByPrimaryFact,
+  type FactGroupingCandidate,
+  type FactBatchSpec,
+} from '@/lib/services/fact-batching';
+import { buildCalibrationCase } from '@/lib/news-harness/scoring-engine';
 import {
   bucketScores,
   buildReasonCallsForSubset,
@@ -83,19 +90,9 @@ import { propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagati
 
 const TAG = '[scoring-pipeline]';
 
-// PipelineBatch is a plain persisted JSON object; the judge-mode flag rides
-// along as an extra field without a store-side type change (the store owns that
-// type and is off-limits here). Read/write it through this cast. `scored` /
-// `released` (Wave 8 swipe-deck release queue, below) ride along the same way.
-type BatchWithJudge = PipelineBatch & {
-  judgeMode?: boolean;
-  /** True once this batch's relevance/raw scores are PERSISTED to the DB — the
-   *  gate for the swipe-deck release queue. Only ever set when Browse is active
-   *  (hasReleaseListeners()). */
-  scored?: boolean;
-  /** True once this batch's card ids have been emitted to the swipe deck. */
-  released?: boolean;
-};
+// Round-3 B1: factId/factStatement/judgeMode/judgedIds are now PROPER persisted
+// fields on PipelineBatch (the `BatchWithJudge` cast + the Wave-8 swipe-deck
+// release queue it also carried are gone).
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -119,11 +116,6 @@ const RUN_ABANDON_MS = 24 * 3600_000;
 const POLL_INTERVAL_MS = 7_000;
 const MIN_POLL_AGE_MS = 15_000;
 const PER_BATCH_POLL_SPACING_MS = 20_000;
-/** Head-of-line force-release timeout for the swipe-deck release queue: if the
- *  lowest-batchId unreleased ("head") batch hasn't been scored within this
- *  window, force-release it (its computed/math scores — persisted at submit —
- *  stand) so a slow head can't stall the whole in-order deck feed. */
-const HEAD_CHUNK_RELEASE_TIMEOUT_MS = 90_000;
 
 // ---------------------------------------------------------------------------
 // Phase predicates
@@ -164,225 +156,24 @@ let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
 
 // ---------------------------------------------------------------------------
-// Swipe-deck chunk release queue (Wave 8, Browse tab)
+// Chunk-release listener — DEPRECATED no-op stub (Round-3)
 //
-// PURELY ADDITIVE and fully gated behind "at least one chunk-release listener is
-// registered" (i.e. the Browse swipe deck is mounted). When no listener is
-// registered NONE of this runs — no timers arm, no extra CAS writes, and the
-// existing For-You progressive-render path (refreshUi) is untouched.
-//
-// Contract: batches release to the deck in strict batchId order. A batch is
-// eligible once it is `scored` (its relevance/raw scores are persisted) or
-// terminal. tryReleaseInOrder walks from the front and stops at the first
-// unreleased batch that isn't yet scored/terminal (the reorder buffer: a
-// later-finishing batch waits for the ones before it). A ~90s head timeout
-// force-releases a stuck head so it can't stall the queue.
+// The Wave-8 swipe-deck in-order chunk-release queue was deleted in Round-3
+// (its only consumer, the Browse swipe deck, is removed in Part C). This stub
+// remains ONLY so `lib/stores/swipe-feed-store.ts` still compiles until the C
+// agent deletes swipe-feed + this export. It registers nothing and never fires.
 // ---------------------------------------------------------------------------
 
 type ChunkReleaseListener = (cardIds: string[]) => void;
-const chunkReleaseListeners = new Set<ChunkReleaseListener>();
 
-// Single force-release timer, keyed to the current head (lowest unreleased
-// batchId). Re-armed whenever the head advances; cleared on finalize/reset.
-let headReleaseTimer: ReturnType<typeof setTimeout> | null = null;
-let headReleaseBatchId: number | null = null;
-
-/**
- * Register a listener that receives each in-order chunk release (the card ids
- * — article_suggestion server ids — that just became releasable). Returns an
- * unsubscribe. Registering the first listener is what turns the release queue
- * ON; unsubscribing the last turns it OFF (and any pending head timer is
- * cleared on the next release attempt / reset).
- */
+/** @deprecated No-op. Returns an unsubscribe that does nothing. Removed with
+ *  swipe-feed in Part C. */
 export function registerChunkReleaseListener(
-  fn: ChunkReleaseListener,
+  _fn: ChunkReleaseListener,
 ): () => void {
-  chunkReleaseListeners.add(fn);
-  return () => {
-    chunkReleaseListeners.delete(fn);
-    if (chunkReleaseListeners.size === 0) clearHeadReleaseTimer();
-  };
+  return () => {};
 }
 
-/** Release machinery gate — true only while the Browse deck is mounted. */
-function hasReleaseListeners(): boolean {
-  return chunkReleaseListeners.size > 0;
-}
-
-/** Fan out a chunk release to every listener. Never throws into the pipeline
- *  flow (a listener error is logged, not propagated). No-op for an empty set. */
-function emitChunkReleased(cardIds: string[]): void {
-  if (cardIds.length === 0) return;
-  for (const fn of chunkReleaseListeners) {
-    try {
-      fn(cardIds);
-    } catch (err) {
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'emit-chunk-released' },
-      });
-    }
-  }
-}
-
-/** Minimal per-batch view the pure ordering helper needs. */
-export interface ReleasableBatchView {
-  batchId: number;
-  released: boolean;
-  scored: boolean;
-  terminal: boolean;
-}
-
-/**
- * PURE, unit-tested ordering decision: given the batches, return the batchIds
- * that may be released NOW, in ascending batchId order. Walk from the front:
- * skip already-released batches (they're ahead in the order), release each
- * scored-or-terminal batch, and STOP at the first unreleased batch that is
- * neither scored nor terminal — that batch (and everything after it) waits, so
- * the deck only ever grows contiguously from the front (in-order guarantee).
- */
-export function computeReleasableBatchIds(
-  batches: ReleasableBatchView[],
-): number[] {
-  const sorted = [...batches].sort((a, b) => a.batchId - b.batchId);
-  const out: number[] = [];
-  for (const b of sorted) {
-    if (b.released) continue;
-    if (b.scored || b.terminal) {
-      out.push(b.batchId);
-      continue;
-    }
-    break;
-  }
-  return out;
-}
-
-/** The card ids a batch releases to the deck: the ids that actually scored
- *  (persisted `relevanceMap` keys when present, else the batch's candidateIds).
- *  A `failed` batch releases nothing (it persisted no scores). The store applies
- *  its own scored/seen filter, so an over-broad candidateIds fallback is safe. */
-function releasableCardIds(batch: PipelineBatch): string[] {
-  if (batch.phase === 'failed') return [];
-  const relMap = batch.relevanceMap;
-  if (relMap && Object.keys(relMap).length > 0) return Object.keys(relMap);
-  return batch.candidateIds;
-}
-
-/**
- * Release every contiguous-from-front eligible batch to the deck, in order.
- * Gated behind hasReleaseListeners(); a no-op (and zero cost) otherwise. After
- * releasing, (re)arms the head force-release timer for the new head.
- */
-async function tryReleaseInOrder(): Promise<void> {
-  if (!hasReleaseListeners()) return;
-  const snap = await getPipeline();
-  if (!snap) {
-    clearHeadReleaseTimer();
-    return;
-  }
-  const { run } = snap;
-  const views: ReleasableBatchView[] = run.batches.map((b) => ({
-    batchId: b.batchId,
-    released: (b as BatchWithJudge).released === true,
-    scored: (b as BatchWithJudge).scored === true,
-    terminal: isTerminal(b.phase),
-  }));
-  const toRelease = computeReleasableBatchIds(views);
-  for (const batchId of toRelease) {
-    const batch = run.batches.find((b) => b.batchId === batchId);
-    if (!batch) continue;
-    emitChunkReleased(releasableCardIds(batch));
-    await mutatePipeline((r) => {
-      const b = r.batches.find((x) => x.batchId === batchId);
-      if (!b || (b as BatchWithJudge).released === true) return null;
-      (b as BatchWithJudge).released = true;
-      return true;
-    });
-  }
-  await armHeadReleaseTimer();
-}
-
-/** Mark a batch `scored` (relevance/raw scores persisted) and try to release.
- *  Gated: does nothing unless the Browse deck is active. */
-async function markBatchScored(batchId: number): Promise<void> {
-  if (!hasReleaseListeners()) return;
-  await mutatePipeline((run) => {
-    const b = run.batches.find((x) => x.batchId === batchId);
-    if (!b || (b as BatchWithJudge).scored === true) return null;
-    (b as BatchWithJudge).scored = true;
-    return true;
-  });
-  await tryReleaseInOrder();
-}
-
-function clearHeadReleaseTimer(): void {
-  if (headReleaseTimer) {
-    clearTimeout(headReleaseTimer);
-    headReleaseTimer = null;
-  }
-  headReleaseBatchId = null;
-}
-
-/**
- * (Re)arm the ~90s head force-release timer. The head is the lowest-batchId
- * unreleased batch; if it is already scored/terminal it will have been released
- * by tryReleaseInOrder (so no timer needed). Only arm for an unreleased,
- * not-yet-scored head; keep the existing timer if it's already for this head.
- */
-async function armHeadReleaseTimer(): Promise<void> {
-  if (!hasReleaseListeners()) {
-    clearHeadReleaseTimer();
-    return;
-  }
-  const snap = await getPipeline();
-  if (!snap) {
-    clearHeadReleaseTimer();
-    return;
-  }
-  const sorted = [...snap.run.batches].sort((a, b) => a.batchId - b.batchId);
-  const head = sorted.find((b) => (b as BatchWithJudge).released !== true);
-  if (!head) {
-    clearHeadReleaseTimer();
-    return;
-  }
-  const headScored =
-    (head as BatchWithJudge).scored === true || isTerminal(head.phase);
-  if (headScored) {
-    // tryReleaseInOrder handles it; nothing to time out on.
-    clearHeadReleaseTimer();
-    return;
-  }
-  if (headReleaseBatchId === head.batchId && headReleaseTimer) return; // already armed
-  clearHeadReleaseTimer();
-  headReleaseBatchId = head.batchId;
-  headReleaseTimer = setTimeout(() => {
-    void forceReleaseHead(head.batchId);
-  }, HEAD_CHUNK_RELEASE_TIMEOUT_MS);
-}
-
-/** Head-timeout fired: force the head `scored` (its computed/math scores,
- *  persisted at submit, stand) and re-run the in-order release so the queue
- *  advances past a stuck head. */
-async function forceReleaseHead(batchId: number): Promise<void> {
-  headReleaseTimer = null;
-  headReleaseBatchId = null;
-  if (!hasReleaseListeners()) return;
-  logger.info(
-    `${TAG} head-chunk force-release: batch ${batchId} timed out (${HEAD_CHUNK_RELEASE_TIMEOUT_MS}ms) — releasing on computed scores`,
-  );
-  await mutatePipeline((run) => {
-    const b = run.batches.find((x) => x.batchId === batchId);
-    if (
-      !b ||
-      (b as BatchWithJudge).released === true ||
-      (b as BatchWithJudge).scored === true
-    ) {
-      return null;
-    }
-    (b as BatchWithJudge).scored = true;
-    return true;
-  });
-  await tryReleaseInOrder();
-}
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -398,6 +189,7 @@ function makeQueuedBatch(
   batchId: number,
   candidateIds: string[],
   reasonsOnly = false,
+  fact?: { factId: string | null; factStatement: string | null },
 ): PipelineBatch {
   return {
     batchId,
@@ -405,7 +197,64 @@ function makeQueuedBatch(
     candidateIds,
     attempt: 0,
     ...(reasonsOnly ? { reasonsOnly: true } : {}),
+    ...(fact ? { factId: fact.factId, factStatement: fact.factStatement } : {}),
   };
+}
+
+/**
+ * Round-3 B1: build per-fact batch specs for a set of fresh candidate ids.
+ * Loads the candidates' grouping metadata + the persona topic/fact snapshots,
+ * then groups by primary fact (fact-batching.ts). Fail-open: any load error (or
+ * a missing snapshot in tests) yields empty snapshots ⇒ every id lands in one
+ * `factId: null` tail, i.e. plain sequential chunks — the pre-Round-3 layout.
+ */
+async function planFactBatches(freshIds: string[]): Promise<FactBatchSpec[]> {
+  let metaById = new Map<string, FactGroupingCandidate>();
+  let topics = new Map<string, import('@/lib/news-harness/feed-select').TopicSnapshot>();
+  let facts = new Map<string, import('@/lib/news-harness/feed-select').FactSnapshot>();
+  try {
+    const candidates = await getUnscoredSuggestionsWithFacts();
+    const freshSet = new Set(freshIds);
+    for (const c of candidates) {
+      if (!freshSet.has(c.id)) continue;
+      metaById.set(c.id, {
+        id: c.id,
+        matchedTopics: parseMatchedTopicsForGrouping(c.meta?.matchedTopicsJson ?? null),
+        relatedFacts: c.relatedFacts,
+      });
+    }
+    // Lazy require: feed-sections-selector pulls the persona DB services, kept
+    // off the module load path (and mockable in tests).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { loadSectionSnapshots } = require('@/lib/stores/feed-sections-selector') as typeof import('@/lib/stores/feed-sections-selector');
+    const snap = await loadSectionSnapshots();
+    topics = snap.topics;
+    facts = snap.facts;
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'plan-fact-batches' },
+    });
+    // Fall through with whatever we have (empty ⇒ single tail).
+    metaById = metaById ?? new Map();
+  }
+  return groupCandidatesByPrimaryFact(freshIds, metaById, topics, facts, BATCH_SIZE);
+}
+
+/** Parse `matched_topics_json` → [{ topicId, text }] for fact ownership. */
+function parseMatchedTopicsForGrouping(
+  json: string | null,
+): { topicId: string | null; text: string }[] {
+  if (!json) return [];
+  try {
+    const raw = JSON.parse(json);
+    if (!Array.isArray(raw)) return [];
+    return raw.map((m: { topicId?: string | null; text?: string }) => ({
+      topicId: typeof m?.topicId === 'string' && m.topicId.length > 0 ? m.topicId : null,
+      text: typeof m?.text === 'string' ? m.text : '',
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export function nonTerminalCandidateIds(run: PipelineRun): Set<string> {
@@ -517,19 +366,93 @@ export async function getPipelineUiState(): Promise<PipelineUiState> {
   return derivePipelineUiState(snap.run);
 }
 
-/** Best-effort push of the derived phase + progress into the For-You header
- *  store. Lazily-required (like refreshUi) to avoid a load-time import cycle. */
+// ---------------------------------------------------------------------------
+// Per-fact stage projection (Round-3 B1) — the fact-aware status accordion +
+// collapsed shimmer read this.
+// ---------------------------------------------------------------------------
+
+/**
+ * Project a run onto its per-fact stages, ordered as the batches were enqueued
+ * (fact weight desc; the `null` tail last). One entry per distinct
+ * factId (the `null` tail collapses to a single "other stories" stage; a legacy
+ * schema-1 run with no factId projects as ONE generic stage). `phase`:
+ *   - 'done'    — every batch for this fact is terminal.
+ *   - 'working' — at least one batch is in-flight / needs-submit (submitting-*,
+ *                 waiting-*, needs-reasons-submit).
+ *   - 'queued'  — otherwise (all its non-terminal batches are still 'queued').
+ */
+export function derivePipelineFactStages(
+  run: PipelineRun,
+): import('@/lib/stores/for-you-store').PipelineFactStage[] {
+  // factId key ('' sentinel for the null tail) → aggregate state, first-seen order.
+  const order: (string | null)[] = [];
+  const seen = new Set<string>();
+  const statementByKey = new Map<string, string | null>();
+  const anyWorking = new Map<string, boolean>();
+  const anyNonTerminal = new Map<string, boolean>();
+
+  const keyOf = (factId: string | null | undefined) =>
+    factId == null ? '' : factId;
+
+  for (const b of run.batches) {
+    const factId = b.factId ?? null;
+    const key = keyOf(factId);
+    if (!seen.has(key)) {
+      seen.add(key);
+      order.push(factId);
+      statementByKey.set(key, b.factStatement ?? null);
+    }
+    const terminal = isTerminal(b.phase);
+    if (!terminal) anyNonTerminal.set(key, true);
+    const working =
+      !terminal &&
+      (b.phase === 'submitting-relevance' ||
+        b.phase === 'submitting-reasons' ||
+        b.phase === 'waiting-relevance' ||
+        b.phase === 'waiting-reasons' ||
+        b.phase === 'needs-reasons-submit');
+    if (working) anyWorking.set(key, true);
+  }
+
+  return order.map((factId) => {
+    const key = keyOf(factId);
+    const phase: 'queued' | 'working' | 'done' = anyWorking.get(key)
+      ? 'working'
+      : anyNonTerminal.get(key)
+        ? 'queued'
+        : 'done';
+    return { factId, statement: statementByKey.get(key) ?? null, phase };
+  });
+}
+
+/** Read the persisted run and project its per-fact stages. Empty when no run
+ *  exists. Consumed by the store's boot hydration. */
+export async function getPipelineFactStages(): Promise<
+  import('@/lib/stores/for-you-store').PipelineFactStage[]
+> {
+  const snap = await getPipeline();
+  if (!snap) return [];
+  return derivePipelineFactStages(snap.run);
+}
+
+/** Best-effort push of the derived phase + progress + per-fact stages into the
+ *  For-You header store. Lazily-required (like refreshUi) to avoid a load-time
+ *  import cycle. */
 async function pushUiProgress(): Promise<void> {
   try {
-    const ui = await getPipelineUiState();
+    const snap = await getPipeline();
+    const ui = snap
+      ? derivePipelineUiState(snap.run)
+      : { phase: 'idle' as const, processedCount: 0, totalCount: 0 };
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+    const store = useForYouStore.getState();
     if (ui.phase === 'idle') {
-      useForYouStore.getState().setAsyncJobPhase('idle');
+      store.setAsyncJobPhase('idle');
+      store.setFactStages([]);
     } else {
-      useForYouStore
-        .getState()
-        .setAsyncJobPhase(ui.phase, ui.processedCount, ui.totalCount);
+      store.setAsyncJobPhase(ui.phase, ui.processedCount, ui.totalCount);
+      store.setFactStages(snap ? derivePipelineFactStages(snap.run) : []);
     }
   } catch (err) {
     logger.captureException(err, {
@@ -593,19 +516,28 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
     }
   }
 
-  const chunks = chunkIds(fresh, BATCH_SIZE);
+  // Round-3 B1: group the fresh ids into per-fact batch specs (fact groups by
+  // weight desc, sub-3-candidate facts + orphans merged into a factId:null
+  // tail). Degrades to plain sequential chunks when no persona metadata exists.
+  const specs = await planFactBatches(fresh);
   logger.info(
-    `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${chunks.length} batch(es) (run ${snap ? 'exists' : 'new'})`,
+    `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${specs.length} batch(es) across ${
+      new Set(specs.map((s) => s.factId)).size
+    } fact group(s) (run ${snap ? 'exists' : 'new'})`,
   );
 
+  const buildFromSpecs = (base: number): PipelineBatch[] =>
+    specs.map((s, i) =>
+      makeQueuedBatch(base + i, s.ids, false, {
+        factId: s.factId,
+        factStatement: s.factStatement,
+      }),
+    );
+
   if (!snap) {
-    await createRunWithBatches((base) =>
-      chunks.map((c, i) => makeQueuedBatch(base + i, c)),
-    );
+    await createRunWithBatches(buildFromSpecs);
   } else {
-    await appendBatches((base) =>
-      chunks.map((c, i) => makeQueuedBatch(base + i, c)),
-    );
+    await appendBatches(buildFromSpecs);
   }
 
   await drain('foreground');
@@ -765,11 +697,6 @@ async function doDrain(context: ExecutionContext): Promise<void> {
   // A submit inside the loop may have flipped the last batch terminal (empty
   // bundle / submit failure). Never calls drain, so no re-entrancy.
   await maybeFinalize();
-
-  // A drain can flip batches terminal (empty bundle) or admit fresh batches
-  // (advancing the release head) — try an in-order release + (re)arm the head
-  // timer. Self-guarded: a no-op when the Browse deck isn't mounted.
-  await tryReleaseInOrder();
 }
 
 /**
@@ -903,21 +830,66 @@ async function doSubmitRelevance(
   }
 
   // --- JUDGE MODE (all candidates are math-mode) ---------------------------
-  // Persist the math NOW (rawScore initialized to computed; overwritten at
-  // decode) so a judge failure/timeout fail-opens to the persisted math score.
-  await batchSaveComputedScores(
-    math.stage.map((c) => ({
-      id: c.input.id,
-      computedScore: math.computedScoreMap.get(c.input.id)!,
-      rawScore: math.computedScoreMap.get(c.input.id)!,
-      scoreComponentsJson: JSON.stringify(math.componentsMap.get(c.input.id)!),
-    })),
+  // Round-3 B1: PERSIST THE MATH IMMEDIATELY (bucketed relevance, reason:'',
+  // reasonSkipped for sub-threshold rows, scored_at, audit columns) so cards are
+  // renderable now — the judge no longer decides the score (Part A: advisory),
+  // it only writes the note. Bucket a copy; keep the raw computed as rawScore.
+  const bucketed = new Map(math.computedScoreMap);
+  bucketScores(bucketed);
+  const bucketedRecord: Record<string, number> = {};
+  for (const c of math.stage) {
+    const id = c.input.id;
+    bucketedRecord[id] = bucketed.get(id) ?? 0;
+  }
+  await batchSaveMathScores(
+    math.stage.map((c) => {
+      const id = c.input.id;
+      const bucket = bucketed.get(id) ?? 0;
+      return {
+        id,
+        relevance: bucket,
+        reasonSkipped: bucket <= REASON_RELEVANCE_THRESHOLD,
+        computedScore: math.computedScoreMap.get(id)!,
+        rawScore: math.computedScoreMap.get(id)!,
+        scoreComponentsJson: JSON.stringify(math.componentsMap.get(id)!),
+      };
+    }),
   );
+  await refreshUi();
 
-  // Combined judge+reason calls, chunked at judgeChunkSize. chunkIds order is
-  // reconstructed at decode time from batch.candidateIds (same order).
+  // Fresh donors — copy scores onto held-back unscored siblings (same as the
+  // legacy relevance path, moved to submit since the score is final here).
+  try {
+    const inFlight = await getNonTerminalCandidateIds();
+    const propagated = await propagateToUnscoredSiblings(inFlight);
+    if (propagated > 0) await refreshUi();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'propagate-siblings' },
+    });
+  }
+
+  // The judge+notes job only needs the ABOVE-THRESHOLD survivors (the rows that
+  // will render + earn a note). Sub-threshold rows are already terminal
+  // (reasonSkipped). buildJudgeCalls chunks this subset in order → the `judge:N`
+  // decode join key stored as judgedIds.
+  const judgedStage = math.stage.filter(
+    (c) => (bucketed.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
+  );
+  const judgedIds = judgedStage.map((c) => c.input.id);
+
+  if (judgedStage.length === 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} judge: no above-threshold rows — marking done`,
+    );
+    const discarded = await discardLowRelevance(batch.candidateIds, bucketedRecord);
+    if (discarded > 0) await refreshUi();
+    await markBatchDone(batch.batchId);
+    return;
+  }
+
   const { calls } = buildJudgeCalls(
-    math.stage,
+    judgedStage,
     math.computedScoreMap,
     math.componentsMap,
     math.persona,
@@ -927,14 +899,12 @@ async function doSubmitRelevance(
     logger.info(
       `${TAG} batch ${batch.batchId} judge bundle empty — marking done`,
     );
+    const discarded = await discardLowRelevance(batch.candidateIds, bucketedRecord);
+    if (discarded > 0) await refreshUi();
     await markBatchDone(batch.batchId);
     return;
   }
 
-  // CRITICAL: the decode join re-chunks batch.candidateIds in THIS order to
-  // rebuild `judge:${i}` → ids, so candidateIds MUST be the order buildJudgeCalls
-  // chunked (math.stage order).
-  const eligibleIds = math.stage.map((c) => c.input.id);
   const bundle: CloudCallBundle = {
     calls,
     promptsById: new Map(),
@@ -944,7 +914,7 @@ async function doSubmitRelevance(
 
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
   logger.info(
-    `${TAG} batch ${batch.batchId} submit judge: ${eligibleIds.length} ids in ${calls.length} calls (token=${token ? 'yes' : 'no'})`,
+    `${TAG} batch ${batch.batchId} submit judge notes: ${judgedIds.length}/${math.stage.length} ids in ${calls.length} calls (token=${token ? 'yes' : 'no'})`,
   );
   const outcome = await sendInferenceRequest({
     bundle,
@@ -955,18 +925,28 @@ async function doSubmitRelevance(
   });
 
   if (outcome.status === 'ok') {
-    // Carry the computed scores forward on the batch via rawRelevanceMap so the
-    // decode fail-open can read them without recomputing (persona could differ).
+    // Carry the computed scores of the JUDGED subset forward via rawRelevanceMap
+    // (decode fail-open + the reason-threshold filter), the bucketed relevance
+    // map (for the decode-time discard), and the judged id order (decode join).
     const computedRecord: Record<string, number> = {};
-    for (const id of eligibleIds) {
+    for (const id of judgedIds) {
       computedRecord[id] = math.computedScoreMap.get(id)!;
     }
-    await transitionToWaitingRelevance(batch.batchId, outcome, eligibleIds, {
-      judgeMode: true,
-      computedScoreMap: computedRecord,
-    });
+    // candidateIds stays the FULL batch (discard at decode covers every row);
+    // judgedIds is the judge subset.
+    await transitionToWaitingRelevance(
+      batch.batchId,
+      outcome,
+      batch.candidateIds,
+      {
+        judgeMode: true,
+        computedScoreMap: computedRecord,
+        relevanceMap: bucketedRecord,
+        judgedIds,
+      },
+    );
     logger.info(
-      `${TAG} batch ${batch.batchId} → waiting-relevance (judge) requestId=${outcome.requestId}`,
+      `${TAG} batch ${batch.batchId} → waiting-relevance (judge notes) requestId=${outcome.requestId}`,
     );
   } else if (outcome.status === 'throttled') {
     await requeueThrottled(batch.batchId, 'submitting-relevance');
@@ -1039,7 +1019,12 @@ async function transitionToWaitingRelevance(
   batchId: number,
   outcome: { requestId: string; capabilityToken: string },
   eligibleIds: string[],
-  judge?: { judgeMode: boolean; computedScoreMap: Record<string, number> },
+  judge?: {
+    judgeMode: boolean;
+    computedScoreMap: Record<string, number>;
+    relevanceMap: Record<string, number>;
+    judgedIds: string[];
+  },
 ): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -1050,11 +1035,15 @@ async function transitionToWaitingRelevance(
     b.candidateIds = eligibleIds; // eligible/submit order = decode join key
     b.submittedAt = Date.now();
     if (judge) {
-      // Judge-mode batch: flag it so decode routes to handleJudgeResults, and
-      // stash the computed (math) scores on rawRelevanceMap — the decode-time
-      // fail-open carrier (reusing the existing persisted field).
-      (b as BatchWithJudge).judgeMode = judge.judgeMode;
+      // Judge-mode batch: flag it so decode routes to handleJudgeResults, stash
+      // the computed (math) scores on rawRelevanceMap (decode fail-open + reason
+      // threshold), the bucketed relevance persisted at submit, and the
+      // above-threshold subset the judge job was built over (the `judge:N`
+      // decode join key).
+      b.judgeMode = judge.judgeMode;
       b.rawRelevanceMap = judge.computedScoreMap;
+      b.relevanceMap = judge.relevanceMap;
+      b.judgedIds = judge.judgedIds;
     }
     return true;
   });
@@ -1199,14 +1188,15 @@ async function decodeBatch(
 }
 
 /**
- * Decode a JUDGE-MODE batch (combined judge+reason job). The math was persisted
- * at submit (computed_score/score_components_json) and the computed scores were
- * stashed on batch.rawRelevanceMap as the fail-open carrier. This:
- *   - reconstructs the `judge:${i}` chunk map by re-chunking candidateIds,
- *   - decodes judge decisions (missing/failed chunk → math stands),
- *   - demote-only reconciles (judge may only LOWER the math score here),
- *   - buckets, persists relevance + reason + rawScore, propagates to siblings,
- *   - terminates the batch (no reasons sub-phase — reasons rode the same call).
+ * Decode a JUDGE-MODE batch (Round-3 B1 — the ADVISORY judge+notes job).
+ *
+ * The relevance was already persisted at SUBMIT (the math is the authority —
+ * Part A). The judge is advisory: this pass ONLY writes the notes it returned
+ * (reason_pending → complete) and captures math-vs-judge disagreements as
+ * CalibrationCases so the calibration loop keeps learning (the cloud path
+ * previously did NOT feed it — the gap Part A flagged). It then terminates the
+ * batch and runs the low-relevance discard. No relevance re-persist, no sibling
+ * propagation (both happened at submit).
  */
 async function handleJudgeResults(
   batch: PipelineBatch,
@@ -1215,26 +1205,29 @@ async function handleJudgeResults(
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
 
-  // Wave 14: decode against the same calibration-overrides-aware config the
-  // submit path built with. NOTE: judgeChunkSize must equal the submit-time
-  // value for the chunk rebuild — articlePipeline is never override-tunable
-  // (TUNABLE_CONSTANTS is scoringEngine-only), so this holds by construction.
+  // Decode against the same calibration-overrides-aware config the submit path
+  // built with. judgeChunkSize must equal the submit-time value for the chunk
+  // rebuild — articlePipeline is never override-tunable, so this holds.
   const judgeConfig = await judgeHarnessConfig();
 
-  // Rebuild chunkIds: the judge calls were `judge:${i}`, chunked at
-  // judgeChunkSize over batch.candidateIds IN ORDER (the submit-time order).
+  // Rebuild chunkIds from judgedIds — the ABOVE-THRESHOLD subset buildJudgeCalls
+  // chunked at submit (NOT candidateIds, which also covers the sub-threshold
+  // rows that were never sent to the judge).
+  const judgedIds = batch.judgedIds ?? [];
   const size = judgeConfig.articlePipeline.judgeChunkSize;
   const judgeChunkIds = new Map<string, string[]>();
-  chunkIds(batch.candidateIds, size).forEach((ids, i) => {
+  chunkIds(judgedIds, size).forEach((ids, i) => {
     judgeChunkIds.set(`judge:${i}`, ids);
   });
 
-  // Computed (math) scores carried on the batch at submit — the fail-open base.
+  // Computed (math) scores of the judged subset carried at submit. rawScoreMap
+  // (== computed, Part A) is IGNORED for scoring; judgeScoreMap + overrideMap
+  // feed calibration; reasonMap carries the notes.
   const computedScoreMap = new Map<string, number>(
     Object.entries(batch.rawRelevanceMap ?? {}),
   );
 
-  const { rawScoreMap, reasonMap } = decodeJudgeResults(
+  const { reasonMap, judgeScoreMap, overrideMap } = decodeJudgeResults(
     batchResults,
     judgeChunkIds,
     computedScoreMap,
@@ -1242,80 +1235,64 @@ async function handleJudgeResults(
     undefined,
   );
 
-  // Demote-only reconciliation: in the E2EE/background path the judge may only
-  // LOWER the shown/math score, never promote (M-P5 background contract).
-  const finalRawById = new Map<string, number>();
-  for (const id of batch.candidateIds) {
-    const computed = computedScoreMap.get(id) ?? 0;
-    const judged = rawScoreMap.get(id) ?? computed;
-    finalRawById.set(id, Math.min(judged, computed));
-  }
-
-  // Snapshot raw, then bucket a copy (storage/gating use bucketed values).
-  const bucketed = new Map(finalRawById);
-  bucketScores(bucketed);
-
-  const bucketedRecord: Record<string, number> = {};
-  for (const id of batch.candidateIds) {
-    const raw = finalRawById.get(id);
-    const bucket = bucketed.get(id);
-    if (raw === undefined || bucket === undefined) continue;
-    bucketedRecord[id] = bucket;
-    const reason = reasonMap.get(id) ?? '';
-    // reason present → Complete. absent but bucketed ≥ floor → ReasonPending
-    // (orphan-reasons sweep captions it). absent + below floor → reasonSkipped
-    // (terminal). saveScoringResult derives status from reason/reasonSkipped.
-    const reasonSkipped =
-      reason.length === 0 ? bucket < REASON_RELEVANCE_THRESHOLD : false;
+  // Apply the notes: reason present → the row completes; absent rows stay
+  // reason_pending (the orphan-reasons sweep re-attempts them).
+  for (const [id, reason] of reasonMap) {
+    if (!reason) continue;
     try {
-      await saveScoringResult(id, {
-        relevance: bucket,
-        reason,
-        reasonSkipped,
-        rawScore: raw,
-        // computedScore + scoreComponentsJson already persisted at submit.
-      });
+      await saveReason(id, reason);
     } catch (err) {
       if (isRecordNotFoundError(err)) continue;
       logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'save-judge' },
+        tags: { service: 'scoring-pipeline', step: 'save-judge-note' },
         extra: { candidateId: id },
       });
     }
   }
   await refreshUi();
 
-  // Sibling propagation (identical to the legacy relevance path): fresh donors
-  // copy their scores onto held-back unscored siblings. Fail-open.
-  try {
-    const inFlight = await getNonTerminalCandidateIds();
-    const propagated = await propagateToUnscoredSiblings(inFlight);
-    if (propagated > 0) await refreshUi();
-  } catch (err) {
-    logger.captureException(err, {
-      tags: { service: 'scoring-pipeline', step: 'propagate-siblings' },
-    });
+  // Calibration capture (Part A): for every id the judge overrode
+  // (|judge − computed| > OVERRIDE_DELTA), build a CalibrationCase from the
+  // persisted components + the advisory judge score and feed the loop. Off the
+  // critical path (fire-and-forget); read only the overridden rows' components.
+  const overriddenIds = [...overrideMap.keys()];
+  if (overriddenIds.length > 0) {
+    try {
+      const compsById = await getComputedComponentsByIds(overriddenIds);
+      const cases = [];
+      for (const id of overriddenIds) {
+        const computed = computedScoreMap.get(id);
+        const judge = judgeScoreMap.get(id);
+        const entry = compsById.get(id);
+        if (computed === undefined || judge === undefined || !entry) continue;
+        cases.push(buildCalibrationCase(id, computed, judge, entry.components));
+      }
+      if (cases.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { recordOverrides } = require('@/lib/database/services/calibration-service') as typeof import('@/lib/database/services/calibration-service');
+        void recordOverrides(cases).catch((err: unknown) => {
+          logger.captureException(err, {
+            tags: { service: 'scoring-pipeline', step: 'record-overrides' },
+          });
+        });
+      }
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'calibration-capture' },
+      });
+    }
   }
 
   logger.info(
-    `${TAG} batch ${batch.batchId} judge decoded: scored=${Object.keys(bucketedRecord).length} reasons=${reasonMap.size}`,
+    `${TAG} batch ${batch.batchId} judge notes decoded: notes=${reasonMap.size} overrides=${overriddenIds.length}`,
   );
 
-  // Judge mode carries reasons in the SAME call → NO reasons sub-phase. Mark
-  // the batch terminal, discard low-relevance rows, finalize via afterTerminal.
-  await mutatePipeline((run) => {
-    const b = run.batches.find((x) => x.batchId === batch.batchId);
-    if (!b || b.phase !== 'waiting-relevance') return null;
-    b.relevanceMap = bucketedRecord;
-    b.phase = 'done';
-    return true;
-  });
-  // Swipe-deck release: judge decode persisted relevance + reasons in one pass,
-  // so mark the batch scored (releasable) — no-op unless Browse is mounted.
-  await markBatchScored(batch.batchId);
+  // Advisory judge carries only notes → NO reasons sub-phase. Terminate the
+  // batch, discard sub-gate rows (relevance persisted at submit), finalize.
+  await markBatchDone(batch.batchId);
   const discarded = await discardLowRelevance(
     batch.candidateIds,
-    bucketedRecord,
+    batch.relevanceMap ?? {},
   );
   if (discarded > 0) await refreshUi();
   await afterTerminal(context);
@@ -1329,7 +1306,7 @@ async function handleRelevanceResults(
   // Judge-mode batches carry the combined judge+reason result — decode + save +
   // terminate in one pass (no reasons sub-phase). Backstop/legacy batches fall
   // through to the tiered relevance→reasons flow below.
-  if ((batch as BatchWithJudge).judgeMode === true) {
+  if (batch.judgeMode === true) {
     await handleJudgeResults(batch, server, context);
     return;
   }
@@ -1418,8 +1395,6 @@ async function handleRelevanceResults(
       b.phase = 'done';
       return true;
     });
-    // Swipe-deck release: relevance is persisted (no reasons owed) → releasable.
-    await markBatchScored(batch.batchId);
     const discarded = await discardLowRelevance(
       batch.candidateIds,
       relevanceMap,
@@ -1438,10 +1413,6 @@ async function handleRelevanceResults(
     b.phase = 'needs-reasons-submit';
     return true;
   });
-
-  // Swipe-deck release: relevance is persisted now — release to the deck even
-  // though reasons are still owed (the deck shows the reason when it lands).
-  await markBatchScored(batch.batchId);
 
   // Immediately try the reasons submit this cycle.
   await submitNeedsReasons(batch.batchId, context);
@@ -1674,9 +1645,6 @@ async function requeueWaitingOrFail(
  */
 async function afterTerminal(context: ExecutionContext): Promise<void> {
   await drain(context);
-  // A batch just went terminal — a terminal batch is releasable (a failed one
-  // releases nothing, but must still un-block the in-order head). Self-guarded.
-  await tryReleaseInOrder();
 }
 
 async function finalize(run: PipelineRun): Promise<void> {
@@ -1699,8 +1667,6 @@ async function doFinalize(run: PipelineRun): Promise<void> {
   await refreshUi();
   await clearPipeline();
   stopPoller();
-  // The run is gone — no head to force-release.
-  clearHeadReleaseTimer();
 }
 
 // ---------------------------------------------------------------------------
@@ -1877,10 +1843,6 @@ function stopPoller(): void {
     appStateSub.remove();
     appStateSub = null;
   }
-  // Swipe-deck release queue is independent of the poller lifecycle — do NOT
-  // clear listeners here (they belong to the mounted Browse screen). Only the
-  // head timer is cleared, since it's re-armed on the next release attempt.
-  clearHeadReleaseTimer();
 }
 
 async function runPollerTick(): Promise<void> {
@@ -1924,7 +1886,4 @@ export function _resetForTests(): void {
     appStateSub.remove();
     appStateSub = null;
   }
-  // Swipe-deck release queue — full reset for tests.
-  chunkReleaseListeners.clear();
-  clearHeadReleaseTimer();
 }

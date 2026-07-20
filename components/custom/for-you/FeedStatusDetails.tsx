@@ -3,12 +3,14 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
+import type { PipelineFactStage } from '@/lib/stores/for-you-store';
 import {
     useForYouAsyncJobPhase,
     useForYouAsyncJobProcessedCount,
     useForYouAsyncJobTotalCount,
     useForYouDailyLimitResetAt,
     useForYouDeviceProcessing,
+    useForYouFactStages,
     useForYouScoringError,
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
@@ -46,6 +48,25 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
     );
 }
 
+const FACT_PHASE_ICON: Record<PipelineFactStage['phase'], { name: React.ComponentProps<typeof MaterialIcons>['name']; color: string }> = {
+    done: { name: 'check-circle', color: '#34d399' },
+    working: { name: 'sync', color: ACCENT },
+    queued: { name: 'schedule', color: '#6b7280' },
+};
+
+function FactStageRow({ stage, fallbackLabel }: { stage: PipelineFactStage; fallbackLabel: string }) {
+    const icon = FACT_PHASE_ICON[stage.phase];
+    const label = stage.statement ?? fallbackLabel;
+    return (
+        <HStack className="items-center" space="sm">
+            <MaterialIcons name={icon.name} size={14} color={icon.color} />
+            <Text size="xs" className="text-typography-400 flex-1" numberOfLines={1}>
+                {label}
+            </Text>
+        </HStack>
+    );
+}
+
 /**
  * The shared feed-status detail body. This is the single source of truth for the
  * copy + selectors the four legacy header banners used to show — current pipeline
@@ -72,6 +93,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
     const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
+    const factStages = useForYouFactStages();
 
     const isSyncActive =
         syncStatusMessage !== null &&
@@ -80,18 +102,33 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
         syncStatusMessage.state !== 'failed' &&
         syncStatusMessage.state !== 'paused-offline';
 
+    const otherStoriesLabel = t('feed.factStages.otherStories');
+
+    // The first not-yet-done fact stage — a 'working' stage takes precedence
+    // over the next 'queued' one, so the headline narrates whichever fact the
+    // pipeline is actively on.
+    const activeStage =
+        factStages.find((stage) => stage.phase === 'working') ??
+        factStages.find((stage) => stage.phase === 'queued');
+
     // Current stage headline — cloud/device phases take precedence over the raw
     // sync-machine state, mirroring the old SyncProgressForYouBanner labelling.
+    // When a fact-pipelined run is active, narrate the specific fact being
+    // worked on instead of the generic relevance/reasons title.
     const stageMessage =
-        asyncJobPhase === 'relevance'
-            ? tAny('feed.syncToast.relevanceTitle')
-            : asyncJobPhase === 'reasons'
-                ? tAny('feed.syncToast.reasonsTitle')
-                : isDeviceProcessing
-                    ? tAny('feed.syncToast.onDeviceTitle')
-                    : isSyncActive && syncStatusMessage?.headlineKey
-                        ? tAny(syncStatusMessage.headlineKey)
-                        : t('feedStatus.idle');
+        activeStage && (asyncJobPhase === 'relevance' || asyncJobPhase === 'reasons')
+            ? tAny(asyncJobPhase === 'reasons' ? 'feed.factStages.writing' : 'feed.factStages.reading', {
+                  fact: activeStage.statement ?? otherStoriesLabel,
+              })
+            : asyncJobPhase === 'relevance'
+                ? tAny('feed.syncToast.relevanceTitle')
+                : asyncJobPhase === 'reasons'
+                    ? tAny('feed.syncToast.reasonsTitle')
+                    : isDeviceProcessing
+                        ? tAny('feed.syncToast.onDeviceTitle')
+                        : isSyncActive && syncStatusMessage?.headlineKey
+                            ? tAny(syncStatusMessage.headlineKey)
+                            : t('feedStatus.idle');
 
     const isDailyLimited = dailyLimitResetAt != null && Date.now() < dailyLimitResetAt;
     const dailyResetTime = dailyLimitResetAt
@@ -128,6 +165,18 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                             value={`${deviceProcessedCount} / ${deviceTotalCount}`}
                         />
                     )}
+                </VStack>
+            )}
+
+            {factStages.length > 0 && (
+                <VStack space="xs">
+                    {factStages.map((stage, index) => (
+                        <FactStageRow
+                            key={stage.factId ?? `other-${index}`}
+                            stage={stage}
+                            fallbackLabel={otherStoriesLabel}
+                        />
+                    ))}
                 </VStack>
             )}
 

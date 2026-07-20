@@ -20,7 +20,28 @@ const mockGetScoredWithoutReasons = jest.fn();
 const mockSaveScoringResult = jest.fn();
 const mockSaveReason = jest.fn();
 const mockBatchMarkReasonSkipped = jest.fn();
-const mockBatchSaveComputedScores = jest.fn();
+const mockBatchSaveMathScores = jest.fn();
+const mockGetComputedComponentsByIds = jest.fn((..._args: any[]) => Promise.resolve(new Map()));
+// Round-3: per-fact enqueue grouping + advisory-judge calibration deps.
+const mockLoadSectionSnapshots = jest.fn((..._args: any[]) =>
+  Promise.resolve({
+    topics: new Map(),
+    facts: new Map(),
+    locations: new Map(),
+    factStatements: new Map(),
+    hasTopics: false,
+  }),
+);
+const mockBuildJudgeCalls = jest.fn();
+const mockDecodeJudgeResults = jest.fn();
+const mockBuildCalibrationCase = jest.fn((...args: any[]) => ({
+  id: args[0],
+  computed: args[1],
+  judge: args[2],
+}));
+const mockRecordOverrides = jest.fn((..._args: any[]) =>
+  Promise.resolve({ count: 0, notified: false }),
+);
 // Persona-v3: computeMathStage runs at submit. Default = ALL backstop so the
 // pipeline takes the legacy relevance+reasons path these tests already assert;
 // individual judge-mode tests override this to return math-mode candidates.
@@ -45,6 +66,7 @@ const mockToBatchResult = jest.fn((...args: any[]) => ({ id: args[0].id, output:
 const mockReconstructLookups = jest.fn((..._args: any[]) => ({ chunkIdToCandidates: new Map() }));
 const mockGetExpoPushToken = jest.fn(() => 'ExponentPushToken[test]');
 const mockSetAsyncJobPhase = jest.fn();
+const mockSetFactStages = jest.fn();
 
 // ---- AppState (react-native) ----
 let mockAppStateCurrent: string = 'active';
@@ -94,7 +116,24 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   saveScoringResult: (...args: any[]) => mockSaveScoringResult(...args),
   saveReason: (...args: any[]) => mockSaveReason(...args),
   batchMarkReasonSkipped: (...args: any[]) => mockBatchMarkReasonSkipped(...args),
-  batchSaveComputedScores: (...args: any[]) => mockBatchSaveComputedScores(...args),
+  batchSaveMathScores: (...args: any[]) => mockBatchSaveMathScores(...args),
+  getComputedComponentsByIds: (...args: any[]) => mockGetComputedComponentsByIds(...args),
+}));
+
+// Round-3: fact-grouping snapshot loader (lazy-required in planFactBatches).
+jest.mock('@/lib/stores/feed-sections-selector', () => ({
+  loadSectionSnapshots: (...args: any[]) => mockLoadSectionSnapshots(...args),
+}));
+
+// Round-3: advisory-judge decode + calibration.
+jest.mock('@/lib/news-harness/scoring-engine', () => ({
+  buildJudgeCalls: (...args: any[]) => mockBuildJudgeCalls(...args),
+  decodeJudgeResults: (...args: any[]) => mockDecodeJudgeResults(...args),
+  buildCalibrationCase: (...args: any[]) => mockBuildCalibrationCase(...args),
+}));
+
+jest.mock('@/lib/database/services/calibration-service', () => ({
+  recordOverrides: (...args: any[]) => mockRecordOverrides(...args),
 }));
 
 // stage-scoring pulls in the persona DB services + auth chain at import time;
@@ -130,7 +169,10 @@ jest.mock('@/lib/services/SuggestionSyncService', () => ({
 // batches transition (pushUiProgress).
 jest.mock('@/lib/stores/for-you-store', () => ({
   useForYouStore: {
-    getState: () => ({ setAsyncJobPhase: mockSetAsyncJobPhase }),
+    getState: () => ({
+      setAsyncJobPhase: mockSetAsyncJobPhase,
+      setFactStages: mockSetFactStages,
+    }),
   },
 }));
 
@@ -184,6 +226,7 @@ import {
   getPipelineStatus,
   derivePipelineUiState,
   getPipelineUiState,
+  derivePipelineFactStages,
   _resetForTests,
   MIN_RUN_CANDIDATES,
   MAX_UNSCORED_WAIT_MS,
@@ -286,6 +329,21 @@ beforeEach(() => {
   });
   mockDiscardLowRelevance.mockResolvedValue(0);
   mockRefresh.mockResolvedValue(undefined);
+  mockBatchSaveMathScores.mockResolvedValue(undefined);
+  mockGetComputedComponentsByIds.mockResolvedValue(new Map());
+  mockLoadSectionSnapshots.mockResolvedValue({
+    topics: new Map(),
+    facts: new Map(),
+    locations: new Map(),
+    factStatements: new Map(),
+    hasTopics: false,
+  });
+  mockRecordOverrides.mockResolvedValue({ count: 0, notified: false });
+  mockBuildCalibrationCase.mockImplementation((id: string, computed: number, judge: number) => ({
+    id,
+    computed,
+    judge,
+  }));
 });
 
 afterEach(() => {
@@ -892,5 +950,142 @@ describe('live header progress push', () => {
 
     expect(currentRun()).toBeNull(); // finalized + cleared
     expect(mockSetAsyncJobPhase.mock.calls.at(-1)).toEqual(['idle']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Round-3 B1 — advisory judge (persist math at submit, notes-only decode,
+// calibration capture) + per-fact stage projection.
+// ---------------------------------------------------------------------------
+
+/** Make computeMathStage return an all-math-mode batch with the given scores. */
+function mockMathMode(scores: Record<string, number>) {
+  mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+    persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+    stage: candidates.map((c) => ({ input: { id: c.id } })),
+    computedScoreMap: new Map(Object.entries(scores)),
+    componentsMap: new Map(candidates.map((c) => [c.id, { geoAlignment: 'NONE' }])),
+    modeMap: new Map(candidates.map((c) => [c.id, 'math'])),
+  }));
+}
+
+describe('judge mode (advisory)', () => {
+  beforeEach(() => {
+    mockBuildJudgeCalls.mockReturnValue({
+      calls: [{ id: 'judge:0', system: 's', prompt: 'p' }],
+      chunkIds: new Map(),
+    });
+    mockDecodeJudgeResults.mockReturnValue({
+      rawScoreMap: new Map(),
+      judgeScoreMap: new Map(),
+      reasonMap: new Map(),
+      overrideMap: new Map(),
+      adjustedIds: new Set(),
+    });
+  });
+
+  it('persists the math at submit (bucketed relevance + reasonSkipped) and only judges above-threshold rows', async () => {
+    mockMathMode({ a0: 0.8, a1: 0.2 });
+    await enqueueCandidates(['a0', 'a1']);
+
+    // math persisted immediately for BOTH rows, reason:''
+    expect(mockBatchSaveMathScores).toHaveBeenCalledTimes(1);
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'a0', relevance: 0.8, reasonSkipped: false }),
+        expect.objectContaining({ id: 'a1', relevance: 0.2, reasonSkipped: true }),
+      ]),
+    );
+    // judge job built over the above-threshold subset only (a0)
+    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
+    expect(judgeStage.map((c) => c.input.id)).toEqual(['a0']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    expect(batch.judgeMode).toBe(true);
+    expect(batch.judgedIds).toEqual(['a0']);
+  });
+
+  it('marks the batch done at submit without a judge job when nothing is above threshold', async () => {
+    mockMathMode({ a0: 0.1, a1: 0.2 });
+    mockSendInferenceRequest.mockClear();
+    await enqueueCandidates(['a0', 'a1']);
+
+    expect(mockBatchSaveMathScores).toHaveBeenCalledTimes(1);
+    expect(mockBuildJudgeCalls).not.toHaveBeenCalled();
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    // single batch, no cloud job → finalized + cleared
+    expect(currentRun()).toBeNull();
+  });
+
+  it('decode applies notes (advisory) and records calibration overrides — never rescores', async () => {
+    mockMathMode({ a0: 0.8 });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    mockDecodeJudgeResults.mockReturnValue({
+      rawScoreMap: new Map([['a0', 0.8]]), // == computed (advisory)
+      judgeScoreMap: new Map([['a0', 0.3]]),
+      reasonMap: new Map([['a0', 'why it matters']]),
+      overrideMap: new Map([['a0', true]]),
+      adjustedIds: new Set(),
+    });
+    mockGetComputedComponentsByIds.mockResolvedValue(
+      new Map([['a0', { computedScore: 0.8, components: { geoAlignment: 'NONE' } }]]),
+    );
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'judge:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    // note applied via saveReason; relevance NEVER re-persisted at decode
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'why it matters');
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+    // calibration case built + recorded for the overridden row
+    expect(mockBuildCalibrationCase).toHaveBeenCalledWith('a0', 0.8, 0.3, { geoAlignment: 'NONE' });
+    expect(mockRecordOverrides).toHaveBeenCalledTimes(1);
+    // single batch → finalized
+    expect(currentRun()).toBeNull();
+  });
+});
+
+describe('derivePipelineFactStages', () => {
+  const b = (over: Partial<PipelineRun['batches'][number]>): PipelineRun['batches'][number] => ({
+    batchId: 0,
+    phase: 'queued',
+    candidateIds: ['x'],
+    attempt: 0,
+    ...over,
+  });
+
+  it('one stage per fact, ordered as enqueued, with the right phase', () => {
+    const run = {
+      batches: [
+        b({ batchId: 0, factId: 'f1', factStatement: 'Fact one', phase: 'waiting-relevance' }),
+        b({ batchId: 1, factId: 'f1', factStatement: 'Fact one', phase: 'done' }),
+        b({ batchId: 2, factId: 'f2', factStatement: 'Fact two', phase: 'queued' }),
+        b({ batchId: 3, factId: null, factStatement: null, phase: 'done' }),
+      ],
+    } as unknown as PipelineRun;
+    expect(derivePipelineFactStages(run)).toEqual([
+      { factId: 'f1', statement: 'Fact one', phase: 'working' }, // one batch still in-flight
+      { factId: 'f2', statement: 'Fact two', phase: 'queued' },
+      { factId: null, statement: null, phase: 'done' },
+    ]);
+  });
+
+  it('projects a legacy run with no factId as a single generic stage', () => {
+    const run = {
+      batches: [
+        b({ batchId: 0, phase: 'waiting-relevance' }),
+        b({ batchId: 1, phase: 'queued' }),
+      ],
+    } as unknown as PipelineRun;
+    expect(derivePipelineFactStages(run)).toEqual([
+      { factId: null, statement: null, phase: 'working' },
+    ]);
   });
 });

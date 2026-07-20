@@ -58,6 +58,9 @@ export default class ArticleSuggestion extends Model {
   @field('raw_score') rawScore!: number | null;
   // Full RelevanceComponents breakdown (audit + judge context).
   @field('score_components_json') scoreComponentsJson!: string | null;
+  // Round-3 (schema v41): epoch ms the row was scored (math persisted). Null
+  // while unscored. Feeds the fact-rows selector's "added" ordering.
+  @field('scored_at') scoredAt!: number | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
 

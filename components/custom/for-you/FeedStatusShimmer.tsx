@@ -1,6 +1,9 @@
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
+import type { PipelineFactStage } from '@/lib/stores/for-you-store';
+import { useForYouAsyncJobPhase, useForYouFactStages } from '@/lib/stores/selectors';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +24,70 @@ const BAR_HEIGHT = 3;
 
 /** Fraction of the track width the moving segment occupies. */
 const SEGMENT_FRACTION = 0.4;
+
+/** Ported from the (now-deleted) SyncProgressForYouBanner — the collapsed row's
+ *  cycling status line rotates through its text pool at this cadence. */
+const HEADLINE_CYCLE_MS = 5000;
+
+/**
+ * The collapsed row's cycling status line while `mode === 'processing'`. Pool =
+ * the active fact-stage lines (from the per-fact pipelined run, if any) followed
+ * by the generic stage headlines for the current phase — same rotation pattern
+ * the old SyncProgressForYouBanner used (index + setInterval, faded in/out per
+ * index), just re-homed here since that banner is no longer mounted.
+ */
+function ProcessingHeadline() {
+    const { t } = useTranslation();
+    const tAny = t as any;
+    const asyncJobPhase = useForYouAsyncJobPhase();
+    const factStages = useForYouFactStages();
+
+    const otherStoriesLabel = t('feed.factStages.otherStories');
+
+    const factLines = factStages
+        .filter((stage: PipelineFactStage) => stage.phase === 'working')
+        .map((stage) => {
+            const fact = stage.statement ?? otherStoriesLabel;
+            return asyncJobPhase === 'reasons'
+                ? (tAny('feed.factStages.writing', { fact }) as string)
+                : (tAny('feed.factStages.reading', { fact }) as string);
+        });
+
+    const stageKey =
+        asyncJobPhase === 'reasons' ? 'cloudReasons'
+            : asyncJobPhase === 'relevance' ? 'cloudRelevance'
+                : 'onDevice';
+    const rawGenericLines = tAny(`feed.processing.stages.${stageKey}.headlines`, {
+        returnObjects: true,
+        defaultValue: [],
+    });
+    const genericLines = Array.isArray(rawGenericLines) ? (rawGenericLines as string[]) : [];
+
+    const pool = [...factLines, ...genericLines];
+
+    const [index, setIndex] = useState(0);
+    useEffect(() => {
+        setIndex(0);
+        if (pool.length <= 1) return;
+        const interval = setInterval(
+            () => setIndex((i) => (i + 1) % pool.length),
+            HEADLINE_CYCLE_MS,
+        );
+        return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pool.length, stageKey]);
+
+    const line = pool[index] ?? pool[0] ?? '';
+    if (!line) return null;
+
+    return (
+        <Animated.View key={index} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+            <Text size="xs" className="text-typography-400 leading-4 mt-1">
+                {line}
+            </Text>
+        </Animated.View>
+    );
+}
 
 type ShimmerMode = 'processing' | 'error' | 'limited' | 'idle';
 
@@ -154,6 +221,8 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
                     </Animated.View>
                 </Pressable>
             </HStack>
+
+            {mode === 'processing' && <ProcessingHeadline />}
 
             {expanded && (
                 <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)}>

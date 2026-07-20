@@ -84,6 +84,30 @@ export type ForYouSuggestion = {
     headlineScope: 'CITY' | 'COUNTRY' | 'GLOBAL' | null;
     /** Inverted per-topic matchMeta — resolves the owning fact/section. */
     matchedTopics: MatchedTopicRef[];
+    // ── Round-3 (schema v41) fact-rows fields ──────────────────────────────
+    // Optional so the many existing suggestion fixtures/snapshots keep compiling;
+    // `loadSuggestions` (the live path) always populates both. Consumers read
+    // them with `?? []` / `?? null`.
+    /** Fact ids this suggestion is linked to (from `article_suggestion_facts`).
+     *  Empty for orphan/headline rows. Feeds the fact-rows selector's ownership +
+     *  the per-fact feed. */
+    factIds?: string[];
+    /** Epoch ms the row was scored (`article_suggestions.scored_at`); null when
+     *  unscored or on legacy rows. The fact-rows selector uses `scoredAt ??
+     *  createdAt` as the row's "added" time for newest-first ordering. */
+    scoredAt?: number | null;
+};
+
+/** One fact's stage in the per-fact pipelined scoring run — the projection the
+ *  status accordion + collapsed shimmer narrate. `phase`: 'queued' (batch not
+ *  started), 'working' (a batch for this fact is in any in-flight/needs-submit
+ *  phase), 'done' (every batch for this fact is terminal). The `null` factId
+ *  entry is the merged tail (orphans + sub-3-candidate facts) / a legacy run's
+ *  single generic stage. */
+export type PipelineFactStage = {
+    factId: string | null;
+    statement: string | null;
+    phase: 'queued' | 'working' | 'done';
 };
 
 /** @deprecated Use syncStatusMessage instead */
@@ -129,6 +153,12 @@ interface ForYouState {
     /** Total candidates across every batch in the current run — the
      *  denominator of the spinner text. 0 when idle. */
     asyncJobTotalCount: number;
+
+    // Per-fact pipelined-scoring stages (Round-3 B1). Written live by
+    // scoring-pipeline as batches transition (pushUiProgress) and rehydrated at
+    // boot from the persisted run. Empty when no run / all terminal. Drives the
+    // fact-aware status accordion + the collapsed shimmer's cycling texts.
+    factStages: PipelineFactStage[];
 
     // Sync status — set by FeedSyncMachine, read by UI
     syncStatusMessage: SyncStatusMessage | null;
@@ -176,6 +206,7 @@ interface ForYouState {
         totalCount?: number,
     ) => void;
     setAsyncJobProgress: (processedCount: number, totalCount: number) => void;
+    setFactStages: (stages: PipelineFactStage[]) => void;
     clearData: () => Promise<void>;
     pruneOrphanedData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
@@ -206,6 +237,7 @@ const initialState = {
     asyncJobPhase: 'idle' as 'idle' | 'relevance' | 'reasons',
     asyncJobProcessedCount: 0,
     asyncJobTotalCount: 0,
+    factStages: [] as PipelineFactStage[],
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
     scoringError: null as ScoringErrorKind | null,
@@ -328,6 +360,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setAsyncJobProgress: (processedCount, totalCount) =>
         set({ asyncJobProcessedCount: processedCount, asyncJobTotalCount: totalCount }),
 
+    setFactStages: (stages) => set({ factStages: stages }),
+
     setSyncStatusMessage: (msg) => set({ syncStatusMessage: msg }),
 
     setLastSyncAt: (ts) => set({ lastSyncAt: ts }),
@@ -438,13 +472,14 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             // Rehydrate the header's scoring phase/progress from the persisted
             // multi-batch pipeline run (replaces the legacy single-slot
             // getPendingAsyncJob read). idle when no run / all batches terminal.
-            const { getPipelineUiState } = await import(
+            const { getPipelineUiState, getPipelineFactStages } = await import(
                 '@/lib/services/scoring-pipeline'
             );
 
-            const [meta, pipelineUi] = await Promise.all([
+            const [meta, pipelineUi, factStages] = await Promise.all([
                 loadFeedMetadata(),
                 getPipelineUiState(),
+                getPipelineFactStages(),
             ]);
 
             const current = get().suggestions;
@@ -462,6 +497,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                     pipelineUi.phase === 'idle' ? 0 : pipelineUi.processedCount,
                 asyncJobTotalCount:
                     pipelineUi.phase === 'idle' ? 0 : pipelineUi.totalCount,
+                factStages: pipelineUi.phase === 'idle' ? [] : factStages,
             });
         } catch (err) {
             // Metadata hydration failed — leave defaults in place, but surface the error.

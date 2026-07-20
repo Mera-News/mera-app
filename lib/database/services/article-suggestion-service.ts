@@ -18,6 +18,7 @@ import type {
   MatchedTopicInput,
   ArticleGeoTag,
   HeadlineScope,
+  RelevanceComponents,
 } from '@/lib/news-harness/scoring-engine';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
@@ -182,7 +183,28 @@ export async function loadSuggestions(): Promise<ForYouSuggestion[]> {
   // suggestion TTL, not by a query limit here.
   const rows = await articleSuggestionsCol.query().fetch();
   if (rows.length === 0) return [];
-  return rows.map(toForYouSuggestion);
+  const factIdsBySuggestion = await loadFactIdsBySuggestion(rows.map((r) => r.id));
+  return rows.map((row) =>
+    toForYouSuggestion(row, factIdsBySuggestion.get(row.id) ?? []),
+  );
+}
+
+/** Batch-load the linked fact ids for a set of suggestion ids →
+ *  suggestionId → factId[] (empty for orphan/headline rows). */
+async function loadFactIdsBySuggestion(
+  ids: string[],
+): Promise<Map<string, string[]>> {
+  const map = new Map<string, string[]>();
+  if (ids.length === 0) return map;
+  const links = await articleSuggestionFactsCol
+    .query(Q.where('article_suggestion_id', Q.oneOf(ids)))
+    .fetch();
+  for (const link of links) {
+    const bucket = map.get(link.articleSuggestionId) ?? [];
+    bucket.push(link.factId);
+    map.set(link.articleSuggestionId, bucket);
+  }
+  return map;
 }
 
 // --- Read: unscored with linked facts (scoring input) ---
@@ -469,12 +491,89 @@ export async function saveScoringResult(
       if (computedScore !== undefined) r.computedScore = computedScore;
       if (rawScore !== undefined) r.rawScore = rawScore;
       if (scoreComponentsJson !== undefined) r.scoreComponentsJson = scoreComponentsJson;
+      // Round-3: stamp scored_at the moment the row leaves `unscored`. Only set
+      // it once (a later reason write must not slide the "added" time forward).
+      if (r.scoredAt == null) r.scoredAt = Date.now();
       r.status =
         reason.length > 0 || reasonSkipped
           ? ArticleSuggestionStatus.Complete
           : ArticleSuggestionStatus.ReasonPending;
     });
   });
+}
+
+/**
+ * Round-3 B1: persist the deterministic math result for a batch of judge-mode
+ * rows in ONE write, at SUBMIT time — bucketed `relevance`, `reason:''`, the
+ * audit columns (computed/raw/components), a fresh `scored_at`, and the derived
+ * status: `complete` for sub-threshold rows (reasonSkipped — terminal, no note
+ * owed) else `reason_pending` (the combined judge+notes job fills the note at
+ * decode). This makes cards renderable immediately; a later judge failure
+ * fail-opens to exactly these persisted scores. Missing rows are skipped.
+ */
+export async function batchSaveMathScores(
+  entries: {
+    id: string;
+    relevance: number;
+    reasonSkipped: boolean;
+    computedScore: number;
+    rawScore: number;
+    scoreComponentsJson: string;
+  }[],
+  nowMs: number = Date.now(),
+): Promise<void> {
+  if (entries.length === 0) return;
+  const rows = await Promise.all(
+    entries.map((e) => articleSuggestionsCol.find(e.id).catch(() => null)),
+  );
+  const entryById = new Map(entries.map((e) => [e.id, e]));
+  const present = rows.filter((r): r is ArticleSuggestionModel => r != null);
+  if (present.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      present.map((row) => {
+        const e = entryById.get(row.id)!;
+        return row.prepareUpdate((r) => {
+          r.relevance = e.relevance;
+          r.reason = '';
+          r.computedScore = e.computedScore;
+          r.rawScore = e.rawScore;
+          r.scoreComponentsJson = e.scoreComponentsJson;
+          if (r.scoredAt == null) r.scoredAt = nowMs;
+          r.status = e.reasonSkipped
+            ? ArticleSuggestionStatus.Complete
+            : ArticleSuggestionStatus.ReasonPending;
+        });
+      }),
+    );
+  });
+}
+
+/**
+ * Round-3 B1: read the persisted RelevanceComponents (+ computed_score) for a
+ * small set of ids — the cloud judge-decode path needs them to build a
+ * CalibrationCase for each overridden row (the advisory judge score vs the math,
+ * with its component breakdown). Rows missing / with unparseable components are
+ * simply absent from the returned map. Read-only.
+ */
+export async function getComputedComponentsByIds(
+  ids: string[],
+): Promise<Map<string, { computedScore: number | null; components: RelevanceComponents }>> {
+  const out = new Map<string, { computedScore: number | null; components: RelevanceComponents }>();
+  if (ids.length === 0) return out;
+  const rows = await articleSuggestionsCol
+    .query(Q.where('id', Q.oneOf(ids)))
+    .fetch();
+  for (const row of rows) {
+    if (!row.scoreComponentsJson) continue;
+    try {
+      const components = JSON.parse(row.scoreComponentsJson) as RelevanceComponents;
+      out.set(row.id, { computedScore: row.computedScore, components });
+    } catch {
+      // Unparseable audit JSON — skip (calibration just loses this one case).
+    }
+  }
+  return out;
 }
 
 /**
@@ -601,7 +700,8 @@ export async function saveReason(
 export async function getSuggestionByServerId(serverId: string): Promise<ForYouSuggestion | null> {
   try {
     const row = await articleSuggestionsCol.find(serverId);
-    return toForYouSuggestion(row);
+    const factIds = await loadFactIdsBySuggestion([serverId]);
+    return toForYouSuggestion(row, factIds.get(serverId) ?? []);
   } catch {
     return null;
   }
@@ -621,6 +721,8 @@ export async function getSuggestionFeedbackContext(opts: {
   suggestion: ForYouSuggestion;
   matchedTopicTexts: string[];
   linkedFacts: { id: string; statement: string }[];
+  entities: string[];
+  category: string | null;
 } | null> {
   let row: ArticleSuggestionModel | null = null;
 
@@ -653,7 +755,13 @@ export async function getSuggestionFeedbackContext(opts: {
     }
   }
 
-  return { suggestion, matchedTopicTexts, linkedFacts };
+  // Entities (≤8) + category feed the "less of this" choose-one alternatives.
+  const entities = parseJsonArray<string>(row.entitiesJson)
+    .filter((e): e is string => typeof e === 'string' && e.trim().length > 0)
+    .slice(0, 8);
+  const category = row.category ?? null;
+
+  return { suggestion, matchedTopicTexts, linkedFacts, entities, category };
 }
 
 // --- Clear / TTL ---
@@ -749,7 +857,10 @@ export async function loadFeedMetadata(): Promise<FeedMetadata | null> {
 
 // --- Internal helpers ---
 
-function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
+function toForYouSuggestion(
+  row: ArticleSuggestionModel,
+  factIds: string[] = [],
+): ForYouSuggestion {
   return {
     _id: row.id,
     articleId: row.articleId,
@@ -778,6 +889,9 @@ function toForYouSuggestion(row: ArticleSuggestionModel): ForYouSuggestion {
         ? row.headlineScope
         : null,
     matchedTopics: parseMatchedTopicRefs(row.matchedTopicsJson),
+    // Round-3 fact-rows fields.
+    factIds,
+    scoredAt: typeof row.scoredAt === 'number' ? row.scoredAt : null,
   };
 }
 

@@ -61,6 +61,24 @@ export interface PipelineBatch {
   reasonsOnly?: boolean;
   /** ≤25 ids; array order is the decode join key for `score:N` results. */
   candidateIds: string[];
+  /** Round-3 B1: the primary fact this batch's candidates were grouped under
+   *  (strongest owning fact via matched-topic weights). `null` for the merged
+   *  tail batch (orphans + sub-3-candidate facts) and for legacy runs. Drives the
+   *  per-fact status accordion + fact-stage projection. */
+  factId?: string | null;
+  /** Human fact statement for `factId` (the accordion label). Null for the tail
+   *  batch / legacy runs. */
+  factStatement?: string | null;
+  /** Round-3 B1: true when this batch runs the combined judge+notes cloud job
+   *  (all candidates are math-mode). A proper persisted field now (previously a
+   *  `BatchWithJudge` cast). False/absent ⇒ the legacy backstop relevance→reasons
+   *  path. */
+  judgeMode?: boolean;
+  /** Round-3 B1: judge-mode only — the above-threshold subset the judge job was
+   *  built over, in the EXACT order buildJudgeCalls chunked (the `judge:N` decode
+   *  join key). Distinct from candidateIds (which covers every row, incl. the
+   *  sub-threshold rows persisted at submit and never sent to the judge). */
+  judgedIds?: string[];
   /** Current outstanding gateway job; `placeholder-…` while `submitting-*`. */
   requestId?: string;
   /** Per-batch gateway capability token (results:read / jobs:submit-followup). */
@@ -82,7 +100,11 @@ export interface PipelineBatch {
 }
 
 export interface PipelineRun {
-  schema: 1;
+  /** Run-shape version. Bumped to 2 in Round-3 B1 (per-fact batches gained
+   *  factId/factStatement/judgeMode/judgedIds). A persisted schema-1 run still
+   *  parses cleanly (the new fields are all optional) and simply projects as one
+   *  generic fact-stage — RUN_ABANDON_MS bounds its lifetime. */
+  schema: 1 | 2;
   /** Unique identifier for the run. */
   runId: string;
   startedAt: number;
@@ -185,7 +207,7 @@ export async function createPipeline(
     );
   }
   await secureStore.setItemAsync(PIPELINE_PRIVKEY_KEY, privKeyHex);
-  const full: PipelineRun = { ...run, schema: 1, version: 1 };
+  const full: PipelineRun = { ...run, schema: 2, version: 1 };
   await setSetting(PIPELINE_KEY, JSON.stringify(full));
 }
 

@@ -81,6 +81,12 @@ export const useForYouAsyncJobProcessedCount = () =>
 export const useForYouAsyncJobTotalCount = () =>
     useForYouStore((state) => state.asyncJobTotalCount);
 
+/** Reactive selector for the per-fact pipelined-scoring stages (Round-3 B1).
+ *  Empty when no run is active. Drives the fact-aware status accordion + the
+ *  collapsed shimmer's cycling texts. */
+export const useForYouFactStages = () =>
+    useForYouStore((state) => state.factStages);
+
 /** Epoch ms of the last finished processing run (cloud or on-device).
  *  null when no run has ever finished on this device. */
 export const useForYouLastProcessingRunFinishedAt = () =>

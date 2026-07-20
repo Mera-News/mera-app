@@ -44,10 +44,22 @@ jest.mock('@/components/ui/hstack', () => {
     const { View } = require('react-native');
     return { HStack: (props: any) => <View {...props} /> };
 });
+jest.mock('@/components/ui/text', () => {
+    const { Text: RNText } = require('react-native');
+    return { Text: (props: any) => <RNText {...props} /> };
+});
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (props: any) => <View {...props} /> };
 });
+
+// FeedStatusShimmer's collapsed-row cycling headline reads the fact-stage +
+// async-job-phase selectors directly (Round-3 B2) — stub them to the "no run
+// active" defaults so this test stays isolated from the real zustand store.
+jest.mock('@/lib/stores/selectors', () => ({
+    useForYouAsyncJobPhase: () => 'idle',
+    useForYouFactStages: () => [],
+}));
 
 // The inline detail body is exercised by its own tests + the sheet; here it is
 // stubbed so the shimmer test stays isolated from the store selectors.

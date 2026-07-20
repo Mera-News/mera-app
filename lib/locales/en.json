@@ -186,6 +186,11 @@
       "completedTitle": "All done",
       "completedMessage": "Your feed is ready"
     },
+    "factStages": {
+      "reading": "Reading articles for {{fact}}…",
+      "writing": "Writing notes for {{fact}}…",
+      "otherStories": "other stories"
+    },
     "moreSources_one": "+{{count}} source",
     "moreSources_other": "+{{count}} sources"
   },

@@ -1152,5 +1152,58 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Per-fact pipeline: scored_at (schema v41) ──────────────────
+      // Drop/recreate the EPHEMERAL article_suggestions (+ its join) with the
+      // new `scored_at` column — the sanctioned pattern for this cache (see v37;
+      // data re-syncs from the server's 24h window on the next feed sync). NEVER
+      // apply this to any long-lived, user-owned table.
+      toVersion: 41,
+      steps: [
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestion_facts;'),
+        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestions;'),
+        createTable({
+          name: 'article_suggestions',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'cluster_memberships_json', type: 'string', isOptional: true },
+            { name: 'relevance', type: 'number' },
+            { name: 'reason', type: 'string' },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'country_code', type: 'string', isOptional: true },
+            { name: 'language_code', type: 'string', isOptional: true },
+            { name: 'publication_name', type: 'string', isOptional: true },
+            { name: 'title_en', type: 'string', isOptional: true },
+            { name: 'title_original', type: 'string', isOptional: true },
+            { name: 'description_en', type: 'string', isOptional: true },
+            { name: 'article_url', type: 'string', isOptional: true },
+            { name: 'image_url', type: 'string', isOptional: true },
+            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
+            { name: 'geo_tags_json', type: 'string', isOptional: true },
+            { name: 'entities_json', type: 'string', isOptional: true },
+            { name: 'event_type', type: 'string', isOptional: true },
+            { name: 'category', type: 'string', isOptional: true },
+            { name: 'max_cluster_size', type: 'number', isOptional: true },
+            { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'headline_scope', type: 'string', isOptional: true },
+            { name: 'matched_topics_json', type: 'string', isOptional: true },
+            { name: 'computed_score', type: 'number', isOptional: true },
+            { name: 'raw_score', type: 'number', isOptional: true },
+            { name: 'score_components_json', type: 'string', isOptional: true },
+            { name: 'scored_at', type: 'number', isOptional: true },
+            { name: 'created_at', type: 'number' },
+            { name: 'first_pub_date', type: 'number' },
+          ],
+        }),
+        createTable({
+          name: 'article_suggestion_facts',
+          columns: [
+            { name: 'article_suggestion_id', type: 'string', isIndexed: true },
+            { name: 'fact_id', type: 'string', isIndexed: true },
+            { name: 'created_at', type: 'number' },
+          ],
+        }),
+      ],
+    },
   ],
 });

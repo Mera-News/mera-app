@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 40,
+  version: 41,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -93,6 +93,9 @@ export default appSchema({
         // Final post-judge raw score used for within-section ordering.
         { name: 'raw_score', type: 'number', isOptional: true },
         { name: 'score_components_json', type: 'string', isOptional: true },
+        // Round-3 (schema v41): epoch ms the row was scored. Feeds the fact-rows
+        // selector's newest-first ordering (scored_at ?? created_at).
+        { name: 'scored_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
       ],
