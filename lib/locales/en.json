@@ -378,7 +378,9 @@
     "savedTitle": "Preferences Saved",
     "savedDescription": "Your notification settings have been updated.",
     "saveFailedTitle": "Save Failed",
-    "saveFailedDescription": "Failed to save your preferences. Please try again."
+    "saveFailedDescription": "Failed to save your preferences. Please try again.",
+    "trackedStoryUpdateTitle": "Story update",
+    "trackedStoryUpdateBody": "{{count}} new articles in a story you follow"
   },
   "language": {
     "title": "Language",

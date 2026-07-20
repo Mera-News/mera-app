@@ -17,6 +17,8 @@ const mockGateUnscoredForScoring = jest.fn();
 const mockLogInfo = jest.fn();
 const mockGetActive = jest.fn();
 const mockGetAllLocations = jest.fn();
+const mockReconcileTrackedStories = jest.fn();
+const mockCaptureException = jest.fn();
 
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFacts: (...args: any[]) => mockGetFacts(...args),
@@ -63,12 +65,16 @@ jest.mock('@/lib/feed-grouping/score-propagation', () => ({
   gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
 }));
 
+jest.mock('../tracked-story-reconcile', () => ({
+  reconcileTrackedStories: (...args: any[]) => mockReconcileTrackedStories(...args),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
     info: (...args: any[]) => mockLogInfo(...args),
     warn: jest.fn(),
-    captureException: jest.fn(),
+    captureException: (...args: any[]) => mockCaptureException(...args),
   },
 }));
 
@@ -134,6 +140,7 @@ beforeEach(() => {
     propagatedCount: 0,
     heldBackCount: 0,
   });
+  mockReconcileTrackedStories.mockResolvedValue(undefined);
 });
 
 // ── stepFetchTopicIds ─────────────────────────────────────────────────────────
@@ -447,6 +454,51 @@ describe('stepHydratePersistEnqueue', () => {
     expect(result.insertedCount).toBe(1);
     expect(result.enqueuedCount).toBe(1);
     expect(result.dailyLimitReached).toBe(false);
+  });
+
+  it('fires reconcileTrackedStories fire-and-forget after a successful persist', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-1'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockReconcileTrackedStories).toHaveBeenCalledTimes(1);
+  });
+
+  it('never lets a reconcileTrackedStories failure surface from the sync', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockReconcileTrackedStories.mockRejectedValue(new Error('reconcile boom'));
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-1'],
+    };
+
+    // Resolves normally — the sync itself never sees the reconcile failure.
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+    expect(result.insertedCount).toBe(1);
+
+    // Flush the fire-and-forget promise's rejection handler.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        tags: expect.objectContaining({ component: 'feed-sync-steps' }),
+      }),
+    );
   });
 
   it('marks ineligible rows scored and enqueues only the eligible chunk ids', async () => {

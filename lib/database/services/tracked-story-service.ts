@@ -263,3 +263,67 @@ export async function getActiveForReconcile(): Promise<TrackedStoryReconcileRow[
       latestArticleId: r.latestArticleId ?? null,
     }));
 }
+
+/** Lean projection for the 30-min tracked-stories-poll-task. Unlike
+ *  `getActiveForReconcile`, includes stories with no resolved stable id yet
+ *  (singletons) — the poll task promotes those via `getNewsClusterForArticle`
+ *  + `resolveStableId`. */
+export interface TrackedStoryPollRow {
+  id: string;
+  stableClusterId: string | null;
+  memberArticleIds: string[];
+  latestArticleId: string | null;
+}
+
+// --- Coordination note (feed-sync/reconcile wave, 2026-07-20) ---
+// `getActiveForPoll` and `stampChecked` below are additive: a lean read
+// projection + a single-field setter, following the exact shape of the
+// existing `getActiveForReconcile` / `recordMiss` functions above. Added so
+// `lib/scheduler/tasks/tracked-stories-poll-task.ts` can select due stories
+// and stamp `last_checked_at` without reaching into the WatermelonDB
+// collection directly (this service owns that collection). No existing
+// exports were changed.
+
+/**
+ * Active stories due for a poll check: `last_checked_at` is null (never
+ * checked) or older than `staleBeforeMs`, oldest-checked-first, capped at
+ * `limit`. Never throws (falls back to an empty list).
+ */
+export async function getActiveForPoll(
+  staleBeforeMs: number,
+  limit: number,
+): Promise<TrackedStoryPollRow[]> {
+  try {
+    const rows = await collection.query(Q.where('status', 'active')).fetch();
+    const time = (r: TrackedStoryModel): number =>
+      r.lastCheckedAt instanceof Date ? r.lastCheckedAt.getTime() : 0;
+    return rows
+      .filter((r) => r.status === 'active') // JS guard for test mock
+      .filter((r) => time(r) < staleBeforeMs) // never-checked (time=0) always qualifies
+      .sort((a, b) => time(a) - time(b)) // oldest/never-checked first
+      .slice(0, limit)
+      .map((r) => ({
+        id: r.id,
+        stableClusterId: r.stableClusterId ?? null,
+        memberArticleIds: r.memberArticleIds ?? [],
+        latestArticleId: r.latestArticleId ?? null,
+      }));
+  } catch (err) {
+    logger.warn('[tracked-story] getActiveForPoll failed', { error: String(err) });
+    return [];
+  }
+}
+
+/** Stamp a story as just-checked (poll ran, whatever the outcome). Never throws. */
+export async function stampChecked(id: string): Promise<void> {
+  try {
+    const record = await collection.find(id);
+    await database.write(async () => {
+      await record.update((m) => {
+        m.lastCheckedAt = new Date();
+      });
+    });
+  } catch (err) {
+    logger.warn('[tracked-story] stampChecked failed', { id, error: String(err) });
+  }
+}
