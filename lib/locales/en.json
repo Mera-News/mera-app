@@ -723,7 +723,16 @@
     "actionDeleteFact": "Remove fact",
     "actionAddTopics": "Add topics",
     "actionRemoveTopics": "Remove topics",
-    "actionFeatureRequest": "Send feature request to the Mera team"
+    "actionFeatureRequest": "Send feature request to the Mera team",
+    "actionShowLessTopic": "Show less of a topic",
+    "actionShowMoreTopic": "Show more of a topic",
+    "actionDownRank": "Down-rank a topic",
+    "actionPublicationPref": "Adjust a publication",
+    "actionSuppress": "Filter out a phrase",
+    "actionPinTopic": "Pin a topic",
+    "actionUnpinTopic": "Unpin a topic",
+    "actionRetireTopic": "Retire a topic",
+    "chooseOneHint": "Pick one option"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publications you've been reading",

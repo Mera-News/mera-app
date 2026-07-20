@@ -7,12 +7,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
-import type { TrackedStoryMemberSnapshot } from '@/lib/database/models/TrackedStory';
 import {
     getTrackedStoryById,
     markSeen,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle, TrackedStoryArticleSnapshot } from '@/lib/generated/graphql-types';
+import { mergeTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -26,76 +26,9 @@ interface StoryTimelineScreenProps {
     onBack: () => void;
 }
 
-/** The card shape both the local member snapshots and the server archive
- *  snapshots are normalized into before rendering. `pubDateMs` drives the
- *  strict newest-first ordering that applies regardless of source. */
-interface TimelineCard {
-    articleId: string;
-    title: string;
-    pubDateMs: number;
-    imageUrl?: string;
-    publicationName?: string;
-    countryCode?: string;
-    articleUrl?: string;
-}
-
-function serverToCard(snap: TrackedStoryArticleSnapshot): TimelineCard {
-    return {
-        articleId: snap.articleId,
-        title: snap.title_en ?? '',
-        pubDateMs: snap.pubDate ? Date.parse(snap.pubDate) || 0 : 0,
-        imageUrl: snap.image_url ?? undefined,
-        publicationName: snap.publication_name ?? undefined,
-        countryCode: snap.country_code ?? undefined,
-        articleUrl: snap.article_url ?? undefined,
-    };
-}
-
-function localToCard(snap: TrackedStoryMemberSnapshot): TimelineCard {
-    return {
-        articleId: snap.articleId,
-        title: snap.title ?? '',
-        pubDateMs: snap.pubDateMs ?? 0,
-        imageUrl: snap.imageUrl,
-        publicationName: snap.publicationName,
-    };
-}
-
-/**
- * Merge the local member snapshots with the server archive snapshots, deduped
- * by articleId (local wins — it carries the freshest, reconcile-discovered
- * fields), then sorted strictly newest-first by pubDate. When a local snapshot's
- * title is empty we fall back to the server title (the server title-bug fix is
- * landing in parallel), and vice-versa — so the card never renders blank when
- * either source has a title.
- */
-function mergeTimeline(
-    local: TrackedStoryMemberSnapshot[],
-    server: TrackedStoryArticleSnapshot[],
-): TimelineCard[] {
-    const byId = new Map<string, TimelineCard>();
-    for (const s of server) {
-        if (s.articleId) byId.set(s.articleId, serverToCard(s));
-    }
-    for (const l of local) {
-        if (!l.articleId) continue;
-        const base = byId.get(l.articleId);
-        const localCard = localToCard(l);
-        byId.set(l.articleId, {
-            ...base,
-            ...localCard,
-            // Title / media fall back to the server snapshot when the local one
-            // is missing them.
-            title: localCard.title || base?.title || '',
-            imageUrl: localCard.imageUrl ?? base?.imageUrl,
-            publicationName: localCard.publicationName ?? base?.publicationName,
-            countryCode: base?.countryCode,
-            articleUrl: base?.articleUrl,
-            pubDateMs: localCard.pubDateMs || base?.pubDateMs || 0,
-        });
-    }
-    return [...byId.values()].sort((a, b) => b.pubDateMs - a.pubDateMs);
-}
+/** Cap on the quota-free per-article title lookups fired to backfill blank-title
+ *  cards from pre-fix archives (Part E stopgap). */
+const MAX_TITLE_BACKFILL = 6;
 
 /** Map a merged timeline card onto the NewsArticle shape the compact card
  *  expects. Cards are lean (no descriptions / language), so unmappable fields
@@ -160,7 +93,47 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     if (cancelled) return;
                     serverSnapshots = archive?.articles ?? [];
                 }
-                setCards(mergeTimeline(localSnapshots, serverSnapshots));
+                const merged = mergeTimeline(localSnapshots, serverSnapshots);
+                setCards(merged);
+
+                // Stopgap for pre-fix archives that persisted null titles: hydrate
+                // up to 6 still-blank cards via the quota-free getArticleById, then
+                // patch them in. (The durable server-side re-hydration ships in
+                // parallel; TTL'd-out articles simply stay blank.)
+                const missing = merged
+                    .filter((c) => c.articleId && !c.title.trim())
+                    .slice(0, MAX_TITLE_BACKFILL);
+                if (missing.length > 0) {
+                    const patches = await Promise.all(
+                        missing.map(async (c) => {
+                            try {
+                                const art = await ArticleService.getArticleById(c.articleId);
+                                const title =
+                                    art?.title_en_internal_only ?? art?.title ?? '';
+                                return title.trim()
+                                    ? { articleId: c.articleId, title: title.trim() }
+                                    : null;
+                            } catch {
+                                return null;
+                            }
+                        }),
+                    );
+                    if (cancelled) return;
+                    const patchMap = new Map(
+                        patches
+                            .filter((p): p is { articleId: string; title: string } => p !== null)
+                            .map((p) => [p.articleId, p.title]),
+                    );
+                    if (patchMap.size > 0) {
+                        setCards((prev) =>
+                            prev.map((c) =>
+                                patchMap.has(c.articleId)
+                                    ? { ...c, title: patchMap.get(c.articleId)! }
+                                    : c,
+                            ),
+                        );
+                    }
+                }
             } catch (err) {
                 logger.captureException(err, {
                     tags: { screen: 'StoryTimelineScreen', method: 'load' },

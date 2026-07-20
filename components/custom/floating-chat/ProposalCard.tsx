@@ -29,7 +29,7 @@ import {
 } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -111,6 +111,56 @@ function actionToRow(action: ProposalAction): ActionRow {
         labelDefault: 'Follow story',
         detail: action.trackText,
       };
+    // -- Wave-9 rails-backed feed-tuning actions (the "less of this" choose-one
+    //    alternatives) — each renders its own labelled row so the radio card is
+    //    legible. --
+    case 'set_topic_weight':
+      return {
+        icon: action.delta < 0 ? 'trending-down' : 'trending-up',
+        labelKey:
+          action.delta < 0
+            ? 'articleFeedback.actionShowLessTopic'
+            : 'articleFeedback.actionShowMoreTopic',
+        labelDefault: action.delta < 0 ? 'Show less of a topic' : 'Show more of a topic',
+        detail: action.topicText,
+      };
+    case 'add_negative_topic':
+      return {
+        icon: 'thumb-down',
+        labelKey: 'articleFeedback.actionDownRank',
+        labelDefault: 'Down-rank a topic',
+        detail: action.topicText,
+      };
+    case 'set_publication_pref':
+      return {
+        icon: action.publicationPref === 'mute' ? 'volume-off' : 'tune',
+        labelKey: 'articleFeedback.actionPublicationPref',
+        labelDefault: 'Adjust a publication',
+        detail: action.publicationId,
+      };
+    case 'add_suppression':
+      return {
+        icon: 'block',
+        labelKey: 'articleFeedback.actionSuppress',
+        labelDefault: 'Filter out a phrase',
+        detail: action.suppressionPattern,
+      };
+    case 'set_high_priority':
+      return {
+        icon: 'push-pin',
+        labelKey: action.highPriority
+          ? 'articleFeedback.actionPinTopic'
+          : 'articleFeedback.actionUnpinTopic',
+        labelDefault: action.highPriority ? 'Pin a topic' : 'Unpin a topic',
+        detail: action.topicText,
+      };
+    case 'retire_topic':
+      return {
+        icon: 'do-not-disturb-on',
+        labelKey: 'articleFeedback.actionRetireTopic',
+        labelDefault: 'Retire a topic',
+        detail: action.topicText,
+      };
     default:
       // Exhaustiveness guard — a future action type still renders a bare row.
       return { icon: 'tune', labelKey: 'articleFeedback.proposalTitle' };
@@ -129,11 +179,17 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   const isGenerating = useFloatingChatIsGenerating();
   const [localResolved, setLocalResolved] = useState<'applied' | 'cancelled' | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  // Single-select: which alternative the user has picked (defaults to the first,
+  // so Confirm is always meaningful). Only used when proposal.chooseOne.
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // A pure "follow this story" proposal (single track_story action) gets its own
-  // header wording; every other proposal keeps the generic "Proposed changes".
+  const chooseOne = proposal.chooseOne === true && proposal.actions.length > 1;
+
+  // A "follow this story" proposal (every action is track_story, single or
+  // multi-scope) gets its own header wording; other proposals keep the generic
+  // "Proposed changes".
   const isTrackProposal =
-    proposal.actions.length === 1 && proposal.actions[0].type === 'track_story';
+    proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'track_story');
 
   const resolved = localResolved ?? resolvedProposals[proposal.id] ?? null;
   const isPending =
@@ -143,9 +199,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
 
   const handleConfirm = async () => {
     if (isGenerating || isApplying) return;
+    // Single-select applies EXACTLY the chosen alternative; otherwise all actions.
+    const toApply = chooseOne
+      ? [proposal.actions[selectedIndex] ?? proposal.actions[0]]
+      : proposal.actions;
     setIsApplying(true);
     try {
-      await executeProposalActions(proposal.actions);
+      await executeProposalActions(toApply);
     } finally {
       setIsApplying(false);
     }
@@ -180,6 +240,12 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         </Text>
       </View>
 
+      {chooseOne && (
+        <Text size="xs" style={styles.hint}>
+          {t('articleFeedback.chooseOneHint', { defaultValue: 'Pick one option' })}
+        </Text>
+      )}
+
       {proposal.explanation.length > 0 && (
         <Text size="sm" style={styles.explanation}>
           {proposal.explanation}
@@ -189,9 +255,15 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       <View style={styles.actions}>
         {proposal.actions.map((action, idx) => {
           const row = actionToRow(action);
-          return (
-            <View key={idx} style={styles.actionRow}>
-              <MaterialIcons name={row.icon} size={16} color={ACCENT} style={styles.actionIcon} />
+          const selected = chooseOne && idx === selectedIndex;
+          const rowIcon: keyof typeof MaterialIcons.glyphMap = chooseOne
+            ? selected
+              ? 'radio-button-checked'
+              : 'radio-button-unchecked'
+            : row.icon;
+          const body = (
+            <>
+              <MaterialIcons name={rowIcon} size={16} color={ACCENT} style={styles.actionIcon} />
               <View style={styles.actionBody}>
                 <Text size="xs" bold style={styles.actionLabel}>
                   {row.labelDefault
@@ -209,6 +281,24 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                   </Text>
                 )}
               </View>
+            </>
+          );
+          if (chooseOne && isPending) {
+            return (
+              <Pressable
+                key={idx}
+                onPress={() => setSelectedIndex(idx)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                style={[styles.actionRow, styles.actionRowSelectable, selected && styles.actionRowSelected]}
+              >
+                {body}
+              </Pressable>
+            );
+          }
+          return (
+            <View key={idx} style={styles.actionRow}>
+              {body}
             </View>
           );
         })}
@@ -295,6 +385,10 @@ const styles = StyleSheet.create({
   explanation: {
     color: 'rgb(210, 210, 210)',
   },
+  hint: {
+    color: 'rgb(180, 180, 180)',
+    fontStyle: 'italic',
+  },
   actions: {
     gap: 8,
   },
@@ -302,6 +396,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
+  },
+  actionRowSelectable: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  actionRowSelected: {
+    borderColor: ACCENT,
+    backgroundColor: 'rgba(231, 138, 83, 0.10)',
   },
   actionIcon: {
     marginTop: 2,

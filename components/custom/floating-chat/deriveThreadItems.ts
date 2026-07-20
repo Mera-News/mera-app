@@ -176,6 +176,51 @@ function parseProposalAction(value: unknown): ProposalAction | null {
       const summary = typeof rec.summary === 'string' ? rec.summary.trim() : '';
       return title && summary ? { type: 'submit_feature_request', title, summary } : null;
     }
+    // -- Wave-9 rails-backed actions (previously dropped on resume — the parser
+    //    silently returned null, so a persisted feed-tuning proposal never
+    //    re-rendered its confirm card). Mirror the harness validateAction shapes. --
+    case 'set_topic_weight': {
+      const topicText = typeof rec.topicText === 'string' ? rec.topicText.trim() : '';
+      const delta = typeof rec.delta === 'number' && Number.isFinite(rec.delta) ? rec.delta : NaN;
+      return topicText && Number.isFinite(delta) && delta !== 0
+        ? { type: 'set_topic_weight', topicText, delta }
+        : null;
+    }
+    case 'add_negative_topic': {
+      const topicText = typeof rec.topicText === 'string' ? rec.topicText.trim() : '';
+      if (!topicText) return null;
+      return typeof rec.weight === 'number' && Number.isFinite(rec.weight)
+        ? { type: 'add_negative_topic', topicText, weight: rec.weight }
+        : { type: 'add_negative_topic', topicText };
+    }
+    case 'set_publication_pref': {
+      const publicationId = typeof rec.publicationId === 'string' ? rec.publicationId.trim() : '';
+      const pref = typeof rec.publicationPref === 'string' ? rec.publicationPref.trim() : '';
+      return publicationId && (pref === 'boost' || pref === 'deprioritize' || pref === 'mute')
+        ? { type: 'set_publication_pref', publicationId, publicationPref: pref }
+        : null;
+    }
+    case 'add_suppression': {
+      const pattern = typeof rec.suppressionPattern === 'string' ? rec.suppressionPattern.trim() : '';
+      if (!pattern) return null;
+      const keywords = toStringArray(rec.suppressionKeywords);
+      const action: ProposalAction = { type: 'add_suppression', suppressionPattern: pattern };
+      if (keywords.length > 0) action.suppressionKeywords = keywords;
+      if (typeof rec.suppressionStrength === 'number' && Number.isFinite(rec.suppressionStrength)) {
+        action.suppressionStrength = rec.suppressionStrength;
+      }
+      return action;
+    }
+    case 'set_high_priority': {
+      const topicText = typeof rec.topicText === 'string' ? rec.topicText.trim() : '';
+      return topicText && typeof rec.highPriority === 'boolean'
+        ? { type: 'set_high_priority', topicText, highPriority: rec.highPriority }
+        : null;
+    }
+    case 'retire_topic': {
+      const topicText = typeof rec.topicText === 'string' ? rec.topicText.trim() : '';
+      return topicText ? { type: 'retire_topic', topicText } : null;
+    }
     default:
       return null;
   }
@@ -212,7 +257,18 @@ function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
         ? result.proposalId
         : null;
 
-  return { id: echoedId ?? toolCall.id, explanation, expectedEffects, actions };
+  // Single-select mode: recover from the tool INPUT (choose_one) with the RESULT
+  // echo as a fallback. Only meaningful with ≥2 alternatives.
+  const chooseOne =
+    (input.choose_one === true || result?.chooseOne === true) && actions.length >= 2;
+
+  return {
+    id: echoedId ?? toolCall.id,
+    explanation,
+    expectedEffects,
+    actions,
+    ...(chooseOne ? { chooseOne: true } : {}),
+  };
 }
 
 /**
@@ -227,33 +283,63 @@ function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | null {
 
   const input = asRecord(toolCall.input) ?? {};
   const result = asRecord(toolCall.result);
-  const trackText =
-    (typeof input.track === 'string' && input.track.trim()) ||
-    (typeof result?.track === 'string' && result.track.trim()) ||
-    '';
-  if (!trackText) return null;
 
   // Subject is only load-bearing on Confirm (live session, result present). A
   // resumed card is dimmed, so an empty subject is harmless there.
-  const subject = asRecord(result?.subject);
-  const actions: ProposalAction[] = [
-    {
-      type: 'track_story',
-      trackText,
-      subject: {
-        origin: subject?.origin === 'article' ? 'article' : 'suggestion',
-        surface: typeof subject?.surface === 'string' ? subject.surface : 'detail',
-        articleId: typeof subject?.articleId === 'string' ? subject.articleId : '',
-        title: typeof subject?.title === 'string' ? subject.title : '',
-        stableClusterId:
-          typeof subject?.stableClusterId === 'string' ? subject.stableClusterId : null,
-        publicationName:
-          typeof subject?.publicationName === 'string' ? subject.publicationName : null,
-      },
-    },
-  ];
+  const subjectRec = asRecord(result?.subject);
+  const subject = {
+    origin: (subjectRec?.origin === 'article' ? 'article' : 'suggestion') as
+      | 'article'
+      | 'suggestion',
+    surface: typeof subjectRec?.surface === 'string' ? subjectRec.surface : 'detail',
+    articleId: typeof subjectRec?.articleId === 'string' ? subjectRec.articleId : '',
+    title: typeof subjectRec?.title === 'string' ? subjectRec.title : '',
+    stableClusterId:
+      typeof subjectRec?.stableClusterId === 'string' ? subjectRec.stableClusterId : null,
+    publicationName:
+      typeof subjectRec?.publicationName === 'string' ? subjectRec.publicationName : null,
+    ...(typeof subjectRec?.pubDate === 'string' ? { pubDate: subjectRec.pubDate } : {}),
+  };
+
+  // Multi-option (scope choice): rebuild from input.options (result.options as a
+  // fallback), deduped. ≥2 → a single-select proposal of track_story actions.
+  const rawOptions =
+    (Array.isArray(input.options) && input.options) ||
+    (Array.isArray(result?.options) && result.options) ||
+    [];
+  const options = Array.from(
+    new Set(
+      rawOptions
+        .filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
+        .map((o) => o.trim()),
+    ),
+  );
 
   const echoedId = typeof result?.proposalId === 'string' ? result.proposalId : null;
+
+  if (options.length >= 2) {
+    const actions: ProposalAction[] = options.map((trackText) => ({
+      type: 'track_story',
+      trackText,
+      subject,
+    }));
+    return {
+      id: echoedId ?? toolCall.id,
+      explanation: '',
+      expectedEffects: '',
+      actions,
+      chooseOne: true,
+    };
+  }
+
+  const trackText =
+    (typeof input.track === 'string' && input.track.trim()) ||
+    (typeof result?.track === 'string' && result.track.trim()) ||
+    options[0] ||
+    '';
+  if (!trackText) return null;
+
+  const actions: ProposalAction[] = [{ type: 'track_story', trackText, subject }];
   return { id: echoedId ?? toolCall.id, explanation: '', expectedEffects: '', actions };
 }
 

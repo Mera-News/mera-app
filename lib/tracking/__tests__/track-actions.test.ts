@@ -238,6 +238,28 @@ describe('trackStoryWithProposal', () => {
     );
   });
 
+  it('stamps the subject real pubDate into the seed snapshot (Part E)', async () => {
+    await trackStoryWithProposal(
+      { ...SUBJECT, pubDate: '2026-07-15T09:30:00.000Z' },
+      'Track this',
+    );
+    expect(trackStory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialSnapshot: expect.objectContaining({
+          articleId: 'art-1',
+          pubDateMs: Date.parse('2026-07-15T09:30:00.000Z'),
+        }),
+      }),
+    );
+  });
+
+  it('falls back to now for the seed snapshot pubDate when subject has none', async () => {
+    const before = Date.now();
+    await trackStoryWithProposal(SUBJECT, 'Track this');
+    const call = asMock(trackStory).mock.calls.at(-1)?.[0];
+    expect(call.initialSnapshot.pubDateMs).toBeGreaterThanOrEqual(before);
+  });
+
   it('does not enqueue a separate headline job (headline is the proposal)', async () => {
     asMock(ArticleService.trackStory).mockResolvedValue({
       stableClusterId: 'clu-1',

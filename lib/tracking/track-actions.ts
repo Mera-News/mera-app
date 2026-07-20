@@ -38,14 +38,18 @@ const MAX_HEADLINE_TITLES = 12;
  *  strongly (see retrieval-profile), below a hand-pinned 1.0. */
 const TRACKED_TOPIC_WEIGHT = 0.85;
 
-/** Build the lean member snapshot for the originating (tapped) article. The
- *  subject carries no pub date/image, so we stamp "now" and let the reconcile /
- *  server archive supply richer fields for the same id later. */
+/** Build the lean member snapshot for the originating (tapped) article. We stamp
+ *  the subject's REAL pubDate when known (Part E timeline fix) so the timeline
+ *  orders by publication time, not the track moment; `now` is only a fallback
+ *  for subjects that carry no pubDate. The reconcile / server archive still
+ *  supplies richer fields for the same id later. */
 function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapshot {
+  const parsed = subject.pubDate ? Date.parse(subject.pubDate) : NaN;
+  const pubDateMs = Number.isFinite(parsed) ? parsed : Date.now();
   return {
     articleId: subject.articleId,
     title: subject.title ?? '',
-    pubDateMs: Date.now(),
+    pubDateMs,
     publicationName: subject.publicationName ?? undefined,
   };
 }

@@ -15,6 +15,7 @@
 
 import { getFacts } from '../../database/services/fact-service';
 import { getSuggestionFeedbackContext } from '../../database/services/article-suggestion-service';
+import { ArticleService } from '../../article-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { ArticleSuggestionStatus } from '../../database/article-suggestion-status';
 import logger from '../../logger';
@@ -51,6 +52,43 @@ export class ArticleFeedbackAgent implements IAgent {
     private readonly trackSubject?: TrackFeedbackSubject | null,
   ) {
     this.id = `article-feedback-${target.suggestionId ?? target.articleId}`;
+  }
+
+  /** Related-coverage fetch, memoized for the agent instance (buildContext runs
+   *  every turn). Only fetched when a track subject was passed explicitly (the
+   *  follow-a-story flow) so plain thumbs-down chats make no extra network call.
+   *  Failure → []. */
+  private relatedCoveragePromise: Promise<string[]> | null = null;
+
+  private getRelatedCoverage(): Promise<string[]> {
+    if (this.relatedCoveragePromise) return this.relatedCoveragePromise;
+    // Gate on the EXPLICIT trackSubject (not resolveTrackSubject's minimal
+    // fallback) — sibling titles only ground the multi-option track proposal.
+    const articleId = this.trackSubject?.articleId;
+    if (!articleId) {
+      this.relatedCoveragePromise = Promise.resolve([]);
+      return this.relatedCoveragePromise;
+    }
+    const ownTitle = this.trackSubject?.title;
+    this.relatedCoveragePromise = (async () => {
+      try {
+        const cluster = await ArticleService.getNewsClusterForArticle(articleId);
+        const rows = cluster?.articles?.articles ?? [];
+        const titles: string[] = [];
+        for (const a of rows) {
+          const title = a?.title_en_internal_only ?? a?.title ?? null;
+          if (typeof title !== 'string') continue;
+          const trimmed = title.trim();
+          if (!trimmed || trimmed === ownTitle) continue;
+          titles.push(trimmed);
+          if (titles.length >= 5) break;
+        }
+        return titles;
+      } catch {
+        return [];
+      }
+    })();
+    return this.relatedCoveragePromise;
   }
 
   /** Resolve the subject the follow tool tracks against: the explicit
@@ -124,6 +162,8 @@ export class ArticleFeedbackAgent implements IAgent {
           },
           matchedTopicTexts: ctx.matchedTopicTexts,
           linkedFacts: ctx.linkedFacts,
+          entities: ctx.entities,
+          category: ctx.category,
         }
       : null;
 
@@ -138,7 +178,17 @@ export class ArticleFeedbackAgent implements IAgent {
       }
     }
 
-    return buildFeedbackContext({ facts, context, fallbackTitle, proposal, isTracked });
+    // Sibling titles (only when following a story) ground multi-option tracks.
+    const relatedCoverage = await this.getRelatedCoverage();
+
+    return buildFeedbackContext({
+      facts,
+      context,
+      fallbackTitle,
+      proposal,
+      isTracked,
+      relatedCoverage,
+    });
   }
 
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---

@@ -25,6 +25,9 @@ const MAX_ALL_FACTS = 12; // newest-first — needed for "more of this" diagnosi
 const ARTICLE_DESC_TRUNC = 160;
 const FACT_STATEMENT_TRUNC = 120;
 const TOPICS_PER_FACT_PREVIEW = 3;
+const MAX_ARTICLE_ENTITIES = 8;
+const MAX_RELATED_COVERAGE = 5;
+const RELATED_COVERAGE_TITLE_TRUNC = 120;
 // Drop the (largest) ALL-FACTS block first if the assembled context exceeds
 // this — keeps the local path's ~3072-token input budget comfortable.
 const CONTEXT_TOKEN_BUDGET = 1800;
@@ -43,7 +46,24 @@ const VALID_ACTION_TYPES = new Set([
   'set_publication_pref',
   'add_suppression',
   'set_high_priority',
+  'retire_topic',
 ]);
+
+/** Action enum shared by the JSON-Schema tool def and its test (single source). */
+const PROPOSAL_ACTION_ENUM = [
+  'add_fact',
+  'update_fact',
+  'delete_fact',
+  'add_topics',
+  'remove_topics',
+  'submit_feature_request',
+  'set_topic_weight',
+  'add_negative_topic',
+  'set_publication_pref',
+  'add_suppression',
+  'set_high_priority',
+  'retire_topic',
+] as const;
 
 /** Publication-preference kinds the agent may set on a named publication. */
 const VALID_PUBLICATION_PREFS = new Set(['boost', 'deprioritize', 'mute']);
@@ -57,6 +77,8 @@ const FEATURE_REQUEST_SUMMARY_MAX = 500;
 const MAX_TRACK_WORDS = 18;
 /** Hard cap on the accepted track text we stage (defensive trim). */
 const MAX_TRACK_CHARS = 200;
+/** Max distinct track-scope options a single choose-one track card offers. */
+const MAX_TRACK_OPTIONS = 3;
 
 function trunc(text: string, max: number): string {
   const t = (text ?? '').trim();
@@ -116,8 +138,9 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - set_topic_weight — "show me less/more of <topic>": nudge a MATCHED topic's weight by a small delta (negative to see less, positive to see more; keep |delta| ≤ 0.5).
 - add_negative_topic — this article is the wrong topic/place/angle: mint a down-ranking negative topic (topicText, e.g. "Delhi crime").
 - set_publication_pref — boost / deprioritize / mute a NAMED publication (publicationId = the publication name, publicationPref = boost|deprioritize|mute). Use mute only for a clear "stop showing me <source>".
-- add_suppression — filter out a specific phrase the user never wants (suppressionPattern).
+- add_suppression — filter out a phrase the user never wants (suppressionPattern; suppressionStrength 0.9 = never show it, 0.5 = just less of it).
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
+- retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).
 - submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
 
 ## Following a story (the proposeTrack tool)
@@ -132,7 +155,8 @@ Example: proposeTrack {"track": "Updates on the student protest in Sonbhadra ove
 ## Rules
 - NEVER change anything directly. ALWAYS stage changes via the proposeChanges tool — a ≤2-sentence explanation, a ≤2-sentence expected_effects, and a MINIMAL action list.
 - Pick the LEAST drastic action that fits: "less cricket" → set_topic_weight (small negative delta), not a mute. "Mute Times of India" → set_publication_pref mute. "Wrong Delhi — I meant Delhi Ohio" → add_negative_topic.
-- For a vague "less of this", ask ONE clarifying question FIRST — is it the topic, the publication, or the angle? — before proposing.
+- "Less of this / not for me" → ONE proposeChanges with choose_one:true offering 2–4 mutually-exclusive alternatives ordered least→most drastic (e.g. down-weight the topic → suppress a named ENTITY → retire the topic → suppress the CATEGORY). The user picks exactly one; typing free text (e.g. "mute the source") is always an option.
+- "This isn't important to me" → ask ONE short why-question FIRST, then stage the persona update their answer implies.
 - When a PENDING PROPOSAL is shown and the user confirms (yes / ok / do it, in any language) call applyProposal; if they decline call cancelProposal. If they say anything else, leave the proposal pending and answer normally.
 - Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
 }
@@ -149,14 +173,14 @@ function buildArticleFeedbackToolFormat(): string {
 Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
-- proposeChanges: {"explanation": string, "expected_effects": string, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "highPriority"?: boolean}]}
-- proposeTrack: {"track": string}
+- proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "highPriority"?: boolean}]}
+- proposeTrack: {"track": string, "options"?: string[]}
 - applyProposal: {}
 - cancelProposal: {}
 
 ## Example (format only)
-<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You wanted less cricket news.", "expected_effects": "You'll see fewer cricket stories.", "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}]}}</tool_call>
-<tool_call>{"name": "proposeTrack", "arguments": {"track": "Updates on the student protest in Sonbhadra over exam results"}}</tool_call>`;
+<tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You want less of this.", "expected_effects": "Pick how far to go.", "choose_one": true, "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}, {"type": "retire_topic", "topicText": "cricket"}]}}</tool_call>
+<tool_call>{"name": "proposeTrack", "arguments": {"track": "Updates on the student protest in Sonbhadra over exam results", "options": ["The Sonbhadra exam-result protest", "The wider UP student exam-reform movement"]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -170,7 +194,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage } = input;
 
   // --- ARTICLE ---
   let articleBlock: string;
@@ -180,6 +204,11 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     const lines = [`Title: ${trunc(title, 160)}`];
     if (s.publication_name) lines.push(`Publication: ${trunc(s.publication_name, 80)}`);
     if (s.description_en) lines.push(`Description: ${trunc(s.description_en, ARTICLE_DESC_TRUNC)}`);
+    // Category + entities feed the "less of this" choose-one alternatives (one
+    // line each; capped so the block stays compact).
+    if (ctx.category) lines.push(`Category: ${trunc(ctx.category, 60)}`);
+    const entities = (ctx.entities ?? []).slice(0, MAX_ARTICLE_ENTITIES);
+    if (entities.length > 0) lines.push(`Entities: ${entities.join(', ')}`);
     articleBlock = `## ARTICLE\n${lines.join('\n')}`;
   } else {
     articleBlock = `## ARTICLE\nTitle: ${trunc(fallbackTitle ?? '(untitled)', 160)}`;
@@ -233,6 +262,18 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
         }`
       : null;
 
+  // --- RELATED COVERAGE (sibling-cluster titles that ground track options) ---
+  const coverageTitles = (relatedCoverage ?? [])
+    .map((t) => (t ?? '').trim())
+    .filter((t) => t.length > 0)
+    .slice(0, MAX_RELATED_COVERAGE);
+  const relatedCoverageBlock =
+    coverageTitles.length > 0
+      ? '## RELATED COVERAGE\n'
+        + coverageTitles.map((t) => `- ${trunc(t, RELATED_COVERAGE_TITLE_TRUNC)}`).join('\n')
+        + '\nUse ONLY these when proposing track options.'
+      : null;
+
   // --- PENDING PROPOSAL ---
   const pendingBlock = proposal
     ? '## PENDING PROPOSAL\n'
@@ -242,6 +283,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     : null;
 
   const alwaysBlocks = [articleBlock, statusBlock, matchedTopicsBlock, producingBlock];
+  if (relatedCoverageBlock) alwaysBlocks.push(relatedCoverageBlock);
   if (trackStateBlock) alwaysBlocks.push(trackStateBlock);
   const trailing = pendingBlock ? [pendingBlock] : [];
 
@@ -275,27 +317,19 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
           properties: {
             explanation: { type: 'string', description: 'Why (≤2 sentences).' },
             expected_effects: { type: 'string', description: 'What changes in the feed (≤2 sentences).' },
+            choose_one: {
+              type: 'boolean',
+              description: 'When true, actions are mutually-exclusive alternatives and the user picks EXACTLY ONE (single-select card). Use for "less of this / not for me".',
+            },
             actions: {
               type: 'array',
-              description: 'Minimal list of persona changes.',
+              description: 'Minimal list of persona changes (or alternatives when choose_one).',
               items: {
                 type: 'object',
                 properties: {
                   type: {
                     type: 'string',
-                    enum: [
-                      'add_fact',
-                      'update_fact',
-                      'delete_fact',
-                      'add_topics',
-                      'remove_topics',
-                      'submit_feature_request',
-                      'set_topic_weight',
-                      'add_negative_topic',
-                      'set_publication_pref',
-                      'add_suppression',
-                      'set_high_priority',
-                    ],
+                    enum: [...PROPOSAL_ACTION_ENUM],
                     description: 'Action kind.',
                   },
                   statement: { type: 'string', description: 'add_fact: the new fact (English).' },
@@ -304,12 +338,14 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
                   topics: { type: 'array', items: { type: 'string' }, description: 'add_topics/remove_topics: topic texts.' },
                   title: { type: 'string', description: 'submit_feature_request: short feature name (≤80 chars, no "[Feature Request]" prefix).' },
                   summary: { type: 'string', description: 'submit_feature_request: 2–4 sentence description, English, NO personal info.' },
-                  topicText: { type: 'string', description: 'set_topic_weight/set_high_priority: a MATCHED topic text. add_negative_topic: the topic/place to down-rank.' },
+                  topicText: { type: 'string', description: 'set_topic_weight/set_high_priority/retire_topic: a MATCHED topic text. add_negative_topic: the topic/place to down-rank.' },
                   delta: { type: 'number', description: 'set_topic_weight: weight nudge; negative = show less, positive = show more (|delta| ≤ 0.5).' },
                   weight: { type: 'number', description: 'add_negative_topic: optional explicit weight (defaults to a down-ranking value).' },
                   publicationId: { type: 'string', description: 'set_publication_pref: the publication NAME to adjust.' },
                   publicationPref: { type: 'string', enum: ['boost', 'deprioritize', 'mute'], description: 'set_publication_pref: boost, deprioritize, or mute the named publication.' },
-                  suppressionPattern: { type: 'string', description: 'add_suppression: the phrase to filter out of the feed.' },
+                  suppressionPattern: { type: 'string', description: 'add_suppression: the phrase to filter out of the feed (e.g. an entity or category).' },
+                  suppressionKeywords: { type: 'array', items: { type: 'string' }, description: 'add_suppression: optional extra keywords that also match the phrase.' },
+                  suppressionStrength: { type: 'number', description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).' },
                   highPriority: { type: 'boolean', description: 'set_high_priority: true to pin the topic, false to unpin.' },
                 },
                 required: ['type'],
@@ -325,13 +361,18 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
       function: {
         name: 'proposeTrack',
         description:
-          'Propose following this article\'s unfolding story as a durable topic. Never tracks directly — stages a confirm card. track = ONE plain sentence (≤18 words) describing the continuing story (who/what/where), not this single article.',
+          'Propose following this article\'s unfolding story as a durable topic. Never tracks directly — stages a confirm card. track = ONE plain sentence (≤18 words) describing the continuing story (who/what/where), not this single article. Optionally give 2–3 `options` (specific event ↔ bigger story) grounded ONLY in RELATED COVERAGE — the user then picks one scope.',
         parameters: {
           type: 'object',
           properties: {
             track: {
               type: 'string',
               description: 'The durable follow-topic sentence (≤18 words).',
+            },
+            options: {
+              type: 'array',
+              items: { type: 'string' },
+              description: '2–3 alternative follow-topic sentences at different scopes (specific event ↔ wider story), each ≤18 words, grounded ONLY in RELATED COVERAGE. When ≥2 valid, the card becomes single-select.',
             },
           },
           required: ['track'],
@@ -385,6 +426,8 @@ function describeAction(a: ProposalAction): string {
       return `suppress "${trunc(a.suppressionPattern, 60)}"`;
     case 'set_high_priority':
       return `${a.highPriority ? 'pin' : 'unpin'} topic "${trunc(a.topicText, 60)}"`;
+    case 'retire_topic':
+      return `retire topic "${trunc(a.topicText, 60)}"`;
     case 'track_story':
       return `follow "${trunc(a.trackText, 80)}"`;
   }
@@ -485,6 +528,11 @@ function validateAction(raw: unknown, factIds: Set<string>): ValidatedAction {
       if (typeof o.highPriority !== 'boolean') return { error: 'set_high_priority requires a boolean highPriority' };
       return { action: { type: 'set_high_priority', topicText, highPriority: o.highPriority } };
     }
+    case 'retire_topic': {
+      const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
+      if (topicText.length === 0) return { error: 'retire_topic requires a non-empty topicText' };
+      return { action: { type: 'retire_topic', topicText } };
+    }
     case 'submit_feature_request': {
       const title = typeof o.title === 'string' ? o.title.trim() : '';
       const summary = typeof o.summary === 'string' ? o.summary.trim() : '';
@@ -516,6 +564,8 @@ export function decideProposeChanges(
   const explanation = typeof args.explanation === 'string' ? args.explanation.trim() : '';
   const expectedEffects = typeof args.expected_effects === 'string' ? args.expected_effects.trim() : '';
   const rawActions = args.actions;
+  // Single-select mode: the actions are mutually-exclusive alternatives.
+  const chooseOne = args.choose_one === true;
 
   if (!explanation) return { result: { error: 'explanation is required' } };
   if (!expectedEffects) return { result: { error: 'expected_effects is required' } };
@@ -535,12 +585,19 @@ export function decideProposeChanges(
     explanation,
     expectedEffects,
     actions,
+    // Only mark chooseOne when there is a genuine choice (≥2 alternatives).
+    ...(chooseOne && actions.length >= 2 ? { chooseOne: true } : {}),
   };
 
   // proposalId is echoed in the result so deriveThreadItems can key the rebuilt
   // proposal card to store.proposal / resolvedProposals.
   return {
-    result: { staged: true, actionCount: actions.length, proposalId: proposal.id },
+    result: {
+      staged: true,
+      actionCount: actions.length,
+      proposalId: proposal.id,
+      ...(proposal.chooseOne ? { chooseOne: true } : {}),
+    },
     sideEffects: { proposal },
   };
 }
@@ -559,12 +616,49 @@ export function decideProposeTrack(
   args: Record<string, unknown>,
   subject: TrackFeedbackSubject,
 ): ToolExecutionResult {
-  const raw = typeof args.track === 'string' ? args.track.trim() : '';
+  const trimTrack = (s: string): string =>
+    s.length > MAX_TRACK_CHARS ? `${s.slice(0, MAX_TRACK_CHARS - 1)}…` : s;
+
+  // Distinct, non-empty scope options (specific ↔ broad). ≥2 → single-select.
+  const options = Array.isArray(args.options)
+    ? Array.from(
+        new Set(
+          args.options
+            .filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
+            .map((o) => trimTrack(o.trim())),
+        ),
+      ).slice(0, MAX_TRACK_OPTIONS)
+    : [];
+
+  const id = `track-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  if (options.length >= 2) {
+    const actions: ProposalAction[] = options.map((trackText) => ({
+      type: 'track_story',
+      trackText,
+      subject,
+    }));
+    const proposal: StagedProposal = {
+      id,
+      explanation: '',
+      expectedEffects: '',
+      actions,
+      chooseOne: true,
+    };
+    return {
+      result: { staged: true, proposalId: id, chooseOne: true, options, subject },
+      sideEffects: { proposal },
+    };
+  }
+
+  // Single-option flow (unchanged): fall back to `track` (or a lone option).
+  const raw =
+    (typeof args.track === 'string' && args.track.trim()) || options[0] || '';
   if (!raw) return { result: { error: 'track is required' } };
-  const trackText = raw.length > MAX_TRACK_CHARS ? `${raw.slice(0, MAX_TRACK_CHARS - 1)}…` : raw;
+  const trackText = trimTrack(raw);
 
   const proposal: StagedProposal = {
-    id: `track-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id,
     explanation: '',
     expectedEffects: '',
     actions: [{ type: 'track_story', trackText, subject }],

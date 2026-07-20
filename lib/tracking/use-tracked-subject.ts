@@ -70,6 +70,7 @@ export function useTrackedSubject(
             surface: subject.surface,
             articleId: subject.articleId,
             title: subject.title,
+            pubDate: subject.pubDate ?? null,
             stableClusterId: subject.stableClusterId ?? null,
             publicationName: subject.publicationName ?? null,
           },

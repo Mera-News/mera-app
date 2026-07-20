@@ -170,7 +170,11 @@ export type ProposalAction =
   /** Add a soft/hard suppression rule (a phrase to filter out). */
   | { type: 'add_suppression'; suppressionPattern: string; suppressionKeywords?: string[]; suppressionStrength?: number }
   /** Pin / unpin a matched topic as high-priority. */
-  | { type: 'set_high_priority'; topicText: string; highPriority: boolean };
+  | { type: 'set_high_priority'; topicText: string; highPriority: boolean }
+  /** Retire a matched topic entirely — stronger than a weight nudge ("I'm done
+   *  with this topic"). Resolved text→id in the RN executor, then routed through
+   *  ACTION_NAMES.RETIRE_TOPIC. */
+  | { type: 'retire_topic'; topicText: string };
 
 /** Serializable origin snapshot for a `track_story` action — the minimal subset
  *  of the RN `FeedbackSubject` that trackStoryWithProposal needs. Kept here (not
@@ -181,6 +185,10 @@ export interface TrackFeedbackSubject {
   surface: string;
   articleId: string;
   title: string;
+  /** The article's real publication date (ISO string), when known. Threaded so
+   *  the tracked-story seed snapshot stamps the true pubDate instead of `now`
+   *  (Part E timeline fix). */
+  pubDate?: string | null;
   stableClusterId?: string | null;
   publicationName?: string | null;
 }
@@ -191,6 +199,11 @@ export interface StagedProposal {
   explanation: string;     // why (≤2 sentences, enforced by prompt)
   expectedEffects: string; // "you'll see fewer X…"
   actions: ProposalAction[];
+  /** When true the `actions` are mutually-exclusive alternatives: the card
+   *  renders single-select radio rows and Confirm applies EXACTLY ONE chosen
+   *  action (via executeProposalActions([chosen])). Undefined/false = the legacy
+   *  behaviour where Confirm applies every action. */
+  chooseOne?: boolean;
 }
 
 /** Result of an agent tool execution — a plain result map plus optional
@@ -232,6 +245,12 @@ export interface SuggestionFeedbackContext {
   suggestion: FeedbackSuggestion;
   matchedTopicTexts: string[];
   linkedFacts: { id: string; statement: string }[];
+  /** Named entities the article mentions (≤8) — surfaces an entity-suppression
+   *  alternative in the "less of this" choose-one card. */
+  entities?: string[];
+  /** The article's controlled category, when known — surfaces a broader
+   *  category-suppression alternative. */
+  category?: string | null;
 }
 
 /** Plain inputs to buildFeedbackContext — everything the agent has already
@@ -249,4 +268,8 @@ export interface FeedbackContextInput {
   /** True when this article's story is already being followed — lets the agent
    *  say so instead of proposing a duplicate track. Undefined = unknown/N-A. */
   isTracked?: boolean;
+  /** Up to 5 sibling-cluster article titles (from the tapped article's live
+   *  cluster). Renders a `## RELATED COVERAGE` block that grounds the LLM's
+   *  multi-option track proposals. Absent/empty when unavailable. */
+  relatedCoverage?: string[];
 }

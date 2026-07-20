@@ -338,6 +338,40 @@ describe('executeProposalActions — Wave-9 rails-backed actions', () => {
     expect(result.applied).toBe(1);
   });
 
+  it('retire_topic resolves the topic TEXT to an active id, then retires it', async () => {
+    mockGetAllByNormalizedText.mockResolvedValueOnce([
+      { id: 't-active', status: 'active', weight: 0.6 } as never,
+    ]);
+    mockApplyPersonaAction.mockResolvedValueOnce({
+      applied: true,
+      changeLogId: 'cl-retire',
+      summary: 'Retired topic',
+    });
+
+    const result = await executeProposalActions([
+      { type: 'retire_topic', topicText: 'cricket' },
+    ]);
+
+    expect(mockApplyPersonaAction).toHaveBeenCalledWith(
+      { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: 't-active' },
+      'user',
+    );
+    expect(result.applied).toBe(1);
+    expect(result.changeLogIds).toEqual(['cl-retire']);
+  });
+
+  it('retire_topic errors (no executor call) when the topic text has no active topic', async () => {
+    mockGetAllByNormalizedText.mockResolvedValueOnce([]);
+
+    const result = await executeProposalActions([
+      { type: 'retire_topic', topicText: 'unknown topic' },
+    ]);
+
+    expect(mockApplyPersonaAction).not.toHaveBeenCalled();
+    expect(result.applied).toBe(0);
+    expect(result.errors[0]).toContain('no active topic');
+  });
+
   it('set_high_priority errors (no executor call) when the topic text has no active topic', async () => {
     mockGetAllByNormalizedText.mockResolvedValueOnce([]);
 

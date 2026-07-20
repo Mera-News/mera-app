@@ -221,6 +221,20 @@ export async function executeProposalActions(
           );
           break;
         }
+        case 'retire_topic': {
+          // Resolve the matched-topic TEXT to an active topic id, then retire it
+          // (stronger than a weight nudge — the topic stops matching entirely).
+          const topicId = await resolveActiveTopicId(action.topicText);
+          if (!topicId) {
+            errors.push(`retire_topic: no active topic matching "${action.topicText}"`);
+            break;
+          }
+          await runRails(
+            { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId },
+            'retire_topic',
+          );
+          break;
+        }
         case 'track_story': {
           // Follow the tapped article's story as a topic. The origin snapshot is
           // embedded in the action (staged by decideProposeTrack), so this stays

@@ -67,6 +67,7 @@ describe('useTrackedSubject — track path', () => {
         surface: 'for_you',
         articleId: 'art-1',
         title: 'Protest escalates in Sonbhadra',
+        pubDate: null,
         stableClusterId: 'sc-1',
         publicationName: 'The Hindu',
       },

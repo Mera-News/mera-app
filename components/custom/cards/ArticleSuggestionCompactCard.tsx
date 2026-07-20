@@ -68,6 +68,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
     articleId: suggestion.articleId,
     suggestionId: suggestion._id,
     title: suggestion.title_en ?? '',
+    pubDate: suggestion.firstPubDate ?? null,
     publicationName: suggestion.publication_name,
     countryCode: suggestion.country_code,
     stableClusterId:

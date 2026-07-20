@@ -81,6 +81,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     surface: 'detail',
     articleId: article._id,
     title: titleEnglish ?? article.title ?? '',
+    pubDate: article.pubDate ?? null,
     publicationName: article.publicationSource?.publication_name ?? publisherName,
     countryCode: article.publicationSource?.country_code ?? null,
     ...subjectExtras,

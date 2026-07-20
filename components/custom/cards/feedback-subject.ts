@@ -32,6 +32,10 @@ export interface FeedbackSubject {
   suggestionId?: string;
   /** Title used for chat handoff, share, and the feedback-tree context strip. */
   title: string;
+  /** The article's real publication date (ISO string), when known. Threaded into
+   *  the tracked-story seed snapshot so the timeline shows the true pubDate
+   *  instead of the track moment (Part E timeline fix). */
+  pubDate?: string | null;
   publicationName?: string | null;
   countryCode?: string | null;
   /** Explore scope key (city/region/country) — wired by the Explore wave. */

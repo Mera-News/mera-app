@@ -554,6 +554,91 @@ describe('deriveThreadItems', () => {
     }
   });
 
+  it('resumes Wave-9 rails actions (previously dropped) from a proposeChanges input', () => {
+    const tc: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'proposeChanges',
+      status: 'done',
+      input: {
+        explanation: 'x',
+        expected_effects: 'y',
+        actions: [
+          { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+          { type: 'add_negative_topic', topicText: 'Delhi crime' },
+          { type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' },
+          { type: 'add_suppression', suppressionPattern: 'lottery results', suppressionKeywords: ['lottery'], suppressionStrength: 0.9 },
+          { type: 'set_high_priority', topicText: 'AI policy', highPriority: true },
+          { type: 'retire_topic', topicText: 'cricket' },
+        ],
+      },
+      result: {},
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'proposed', [tc])] }));
+    const card = items.find((i) => i.kind === 'proposal-card');
+    if (!card || card.kind !== 'proposal-card') throw new Error('expected a proposal-card');
+    expect(card.proposal.actions).toEqual([
+      { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+      { type: 'add_negative_topic', topicText: 'Delhi crime' },
+      { type: 'set_publication_pref', publicationId: 'Times of India', publicationPref: 'mute' },
+      { type: 'add_suppression', suppressionPattern: 'lottery results', suppressionKeywords: ['lottery'], suppressionStrength: 0.9 },
+      { type: 'set_high_priority', topicText: 'AI policy', highPriority: true },
+      { type: 'retire_topic', topicText: 'cricket' },
+    ]);
+  });
+
+  it('rebuilds a choose_one proposal (single-select) from the tool input', () => {
+    const tc: ToolCallRecord = {
+      id: 'tc-1',
+      name: 'proposeChanges',
+      status: 'done',
+      input: {
+        explanation: 'Less of this?',
+        expected_effects: 'Pick one.',
+        choose_one: true,
+        actions: [
+          { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+          { type: 'retire_topic', topicText: 'cricket' },
+        ],
+      },
+      result: { staged: true, chooseOne: true },
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'ok', [tc])] }));
+    const card = items.find((i) => i.kind === 'proposal-card');
+    if (!card || card.kind !== 'proposal-card') throw new Error('expected a proposal-card');
+    expect(card.proposal.chooseOne).toBe(true);
+    expect(card.proposal.actions).toHaveLength(2);
+  });
+
+  it('rebuilds a multi-option track proposal (chooseOne of track_story) from proposeTrack options', () => {
+    const subject = {
+      origin: 'suggestion',
+      surface: 'detail',
+      articleId: 'art-1',
+      title: 'Protest escalates',
+      stableClusterId: 'sc-1',
+      publicationName: 'The Hindu',
+    };
+    const tc: ToolCallRecord = {
+      id: 'tc-track',
+      name: 'proposeTrack',
+      status: 'done',
+      input: {
+        track: 'The Sonbhadra protest',
+        options: ['The Sonbhadra exam-result protest', 'The wider UP exam-reform movement'],
+      },
+      result: { staged: true, proposalId: 'track-nonce', chooseOne: true, subject },
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Follow which?', [tc])] }));
+    const card = items.find((i) => i.kind === 'proposal-card');
+    if (!card || card.kind !== 'proposal-card') throw new Error('expected a proposal-card');
+    expect(card.proposal.id).toBe('track-nonce');
+    expect(card.proposal.chooseOne).toBe(true);
+    expect(card.proposal.actions).toEqual([
+      { type: 'track_story', trackText: 'The Sonbhadra exam-result protest', subject },
+      { type: 'track_story', trackText: 'The wider UP exam-reform movement', subject },
+    ]);
+  });
+
   it('emits nothing for applyProposal / cancelProposal tool calls', () => {
     const apply: ToolCallRecord = {
       id: 'tc-1',
