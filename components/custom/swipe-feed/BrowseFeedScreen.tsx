@@ -1,3 +1,7 @@
+// DEPRECATED(app-rethink wave): replaced by components/custom/triage/* (the
+// one-card review surface backed by triage-store). Kept live because the Browse
+// tab still mounts it — the tab removal is a later wave. Do NOT extend.
+//
 // BrowseFeedScreen — the Browse tab's vertical swipe deck (Wave 8, N3).
 //
 // A vertical, one-card-at-a-time snapping FlatList. Cards page with peek above/

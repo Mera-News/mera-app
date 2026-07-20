@@ -1,3 +1,7 @@
+// DEPRECATED(app-rethink wave): replaced by components/custom/triage/* (triage
+// renders one card at a time, no per-row deck slot). Kept live only because the
+// still-mounted Browse deck uses it. Do NOT extend.
+//
 // SwipeDeckRow — one row slot in the Browse swipe deck's FlatList (perf item
 // A9). Subscribes to its OWN suggestion via a per-item zustand selector
 // instead of the parent reading `suggestionsById.get(id)` on every render.

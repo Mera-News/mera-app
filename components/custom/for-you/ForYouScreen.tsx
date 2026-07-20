@@ -661,6 +661,8 @@ const MeraNewsScreen: React.FC = () => {
                         suggestion={item.data}
                         moreSourcesCount={moreSourcesCount}
                         onPress={handleSuggestionPress}
+                        showActions
+                        surface="for_you"
                     />
                 );
             }
@@ -682,6 +684,8 @@ const MeraNewsScreen: React.FC = () => {
                         suggestion={item.data}
                         moreSourcesCount={moreSourcesCount}
                         onPress={handleSuggestionPress}
+                        showActions
+                        surface="for_you"
                     />
                 );
             }
@@ -904,6 +908,18 @@ const MeraNewsScreen: React.FC = () => {
                         />
                     )}
                 </View>
+                {/* Triage entry — full-width pill into the one-card review. */}
+                <Pressable
+                    onPress={() => router.push('/logged-in/triage')}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('forYou.triageEntry')}
+                    className="flex-row items-center justify-center rounded-full border border-primary-500 bg-transparent px-4 py-2.5 mt-1"
+                >
+                    <MaterialIcons name="style" size={18} color="#EDA77E" />
+                    <Text size="sm" className="text-primary-500 font-semibold ml-2">
+                        {t('forYou.triageEntry')}
+                    </Text>
+                </Pressable>
                 {navSections.length > 0 && (
                     <Box className="mt-2 mb-1">
                         <SectionNavigator

@@ -1,3 +1,11 @@
+// DEPRECATED(app-rethink wave): replaced by lib/stores/triage-store.ts, which
+// now owns the chunk-release listener wiring for the one-card review surface.
+// This store is kept live ONLY because the Browse tab still mounts
+// BrowseFeedScreen; that tab's removal is a later wave. Both stores may hold a
+// chunk-release listener at once — the scoring-pipeline registry is a Set, so
+// they coexist without conflict (each keeps its own module-scoped unsubscribe).
+// Do NOT extend this store.
+//
 // swipe-feed-store — Zustand store backing the Browse swipe deck (Wave 8, N3).
 //
 // The deck is an ordered list of DeckCards (the PURE deck contract in

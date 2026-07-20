@@ -253,7 +253,20 @@
     "alsoForYou": "Also for you",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
-    "whySection": "Why this section"
+    "whySection": "Why this section",
+    "triageEntry": "Review one at a time"
+  },
+  "triage": {
+    "title": "Review",
+    "progress": "{{current}} / {{total}}",
+    "close": "Close",
+    "upNext": "Up next",
+    "read": "Read",
+    "good": "Good",
+    "bad": "Not for me",
+    "tellWhy": "Tell us why",
+    "save": "Save",
+    "skip": "Skip"
   },
   "whatsNew": {
     "title": "What's new",
