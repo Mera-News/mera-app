@@ -232,9 +232,27 @@ function isBreaking(rep: ScoredSuggestionProjection): boolean {
 }
 
 /**
- * Resolve the owning fact of a group from its representative's matched topics.
- * Returns the winning fact id + its factScore, or null when no active positive
- * fact matches (→ headline / fallthrough per A1.2).
+ * Why a group's representative has no positive-weight owning fact. Drives the
+ * step-4 degrade decision (M-P5b fix — orphaned-but-valuable groups must DEGRADE
+ * to `also_for_you`, not vanish):
+ *  - `owned`    — an active, positive-weight fact wins → gets a fact section.
+ *  - `orphan`   — no active fact resolved (retired/suppressed topic, deleted
+ *                 fact, null factId, missing topic), OR the strongest active
+ *                 effective weight is exactly 0 (active fact, no signal either
+ *                 way). Degradable: falls through to `also_for_you` if relevant.
+ *  - `negative` — the strongest active effective weight is < 0 (the user
+ *                 explicitly down-weighted the only matched topics). Stays
+ *                 dropped: suppression working as intended.
+ */
+export type OwnershipResolution =
+  | { kind: 'owned'; factId: string }
+  | { kind: 'orphan' }
+  | { kind: 'negative' };
+
+/**
+ * Resolve the owning fact of a group from its representative's matched topics,
+ * classifying the no-owner case as `orphan` (degradable) vs `negative`
+ * (suppressed) — see {@link OwnershipResolution}.
  *
  * factScore(fact) = max over that fact's matched topics of
  *   w_eff = clamp(topic.weight × (fact.weight ?? 1) × (highPriority?HP_MULT:1), -1, 1).
@@ -243,16 +261,18 @@ function isBreaking(rep: ScoredSuggestionProjection): boolean {
  *   2. more matched topics owned by that fact (breadth)
  *   3. older fact.created_at (smaller createdAtMs)
  *   4. lexicographic fact id
- * Only facts with factScore > 0 are eligible (negative-only matches own no
- * section — already score-gutted by P_NEG).
+ * Only facts with factScore > 0 are eligible to OWN a section (negative-only
+ * matches own no section — already score-gutted by P_NEG). When no fact owns,
+ * the strongest active effective weight decides orphan (≥ 0 / none) vs negative
+ * (< 0).
  */
-export function resolveOwningFact(
+export function resolveOwnership(
   rep: ScoredSuggestionProjection,
   topics: Map<string, TopicSnapshot>,
   facts: Map<string, FactSnapshot>,
   hpMult: number = DEFAULT_HARNESS_CONFIG.scoringEngine.HP_MULT,
-): string | null {
-  // factId → { score, count }
+): OwnershipResolution {
+  // factId → { score, count } (score = max w_eff over that fact's matched topics)
   const candidates = new Map<string, { score: number; count: number }>();
   for (const mt of rep.matchedTopics) {
     if (!mt.topicId) continue;
@@ -278,7 +298,7 @@ export function resolveOwningFact(
   let winner: string | null = null;
   let winStats: { score: number; count: number } | null = null;
   for (const [factId, stats] of candidates) {
-    if (stats.score <= 0) continue; // negative-only → owns no section
+    if (stats.score <= 0) continue; // ≤ 0 → owns no section
     if (winner == null) {
       winner = factId;
       winStats = stats;
@@ -289,7 +309,34 @@ export function resolveOwningFact(
       winStats = stats;
     }
   }
-  return winner;
+  if (winner != null) return { kind: 'owned', factId: winner };
+
+  // No positive-weight owner. Distinguish an ORPHAN (no active fact resolved,
+  // or the strongest active signal is exactly 0 — no signal either way) from a
+  // NEGATIVE signal (strongest active effective weight < 0 — user actively
+  // doesn't want this). Empty candidates ⇒ nothing active resolved ⇒ orphan.
+  if (candidates.size === 0) return { kind: 'orphan' };
+  let maxActive = Number.NEGATIVE_INFINITY;
+  for (const stats of candidates.values()) {
+    if (stats.score > maxActive) maxActive = stats.score;
+  }
+  return maxActive < 0 ? { kind: 'negative' } : { kind: 'orphan' };
+}
+
+/**
+ * Convenience wrapper preserving the original `string | null` contract: the
+ * winning fact id, or null when no active positive fact owns the group
+ * (orphan OR negative — callers that need the distinction use
+ * {@link resolveOwnership}).
+ */
+export function resolveOwningFact(
+  rep: ScoredSuggestionProjection,
+  topics: Map<string, TopicSnapshot>,
+  facts: Map<string, FactSnapshot>,
+  hpMult: number = DEFAULT_HARNESS_CONFIG.scoringEngine.HP_MULT,
+): string | null {
+  const res = resolveOwnership(rep, topics, facts, hpMult);
+  return res.kind === 'owned' ? res.factId : null;
 }
 
 /** True when candidate fact (id `ca`) should beat the current winner (`cw`). */
@@ -457,13 +504,19 @@ export function selectSections(input: SelectSectionsInput): SelectSectionsResult
     return a.representativeId < b.representativeId ? -1 : 1;
   });
 
-  // 4. Assign each remaining group to a section (fact → headline → drop).
+  // 4. Assign each remaining group to a section (fact → headline → degrade/drop).
   const factSections = new Map<string, FeedSection>();
   const headlineSections = new Map<string, FeedSection>();
+  // Orphaned-but-valuable groups that degrade into `also_for_you` (M-P5b fix).
+  const degradedGroups: SectionGroup[] = [];
+  // Standard For-You render gate (rows render only when relevance > this — see
+  // for-you-store / feed-sections-selector). Reused, NOT a new threshold.
+  const renderGate = config.articlePipeline.reasonRelevanceThreshold;
 
   for (const gs of sectionable) {
-    const factId = resolveOwningFact(gs.rep, topics, facts, hpMult);
-    if (factId != null) {
+    const ownership = resolveOwnership(gs.rep, topics, facts, hpMult);
+    if (ownership.kind === 'owned') {
+      const factId = ownership.factId;
       let sec = factSections.get(factId);
       if (!sec) {
         const fact = facts.get(factId);
@@ -480,8 +533,8 @@ export function selectSections(input: SelectSectionsInput): SelectSectionsResult
       sec.groups.push(toSectionGroup(gs));
       continue;
     }
-    // No owning fact → headline synthetic section (when scoped), else dropped
-    // (negative-only / orphaned match — already score-gutted, not rendered).
+    // No positive-weight owning fact. Precedence:
+    //  (a) headlineScope → synthetic headline section (unchanged behavior).
     if (gs.rep.headlineScope) {
       const meta = headlineMeta(gs.rep, locations, config);
       let sec = headlineSections.get(meta.key);
@@ -498,6 +551,21 @@ export function selectSections(input: SelectSectionsInput): SelectSectionsResult
         headlineSections.set(meta.key, sec);
       }
       sec.groups.push(toSectionGroup(gs));
+      continue;
+    }
+    // (b) Three-way orphan/negative rule — orphaned-but-valuable groups must
+    //     DEGRADE, not disappear (the prod incident: deleting/retiring an AI
+    //     persona orphaned an entire cluster of relevance-0.6 stories and the
+    //     feed appeared gutted). See {@link OwnershipResolution}:
+    //       - orphan (missing/inactive fact, null factId, or effective weight
+    //         exactly 0 — no signal either way) AND representative clears the
+    //         standard render gate (relevance > 0.3) → fall through to
+    //         `also_for_you`.
+    //       - negative (matched topic effective weight < 0 — user actively
+    //         doesn't want it) → stay DROPPED (suppression working as intended).
+    //       - orphan BELOW the render gate → stay DROPPED (not worth showing).
+    if (ownership.kind === 'orphan' && (gs.rep.relevance ?? 0) > renderGate) {
+      degradedGroups.push(toSectionGroup(gs));
     }
   }
 
@@ -507,13 +575,14 @@ export function selectSections(input: SelectSectionsInput): SelectSectionsResult
     ...headlineSections.values(),
   ];
   const multiGroupSections: FeedSection[] = [];
-  const orphanGroups: SectionGroup[] = [];
+  // also_for_you pool: folded 1-item sections + degraded orphaned groups (M-P5b).
+  const alsoGroups: SectionGroup[] = [...degradedGroups];
   for (const sec of allSections) {
     sec.groups.sort((a, b) =>
       groupCompareFromSectionGroup(a, b, byId),
     );
     if (sec.groups.length <= 1) {
-      orphanGroups.push(...sec.groups);
+      alsoGroups.push(...sec.groups);
     } else {
       multiGroupSections.push(sec);
     }
@@ -522,14 +591,14 @@ export function selectSections(input: SelectSectionsInput): SelectSectionsResult
   multiGroupSections.sort(sectionCompare);
 
   const result: FeedSection[] = multiGroupSections;
-  if (orphanGroups.length > 0) {
-    orphanGroups.sort((a, b) => groupCompareFromSectionGroup(a, b, byId));
+  if (alsoGroups.length > 0) {
+    alsoGroups.sort((a, b) => groupCompareFromSectionGroup(a, b, byId));
     result.push({
       key: ALSO_SECTION_KEY,
       kind: 'also',
       title: 'Also for you',
       weight: Number.NEGATIVE_INFINITY, // always last
-      groups: orphanGroups,
+      groups: alsoGroups,
     });
   }
 

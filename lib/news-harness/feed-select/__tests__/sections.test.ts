@@ -4,6 +4,7 @@
 import {
   selectSections,
   resolveOwningFact,
+  resolveOwnership,
   bucketOf,
   type ScoredSuggestionProjection,
   type TopicSnapshot,
@@ -330,6 +331,190 @@ describe('1-item sections fold into also_for_you', () => {
       'mid',
       'midOlder',
       'z-unscored',
+    ]);
+  });
+});
+
+// --- orphaned-but-valuable degrade (M-P5b incident fix) -------------------
+//
+// Prod incident (real device dump): the user down-weighted/removed their AI
+// persona strings, retiring the topics that owned an 11-story relevance-0.6 AI
+// cluster. Pre-fix, step 4 hard-dropped every group whose representative
+// resolved to no active positive-weight owning fact — the whole cluster
+// vanished at once and a working feed looked gutted. The rule now: orphaned
+// (missing/inactive fact, null factId, effective weight 0) groups DEGRADE into
+// also_for_you when relevant enough (relevance > 0.3, the render gate);
+// explicit NEGATIVE matches (effective weight < 0) stay dropped.
+
+describe('orphaned-but-valuable groups degrade into also_for_you', () => {
+  const HP = 1.25;
+
+  it('deleted owning fact: high-relevance orphan lands in also_for_you (not dropped)', () => {
+    // Topic active + points at f-ai, but the fact was DELETED (absent from the
+    // facts map) — the exact prod incident. The group must degrade, not vanish.
+    const topics = new Map([['t-ai', topic({ factId: 'f-ai' })]]);
+    const facts = new Map<string, FactSnapshot>(); // f-ai deleted
+    const s = sugg({
+      id: 'ai1',
+      rawScore: 0.55,
+      relevance: 0.6,
+      matchedTopics: [{ topicId: 't-ai', text: 'AI' }],
+    });
+    const { sections } = run([s], { topics, facts });
+    const also = sections.find((sec) => sec.key === 'also_for_you');
+    expect(also).toBeDefined();
+    expect(also!.groups.map((g) => g.representativeId)).toContain('ai1');
+    // never becomes (or contributes to) a fact section.
+    expect(sections.some((sec) => sec.kind === 'fact')).toBe(false);
+    expect(resolveOwnership(s, topics, facts, HP).kind).toBe('orphan');
+  });
+
+  it('retired topic: the whole AI cluster orphans → all 11 land in also_for_you', () => {
+    // The device dump: eleven relevance-0.6 AI stories whose only owning topic
+    // retired at once. Pre-fix they ALL hard-dropped; now they degrade together.
+    const topics = new Map([
+      ['t-ai', topic({ factId: 'f-ai', status: 'retired' })],
+    ]);
+    const facts = new Map([['f-ai', fact({ statement: 'AI news' })]]);
+    const ai = Array.from({ length: 11 }, (_, i) =>
+      sugg({
+        id: `ai-${i}`,
+        rawScore: 0.5,
+        relevance: 0.6,
+        pubDateMs: 1000 + i,
+        matchedTopics: [{ topicId: 't-ai', text: 'AI' }],
+      }),
+    );
+    const { sections } = run(ai, { topics, facts });
+    const also = sections.find((sec) => sec.key === 'also_for_you');
+    expect(also).toBeDefined();
+    expect(also!.groups.map((g) => g.representativeId).sort()).toEqual(
+      ai.map((s) => s.id).sort(),
+    );
+    // also_for_you is the only section — nothing survived as a fact/headline.
+    expect(sections.every((sec) => sec.kind === 'also')).toBe(true);
+  });
+
+  it('null factId topic: orphan degrades', () => {
+    const topics = new Map([['t', topic({ factId: null })]]);
+    const s = sugg({
+      id: 'n1',
+      relevance: 0.6,
+      matchedTopics: [{ topicId: 't', text: 'x' }],
+    });
+    const { sections } = run([s], { topics, facts: new Map() });
+    const also = sections.find((sec) => sec.key === 'also_for_you');
+    expect(also?.groups.map((g) => g.representativeId)).toContain('n1');
+  });
+
+  it('effective weight exactly 0 with an active fact is orphan-equivalent → degrades', () => {
+    const topics = new Map([['t0', topic({ factId: 'f0', weight: 0 })]]); // w_eff 0
+    const facts = new Map([['f0', fact()]]);
+    const s = sugg({
+      id: 'z0',
+      relevance: 0.6,
+      matchedTopics: [{ topicId: 't0', text: 'x' }],
+    });
+    const { sections } = run([s], { topics, facts });
+    const also = sections.find((sec) => sec.key === 'also_for_you');
+    expect(also?.groups.map((g) => g.representativeId)).toContain('z0');
+    // 0 = no signal either way → orphan, NOT negative.
+    expect(resolveOwnership(s, topics, facts, HP).kind).toBe('orphan');
+  });
+
+  it('negative match (effective weight < 0) stays DROPPED — suppression', () => {
+    const topics = new Map([['tn', topic({ factId: 'fn', weight: -0.8 })]]);
+    const facts = new Map([['fn', fact()]]);
+    const s = sugg({
+      id: 'neg1',
+      relevance: 0.6, // high relevance does NOT rescue an explicit negative.
+      matchedTopics: [{ topicId: 'tn', text: 'x' }],
+    });
+    const { sections } = run([s], { topics, facts });
+    const rendered = sections.flatMap((sec) =>
+      sec.groups.flatMap((g) => g.memberIds),
+    );
+    expect(rendered).not.toContain('neg1');
+    expect(resolveOwnership(s, topics, facts, HP).kind).toBe('negative');
+  });
+
+  it('orphan BELOW the render gate (relevance ≤ 0.3) stays dropped', () => {
+    const topics = new Map([
+      ['t-lo', topic({ factId: 'f-lo', status: 'retired' })],
+    ]);
+    const facts = new Map([['f-lo', fact()]]);
+    const lo = sugg({
+      id: 'lo1',
+      rawScore: 0.2,
+      relevance: 0.28, // ≤ 0.3 render gate → not worth showing.
+      matchedTopics: [{ topicId: 't-lo', text: 'x' }],
+    });
+    const { sections } = run([lo], { topics, facts });
+    const rendered = sections.flatMap((sec) =>
+      sec.groups.flatMap((g) => g.memberIds),
+    );
+    expect(rendered).not.toContain('lo1');
+    // still classified orphan — it's the render gate, not the class, that drops it.
+    expect(resolveOwnership(lo, topics, facts, HP).kind).toBe('orphan');
+  });
+
+  it('headlineScope orphan still forms a headline section (unchanged), not also', () => {
+    // An orphan WITH a headlineScope keeps the old behavior: headline synthetic
+    // section takes precedence over the also_for_you degrade path.
+    const locations = new Map<string, LocationSnapshot>([
+      ['loc', { country: 'India', countryCode: 'IN', weight: 1.0 }],
+    ]);
+    const h1 = sugg({
+      id: 'h1',
+      relevance: 0.6,
+      headlineScope: 'COUNTRY',
+      headlineLocationId: 'loc',
+    });
+    const h2 = sugg({
+      id: 'h2',
+      relevance: 0.6,
+      headlineScope: 'COUNTRY',
+      headlineLocationId: 'loc',
+    });
+    const { sections } = run([h1, h2], { locations });
+    const head = sections.find((sec) => sec.scope === 'COUNTRY');
+    expect(head).toBeDefined();
+    expect(head!.kind).toBe('headline');
+    expect(sections.some((sec) => sec.key === 'also_for_you')).toBe(false);
+  });
+
+  it('degraded orphans interleave with folded singles in also_for_you (rawScore desc)', () => {
+    // one OWNED single-group fact (folds into also) + two orphans (retired
+    // topic) → all three share the also_for_you pool and sort together.
+    const topics = new Map([
+      ['t-own', topic({ factId: 'f-own' })],
+      ['t-orph', topic({ factId: 'f-orph', status: 'retired' })],
+    ]);
+    const facts = new Map([['f-own', fact({ statement: 'Owned' })]]); // f-orph deleted
+    const owned = sugg({
+      id: 'own',
+      rawScore: 0.4,
+      relevance: 0.6,
+      matchedTopics: [{ topicId: 't-own', text: 'o' }],
+    });
+    const orphHi = sugg({
+      id: 'orphHi',
+      rawScore: 0.9,
+      relevance: 0.6,
+      matchedTopics: [{ topicId: 't-orph', text: 'a' }],
+    });
+    const orphLo = sugg({
+      id: 'orphLo',
+      rawScore: 0.5,
+      relevance: 0.6,
+      matchedTopics: [{ topicId: 't-orph', text: 'b' }],
+    });
+    const { sections } = run([owned, orphHi, orphLo], { topics, facts });
+    const also = sections.find((sec) => sec.key === 'also_for_you')!;
+    expect(also.groups.map((g) => g.representativeId)).toEqual([
+      'orphHi',
+      'orphLo',
+      'own',
     ]);
   });
 });
