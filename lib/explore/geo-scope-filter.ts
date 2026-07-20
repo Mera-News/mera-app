@@ -1,3 +1,9 @@
+// DEPRECATED(app-rethink wave, 2026-07-20): no live consumers; geo-tags are
+// dormant in prod, and Explore's chips are now country + World only (derived
+// in lib/explore/scopes.ts, which no longer emits city/region scopes). Kept
+// per convention (see CLAUDE.md v3 migration conventions: DEPRECATE markers on
+// superseded code) rather than deleted outright.
+//
 // Explore tab — on-device geo-tag filter.
 //
 // City/region scope tabs fetch the COUNTRY's article pages (the same

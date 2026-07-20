@@ -5,6 +5,15 @@
 // tab. Each scope drives a DIRECT server-paginated article query — there is no
 // scoring, no LLM, and nothing persisted (see components/custom/explore).
 //
+// Chips are COUNTRY + World only (app-rethink wave, 2026-07-20): city/region
+// derivation was removed because geo-tags are dormant in prod (all null), so
+// those chips showed ~nothing. Each location still contributes its country.
+// The `'city'|'region'` scope-kind members and their builder functions are
+// kept — see the DEPRECATED markers below — purely for type compatibility
+// with any already-persisted `explore_last_scope` id; ExploreScreen already
+// falls back to World when a persisted id no longer resolves, so no data
+// migration is needed here.
+//
 // Country-code formats (subtle — three different conventions collide here):
 //   • WatermelonDB `locations.countryCode` and `NewsArticle.geo_tags.countryCode`
 //     are ISO alpha-2 (the server normalizes geo tags via CountryCodeMapper).
@@ -88,6 +97,7 @@ function countryScope(alpha2: string, alpha3: string): ExploreScope {
     };
 }
 
+// DEPRECATED(app-rethink wave): geo-tags dormant in prod; city/region chips removed from derivation.
 function cityScope(alpha2: string, alpha3: string, city: string, region?: string): ExploreScope {
     return {
         id: `city:${alpha3}:${city.toLowerCase()}`,
@@ -101,6 +111,7 @@ function cityScope(alpha2: string, alpha3: string, city: string, region?: string
     };
 }
 
+// DEPRECATED(app-rethink wave): geo-tags dormant in prod; city/region chips removed from derivation.
 function regionScope(alpha2: string, alpha3: string, region: string): ExploreScope {
     return {
         id: `region:${alpha3}:${region.toLowerCase()}`,
@@ -119,9 +130,9 @@ function regionScope(alpha2: string, alpha3: string, region: string): ExploreSco
  * Order (also the cap priority — World always survives, lowest-priority tail is
  * dropped past {@link MAX_SCOPES}):
  *   1. World (always first).
- *   2. Location-derived scopes, in the locations' own weight-desc order: each
- *      location with a city → a city scope; a location with only a region → a
- *      region scope; and each distinct country → a country scope.
+ *   2. Location-derived country scopes, in the locations' own weight-desc
+ *      order: each distinct location country → a country scope. (City/region
+ *      scopes are no longer derived — see the module header.)
  *   3. The device-locale country (if not already present from a location).
  *
  * De-duped by scope id; capped at {@link MAX_SCOPES}. `locations` is expected
@@ -143,10 +154,6 @@ export function deriveExploreScopes(
         const alpha3 = alpha2ToAlpha3(loc.countryCode);
         if (!alpha3) continue;
         const alpha2 = loc.countryCode.trim().toUpperCase();
-        const city = loc.city?.trim();
-        const region = loc.region?.trim();
-        if (city) push(cityScope(alpha2, alpha3, city, region));
-        else if (region) push(regionScope(alpha2, alpha3, region));
         push(countryScope(alpha2, alpha3));
     }
 

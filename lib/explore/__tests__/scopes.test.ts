@@ -40,26 +40,20 @@ describe('deriveExploreScopes', () => {
         expect(scopes[1]).toMatchObject({ kind: 'country', countryCodeAlpha3: 'USA', countryCodeAlpha2: 'US' });
     });
 
-    it('derives a city scope + a country scope from a city location', () => {
+    it('derives only a country scope from a location with a city (city/region chips removed)', () => {
         const scopes = deriveExploreScopes([loc({ city: 'new delhi', region: 'delhi', countryCode: 'IN' })], null);
-        expect(scopes.map((s) => s.id)).toEqual(['world', 'city:IND:new delhi', 'country:IND']);
-        const city = scopes.find((s) => s.kind === 'city')!;
-        expect(city).toMatchObject({
-            label: 'New Delhi',
-            icon: 'location-city',
-            city: 'new delhi',
-            region: 'delhi',
-            countryCodeAlpha3: 'IND',
-        });
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:IND']);
+        expect(scopes.every((s) => s.kind !== 'city' && s.kind !== 'region')).toBe(true);
+        const country = scopes.find((s) => s.kind === 'country')!;
+        expect(country).toMatchObject({ label: 'India', icon: 'flag', countryCodeAlpha3: 'IND' });
     });
 
-    it('derives a region scope when a location has a region but no city', () => {
+    it('derives only a country scope from a location with a region but no city', () => {
         const scopes = deriveExploreScopes([loc({ region: 'bavaria', countryCode: 'DE' })], null);
-        expect(scopes.map((s) => s.id)).toEqual(['world', 'region:DEU:bavaria', 'country:DEU']);
-        expect(scopes.find((s) => s.kind === 'region')).toMatchObject({ label: 'Bavaria', icon: 'map' });
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:DEU']);
     });
 
-    it('dedupes the country scope across locations and the device country', () => {
+    it('dedupes the country scope across locations sharing a country and the device country', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ city: 'mumbai', countryCode: 'IN', weight: 0.9 }),
@@ -67,13 +61,9 @@ describe('deriveExploreScopes', () => {
             ],
             'IN',
         );
-        // world + 2 city scopes + a single shared country scope (no duplicate).
-        expect(scopes.map((s) => s.id)).toEqual([
-            'world',
-            'city:IND:mumbai',
-            'country:IND',
-            'city:IND:pune',
-        ]);
+        // world + a single shared country scope (no duplicate from the 2nd
+        // location or the device country).
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:IND']);
     });
 
     it('preserves weight-desc location order (locations arrive pre-sorted)', () => {
@@ -84,8 +74,8 @@ describe('deriveExploreScopes', () => {
             ],
             null,
         );
-        const cityIds = scopes.filter((s) => s.kind === 'city').map((s) => s.id);
-        expect(cityIds).toEqual(['city:FRA:paris', 'city:JPN:tokyo']);
+        const countryIds = scopes.filter((s) => s.kind === 'country').map((s) => s.id);
+        expect(countryIds).toEqual(['country:FRA', 'country:JPN']);
     });
 
     it('caps at MAX_SCOPES, always keeping World and dropping the lowest-priority tail', () => {
@@ -95,6 +85,7 @@ describe('deriveExploreScopes', () => {
                 loc({ city: 'b', countryCode: 'GB', weight: 0.8 }),
                 loc({ city: 'c', countryCode: 'FR', weight: 0.7 }),
                 loc({ city: 'd', countryCode: 'DE', weight: 0.6 }),
+                loc({ city: 'e', countryCode: 'IT', weight: 0.5 }),
             ],
             'JP', // device country is lowest priority → should be dropped
         );
