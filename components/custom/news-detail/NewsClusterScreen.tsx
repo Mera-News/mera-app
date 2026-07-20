@@ -1,7 +1,7 @@
 import { CompactPublisherNewsCard } from '@/components/custom/CompactPublisherNewsCard';
 import { FormattedDate } from '@/components/custom/FormattedDate';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
-import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
+import SmoothFlatList, { SmoothFlatListRef } from '@/components/custom/SmoothFlatList';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
@@ -20,6 +20,7 @@ import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface NewsClusterScreenProps {
@@ -41,7 +42,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
-    const scrollViewRef = useRef<SmoothScrollViewRef>(null);
+    const scrollViewRef = useRef<SmoothFlatListRef>(null);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -161,13 +162,17 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
             </Box>
 
             {/* Content */}
-            <SmoothScrollView
+            <SmoothFlatList<NewsArticle>
                 ref={scrollViewRef}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingTop: insets.top }}
                 headerHeight={240}
                 onScrollPositionChange={handleScrollPositionChange}
                 onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                initialNumToRender={10}
+                windowSize={7}
+                removeClippedSubviews={Platform.OS === 'android'}
                 parallaxHeader={
                     clusterImageUrl ? (
                         <Box className="w-full h-full">
@@ -180,95 +185,114 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                         </Box>
                     ) : undefined
                 }
-            >
-                <VStack className="p-5" space="lg">
-                    {/* First Seen Date + Publication */}
-                    <HStack className="items-center justify-between mt-10">
-                        <FormattedDate
-                            dateString={clusterData.createdAt}
-                            size="sm"
-                            className="text-gray-400"
-                        />
-                        {publicationName ? (
-                            <Text size="sm" className="text-gray-400">
-                                {publicationName}{countryCode ? ` · ${countryCode.toUpperCase()}` : ''}
-                            </Text>
-                        ) : null}
-                    </HStack>
-
-                    {/* Headline */}
-                    <TranslatableDynamic
-                        as="heading"
-                        text={displayTitle || t('feed.newsCluster')}
-                        originalText={headlineArticle?.title ?? undefined}
-                        originalLanguage={sourceLanguage ?? undefined}
-                        size="xl"
-                        className="text-white"
-                        style={{ paddingTop: 8 }}
-                    />
-
-                    {/* Translation status */}
-                    {(() => {
-                        const status = getArticleTranslatableStatus(sourceLanguage, appLanguage);
-                        if (status === 'same-language') return null;
-                        const translatable = status === 'translatable';
-                        const languageName =
-                            getLanguageName(sourceLanguage)
-                            ?? t('clusterDetail.unknownLanguage');
-                        return (
-                            <HStack className="items-center justify-center px-2" space="xs">
-                                <MaterialIcons
-                                    name="translate"
-                                    size={14}
-                                    color={translatable ? '#86EFAC' : '#FCA5A5'}
+                headerContent={
+                    <>
+                        {/* p-5's top/left/right padding — bottom padding is folded into
+                            the footer spacer below since header/footer are now separate
+                            FlatList sections rather than siblings in one padded VStack. */}
+                        <VStack className="px-5 pt-5" space="lg">
+                            {/* First Seen Date + Publication */}
+                            <HStack className="items-center justify-between mt-10">
+                                <FormattedDate
+                                    dateString={clusterData.createdAt}
+                                    size="sm"
+                                    className="text-gray-400"
                                 />
-                                <Text
-                                    size="xs"
-                                    italic
-                                    className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
-                                >
-                                    {t(
-                                        translatable
-                                            ? 'clusterDetail.translatable'
-                                            : 'clusterDetail.notTranslatable',
-                                        { language: languageName },
-                                    )}
-                                </Text>
+                                {publicationName ? (
+                                    <Text size="sm" className="text-gray-400">
+                                        {publicationName}{countryCode ? ` · ${countryCode.toUpperCase()}` : ''}
+                                    </Text>
+                                ) : null}
                             </HStack>
-                        );
-                    })()}
 
-                    {/* Articles */}
-                    <VStack space="md">
-                        <Heading size="md" className="text-gray-300">
-                            {t('newsCluster.coverage')}
-                        </Heading>
-                        {articles.length > 0 ? (
-                            articles.map((article, index) => (
-                                <CompactPublisherNewsCard
-                                    key={article._id || `article-${index}`}
-                                    article={article}
-                                    onPress={() => handleArticlePress(article)}
-                                />
-                            ))
-                        ) : (
-                            <Box className="bg-gray-800 rounded-lg p-4">
-                                <Text size="sm" className="text-gray-400 text-center">
-                                    {t('newsCluster.noArticles')}
-                                </Text>
-                            </Box>
-                        )}
+                            {/* Headline */}
+                            <TranslatableDynamic
+                                as="heading"
+                                text={displayTitle || t('feed.newsCluster')}
+                                originalText={headlineArticle?.title ?? undefined}
+                                originalLanguage={sourceLanguage ?? undefined}
+                                size="xl"
+                                className="text-white"
+                                style={{ paddingTop: 8 }}
+                            />
+
+                            {/* Translation status */}
+                            {(() => {
+                                const status = getArticleTranslatableStatus(sourceLanguage, appLanguage);
+                                if (status === 'same-language') return null;
+                                const translatable = status === 'translatable';
+                                const languageName =
+                                    getLanguageName(sourceLanguage)
+                                    ?? t('clusterDetail.unknownLanguage');
+                                return (
+                                    <HStack className="items-center justify-center px-2" space="xs">
+                                        <MaterialIcons
+                                            name="translate"
+                                            size={14}
+                                            color={translatable ? '#86EFAC' : '#FCA5A5'}
+                                        />
+                                        <Text
+                                            size="xs"
+                                            italic
+                                            className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
+                                        >
+                                            {t(
+                                                translatable
+                                                    ? 'clusterDetail.translatable'
+                                                    : 'clusterDetail.notTranslatable',
+                                                { language: languageName },
+                                            )}
+                                        </Text>
+                                    </HStack>
+                                );
+                            })()}
+                        </VStack>
+
+                        {/* Articles heading — 'lg' gap (16) from the block above, matching
+                            the original outer VStack's space="lg" between siblings. */}
+                        <Box className="px-5" style={{ marginTop: 16 }}>
+                            <Heading size="md" className="text-gray-300">
+                                {t('newsCluster.coverage')}
+                            </Heading>
+                        </Box>
+                    </>
+                }
+                data={articles}
+                keyExtractor={(article, index) => article._id || `article-${index}`}
+                renderItem={({ item: article }) => (
+                    // 'md' gap (12) from the previous row (or the Coverage heading for
+                    // the first row), matching the original inner VStack space="md".
+                    <Box className="px-5" style={{ marginTop: 12 }}>
+                        <CompactPublisherNewsCard
+                            article={article}
+                            onPress={() => handleArticlePress(article)}
+                        />
+                    </Box>
+                )}
+                ListEmptyComponent={
+                    <Box className="px-5" style={{ marginTop: 12 }}>
+                        <Box className="bg-gray-800 rounded-lg p-4">
+                            <Text size="sm" className="text-gray-400 text-center">
+                                {t('newsCluster.noArticles')}
+                            </Text>
+                        </Box>
+                    </Box>
+                }
+                ListFooterComponent={
+                    <>
                         {isLoadingMore ? (
-                            <Box className="items-center py-4">
+                            <Box className="items-center py-4 px-5" style={{ marginTop: 12 }}>
                                 <Spinner size="small" />
                             </Box>
                         ) : null}
-                    </VStack>
-
-                    {/* Bottom padding for safe area */}
-                    <Box style={{ height: insets.bottom + 20 }} />
-                </VStack>
-            </SmoothScrollView>
+                        {/* Bottom padding for safe area: original explicit spacer (20 +
+                            insets.bottom) + the 'lg' gap (16) that preceded it + the outer
+                            VStack's p-5 bottom padding (20), now folded into one spacer
+                            since there's no shared padded parent anymore. */}
+                        <Box style={{ height: insets.bottom + 56 }} />
+                    </>
+                }
+            />
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
         </Box>
     );

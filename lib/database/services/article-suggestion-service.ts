@@ -178,6 +178,8 @@ export async function getLocalSuggestionServerIds(): Promise<string[]> {
 // --- Read: full feed ---
 
 export async function loadSuggestions(): Promise<ForYouSuggestion[]> {
+  // Intentionally uncapped: article_suggestions is bounded by the server's 48h
+  // suggestion TTL, not by a query limit here.
   const rows = await articleSuggestionsCol.query().fetch();
   if (rows.length === 0) return [];
   return rows.map(toForYouSuggestion);
