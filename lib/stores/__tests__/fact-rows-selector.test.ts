@@ -9,8 +9,10 @@
 
 import {
   buildFactRows,
+  buildProvisionalRow,
   isSuggestionOpened,
   ALSO_ROW_ID,
+  PROVISIONAL_ROW_ID,
   type FactRowsSnapshots,
 } from '../fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -413,6 +415,63 @@ describe('buildFactRows device-dump shape', () => {
     expect(also).toBeDefined();
     expect(also!.groups).toHaveLength(11);
     expect(rows[rows.length - 1].factId).toBe(ALSO_ROW_ID);
+  });
+});
+
+// --- provisional (pre-scoring) placeholder row -----------------------------
+
+describe('buildProvisionalRow', () => {
+  it('builds one UNSCORED "provisional" row from unscored + in-window rows', () => {
+    const u = sugg({ _id: 'u', status: ArticleSuggestionStatus.Unscored, relevance: 0 });
+    const c = sugg({ _id: 'c', status: ArticleSuggestionStatus.Complete, relevance: 0.6 });
+    const row = buildProvisionalRow([u, c], new Set(), NOW);
+    expect(row).not.toBeNull();
+    expect(row!.kind).toBe('provisional');
+    expect(row!.factId).toBe(PROVISIONAL_ROW_ID);
+    expect(PROVISIONAL_ROW_ID).toBe('provisional');
+    expect(row!.statement).toBe(PROVISIONAL_ROW_ID);
+    expect(row!.factStatement).toBeNull();
+    expect(row!.hasUnreadHighPriority).toBe(false);
+    // Every card carries the UNSCORED bucket.
+    expect(row!.groups.every((g) => g.bucket === 'UNSCORED')).toBe(true);
+    expect(row!.groups.map((g) => g.data._id).sort()).toEqual(['c', 'u']);
+  });
+
+  it('orders cards newest firstPubDate first (id ascending on a tie)', () => {
+    const older = sugg({ _id: 'a', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - 3 * H).toISOString() });
+    const newer = sugg({ _id: 'b', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - 1 * H).toISOString() });
+    const row = buildProvisionalRow([older, newer], new Set(), NOW)!;
+    expect(row.groups.map((g) => g.data._id)).toEqual(['b', 'a']);
+  });
+
+  it('drops discarded (complete && relevance ≤ gate) + out-of-window rows, admits unscored', () => {
+    const disc = sugg({ _id: 'disc', status: ArticleSuggestionStatus.Complete, relevance: 0.3 });
+    const stale = sugg({ _id: 'old', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - 30 * H).toISOString() });
+    const ok = sugg({ _id: 'ok', status: ArticleSuggestionStatus.Unscored, relevance: 0 });
+    const row = buildProvisionalRow([disc, stale, ok], new Set(), NOW)!;
+    expect(row.groups.map((g) => g.data._id)).toEqual(['ok']);
+  });
+
+  it('excludes opened/viewed ids', () => {
+    const a = sugg({ _id: 'a', articleId: 'art-a', status: ArticleSuggestionStatus.Unscored });
+    const b = sugg({ _id: 'b', articleId: 'art-b', status: ArticleSuggestionStatus.Unscored });
+    const row = buildProvisionalRow([a, b], new Set(['art-a']), NOW)!;
+    expect(row.groups.map((g) => g.data._id)).toEqual(['b']);
+  });
+
+  it('collapses a shared-cluster story into one member-carrying card', () => {
+    const a = sugg({ _id: 'a', status: ArticleSuggestionStatus.Unscored, clusters: [{ clusterId: 'c1', confidence: 0.9 }], firstPubDate: new Date(NOW - 2 * H).toISOString() });
+    const b = sugg({ _id: 'b', status: ArticleSuggestionStatus.Unscored, clusters: [{ clusterId: 'c1', confidence: 0.9 }], firstPubDate: new Date(NOW - 1 * H).toISOString() });
+    const row = buildProvisionalRow([a, b], new Set(), NOW)!;
+    expect(row.groups).toHaveLength(1);
+    expect(row.groups[0].data._id).toBe('b'); // newest fronts
+    expect(row.groups[0].members.map((m) => m._id)).toEqual(['a']);
+  });
+
+  it('returns null when the pool is empty / all discarded', () => {
+    expect(buildProvisionalRow([], new Set(), NOW)).toBeNull();
+    const disc = sugg({ status: ArticleSuggestionStatus.Complete, relevance: 0.2 });
+    expect(buildProvisionalRow([disc], new Set(), NOW)).toBeNull();
   });
 });
 

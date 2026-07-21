@@ -11,7 +11,7 @@ import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
-import { buildFactRows } from '@/lib/stores/fact-rows-selector';
+import { buildFactRows, buildProvisionalRow } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -207,6 +207,22 @@ const MeraNewsScreen: React.FC = () => {
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 
+    // Provisional (pre-scoring) placeholder row — the Dashboard fallback while
+    // the REAL feed is empty (post-wipe / fresh install / ManageData clear), so
+    // the newest stories show within seconds instead of an empty screen. Only
+    // computed when there is no real content; swapped out wholesale the moment
+    // real rows/breaking exist. `hasRenderableContent` + the empty-feed watchdog
+    // stay keyed to the REAL selector output — `hasProvisional` is separate and
+    // gates ONLY the render branch, never the watchdog.
+    const provisionalRow = useMemo(
+        () =>
+            hasRenderableContent
+                ? null
+                : buildProvisionalRow(suggestions, openedIds, Date.now(), userGeoLanguageCtx),
+        [hasRenderableContent, suggestions, openedIds, userGeoLanguageCtx],
+    );
+    const displayRows = provisionalRow ? [provisionalRow] : feed.rows;
+
     // First arrival from onboarding: show waiting card if user has any facts.
     useEffect(() => {
         if (fromOnboarding !== '1') return;
@@ -362,7 +378,7 @@ const MeraNewsScreen: React.FC = () => {
                 <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
                     <DashboardSectionsFeed
                         breaking={feed.breaking}
-                        rows={feed.rows}
+                        rows={displayRows}
                         openedIds={openedIds}
                         onPressSuggestion={handleSuggestionPress}
                         scrollHandler={scrollHandler}

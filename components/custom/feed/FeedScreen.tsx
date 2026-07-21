@@ -26,7 +26,12 @@ import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
-import { buildFeedList, type FeedListItem } from '@/lib/stores/feed-list-selector';
+import {
+  buildFeedList,
+  buildProvisionalFeedList,
+  PROVISIONAL_FEED_CAP,
+  type FeedListItem,
+} from '@/lib/stores/feed-list-selector';
 import {
   useFeedSessionStore,
   type Verdict,
@@ -127,8 +132,33 @@ const FeedScreen: React.FC = () => {
     [order, itemsById],
   );
 
+  // ── Provisional feed (P7c) — the pre-scoring fallback. When the real ranked
+  //    list is empty (post-wipe / fresh install / ManageData clear), render the
+  //    newest in-window stories UNSCORED so the feed isn't blank for tens of
+  //    seconds to minutes. It DELIBERATELY BYPASSES the feed-session-store — the
+  //    frozen session order starts only from the real ranked list, so scrolled
+  //    provisional cards are never baked into the session — and is swapped out
+  //    wholesale the moment ≥1 real row exists (`data.length > 0`).
+  const provisional = useMemo(
+    () =>
+      data.length === 0
+        ? buildProvisionalFeedList(
+            suggestions,
+            excludedUnion(openedIds, viewedIds),
+            Date.now(),
+            PROVISIONAL_FEED_CAP,
+            userGeoLanguageCtx,
+          )
+        : [],
+    [data.length, suggestions, openedIds, viewedIds, userGeoLanguageCtx],
+  );
+  const showProvisional = data.length === 0 && provisional.length > 0;
+  const listData = showProvisional ? provisional : data;
+
   // ── Impressions (viewability → mark-viewed) ──
-  const { viewabilityConfigCallbackPairs } = useFeedImpressions(isFocused);
+  // Suppressed while provisional: scrolled-past UNSCORED cards must NOT be added
+  // to the viewed set, or they'd be excluded forever once the real feed lands.
+  const { viewabilityConfigCallbackPairs } = useFeedImpressions(isFocused && !showProvisional);
 
   // ── Feedback sheet ──
   const [activeFeedback, setActiveFeedback] = useState<ActiveFeedback | null>(null);
@@ -306,7 +336,7 @@ const FeedScreen: React.FC = () => {
       </VStack>
 
       <FlatList
-        data={data}
+        data={listData}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
@@ -326,6 +356,15 @@ const FeedScreen: React.FC = () => {
           paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
           flexGrow: 1,
         }}
+        ListHeaderComponent={
+          showProvisional ? (
+            <Box className="px-1 pb-2">
+              <Text size="xs" className="text-typography-400 leading-4">
+                {t('feed.personalizingFeed')}
+              </Text>
+            </Box>
+          ) : null
+        }
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={
           data.length > 0 ? (

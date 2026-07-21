@@ -83,11 +83,19 @@ jest.mock('@/components/custom/for-you/FactSectionHeader', () => {
     const { Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ title, newCount, onPress, kind }: any) => (
-            <Pressable accessibilityLabel={`header:${kind}:${title}`} onPress={onPress}>
-                <Text>{`new:${newCount}`}</Text>
-            </Pressable>
-        ),
+        // Mirror the real component's press rule: provisional headers are never
+        // pressable (no fact feed behind them) — rendered as a static Text with a
+        // distinct label so tests can assert non-navigability.
+        default: ({ title, newCount, onPress, kind }: any) => {
+            const canPress = kind !== 'provisional' && !!onPress;
+            return canPress ? (
+                <Pressable accessibilityLabel={`header:${kind}:${title}`} onPress={onPress}>
+                    <Text>{`new:${newCount}`}</Text>
+                </Pressable>
+            ) : (
+                <Text accessibilityLabel={`statichdr:${kind}:${title}`}>{`new:${newCount}`}</Text>
+            );
+        },
     };
 });
 jest.mock('@/components/custom/for-you/SectionViewAllRow', () => {
@@ -233,6 +241,40 @@ describe('DashboardSectionsFeed', () => {
             pathname: '/logged-in/fact-feed',
             params: { factId: 'f1', statement: 'Statement f1' },
         });
+    });
+
+    it('renders a provisional row with a non-navigable header, all cards inline, and no footer', () => {
+        const groups = [
+            makeGroup('g1', 5000, 5000),
+            makeGroup('g2', 4000, 4000),
+            makeGroup('g3', 3000, 3000),
+            makeGroup('g4', 2000, 2000),
+        ];
+        const row: FactRow = {
+            ...makeRow('provisional', groups),
+            kind: 'provisional',
+            factId: 'provisional',
+            statement: 'provisional',
+        };
+        const { getByLabelText, getAllByText, queryByLabelText } = render(
+            <DashboardSectionsFeed
+                breaking={[]}
+                rows={[row]}
+                openedIds={new Set()}
+                onPressSuggestion={jest.fn()}
+                scrollHandler={noopHandler}
+                headerHeight={100}
+            />,
+        );
+        // Header renders as the STATIC (non-navigable) variant — not a pressable
+        // navigation header.
+        expect(getByLabelText('statichdr:provisional:provisional')).toBeTruthy();
+        expect(queryByLabelText('header:provisional:provisional')).toBeNull();
+        // All 4 cards render inline (no 3-preview cap) and there is NO footer
+        // (which would navigate into a non-existent fact feed).
+        expect(getAllByText(/^card:/)).toHaveLength(4);
+        expect(queryByLabelText('footer')).toBeNull();
+        expect(mockRouterPush).not.toHaveBeenCalled();
     });
 
     it('flows the new-since-last-visit count into the header badge', () => {

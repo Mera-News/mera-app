@@ -100,6 +100,7 @@
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
     "preparingFeed": "Fresh stories are being fetched and processed for you.",
+    "personalizingFeed": "Personalizing your feed — newest stories shown while Mera ranks them",
     "noInterests": "Mera cannot analyze news for you",
     "noInterestsDescription": "Please create your user persona for Mera to start generating news for you.",
     "dashboardTitle": "Dashboard",
