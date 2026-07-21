@@ -7,7 +7,7 @@ import { field, text, date } from '@nozbe/watermelondb/decorators';
  * snapshotted at first impression and `opened` upgraded in place. TTL 30d,
  * pruned by data-cleanup-task.
  */
-export type ImpressionSurface = 'sectioned' | 'swipe' | 'headlines' | 'detail' | 'triage';
+export type ImpressionSurface = 'sectioned' | 'swipe' | 'headlines' | 'detail' | 'triage' | 'feed';
 
 export default class StoryImpression extends Model {
   static table = 'story_impressions';

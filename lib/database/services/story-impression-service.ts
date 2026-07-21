@@ -97,6 +97,10 @@ export async function getAll(): Promise<StoryImpressionModel[]> {
  * path, so tab-1 scrolling can only demote (via P_SEEN if the article is later
  * opened) — it can never exclude a story from the deck.
  *
+ * OPENS-ONLY consumers ONLY: Dashboard read-ticks + P_SEEN scoring. The Feed
+ * tab's exclusion uses `getSeenSet()` below instead (opened OR merely viewed) —
+ * do not repoint Dashboard/scoring at that set, it would change their semantics.
+ *
  * Returns article_ids ∪ non-null stable_cluster_ids of opened rows. The
  * `Q.where('opened', true)` is the production filter; the JS `r.opened === true`
  * guard keeps the set opens-only even under the predicate-ignoring test mock.
@@ -108,6 +112,24 @@ export async function getOpenedSeenSet(): Promise<Set<string>> {
   const seen = new Set<string>();
   for (const r of rows) {
     if (r.opened !== true) continue;
+    if (r.articleId) seen.add(r.articleId);
+    if (r.stableClusterId) seen.add(r.stableClusterId);
+  }
+  return seen;
+}
+
+/**
+ * ALL-impressions seen set (opened OR merely viewed) — feeds ONLY the Feed
+ * tab's exclusion. Dashboard read-ticks + P_SEEN scoring stay on
+ * `getOpenedSeenSet` (opens-only); do not swap them to this set.
+ *
+ * Returns article_ids ∪ non-null stable_cluster_ids of every impression row,
+ * regardless of `opened`.
+ */
+export async function getSeenSet(): Promise<Set<string>> {
+  const rows = await impressionsCollection.query().fetch();
+  const seen = new Set<string>();
+  for (const r of rows) {
     if (r.articleId) seen.add(r.articleId);
     if (r.stableClusterId) seen.add(r.stableClusterId);
   }
