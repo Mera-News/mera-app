@@ -215,3 +215,171 @@ describe('specific migration versions', () => {
     expect(colNames).not.toContain('cluster_ids_json');
   });
 });
+
+// ── P7b: v37/v41 rewritten additively (no more drop/recreate of the cache) ──
+describe('article_suggestions additive migrations (v37 / v41)', () => {
+  const byVersion = new Map(migList.map((m) => [m.toVersion, m]));
+
+  // A raw SQL step touching a table (DROP/DELETE/etc.) — inspect the embedded
+  // SQL string across the known WatermelonDB unsafeExecuteSql shapes.
+  const sqlOf = (step: any): string => {
+    if (!step || step.type !== 'sql') return '';
+    return String(step.sql ?? step.text ?? JSON.stringify(step));
+  };
+
+  it('v37 has no sql step mentioning article_suggestions', () => {
+    const m = byVersion.get(37)!;
+    const offending = m.steps.filter((s: any) => /article_suggestion/.test(sqlOf(s)));
+    expect(offending).toHaveLength(0);
+  });
+
+  it('v37 does not create_table article_suggestions or article_suggestion_facts', () => {
+    const m = byVersion.get(37)!;
+    const creates = m.steps.filter(
+      (s: any) =>
+        s &&
+        s.type === 'create_table' &&
+        (s.schema?.name === 'article_suggestions' ||
+          s.schema?.name === 'article_suggestion_facts'),
+    );
+    expect(creates).toHaveLength(0);
+  });
+
+  it('v37 adds the 11 persona-v3 scorer/audit columns to article_suggestions', () => {
+    const m = byVersion.get(37)!;
+    const addStep = m.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'article_suggestions',
+    );
+    expect(addStep).toBeDefined();
+    const colNames = addStep.columns.map((c: any) => c.name).sort();
+    expect(colNames).toEqual(
+      [
+        'category',
+        'computed_score',
+        'entities_json',
+        'event_type',
+        'geo_tags_json',
+        'headline_scope',
+        'matched_topics_json',
+        'max_cluster_size',
+        'raw_score',
+        'score_components_json',
+        'stable_cluster_id',
+      ].sort(),
+    );
+    // stable_cluster_id keeps its indexed flag through addColumns.
+    const stable = addStep.columns.find((c: any) => c.name === 'stable_cluster_id');
+    expect(!!stable.isIndexed).toBe(true);
+    expect(!!stable.isOptional).toBe(true);
+  });
+
+  it('v37 has no add_columns step for article_suggestion_facts (unchanged since v34)', () => {
+    const m = byVersion.get(37)!;
+    const facts = m.steps.filter(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'article_suggestion_facts',
+    );
+    expect(facts).toHaveLength(0);
+  });
+
+  it('v41 has no sql step mentioning article_suggestions', () => {
+    const m = byVersion.get(41)!;
+    const offending = m.steps.filter((s: any) => /article_suggestion/.test(sqlOf(s)));
+    expect(offending).toHaveLength(0);
+  });
+
+  it('v41 does not create_table article_suggestions or article_suggestion_facts', () => {
+    const m = byVersion.get(41)!;
+    const creates = m.steps.filter(
+      (s: any) =>
+        s &&
+        s.type === 'create_table' &&
+        (s.schema?.name === 'article_suggestions' ||
+          s.schema?.name === 'article_suggestion_facts'),
+    );
+    expect(creates).toHaveLength(0);
+  });
+
+  it('v41 additively adds only scored_at to article_suggestions', () => {
+    const m = byVersion.get(41)!;
+    const addStep = m.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'article_suggestions',
+    );
+    expect(addStep).toBeDefined();
+    const colNames = addStep.columns.map((c: any) => c.name);
+    expect(colNames).toEqual(['scored_at']);
+    expect(!!addStep.columns[0].isOptional).toBe(true);
+  });
+});
+
+// ── P7b: CONVERGENCE — the migration chain reproduces schema.ts exactly ──────
+//
+// Reconstruct each table's column set purely from the migration steps
+// (last create_table for the table ∪ every later add_columns for it) and assert
+// set-equality (name + isOptional + isIndexed) with lib/database/schema.ts.
+//
+// This protects the critical invariant behind the P7b rewrite: every possible
+// device start version (≤v33, v34-36, old-destructive-v37..v40, v41+) must end
+// with the IDENTICAL column set, and NO path may add the same column twice — a
+// duplicate ALTER would throw and brick DB setup. The additivity check below
+// (no add_columns re-adds an existing column after the last create) is exactly
+// that invariant.
+describe('migration → schema convergence', () => {
+  type ColSig = { name: string; isOptional: boolean; isIndexed: boolean };
+
+  const norm = (c: any): ColSig => ({
+    name: c.name,
+    isOptional: !!c.isOptional,
+    isIndexed: !!c.isIndexed,
+  });
+
+  const sigKey = (c: ColSig) => `${c.name}|${c.isOptional}|${c.isIndexed}`;
+
+  // Walk the whole sorted chain: a create_table for `table` RESETS the working
+  // column set (models the historical drop→recreate); an add_columns for
+  // `table` merges in. Returns the converged set + any duplicate names an
+  // add_columns tried to introduce after the last create (invariant violation).
+  function reconstruct(table: string): { cols: ColSig[]; duplicates: string[] } {
+    const cols = new Map<string, ColSig>();
+    const duplicates: string[] = [];
+    for (const m of migList) {
+      for (const step of m.steps) {
+        if (!step) continue;
+        if (step.type === 'create_table' && step.schema?.name === table) {
+          cols.clear();
+          for (const c of step.schema.columnArray) {
+            cols.set(c.name, norm(c));
+          }
+        } else if (step.type === 'add_columns' && step.table === table) {
+          for (const c of step.columns) {
+            if (cols.has(c.name)) duplicates.push(c.name);
+            cols.set(c.name, norm(c));
+          }
+        }
+      }
+    }
+    return { cols: [...cols.values()], duplicates };
+  }
+
+  function schemaColsOf(table: string): ColSig[] {
+    const t = (schema as any).tables[table];
+    expect(t).toBeDefined();
+    return t.columnArray.map(norm);
+  }
+
+  it('article_suggestions: chain reconstruction set-equals schema.ts', () => {
+    const { cols, duplicates } = reconstruct('article_suggestions');
+    // Critical invariant: no column is ALTER-added twice on the current chain.
+    expect(duplicates).toEqual([]);
+    const fromChain = new Set(cols.map(sigKey));
+    const fromSchema = new Set(schemaColsOf('article_suggestions').map(sigKey));
+    expect(fromChain).toEqual(fromSchema);
+  });
+
+  it('article_suggestion_facts: chain reconstruction set-equals schema.ts', () => {
+    const { cols, duplicates } = reconstruct('article_suggestion_facts');
+    expect(duplicates).toEqual([]);
+    const fromChain = new Set(cols.map(sigKey));
+    const fromSchema = new Set(schemaColsOf('article_suggestion_facts').map(sigKey));
+    expect(fromChain).toEqual(fromSchema);
+  });
+});

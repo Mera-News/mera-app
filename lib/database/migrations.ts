@@ -887,12 +887,11 @@ export default schemaMigrations({
       steps: [
         // ── Persona v3 data model ──────────────────────────────────────
         // Six long-lived, user-owned tables + `notifications` (7 total),
-        // an additive `facts.weight` column, and a drop/recreate of the
-        // ephemeral `article_suggestions` (+ join) with the scorer/audit
-        // columns. Nothing reads the new tables yet — the feed still runs
-        // on `fact.metadata.topics`; the silent persona migration only
-        // POPULATES these tables. FORWARD-FIX-ONLY from this schema on
-        // (WatermelonDB cannot roll back).
+        // an additive `facts.weight` column, and additive scorer/audit
+        // columns on the ephemeral `article_suggestions` cache. Nothing reads
+        // the new tables yet — the feed still runs on `fact.metadata.topics`;
+        // the silent persona migration only POPULATES these tables.
+        // FORWARD-FIX-ONLY from this schema on (WatermelonDB cannot roll back).
 
         // The weighted granular topic — replaces `fact.metadata.topics`.
         createTable({
@@ -1009,27 +1008,15 @@ export default schemaMigrations({
           columns: [{ name: 'weight', type: 'number', isOptional: true }],
         }),
 
-        // Recreate the ephemeral article_suggestions (+ join) with the
-        // persona-v3 scorer/audit columns. Data re-syncs from the server.
-        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestion_facts;'),
-        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestions;'),
-        createTable({
-          name: 'article_suggestions',
+        // Additively add the persona-v3 scorer/audit columns to the ephemeral
+        // article_suggestions cache. ADDITIVE — deliberately NOT a drop/recreate:
+        // a wipe costs an empty feed until the next resync + first scoring round
+        // trip, and destroys the 48h score-propagation donor pool. Existing rows
+        // keep null in the new (all-optional) columns and render immediately.
+        // article_suggestion_facts is unchanged since v34, so it needs no step.
+        addColumns({
+          table: 'article_suggestions',
           columns: [
-            { name: 'article_id', type: 'string', isIndexed: true },
-            { name: 'cluster_memberships_json', type: 'string', isOptional: true },
-            { name: 'relevance', type: 'number' },
-            { name: 'reason', type: 'string' },
-            { name: 'status', type: 'string', isIndexed: true },
-            { name: 'country_code', type: 'string', isOptional: true },
-            { name: 'language_code', type: 'string', isOptional: true },
-            { name: 'publication_name', type: 'string', isOptional: true },
-            { name: 'title_en', type: 'string', isOptional: true },
-            { name: 'title_original', type: 'string', isOptional: true },
-            { name: 'description_en', type: 'string', isOptional: true },
-            { name: 'article_url', type: 'string', isOptional: true },
-            { name: 'image_url', type: 'string', isOptional: true },
-            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
             { name: 'geo_tags_json', type: 'string', isOptional: true },
             { name: 'entities_json', type: 'string', isOptional: true },
             { name: 'event_type', type: 'string', isOptional: true },
@@ -1041,16 +1028,6 @@ export default schemaMigrations({
             { name: 'computed_score', type: 'number', isOptional: true },
             { name: 'raw_score', type: 'number', isOptional: true },
             { name: 'score_components_json', type: 'string', isOptional: true },
-            { name: 'created_at', type: 'number' },
-            { name: 'first_pub_date', type: 'number' },
-          ],
-        }),
-        createTable({
-          name: 'article_suggestion_facts',
-          columns: [
-            { name: 'article_suggestion_id', type: 'string', isIndexed: true },
-            { name: 'fact_id', type: 'string', isIndexed: true },
-            { name: 'created_at', type: 'number' },
           ],
         }),
       ],
@@ -1154,54 +1131,16 @@ export default schemaMigrations({
     },
     {
       // ── Per-fact pipeline: scored_at (schema v41) ──────────────────
-      // Drop/recreate the EPHEMERAL article_suggestions (+ its join) with the
-      // new `scored_at` column — the sanctioned pattern for this cache (see v37;
-      // data re-syncs from the server's 24h window on the next feed sync). NEVER
-      // apply this to any long-lived, user-owned table.
+      // Additively add `scored_at` to the ephemeral article_suggestions cache.
+      // ADDITIVE — deliberately NOT a drop/recreate: a wipe costs an empty feed
+      // until the next resync + first scoring round trip, and destroys the 48h
+      // score-propagation donor pool. Existing rows keep null (optional) and
+      // render immediately. article_suggestion_facts is unchanged, so no step.
       toVersion: 41,
       steps: [
-        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestion_facts;'),
-        unsafeExecuteSql('DROP TABLE IF EXISTS article_suggestions;'),
-        createTable({
-          name: 'article_suggestions',
-          columns: [
-            { name: 'article_id', type: 'string', isIndexed: true },
-            { name: 'cluster_memberships_json', type: 'string', isOptional: true },
-            { name: 'relevance', type: 'number' },
-            { name: 'reason', type: 'string' },
-            { name: 'status', type: 'string', isIndexed: true },
-            { name: 'country_code', type: 'string', isOptional: true },
-            { name: 'language_code', type: 'string', isOptional: true },
-            { name: 'publication_name', type: 'string', isOptional: true },
-            { name: 'title_en', type: 'string', isOptional: true },
-            { name: 'title_original', type: 'string', isOptional: true },
-            { name: 'description_en', type: 'string', isOptional: true },
-            { name: 'article_url', type: 'string', isOptional: true },
-            { name: 'image_url', type: 'string', isOptional: true },
-            { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
-            { name: 'geo_tags_json', type: 'string', isOptional: true },
-            { name: 'entities_json', type: 'string', isOptional: true },
-            { name: 'event_type', type: 'string', isOptional: true },
-            { name: 'category', type: 'string', isOptional: true },
-            { name: 'max_cluster_size', type: 'number', isOptional: true },
-            { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
-            { name: 'headline_scope', type: 'string', isOptional: true },
-            { name: 'matched_topics_json', type: 'string', isOptional: true },
-            { name: 'computed_score', type: 'number', isOptional: true },
-            { name: 'raw_score', type: 'number', isOptional: true },
-            { name: 'score_components_json', type: 'string', isOptional: true },
-            { name: 'scored_at', type: 'number', isOptional: true },
-            { name: 'created_at', type: 'number' },
-            { name: 'first_pub_date', type: 'number' },
-          ],
-        }),
-        createTable({
-          name: 'article_suggestion_facts',
-          columns: [
-            { name: 'article_suggestion_id', type: 'string', isIndexed: true },
-            { name: 'fact_id', type: 'string', isIndexed: true },
-            { name: 'created_at', type: 'number' },
-          ],
+        addColumns({
+          table: 'article_suggestions',
+          columns: [{ name: 'scored_at', type: 'number', isOptional: true }],
         }),
       ],
     },
