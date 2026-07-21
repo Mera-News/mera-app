@@ -67,9 +67,6 @@
     "dashboardTitle": "แดชบอร์ด",
     "pullDownToRetry": "ดึงลงเพื่อลองใหม่",
     "readArticleToast": "คุณอ่านบทความนี้แล้ว",
-    "jumpToSection": "ไปยังส่วน",
-    "skipToSection": "ไปยัง {{section}}",
-    "sectionMenuTop": "บนสุด",
     "stuckTitle": "ไม่สามารถโหลดฟีดของคุณได้",
     "stuckDescription": "มีบางอย่างผิดพลาดจากฝั่งเรา",
     "stuckHint": "ลองเปิดแอปใหม่อีกสักครู่",
@@ -781,12 +778,8 @@
     "yourDeck": "สำหรับคุณ",
     "moreLikeThis": "แบบนี้อีก",
     "lessLikeThis": "แบบนี้น้อยลง",
-    "next": "ถัดไป",
-    "back": "ย้อนกลับ",
     "askMera": "ถาม Mera",
     "closeTree": "ปิด",
-    "likeStamp": "ถูกใจ",
-    "nopeStamp": "ผ่าน",
     "treeRoot": "ทั้งหมด",
     "treeThanks": "ขอบคุณ — บันทึกแล้ว",
     "chatHandoffLike": "ฉันชอบเรื่องนี้ — อยากได้แบบนี้อีก: {{path}}",
@@ -818,7 +811,9 @@
     "subTabFeed": "ฟีด",
     "subTabStories": "เรื่องราว",
     "subTabSaved": "บันทึกไว้",
-    "openFactFeed": "ดูเรื่องราวทั้งหมดในหัวข้อนี้"
+    "openFactFeed": "ดูเรื่องราวทั้งหมดในหัวข้อนี้",
+    "viewAllStories": "ดูเรื่องราวทั้งหมด {{count}} เรื่อง",
+    "newInSection_other": "มีเรื่องราวใหม่ {{count}} เรื่องนับตั้งแต่ที่คุณเข้าชมล่าสุด"
   },
   "feedStatus": {
     "title": "สถานะฟีด",

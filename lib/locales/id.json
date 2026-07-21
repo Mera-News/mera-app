@@ -67,9 +67,6 @@
     "dashboardTitle": "Dasbor",
     "pullDownToRetry": "Tarik ke bawah untuk mencoba lagi",
     "readArticleToast": "Anda telah membaca artikel ini",
-    "jumpToSection": "Lompat ke bagian",
-    "skipToSection": "Lompat ke {{section}}",
-    "sectionMenuTop": "Atas",
     "stuckTitle": "Tidak dapat memuat feed Anda",
     "stuckDescription": "Terjadi kesalahan di pihak kami.",
     "stuckHint": "Buka kembali aplikasi dalam beberapa menit.",
@@ -781,12 +778,8 @@
     "yourDeck": "Untuk Anda",
     "moreLikeThis": "Lebih banyak seperti ini",
     "lessLikeThis": "Lebih sedikit seperti ini",
-    "next": "Berikutnya",
-    "back": "Kembali",
     "askMera": "Tanya Mera",
     "closeTree": "Tutup",
-    "likeStamp": "SUKA",
-    "nopeStamp": "TIDAK",
     "treeRoot": "Semua",
     "treeThanks": "Terima kasih — dicatat.",
     "chatHandoffLike": "Saya suka cerita ini — lebih banyak seperti ini: {{path}}.",
@@ -818,7 +811,9 @@
     "subTabFeed": "Feed",
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan",
-    "openFactFeed": "Lihat semua cerita untuk topik ini"
+    "openFactFeed": "Lihat semua cerita untuk topik ini",
+    "viewAllStories": "Lihat semua {{count}} cerita",
+    "newInSection_other": "{{count}} cerita baru sejak kunjungan terakhir Anda"
   },
   "feedStatus": {
     "title": "Status feed",

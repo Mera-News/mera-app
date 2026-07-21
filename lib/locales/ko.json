@@ -67,9 +67,6 @@
     "dashboardTitle": "대시보드",
     "pullDownToRetry": "아래로 당겨서 재시도",
     "readArticleToast": "이 기사를 읽었습니다",
-    "jumpToSection": "섹션으로 이동",
-    "skipToSection": "{{section}}으로 이동",
-    "sectionMenuTop": "맨 위",
     "stuckTitle": "피드를 불러올 수 없습니다",
     "stuckDescription": "서버에서 문제가 발생했습니다.",
     "stuckHint": "몇 분 후에 앱을 다시 열어 주세요.",
@@ -781,12 +778,8 @@
     "yourDeck": "맞춤 뉴스",
     "moreLikeThis": "이런 소식 더 보기",
     "lessLikeThis": "이런 소식 덜 보기",
-    "next": "다음",
-    "back": "뒤로",
     "askMera": "Mera에게 묻기",
     "closeTree": "닫기",
-    "likeStamp": "좋아요",
-    "nopeStamp": "싫어요",
     "treeRoot": "전체",
     "treeThanks": "감사합니다 — 반영했어요.",
     "chatHandoffLike": "이 소식이 마음에 들었어요 — 이런 소식 더 보고 싶어요: {{path}}.",
@@ -818,7 +811,9 @@
     "subTabFeed": "피드",
     "subTabStories": "스토리",
     "subTabSaved": "저장됨",
-    "openFactFeed": "이 토픽에 대한 모든 소식 보기"
+    "openFactFeed": "이 토픽에 대한 모든 소식 보기",
+    "viewAllStories": "전체 스토리 {{count}}건 보기",
+    "newInSection_other": "지난 방문 이후 새 스토리 {{count}}건"
   },
   "feedStatus": {
     "title": "피드 상태",
