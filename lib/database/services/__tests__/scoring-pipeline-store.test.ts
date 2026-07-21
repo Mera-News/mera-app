@@ -157,17 +157,17 @@ describe('createPipeline + getPipeline', () => {
   it('round-trips the run and merges the privkey from secure store', async () => {
     await mod.createPipeline(baseRun(), 'privhex-abc');
 
-    // Secret written before the row; row carries version 1 + schema 2 (Round-3).
+    // Secret written before the row; row carries version 1 + schema 3 (Round-4 FIFO batches).
     expect(secureStoreState[PIPELINE_PRIVKEY_KEY]).toBe('privhex-abc');
     const stored = JSON.parse(settingsStore[PIPELINE_KEY]) as PipelineRun;
     expect(stored.version).toBe(1);
-    expect(stored.schema).toBe(2);
+    expect(stored.schema).toBe(3);
 
     const got = await mod.getPipeline();
     expect(got).not.toBeNull();
     expect(got!.run.runId).toBe('run-1');
     expect(got!.run.version).toBe(1);
-    expect(got!.run.schema).toBe(2);
+    expect(got!.run.schema).toBe(3);
     expect(got!.privKeyHex).toBe('privhex-abc');
   });
 

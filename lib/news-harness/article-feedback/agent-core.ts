@@ -194,7 +194,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions } = input;
 
   // --- ARTICLE ---
   let articleBlock: string;
@@ -282,7 +282,21 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
       + 'If the user confirms call applyProposal; if they decline call cancelProposal.'
     : null;
 
+  // --- USER VERDICT (Feed-tab handoff) — grounds the proposal ---
+  let verdictBlock: string | null = null;
+  if (verdict) {
+    const lines = [
+      `## USER VERDICT\n${verdict === 'like' ? 'The user LIKED this story — they want MORE like it.' : "The user DISLIKED this story — they want FEWER like it."}`,
+    ];
+    const options = (tappedOptions ?? []).map((o) => (o ?? '').trim()).filter((o) => o.length > 0);
+    if (options.length > 0) {
+      lines.push(`TAPPED OPTIONS: ${options.join(' → ')}`);
+    }
+    verdictBlock = lines.join('\n');
+  }
+
   const alwaysBlocks = [articleBlock, statusBlock, matchedTopicsBlock, producingBlock];
+  if (verdictBlock) alwaysBlocks.push(verdictBlock);
   if (relatedCoverageBlock) alwaysBlocks.push(relatedCoverageBlock);
   if (trackStateBlock) alwaysBlocks.push(trackStateBlock);
   const trailing = pendingBlock ? [pendingBlock] : [];

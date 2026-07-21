@@ -192,6 +192,17 @@ describe('specific migration versions', () => {
     expect(colNames).toContain('member_snapshots_json');
   });
 
+  it('v42 adds processed_at to article_feedback', () => {
+    const m = byVersion.get(42);
+    expect(m).toBeDefined();
+    const addStep = m!.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'article_feedback',
+    );
+    expect(addStep).toBeDefined();
+    const colNames = addStep.columns.map((c: any) => c.name);
+    expect(colNames).toContain('processed_at');
+  });
+
   it('v32 creates article_suggestions with cluster_memberships_json', () => {
     const m = byVersion.get(32);
     expect(m).toBeDefined();

@@ -272,4 +272,11 @@ export interface FeedbackContextInput {
    *  cluster). Renders a `## RELATED COVERAGE` block that grounds the LLM's
    *  multi-option track proposals. Absent/empty when unavailable. */
   relatedCoverage?: string[];
+  /** The Feed-tab verdict the user gave on this article (Round-4 P4 handoff) —
+   *  grounds the agent's proposals. Absent for chats opened outside the feed. */
+  verdict?: 'like' | 'dislike';
+  /** Human-readable breadcrumb LABELS of the inline feedback-tree options the
+   *  user tapped before opening chat (e.g. ["Not a good suggestion", "Wrong
+   *  topic"]). Rendered as a `TAPPED OPTIONS` line. Absent/empty when none. */
+  tappedOptions?: string[];
 }

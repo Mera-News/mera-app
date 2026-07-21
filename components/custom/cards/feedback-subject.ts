@@ -6,7 +6,7 @@
 // a context snapshot) regardless of whether the underlying content is a
 // personalized ForYouSuggestion or a standalone NewsArticle.
 
-import type { MatchedTopicRef } from '@/lib/stores/for-you-store';
+import type { ForYouSuggestion, MatchedTopicRef } from '@/lib/stores/for-you-store';
 
 export type { MatchedTopicRef };
 
@@ -49,4 +49,48 @@ export interface FeedbackSubject {
   matchedTopics?: MatchedTopicRef[];
   /** Relevance score (suggestions only), for the persisted context snapshot. */
   relevance?: number;
+}
+
+/**
+ * Snapshot the subject's contextual extras for the persisted feedback row's
+ * `context_json`. Shared by every actions surface (ArticleActionsRow /
+ * CompactActionsSheet / the swipe feed) so the stored provenance shape is
+ * identical everywhere.
+ */
+export function buildContextJson(subject: FeedbackSubject): string | null {
+  const snapshot: Record<string, unknown> = {};
+  if (subject.scopeKey) snapshot.scopeKey = subject.scopeKey;
+  if (subject.stableClusterId) snapshot.stableClusterId = subject.stableClusterId;
+  if (subject.eventType) snapshot.eventType = subject.eventType;
+  if (typeof subject.relevance === 'number') snapshot.relevance = subject.relevance;
+  if (subject.matchedTopics && subject.matchedTopics.length > 0) {
+    snapshot.matchedTopics = subject.matchedTopics;
+  }
+  return Object.keys(snapshot).length > 0 ? JSON.stringify(snapshot) : null;
+}
+
+/**
+ * Builds a suggestion-origin {@link FeedbackSubject} from a ForYouSuggestion.
+ * Mirrors the descriptor ArticleSuggestionCard assembles so the feed's
+ * verdict/tree persistence carries identical provenance.
+ */
+export function feedbackSubjectFromSuggestion(
+  suggestion: ForYouSuggestion,
+  surface: FeedbackSurface,
+): FeedbackSubject {
+  return {
+    origin: 'suggestion',
+    surface,
+    articleId: suggestion.articleId,
+    suggestionId: suggestion._id,
+    title: suggestion.title_en ?? '',
+    pubDate: suggestion.firstPubDate ?? null,
+    publicationName: suggestion.publication_name,
+    countryCode: suggestion.country_code,
+    stableClusterId:
+      suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? undefined,
+    eventType: suggestion.eventType ?? undefined,
+    matchedTopics: suggestion.matchedTopics,
+    relevance: suggestion.relevance,
+  };
 }

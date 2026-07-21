@@ -15,6 +15,7 @@
 
 import { getFacts } from '../../database/services/fact-service';
 import { getSuggestionFeedbackContext } from '../../database/services/article-suggestion-service';
+import { markFeedbackProcessedFor } from '../../database/services/article-feedback-service';
 import { ArticleService } from '../../article-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { ArticleSuggestionStatus } from '../../database/article-suggestion-status';
@@ -146,6 +147,11 @@ export class ArticleFeedbackAgent implements IAgent {
     const storeContext = useFloatingChatStore.getState().context;
     const fallbackTitle =
       storeContext.kind === 'article-suggestion' ? storeContext.articleTitle : undefined;
+    // Feed-verdict handoff: the like/dislike + tapped-option label breadcrumb.
+    const verdict =
+      storeContext.kind === 'article-suggestion' ? storeContext.verdict : undefined;
+    const tappedOptions =
+      storeContext.kind === 'article-suggestion' ? storeContext.treePath : undefined;
     const proposal = useFloatingChatStore.getState().proposal;
 
     // Map the RN suggestion row into the harness's enum-free plain shape.
@@ -188,6 +194,8 @@ export class ArticleFeedbackAgent implements IAgent {
       proposal,
       isTracked,
       relatedCoverage,
+      verdict,
+      tappedOptions,
     });
   }
 
@@ -235,6 +243,19 @@ export class ArticleFeedbackAgent implements IAgent {
         if (!proposal) return { result: { error: 'no pending proposal' } };
         const { applied, errors, summaries, changeLogIds } =
           await executeProposalActions(proposal.actions);
+        // A Feed-verdict handoff whose proposals just APPLIED has folded that
+        // verdict into the persona — stamp its feedback row processed so the
+        // deferred daily-plan wave won't double-count it. Best-effort; gated on
+        // the store context carrying a verdict + article id.
+        const sc = useFloatingChatStore.getState().context;
+        if (sc && sc.kind === 'article-suggestion' && sc.verdict) {
+          const articleId = sc.articleId ?? this.target.articleId;
+          if (articleId) {
+            await markFeedbackProcessedFor(articleId, sc.verdict).catch(() => {
+              /* non-fatal */
+            });
+          }
+        }
         // summaries + changeLogIds surface what changed and power undo (revert_change).
         return {
           result: { applied, errors, summaries, changeLogIds },

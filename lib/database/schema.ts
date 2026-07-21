@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 41,
+  version: 42,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -247,6 +247,12 @@ export default appSchema({
         { name: 'origin', type: 'string', isOptional: true },
         { name: 'surface', type: 'string', isOptional: true },
         { name: 'context_json', type: 'string', isOptional: true },
+        // ── Feed-verdict processing (schema v42) ────────────────────────
+        // Epoch ms when this like/dislike was folded into the persona (by the
+        // Mera-chat handoff applying its proposals). Null ⇒ unprocessed — the
+        // later daily-plan wave claims null rows. Feed taps never mutate the
+        // persona directly; this is the deferred-processing marker.
+        { name: 'processed_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
       ],
     }),

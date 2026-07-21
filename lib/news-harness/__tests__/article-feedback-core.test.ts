@@ -148,6 +148,30 @@ describe('buildFeedbackContext', () => {
     expect(ctx).not.toContain('Reason given');
   });
 
+  it('injects the USER VERDICT block (with tapped options) on a Feed handoff', () => {
+    const ctx = buildFeedbackContext({
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+      verdict: 'dislike',
+      tappedOptions: ['Not a good suggestion', 'Wrong topic'],
+    });
+    expect(ctx).toContain('## USER VERDICT');
+    expect(ctx).toContain('DISLIKED');
+    expect(ctx).toContain('TAPPED OPTIONS: Not a good suggestion → Wrong topic');
+  });
+
+  it('omits the USER VERDICT block when no verdict is present', () => {
+    const ctx = buildFeedbackContext({
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).not.toContain('## USER VERDICT');
+  });
+
   it('injects the PENDING PROPOSAL block when a proposal is staged', () => {
     const proposal: StagedProposal = {
       id: 'p1',

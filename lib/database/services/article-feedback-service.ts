@@ -98,6 +98,159 @@ export async function removeArticleFeedback(
   }
 }
 
+/** Verdict sentiments the feed surface records (a subset of the full union). */
+export type VerdictSentiment = 'like' | 'dislike';
+
+/**
+ * Records a verdict feedback row with LATEST-WINS semantics: recording one
+ * sentiment removes any existing OPPOSITE-sentiment row for the same article
+ * first (a card can't be both liked and disliked). Kept separate from the plain
+ * `recordArticleFeedback` so the card action rows (which allow like + dislike to
+ * coexist independently) keep their existing behavior.
+ */
+export async function recordVerdictFeedback(
+  input: RecordArticleFeedbackInput & { sentiment: VerdictSentiment },
+): Promise<void> {
+  const articleId = (input.articleId ?? '').trim();
+  if (!articleId) return;
+  const opposite: VerdictSentiment = input.sentiment === 'like' ? 'dislike' : 'like';
+  await removeArticleFeedback(articleId, opposite);
+  await recordArticleFeedback(input);
+}
+
+/**
+ * Merges a feedback-tree path into an existing verdict row's `context_json`
+ * (under `treePath`). No-op if no matching (articleId, sentiment) row exists.
+ * The path is the array of node ids/labels the user tapped in the inline tree.
+ */
+export async function updateFeedbackContextPath(
+  articleId: string,
+  sentiment: VerdictSentiment,
+  treePath: string[],
+): Promise<void> {
+  const id = (articleId ?? '').trim();
+  if (!id) return;
+  try {
+    const existing = await articleFeedbackCol
+      .query(Q.where('article_id', id), Q.where('sentiment', sentiment))
+      .fetch();
+    if (existing.length === 0) return;
+
+    await database.write(async () => {
+      for (const row of existing) {
+        let snapshot: Record<string, unknown> = {};
+        if (row.contextJson) {
+          try {
+            const parsed = JSON.parse(row.contextJson);
+            if (parsed && typeof parsed === 'object') snapshot = parsed as Record<string, unknown>;
+          } catch {
+            /* corrupt json — overwrite with a fresh snapshot */
+          }
+        }
+        snapshot.treePath = treePath;
+        await row.update((r) => {
+          r.contextJson = JSON.stringify(snapshot);
+        });
+      }
+    });
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'updateContextPath' },
+    });
+  }
+}
+
+/**
+ * Returns all UNPROCESSED verdict rows (processed_at null, sentiment
+ * like|dislike) — the deferred daily-plan wave claims these to fold into the
+ * persona. Newest-first.
+ */
+export async function getUnprocessedFeedback(): Promise<ArticleFeedbackModel[]> {
+  try {
+    return await articleFeedbackCol
+      .query(
+        Q.where('processed_at', null),
+        Q.where('sentiment', Q.oneOf(['like', 'dislike'])),
+        Q.sortBy('created_at', Q.desc),
+      )
+      .fetch();
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'getUnprocessed' },
+    });
+    return [];
+  }
+}
+
+/** Count of unprocessed verdict rows (processed_at null, sentiment like|dislike). */
+export async function countUnprocessedFeedback(): Promise<number> {
+  try {
+    return await articleFeedbackCol
+      .query(
+        Q.where('processed_at', null),
+        Q.where('sentiment', Q.oneOf(['like', 'dislike'])),
+      )
+      .fetchCount();
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'countUnprocessed' },
+    });
+    return 0;
+  }
+}
+
+/** Stamps the given row ids as processed (processed_at = now). */
+export async function markFeedbackProcessed(rowIds: string[]): Promise<void> {
+  const ids = rowIds.filter((id) => !!id);
+  if (ids.length === 0) return;
+  try {
+    const rows = await articleFeedbackCol.query(Q.where('id', Q.oneOf(ids))).fetch();
+    if (rows.length === 0) return;
+    const now = Date.now();
+    await database.write(async () => {
+      await database.batch(
+        rows.map((row) => row.prepareUpdate((r) => {
+          r.processedAt = now;
+        })),
+      );
+    });
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'markProcessed' },
+    });
+  }
+}
+
+/**
+ * Stamps the matching (articleId, sentiment) verdict row(s) as processed —
+ * called when the Mera chat applies the proposals derived from that verdict.
+ */
+export async function markFeedbackProcessedFor(
+  articleId: string,
+  sentiment: VerdictSentiment,
+): Promise<void> {
+  const id = (articleId ?? '').trim();
+  if (!id) return;
+  try {
+    const rows = await articleFeedbackCol
+      .query(Q.where('article_id', id), Q.where('sentiment', sentiment))
+      .fetch();
+    if (rows.length === 0) return;
+    const now = Date.now();
+    await database.write(async () => {
+      await database.batch(
+        rows.map((row) => row.prepareUpdate((r) => {
+          r.processedAt = now;
+        })),
+      );
+    });
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'markProcessedFor' },
+    });
+  }
+}
+
 /**
  * Returns true if a 'like' row already exists for the given article — used
  * to restore the "liked" button state after leaving and reopening the

@@ -257,7 +257,13 @@
     "back": "Back",
     "askMera": "Ask Mera",
     "likeStamp": "LIKE",
-    "nopeStamp": "NOPE"
+    "nopeStamp": "NOPE",
+    "treeRoot": "All",
+    "treeThanks": "Thanks — noted.",
+    "chatHandoffLike": "I liked this story — more like this: {{path}}.",
+    "chatHandoffLikeNoPath": "I liked this story — I'd like more like this.",
+    "chatHandoffDislike": "I didn't like this story — {{path}}.",
+    "chatHandoffDislikeNoPath": "I didn't like this story. Help me get fewer like it."
   },
   "explore": {
     "title": "Explore",
@@ -667,6 +673,7 @@
     "bubbleHint": "Chat with Mera",
     "close": "Close",
     "title": "Mera",
+    "aboutThisStory": "ABOUT THIS STORY",
     "earlierConversation": "Earlier conversation",
     "loadingHistory": "Loading earlier messages…",
     "factSavedTitle": "Saved to your persona",
@@ -710,6 +717,8 @@
     "improveMessage": "This suggestion could be better: \"{{title}}\". Help me tune my suggestions.",
     "intro": "What can I do for you? I can explain why you received this suggestion, or help you get better ones.",
     "introArticle": "What can I do for you? I can help you tune your news suggestions based on this article.",
+    "introLikeTuning": "You liked this story — tell me more and I'll tune your feed.",
+    "introDislikeTuning": "You didn't like this story — tell me why and I'll tune your feed.",
     "chipWhy": "Why did I receive this suggestion?",
     "chipWhyMessage": "Why did I receive this suggestion?",
     "chipDontWant": "I don't want this suggestion",

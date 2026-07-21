@@ -21,6 +21,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
+import ArticleContextCard from './ArticleContextCard';
 import FactCard from './FactCard';
 import ProposalCard from './ProposalCard';
 import TopicPlanCard from './TopicPlanCard';
@@ -85,6 +86,15 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   const renderItem = (item: ChatThreadItem): React.ReactElement | null => {
     switch (item.kind) {
+      case 'article-context-card':
+        return (
+          <ArticleContextCard
+            title={item.title}
+            articleId={item.articleId}
+            suggestionId={item.suggestionId}
+          />
+        );
+
       case 'message': {
         const { message } = item;
         const inner =

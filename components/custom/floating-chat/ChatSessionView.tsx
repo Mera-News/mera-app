@@ -71,7 +71,11 @@ export default function ChatSessionView({
   // else keeps the persona intro.
   const introText =
     context.kind === 'article-suggestion'
-      ? t(context.suggestionId ? 'articleFeedback.intro' : 'articleFeedback.introArticle')
+      ? context.verdict === 'like'
+        ? t('articleFeedback.introLikeTuning')
+        : context.verdict === 'dislike'
+          ? t('articleFeedback.introDislikeTuning')
+          : t(context.suggestionId ? 'articleFeedback.intro' : 'articleFeedback.introArticle')
       : t('personaChat.introMessage');
 
   // Intro pseudo-message until the first send of this session.
@@ -87,6 +91,19 @@ export default function ChatSessionView({
     conversationId ?? undefined,
   );
 
+  // Pin the subject article at the top of an article-suggestion thread.
+  const articleContext = useMemo(
+    () =>
+      context.kind === 'article-suggestion'
+        ? {
+            articleId: context.articleId,
+            suggestionId: context.suggestionId,
+            title: context.articleTitle ?? '',
+          }
+        : undefined,
+    [context],
+  );
+
   const items = useMemo(
     () =>
       deriveThreadItems({
@@ -96,8 +113,9 @@ export default function ChatSessionView({
         isStreaming,
         earlierConversationLabel: t('floatingChat.earlierConversation'),
         resume,
+        articleContext,
       }),
-    [messages, history, introMessage, isStreaming, t, resume],
+    [messages, history, introMessage, isStreaming, t, resume, articleContext],
   );
 
   // Mirror generation state into the floating-chat store (bubble shimmer etc).

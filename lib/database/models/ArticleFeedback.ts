@@ -15,5 +15,9 @@ export default class ArticleFeedback extends Model {
   @field('origin') origin!: string | null;
   @field('surface') surface!: string | null;
   @field('context_json') contextJson!: string | null;
+  // Feed-verdict processing marker (schema v42). Epoch ms when the like/dislike
+  // was folded into the persona via the Mera-chat handoff; null while
+  // unprocessed. Feed taps never mutate the persona directly.
+  @field('processed_at') processedAt!: number | null;
   @date('created_at') createdAt!: Date;
 }

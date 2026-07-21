@@ -499,10 +499,27 @@ export function deriveThreadItems(opts: {
    * it renders statically (via resume) instead of replaying the entering anim.
    */
   resume?: PersistedMessage[];
+  /**
+   * When the chat context is an article-suggestion, the subject article — emitted
+   * as a PINNED card at the very top of the thread (before history/intro), so the
+   * conversation always shows what it's about (Round-4 P4 handoff).
+   */
+  articleContext?: { articleId?: string; suggestionId?: string; title: string };
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
   const out: ChatThreadItem[] = [];
+
+  // --- Pinned article-context card (always first) ---
+  if (opts.articleContext) {
+    out.push({
+      kind: 'article-context-card',
+      key: 'article-context',
+      articleId: opts.articleContext.articleId,
+      suggestionId: opts.articleContext.suggestionId,
+      title: opts.articleContext.title,
+    });
+  }
 
   // --- History (re-sorted oldest-first) ---
   const sortedHistory = [...history].sort((a, b) => a.createdAt - b.createdAt);

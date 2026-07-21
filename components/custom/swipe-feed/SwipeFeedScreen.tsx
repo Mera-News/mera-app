@@ -14,7 +14,9 @@ import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import SwipeDeck, { type DeckWindowEntry } from './SwipeDeck';
 import VerdictBar from './VerdictBar';
+import InlineFeedbackTree from './InlineFeedbackTree';
 import { swipeCallbacks } from './swipe-callbacks';
+import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
@@ -49,6 +51,10 @@ import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const H_MARGIN = 16;
+
+// Install the real Feed-signal implementations onto the swipe-callbacks contract
+// once, when this screen's module loads (before any render). Idempotent.
+wireSwipeCallbacks();
 
 /** Record an open impression for a story on the swipe surface (dim + persist).
  *  recordOpen upserts, so calling it on every advance is idempotent. */
@@ -176,6 +182,23 @@ const SwipeFeedScreen: React.FC = () => {
     swipeCallbacks.onInvokeMera(cand.suggestion, rec?.verdict ?? 'like', rec?.path ?? []);
   }, []);
 
+  // ── Inline feedback tree (under the VerdictBar) ──
+  const handleTreePathChanged = useCallback(
+    (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => {
+      const cand = windowRef.current[0]?.candidate;
+      if (cand) useSwipeDeckStore.getState().setPath(cand.id, pathIds);
+      swipeCallbacks.onTreePathChanged(suggestion, verdict, pathIds);
+    },
+    [],
+  );
+
+  const handleTreeInvokeMera = useCallback(
+    (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => {
+      swipeCallbacks.onInvokeMera(suggestion, verdict, pathIds);
+    },
+    [],
+  );
+
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
   const asyncJobPhase = useForYouAsyncJobPhase();
@@ -257,6 +280,18 @@ const SwipeFeedScreen: React.FC = () => {
             onVerdict={handlePillVerdict}
             onVerdictChanged={handlePillChanged}
             onAskMera={handleAskMera}
+            treeSlot={
+              topVerdict != null && topEntry?.candidate ? (
+                <InlineFeedbackTree
+                  key={topId ?? undefined}
+                  suggestion={topEntry.candidate.suggestion}
+                  verdict={topVerdict}
+                  onTreePathChanged={handleTreePathChanged}
+                  onInvokeMera={handleTreeInvokeMera}
+                  initialPathIds={topId ? verdicts[topId]?.path : undefined}
+                />
+              ) : undefined
+            }
           />
         ) : null}
 

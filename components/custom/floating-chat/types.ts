@@ -21,6 +21,15 @@ export type { PersistedMessage } from '@/lib/database/services/conversation-serv
 export type FactCardAction = 'saved' | 'deleted' | 'updated';
 
 export type ChatThreadItem =
+  // Pinned article card at the TOP of an article-suggestion chat thread — the
+  // subject of the conversation, always the first item (Round-4 P4 handoff).
+  | {
+      kind: 'article-context-card';
+      key: string;
+      articleId?: string;
+      suggestionId?: string;
+      title: string;
+    }
   | { kind: 'message'; key: string; message: ConversationMessage; pending?: boolean }
   | {
       kind: 'fact-card';

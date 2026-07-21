@@ -1205,5 +1205,19 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Feed-verdict processing marker (schema v42, Round-4 P4) ─────────
+      // `processed_at` on article_feedback: epoch ms when a swipe/verdict
+      // like/dislike was folded into the persona (via the Mera-chat handoff
+      // applying its proposals); null while unprocessed. Additive + optional —
+      // long-lived, user-owned feedback log is NEVER wiped.
+      toVersion: 42,
+      steps: [
+        addColumns({
+          table: 'article_feedback',
+          columns: [{ name: 'processed_at', type: 'number', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

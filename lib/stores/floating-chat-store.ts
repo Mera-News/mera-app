@@ -17,6 +17,15 @@ export type ChatContext =
           // Present when the chat was opened from a "Track" tap — the origin
           // snapshot the agent's proposeTrack tool follows against.
           trackSubject?: TrackFeedbackSubject;
+          // Feed-verdict handoff (Round-4 P4): the like/dislike the user gave on
+          // the Feed tab, and the human-readable breadcrumb LABELS of the inline
+          // feedback-tree options they tapped. Both feed the agent's <context>
+          // ("USER VERDICT" / "TAPPED OPTIONS") so its proposals are grounded,
+          // and gate `markFeedbackProcessedFor` when a proposal applies. The
+          // store stays dumb — the caller (swipe-feedback.ts) resolves ids→labels
+          // and prebuilds the auto-sent message.
+          verdict?: 'like' | 'dislike';
+          treePath?: string[];
       }
     | { kind: 'generic'; route: string };
 
@@ -99,7 +108,12 @@ const initialState = {
 function contextDiffers(a: ChatContext, b: ChatContext): boolean {
     if (a.kind !== b.kind) return true;
     if (a.kind === 'article-suggestion' && b.kind === 'article-suggestion') {
-        return a.articleId !== b.articleId || a.suggestionId !== b.suggestionId;
+        return (
+            a.articleId !== b.articleId ||
+            a.suggestionId !== b.suggestionId ||
+            a.verdict !== b.verdict ||
+            (a.treePath ?? []).join('') !== (b.treePath ?? []).join('')
+        );
     }
     return false;
 }

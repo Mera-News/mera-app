@@ -12,6 +12,12 @@ jest.mock('../../database/services/article-suggestion-service', () => ({
   getSuggestionFeedbackContext: (...args: unknown[]) => mockGetSuggestionFeedbackContext(...args),
 }));
 
+const mockMarkFeedbackProcessedFor = jest.fn((..._args: unknown[]) => Promise.resolve());
+
+jest.mock('../../database/services/article-feedback-service', () => ({
+  markFeedbackProcessedFor: (...args: unknown[]) => mockMarkFeedbackProcessedFor(...args),
+}));
+
 const mockExecuteProposalActions = jest.fn();
 
 jest.mock('../../chat-tools/proposal-handlers', () => ({
@@ -382,6 +388,24 @@ describe('ArticleFeedbackAgent', () => {
       expect(mockExecuteProposalActions).toHaveBeenCalled();
       expect(result.result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
       expect(result.sideEffects?.proposalResolved).toBe('applied');
+    });
+
+    it('stamps the feed-verdict feedback processed when a handoff proposal applies', async () => {
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: { id: 'p1', explanation: '', expectedEffects: '', actions: [{ type: 'add_fact', statement: 'X' }] },
+        context: { kind: 'article-suggestion', articleId: 'art-1', verdict: 'like' },
+      });
+      await makeAgent().executeTool('applyProposal', {});
+      expect(mockMarkFeedbackProcessedFor).toHaveBeenCalledWith('art-1', 'like');
+    });
+
+    it('does NOT stamp feedback processed when the context carries no verdict', async () => {
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: { id: 'p1', explanation: '', expectedEffects: '', actions: [{ type: 'add_fact', statement: 'X' }] },
+        context: { kind: 'article-suggestion', articleId: 'art-1' },
+      });
+      await makeAgent().executeTool('applyProposal', {});
+      expect(mockMarkFeedbackProcessedFor).not.toHaveBeenCalled();
     });
 
     it('errors when there is no pending proposal to apply', async () => {

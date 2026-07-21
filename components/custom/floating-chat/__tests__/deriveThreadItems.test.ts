@@ -78,6 +78,29 @@ describe('deriveThreadItems', () => {
     expect(keys(items)).toEqual(['live-intro', 'live-u1']);
   });
 
+  it('emits a pinned article-context card FIRST when articleContext is provided', () => {
+    const items = deriveThreadItems(
+      base({
+        articleContext: { articleId: 'art-1', suggestionId: 'sugg-1', title: 'A story' },
+        introMessage: 'Welcome!',
+        live: [userMsg('u1', 'hi')],
+      }),
+    );
+    expect(items[0]).toMatchObject({
+      kind: 'article-context-card',
+      key: 'article-context',
+      articleId: 'art-1',
+      suggestionId: 'sugg-1',
+      title: 'A story',
+    });
+    expect(keys(items)).toEqual(['article-context', 'live-intro', 'live-u1']);
+  });
+
+  it('omits the pinned card when no articleContext is provided', () => {
+    const items = deriveThreadItems(base({ live: [userMsg('u1')] }));
+    expect(items.some((i) => i.kind === 'article-context-card')).toBe(false);
+  });
+
   it('renders resumed current-conversation messages (no divider) before live, and suppresses intro', () => {
     const items = deriveThreadItems(
       base({

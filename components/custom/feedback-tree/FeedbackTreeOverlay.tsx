@@ -19,17 +19,12 @@ import { revertChange } from '@/lib/database/services/persona-change-log-service
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import {
-  evaluateCondition,
   resolveLeafActions,
-  type FeedbackTree,
   type FeedbackTreeNode,
   type LocalFeedbackContext,
   type ResolvedPersonaAction,
 } from '@/lib/news-harness/feedback-tree';
-import {
-  getFeedbackTree,
-  refreshFeedbackTree,
-} from '@/lib/services/feedback-tree-service';
+import { useFeedbackTreeEngine } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -73,31 +68,20 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
   const c = useChrome();
   const toast = useToast();
 
-  const [tree, setTree] = useState<FeedbackTree | null>(null);
-  // Descended branch nodes (empty = entry/fast-path view unless `browsing`).
-  const [path, setPath] = useState<FeedbackTreeNode[]>([]);
+  // Tree navigation (fetch + root selection + gated descent) lives in the shared
+  // engine; the overlay keeps ONLY its dislike-specific chrome state below.
+  const { path, currentChildren, findNode, descend, backtrack } =
+    useFeedbackTreeEngine({ active: visible, root: 'dislike', context });
+
   const [browsing, setBrowsing] = useState(false);
   // Pending destructive confirm.
   const [confirming, setConfirming] = useState<FeedbackTreeNode | null>(null);
 
-  // Load the tree + kick a throttled refresh whenever the overlay opens.
+  // Reset the overlay-local chrome whenever it opens (the engine resets the path).
   useEffect(() => {
     if (!visible) return;
-    let cancelled = false;
-    setPath([]);
     setBrowsing(false);
     setConfirming(null);
-    getFeedbackTree()
-      .then((tr) => {
-        if (!cancelled) setTree(tr);
-      })
-      .catch((err) =>
-        logger.captureException(err, { tags: { component: 'FeedbackTreeOverlay', method: 'load' } }),
-      );
-    void refreshFeedbackTree();
-    return () => {
-      cancelled = true;
-    };
   }, [visible]);
 
   const label = useCallback(
@@ -105,32 +89,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
     [t],
   );
 
-  /** Find a leaf node by id anywhere in the tree (for the fast-path chip). */
-  const findNode = useCallback(
-    (id: string): FeedbackTreeNode | null => {
-      const walk = (nodes: FeedbackTreeNode[]): FeedbackTreeNode | null => {
-        for (const n of nodes) {
-          if (n.id === id) return n;
-          if (n.children) {
-            const hit = walk(n.children);
-            if (hit) return hit;
-          }
-        }
-        return null;
-      };
-      return tree ? walk(tree.root) : null;
-    },
-    [tree],
-  );
-
   const fastPathNode = useMemo(() => findNode('not_important'), [findNode]);
-
-  // Children visible at the current level, gated by evaluateCondition.
-  const currentChildren = useMemo(() => {
-    if (!tree) return [];
-    const level = path.length > 0 ? (path[path.length - 1].children ?? []) : tree.root;
-    return level.filter((n) => evaluateCondition(n.visibleIf, context));
-  }, [tree, path, context]);
 
   // ---- Toasts --------------------------------------------------------------
 
@@ -269,7 +228,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
     (node: FeedbackTreeNode) => {
       hapticMedium();
       if (node.children && node.children.length > 0) {
-        setPath((p) => [...p, node]);
+        descend(node);
         return;
       }
       // Destructive leaf → confirm first.
@@ -279,7 +238,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       }
       performLeaf(node);
     },
-    [performLeaf],
+    [performLeaf, descend],
   );
 
   const goBack = useCallback(() => {
@@ -289,7 +248,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       return;
     }
     if (path.length > 0) {
-      setPath((p) => p.slice(0, -1));
+      backtrack();
       return;
     }
     if (browsing) {
@@ -297,7 +256,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       return;
     }
     onClose();
-  }, [confirming, path.length, browsing, onClose]);
+  }, [confirming, path.length, browsing, onClose, backtrack]);
 
   if (!visible) return null;
 

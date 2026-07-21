@@ -18,6 +18,12 @@ import {
   recordArticleFeedback,
   removeArticleFeedback,
   hasLiked,
+  recordVerdictFeedback,
+  updateFeedbackContextPath,
+  getUnprocessedFeedback,
+  countUnprocessedFeedback,
+  markFeedbackProcessed,
+  markFeedbackProcessedFor,
 } from '../article-feedback-service';
 
 const db = database as any;
@@ -292,5 +298,138 @@ describe('hasLiked', () => {
     const result = await hasLiked('a1');
     expect(result).toBe(false);
     expect(logger.captureException).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// recordVerdictFeedback (latest-wins) — Round-4 P4
+// ---------------------------------------------------------------------------
+
+describe('recordVerdictFeedback', () => {
+  it('records a fresh verdict and creates a row when no opposite exists', async () => {
+    db._setRows('article_feedback', []);
+    await recordVerdictFeedback({
+      articleId: 'a1',
+      suggestionId: 's1',
+      sentiment: 'like',
+      title: 'T',
+      origin: 'suggestion',
+      surface: 'swipe',
+    });
+    // remove-opposite found nothing (no write for it); record created one row.
+    expect(db._collections['article_feedback'].create).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes the opposite-sentiment row before recording (latest-wins)', async () => {
+    const col = db._collections['article_feedback'];
+    const dislikeRow = makeFeedbackRecord({ articleId: 'a1', sentiment: 'dislike' });
+    // 1) remove-opposite ('dislike') fetch → finds the dislike row.
+    col.query.mockReturnValueOnce({
+      fetch: jest.fn(async () => [dislikeRow]),
+      fetchCount: jest.fn(async () => 1),
+    });
+    // 2) record ('like') idempotency fetch → nothing existing.
+    col.query.mockReturnValueOnce({
+      fetch: jest.fn(async () => []),
+      fetchCount: jest.fn(async () => 0),
+    });
+
+    await recordVerdictFeedback({ articleId: 'a1', sentiment: 'like', title: 'T' });
+
+    expect(dislikeRow.destroyPermanently).toHaveBeenCalledTimes(1);
+    expect(col.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when articleId is empty', async () => {
+    await recordVerdictFeedback({ articleId: '   ', sentiment: 'like', title: 'T' });
+    expect(database.write).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateFeedbackContextPath
+// ---------------------------------------------------------------------------
+
+describe('updateFeedbackContextPath', () => {
+  it('merges treePath into an existing row context_json', async () => {
+    const row = makeFeedbackRecord({
+      articleId: 'a1',
+      sentiment: 'dislike',
+      contextJson: '{"relevance":0.5}',
+    });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', ['n1', 'n2']);
+
+    expect(row.update).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(row.contextJson)).toEqual({ relevance: 0.5, treePath: ['n1', 'n2'] });
+  });
+
+  it('sets treePath on a null context_json', async () => {
+    const row = makeFeedbackRecord({ articleId: 'a1', sentiment: 'like', contextJson: null });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'like', ['x']);
+
+    expect(JSON.parse(row.contextJson)).toEqual({ treePath: ['x'] });
+  });
+
+  it('is a no-op when no matching row exists', async () => {
+    db._setRows('article_feedback', []);
+    await updateFeedbackContextPath('a1', 'like', ['x']);
+    expect(database.write).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// unprocessed queries + processed markers
+// ---------------------------------------------------------------------------
+
+describe('getUnprocessedFeedback / countUnprocessedFeedback', () => {
+  it('returns the rows the query yields', async () => {
+    const rows = [
+      makeFeedbackRecord({ articleId: 'a1', sentiment: 'like' }),
+      makeFeedbackRecord({ articleId: 'a2', sentiment: 'dislike' }),
+    ];
+    db._setRows('article_feedback', rows);
+    expect(await getUnprocessedFeedback()).toHaveLength(2);
+    expect(await countUnprocessedFeedback()).toBe(2);
+  });
+
+  it('returns empty/0 and captures on error', async () => {
+    db._collections['article_feedback'].query.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    expect(await getUnprocessedFeedback()).toEqual([]);
+    expect(logger.captureException).toHaveBeenCalled();
+  });
+});
+
+describe('markFeedbackProcessed', () => {
+  it('stamps processed_at on the fetched rows', async () => {
+    const row = makeFeedbackRecord({ articleId: 'a1', sentiment: 'like' });
+    db._setRows('article_feedback', [row]);
+    await markFeedbackProcessed([row.id]);
+    expect(row.processedAt).toBe(NOW);
+    expect(database.batch).toHaveBeenCalledTimes(1);
+  });
+
+  it('is a no-op for an empty id list', async () => {
+    await markFeedbackProcessed([]);
+    expect(database.write).not.toHaveBeenCalled();
+  });
+});
+
+describe('markFeedbackProcessedFor', () => {
+  it('stamps processed_at on the matching (articleId, sentiment) row', async () => {
+    const row = makeFeedbackRecord({ articleId: 'a1', sentiment: 'like' });
+    db._setRows('article_feedback', [row]);
+    await markFeedbackProcessedFor('a1', 'like');
+    expect(row.processedAt).toBe(NOW);
+  });
+
+  it('is a no-op for an empty articleId', async () => {
+    await markFeedbackProcessedFor('  ', 'like');
+    expect(database.write).not.toHaveBeenCalled();
   });
 });

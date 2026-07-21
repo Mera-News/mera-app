@@ -5,7 +5,7 @@ import { VStack } from '@/components/ui/vstack';
 import { Pressable } from '@/components/ui/pressable';
 import MeraLogo from '@/components/custom/MeraLogo';
 import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';
-import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
+import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import {
   hasLiked,
   recordArticleFeedback,
@@ -42,18 +42,6 @@ interface CompactActionsSheetProps {
   share?: ShareArticleParams;
 }
 
-/** Snapshot the subject's contextual extras for the persisted feedback row. */
-function buildContextJson(subject: FeedbackSubject): string | null {
-  const snapshot: Record<string, unknown> = {};
-  if (subject.scopeKey) snapshot.scopeKey = subject.scopeKey;
-  if (subject.stableClusterId) snapshot.stableClusterId = subject.stableClusterId;
-  if (subject.eventType) snapshot.eventType = subject.eventType;
-  if (typeof subject.relevance === 'number') snapshot.relevance = subject.relevance;
-  if (subject.matchedTopics && subject.matchedTopics.length > 0) {
-    snapshot.matchedTopics = subject.matchedTopics;
-  }
-  return Object.keys(snapshot).length > 0 ? JSON.stringify(snapshot) : null;
-}
 
 /**
  * Compact-row actions sheet — the same universal actions as ArticleActionsRow,
