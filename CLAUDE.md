@@ -95,7 +95,24 @@ export default function MyRoute() {
 
 Schema lives in `lib/database/schema.ts`; migrations in `lib/database/migrations.ts`. Migrations are a linear chain — add a new `{ toVersion: N, steps: [...] }` and bump `appSchema.version`.
 
-**`article_suggestions` is an ephemeral cache.** Every row is rebuilt by `syncFeed` from the server's 24h window. For schema changes to this table (or `article_suggestion_facts`), it's always safe — and often simplest — to DROP and recreate it in the migration rather than writing column-by-column alter steps. See v8 and v9 migrations for the pattern (then applied to `cluster_suggestions`; same pattern now applies to `article_suggestions`). Do NOT apply this to `facts`, `user_personas`, `conversations`, `messages`, `inference_jobs`, or any other table — those hold user-owned or long-lived state and must be migrated, not wiped.
+**`article_suggestions` (and `article_suggestion_facts`) are resyncable, but a wipe is not free.** Every row is eventually rebuilt by `syncFeed` from the server's 24h window, but default to **additive `addColumns`** for schema changes to these tables anyway — DROP+recreate leaves the feed empty until a full re-sync plus the first cloud scoring round trip, and it destroys the 48h score-propagation donor pool. The 2026-07 v36→v43 OTA shipped migrations v37/v41 that DROP+recreated `article_suggestions` for purely additive changes (11 optional columns, then `scored_at` — no removal/rename/semantics change required it) and wiped every device's feed as a side effect; both were rewritten additively in r5 P7b. Treat that incident as the cautionary example, not a pattern to copy.
+
+Reserve DROP+recreate for genuinely incompatible changes — a column's type or semantics changing, or a status-machine change. When a wipe is truly unavoidable, preserve scoring state in the same migration instead of losing it: rename the old table, create the new one, `INSERT INTO ... SELECT ...` the surviving rows across, then drop the renamed original:
+
+```sql
+ALTER TABLE article_suggestions RENAME TO article_suggestions_old;
+-- createTable({ name: 'article_suggestions', columns: [...new shape] })
+INSERT INTO article_suggestions (id, _status, _changed, article_id, created_at, first_pub_date, relevance, reason, status, scored_at)
+  SELECT id, _status, _changed, article_id, created_at, first_pub_date, relevance, reason, status, scored_at
+  FROM article_suggestions_old;
+DROP TABLE article_suggestions_old;
+```
+
+WatermelonDB's own `_status`/`_changed` metadata columns must be carried across along with the business columns — dropping them breaks sync bookkeeping for surviving rows. At minimum preserve `(id, article_id, created_at, first_pub_date, relevance, reason, status, scored_at)`.
+
+Any migration touching `article_suggestions` must keep the convergence test in `lib/database/__tests__/migrations.test.ts` green — it reconstructs the migration chain's resulting column set and equality-checks it against `schema.ts`, and rejects duplicate column adds.
+
+Do NOT apply any of this — additive or wipe — to `facts`, `user_personas`, `conversations`, `messages`, `inference_jobs`, or any other table — those hold user-owned or long-lived state and must be migrated, not wiped.
 
 ## Workflows
 
