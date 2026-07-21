@@ -110,8 +110,9 @@ const SwipeArticleCard: React.FC<SwipeArticleCardProps> = ({
         ) : null}
       </Box>
 
-      {/* Body: meta → title → reason. */}
-      <VStack className="flex-1 px-4 pt-3" space="sm">
+      {/* Body: meta → title → reason. Fills the card's lower ~50%; bottom padding
+          keeps the reason box off the rounded card edge (no clipping). */}
+      <VStack className="flex-1 px-4 pt-3 pb-4" space="sm">
         <ArticleMetaRow
           pubDate={suggestion.firstPubDate ?? suggestion.createdAt}
           languageCode={suggestion.language_code}

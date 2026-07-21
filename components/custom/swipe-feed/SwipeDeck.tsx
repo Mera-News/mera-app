@@ -10,8 +10,10 @@
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import { Box } from '@/components/ui/box';
+import { Pressable } from '@/components/ui/pressable';
 import type { SwipeDeckCandidate } from '@/lib/stores/swipe-stack-selector';
 import type { Verdict } from '@/lib/stores/swipe-deck-store';
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -47,7 +49,52 @@ interface SwipeDeckProps {
   hMargin?: number;
   /** Dim the top card + disable its gesture/tap while the feedback overlay is open. */
   topDimmed?: boolean;
+  /** Show the Back FAB (hidden at the head of the deck, cursor 0). */
+  showBack?: boolean;
+  /** Back FAB tapped — step to the previous card. */
+  onBack?: () => void;
+  /** Next FAB tapped — advance to the next card. */
+  onNext?: () => void;
+  /** a11y label for the Back FAB. */
+  backLabel?: string;
+  /** a11y label for the Next FAB. */
+  nextLabel?: string;
 }
+
+const NAV_ACCENT = '#EDA77E';
+const NAV_FAB_SIZE = 44;
+
+/** A semi-elevated circular Back/Next control overlaid on the card's vertical
+ *  center, just inside the given edge. Small fixed target so the card's pan
+ *  gesture (which starts anywhere else) is unobstructed. Sits above the card but
+ *  below the feedback overlay (a later sibling of this deck). */
+const NavFab: React.FC<{
+  edge: 'left' | 'right';
+  icon: keyof typeof MaterialIcons.glyphMap;
+  onPress: () => void;
+  accessibilityLabel: string;
+}> = ({ edge, icon, onPress, accessibilityLabel }) => (
+  <Pressable
+    onPress={onPress}
+    hitSlop={8}
+    accessibilityRole="button"
+    accessibilityLabel={accessibilityLabel}
+    className="absolute items-center justify-center rounded-full"
+    style={{
+      top: '50%',
+      marginTop: -NAV_FAB_SIZE / 2,
+      [edge]: 8,
+      width: NAV_FAB_SIZE,
+      height: NAV_FAB_SIZE,
+      borderWidth: 1.5,
+      borderColor: NAV_ACCENT,
+      backgroundColor: 'rgba(10,10,10,0.72)',
+      zIndex: 5,
+    }}
+  >
+    <MaterialIcons name={icon} size={26} color={NAV_ACCENT} />
+  </Pressable>
+);
 
 const BEHIND_SCALE = [1, 0.94, 0.9];
 const BEHIND_TY = [0, 12, 22];
@@ -103,6 +150,11 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
   onAdvanceSentinel,
   hMargin = 16,
   topDimmed = false,
+  showBack = false,
+  onBack,
+  onNext,
+  backLabel,
+  nextLabel,
 }) => {
   const { width } = useWindowDimensions();
   const cardWidth = Math.max(0, width - 2 * hMargin);
@@ -247,6 +299,25 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
           )}
         </Animated.View>
       </GestureDetector>
+
+      {/* Back / Next FABs — overlaid on the card edges (rendered last = above the
+          card; the screen's feedback overlay is a later sibling = above these). */}
+      {!topDimmed && showBack && onBack ? (
+        <NavFab
+          edge="left"
+          icon="chevron-left"
+          onPress={onBack}
+          accessibilityLabel={backLabel ?? 'Back'}
+        />
+      ) : null}
+      {!topDimmed && onNext ? (
+        <NavFab
+          edge="right"
+          icon="chevron-right"
+          onPress={onNext}
+          accessibilityLabel={nextLabel ?? 'Next'}
+        />
+      ) : null}
     </Box>
   );
 };

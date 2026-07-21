@@ -1,6 +1,6 @@
 // VerdictBar — the PRIMARY interaction for the Feed deck: two round thumb icon
-// buttons (thumb-down = "less like this", red; thumb-up = "more like this",
-// green) plus a Mera button. Tapping a thumb records a verdict WITHOUT advancing
+// buttons plus a Mera button, laid out thumb-up (green, LEFT) · Mera (CENTER) ·
+// thumb-down (red, RIGHT). Tapping a thumb records a verdict WITHOUT advancing
 // the deck and opens the feedback-tree overlay (owned by the screen). On a
 // revisited (Back) card the thumbs reflect the stored verdict; tapping the OTHER
 // thumb flips it (onVerdictChanged), and re-tapping the SELECTED thumb re-opens
@@ -19,8 +19,15 @@ import { useTranslation } from 'react-i18next';
 
 const LIKE_COLOR = '#22C55E';
 const DISLIKE_COLOR = '#EF4444';
+// Both thumbs are white-outline variants: white border, transparent fill; the
+// glyph keeps its verdict color (green up / red down).
+const OUTLINE_COLOR = '#FFFFFF';
 const BUTTON_SIZE = 52;
 const ICON_SIZE = 24;
+// MeraLogo's visible hexagon spans ~67% of its `size` box, so oversizing the
+// glyph past the button diameter (clipped by the button's overflow-hidden) lets
+// the hexagon read at ~70% of the button — balanced against the 24px thumbs.
+const MERA_LOGO_SIZE = 54;
 
 interface VerdictBarProps {
   /** The card's currently-stored verdict (null when undecided). */
@@ -73,7 +80,7 @@ const VerdictBar: React.FC<VerdictBarProps> = ({
           height: BUTTON_SIZE,
           backgroundColor: selected ? color : 'transparent',
           borderWidth: 2,
-          borderColor: color,
+          borderColor: OUTLINE_COLOR,
           opacity: dimmed ? 0.45 : 1,
         }}
       >
@@ -84,7 +91,6 @@ const VerdictBar: React.FC<VerdictBarProps> = ({
 
   return (
     <HStack className="items-center justify-center" space="2xl">
-      {renderThumb('dislike', DISLIKE_COLOR, 'thumb-down', t('swipeFeed.lessLikeThis'))}
       {renderThumb('like', LIKE_COLOR, 'thumb-up', t('swipeFeed.moreLikeThis'))}
       <Pressable
         onPress={onAskMera}
@@ -94,16 +100,17 @@ const VerdictBar: React.FC<VerdictBarProps> = ({
         style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }}
       >
         <Box
-          className="rounded-full items-center justify-center"
+          className="rounded-full items-center justify-center overflow-hidden"
           style={{
             width: BUTTON_SIZE,
             height: BUTTON_SIZE,
             backgroundColor: 'rgba(231,138,83,0.15)',
           }}
         >
-          <MeraLogo size={32} />
+          <MeraLogo size={MERA_LOGO_SIZE} />
         </Box>
       </Pressable>
+      {renderThumb('dislike', DISLIKE_COLOR, 'thumb-down', t('swipeFeed.lessLikeThis'))}
     </HStack>
   );
 };

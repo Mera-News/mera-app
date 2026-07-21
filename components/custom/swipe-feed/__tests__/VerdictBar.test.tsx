@@ -57,6 +57,18 @@ function setup(overrides: Partial<React.ComponentProps<typeof VerdictBar>> = {})
 }
 
 describe('VerdictBar', () => {
+  it('lays out thumb-up (left) · Mera (center) · thumb-down (right)', () => {
+    const { getAllByRole } = setup();
+    const labels = getAllByRole('button').map(
+      (n) => n.props.accessibilityLabel,
+    );
+    expect(labels).toEqual([
+      'swipeFeed.moreLikeThis',
+      'swipeFeed.askMera',
+      'swipeFeed.lessLikeThis',
+    ]);
+  });
+
   it('records a fresh verdict on an undecided card (thumb-up)', () => {
     const { getByLabelText, onVerdict, onVerdictChanged } = setup({ verdict: null });
     fireEvent.press(getByLabelText('swipeFeed.moreLikeThis'));
