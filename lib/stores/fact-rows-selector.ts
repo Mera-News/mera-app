@@ -350,13 +350,26 @@ export function buildFactRows(
   return { breaking, rows };
 }
 
+/** Raw predicate behind `isSuggestionOpened`: true when `articleId` OR
+ *  `stableClusterId` (if present) is in the opened set. Exported separately so
+ *  callers that only have an article id + stable cluster id (no full
+ *  `ForYouSuggestion`) — e.g. the article-detail screen — can reuse the exact
+ *  same opened-set check without constructing a fake suggestion. */
+export function isOpenedId(
+  articleId: string | null | undefined,
+  stableClusterId: string | null | undefined,
+  openedSet: Set<string>,
+): boolean {
+  if (openedSet.size === 0) return false;
+  if (articleId && openedSet.has(articleId)) return true;
+  if (stableClusterId && openedSet.has(stableClusterId)) return true;
+  return false;
+}
+
 /** True when a suggestion's article_id OR top stable cluster id is in the opened
  *  set — the card-dimming predicate. Ported from the deleted feed-sections
  *  selector. */
 export function isSuggestionOpened(s: ForYouSuggestion, openedSet: Set<string>): boolean {
-  if (openedSet.size === 0) return false;
-  if (s.articleId && openedSet.has(s.articleId)) return true;
   const topStable = s.clusters?.find((c) => c.stableClusterId)?.stableClusterId;
-  if (topStable && openedSet.has(topStable)) return true;
-  return false;
+  return isOpenedId(s.articleId, topStable, openedSet);
 }

@@ -29,6 +29,8 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import {
     buildStoryGroups,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
@@ -82,6 +84,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         storeSuggestion ?? null,
     );
     const suggestions = useForYouStore((s) => s.suggestions);
+    const openedIds = useOpenedStoriesStore((s) => s.ids);
 
     // Locally-derived "More coverage" siblings: the user's other personalized
     // cards for the same story that the feed collapsed away. We deliberately
@@ -301,6 +304,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     }
 
     const sourceLanguage = suggestion.language_code ?? null;
+    const read = isSuggestionOpened(suggestion, openedIds);
 
     // Map ArticleSummary → NewsArticle-shaped object for CompactPublisherNewsCard
     // (the existing card type works against NewsArticle fields).
@@ -377,6 +381,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             <ArticleSuggestionContainer
                 suggestion={suggestion}
                 variant="screen"
+                read={read}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
                 contentTopInset={insets.top}

@@ -20,6 +20,9 @@ interface ArticleMetaRowProps {
     /** Number of additional source publications collapsed into this story card;
      *  renders a "+N sources" pill next to the NEW badge (card variant only). */
     moreSourcesCount?: number;
+    /** Marks the article as already-read — renders a small eye icon immediately
+     *  after the time group. Default false — no visual change when omitted. */
+    read?: boolean;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -30,6 +33,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     variant,
     isNew = false,
     moreSourcesCount,
+    read = false,
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
@@ -74,6 +78,14 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 <Text size="sm" className={ageColor}>
                     {age}
                 </Text>
+                {read ? (
+                    <MaterialIcons
+                        name="visibility"
+                        size={14}
+                        color={iconColor}
+                        accessibilityLabel="read"
+                    />
+                ) : null}
                 {isCard && isNew ? (
                     <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
                         <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>

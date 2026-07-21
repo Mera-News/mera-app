@@ -120,7 +120,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         data={groups}
         keyExtractor={(g) => g.data._id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 0, paddingVertical: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<AllCaughtUpCard />}
       />

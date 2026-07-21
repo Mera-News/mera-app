@@ -37,8 +37,9 @@ interface ArticleCardProps {
   dimmed?: boolean;
   /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
   read?: boolean;
-  /** Pass-through to `ArticleCardBase` — renders without the Card chrome
-   *  (Dashboard's flat-list treatment). Default false. */
+  /** Pass-through to `ArticleCardBase` — renders as the floating neumorphic
+   *  card (Dashboard's list treatment) instead of the default Card chrome.
+   *  Default false. */
   flat?: boolean;
 }
 

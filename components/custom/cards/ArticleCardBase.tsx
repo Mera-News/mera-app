@@ -1,5 +1,4 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
-import ReadTickChip from '@/components/custom/cards/ReadTickChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -40,15 +39,19 @@ export interface ArticleCardBaseProps {
   /** Dims the whole card (~0.55 opacity) — used to fade already-opened rows in
    *  the Earlier zone. No visual change when undefined. */
   dimmed?: boolean;
-  /** Marks the card as already-read — shows a green tick chip (top-right)
-   *  instead of dimming. The Dashboard surfaces use this. */
+  /** Marks the card as already-read — shows a small eye icon in the meta row
+   *  next to the time group, instead of dimming. The Dashboard surfaces use
+   *  this. */
   read?: boolean;
-  /** Renders without the Card chrome — no `bg-background-0` surface, no
-   *  border/shadow/rounding, and zero internal horizontal padding, so the
-   *  hero image and text span the full item width. Used by Dashboard's
-   *  flat-list treatment (FactSectionsFeed / FactFeedScreen). Vertical
-   *  spacing between elements and the `read`/`dimmed` behaviors are
-   *  unaffected. Default false — every other surface is pixel-identical. */
+  /** Renders as a "floating" neumorphic card instead of the default `Card`
+   *  chrome: rounded-2xl, a hairline low-opacity border, a subtle drop shadow,
+   *  and the same `bg-background-0` surface tone the default Card already
+   *  uses — just a touch more elevated-looking against the pure-black page.
+   *  Used by Dashboard's list treatment (FactSectionsFeed / FactFeedScreen),
+   *  which own the shared horizontal list inset (~12px) so the rounded edges
+   *  read against the page. Vertical spacing between elements and the
+   *  `read`/`dimmed` behaviors are unaffected. Default false — every other
+   *  surface is pixel-identical. */
   flat?: boolean;
   onPress?: () => void;
   children?: React.ReactNode;
@@ -82,11 +85,10 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
 
   const innerContent = (
     <>
-      {read && <ReadTickChip />}
       {showImage && (
         <Box
           className={
-            flat ? 'w-full h-48 overflow-hidden rounded-lg' : 'w-full h-48 overflow-hidden rounded-t-lg'
+            flat ? 'w-full h-48 overflow-hidden rounded-t-2xl' : 'w-full h-48 overflow-hidden rounded-t-lg'
           }
         >
           <Image
@@ -99,7 +101,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
           />
         </Box>
       )}
-      <VStack className={flat ? 'py-4' : 'p-4'} space="sm">
+      <VStack className="p-4" space="sm">
         <Box>
           <ArticleMetaRow
             pubDate={pubDate}
@@ -109,6 +111,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
             variant="card"
             isNew={isNew}
             moreSourcesCount={moreSourcesCount}
+            read={read}
           />
           {metaAccessory ? (
             <HStack className="self-end mt-1">{metaAccessory}</HStack>
@@ -131,7 +134,15 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   return (
     <Pressable onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       {flat ? (
-        <Box className="mb-3">{innerContent}</Box>
+        // Shadow lives on this outer, non-clipping Box — RN drops a view's
+        // shadow the moment that same view also sets `overflow: hidden`, so
+        // the rounded/clipped surface (border + bg + hero image) has to be a
+        // separate inner Box for the floating look to actually show a shadow.
+        <Box className="mb-3 rounded-2xl shadow-hard-2">
+          <Box className="rounded-2xl overflow-hidden bg-background-0 border border-white/10">
+            {innerContent}
+          </Box>
+        </Box>
       ) : (
         <Card variant="elevated" size="md" className="mb-4 overflow-hidden">
           {innerContent}

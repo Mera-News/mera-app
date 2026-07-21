@@ -17,6 +17,8 @@ import { recordPublicationVisit } from '@/lib/database/services/publication-visi
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { isOpenedId } from '@/lib/stores/fact-rows-selector';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -73,6 +75,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguage();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
+    const openedIds = useOpenedStoriesStore((s) => s.ids);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -188,6 +191,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     const sourceLanguage = article.original_language_code ?? null;
     const articleUrl = article.article_url ?? null;
+    const read = isOpenedId(article._id, stableClusterId, openedIds);
 
     return (
         <Box className="flex-1 bg-black">
@@ -207,6 +211,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             <ArticleSuggestionContainer
                 article={article}
                 variant="screen"
+                read={read}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
                 contentTopInset={insets.top}

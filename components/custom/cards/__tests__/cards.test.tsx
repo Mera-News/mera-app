@@ -70,10 +70,13 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
   return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
 });
 jest.mock('@/components/custom/ArticleMetaRow', () => {
-  const { Text } = require('react-native');
+  const { Text, View } = require('react-native');
   return {
-    ArticleMetaRow: ({ publicationName }: any) => (
-      <Text>{publicationName ?? ''}</Text>
+    ArticleMetaRow: ({ publicationName, read }: any) => (
+      <View>
+        <Text>{publicationName ?? ''}</Text>
+        {read ? <View testID="read-eye-icon" /> : null}
+      </View>
     ),
   };
 });
@@ -141,10 +144,6 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { captureException: jest.fn() },
-}));
-const mockShowInfo = jest.fn();
-jest.mock('@/lib/toast-manager', () => ({
-  toastManager: { showInfo: (...a: any[]) => mockShowInfo(...a) },
 }));
 
 // eslint-disable-next-line import/first
@@ -253,20 +252,18 @@ describe('ArticleSuggestionCard', () => {
     expect(onPress).toHaveBeenCalledWith(s);
   });
 
-  it('does not render the read tick chip by default', () => {
-    const { queryByLabelText } = render(
+  it('does not render the read eye icon by default', () => {
+    const { queryByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
     );
-    expect(queryByLabelText('feed.readArticleToast')).toBeNull();
+    expect(queryByTestId('read-eye-icon')).toBeNull();
   });
 
-  it('renders the read tick chip when read and toasts on tap (not opening the card)', () => {
-    const onPress = jest.fn();
-    const { getByLabelText } = render(
-      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={onPress} read />,
+  it('renders the read eye icon in the meta row when read', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} read />,
     );
-    fireEvent.press(getByLabelText('feed.readArticleToast'));
-    expect(mockShowInfo).toHaveBeenCalledWith('feed.readArticleToast');
+    expect(getByTestId('read-eye-icon')).toBeTruthy();
   });
 });
 

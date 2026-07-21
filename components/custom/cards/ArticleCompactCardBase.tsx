@@ -1,5 +1,4 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
-import ReadTickChip from '@/components/custom/cards/ReadTickChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -40,8 +39,9 @@ export interface ArticleCompactCardBaseProps {
   /** Dims the whole row (~0.55 opacity) — used to fade already-opened rows in
    *  the Earlier zone. No visual change when undefined. */
   dimmed?: boolean;
-  /** Marks the row as already-read — shows a green tick chip (top-right)
-   *  instead of dimming. The Dashboard surfaces use this. */
+  /** Marks the row as already-read — shows a small eye icon in the meta row
+   *  next to the time group, instead of dimming. The Dashboard surfaces use
+   *  this. */
   read?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
@@ -73,7 +73,6 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       <Card variant="elevated" size="sm" className="mb-3 overflow-hidden rounded-xl">
-        {read && <ReadTickChip />}
         <Box className="flex-row h-24">
           {/* Image Section - 1/4 width (25%) */}
           <Box className="w-1/4 h-full">
@@ -107,6 +106,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   countryCode={countryCode}
                   variant="card"
                   isNew={isNew}
+                  read={read}
                 />
               </Box>
               {metaAccessory}
