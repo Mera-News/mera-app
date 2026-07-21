@@ -145,8 +145,22 @@ class FeedSyncMachine {
       const scoringPipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
       const pipelineStatus = await scoringPipeline.getPipelineStatus();
       if (pipelineStatus === 'running') {
-        logger.info('[FeedSyncMachine] skipped — scoring pipeline active');
-        return;
+        // Defense in depth against a wedged run (a batch stuck waiting-* on a
+        // throwing /results, or a run orphaned by a cache-clear): if the run has
+        // been alive longer than STALE_RUN_GUARD_MS it cannot be trusted to
+        // finish on its own, and skipping would strand feed-sync forever. Abort
+        // it (force-fail + finalize) and fall through to sync normally.
+        const startedAt = await scoringPipeline.getRunStartedAt();
+        const ageMs = startedAt !== null ? Date.now() - startedAt : 0;
+        if (startedAt !== null && ageMs > scoringPipeline.STALE_RUN_GUARD_MS) {
+          logger.warn(
+            `[FeedSyncMachine] scoring pipeline running but run is stale (${Math.round(ageMs / 60_000)}min) — aborting and proceeding`,
+          );
+          await scoringPipeline.abortRun('stale-guard');
+        } else {
+          logger.info('[FeedSyncMachine] skipped — scoring pipeline active');
+          return;
+        }
       }
 
       // Step 1: fetch topic IDs. NOTE (Round-4 B): the fetching-topic-ids and

@@ -11,6 +11,7 @@ import database from '@/lib/database';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
+import * as scoringPipeline from '@/lib/services/scoring-pipeline';
 import { clearAllStores, useForYouStore } from '@/lib/stores';
 import { useDeleteAccountModal, useUIStore } from '@/lib/stores/ui-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -107,7 +108,15 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             switch (action) {
                 case 'feedCache': {
                     await deleteTables(FEED_CACHE_TABLES);
-                    useForYouStore.getState().clearData();
+                    await useForYouStore.getState().clearData();
+                    // Deleting article_suggestions leaves the persisted scoring
+                    // run pointing at now-gone rows; without clearing it, its
+                    // stuck batches keep getPipelineStatus()==='running' forever
+                    // and every feed-sync bails (the clear-feed deadlock). Abort
+                    // AFTER clearData so its markProcessingRunFinished stamp is
+                    // not reset to null (clearData nulls it), and BEFORE the sync
+                    // so the pipeline reads idle.
+                    await scoringPipeline.abortRun('cache-clear');
                     if (!useSchedulerStore.getState().isRunning('feed-sync')) {
                         void AppScheduler.trigger('feed-sync');
                     }
@@ -115,7 +124,10 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 }
                 case 'factsTopics': {
                     await deleteTables(FACTS_AND_TOPICS_TABLES);
-                    useForYouStore.getState().clearData();
+                    await useForYouStore.getState().clearData();
+                    // Same clear-feed deadlock guard as the feedCache case — the
+                    // orphaned run must be force-cleared before re-syncing.
+                    await scoringPipeline.abortRun('cache-clear');
                     if (!useSchedulerStore.getState().isRunning('feed-sync')) {
                         void AppScheduler.trigger('feed-sync');
                     }

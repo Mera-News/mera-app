@@ -225,6 +225,7 @@ import {
   handlePush,
   pollTick,
   recover,
+  abortRun,
   getPipelineStatus,
   derivePipelineUiState,
   getPipelineUiState,
@@ -679,6 +680,62 @@ describe('stale pending', () => {
     // attempt 1 (< MAX) → requeued to queued then re-drained → back in flight
     expect(['queued', 'submitting-relevance', 'waiting-relevance']).toContain(b.phase);
     expect(b.attempt).toBe(1);
+  });
+});
+
+describe('throwing /results fetch (catch-path staleness)', () => {
+  it('requeues/fails a waiting batch past BATCH_STALE_MS when the fetch throws', async () => {
+    await enqueueCandidates(['a0']);
+    // A THROWING /results fetch (5xx / network) — previously left the batch in
+    // waiting-* untouched forever; the catch path now applies BATCH_STALE_MS.
+    mockFetchResults.mockRejectedValue(new Error('network 5xx'));
+
+    // Advance beyond BATCH_STALE_MS (15 min) so the waiting batch is over-age.
+    jest.setSystemTime(NOW + 16 * 60_000);
+    mockSendInferenceRequest.mockClear();
+    await pollTick('foreground');
+
+    const b = currentRun().batches[0];
+    // attempt 1 (< MAX) → requeued to queued then re-drained → back in flight
+    expect(['queued', 'submitting-relevance', 'waiting-relevance']).toContain(b.phase);
+    expect(b.attempt).toBe(1);
+  });
+
+  it('leaves a waiting batch younger than BATCH_STALE_MS untouched when the fetch throws', async () => {
+    await enqueueCandidates(['a0']);
+    mockFetchResults.mockRejectedValue(new Error('network blip'));
+
+    // Past MIN_POLL_AGE (15s) so pollTick actually polls, but well under
+    // BATCH_STALE_MS — the throw is logged and the batch is left alone.
+    jest.setSystemTime(NOW + 30_000);
+    await pollTick('foreground');
+
+    const b = currentRun().batches[0];
+    expect(b.phase).toBe('waiting-relevance');
+    expect(b.attempt).toBe(0);
+  });
+});
+
+describe('abortRun', () => {
+  it('force-fails non-terminal batches, finalizes + clears the run, and stamps markProcessingRunFinished', async () => {
+    await enqueueCandidates(ids(50)); // 2 waiting-relevance (non-terminal) batches
+    expect(currentRun()).not.toBeNull();
+    mockMarkProcessingRunFinished.mockClear();
+
+    await abortRun('cache-clear');
+
+    // run force-failed → finalized → cleared
+    expect(currentRun()).toBeNull();
+    expect(mockMarkProcessingRunFinished).toHaveBeenCalled();
+  });
+
+  it('still stamps markProcessingRunFinished when no run exists', async () => {
+    expect(currentRun()).toBeNull();
+
+    await abortRun('cache-clear');
+
+    expect(currentRun()).toBeNull();
+    expect(mockMarkProcessingRunFinished).toHaveBeenCalled();
   });
 });
 

@@ -106,6 +106,12 @@ export const MIN_RUN_CANDIDATES = BATCH_SIZE;
 export const MAX_UNSCORED_WAIT_MS = 30 * 60_000;
 const SUBMIT_STUCK_MS = 60_000;
 const BATCH_STALE_MS = 15 * 60_000;
+/** A run whose `startedAt` is older than this is treated as wedged: the
+ *  FeedSyncMachine stale-guard aborts it (force-fail + finalize) and proceeds
+ *  with the sync rather than skipping every cycle forever. Derived from
+ *  BATCH_STALE_MS (two full stale windows — a healthy run's batches all clear
+ *  well within one), so there is no independent magic number to keep in sync. */
+export const STALE_RUN_GUARD_MS = 2 * BATCH_STALE_MS;
 const MAX_BATCH_ATTEMPTS = 2;
 const RUN_ABANDON_MS = 24 * 3600_000;
 const POLL_INTERVAL_MS = 7_000;
@@ -1036,6 +1042,19 @@ async function checkBatch(
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'fetch', batchId: String(batch.batchId) },
     });
+    // A THROWING /results fetch (5xx / network) used to leave the batch in
+    // waiting-* with no phase change and no attempt++, so it could hang forever
+    // past BATCH_STALE_MS and MAX_BATCH_ATTEMPTS — only recover()'s 24h
+    // RUN_ABANDON ever freed it (this wedged a production device). Apply the
+    // SAME staleness bound the pending case uses: once the batch has been
+    // waiting past BATCH_STALE_MS, requeue-or-fail it so the run can progress.
+    const age = Date.now() - (batch.submittedAt ?? 0);
+    if (age > BATCH_STALE_MS) {
+      logger.warn(
+        `${TAG} batch ${batch.batchId} fetch threw + waiting ${Math.round(age / 1000)}s — stale, requeue/fail`,
+      );
+      await requeueWaitingOrFail(batch, 'stale', context);
+    }
     return;
   }
 
@@ -1716,6 +1735,62 @@ export async function handlePush(
   await pollTick(context);
 }
 
+/**
+ * Force-fail every non-terminal batch of the current run, then finalize it.
+ * `finalize` (via doFinalize) refreshes the UI, clears the pipeline, stops the
+ * poller, and stamps markProcessingRunFinished — so this is the complete
+ * "abandon the run cleanly" primitive. No-op if no run exists.
+ *
+ * Shared by recover()'s RUN_ABANDON path and abortRun() so the force-fail →
+ * finalize sequence lives in exactly one place.
+ */
+async function forceFailNonTerminalAndFinalize(): Promise<void> {
+  await mutatePipeline((r) => {
+    for (const b of r.batches) {
+      if (!isTerminal(b.phase)) {
+        b.phase = 'failed';
+        b.failureReason = 'stale';
+      }
+    }
+    return true;
+  });
+  const after = await getPipeline();
+  if (after) await finalize(after.run);
+}
+
+/**
+ * Force-clear the current scoring run — the deadlock escape hatch used when the
+ * feed cache is wiped (ManageData) or a wedged 'running' run must be released so
+ * feed-sync can resume (FeedSyncMachine's stale-guard). Reuses recover()'s
+ * abandon primitive: force-fail every non-terminal batch → finalize (which
+ * stamps markProcessingRunFinished + clears the pipeline).
+ *
+ * When no run exists it still stamps a bare clearPipeline() +
+ * markProcessingRunFinished() so `lastProcessingRunFinishedAt` is ALWAYS set —
+ * otherwise the FeedPreparingCard keeps spinning on a null timestamp.
+ */
+export async function abortRun(reason: string): Promise<void> {
+  logger.warn(`${TAG} abortRun(${reason})`);
+  const snap = await getPipeline();
+  if (snap) {
+    await forceFailNonTerminalAndFinalize();
+    return;
+  }
+  // No run to finalize — clear anything left and stamp the finished timestamp
+  // directly (only finalize/markProcessingRunFinished ever sets it, and the UI
+  // gates the preparing card on it being non-null).
+  await clearPipeline();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+    useForYouStore.getState().markProcessingRunFinished();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'abort-mark-finished' },
+    });
+  }
+}
+
 export async function recover(): Promise<'idle' | 'running'> {
   const snap = await getPipeline();
   if (!snap) return 'idle';
@@ -1725,17 +1800,7 @@ export async function recover(): Promise<'idle' | 'running'> {
     logger.warn(
       `${TAG} run ${run.runId} older than ${RUN_ABANDON_MS}ms — abandoning`,
     );
-    await mutatePipeline((r) => {
-      for (const b of r.batches) {
-        if (!isTerminal(b.phase)) {
-          b.phase = 'failed';
-          b.failureReason = 'stale';
-        }
-      }
-      return true;
-    });
-    const after = await getPipeline();
-    if (after) await finalize(after.run);
+    await forceFailNonTerminalAndFinalize();
     return 'idle';
   }
 
@@ -1750,6 +1815,15 @@ export async function getPipelineStatus(): Promise<'idle' | 'running'> {
   const snap = await getPipeline();
   if (!snap) return 'idle';
   return snap.run.batches.some((b) => !isTerminal(b.phase)) ? 'running' : 'idle';
+}
+
+/** The current run's `startedAt` epoch-ms, or null when no run exists. Exposed
+ *  for the FeedSyncMachine stale-guard, which needs the run's age to decide
+ *  whether a 'running' pipeline is wedged (getPipelineStatus returns only the
+ *  coarse idle/running string). */
+export async function getRunStartedAt(): Promise<number | null> {
+  const snap = await getPipeline();
+  return snap ? snap.run.startedAt : null;
 }
 
 // ---------------------------------------------------------------------------

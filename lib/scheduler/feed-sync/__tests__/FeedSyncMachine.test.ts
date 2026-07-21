@@ -19,6 +19,11 @@ const mockDeactivateKeepAwake = jest.fn();
 const mockCaptureException = jest.fn();
 const mockLogInfo = jest.fn();
 const mockGetPipelineStatus = jest.fn();
+const mockGetRunStartedAt = jest.fn();
+const mockAbortRun = jest.fn();
+
+// Mirrors scoring-pipeline's STALE_RUN_GUARD_MS (2 * BATCH_STALE_MS = 30min).
+const STALE_RUN_GUARD_MS = 30 * 60_000;
 
 // Network store subscription support
 let networkSubscribeFn: ((state: any, prev: any) => void) | null = null;
@@ -76,6 +81,9 @@ jest.mock('@/lib/services/SuggestionSyncService', () => ({
 
 jest.mock('@/lib/services/scoring-pipeline', () => ({
   getPipelineStatus: (...args: any[]) => mockGetPipelineStatus(...args),
+  getRunStartedAt: (...args: any[]) => mockGetRunStartedAt(...args),
+  abortRun: (...args: any[]) => mockAbortRun(...args),
+  STALE_RUN_GUARD_MS: 30 * 60_000,
 }));
 
 jest.mock('@/lib/scheduler/feed-sync/feed-sync-status', () => ({
@@ -162,6 +170,8 @@ beforeEach(() => {
   ArticleService.getRecentArticleCount.mockResolvedValue(10);
 
   mockGetPipelineStatus.mockResolvedValue('idle');
+  mockGetRunStartedAt.mockResolvedValue(null);
+  mockAbortRun.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -241,6 +251,40 @@ describe('FeedSyncMachine — scoring-pipeline gate', () => {
     expect(mockStepFetchTopicIds).toHaveBeenCalled();
     expect(mockStepScore).toHaveBeenCalled();
     expect(feedSyncMachine.state).toBe('done');
+  });
+});
+
+describe('FeedSyncMachine — scoring-pipeline stale-guard', () => {
+  it('aborts a stale running run and proceeds with the sync', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    // Run started > STALE_RUN_GUARD_MS ago → wedged; must be aborted, not skipped.
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - (STALE_RUN_GUARD_MS + 60_000));
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockAbortRun).toHaveBeenCalledWith('stale-guard');
+    // Sync proceeded rather than bailing out.
+    expect(mockStepFetchTopicIds).toHaveBeenCalled();
+    expect(mockStepScore).toHaveBeenCalled();
+    expect(feedSyncMachine.state).toBe('done');
+  });
+
+  it('still skips a fresh running run (does not abort)', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    // Run started well within STALE_RUN_GUARD_MS → healthy, keep skipping.
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockAbortRun).not.toHaveBeenCalled();
+    expect(mockStepFetchTopicIds).not.toHaveBeenCalled();
+    expect(feedSyncMachine.state).toBe('idle');
   });
 });
 
