@@ -869,6 +869,7 @@
     "empty": "Você está em dia",
     "close": "Fechar",
     "markAllRead": "Marcar tudo como lido",
+    "clearAll": "Limpar todas as notificações",
     "migrationDoneTitle": "Seus interesses estão prontos",
     "migrationDoneBody": "A Mera organizou seu perfil em tópicos e localizações.",
     "syncFailedTitle": "Não foi possível atualizar seu feed",

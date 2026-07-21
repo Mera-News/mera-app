@@ -85,6 +85,34 @@ export async function getAll(limit = 100): Promise<NotificationModel[]> {
     .fetch();
 }
 
+/** Marks every unread notification read. Returns the number updated. */
+export async function markAllRead(): Promise<number> {
+  const unread = await notificationsCollection
+    .query(Q.where('status', 'unread'))
+    .fetch();
+  if (unread.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(
+      unread.map((r) =>
+        r.prepareUpdate((n) => {
+          n.status = 'read';
+        }),
+      ),
+    );
+  });
+  return unread.length;
+}
+
+/** Permanently deletes every notification row. Returns the number removed. */
+export async function clearAll(): Promise<number> {
+  const all = await notificationsCollection.query().fetch();
+  if (all.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(all.map((r) => r.prepareDestroyPermanently()));
+  });
+  return all.length;
+}
+
 /** Deletes notifications created before the cutoff. Returns deleted count. */
 export async function deleteOlderThan(cutoffMs: number): Promise<number> {
   const old = await notificationsCollection

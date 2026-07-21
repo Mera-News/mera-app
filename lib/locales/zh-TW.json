@@ -866,6 +866,7 @@
     "empty": "你已經看完所有內容",
     "close": "關閉",
     "markAllRead": "全部標為已讀",
+    "clearAll": "清除所有通知",
     "migrationDoneTitle": "你的興趣已準備就緒",
     "migrationDoneBody": "Mera 已將你的資料整理為主題和地點。",
     "syncFailedTitle": "無法重新整理你的動態",

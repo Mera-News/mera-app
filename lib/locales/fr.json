@@ -869,6 +869,7 @@
     "empty": "Vous êtes à jour",
     "close": "Fermer",
     "markAllRead": "Tout marquer comme lu",
+    "clearAll": "Effacer toutes les notifications",
     "migrationDoneTitle": "Vos centres d'intérêt sont prêts",
     "migrationDoneBody": "Mera a organisé votre profil en sujets et lieux.",
     "syncFailedTitle": "Impossible d'actualiser votre fil",

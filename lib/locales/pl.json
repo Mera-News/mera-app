@@ -875,6 +875,7 @@
     "empty": "Jesteś na bieżąco",
     "close": "Zamknij",
     "markAllRead": "Oznacz wszystkie jako przeczytane",
+    "clearAll": "Wyczyść wszystkie powiadomienia",
     "migrationDoneTitle": "Twoje zainteresowania są gotowe",
     "migrationDoneBody": "Mera uporządkowała Twój profil na tematy i lokalizacje.",
     "syncFailedTitle": "Nie udało się odświeżyć kanału",

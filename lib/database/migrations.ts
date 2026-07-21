@@ -1219,5 +1219,16 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Purge stale tracked-story notifications (schema v43) ────────────
+      // The removed tracked-stories emitter left rows whose title/body are the
+      // now-deleted i18n keys `notifications.trackedStoryUpdateTitle/Body`, so
+      // the notification center rendered the raw keys. Delete them outright —
+      // notifications are ephemeral app-side surfaces, never user-owned state.
+      toVersion: 43,
+      steps: [
+        unsafeExecuteSql("DELETE FROM notifications WHERE type = 'tracked_story_update';"),
+      ],
+    },
   ],
 });

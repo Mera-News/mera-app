@@ -866,6 +866,7 @@
     "empty": "Anda sudah mengikuti semua update",
     "close": "Tutup",
     "markAllRead": "Tandai semua telah dibaca",
+    "clearAll": "Hapus semua notifikasi",
     "migrationDoneTitle": "Minat Anda sudah siap",
     "migrationDoneBody": "Mera mengatur profil Anda ke dalam topik dan lokasi.",
     "syncFailedTitle": "Tidak dapat menyegarkan feed Anda",

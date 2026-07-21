@@ -866,6 +866,7 @@
     "empty": "すべて確認済みです",
     "close": "閉じる",
     "markAllRead": "すべて既読にする",
+    "clearAll": "すべての通知を削除",
     "migrationDoneTitle": "興味の設定が完了しました",
     "migrationDoneBody": "Meraがあなたのプロフィールをトピックと場所に整理しました。",
     "syncFailedTitle": "フィードを更新できませんでした",

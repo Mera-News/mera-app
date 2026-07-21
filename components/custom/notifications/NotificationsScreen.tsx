@@ -7,7 +7,9 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type NotificationModel from '@/lib/database/models/Notification';
 import {
+    clearAll,
     markActioned,
+    markAllRead,
     markRead,
     observeAll,
 } from '@/lib/database/services/notification-service';
@@ -102,6 +104,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
     useEffect(() => {
         const sub = observeAll().subscribe(setItems);
         return () => sub.unsubscribe();
+    }, []);
+
+    // Unread dots stay visible while the user reads the list; the bell badge
+    // (observeUnreadCount) is cleared only on leave — mark everything read here.
+    useEffect(() => {
+        return () => {
+            void markAllRead();
+        };
     }, []);
 
     /** Opens the floating Mera chat pre-staged with a synthesized message. */
@@ -224,7 +234,23 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
 
     return (
         <Box className="flex-1 bg-black">
-            <DrillDownHeader title={t('notificationCenter.title')} onBack={onBack} />
+            <DrillDownHeader
+                title={t('notificationCenter.title')}
+                onBack={onBack}
+                rightAction={
+                    items.length > 0 ? (
+                        <Pressable
+                            onPress={() => void clearAll()}
+                            hitSlop={10}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('notificationCenter.clearAll')}
+                            className="p-2 rounded-full border border-primary-500"
+                        >
+                            <MaterialIcons name="delete-sweep" size={20} color={ACCENT} />
+                        </Pressable>
+                    ) : undefined
+                }
+            />
             {items.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center px-6" space="md">
                     <MeraLogo size={72} />

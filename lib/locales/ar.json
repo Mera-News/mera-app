@@ -886,6 +886,7 @@
     "empty": "أنت مطّلع على كل شيء",
     "close": "إغلاق",
     "markAllRead": "تعليم الكل كمقروء",
+    "clearAll": "مسح كل الإشعارات",
     "migrationDoneTitle": "اهتماماتك جاهزة",
     "migrationDoneBody": "نظّم Mera ملفك الشخصي إلى موضوعات وأماكن.",
     "syncFailedTitle": "تعذّر تحديث موجزك",

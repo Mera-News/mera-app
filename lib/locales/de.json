@@ -869,6 +869,7 @@
     "empty": "Sie sind auf dem neuesten Stand",
     "close": "Schließen",
     "markAllRead": "Alle als gelesen markieren",
+    "clearAll": "Alle Benachrichtigungen löschen",
     "migrationDoneTitle": "Ihre Interessen sind bereit",
     "migrationDoneBody": "Mera hat Ihr Profil in Themen und Orte organisiert.",
     "syncFailedTitle": "Feed konnte nicht aktualisiert werden",

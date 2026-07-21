@@ -869,6 +869,7 @@
     "empty": "Sei aggiornato",
     "close": "Chiudi",
     "markAllRead": "Segna tutte come lette",
+    "clearAll": "Cancella tutte le notifiche",
     "migrationDoneTitle": "I tuoi interessi sono pronti",
     "migrationDoneBody": "Mera ha organizzato il tuo profilo in argomenti e luoghi.",
     "syncFailedTitle": "Impossibile aggiornare il tuo feed",

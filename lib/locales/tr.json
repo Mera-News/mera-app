@@ -870,6 +870,7 @@
     "empty": "Her şeyi okudun",
     "close": "Kapat",
     "markAllRead": "Tümünü okundu işaretle",
+    "clearAll": "Tüm bildirimleri temizle",
     "migrationDoneTitle": "İlgi alanların hazır",
     "migrationDoneBody": "Mera profilini konular ve konumlar halinde düzenledi.",
     "syncFailedTitle": "Akışın yenilenemedi",

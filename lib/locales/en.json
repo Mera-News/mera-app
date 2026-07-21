@@ -332,6 +332,7 @@
     "empty": "You're all caught up",
     "close": "Close",
     "markAllRead": "Mark all read",
+    "clearAll": "Clear all notifications",
     "migrationDoneTitle": "Your interests are ready",
     "migrationDoneBody": "Mera organized your profile into topics and locations.",
     "syncFailedTitle": "Couldn't refresh your feed",
