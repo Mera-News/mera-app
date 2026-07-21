@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Zaktualizowano {{time}}",
     "allCaughtUp": "Jesteś na bieżąco z tym, co Cię dotyczy.",
-    "preparingFeed": "Pobieramy i przygotowujemy dla Ciebie najświeższe wiadomości.",
+    "preparingFeed": "Świeże wiadomości są pobierane i personalizowane dla Ciebie — może to zająć chwilę.",
+    "preparingFeedExploreHint": "W międzyczasie sprawdź zakładkę Odkrywaj, aby zobaczyć najważniejsze wiadomości.",
+    "personalizingFeed": "Personalizujemy Twój kanał — najnowsze wiadomości są wyświetlane, podczas gdy Mera je szereguje",
     "noInterests": "Mera nie może analizować wiadomości dla Ciebie",
     "noInterestsDescription": "Utwórz swoją personę użytkownika, aby Mera zaczęła generować wiadomości dla Ciebie.",
     "dashboardTitle": "Pulpit",

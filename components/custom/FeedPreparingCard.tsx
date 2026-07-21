@@ -14,6 +14,9 @@ const FeedPreparingCard: React.FC = () => {
                 <Text size="md" className="text-gray-400 text-center mt-4">
                     {t('feed.preparingFeed')}
                 </Text>
+                <Text size="sm" className="text-gray-500 text-center mt-2">
+                    {t('feed.preparingFeedExploreHint')}
+                </Text>
             </Box>
         </Card>
     );

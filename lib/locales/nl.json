@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Bijgewerkt {{time}}",
     "allCaughtUp": "Je bent helemaal bij met wat voor jou relevant is.",
-    "preparingFeed": "We halen vers nieuws voor je op en verwerken het.",
+    "preparingFeed": "Vers nieuws wordt opgehaald en voor je gepersonaliseerd — dit kan een minuutje duren.",
+    "preparingFeedExploreHint": "Bekijk ondertussen het tabblad Verkennen voor de belangrijkste verhalen.",
+    "personalizingFeed": "Je feed wordt gepersonaliseerd — de nieuwste verhalen worden getoond terwijl Mera ze rangschikt",
     "noInterests": "Mera kan geen nieuws voor je analyseren",
     "noInterestsDescription": "Maak je gebruikersprofiel aan zodat Mera nieuws voor je kan genereren.",
     "dashboardTitle": "Dashboard",

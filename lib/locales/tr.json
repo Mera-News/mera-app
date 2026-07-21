@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "{{time}} güncellendi",
     "allCaughtUp": "Seni etkileyen tüm haberleri okudun.",
-    "preparingFeed": "Senin için taze haberler getiriliyor ve işleniyor.",
+    "preparingFeed": "Senin için taze haberler getiriliyor ve kişiselleştiriliyor — bu bir dakika sürebilir.",
+    "preparingFeedExploreHint": "Bu arada, öne çıkan haberler için Keşfet sekmesine göz at.",
+    "personalizingFeed": "Akışın kişiselleştiriliyor — Mera sıralarken en yeni haberler gösteriliyor",
     "noInterests": "Mera senin için haberleri analiz edemiyor",
     "noInterestsDescription": "Mera'nın sana haber üretmeye başlaması için lütfen kullanıcı profilini oluştur.",
     "dashboardTitle": "Panel",

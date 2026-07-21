@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "更新於 {{time}}",
     "allCaughtUp": "您已瀏覽完所有與您相關的新聞。",
-    "preparingFeed": "我們正在為您擷取並處理最新資訊。",
+    "preparingFeed": "正在為您擷取並個人化最新資訊 — 這可能需要一分鐘。",
+    "preparingFeedExploreHint": "與此同時，可前往「探索」標籤頁查看熱門報導。",
+    "personalizingFeed": "正在為您個人化資訊 — Mera 排序期間，將先顯示最新報導",
     "noInterests": "Mera 無法為您分析新聞",
     "noInterestsDescription": "請建立您的使用者人物誌，讓 Mera 開始為您產生新聞。",
     "dashboardTitle": "儀表板",

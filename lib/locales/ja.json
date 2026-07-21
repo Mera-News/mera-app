@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "{{time}}に更新",
     "allCaughtUp": "あなたに影響するすべてのニュースを確認しました。",
-    "preparingFeed": "最新のニュースを取得し、あなたのために処理しています。",
+    "preparingFeed": "最新のニュースを取得し、あなたのためにパーソナライズしています — 少し時間がかかる場合があります。",
+    "preparingFeedExploreHint": "その間、注目のニュースは探索タブでご覧いただけます。",
+    "personalizingFeed": "フィードをパーソナライズ中 — Meraがランク付けする間、最新の記事を表示しています",
     "noInterests": "Meraはあなたのためにニュースを分析できません",
     "noInterestsDescription": "Meraがニュースの生成を開始するには、ユーザーペルソナを作成してください。",
     "dashboardTitle": "ダッシュボード",

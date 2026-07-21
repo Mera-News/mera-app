@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "{{time}} 업데이트됨",
     "allCaughtUp": "나와 관련된 모든 소식을 다 확인하셨습니다.",
-    "preparingFeed": "회원님을 위한 새로운 소식을 불러와 정리하고 있어요.",
+    "preparingFeed": "회원님을 위한 최신 소식을 불러와 맞춤 설정하고 있어요 — 잠시 시간이 걸릴 수 있습니다.",
+    "preparingFeedExploreHint": "그동안 탐색 탭에서 주요 소식을 확인해보세요.",
+    "personalizingFeed": "피드를 맞춤 설정하는 중입니다 — Mera가 순위를 매기는 동안 최신 소식을 보여드려요",
     "noInterests": "Mera가 뉴스를 분석할 수 없습니다",
     "noInterestsDescription": "Mera가 뉴스를 생성하려면 사용자 페르소나를 설정해 주세요.",
     "dashboardTitle": "대시보드",

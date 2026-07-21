@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "更新于 {{time}}",
     "allCaughtUp": "您已浏览完所有与您相关的新闻。",
-    "preparingFeed": "我们正在为您获取并处理最新资讯。",
+    "preparingFeed": "正在为您获取并个性化最新资讯 — 这可能需要一分钟。",
+    "preparingFeedExploreHint": "与此同时，可前往「探索」标签页查看热门报道。",
+    "personalizingFeed": "正在为您个性化资讯 — Mera 排序期间，将先显示最新报道",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
     "dashboardTitle": "仪表盘",

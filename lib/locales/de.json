@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Aktualisiert {{time}}",
     "allCaughtUp": "Sie sind auf dem neuesten Stand mit allem, was Sie betrifft.",
-    "preparingFeed": "Frische Nachrichten werden gerade für Sie abgerufen und aufbereitet.",
+    "preparingFeed": "Aktuelle Nachrichten werden für Sie abgerufen und personalisiert — das kann eine Minute dauern.",
+    "preparingFeedExploreHint": "Schauen Sie in der Zwischenzeit im Tab „Entdecken“ nach den Top-Nachrichten vorbei.",
+    "personalizingFeed": "Ihr Feed wird personalisiert — die neuesten Nachrichten werden angezeigt, während Mera sie einordnet",
     "noInterests": "Mera kann keine Nachrichten für Sie analysieren",
     "noInterestsDescription": "Bitte erstellen Sie Ihre Benutzerpersona, damit Mera Nachrichten für Sie generieren kann.",
     "dashboardTitle": "Dashboard",

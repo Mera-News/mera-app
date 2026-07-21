@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Mis à jour {{time}}",
     "allCaughtUp": "Vous êtes à jour avec ce qui vous concerne.",
-    "preparingFeed": "De nouvelles actualités sont en cours de récupération et de traitement pour vous.",
+    "preparingFeed": "Les dernières actualités sont récupérées et personnalisées pour vous — cela peut prendre une minute.",
+    "preparingFeedExploreHint": "En attendant, consultez l'onglet Explorer pour découvrir les principales actualités.",
+    "personalizingFeed": "Personnalisation de votre fil — les actualités les plus récentes sont affichées pendant que Mera les classe",
     "noInterests": "Mera ne peut pas analyser les actualités pour vous",
     "noInterestsDescription": "Veuillez créer votre profil utilisateur pour que Mera commence à générer des actualités pour vous.",
     "dashboardTitle": "Tableau de bord",

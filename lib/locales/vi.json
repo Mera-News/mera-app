@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Cập nhật lúc {{time}}",
     "allCaughtUp": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
-    "preparingFeed": "Chúng tôi đang tìm và xử lý những tin tức mới nhất dành cho bạn.",
+    "preparingFeed": "Các tin tức mới đang được tìm và cá nhân hóa cho bạn — quá trình này có thể mất một phút.",
+    "preparingFeedExploreHint": "Trong lúc chờ, hãy xem tab Khám phá để biết những tin tức hàng đầu.",
+    "personalizingFeed": "Đang cá nhân hóa bảng tin của bạn — các tin mới nhất được hiển thị trong khi Mera xếp hạng chúng",
     "noInterests": "Mera không thể phân tích tin tức cho bạn",
     "noInterestsDescription": "Vui lòng tạo hồ sơ người dùng để Mera bắt đầu tạo tin tức cho bạn.",
     "dashboardTitle": "Bảng điều khiển",

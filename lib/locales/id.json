@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Diperbarui {{time}}",
     "allCaughtUp": "Anda sudah membaca semua berita yang relevan untuk Anda.",
-    "preparingFeed": "Berita terbaru sedang diambil dan diproses khusus untuk Anda.",
+    "preparingFeed": "Berita terbaru sedang diambil dan dipersonalisasi untuk Anda — ini bisa memakan waktu beberapa saat.",
+    "preparingFeedExploreHint": "Sementara itu, lihat tab Eksplor untuk berita utama.",
+    "personalizingFeed": "Mempersonalisasi feed Anda — berita terbaru ditampilkan selagi Mera mengurutkannya",
     "noInterests": "Mera tidak dapat menganalisis berita untuk Anda",
     "noInterestsDescription": "Silakan buat persona pengguna Anda agar Mera dapat mulai menghasilkan berita untuk Anda.",
     "dashboardTitle": "Dasbor",

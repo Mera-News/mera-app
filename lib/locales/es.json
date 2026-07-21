@@ -61,7 +61,9 @@
   "feed": {
     "updatedAt": "Actualizado {{time}}",
     "allCaughtUp": "Estás al día con todo lo que te afecta.",
-    "preparingFeed": "Estamos buscando y procesando noticias frescas para ti.",
+    "preparingFeed": "Estamos buscando y personalizando noticias recientes para ti — esto puede tardar un minuto.",
+    "preparingFeedExploreHint": "Mientras tanto, echa un vistazo a la pestaña Explorar para ver las noticias principales.",
+    "personalizingFeed": "Personalizando tu feed — se muestran las noticias más recientes mientras Mera las clasifica",
     "noInterests": "Mera no puede analizar noticias para ti",
     "noInterestsDescription": "Por favor, crea tu perfil de usuario para que Mera pueda empezar a generar noticias para ti.",
     "dashboardTitle": "Panel",
