@@ -64,7 +64,10 @@
     "preparingFeed": "Estamos buscando y procesando noticias frescas para ti.",
     "noInterests": "Mera no puede analizar noticias para ti",
     "noInterestsDescription": "Por favor, crea tu perfil de usuario para que Mera pueda empezar a generar noticias para ti.",
-    "forYou": "Para ti",
+    "dashboardTitle": "Panel",
+    "readArticleToast": "Has leído este artículo",
+    "jumpToSection": "Ir a la sección",
+    "sectionMenuTop": "Arriba",
     "pullDownToRetry": "Desliza hacia abajo para reintentar",
     "stuckTitle": "No se pudo cargar tu feed",
     "stuckDescription": "Algo salió mal de nuestra parte.",
@@ -184,11 +187,9 @@
       "bodyWithTime": "Por ahora no se pueden obtener nuevos artículos. Explora los artículos que ya tienes en tu dispositivo; los nuevos se desbloquean a las {{time}}.",
       "title": "Límite diario de artículos alcanzado"
     },
-    "factStages": {
-      "reading": "Leyendo artículos para {{fact}}…",
-      "writing": "Escribiendo notas para {{fact}}…",
-      "otherStories": "otras historias"
-    },
+    "analysingProgress": "Analizando {{done}} de {{total}} artículos",
+    "waitingForNextBatch_one": "{{count}} artículo nuevo esperando el próximo lote de análisis",
+    "waitingForNextBatch_other": "{{count}} artículos nuevos esperando el próximo lote de análisis",
     "moreSources_one": "+{{count}} fuente",
     "moreSources_other": "+{{count}} fuentes"
   },
@@ -293,9 +294,7 @@
     "savedTitle": "Preferencias guardadas",
     "savedDescription": "Tus ajustes de notificaciones han sido actualizados.",
     "saveFailedTitle": "Error al guardar",
-    "saveFailedDescription": "No se pudieron guardar tus preferencias. Por favor, inténtalo de nuevo.",
-    "trackedStoryUpdateTitle": "Actualización de la historia",
-    "trackedStoryUpdateBody": "{{count}} artículos nuevos en una historia que sigues"
+    "saveFailedDescription": "No se pudieron guardar tus preferencias. Por favor, inténtalo de nuevo."
   },
   "language": {
     "title": "Idioma",
@@ -551,6 +550,7 @@
     "bubbleHint": "Chatea con Mera",
     "close": "Cerrar",
     "title": "Mera",
+    "aboutThisStory": "ACERCA DE ESTA HISTORIA",
     "earlierConversation": "Conversación anterior",
     "loadingHistory": "Cargando mensajes anteriores…",
     "factSavedTitle": "Guardado en tu perfil",
@@ -594,6 +594,8 @@
     "improveMessage": "Esta sugerencia podría ser mejor: \"{{title}}\". Ayúdame a ajustar mis sugerencias.",
     "intro": "¿Qué puedo hacer por ti? Puedo explicarte por qué recibiste esta sugerencia o ayudarte a conseguir mejores.",
     "introArticle": "¿Qué puedo hacer por ti? Puedo ayudarte a ajustar tus sugerencias de noticias según este artículo.",
+    "introLikeTuning": "Te gustó esta historia — cuéntame más y ajustaré tu feed.",
+    "introDislikeTuning": "No te gustó esta historia — cuéntame por qué y ajustaré tu feed.",
     "chipWhy": "¿Por qué recibí esta sugerencia?",
     "chipWhyMessage": "¿Por qué recibí esta sugerencia?",
     "chipDontWant": "No quiero esta sugerencia",
@@ -769,12 +771,27 @@
     "upgrade": "Mejorar plan"
   },
   "tabs": {
-    "browse": "Noticias",
-    "forYou": "Para ti",
+    "feed": "Feed",
+    "dashboard": "Panel",
     "around": "Explorar",
     "profile": "Perfil",
     "settings": "Ajustes",
     "gotIt": "Entendido"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Más como esto",
+    "lessLikeThis": "Menos como esto",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "askMera": "Pregúntale a Mera",
+    "likeStamp": "ME GUSTA",
+    "nopeStamp": "NO",
+    "treeRoot": "Todo",
+    "treeThanks": "Gracias — anotado.",
+    "chatHandoffLike": "Me gustó esta historia — más como esta: {{path}}.",
+    "chatHandoffLikeNoPath": "Me gustó esta historia — quiero ver más como esta.",
+    "chatHandoffDislike": "No me gustó esta historia — {{path}}.",
+    "chatHandoffDislikeNoPath": "No me gustó esta historia. Ayúdame a ver menos como esta."
   },
   "explore": {
     "title": "Explorar",
@@ -1102,5 +1119,24 @@
     "clear": "Borrar",
     "clearA11y": "Borrar preferencia",
     "empty": "Aún no has ajustado ninguna fuente. Impulsa, degrada o silencia una publicación desde cualquier artículo para verla aquí."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Tu optimización diaria del feed está lista",
+    "notificationBody": "Mera revisó lo que te gustó y no te gustó recientemente y preparó {{count}} ajustes.",
+    "reviewChip": "Revisar plan",
+    "cardTitle": "Optimización diaria del feed",
+    "cardSubtitle": "Revisa los cambios y aplica los que apruebes.",
+    "autoSection": "Optimizaciones",
+    "reviewSection": "Necesita tu opinión",
+    "conflictsLabel": "También afecta a historias que te gustaron:",
+    "apply": "Aplicar plan",
+    "notNow": "Ahora no",
+    "discard": "Descartar plan",
+    "discardConfirm": "¿Descartar este plan? Estas sugerencias no volverán.",
+    "discardConfirmYes": "Descartar",
+    "discardConfirmNo": "Mantener",
+    "appliedToast": "{{count}} cambios aplicados",
+    "appliedTitle": "Feed optimizado",
+    "empty": "No hay nada que optimizar por ahora."
   }
 }

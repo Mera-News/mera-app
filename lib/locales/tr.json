@@ -64,8 +64,11 @@
     "preparingFeed": "Senin için taze haberler getiriliyor ve işleniyor.",
     "noInterests": "Mera senin için haberleri analiz edemiyor",
     "noInterestsDescription": "Mera'nın sana haber üretmeye başlaması için lütfen kullanıcı profilini oluştur.",
-    "forYou": "Senin İçin",
+    "dashboardTitle": "Panel",
     "pullDownToRetry": "Tekrar denemek için aşağı çek",
+    "readArticleToast": "Bu makaleyi okudun",
+    "jumpToSection": "Bölüme atla",
+    "sectionMenuTop": "Üst",
     "stuckTitle": "Haber akışın yüklenemedi",
     "stuckDescription": "Bizim tarafımızda bir şeyler ters gitti.",
     "stuckHint": "Birkaç dakika sonra uygulamayı yeniden aç.",
@@ -184,13 +187,11 @@
       "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler {{time}} saatinde açılır.",
       "title": "Günlük makale sınırına ulaşıldı"
     },
+    "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
+    "waitingForNextBatch_one": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
+    "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
     "moreSources_one": "+{{count}} kaynak",
-    "moreSources_other": "+{{count}} kaynak",
-    "factStages": {
-      "reading": "{{fact}} için makaleler okunuyor…",
-      "writing": "{{fact}} için notlar yazılıyor…",
-      "otherStories": "diğer haberler"
-    }
+    "moreSources_other": "+{{count}} kaynak"
   },
   "relevance": {
     "emergency": "Acil",
@@ -287,8 +288,6 @@
     "savedDescription": "Bildirim ayarların güncellendi.",
     "saveFailedTitle": "Kaydetme Başarısız",
     "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
-    "trackedStoryUpdateTitle": "Haber güncellendi",
-    "trackedStoryUpdateBody": "Takip ettiğin bir haberde {{count}} yeni makale",
     "timeDescriptionOnboarding": "Haberlerine ne zaman göz atmak istediğini seç",
     "timeNudges": [
       "Haberler, günde bir ya da iki odaklanmış anda en iyi şekilde işler.",
@@ -551,6 +550,7 @@
     "bubbleHint": "Mera ile sohbet et",
     "close": "Kapat",
     "title": "Mera",
+    "aboutThisStory": "BU HABER HAKKINDA",
     "earlierConversation": "Önceki konuşma",
     "loadingHistory": "Önceki mesajlar yükleniyor…",
     "factSavedTitle": "Profiline kaydedildi",
@@ -594,6 +594,8 @@
     "improveMessage": "Bu öneri daha iyi olabilir: \"{{title}}\". Önerilerimi ayarlamama yardım et.",
     "intro": "Senin için ne yapabilirim? Bu öneriyi neden aldığını açıklayabilir veya daha iyi öneriler almana yardımcı olabilirim.",
     "introArticle": "Senin için ne yapabilirim? Bu makaleye dayanarak haber önerilerini ayarlamana yardımcı olabilirim.",
+    "introLikeTuning": "Bu haberi beğendin — biraz daha anlat, akışını ayarlayayım.",
+    "introDislikeTuning": "Bu haberi beğenmedin — nedenini anlat, akışını ayarlayayım.",
     "chipWhy": "Bu öneriyi neden aldım?",
     "chipWhyMessage": "Bu öneriyi neden aldım?",
     "chipDontWant": "Bu öneriyi istemiyorum",
@@ -769,12 +771,27 @@
     "upgrade": "Yükselt"
   },
   "tabs": {
-    "browse": "Gözat",
-    "forYou": "Senin İçin",
+    "feed": "Akış",
+    "dashboard": "Panel",
     "around": "Keşfet",
     "profile": "Profil",
     "settings": "Ayarlar",
     "gotIt": "Anladım"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Bunun gibi daha fazlası",
+    "lessLikeThis": "Bunun gibi daha azı",
+    "next": "Sonraki",
+    "back": "Geri",
+    "askMera": "Mera'ya Sor",
+    "likeStamp": "BEĞEN",
+    "nopeStamp": "GEÇ",
+    "treeRoot": "Tümü",
+    "treeThanks": "Teşekkürler — not edildi.",
+    "chatHandoffLike": "Bu haberi beğendim — bunun gibi daha fazlası: {{path}}.",
+    "chatHandoffLikeNoPath": "Bu haberi beğendim — bunun gibi daha fazlasını istiyorum.",
+    "chatHandoffDislike": "Bu haberi beğenmedim — {{path}}.",
+    "chatHandoffDislikeNoPath": "Bu haberi beğenmedim. Bunun gibi daha azını görmeme yardım et."
   },
   "explore": {
     "title": "Keşfet",
@@ -1103,5 +1120,24 @@
     "clear": "Temizle",
     "clearA11y": "Tercihi temizle",
     "empty": "Henüz hiçbir kaynağı ayarlamadın. Herhangi bir makaleden bir yayını öne çıkar, önceliğini düşür veya sustur, burada görünsün."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Günlük akış ayarın hazır",
+    "notificationBody": "Mera son beğenilerini ve beğenmediklerini inceledi ve {{count}} ayarlama hazırladı.",
+    "reviewChip": "Planı incele",
+    "cardTitle": "Günlük akış ayarı",
+    "cardSubtitle": "Değişiklikleri incele ve katıldıklarını uygula.",
+    "autoSection": "Ayarlamalar",
+    "reviewSection": "Onayın gerekiyor",
+    "conflictsLabel": "Beğendiğin haberleri de etkiler:",
+    "apply": "Planı uygula",
+    "notNow": "Şimdi değil",
+    "discard": "Planı sil",
+    "discardConfirm": "Bu plan silinsin mi? Bu öneriler bir daha gelmeyecek.",
+    "discardConfirmYes": "Sil",
+    "discardConfirmNo": "Sakla",
+    "appliedToast": "{{count}} değişiklik uygulandı",
+    "appliedTitle": "Akış ayarlandı",
+    "empty": "Şu anda ayarlanacak bir şey yok."
   }
 }

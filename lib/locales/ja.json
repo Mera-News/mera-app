@@ -64,8 +64,11 @@
     "preparingFeed": "最新のニュースを取得し、あなたのために処理しています。",
     "noInterests": "Meraはあなたのためにニュースを分析できません",
     "noInterestsDescription": "Meraがニュースの生成を開始するには、ユーザーペルソナを作成してください。",
-    "forYou": "あなたへ",
+    "dashboardTitle": "ダッシュボード",
     "pullDownToRetry": "引き下げて再試行",
+    "readArticleToast": "この記事を読みました",
+    "jumpToSection": "セクションにジャンプ",
+    "sectionMenuTop": "トップ",
     "stuckTitle": "フィードを読み込めませんでした",
     "stuckDescription": "サーバー側で問題が発生しました。",
     "stuckHint": "数分後にアプリを再度開いてください。",
@@ -179,16 +182,13 @@
       "completedTitle": "完了しました",
       "completedMessage": "フィードの準備ができました"
     },
-    "factStages": {
-      "reading": "{{fact}}に関する記事を読んでいます…",
-      "writing": "{{fact}}のためのメモを作成しています…",
-      "otherStories": "その他のストーリー"
-    },
     "dailyLimit": {
       "body": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は明日解放されます。",
       "bodyWithTime": "現在、新しい記事は取得できません。すでに端末にある記事をご覧ください。新しい記事は{{time}}に解放されます。",
       "title": "1日の記事上限に達しました"
     },
+    "analysingProgress": "{{total}}件中{{done}}件の記事を分析中",
+    "waitingForNextBatch_other": "次の分析バッチを待っている新着記事が{{count}}件あります",
     "moreSources_other": "+{{count}}件のソース"
   },
   "relevance": {
@@ -292,9 +292,7 @@
     "savedTitle": "設定を保存しました",
     "savedDescription": "通知設定が更新されました。",
     "saveFailedTitle": "保存に失敗しました",
-    "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。",
-    "trackedStoryUpdateTitle": "ストーリーの更新",
-    "trackedStoryUpdateBody": "フォロー中のストーリーに{{count}}件の新着記事があります"
+    "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。"
   },
   "language": {
     "title": "言語",
@@ -550,6 +548,7 @@
     "bubbleHint": "Meraとチャット",
     "close": "閉じる",
     "title": "Mera",
+    "aboutThisStory": "このストーリーについて",
     "earlierConversation": "以前の会話",
     "loadingHistory": "以前のメッセージを読み込み中…",
     "factSavedTitle": "プロフィールに保存しました",
@@ -593,6 +592,8 @@
     "improveMessage": "この提案は改善の余地があります:「{{title}}」。提案の調整を手伝ってください。",
     "intro": "何をお手伝いしましょうか?この提案が表示された理由を説明したり、より良い提案を得るお手伝いができます。",
     "introArticle": "何をお手伝いしましょうか?この記事に基づいてニュースの提案を調整するお手伝いができます。",
+    "introLikeTuning": "このストーリーが気に入ったのですね — もっと教えていただければ、フィードを調整します。",
+    "introDislikeTuning": "このストーリーは気に入らなかったのですね — 理由を教えていただければ、フィードを調整します。",
     "chipWhy": "なぜこの提案が表示されたのですか?",
     "chipWhyMessage": "なぜこの提案が表示されたのですか?",
     "chipDontWant": "この提案は不要です",
@@ -768,12 +769,27 @@
     "upgrade": "アップグレード"
   },
   "tabs": {
-    "browse": "閲覧",
-    "forYou": "あなたへ",
+    "feed": "フィード",
+    "dashboard": "ダッシュボード",
     "around": "探索",
     "profile": "プロフィール",
     "settings": "設定",
     "gotIt": "わかりました"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "こういう記事をもっと",
+    "lessLikeThis": "こういう記事を減らす",
+    "next": "次へ",
+    "back": "戻る",
+    "askMera": "Meraに聞く",
+    "likeStamp": "LIKE",
+    "nopeStamp": "NOPE",
+    "treeRoot": "すべて",
+    "treeThanks": "ありがとうございます — 記録しました。",
+    "chatHandoffLike": "このストーリーが気に入りました — こういうのをもっと: {{path}}。",
+    "chatHandoffLikeNoPath": "このストーリーが気に入りました — こういうのをもっと見たいです。",
+    "chatHandoffDislike": "このストーリーは気に入りませんでした — {{path}}。",
+    "chatHandoffDislikeNoPath": "このストーリーは気に入りませんでした。こういうのを減らすのを手伝ってください。"
   },
   "explore": {
     "title": "探索",
@@ -1096,5 +1112,24 @@
     "clear": "クリア",
     "clearA11y": "設定をクリア",
     "empty": "まだソースを調整していません。記事から出版社をブースト、格下げ、またはミュートすると、ここに表示されます。"
+  },
+  "optimisationPlan": {
+    "notificationTitle": "毎日のフィード調整の準備ができました",
+    "notificationBody": "Meraは最近の「いいね」と「興味なし」を確認し、{{count}}件の調整を用意しました。",
+    "reviewChip": "プランを確認",
+    "cardTitle": "毎日のフィード調整",
+    "cardSubtitle": "変更内容を確認し、同意するものを適用してください。",
+    "autoSection": "調整",
+    "reviewSection": "確認が必要",
+    "conflictsLabel": "気に入ったストーリーにも影響します:",
+    "apply": "プランを適用",
+    "notNow": "後で",
+    "discard": "プランを破棄",
+    "discardConfirm": "このプランを破棄しますか？これらの提案は元に戻りません。",
+    "discardConfirmYes": "破棄",
+    "discardConfirmNo": "保持",
+    "appliedToast": "{{count}}件の変更を適用しました",
+    "appliedTitle": "フィードを調整しました",
+    "empty": "現在調整することはありません。"
   }
 }

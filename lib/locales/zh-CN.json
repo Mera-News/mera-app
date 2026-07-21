@@ -64,8 +64,11 @@
     "preparingFeed": "我们正在为您获取并处理最新资讯。",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
-    "forYou": "为您推荐",
+    "dashboardTitle": "仪表盘",
     "pullDownToRetry": "下拉重试",
+    "readArticleToast": "您已阅读过这篇文章",
+    "jumpToSection": "跳转到分区",
+    "sectionMenuTop": "顶部",
     "stuckTitle": "无法加载您的资讯",
     "stuckDescription": "我们这边出现了问题。",
     "stuckHint": "请几分钟后重新打开应用。",
@@ -179,16 +182,13 @@
       "completedTitle": "全部完成",
       "completedMessage": "您的资讯已准备就绪"
     },
-    "factStages": {
-      "reading": "正在阅读关于{{fact}}的文章…",
-      "writing": "正在为{{fact}}撰写笔记…",
-      "otherStories": "其他报道"
-    },
     "dailyLimit": {
       "body": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于明天解锁。",
       "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于 {{time}} 解锁。",
       "title": "已达每日文章上限"
     },
+    "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
+    "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析",
     "moreSources_other": "+{{count}} 个来源"
   },
   "relevance": {
@@ -292,9 +292,7 @@
     "savedTitle": "偏好已保存",
     "savedDescription": "您的通知设置已更新。",
     "saveFailedTitle": "保存失败",
-    "saveFailedDescription": "无法保存您的偏好设置，请重试。",
-    "trackedStoryUpdateTitle": "报道更新",
-    "trackedStoryUpdateBody": "您关注的报道有 {{count}} 篇新文章"
+    "saveFailedDescription": "无法保存您的偏好设置，请重试。"
   },
   "language": {
     "title": "语言",
@@ -550,6 +548,7 @@
     "bubbleHint": "与 Mera 聊天",
     "close": "关闭",
     "title": "Mera",
+    "aboutThisStory": "关于这篇报道",
     "earlierConversation": "较早的对话",
     "loadingHistory": "正在加载较早的消息…",
     "factSavedTitle": "已保存到你的档案",
@@ -593,6 +592,8 @@
     "improveMessage": "这个推荐可以更好:「{{title}}」。请帮我调整我的推荐。",
     "intro": "我能为你做些什么?我可以解释你为什么收到这个推荐,或者帮你获得更好的推荐。",
     "introArticle": "我能为你做些什么?我可以根据这篇文章帮你调整新闻推荐。",
+    "introLikeTuning": "你喜欢这篇报道——告诉我更多信息，我会帮你调整信息流。",
+    "introDislikeTuning": "你不喜欢这篇报道——告诉我原因，我会帮你调整信息流。",
     "chipWhy": "我为什么会收到这个推荐?",
     "chipWhyMessage": "我为什么会收到这个推荐?",
     "chipDontWant": "我不想要这个推荐",
@@ -768,12 +769,27 @@
     "upgrade": "升级"
   },
   "tabs": {
-    "browse": "浏览",
-    "forYou": "为你推荐",
+    "feed": "资讯",
+    "dashboard": "仪表盘",
     "around": "探索",
     "profile": "我的",
     "settings": "设置",
     "gotIt": "知道了"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "多看这类",
+    "lessLikeThis": "少看这类",
+    "next": "下一个",
+    "back": "返回",
+    "askMera": "问 Mera",
+    "likeStamp": "喜欢",
+    "nopeStamp": "不要",
+    "treeRoot": "全部",
+    "treeThanks": "谢谢——已记录。",
+    "chatHandoffLike": "我喜欢这篇报道——多看这类：{{path}}。",
+    "chatHandoffLikeNoPath": "我喜欢这篇报道——我想多看这类内容。",
+    "chatHandoffDislike": "我不喜欢这篇报道——{{path}}。",
+    "chatHandoffDislikeNoPath": "我不喜欢这篇报道。帮我减少这类内容。"
   },
   "explore": {
     "title": "探索",
@@ -1096,5 +1112,24 @@
     "clear": "清除",
     "clearA11y": "清除偏好",
     "empty": "你还没有调整过任何来源。在任意文章中提升、降权或屏蔽一个媒体，即可在此看到。"
+  },
+  "optimisationPlan": {
+    "notificationTitle": "你的每日信息流调整已就绪",
+    "notificationBody": "Mera 审阅了你最近的点赞与不喜欢，整理出 {{count}} 项调整。",
+    "reviewChip": "查看方案",
+    "cardTitle": "每日信息流调整",
+    "cardSubtitle": "查看这些变更，应用你认同的部分。",
+    "autoSection": "调整项",
+    "reviewSection": "需要你确认",
+    "conflictsLabel": "也会影响你喜欢的报道：",
+    "apply": "应用方案",
+    "notNow": "暂时不用",
+    "discard": "放弃方案",
+    "discardConfirm": "放弃这个方案？这些建议将不再出现。",
+    "discardConfirmYes": "放弃",
+    "discardConfirmNo": "保留",
+    "appliedToast": "已应用 {{count}} 项更改",
+    "appliedTitle": "信息流已调整",
+    "empty": "目前没有需要调整的内容。"
   }
 }

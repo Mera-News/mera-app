@@ -64,8 +64,11 @@
     "preparingFeed": "Stiamo recuperando ed elaborando le notizie più fresche per te.",
     "noInterests": "Mera non può analizzare le notizie per te",
     "noInterestsDescription": "Per favore crea il tuo profilo utente affinché Mera possa iniziare a generare notizie per te.",
-    "forYou": "Per te",
+    "dashboardTitle": "Dashboard",
     "pullDownToRetry": "Scorri verso il basso per riprovare",
+    "readArticleToast": "Hai letto questo articolo",
+    "jumpToSection": "Vai alla sezione",
+    "sectionMenuTop": "Inizio",
     "stuckTitle": "Impossibile caricare il tuo feed",
     "stuckDescription": "Qualcosa è andato storto da parte nostra.",
     "stuckHint": "Riapri l'app tra qualche minuto.",
@@ -179,16 +182,14 @@
       "completedTitle": "Tutto fatto",
       "completedMessage": "Il tuo feed è pronto"
     },
-    "factStages": {
-      "reading": "Sto leggendo gli articoli per {{fact}}…",
-      "writing": "Sto scrivendo note per {{fact}}…",
-      "otherStories": "altre storie"
-    },
     "dailyLimit": {
       "body": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano domani.",
       "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano alle {{time}}.",
       "title": "Limite giornaliero di articoli raggiunto"
     },
+    "analysingProgress": "Analisi di {{done}} di {{total}} articoli",
+    "waitingForNextBatch_one": "{{count}} nuovo articolo in attesa del prossimo lotto di analisi",
+    "waitingForNextBatch_other": "{{count}} nuovi articoli in attesa del prossimo lotto di analisi",
     "moreSources_one": "+{{count}} fonte",
     "moreSources_other": "+{{count}} fonti"
   },
@@ -293,9 +294,7 @@
     "savedTitle": "Preferenze salvate",
     "savedDescription": "Le impostazioni delle notifiche sono state aggiornate.",
     "saveFailedTitle": "Salvataggio non riuscito",
-    "saveFailedDescription": "Impossibile salvare le preferenze. Per favore riprova.",
-    "trackedStoryUpdateTitle": "Aggiornamento storia",
-    "trackedStoryUpdateBody": "{{count}} nuovi articoli in una storia che segui"
+    "saveFailedDescription": "Impossibile salvare le preferenze. Per favore riprova."
   },
   "language": {
     "title": "Lingua",
@@ -551,6 +550,7 @@
     "bubbleHint": "Chatta con Mera",
     "close": "Chiudi",
     "title": "Mera",
+    "aboutThisStory": "SU QUESTA STORIA",
     "earlierConversation": "Conversazione precedente",
     "loadingHistory": "Caricamento dei messaggi precedenti…",
     "factSavedTitle": "Salvato nel tuo profilo",
@@ -594,6 +594,8 @@
     "improveMessage": "Questo suggerimento potrebbe essere migliore: \"{{title}}\". Aiutami a modificare i miei suggerimenti.",
     "intro": "Cosa posso fare per te? Posso spiegarti perché hai ricevuto questo suggerimento, oppure aiutarti a ottenerne di migliori.",
     "introArticle": "Cosa posso fare per te? Posso aiutarti a modificare i tuoi suggerimenti di notizie in base a questo articolo.",
+    "introLikeTuning": "Ti è piaciuta questa storia — dimmi di più e regolerò il tuo feed.",
+    "introDislikeTuning": "Non ti è piaciuta questa storia — dimmi perché e regolerò il tuo feed.",
     "chipWhy": "Perché ho ricevuto questo suggerimento?",
     "chipWhyMessage": "Perché ho ricevuto questo suggerimento?",
     "chipDontWant": "Non voglio questo suggerimento",
@@ -769,12 +771,27 @@
     "upgrade": "Aggiorna"
   },
   "tabs": {
-    "browse": "Sfoglia",
-    "forYou": "Per te",
+    "feed": "Feed",
+    "dashboard": "Dashboard",
     "around": "Esplora",
     "profile": "Profilo",
     "settings": "Impostazioni",
     "gotIt": "Capito"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Più come questo",
+    "lessLikeThis": "Meno come questo",
+    "next": "Avanti",
+    "back": "Indietro",
+    "askMera": "Chiedi a Mera",
+    "likeStamp": "LIKE",
+    "nopeStamp": "NOPE",
+    "treeRoot": "Tutto",
+    "treeThanks": "Grazie — annotato.",
+    "chatHandoffLike": "Mi è piaciuta questa storia — altre come questa: {{path}}.",
+    "chatHandoffLikeNoPath": "Mi è piaciuta questa storia — vorrei vederne altre simili.",
+    "chatHandoffDislike": "Non mi è piaciuta questa storia — {{path}}.",
+    "chatHandoffDislikeNoPath": "Non mi è piaciuta questa storia. Aiutami a vederne di meno simili."
   },
   "explore": {
     "title": "Esplora",
@@ -1102,5 +1119,24 @@
     "clear": "Cancella",
     "clearA11y": "Cancella preferenza",
     "empty": "Non hai ancora modificato nessuna fonte. Aumenta, declassa o silenzia una pubblicazione da qualsiasi articolo per vederla qui."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Il tuo aggiornamento giornaliero del feed è pronto",
+    "notificationBody": "Mera ha rivisto i tuoi \"mi piace\" e \"non mi piace\" recenti e ha preparato {{count}} modifiche.",
+    "reviewChip": "Rivedi il piano",
+    "cardTitle": "Aggiornamento giornaliero del feed",
+    "cardSubtitle": "Rivedi le modifiche e applica quelle con cui sei d'accordo.",
+    "autoSection": "Aggiornamenti",
+    "reviewSection": "Richiede il tuo contributo",
+    "conflictsLabel": "Influisce anche sulle storie che ti sono piaciute:",
+    "apply": "Applica piano",
+    "notNow": "Non ora",
+    "discard": "Scarta piano",
+    "discardConfirm": "Scartare questo piano? Questi suggerimenti non torneranno.",
+    "discardConfirmYes": "Scarta",
+    "discardConfirmNo": "Mantieni",
+    "appliedToast": "{{count}} modifiche applicate",
+    "appliedTitle": "Feed aggiornato",
+    "empty": "Al momento non c'è nulla da aggiornare."
   }
 }

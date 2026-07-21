@@ -64,8 +64,11 @@
     "preparingFeed": "Chúng tôi đang tìm và xử lý những tin tức mới nhất dành cho bạn.",
     "noInterests": "Mera không thể phân tích tin tức cho bạn",
     "noInterestsDescription": "Vui lòng tạo hồ sơ người dùng để Mera bắt đầu tạo tin tức cho bạn.",
-    "forYou": "Dành cho bạn",
+    "dashboardTitle": "Bảng điều khiển",
     "pullDownToRetry": "Kéo xuống để thử lại",
+    "readArticleToast": "Bạn đã đọc bài viết này",
+    "jumpToSection": "Chuyển đến mục",
+    "sectionMenuTop": "Đầu trang",
     "stuckTitle": "Không thể tải bản tin",
     "stuckDescription": "Đã xảy ra sự cố ở phía chúng tôi.",
     "stuckHint": "Hãy mở lại ứng dụng sau vài phút.",
@@ -179,16 +182,13 @@
       "completedTitle": "Hoàn tất",
       "completedMessage": "Bản tin của bạn đã sẵn sàng"
     },
-    "factStages": {
-      "reading": "Đang đọc bài viết về {{fact}}…",
-      "writing": "Đang viết ghi chú cho {{fact}}…",
-      "otherStories": "các tin khác"
-    },
     "dailyLimit": {
       "body": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào ngày mai.",
       "bodyWithTime": "Hiện chưa thể tải thêm bài viết mới. Hãy xem các bài viết đã có trên thiết bị của bạn — bài viết mới sẽ mở khóa vào lúc {{time}}.",
       "title": "Đã đạt giới hạn bài viết hằng ngày"
     },
+    "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
+    "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
     "moreSources_other": "+{{count}} nguồn"
   },
   "relevance": {
@@ -292,9 +292,7 @@
     "savedTitle": "Đã lưu tùy chọn",
     "savedDescription": "Cài đặt thông báo của bạn đã được cập nhật.",
     "saveFailedTitle": "Lưu thất bại",
-    "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại.",
-    "trackedStoryUpdateTitle": "Cập nhật câu chuyện",
-    "trackedStoryUpdateBody": "{{count}} bài viết mới trong một câu chuyện bạn đang theo dõi"
+    "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại."
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -550,6 +548,7 @@
     "bubbleHint": "Trò chuyện với Mera",
     "close": "Đóng",
     "title": "Mera",
+    "aboutThisStory": "VỀ CÂU CHUYỆN NÀY",
     "earlierConversation": "Cuộc trò chuyện trước đó",
     "loadingHistory": "Đang tải tin nhắn trước đó…",
     "factSavedTitle": "Đã lưu vào hồ sơ của bạn",
@@ -593,6 +592,8 @@
     "improveMessage": "Gợi ý này có thể tốt hơn: \"{{title}}\". Hãy giúp tôi điều chỉnh gợi ý của mình.",
     "intro": "Tôi có thể giúp gì cho bạn? Tôi có thể giải thích tại sao bạn nhận được gợi ý này, hoặc giúp bạn có được gợi ý tốt hơn.",
     "introArticle": "Tôi có thể giúp gì cho bạn? Tôi có thể giúp điều chỉnh gợi ý tin tức của bạn dựa trên bài viết này.",
+    "introLikeTuning": "Bạn đã thích câu chuyện này — hãy nói thêm để mình tinh chỉnh bản tin của bạn.",
+    "introDislikeTuning": "Bạn không thích câu chuyện này — hãy cho mình biết lý do để mình tinh chỉnh bản tin của bạn.",
     "chipWhy": "Tại sao tôi nhận được gợi ý này?",
     "chipWhyMessage": "Tại sao tôi nhận được gợi ý này?",
     "chipDontWant": "Tôi không muốn gợi ý này",
@@ -768,12 +769,27 @@
     "upgrade": "Nâng cấp"
   },
   "tabs": {
-    "browse": "Duyệt",
-    "forYou": "Dành cho bạn",
+    "feed": "Bản tin",
+    "dashboard": "Bảng điều khiển",
     "around": "Khám phá",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
     "gotIt": "Đã hiểu"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Thêm như thế này",
+    "lessLikeThis": "Bớt như thế này",
+    "next": "Tiếp theo",
+    "back": "Quay lại",
+    "askMera": "Hỏi Mera",
+    "likeStamp": "LIKE",
+    "nopeStamp": "NOPE",
+    "treeRoot": "Tất cả",
+    "treeThanks": "Cảm ơn — đã ghi nhận.",
+    "chatHandoffLike": "Tôi thích câu chuyện này — thêm nội dung như: {{path}}.",
+    "chatHandoffLikeNoPath": "Tôi thích câu chuyện này — tôi muốn xem thêm nội dung như thế này.",
+    "chatHandoffDislike": "Tôi không thích câu chuyện này — {{path}}.",
+    "chatHandoffDislikeNoPath": "Tôi không thích câu chuyện này. Hãy giúp tôi giảm bớt nội dung như thế này."
   },
   "explore": {
     "title": "Khám phá",
@@ -1096,5 +1112,24 @@
     "clear": "Xóa",
     "clearA11y": "Xóa tùy chọn",
     "empty": "Bạn chưa điều chỉnh nguồn tin nào. Tăng, giảm hoặc tắt tiếng một ấn phẩm từ bất kỳ bài viết nào để thấy nó ở đây."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Tinh chỉnh bản tin hằng ngày của bạn đã sẵn sàng",
+    "notificationBody": "Mera đã xem xét các lượt thích và không thích gần đây của bạn và chuẩn bị {{count}} điều chỉnh.",
+    "reviewChip": "Xem xét kế hoạch",
+    "cardTitle": "Tinh chỉnh bản tin hằng ngày",
+    "cardSubtitle": "Xem lại các thay đổi và áp dụng những gì bạn đồng ý.",
+    "autoSection": "Điều chỉnh",
+    "reviewSection": "Cần bạn xem xét",
+    "conflictsLabel": "Cũng ảnh hưởng đến các câu chuyện bạn đã thích:",
+    "apply": "Áp dụng kế hoạch",
+    "notNow": "Không phải bây giờ",
+    "discard": "Hủy kế hoạch",
+    "discardConfirm": "Hủy kế hoạch này? Các đề xuất này sẽ không quay lại.",
+    "discardConfirmYes": "Hủy",
+    "discardConfirmNo": "Giữ lại",
+    "appliedToast": "Đã áp dụng {{count}} thay đổi",
+    "appliedTitle": "Đã tinh chỉnh bản tin",
+    "empty": "Hiện không có gì cần tinh chỉnh."
   }
 }

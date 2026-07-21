@@ -64,8 +64,11 @@
     "preparingFeed": "Frische Nachrichten werden gerade für Sie abgerufen und aufbereitet.",
     "noInterests": "Mera kann keine Nachrichten für Sie analysieren",
     "noInterestsDescription": "Bitte erstellen Sie Ihre Benutzerpersona, damit Mera Nachrichten für Sie generieren kann.",
-    "forYou": "Für Sie",
+    "dashboardTitle": "Dashboard",
     "pullDownToRetry": "Nach unten ziehen, um es erneut zu versuchen",
+    "readArticleToast": "Sie haben diesen Artikel bereits gelesen",
+    "jumpToSection": "Zum Abschnitt springen",
+    "sectionMenuTop": "Oben",
     "stuckTitle": "Ihr Feed konnte nicht geladen werden",
     "stuckDescription": "Bei uns ist etwas schiefgelaufen.",
     "stuckHint": "Öffnen Sie die App in wenigen Minuten erneut.",
@@ -186,11 +189,9 @@
     },
     "moreSources_one": "+{{count}} Quelle",
     "moreSources_other": "+{{count}} Quellen",
-    "factStages": {
-      "reading": "Artikel für {{fact}} werden gelesen…",
-      "writing": "Notizen für {{fact}} werden verfasst…",
-      "otherStories": "andere Geschichten"
-    }
+    "analysingProgress": "{{done}} von {{total}} Artikeln werden analysiert",
+    "waitingForNextBatch_one": "{{count}} neuer Artikel wartet auf die nächste Analyserunde",
+    "waitingForNextBatch_other": "{{count}} neue Artikel warten auf die nächste Analyserunde"
   },
   "relevance": {
     "emergency": "Notfall",
@@ -287,8 +288,6 @@
     "savedDescription": "Ihre Benachrichtigungseinstellungen wurden aktualisiert.",
     "saveFailedTitle": "Speichern fehlgeschlagen",
     "saveFailedDescription": "Ihre Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
-    "trackedStoryUpdateTitle": "Story-Update",
-    "trackedStoryUpdateBody": "{{count}} neue Artikel in einer Geschichte, der Sie folgen",
     "timeDescriptionOnboarding": "Wählen Sie, wann Sie sich über Ihre Nachrichten informieren möchten",
     "timeNudges": [
       "Nachrichten funktionieren am besten in ein oder zwei fokussierten Momenten am Tag.",
@@ -551,6 +550,7 @@
     "bubbleHint": "Mit Mera chatten",
     "close": "Schließen",
     "title": "Mera",
+    "aboutThisStory": "ÜBER DIESE GESCHICHTE",
     "earlierConversation": "Frühere Unterhaltung",
     "loadingHistory": "Frühere Nachrichten werden geladen…",
     "factSavedTitle": "In deinem Profil gespeichert",
@@ -594,6 +594,8 @@
     "improveMessage": "Dieser Vorschlag könnte besser sein: \"{{title}}\". Hilf mir, meine Vorschläge zu verbessern.",
     "intro": "Was kann ich für dich tun? Ich kann erklären, warum du diesen Vorschlag erhalten hast, oder dir helfen, bessere zu bekommen.",
     "introArticle": "Was kann ich für dich tun? Ich kann dir helfen, deine Nachrichtenvorschläge anhand dieses Artikels anzupassen.",
+    "introLikeTuning": "Dir hat diese Geschichte gefallen — erzähl mir mehr, und ich optimiere deinen Feed.",
+    "introDislikeTuning": "Dir hat diese Geschichte nicht gefallen — sag mir, warum, und ich optimiere deinen Feed.",
     "chipWhy": "Warum habe ich diesen Vorschlag erhalten?",
     "chipWhyMessage": "Warum habe ich diesen Vorschlag erhalten?",
     "chipDontWant": "Ich möchte diesen Vorschlag nicht",
@@ -769,12 +771,27 @@
     "upgrade": "Upgrade"
   },
   "tabs": {
-    "browse": "Nachrichten",
-    "forYou": "Für Sie",
+    "feed": "Feed",
+    "dashboard": "Dashboard",
     "around": "Entdecken",
     "profile": "Profil",
     "settings": "Einstellungen",
     "gotIt": "Verstanden"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Mehr davon",
+    "lessLikeThis": "Weniger davon",
+    "next": "Weiter",
+    "back": "Zurück",
+    "askMera": "Mera fragen",
+    "likeStamp": "LIKE",
+    "nopeStamp": "NOPE",
+    "treeRoot": "Alle",
+    "treeThanks": "Danke — notiert.",
+    "chatHandoffLike": "Mir hat diese Geschichte gefallen — mehr davon: {{path}}.",
+    "chatHandoffLikeNoPath": "Mir hat diese Geschichte gefallen — ich hätte gerne mehr davon.",
+    "chatHandoffDislike": "Mir hat diese Geschichte nicht gefallen — {{path}}.",
+    "chatHandoffDislikeNoPath": "Mir hat diese Geschichte nicht gefallen. Hilf mir, weniger davon zu bekommen."
   },
   "explore": {
     "title": "Entdecken",
@@ -1102,5 +1119,24 @@
     "clear": "Löschen",
     "clearA11y": "Präferenz löschen",
     "empty": "Sie haben noch keine Quellen angepasst. Heben Sie eine Publikation aus einem beliebigen Artikel hervor, stufen Sie sie herab oder schalten Sie sie stumm, um sie hier zu sehen."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Ihre tägliche Feed-Optimierung ist bereit",
+    "notificationBody": "Mera hat Ihre letzten Zustimmungen und Ablehnungen geprüft und {{count}} Anpassungen vorbereitet.",
+    "reviewChip": "Plan prüfen",
+    "cardTitle": "Tägliche Feed-Optimierung",
+    "cardSubtitle": "Prüfen Sie die Änderungen und übernehmen Sie, womit Sie einverstanden sind.",
+    "autoSection": "Optimierungen",
+    "reviewSection": "Braucht Ihre Rückmeldung",
+    "conflictsLabel": "Betrifft auch Geschichten, die Ihnen gefallen haben:",
+    "apply": "Plan übernehmen",
+    "notNow": "Jetzt nicht",
+    "discard": "Plan verwerfen",
+    "discardConfirm": "Diesen Plan verwerfen? Diese Vorschläge kommen nicht zurück.",
+    "discardConfirmYes": "Verwerfen",
+    "discardConfirmNo": "Behalten",
+    "appliedToast": "{{count}} Änderungen übernommen",
+    "appliedTitle": "Feed optimiert",
+    "empty": "Momentan nichts zu optimieren."
   }
 }

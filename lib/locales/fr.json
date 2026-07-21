@@ -64,7 +64,10 @@
     "preparingFeed": "De nouvelles actualités sont en cours de récupération et de traitement pour vous.",
     "noInterests": "Mera ne peut pas analyser les actualités pour vous",
     "noInterestsDescription": "Veuillez créer votre profil utilisateur pour que Mera commence à générer des actualités pour vous.",
-    "forYou": "Pour vous",
+    "dashboardTitle": "Tableau de bord",
+    "readArticleToast": "Vous avez lu cet article",
+    "jumpToSection": "Aller à la section",
+    "sectionMenuTop": "Haut",
     "pullDownToRetry": "Tirez vers le bas pour réessayer",
     "stuckTitle": "Impossible de charger votre fil",
     "stuckDescription": "Une erreur s'est produite de notre côté.",
@@ -184,11 +187,9 @@
       "bodyWithTime": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil — de nouveaux articles seront débloqués à {{time}}.",
       "title": "Limite quotidienne d'articles atteinte"
     },
-    "factStages": {
-      "reading": "Lecture des articles pour {{fact}}…",
-      "writing": "Rédaction de notes pour {{fact}}…",
-      "otherStories": "autres actualités"
-    },
+    "analysingProgress": "Analyse de {{done}} sur {{total}} articles",
+    "waitingForNextBatch_one": "{{count}} nouvel article en attente du prochain lot d'analyse",
+    "waitingForNextBatch_other": "{{count}} nouveaux articles en attente du prochain lot d'analyse",
     "moreSources_one": "+{{count}} source",
     "moreSources_other": "+{{count}} sources"
   },
@@ -293,9 +294,7 @@
     "savedTitle": "Préférences enregistrées",
     "savedDescription": "Vos paramètres de notification ont été mis à jour.",
     "saveFailedTitle": "Échec de l'enregistrement",
-    "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer.",
-    "trackedStoryUpdateTitle": "Mise à jour de l'actualité",
-    "trackedStoryUpdateBody": "{{count}} nouveaux articles dans une actualité que vous suivez"
+    "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer."
   },
   "language": {
     "title": "Langue",
@@ -551,6 +550,7 @@
     "bubbleHint": "Discuter avec Mera",
     "close": "Fermer",
     "title": "Mera",
+    "aboutThisStory": "À PROPOS DE CETTE HISTOIRE",
     "earlierConversation": "Conversation précédente",
     "loadingHistory": "Chargement des messages précédents…",
     "factSavedTitle": "Enregistré dans votre profil",
@@ -594,6 +594,8 @@
     "improveMessage": "Cette suggestion pourrait être meilleure : \"{{title}}\". Aidez-moi à ajuster mes suggestions.",
     "intro": "Que puis-je faire pour vous ? Je peux vous expliquer pourquoi vous avez reçu cette suggestion, ou vous aider à en obtenir de meilleures.",
     "introArticle": "Que puis-je faire pour vous ? Je peux vous aider à ajuster vos suggestions d'actualités en fonction de cet article.",
+    "introLikeTuning": "Vous avez aimé cette histoire — dites-m'en plus et j'ajusterai votre fil.",
+    "introDislikeTuning": "Vous n'avez pas aimé cette histoire — dites-moi pourquoi et j'ajusterai votre fil.",
     "chipWhy": "Pourquoi ai-je reçu cette suggestion ?",
     "chipWhyMessage": "Pourquoi ai-je reçu cette suggestion ?",
     "chipDontWant": "Je ne veux pas de cette suggestion",
@@ -769,12 +771,27 @@
     "upgrade": "Passer à un forfait supérieur"
   },
   "tabs": {
-    "browse": "Actualités",
-    "forYou": "Pour vous",
+    "feed": "Fil",
+    "dashboard": "Tableau de bord",
     "around": "Explorer",
     "profile": "Profil",
     "settings": "Paramètres",
     "gotIt": "Compris"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Plus comme ceci",
+    "lessLikeThis": "Moins comme ceci",
+    "next": "Suivant",
+    "back": "Retour",
+    "askMera": "Demander à Mera",
+    "likeStamp": "J'AIME",
+    "nopeStamp": "NON",
+    "treeRoot": "Tout",
+    "treeThanks": "Merci — noté.",
+    "chatHandoffLike": "J'ai aimé cette histoire — plus comme ceci : {{path}}.",
+    "chatHandoffLikeNoPath": "J'ai aimé cette histoire — j'aimerais en voir plus comme ceci.",
+    "chatHandoffDislike": "Je n'ai pas aimé cette histoire — {{path}}.",
+    "chatHandoffDislikeNoPath": "Je n'ai pas aimé cette histoire. Aidez-moi à en voir moins comme ceci."
   },
   "explore": {
     "title": "Explorer",
@@ -1102,5 +1119,24 @@
     "clear": "Effacer",
     "clearA11y": "Effacer la préférence",
     "empty": "Vous n'avez encore ajusté aucune source. Boostez, rétrogradez ou masquez une publication depuis n'importe quel article pour la voir ici."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Votre optimisation quotidienne du fil est prête",
+    "notificationBody": "Mera a examiné vos avis positifs et négatifs récents et a préparé {{count}} ajustements.",
+    "reviewChip": "Vérifier le plan",
+    "cardTitle": "Optimisation quotidienne du fil",
+    "cardSubtitle": "Vérifiez les modifications et appliquez celles que vous approuvez.",
+    "autoSection": "Optimisations",
+    "reviewSection": "Nécessite votre avis",
+    "conflictsLabel": "Affecte aussi des histoires que vous avez aimées :",
+    "apply": "Appliquer le plan",
+    "notNow": "Pas maintenant",
+    "discard": "Supprimer le plan",
+    "discardConfirm": "Supprimer ce plan ? Ces suggestions ne reviendront pas.",
+    "discardConfirmYes": "Supprimer",
+    "discardConfirmNo": "Conserver",
+    "appliedToast": "{{count}} changements appliqués",
+    "appliedTitle": "Fil optimisé",
+    "empty": "Rien à optimiser pour le moment."
   }
 }

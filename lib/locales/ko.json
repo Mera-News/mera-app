@@ -64,8 +64,11 @@
     "preparingFeed": "회원님을 위한 새로운 소식을 불러와 정리하고 있어요.",
     "noInterests": "Mera가 뉴스를 분석할 수 없습니다",
     "noInterestsDescription": "Mera가 뉴스를 생성하려면 사용자 페르소나를 설정해 주세요.",
-    "forYou": "맞춤 뉴스",
+    "dashboardTitle": "대시보드",
     "pullDownToRetry": "아래로 당겨서 재시도",
+    "readArticleToast": "이 기사를 읽었습니다",
+    "jumpToSection": "섹션으로 이동",
+    "sectionMenuTop": "맨 위",
     "stuckTitle": "피드를 불러올 수 없습니다",
     "stuckDescription": "서버에서 문제가 발생했습니다.",
     "stuckHint": "몇 분 후에 앱을 다시 열어 주세요.",
@@ -179,17 +182,14 @@
       "completedTitle": "모두 완료",
       "completedMessage": "피드가 준비되었습니다"
     },
+    "analysingProgress": "{{total}}개 중 {{done}}개 기사 분석 중",
+    "waitingForNextBatch_other": "새 기사 {{count}}건이 다음 분석 배치를 기다리고 있습니다",
     "dailyLimit": {
       "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
       "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
       "title": "일일 기사 한도에 도달했습니다"
     },
-    "moreSources_other": "+{{count}}개 출처",
-    "factStages": {
-      "reading": "{{fact}}에 대한 기사를 읽는 중…",
-      "writing": "{{fact}}에 대한 메모를 작성하는 중…",
-      "otherStories": "다른 소식"
-    }
+    "moreSources_other": "+{{count}}개 출처"
   },
   "relevance": {
     "emergency": "긴급",
@@ -286,8 +286,6 @@
     "savedDescription": "알림 설정이 업데이트되었습니다.",
     "saveFailedTitle": "저장 실패",
     "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요.",
-    "trackedStoryUpdateTitle": "스토리 업데이트",
-    "trackedStoryUpdateBody": "팔로우 중인 스토리에 새 기사 {{count}}건이 있습니다",
     "timeDescriptionOnboarding": "뉴스를 확인하고 싶은 시간을 선택해 주세요",
     "timeNudges": [
       "뉴스는 하루에 한두 번, 집중된 시간에 확인할 때 가장 효과적입니다.",
@@ -550,6 +548,7 @@
     "bubbleHint": "Mera와 채팅",
     "close": "닫기",
     "title": "Mera",
+    "aboutThisStory": "이 소식에 대해",
     "earlierConversation": "이전 대화",
     "loadingHistory": "이전 메시지를 불러오는 중…",
     "factSavedTitle": "프로필에 저장됨",
@@ -593,6 +592,8 @@
     "improveMessage": "이 추천은 더 나아질 수 있어요: \"{{title}}\". 추천을 조정하도록 도와주세요.",
     "intro": "무엇을 도와드릴까요? 이 추천을 받은 이유를 설명하거나, 더 나은 추천을 받도록 도와드릴 수 있어요.",
     "introArticle": "무엇을 도와드릴까요? 이 기사를 바탕으로 뉴스 추천을 조정하도록 도와드릴 수 있어요.",
+    "introLikeTuning": "이 소식이 마음에 드셨군요 — 더 알려주시면 피드를 조정해 드릴게요.",
+    "introDislikeTuning": "이 소식이 마음에 들지 않으셨군요 — 이유를 알려주시면 피드를 조정해 드릴게요.",
     "chipWhy": "왜 이 추천을 받았나요?",
     "chipWhyMessage": "왜 이 추천을 받았나요?",
     "chipDontWant": "이 추천을 원하지 않아요",
@@ -768,12 +769,27 @@
     "upgrade": "업그레이드"
   },
   "tabs": {
-    "browse": "둘러보기",
-    "forYou": "맞춤 뉴스",
+    "feed": "피드",
+    "dashboard": "대시보드",
     "around": "탐색",
     "profile": "프로필",
     "settings": "설정",
     "gotIt": "확인"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "이런 소식 더 보기",
+    "lessLikeThis": "이런 소식 덜 보기",
+    "next": "다음",
+    "back": "뒤로",
+    "askMera": "Mera에게 묻기",
+    "likeStamp": "좋아요",
+    "nopeStamp": "싫어요",
+    "treeRoot": "전체",
+    "treeThanks": "감사합니다 — 반영했어요.",
+    "chatHandoffLike": "이 소식이 마음에 들었어요 — 이런 소식 더 보고 싶어요: {{path}}.",
+    "chatHandoffLikeNoPath": "이 소식이 마음에 들었어요 — 이런 소식을 더 보고 싶어요.",
+    "chatHandoffDislike": "이 소식이 마음에 들지 않았어요 — {{path}}.",
+    "chatHandoffDislikeNoPath": "이 소식이 마음에 들지 않았어요. 이런 소식을 줄이도록 도와주세요."
   },
   "explore": {
     "title": "탐색",
@@ -1096,5 +1112,24 @@
     "clear": "지우기",
     "clearA11y": "선호도 지우기",
     "empty": "아직 조정한 소스가 없습니다. 기사에서 발행사를 부스트, 낮추기 또는 음소거하면 여기에 표시됩니다."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "오늘의 피드 조정이 준비되었습니다",
+    "notificationBody": "Mera가 최근의 좋아요와 싫어요를 검토하여 {{count}}건의 조정 사항을 준비했습니다.",
+    "reviewChip": "조정안 검토",
+    "cardTitle": "오늘의 피드 조정",
+    "cardSubtitle": "변경 사항을 검토하고 동의하는 항목을 적용하세요.",
+    "autoSection": "조정 사항",
+    "reviewSection": "확인이 필요한 항목",
+    "conflictsLabel": "좋아요한 소식에도 영향을 줍니다:",
+    "apply": "조정안 적용",
+    "notNow": "나중에",
+    "discard": "조정안 폐기",
+    "discardConfirm": "이 조정안을 폐기하시겠어요? 이 제안은 다시 나타나지 않습니다.",
+    "discardConfirmYes": "폐기",
+    "discardConfirmNo": "유지",
+    "appliedToast": "{{count}}건의 변경 사항이 적용되었습니다",
+    "appliedTitle": "피드가 조정되었습니다",
+    "empty": "지금은 조정할 사항이 없습니다."
   }
 }

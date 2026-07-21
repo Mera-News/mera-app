@@ -64,8 +64,11 @@
     "preparingFeed": "We halen vers nieuws voor je op en verwerken het.",
     "noInterests": "Mera kan geen nieuws voor je analyseren",
     "noInterestsDescription": "Maak je gebruikersprofiel aan zodat Mera nieuws voor je kan genereren.",
-    "forYou": "Voor jou",
+    "dashboardTitle": "Dashboard",
     "pullDownToRetry": "Trek omlaag om opnieuw te proberen",
+    "readArticleToast": "Je hebt dit artikel gelezen",
+    "jumpToSection": "Naar sectie springen",
+    "sectionMenuTop": "Boven",
     "stuckTitle": "Feed kon niet worden geladen",
     "stuckDescription": "Er is iets misgegaan aan onze kant.",
     "stuckHint": "Open de app opnieuw over een paar minuten.",
@@ -179,18 +182,16 @@
       "completedTitle": "Alles klaar",
       "completedMessage": "Je feed is gereed"
     },
+    "analysingProgress": "{{done}} van {{total}} artikelen analyseren",
+    "waitingForNextBatch_one": "{{count}} nieuw artikel wacht op de volgende analysebatch",
+    "waitingForNextBatch_other": "{{count}} nieuwe artikelen wachten op de volgende analysebatch",
     "dailyLimit": {
       "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden morgen ontgrendeld.",
       "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden om {{time}} ontgrendeld.",
       "title": "Daglimiet voor artikelen bereikt"
     },
     "moreSources_one": "+{{count}} bron",
-    "moreSources_other": "+{{count}} bronnen",
-    "factStages": {
-      "reading": "Artikelen lezen voor {{fact}}…",
-      "writing": "Notities schrijven voor {{fact}}…",
-      "otherStories": "andere verhalen"
-    }
+    "moreSources_other": "+{{count}} bronnen"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -287,8 +288,6 @@
     "savedDescription": "Je meldingsinstellingen zijn bijgewerkt.",
     "saveFailedTitle": "Opslaan mislukt",
     "saveFailedDescription": "Voorkeuren opslaan mislukt. Probeer het opnieuw.",
-    "trackedStoryUpdateTitle": "Verhaalupdate",
-    "trackedStoryUpdateBody": "{{count}} nieuwe artikelen in een verhaal dat je volgt",
     "timeDescriptionOnboarding": "Kies wanneer je wilt bijlezen over het nieuws",
     "timeNudges": [
       "Nieuws werkt het best op een of twee vaste momenten per dag.",
@@ -551,6 +550,7 @@
     "bubbleHint": "Chat met Mera",
     "close": "Sluiten",
     "title": "Mera",
+    "aboutThisStory": "OVER DIT VERHAAL",
     "earlierConversation": "Eerder gesprek",
     "loadingHistory": "Eerdere berichten laden…",
     "factSavedTitle": "Opgeslagen in je profiel",
@@ -594,6 +594,8 @@
     "improveMessage": "Deze suggestie kan beter: \"{{title}}\". Help me mijn suggesties te verbeteren.",
     "intro": "Wat kan ik voor je doen? Ik kan uitleggen waarom je deze suggestie hebt gekregen, of je helpen betere suggesties te krijgen.",
     "introArticle": "Wat kan ik voor je doen? Ik kan je helpen je nieuwssuggesties aan te passen op basis van dit artikel.",
+    "introLikeTuning": "Je vond dit verhaal leuk — vertel me meer en ik pas je feed aan.",
+    "introDislikeTuning": "Je vond dit verhaal niet leuk — vertel me waarom en ik pas je feed aan.",
     "chipWhy": "Waarom heb ik deze suggestie gekregen?",
     "chipWhyMessage": "Waarom heb ik deze suggestie gekregen?",
     "chipDontWant": "Ik wil deze suggestie niet",
@@ -769,12 +771,27 @@
     "upgrade": "Upgraden"
   },
   "tabs": {
-    "browse": "Bladeren",
-    "forYou": "Voor jou",
+    "feed": "Feed",
+    "dashboard": "Dashboard",
     "around": "Verkennen",
     "profile": "Profiel",
     "settings": "Instellingen",
     "gotIt": "Begrepen"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Meer zoals dit",
+    "lessLikeThis": "Minder zoals dit",
+    "next": "Volgende",
+    "back": "Terug",
+    "askMera": "Vraag het Mera",
+    "likeStamp": "LEUK",
+    "nopeStamp": "NEE",
+    "treeRoot": "Alles",
+    "treeThanks": "Bedankt — genoteerd.",
+    "chatHandoffLike": "Ik vond dit verhaal leuk — meer zoals dit: {{path}}.",
+    "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk — ik wil graag meer zoals dit.",
+    "chatHandoffDislike": "Ik vond dit verhaal niet leuk — {{path}}.",
+    "chatHandoffDislikeNoPath": "Ik vond dit verhaal niet leuk. Help me minder van dit soort verhalen te krijgen."
   },
   "explore": {
     "title": "Verkennen",
@@ -1102,5 +1119,24 @@
     "clear": "Wissen",
     "clearA11y": "Voorkeur wissen",
     "empty": "Je hebt nog geen bronnen aangepast. Boost, verlaag of demp een publicatie vanaf elk artikel om deze hier te zien."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Je dagelijkse feed-afstemming staat klaar",
+    "notificationBody": "Mera heeft je recente likes en dislikes bekeken en {{count}} aanpassingen klaargezet.",
+    "reviewChip": "Plan bekijken",
+    "cardTitle": "Dagelijkse feed-afstemming",
+    "cardSubtitle": "Bekijk de wijzigingen en pas toe waar je het mee eens bent.",
+    "autoSection": "Afstemmingen",
+    "reviewSection": "Vraagt om jouw input",
+    "conflictsLabel": "Heeft ook invloed op verhalen die je leuk vond:",
+    "apply": "Plan toepassen",
+    "notNow": "Niet nu",
+    "discard": "Plan verwerpen",
+    "discardConfirm": "Dit plan verwerpen? Deze suggesties komen niet meer terug.",
+    "discardConfirmYes": "Verwerpen",
+    "discardConfirmNo": "Behouden",
+    "appliedToast": "{{count}} wijzigingen toegepast",
+    "appliedTitle": "Feed afgestemd",
+    "empty": "Nu even niets om af te stemmen."
   }
 }

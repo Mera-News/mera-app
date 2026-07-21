@@ -64,8 +64,11 @@
     "preparingFeed": "我們正在為您擷取並處理最新資訊。",
     "noInterests": "Mera 無法為您分析新聞",
     "noInterestsDescription": "請建立您的使用者人物誌，讓 Mera 開始為您產生新聞。",
-    "forYou": "為您推薦",
+    "dashboardTitle": "儀表板",
     "pullDownToRetry": "下拉以重試",
+    "readArticleToast": "您已閱讀此文章",
+    "jumpToSection": "跳至區段",
+    "sectionMenuTop": "頂端",
     "stuckTitle": "無法載入您的動態",
     "stuckDescription": "我們這邊發生了問題。",
     "stuckHint": "請幾分鐘後重新開啟應用程式。",
@@ -179,16 +182,13 @@
       "completedTitle": "全部完成",
       "completedMessage": "您的動態已準備就緒"
     },
-    "factStages": {
-      "reading": "正在閱讀關於{{fact}}的文章…",
-      "writing": "正在為{{fact}}撰寫筆記…",
-      "otherStories": "其他報導"
-    },
     "dailyLimit": {
       "body": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於明天解鎖。",
       "bodyWithTime": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於 {{time}} 解鎖。",
       "title": "已達每日文章上限"
     },
+    "analysingProgress": "正在分析 {{total}} 篇文章中的第 {{done}} 篇",
+    "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析",
     "moreSources_other": "+{{count}} 個來源"
   },
   "relevance": {
@@ -292,9 +292,7 @@
     "savedTitle": "偏好設定已儲存",
     "savedDescription": "您的通知設定已更新。",
     "saveFailedTitle": "儲存失敗",
-    "saveFailedDescription": "無法儲存您的偏好設定，請再試一次。",
-    "trackedStoryUpdateTitle": "報導更新",
-    "trackedStoryUpdateBody": "您追蹤的報導有 {{count}} 篇新文章"
+    "saveFailedDescription": "無法儲存您的偏好設定，請再試一次。"
   },
   "language": {
     "title": "語言",
@@ -550,6 +548,7 @@
     "bubbleHint": "與 Mera 聊天",
     "close": "關閉",
     "title": "Mera",
+    "aboutThisStory": "關於此報導",
     "earlierConversation": "較早的對話",
     "loadingHistory": "正在載入較早的訊息…",
     "factSavedTitle": "已儲存到你的檔案",
@@ -593,6 +592,8 @@
     "improveMessage": "這個建議可以更好:「{{title}}」。請幫我調整我的建議。",
     "intro": "我能為你做些什麼?我可以解釋你為什麼收到這個建議,或是幫你取得更好的建議。",
     "introArticle": "我能為你做些什麼?我可以根據這篇文章幫你調整新聞建議。",
+    "introLikeTuning": "你喜歡這則報導 — 告訴我更多，我會幫你調整你的動態。",
+    "introDislikeTuning": "你不喜歡這則報導 — 告訴我原因，我會幫你調整你的動態。",
     "chipWhy": "我為什麼會收到這個建議?",
     "chipWhyMessage": "我為什麼會收到這個建議?",
     "chipDontWant": "我不想要這個建議",
@@ -768,12 +769,27 @@
     "upgrade": "升級"
   },
   "tabs": {
-    "browse": "瀏覽",
-    "forYou": "為你推薦",
+    "feed": "動態",
+    "dashboard": "儀表板",
     "around": "探索",
     "profile": "我的",
     "settings": "設定",
     "gotIt": "知道了"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "多推薦類似的",
+    "lessLikeThis": "少推薦類似的",
+    "next": "下一則",
+    "back": "返回",
+    "askMera": "詢問 Mera",
+    "likeStamp": "喜歡",
+    "nopeStamp": "不喜歡",
+    "treeRoot": "全部",
+    "treeThanks": "謝謝——已記錄。",
+    "chatHandoffLike": "我喜歡這則報導 — 想看更多類似的：{{path}}。",
+    "chatHandoffLikeNoPath": "我喜歡這則報導 — 我想看更多類似的。",
+    "chatHandoffDislike": "我不喜歡這則報導 — {{path}}。",
+    "chatHandoffDislikeNoPath": "我不喜歡這則報導。請幫我減少看到這類內容。"
   },
   "explore": {
     "title": "探索",
@@ -1096,5 +1112,24 @@
     "clear": "清除",
     "clearA11y": "清除偏好",
     "empty": "你尚未調整過任何來源。在任意文章中提升、降權或靜音一個媒體，即可在此看到。"
+  },
+  "optimisationPlan": {
+    "notificationTitle": "你的每日動態調校已準備就緒",
+    "notificationBody": "Mera 檢視了你最近的喜歡與不喜歡，整理出 {{count}} 項調整建議。",
+    "reviewChip": "查看調校計畫",
+    "cardTitle": "每日動態調校",
+    "cardSubtitle": "檢視這些變更，並套用你同意的部分。",
+    "autoSection": "調校項目",
+    "reviewSection": "需要你的確認",
+    "conflictsLabel": "也會影響你喜歡的報導：",
+    "apply": "套用計畫",
+    "notNow": "暫時不用",
+    "discard": "捨棄計畫",
+    "discardConfirm": "要捨棄這個計畫嗎？這些建議將不會再次出現。",
+    "discardConfirmYes": "捨棄",
+    "discardConfirmNo": "保留",
+    "appliedToast": "已套用 {{count}} 項變更",
+    "appliedTitle": "動態已調校",
+    "empty": "目前沒有需要調校的內容。"
   }
 }

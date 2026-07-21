@@ -64,8 +64,11 @@
     "preparingFeed": "Berita terbaru sedang diambil dan diproses khusus untuk Anda.",
     "noInterests": "Mera tidak dapat menganalisis berita untuk Anda",
     "noInterestsDescription": "Silakan buat persona pengguna Anda agar Mera dapat mulai menghasilkan berita untuk Anda.",
-    "forYou": "Untuk Anda",
+    "dashboardTitle": "Dasbor",
     "pullDownToRetry": "Tarik ke bawah untuk mencoba lagi",
+    "readArticleToast": "Anda telah membaca artikel ini",
+    "jumpToSection": "Lompat ke bagian",
+    "sectionMenuTop": "Atas",
     "stuckTitle": "Tidak dapat memuat feed Anda",
     "stuckDescription": "Terjadi kesalahan di pihak kami.",
     "stuckHint": "Buka kembali aplikasi dalam beberapa menit.",
@@ -184,12 +187,9 @@
       "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka pada {{time}}.",
       "title": "Batas artikel harian tercapai"
     },
-    "moreSources_other": "+{{count}} sumber",
-    "factStages": {
-      "reading": "Membaca artikel untuk {{fact}}…",
-      "writing": "Menulis catatan untuk {{fact}}…",
-      "otherStories": "cerita lainnya"
-    }
+    "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
+    "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya",
+    "moreSources_other": "+{{count}} sumber"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -286,8 +286,6 @@
     "savedDescription": "Pengaturan notifikasi Anda telah diperbarui.",
     "saveFailedTitle": "Gagal Menyimpan",
     "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
-    "trackedStoryUpdateTitle": "Pembaruan cerita",
-    "trackedStoryUpdateBody": "{{count}} artikel baru dalam cerita yang Anda ikuti",
     "timeDescriptionOnboarding": "Pilih kapan Anda ingin mengejar ketinggalan berita Anda",
     "timeNudges": [
       "Berita bekerja paling baik dalam satu atau dua momen fokus sehari.",
@@ -550,6 +548,7 @@
     "bubbleHint": "Ngobrol dengan Mera",
     "close": "Tutup",
     "title": "Mera",
+    "aboutThisStory": "TENTANG CERITA INI",
     "earlierConversation": "Percakapan sebelumnya",
     "loadingHistory": "Memuat pesan sebelumnya…",
     "factSavedTitle": "Disimpan ke profil Anda",
@@ -593,6 +592,8 @@
     "improveMessage": "Saran ini bisa lebih baik: \"{{title}}\". Bantu saya menyesuaikan saran saya.",
     "intro": "Apa yang bisa saya bantu? Saya bisa menjelaskan mengapa kamu menerima saran ini, atau membantu kamu mendapatkan saran yang lebih baik.",
     "introArticle": "Apa yang bisa saya bantu? Saya bisa membantu menyesuaikan saran berita kamu berdasarkan artikel ini.",
+    "introLikeTuning": "Anda menyukai cerita ini — beri tahu saya lebih lanjut dan saya akan menyesuaikan feed Anda.",
+    "introDislikeTuning": "Anda tidak menyukai cerita ini — beri tahu saya alasannya dan saya akan menyesuaikan feed Anda.",
     "chipWhy": "Mengapa saya menerima saran ini?",
     "chipWhyMessage": "Mengapa saya menerima saran ini?",
     "chipDontWant": "Saya tidak ingin saran ini",
@@ -768,12 +769,27 @@
     "upgrade": "Tingkatkan"
   },
   "tabs": {
-    "browse": "Jelajahi",
-    "forYou": "Untuk Anda",
+    "feed": "Feed",
+    "dashboard": "Dasbor",
     "around": "Eksplor",
     "profile": "Profil",
     "settings": "Pengaturan",
     "gotIt": "Mengerti"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "Lebih banyak seperti ini",
+    "lessLikeThis": "Lebih sedikit seperti ini",
+    "next": "Berikutnya",
+    "back": "Kembali",
+    "askMera": "Tanya Mera",
+    "likeStamp": "SUKA",
+    "nopeStamp": "TIDAK",
+    "treeRoot": "Semua",
+    "treeThanks": "Terima kasih — dicatat.",
+    "chatHandoffLike": "Saya suka cerita ini — lebih banyak seperti ini: {{path}}.",
+    "chatHandoffLikeNoPath": "Saya suka cerita ini — saya ingin lebih banyak seperti ini.",
+    "chatHandoffDislike": "Saya tidak suka cerita ini — {{path}}.",
+    "chatHandoffDislikeNoPath": "Saya tidak suka cerita ini. Bantu saya agar mendapat lebih sedikit yang seperti ini."
   },
   "explore": {
     "title": "Eksplor",
@@ -1096,5 +1112,24 @@
     "clear": "Hapus",
     "clearA11y": "Hapus preferensi",
     "empty": "Anda belum menyesuaikan sumber apa pun. Naikkan, turunkan, atau bisukan publikasi dari artikel mana pun untuk melihatnya di sini."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Penyesuaian feed harian Anda sudah siap",
+    "notificationBody": "Mera meninjau suka dan tidak suka terbaru Anda dan menyiapkan {{count}} penyesuaian.",
+    "reviewChip": "Tinjau rencana",
+    "cardTitle": "Penyesuaian feed harian",
+    "cardSubtitle": "Tinjau perubahan dan terapkan yang Anda setujui.",
+    "autoSection": "Penyesuaian",
+    "reviewSection": "Perlu masukan Anda",
+    "conflictsLabel": "Juga memengaruhi cerita yang Anda sukai:",
+    "apply": "Terapkan rencana",
+    "notNow": "Nanti saja",
+    "discard": "Buang rencana",
+    "discardConfirm": "Buang rencana ini? Saran ini tidak akan kembali.",
+    "discardConfirmYes": "Buang",
+    "discardConfirmNo": "Simpan",
+    "appliedToast": "{{count}} perubahan diterapkan",
+    "appliedTitle": "Feed disesuaikan",
+    "empty": "Tidak ada yang perlu disesuaikan saat ini."
   }
 }

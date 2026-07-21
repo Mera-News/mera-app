@@ -64,8 +64,11 @@
     "preparingFeed": "يتم الآن جلب أحدث الأخبار ومعالجتها من أجلك.",
     "noInterests": "لا يمكن لـ Mera تحليل الأخبار لك",
     "noInterestsDescription": "يرجى إنشاء ملفك الشخصي ليتمكن Mera من البدء في توليد الأخبار لك.",
-    "forYou": "لك",
+    "dashboardTitle": "لوحة التحكم",
     "pullDownToRetry": "اسحب للأسفل لإعادة المحاولة",
+    "readArticleToast": "لقد قرأت هذا المقال بالفعل.",
+    "jumpToSection": "الانتقال إلى القسم",
+    "sectionMenuTop": "الأعلى",
     "stuckTitle": "تعذّر تحميل موجز أخبارك",
     "stuckDescription": "حدث خطأ من جانبنا.",
     "stuckHint": "أعد فتح التطبيق بعد بضع دقائق.",
@@ -190,11 +193,13 @@
     "moreSources_few": "+{{count}} مصادر",
     "moreSources_many": "+{{count}} مصدرًا",
     "moreSources_other": "+{{count}} مصدر",
-    "factStages": {
-      "reading": "جارٍ قراءة المقالات عن {{fact}}…",
-      "writing": "جارٍ كتابة ملاحظات عن {{fact}}…",
-      "otherStories": "قصص أخرى"
-    }
+    "analysingProgress": "جارٍ تحليل {{done}} من {{total}} مقالة",
+    "waitingForNextBatch_zero": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
+    "waitingForNextBatch_one": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
+    "waitingForNextBatch_two": "{{count}} مقالان جديدان ينتظران الدفعة التالية من التحليل",
+    "waitingForNextBatch_few": "{{count}} مقالات جديدة تنتظر الدفعة التالية من التحليل",
+    "waitingForNextBatch_many": "{{count}} مقالًا جديدًا ينتظر الدفعة التالية من التحليل",
+    "waitingForNextBatch_other": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل"
   },
   "relevance": {
     "emergency": "طارئ",
@@ -291,8 +296,6 @@
     "savedDescription": "تم تحديث إعدادات الإشعارات الخاصة بك.",
     "saveFailedTitle": "فشل الحفظ",
     "saveFailedDescription": "فشل حفظ تفضيلاتك. يرجى المحاولة مرة أخرى.",
-    "trackedStoryUpdateTitle": "تحديث القصة",
-    "trackedStoryUpdateBody": "{{count}} مقالات جديدة في قصة تتابعها",
     "timeDescriptionOnboarding": "اختر الوقت الذي تودّ فيه متابعة أخبارك",
     "timeNudges": [
       "تعمل الأخبار بشكل أفضل في لحظة أو لحظتين مركّزتين يوميًا.",
@@ -555,6 +558,7 @@
     "bubbleHint": "الدردشة مع ميرا",
     "close": "إغلاق",
     "title": "Mera",
+    "aboutThisStory": "حول هذه القصة",
     "earlierConversation": "محادثة سابقة",
     "loadingHistory": "جارٍ تحميل الرسائل السابقة…",
     "factSavedTitle": "تم الحفظ في ملفك الشخصي",
@@ -598,6 +602,8 @@
     "improveMessage": "يمكن أن يكون هذا الاقتراح أفضل: \"{{title}}\". ساعدني في ضبط اقتراحاتي.",
     "intro": "بماذا يمكنني مساعدتك؟ يمكنني أن أشرح لماذا تلقيت هذا الاقتراح، أو أساعدك في الحصول على اقتراحات أفضل.",
     "introArticle": "بماذا يمكنني مساعدتك؟ يمكنني مساعدتك في ضبط اقتراحات الأخبار بناءً على هذا المقال.",
+    "introLikeTuning": "أعجبتك هذه القصة — أخبرني بالمزيد وسأضبط موجزك.",
+    "introDislikeTuning": "لم تعجبك هذه القصة — أخبرني بالسبب وسأضبط موجزك.",
     "chipWhy": "لماذا تلقيت هذا الاقتراح؟",
     "chipWhyMessage": "لماذا تلقيت هذا الاقتراح؟",
     "chipDontWant": "لا أريد هذا الاقتراح",
@@ -773,12 +779,27 @@
     "upgrade": "الترقية"
   },
   "tabs": {
-    "browse": "الأخبار",
-    "forYou": "لك",
+    "feed": "الموجز",
+    "dashboard": "لوحة التحكم",
     "around": "استكشاف",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
     "gotIt": "فهمت"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "المزيد مثل هذا",
+    "lessLikeThis": "أقل مثل هذا",
+    "next": "التالي",
+    "back": "رجوع",
+    "askMera": "اسأل Mera",
+    "likeStamp": "إعجاب",
+    "nopeStamp": "رفض",
+    "treeRoot": "الكل",
+    "treeThanks": "شكرًا — تم تدوين ذلك.",
+    "chatHandoffLike": "أعجبتني هذه القصة — المزيد مثل هذا: {{path}}.",
+    "chatHandoffLikeNoPath": "أعجبتني هذه القصة — أود المزيد مثل هذا.",
+    "chatHandoffDislike": "لم تعجبني هذه القصة — {{path}}.",
+    "chatHandoffDislikeNoPath": "لم تعجبني هذه القصة. ساعدني في تقليل ما يشبهها."
   },
   "explore": {
     "title": "استكشاف",
@@ -1131,5 +1152,24 @@
     "clear": "مسح",
     "clearA11y": "مسح التفضيل",
     "empty": "لم تُعدّل أي مصادر بعد. عزّز منشورًا أو خفّض أولويته أو اكتمه من أي مقالة لتراه هنا."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "ضبط موجزك اليومي جاهز",
+    "notificationBody": "راجع Mera ما أعجبك وما لم يعجبك مؤخرًا، وأعدّ {{count}} تعديلًا.",
+    "reviewChip": "مراجعة الخطة",
+    "cardTitle": "ضبط الموجز اليومي",
+    "cardSubtitle": "راجع التغييرات وطبّق ما توافق عليه.",
+    "autoSection": "التعديلات",
+    "reviewSection": "يحتاج إلى رأيك",
+    "conflictsLabel": "يؤثر أيضًا على القصص التي أعجبتك:",
+    "apply": "تطبيق الخطة",
+    "notNow": "ليس الآن",
+    "discard": "تجاهل الخطة",
+    "discardConfirm": "هل تريد تجاهل هذه الخطة؟ لن تعود هذه الاقتراحات مرة أخرى.",
+    "discardConfirmYes": "تجاهل",
+    "discardConfirmNo": "الاحتفاظ",
+    "appliedToast": "تم تطبيق {{count}} تغيير",
+    "appliedTitle": "تم ضبط الموجز",
+    "empty": "لا يوجد ما يجب ضبطه الآن."
   }
 }
