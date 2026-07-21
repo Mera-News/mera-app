@@ -206,8 +206,7 @@
     "articleNotFound": "記事が見つかりません",
     "readOn": "{{publication}}で読む",
     "share": "共有",
-    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}",
-    "moreCoverage": "その他の報道"
+    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",

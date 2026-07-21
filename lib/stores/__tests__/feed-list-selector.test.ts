@@ -15,6 +15,7 @@ import {
   type FeedListItem,
 } from '../feed-list-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ClusterMembership, ForYouSuggestion } from '../for-you-store';
 
 const NOW = 1_000_000_000_000; // fixed clock
@@ -197,6 +198,80 @@ describe('buildFeedList — score, breaking flag + frozen score', () => {
     const old = sugg({ _id: 'old', rawScore: 0.9, createdAt: new Date(NOW - 12 * H).toISOString() });
     const list = buildFeedList([fresh, old], new Set(), NOW);
     expect(list.map((c) => c.suggestion._id)).toEqual(['fresh', 'old']);
+  });
+});
+
+describe('buildFeedList — representative election (geo/language priority, Wave 2b)', () => {
+  it('home-country sibling becomes representative even when another sibling is newer/higher-scored', () => {
+    const ctx: UserGeoLanguageContext = {
+      homeCountryAlpha3: 'IND',
+      otherCountriesAlpha3: [],
+      appLanguageBase: 'en',
+    };
+    const home = sugg({
+      _id: 'home',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.4,
+      clusters: [cluster('story-1')],
+    });
+    const newer = sugg({
+      _id: 'newer',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.9,
+      clusters: [cluster('story-1')],
+    });
+    const list = buildFeedList([home, newer], new Set(), NOW, ctx);
+    expect(list).toHaveLength(1);
+    expect(list[0].suggestion._id).toBe('home');
+    expect(list[0].memberCount).toBe(2);
+  });
+
+  it('an other-user-country sibling beats an app-language-match sibling', () => {
+    const ctx: UserGeoLanguageContext = {
+      homeCountryAlpha3: null,
+      otherCountriesAlpha3: ['GBR'],
+      appLanguageBase: 'fr',
+    };
+    const otherCountry = sugg({
+      _id: 'gbr',
+      country_code: 'GBR',
+      language_code: 'en',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.3,
+      clusters: [cluster('story-2')],
+    });
+    const langMatch = sugg({
+      _id: 'fr',
+      country_code: null,
+      language_code: 'fr',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.9,
+      clusters: [cluster('story-2')],
+    });
+    const list = buildFeedList([otherCountry, langMatch], new Set(), NOW, ctx);
+    expect(list[0].suggestion._id).toBe('gbr');
+  });
+
+  it('a null userCtx (default) keeps the legacy newest/rawScore-based pick', () => {
+    const older = sugg({
+      _id: 'older',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.4,
+      clusters: [cluster('story-3')],
+    });
+    const newer = sugg({
+      _id: 'newer',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.9,
+      clusters: [cluster('story-3')],
+    });
+    // Explicit `null` and the omitted-argument default must agree.
+    expect(buildFeedList([older, newer], new Set(), NOW, null)[0].suggestion._id).toBe('newer');
+    expect(buildFeedList([older, newer], new Set(), NOW)[0].suggestion._id).toBe('newer');
   });
 });
 

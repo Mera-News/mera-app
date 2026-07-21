@@ -33,6 +33,7 @@ import {
   isBreaking,
   isSuggestionOpened,
 } from './fact-rows-selector';
+import { repPriorityTier, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from './for-you-store';
 
 /** Exponential-decay half-life (hours) for the recency term of `feedScore`. */
@@ -87,6 +88,22 @@ function repCompare(a: GroupItem, b: GroupItem): number {
   const rb = b.s.rawScore ?? Number.NEGATIVE_INFINITY;
   if (ra !== rb) return rb - ra;
   return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
+}
+
+/** Tier-aware representative comparator: the user's geo/language priority
+ *  tier (`repPriorityTier` — home country → other user country → app
+ *  language → rest) is compared FIRST (lower tier wins); only on a tier tie
+ *  does the existing `repCompare` (newest → rawScore → id) decide. A `null`
+ *  `userCtx` collapses every item to tier 3, so this is byte-identical to
+ *  `repCompare` alone — the pre-priority legacy behavior. List ordering
+ *  (`feedCompare`) is unaffected — only which article fronts a group. */
+function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
+  return (a: GroupItem, b: GroupItem): number => {
+    const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
+    const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
+    if (ta !== tb) return ta - tb;
+    return repCompare(a, b);
+  };
 }
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -144,13 +161,20 @@ export function feedCompare(a: FeedListItem, b: FeedListItem): number {
  *                    viewed story.
  * @param nowMs       injected clock (deterministic testing), captured once
  *                    and used to freeze every item's `score`.
+ * @param userCtx     the user's geo/language context (home/other countries +
+ *                    app language) — makes representative ELECTION tier-aware
+ *                    (see `makeRepCompare`). `null` (default) preserves the
+ *                    legacy geo/language-blind pick. List ordering
+ *                    (`feedCompare`) is unaffected.
  */
 export function buildFeedList(
   suggestions: ForYouSuggestion[],
   excludedIds: Set<string>,
   nowMs: number = Date.now(),
+  userCtx: UserGeoLanguageContext | null = null,
 ): FeedListItem[] {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
+  const repCompareForGroups = makeRepCompare(userCtx);
 
   // 1. Visible pool (note-gated + render gate + 24h window). Same gate the
   //    swipe deck / fact-rows feeds use, so every surface agrees on what is
@@ -176,7 +200,7 @@ export function buildFeedList(
   //    composite score at build time.
   const list: FeedListItem[] = [];
   for (const g of groups) {
-    const rep = pickRepresentative(g, repCompare).s;
+    const rep = pickRepresentative(g, repCompareForGroups).s;
     if (isSuggestionOpened(rep, excludedIds)) continue;
     list.push({
       id: rep.articleId,

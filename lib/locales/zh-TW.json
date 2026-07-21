@@ -206,8 +206,7 @@
     "articleNotFound": "找不到文章",
     "readOn": "在 {{publication}} 上閱讀",
     "share": "分享",
-    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}",
-    "moreCoverage": "更多報導"
+    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",

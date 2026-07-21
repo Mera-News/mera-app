@@ -37,6 +37,11 @@ import {
     TITLE_JACCARD_DISPLAY_THRESHOLD,
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
+import {
+    sortRelatedArticles,
+    type RelatedSortable,
+} from '@/lib/feed-grouping/related-articles-sort';
+import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
@@ -55,20 +60,89 @@ interface ArticleSuggestionScreenProps {
 
 const SCROLL_THRESHOLD = 300;
 
+// Map ArticleSummary → NewsArticle-shaped object for ArticleStandaloneCompactCard
+// (the existing card type works against NewsArticle fields). Hoisted to module
+// scope so the merged-entries `useMemo` (which runs before the early returns)
+// can call it without violating hook ordering.
+const toNewsArticle = (a: ArticleSummary): NewsArticle => ({
+    _id: a._id,
+    title: a.title_en,
+    title_en_internal_only: a.title_en,
+    description: a.description_en ?? undefined,
+    description_en_internal_only: a.description_en ?? undefined,
+    pubDate: a.pubDate,
+    article_url: a.article_url ?? undefined,
+    image_url: a.image_url ?? undefined,
+    original_language_code: a.language_code ?? undefined,
+    publicationSource: a.publication_name || a.country_code
+        ? ({
+            _id: a._id,
+            publication_name: a.publication_name,
+            country_code: a.country_code,
+        } as NewsArticle['publicationSource'])
+        : undefined,
+} as NewsArticle);
+
+// Map a local ForYouSuggestion → NewsArticle-shaped object for
+// ArticleStandaloneCompactCard (mirrors toNewsArticle above). `_id` is the
+// ARTICLE id so dedupe against server related rows works by article id.
+const suggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
+    _id: s.articleId,
+    title: s.title_en ?? s.title_original ?? '',
+    title_en_internal_only: s.title_en ?? undefined,
+    description: s.description_en ?? undefined,
+    description_en_internal_only: s.description_en ?? undefined,
+    pubDate: s.firstPubDate ?? s.createdAt,
+    article_url: s.article_url ?? undefined,
+    image_url: s.image_url ?? undefined,
+    original_language_code: s.language_code ?? undefined,
+    publicationSource: s.publication_name || s.country_code
+        ? ({
+            _id: s.articleId,
+            publication_name: s.publication_name,
+            country_code: s.country_code,
+        } as NewsArticle['publicationSource'])
+        : undefined,
+} as NewsArticle);
+
+/** Parse a date string to epoch ms, or null when absent/unparseable. */
+const toPubDateMs = (raw: string | null | undefined): number | null => {
+    if (!raw) return null;
+    const ms = Date.parse(raw);
+    return Number.isNaN(ms) ? null : ms;
+};
+
+/**
+ * A single row in the merged "Related Articles" list — either a local cluster
+ * sibling (`suggestionId` set → taps into the richer suggestion-detail route)
+ * or a server `relatedArticles` row (`suggestionId` undefined → taps into the
+ * article-detail route). Sorted via {@link sortRelatedArticles}.
+ */
+interface RelatedEntry extends RelatedSortable {
+    article: NewsArticle;
+    /** Present only for local sibling entries → suggestion-detail navigation. */
+    suggestionId?: string;
+}
+
 /**
  * Detail screen for a single ArticleSuggestion. Header shows the primary
  * article from the local DB row. Sibling coverage of the same story is shown
- * in the footer from two sources, deduped by article id:
- *   1. "More coverage" — locally-derived siblings, computed in-screen by
- *      running `buildStoryGroups` over ALL store suggestions (not just the
+ * in the footer as ONE flat, sorted "Related Articles" list that merges two
+ * sources, deduped by article id:
+ *   1. Locally-derived siblings, computed in-screen by running
+ *      `buildStoryGroups` over ALL store suggestions (not just the
  *      feed-visible ones). These are the user's own personalized cards for the
  *      same story that the feed collapsed away, so they surface even when
- *      low-relevance or unscored. Superset signal vs. the server join below.
- *   2. "Related articles" — `relatedArticles(articleId)`, fetched lazily on
- *      mount via Apollo (no-cache). Limited to the CURRENT clustering
- *      generation on the server, so it can miss cross-generation siblings that
- *      the local title-Jaccard grouping catches; rows already shown as local
- *      siblings (or the opened article itself) are filtered out.
+ *      low-relevance or unscored, and tap into the richer suggestion-detail
+ *      route. Superset signal vs. the server join below.
+ *   2. `relatedArticles(articleId)`, fetched lazily on mount via Apollo
+ *      (no-cache). Limited to the CURRENT clustering generation on the server,
+ *      so it can miss cross-generation siblings that the local title-Jaccard
+ *      grouping catches; rows already shown as local siblings (or the opened
+ *      article itself) are filtered out, and the survivors tap into the
+ *      article-detail route.
+ * Both origins are merged and ordered by the user's language/country signals
+ * first (via `sortRelatedArticles`), then publication → date → id.
  */
 const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     articleSuggestionId,
@@ -124,7 +198,48 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [showGuideVideo, setShowGuideVideo] = useState(false);
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguage();
+    const userCtx = useUserGeoLanguageContext();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
+
+    // Merged, flat "Related Articles" list: local cluster siblings + the server
+    // `relatedArticles` join, deduped by article id (drop rows whose id equals
+    // the opened article or any local sibling), then ordered by the user's
+    // language/country signals first via `sortRelatedArticles`. Local siblings
+    // navigate to the richer suggestion-detail route; server rows to the
+    // article-detail route (encoded by whether `suggestionId` is set).
+    const relatedEntries = useMemo<RelatedEntry[]>(() => {
+        if (!suggestion) return [];
+        const siblingArticleIds = new Set<string>(
+            localSiblings.map((s) => s.articleId),
+        );
+        const siblingEntries: RelatedEntry[] = localSiblings.map((s) => ({
+            id: s.articleId,
+            languageCode: s.language_code,
+            countryCodeAlpha3: s.country_code,
+            publicationName: s.publication_name,
+            pubDateMs: toPubDateMs(s.firstPubDate ?? s.createdAt),
+            article: suggestionToNewsArticle(s),
+            suggestionId: s._id,
+        }));
+        const serverEntries: RelatedEntry[] = related
+            .filter(
+                (a) =>
+                    a._id !== suggestion.articleId &&
+                    !siblingArticleIds.has(a._id),
+            )
+            .map((a) => ({
+                id: a._id,
+                languageCode: a.language_code ?? null,
+                countryCodeAlpha3: a.country_code ?? null,
+                publicationName: a.publication_name ?? null,
+                pubDateMs: toPubDateMs(a.pubDate),
+                article: toNewsArticle(a),
+            }));
+        return sortRelatedArticles(
+            [...siblingEntries, ...serverEntries],
+            userCtx,
+        );
+    }, [localSiblings, related, suggestion, userCtx]);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -199,7 +314,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // Same-story siblings are surfaced two ways: `localSiblings` (above) groups
     // the user's own store rows that the feed collapsed, and
     // `relatedArticles(articleId)` (above) joins the server's current clustering
-    // generation. Both render in the footer, deduped by article id.
+    // generation. Both are merged, deduped by article id, and sorted into the
+    // single flat "Related Articles" footer list by the `relatedEntries` memo.
 
     // Reflect whether this suggestion is already saved for later.
     useEffect(() => {
@@ -305,61 +421,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     const sourceLanguage = suggestion.language_code ?? null;
     const read = isSuggestionOpened(suggestion, openedIds);
-
-    // Map ArticleSummary → NewsArticle-shaped object for CompactPublisherNewsCard
-    // (the existing card type works against NewsArticle fields).
-    const toNewsArticle = (a: ArticleSummary): NewsArticle => ({
-        _id: a._id,
-        title: a.title_en,
-        title_en_internal_only: a.title_en,
-        description: a.description_en ?? undefined,
-        description_en_internal_only: a.description_en ?? undefined,
-        pubDate: a.pubDate,
-        article_url: a.article_url ?? undefined,
-        image_url: a.image_url ?? undefined,
-        original_language_code: a.language_code ?? undefined,
-        publicationSource: a.publication_name || a.country_code
-            ? ({
-                _id: a._id,
-                publication_name: a.publication_name,
-                country_code: a.country_code,
-            } as NewsArticle['publicationSource'])
-            : undefined,
-    } as NewsArticle);
-
-    // Map a local ForYouSuggestion → NewsArticle-shaped object for
-    // CompactPublisherNewsCard (mirrors toNewsArticle above). `_id` is the
-    // ARTICLE id so dedupe against server related rows works by article id.
-    const suggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
-        _id: s.articleId,
-        title: s.title_en ?? s.title_original ?? '',
-        title_en_internal_only: s.title_en ?? undefined,
-        description: s.description_en ?? undefined,
-        description_en_internal_only: s.description_en ?? undefined,
-        pubDate: s.firstPubDate ?? s.createdAt,
-        article_url: s.article_url ?? undefined,
-        image_url: s.image_url ?? undefined,
-        original_language_code: s.language_code ?? undefined,
-        publicationSource: s.publication_name || s.country_code
-            ? ({
-                _id: s.articleId,
-                publication_name: s.publication_name,
-                country_code: s.country_code,
-            } as NewsArticle['publicationSource'])
-            : undefined,
-    } as NewsArticle);
-
-    // Article ids already shown as local "More coverage" siblings, plus the
-    // opened article's own id — server related rows matching any of these are
-    // filtered out so the footer never lists a story twice or itself.
-    const localSiblingArticleIds = new Set<string>(
-        localSiblings.map((s) => s.articleId),
-    );
-    const serverRelated = related.filter(
-        (a) =>
-            a._id !== suggestion.articleId &&
-            !localSiblingArticleIds.has(a._id),
-    );
 
     return (
         <Box className="flex-1 bg-black">
@@ -485,58 +546,42 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             </VStack>
                         ) : null}
 
-                        {/* More coverage — locally-derived sibling
-                            ArticleSuggestions (the user's own personalized
-                            cards for this story that the feed collapsed).
-                            Rendered first because it's a superset of the
-                            server join below. Tapping opens the richer
-                            personalized suggestion-detail row. */}
-                        {localSiblings.length > 0 && (
-                            <VStack space="md">
-                                <Heading size="md" className="text-gray-300">
-                                    {t('articleDetail.moreCoverage')}
-                                </Heading>
-                                {localSiblings.map((sibling, index) => (
-                                    <ArticleStandaloneCompactCard
-                                        key={sibling._id || `sibling-${index}`}
-                                        article={suggestionToNewsArticle(sibling)}
-                                        onPress={() => router.replace({
-                                            pathname: '/logged-in/suggestion-detail',
-                                            params: { articleSuggestionId: sibling._id },
-                                        })}
-                                        subjectExtras={{ surface: 'detail' }}
-                                    />
-                                ))}
-                            </VStack>
-                        )}
-
-                        {/* Related Articles — live cluster siblings from the
-                            server for the current clustering generation, minus
-                            any already shown as local siblings above (and the
-                            opened article itself). */}
-                        {(isLoadingRelated || serverRelated.length > 0) && (
+                        {/* Related Articles — ONE flat, sorted list merging the
+                            local cluster siblings (the user's own personalized
+                            cards the feed collapsed, tapping into the richer
+                            suggestion-detail route) and the server's current-
+                            generation cluster join (tapping into article-detail),
+                            deduped by article id and ordered by the user's
+                            language/country signals first. Local rows render
+                            immediately; the spinner row is appended while the
+                            server join is still loading. */}
+                        {(relatedEntries.length > 0 || isLoadingRelated) && (
                             <VStack space="md">
                                 <Heading size="md" className="text-gray-300">
                                     {t('articleDetail.relatedArticles')}
                                 </Heading>
-                                {isLoadingRelated && serverRelated.length === 0 ? (
+                                {relatedEntries.map((entry, index) => (
+                                    <ArticleStandaloneCompactCard
+                                        key={entry.id || `related-${index}`}
+                                        article={entry.article}
+                                        onPress={() => router.replace(
+                                            entry.suggestionId
+                                                ? {
+                                                    pathname: '/logged-in/suggestion-detail',
+                                                    params: { articleSuggestionId: entry.suggestionId },
+                                                }
+                                                : {
+                                                    pathname: '/logged-in/article-detail',
+                                                    params: { articleId: entry.id },
+                                                },
+                                        )}
+                                        subjectExtras={{ surface: 'detail' }}
+                                    />
+                                ))}
+                                {isLoadingRelated && (
                                     <Box className="items-center justify-center py-4">
                                         <Spinner size="small" />
                                     </Box>
-                                ) : (
-                                    <>
-                                        {serverRelated.map((a, index) => (
-                                            <ArticleStandaloneCompactCard
-                                                key={a._id || `related-${index}`}
-                                                article={toNewsArticle(a)}
-                                                onPress={() => router.replace({
-                                                    pathname: '/logged-in/article-detail',
-                                                    params: { articleId: a._id },
-                                                })}
-                                                subjectExtras={{ surface: 'detail' }}
-                                            />
-                                        ))}
-                                    </>
                                 )}
                             </VStack>
                         )}

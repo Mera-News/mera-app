@@ -20,10 +20,12 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
+import { sortRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
+import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -74,8 +76,27 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguage();
+    const userCtx = useUserGeoLanguageContext();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
+
+    // Server related rows, ordered by the user's language/country signals first
+    // (then publication → date → id). Non-mutating; `userCtx === null` (still
+    // loading) degrades to the legacy publication/date/id order.
+    const sortedRelated = useMemo(() => {
+        const entries = related.map((a) => ({
+            id: a._id,
+            languageCode: a.language_code ?? null,
+            countryCodeAlpha3: a.country_code ?? null,
+            publicationName: a.publication_name ?? null,
+            pubDateMs: (() => {
+                const ms = Date.parse(a.pubDate);
+                return Number.isNaN(ms) ? null : ms;
+            })(),
+            summary: a,
+        }));
+        return sortRelatedArticles(entries, userCtx);
+    }, [related, userCtx]);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -299,11 +320,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         <Spinner size="small" />
                                     </Box>
                                 ) : (
-                                    related.map((a, index) => (
+                                    sortedRelated.map((entry, index) => (
                                         <ArticleStandaloneCompactCard
-                                            key={a._id || `related-${index}`}
-                                            article={summaryToNewsArticle(a)}
-                                            onPress={() => handleRelatedPress(a._id)}
+                                            key={entry.id || `related-${index}`}
+                                            article={summaryToNewsArticle(entry.summary)}
+                                            onPress={() => handleRelatedPress(entry.id)}
                                             subjectExtras={{ surface: 'detail' }}
                                         />
                                     ))

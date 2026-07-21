@@ -212,8 +212,7 @@
     "articleNotFound": "Nie znaleziono artykułu",
     "readOn": "Czytaj w {{publication}}",
     "share": "Udostępnij",
-    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}",
-    "moreCoverage": "Więcej relacji"
+    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",

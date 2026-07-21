@@ -208,8 +208,7 @@
     "articleNotFound": "Artículo no encontrado",
     "readOn": "Leer en {{publication}}",
     "share": "Compartir",
-    "shareVia": "Compartido a través de Mera News — noticias personalizadas para ti. Descarga la app: {{downloadUrl}}",
-    "moreCoverage": "Más cobertura"
+    "shareVia": "Compartido a través de Mera News — noticias personalizadas para ti. Descarga la app: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Error al cargar los detalles del grupo",

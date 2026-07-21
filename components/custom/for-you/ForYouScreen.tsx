@@ -13,6 +13,8 @@ import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
+import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -191,12 +193,17 @@ const MeraNewsScreen: React.FC = () => {
         return () => { cancelled = true; };
     }, [hasGeneratedInterests, suggestions.length]);
 
+    // The user's geo/language context (home/other countries + app language) —
+    // makes representative election tier-aware. Null while loading/on failure,
+    // which `buildFactRows` treats as the legacy geo/language-blind pick.
+    const userGeoLanguageCtx = useUserGeoLanguageContext();
+
     // The fact-rows selector output (breaking strip + per-fact rows). Empty until
     // the snapshots hydrate.
     const feed = useMemo(() => {
         if (!snapshots) return { breaking: [], rows: [] };
-        return buildFactRows(suggestions, snapshots, openedIds);
-    }, [snapshots, suggestions, openedIds]);
+        return buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
+    }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 

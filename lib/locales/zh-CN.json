@@ -206,8 +206,7 @@
     "articleNotFound": "文章未找到",
     "readOn": "在 {{publication}} 上阅读",
     "share": "分享",
-    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}",
-    "moreCoverage": "更多报道"
+    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",

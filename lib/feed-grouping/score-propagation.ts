@@ -35,6 +35,10 @@ import {
     type SuggestionGroupingRow,
 } from '@/lib/database/services/article-suggestion-service';
 import {
+    repPriorityTier,
+    type UserGeoLanguageContext,
+} from '@/lib/feed-grouping/geo-language-priority';
+import {
     buildStoryGroups,
     pickRepresentative,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
@@ -85,12 +89,31 @@ function pickDonor(donors: SuggestionGroupingRow[]): SuggestionGroupingRow {
 }
 
 /**
- * Elect the single representative to score for a donor-less duplicate group:
- * prefer a row that has a description, then newest `firstPubDateMs`, then (via
- * pickRepresentative) the smaller id. Fully deterministic.
+ * Elect the single representative to score for a donor-less duplicate group.
+ *
+ * Country/language priority comes FIRST: a lower `repPriorityTier` wins (an
+ * article from the user's HOME country → another of the user's countries → the
+ * user's app-UI language → the rest). Only when two candidates share a tier do
+ * the legacy tiebreaks decide: prefer a row that has a description, then newest
+ * `firstPubDateMs`, then (via pickRepresentative) the smaller id. A `null`
+ * `userCtx` collapses every tier to 3, so election degrades to the exact legacy
+ * order. Fully deterministic.
  */
-function electRepresentative(candidates: SuggestionGroupingRow[]): SuggestionGroupingRow {
+function electRepresentative(
+    candidates: SuggestionGroupingRow[],
+    userCtx: UserGeoLanguageContext | null,
+): SuggestionGroupingRow {
+    // Groups are small, so computing the tier inline in the comparator is fine.
     return pickRepresentative(candidates, (a, b) => {
+        const tierA = repPriorityTier(
+            { countryCodeAlpha3: a.countryCode, languageCode: a.languageCode },
+            userCtx,
+        );
+        const tierB = repPriorityTier(
+            { countryCodeAlpha3: b.countryCode, languageCode: b.languageCode },
+            userCtx,
+        );
+        if (tierA !== tierB) return tierA - tierB; // lower tier = higher priority
         if (a.hasDescription !== b.hasDescription) return a.hasDescription ? -1 : 1;
         if (a.firstPubDateMs !== b.firstPubDateMs) return b.firstPubDateMs - a.firstPubDateMs;
         return 0;
@@ -105,13 +128,21 @@ function electRepresentative(candidates: SuggestionGroupingRow[]): SuggestionGro
  * thresholds, then per group:
  *   - ≥1 donor + ≥1 candidate → propagate the best donor's score to every
  *     candidate (one accumulated batch write across all groups);
- *   - donor-less, ≥2 candidates → elect one representative to enqueue, hold the
- *     rest back;
+ *   - donor-less, ≥2 candidates → elect one representative to enqueue (via
+ *     `electRepresentative`, honoring `userCtx`'s country/language priority),
+ *     hold the rest back;
  *   - donor-less singleton → enqueue.
+ *
+ * `userCtx` (default `null`) is the user's geo/language context, threaded in by
+ * the caller so this module stays store/DB-decoupled. A `null` context makes
+ * election byte-identical to the legacy (country/language-blind) order.
  *
  * Fails open: on any error, enqueue all candidate ids and propagate nothing.
  */
-export async function gateUnscoredForScoring(inFlightIds: Set<string>): Promise<GateResult> {
+export async function gateUnscoredForScoring(
+    inFlightIds: Set<string>,
+    userCtx: UserGeoLanguageContext | null = null,
+): Promise<GateResult> {
     // Captured before any throwing step so the fail-open path can enqueue them.
     let candidateIds: string[] = [];
     try {
@@ -152,7 +183,7 @@ export async function gateUnscoredForScoring(inFlightIds: Set<string>): Promise<
                 }
             } else if (groupCandidates.length >= 2) {
                 // Same-sync election: score one, hold the siblings back.
-                enqueueIds.push(electRepresentative(groupCandidates).id);
+                enqueueIds.push(electRepresentative(groupCandidates, userCtx).id);
                 heldBackCount += groupCandidates.length - 1;
             } else {
                 // Donor-less singleton → score it directly.

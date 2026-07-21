@@ -14,6 +14,7 @@ const mockRunScoringPass = jest.fn();
 const mockEnqueueCandidates = jest.fn();
 const mockGetNonTerminalCandidateIds = jest.fn();
 const mockGateUnscoredForScoring = jest.fn();
+const mockLoadUserGeoLanguageContext = jest.fn();
 const mockLogInfo = jest.fn();
 const mockGetActive = jest.fn();
 const mockGetAllLocations = jest.fn();
@@ -63,6 +64,10 @@ jest.mock('@/lib/services/scoring-pipeline', () => ({
 
 jest.mock('@/lib/feed-grouping/score-propagation', () => ({
   gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
+}));
+
+jest.mock('@/lib/user-context/user-geo-language-context', () => ({
+  loadUserGeoLanguageContext: (...args: any[]) => mockLoadUserGeoLanguageContext(...args),
 }));
 
 jest.mock('../tracked-story-reconcile', () => ({
@@ -142,6 +147,7 @@ beforeEach(() => {
     heldBackCount: 0,
   });
   mockReconcileTrackedStories.mockResolvedValue(undefined);
+  mockLoadUserGeoLanguageContext.mockResolvedValue(null);
 });
 
 // ── stepFetchTopicIds ─────────────────────────────────────────────────────────
@@ -877,8 +883,9 @@ describe('stepHydratePersistEnqueue', () => {
 
     const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
-    // Gate received the in-flight set produced by getNonTerminalCandidateIds.
-    expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight-id']));
+    // Gate received the in-flight set produced by getNonTerminalCandidateIds
+    // plus the (fail-open null) user geo/language context loaded once per run.
+    expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight-id']), null);
     // Only the elected representative is enqueued; the held-back sibling is not.
     expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a']);
     expect(result.enqueuedCount).toBe(1);

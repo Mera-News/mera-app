@@ -26,6 +26,7 @@ import {
   gateUnscoredForScoring,
   propagateToUnscoredSiblings,
 } from '../score-propagation';
+import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { SuggestionGroupingRow } from '@/lib/database/services/article-suggestion-service';
 
 // A single shared clusterId (confidence ≥ 0.5) unions every row that carries it
@@ -39,6 +40,8 @@ function row(overrides: Partial<SuggestionGroupingRow> & { id: string }): Sugges
     status: overrides.status ?? ('unscored' as any),
     firstPubDateMs: overrides.firstPubDateMs ?? 1_000,
     hasDescription: overrides.hasDescription ?? true,
+    countryCode: overrides.countryCode ?? null,
+    languageCode: overrides.languageCode ?? null,
     ...overrides,
   };
 }
@@ -157,6 +160,68 @@ describe('gateUnscoredForScoring — same-sync election', () => {
     expect(result.heldBackCount).toBe(0);
     expect(result.propagatedCount).toBe(0);
     expect(mockBatchPropagateScores).not.toHaveBeenCalled();
+  });
+});
+
+// ===========================================================================
+// gateUnscoredForScoring — country/language priority election (userCtx)
+// ===========================================================================
+
+describe('gateUnscoredForScoring — geo/language priority election', () => {
+  // Home = USA (tier 0), one other country GBR (tier 1), app language fr (tier 2).
+  const ctx: UserGeoLanguageContext = {
+    homeCountryAlpha3: 'USA',
+    otherCountriesAlpha3: ['GBR'],
+    appLanguageBase: 'fr',
+  };
+
+  it('elects the HOME-country row over a has-description, newer sibling', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({ id: 'home', countryCode: 'USA', hasDescription: false, firstPubDateMs: 1_000 }),
+      row({ id: 'other', countryCode: null, languageCode: null, hasDescription: true, firstPubDateMs: 9_000 }),
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set(), ctx);
+
+    expect(result.enqueueIds).toEqual(['home']); // tier 0 beats has-description + newest
+    expect(result.heldBackCount).toBe(1);
+  });
+
+  it('elects an OTHER-user-country row over an app-language row', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({ id: 'other-country', countryCode: 'GBR', languageCode: 'de' }),
+      row({ id: 'app-lang', countryCode: null, languageCode: 'fr' }),
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set(), ctx);
+
+    expect(result.enqueueIds).toEqual(['other-country']); // tier 1 beats tier 2
+    expect(result.heldBackCount).toBe(1);
+  });
+
+  it('elects an APP-language row over a newer, tier-3 sibling', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({ id: 'app-lang', countryCode: null, languageCode: 'fr', firstPubDateMs: 1_000 }),
+      row({ id: 'rest', countryCode: null, languageCode: 'en', firstPubDateMs: 9_000 }),
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set(), ctx);
+
+    expect(result.enqueueIds).toEqual(['app-lang']); // tier 2 beats tier 3 despite newer sibling
+    expect(result.heldBackCount).toBe(1);
+  });
+
+  it('preserves legacy election (description → newest) when userCtx is null', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({ id: 'home', countryCode: 'USA', hasDescription: false, firstPubDateMs: 9_000 }),
+      row({ id: 'described', countryCode: null, hasDescription: true, firstPubDateMs: 1_000 }),
+    ]);
+
+    // No userCtx → every tier collapses to 3 → legacy tiebreaks decide.
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.enqueueIds).toEqual(['described']); // has-description wins, geo ignored
+    expect(result.heldBackCount).toBe(1);
   });
 });
 

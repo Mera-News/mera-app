@@ -340,6 +340,8 @@ export interface SuggestionGroupingRow {
   status: ArticleSuggestionStatus;
   firstPubDateMs: number; // epoch ms, 0 if invalid
   hasDescription: boolean; // !!descriptionEn — used for representative election
+  countryCode: string | null; // publishing country, ISO alpha-3 (as stored) — geo/language priority
+  languageCode: string | null; // article/publication language (may be a full tag) — geo/language priority
 }
 
 function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
@@ -353,6 +355,8 @@ function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
     status: row.status,
     firstPubDateMs: Number.isFinite(pubMs) ? (pubMs as number) : 0,
     hasDescription: !!row.descriptionEn,
+    countryCode: row.countryCode,
+    languageCode: row.languageCode,
   };
 }
 

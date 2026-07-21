@@ -216,8 +216,7 @@
     "articleNotFound": "المقال غير موجود",
     "readOn": "اقرأ على {{publication}}",
     "share": "مشاركة",
-    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}",
-    "moreCoverage": "مزيد من التغطية"
+    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",

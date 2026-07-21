@@ -39,6 +39,7 @@ import {
 } from '@/lib/feed-grouping/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { repPriorityTier, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from './for-you-store';
 
 /** Only stories from the last 24h are eligible (matches the legacy feed).
@@ -180,6 +181,21 @@ function repCompare(a: GroupItem, b: GroupItem): number {
   return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
 }
 
+/** Tier-aware representative comparator: the user's geo/language priority
+ *  tier (`repPriorityTier` — home country → other user country → app
+ *  language → rest) is compared FIRST (lower tier wins); only on a tier tie
+ *  does the existing `repCompare` (newest → rawScore → id) decide. A `null`
+ *  `userCtx` collapses every item to tier 3, so this is byte-identical to
+ *  `repCompare` alone — the pre-priority legacy behavior. */
+function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
+  return (a: GroupItem, b: GroupItem): number => {
+    const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
+    const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
+    if (ta !== tb) return ta - tb;
+    return repCompare(a, b);
+  };
+}
+
 /** Card (story-group) ordering within a Dashboard section: representative
  *  `createdAt` (suggestion-creation time) descending, then id. */
 function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
@@ -199,6 +215,11 @@ function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
  *                    counts + the unread-high-priority-first sort. Pass the live
  *                    set so the Dashboard resorts as stories are opened.
  * @param nowMs       injected clock (deterministic testing).
+ * @param userCtx     the user's geo/language context (home/other countries +
+ *                    app language) — makes representative ELECTION tier-aware
+ *                    (see `makeRepCompare`). `null` (default) preserves the
+ *                    legacy geo/language-blind pick. Card order, breaking
+ *                    sort, and section sort are unaffected.
  */
 export function buildFactRows(
   suggestions: ForYouSuggestion[],
@@ -206,9 +227,11 @@ export function buildFactRows(
   openedIds: Set<string> = new Set(),
   nowMs: number = Date.now(),
   config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
+  userCtx: UserGeoLanguageContext | null = null,
 ): FactRowsResult {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
   const hpMult = config.scoringEngine.HP_MULT;
+  const repCompareForGroups = makeRepCompare(userCtx);
 
   // 1. Visible pool (note-gated + render gate + 24h window).
   const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
@@ -234,7 +257,7 @@ export function buildFactRows(
   const assignable: { rep: ForYouSuggestion; group: FactRowGroup }[] = [];
 
   for (const g of groups) {
-    const rep = pickRepresentative(g, repCompare).s;
+    const rep = pickRepresentative(g, repCompareForGroups).s;
     const members = g.map((it) => it.s).filter((m) => m._id !== rep._id);
     const all = [rep, ...members];
     const pubDateMs = all.reduce((mx, m) => Math.max(mx, parseMs(m.firstPubDate)), 0);

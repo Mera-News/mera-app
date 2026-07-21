@@ -10,6 +10,7 @@ const mockGetNonTerminalCandidateIds = jest.fn();
 const mockGetUnscored = jest.fn();
 const mockBuildRelevanceCalls = jest.fn();
 const mockGateUnscoredForScoring = jest.fn();
+const mockLoadUserGeoLanguageContext = jest.fn();
 const mockRequestSuggestionsRefresh = jest.fn();
 const mockContextForCycleReason = jest.fn();
 const mockCaptureException = jest.fn();
@@ -49,6 +50,10 @@ jest.mock('@/lib/feed-grouping/score-propagation', () => ({
   gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
 }));
 
+jest.mock('@/lib/user-context/user-geo-language-context', () => ({
+  loadUserGeoLanguageContext: (...args: any[]) => mockLoadUserGeoLanguageContext(...args),
+}));
+
 jest.mock('@/lib/services/SuggestionSyncService', () => ({
   requestSuggestionsRefresh: (...args: any[]) => mockRequestSuggestionsRefresh(...args),
 }));
@@ -86,6 +91,7 @@ beforeEach(() => {
     heldBackCount: 0,
   }));
   mockRequestSuggestionsRefresh.mockResolvedValue(undefined);
+  mockLoadUserGeoLanguageContext.mockResolvedValue(null);
 });
 
 describe('runBackgroundCycle — background completion pushes', () => {
@@ -142,8 +148,9 @@ describe('runBackgroundCycle — scoring-pass', () => {
 
     const result = await runBackgroundCycle('scoring-pass');
 
-    // Gate was fed the pipeline's in-flight set.
-    expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight']));
+    // Gate was fed the pipeline's in-flight set plus the (fail-open null) user
+    // geo/language context loaded for this pass.
+    expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight']), null);
     expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a']);
     expect(mockEnqueueOrphanedReasons).toHaveBeenCalledTimes(1);
     expect(mockPollTick).toHaveBeenCalledWith('foreground');

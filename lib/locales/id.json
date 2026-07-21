@@ -206,8 +206,7 @@
     "articleNotFound": "Artikel tidak ditemukan",
     "readOn": "Baca di {{publication}}",
     "share": "Bagikan",
-    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}",
-    "moreCoverage": "Liputan lainnya"
+    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",

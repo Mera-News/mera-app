@@ -206,8 +206,7 @@
     "articleNotFound": "Không tìm thấy bài viết",
     "readOn": "Đọc trên {{publication}}",
     "share": "Chia sẻ",
-    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}",
-    "moreCoverage": "Nguồn tin khác"
+    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",

@@ -17,6 +17,7 @@ import { getAll as getAllLocations } from '@/lib/database/services/location-serv
 import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
 import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
+import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
 import { yieldToEventLoop } from '../idle';
@@ -320,6 +321,12 @@ export async function stepHydratePersistEnqueue(
     return next;
   };
 
+  // Resolve the user's geo/language context once for the whole run and reuse it
+  // across every serialized gate call — its country/language priority steers
+  // which sibling of a duplicate group gets elected to score. Fails open to
+  // null (legacy, geo/language-blind election).
+  const userCtx = await loadUserGeoLanguageContext();
+
   // The gate re-derives its candidates from ALL unscored, not-in-flight rows —
   // not just this chunk's eligible ids — so any sibling held back or missed by a
   // failed batch on a prior chunk/sync is re-considered. Self-healing with no
@@ -327,7 +334,7 @@ export async function stepHydratePersistEnqueue(
   // scored) or re-enqueued next pass.
   const gateAndEnqueue = async (): Promise<void> => {
     const inFlight = await getNonTerminalCandidateIds();
-    const gate = await gateUnscoredForScoring(inFlight);
+    const gate = await gateUnscoredForScoring(inFlight, userCtx);
     if (gate.propagatedCount > 0) {
       // Propagated rows are now terminal `Complete` — surface them immediately.
       await opts.refreshStore();

@@ -19,6 +19,8 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
+import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -94,11 +96,16 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     };
   }, [factId]);
 
+  // The user's geo/language context (home/other countries + app language) —
+  // makes representative election tier-aware. Null while loading/on failure,
+  // which `buildFactRows` treats as the legacy geo/language-blind pick.
+  const userGeoLanguageCtx = useUserGeoLanguageContext();
+
   const groups: FactRowGroup[] = useMemo(() => {
     if (!snapshots) return [];
-    const { rows } = buildFactRows(suggestions, snapshots, openedIds);
+    const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
     return rows.find((r) => r.factId === factId)?.groups ?? [];
-  }, [snapshots, suggestions, factId, openedIds]);
+  }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx]);
 
   const renderItem = useCallback(
     ({ item }: { item: FactRowGroup }) => (

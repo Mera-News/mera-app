@@ -206,8 +206,7 @@
     "articleNotFound": "ไม่พบบทความ",
     "readOn": "อ่านต่อที่ {{publication}}",
     "share": "แชร์",
-    "shareVia": "แชร์ผ่าน Mera News — ข่าวที่คัดสรรมาเพื่อคุณโดยเฉพาะ ดาวน์โหลดแอปได้ที่: {{downloadUrl}}",
-    "moreCoverage": "การรายงานเพิ่มเติม"
+    "shareVia": "แชร์ผ่าน Mera News — ข่าวที่คัดสรรมาเพื่อคุณโดยเฉพาะ ดาวน์โหลดแอปได้ที่: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "โหลดรายละเอียดกลุ่มข่าวไม่สำเร็จ",

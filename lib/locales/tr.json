@@ -208,8 +208,7 @@
     "articleNotFound": "Makale bulunamadı",
     "readOn": "{{publication}} üzerinde oku",
     "share": "Paylaş",
-    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}",
-    "moreCoverage": "Diğer kaynaklar"
+    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",

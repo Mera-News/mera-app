@@ -35,6 +35,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useViewedStoriesStore } from '@/lib/stores/viewed-stories-store';
+import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
   useForYouAsyncJobPhase,
   useForYouDeviceProcessing,
@@ -91,9 +92,14 @@ const FeedScreen: React.FC = () => {
     if (isFocused) void useViewedStoriesStore.getState().hydrate();
   }, [isFocused]);
 
+  // The user's geo/language context (home/other countries + app language) —
+  // makes representative election tier-aware. Null while loading/on failure,
+  // which `buildFeedList` treats as the legacy geo/language-blind pick.
+  const userGeoLanguageCtx = useUserGeoLanguageContext();
+
   const candidates = useMemo(
-    () => buildFeedList(suggestions, excludedUnion(openedIds, viewedIds)),
-    [suggestions, openedIds, viewedIds],
+    () => buildFeedList(suggestions, excludedUnion(openedIds, viewedIds), Date.now(), userGeoLanguageCtx),
+    [suggestions, openedIds, viewedIds, userGeoLanguageCtx],
   );
   const candidatesRef = useRef(candidates);
   candidatesRef.current = candidates;
@@ -214,9 +220,9 @@ const FeedScreen: React.FC = () => {
       useOpenedStoriesStore.getState().ids,
       useViewedStoriesStore.getState().ids,
     );
-    useFeedSessionStore.getState().rebuild(buildFeedList(latest, excluded, Date.now()));
+    useFeedSessionStore.getState().rebuild(buildFeedList(latest, excluded, Date.now(), userGeoLanguageCtx));
     setRefreshing(false);
-  }, []);
+  }, [userGeoLanguageCtx]);
 
   const renderItem = useCallback(
     ({ item }: { item: FeedListItem }) => (

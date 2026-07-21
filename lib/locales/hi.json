@@ -208,8 +208,7 @@
     "articleNotFound": "लेख नहीं मिला",
     "readOn": "{{publication}} पर पढ़ें",
     "share": "साझा करें",
-    "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}",
-    "moreCoverage": "अधिक कवरेज"
+    "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",

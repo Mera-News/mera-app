@@ -208,8 +208,7 @@
     "articleNotFound": "Artikel niet gevonden",
     "readOn": "Lezen op {{publication}}",
     "share": "Delen",
-    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}",
-    "moreCoverage": "Meer berichtgeving"
+    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",

@@ -14,6 +14,8 @@ import {
   type FactRowsSnapshots,
 } from '../fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from '../for-you-store';
 
 const NOW = 1_000_000_000_000; // fixed clock
@@ -199,6 +201,92 @@ describe('buildFactRows cluster timestamp', () => {
     expect(f1.groups[0].data._id).toBe('newer'); // newest fronts
     expect(f1.groups[0].pubDateMs).toBe(NOW - 1 * H);
     expect(f1.groups[0].members.map((m) => m._id)).toEqual(['older']);
+  });
+});
+
+// --- representative election (geo/language priority, Wave 2b) --------------
+
+describe('buildFactRows representative election (geo/language priority)', () => {
+  const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+
+  it('home-country sibling becomes representative even when another sibling is newer', () => {
+    const ctx: UserGeoLanguageContext = {
+      homeCountryAlpha3: 'IND',
+      otherCountriesAlpha3: [],
+      appLanguageBase: 'en',
+    };
+    const home = sugg({
+      _id: 'home',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.4,
+      clusters: [{ clusterId: 'c1', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'x' }],
+    });
+    const newer = sugg({
+      _id: 'newer',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.9,
+      clusters: [{ clusterId: 'c1', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'y' }],
+    });
+    const { rows } = buildFactRows([home, newer], snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, ctx);
+    const f1 = rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups).toHaveLength(1);
+    expect(f1.groups[0].data._id).toBe('home');
+    expect(f1.groups[0].members.map((m) => m._id)).toEqual(['newer']);
+  });
+
+  it('an other-user-country sibling beats an app-language-match sibling', () => {
+    const ctx: UserGeoLanguageContext = {
+      homeCountryAlpha3: null,
+      otherCountriesAlpha3: ['GBR'],
+      appLanguageBase: 'fr',
+    };
+    const otherCountry = sugg({
+      _id: 'gbr',
+      country_code: 'GBR',
+      language_code: 'en',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.3,
+      clusters: [{ clusterId: 'c2', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'x' }],
+    });
+    const langMatch = sugg({
+      _id: 'fr',
+      country_code: null,
+      language_code: 'fr',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.9,
+      clusters: [{ clusterId: 'c2', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'y' }],
+    });
+    const { rows } = buildFactRows([otherCountry, langMatch], snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, ctx);
+    const f1 = rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups[0].data._id).toBe('gbr');
+  });
+
+  it('a null userCtx keeps the legacy newest/rawScore-based pick', () => {
+    const older = sugg({
+      _id: 'older',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.4,
+      clusters: [{ clusterId: 'c3', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'x' }],
+    });
+    const newer = sugg({
+      _id: 'newer',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.9,
+      clusters: [{ clusterId: 'c3', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'y' }],
+    });
+    const { rows } = buildFactRows([older, newer], snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, null);
+    const f1 = rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups[0].data._id).toBe('newer');
   });
 });
 

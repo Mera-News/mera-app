@@ -24,6 +24,7 @@ import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { getUnscoredSuggestionsWithFacts } from '@/lib/database/services/article-suggestion-service';
 import { buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
+import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { contextForCycleReason } from '@/lib/llm/execution-context';
 
 export type CycleReason =
@@ -92,8 +93,11 @@ export async function runBackgroundCycle(
     const bundle = await buildRelevanceCalls(candidates);
     const eligibleIds = new Set(bundle.eligibleCandidates.map((c) => c.id));
     if (eligibleIds.size > 0) {
+      // Build the user's geo/language context once for this pass so election
+      // honors country/language priority. Fails open to null (legacy behavior).
+      const userCtx = await loadUserGeoLanguageContext();
       const inFlight = await pipeline.getNonTerminalCandidateIds();
-      const gate = await gateUnscoredForScoring(inFlight);
+      const gate = await gateUnscoredForScoring(inFlight, userCtx);
       // Propagated rows are now terminal `Complete` — surface them immediately.
       if (gate.propagatedCount > 0) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
