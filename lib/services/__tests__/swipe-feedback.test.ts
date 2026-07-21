@@ -9,8 +9,11 @@ jest.mock('@/lib/database/services/article-feedback-service', () => ({
 }));
 
 const mockOpenArticleFeedback = jest.fn();
+const mockExpand = jest.fn();
 jest.mock('@/lib/stores/floating-chat-store', () => ({
-  useFloatingChatStore: { getState: () => ({ openArticleFeedback: mockOpenArticleFeedback }) },
+  useFloatingChatStore: {
+    getState: () => ({ openArticleFeedback: mockOpenArticleFeedback, expand: mockExpand }),
+  },
 }));
 
 const TREE = {
@@ -66,6 +69,7 @@ import {
   changeSwipeVerdict,
   updateFeedbackTreePath,
   openFeedbackChatWithPath,
+  openArticleChat,
   wireSwipeCallbacks,
 } from '../swipe-feedback';
 
@@ -162,6 +166,24 @@ describe('openFeedbackChatWithPath', () => {
   });
 });
 
+describe('openArticleChat', () => {
+  it('opens the DEFAULT article chat (no verdict/path, no auto-sent message)', () => {
+    openArticleChat(makeSuggestion());
+    expect(mockExpand).toHaveBeenCalledTimes(1);
+    const [context] = mockExpand.mock.calls[0];
+    expect(context).toEqual({
+      kind: 'article-suggestion',
+      articleId: 'art-1',
+      suggestionId: 'sugg-1',
+      articleTitle: 'A story',
+    });
+    // Crucially NOT the primed handoff path.
+    expect(context.verdict).toBeUndefined();
+    expect(context.treePath).toBeUndefined();
+    expect(mockOpenArticleFeedback).not.toHaveBeenCalled();
+  });
+});
+
 describe('wireSwipeCallbacks', () => {
   it('installs real implementations onto the swipe-callbacks contract', async () => {
     wireSwipeCallbacks();
@@ -169,5 +191,16 @@ describe('wireSwipeCallbacks', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(recordVerdictFeedback).toHaveBeenCalled();
+  });
+
+  it('wires the VerdictBar Mera icon to the plain article chat (expand, no prime)', () => {
+    wireSwipeCallbacks();
+    swipeCallbacks.onOpenArticleChat(makeSuggestion());
+    expect(mockExpand).toHaveBeenCalledTimes(1);
+    expect(mockExpand.mock.calls[0][0]).toMatchObject({
+      kind: 'article-suggestion',
+      articleId: 'art-1',
+    });
+    expect(mockOpenArticleFeedback).not.toHaveBeenCalled();
   });
 });

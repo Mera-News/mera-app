@@ -204,7 +204,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
               color={ACCENT}
             />
           ) : null}
-          <Text className="flex-1 text-typography-0" style={{ fontSize: 14, fontWeight: '600' }}>
+          <Text className="flex-1" style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
             {label(node)}
           </Text>
           {isBranch ? (
@@ -240,8 +240,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
                 onPress={() => handleCrumb(i + 1)}
               >
                 <Text
-                  className="text-typography-300"
-                  style={{ fontSize: 12, fontWeight: '600' }}
+                  style={{ color: '#E5E5E5', fontSize: 12, fontWeight: '600' }}
                   numberOfLines={1}
                 >
                   {crumb}
@@ -257,7 +256,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
         <VStack space="xs">{currentChildren.map(renderChip)}</VStack>
       ) : (
         <Box className="py-2">
-          <Text className="text-typography-400 text-center" style={{ fontSize: 12 }}>
+          <Text className="text-center" style={{ color: '#E5E5E5', fontSize: 12 }}>
             {t('swipeFeed.treeThanks')}
           </Text>
         </Box>

@@ -59,6 +59,9 @@ interface SwipeDeckProps {
   backLabel?: string;
   /** a11y label for the Next FAB. */
   nextLabel?: string;
+  /** Feedback overlay content, clipped to the top card's exact frame + rounded
+   *  corners (the card IS the surface). Null when closed. */
+  overlay?: React.ReactNode;
 }
 
 const NAV_ACCENT = '#EDA77E';
@@ -154,6 +157,7 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
   onNext,
   backLabel,
   nextLabel,
+  overlay,
 }) => {
   const { width } = useWindowDimensions();
   const cardWidth = Math.max(0, width - 2 * hMargin);
@@ -316,6 +320,18 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
           onPress={onNext}
           accessibilityLabel={nextLabel ?? 'Next'}
         />
+      ) : null}
+
+      {/* Feedback overlay — clipped to the top card's exact frame + rounded
+          corners so the card itself reads as the overlay surface (above the
+          card + FABs). */}
+      {overlay ? (
+        <Box
+          className="overflow-hidden rounded-2xl"
+          style={[StyleSheet.absoluteFill, { zIndex: 20 }]}
+        >
+          {overlay}
+        </Box>
       ) : null}
     </Box>
   );

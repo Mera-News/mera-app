@@ -16,8 +16,10 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import RelevanceChip from '@/components/custom/RelevanceChip';
+import ReadArticleButton from './ReadArticleButton';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
+import { useOpenArticleUrl } from './use-open-article-url';
 import { reasonBoxColors } from '@/lib/relevance-utils';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -50,6 +52,7 @@ const SwipeArticleCard: React.FC<SwipeArticleCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const open = useOpenSuggestion('swipe');
+  const openArticleUrl = useOpenArticleUrl();
 
   const [imageFailed, setImageFailed] = React.useState(false);
   const imageSource =
@@ -145,6 +148,18 @@ const SwipeArticleCard: React.FC<SwipeArticleCardProps> = ({
             />
           </Box>
         ) : null}
+
+        {/* "Read on {publication}" — always pinned at the card bottom. Opens the
+            ORIGINAL article URL in the in-app browser (same action as the detail
+            page's read button), distinct from tapping the card (opens detail).
+            Disabled on behind / dimmed cards or when there is no article URL. */}
+        <Box style={{ marginTop: 'auto' }}>
+          <ReadArticleButton
+            publicationName={suggestion.publication_name}
+            onPress={() => openArticleUrl(suggestion)}
+            disabled={!interactive || !suggestion.article_url}
+          />
+        </Box>
       </VStack>
     </Pressable>
   );

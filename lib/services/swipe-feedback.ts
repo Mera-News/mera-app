@@ -143,6 +143,23 @@ export async function openFeedbackChatWithPath(
   );
 }
 
+/**
+ * Opens the DEFAULT article chat from the VerdictBar's Mera icon: the article
+ * context (pinned card) with the standard starter chips ("Why this?" / "Don't
+ * want this") and NO auto-sent message — deliberately WITHOUT the verdict/tapped
+ * path, so it is a plain conversation about the article rather than the tree's
+ * "convert my taps into a conversation" handoff. `expand` starts a fresh thread
+ * (nulling any pending auto-send) whenever the context differs.
+ */
+export function openArticleChat(suggestion: ForYouSuggestion): void {
+  useFloatingChatStore.getState().expand({
+    kind: 'article-suggestion',
+    articleId: suggestion.articleId,
+    suggestionId: suggestion._id,
+    articleTitle: suggestion.title_en ?? '',
+  });
+}
+
 /** Installs the real Feed-signal implementations onto the swipe-callbacks contract. */
 export function wireSwipeCallbacks(): void {
   swipeCallbacks.onVerdict = (suggestion, verdict) => {
@@ -156,5 +173,8 @@ export function wireSwipeCallbacks(): void {
   };
   swipeCallbacks.onInvokeMera = (suggestion, verdict, path) => {
     void openFeedbackChatWithPath(suggestion, verdict, path);
+  };
+  swipeCallbacks.onOpenArticleChat = (suggestion) => {
+    openArticleChat(suggestion);
   };
 }

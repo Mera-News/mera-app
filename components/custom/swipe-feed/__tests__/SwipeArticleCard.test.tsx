@@ -63,6 +63,11 @@ jest.mock('@/lib/hooks/use-open-suggestion', () => ({
   useOpenSuggestion: () => mockOpen,
 }));
 
+const mockOpenArticleUrl = jest.fn();
+jest.mock('../use-open-article-url', () => ({
+  useOpenArticleUrl: () => mockOpenArticleUrl,
+}));
+
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -100,7 +105,10 @@ function sugg(over: Partial<ForYouSuggestion> = {}): ForYouSuggestion {
   } as ForYouSuggestion;
 }
 
-beforeEach(() => mockOpen.mockClear());
+beforeEach(() => {
+  mockOpen.mockClear();
+  mockOpenArticleUrl.mockClear();
+});
 
 describe('SwipeArticleCard', () => {
   it('renders title + reason', () => {
@@ -138,5 +146,23 @@ describe('SwipeArticleCard', () => {
     );
     fireEvent.press(getByText('A tall headline'));
     expect(mockOpen).not.toHaveBeenCalled();
+  });
+
+  it('opens the ORIGINAL article URL via the read button (not the detail route)', () => {
+    const s = sugg({ article_url: 'https://ex.com/a' });
+    const { getByLabelText } = render(
+      <SwipeArticleCard suggestion={s} memberCount={1} likeOpacity={zero} nopeOpacity={zero} interactive />,
+    );
+    fireEvent.press(getByLabelText('articleDetail.readOn'));
+    expect(mockOpenArticleUrl).toHaveBeenCalledWith(s);
+    expect(mockOpen).not.toHaveBeenCalled();
+  });
+
+  it('disables the read button when the suggestion has no article URL', () => {
+    const { getByLabelText } = render(
+      <SwipeArticleCard suggestion={sugg({ article_url: null })} memberCount={1} likeOpacity={zero} nopeOpacity={zero} interactive />,
+    );
+    fireEvent.press(getByLabelText('articleDetail.readOn'));
+    expect(mockOpenArticleUrl).not.toHaveBeenCalled();
   });
 });

@@ -29,12 +29,17 @@ export interface SwipeCallbacks {
     verdict: Verdict,
     path: string[],
   ) => void;
-  /** The user asked to continue the feedback with Mera from a card. */
+  /** The user asked to continue the feedback with Mera from a card — a
+   *  verdict+path-primed handoff ("convert my taps into a conversation"). Used by
+   *  the feedback-tree overlay's openChat leaves + its Mera entry row. */
   onInvokeMera: (
     suggestion: ForYouSuggestion,
     verdict: Verdict,
     path: string[],
   ) => void;
+  /** The VerdictBar's Mera icon was tapped — open the DEFAULT article chat
+   *  (pinned card + starter chips, NO verdict/path, NO auto-sent message). */
+  onOpenArticleChat: (suggestion: ForYouSuggestion) => void;
 }
 
 /** Live contract object. No-op defaults this phase; P4 fills the members. */
@@ -43,4 +48,5 @@ export const swipeCallbacks: SwipeCallbacks = {
   onVerdictChanged: () => {},
   onTreePathChanged: () => {},
   onInvokeMera: () => {},
+  onOpenArticleChat: () => {},
 };

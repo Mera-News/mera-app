@@ -194,11 +194,21 @@ const SwipeFeedScreen: React.FC = () => {
 
   const handleReopenTree = useCallback(() => setTreeOpen(true), []);
 
+  // Overlay Mera entry — the verdict+path-primed handoff ("convert my taps into
+  // a conversation").
   const handleAskMera = useCallback(() => {
     const cand = windowRef.current[0]?.candidate;
     if (!cand) return;
     const rec = useSwipeDeckStore.getState().verdicts[cand.id];
     swipeCallbacks.onInvokeMera(cand.suggestion, rec?.verdict ?? 'like', rec?.path ?? []);
+  }, []);
+
+  // VerdictBar Mera icon — open the DEFAULT article chat (no verdict/path prime,
+  // no auto-sent message; just the article context + starter chips).
+  const handleBarMera = useCallback(() => {
+    const cand = windowRef.current[0]?.candidate;
+    if (!cand) return;
+    swipeCallbacks.onOpenArticleChat(cand.suggestion);
   }, []);
 
   // ── Feedback tree (inside the overlay) ──
@@ -299,7 +309,9 @@ const SwipeFeedScreen: React.FC = () => {
       </VStack>
 
       {/* Deck area — flexes to fill the space between header and verdict bar so
-          the card is as tall as possible; Back / Next are FABs on the card. */}
+          the card is as tall as possible; Back / Next are FABs on the card. The
+          feedback overlay is rendered by SwipeDeck, clipped to the top card's
+          exact frame (the card IS the overlay surface). */}
       <View style={{ flex: 1, paddingHorizontal: H_MARGIN, paddingVertical: 8 }}>
         {showDeck ? (
           <SwipeDeck
@@ -313,25 +325,25 @@ const SwipeFeedScreen: React.FC = () => {
             onNext={handleNext}
             backLabel={t('swipeFeed.back')}
             nextLabel={t('swipeFeed.next')}
+            overlay={
+              treeOpen && topIsReal && topVerdict != null && topEntry?.candidate ? (
+                <FeedbackCardOverlay
+                  key={topId ?? undefined}
+                  suggestion={topEntry.candidate.suggestion}
+                  verdict={topVerdict}
+                  initialPathIds={topId ? verdicts[topId]?.path : undefined}
+                  onClose={() => setTreeOpen(false)}
+                  onTreePathChanged={handleTreePathChanged}
+                  onInvokeMera={handleTreeInvokeMera}
+                  onLeafCommitted={handleLeafCommitted}
+                  onAskMera={handleAskMera}
+                />
+              ) : null
+            }
           />
         ) : (
           <View style={{ flex: 1, justifyContent: 'center' }}>{renderEmpty()}</View>
         )}
-
-        {/* Feedback-tree overlay — floats over the (dimmed) top card. */}
-        {treeOpen && topIsReal && topVerdict != null && topEntry?.candidate ? (
-          <FeedbackCardOverlay
-            key={topId ?? undefined}
-            suggestion={topEntry.candidate.suggestion}
-            verdict={topVerdict}
-            initialPathIds={topId ? verdicts[topId]?.path : undefined}
-            onClose={() => setTreeOpen(false)}
-            onTreePathChanged={handleTreePathChanged}
-            onInvokeMera={handleTreeInvokeMera}
-            onLeafCommitted={handleLeafCommitted}
-            onAskMera={handleAskMera}
-          />
-        ) : null}
       </View>
 
       {/* Controls — the thumbs VerdictBar (real cards only). Sits snug above the
@@ -347,7 +359,7 @@ const SwipeFeedScreen: React.FC = () => {
             onVerdict={handlePillVerdict}
             onVerdictChanged={handlePillChanged}
             onReopenTree={handleReopenTree}
-            onAskMera={handleAskMera}
+            onAskMera={handleBarMera}
           />
         ) : null}
       </VStack>
