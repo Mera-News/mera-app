@@ -71,9 +71,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
 
   const groups: FactRowGroup[] = useMemo(() => {
     if (!snapshots) return [];
-    const { rows } = buildFactRows(suggestions, snapshots);
+    const { rows } = buildFactRows(suggestions, snapshots, openedIds);
     return rows.find((r) => r.factId === factId)?.groups ?? [];
-  }, [snapshots, suggestions, factId]);
+  }, [snapshots, suggestions, factId, openedIds]);
 
   const renderItem = useCallback(
     ({ item }: { item: FactRowGroup }) => (
@@ -81,9 +81,8 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         suggestion={item.data}
         moreSourcesCount={moreSourcesCount(item.data, item.members)}
         onPress={handlePress}
-        showActions
         surface="for_you"
-        dimmed={isSuggestionOpened(item.data, openedIds)}
+        read={isSuggestionOpened(item.data, openedIds)}
       />
     ),
     [handlePress, openedIds],

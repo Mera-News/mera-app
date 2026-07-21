@@ -19,6 +19,9 @@ interface FactSectionHeaderProps {
   title: string;
   /** event_type of the row's top item — drives the icon prefix. */
   eventType: string | null;
+  /** Unread stories in this section — renders an accent count badge after the
+   *  title. Hidden when 0 / undefined. */
+  unreadCount?: number;
   /** When set, the whole header is tappable and opens the full fact feed. */
   onPress?: () => void;
 }
@@ -36,6 +39,7 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
   kind,
   title,
   eventType,
+  unreadCount = 0,
   onPress,
 }) => {
   const { t } = useTranslation();
@@ -69,6 +73,17 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       <HStack className="items-center" space="sm">
         {icon && <MaterialIcons name={icon} size={20} color={ACCENT} />}
         <Box className="flex-1 min-w-0">{titleNode}</Box>
+        {unreadCount > 0 && (
+          <Box
+            className="rounded-full items-center justify-center px-1.5"
+            style={{ minWidth: 20, height: 20, backgroundColor: ACCENT }}
+            accessibilityLabel={`${unreadCount}`}
+          >
+            <Text size="xs" bold className="text-black">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Text>
+          </Box>
+        )}
         {canPress && (
           <MaterialIcons name="chevron-right" size={22} color="rgb(163, 163, 163)" />
         )}

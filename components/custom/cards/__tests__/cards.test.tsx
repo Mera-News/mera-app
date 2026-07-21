@@ -142,6 +142,10 @@ jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { captureException: jest.fn() },
 }));
+const mockShowInfo = jest.fn();
+jest.mock('@/lib/toast-manager', () => ({
+  toastManager: { showInfo: (...a: any[]) => mockShowInfo(...a) },
+}));
 
 // eslint-disable-next-line import/first
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
@@ -247,6 +251,22 @@ describe('ArticleSuggestionCard', () => {
     const { getByText } = render(<ArticleSuggestionCard suggestion={s} onPress={onPress} />);
     fireEvent.press(getByText('A headline'));
     expect(onPress).toHaveBeenCalledWith(s);
+  });
+
+  it('does not render the read tick chip by default', () => {
+    const { queryByLabelText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    expect(queryByLabelText('feed.readArticleToast')).toBeNull();
+  });
+
+  it('renders the read tick chip when read and toasts on tap (not opening the card)', () => {
+    const onPress = jest.fn();
+    const { getByLabelText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={onPress} read />,
+    );
+    fireEvent.press(getByLabelText('feed.readArticleToast'));
+    expect(mockShowInfo).toHaveBeenCalledWith('feed.readArticleToast');
   });
 });
 

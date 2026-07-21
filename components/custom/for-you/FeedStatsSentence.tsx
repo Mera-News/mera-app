@@ -1,8 +1,7 @@
 // FeedStatsSentence — the presentational "N articles published / M analysed /
 // K relevant" line for the last 24h. Reads the shared `useFeedCounts()` hook and
-// renders the same interpolation recipe the (now-deprecated)
-// ArticleCountForYouBanner used. Mounted in the Feed tab header this phase; the
-// Dashboard header mount is a later phase.
+// renders the same interpolation recipe the (now-deleted) ArticleCountForYouBanner
+// used. Mounted in both the Feed tab header and the Dashboard header.
 
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';

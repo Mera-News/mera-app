@@ -35,6 +35,8 @@ interface ArticleCardProps {
   surface?: FeedbackSurface;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
+  /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
+  read?: boolean;
 }
 
 export type { ArticleCardProps };
@@ -56,6 +58,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   showActions = false,
   surface = 'for_you',
   dimmed = false,
+  read = false,
 }) => {
   const [facts, setFacts] = useState<Fact[]>([]);
 
@@ -180,6 +183,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       moreSourcesCount={moreSourcesCount}
       recyclingKey={suggestion._id}
       dimmed={dimmed}
+      read={read}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}
     >

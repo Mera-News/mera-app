@@ -8,7 +8,8 @@ import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/Fo
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
-import FactRowsFeed from '@/components/custom/for-you/FactRowsFeed';
+import FactSectionsFeed from '@/components/custom/for-you/FactSectionsFeed';
+import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
@@ -39,6 +40,8 @@ import {
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
+import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -48,7 +51,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import Animated, { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Profile is now a bottom tab — the right-edge swipe still opens it directly.
@@ -62,6 +65,12 @@ const MeraNewsScreen: React.FC = () => {
     // them (see lib/hooks/*).
     const { isLoading, errorMessage } = useFeedBootstrap();
     const handleSuggestionPress = useOpenSuggestion('sectioned');
+    // Collapsing Dashboard header (hides on scroll-down, reveals on scroll-up).
+    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
+        useCollapsibleHeader();
+    // Live opened set — subscribed so the section resort + green ticks update as
+    // stories are opened.
+    const openedIds = useOpenedStoriesStore((s) => s.ids);
     const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>();
     const [showOnboardingWait, setShowOnboardingWait] = useState(false);
     const [stuckOnEmpty, setStuckOnEmpty] = useState(false);
@@ -88,7 +97,9 @@ const MeraNewsScreen: React.FC = () => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
         if (tab === 'saved') setSavedVisited(true);
-    }, []);
+        // Always reveal the header on a sub-tab switch.
+        reveal();
+    }, [reveal]);
 
     // Feed-status detail sheet (opened from the header status line + shimmer).
     const [statusSheetOpen, setStatusSheetOpen] = useState(false);
@@ -177,8 +188,8 @@ const MeraNewsScreen: React.FC = () => {
     // the snapshots hydrate.
     const feed = useMemo(() => {
         if (!snapshots) return { breaking: [], rows: [] };
-        return buildFactRows(suggestions, snapshots);
-    }, [snapshots, suggestions]);
+        return buildFactRows(suggestions, snapshots, openedIds);
+    }, [snapshots, suggestions, openedIds]);
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 
@@ -266,6 +277,15 @@ const MeraNewsScreen: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, hasRenderableContent, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
 
+    // Auto-reveal the header on error / offline / daily-limit conditions so the
+    // status chrome (shimmer, offline row) is never hidden under a collapsed
+    // header when the user most needs it.
+    useEffect(() => {
+        if (!isConnected || scoringError !== null || isDailyLimited) {
+            reveal();
+        }
+    }, [isConnected, scoringError, isDailyLimited, reveal]);
+
     const renderEmpty = useCallback(() => {
         if (showOnboardingWait) {
             return <OnboardingWaitingCard />;
@@ -320,77 +340,96 @@ const MeraNewsScreen: React.FC = () => {
 
     return (
         <Box className="flex-1 bg-black">
-            <VStack className="px-5 pb-2 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
-                <HStack className="items-start justify-between mb-2">
-                    <VStack className="flex-1 min-w-0 mr-3">
-                        <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.dashboardTitle')}</Heading>
-                        {lastProcessedLabel && (
-                            <Pressable
-                                onPress={openStatusSheet}
-                                hitSlop={8}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('feedStatus.openA11y')}
-                            >
-                                <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
-                            </Pressable>
-                        )}
-                    </VStack>
-                    <HStack className="items-center flex-shrink-0" space="sm">
-                        <NotificationBellButton />
-                    </HStack>
-                </HStack>
-
-                {/* Sub-tab pills — Feed / Stories / Saved. */}
-                <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
-
-                {/* Feed-status shimmer — indeterminate bar + expand accordion. */}
-                <FeedStatusShimmer
-                    processing={isFeedProcessing}
-                    error={scoringError !== null}
-                    dailyLimited={isDailyLimited}
-                    unscoredCount={unscoredCount}
-                    processedCount={articleCount}
-                    analysedCount={analysedCount}
-                    relevantCount={relevantCount}
-                    noiseRemovedCount={noisyDiscardedCount ?? 0}
-                    injectNoiseEnabled={injectNoiseEnabled}
-                    lastProcessedLabel={lastProcessedLabel}
-                />
-
-                {activeSubTab === 'feed' && !isConnected && (
-                    <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
-                        <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                        <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
-                    </HStack>
-                )}
-            </VStack>
-
-            {/* Keep-mounted sub-tab content. */}
+            {/* Keep-mounted sub-tab content — rendered FIRST so the absolute
+                collapsing header paints on top of it. */}
             <View style={{ flex: 1 }}>
-                {/* Feed */}
+                {/* Feed — the list handles its own top padding (contentContainer)
+                    so it can scroll under the collapsing header. */}
                 <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
-                    <FactRowsFeed
+                    <FactSectionsFeed
                         breaking={feed.breaking}
                         rows={feed.rows}
+                        openedIds={openedIds}
                         onPressSuggestion={handleSuggestionPress}
+                        scrollHandler={scrollHandler}
+                        headerHeight={headerHeight}
                         ListEmptyComponent={renderEmpty}
                     />
                 </View>
 
-                {/* Stories (lazy-mounted on first visit) */}
+                {/* Stories (lazy-mounted on first visit) — header stays revealed,
+                    so pad the content below its measured height. */}
                 {storiesVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'stories' ? 'flex' : 'none' }}>
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'stories' ? 'flex' : 'none' }}>
                         <StoriesSlotPlaceholder />
                     </View>
                 )}
 
                 {/* Saved (lazy-mounted on first visit) */}
                 {savedVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'saved' ? 'flex' : 'none' }}>
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }}>
                         <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} />
                     </View>
                 )}
             </View>
+
+            {/* Collapsing Dashboard header — absolute overlay, translates up on
+                scroll-down and back on scroll-up / reveal(). */}
+            <Animated.View
+                onLayout={onHeaderLayout}
+                style={[
+                    { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
+                    headerStyle,
+                ]}
+            >
+                <VStack className="px-5 pb-2" style={{ paddingTop: insets.top + 16 }}>
+                    <HStack className="items-start justify-between mb-2">
+                        <VStack className="flex-1 min-w-0 mr-3">
+                            <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.dashboardTitle')}</Heading>
+                            {lastProcessedLabel && (
+                                <Pressable
+                                    onPress={openStatusSheet}
+                                    hitSlop={8}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('feedStatus.openA11y')}
+                                >
+                                    <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
+                                </Pressable>
+                            )}
+                        </VStack>
+                        <HStack className="items-center flex-shrink-0" space="sm">
+                            <NotificationBellButton />
+                        </HStack>
+                    </HStack>
+
+                    {/* Stats sentence — always visible in the Dashboard header. */}
+                    <FeedStatsSentence className="text-typography-400 leading-6 mb-2" />
+
+                    {/* Sub-tab pills — Feed / Stories / Saved. */}
+                    <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+
+                    {/* Feed-status shimmer — indeterminate bar + expand accordion. */}
+                    <FeedStatusShimmer
+                        processing={isFeedProcessing}
+                        error={scoringError !== null}
+                        dailyLimited={isDailyLimited}
+                        unscoredCount={unscoredCount}
+                        processedCount={articleCount}
+                        analysedCount={analysedCount}
+                        relevantCount={relevantCount}
+                        noiseRemovedCount={noisyDiscardedCount ?? 0}
+                        injectNoiseEnabled={injectNoiseEnabled}
+                        lastProcessedLabel={lastProcessedLabel}
+                    />
+
+                    {activeSubTab === 'feed' && !isConnected && (
+                        <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
+                            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                            <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
+                        </HStack>
+                    )}
+                </VStack>
+            </Animated.View>
 
             {/* Right edge swipe hitbox */}
             <GestureDetector gesture={edgeSwipeGesture}>

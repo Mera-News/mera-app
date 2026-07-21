@@ -1,4 +1,3 @@
-import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -105,13 +104,12 @@ const ExploreScreen: React.FC = () => {
 
     return (
         <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
-                {/* Header — title + notification bell (app-rethink wave: takes the
-                    header slot the Sources button used to occupy). */}
+                {/* Header — title only (the notification bell now lives solely on
+                    the Dashboard). */}
                 <HStack className="items-start justify-between px-5 mb-2">
                     <Heading size="3xl" className="text-white" numberOfLines={1}>
                         {t('explore.title')}
                     </Heading>
-                    <NotificationBellButton />
                 </HStack>
 
                 {/* Scope chips */}

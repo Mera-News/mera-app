@@ -85,7 +85,7 @@ describe('buildFactRows ownership', () => {
     );
     const a = sugg({ _id: 'a', matchedTopics: [{ topicId: 't1', text: 'x' }] });
     const b = sugg({ _id: 'b', matchedTopics: [{ topicId: 't2', text: 'y' }] });
-    const { rows } = buildFactRows([a, b], snap, NOW);
+    const { rows } = buildFactRows([a, b], snap, new Set(), NOW);
     const f1 = rows.find((r) => r.factId === 'f1');
     const f2 = rows.find((r) => r.factId === 'f2');
     expect(f1?.statement).toBe('Berlin tech');
@@ -101,7 +101,7 @@ describe('buildFactRows ownership', () => {
     );
     const owned = sugg({ _id: 'own', matchedTopics: [{ topicId: 't-own', text: 'o' }] });
     const orphan = sugg({ _id: 'orph', matchedTopics: [{ topicId: 't-orph', text: 'a' }] });
-    const { rows } = buildFactRows([owned, orphan], snap, NOW);
+    const { rows } = buildFactRows([owned, orphan], snap, new Set(), NOW);
     const also = rows.find((r) => r.factId === ALSO_ROW_ID);
     expect(also?.kind).toBe('also');
     expect(also?.groups.map((g) => g.data._id)).toEqual(['orph']);
@@ -118,7 +118,7 @@ describe('buildFactRows ownership', () => {
       [['fn', { statement: 'Suppressed' }]],
     );
     const neg = sugg({ _id: 'neg', relevance: 0.6, matchedTopics: [{ topicId: 'tn', text: 'x' }] });
-    const { rows } = buildFactRows([neg], snap, NOW);
+    const { rows } = buildFactRows([neg], snap, new Set(), NOW);
     const shown = rows.flatMap((r) => r.groups.map((g) => g.data._id));
     expect(shown).not.toContain('neg');
     expect(rows).toHaveLength(0);
@@ -132,7 +132,7 @@ describe('buildFactRows visibility', () => {
 
   it('drops sub-render-gate (relevance ≤ 0.3) rows', () => {
     const lo = sugg({ _id: 'lo', relevance: 0.28, matchedTopics: [{ topicId: 't1', text: 'x' }] });
-    const { rows } = buildFactRows([lo], snap, NOW);
+    const { rows } = buildFactRows([lo], snap, new Set(), NOW);
     expect(rows).toHaveLength(0);
   });
 
@@ -147,7 +147,7 @@ describe('buildFactRows visibility', () => {
       status: ArticleSuggestionStatus.Complete,
       matchedTopics: [{ topicId: 't1', text: 'y' }],
     });
-    const { rows } = buildFactRows([pending, complete], snap, NOW);
+    const { rows } = buildFactRows([pending, complete], snap, new Set(), NOW);
     const shown = rows.flatMap((r) => r.groups.map((g) => g.data._id));
     expect(shown).toContain('complete');
     expect(shown).not.toContain('pending');
@@ -161,7 +161,7 @@ describe('buildFactRows visibility', () => {
       relevance: 0.4,
       matchedTopics: [{ topicId: 't1', text: 'x' }],
     });
-    const { rows } = buildFactRows([skipped], snap, NOW);
+    const { rows } = buildFactRows([skipped], snap, new Set(), NOW);
     expect(rows.flatMap((r) => r.groups.map((g) => g.data._id))).toContain('skip');
   });
 
@@ -171,7 +171,7 @@ describe('buildFactRows visibility', () => {
       firstPubDate: new Date(NOW - 30 * H).toISOString(),
       matchedTopics: [{ topicId: 't1', text: 'x' }],
     });
-    const { rows } = buildFactRows([old], snap, NOW);
+    const { rows } = buildFactRows([old], snap, new Set(), NOW);
     expect(rows).toHaveLength(0);
   });
 });
@@ -193,7 +193,7 @@ describe('buildFactRows cluster timestamp', () => {
       clusters: [{ clusterId: 'c1', confidence: 0.9 }],
       matchedTopics: [{ topicId: 't1', text: 'y' }],
     });
-    const { rows } = buildFactRows([older, newer], snap, NOW);
+    const { rows } = buildFactRows([older, newer], snap, new Set(), NOW);
     const f1 = rows.find((r) => r.factId === 'f1')!;
     expect(f1.groups).toHaveLength(1); // collapsed via shared cluster
     expect(f1.groups[0].data._id).toBe('newer'); // newest fronts
@@ -202,24 +202,63 @@ describe('buildFactRows cluster timestamp', () => {
   });
 });
 
-// --- reorder on new article ------------------------------------------------
+// --- section ordering + unread / high-priority fields ----------------------
 
-describe('buildFactRows reorder on new article', () => {
-  const snap = snapshots(
-    [['t1', { factId: 'f1' }], ['t2', { factId: 'f2' }]],
-    [['f1', { statement: 'Older fact' }], ['f2', { statement: 'Newer fact' }]],
-  );
+describe('buildFactRows section ordering', () => {
+  it('orders sections: unread high-priority first, then group count desc, then factId asc', () => {
+    const snap = snapshots(
+      [
+        ['t1', { factId: 'f1' }],
+        ['t2', { factId: 'f2' }],
+        ['t3', { factId: 'f3', highPriority: true }],
+      ],
+      [['f1', {}], ['f2', {}], ['f3', {}]],
+    );
+    // f1: two (distinct-cluster) groups. f2: one group. f3: one HP group (unread).
+    const f1a = sugg({ _id: 'f1a', clusters: [{ clusterId: 'g1a', confidence: 0.9 }], matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const f1b = sugg({ _id: 'f1b', clusters: [{ clusterId: 'g1b', confidence: 0.9 }], matchedTopics: [{ topicId: 't1', text: 'y' }] });
+    const f2a = sugg({ _id: 'f2a', matchedTopics: [{ topicId: 't2', text: 'z' }] });
+    const f3a = sugg({ _id: 'f3a', matchedTopics: [{ topicId: 't3', text: 'hp' }] });
+    const { rows } = buildFactRows([f1a, f1b, f2a, f3a], snap, new Set(), NOW);
+    expect(rows.map((r) => r.factId)).toEqual(['f3', 'f1', 'f2']);
+  });
 
-  it('rows sort by newest scoredAt across their groups', () => {
-    const f1a = sugg({ _id: 'f1a', scoredAt: NOW - 10 * H, matchedTopics: [{ topicId: 't1', text: 'x' }] });
-    const f2a = sugg({ _id: 'f2a', scoredAt: NOW - 8 * H, matchedTopics: [{ topicId: 't2', text: 'y' }] });
-    const before = buildFactRows([f1a, f2a], snap, NOW).rows;
-    expect(before.map((r) => r.factId)).toEqual(['f2', 'f1']); // f2 newer added
+  it('flags a HIGH-bucket group as high-priority', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    const hi = sugg({ _id: 'hi', relevance: 0.85, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const f1 = buildFactRows([hi], snap, new Set(), NOW).rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups[0].highPriority).toBe(true);
+    expect(f1.hasUnreadHighPriority).toBe(true);
+  });
 
-    // A fresh article scored into f1 bubbles f1 to the top.
-    const f1b = sugg({ _id: 'f1b', scoredAt: NOW - 1 * H, matchedTopics: [{ topicId: 't1', text: 'z' }] });
-    const after = buildFactRows([f1a, f2a, f1b], snap, NOW).rows;
-    expect(after.map((r) => r.factId)).toEqual(['f1', 'f2']);
+  it('computes unreadCount and clears the HP flag once the story is opened', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    const hi = sugg({ _id: 'hi', articleId: 'art-hi', relevance: 0.85, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const before = buildFactRows([hi], snap, new Set(), NOW).rows.find((r) => r.factId === 'f1')!;
+    expect(before.unreadCount).toBe(1);
+    expect(before.hasUnreadHighPriority).toBe(true);
+
+    const after = buildFactRows([hi], snap, new Set(['art-hi']), NOW).rows.find((r) => r.factId === 'f1')!;
+    expect(after.unreadCount).toBe(0);
+    expect(after.hasUnreadHighPriority).toBe(false);
+  });
+
+  it('orders cards within a section by representative createdAt desc', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    const early = sugg({
+      _id: 'early',
+      createdAt: new Date(NOW - 5 * H).toISOString(),
+      clusters: [{ clusterId: 'ce', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'a' }],
+    });
+    const late = sugg({
+      _id: 'late',
+      createdAt: new Date(NOW - 1 * H).toISOString(),
+      clusters: [{ clusterId: 'cl', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'b' }],
+    });
+    const f1 = buildFactRows([early, late], snap, new Set(), NOW).rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups.map((g) => g.data._id)).toEqual(['late', 'early']);
   });
 });
 
@@ -231,7 +270,7 @@ describe('buildFactRows breaking extraction', () => {
     const emg = sugg({ _id: 'emg', rawScore: 1.05, relevance: 1.1, matchedTopics: [{ topicId: 't1', text: 'a' }] });
     const wx = sugg({ _id: 'wx', rawScore: 0.85, relevance: 0.8, eventType: 'weather', matchedTopics: [{ topicId: 't1', text: 'b' }] });
     const plain = sugg({ _id: 'plain', rawScore: 0.9, relevance: 0.8, eventType: 'politics', matchedTopics: [{ topicId: 't1', text: 'c' }] });
-    const { breaking, rows } = buildFactRows([emg, wx, plain], snap, NOW);
+    const { breaking, rows } = buildFactRows([emg, wx, plain], snap, new Set(), NOW);
     expect(breaking.map((b) => b.data._id)).toEqual(['emg', 'wx']);
     const inRows = rows.flatMap((r) => r.groups.map((g) => g.data._id));
     expect(inRows).toContain('plain');
@@ -279,7 +318,7 @@ describe('buildFactRows device-dump shape', () => {
     }
 
     const snap = snapshots(topics, facts);
-    const { rows } = buildFactRows(rowsInput, snap, NOW);
+    const { rows } = buildFactRows(rowsInput, snap, new Set(), NOW);
     const factRows = rows.filter((r) => r.kind === 'fact');
     const also = rows.find((r) => r.factId === ALSO_ROW_ID);
     expect(factRows).toHaveLength(37);

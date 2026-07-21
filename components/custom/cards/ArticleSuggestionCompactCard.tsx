@@ -17,6 +17,8 @@ interface ArticleSuggestionCompactCardProps {
   surface?: FeedbackSurface;
   /** Dims the row (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
+  /** Marks the row as read — green tick chip instead of dimming (Dashboard). */
+  read?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   hideSource = false,
   surface = 'triage',
   dimmed = false,
+  read = false,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -92,6 +95,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         hideSource={hideSource}
         recyclingKey={suggestion._id}
         dimmed={dimmed}
+        read={read}
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
         metaAccessory={metaAccessory}

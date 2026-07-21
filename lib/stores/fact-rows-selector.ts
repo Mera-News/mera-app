@@ -21,6 +21,7 @@
 
 import {
   bucketOf,
+  bucketRank,
   resolveOwnership,
   type FeedBucket,
   type ScoredSuggestionProjection,
@@ -73,6 +74,13 @@ export interface FactRowGroup {
   pubDateMs: number;
   /** Newest member's `scoredAt ?? createdAt` (epoch ms) — the "added" time. */
   addedMs: number;
+  /** Representative's `createdAt` (epoch ms) — the suggestion-creation time that
+   *  orders cards within a Dashboard section (newest-created first). */
+  createdAtMs: number;
+  /** True when this group is high-priority: its display bucket is HIGH (or above)
+   *  OR one of the representative's matched topics is flagged `highPriority` in
+   *  the persona snapshots. Drives section ordering + the unread-HP-first rule. */
+  highPriority: boolean;
 }
 
 /** One fact row: a fact's stories laid out as a horizontal strip. */
@@ -85,8 +93,15 @@ export interface FactRow {
   statement: string;
   /** The underlying real fact statement (header reveal); null for `also`. */
   factStatement: string | null;
-  /** Newest `addedMs` across the row's groups — the row-ordering key. */
+  /** Newest `addedMs` across the row's groups. KEPT for other consumers even
+   *  though the Dashboard resort no longer keys on it. */
   latestAddedMs: number;
+  /** Number of groups whose representative is NOT in the opened set — drives the
+   *  section-header unread badge. */
+  unreadCount: number;
+  /** True when the row has an unread high-priority group — sorts these sections
+   *  first on the Dashboard. */
+  hasUnreadHighPriority: boolean;
   groups: FactRowGroup[];
 }
 
@@ -165,9 +180,10 @@ function repCompare(a: GroupItem, b: GroupItem): number {
   return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
 }
 
-/** Card (story-group) ordering within a row: newest pubDate first, then id. */
+/** Card (story-group) ordering within a Dashboard section: representative
+ *  `createdAt` (suggestion-creation time) descending, then id. */
 function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
-  if (a.pubDateMs !== b.pubDateMs) return b.pubDateMs - a.pubDateMs;
+  if (a.createdAtMs !== b.createdAtMs) return b.createdAtMs - a.createdAtMs;
   return a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0;
 }
 
@@ -179,11 +195,15 @@ function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
  * @param suggestions the live `ForYouSuggestion` pool.
  * @param snapshots   topics/facts/locations + factStatements (from
  *                    `loadSectionSnapshots`).
+ * @param openedIds   the opened-stories set — used to compute per-section unread
+ *                    counts + the unread-high-priority-first sort. Pass the live
+ *                    set so the Dashboard resorts as stories are opened.
  * @param nowMs       injected clock (deterministic testing).
  */
 export function buildFactRows(
   suggestions: ForYouSuggestion[],
   snapshots: FactRowsSnapshots,
+  openedIds: Set<string> = new Set(),
   nowMs: number = Date.now(),
   config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
 ): FactRowsResult {
@@ -224,15 +244,26 @@ export function buildFactRows(
       breaking.push({ data: rep, members });
       continue;
     }
+    const bucket = bucketOf(rep.relevance, config);
+    // High-priority: display bucket HIGH+ OR a matched persona topic flagged
+    // highPriority. (bucketRank ≥ HIGH also captures the EMERGENCY tier, which
+    // is strictly higher-priority than HIGH.)
+    const highPriority =
+      bucketRank(bucket) >= bucketRank('HIGH') ||
+      (rep.matchedTopics ?? []).some(
+        (m) => m.topicId != null && snapshots.topics.get(m.topicId)?.highPriority === true,
+      );
     assignable.push({
       rep,
       group: {
         data: rep,
         members,
         rawScore: rep.rawScore,
-        bucket: bucketOf(rep.relevance, config),
+        bucket,
         pubDateMs,
         addedMs,
+        createdAtMs: parseMs(rep.createdAt),
+        highPriority,
       },
     });
   }
@@ -266,6 +297,8 @@ export function buildFactRows(
           statement: fact?.statement?.trim() || factId,
           factStatement: snapshots.factStatements.get(factId) ?? null,
           latestAddedMs: 0,
+          unreadCount: 0,
+          hasUnreadHighPriority: false,
           groups: [],
         };
         factRows.set(factId, row);
@@ -277,18 +310,25 @@ export function buildFactRows(
     alsoGroups.push(group);
   }
 
-  // 5. Finalize each row: order cards newest-first, compute latestAddedMs.
+  // 5. Finalize each row: order cards createdAt-desc, compute unread counts.
+  const isGroupUnread = (g: FactRowGroup) => !isSuggestionOpened(g.data, openedIds);
   const rows: FactRow[] = [];
   for (const row of factRows.values()) {
     row.groups.sort(cardCompare);
     row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
+    row.unreadCount = row.groups.filter(isGroupUnread).length;
+    row.hasUnreadHighPriority = row.groups.some((g) => g.highPriority && isGroupUnread(g));
     rows.push(row);
   }
 
-  // Rows sorted by their newest "added" time — a freshly-scored article bubbles
-  // its fact row up. Ties broken by factId for determinism.
+  // Section order (Dashboard live resort): sections with an unread high-priority
+  // group first, then by group count desc, ties broken by factId asc for
+  // determinism. The "also" row is appended after this sort (always last).
   rows.sort((a, b) => {
-    if (a.latestAddedMs !== b.latestAddedMs) return b.latestAddedMs - a.latestAddedMs;
+    if (a.hasUnreadHighPriority !== b.hasUnreadHighPriority) {
+      return a.hasUnreadHighPriority ? -1 : 1;
+    }
+    if (a.groups.length !== b.groups.length) return b.groups.length - a.groups.length;
     return a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0;
   });
 
@@ -301,6 +341,8 @@ export function buildFactRows(
       statement: ALSO_ROW_ID,
       factStatement: null,
       latestAddedMs: alsoGroups.reduce((mx, g) => Math.max(mx, g.addedMs), 0),
+      unreadCount: alsoGroups.filter(isGroupUnread).length,
+      hasUnreadHighPriority: alsoGroups.some((g) => g.highPriority && isGroupUnread(g)),
       groups: alsoGroups,
     });
   }

@@ -1,4 +1,5 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import ReadTickChip from '@/components/custom/cards/ReadTickChip';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -39,6 +40,9 @@ export interface ArticleCardBaseProps {
   /** Dims the whole card (~0.55 opacity) — used to fade already-opened rows in
    *  the Earlier zone. No visual change when undefined. */
   dimmed?: boolean;
+  /** Marks the card as already-read — shows a green tick chip (top-right)
+   *  instead of dimming. The Dashboard surfaces use this. */
+  read?: boolean;
   onPress?: () => void;
   children?: React.ReactNode;
   metaAccessory?: React.ReactNode;
@@ -57,6 +61,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   moreSourcesCount,
   recyclingKey,
   dimmed = false,
+  read = false,
   onPress,
   children,
   metaAccessory,
@@ -70,6 +75,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   return (
     <Pressable onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       <Card variant="elevated" size="md" className="mb-4 overflow-hidden">
+        {read && <ReadTickChip />}
         {showImage && (
           <Box className="w-full h-48 overflow-hidden rounded-t-lg">
             <Image
