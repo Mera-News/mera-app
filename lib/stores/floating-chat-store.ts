@@ -27,6 +27,9 @@ export type ChatContext =
           verdict?: 'like' | 'dislike';
           treePath?: string[];
       }
+    // Round-4 C5: open the popover showing the pending daily optimisation plan.
+    // No target ids — the OptimisationPlanCard loads the plan from the service.
+    | { kind: 'optimisation-plan' }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
@@ -65,6 +68,7 @@ interface FloatingChatState {
     // Actions
     expand: (context?: ChatContext) => void;
     openArticleFeedback: (context: ChatContext, initialMessage: string) => void;
+    openOptimisationPlan: () => void;
     consumePendingInitialMessage: () => string | null;
     setProposal: (p: StagedProposal | null) => void;
     resolveProposal: (status: 'applied' | 'cancelled') => void;
@@ -152,6 +156,17 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             // message land in one commit — the old thread unmounts before its
             // auto-send effect could consume the message into the OLD
             // conversation.
+            conversationId: null,
+        })),
+
+    openOptimisationPlan: () =>
+        set(() => ({
+            // Fresh thread showing only the plan card (no auto-send). Null id is
+            // the "create a fresh conversation" signal MeraChatSession watches.
+            context: { kind: 'optimisation-plan' } as ChatContext,
+            isExpanded: true,
+            pendingInitialMessage: null,
+            proposal: null,
             conversationId: null,
         })),
 

@@ -1094,5 +1094,24 @@
     "clear": "Clear",
     "clearA11y": "Clear preference",
     "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here."
+  },
+  "optimisationPlan": {
+    "notificationTitle": "Your daily feed tune-up is ready",
+    "notificationBody": "Mera reviewed your recent likes and dislikes and lined up {{count}} adjustments.",
+    "reviewChip": "Review plan",
+    "cardTitle": "Daily feed tune-up",
+    "cardSubtitle": "Review the changes and apply what you agree with.",
+    "autoSection": "Tune-ups",
+    "reviewSection": "Needs your input",
+    "conflictsLabel": "Also affects stories you liked:",
+    "apply": "Apply plan",
+    "notNow": "Not now",
+    "discard": "Discard plan",
+    "discardConfirm": "Discard this plan? These suggestions won't come back.",
+    "discardConfirmYes": "Discard",
+    "discardConfirmNo": "Keep",
+    "appliedToast": "{{count}} changes applied",
+    "appliedTitle": "Feed tuned up",
+    "empty": "Nothing to tune up right now."
   }
 }

@@ -70,13 +70,16 @@ export default function ChatSessionView({
   // "what can I do for you" line (article vs. suggestion variant); everything
   // else keeps the persona intro.
   const introText =
-    context.kind === 'article-suggestion'
-      ? context.verdict === 'like'
-        ? t('articleFeedback.introLikeTuning')
-        : context.verdict === 'dislike'
-          ? t('articleFeedback.introDislikeTuning')
-          : t(context.suggestionId ? 'articleFeedback.intro' : 'articleFeedback.introArticle')
-      : t('personaChat.introMessage');
+    context.kind === 'optimisation-plan'
+      ? // The pinned plan card IS the content — no persona intro line beneath it.
+        null
+      : context.kind === 'article-suggestion'
+        ? context.verdict === 'like'
+          ? t('articleFeedback.introLikeTuning')
+          : context.verdict === 'dislike'
+            ? t('articleFeedback.introDislikeTuning')
+            : t(context.suggestionId ? 'articleFeedback.intro' : 'articleFeedback.introArticle')
+        : t('personaChat.introMessage');
 
   // Intro pseudo-message until the first send of this session.
   const [introMessage, setIntroMessage] = useState<string | null>(introText);
@@ -104,6 +107,12 @@ export default function ChatSessionView({
     [context],
   );
 
+  // Pin the interactive optimisation-plan card at the top of a plan thread.
+  const optimisationPlan = useMemo(
+    () => (context.kind === 'optimisation-plan' ? { key: 'optimisation-plan' } : undefined),
+    [context],
+  );
+
   const items = useMemo(
     () =>
       deriveThreadItems({
@@ -114,8 +123,9 @@ export default function ChatSessionView({
         earlierConversationLabel: t('floatingChat.earlierConversation'),
         resume,
         articleContext,
+        optimisationPlan,
       }),
-    [messages, history, introMessage, isStreaming, t, resume, articleContext],
+    [messages, history, introMessage, isStreaming, t, resume, articleContext, optimisationPlan],
   );
 
   // Mirror generation state into the floating-chat store (bubble shimmer etc).
@@ -143,6 +153,8 @@ export default function ChatSessionView({
   }, [liveFactCardCount]);
 
   const starterChips: StarterChip[] = useMemo(() => {
+    // The optimisation-plan thread is card-only — no persona/article chips.
+    if (context.kind === 'optimisation-plan') return [];
     if (context.kind === 'article-suggestion') {
       // A real suggestion can be explained ("why?"); a plain article can't, so
       // it offers "more like this" instead. Both offer the "don't want" chip.

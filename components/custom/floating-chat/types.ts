@@ -39,6 +39,9 @@ export type ChatThreadItem =
       factIds: string[];
     }
   | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
+  // Round-4 C5 — pinned interactive daily-optimisation-plan card at the top of an
+  // `optimisation-plan` chat thread. Loads the pending plan from the service.
+  | { kind: 'optimisation-plan-card'; key: string }
   // Wave 11 U-B2 — in-chat topic-planning widget for one saved fact. Subscribes
   // to the fact's live topic rows (observeByFact) inside the component.
   | { kind: 'topic-plan-card'; key: string; factId: string; factStatement: string }

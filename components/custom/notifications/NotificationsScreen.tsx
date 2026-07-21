@@ -31,6 +31,8 @@ function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
             return 'tune';
         case 'hygiene':
             return 'cleaning-services';
+        case 'optimisation_plan':
+            return 'auto-fix-high';
         case 'migration_done':
             return 'auto-awesome';
         case 'sync_event':
@@ -150,6 +152,11 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
             // Deterministic review sheet (no chat, no LLM) — push the dedicated
             // hygiene-review route.
             router.push('/logged-in/hygiene-review');
+            return;
+        }
+        if (action.id === 'review-plan') {
+            // Round-4 C5 — open Mera chat showing the pending daily tune-up plan.
+            useFloatingChatStore.getState().openOptimisationPlan();
             return;
         }
         const chipLabel = action.labelKey

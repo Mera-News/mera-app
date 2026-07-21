@@ -505,10 +505,21 @@ export function deriveThreadItems(opts: {
    * conversation always shows what it's about (Round-4 P4 handoff).
    */
   articleContext?: { articleId?: string; suggestionId?: string; title: string };
+  /**
+   * When the chat context is the daily optimisation plan, the interactive plan
+   * card is emitted as a PINNED card at the very top of the thread (before
+   * history/intro), mirroring `articleContext` (Round-4 C5).
+   */
+  optimisationPlan?: { key: string };
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
   const out: ChatThreadItem[] = [];
+
+  // --- Pinned optimisation-plan card (always first when present) ---
+  if (opts.optimisationPlan) {
+    out.push({ kind: 'optimisation-plan-card', key: opts.optimisationPlan.key });
+  }
 
   // --- Pinned article-context card (always first) ---
   if (opts.articleContext) {
