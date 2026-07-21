@@ -771,7 +771,7 @@
     "upgrade": "अपग्रेड करें"
   },
   "tabs": {
-    "feed": "फ़ीड",
+    "deck": "डेक",
     "dashboard": "डैशबोर्ड",
     "around": "एक्सप्लोर",
     "profile": "प्रोफ़ाइल",
@@ -779,11 +779,13 @@
     "gotIt": "समझ गया"
   },
   "swipeFeed": {
+    "yourDeck": "For You",
     "moreLikeThis": "इस जैसी और स्टोरीज़",
     "lessLikeThis": "ऐसी कम स्टोरीज़",
     "next": "अगला",
     "back": "वापस",
     "askMera": "Mera से पूछें",
+    "closeTree": "बंद करें",
     "likeStamp": "लाइक",
     "nopeStamp": "नोप",
     "treeRoot": "सभी",

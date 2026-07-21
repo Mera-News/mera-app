@@ -769,7 +769,7 @@
     "upgrade": "Nâng cấp"
   },
   "tabs": {
-    "feed": "Bản tin",
+    "deck": "Bộ bài",
     "dashboard": "Bảng điều khiển",
     "around": "Khám phá",
     "profile": "Hồ sơ",
@@ -777,11 +777,13 @@
     "gotIt": "Đã hiểu"
   },
   "swipeFeed": {
+    "yourDeck": "Dành cho bạn",
     "moreLikeThis": "Thêm như thế này",
     "lessLikeThis": "Bớt như thế này",
     "next": "Tiếp theo",
     "back": "Quay lại",
     "askMera": "Hỏi Mera",
+    "closeTree": "Đóng",
     "likeStamp": "LIKE",
     "nopeStamp": "NOPE",
     "treeRoot": "Tất cả",

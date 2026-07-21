@@ -771,7 +771,7 @@
     "upgrade": "Passer à un forfait supérieur"
   },
   "tabs": {
-    "feed": "Fil",
+    "deck": "Paquet",
     "dashboard": "Tableau de bord",
     "around": "Explorer",
     "profile": "Profil",
@@ -779,11 +779,13 @@
     "gotIt": "Compris"
   },
   "swipeFeed": {
+    "yourDeck": "Pour vous",
     "moreLikeThis": "Plus comme ceci",
     "lessLikeThis": "Moins comme ceci",
     "next": "Suivant",
     "back": "Retour",
     "askMera": "Demander à Mera",
+    "closeTree": "Fermer",
     "likeStamp": "J'AIME",
     "nopeStamp": "NON",
     "treeRoot": "Tout",

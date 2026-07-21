@@ -769,7 +769,7 @@
     "upgrade": "アップグレード"
   },
   "tabs": {
-    "feed": "フィード",
+    "deck": "デッキ",
     "dashboard": "ダッシュボード",
     "around": "探索",
     "profile": "プロフィール",
@@ -777,11 +777,13 @@
     "gotIt": "わかりました"
   },
   "swipeFeed": {
+    "yourDeck": "あなたへ",
     "moreLikeThis": "こういう記事をもっと",
     "lessLikeThis": "こういう記事を減らす",
     "next": "次へ",
     "back": "戻る",
     "askMera": "Meraに聞く",
+    "closeTree": "閉じる",
     "likeStamp": "LIKE",
     "nopeStamp": "NOPE",
     "treeRoot": "すべて",

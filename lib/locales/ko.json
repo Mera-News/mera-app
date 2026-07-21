@@ -769,7 +769,7 @@
     "upgrade": "업그레이드"
   },
   "tabs": {
-    "feed": "피드",
+    "deck": "덱",
     "dashboard": "대시보드",
     "around": "탐색",
     "profile": "프로필",
@@ -777,11 +777,13 @@
     "gotIt": "확인"
   },
   "swipeFeed": {
+    "yourDeck": "맞춤 뉴스",
     "moreLikeThis": "이런 소식 더 보기",
     "lessLikeThis": "이런 소식 덜 보기",
     "next": "다음",
     "back": "뒤로",
     "askMera": "Mera에게 묻기",
+    "closeTree": "닫기",
     "likeStamp": "좋아요",
     "nopeStamp": "싫어요",
     "treeRoot": "전체",

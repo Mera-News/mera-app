@@ -771,7 +771,7 @@
     "upgrade": "Yükselt"
   },
   "tabs": {
-    "feed": "Akış",
+    "deck": "Deste",
     "dashboard": "Panel",
     "around": "Keşfet",
     "profile": "Profil",
@@ -779,11 +779,13 @@
     "gotIt": "Anladım"
   },
   "swipeFeed": {
+    "yourDeck": "Senin için",
     "moreLikeThis": "Bunun gibi daha fazlası",
     "lessLikeThis": "Bunun gibi daha azı",
     "next": "Sonraki",
     "back": "Geri",
     "askMera": "Mera'ya Sor",
+    "closeTree": "Kapat",
     "likeStamp": "BEĞEN",
     "nopeStamp": "GEÇ",
     "treeRoot": "Tümü",

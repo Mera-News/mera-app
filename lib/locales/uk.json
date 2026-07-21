@@ -775,7 +775,7 @@
     "upgrade": "Поліпшити"
   },
   "tabs": {
-    "feed": "Стрічка",
+    "deck": "Колода",
     "dashboard": "Панель",
     "around": "Огляд",
     "profile": "Профіль",
@@ -783,11 +783,13 @@
     "gotIt": "Зрозуміло"
   },
   "swipeFeed": {
+    "yourDeck": "Для вас",
     "moreLikeThis": "Більше такого",
     "lessLikeThis": "Менше такого",
     "next": "Далі",
     "back": "Назад",
     "askMera": "Запитати Mera",
+    "closeTree": "Закрити",
     "likeStamp": "ЛАЙК",
     "nopeStamp": "ПАС",
     "treeRoot": "Усі",

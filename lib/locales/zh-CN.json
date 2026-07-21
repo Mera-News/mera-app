@@ -769,7 +769,7 @@
     "upgrade": "升级"
   },
   "tabs": {
-    "feed": "资讯",
+    "deck": "卡组",
     "dashboard": "仪表盘",
     "around": "探索",
     "profile": "我的",
@@ -777,11 +777,13 @@
     "gotIt": "知道了"
   },
   "swipeFeed": {
+    "yourDeck": "为你推荐",
     "moreLikeThis": "多看这类",
     "lessLikeThis": "少看这类",
     "next": "下一个",
     "back": "返回",
     "askMera": "问 Mera",
+    "closeTree": "关闭",
     "likeStamp": "喜欢",
     "nopeStamp": "不要",
     "treeRoot": "全部",

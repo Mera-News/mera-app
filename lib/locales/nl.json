@@ -771,7 +771,7 @@
     "upgrade": "Upgraden"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Stapel",
     "dashboard": "Dashboard",
     "around": "Verkennen",
     "profile": "Profiel",
@@ -779,11 +779,13 @@
     "gotIt": "Begrepen"
   },
   "swipeFeed": {
+    "yourDeck": "Voor Jou",
     "moreLikeThis": "Meer zoals dit",
     "lessLikeThis": "Minder zoals dit",
     "next": "Volgende",
     "back": "Terug",
     "askMera": "Vraag het Mera",
+    "closeTree": "Sluiten",
     "likeStamp": "LEUK",
     "nopeStamp": "NEE",
     "treeRoot": "Alles",

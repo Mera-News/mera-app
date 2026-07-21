@@ -771,7 +771,7 @@
     "upgrade": "Upgrade"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Stapel",
     "dashboard": "Dashboard",
     "around": "Entdecken",
     "profile": "Profil",
@@ -779,11 +779,13 @@
     "gotIt": "Verstanden"
   },
   "swipeFeed": {
+    "yourDeck": "Für Sie",
     "moreLikeThis": "Mehr davon",
     "lessLikeThis": "Weniger davon",
     "next": "Weiter",
     "back": "Zurück",
     "askMera": "Mera fragen",
+    "closeTree": "Schließen",
     "likeStamp": "LIKE",
     "nopeStamp": "NOPE",
     "treeRoot": "Alle",

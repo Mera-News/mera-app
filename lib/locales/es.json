@@ -771,7 +771,7 @@
     "upgrade": "Mejorar plan"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Mazo",
     "dashboard": "Panel",
     "around": "Explorar",
     "profile": "Perfil",
@@ -779,11 +779,13 @@
     "gotIt": "Entendido"
   },
   "swipeFeed": {
+    "yourDeck": "Para ti",
     "moreLikeThis": "Más como esto",
     "lessLikeThis": "Menos como esto",
     "next": "Siguiente",
     "back": "Atrás",
     "askMera": "Pregúntale a Mera",
+    "closeTree": "Cerrar",
     "likeStamp": "ME GUSTA",
     "nopeStamp": "NO",
     "treeRoot": "Todo",

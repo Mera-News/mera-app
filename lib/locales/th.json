@@ -769,7 +769,7 @@
     "upgrade": "อัปเกรด"
   },
   "tabs": {
-    "feed": "ฟีด",
+    "deck": "เด็ค",
     "dashboard": "แดชบอร์ด",
     "around": "สำรวจ",
     "profile": "โปรไฟล์",
@@ -777,11 +777,13 @@
     "gotIt": "รับทราบ"
   },
   "swipeFeed": {
+    "yourDeck": "สำหรับคุณ",
     "moreLikeThis": "แบบนี้อีก",
     "lessLikeThis": "แบบนี้น้อยลง",
     "next": "ถัดไป",
     "back": "ย้อนกลับ",
     "askMera": "ถาม Mera",
+    "closeTree": "ปิด",
     "likeStamp": "ถูกใจ",
     "nopeStamp": "ผ่าน",
     "treeRoot": "ทั้งหมด",

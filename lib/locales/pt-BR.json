@@ -771,7 +771,7 @@
     "upgrade": "Fazer upgrade"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Baralho",
     "dashboard": "Painel",
     "around": "Explorar",
     "profile": "Perfil",
@@ -779,11 +779,13 @@
     "gotIt": "Entendi"
   },
   "swipeFeed": {
+    "yourDeck": "Para você",
     "moreLikeThis": "Mais como este",
     "lessLikeThis": "Menos como este",
     "next": "Próximo",
     "back": "Voltar",
     "askMera": "Perguntar à Mera",
+    "closeTree": "Fechar",
     "likeStamp": "CURTI",
     "nopeStamp": "NÃO",
     "treeRoot": "Tudo",

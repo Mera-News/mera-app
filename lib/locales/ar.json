@@ -779,7 +779,7 @@
     "upgrade": "الترقية"
   },
   "tabs": {
-    "feed": "الموجز",
+    "deck": "الحزمة",
     "dashboard": "لوحة التحكم",
     "around": "استكشاف",
     "profile": "الملف الشخصي",
@@ -787,11 +787,13 @@
     "gotIt": "فهمت"
   },
   "swipeFeed": {
+    "yourDeck": "لك",
     "moreLikeThis": "المزيد مثل هذا",
     "lessLikeThis": "أقل مثل هذا",
     "next": "التالي",
     "back": "رجوع",
     "askMera": "اسأل Mera",
+    "closeTree": "إغلاق",
     "likeStamp": "إعجاب",
     "nopeStamp": "رفض",
     "treeRoot": "الكل",

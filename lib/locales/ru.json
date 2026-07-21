@@ -775,7 +775,7 @@
     "upgrade": "Улучшить план"
   },
   "tabs": {
-    "feed": "Лента",
+    "deck": "Колода",
     "dashboard": "Дашборд",
     "around": "Обзор",
     "profile": "Профиль",
@@ -783,11 +783,13 @@
     "gotIt": "Понятно"
   },
   "swipeFeed": {
+    "yourDeck": "Для вас",
     "moreLikeThis": "Больше похожего на это",
     "lessLikeThis": "Меньше похожего на это",
     "next": "Далее",
     "back": "Назад",
     "askMera": "Спросить Mera",
+    "closeTree": "Закрыть",
     "likeStamp": "ЛАЙК",
     "nopeStamp": "НЕТ",
     "treeRoot": "Все",

@@ -775,7 +775,7 @@
     "upgrade": "Ulepsz"
   },
   "tabs": {
-    "feed": "Kanał",
+    "deck": "Talia",
     "dashboard": "Pulpit",
     "around": "Odkrywaj",
     "profile": "Profil",
@@ -783,11 +783,13 @@
     "gotIt": "Rozumiem"
   },
   "swipeFeed": {
+    "yourDeck": "Dla Ciebie",
     "moreLikeThis": "Więcej takich",
     "lessLikeThis": "Mniej takich",
     "next": "Dalej",
     "back": "Wstecz",
     "askMera": "Zapytaj Mera",
+    "closeTree": "Zamknij",
     "likeStamp": "LAJK",
     "nopeStamp": "NIE",
     "treeRoot": "Wszystko",

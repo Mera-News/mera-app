@@ -769,7 +769,7 @@
     "upgrade": "Tingkatkan"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Tumpukan",
     "dashboard": "Dasbor",
     "around": "Eksplor",
     "profile": "Profil",
@@ -777,11 +777,13 @@
     "gotIt": "Mengerti"
   },
   "swipeFeed": {
+    "yourDeck": "Untuk Anda",
     "moreLikeThis": "Lebih banyak seperti ini",
     "lessLikeThis": "Lebih sedikit seperti ini",
     "next": "Berikutnya",
     "back": "Kembali",
     "askMera": "Tanya Mera",
+    "closeTree": "Tutup",
     "likeStamp": "SUKA",
     "nopeStamp": "TIDAK",
     "treeRoot": "Semua",

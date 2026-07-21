@@ -771,7 +771,7 @@
     "upgrade": "Aggiorna"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Mazzo",
     "dashboard": "Dashboard",
     "around": "Esplora",
     "profile": "Profilo",
@@ -779,11 +779,13 @@
     "gotIt": "Capito"
   },
   "swipeFeed": {
+    "yourDeck": "Per te",
     "moreLikeThis": "Più come questo",
     "lessLikeThis": "Meno come questo",
     "next": "Avanti",
     "back": "Indietro",
     "askMera": "Chiedi a Mera",
+    "closeTree": "Chiudi",
     "likeStamp": "LIKE",
     "nopeStamp": "NOPE",
     "treeRoot": "Tutto",

@@ -769,7 +769,7 @@
     "upgrade": "升級"
   },
   "tabs": {
-    "feed": "動態",
+    "deck": "卡組",
     "dashboard": "儀表板",
     "around": "探索",
     "profile": "我的",
@@ -777,11 +777,13 @@
     "gotIt": "知道了"
   },
   "swipeFeed": {
+    "yourDeck": "為你推薦",
     "moreLikeThis": "多推薦類似的",
     "lessLikeThis": "少推薦類似的",
     "next": "下一則",
     "back": "返回",
     "askMera": "詢問 Mera",
+    "closeTree": "關閉",
     "likeStamp": "喜歡",
     "nopeStamp": "不喜歡",
     "treeRoot": "全部",
