@@ -64,10 +64,10 @@ interface SwipeDeckProps {
 const NAV_ACCENT = '#EDA77E';
 const NAV_FAB_SIZE = 44;
 
-/** A semi-elevated circular Back/Next control overlaid on the card's vertical
- *  center, just inside the given edge. Small fixed target so the card's pan
- *  gesture (which starts anywhere else) is unobstructed. Sits above the card but
- *  below the feedback overlay (a later sibling of this deck). */
+/** A semi-elevated circular Back/Next control overlaid near the card's top,
+ *  just inside the given edge. Small fixed target so the card's pan gesture
+ *  (which starts anywhere else) is unobstructed. Sits above the card but below
+ *  the feedback overlay (a later sibling of this deck). */
 const NavFab: React.FC<{
   edge: 'left' | 'right';
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -81,8 +81,7 @@ const NavFab: React.FC<{
     accessibilityLabel={accessibilityLabel}
     className="absolute items-center justify-center rounded-full"
     style={{
-      top: '50%',
-      marginTop: -NAV_FAB_SIZE / 2,
+      top: 12,
       [edge]: 8,
       width: NAV_FAB_SIZE,
       height: NAV_FAB_SIZE,
