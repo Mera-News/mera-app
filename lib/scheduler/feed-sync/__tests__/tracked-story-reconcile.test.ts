@@ -60,7 +60,7 @@ describe('reconcileTrackedStories', () => {
     expect(mockStampChecked).not.toHaveBeenCalled();
   });
 
-  it('applies updates + fires exactly one notify for a story that gained members', async () => {
+  it('applies updates but creates no notification for a story that gained members', async () => {
     mockGetActiveForReconcile.mockResolvedValue([
       { id: 's1', stableClusterId: 'clu-1', memberArticleIds: ['a1'], latestArticleId: 'a1' },
       { id: 's2', stableClusterId: 'clu-2', memberArticleIds: ['b1'], latestArticleId: 'b1' },
@@ -77,15 +77,7 @@ describe('reconcileTrackedStories', () => {
     expect(mockApplyUpdates).toHaveBeenCalledTimes(1);
     expect(mockApplyUpdates).toHaveBeenCalledWith('s1', { newMemberIds: ['a2', 'a3'] });
 
-    expect(mockNotify).toHaveBeenCalledTimes(1);
-    expect(mockNotify).toHaveBeenCalledWith({
-      type: 'tracked_story_update',
-      title: 'notifications.trackedStoryUpdateTitle',
-      body: 'notifications.trackedStoryUpdateBody',
-      icon: 'track-changes',
-      context: { trackedStoryId: 's1', count: 2 },
-      source: 'tracked-stories',
-    });
+    expect(mockNotify).not.toHaveBeenCalled();
 
     // Both examined stories get stamped, found-new or not.
     expect(mockStampChecked).toHaveBeenCalledWith('s1');
@@ -166,7 +158,7 @@ describe('reconcileTrackedStories — topic path (v40)', () => {
     publicationName: extra.publicationName ?? null,
   });
 
-  it('grows a topic story from suggestions matching its topic id, with snapshots', async () => {
+  it('grows a topic story from suggestions matching its topic id, with snapshots (no notification)', async () => {
     mockGetActiveForReconcile.mockResolvedValue([]);
     mockGetActiveForTopicReconcile.mockResolvedValue([
       { id: 't1', topicId: 'top-1', memberArticleIds: ['a1'] },
@@ -192,10 +184,7 @@ describe('reconcileTrackedStories — topic path (v40)', () => {
         },
       ],
     });
-    expect(mockNotify).toHaveBeenCalledTimes(1);
-    expect(mockNotify).toHaveBeenCalledWith(
-      expect.objectContaining({ context: { trackedStoryId: 't1', count: 1 } }),
-    );
+    expect(mockNotify).not.toHaveBeenCalled();
     // Topic stories are stamped checked but NEVER end (no recordMiss here).
     expect(mockStampChecked).toHaveBeenCalledWith('t1');
   });

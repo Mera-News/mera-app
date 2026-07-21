@@ -18,7 +18,6 @@ import {
   stampChecked,
   type TrackedStoryPollRow,
 } from '@/lib/database/services/tracked-story-service';
-import { notify } from '@/lib/database/services/notification-service';
 import { getCurrentPathname } from '@/lib/nav-state';
 import logger from '@/lib/logger';
 import { AppScheduler } from '../AppScheduler';
@@ -32,18 +31,6 @@ const MAX_STORIES_PER_RUN = 10;
 function diffNewMembers(candidateIds: string[], existingIds: string[]): string[] {
   const existing = new Set(existingIds);
   return candidateIds.filter((id) => !existing.has(id));
-}
-
-/** One quiet bell notification per story that gained members this run. */
-async function notifyGrew(storyId: string, count: number): Promise<void> {
-  await notify({
-    type: 'tracked_story_update',
-    title: 'notifications.trackedStoryUpdateTitle',
-    body: 'notifications.trackedStoryUpdateBody',
-    icon: 'track-changes',
-    context: { trackedStoryId: storyId, count },
-    source: 'tracked-stories',
-  });
 }
 
 /**
@@ -73,7 +60,6 @@ async function pollViaLiveCluster(story: TrackedStoryPollRow): Promise<void> {
   const newMemberIds = diffNewMembers(candidateIds, story.memberArticleIds);
   if (newMemberIds.length > 0) {
     await applyUpdates(story.id, { newMemberIds });
-    await notifyGrew(story.id, newMemberIds.length);
   } else {
     await recordMiss(story.id);
   }
@@ -93,7 +79,6 @@ async function pollViaArchive(story: TrackedStoryPollRow, stableClusterId: strin
   const newMemberIds = diffNewMembers(candidateIds, story.memberArticleIds);
   if (newMemberIds.length > 0) {
     await applyUpdates(story.id, { newMemberIds });
-    await notifyGrew(story.id, newMemberIds.length);
   } else {
     await recordMiss(story.id);
   }

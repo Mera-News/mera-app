@@ -27,20 +27,7 @@ import {
   applyUpdates,
   stampChecked,
 } from '@/lib/database/services/tracked-story-service';
-import { notify } from '@/lib/database/services/notification-service';
 import logger from '@/lib/logger';
-
-/** One quiet bell notification per story that gained members this run. */
-async function notifyStoryGrew(trackedStoryId: string, count: number): Promise<void> {
-  await notify({
-    type: 'tracked_story_update',
-    title: 'notifications.trackedStoryUpdateTitle',
-    body: 'notifications.trackedStoryUpdateBody',
-    icon: 'track-changes',
-    context: { trackedStoryId, count },
-    source: 'tracked-stories',
-  });
-}
 
 /** Safe pubDate → ms for a suggestion row (Date column or number). */
 function pubDateMs(row: ArticleSuggestionModel): number {
@@ -111,7 +98,6 @@ async function reconcileByTopic(): Promise<void> {
           newMemberIds: fresh.map((r) => r.id),
           newSnapshots: fresh.map(snapshotFromSuggestion),
         });
-        await notifyStoryGrew(story.id, fresh.length);
       }
     } catch (err) {
       logger.captureException(err, {
@@ -155,7 +141,6 @@ async function reconcileByCluster(): Promise<void> {
 
       if (newMemberIds.length > 0) {
         await applyUpdates(story.id, { newMemberIds });
-        await notifyStoryGrew(story.id, newMemberIds.length);
       }
     } catch (err) {
       // Isolate per-story failures — one bad row must not block the rest or

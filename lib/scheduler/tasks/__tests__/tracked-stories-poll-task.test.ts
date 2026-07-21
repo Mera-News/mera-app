@@ -135,7 +135,7 @@ describe('tracked-stories-poll-task handler', () => {
     expect(mockGetActiveForPoll).toHaveBeenCalledWith(expect.any(Number), 10);
   });
 
-  it('archive found with new members → applyUpdates + notify + stamp', async () => {
+  it('archive found with new members → applyUpdates + stamp, no notify', async () => {
     mockGetActiveForPoll.mockResolvedValue([
       makeRow({ id: 's1', stableClusterId: 'clu-1', memberArticleIds: ['a1'] }),
     ]);
@@ -150,14 +150,7 @@ describe('tracked-stories-poll-task handler', () => {
 
     expect(mockGetTrackedStory).toHaveBeenCalledWith('clu-1');
     expect(mockApplyUpdates).toHaveBeenCalledWith('s1', { newMemberIds: ['a2'] });
-    expect(mockNotify).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'tracked_story_update',
-        title: 'notifications.trackedStoryUpdateTitle',
-        body: 'notifications.trackedStoryUpdateBody',
-        context: { trackedStoryId: 's1', count: 1 },
-      }),
-    );
+    expect(mockNotify).not.toHaveBeenCalled();
     expect(mockRecordMiss).not.toHaveBeenCalled();
     expect(mockStampChecked).toHaveBeenCalledWith('s1');
   });
@@ -178,7 +171,7 @@ describe('tracked-stories-poll-task handler', () => {
     expect(mockNotify).not.toHaveBeenCalled();
   });
 
-  it('archive null → re-acquires via live cluster and adopts (resolveStableId + applyUpdates)', async () => {
+  it('archive null → re-acquires via live cluster and adopts (resolveStableId + applyUpdates, no notify)', async () => {
     mockGetActiveForPoll.mockResolvedValue([
       makeRow({ id: 's1', stableClusterId: 'clu-1', memberArticleIds: ['a1'], latestArticleId: 'a1' }),
     ]);
@@ -193,7 +186,7 @@ describe('tracked-stories-poll-task handler', () => {
     expect(mockGetNewsClusterForArticle).toHaveBeenCalledWith('a1');
     expect(mockResolveStableId).toHaveBeenCalledWith('s1', 'clu-1-new');
     expect(mockApplyUpdates).toHaveBeenCalledWith('s1', { newMemberIds: ['a2'] });
-    expect(mockNotify).toHaveBeenCalledTimes(1);
+    expect(mockNotify).not.toHaveBeenCalled();
     expect(mockStampChecked).toHaveBeenCalledWith('s1');
   });
 
