@@ -74,6 +74,35 @@ describe('resolveLeafActions', () => {
     expect(resolveLeafActions(leaf, ctx())).toEqual([]);
   });
 
+  it('add_suppression fills from_context_category', () => {
+    const leaf: FeedbackTreeLeaf = {
+      actions: [{ type: 'add_suppression', pattern: 'from_context_category', strength: 0.5 }],
+    };
+    expect(resolveLeafActions(leaf, ctx({ category: '  Politics  ' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'Politics', suppressionStrength: 0.5 },
+    ]);
+    expect(resolveLeafActions(leaf, ctx())).toEqual([]);
+  });
+
+  it('add_suppression fills from_context_eventType', () => {
+    const leaf: FeedbackTreeLeaf = {
+      actions: [{ type: 'add_suppression', pattern: 'from_context_eventType', strength: 0.5 }],
+    };
+    expect(resolveLeafActions(leaf, ctx({ eventType: '  Earnings call  ' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'Earnings call', suppressionStrength: 0.5 },
+    ]);
+    expect(resolveLeafActions(leaf, ctx())).toEqual([]);
+  });
+
+  it('add_negative_topic supports a positive weight (like-tree place-boost)', () => {
+    const leaf: FeedbackTreeLeaf = {
+      actions: [{ type: 'add_negative_topic', text: 'from_context_geo', weight: 0.6 }],
+    };
+    expect(resolveLeafActions(leaf, ctx({ geoText: 'Mumbai' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_NEGATIVE_TOPIC, topicText: 'Mumbai', weight: 0.6 },
+    ]);
+  });
+
   it('unknown action type is ignored (forward-compat)', () => {
     const leaf: FeedbackTreeLeaf = {
       actions: [{ type: 'teleport_user' }, { type: 'set_publication_pref', value: 'mute' }],

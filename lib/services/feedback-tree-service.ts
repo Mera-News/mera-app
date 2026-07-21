@@ -54,11 +54,15 @@ let memo: FeedbackTree | null = null;
 /** Shallow structural validation — enough to trust a parsed tree to render. */
 function validateTree(value: unknown): FeedbackTree | null {
   if (!value || typeof value !== 'object') return null;
-  const t = value as { version?: unknown; root?: unknown };
+  const t = value as { version?: unknown; root?: unknown; likeRoot?: unknown };
   if (typeof t.version !== 'number' || !Array.isArray(t.root)) return null;
   const okNode = (n: unknown): n is FeedbackTreeNode =>
     !!n && typeof n === 'object' && typeof (n as FeedbackTreeNode).id === 'string';
   if (!t.root.every(okNode)) return null;
+  // likeRoot (v2+) is optional — when present it must validate the same way.
+  if (t.likeRoot !== undefined) {
+    if (!Array.isArray(t.likeRoot) || !t.likeRoot.every(okNode)) return null;
+  }
   return value as FeedbackTree;
 }
 

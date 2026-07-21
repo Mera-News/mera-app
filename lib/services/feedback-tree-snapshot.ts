@@ -4,14 +4,18 @@
 // live tree is fetched + cached at runtime (feedback-tree-service), so a small
 // content drift here is harmless — this only shows when the network/cache can't
 // supply the current version.
+//
+// v2: adds `likeRoot` (the LIKE-side tree for the verdict bar) and the
+// dislike-root `not_important_to_me` branch — kept verbatim in sync with the
+// server's v2 feedback-tree-v1.ts.
 
 import type { FeedbackTree } from '../news-harness/feedback-tree/types';
 
 /** Structural schema version this app understands (gates minAppSchema). */
-export const APP_FEEDBACK_SCHEMA = 1;
+export const APP_FEEDBACK_SCHEMA = 2;
 
 export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
-  version: 1,
+  version: 2,
   root: [
     {
       id: 'publication_website',
@@ -141,6 +145,79 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_title', strength: 0.5 }] },
         },
       ],
+    },
+    {
+      id: 'not_important_to_me',
+      labelKey: 'feedback.not_important_to_me',
+      labelDefault: 'Not important to me',
+      icon: 'not-interested',
+      children: [
+        {
+          id: 'this_category',
+          labelKey: 'feedback.this_category',
+          labelDefault: 'This category',
+          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_category', strength: 0.5 }] },
+        },
+        {
+          id: 'this_kind_of_event',
+          labelKey: 'feedback.this_kind_of_event',
+          labelDefault: 'This kind of event',
+          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_eventType', strength: 0.5 }] },
+        },
+        {
+          id: 'tell_mera_why',
+          labelKey: 'feedback.tell_mera_why',
+          labelDefault: 'Tell Mera why',
+          leaf: { openChat: true },
+        },
+      ],
+    },
+  ],
+  likeRoot: [
+    {
+      id: 'more_about_topic',
+      labelKey: 'feedback.more_about_topic',
+      labelDefault: 'More about this topic',
+      icon: 'label',
+      visibleIf: { has_matched_topics: true },
+      children: [
+        {
+          id: 'a_lot_more',
+          labelKey: 'feedback.a_lot_more',
+          labelDefault: 'A lot more',
+          leaf: { actions: [{ type: 'set_topic_weight', topics: 'from_selection', delta: 0.3 }] },
+        },
+        {
+          id: 'a_bit_more',
+          labelKey: 'feedback.a_bit_more',
+          labelDefault: 'A bit more',
+          leaf: { actions: [{ type: 'set_topic_weight', topics: 'from_selection', delta: 0.15 }] },
+        },
+      ],
+    },
+    {
+      id: 'more_from_publication',
+      labelKey: 'feedback.more_from_publication',
+      labelDefault: 'More from this publication',
+      icon: 'newspaper',
+      leaf: { actions: [{ type: 'set_publication_pref', value: 'boost' }] },
+    },
+    {
+      id: 'more_news_from_place',
+      labelKey: 'feedback.more_news_from_place',
+      labelDefault: 'More news from this place',
+      icon: 'location-on',
+      // No visibleIf: has_geo_mismatch is dislike-specific ("wrong place");
+      // there's no clean inverse. Shown unconditionally — the leaf no-ops
+      // client-side when there's no geoText.
+      leaf: { actions: [{ type: 'add_negative_topic', text: 'from_context_geo', weight: 0.6 }] },
+    },
+    {
+      id: 'follow_story',
+      labelKey: 'feedback.follow_story',
+      labelDefault: 'Follow this story',
+      icon: 'forum',
+      leaf: { openChat: true },
     },
   ],
 };

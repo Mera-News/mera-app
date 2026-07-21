@@ -88,9 +88,13 @@ function resolveOne(
       const pattern =
         a.pattern === 'from_context_title'
           ? ctx.articleTitle?.trim()
-          : typeof a.pattern === 'string'
-            ? a.pattern.trim()
-            : undefined;
+          : a.pattern === 'from_context_category'
+            ? ctx.category?.trim()
+            : a.pattern === 'from_context_eventType'
+              ? ctx.eventType?.trim()
+              : typeof a.pattern === 'string'
+                ? a.pattern.trim()
+                : undefined;
       if (!pattern) return [];
       return [
         {

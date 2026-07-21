@@ -27,10 +27,11 @@ const KEY_VERSION = 'feedback_tree.version';
 const KEY_FETCHED_AT = 'feedback_tree.fetched_at';
 
 /** A minimal but valid server tree JSON (version 2). */
-const serverTree = (version: number) =>
+const serverTree = (version: number, extra: Record<string, unknown> = {}) =>
   JSON.stringify({
     version,
     root: [{ id: 'x', labelKey: 'k', labelDefault: 'X', leaf: { seenOnly: true } }],
+    ...extra,
   });
 
 beforeEach(() => {
@@ -56,6 +57,29 @@ describe('getFeedbackTree', () => {
   it('falls back to bundled when the cached JSON is corrupt', async () => {
     mockGetSetting.mockImplementation((key: string) =>
       Promise.resolve(key === KEY_JSON ? '{not json' : null),
+    );
+    const tree = await getFeedbackTree();
+    expect(tree).toBe(BUNDLED_FEEDBACK_TREE);
+  });
+
+  it('accepts a cached tree carrying a valid likeRoot', async () => {
+    const withLikeRoot = serverTree(2, {
+      likeRoot: [{ id: 'like_x', labelKey: 'k', labelDefault: 'X', leaf: { openChat: true } }],
+    });
+    mockGetSetting.mockImplementation((key: string) =>
+      Promise.resolve(key === KEY_JSON ? withLikeRoot : null),
+    );
+    const tree = await getFeedbackTree();
+    expect(tree.likeRoot).toEqual([
+      { id: 'like_x', labelKey: 'k', labelDefault: 'X', leaf: { openChat: true } },
+    ]);
+  });
+
+  it('falls back to bundled when the cached likeRoot is malformed', async () => {
+    // likeRoot present but not an array of valid nodes (missing `id`).
+    const malformed = serverTree(2, { likeRoot: [{ labelKey: 'k', labelDefault: 'X' }] });
+    mockGetSetting.mockImplementation((key: string) =>
+      Promise.resolve(key === KEY_JSON ? malformed : null),
     );
     const tree = await getFeedbackTree();
     expect(tree).toBe(BUNDLED_FEEDBACK_TREE);
@@ -104,6 +128,36 @@ describe('refreshFeedbackTree', () => {
 
     expect(mockSetSetting).not.toHaveBeenCalledWith(KEY_JSON, expect.anything());
     expect((await getFeedbackTree())).toBe(BUNDLED_FEEDBACK_TREE);
+  });
+
+  it('ACCEPTS a tree whose minAppSchema exactly equals the app schema (schema-2 acceptance)', async () => {
+    mockGetSetting.mockResolvedValue(null);
+    const withLikeRoot = serverTree(2, {
+      likeRoot: [{ id: 'like_x', labelKey: 'k', labelDefault: 'X', leaf: { openChat: true } }],
+    });
+    mockQuery.mockResolvedValue({
+      data: { feedbackTree: { version: 2, minAppSchema: 2, updatedAt: 'now', treeJson: withLikeRoot } },
+    });
+
+    await refreshFeedbackTree({ force: true });
+
+    expect(mockSetSetting).toHaveBeenCalledWith(KEY_JSON, withLikeRoot);
+    const tree = await getFeedbackTree();
+    expect(tree.version).toBe(2);
+    expect(tree.likeRoot).toHaveLength(1);
+  });
+
+  it('rejects (does not persist) a server tree with a malformed likeRoot', async () => {
+    mockGetSetting.mockResolvedValue(null);
+    const malformed = serverTree(2, { likeRoot: 'not-an-array' });
+    mockQuery.mockResolvedValue({
+      data: { feedbackTree: { version: 2, minAppSchema: 2, updatedAt: 'now', treeJson: malformed } },
+    });
+
+    await refreshFeedbackTree({ force: true });
+
+    expect(mockSetSetting).not.toHaveBeenCalledWith(KEY_JSON, expect.anything());
+    expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
   });
 
   it('keeps bundled/cached when the server is unseeded (null response)', async () => {
