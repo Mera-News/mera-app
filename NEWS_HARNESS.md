@@ -42,6 +42,11 @@ persona-management/
   fact-rules.ts          — filterNewFacts + fact-acceptance rules (empty/too-long/meta/duplicate)
   topic-generation.ts    — generateTopicsForFactsBatch (fact → search topics)
   persona-agent-core.ts  — PersonaUpdateAgent brain (system prompt, context, tools)
+  feedback-digest.ts     — analyzeFeedback: deterministic sweep over stored swipe/
+                           inline-feedback-tree signals (article_feedback rows) →
+                           optimisation-plan candidates (topic_up/down/retire/
+                           suppress) with conflictsWith detection; feeds the daily
+                           Optimisation Plan (Round 4 C5)
 article-pipeline/
   scoring.ts     — batched relevance calls, reason calls, response parsing, bucketing
   candidates.ts  — deriveTopicTexts, buildCandidatesFromArticles
@@ -137,13 +142,15 @@ old sectioned/two-zone For-You view and its single-shot cloud scoring job:
   built from the render-gated 24h suggestion pool via `resolveOwnership`. A
   card enters its row once its note exists (or is deliberately reason-skipped).
 - **`lib/services/fact-batching.ts`** + **`lib/services/scoring-pipeline.ts`**
-  — cloud scoring is per-fact batched. Candidates are grouped by their
-  primary (strongest owning) fact — `groupCandidatesByPrimaryFact`, reusing
-  `resolveOwningFact` — chunked per fact (facts with <3 candidates merge into
-  a `factId: null` tail). Per batch: the math score is computed and persisted
-  **immediately**; then ONE combined judge+notes cloud job runs per batch,
-  whose only effect is filling in notes — the judge never rewrites the
+  — cloud scoring is batched. Per batch: the math score is computed and
+  persisted **immediately**; then ONE combined judge+notes cloud job runs per
+  batch, whose only effect is filling in notes — the judge never rewrites the
   already-persisted math score (advisory-only, see Config philosophy below).
+  **Round 4 B:** per-fact batch grouping (`groupCandidatesByPrimaryFact` /
+  `resolveOwningFact`-based chunking) and per-fact narration were retired —
+  batches are now FIFO 25-article quanta of eligible candidates in delivery
+  order (`factId`/`factStatement` remain optional persisted fields, always
+  null for new batches, only so older-build runs still parse).
 
 ## 3. Running locally
 

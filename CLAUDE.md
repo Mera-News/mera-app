@@ -39,7 +39,7 @@ OTA updates work for JS/TS/styling/GraphQL changes. Native builds required for n
 
 - **Auth**: Better Auth with email OTP via `authClient` (`lib/auth-client.ts`). Tokens in expo-secure-store (native) / AsyncStorage (web). Auth cookies auto-injected into GraphQL via `SetContextLink` in `lib/apollo-client.ts`. Logout must call `clearAuthStorage()`.
 - **Data Fetching**: Apollo Client with `fetchPolicy: 'no-cache'` everywhere — intentional for real-time personalized content.
-- **Navigation**: Expo Router file-based routing. Stack (`app/_layout.tsx`) + Native Tabs (`app/app_container/_layout.tsx`: News, Train, Review, Preferences).
+- **Navigation**: Expo Router file-based routing. Stack (`app/_layout.tsx`) + Native Tabs (`app/logged-in/app_container/_layout.tsx`: Feed (swipe deck, landing tab), Dashboard (`for_you` route — sectioned news), Explore (`around`), Profile, Settings).
 - **UI**: NativeWind + Gluestack UI v4. Dark mode only (`mode="dark"`). Colors in `tailwind.config.js`.
 - **GraphQL**: Schema in `schema.gql` → codegen → `lib/generated/graphql-types.ts`. Always regenerate after schema changes.
 
@@ -62,7 +62,7 @@ export default function MyRoute() {
 ```
 /app                        # Expo Router routes (routing only)
   /_layout.tsx              # Root: ApolloProvider + GluestackUIProvider + SafeAreaProvider
-  /app_container/           # Main tabs (news, train, review, preferences)
+  /logged-in/app_container/ # Main tabs: Feed, Dashboard (for_you), Explore (around), Profile, Settings
 /components
   /ui/                      # Gluestack-based atomic components
   /custom/                  # All app-specific components
@@ -71,10 +71,11 @@ export default function MyRoute() {
     /chat/                  # Chat UI components
     /config-mera/           # App preferences & settings screens
     /config-panel/          # Review panel (persona + sources drill-downs)
-    /for-you/               # Main news feed screen
-    /news-detail/           # Cluster/article detail screens
-    /onboarding/            # Onboarding flow
-    /persona-chat/          # Persona chat variants
+    /for-you/                # Dashboard screen (for_you route) — sectioned news
+    /swipe-feed/             # Feed tab: card deck + verdict bar + inline feedback tree
+    /news-detail/            # Cluster/article detail screens
+    /onboarding/             # Onboarding flow
+    /persona-chat/           # Persona chat variants
 /lib
   /apollo-client.ts         # Apollo Client setup
   /auth-client.ts           # Better Auth client
