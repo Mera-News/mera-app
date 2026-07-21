@@ -6,8 +6,11 @@ const mockGetPipelineStatus = jest.fn();
 const mockEnqueueCandidates = jest.fn();
 const mockEnqueueOrphanedReasons = jest.fn();
 const mockPollTick = jest.fn();
+const mockGetNonTerminalCandidateIds = jest.fn();
 const mockGetUnscored = jest.fn();
 const mockBuildRelevanceCalls = jest.fn();
+const mockGateUnscoredForScoring = jest.fn();
+const mockRequestSuggestionsRefresh = jest.fn();
 const mockContextForCycleReason = jest.fn();
 const mockCaptureException = jest.fn();
 const mockWarn = jest.fn();
@@ -31,6 +34,7 @@ jest.mock('@/lib/services/scoring-pipeline', () => ({
   enqueueCandidates: (...args: any[]) => mockEnqueueCandidates(...args),
   enqueueOrphanedReasons: (...args: any[]) => mockEnqueueOrphanedReasons(...args),
   pollTick: (...args: any[]) => mockPollTick(...args),
+  getNonTerminalCandidateIds: (...args: any[]) => mockGetNonTerminalCandidateIds(...args),
 }));
 
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
@@ -39,6 +43,14 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
 
 jest.mock('@/lib/mera-protocol/scoring-service', () => ({
   buildRelevanceCalls: (...args: any[]) => mockBuildRelevanceCalls(...args),
+}));
+
+jest.mock('@/lib/feed-grouping/score-propagation', () => ({
+  gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
+}));
+
+jest.mock('@/lib/services/SuggestionSyncService', () => ({
+  requestSuggestionsRefresh: (...args: any[]) => mockRequestSuggestionsRefresh(...args),
 }));
 
 jest.mock('@/lib/llm/execution-context', () => ({
@@ -64,8 +76,16 @@ beforeEach(() => {
   mockEnqueueCandidates.mockResolvedValue(undefined);
   mockEnqueueOrphanedReasons.mockResolvedValue(undefined);
   mockPollTick.mockResolvedValue(undefined);
+  mockGetNonTerminalCandidateIds.mockResolvedValue(new Set());
   mockGetUnscored.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
   mockBuildRelevanceCalls.mockResolvedValue(bundleWith(['a', 'b']));
+  // Default gate: elect every eligible id (no propagation / no election).
+  mockGateUnscoredForScoring.mockImplementation(async () => ({
+    enqueueIds: ['a', 'b'],
+    propagatedCount: 0,
+    heldBackCount: 0,
+  }));
+  mockRequestSuggestionsRefresh.mockResolvedValue(undefined);
 });
 
 describe('runBackgroundCycle — background completion pushes', () => {
@@ -107,25 +127,51 @@ describe('runBackgroundCycle — app-resume', () => {
 });
 
 describe('runBackgroundCycle — scoring-pass', () => {
-  it('enqueues eligible candidates + orphaned reasons then polls', async () => {
+  it('routes eligible ids through the gate and enqueues only the intersection of gate.enqueueIds + eligible', async () => {
     mockGetUnscored.mockResolvedValue([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
-    mockBuildRelevanceCalls.mockResolvedValue(bundleWith(['a', 'c']));
+    mockBuildRelevanceCalls.mockResolvedValue(bundleWith(['a', 'c'])); // eligible = {a, c}
+    mockGetNonTerminalCandidateIds.mockResolvedValue(new Set(['in-flight']));
+    // Gate elects 'a' and a non-eligible 'z' — only the eligible intersection
+    // ('a') is enqueued.
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['a', 'z'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
     mockGetPipelineStatus.mockResolvedValue('running');
 
     const result = await runBackgroundCycle('scoring-pass');
 
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a', 'c']);
+    // Gate was fed the pipeline's in-flight set.
+    expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight']));
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a']);
     expect(mockEnqueueOrphanedReasons).toHaveBeenCalledTimes(1);
     expect(mockPollTick).toHaveBeenCalledWith('foreground');
     expect(result).toBe('running');
   });
 
-  it('skips enqueueCandidates when no eligible ids but still enqueues orphaned reasons', async () => {
+  it('refreshes the store when the gate propagated scores', async () => {
+    mockBuildRelevanceCalls.mockResolvedValue(bundleWith(['a']));
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: [],
+      propagatedCount: 3,
+      heldBackCount: 0,
+    });
+    mockGetPipelineStatus.mockResolvedValue('running');
+
+    await runBackgroundCycle('scoring-pass');
+
+    expect(mockRequestSuggestionsRefresh).toHaveBeenCalledTimes(1);
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+  });
+
+  it('skips the gate + enqueueCandidates when no eligible ids but still enqueues orphaned reasons', async () => {
     mockBuildRelevanceCalls.mockResolvedValue(bundleWith([]));
     mockGetPipelineStatus.mockResolvedValue('idle');
 
     const result = await runBackgroundCycle('scoring-pass');
 
+    expect(mockGateUnscoredForScoring).not.toHaveBeenCalled();
     expect(mockEnqueueCandidates).not.toHaveBeenCalled();
     expect(mockEnqueueOrphanedReasons).toHaveBeenCalledTimes(1);
     expect(mockPollTick).toHaveBeenCalledWith('foreground');

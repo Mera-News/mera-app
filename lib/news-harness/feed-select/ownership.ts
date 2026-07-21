@@ -5,8 +5,7 @@
 // Round-3 C3) are the shared authority for:
 //   - `bucketOf` / `bucketRank` — persisted relevance → display tier.
 //   - `resolveOwnership` / `resolveOwningFact` — which fact owns a story group
-//     (used by both the fact-rows feed selector and the per-fact scoring
-//     batcher, `lib/services/fact-batching.ts`).
+//     (used by the fact-rows feed selector).
 //
 // The input projection types are declared here (redeclared, never importing
 // lib/stores) so this module stays at the RN-free harness layer.

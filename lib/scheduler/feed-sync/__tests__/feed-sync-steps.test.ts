@@ -84,6 +84,7 @@ import {
   stepHydratePersistEnqueue,
   stepScore,
   HYDRATE_CHUNK_SIZE,
+  HYDRATE_CONCURRENCY,
 } from '../feed-sync-steps';
 import type {
   FetchTopicIdsResult,
@@ -615,7 +616,7 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-0']);
   });
 
-  it('accumulates eligible ids across multiple chunks and enqueues them exactly once, after all persists', async () => {
+  it('runs the gate + enqueue PER chunk (greedy overlap), not once at the end', async () => {
     const chunk1Ids = Array.from({ length: HYDRATE_CHUNK_SIZE }, (_, i) => `art-${i}`);
     const chunk2Ids = Array.from({ length: 5 }, (_, i) => `art-${HYDRATE_CHUNK_SIZE + i}`);
     const missingIds = [...chunk1Ids, ...chunk2Ids];
@@ -630,17 +631,14 @@ describe('stepHydratePersistEnqueue', () => {
         dailyLimitReached: false,
       });
     mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
-    mockGetUnscoredSuggestionsWithFacts
-      .mockResolvedValueOnce(
-        chunk1Ids.map((id) => ({ id, titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] })),
-      )
-      .mockResolvedValueOnce(
-        chunk2Ids.map((id) => ({ id, titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] })),
-      );
-
-    // The gate elects every eligible id this sync (no donors, all singletons).
+    // Order-independent: markIneligibleAndCollectEligible scopes to the chunk set,
+    // so a single all-eligible result yields the right per-chunk eligible ids.
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue(
+      missingIds.map((id) => ({ id, titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] })),
+    );
+    // Gate returns a fixed elected id each call (one per chunk that had eligibles).
     mockGateUnscoredForScoring.mockResolvedValue({
-      enqueueIds: missingIds,
+      enqueueIds: ['elected'],
       propagatedCount: 0,
       heldBackCount: 0,
     });
@@ -652,12 +650,14 @@ describe('stepHydratePersistEnqueue', () => {
 
     const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
-    // Exactly one enqueueCandidates call, after both chunks' persists ran, with
-    // the union of eligible ids across both chunks — not per-chunk.
-    expect(mockEnqueueCandidates).toHaveBeenCalledTimes(1);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(missingIds);
+    // Both chunks persisted eligible rows → the gate+enqueue ran once per chunk
+    // (greedy overlap) rather than a single post-loop enqueue.
     expect(mockPersistAndLinkV2Suggestions).toHaveBeenCalledTimes(2);
-    expect(result.enqueuedCount).toBe(missingIds.length);
+    expect(mockGateUnscoredForScoring).toHaveBeenCalledTimes(2);
+    expect(mockEnqueueCandidates).toHaveBeenCalledTimes(2);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['elected']);
+    // enqueuedCount accumulates gate.enqueueIds.length across both invocations.
+    expect(result.enqueuedCount).toBe(2);
   });
 
   it('still enqueues once with whatever landed when the daily-limit cuts the run short mid-loop', async () => {
@@ -761,16 +761,20 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockWithRetry).toHaveBeenCalledWith(expect.any(Function), ctx.signal);
   });
 
-  it('honors mid-loop abort: stops before fetching the next chunk', async () => {
-    const missingIds = Array.from({ length: HYDRATE_CHUNK_SIZE + 1 }, (_, i) => `art-${i}`);
+  it('honors mid-loop abort: stops launching chunks beyond the in-flight pool', async () => {
+    // 4 chunks; concurrency is HYDRATE_CONCURRENCY (3). The 3 pool workers grab
+    // chunks 0,1,2 and fetch concurrently; the first chunk's refreshStore aborts,
+    // so the 4th chunk is never launched.
+    const missingIds = Array.from(
+      { length: HYDRATE_CHUNK_SIZE * 4 },
+      (_, i) => `art-${i}`,
+    );
     mockGetArticlesForTopicsByIds.mockResolvedValue({
-      articles: [{ _id: 'art-0' }],
+      articles: [{ _id: 'art-x' }],
       dailyLimitReached: false,
     });
     mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
-    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
-      { id: 'art-0', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
-    ]);
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
       articleToTopicTexts: new Map(),
@@ -778,7 +782,7 @@ describe('stepHydratePersistEnqueue', () => {
     };
 
     const ctx = makeCtx();
-    // Abort right after the first chunk's store refresh.
+    // Abort on the first chunk's store refresh.
     const opts = makeOpts({
       refreshStore: jest.fn().mockImplementation(async () => {
         ctx.controller.abort();
@@ -787,8 +791,51 @@ describe('stepHydratePersistEnqueue', () => {
 
     await stepHydratePersistEnqueue(diffResult, ctx, opts);
 
-    // Only the first chunk was fetched — abort broke the loop before chunk 2.
-    expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledTimes(1);
+    // Exactly the initial concurrent pool was fetched — chunk 4 was never launched.
+    expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledTimes(HYDRATE_CONCURRENCY);
+  });
+
+  it('hydrates chunks concurrently (up to HYDRATE_CONCURRENCY fetches in flight)', async () => {
+    // 4 chunks; each fetch is deferred so we can observe how many run at once.
+    const missingIds = Array.from(
+      { length: HYDRATE_CHUNK_SIZE * 4 },
+      (_, i) => `art-${i}`,
+    );
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const resolvers: Array<() => void> = [];
+    mockGetArticlesForTopicsByIds.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          inFlight++;
+          maxInFlight = Math.max(maxInFlight, inFlight);
+          resolvers.push(() => {
+            inFlight--;
+            resolve({ articles: [], dailyLimitReached: false });
+          });
+        }),
+    );
+    const flush = async () => {
+      for (let i = 0; i < 8; i++) await Promise.resolve();
+    };
+    const diffResult: DiffResult = {
+      serverArticleIds: missingIds,
+      articleToTopicTexts: new Map(),
+      missingIds,
+    };
+
+    const p = stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+    await flush();
+    // The pool launched exactly HYDRATE_CONCURRENCY fetches before any resolved.
+    expect(maxInFlight).toBe(HYDRATE_CONCURRENCY);
+
+    // Drain: each resolution frees a worker to launch the next chunk.
+    while (resolvers.length > 0) {
+      resolvers.shift()!();
+      await flush();
+    }
+    await p;
+    expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledTimes(4);
   });
 
   it('awaits resume between chunks (pause support)', async () => {

@@ -53,12 +53,13 @@ jest.mock('@expo/vector-icons', () => {
     return { MaterialIcons: (props: any) => <View {...props} /> };
 });
 
-// FeedStatusShimmer's collapsed-row cycling headline reads the fact-stage +
-// async-job-phase selectors directly (Round-3 B2) — stub them to the "no run
-// active" defaults so this test stays isolated from the real zustand store.
+// FeedStatusShimmer's collapsed-row cycling headline + progress line read the
+// async-job-phase + batch-progress selectors directly (Round-4 B) — stub them to
+// controllable defaults so this test stays isolated from the real zustand store.
+let mockBatchProgress: { done: number; total: number } | null = null;
 jest.mock('@/lib/stores/selectors', () => ({
     useForYouAsyncJobPhase: () => 'idle',
-    useForYouFactStages: () => [],
+    useForYouBatchProgress: () => mockBatchProgress,
     useForYouDeviceProcessing: () => ({
         isDeviceProcessing: false,
         deviceProcessedCount: 0,
@@ -80,6 +81,7 @@ const EXPAND_A11Y = 'feedStatus.expandA11y';
 const COLLAPSE_A11Y = 'feedStatus.collapseA11y';
 
 const detailProps = {
+    unscoredCount: 0,
     processedCount: 0,
     analysedCount: 0,
     relevantCount: 0,
@@ -87,6 +89,10 @@ const detailProps = {
     injectNoiseEnabled: false,
     lastProcessedLabel: null,
 };
+
+beforeEach(() => {
+    mockBatchProgress = null;
+});
 
 describe('FeedStatusShimmer', () => {
     it('renders a tappable bar + collapsed expand chevron while processing', () => {
@@ -132,10 +138,55 @@ describe('FeedStatusShimmer', () => {
         expect(getByLabelText(OPEN_A11Y)).toBeTruthy();
     });
 
-    it('renders nothing when idle', () => {
+    it('renders nothing when idle (not processing, no unscored)', () => {
         const { queryByLabelText } = render(
             <FeedStatusShimmer processing={false} error={false} dailyLimited={false} {...detailProps} />,
         );
         expect(queryByLabelText(OPEN_A11Y)).toBeNull();
+    });
+
+    it('renders a static "waiting for the next batch" note when not processing but rows are deferred', () => {
+        const { getByText, queryByLabelText } = render(
+            <FeedStatusShimmer
+                processing={false}
+                error={false}
+                dailyLimited={false}
+                {...detailProps}
+                unscoredCount={5}
+            />,
+        );
+        // The static note text (no animated bar / chevron in deferred mode).
+        expect(getByText('feed.waitingForNextBatch')).toBeTruthy();
+        expect(queryByLabelText(OPEN_A11Y)).toBeNull();
+    });
+
+    it('processing takes precedence over deferred rows (animated bar shown)', () => {
+        const { getByLabelText, queryByText } = render(
+            <FeedStatusShimmer
+                processing
+                error={false}
+                dailyLimited={false}
+                {...detailProps}
+                unscoredCount={5}
+            />,
+        );
+        expect(getByLabelText(OPEN_A11Y)).toBeTruthy();
+        expect(queryByText('feed.waitingForNextBatch')).toBeNull();
+    });
+
+    it('shows the "Analysing X of Y articles" progress line while processing', () => {
+        mockBatchProgress = { done: 3, total: 10 };
+        const { getByText } = render(
+            <FeedStatusShimmer processing error={false} dailyLimited={false} {...detailProps} />,
+        );
+        expect(getByText('feed.analysingProgress')).toBeTruthy();
+    });
+
+    it('omits the progress line when there is no batch total', () => {
+        mockBatchProgress = null;
+        const { queryByText } = render(
+            <FeedStatusShimmer processing error={false} dailyLimited={false} {...detailProps} />,
+        );
+        expect(queryByText('feed.analysingProgress')).toBeNull();
     });
 });

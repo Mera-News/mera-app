@@ -149,9 +149,13 @@ class FeedSyncMachine {
         return;
       }
 
-      // Step 1: fetch topic IDs
+      // Step 1: fetch topic IDs. NOTE (Round-4 B): the fetching-topic-ids and
+      // diffing statuses are NOT published — a bare poll that finds no new
+      // articles must be silent (no shimmer flicker). Only the has-work path
+      // publishes, from `hydrating` onward. Internal `_transitionTo` +
+      // `updateMachineState` bookkeeping still runs so the machine + persisted
+      // snapshot stay consistent.
       this._transitionTo('fetching-topic-ids');
-      publishSyncStatus('fetching-topic-ids');
       logger.info('[FeedSyncMachine] → fetching-topic-ids');
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
@@ -173,9 +177,8 @@ class FeedSyncMachine {
         useForYouStore.getState().relevantArticleCount,
       );
 
-      // Step 2: diff
+      // Step 2: diff (status intentionally not published — see Step 1 note).
       this._transitionTo('diffing');
-      publishSyncStatus('diffing');
       logger.info('[FeedSyncMachine] → diffing');
       await feedPersistence.updateMachineState('diffing');
 
@@ -186,9 +189,14 @@ class FeedSyncMachine {
         // No new articles and nothing deleted — but still run scoring in case
         // articles from a prior run are waiting to be analysed (e.g. when the
         // previous scoring step failed transiently and left unscoredCount > 0).
+        //
+        // Round-4 B: this no-op cycle is SILENT — no transient scoring/done/idle
+        // publishes and no 2s done→idle timer, so a bare poll never flickers the
+        // shimmer. Internal transitions + snapshot clearing + setLastSyncAt still
+        // run so the machine stays consistent. If scoring actually finds work,
+        // the scoring-pipeline publishes its own header progress independently.
         this._transitionTo('scoring');
-        publishSyncStatus('scoring');
-        logger.info('[FeedSyncMachine] → scoring (no new articles)');
+        logger.info('[FeedSyncMachine] → scoring (no new articles, silent)');
         await feedPersistence.updateMachineState('scoring');
 
         if (ctx.signal.aborted) return;
@@ -196,7 +204,6 @@ class FeedSyncMachine {
 
         await flushSuggestionsRefresh();
         this._transitionTo('done');
-        publishSyncStatus('done');
         useForYouStore.getState().setLastSyncAt(Date.now());
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -205,13 +212,6 @@ class FeedSyncMachine {
             tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
           });
         }
-
-        setTimeout(() => {
-          if (this._state === 'done') {
-            this._transitionTo('idle');
-            publishSyncStatus('idle');
-          }
-        }, 2_000);
         return;
       }
 

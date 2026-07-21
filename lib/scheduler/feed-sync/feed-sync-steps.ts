@@ -29,6 +29,11 @@ import { reconcileTrackedStories } from './tracked-story-reconcile';
  *  batch (`BATCH_SIZE = 25` in scoring-pipeline). */
 export const HYDRATE_CHUNK_SIZE = 25;
 
+/** Round-4 B: hydrate up to this many chunks concurrently. WatermelonDB
+ *  serializes writes internally, so per-chunk persists are safe to interleave;
+ *  the gate+enqueue step is separately serialized behind a promise chain. */
+export const HYDRATE_CONCURRENCY = 3;
+
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
   serverArticleIds: string[];
@@ -257,17 +262,21 @@ export async function stepDiff(
 /**
  * Merged hydrate + persist + enqueue step (runs under the `hydrating` state).
  *
- * Loops over `missingIds` in `HYDRATE_CHUNK_SIZE` chunks sequentially. For each
- * chunk it: downloads the full records (one server query), persists + links
- * them, marks ineligible rows scored, hands the eligible ids to the scoring
- * pipeline (which starts scoring that chunk while the next one downloads),
- * refreshes the store for progressive rendering, and reports progress. Between
- * chunks it honors pause (offline) and abort.
+ * Round-4 B: chunks are hydrated with concurrency `HYDRATE_CONCURRENCY` (a
+ * simple promise pool, no new deps). For each chunk a worker downloads the full
+ * records (one server query), persists + links them, marks ineligible rows
+ * scored, refreshes the store for progressive rendering, and — if the chunk
+ * produced eligible ids — runs the gate + enqueue step so full 25-article quanta
+ * dispatch MID-hydration (greedy overlap) instead of only once at the end. The
+ * gate+enqueue invocations are serialized behind a promise chain so they never
+ * run concurrently (the gate re-derives its candidates from ALL unscored,
+ * not-in-flight rows, and enqueueCandidates applies the strict quantum gate).
  *
  * Daily-limit semantics: the server charges the delivery cap here and clips the
  * response. If the cap leaves NOTHING to deliver on the whole run, throw a
- * terminal `daily-limit` error. If it hits after some chunks already landed,
- * stop the loop and keep what landed (the machine surfaces the banner).
+ * terminal `daily-limit` error (decided AFTER the pool drains so a parallel dry
+ * chunk can't pre-empt a sibling that did deliver). If it hits after some chunks
+ * already landed, stop launching new chunks and keep what landed.
  */
 export async function stepHydratePersistEnqueue(
   diffResult: DiffResult,
@@ -279,16 +288,15 @@ export async function stepHydratePersistEnqueue(
   const { missingIds, articleToTopicTexts, personaMeta } = diffResult;
   const chunks = chunkArray(missingIds, HYDRATE_CHUNK_SIZE);
 
-  let completedSoFar = 0;
+  let completedIds = 0;
   let insertedCount = 0;
   let deliveredAny = false;
   let dailyLimitReached = false;
   let resetAt: string | undefined;
-  // Accumulated across all chunks — handed to the scoring pipeline in ONE
-  // batch-set after the loop finishes, instead of a per-chunk enqueue that
-  // keeps appending to (and never finishing) an active run while backend
-  // ingestion is continuous.
-  const allEligibleIds: string[] = [];
+  let enqueuedCount = 0;
+  // Set once a chunk hits the cap dry (0 articles) or a mid-run abort/pause
+  // ends — stops the pool from launching further chunks.
+  let stopLaunching = false;
 
   // Lazy require (not a static import) breaks the module-load cycle
   // feed-sync-steps → scoring-pipeline → SuggestionSyncService → run-inference-
@@ -297,117 +305,134 @@ export async function stepHydratePersistEnqueue(
   const scoringPipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
   const { enqueueCandidates, getNonTerminalCandidateIds } = scoringPipeline;
 
-  for (let i = 0; i < chunks.length; i++) {
-    // Between-chunk cooperative points: pause while offline, bail on abort. A
-    // mid-run abort stops the loop gracefully and returns what already landed;
-    // the machine's post-step abort check returns before scoring.
-    await opts.awaitResumeIfPaused();
-    if (ctx.signal.aborted) break;
-
-    const chunk = chunks[i];
-    const response = await withRetry(
-      () =>
-        ArticleService.getArticlesForTopicsByIds(chunk, (chunkCompleted) => {
-          opts.onProgress(completedSoFar + chunkCompleted);
-        }),
-      ctx.signal,
+  // Serialize gate+enqueue: the gate scans ALL unscored rows and enqueueCandidates
+  // dispatches quanta, so two concurrent invocations could double-count. A simple
+  // promise chain guarantees one-at-a-time execution across the parallel workers.
+  let gateChain: Promise<void> = Promise.resolve();
+  const runGateSerialized = (fn: () => Promise<void>): Promise<void> => {
+    const next = gateChain.then(fn, fn);
+    // Keep the chain alive even if fn rejects, so one failure doesn't wedge the
+    // rest. Individual failures still surface via the awaited `next`.
+    gateChain = next.then(
+      () => undefined,
+      () => undefined,
     );
-    const chunkArticles = response.articles;
-    if (response.dailyLimitReached) {
-      dailyLimitReached = true;
-      resetAt = resetAt ?? response.resetAt;
-    }
+    return next;
+  };
 
-    if (chunkArticles.length > 0) {
-      deliveredAny = true;
-      const { insertedCount: chunkInserted } = await persistAndLinkV2Suggestions(
-        chunkArticles,
-        articleToTopicTexts,
-        personaMeta,
-      );
-      insertedCount += chunkInserted;
-
-      const chunkIds = new Set(chunkArticles.map((a) => a._id));
-      const { ineligibleCount, eligibleIds } =
-        await markIneligibleAndCollectEligible(chunkIds);
-      if (ineligibleCount > 0) {
-        ctx.log(`pre-scored ${ineligibleCount} ineligible articles`);
-      }
-
-      if (eligibleIds.length > 0) {
-        allEligibleIds.push(...eligibleIds);
-      }
-
-      // Progressive rendering: newly-persisted (unscored) articles appear now.
-      await opts.refreshStore();
-      // A6: yield the JS thread between chunks so the just-rendered chunk can
-      // paint (and touches process) before the next server fetch + persist.
-      await yieldToEventLoop();
-    }
-
-    completedSoFar += chunk.length;
-    opts.onProgress(completedSoFar);
-    ctx.log(
-      `chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
-    );
-    logger.info(
-      `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
-    );
-
-    // Daily cap ran dry for this chunk (nothing delivered).
-    if (dailyLimitReached && chunkArticles.length === 0) {
-      if (!deliveredAny) {
-        // Nothing delivered the entire run — terminal "daily limit reached".
-        logger.info('[feed-sync-steps] daily article-delivery limit reached');
-        throw Object.assign(new Error('daily-limit'), {
-          code: 'daily-limit',
-          resetAt: resetAt ? Date.parse(resetAt) : undefined,
-        });
-      }
-      // Some chunks already landed — stop, keep what we have, banner surfaces.
-      logger.info(
-        '[feed-sync-steps] daily limit hit mid-run — stopping loop, keeping delivered chunks',
-      );
-      break;
-    }
-  }
-
-  // Enqueue once, after the full hydration pass (including a partial-delivery
-  // early exit above) — one clean batch-set so the pipeline starts a single
-  // run with a stable total, instead of a per-chunk enqueue that keeps
-  // appending to (and never finishing) an active run.
-  //
-  // But first run the scoring skip gate + same-sync election. Instead of
-  // enqueueing every freshly-eligible id, the gate (a) copies an already-scored
-  // sibling story's score onto its still-unscored duplicates and (b) elects a
-  // single representative per same-sync duplicate group, holding the siblings
-  // back. Crucially the gate re-derives its candidates from ALL unscored,
-  // not-in-flight rows — not just THIS sync's `allEligibleIds` — so any sibling
-  // held back or missed by a failed batch on a prior sync is re-considered here.
-  // That makes the whole scheme self-healing with no persisted held-back state:
-  // a held-back sibling is either propagated (its rep scored) or re-enqueued
-  // next sync. `enqueueCandidates` dedupes in-flight ids internally, so feeding
-  // it the wider set is safe, and MIN_RUN_CANDIDATES semantics (inside
-  // enqueueCandidates) are untouched.
-  let enqueuedCount = 0;
-  if (allEligibleIds.length > 0) {
+  // The gate re-derives its candidates from ALL unscored, not-in-flight rows —
+  // not just this chunk's eligible ids — so any sibling held back or missed by a
+  // failed batch on a prior chunk/sync is re-considered. Self-healing with no
+  // persisted held-back state: a held-back sibling is either propagated (its rep
+  // scored) or re-enqueued next pass.
+  const gateAndEnqueue = async (): Promise<void> => {
     const inFlight = await getNonTerminalCandidateIds();
     const gate = await gateUnscoredForScoring(inFlight);
-    // Propagated rows are now terminal `Complete` — surface them immediately,
-    // the same way each hydration chunk refreshes for progressive rendering.
     if (gate.propagatedCount > 0) {
+      // Propagated rows are now terminal `Complete` — surface them immediately.
       await opts.refreshStore();
     }
     if (gate.enqueueIds.length > 0) {
       await enqueueCandidates(gate.enqueueIds);
     }
-    enqueuedCount = gate.enqueueIds.length;
+    enqueuedCount += gate.enqueueIds.length;
     ctx.log(
-      `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${enqueuedCount}`,
+      `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${gate.enqueueIds.length}`,
     );
     logger.info(
-      `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${enqueuedCount}`,
+      `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${gate.enqueueIds.length}`,
     );
+  };
+
+  let nextChunk = 0;
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      if (stopLaunching) return;
+      // Cooperative points: pause while offline, bail on abort.
+      await opts.awaitResumeIfPaused();
+      if (ctx.signal.aborted) {
+        stopLaunching = true;
+        return;
+      }
+      const i = nextChunk++;
+      if (i >= chunks.length) return;
+      const chunk = chunks[i];
+
+      const response = await withRetry(
+        () =>
+          ArticleService.getArticlesForTopicsByIds(chunk, (chunkCompleted) => {
+            opts.onProgress(completedIds + chunkCompleted);
+          }),
+        ctx.signal,
+      );
+      const chunkArticles = response.articles;
+      if (response.dailyLimitReached) {
+        dailyLimitReached = true;
+        resetAt = resetAt ?? response.resetAt;
+      }
+
+      if (chunkArticles.length > 0) {
+        deliveredAny = true;
+        const { insertedCount: chunkInserted } =
+          await persistAndLinkV2Suggestions(
+            chunkArticles,
+            articleToTopicTexts,
+            personaMeta,
+          );
+        insertedCount += chunkInserted;
+
+        const chunkIdSet = new Set(chunkArticles.map((a) => a._id));
+        const { ineligibleCount, eligibleIds } =
+          await markIneligibleAndCollectEligible(chunkIdSet);
+        if (ineligibleCount > 0) {
+          ctx.log(`pre-scored ${ineligibleCount} ineligible articles`);
+        }
+
+        // Progressive rendering: newly-persisted (unscored) articles appear now.
+        await opts.refreshStore();
+        // A6: yield the JS thread so the just-rendered chunk can paint.
+        await yieldToEventLoop();
+
+        // Greedy overlap: if this chunk produced eligible ids, run the
+        // gate+enqueue now (serialized) so accumulated full quanta dispatch
+        // mid-hydration instead of only once at the end.
+        if (eligibleIds.length > 0) {
+          await runGateSerialized(gateAndEnqueue);
+        }
+      }
+
+      completedIds += chunk.length;
+      opts.onProgress(completedIds);
+      ctx.log(`chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`);
+      logger.info(
+        `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
+      );
+
+      // Daily cap ran dry for this chunk (nothing delivered) — stop launching
+      // further chunks. The throw-vs-keep decision is made AFTER the pool drains.
+      if (dailyLimitReached && chunkArticles.length === 0) {
+        stopLaunching = true;
+        logger.info(
+          '[feed-sync-steps] daily limit hit — stopping the hydration pool',
+        );
+        return;
+      }
+    }
+  };
+
+  const poolSize = Math.min(HYDRATE_CONCURRENCY, Math.max(1, chunks.length));
+  await Promise.all(Array.from({ length: poolSize }, () => worker()));
+  // Drain any still-pending serialized gate invocation before deciding the
+  // outcome / returning.
+  await gateChain;
+
+  // Daily-limit outcome: throw ONLY if the cap blocked the entire run.
+  if (dailyLimitReached && !deliveredAny) {
+    logger.info('[feed-sync-steps] daily article-delivery limit reached');
+    throw Object.assign(new Error('daily-limit'), {
+      code: 'daily-limit',
+      resetAt: resetAt ? Date.parse(resetAt) : undefined,
+    });
   }
 
   ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}`);

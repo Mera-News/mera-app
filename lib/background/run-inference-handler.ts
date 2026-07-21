@@ -23,6 +23,7 @@ import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { getUnscoredSuggestionsWithFacts } from '@/lib/database/services/article-suggestion-service';
 import { buildRelevanceCalls } from '@/lib/mera-protocol/scoring-service';
+import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { contextForCycleReason } from '@/lib/llm/execution-context';
 
 export type CycleReason =
@@ -79,12 +80,30 @@ export async function runBackgroundCycle(
 
     // scoring-pass: enqueue all unscored eligible candidates + orphaned reasons,
     // then poll. The pipeline dedups ids already covered by a non-terminal
-    // batch, so re-firing this every ~10s during a sync is safe.
+    // batch, so re-firing this is safe.
+    //
+    // Route through the same sibling-election gate feed-sync uses (previously
+    // skipped on this path): the gate copies an already-scored sibling story's
+    // score onto its unscored duplicates (propagation) and elects a single
+    // representative per same-sync duplicate group, holding the rest back. We
+    // then enqueue only the elected ids that are ALSO eligible to be scored
+    // (title/description/facts present).
     const candidates = await getUnscoredSuggestionsWithFacts();
     const bundle = await buildRelevanceCalls(candidates);
-    const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
-    if (eligibleIds.length > 0) {
-      await pipeline.enqueueCandidates(eligibleIds);
+    const eligibleIds = new Set(bundle.eligibleCandidates.map((c) => c.id));
+    if (eligibleIds.size > 0) {
+      const inFlight = await pipeline.getNonTerminalCandidateIds();
+      const gate = await gateUnscoredForScoring(inFlight);
+      // Propagated rows are now terminal `Complete` — surface them immediately.
+      if (gate.propagatedCount > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const svc = require('@/lib/services/SuggestionSyncService') as typeof import('@/lib/services/SuggestionSyncService');
+        await svc.requestSuggestionsRefresh();
+      }
+      const toEnqueue = gate.enqueueIds.filter((id) => eligibleIds.has(id));
+      if (toEnqueue.length > 0) {
+        await pipeline.enqueueCandidates(toEnqueue);
+      }
     }
     await pipeline.enqueueOrphanedReasons();
     await pipeline.pollTick(context);

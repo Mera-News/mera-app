@@ -7,7 +7,7 @@ import logger from '@/lib/logger';
 AppScheduler.register({
   name: 'feed-sync',
   displayName: 'Feed Sync',
-  frequency: 10 * 1000,
+  frequency: 60 * 1000,
   triggers: ['app-foreground', 'network-reconnect'],
   conditions: [
     { type: 'network' },

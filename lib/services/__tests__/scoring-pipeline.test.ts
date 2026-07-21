@@ -66,7 +66,8 @@ const mockToBatchResult = jest.fn((...args: any[]) => ({ id: args[0].id, output:
 const mockReconstructLookups = jest.fn((..._args: any[]) => ({ chunkIdToCandidates: new Map() }));
 const mockGetExpoPushToken = jest.fn(() => 'ExponentPushToken[test]');
 const mockSetAsyncJobPhase = jest.fn();
-const mockSetFactStages = jest.fn();
+const mockSetBatchProgress = jest.fn();
+const mockMarkProcessingRunFinished = jest.fn();
 
 // ---- AppState (react-native) ----
 let mockAppStateCurrent: string = 'active';
@@ -171,7 +172,8 @@ jest.mock('@/lib/stores/for-you-store', () => ({
   useForYouStore: {
     getState: () => ({
       setAsyncJobPhase: mockSetAsyncJobPhase,
-      setFactStages: mockSetFactStages,
+      setBatchProgress: mockSetBatchProgress,
+      markProcessingRunFinished: mockMarkProcessingRunFinished,
     }),
   },
 }));
@@ -226,9 +228,9 @@ import {
   getPipelineStatus,
   derivePipelineUiState,
   getPipelineUiState,
-  derivePipelineFactStages,
+  derivePipelineBatchProgress,
   _resetForTests,
-  MIN_RUN_CANDIDATES,
+  BATCH_SIZE,
   MAX_UNSCORED_WAIT_MS,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
@@ -298,10 +300,12 @@ beforeEach(() => {
     }
     return Array.from(all).map((id) => candidate(id));
   });
-  // Default: well above MIN_RUN_CANDIDATES and no wait, so the min-run gate is
-  // a no-op for every test that isn't specifically exercising it.
-  mockCountUnscoredSuggestions.mockResolvedValue(MIN_RUN_CANDIDATES + 100);
-  mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
+  // Default: the oldest unscored row is well past MAX_UNSCORED_WAIT_MS, so the
+  // staleness escape fires and a trailing partial (<25) quantum still dispatches.
+  // This keeps every test that enqueues a small (<25) id set exercising the
+  // pipeline; the deferral-specific tests override this to a fresh timestamp.
+  mockCountUnscoredSuggestions.mockResolvedValue(BATCH_SIZE + 100);
+  mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW - MAX_UNSCORED_WAIT_MS - 1_000);
   mockGetScoredWithoutReasons.mockResolvedValue([]);
   mockSaveScoringResult.mockResolvedValue(undefined);
   mockSaveReason.mockResolvedValue(undefined);
@@ -426,30 +430,28 @@ describe('enqueueCandidates', () => {
   });
 });
 
-describe('enqueueCandidates: min-run gate', () => {
-  it('defers run creation below MIN_RUN_CANDIDATES with a fresh oldest-unscored row', async () => {
-    mockCountUnscoredSuggestions.mockResolvedValue(MIN_RUN_CANDIDATES - 15);
+describe('enqueueCandidates: strict quantum gate', () => {
+  it('defers a sub-25 quantum when the oldest unscored row is fresh (no run created)', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // age 0 — no escape
 
-    await enqueueCandidates(ids(5));
+    await enqueueCandidates(ids(5)); // 5 < BATCH_SIZE → trailing partial → deferred
 
     expect(currentRun()).toBeNull();
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 
-  it('creates a run when total accumulated unscored count reaches MIN_RUN_CANDIDATES, even with a small fresh-id call', async () => {
-    mockCountUnscoredSuggestions.mockResolvedValue(MIN_RUN_CANDIDATES + 5); // e.g. 20 pre-existing + 5 fresh
-    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
+  it('dispatches exactly floor(n/25) full quanta and defers the remainder (run creation)', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — no escape for the partial
 
-    await enqueueCandidates(ids(5)); // only 5 fresh ids in this call
+    await enqueueCandidates(ids(30)); // 30 = 1 full quantum (25) + 5 deferred
 
     const run = currentRun();
     expect(run).not.toBeNull();
     expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(BATCH_SIZE);
   });
 
-  it('creates a run below MIN_RUN_CANDIDATES once the oldest unscored row exceeds MAX_UNSCORED_WAIT_MS (escape)', async () => {
-    mockCountUnscoredSuggestions.mockResolvedValue(MIN_RUN_CANDIDATES - 17);
+  it('dispatches a sub-25 partial once the oldest unscored row exceeds MAX_UNSCORED_WAIT_MS (escape)', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW - MAX_UNSCORED_WAIT_MS - 1_000);
 
     await enqueueCandidates(ids(3));
@@ -457,25 +459,27 @@ describe('enqueueCandidates: min-run gate', () => {
     const run = currentRun();
     expect(run).not.toBeNull();
     expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(3);
   });
 
-  it('does not gate appends to an already-active run', async () => {
-    // Establish a run under gate-passing conditions (default beforeEach mocks).
-    await enqueueCandidates(ids(5));
+  it('applies the SAME quantum rule to appends: 30 fresh with an active run → one 25-batch appended, 5 deferred', async () => {
+    // Establish an active run with one full quantum.
+    await enqueueCandidates(ids(25, 'seed'));
     const before = currentRun().batches.length;
+    expect(before).toBe(1);
 
-    // Now starve the gate — if it were checked on append, this would defer.
-    mockCountUnscoredSuggestions.mockResolvedValue(1);
+    // Fresh oldest → the trailing partial must defer even on an append.
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
-    mockSendInferenceRequest.mockClear();
 
-    await enqueueCandidates(['extra-fresh-id']);
+    await enqueueCandidates(ids(30, 'more')); // 1 full quantum appended, 5 deferred
 
-    expect(currentRun().batches.length).toBe(before + 1);
+    const run = currentRun();
+    expect(run.batches).toHaveLength(before + 1);
+    const appended = run.batches[run.batches.length - 1];
+    expect(appended.candidateIds).toHaveLength(BATCH_SIZE);
   });
 
-  it('enqueueOrphanedReasons is ungated by the min-run threshold', async () => {
-    mockCountUnscoredSuggestions.mockResolvedValue(1);
+  it('enqueueOrphanedReasons is ungated by the quantum rule', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
     mockGetScoredWithoutReasons.mockResolvedValue([
       { ...candidate('o0'), relevance: 0.8 },
@@ -954,6 +958,59 @@ describe('live header progress push', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Finalize side-effects (Round-4 B): stamp markProcessingRunFinished + the
+// post-finalize kick that starts the next run when a full quantum still waits.
+// ---------------------------------------------------------------------------
+
+describe('finalize side-effects', () => {
+  async function finalizeSingleBatchRun() {
+    await enqueueCandidates(['a0']); // escape default → 1 batch
+    const batch = currentRun().batches[0];
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.1]]), // sub-threshold → no reasons → finalize
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    await handlePush(batch.requestId, 'foreground');
+  }
+
+  it('stamps markProcessingRunFinished when a cloud run finalizes', async () => {
+    await finalizeSingleBatchRun();
+    expect(currentRun()).toBeNull();
+    expect(mockMarkProcessingRunFinished).toHaveBeenCalled();
+  });
+
+  it('post-finalize kick starts the next run when ≥25 unscored still remain', async () => {
+    await finalizeSingleBatchRun();
+    expect(currentRun()).toBeNull();
+
+    // A full quantum of unscored rows is available for the kick to pick up.
+    mockGetUnscored.mockResolvedValue(
+      ids(25, 'kick').map((id) => candidate(id)),
+    );
+
+    // Fire the scheduled setTimeout(0) kick + flush its async body.
+    await jest.advanceTimersByTimeAsync(0);
+
+    const run = currentRun();
+    expect(run).not.toBeNull();
+    expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(25);
+  });
+
+  it('post-finalize kick does nothing when no unscored rows remain', async () => {
+    await finalizeSingleBatchRun();
+    // mockGetUnscored returns [] while no run exists (default impl) → kick no-ops.
+    await jest.advanceTimersByTimeAsync(0);
+    expect(currentRun()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Round-3 B1 — advisory judge (persist math at submit, notes-only decode,
 // calibration capture) + per-fact stage projection.
 // ---------------------------------------------------------------------------
@@ -1052,40 +1109,45 @@ describe('judge mode (advisory)', () => {
   });
 });
 
-describe('derivePipelineFactStages', () => {
-  const b = (over: Partial<PipelineRun['batches'][number]>): PipelineRun['batches'][number] => ({
-    batchId: 0,
-    phase: 'queued',
-    candidateIds: ['x'],
-    attempt: 0,
-    ...over,
+describe('derivePipelineBatchProgress', () => {
+  it('projects {done, total} article counts (done = relevance-known articles)', () => {
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([
+          { phase: 'done', candidateIds: ['a', 'b'] },
+          { phase: 'waiting-relevance', candidateIds: ['c'] },
+        ]),
+      ),
+    ).toEqual({ done: 2, total: 3 });
   });
 
-  it('one stage per fact, ordered as enqueued, with the right phase', () => {
-    const run = {
-      batches: [
-        b({ batchId: 0, factId: 'f1', factStatement: 'Fact one', phase: 'waiting-relevance' }),
-        b({ batchId: 1, factId: 'f1', factStatement: 'Fact one', phase: 'done' }),
-        b({ batchId: 2, factId: 'f2', factStatement: 'Fact two', phase: 'queued' }),
-        b({ batchId: 3, factId: null, factStatement: null, phase: 'done' }),
-      ],
-    } as unknown as PipelineRun;
-    expect(derivePipelineFactStages(run)).toEqual([
-      { factId: 'f1', statement: 'Fact one', phase: 'working' }, // one batch still in-flight
-      { factId: 'f2', statement: 'Fact two', phase: 'queued' },
-      { factId: null, statement: null, phase: 'done' },
-    ]);
+  it('counts relevance-known non-terminal batches toward done', () => {
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([
+          { phase: 'waiting-reasons', candidateIds: ['a', 'b'] },
+          { phase: 'waiting-relevance', candidateIds: ['c'] },
+        ]),
+      ),
+    ).toEqual({ done: 2, total: 3 });
   });
 
-  it('projects a legacy run with no factId as a single generic stage', () => {
-    const run = {
-      batches: [
-        b({ batchId: 0, phase: 'waiting-relevance' }),
-        b({ batchId: 1, phase: 'queued' }),
-      ],
-    } as unknown as PipelineRun;
-    expect(derivePipelineFactStages(run)).toEqual([
-      { factId: null, statement: null, phase: 'working' },
-    ]);
+  it('is {done:0,total:0} when every batch is terminal (idle)', () => {
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([{ phase: 'done', candidateIds: ['a'] }]),
+      ),
+    ).toEqual({ done: 0, total: 0 });
+  });
+
+  it('projects a legacy per-fact run identically (batches just counted)', () => {
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([
+          { phase: 'done', factId: 'f1', factStatement: 'Fact one', candidateIds: ['a'] },
+          { phase: 'waiting-relevance', factId: 'f2', factStatement: 'Fact two', candidateIds: ['b', 'c'] },
+        ]),
+      ),
+    ).toEqual({ done: 1, total: 3 });
   });
 });

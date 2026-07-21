@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 // Foreground polling, AppState listening, and recoverCycle calls have moved
 // to AppScheduler (lib/scheduler/AppScheduler.ts) and its registered tasks:
-//   - feed-sync-task.ts   — syncs the feed on a 5-minute cadence + foreground
+//   - feed-sync-task.ts   — syncs the feed on a 60-second cadence + foreground
 //   - inference-recover-task.ts — calls recoverCycle on foreground
 
 // House dark-mode accent (components/ui/gluestack-ui-provider/config.ts dark

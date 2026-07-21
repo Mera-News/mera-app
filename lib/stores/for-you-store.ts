@@ -98,16 +98,13 @@ export type ForYouSuggestion = {
     scoredAt?: number | null;
 };
 
-/** One fact's stage in the per-fact pipelined scoring run — the projection the
- *  status accordion + collapsed shimmer narrate. `phase`: 'queued' (batch not
- *  started), 'working' (a batch for this fact is in any in-flight/needs-submit
- *  phase), 'done' (every batch for this fact is terminal). The `null` factId
- *  entry is the merged tail (orphans + sub-3-candidate facts) / a legacy run's
- *  single generic stage. */
-export type PipelineFactStage = {
-    factId: string | null;
-    statement: string | null;
-    phase: 'queued' | 'working' | 'done';
+/** Honest article-scoring progress for the current cloud run (Round-4 B) —
+ *  `done` articles analysed of `total`. Drives the shimmer's "Analysing X of Y
+ *  articles" line + the status accordion's progress row. null when no run is
+ *  active. */
+export type PipelineBatchProgress = {
+    done: number;
+    total: number;
 };
 
 /** @deprecated Use syncStatusMessage instead */
@@ -154,11 +151,11 @@ interface ForYouState {
      *  denominator of the spinner text. 0 when idle. */
     asyncJobTotalCount: number;
 
-    // Per-fact pipelined-scoring stages (Round-3 B1). Written live by
+    // Honest cloud batch/article progress (Round-4 B). Written live by
     // scoring-pipeline as batches transition (pushUiProgress) and rehydrated at
-    // boot from the persisted run. Empty when no run / all terminal. Drives the
-    // fact-aware status accordion + the collapsed shimmer's cycling texts.
-    factStages: PipelineFactStage[];
+    // boot from the persisted run. null when no run / all terminal. Drives the
+    // shimmer's "Analysing X of Y articles" line + the status accordion.
+    batchProgress: PipelineBatchProgress | null;
 
     // Sync status — set by FeedSyncMachine, read by UI
     syncStatusMessage: SyncStatusMessage | null;
@@ -206,7 +203,7 @@ interface ForYouState {
         totalCount?: number,
     ) => void;
     setAsyncJobProgress: (processedCount: number, totalCount: number) => void;
-    setFactStages: (stages: PipelineFactStage[]) => void;
+    setBatchProgress: (progress: PipelineBatchProgress | null) => void;
     clearData: () => Promise<void>;
     pruneOrphanedData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
@@ -237,7 +234,7 @@ const initialState = {
     asyncJobPhase: 'idle' as 'idle' | 'relevance' | 'reasons',
     asyncJobProcessedCount: 0,
     asyncJobTotalCount: 0,
-    factStages: [] as PipelineFactStage[],
+    batchProgress: null as PipelineBatchProgress | null,
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
     scoringError: null as ScoringErrorKind | null,
@@ -360,7 +357,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setAsyncJobProgress: (processedCount, totalCount) =>
         set({ asyncJobProcessedCount: processedCount, asyncJobTotalCount: totalCount }),
 
-    setFactStages: (stages) => set({ factStages: stages }),
+    setBatchProgress: (progress) => set({ batchProgress: progress }),
 
     setSyncStatusMessage: (msg) => set({ syncStatusMessage: msg }),
 
@@ -472,14 +469,14 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             // Rehydrate the header's scoring phase/progress from the persisted
             // multi-batch pipeline run (replaces the legacy single-slot
             // getPendingAsyncJob read). idle when no run / all batches terminal.
-            const { getPipelineUiState, getPipelineFactStages } = await import(
+            const { getPipelineUiState, getPipelineBatchProgress } = await import(
                 '@/lib/services/scoring-pipeline'
             );
 
-            const [meta, pipelineUi, factStages] = await Promise.all([
+            const [meta, pipelineUi, batchProgress] = await Promise.all([
                 loadFeedMetadata(),
                 getPipelineUiState(),
-                getPipelineFactStages(),
+                getPipelineBatchProgress(),
             ]);
 
             const current = get().suggestions;
@@ -497,7 +494,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                     pipelineUi.phase === 'idle' ? 0 : pipelineUi.processedCount,
                 asyncJobTotalCount:
                     pipelineUi.phase === 'idle' ? 0 : pipelineUi.totalCount,
-                factStages: pipelineUi.phase === 'idle' ? [] : factStages,
+                batchProgress: pipelineUi.phase === 'idle' ? null : batchProgress,
             });
         } catch (err) {
             // Metadata hydration failed — leave defaults in place, but surface the error.

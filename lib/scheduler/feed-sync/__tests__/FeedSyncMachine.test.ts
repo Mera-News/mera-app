@@ -252,8 +252,10 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
     await startPromise;
 
     const states = mockPublishSyncStatus.mock.calls.map((c) => c[0]);
-    expect(states).toContain('fetching-topic-ids');
-    expect(states).toContain('diffing');
+    // Round-4 B: fetching-topic-ids / diffing are NOT published (silent until
+    // there's real work). The has-work path publishes from `hydrating` onward.
+    expect(states).not.toContain('fetching-topic-ids');
+    expect(states).not.toContain('diffing');
     expect(states).toContain('hydrating');
     // `persisting` is no longer a runtime state (merged into `hydrating`).
     expect(states).not.toContain('persisting');
@@ -399,17 +401,28 @@ describe('FeedSyncMachine — no new articles path (diffResult.missingIds is emp
     expect(mockStepScore).toHaveBeenCalled();
   });
 
-  it('transitions to scoring then done (no hydrating/persisting)', async () => {
+  it('publishes NOTHING transient on a no-op cycle (silent — no shimmer flicker)', async () => {
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
 
-    const states = mockPublishSyncStatus.mock.calls.map((c) => c[0]);
-    expect(states).toContain('scoring');
-    expect(states).toContain('done');
-    expect(states).not.toContain('hydrating');
-    expect(states).not.toContain('persisting');
+    // Round-4 B: a bare poll that finds no new articles is fully silent — no
+    // scoring/done/idle (nor fetching-topic-ids/diffing) publishes.
+    expect(mockPublishSyncStatus).not.toHaveBeenCalled();
+  });
+
+  it('still runs the internal transitions + setLastSyncAt + snapshot clear on a no-op cycle', async () => {
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepScore).toHaveBeenCalled();
+    expect(mockForYouStoreState.setLastSyncAt).toHaveBeenCalledWith(expect.any(Number));
+    expect(mockClearMachineSnapshot).toHaveBeenCalled();
+    // Internal bookkeeping still reaches the terminal `done` state.
+    expect(feedSyncMachine.state).toBe('done');
   });
 });
 
@@ -761,7 +774,10 @@ describe('FeedSyncMachine — no new articles path: clearMachineSnapshot and set
     );
   });
 
-  it('auto-transitions from done to idle after 2s in no-missing-ids path', async () => {
+  it('does NOT arm the 2s done→idle timer on the no-op path (stays done, no idle publish)', async () => {
+    // Round-4 B: the silent no-op path skips the 2s done→idle timer entirely, so
+    // no `idle` status is ever published and the machine simply rests at `done`
+    // until the next run resets it.
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
@@ -771,23 +787,8 @@ describe('FeedSyncMachine — no new articles path: clearMachineSnapshot and set
 
     await jest.advanceTimersByTimeAsync(2_000);
 
-    expect(feedSyncMachine.state).toBe('idle');
-    expect(mockPublishSyncStatus).toHaveBeenCalledWith('idle');
-  });
-
-  it('does NOT transition from done to idle in setTimeout if state has changed', async () => {
-    // Cover the `if (this._state === 'done')` guard — if state changed before timeout, skip
-    const ctx = makeCtx();
-    const startPromise = feedSyncMachine.start('persona-1', ctx);
-    await jest.advanceTimersByTimeAsync(0);
-    await startPromise;
-
     expect(feedSyncMachine.state).toBe('done');
-    // Manually force a state change before the timeout fires
-    // (In real scenarios this could happen if start() is called again)
-    // We just advance timers and verify it behaves correctly
-    await jest.advanceTimersByTimeAsync(2_000);
-    expect(feedSyncMachine.state).toBe('idle');
+    expect(mockPublishSyncStatus).not.toHaveBeenCalledWith('idle');
   });
 });
 

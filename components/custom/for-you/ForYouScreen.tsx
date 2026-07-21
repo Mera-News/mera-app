@@ -148,9 +148,13 @@ const MeraNewsScreen: React.FC = () => {
         syncStatusMessage.state !== 'failed' &&
         syncStatusMessage.state !== 'paused-offline';
 
-    // Any client-visible fetch/scoring work still in flight.
+    // Any client-visible fetch/scoring work still in flight. Round-4 B: dropped
+    // the `unscoredCount > 0` term — deliberately-deferred rows (a sub-25 quantum
+    // waiting for the next batch) are NOT "processing", so the shimmer no longer
+    // spins forever while they wait. The deferred rows surface as a static note
+    // via FeedStatusShimmer's `unscoredCount` prop instead.
     const isFeedProcessing =
-        isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing || unscoredCount > 0;
+        isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes).
@@ -439,6 +443,7 @@ const MeraNewsScreen: React.FC = () => {
                     processing={isFeedProcessing}
                     error={scoringError !== null}
                     dailyLimited={isDailyLimited}
+                    unscoredCount={unscoredCount}
                     processedCount={articleCount}
                     analysedCount={analysedCount}
                     relevantCount={relevantCount}

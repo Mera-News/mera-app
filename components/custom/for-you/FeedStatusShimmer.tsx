@@ -2,11 +2,10 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import type { PipelineFactStage } from '@/lib/stores/for-you-store';
 import {
     useForYouAsyncJobPhase,
+    useForYouBatchProgress,
     useForYouDeviceProcessing,
-    useForYouFactStages,
 } from '@/lib/stores/selectors';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
@@ -35,28 +34,15 @@ const HEADLINE_CYCLE_MS = 5000;
 
 /**
  * The collapsed row's cycling status line while `mode === 'processing'`. Pool =
- * the active fact-stage lines (from the per-fact pipelined run, if any) followed
- * by the generic stage headlines for the current phase — same rotation pattern
- * the old SyncProgressForYouBanner used (index + setInterval, faded in/out per
- * index), just re-homed here since that banner is no longer mounted.
+ * the generic stage headlines for the current phase (Round-4 B removed the
+ * per-fact stage lines) — same rotation pattern the old SyncProgressForYouBanner
+ * used (index + setInterval, faded in/out per index).
  */
 function ProcessingHeadline() {
     const { t } = useTranslation();
     const tAny = t as any;
     const asyncJobPhase = useForYouAsyncJobPhase();
-    const factStages = useForYouFactStages();
     const { isDeviceProcessing } = useForYouDeviceProcessing();
-
-    const otherStoriesLabel = t('feed.factStages.otherStories');
-
-    const factLines = factStages
-        .filter((stage: PipelineFactStage) => stage.phase === 'working')
-        .map((stage) => {
-            const fact = stage.statement ?? otherStoriesLabel;
-            return asyncJobPhase === 'reasons'
-                ? (tAny('feed.factStages.writing', { fact }) as string)
-                : (tAny('feed.factStages.reading', { fact }) as string);
-        });
 
     const stageKey =
         asyncJobPhase === 'reasons' ? 'cloudReasons'
@@ -67,9 +53,7 @@ function ProcessingHeadline() {
         returnObjects: true,
         defaultValue: [],
     });
-    const genericLines = Array.isArray(rawGenericLines) ? (rawGenericLines as string[]) : [];
-
-    const pool = [...factLines, ...genericLines];
+    const pool = Array.isArray(rawGenericLines) ? (rawGenericLines as string[]) : [];
 
     const [index, setIndex] = useState(0);
     useEffect(() => {
@@ -80,7 +64,6 @@ function ProcessingHeadline() {
             HEADLINE_CYCLE_MS,
         );
         return () => clearInterval(interval);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pool.length, stageKey]);
 
     const line = pool[index] ?? pool[0] ?? '';
@@ -95,7 +78,23 @@ function ProcessingHeadline() {
     );
 }
 
-type ShimmerMode = 'processing' | 'error' | 'limited' | 'idle';
+/** Honest per-run progress line while processing — "Analysing X of Y articles",
+ *  read from the live batch progress. Renders nothing until a total is known. */
+function AnalysingProgress() {
+    const { t } = useTranslation();
+    const batchProgress = useForYouBatchProgress();
+    if (!batchProgress || batchProgress.total <= 0) return null;
+    return (
+        <Text size="xs" className="text-typography-500 leading-4 mt-1">
+            {t('feed.analysingProgress', {
+                done: batchProgress.done,
+                total: batchProgress.total,
+            })}
+        </Text>
+    );
+}
+
+type ShimmerMode = 'processing' | 'error' | 'limited' | 'deferred' | 'idle';
 
 interface FeedStatusShimmerProps extends FeedStatusDetailsProps {
     /** Feed work in flight — animated indeterminate bar. Highest priority. */
@@ -104,6 +103,10 @@ interface FeedStatusShimmerProps extends FeedStatusDetailsProps {
     readonly error: boolean;
     /** Over the daily delivery cap — static amber tint (only when not processing). */
     readonly dailyLimited: boolean;
+    /** Unscored rows waiting for the next analysis batch — when nothing else is
+     *  in flight, shows a static (non-animated) "waiting for the next batch"
+     *  note so the honest shimmer doesn't spin during deliberate deferral. */
+    readonly unscoredCount: number;
 }
 
 function IndeterminateSegment() {
@@ -163,6 +166,7 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
     processing,
     error,
     dailyLimited,
+    unscoredCount,
     ...detailProps
 }) => {
     const { t } = useTranslation();
@@ -182,9 +186,23 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
             ? 'error'
             : dailyLimited
                 ? 'limited'
-                : 'idle';
+                : unscoredCount > 0
+                    ? 'deferred'
+                    : 'idle';
 
     if (mode === 'idle') return null;
+
+    // Deferred: rows are waiting for the next analysis batch but no work is in
+    // flight — a static one-line note, no animated bar (honest shimmer).
+    if (mode === 'deferred') {
+        return (
+            <Animated.View layout={LinearTransition} style={{ marginTop: 8 }}>
+                <Text size="xs" className="text-typography-400 leading-4">
+                    {t('feed.waitingForNextBatch', { count: unscoredCount })}
+                </Text>
+            </Animated.View>
+        );
+    }
 
     const trackColor =
         mode === 'processing'
@@ -228,6 +246,7 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
                 </Pressable>
             </HStack>
 
+            {mode === 'processing' && <AnalysingProgress />}
             {mode === 'processing' && <ProcessingHeadline />}
 
             {expanded && (

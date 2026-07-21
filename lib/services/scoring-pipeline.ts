@@ -29,7 +29,6 @@ import {
   rebuildE2EEContext,
 } from '@/lib/e2ee/e2ee-service';
 import {
-  countUnscoredSuggestions,
   getOldestUnscoredCreatedAt,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
@@ -41,12 +40,6 @@ import {
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
 import {
-  groupCandidatesByPrimaryFact,
-  type FactGroupingCandidate,
-  type FactBatchSpec,
-} from '@/lib/services/fact-batching';
-import { buildCalibrationCase } from '@/lib/news-harness/scoring-engine';
-import {
   bucketScores,
   buildReasonCallsForSubset,
   buildRelevanceCalls,
@@ -57,6 +50,7 @@ import {
 } from '@/lib/mera-protocol/scoring-service';
 import { computeMathStage, effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import {
+  buildCalibrationCase,
   buildJudgeCalls,
   decodeJudgeResults,
 } from '@/lib/news-harness/scoring-engine';
@@ -90,9 +84,11 @@ import { propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagati
 
 const TAG = '[scoring-pipeline]';
 
-// Round-3 B1: factId/factStatement/judgeMode/judgedIds are now PROPER persisted
-// fields on PipelineBatch (the `BatchWithJudge` cast + the Wave-8 swipe-deck
-// release queue it also carried are gone).
+// Round-4 B: cloud scoring dispatches in STRICT 25-article quanta. The former
+// per-fact batch grouping (factId/factStatement) is gone — batches are FIFO
+// quanta of BATCH_SIZE eligible candidates in delivery order. factId/
+// factStatement remain OPTIONAL persisted fields (always null for new batches)
+// only so a run persisted by an older build still parses.
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -100,14 +96,13 @@ const TAG = '[scoring-pipeline]';
 
 export const BATCH_SIZE = 25;
 export const MAX_IN_FLIGHT = 3;
-/** Minimum accumulated unscored count before a fresh run is created — below
- *  this, every enqueue would pay full run overhead (E2EE keypair mint, run
- *  lifecycle, foreground poller) for a trickle. See MAX_UNSCORED_WAIT_MS for
- *  the escape that prevents this from hiding news indefinitely. */
-export const MIN_RUN_CANDIDATES = 25;
-/** Escape hatch: if the oldest unscored row has been waiting this long, start
- *  a run anyway even below MIN_RUN_CANDIDATES — unscored articles don't
- *  render, so a strict count gate could hide news for hours on slow days. */
+/** Legacy alias for BATCH_SIZE, kept exported for back-compat. The quantum rule
+ *  (dispatch every full BATCH_SIZE, defer the remainder) uses BATCH_SIZE. */
+export const MIN_RUN_CANDIDATES = BATCH_SIZE;
+/** Escape hatch: if the oldest unscored row has been waiting this long, also
+ *  dispatch the trailing partial (<BATCH_SIZE) quantum — unscored articles
+ *  don't render, so a strict quantum gate could hide news for hours on slow
+ *  days. */
 export const MAX_UNSCORED_WAIT_MS = 30 * 60_000;
 const SUBMIT_STUCK_MS = 60_000;
 const BATCH_STALE_MS = 15 * 60_000;
@@ -147,6 +142,12 @@ function isWaiting(phase: BatchPhase): boolean {
 
 let drainInFlight: Promise<void> | null = null;
 let finalizeInFlight: Promise<void> | null = null;
+// Post-finalize kick: after a run finalizes, if a full quantum of unscored rows
+// still remains we want the NEXT run to start immediately rather than waiting
+// for the next discovery tick. Scheduled as a macrotask so it runs AFTER the
+// finalize/drain single-flights have fully settled (calling drain/finalize from
+// inside their own in-flight promise would be swallowed / deadlock).
+let postFinalizeKickTimer: ReturnType<typeof setTimeout> | null = null;
 // Last poll timestamp per batchId — enforces PER_BATCH_POLL_SPACING_MS. Kept in
 // memory (not persisted) so a fresh process simply re-polls.
 const lastPolledAt = new Map<number, number>();
@@ -169,7 +170,6 @@ function makeQueuedBatch(
   batchId: number,
   candidateIds: string[],
   reasonsOnly = false,
-  fact?: { factId: string | null; factStatement: string | null },
 ): PipelineBatch {
   return {
     batchId,
@@ -177,64 +177,7 @@ function makeQueuedBatch(
     candidateIds,
     attempt: 0,
     ...(reasonsOnly ? { reasonsOnly: true } : {}),
-    ...(fact ? { factId: fact.factId, factStatement: fact.factStatement } : {}),
   };
-}
-
-/**
- * Round-3 B1: build per-fact batch specs for a set of fresh candidate ids.
- * Loads the candidates' grouping metadata + the persona topic/fact snapshots,
- * then groups by primary fact (fact-batching.ts). Fail-open: any load error (or
- * a missing snapshot in tests) yields empty snapshots ⇒ every id lands in one
- * `factId: null` tail, i.e. plain sequential chunks — the pre-Round-3 layout.
- */
-async function planFactBatches(freshIds: string[]): Promise<FactBatchSpec[]> {
-  let metaById = new Map<string, FactGroupingCandidate>();
-  let topics = new Map<string, import('@/lib/news-harness/feed-select').TopicSnapshot>();
-  let facts = new Map<string, import('@/lib/news-harness/feed-select').FactSnapshot>();
-  try {
-    const candidates = await getUnscoredSuggestionsWithFacts();
-    const freshSet = new Set(freshIds);
-    for (const c of candidates) {
-      if (!freshSet.has(c.id)) continue;
-      metaById.set(c.id, {
-        id: c.id,
-        matchedTopics: parseMatchedTopicsForGrouping(c.meta?.matchedTopicsJson ?? null),
-        relatedFacts: c.relatedFacts,
-      });
-    }
-    // Lazy require: section-snapshots pulls the persona DB services, kept off
-    // the module load path (and mockable in tests).
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { loadSectionSnapshots } = require('@/lib/stores/section-snapshots') as typeof import('@/lib/stores/section-snapshots');
-    const snap = await loadSectionSnapshots();
-    topics = snap.topics;
-    facts = snap.facts;
-  } catch (err) {
-    logger.captureException(err, {
-      tags: { service: 'scoring-pipeline', step: 'plan-fact-batches' },
-    });
-    // Fall through with whatever we have (empty ⇒ single tail).
-    metaById = metaById ?? new Map();
-  }
-  return groupCandidatesByPrimaryFact(freshIds, metaById, topics, facts, BATCH_SIZE);
-}
-
-/** Parse `matched_topics_json` → [{ topicId, text }] for fact ownership. */
-function parseMatchedTopicsForGrouping(
-  json: string | null,
-): { topicId: string | null; text: string }[] {
-  if (!json) return [];
-  try {
-    const raw = JSON.parse(json);
-    if (!Array.isArray(raw)) return [];
-    return raw.map((m: { topicId?: string | null; text?: string }) => ({
-      topicId: typeof m?.topicId === 'string' && m.topicId.length > 0 ? m.topicId : null,
-      text: typeof m?.text === 'string' ? m.text : '',
-    }));
-  } catch {
-    return [];
-  }
 }
 
 export function nonTerminalCandidateIds(run: PipelineRun): Set<string> {
@@ -347,77 +290,41 @@ export async function getPipelineUiState(): Promise<PipelineUiState> {
 }
 
 // ---------------------------------------------------------------------------
-// Per-fact stage projection (Round-3 B1) — the fact-aware status accordion +
-// collapsed shimmer read this.
+// Batch progress projection (Round-4 B) — the honest "Analysing X of Y
+// articles" line in the shimmer + the status accordion read this.
 // ---------------------------------------------------------------------------
 
-/**
- * Project a run onto its per-fact stages, ordered as the batches were enqueued
- * (fact weight desc; the `null` tail last). One entry per distinct
- * factId (the `null` tail collapses to a single "other stories" stage; a legacy
- * schema-1 run with no factId projects as ONE generic stage). `phase`:
- *   - 'done'    — every batch for this fact is terminal.
- *   - 'working' — at least one batch is in-flight / needs-submit (submitting-*,
- *                 waiting-*, needs-reasons-submit).
- *   - 'queued'  — otherwise (all its non-terminal batches are still 'queued').
- */
-export function derivePipelineFactStages(
-  run: PipelineRun,
-): import('@/lib/stores/for-you-store').PipelineFactStage[] {
-  // factId key ('' sentinel for the null tail) → aggregate state, first-seen order.
-  const order: (string | null)[] = [];
-  const seen = new Set<string>();
-  const statementByKey = new Map<string, string | null>();
-  const anyWorking = new Map<string, boolean>();
-  const anyNonTerminal = new Map<string, boolean>();
-
-  const keyOf = (factId: string | null | undefined) =>
-    factId == null ? '' : factId;
-
-  for (const b of run.batches) {
-    const factId = b.factId ?? null;
-    const key = keyOf(factId);
-    if (!seen.has(key)) {
-      seen.add(key);
-      order.push(factId);
-      statementByKey.set(key, b.factStatement ?? null);
-    }
-    const terminal = isTerminal(b.phase);
-    if (!terminal) anyNonTerminal.set(key, true);
-    const working =
-      !terminal &&
-      (b.phase === 'submitting-relevance' ||
-        b.phase === 'submitting-reasons' ||
-        b.phase === 'waiting-relevance' ||
-        b.phase === 'waiting-reasons' ||
-        b.phase === 'needs-reasons-submit');
-    if (working) anyWorking.set(key, true);
-  }
-
-  return order.map((factId) => {
-    const key = keyOf(factId);
-    const phase: 'queued' | 'working' | 'done' = anyWorking.get(key)
-      ? 'working'
-      : anyNonTerminal.get(key)
-        ? 'queued'
-        : 'done';
-    return { factId, statement: statementByKey.get(key) ?? null, phase };
-  });
+/** How much of the current run has finished, in ARTICLE counts. `done` counts
+ *  the articles whose relevance is known (relevance-known batches: past the
+ *  pre-relevance phases; reasonsOnly + terminal batches count too — same
+ *  numerator as {@link derivePipelineUiState}); `total` counts every candidate
+ *  article across all batches. `null` when no run is active. */
+export interface PipelineBatchProgress {
+  done: number;
+  total: number;
 }
 
-/** Read the persisted run and project its per-fact stages. Empty when no run
- *  exists. Consumed by the store's boot hydration. */
-export async function getPipelineFactStages(): Promise<
-  import('@/lib/stores/for-you-store').PipelineFactStage[]
-> {
+/** Project a run onto {done, total} article counts. Reuses the header UI
+ *  projection so the shimmer's "Analysing done/total" is in lockstep with the
+ *  cloud-progress row. A legacy per-fact run projects identically (batches are
+ *  just counted). */
+export function derivePipelineBatchProgress(run: PipelineRun): PipelineBatchProgress {
+  const ui = derivePipelineUiState(run);
+  return { done: ui.processedCount, total: ui.totalCount };
+}
+
+/** Read the persisted run and project its batch progress. `null` when no run
+ *  exists / every batch is terminal. Consumed by the store's boot hydration. */
+export async function getPipelineBatchProgress(): Promise<PipelineBatchProgress | null> {
   const snap = await getPipeline();
-  if (!snap) return [];
-  return derivePipelineFactStages(snap.run);
+  if (!snap) return null;
+  const ui = derivePipelineUiState(snap.run);
+  if (ui.phase === 'idle') return null;
+  return { done: ui.processedCount, total: ui.totalCount };
 }
 
-/** Best-effort push of the derived phase + progress + per-fact stages into the
- *  For-You header store. Lazily-required (like refreshUi) to avoid a load-time
- *  import cycle. */
+/** Best-effort push of the derived phase + progress into the For-You header
+ *  store. Lazily-required (like refreshUi) to avoid a load-time import cycle. */
 async function pushUiProgress(): Promise<void> {
   try {
     const snap = await getPipeline();
@@ -429,10 +336,10 @@ async function pushUiProgress(): Promise<void> {
     const store = useForYouStore.getState();
     if (ui.phase === 'idle') {
       store.setAsyncJobPhase('idle');
-      store.setFactStages([]);
+      store.setBatchProgress(null);
     } else {
       store.setAsyncJobPhase(ui.phase, ui.processedCount, ui.totalCount);
-      store.setFactStages(snap ? derivePipelineFactStages(snap.run) : []);
+      store.setBatchProgress({ done: ui.processedCount, total: ui.totalCount });
     }
   } catch (err) {
     logger.captureException(err, {
@@ -454,10 +361,16 @@ function makeRunId(): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Add fresh unscored candidate ids into the pipeline as ≤25-article relevance
- * batches. Feed-sync re-fires this every ~10s, so ids already present in a
- * non-terminal batch are deduped out. Creates the run (minting the E2EE
- * keypair) if none exists, else appends.
+ * Add fresh unscored candidate ids into the pipeline in STRICT 25-article
+ * quanta (Round-4 B). ids already in a non-terminal batch are deduped out; the
+ * remaining fresh ids (delivery order preserved) are chunked into BATCH_SIZE
+ * quanta. Every FULL quantum is dispatched immediately — creating the run
+ * (minting the E2EE keypair) if none exists, else appending to it. The trailing
+ * partial (<BATCH_SIZE) stays unscored/deferred and re-enters the next cycle
+ * (greedy accumulation), UNLESS the oldest unscored row has aged past
+ * MAX_UNSCORED_WAIT_MS, in which case the partial is dispatched too so a slow
+ * trickle can't hide news for hours. The rule is uniform for run creation AND
+ * appends — no foreground special-case.
  */
 export async function enqueueCandidates(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
@@ -473,51 +386,53 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
     return;
   }
 
-  // Gate RUN CREATION only — appending to an already-running run is unchanged
-  // (that run is already paying its overhead). Below MIN_RUN_CANDIDATES total
-  // accumulated unscored rows, defer creating a run unless the oldest unscored
-  // row has aged past MAX_UNSCORED_WAIT_MS (escape so a slow trickle can't
-  // hide news for hours). Rows stay `unscored` and re-enter the next cycle.
-  if (!snap) {
-    const totalUnscored = await countUnscoredSuggestions();
-    if (totalUnscored < MIN_RUN_CANDIDATES) {
-      const oldestCreatedAt = await getOldestUnscoredCreatedAt();
-      const oldestAgeMs =
-        oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : 0;
-      if (oldestCreatedAt === null || oldestAgeMs < MAX_UNSCORED_WAIT_MS) {
-        logger.info(
-          `${TAG} enqueueCandidates: deferred: ${totalUnscored}/${MIN_RUN_CANDIDATES} unscored, oldest ${Math.round(oldestAgeMs / 60_000)}min`,
-        );
-        return;
-      }
+  // FIFO 25-article quanta. chunkIds yields at most one trailing partial (the
+  // last chunk); dispatch every full quantum, defer the partial unless the
+  // staleness escape fires.
+  const chunks = chunkIds(fresh, BATCH_SIZE);
+  const dispatch: string[][] = [];
+  let deferred = 0;
+  for (const chunk of chunks) {
+    if (chunk.length === BATCH_SIZE) {
+      dispatch.push(chunk);
+      continue;
+    }
+    // Trailing partial (<BATCH_SIZE).
+    const oldestCreatedAt = await getOldestUnscoredCreatedAt();
+    const oldestAgeMs =
+      oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : 0;
+    if (oldestCreatedAt !== null && oldestAgeMs >= MAX_UNSCORED_WAIT_MS) {
       logger.info(
-        `${TAG} enqueueCandidates: min-run escape: oldest unscored waited ${Math.round(oldestAgeMs / 60_000)}min`,
+        `${TAG} enqueueCandidates: staleness escape — dispatching partial batch of ${chunk.length} (oldest unscored waited ${Math.round(oldestAgeMs / 60_000)}min)`,
+      );
+      dispatch.push(chunk);
+    } else {
+      deferred = chunk.length;
+      logger.info(
+        `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${BATCH_SIZE} quantum, oldest ${Math.round(oldestAgeMs / 60_000)}min)`,
       );
     }
   }
 
-  // Round-3 B1: group the fresh ids into per-fact batch specs (fact groups by
-  // weight desc, sub-3-candidate facts + orphans merged into a factId:null
-  // tail). Degrades to plain sequential chunks when no persona metadata exists.
-  const specs = await planFactBatches(fresh);
+  if (dispatch.length === 0) {
+    if (snap) {
+      await drain('foreground');
+      ensurePoller();
+    }
+    return;
+  }
+
   logger.info(
-    `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${specs.length} batch(es) across ${
-      new Set(specs.map((s) => s.factId)).size
-    } fact group(s) (run ${snap ? 'exists' : 'new'})`,
+    `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${dispatch.length} batch(es) dispatched, ${deferred} deferred (run ${snap ? 'exists' : 'new'})`,
   );
 
-  const buildFromSpecs = (base: number): PipelineBatch[] =>
-    specs.map((s, i) =>
-      makeQueuedBatch(base + i, s.ids, false, {
-        factId: s.factId,
-        factStatement: s.factStatement,
-      }),
-    );
+  const build = (base: number): PipelineBatch[] =>
+    dispatch.map((c, i) => makeQueuedBatch(base + i, c, false));
 
   if (!snap) {
-    await createRunWithBatches(buildFromSpecs);
+    await createRunWithBatches(build);
   } else {
-    await appendBatches(buildFromSpecs);
+    await appendBatches(build);
   }
 
   await drain('foreground');
@@ -1647,6 +1562,58 @@ async function doFinalize(run: PipelineRun): Promise<void> {
   await refreshUi();
   await clearPipeline();
   stopPoller();
+
+  // Stamp the "last finished processing run" timestamp — cloud runs previously
+  // never did this (only the on-device path in SuggestionSyncService did), so
+  // the header's "updated X ago" stayed stale after a cloud run. Lazy-require
+  // (like pushUiProgress) to avoid a load-time import cycle.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
+    useForYouStore.getState().markProcessingRunFinished();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'finalize-mark-finished' },
+    });
+  }
+
+  // Post-finalize kick: if a full quantum of unscored rows still remains (or the
+  // staleness escape applies), start the next run right away instead of waiting
+  // for the next discovery tick. Scheduled as a macrotask so it runs after this
+  // finalize (and any outer drain) has settled.
+  schedulePostFinalizeKick();
+}
+
+/** Schedule a one-shot post-finalize kick (idempotent while pending). Runs on a
+ *  fresh macrotask so the drain/finalize single-flights are clear before it
+ *  re-enters the enqueue path. */
+function schedulePostFinalizeKick(): void {
+  if (postFinalizeKickTimer) return;
+  postFinalizeKickTimer = setTimeout(() => {
+    postFinalizeKickTimer = null;
+    void runPostFinalizeKick();
+  }, 0);
+}
+
+/** Gather the still-unscored eligible rows and re-enqueue them. enqueueCandidates
+ *  itself applies the strict quantum gate, so this dispatches a fresh run only
+ *  when ≥ BATCH_SIZE remain (or the staleness escape fires). */
+async function runPostFinalizeKick(): Promise<void> {
+  try {
+    // A concurrent trigger (feed-sync / scoring-pass) may already have started a
+    // run between finalize and now — enqueueCandidates dedups + gates, so this
+    // is safe either way.
+    const candidates = await getUnscoredSuggestionsWithFacts();
+    const eligibleIds = candidates
+      .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
+      .map((c) => c.id);
+    if (eligibleIds.length === 0) return;
+    await enqueueCandidates(eligibleIds);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'post-finalize-kick' },
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1858,6 +1825,10 @@ export function _resetForTests(): void {
   finalizeInFlight = null;
   lastPolledAt.clear();
   pollTickRunning = false;
+  if (postFinalizeKickTimer) {
+    clearTimeout(postFinalizeKickTimer);
+    postFinalizeKickTimer = null;
+  }
   if (pollerTimer) {
     clearInterval(pollerTimer);
     pollerTimer = null;

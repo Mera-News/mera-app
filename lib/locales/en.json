@@ -192,6 +192,9 @@
       "writing": "Writing notes for {{fact}}…",
       "otherStories": "other stories"
     },
+    "analysingProgress": "Analysing {{done}} of {{total}} articles",
+    "waitingForNextBatch_one": "{{count}} new article waiting for the next analysis batch",
+    "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch",
     "moreSources_one": "+{{count}} source",
     "moreSources_other": "+{{count}} sources"
   },

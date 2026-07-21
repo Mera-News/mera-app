@@ -61,13 +61,13 @@ export interface PipelineBatch {
   reasonsOnly?: boolean;
   /** ≤25 ids; array order is the decode join key for `score:N` results. */
   candidateIds: string[];
-  /** Round-3 B1: the primary fact this batch's candidates were grouped under
-   *  (strongest owning fact via matched-topic weights). `null` for the merged
-   *  tail batch (orphans + sub-3-candidate facts) and for legacy runs. Drives the
-   *  per-fact status accordion + fact-stage projection. */
+  /** LEGACY (Round-3 B1): the primary fact this batch's candidates were grouped
+   *  under. Round-4 B removed per-fact grouping — batches are FIFO 25-article
+   *  quanta, so this is always null on new batches. Kept optional only so a run
+   *  persisted by an older build still parses. */
   factId?: string | null;
-  /** Human fact statement for `factId` (the accordion label). Null for the tail
-   *  batch / legacy runs. */
+  /** LEGACY (Round-3 B1): human fact statement for `factId`. Always null on new
+   *  batches (see `factId`). */
   factStatement?: string | null;
   /** Round-3 B1: true when this batch runs the combined judge+notes cloud job
    *  (all candidates are math-mode). A proper persisted field now (previously a
@@ -100,11 +100,12 @@ export interface PipelineBatch {
 }
 
 export interface PipelineRun {
-  /** Run-shape version. Bumped to 2 in Round-3 B1 (per-fact batches gained
-   *  factId/factStatement/judgeMode/judgedIds). A persisted schema-1 run still
-   *  parses cleanly (the new fields are all optional) and simply projects as one
-   *  generic fact-stage — RUN_ABANDON_MS bounds its lifetime. */
-  schema: 1 | 2;
+  /** Run-shape version. Bumped to 3 in Round-4 B (per-fact batch grouping
+   *  removed — batches are FIFO 25-article quanta; factId/factStatement are now
+   *  always null on new batches). A persisted schema-1/2 run still parses cleanly
+   *  (factId/factStatement are optional) and simply projects via batch counts —
+   *  RUN_ABANDON_MS bounds its lifetime. */
+  schema: 1 | 2 | 3;
   /** Unique identifier for the run. */
   runId: string;
   startedAt: number;
@@ -207,7 +208,7 @@ export async function createPipeline(
     );
   }
   await secureStore.setItemAsync(PIPELINE_PRIVKEY_KEY, privKeyHex);
-  const full: PipelineRun = { ...run, schema: 2, version: 1 };
+  const full: PipelineRun = { ...run, schema: 3, version: 1 };
   await setSetting(PIPELINE_KEY, JSON.stringify(full));
 }
 

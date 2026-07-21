@@ -81,11 +81,11 @@ export const useForYouAsyncJobProcessedCount = () =>
 export const useForYouAsyncJobTotalCount = () =>
     useForYouStore((state) => state.asyncJobTotalCount);
 
-/** Reactive selector for the per-fact pipelined-scoring stages (Round-3 B1).
- *  Empty when no run is active. Drives the fact-aware status accordion + the
- *  collapsed shimmer's cycling texts. */
-export const useForYouFactStages = () =>
-    useForYouStore((state) => state.factStages);
+/** Reactive selector for the honest cloud batch/article progress (Round-4 B).
+ *  null when no run is active. Drives the shimmer's "Analysing X of Y articles"
+ *  line + the status accordion's progress row. */
+export const useForYouBatchProgress = () =>
+    useForYouStore((state) => state.batchProgress);
 
 /** Epoch ms of the last finished processing run (cloud or on-device).
  *  null when no run has ever finished on this device. */
