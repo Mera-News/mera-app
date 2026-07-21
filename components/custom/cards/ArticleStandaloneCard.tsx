@@ -35,6 +35,7 @@ const ArticleStandaloneCardImpl: React.FC<ArticleStandaloneCardProps> = ({
     pubDate: article.pubDate ?? null,
     publicationName: article.publicationSource?.publication_name ?? null,
     countryCode: article.publicationSource?.country_code ?? null,
+    category: article.category ?? null,
     ...subjectExtras,
   };
 

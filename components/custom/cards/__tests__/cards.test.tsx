@@ -284,6 +284,16 @@ describe('ArticleStandaloneCard', () => {
     );
     expect(getByLabelText('articleFeedback.likeLabel')).toBeTruthy();
   });
+
+  it('threads the article category + publication name into the persisted context snapshot', async () => {
+    const { getByLabelText } = render(
+      <ArticleStandaloneCard article={makeArticle({ category: 'Politics' })} onPress={jest.fn()} />,
+    );
+    fireEvent.press(getByLabelText('articleFeedback.dislikeLabel'));
+    await waitFor(() => expect(mockRecordArticleFeedback).toHaveBeenCalled());
+    const arg = mockRecordArticleFeedback.mock.calls[0][0];
+    expect(JSON.parse(arg.contextJson)).toMatchObject({ category: 'Politics', publication: 'Die Zeit' });
+  });
 });
 
 describe('ArticleStandaloneCompactCard', () => {

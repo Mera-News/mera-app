@@ -38,6 +38,11 @@ export interface FeedbackSubject {
   pubDate?: string | null;
   publicationName?: string | null;
   countryCode?: string | null;
+  /** Article category label (e.g. "Politics"), when the source data carries one
+   *  (standalone `NewsArticle.category`; `ForYouSuggestion` has no category
+   *  field, so suggestion-origin subjects leave this unset). Feeds the
+   *  feedback-digest's category-suppression candidates via `buildContextJson`. */
+  category?: string | null;
   /** Explore scope key (city/region/country) — wired by the Explore wave. */
   scopeKey?: string;
   /** Cross-run stable story id, when known. */
@@ -62,6 +67,11 @@ export function buildContextJson(subject: FeedbackSubject): string | null {
   if (subject.scopeKey) snapshot.scopeKey = subject.scopeKey;
   if (subject.stableClusterId) snapshot.stableClusterId = subject.stableClusterId;
   if (subject.eventType) snapshot.eventType = subject.eventType;
+  if (subject.category) snapshot.category = subject.category;
+  // Keyed `publication` (not `publicationName`) to match the field name the
+  // feedback-digest's DigestSignalContext / optimisation-plan-service reader
+  // already expect.
+  if (subject.publicationName) snapshot.publication = subject.publicationName;
   if (typeof subject.relevance === 'number') snapshot.relevance = subject.relevance;
   if (subject.matchedTopics && subject.matchedTopics.length > 0) {
     snapshot.matchedTopics = subject.matchedTopics;

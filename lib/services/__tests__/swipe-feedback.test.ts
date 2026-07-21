@@ -110,8 +110,9 @@ describe('recordSwipeVerdict', () => {
       origin: 'suggestion',
       surface: 'swipe',
     });
-    // Context snapshot carries the matched topics + relevance.
-    expect(JSON.parse(arg.contextJson)).toMatchObject({ relevance: 0.8 });
+    // Context snapshot carries the matched topics + relevance + publication
+    // (keyed `publication`, matching the digest's DigestSignalContext).
+    expect(JSON.parse(arg.contextJson)).toMatchObject({ relevance: 0.8, publication: 'The Hindu' });
   });
 });
 
