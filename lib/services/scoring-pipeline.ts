@@ -30,6 +30,7 @@ import {
 } from '@/lib/e2ee/e2ee-service';
 import {
   getOldestUnscoredCreatedAt,
+  getScoredDonorRows,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
   saveReason,
@@ -81,6 +82,10 @@ import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';
 // so there is no cycle (this module already statically imports the same DB
 // service). In-flight ids are passed IN, so it never reaches back here.
 import { propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagation';
+// The cold-start predicate reuses the SAME 48h donor lookback the score
+// propagation uses — a table with zero scored donors in that window is exactly
+// a "cold" feed (no scores to render, no siblings to propagate from).
+import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
 
 const TAG = '[scoring-pipeline]';
 
@@ -104,6 +109,14 @@ export const MIN_RUN_CANDIDATES = BATCH_SIZE;
  *  don't render, so a strict quantum gate could hide news for hours on slow
  *  days. */
 export const MAX_UNSCORED_WAIT_MS = 30 * 60_000;
+/** P7d cold-start floor: on a COLD feed (no scored donor in the 48h window) the
+ *  first paint is gated on the trailing partial quantum, so we dispatch it
+ *  immediately once it holds at least this many rows rather than waiting for a
+ *  full BATCH_SIZE or the 30-min staleness escape. Derived as two cloud-scoring
+ *  chunks (2 × CLOUD_SCORE_CHUNK_SIZE) — one chunk is too little to be worth a
+ *  run, two guarantees a multi-chunk prompt shaped like a steady-state batch, so
+ *  the per-prompt content stays byte-identical to the warm path. */
+export const COLD_START_MIN_BATCH = 2 * CLOUD_SCORE_CHUNK_SIZE;
 const SUBMIT_STUCK_MS = 60_000;
 const BATCH_STALE_MS = 15 * 60_000;
 /** A run whose `startedAt` is older than this is treated as wedged: the
@@ -161,6 +174,46 @@ const lastPolledAt = new Map<number, number>();
 let pollerTimer: ReturnType<typeof setInterval> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
+
+// P7d cold-start cache: once the feed has ANY scored donor in the 48h window it
+// is WARM for the rest of the process. The cold→warm transition only ever
+// happens once per launch (the first batch's scores land) and never reverses
+// without a restart (scored rows only leave the window by ageing past 48h, far
+// longer than a session), so caching the warm verdict permanently avoids a DB
+// read on every enqueue/poll tick. Reset by _resetForTests.
+let feedWarmCached = false;
+
+// ---------------------------------------------------------------------------
+// Cold-start predicate (P7d)
+// ---------------------------------------------------------------------------
+
+/**
+ * True when the feed is COLD — zero scored donor rows within the 48h score
+ * propagation lookback (the same window {@link propagateToUnscoredSiblings}
+ * uses). A cold table has nothing rendered yet, so the first scored paint is on
+ * the critical path; the enqueue partial-quantum knob and the poll-latency knob
+ * both relax only while this holds. Warm is cached (see `feedWarmCached`) so a
+ * warm feed pays no per-tick DB cost. Fails WARM on a read error — the
+ * aggressive cold knobs must never fire off a failed read.
+ */
+export async function isFeedCold(): Promise<boolean> {
+  if (feedWarmCached) return false;
+  try {
+    const donors = await getScoredDonorRows(
+      Date.now() - SCORE_PROPAGATION_LOOKBACK_MS,
+    );
+    if (donors.length > 0) {
+      feedWarmCached = true;
+      return false;
+    }
+    return true;
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'is-feed-cold' },
+    });
+    return false;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -403,7 +456,22 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
       dispatch.push(chunk);
       continue;
     }
-    // Trailing partial (<BATCH_SIZE).
+    // Trailing partial (<BATCH_SIZE). chunkIds only ever yields one, as the last
+    // chunk, so the cold read below runs at most once per enqueue.
+    //
+    // Knob 1 (P7d): on a COLD feed the first scored paint is gated entirely on
+    // this partial — the warm "accumulate to 25 / 30-min staleness escape" rule
+    // would leave the feed empty until a full quantum arrives. Dispatch it
+    // straight away once it holds at least COLD_START_MIN_BATCH rows so the very
+    // first hydration chunk starts scoring. Warm feeds keep the exact prior
+    // behavior (isFeedCold returns false → falls through to the escape below).
+    if ((await isFeedCold()) && chunk.length >= COLD_START_MIN_BATCH) {
+      logger.info(
+        `${TAG} enqueueCandidates: cold-start — dispatching partial batch of ${chunk.length} (>=${COLD_START_MIN_BATCH}, no scored donors in 48h)`,
+      );
+      dispatch.push(chunk);
+      continue;
+    }
     const oldestCreatedAt = await getOldestUnscoredCreatedAt();
     const oldestAgeMs =
       oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : 0;
@@ -1664,13 +1732,25 @@ export async function pollTick(context: ExecutionContext): Promise<void> {
     .filter((b) => isWaiting(b.phase))
     .sort((a, b) => (a.submittedAt ?? 0) - (b.submittedAt ?? 0));
 
+  // Knob 2 (P7d): on a COLD feed the first scored paint waits on the first
+  // poll, so relax the poll-age gate and per-batch spacing to the poller's own
+  // tick cadence (POLL_INTERVAL_MS, 7s) instead of the warm 15s min-age / 20s
+  // spacing — a batch that finished fast is picked up on the very next tick
+  // rather than one or two ticks later. Derived from the tick cadence (no point
+  // gating tighter than the poller can fire); the rate limiter still applies and
+  // the window ends the moment the first batch completes (warm thereafter).
+  // Computed once per tick.
+  const cold = await isFeedCold();
+  const minPollAge = cold ? POLL_INTERVAL_MS : MIN_POLL_AGE_MS;
+  const pollSpacing = cold ? POLL_INTERVAL_MS : PER_BATCH_POLL_SPACING_MS;
+
   const cap = context === 'background' ? 3 : Infinity;
   let polled = 0;
   for (const b of waiting) {
     if (polled >= cap) break;
     const nowTick = Date.now();
-    if (nowTick - (b.submittedAt ?? 0) < MIN_POLL_AGE_MS) continue;
-    if (nowTick - (lastPolledAt.get(b.batchId) ?? 0) < PER_BATCH_POLL_SPACING_MS)
+    if (nowTick - (b.submittedAt ?? 0) < minPollAge) continue;
+    if (nowTick - (lastPolledAt.get(b.batchId) ?? 0) < pollSpacing)
       continue;
     if (!gatewayRateLimiter.tryTakeImmediate()) break;
     lastPolledAt.set(b.batchId, nowTick);
@@ -1899,6 +1979,7 @@ export function _resetForTests(): void {
   finalizeInFlight = null;
   lastPolledAt.clear();
   pollTickRunning = false;
+  feedWarmCached = false;
   if (postFinalizeKickTimer) {
     clearTimeout(postFinalizeKickTimer);
     postFinalizeKickTimer = null;

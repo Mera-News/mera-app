@@ -16,6 +16,7 @@ const mockRebuildE2EEContext = jest.fn();
 const mockGetUnscored = jest.fn();
 const mockCountUnscoredSuggestions = jest.fn();
 const mockGetOldestUnscoredCreatedAt = jest.fn();
+const mockGetScoredDonorRows = jest.fn();
 const mockGetScoredWithoutReasons = jest.fn();
 const mockSaveScoringResult = jest.fn();
 const mockSaveReason = jest.fn();
@@ -113,6 +114,7 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscored(...args),
   countUnscoredSuggestions: (...args: any[]) => mockCountUnscoredSuggestions(...args),
   getOldestUnscoredCreatedAt: (...args: any[]) => mockGetOldestUnscoredCreatedAt(...args),
+  getScoredDonorRows: (...args: any[]) => mockGetScoredDonorRows(...args),
   getScoredSuggestionsWithoutReasons: (...args: any[]) => mockGetScoredWithoutReasons(...args),
   saveScoringResult: (...args: any[]) => mockSaveScoringResult(...args),
   saveReason: (...args: any[]) => mockSaveReason(...args),
@@ -230,9 +232,11 @@ import {
   derivePipelineUiState,
   getPipelineUiState,
   derivePipelineBatchProgress,
+  isFeedCold,
   _resetForTests,
   BATCH_SIZE,
   MAX_UNSCORED_WAIT_MS,
+  COLD_START_MIN_BATCH,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 
@@ -307,6 +311,10 @@ beforeEach(() => {
   // pipeline; the deferral-specific tests override this to a fresh timestamp.
   mockCountUnscoredSuggestions.mockResolvedValue(BATCH_SIZE + 100);
   mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW - MAX_UNSCORED_WAIT_MS - 1_000);
+  // Default WARM: a scored donor exists in the 48h window, so isFeedCold() is
+  // false and every existing test keeps the warm enqueue/poll behavior. The
+  // P7d cold-start tests override this to [] to exercise the cold path.
+  mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor-warm' }]);
   mockGetScoredWithoutReasons.mockResolvedValue([]);
   mockSaveScoringResult.mockResolvedValue(undefined);
   mockSaveReason.mockResolvedValue(undefined);
@@ -492,6 +500,109 @@ describe('enqueueCandidates: strict quantum gate', () => {
     expect(run).not.toBeNull();
     expect(run.batches).toHaveLength(1);
     expect(run.batches[0].reasonsOnly).toBe(true);
+  });
+});
+
+describe('cold-start predicate (P7d isFeedCold)', () => {
+  it('reports cold while no scored donor exists in the 48h window', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([]);
+    expect(await isFeedCold()).toBe(true);
+  });
+
+  it('reports warm as soon as a scored donor exists', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]);
+    expect(await isFeedCold()).toBe(false);
+  });
+
+  it('caches the warm verdict per process and re-reads only after _resetForTests', async () => {
+    // Warm: a donor exists → false, and the verdict is cached permanently.
+    mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]);
+    expect(await isFeedCold()).toBe(false);
+
+    // Donors vanish, but the cached warm verdict survives (warm is permanent per
+    // process) — no re-query flips it back to cold.
+    mockGetScoredDonorRows.mockResolvedValue([]);
+    expect(await isFeedCold()).toBe(false);
+
+    // _resetForTests clears the module cache → the next read reflects the DB.
+    _resetForTests();
+    expect(await isFeedCold()).toBe(true);
+  });
+
+  it('fails WARM on a donor read error (never triggers the cold knobs off a failed read)', async () => {
+    mockGetScoredDonorRows.mockRejectedValue(new Error('db read failed'));
+    expect(await isFeedCold()).toBe(false);
+  });
+});
+
+describe('cold-start partial quantum (P7d Knob 1)', () => {
+  it('dispatches a cold partial >= COLD_START_MIN_BATCH without the staleness escape', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([]); // cold: no scored donors
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
+
+    // COLD_START_MIN_BATCH (10) < BATCH_SIZE (25) → a single trailing partial.
+    await enqueueCandidates(ids(COLD_START_MIN_BATCH));
+
+    const run = currentRun();
+    expect(run).not.toBeNull();
+    expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(COLD_START_MIN_BATCH);
+  });
+
+  it('defers a cold partial below COLD_START_MIN_BATCH (fresh oldest, no escape)', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([]); // cold
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
+
+    await enqueueCandidates(ids(COLD_START_MIN_BATCH - 1));
+
+    expect(currentRun()).toBeNull();
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+
+  it('defers a warm partial >= COLD_START_MIN_BATCH (fresh oldest) — the knob is cold-only', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]); // warm
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
+
+    await enqueueCandidates(ids(COLD_START_MIN_BATCH));
+
+    expect(currentRun()).toBeNull();
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+});
+
+describe('cold-start poll latency (P7d Knob 2)', () => {
+  // Default stale oldest → the single-id partial dispatches via the staleness
+  // escape, giving us one waiting-relevance batch to poll.
+  async function oneWaitingBatch() {
+    await enqueueCandidates(['a0']);
+    const b = currentRun().batches[0];
+    expect(b.phase).toBe('waiting-relevance');
+    return b;
+  }
+
+  it('cold table polls a batch aged between POLL_INTERVAL_MS (7s) and MIN_POLL_AGE_MS (15s)', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([]); // cold
+    await oneWaitingBatch();
+    mockFetchResults.mockClear();
+    mockFetchResults.mockResolvedValue('pending');
+
+    // Age 10s: past the cold 7s min-poll-age but under the warm 15s gate.
+    jest.setSystemTime(NOW + 10_000);
+    await pollTick('foreground');
+
+    expect(mockFetchResults).toHaveBeenCalled();
+  });
+
+  it('warm table does NOT poll a batch younger than MIN_POLL_AGE_MS (15s)', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]); // warm
+    await oneWaitingBatch();
+    mockFetchResults.mockClear();
+    mockFetchResults.mockResolvedValue('pending');
+
+    jest.setSystemTime(NOW + 10_000);
+    await pollTick('foreground');
+
+    expect(mockFetchResults).not.toHaveBeenCalled();
   });
 });
 
