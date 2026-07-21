@@ -148,7 +148,8 @@
           "tooltip": "A IA está escrevendo uma nota curta para cada história explicando por que pode importar para você. A solicitação permanece criptografada.",
           "headlines": [
             "Escrevendo uma nota curta para cada história relevante.",
-            "Você pode se afastar — vamos te notificar quando estiver pronto."
+            "Você pode se afastar — vamos te notificar quando estiver pronto.",
+            "Tudo permanece criptografado de ponta a ponta — só o seu celular consegue ler."
           ]
         },
         "onDevice": {
@@ -310,7 +311,7 @@
     "restartDescription": "O app precisa reiniciar para aplicar a mudança de idioma.",
     "restart": "Reiniciar Agora",
     "later": "Depois",
-    "packMissingBanner": "Este idioma precisa de um pacote de tradução local. O Mera processa tudo localmente, então seus dados nunca saem do seu dispositivo. Você pode gerenciar os idiomas nas configurações do seu celular.",
+    "packMissingBanner": "Este idioma precisa de um pacote de tradução local — a tradução em si acontece localmente no seu celular. Você pode gerenciar os idiomas nas configurações do seu celular.",
     "packMissingIosPath": "Ajustes → Geral → Idioma e Região",
     "retry": "Tentar novamente",
     "watchGuide": "Veja como adicionar um idioma ao seu dispositivo",

@@ -3,7 +3,11 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { PipelineFactStage } from '@/lib/stores/for-you-store';
-import { useForYouAsyncJobPhase, useForYouFactStages } from '@/lib/stores/selectors';
+import {
+    useForYouAsyncJobPhase,
+    useForYouDeviceProcessing,
+    useForYouFactStages,
+} from '@/lib/stores/selectors';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +45,7 @@ function ProcessingHeadline() {
     const tAny = t as any;
     const asyncJobPhase = useForYouAsyncJobPhase();
     const factStages = useForYouFactStages();
+    const { isDeviceProcessing } = useForYouDeviceProcessing();
 
     const otherStoriesLabel = t('feed.factStages.otherStories');
 
@@ -56,7 +61,8 @@ function ProcessingHeadline() {
     const stageKey =
         asyncJobPhase === 'reasons' ? 'cloudReasons'
             : asyncJobPhase === 'relevance' ? 'cloudRelevance'
-                : 'onDevice';
+                : isDeviceProcessing ? 'onDevice'
+                    : 'cloudRelevance';
     const rawGenericLines = tAny(`feed.processing.stages.${stageKey}.headlines`, {
         returnObjects: true,
         defaultValue: [],

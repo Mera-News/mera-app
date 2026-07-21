@@ -148,7 +148,8 @@
           "tooltip": "AI sedang menulis catatan singkat untuk setiap cerita yang menjelaskan mengapa itu mungkin penting bagi Anda. Permintaan tetap terenkripsi.",
           "headlines": [
             "Menulis catatan singkat untuk setiap cerita yang relevan.",
-            "Anda bisa pergi sejenak — kami akan memberi tahu Anda saat sudah siap."
+            "Anda bisa pergi sejenak — kami akan memberi tahu Anda saat sudah siap.",
+            "Semua tetap terenkripsi end-to-end — hanya ponsel Anda yang bisa membacanya."
           ]
         },
         "onDevice": {
@@ -309,7 +310,7 @@
     "restartDescription": "Aplikasi perlu dimulai ulang untuk menerapkan perubahan bahasa.",
     "restart": "Mulai Ulang Sekarang",
     "later": "Nanti",
-    "packMissingBanner": "Bahasa ini membutuhkan paket terjemahan di perangkat. Mera memproses segalanya secara lokal, sehingga data Anda tidak pernah meninggalkan perangkat. Anda dapat mengelola bahasa dari pengaturan ponsel Anda.",
+    "packMissingBanner": "Bahasa ini membutuhkan paket terjemahan di perangkat — proses terjemahannya berjalan secara lokal di ponsel Anda. Anda dapat mengelola bahasa dari pengaturan ponsel Anda.",
     "packMissingIosPath": "Pengaturan → Umum → Bahasa & Wilayah",
     "retry": "Coba Lagi",
     "watchGuide": "Lihat cara menambahkan bahasa ke perangkat Anda",

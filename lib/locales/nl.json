@@ -148,7 +148,8 @@
           "tooltip": "De AI schrijft voor elk artikel een korte notitie uit waarom het voor jou van belang kan zijn. Het verzoek blijft versleuteld.",
           "headlines": [
             "Een korte notitie schrijven voor elk relevant artikel.",
-            "Je kunt wegstappen — we sturen je een melding wanneer het klaar is."
+            "Je kunt wegstappen — we sturen je een melding wanneer het klaar is.",
+            "Alles blijft end-to-end versleuteld — alleen jouw telefoon kan het lezen."
           ]
         },
         "onDevice": {
@@ -310,7 +311,7 @@
     "restartDescription": "De app moet opnieuw worden gestart om de taalwijziging toe te passen.",
     "restart": "Nu herstarten",
     "later": "Later",
-    "packMissingBanner": "Voor deze taal is een on-device vertaalpakket nodig. Mera verwerkt alles lokaal, zodat je gegevens je apparaat nooit verlaten. Je kunt talen beheren via de instellingen van je telefoon.",
+    "packMissingBanner": "Voor deze taal is een on-device vertaalpakket nodig — de vertaling zelf gebeurt lokaal op je telefoon. Je kunt talen beheren via de instellingen van je telefoon.",
     "packMissingIosPath": "Instellingen → Algemeen → Taal en regio",
     "retry": "Opnieuw proberen",
     "watchGuide": "Bekijk hoe je een taal aan je apparaat toevoegt",

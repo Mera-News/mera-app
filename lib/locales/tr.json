@@ -148,7 +148,8 @@
           "tooltip": "AI her hikaye için kısa bir not yazıyor — bu haberin sana neden önemli olduğunu açıklıyor. İstek şifreli kalmaya devam ediyor.",
           "headlines": [
             "Her uygun hikaye için kısa bir not yazılıyor.",
-            "Uzaklaşabilirsin — hazır olduğunda sana bildirim göndeririz."
+            "Uzaklaşabilirsin — hazır olduğunda sana bildirim göndeririz.",
+            "Her şey uçtan uca şifreli kalır — yalnızca telefonun bunu okuyabilir."
           ]
         },
         "onDevice": {
@@ -310,7 +311,7 @@
     "restartDescription": "Dil değişikliğini uygulamak için uygulamanın yeniden başlatılması gerekiyor.",
     "restart": "Şimdi Yeniden Başlat",
     "later": "Daha Sonra",
-    "packMissingBanner": "Bu dil için cihaz üzerinde bir çeviri paketi gerekiyor. Mera her şeyi yerel olarak işler, bu nedenle verilerin cihazından çıkmaz. Dilleri telefonunun ayarlarından yönetebilirsin.",
+    "packMissingBanner": "Bu dil için cihaz üzerinde bir çeviri paketi gerekiyor — çevirinin kendisi telefonunda yerel olarak çalışır. Dilleri telefonunun ayarlarından yönetebilirsin.",
     "packMissingIosPath": "Ayarlar → Genel → Dil ve Bölge",
     "retry": "Tekrar Dene",
     "watchGuide": "Cihazınıza dil eklemeyi izleyin",

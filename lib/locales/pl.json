@@ -148,7 +148,8 @@
           "tooltip": "Sztuczna inteligencja pisze krótką notatkę dla każdej historii, wyjaśniając, dlaczego może Cię dotyczyć. Żądanie pozostaje zaszyfrowane.",
           "headlines": [
             "Pisanie krótkiej notatki dla każdej trafnej historii.",
-            "Możesz się oddalić — powiadomimy Cię, gdy będzie gotowe."
+            "Możesz się oddalić — powiadomimy Cię, gdy będzie gotowe.",
+            "Wszystko pozostaje zaszyfrowane end-to-end — tylko Twój telefon może to odczytać."
           ]
         },
         "onDevice": {
@@ -312,7 +313,7 @@
     "restartDescription": "Aplikacja musi zostać uruchomiona ponownie, aby zastosować zmianę języka.",
     "restart": "Uruchom ponownie",
     "later": "Później",
-    "packMissingBanner": "Ten język wymaga lokalnego pakietu tłumaczeń. Mera przetwarza wszystko lokalnie, więc Twoje dane nigdy nie opuszczają urządzenia. Możesz zarządzać językami w ustawieniach telefonu.",
+    "packMissingBanner": "Ten język wymaga lokalnego pakietu tłumaczeń — samo tłumaczenie działa lokalnie, na Twoim telefonie. Możesz zarządzać językami w ustawieniach telefonu.",
     "packMissingIosPath": "Ustawienia → Ogólne → Język i region",
     "retry": "Ponów",
     "watchGuide": "Zobacz, jak dodać język do urządzenia",

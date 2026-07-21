@@ -148,7 +148,8 @@
           "tooltip": "Die KI schreibt für jede Geschichte eine kurze Notiz, warum sie für Sie relevant sein könnte. Die Anfrage bleibt verschlüsselt.",
           "headlines": [
             "Eine kurze Notiz wird für jede relevante Geschichte verfasst.",
-            "Sie können sich entfernen — wir benachrichtigen Sie, wenn alles fertig ist."
+            "Sie können sich entfernen — wir benachrichtigen Sie, wenn alles fertig ist.",
+            "Alles bleibt Ende-zu-Ende verschlüsselt — nur Ihr Telefon kann es lesen."
           ]
         },
         "onDevice": {
@@ -310,7 +311,7 @@
     "restartDescription": "Die App muss neu gestartet werden, um die Sprachänderung anzuwenden.",
     "restart": "Jetzt neu starten",
     "later": "Später",
-    "packMissingBanner": "Diese Sprache benötigt ein lokales Übersetzungspaket. Mera verarbeitet alles lokal, sodass Ihre Daten Ihr Gerät nie verlassen. Sie können Sprachen in den Telefoneinstellungen verwalten.",
+    "packMissingBanner": "Diese Sprache benötigt ein lokales Übersetzungspaket — die Übersetzung selbst läuft lokal auf Ihrem Telefon. Sie können Sprachen in den Telefoneinstellungen verwalten.",
     "packMissingIosPath": "Einstellungen → Allgemein → Sprache & Region",
     "retry": "Erneut versuchen",
     "watchGuide": "Sieh dir an, wie du eine Sprache zu deinem Gerät hinzufügst",

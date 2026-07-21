@@ -161,7 +161,8 @@
         "cloudReasons": {
           "headlines": [
             "Writing a short note for each relevant story.",
-            "You can step away — we’ll notify you when it’s ready."
+            "You can step away — we’ll notify you when it’s ready.",
+            "Everything stays end-to-end encrypted — only your phone can read it."
           ]
         },
         "onDevice": {
@@ -405,7 +406,7 @@
     "restartDescription": "The app needs to restart to apply the language change.",
     "restart": "Restart Now",
     "later": "Later",
-    "packMissingBanner": "This language needs an on-device translation pack. Mera processes everything locally, so your data never leaves your device. You can manage languages from your phone's settings.",
+    "packMissingBanner": "This language needs an on-device translation pack — translation itself runs locally on your phone. You can manage languages from your phone's settings.",
     "packMissingIosPath": "Settings → General → Language & Region",
     "retry": "Retry",
     "watchGuide": "Watch how to add language to your device",

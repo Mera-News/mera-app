@@ -59,6 +59,11 @@ jest.mock('@expo/vector-icons', () => {
 jest.mock('@/lib/stores/selectors', () => ({
     useForYouAsyncJobPhase: () => 'idle',
     useForYouFactStages: () => [],
+    useForYouDeviceProcessing: () => ({
+        isDeviceProcessing: false,
+        deviceProcessedCount: 0,
+        deviceTotalCount: 0,
+    }),
 }));
 
 // The inline detail body is exercised by its own tests + the sheet; here it is

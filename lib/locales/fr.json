@@ -148,7 +148,8 @@
           "tooltip": "L'IA rédige une courte note pour chaque article expliquant pourquoi il pourrait vous intéresser. La requête reste chiffrée.",
           "headlines": [
             "Rédaction d'une courte note pour chaque article pertinent.",
-            "Vous pouvez vous éloigner — nous vous préviendrons dès que c'est prêt."
+            "Vous pouvez vous éloigner — nous vous préviendrons dès que c'est prêt.",
+            "Tout reste chiffré de bout en bout — seul votre téléphone peut le lire."
           ]
         },
         "onDevice": {
@@ -310,7 +311,7 @@
     "restartDescription": "L'application doit redémarrer pour appliquer le changement de langue.",
     "restart": "Redémarrer maintenant",
     "later": "Plus tard",
-    "packMissingBanner": "Cette langue nécessite un pack de traduction sur l'appareil. Mera traite tout en local, vos données ne quittent jamais votre appareil. Vous pouvez gérer les langues depuis les paramètres de votre téléphone.",
+    "packMissingBanner": "Cette langue nécessite un pack de traduction sur l'appareil — la traduction elle-même s'exécute localement sur votre téléphone. Vous pouvez gérer les langues depuis les paramètres de votre téléphone.",
     "packMissingIosPath": "Réglages → Général → Langue et région",
     "retry": "Réessayer",
     "watchGuide": "Découvrez comment ajouter une langue à votre appareil",
