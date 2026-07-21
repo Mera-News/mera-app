@@ -68,13 +68,15 @@ const SectionHeaderRow: React.FC<HeaderRowProps> = React.memo(({ row }) => {
   }, [row.factId, row.statement]);
 
   return (
-    <FactSectionHeader
-      kind={row.kind}
-      title={row.statement}
-      eventType={row.groups[0]?.data.eventType ?? null}
-      unreadCount={row.unreadCount}
-      onPress={row.kind === 'fact' ? openFactFeed : undefined}
-    />
+    <Box className="px-4">
+      <FactSectionHeader
+        kind={row.kind}
+        title={row.statement}
+        eventType={row.groups[0]?.data.eventType ?? null}
+        unreadCount={row.unreadCount}
+        onPress={row.kind === 'fact' ? openFactFeed : undefined}
+      />
+    </Box>
   );
 });
 SectionHeaderRow.displayName = 'SectionHeaderRow';
@@ -191,6 +193,7 @@ const FactSectionsFeed: React.FC<FactSectionsFeedProps> = ({
           onPress={onPressSuggestion}
           surface="for_you"
           read={isSuggestionOpened(group.data, openedIds)}
+          flat
         />
       );
     },
@@ -216,7 +219,7 @@ const FactSectionsFeed: React.FC<FactSectionsFeedProps> = ({
         ListEmptyComponent={ListEmptyComponent}
         contentContainerStyle={{
           paddingTop: headerHeight + 12,
-          paddingHorizontal: 16,
+          paddingHorizontal: 0,
           paddingBottom: TAB_BAR_HEIGHT + 120,
         }}
         showsVerticalScrollIndicator={false}

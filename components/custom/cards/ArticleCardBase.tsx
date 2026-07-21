@@ -43,6 +43,13 @@ export interface ArticleCardBaseProps {
   /** Marks the card as already-read — shows a green tick chip (top-right)
    *  instead of dimming. The Dashboard surfaces use this. */
   read?: boolean;
+  /** Renders without the Card chrome — no `bg-background-0` surface, no
+   *  border/shadow/rounding, and zero internal horizontal padding, so the
+   *  hero image and text span the full item width. Used by Dashboard's
+   *  flat-list treatment (FactSectionsFeed / FactFeedScreen). Vertical
+   *  spacing between elements and the `read`/`dimmed` behaviors are
+   *  unaffected. Default false — every other surface is pixel-identical. */
+  flat?: boolean;
   onPress?: () => void;
   children?: React.ReactNode;
   metaAccessory?: React.ReactNode;
@@ -62,6 +69,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   recyclingKey,
   dimmed = false,
   read = false,
+  flat = false,
   onPress,
   children,
   metaAccessory,
@@ -72,49 +80,63 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   const displayTitle = titleEnglish || t('feed.newsCluster');
   const showImage = !!imageUrl && !imageFailed;
 
+  const innerContent = (
+    <>
+      {read && <ReadTickChip />}
+      {showImage && (
+        <Box
+          className={
+            flat ? 'w-full h-48 overflow-hidden rounded-lg' : 'w-full h-48 overflow-hidden rounded-t-lg'
+          }
+        >
+          <Image
+            source={{ uri: imageUrl! }}
+            alt={displayTitle}
+            className="w-full h-full"
+            resizeMode="cover"
+            recyclingKey={recyclingKey}
+            onError={() => setImageFailed(true)}
+          />
+        </Box>
+      )}
+      <VStack className={flat ? 'py-4' : 'p-4'} space="sm">
+        <Box>
+          <ArticleMetaRow
+            pubDate={pubDate}
+            languageCode={languageCode}
+            publicationName={publicationName}
+            countryCode={countryCode}
+            variant="card"
+            isNew={isNew}
+            moreSourcesCount={moreSourcesCount}
+          />
+          {metaAccessory ? (
+            <HStack className="self-end mt-1">{metaAccessory}</HStack>
+          ) : null}
+        </Box>
+        <TranslatableDynamic
+          as="heading"
+          text={displayTitle}
+          originalText={titleOriginal}
+          originalLanguage={sourceLanguage}
+          size="md"
+          className="leading-6"
+          showToggle={false}
+        />
+        {children}
+      </VStack>
+    </>
+  );
+
   return (
     <Pressable onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
-      <Card variant="elevated" size="md" className="mb-4 overflow-hidden">
-        {read && <ReadTickChip />}
-        {showImage && (
-          <Box className="w-full h-48 overflow-hidden rounded-t-lg">
-            <Image
-              source={{ uri: imageUrl! }}
-              alt={displayTitle}
-              className="w-full h-full"
-              resizeMode="cover"
-              recyclingKey={recyclingKey}
-              onError={() => setImageFailed(true)}
-            />
-          </Box>
-        )}
-        <VStack className="p-4" space="sm">
-          <Box>
-            <ArticleMetaRow
-              pubDate={pubDate}
-              languageCode={languageCode}
-              publicationName={publicationName}
-              countryCode={countryCode}
-              variant="card"
-              isNew={isNew}
-              moreSourcesCount={moreSourcesCount}
-            />
-            {metaAccessory ? (
-              <HStack className="self-end mt-1">{metaAccessory}</HStack>
-            ) : null}
-          </Box>
-          <TranslatableDynamic
-            as="heading"
-            text={displayTitle}
-            originalText={titleOriginal}
-            originalLanguage={sourceLanguage}
-            size="md"
-            className="leading-6"
-            showToggle={false}
-          />
-          {children}
-        </VStack>
-      </Card>
+      {flat ? (
+        <Box className="mb-3">{innerContent}</Box>
+      ) : (
+        <Card variant="elevated" size="md" className="mb-4 overflow-hidden">
+          {innerContent}
+        </Card>
+      )}
     </Pressable>
   );
 };

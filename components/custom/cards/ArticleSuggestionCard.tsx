@@ -37,6 +37,9 @@ interface ArticleCardProps {
   dimmed?: boolean;
   /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
   read?: boolean;
+  /** Pass-through to `ArticleCardBase` — renders without the Card chrome
+   *  (Dashboard's flat-list treatment). Default false. */
+  flat?: boolean;
 }
 
 export type { ArticleCardProps };
@@ -59,6 +62,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   surface = 'for_you',
   dimmed = false,
   read = false,
+  flat = false,
 }) => {
   const [facts, setFacts] = useState<Fact[]>([]);
 
@@ -184,6 +188,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       recyclingKey={suggestion._id}
       dimmed={dimmed}
       read={read}
+      flat={flat}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}
     >

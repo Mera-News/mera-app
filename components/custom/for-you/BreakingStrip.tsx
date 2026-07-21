@@ -60,7 +60,7 @@ const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => 
   });
 
   return (
-    <Box className="mb-2">
+    <Box className="mb-2 px-4">
       {items.length > 1 ? (
         <ScrollView
           horizontal

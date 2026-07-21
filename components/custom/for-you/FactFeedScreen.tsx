@@ -83,6 +83,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         onPress={handlePress}
         surface="for_you"
         read={isSuggestionOpened(item.data, openedIds)}
+        flat
       />
     ),
     [handlePress, openedIds],
@@ -119,7 +120,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         data={groups}
         keyExtractor={(g) => g.data._id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 0, paddingVertical: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<AllCaughtUpCard />}
       />
