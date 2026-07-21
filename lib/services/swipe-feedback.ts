@@ -16,7 +16,7 @@ import {
   buildContextJson,
   feedbackSubjectFromSuggestion,
 } from '@/components/custom/cards/feedback-subject';
-import { swipeCallbacks, type Verdict } from '@/components/custom/swipe-feed/swipe-callbacks';
+import { swipeCallbacks, type Verdict } from '@/components/custom/feed/swipe-callbacks';
 import i18n from '@/lib/i18n';
 import {
   recordVerdictFeedback,
@@ -29,6 +29,9 @@ import type { FeedbackTreeNode } from '@/lib/news-harness/feedback-tree/types';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
+// Analytics surface tag. Historically the Tinder-style swipe deck; the deck was
+// replaced by the vertical Feed, so this now tags the FEED's verdict row. Kept as
+// 'swipe' deliberately — renaming it would fragment the live feedback analytics.
 const SURFACE = 'swipe';
 
 /** Records a fresh verdict (latest-wins: removes the opposite-sentiment row). */

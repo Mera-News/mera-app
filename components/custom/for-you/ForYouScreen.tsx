@@ -8,7 +8,7 @@ import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/Fo
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
-import FactSectionsFeed from '@/components/custom/for-you/FactSectionsFeed';
+import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
@@ -42,6 +42,7 @@ import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
+import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -169,6 +170,12 @@ const MeraNewsScreen: React.FC = () => {
     // ── Fact-rows feed (Round-3 C1/C2) ──
     // Persona snapshots (topics/facts/locations). Null while loading.
     const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
+
+    // Hydrate the persisted section-visit map once on mount so the Dashboard's
+    // "+N new" section badges are correct on first paint.
+    useEffect(() => {
+        void useSectionVisitsStore.getState().hydrate();
+    }, []);
 
     // Load the persona snapshots when interests exist or the feed size changes
     // (tiny tables; a new sync's insert/remove is the coarse trigger).
@@ -346,7 +353,7 @@ const MeraNewsScreen: React.FC = () => {
                 {/* Feed — the list handles its own top padding (contentContainer)
                     so it can scroll under the collapsing header. */}
                 <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
-                    <FactSectionsFeed
+                    <DashboardSectionsFeed
                         breaking={feed.breaking}
                         rows={feed.rows}
                         openedIds={openedIds}

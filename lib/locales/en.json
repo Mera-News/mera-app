@@ -282,6 +282,9 @@
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
     "openFactFeed": "See all stories for this topic",
+    "viewAllStories": "View all {{count}} stories",
+    "newInSection_one": "{{count}} new story since your last visit",
+    "newInSection_other": "{{count}} new stories since your last visit",
     "subTabFeed": "Feed",
     "subTabStories": "Stories",
     "subTabSaved": "Saved"

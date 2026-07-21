@@ -63,7 +63,7 @@ import {
   updateFeedbackContextPath,
 } from '@/lib/database/services/article-feedback-service';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { swipeCallbacks } from '@/components/custom/swipe-feed/swipe-callbacks';
+import { swipeCallbacks } from '@/components/custom/feed/swipe-callbacks';
 import {
   recordSwipeVerdict,
   changeSwipeVerdict,

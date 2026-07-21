@@ -47,7 +47,7 @@ export interface ArticleCardBaseProps {
    *  chrome: rounded-2xl, a hairline low-opacity border, a subtle drop shadow,
    *  and the same `bg-background-0` surface tone the default Card already
    *  uses — just a touch more elevated-looking against the pure-black page.
-   *  Used by Dashboard's list treatment (FactSectionsFeed / FactFeedScreen),
+   *  Used by Dashboard's list treatment (FactFeedScreen),
    *  which own the shared horizontal list inset (~12px) so the rounded edges
    *  read against the page. Vertical spacing between elements and the
    *  `read`/`dimmed` behaviors are unaffected. Default false — every other

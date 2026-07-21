@@ -1,3 +1,6 @@
+// DEPRECATE(r5-dashboard-redesign): orphan — superseded by SectionViewAllRow
+// (Dashboard section "View all N stories" footer). Delete after the redesign is
+// verified live.
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';

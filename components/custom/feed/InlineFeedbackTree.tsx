@@ -1,5 +1,5 @@
-// InlineFeedbackTree — the Feed-tab feedback tree, rendered INLINE beneath the
-// VerdictBar (via its `treeSlot`) once a verdict exists. Unlike the dislike
+// InlineFeedbackTree — the Feed-tab feedback tree, rendered inside the
+// FeedbackTreeSheet once a verdict exists. Unlike the dislike
 // overlay it applies NO persona mutations: every tap simply enriches the stored
 // verdict row's path (onTreePathChanged), and an `openChat` leaf escalates to
 // the Mera chat (onInvokeMera). The tree content + gating come from the shared
@@ -20,7 +20,7 @@ import type {
   LocalFeedbackContext,
 } from '@/lib/news-harness/feedback-tree';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import type { Verdict } from '@/lib/stores/swipe-deck-store';
+import type { Verdict } from '@/lib/stores/feed-session-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';

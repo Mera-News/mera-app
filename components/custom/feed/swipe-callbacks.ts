@@ -9,7 +9,7 @@
 // it (e.g. `Object.assign(swipeCallbacks, realImpl)`), or replaces individual
 // members.
 
-import type { Verdict } from '@/lib/stores/swipe-deck-store';
+import type { Verdict } from '@/lib/stores/feed-session-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 export type { Verdict };

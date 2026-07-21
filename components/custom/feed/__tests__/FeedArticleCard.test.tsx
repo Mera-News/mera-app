@@ -1,6 +1,6 @@
-// SwipeArticleCard render/tap tests. Reanimated + the open-suggestion hook +
-// heavy UI primitives are stubbed (cards.test.tsx pattern) so the card renders
-// under jest-expo without native modules.
+// FeedArticleCard render/tap tests. Heavy UI primitives + the save service +
+// CardActionBar are stubbed (cards.test.tsx pattern) so the card renders under
+// jest-expo without native modules.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -8,14 +8,6 @@ jest.mock('react-i18next', () => ({
     t: (key: string, opts?: any) => (opts?.count != null ? `${key}:${opts.count}` : key),
   }),
 }));
-jest.mock('react-native-reanimated', () => {
-  const { View } = require('react-native');
-  return {
-    __esModule: true,
-    default: { View: (p: any) => <View {...p} /> },
-    useAnimatedStyle: () => ({}),
-  };
-});
 jest.mock('@/components/ui/box', () => {
   const { View } = require('react-native');
   return { Box: (p: any) => <View {...p} /> };
@@ -57,24 +49,23 @@ jest.mock('@/components/custom/ArticleMetaRow', () => {
   const Stub = (p: any) => <View {...p} />;
   return { __esModule: true, default: Stub, ArticleMetaRow: Stub };
 });
-
-const mockOpen = jest.fn();
-jest.mock('@/lib/hooks/use-open-suggestion', () => ({
-  useOpenSuggestion: () => mockOpen,
-}));
-
-const mockOpenArticleUrl = jest.fn();
-jest.mock('../use-open-article-url', () => ({
-  useOpenArticleUrl: () => mockOpenArticleUrl,
+jest.mock('../CardActionBar', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID="action-bar" {...p} /> };
+});
+jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn(), hapticSuccess: jest.fn() }));
+jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
+  saveSuggestion: jest.fn(),
+  deleteSavedSuggestion: jest.fn(),
+  isSuggestionSaved: jest.fn(async () => false),
 }));
 
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import SwipeArticleCard from '../SwipeArticleCard';
-
-const zero = { value: 0 } as any;
+import FeedArticleCard from '../FeedArticleCard';
 
 function sugg(over: Partial<ForYouSuggestion> = {}): ForYouSuggestion {
   return {
@@ -105,64 +96,83 @@ function sugg(over: Partial<ForYouSuggestion> = {}): ForYouSuggestion {
   } as ForYouSuggestion;
 }
 
-beforeEach(() => {
-  mockOpen.mockClear();
-  mockOpenArticleUrl.mockClear();
-});
+function makeItem(over: Partial<FeedListItem> = {}): FeedListItem {
+  return {
+    id: 'art1',
+    suggestion: sugg(),
+    memberCount: 1,
+    breaking: false,
+    score: 0.9,
+    ...over,
+  };
+}
 
-describe('SwipeArticleCard', () => {
-  it('renders title + reason', () => {
+/** Walk up from a node to find the nearest resolved `opacity` style. */
+function opacityOf(node: any): number | undefined {
+  let n: any = node;
+  while (n) {
+    const st = n.props?.style;
+    const flat = Array.isArray(st) ? Object.assign({}, ...st) : st;
+    if (flat && typeof flat.opacity === 'number') return flat.opacity;
+    n = n.parent;
+  }
+  return undefined;
+}
+
+describe('FeedArticleCard', () => {
+  it('renders the title + reason', () => {
     const { getByText } = render(
-      <SwipeArticleCard suggestion={sugg()} memberCount={1} likeOpacity={zero} nopeOpacity={zero} />,
+      <FeedArticleCard
+        item={makeItem()}
+        verdict={null}
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+        onAskMera={jest.fn()}
+      />,
     );
     expect(getByText('A tall headline')).toBeTruthy();
     expect(getByText('Matters to you')).toBeTruthy();
   });
 
-  it('shows a "+N sources" chip only when the story collapses members', () => {
-    const single = render(
-      <SwipeArticleCard suggestion={sugg()} memberCount={1} likeOpacity={zero} nopeOpacity={zero} />,
-    );
-    expect(single.queryByText('feed.moreSources:1')).toBeNull();
-
-    const grouped = render(
-      <SwipeArticleCard suggestion={sugg()} memberCount={3} likeOpacity={zero} nopeOpacity={zero} />,
-    );
-    expect(grouped.getByText('feed.moreSources:2')).toBeTruthy();
-  });
-
-  it('opens the story on tap when interactive', () => {
-    const s = sugg();
+  it('opens the story on body press with the suggestion', () => {
+    const onPress = jest.fn();
+    const it = makeItem();
     const { getByText } = render(
-      <SwipeArticleCard suggestion={s} memberCount={1} likeOpacity={zero} nopeOpacity={zero} interactive />,
+      <FeedArticleCard
+        item={it}
+        verdict={null}
+        onPress={onPress}
+        onVerdict={jest.fn()}
+        onAskMera={jest.fn()}
+      />,
     );
     fireEvent.press(getByText('A tall headline'));
-    expect(mockOpen).toHaveBeenCalledWith(s);
+    expect(onPress).toHaveBeenCalledWith(it.suggestion);
   });
 
-  it('does not open when non-interactive (a behind card)', () => {
+  it('dims the body when verdicted (opacity 0.7)', () => {
     const { getByText } = render(
-      <SwipeArticleCard suggestion={sugg()} memberCount={1} likeOpacity={zero} nopeOpacity={zero} interactive={false} />,
+      <FeedArticleCard
+        item={makeItem()}
+        verdict="like"
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+        onAskMera={jest.fn()}
+      />,
     );
-    fireEvent.press(getByText('A tall headline'));
-    expect(mockOpen).not.toHaveBeenCalled();
+    expect(opacityOf(getByText('A tall headline'))).toBe(0.7);
   });
 
-  it('opens the ORIGINAL article URL via the read button (not the detail route)', () => {
-    const s = sugg({ article_url: 'https://ex.com/a' });
-    const { getByLabelText } = render(
-      <SwipeArticleCard suggestion={s} memberCount={1} likeOpacity={zero} nopeOpacity={zero} interactive />,
+  it('keeps the body at full opacity when undecided', () => {
+    const { getByText } = render(
+      <FeedArticleCard
+        item={makeItem()}
+        verdict={null}
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+        onAskMera={jest.fn()}
+      />,
     );
-    fireEvent.press(getByLabelText('articleDetail.readOn'));
-    expect(mockOpenArticleUrl).toHaveBeenCalledWith(s);
-    expect(mockOpen).not.toHaveBeenCalled();
-  });
-
-  it('disables the read button when the suggestion has no article URL', () => {
-    const { getByLabelText } = render(
-      <SwipeArticleCard suggestion={sugg({ article_url: null })} memberCount={1} likeOpacity={zero} nopeOpacity={zero} interactive />,
-    );
-    fireEvent.press(getByLabelText('articleDetail.readOn'));
-    expect(mockOpenArticleUrl).not.toHaveBeenCalled();
+    expect(opacityOf(getByText('A tall headline'))).toBe(1);
   });
 });

@@ -19,9 +19,10 @@ interface FactSectionHeaderProps {
   title: string;
   /** event_type of the row's top item — drives the icon prefix. */
   eventType: string | null;
-  /** Unread stories in this section — renders an accent count badge after the
-   *  title. Hidden when 0 / undefined. */
-  unreadCount?: number;
+  /** Stories that became visible in this section since the user's last visit —
+   *  renders a small accent "+N" pill after the title. Hidden when 0 /
+   *  undefined. */
+  newCount?: number;
   /** When set, the whole header is tappable and opens the full fact feed. */
   onPress?: () => void;
 }
@@ -39,14 +40,16 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
   kind,
   title,
   eventType,
-  unreadCount = 0,
+  newCount = 0,
   onPress,
 }) => {
   const { t } = useTranslation();
 
   const isFact = kind === 'fact';
   const icon = eventTypeIcon(eventType);
-  const canPress = isFact && !!onPress;
+  // Both fact and "also" rows are pressable — the header navigates into the
+  // section's full feed (the "also" catch-all feed included).
+  const canPress = !!onPress;
 
   const titleNode = isFact ? (
     <TranslatableDynamic
@@ -64,7 +67,9 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
   );
 
   const HeaderInner = (
-    <VStack className="mb-2 mt-4">
+    // Internal padding (no outer margins) so the header text sits on the
+    // gradient ink of the enclosing SectionGradientPanel.
+    <VStack className="px-3 py-2.5">
       {isFact && (
         <Text size="xs" className="text-typography-500 mb-0.5">
           {t('forYou.sectionPrefix')}
@@ -73,14 +78,14 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       <HStack className="items-center" space="sm">
         {icon && <MaterialIcons name={icon} size={20} color={ACCENT} />}
         <Box className="flex-1 min-w-0">{titleNode}</Box>
-        {unreadCount > 0 && (
+        {newCount > 0 && (
           <Box
             className="rounded-full items-center justify-center px-1.5"
             style={{ minWidth: 20, height: 20, backgroundColor: ACCENT }}
-            accessibilityLabel={`${unreadCount}`}
+            accessibilityLabel={t('forYou.newInSection', { count: newCount })}
           >
             <Text size="xs" bold className="text-black">
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {newCount > 99 ? '+99' : `+${newCount}`}
             </Text>
           </Box>
         )}

@@ -19,6 +19,11 @@ interface ArticleSuggestionCompactCardProps {
   dimmed?: boolean;
   /** Marks the row as read — green tick chip instead of dimming (Dashboard). */
   read?: boolean;
+  /** Number of additional source publications collapsed into this story — the
+   *  "+N sources" pill (Dashboard section cards). */
+  moreSourcesCount?: number;
+  /** Renders the green "NEW" pill in the meta row (Dashboard section cards). */
+  isNew?: boolean;
 }
 
 /**
@@ -34,6 +39,8 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   surface = 'triage',
   dimmed = false,
   read = false,
+  moreSourcesCount,
+  isNew = false,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -96,6 +103,8 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         recyclingKey={suggestion._id}
         dimmed={dimmed}
         read={read}
+        isNew={isNew}
+        moreSourcesCount={moreSourcesCount}
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
         metaAccessory={metaAccessory}

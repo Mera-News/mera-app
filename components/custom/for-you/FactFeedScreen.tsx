@@ -1,5 +1,6 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
+import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -8,6 +9,7 @@ import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
+  ALSO_ROW_ID,
   buildFactRows,
   isSuggestionOpened,
   type FactRowGroup,
@@ -16,6 +18,7 @@ import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/sectio
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
+import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -55,6 +58,12 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
   const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
+  const isAlso = factId === ALSO_ROW_ID;
+
+  // Last-visit timestamp captured on entry (before we mark this visit) — drives
+  // the per-card NEW badge. `null` until hydrated; `0` on a first-ever visit
+  // (⇒ no badges, avoiding first-run badge spam).
+  const [prevVisitMs, setPrevVisitMs] = useState<number | null>(null);
 
   useEffect(() => {
     void useOpenedStoriesStore.getState().hydrate();
@@ -68,6 +77,22 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
       });
     return () => { cancelled = true; };
   }, []);
+
+  // Visit tracking: read the prior visit time, then mark this section visited
+  // (both on entry and again on unmount, so a long dwell still advances the
+  // clock). Keyed by factId so navigating between fact feeds re-runs it.
+  useEffect(() => {
+    let cancelled = false;
+    void useSectionVisitsStore.getState().hydrate().then(() => {
+      if (cancelled) return;
+      setPrevVisitMs(useSectionVisitsStore.getState().visits[factId] ?? 0);
+      useSectionVisitsStore.getState().markVisited(factId);
+    });
+    return () => {
+      cancelled = true;
+      useSectionVisitsStore.getState().markVisited(factId);
+    };
+  }, [factId]);
 
   const groups: FactRowGroup[] = useMemo(() => {
     if (!snapshots) return [];
@@ -83,39 +108,55 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         onPress={handlePress}
         surface="for_you"
         read={isSuggestionOpened(item.data, openedIds)}
+        // NEW pill only for stories that became visible since the last visit —
+        // and never on a first-ever visit (prevVisitMs 0).
+        isNew={prevVisitMs != null && prevVisitMs > 0 && item.addedMs > prevVisitMs}
         flat
       />
     ),
-    [handlePress, openedIds],
+    [handlePress, openedIds, prevVisitMs],
   );
 
   return (
     <Box className="flex-1 bg-black">
-      <HStack
-        className="items-center px-4 pb-3 border-b border-gray-900"
-        style={{ paddingTop: insets.top + 12 }}
-        space="sm"
-      >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('common.back')}
+      <SectionGradientPanel factId={factId} borderRadius={0}>
+        <HStack
+          className="items-center px-4 pb-3 border-b border-gray-900"
+          style={{ paddingTop: insets.top + 12 }}
+          space="sm"
         >
-          <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-        </Pressable>
-        <Box className="flex-1 min-w-0">
-          <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
-          <TranslatableDynamic
-            text={statement}
-            as="heading"
-            size="lg"
-            bold
-            numberOfLines={1}
-            className="text-white"
-          />
-        </Box>
-      </HStack>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+          </Pressable>
+          <Box className="flex-1 min-w-0">
+            {/* The "also" catch-all has no owning fact statement — render its
+                passed title plainly (no "News about:" prefix, no dynamic
+                translation of the sentinel label). */}
+            {isAlso ? (
+              <Text size="lg" bold numberOfLines={1} className="text-white">
+                {statement}
+              </Text>
+            ) : (
+              <>
+                <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
+                <TranslatableDynamic
+                  text={statement}
+                  as="heading"
+                  size="lg"
+                  bold
+                  numberOfLines={1}
+                  className="text-white"
+                />
+              </>
+            )}
+          </Box>
+        </HStack>
+      </SectionGradientPanel>
       <FlatList
         data={groups}
         keyExtractor={(g) => g.data._id}

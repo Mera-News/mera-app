@@ -3,9 +3,8 @@
 // outline, rounded-full, primary-bordered button with an open-in-new glyph and
 // the same `articleDetail.readOn` / `articleDetail.readArticle` label. Tapping it
 // opens the publisher URL in the in-app browser (via use-open-article-url) — the
-// same action as the detail page, NOT "open suggestion detail". Rendered in two
-// places: pinned at the bottom of SwipeArticleCard (always visible) and in the
-// in-card feedback overlay's footer (reachable while the card is dimmed).
+// same action as the detail page, NOT "open suggestion detail". Rendered as the
+// pinned footer of the Feed tab's FeedbackTreeSheet.
 
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';

@@ -34,6 +34,9 @@ export interface ArticleCompactCardBaseProps {
   publicationName?: string | null;
   countryCode?: string | null;
   isNew?: boolean;
+  /** Number of additional source publications collapsed into this story row —
+   *  forwarded to the meta row's "+N sources" pill. */
+  moreSourcesCount?: number;
   hideSource?: boolean;
   recyclingKey?: string;
   /** Dims the whole row (~0.55 opacity) — used to fade already-opened rows in
@@ -59,6 +62,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   publicationName,
   countryCode,
   isNew = false,
+  moreSourcesCount,
   hideSource = false,
   recyclingKey,
   dimmed = false,
@@ -106,6 +110,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   countryCode={countryCode}
                   variant="card"
                   isNew={isNew}
+                  moreSourcesCount={moreSourcesCount}
                   read={read}
                 />
               </Box>
