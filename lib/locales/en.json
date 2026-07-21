@@ -106,6 +106,7 @@
     "pullDownToRetry": "Pull down to retry",
     "readArticleToast": "You have read this article",
     "jumpToSection": "Jump to section",
+    "skipToSection": "Skip to {{section}}",
     "sectionMenuTop": "Top",
     "stuckTitle": "Couldn't load your feed",
     "stuckDescription": "Something went wrong on our end.",

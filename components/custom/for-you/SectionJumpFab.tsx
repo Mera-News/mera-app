@@ -31,10 +31,13 @@ interface SectionJumpFabProps {
 
 /**
  * Wide pill FAB pinned bottom-center above the tab bar. The pill shows
- * "↓ ⟨next section⟩" and scrolls to the next section on tap; a trailing list
- * button opens a floating menu of every section (+ a "Top" entry) with story
- * counts. When there is no next section (list at its end) only the menu button
- * shows.
+ * "Skip to ⟨next section⟩ ⏭" and scrolls to the next section on tap; a
+ * trailing list button opens a floating menu of every section (+ a "Top"
+ * entry) with story counts. When there is no next section (list at its end)
+ * only the menu button shows. Both buttons share the same outlined idiom
+ * (transparent/near-black fill, accent border + icon/text) as the app's other
+ * round nav buttons (e.g. `NotificationBellButton`) so the FAB group reads as
+ * one outlined unit rather than a solid CTA.
  */
 const SectionJumpFab: React.FC<SectionJumpFabProps> = ({
   sections,
@@ -77,13 +80,13 @@ const SectionJumpFab: React.FC<SectionJumpFabProps> = ({
               onPress={() => jump(nextSection.id)}
               accessibilityRole="button"
               accessibilityLabel={t('feed.jumpToSection')}
-              className="flex-row items-center rounded-full bg-primary-400 px-4 py-2.5"
+              className="flex-row items-center rounded-full border border-primary-500 bg-black px-4 py-2.5"
               style={{ maxWidth: width * 0.65 }}
             >
-              <MaterialIcons name="arrow-downward" size={16} color="#000000" style={{ marginRight: 6 }} />
-              <Text size="sm" numberOfLines={1} className="text-black font-semibold flex-shrink">
-                {nextSection.label}
+              <Text size="sm" numberOfLines={1} className="font-semibold flex-shrink" style={{ color: ACCENT }}>
+                {t('feed.skipToSection', { section: nextSection.label })}
               </Text>
+              <MaterialIcons name="skip-next" size={18} color={ACCENT} style={{ marginLeft: 6 }} />
             </Pressable>
           )}
           <Pressable
