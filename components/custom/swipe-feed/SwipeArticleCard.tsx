@@ -139,7 +139,7 @@ const SwipeArticleCard: React.FC<SwipeArticleCardProps> = ({
               size="sm"
               italic
               bold
-              className="ml-3 flex-1 text-right"
+              className="ml-3 flex-1 text-right text-white"
               style={{ color: reasonBoxColors.textColor }}
             />
           </Box>

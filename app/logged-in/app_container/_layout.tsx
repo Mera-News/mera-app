@@ -33,10 +33,14 @@ export default function AppLayout() {
                 level="screen"
                 FallbackComponent={FullScreenErrorFallback}
             >
+                {/* Icons-only navbar: every `<Label hidden>` keeps the tab's
+                    accessibility title (the string children) while suppressing the
+                    visible caption. `hidden` on NativeTabsTriggerLabelProps is the
+                    supported cross-platform mechanism (iOS + Android). */}
                 <NativeTabs tintColor={ACCENT} minimizeBehavior="onScrollDown">
-                    {/* Feed (route `feed`) — the buttons-first swipe deck, landing tab. */}
+                    {/* Deck (route `feed`) — the buttons-first swipe deck, landing tab. */}
                     <NativeTabs.Trigger name="feed">
-                        <Label>{t('tabs.feed')}</Label>
+                        <Label hidden>{t('tabs.deck')}</Label>
                         <Icon
                             sf="house.fill"
                             src={<VectorIcon family={MaterialIcons} name="home" />}
@@ -44,7 +48,7 @@ export default function AppLayout() {
                     </NativeTabs.Trigger>
                     {/* Dashboard (route `for_you`). */}
                     <NativeTabs.Trigger name="for_you">
-                        <Label>{t('tabs.dashboard')}</Label>
+                        <Label hidden>{t('tabs.dashboard')}</Label>
                         <Icon
                             sf="square.grid.2x2.fill"
                             src={<VectorIcon family={MaterialIcons} name="dashboard" />}
@@ -52,21 +56,21 @@ export default function AppLayout() {
                     </NativeTabs.Trigger>
                     {/* Explore (route `around`). */}
                     <NativeTabs.Trigger name="around">
-                        <Label>{t('tabs.around')}</Label>
+                        <Label hidden>{t('tabs.around')}</Label>
                         <Icon
                             sf="safari.fill"
                             src={<VectorIcon family={MaterialIcons} name="explore" />}
                         />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger name="profile">
-                        <Label>{t('tabs.profile')}</Label>
+                        <Label hidden>{t('tabs.profile')}</Label>
                         <Icon
                             sf="person.fill"
                             src={<VectorIcon family={MaterialIcons} name="person" />}
                         />
                     </NativeTabs.Trigger>
                     <NativeTabs.Trigger name="settings">
-                        <Label>{t('tabs.settings')}</Label>
+                        <Label hidden>{t('tabs.settings')}</Label>
                         <Icon
                             sf="gearshape.fill"
                             src={<VectorIcon family={MaterialIcons} name="settings" />}

@@ -235,7 +235,7 @@
     "togglePin": "Toggle pin"
   },
   "tabs": {
-    "feed": "Feed",
+    "deck": "Deck",
     "dashboard": "Dashboard",
     "around": "Explore",
     "profile": "Profile",
@@ -243,11 +243,13 @@
     "gotIt": "Got it"
   },
   "swipeFeed": {
+    "yourDeck": "Your deck",
     "moreLikeThis": "More like this",
     "lessLikeThis": "Less like this",
     "next": "Next",
     "back": "Back",
     "askMera": "Ask Mera",
+    "closeTree": "Close",
     "likeStamp": "LIKE",
     "nopeStamp": "NOPE",
     "treeRoot": "All",

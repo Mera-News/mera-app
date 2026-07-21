@@ -1,11 +1,10 @@
-// SwipeFeedScreen — the Feed tab (landing tab). A Tinder-style card stack whose
-// PRIMARY interaction is the labeled VerdictBar ("Less like this" / "More like
-// this" + Ask Mera); a horizontal swipe is a secondary quick verdict. The header
-// is ONLY the 24h stats sentence. Below the deck: the VerdictBar, a "Next ›"
-// advance control, and a "‹ Back" control (once past the first card).
-//
-// This phase ships the tab/deck/cards/verdict-bar + the swipe-callbacks contract
-// (no-op defaults). P4 fills the callbacks + the inline-feedback tree (treeSlot).
+// SwipeFeedScreen — the "Deck" tab (landing tab). A Tinder-style card stack whose
+// PRIMARY interaction is the thumbs VerdictBar (thumb-down = less like this,
+// thumb-up = more like this, + Ask Mera); a horizontal swipe is a secondary quick
+// verdict. The header is the "Your deck" heading + the 24h stats sentence, with
+// round icon-only Back / Next controls ABOVE the card. Tapping a thumb records a
+// verdict and floats the FeedbackCardOverlay over the (dimmed) top card; a
+// terminal (non-openChat) leaf auto-advances the deck.
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
@@ -14,16 +13,18 @@ import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import SwipeDeck, { type DeckWindowEntry } from './SwipeDeck';
 import VerdictBar from './VerdictBar';
-import InlineFeedbackTree from './InlineFeedbackTree';
+import FeedbackCardOverlay from './FeedbackCardOverlay';
 import { swipeCallbacks } from './swipe-callbacks';
 import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
 import { Box } from '@/components/ui/box';
+import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { MaterialIcons } from '@expo/vector-icons';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -44,13 +45,40 @@ import {
 } from '@/lib/stores/swipe-deck-store';
 import { buildSwipeStack } from '@/lib/stores/swipe-stack-selector';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const H_MARGIN = 16;
+const NAV_ACCENT = '#EDA77E';
+const NAV_BUTTON_SIZE = 44;
+
+/** A round, icon-only Back/Next control — mirrors the bordered circular buttons
+ *  used across the app (ArticleActionsRow). Label lives in `accessibilityLabel`. */
+const NavIconButton: React.FC<{
+  icon: keyof typeof MaterialIcons.glyphMap;
+  onPress: () => void;
+  accessibilityLabel: string;
+}> = ({ icon, onPress, accessibilityLabel }) => (
+  <Pressable
+    onPress={onPress}
+    hitSlop={10}
+    accessibilityRole="button"
+    accessibilityLabel={accessibilityLabel}
+    className="items-center justify-center rounded-full"
+    style={{
+      width: NAV_BUTTON_SIZE,
+      height: NAV_BUTTON_SIZE,
+      borderWidth: 1.75,
+      borderColor: NAV_ACCENT,
+      backgroundColor: 'transparent',
+    }}
+  >
+    <MaterialIcons name={icon} size={24} color={NAV_ACCENT} />
+  </Pressable>
+);
 
 // Install the real Feed-signal implementations onto the swipe-callbacks contract
 // once, when this screen's module loads (before any render). Idempotent.
@@ -129,6 +157,21 @@ const SwipeFeedScreen: React.FC = () => {
   const topId = topEntry?.candidate?.id ?? null;
   const topVerdict: Verdict | null = topId ? verdicts[topId]?.verdict ?? null : null;
 
+  // ── Feedback-tree overlay (floats OVER the top card once a thumb is tapped) ──
+  const [treeOpen, setTreeOpen] = useState(false);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Any change of the top card (advance / Back) closes the overlay — a revisited
+  // card shows its stored verdict on the thumbs but does NOT auto-open the tree.
+  useEffect(() => {
+    setTreeOpen(false);
+  }, [topId]);
+  useEffect(
+    () => () => {
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+    },
+    [],
+  );
+
   // ── Commit paths ──
   const handleSwipeVerdict = useCallback((verdict: Verdict) => {
     const cand = windowRef.current[0]?.candidate;
@@ -160,12 +203,13 @@ const SwipeFeedScreen: React.FC = () => {
     useSwipeDeckStore.getState().goBack();
   }, []);
 
-  // ── VerdictBar (no advance) ──
+  // ── VerdictBar (records a verdict, then opens the tree overlay — no advance) ──
   const handlePillVerdict = useCallback((verdict: Verdict) => {
     const cand = windowRef.current[0]?.candidate;
     if (!cand) return;
     useSwipeDeckStore.getState().setVerdict(cand.id, verdict);
     swipeCallbacks.onVerdict(cand.suggestion, verdict);
+    setTreeOpen(true);
   }, []);
 
   const handlePillChanged = useCallback((from: Verdict, to: Verdict) => {
@@ -173,7 +217,10 @@ const SwipeFeedScreen: React.FC = () => {
     if (!cand) return;
     useSwipeDeckStore.getState().setVerdict(cand.id, to);
     swipeCallbacks.onVerdictChanged(cand.suggestion, from, to);
+    setTreeOpen(true);
   }, []);
+
+  const handleReopenTree = useCallback(() => setTreeOpen(true), []);
 
   const handleAskMera = useCallback(() => {
     const cand = windowRef.current[0]?.candidate;
@@ -182,7 +229,7 @@ const SwipeFeedScreen: React.FC = () => {
     swipeCallbacks.onInvokeMera(cand.suggestion, rec?.verdict ?? 'like', rec?.path ?? []);
   }, []);
 
-  // ── Inline feedback tree (under the VerdictBar) ──
+  // ── Feedback tree (inside the overlay) ──
   const handleTreePathChanged = useCallback(
     (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => {
       const cand = windowRef.current[0]?.candidate;
@@ -198,6 +245,20 @@ const SwipeFeedScreen: React.FC = () => {
     },
     [],
   );
+
+  // Terminal (non-openChat) leaf tapped: path is already recorded — give the
+  // selection a brief beat to register, then close the overlay + advance. The
+  // verdict was recorded on the thumb tap, so this only needs the seen-impression
+  // + advance (same path as Next on a decided card).
+  const handleLeafCommitted = useCallback(() => {
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => {
+      const cand = windowRef.current[0]?.candidate;
+      setTreeOpen(false);
+      if (cand) recordSeen(cand.suggestion);
+      useSwipeDeckStore.getState().advance();
+    }, 250);
+  }, []);
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
@@ -249,10 +310,35 @@ const SwipeFeedScreen: React.FC = () => {
 
   return (
     <Box className="flex-1 bg-black">
-      {/* Header — the stats sentence is the ONLY header element this phase. */}
-      <VStack className="px-5 pb-3" style={{ paddingTop: insets.top + 16 }}>
+      {/* Header — "Your deck" heading (top-left) + the 24h stats sentence. */}
+      <VStack className="px-5 pb-2" space="xs" style={{ paddingTop: insets.top + 16 }}>
+        <Heading size="3xl" className="text-white" numberOfLines={1}>
+          {t('swipeFeed.yourDeck')}
+        </Heading>
         <FeedStatsSentence />
       </VStack>
+
+      {/* Back / Next — compact icon-only controls ABOVE the card. */}
+      <HStack className="items-center justify-between px-5 pb-2">
+        {cursor > 0 ? (
+          <NavIconButton
+            icon="chevron-left"
+            onPress={handleBack}
+            accessibilityLabel={t('swipeFeed.back')}
+          />
+        ) : (
+          <View style={{ width: NAV_BUTTON_SIZE, height: NAV_BUTTON_SIZE }} />
+        )}
+        {showDeck ? (
+          <NavIconButton
+            icon="chevron-right"
+            onPress={handleNext}
+            accessibilityLabel={t('swipeFeed.next')}
+          />
+        ) : (
+          <View style={{ width: NAV_BUTTON_SIZE, height: NAV_BUTTON_SIZE }} />
+        )}
+      </HStack>
 
       {/* Deck area. */}
       <View style={{ flex: 1, paddingHorizontal: H_MARGIN, paddingVertical: 8 }}>
@@ -262,13 +348,29 @@ const SwipeFeedScreen: React.FC = () => {
             onSwipeVerdict={handleSwipeVerdict}
             onAdvanceSentinel={handleAdvanceSentinel}
             hMargin={H_MARGIN}
+            topDimmed={treeOpen && topIsReal && topVerdict != null}
           />
         ) : (
           <View style={{ flex: 1, justifyContent: 'center' }}>{renderEmpty()}</View>
         )}
+
+        {/* Feedback-tree overlay — floats over the (dimmed) top card. */}
+        {treeOpen && topIsReal && topVerdict != null && topEntry?.candidate ? (
+          <FeedbackCardOverlay
+            key={topId ?? undefined}
+            suggestion={topEntry.candidate.suggestion}
+            verdict={topVerdict}
+            initialPathIds={topId ? verdicts[topId]?.path : undefined}
+            onClose={() => setTreeOpen(false)}
+            onTreePathChanged={handleTreePathChanged}
+            onInvokeMera={handleTreeInvokeMera}
+            onLeafCommitted={handleLeafCommitted}
+            onAskMera={handleAskMera}
+          />
+        ) : null}
       </View>
 
-      {/* Controls — VerdictBar (real cards only) + Next / Back. */}
+      {/* Controls — the thumbs VerdictBar (real cards only). */}
       <VStack
         className="px-5"
         space="md"
@@ -279,52 +381,10 @@ const SwipeFeedScreen: React.FC = () => {
             verdict={topVerdict}
             onVerdict={handlePillVerdict}
             onVerdictChanged={handlePillChanged}
+            onReopenTree={handleReopenTree}
             onAskMera={handleAskMera}
-            treeSlot={
-              topVerdict != null && topEntry?.candidate ? (
-                <InlineFeedbackTree
-                  key={topId ?? undefined}
-                  suggestion={topEntry.candidate.suggestion}
-                  verdict={topVerdict}
-                  onTreePathChanged={handleTreePathChanged}
-                  onInvokeMera={handleTreeInvokeMera}
-                  initialPathIds={topId ? verdicts[topId]?.path : undefined}
-                />
-              ) : undefined
-            }
           />
         ) : null}
-
-        <HStack className="items-center justify-between">
-          {cursor > 0 ? (
-            <Pressable
-              onPress={handleBack}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={t('swipeFeed.back')}
-            >
-              <Text size="md" className="text-typography-400">
-                {`‹ ${t('swipeFeed.back')}`}
-              </Text>
-            </Pressable>
-          ) : (
-            <View />
-          )}
-          {showDeck ? (
-            <Pressable
-              onPress={handleNext}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={t('swipeFeed.next')}
-            >
-              <Text size="md" className="text-primary-400 font-semibold">
-                {`${t('swipeFeed.next')} ›`}
-              </Text>
-            </Pressable>
-          ) : (
-            <View />
-          )}
-        </HStack>
       </VStack>
 
       {/* One-time "What's new" sheet (moved here from ForYouScreen). */}

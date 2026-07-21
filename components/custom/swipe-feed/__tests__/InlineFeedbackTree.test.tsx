@@ -100,12 +100,14 @@ describe('InlineFeedbackTree', () => {
   it('descending a branch records the path and reveals its children', async () => {
     const onTreePathChanged = jest.fn();
     const onInvokeMera = jest.fn();
+    const onLeafCommitted = jest.fn();
     const { getByText } = render(
       <InlineFeedbackTree
         suggestion={makeSuggestion()}
         verdict="dislike"
         onTreePathChanged={onTreePathChanged}
         onInvokeMera={onInvokeMera}
+        onLeafCommitted={onLeafCommitted}
       />,
     );
 
@@ -120,17 +122,21 @@ describe('InlineFeedbackTree', () => {
     // Children now visible.
     await waitFor(() => getByText('Wrong topic'));
     expect(onInvokeMera).not.toHaveBeenCalled();
+    // A branch is not a terminal leaf — no auto-advance signal.
+    expect(onLeafCommitted).not.toHaveBeenCalled();
   });
 
-  it('tapping an openChat leaf escalates to Mera with the full path', async () => {
+  it('tapping an openChat leaf escalates to Mera with the full path (no auto-advance)', async () => {
     const onTreePathChanged = jest.fn();
     const onInvokeMera = jest.fn();
+    const onLeafCommitted = jest.fn();
     const { getByText } = render(
       <InlineFeedbackTree
         suggestion={makeSuggestion()}
         verdict="dislike"
         onTreePathChanged={onTreePathChanged}
         onInvokeMera={onInvokeMera}
+        onLeafCommitted={onLeafCommitted}
       />,
     );
 
@@ -142,17 +148,21 @@ describe('InlineFeedbackTree', () => {
       'dislike',
       ['suggestion', 'something_else'],
     );
+    // openChat leaves hand off to Mera — they must NOT auto-advance the deck.
+    expect(onLeafCommitted).not.toHaveBeenCalled();
   });
 
-  it('tapping an actions leaf records the path without escalating to Mera', async () => {
+  it('tapping a terminal actions leaf records the path + fires onLeafCommitted (auto-advance)', async () => {
     const onTreePathChanged = jest.fn();
     const onInvokeMera = jest.fn();
+    const onLeafCommitted = jest.fn();
     const { getByText } = render(
       <InlineFeedbackTree
         suggestion={makeSuggestion()}
         verdict="dislike"
         onTreePathChanged={onTreePathChanged}
         onInvokeMera={onInvokeMera}
+        onLeafCommitted={onLeafCommitted}
       />,
     );
 
@@ -161,6 +171,11 @@ describe('InlineFeedbackTree', () => {
 
     expect(onInvokeMera).not.toHaveBeenCalled();
     expect(onTreePathChanged).toHaveBeenLastCalledWith(
+      expect.objectContaining({ articleId: 'art-1' }),
+      'dislike',
+      ['suggestion', 'wrong_topic'],
+    );
+    expect(onLeafCommitted).toHaveBeenCalledWith(
       expect.objectContaining({ articleId: 'art-1' }),
       'dislike',
       ['suggestion', 'wrong_topic'],

@@ -37,59 +37,53 @@ jest.mock('@/components/custom/MeraLogo', () => {
 
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { Text as RNText } from 'react-native';
 import VerdictBar from '../VerdictBar';
 
 function setup(overrides: Partial<React.ComponentProps<typeof VerdictBar>> = {}) {
   const onVerdict = jest.fn();
   const onVerdictChanged = jest.fn();
+  const onReopenTree = jest.fn();
   const onAskMera = jest.fn();
   const utils = render(
     <VerdictBar
       verdict={overrides.verdict ?? null}
       onVerdict={onVerdict}
       onVerdictChanged={onVerdictChanged}
+      onReopenTree={onReopenTree}
       onAskMera={onAskMera}
-      treeSlot={overrides.treeSlot}
     />,
   );
-  return { ...utils, onVerdict, onVerdictChanged, onAskMera };
+  return { ...utils, onVerdict, onVerdictChanged, onReopenTree, onAskMera };
 }
 
 describe('VerdictBar', () => {
-  it('records a fresh verdict on an undecided card', () => {
+  it('records a fresh verdict on an undecided card (thumb-up)', () => {
     const { getByLabelText, onVerdict, onVerdictChanged } = setup({ verdict: null });
     fireEvent.press(getByLabelText('swipeFeed.moreLikeThis'));
     expect(onVerdict).toHaveBeenCalledWith('like');
     expect(onVerdictChanged).not.toHaveBeenCalled();
   });
 
-  it('flips the verdict when the OTHER pill is tapped on a decided card', () => {
+  it('flips the verdict when the OTHER thumb is tapped on a decided card', () => {
     const { getByLabelText, onVerdict, onVerdictChanged } = setup({ verdict: 'like' });
     fireEvent.press(getByLabelText('swipeFeed.lessLikeThis'));
     expect(onVerdictChanged).toHaveBeenCalledWith('like', 'dislike');
     expect(onVerdict).not.toHaveBeenCalled();
   });
 
-  it('is a no-op when the already-selected pill is tapped', () => {
-    const { getByLabelText, onVerdict, onVerdictChanged } = setup({ verdict: 'like' });
+  it('re-opens the tree (no re-record) when the already-selected thumb is tapped', () => {
+    const { getByLabelText, onVerdict, onVerdictChanged, onReopenTree } = setup({
+      verdict: 'like',
+    });
     fireEvent.press(getByLabelText('swipeFeed.moreLikeThis'));
     expect(onVerdict).not.toHaveBeenCalled();
     expect(onVerdictChanged).not.toHaveBeenCalled();
+    expect(onReopenTree).toHaveBeenCalled();
   });
 
   it('invokes Ask Mera', () => {
     const { getByLabelText, onAskMera } = setup();
     fireEvent.press(getByLabelText('swipeFeed.askMera'));
     expect(onAskMera).toHaveBeenCalled();
-  });
-
-  it('renders the tree slot only once a verdict exists', () => {
-    const slot = <RNText>TREE_SLOT</RNText>;
-    const undecided = setup({ verdict: null, treeSlot: slot });
-    expect(undecided.queryByText('TREE_SLOT')).toBeNull();
-
-    const decided = setup({ verdict: 'dislike', treeSlot: slot });
-    expect(decided.queryByText('TREE_SLOT')).not.toBeNull();
   });
 });

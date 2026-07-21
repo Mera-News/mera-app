@@ -37,6 +37,9 @@ export interface InlineFeedbackTreeProps {
   onTreePathChanged: (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => void;
   /** Escalate to the Mera chat (openChat leaves + the VerdictBar's Mera icon). */
   onInvokeMera: (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => void;
+  /** A TERMINAL leaf (childless, NON-openChat: actions/nudge/seenOnly) was tapped
+   *  after its path was recorded — the overlay uses this to settle + auto-advance. */
+  onLeafCommitted?: (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => void;
   /** Stored node-id path to resume when revisiting a card (Back). */
   initialPathIds?: string[];
 }
@@ -85,6 +88,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   verdict,
   onTreePathChanged,
   onInvokeMera,
+  onLeafCommitted,
   initialPathIds,
 }) => {
   const { t } = useTranslation();
@@ -156,8 +160,10 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       hapticLight();
       setSelectedLeafId(node.id);
       onTreePathChanged(suggestion, verdict, nextIds);
+      // Terminal (non-openChat) leaf — let the overlay settle + auto-advance.
+      onLeafCommitted?.(suggestion, verdict, nextIds);
     },
-    [pathIds, descend, onTreePathChanged, onInvokeMera, suggestion, verdict],
+    [pathIds, descend, onTreePathChanged, onInvokeMera, onLeafCommitted, suggestion, verdict],
   );
 
   const handleCrumb = useCallback(

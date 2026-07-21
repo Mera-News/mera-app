@@ -45,6 +45,8 @@ interface SwipeDeckProps {
   onAdvanceSentinel: () => void;
   /** Deck-area horizontal margin (card width = screen − 2 × margin). */
   hMargin?: number;
+  /** Dim the top card + disable its gesture/tap while the feedback overlay is open. */
+  topDimmed?: boolean;
 }
 
 const BEHIND_SCALE = [1, 0.94, 0.9];
@@ -100,6 +102,7 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
   onSwipeVerdict,
   onAdvanceSentinel,
   hMargin = 16,
+  topDimmed = false,
 }) => {
   const { width } = useWindowDimensions();
   const cardWidth = Math.max(0, width - 2 * hMargin);
@@ -145,6 +148,7 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
   const panGesture = React.useMemo(
     () =>
       Gesture.Pan()
+        .enabled(!topDimmed)
         .activeOffsetX([-12, 12])
         .onUpdate((e) => {
           translateX.value = e.translationX;
@@ -188,7 +192,7 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
             }
           }
         }),
-    [cardWidth, reduceMotion, topIsSentinel, commitVerdict, commitSentinel, translateX, translateY, opacity, dragProgress],
+    [cardWidth, reduceMotion, topIsSentinel, commitVerdict, commitSentinel, translateX, translateY, opacity, dragProgress, topDimmed],
   );
 
   const topStyle = useAnimatedStyle(() => {
@@ -196,14 +200,14 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
       ? '0deg'
       : `${interpolate(translateX.value, [-cardWidth, 0, cardWidth], [-12, 0, 12])}deg`;
     return {
-      opacity: opacity.value,
+      opacity: opacity.value * (topDimmed ? 0.35 : 1),
       transform: [
         { translateX: translateX.value },
         { translateY: translateY.value },
         { rotate },
       ],
     };
-  });
+  }, [reduceMotion, cardWidth, topDimmed]);
 
   // LIKE/NOPE stamp opacities derived from the top card's horizontal drag.
   const likeOpacity = useDerivedValue(() => {
@@ -238,7 +242,7 @@ const SwipeDeck: React.FC<SwipeDeckProps> = ({
               memberCount={top.candidate.memberCount}
               likeOpacity={likeOpacity}
               nopeOpacity={nopeOpacity}
-              interactive
+              interactive={!topDimmed}
             />
           )}
         </Animated.View>
