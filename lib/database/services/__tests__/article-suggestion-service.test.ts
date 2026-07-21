@@ -1325,6 +1325,96 @@ describe('persistAndLinkV2Suggestions', () => {
     expect(existingRow.clusterMembershipsJson).toContain('c-new');
   });
 
+  // ── P7e: heal matched_topics_json orphaned by the topics-empty legacy path ──
+  it('backfills a null matched_topics_json on an existing row when personaMeta is present', async () => {
+    const existingRow = makeSuggestion({
+      id: 'art-1',
+      matchedTopicsJson: null,
+      clusterMembershipsJson: null,
+    });
+    db._setRows('article_suggestions', [existingRow]);
+    db._setRows('article_suggestion_facts', []);
+    mockGetFacts.mockResolvedValueOnce([]);
+
+    // Unchanged clusters ([] == []) so only the matched-topics backfill fires.
+    const article = makeArticleWithClusters({ _id: 'art-1', clusters: [] });
+    const personaMeta = {
+      matchedTopics: new Map([
+        ['art-1', [{ topicId: 't1', text: 'ai', vectorScore: 0.9 }]],
+      ]),
+      headlineScope: new Map(),
+      stableClusterId: new Map(),
+    };
+
+    const result = await persistAndLinkV2Suggestions(
+      [article],
+      new Map(),
+      personaMeta as any,
+    );
+
+    expect(result.insertedCount).toBe(0);
+    expect(database.write).toHaveBeenCalledTimes(1);
+    expect(existingRow.prepareUpdate).toHaveBeenCalledTimes(1);
+    expect(existingRow.matchedTopicsJson).toBe(
+      JSON.stringify([{ topicId: 't1', text: 'ai', vectorScore: 0.9 }]),
+    );
+  });
+
+  it('leaves a non-null matched_topics_json on an existing row untouched', async () => {
+    const originalJson = JSON.stringify([{ topicId: 't-existing', text: 'kept' }]);
+    const existingRow = makeSuggestion({
+      id: 'art-1',
+      matchedTopicsJson: originalJson,
+      clusterMembershipsJson: null,
+    });
+    db._setRows('article_suggestions', [existingRow]);
+    db._setRows('article_suggestion_facts', []);
+    mockGetFacts.mockResolvedValueOnce([]);
+
+    const article = makeArticleWithClusters({ _id: 'art-1', clusters: [] });
+    const personaMeta = {
+      matchedTopics: new Map([
+        ['art-1', [{ topicId: 't1', text: 'ai', vectorScore: 0.9 }]],
+      ]),
+      headlineScope: new Map(),
+      stableClusterId: new Map(),
+    };
+
+    const result = await persistAndLinkV2Suggestions(
+      [article],
+      new Map(),
+      personaMeta as any,
+    );
+
+    // Nothing to insert, clusters unchanged, matched topics already present →
+    // no update at all (early-return path, no write).
+    expect(result.insertedCount).toBe(0);
+    expect(existingRow.prepareUpdate).not.toHaveBeenCalled();
+    expect(existingRow.matchedTopicsJson).toBe(originalJson);
+    expect(database.write).not.toHaveBeenCalled();
+  });
+
+  it('does not backfill matched_topics_json when personaMeta is absent (legacy path)', async () => {
+    const existingRow = makeSuggestion({
+      id: 'art-1',
+      matchedTopicsJson: null,
+      clusterMembershipsJson: null,
+    });
+    db._setRows('article_suggestions', [existingRow]);
+    db._setRows('article_suggestion_facts', []);
+    mockGetFacts.mockResolvedValueOnce([]);
+
+    const article = makeArticleWithClusters({ _id: 'art-1', clusters: [] });
+
+    // No personaMeta → the legacy fallback cannot heal the field.
+    const result = await persistAndLinkV2Suggestions([article], new Map());
+
+    expect(result.insertedCount).toBe(0);
+    expect(existingRow.prepareUpdate).not.toHaveBeenCalled();
+    expect(existingRow.matchedTopicsJson).toBeNull();
+    expect(database.write).not.toHaveBeenCalled();
+  });
+
   it('handles pubDate as a Date object', async () => {
     db._setRows('article_suggestions', []);
     mockGetFacts.mockResolvedValueOnce([]);

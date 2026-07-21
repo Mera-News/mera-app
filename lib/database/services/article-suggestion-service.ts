@@ -1054,6 +1054,33 @@ export interface PersonaPersistMeta {
   stableClusterId?: Map<string, string>;
 }
 
+/** Serialize matched-topic entries into the stored matched_topics_json shape.
+ *  Shared by the insert path and the P7e existing-row backfill so both write the
+ *  identical format. */
+function buildMatchedTopicsJson(matched: MatchedTopicMeta[]): string {
+  return JSON.stringify(
+    matched.map((m) => ({
+      topicId: m.topicId,
+      text: m.text,
+      ...(m.vectorScore != null ? { vectorScore: m.vectorScore } : {}),
+    })),
+  );
+}
+
+/** True when a stored matched_topics_json holds no topics (null, empty string,
+ *  or a JSON empty array) — the marker of a row persisted via the legacy
+ *  topics-empty fallback. Unparseable non-empty values are treated as present so
+ *  the P7e backfill never clobbers real data. */
+function isMatchedTopicsJsonEmpty(json: string | null | undefined): boolean {
+  if (!json) return true;
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) && parsed.length === 0;
+  } catch {
+    return false;
+  }
+}
+
 /** Pick the article's stable cluster id: prefer the server's largest-cluster
  *  rule (matchMeta / headline), else the first non-empty membership stable id. */
 function pickStableClusterId(
@@ -1089,18 +1116,52 @@ export async function persistAndLinkV2Suggestions(
   const existingById = new Map(existingRows.map((r) => [r.id, r]));
   const toInsert = fetched.filter((a) => !existingById.has(a._id));
 
-  const clusterRefreshes: { row: ArticleSuggestionModel; nextJson: string }[] = [];
+  // Updates to already-persisted rows: a changed cluster membership and/or the
+  // P7e matched-topics backfill. Each field is optional and applied only when
+  // set, so an unchanged cluster is left alone while topics are healed and vice
+  // versa.
+  const existingUpdates: {
+    row: ArticleSuggestionModel;
+    nextClusterJson?: string;
+    nextMatchedTopicsJson?: string;
+  }[] = [];
   for (const a of fetched) {
     const row = existingById.get(a._id);
     if (!row) continue;
+    const update: {
+      row: ArticleSuggestionModel;
+      nextClusterJson?: string;
+      nextMatchedTopicsJson?: string;
+    } = { row };
+    let hasUpdate = false;
+
     const nextJson = canonicalClusterMembershipsJson(toClusterMemberships(a.clusters));
     const currentJson = canonicalClusterMembershipsJson(
       parseClusterMemberships(row.clusterMembershipsJson),
     );
-    if (currentJson !== nextJson) clusterRefreshes.push({ row, nextJson });
+    if (currentJson !== nextJson) {
+      update.nextClusterJson = nextJson;
+      hasUpdate = true;
+    }
+
+    // P7e: heal rows persisted during the topics-empty window. The legacy
+    // fallback persisted matched_topics_json = null, so section ownership
+    // orphaned every article to "Also for you" (sticky, since a re-sync only
+    // ever touched clusterMembershipsJson). When we now have persona matched
+    // topics for this article and the stored value is still null/empty, backfill
+    // it — never overwriting a non-null value.
+    if (personaMeta && isMatchedTopicsJsonEmpty(row.matchedTopicsJson)) {
+      const matched = personaMeta.matchedTopics.get(a._id) ?? [];
+      if (matched.length > 0) {
+        update.nextMatchedTopicsJson = buildMatchedTopicsJson(matched);
+        hasUpdate = true;
+      }
+    }
+
+    if (hasUpdate) existingUpdates.push(update);
   }
 
-  if (toInsert.length === 0 && clusterRefreshes.length === 0) {
+  if (toInsert.length === 0 && existingUpdates.length === 0) {
     return { insertedCount: 0, linkedCount: 0 };
   }
 
@@ -1132,8 +1193,13 @@ export async function persistAndLinkV2Suggestions(
     const ops: any[] = [];
     const now = new Date();
 
-    for (const { row, nextJson } of clusterRefreshes) {
-      ops.push(row.prepareUpdate((r) => { r.clusterMembershipsJson = nextJson; }));
+    for (const { row, nextClusterJson, nextMatchedTopicsJson } of existingUpdates) {
+      ops.push(
+        row.prepareUpdate((r) => {
+          if (nextClusterJson !== undefined) r.clusterMembershipsJson = nextClusterJson;
+          if (nextMatchedTopicsJson !== undefined) r.matchedTopicsJson = nextMatchedTopicsJson;
+        }),
+      );
     }
 
     for (const a of toInsert) {
@@ -1188,15 +1254,7 @@ export async function persistAndLinkV2Suggestions(
         r.maxClusterSize = a.maxClusterSize ?? null;
         r.stableClusterId = stableId;
         r.headlineScope = scope;
-        r.matchedTopicsJson = personaMeta
-          ? JSON.stringify(
-              matched.map((m) => ({
-                topicId: m.topicId,
-                text: m.text,
-                ...(m.vectorScore != null ? { vectorScore: m.vectorScore } : {}),
-              })),
-            )
-          : null;
+        r.matchedTopicsJson = personaMeta ? buildMatchedTopicsJson(matched) : null;
         r.computedScore = null;
         r.rawScore = null;
         r.scoreComponentsJson = null;

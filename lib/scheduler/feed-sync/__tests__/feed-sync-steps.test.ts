@@ -20,6 +20,7 @@ const mockGetActive = jest.fn();
 const mockGetAllLocations = jest.fn();
 const mockReconcileTrackedStories = jest.fn();
 const mockCaptureException = jest.fn();
+const mockRunPersonaMigrationIfNeeded = jest.fn();
 
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFacts: (...args: any[]) => mockGetFacts(...args),
@@ -27,6 +28,10 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 
 jest.mock('@/lib/database/services/topic-service', () => ({
   getActive: (...args: any[]) => mockGetActive(...args),
+}));
+
+jest.mock('@/lib/services/persona-migration-service', () => ({
+  runPersonaMigrationIfNeeded: (...args: any[]) => mockRunPersonaMigrationIfNeeded(...args),
 }));
 
 jest.mock('@/lib/database/services/location-service', () => ({
@@ -148,6 +153,12 @@ beforeEach(() => {
   });
   mockReconcileTrackedStories.mockResolvedValue(undefined);
   mockLoadUserGeoLanguageContext.mockResolvedValue(null);
+  mockRunPersonaMigrationIfNeeded.mockResolvedValue({
+    ran: false,
+    factsMigrated: 0,
+    topicsCreated: 0,
+    locationsUpserted: 0,
+  });
 });
 
 // ── stepFetchTopicIds ─────────────────────────────────────────────────────────
@@ -319,6 +330,55 @@ describe('stepFetchTopicIds', () => {
     expect(result.personaMeta?.stableClusterId?.get('art-1')).toBe('sc1');
     expect(mockGetArticleIdsForPersona).toHaveBeenCalled();
     expect(mockGetArticleIdsForTopics).not.toHaveBeenCalled();
+  });
+
+  // ── P7e: sync-vs-persona-migration race ──────────────────────────────────
+  it('awaits the persona migration BEFORE choosing the topics path', async () => {
+    // Migration populates topics as a side effect: getActive returns empty until
+    // the migration resolves, then the persona path is taken.
+    mockRunPersonaMigrationIfNeeded.mockResolvedValue({
+      ran: true,
+      factsMigrated: 1,
+      topicsCreated: 1,
+      locationsUpserted: 0,
+    });
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: 'f1', locationId: null },
+    ] as any);
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    const ctx = makeCtx();
+    await stepFetchTopicIds('p-1', ctx);
+
+    expect(mockRunPersonaMigrationIfNeeded).toHaveBeenCalledTimes(1);
+    // The migration must be invoked before the topics-path choice reads topics.
+    expect(mockRunPersonaMigrationIfNeeded.mock.invocationCallOrder[0]).toBeLessThan(
+      mockGetActive.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('does not fail the step when the persona migration rejects — legacy path still proceeds', async () => {
+    mockRunPersonaMigrationIfNeeded.mockRejectedValue(new Error('migration boom'));
+    // Topics table still empty → legacy fallback path.
+    mockGetActive.mockResolvedValue([]);
+    mockGetFacts.mockResolvedValue([{ metadata: { topics: ['topic-1'] } }]);
+    mockGetArticleIdsForTopics.mockResolvedValue({ results: [] });
+
+    const ctx = makeCtx();
+    // Resolves normally despite the migration rejection.
+    const result = await stepFetchTopicIds('p-1', ctx);
+
+    expect(result.serverArticleIds).toEqual([]);
+    // Legacy path ran (topics still empty), persona path did not.
+    expect(mockGetArticleIdsForTopics).toHaveBeenCalled();
+    expect(mockGetArticleIdsForPersona).not.toHaveBeenCalled();
+    // The failure was captured, not propagated.
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        tags: expect.objectContaining({ method: 'runPersonaMigrationIfNeeded' }),
+      }),
+    );
   });
 
 });

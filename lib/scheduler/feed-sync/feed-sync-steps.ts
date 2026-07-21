@@ -13,6 +13,7 @@ import {
 } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
+import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
 import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
 import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
@@ -81,6 +82,23 @@ export async function stepFetchTopicIds(
   ctx: TaskContext,
 ): Promise<FetchTopicIdsResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
+
+  // P7e: close the sync-vs-migration race. On a fresh upgrade/login both
+  // `feed-sync` and the one-time persona migration fire on app-foreground with
+  // no ordering; if the sync wins, the `topics` table is still empty, so we fall
+  // to the legacy path, which persists rows with matched_topics_json = null —
+  // orphaning every article to "Also for you" (sticky, since re-sync never
+  // rewrites the field). Run the (flag-guarded, instant no-op after first
+  // completion) migration BEFORE the topics-path choice so the persona path is
+  // taken from the first sync. A migration failure must never kill the sync — on
+  // error we proceed exactly as before (legacy fallback if topics still empty).
+  try {
+    await runPersonaMigrationIfNeeded();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { component: 'feed-sync-steps', method: 'runPersonaMigrationIfNeeded' },
+    });
+  }
 
   // Self-gating cutover: once the persona-v3 `topics` table is populated (the
   // one-time silent migration ran), use the privacy-lean persona retrieval;
