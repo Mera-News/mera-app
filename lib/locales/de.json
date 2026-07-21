@@ -68,6 +68,7 @@
     "pullDownToRetry": "Nach unten ziehen, um es erneut zu versuchen",
     "readArticleToast": "Sie haben diesen Artikel bereits gelesen",
     "jumpToSection": "Zum Abschnitt springen",
+    "skipToSection": "Zu {{section}} springen",
     "sectionMenuTop": "Oben",
     "stuckTitle": "Ihr Feed konnte nicht geladen werden",
     "stuckDescription": "Bei uns ist etwas schiefgelaufen.",

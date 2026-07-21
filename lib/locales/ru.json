@@ -68,6 +68,7 @@
     "pullDownToRetry": "Потяните вниз, чтобы повторить",
     "readArticleToast": "Вы прочитали эту статью",
     "jumpToSection": "Перейти к разделу",
+    "skipToSection": "Перейти к {{section}}",
     "sectionMenuTop": "Наверх",
     "stuckTitle": "Не удалось загрузить ленту",
     "stuckDescription": "На нашей стороне что-то пошло не так.",

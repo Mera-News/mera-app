@@ -68,6 +68,7 @@
     "pullDownToRetry": "اسحب للأسفل لإعادة المحاولة",
     "readArticleToast": "لقد قرأت هذا المقال بالفعل.",
     "jumpToSection": "الانتقال إلى القسم",
+    "skipToSection": "الانتقال إلى {{section}}",
     "sectionMenuTop": "الأعلى",
     "stuckTitle": "تعذّر تحميل موجز أخبارك",
     "stuckDescription": "حدث خطأ من جانبنا.",

@@ -68,6 +68,7 @@
     "pullDownToRetry": "Tekrar denemek için aşağı çek",
     "readArticleToast": "Bu makaleyi okudun",
     "jumpToSection": "Bölüme atla",
+    "skipToSection": "{{section}} bölümüne atla",
     "sectionMenuTop": "Üst",
     "stuckTitle": "Haber akışın yüklenemedi",
     "stuckDescription": "Bizim tarafımızda bir şeyler ters gitti.",

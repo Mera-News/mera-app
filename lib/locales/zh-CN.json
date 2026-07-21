@@ -68,6 +68,7 @@
     "pullDownToRetry": "下拉重试",
     "readArticleToast": "您已阅读过这篇文章",
     "jumpToSection": "跳转到分区",
+    "skipToSection": "跳转到 {{section}}",
     "sectionMenuTop": "顶部",
     "stuckTitle": "无法加载您的资讯",
     "stuckDescription": "我们这边出现了问题。",

@@ -68,6 +68,7 @@
     "pullDownToRetry": "Потягніть вниз, щоб повторити",
     "readArticleToast": "Ви прочитали цю статтю",
     "jumpToSection": "Перейти до розділу",
+    "skipToSection": "Перейти до {{section}}",
     "sectionMenuTop": "Вгору",
     "stuckTitle": "Не вдалося завантажити стрічку",
     "stuckDescription": "Щось пішло не так на нашому боці.",

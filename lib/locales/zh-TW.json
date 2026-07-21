@@ -68,6 +68,7 @@
     "pullDownToRetry": "下拉以重試",
     "readArticleToast": "您已閱讀此文章",
     "jumpToSection": "跳至區段",
+    "skipToSection": "跳至 {{section}}",
     "sectionMenuTop": "頂端",
     "stuckTitle": "無法載入您的動態",
     "stuckDescription": "我們這邊發生了問題。",

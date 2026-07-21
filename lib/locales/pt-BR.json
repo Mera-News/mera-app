@@ -68,6 +68,7 @@
     "pullDownToRetry": "Puxe para baixo para tentar novamente",
     "readArticleToast": "Você já leu este artigo",
     "jumpToSection": "Ir para seção",
+    "skipToSection": "Ir para {{section}}",
     "sectionMenuTop": "Topo",
     "stuckTitle": "Não foi possível carregar seu feed",
     "stuckDescription": "Algo deu errado do nosso lado.",

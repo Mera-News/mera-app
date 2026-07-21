@@ -68,6 +68,7 @@
     "pullDownToRetry": "아래로 당겨서 재시도",
     "readArticleToast": "이 기사를 읽었습니다",
     "jumpToSection": "섹션으로 이동",
+    "skipToSection": "{{section}}으로 이동",
     "sectionMenuTop": "맨 위",
     "stuckTitle": "피드를 불러올 수 없습니다",
     "stuckDescription": "서버에서 문제가 발생했습니다.",

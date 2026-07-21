@@ -68,6 +68,7 @@
     "pullDownToRetry": "ดึงลงเพื่อลองใหม่",
     "readArticleToast": "คุณอ่านบทความนี้แล้ว",
     "jumpToSection": "ไปยังส่วน",
+    "skipToSection": "ไปยัง {{section}}",
     "sectionMenuTop": "บนสุด",
     "stuckTitle": "ไม่สามารถโหลดฟีดของคุณได้",
     "stuckDescription": "มีบางอย่างผิดพลาดจากฝั่งเรา",

@@ -68,6 +68,7 @@
     "pullDownToRetry": "पुनः प्रयास के लिए नीचे खींचें",
     "readArticleToast": "आपने यह लेख पढ़ लिया है",
     "jumpToSection": "सेक्शन पर जाएं",
+    "skipToSection": "{{section}} पर जाएं",
     "sectionMenuTop": "ऊपर",
     "stuckTitle": "आपकी फ़ीड लोड नहीं हो सकी",
     "stuckDescription": "हमारी तरफ से कुछ गड़बड़ हो गई।",

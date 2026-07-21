@@ -68,6 +68,7 @@
     "pullDownToRetry": "Kéo xuống để thử lại",
     "readArticleToast": "Bạn đã đọc bài viết này",
     "jumpToSection": "Chuyển đến mục",
+    "skipToSection": "Chuyển đến {{section}}",
     "sectionMenuTop": "Đầu trang",
     "stuckTitle": "Không thể tải bản tin",
     "stuckDescription": "Đã xảy ra sự cố ở phía chúng tôi.",

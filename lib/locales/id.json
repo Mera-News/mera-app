@@ -68,6 +68,7 @@
     "pullDownToRetry": "Tarik ke bawah untuk mencoba lagi",
     "readArticleToast": "Anda telah membaca artikel ini",
     "jumpToSection": "Lompat ke bagian",
+    "skipToSection": "Lompat ke {{section}}",
     "sectionMenuTop": "Atas",
     "stuckTitle": "Tidak dapat memuat feed Anda",
     "stuckDescription": "Terjadi kesalahan di pihak kami.",

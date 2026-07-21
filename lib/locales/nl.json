@@ -68,6 +68,7 @@
     "pullDownToRetry": "Trek omlaag om opnieuw te proberen",
     "readArticleToast": "Je hebt dit artikel gelezen",
     "jumpToSection": "Naar sectie springen",
+    "skipToSection": "Naar {{section}} springen",
     "sectionMenuTop": "Boven",
     "stuckTitle": "Feed kon niet worden geladen",
     "stuckDescription": "Er is iets misgegaan aan onze kant.",

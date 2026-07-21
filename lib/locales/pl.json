@@ -68,6 +68,7 @@
     "pullDownToRetry": "Pociągnij w dół, aby ponowić",
     "readArticleToast": "Przeczytałeś ten artykuł",
     "jumpToSection": "Przejdź do sekcji",
+    "skipToSection": "Przejdź do {{section}}",
     "sectionMenuTop": "Góra",
     "stuckTitle": "Nie udało się załadować kanału",
     "stuckDescription": "Coś poszło nie tak po naszej stronie.",

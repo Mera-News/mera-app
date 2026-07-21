@@ -67,6 +67,7 @@
     "dashboardTitle": "Panel",
     "readArticleToast": "Has leído este artículo",
     "jumpToSection": "Ir a la sección",
+    "skipToSection": "Ir a {{section}}",
     "sectionMenuTop": "Arriba",
     "pullDownToRetry": "Desliza hacia abajo para reintentar",
     "stuckTitle": "No se pudo cargar tu feed",

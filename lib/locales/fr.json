@@ -67,6 +67,7 @@
     "dashboardTitle": "Tableau de bord",
     "readArticleToast": "Vous avez lu cet article",
     "jumpToSection": "Aller à la section",
+    "skipToSection": "Aller à {{section}}",
     "sectionMenuTop": "Haut",
     "pullDownToRetry": "Tirez vers le bas pour réessayer",
     "stuckTitle": "Impossible de charger votre fil",

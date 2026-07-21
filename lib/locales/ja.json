@@ -68,6 +68,7 @@
     "pullDownToRetry": "引き下げて再試行",
     "readArticleToast": "この記事を読みました",
     "jumpToSection": "セクションにジャンプ",
+    "skipToSection": "{{section}}にジャンプ",
     "sectionMenuTop": "トップ",
     "stuckTitle": "フィードを読み込めませんでした",
     "stuckDescription": "サーバー側で問題が発生しました。",
