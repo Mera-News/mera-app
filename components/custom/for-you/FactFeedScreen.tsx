@@ -5,9 +5,8 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { authClient } from '@/lib/auth-client';
-import { recordOpen } from '@/lib/database/services/story-impression-service';
 import logger from '@/lib/logger';
+import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
   buildFactRows,
   isSuggestionOpened,
@@ -17,7 +16,6 @@ import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/sectio
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { useUserStore } from '@/lib/stores/user-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -55,7 +53,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const insets = useSafeAreaInsets();
   const suggestions = useForYouSuggestions();
   const openedIds = useOpenedStoriesStore((s) => s.ids);
-  const { data: session } = authClient.useSession();
+  const handlePress = useOpenSuggestion('sectioned');
   const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
 
   useEffect(() => {
@@ -76,31 +74,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     const { rows } = buildFactRows(suggestions, snapshots);
     return rows.find((r) => r.factId === factId)?.groups ?? [];
   }, [snapshots, suggestions, factId]);
-
-  const handlePress = useCallback((suggestion: ForYouSuggestion) => {
-    useOpenedStoriesStore.getState().markOpened(
-      suggestion.articleId,
-      suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null,
-    );
-    void recordOpen({
-      articleId: suggestion.articleId,
-      suggestionId: suggestion._id,
-      stableClusterId:
-        suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null,
-      titleNorm:
-        (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
-      surface: 'sectioned',
-    });
-    const userPersonaId = useUserStore.getState().userPersona?._id || '';
-    router.push({
-      pathname: '/logged-in/suggestion-detail',
-      params: {
-        articleSuggestionId: suggestion._id,
-        userId: session?.user?.id || '',
-        userPersonaId,
-      },
-    });
-  }, [session?.user?.id]);
 
   const renderItem = useCallback(
     ({ item }: { item: FactRowGroup }) => (

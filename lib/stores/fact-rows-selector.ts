@@ -40,11 +40,13 @@ import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/c
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from './for-you-store';
 
-/** Only stories from the last 24h are eligible (matches the legacy feed). */
-const FEED_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Only stories from the last 24h are eligible (matches the legacy feed).
+ *  Exported so the swipe-stack selector reuses the exact same window. */
+export const FEED_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-/** The render gate — a scored row must clear this to be shown. */
-const RENDER_GATE = 0.3;
+/** The render gate — a scored row must clear this to be shown. Exported so the
+ *  swipe-stack selector reuses the exact same threshold. */
+export const RENDER_GATE = 0.3;
 
 /** Sentinel factId for the trailing "Also for you" catch-all row. Real factIds
  *  are UUIDs, so this never collides. */
@@ -110,8 +112,9 @@ function parseMs(iso: string | null | undefined): number {
 }
 
 /** A row is VISIBLE once its note exists (status `complete`) — see the module
- *  header. Must also clear the render gate and the 24h window. */
-function isVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
+ *  header. Must also clear the render gate and the 24h window. Exported so the
+ *  swipe-stack selector applies the identical visibility gate. */
+export function isVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
   if (s.status !== ArticleSuggestionStatus.Complete) return false;
   if ((s.relevance ?? 0) <= RENDER_GATE) return false;
   const pub = parseMs(s.firstPubDate);
@@ -124,7 +127,10 @@ function addedMsOf(s: ForYouSuggestion): number {
   return parseMs(s.createdAt);
 }
 
-function isBreaking(s: ForYouSuggestion): boolean {
+/** Breaking predicate (rawScore > 1.0, or ≥ 0.8 with a disaster/weather/conflict
+ *  event type). Exported so the swipe-stack selector's deck ordering pins the
+ *  same breaking stories first without duplicating the rule. */
+export function isBreaking(s: ForYouSuggestion): boolean {
   const raw = s.rawScore;
   if (raw == null) return false;
   if (raw > 1.0) return true;

@@ -25,8 +25,8 @@ export default function AppLayout() {
     const { t } = useTranslation();
 
     // Trigger order defines both the tab order AND the initial route — the first
-    // trigger (`for_you`) is the one selected on first mount, replacing the old
-    // JS-Tabs `initialRouteName="browse"`.
+    // trigger (`feed`) is the one selected on first mount (the landing tab), with
+    // `for_you` (now the "Dashboard") second.
     return (
         <View style={{ flex: 1, backgroundColor: '#000' }}>
             <ErrorBoundary
@@ -34,11 +34,20 @@ export default function AppLayout() {
                 FallbackComponent={FullScreenErrorFallback}
             >
                 <NativeTabs tintColor={ACCENT} minimizeBehavior="onScrollDown">
-                    <NativeTabs.Trigger name="for_you">
-                        <Label>{t('tabs.forYou')}</Label>
+                    {/* Feed (route `feed`) — the buttons-first swipe deck, landing tab. */}
+                    <NativeTabs.Trigger name="feed">
+                        <Label>{t('tabs.feed')}</Label>
                         <Icon
                             sf="house.fill"
                             src={<VectorIcon family={MaterialIcons} name="home" />}
+                        />
+                    </NativeTabs.Trigger>
+                    {/* Dashboard (route `for_you`). */}
+                    <NativeTabs.Trigger name="for_you">
+                        <Label>{t('tabs.dashboard')}</Label>
+                        <Icon
+                            sf="square.grid.2x2.fill"
+                            src={<VectorIcon family={MaterialIcons} name="dashboard" />}
                         />
                     </NativeTabs.Trigger>
                     {/* Explore (route `around`). */}

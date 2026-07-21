@@ -103,6 +103,7 @@
     "noInterests": "Mera cannot analyze news for you",
     "noInterestsDescription": "Please create your user persona for Mera to start generating news for you.",
     "forYou": "For you",
+    "dashboardTitle": "Dashboard",
     "pullDownToRetry": "Pull down to retry",
     "stuckTitle": "Couldn't load your feed",
     "stuckDescription": "Something went wrong on our end.",
@@ -238,11 +239,22 @@
   },
   "tabs": {
     "browse": "Browse",
+    "feed": "Feed",
+    "dashboard": "Dashboard",
     "forYou": "For You",
     "around": "Explore",
     "profile": "Profile",
     "settings": "Settings",
     "gotIt": "Got it"
+  },
+  "swipeFeed": {
+    "moreLikeThis": "More like this",
+    "lessLikeThis": "Less like this",
+    "next": "Next",
+    "back": "Back",
+    "askMera": "Ask Mera",
+    "likeStamp": "LIKE",
+    "nopeStamp": "NOPE"
   },
   "explore": {
     "title": "Explore",

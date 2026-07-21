@@ -4,7 +4,6 @@ import NotificationBellButton from '@/components/custom/notifications/Notificati
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
-import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
@@ -21,15 +20,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
-import { recordOpen } from '@/lib/database/services/story-impression-service';
 import logger from '@/lib/logger';
-import { ForYouSuggestion, useForYouStore } from '@/lib/stores/for-you-store';
-import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
-    getForYouActions,
-    useForYouCounts,
     useForYouAsyncJobPhase,
     useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
@@ -41,16 +36,17 @@ import {
     useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
-import { useUserStore } from '@/lib/stores/user-store';
+import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
+import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -61,8 +57,11 @@ const openConfigPanel = () => router.push('/logged-in/app_container/profile');
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
     // Local UI state only
-    const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    // Shared initial-load bootstrap (persona fetch + opened-set hydration) and
+    // the shared open-suggestion handler — both extracted so the Feed tab reuses
+    // them (see lib/hooks/*).
+    const { isLoading, errorMessage } = useFeedBootstrap();
+    const handleSuggestionPress = useOpenSuggestion('sectioned');
     const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>();
     const [showOnboardingWait, setShowOnboardingWait] = useState(false);
     const [stuckOnEmpty, setStuckOnEmpty] = useState(false);
@@ -98,17 +97,8 @@ const MeraNewsScreen: React.FC = () => {
     // The live store array — now rendered directly (no held-feed pill hop).
     const suggestions = useForYouSuggestions();
 
-    // Hydrate the opened-story set once on mount; refresh on refocus so opens
-    // recorded on other surfaces dim here too.
-    useEffect(() => {
-        void useOpenedStoriesStore.getState().hydrate();
-    }, []);
-    useEffect(() => {
-        if (isFocused) void useOpenedStoriesStore.getState().hydrate();
-    }, [isFocused]);
-
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
-    const { articleCount } = useForYouCounts();
+    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const { isDeviceProcessing } = useForYouDeviceProcessing();
     const unscoredCount = useForYouUnscoredCount();
@@ -161,27 +151,9 @@ const MeraNewsScreen: React.FC = () => {
     const isDailyLimited =
         dailyLimitResetAt != null && nowTick < dailyLimitResetAt;
 
-    // Header counts reflect everything scored this cycle (live store).
-    const { analysedCount, relevantCount } = useMemo(() => {
-        const cutoffMs = Date.now() - 24 * 60 * 60 * 1000;
-        let analysed = 0;
-        let relevant = 0;
-        for (const s of suggestions) {
-            if (s.status === ArticleSuggestionStatus.Unscored) continue;
-            const pt = Date.parse(s.firstPubDate);
-            if (!Number.isFinite(pt) || pt < cutoffMs) continue;
-            analysed++;
-            if (s.relevance > 0.3) relevant++;
-        }
-        return { analysedCount: analysed, relevantCount: relevant };
-    }, [suggestions]);
-
-    const { setHasGeneratedTopics } = getForYouActions();
-    const { fetchUserPersona } = useUserStore();
     const { data: session } = authClient.useSession();
     const isConnected = useIsConnected();
     const insets = useSafeAreaInsets();
-    const loadingRef = useRef(false);
 
     // ── Fact-rows feed (Round-3 C1/C2) ──
     // Persona snapshots (topics/facts/locations). Null while loading.
@@ -210,16 +182,6 @@ const MeraNewsScreen: React.FC = () => {
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 
-    // Initial load — fetch if store is empty (first visit or after logout).
-    useEffect(() => {
-        const storeState = useForYouStore.getState();
-        if (!session?.user?.id) return;
-        if (storeState.suggestions.length === 0) {
-            loadArticles();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [session?.user?.id]);
-
     // First arrival from onboarding: show waiting card if user has any facts.
     useEffect(() => {
         if (fromOnboarding !== '1') return;
@@ -235,36 +197,6 @@ const MeraNewsScreen: React.FC = () => {
             });
         return () => { cancelled = true; };
     }, [fromOnboarding]);
-
-    const loadArticles = async () => {
-        if (!session?.user?.id) return;
-        if (loadingRef.current) return;
-        loadingRef.current = true;
-
-        try {
-            setErrorMessage(null);
-            setIsLoading(true);
-
-            const persona = await fetchUserPersona(session.user.id);
-            const fetchedUserPersonaId = persona?._id;
-            const hasInterests = persona?.userTopics && persona.userTopics.length > 0;
-            setHasGeneratedTopics(hasInterests ?? false);
-
-            if (!fetchedUserPersonaId || !hasInterests) {
-                return;
-            }
-        } catch (error: any) {
-            logger.captureException(error, {
-                tags: { screen: 'ForYouScreen', method: 'loadArticles' },
-                extra: { userId: session.user.id },
-            });
-            const isNetworkError = error?.networkError || error?.message?.includes('Network request failed');
-            setErrorMessage(isNetworkError ? t('errors.networkError') : t('errors.feedError'));
-        } finally {
-            setIsLoading(false);
-            loadingRef.current = false;
-        }
-    };
 
     // Hide the onboarding waiting card once the first card is ready.
     useEffect(() => {
@@ -325,7 +257,6 @@ const MeraNewsScreen: React.FC = () => {
                     hasGeneratedTopics: s.hasGeneratedTopics,
                     lastProcessingRunFinishedAt: s.lastProcessingRunFinishedAt,
                     dbReady: d.ready,
-                    loadingRef: loadingRef.current,
                 },
             });
             setStuckOnEmpty(true);
@@ -334,32 +265,6 @@ const MeraNewsScreen: React.FC = () => {
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, hasRenderableContent, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
-
-    const handleSuggestionPress = useCallback((suggestion: ForYouSuggestion) => {
-        // Optimistically dim the row immediately.
-        useOpenedStoriesStore.getState().markOpened(
-            suggestion.articleId,
-            suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null,
-        );
-        void recordOpen({
-            articleId: suggestion.articleId,
-            suggestionId: suggestion._id,
-            stableClusterId:
-                suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null,
-            titleNorm:
-                (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
-            surface: 'sectioned',
-        });
-        const userPersonaId = useUserStore.getState().userPersona?._id || '';
-        router.push({
-            pathname: '/logged-in/suggestion-detail',
-            params: {
-                articleSuggestionId: suggestion._id,
-                userId: session?.user?.id || '',
-                userPersonaId,
-            },
-        });
-    }, [session?.user?.id]);
 
     const renderEmpty = useCallback(() => {
         if (showOnboardingWait) {
@@ -418,7 +323,7 @@ const MeraNewsScreen: React.FC = () => {
             <VStack className="px-5 pb-2 border-gray-800 z-10" style={{ paddingTop: insets.top + 16 }}>
                 <HStack className="items-start justify-between mb-2">
                     <VStack className="flex-1 min-w-0 mr-3">
-                        <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.forYou')}</Heading>
+                        <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.dashboardTitle')}</Heading>
                         {lastProcessedLabel && (
                             <Pressable
                                 onPress={openStatusSheet}
@@ -491,9 +396,6 @@ const MeraNewsScreen: React.FC = () => {
             <GestureDetector gesture={edgeSwipeGesture}>
                 <View style={styles.edgeSwipeHitbox} />
             </GestureDetector>
-
-            {/* One-time "What's new" sheet. */}
-            <WhatsNewSheet />
 
             {/* Feed-status detail sheet. */}
             <FeedStatusSheet
