@@ -40,6 +40,7 @@ jest.mock('react-native', () => {
 // --- gluestack ui + icons → RN primitives ---------------------------------
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/hstack', () => { const { View } = require('react-native'); return { HStack: (p: any) => <View {...p} /> }; });
+jest.mock('@/components/ui/heading', () => { const { Text } = require('react-native'); return { Heading: (p: any) => <Text {...p} /> }; });
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
@@ -144,6 +145,12 @@ describe('ProfileScreen', () => {
         const { getByTestId, getByText } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('usage-widget')).toBeTruthy());
         expect(getByText('Advanced')).toBeTruthy();
+    });
+
+    it('renders the "Profile" screen heading (reusing tabs.profile)', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByText } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByText('tabs.profile')).toBeTruthy());
     });
 
     it('empty persona → shows the Start-talking CTA and no About-you rows', async () => {

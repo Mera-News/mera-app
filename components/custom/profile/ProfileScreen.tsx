@@ -6,11 +6,11 @@ import PersonaStringSheet from '@/components/custom/profile/PersonaStringSheet';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
+import { Heading } from '@/components/ui/heading';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import { fetchUserBilling } from '@/lib/billing-service';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -140,6 +140,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
 
     return (
         <Box className="flex-1 bg-black">
+            {/* Screen heading — mirrors the ForYou/Explore top-left title idiom. */}
+            <HStack className="items-start justify-between px-5 pt-4 mb-2">
+                <Heading size="3xl" className="text-white" numberOfLines={1}>
+                    {t('tabs.profile')}
+                </Heading>
+            </HStack>
+
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingTop: 8, paddingBottom: 140 }}
@@ -186,7 +193,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         </HStack>
 
                         {strings.length === 0 ? (
-                            <Box className="px-4 py-5 rounded-2xl border border-gray-800" style={{ backgroundColor: '#0e0e0e' }}>
+                            <Box className="px-4 py-5 rounded-2xl" style={{ backgroundColor: '#141414' }}>
                                 <HStack space="sm" className="items-center">
                                     <MaterialIcons name="auto-awesome" size={18} color="#93c5fd" />
                                     <Text className="text-gray-400 flex-1" style={{ fontSize: 14 }}>
@@ -195,15 +202,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                                 </HStack>
                             </Box>
                         ) : (
-                            <VStack space="sm">
-                                {strings.map((s) => (
+                            // Flat list on a single surface — no per-row outlines, just a
+                            // hairline separator between rows (last row has none).
+                            <Box className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#141414' }}>
+                                {strings.map((s, index) => (
                                     <Pressable
                                         key={s.id}
                                         accessibilityRole="button"
                                         accessibilityLabel={s.text}
                                         onPress={() => setSheetRow(s)}
-                                        className="flex-row items-center justify-between px-4 py-3.5 rounded-2xl border border-gray-800"
-                                        style={{ backgroundColor: '#141414', opacity: s.stale ? 0.6 : 1 }}
+                                        className={`flex-row items-center justify-between px-4 py-3.5 active:bg-white/5${
+                                            index < strings.length - 1 ? ' border-b border-gray-800' : ''
+                                        }`}
+                                        style={{ opacity: s.stale ? 0.6 : 1 }}
                                     >
                                         <TranslatableDynamic
                                             text={s.text}
@@ -214,7 +225,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                                         <MaterialIcons name="chevron-right" size={20} color="#6b7280" />
                                     </Pressable>
                                 ))}
-                            </VStack>
+                            </Box>
                         )}
                     </Box>
                 )}
