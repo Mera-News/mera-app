@@ -231,6 +231,7 @@
     "notTranslatable": "此文章为 {{language}} 语言，可能无法翻译",
     "unknownLanguage": "其他语言",
     "translationGuideLink": "告诉我如何翻译这篇文章",
+    "viewInGoogleTranslate": "在 Google 翻译中查看",
     "showOriginal": "显示原文",
     "showTranslation": "显示译文"
   },

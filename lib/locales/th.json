@@ -231,6 +231,7 @@
     "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} และอาจไม่สามารถแปลได้",
     "unknownLanguage": "ภาษาอื่น",
     "translationGuideLink": "แสดงวิธีแปลบทความ",
+    "viewInGoogleTranslate": "ดูใน Google แปลภาษา",
     "showOriginal": "แสดงต้นฉบับ",
     "showTranslation": "แสดงคำแปล"
   },

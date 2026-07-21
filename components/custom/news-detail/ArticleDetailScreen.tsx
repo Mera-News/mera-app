@@ -19,10 +19,10 @@ import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
+import { buildGoogleTranslateUrl, getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { sortRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
-import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser, openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -305,6 +305,34 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                                 )}
                                             </Text>
                                         </HStack>
+                                    );
+                                })()}
+                                {(() => {
+                                    const status = getArticleTranslatableStatus(
+                                        sourceLanguage,
+                                        appLanguage,
+                                    );
+                                    if (status === 'same-language') return null;
+                                    return (
+                                        <Button
+                                            variant="outline"
+                                            action="secondary"
+                                            size="sm"
+                                            className="rounded-full"
+                                            onPress={() =>
+                                                openInAppBrowser(
+                                                    buildGoogleTranslateUrl(
+                                                        articleUrl,
+                                                        appLanguage,
+                                                    ),
+                                                )
+                                            }
+                                        >
+                                            <ButtonIcon as={() => <MaterialIcons name="translate" size={16} color="#ffffff" />} />
+                                            <ButtonText className="text-white ml-2">
+                                                {t('clusterDetail.viewInGoogleTranslate')}
+                                            </ButtonText>
+                                        </Button>
                                     );
                                 })()}
                             </VStack>

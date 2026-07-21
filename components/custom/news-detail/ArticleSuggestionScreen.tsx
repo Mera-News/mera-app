@@ -42,9 +42,9 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
-import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
+import { buildGoogleTranslateUrl, getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
-import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser, openInAppBrowser } from '@/lib/web-browser-utils';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -541,6 +541,34 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                                 )}
                                             </Text>
                                         </HStack>
+                                    );
+                                })()}
+                                {(() => {
+                                    const status = getArticleTranslatableStatus(
+                                        sourceLanguage,
+                                        appLanguage,
+                                    );
+                                    if (status === 'same-language') return null;
+                                    return (
+                                        <Button
+                                            variant="outline"
+                                            action="secondary"
+                                            size="sm"
+                                            className="rounded-full"
+                                            onPress={() =>
+                                                openInAppBrowser(
+                                                    buildGoogleTranslateUrl(
+                                                        suggestion.article_url!,
+                                                        appLanguage,
+                                                    ),
+                                                )
+                                            }
+                                        >
+                                            <ButtonIcon as={() => <MaterialIcons name="translate" size={16} color="#ffffff" />} />
+                                            <ButtonText className="text-white ml-2">
+                                                {t('clusterDetail.viewInGoogleTranslate')}
+                                            </ButtonText>
+                                        </Button>
                                     );
                                 })()}
                             </VStack>

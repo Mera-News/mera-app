@@ -233,6 +233,7 @@
     "notTranslatable": "Este artigo está em {{language}} e pode não ser traduzido",
     "unknownLanguage": "outro idioma",
     "translationGuideLink": "Mostre-me como traduzir o artigo",
+    "viewInGoogleTranslate": "Ver no Google Tradutor",
     "showOriginal": "Ver original",
     "showTranslation": "Ver tradução"
   },

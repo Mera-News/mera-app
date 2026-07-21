@@ -28,6 +28,7 @@ jest.mock('react-native', () => ({
 }));
 
 import {
+    buildGoogleTranslateUrl,
     getLanguageName,
     getNativeLanguageName,
     getArticleTranslatableStatus,
@@ -226,6 +227,48 @@ describe('getArticleTranslatableStatus (iOS)', () => {
 
     it('returns "not-translatable" for an unknown code on iOS', () => {
         expect(getArticleTranslatableStatus('xyz', 'en')).toBe('not-translatable');
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildGoogleTranslateUrl
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildGoogleTranslateUrl', () => {
+    it('maps zh-Hans → zh-CN in the tl param', () => {
+        const url = buildGoogleTranslateUrl('https://example.com/a', 'zh-Hans');
+        expect(url).toContain('tl=zh-CN');
+        expect(url).not.toContain('tl=zh-Hans');
+    });
+
+    it('maps zh-Hant → zh-TW in the tl param', () => {
+        const url = buildGoogleTranslateUrl('https://example.com/a', 'zh-Hant');
+        expect(url).toContain('tl=zh-TW');
+        expect(url).not.toContain('tl=zh-Hant');
+    });
+
+    it('passes non-Chinese codes through unchanged', () => {
+        expect(buildGoogleTranslateUrl('https://example.com/a', 'fr')).toContain('tl=fr');
+        expect(buildGoogleTranslateUrl('https://example.com/a', 'pt')).toContain('tl=pt');
+        expect(buildGoogleTranslateUrl('https://example.com/a', 'en')).toContain('tl=en');
+    });
+
+    it('always sets sl=auto', () => {
+        expect(buildGoogleTranslateUrl('https://example.com/a', 'de')).toContain('sl=auto');
+    });
+
+    it('URL-encodes the article URL in the u param', () => {
+        const articleUrl = 'https://news.example.com/story?id=1&x=2';
+        const url = buildGoogleTranslateUrl(articleUrl, 'de');
+        expect(url).toContain(`u=${encodeURIComponent(articleUrl)}`);
+        // raw ampersands/query of the article URL must not leak into the outer URL
+        expect(url).toContain('u=https%3A%2F%2Fnews.example.com%2Fstory%3Fid%3D1%26x%3D2');
+    });
+
+    it('builds the full expected URL shape', () => {
+        expect(buildGoogleTranslateUrl('https://a.com', 'ja')).toBe(
+            'https://translate.google.com/translate?sl=auto&tl=ja&u=https%3A%2F%2Fa.com',
+        );
     });
 });
 

@@ -344,6 +344,7 @@
     "notTranslatable": "This article is in {{language}} and may not be translated",
     "unknownLanguage": "another language",
     "translationGuideLink": "Show me how to translate the article",
+    "viewInGoogleTranslate": "View in Google Translate",
     "showOriginal": "Show original",
     "showTranslation": "Show translation"
   },

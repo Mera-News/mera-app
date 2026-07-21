@@ -231,6 +231,7 @@
     "notTranslatable": "Bài viết này bằng {{language}} và có thể không được dịch",
     "unknownLanguage": "ngôn ngữ khác",
     "translationGuideLink": "Hướng dẫn tôi cách dịch bài viết",
+    "viewInGoogleTranslate": "Xem trong Google Dịch",
     "showOriginal": "Hiển thị bản gốc",
     "showTranslation": "Hiển thị bản dịch"
   },

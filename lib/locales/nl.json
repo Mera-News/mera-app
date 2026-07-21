@@ -233,6 +233,7 @@
     "notTranslatable": "Dit artikel is in {{language}} en kan mogelijk niet worden vertaald",
     "unknownLanguage": "een andere taal",
     "translationGuideLink": "Laat me zien hoe ik het artikel kan vertalen",
+    "viewInGoogleTranslate": "Bekijken in Google Translate",
     "showOriginal": "Origineel tonen",
     "showTranslation": "Vertaling tonen"
   },

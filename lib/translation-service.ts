@@ -66,6 +66,27 @@ export const SUPPORTED_LANGUAGES = [
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 
+// Google Translate's `tl` (target-language) param doesn't accept the
+// script-suffixed BCP-47 codes the app uses for Chinese — it wants the
+// region-based `zh-CN` / `zh-TW`. Every other SUPPORTED_LANGUAGES code
+// passes through unchanged.
+const GOOGLE_TRANSLATE_CODE_MAP: Record<string, string> = {
+    'zh-Hans': 'zh-CN',
+    'zh-Hant': 'zh-TW',
+};
+
+/**
+ * Build a Google Translate URL that opens the given article page translated
+ * into the user's app language. `sl=auto` lets Google auto-detect the source
+ * (avoids source-code mapping issues); `tl` is the app language mapped through
+ * GOOGLE_TRANSLATE_CODE_MAP. Google redirects to the proxied `*.translate.goog`
+ * page.
+ */
+export function buildGoogleTranslateUrl(articleUrl: string, appLanguage: string): string {
+    const tl = GOOGLE_TRANSLATE_CODE_MAP[appLanguage] ?? appLanguage;
+    return `https://translate.google.com/translate?sl=auto&tl=${tl}&u=${encodeURIComponent(articleUrl)}`;
+}
+
 // Apple Translation framework (iOS 17.4+).
 const IOS_TRANSLATION_SOURCE_CODES = new Set<string>([
     'ar', 'zh-Hans', 'zh-Hant', 'nl', 'en', 'fr', 'de', 'hi', 'id', 'it',

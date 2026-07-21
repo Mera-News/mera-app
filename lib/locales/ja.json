@@ -231,6 +231,7 @@
     "notTranslatable": "この記事は{{language}}で書かれており、翻訳できない場合があります",
     "unknownLanguage": "別の言語",
     "translationGuideLink": "記事の翻訳方法を教えてください",
+    "viewInGoogleTranslate": "Google 翻訳で見る",
     "showOriginal": "原文を表示",
     "showTranslation": "翻訳を表示"
   },
