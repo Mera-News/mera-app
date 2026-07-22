@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import {
+    advanceSeenWatermark,
     getTrackedStoryById,
     markSeen,
 } from '@/lib/database/services/tracked-story-service';
@@ -15,11 +16,14 @@ import type { NewsArticle, TrackedStoryArticleSnapshot } from '@/lib/generated/g
 import { mergeTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem } from 'react-native';
+import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+/** Pull-to-refresh spinner tint — matches FeedScreen's. */
+const REFRESH_TINT = '#EDA77E';
 
 interface StoryTimelineScreenProps {
     trackedStoryId: string;
@@ -55,10 +59,17 @@ function cardToNewsArticle(card: TimelineCard): NewsArticle {
 
 /**
  * A tracked story's timeline — the archived coverage gathered under its stable
- * cluster id, newest-first. Marks the story seen on mount (clears its unseen
- * badge). The header renders the LLM headline (falling back to the tracked
- * title). When no archive exists yet (never resolved a stable id, or the story
- * ended before coverage was captured), a quiet note stands in for the list.
+ * cluster id, newest-first. Marks the story seen on every focus (clears its
+ * unseen badge) and refetches the server archive on every focus + on
+ * pull-to-refresh, so re-opening a story always shows the freshest coverage.
+ * The header renders the LLM headline (falling back to the tracked title). When
+ * no archive exists yet (never resolved a stable id, or the story ended before
+ * coverage was captured), a quiet note stands in for the list.
+ *
+ * After each SUCCESSFUL load, the newest pubDate on screen is stamped as the
+ * story's seen watermark (schema v44) so the reconcile counts only members
+ * published after it toward the "N new" badge — backfilled OLD articles no
+ * longer inflate the count.
  */
 const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryId, onBack }) => {
     const { t } = useTranslation();
@@ -67,20 +78,24 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const [stableClusterId, setStableClusterId] = useState<string | null>(null);
     const [cards, setCards] = useState<TimelineCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
-    useEffect(() => {
-        let cancelled = false;
-        // Clear the unseen badge as soon as the timeline opens.
-        void markSeen(trackedStoryId);
+    // Monotonic run token — each load() invalidates prior in-flight runs, and
+    // the focus-effect cleanup bumps it so a load resolving after blur/unmount
+    // never writes stale state.
+    const runIdRef = useRef(0);
 
-        (async () => {
+    const load = useCallback(
+        async (opts?: { isRefresh?: boolean }) => {
+            const runId = ++runIdRef.current;
+            const alive = () => runId === runIdRef.current;
+            if (opts?.isRefresh) setRefreshing(true);
+            else setIsLoading(true);
+
             try {
                 const story = await getTrackedStoryById(trackedStoryId);
-                if (cancelled) return;
-                if (!story) {
-                    setIsLoading(false);
-                    return;
-                }
+                if (!alive()) return;
+                if (!story) return;
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
 
                 const localSnapshots = story.memberSnapshots ?? [];
@@ -90,11 +105,17 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 let serverSnapshots: TrackedStoryArticleSnapshot[] = [];
                 if (sid) {
                     const archive = await ArticleService.getTrackedStory(sid);
-                    if (cancelled) return;
+                    if (!alive()) return;
                     serverSnapshots = archive?.articles ?? [];
                 }
                 const merged = mergeTimeline(localSnapshots, serverSnapshots);
                 setCards(merged);
+
+                // Successful merge → advance the seen-pubDate watermark to the
+                // newest pubDate on screen. Backfilled OLD articles (published
+                // before this) then won't count toward the "N new" badge.
+                const maxPub = Math.max(...merged.map((c) => c.pubDateMs || 0));
+                if (maxPub > 0) void advanceSeenWatermark(trackedStoryId, maxPub);
 
                 // Stopgap for pre-fix archives that persisted null titles: hydrate
                 // up to 6 still-blank cards via the quota-free getArticleById, then
@@ -118,7 +139,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             }
                         }),
                     );
-                    if (cancelled) return;
+                    if (!alive()) return;
                     const patchMap = new Map(
                         patches
                             .filter((p): p is { articleId: string; title: string } => p !== null)
@@ -135,19 +156,33 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     }
                 }
             } catch (err) {
+                // Failed load — deliberately do NOT advance the watermark.
                 logger.captureException(err, {
                     tags: { screen: 'StoryTimelineScreen', method: 'load' },
                     extra: { trackedStoryId },
                 });
             } finally {
-                if (!cancelled) setIsLoading(false);
+                if (alive()) {
+                    setIsLoading(false);
+                    setRefreshing(false);
+                }
             }
-        })();
+        },
+        [trackedStoryId],
+    );
 
-        return () => {
-            cancelled = true;
-        };
-    }, [trackedStoryId]);
+    // Refetch on every focus (not just first mount) so re-opening a story shows
+    // the freshest coverage. markSeen clears the unseen badge as it opens.
+    useFocusEffect(
+        useCallback(() => {
+            void markSeen(trackedStoryId);
+            void load();
+            return () => {
+                // Invalidate any in-flight load so it can't write state post-blur.
+                runIdRef.current++;
+            };
+        }, [trackedStoryId, load]),
+    );
 
     const handleArticlePress = useCallback(
         (articleId: string, stableClusterId: string | null) => {
@@ -229,6 +264,14 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListEmptyComponent={ListEmpty}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => load({ isRefresh: true })}
+                        tintColor={REFRESH_TINT}
+                        colors={[REFRESH_TINT]}
+                    />
+                }
                 contentContainerStyle={{
                     paddingTop: 8,
                     paddingBottom: insets.bottom + 40,

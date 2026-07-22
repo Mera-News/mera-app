@@ -59,6 +59,10 @@ async function pollViaLiveCluster(story: TrackedStoryPollRow): Promise<void> {
   const candidateIds = (cluster.articles?.articles ?? []).map((a) => a._id);
   const newMemberIds = diffNewMembers(candidateIds, story.memberArticleIds);
   if (newMemberIds.length > 0) {
+    // Legacy count fallback (no newSnapshots): the poll works off id-only diffs
+    // against the live cluster / archive, so it can't hand applyUpdates the
+    // per-member pubDates the v44 watermark gate needs. The feed-sync reconcile
+    // owns the watermark-accurate path; this network poll stays id-only.
     await applyUpdates(story.id, { newMemberIds });
   } else {
     await recordMiss(story.id);

@@ -124,23 +124,30 @@ async function reconcileByCluster(): Promise<void> {
     .query(Q.where('stable_cluster_id', Q.oneOf(stableIds)))
     .fetch();
 
-  const articleIdsByStableId = new Map<string, string[]>();
+  // Bucket the FULL suggestion rows (not just ids) per stable cluster id so the
+  // cluster pass can hand `applyUpdates` a lean snapshot per new member — this
+  // gives cluster-path stories watermark-accurate badges (v44) and locally
+  // renderable timeline cards, exactly like the topic pass above.
+  const rowsByStableId = new Map<string, ArticleSuggestionModel[]>();
   for (const row of rows) {
     const sid = row.stableClusterId;
     if (!sid) continue; // JS guard for test mock (mirrors getActiveForReconcile)
-    const bucket = articleIdsByStableId.get(sid) ?? [];
-    bucket.push(row.id); // WMDB row id === server article _id
-    articleIdsByStableId.set(sid, bucket);
+    const bucket = rowsByStableId.get(sid) ?? [];
+    bucket.push(row);
+    rowsByStableId.set(sid, bucket);
   }
 
   for (const story of stories) {
     try {
-      const candidateIds = articleIdsByStableId.get(story.stableClusterId) ?? [];
+      const candidates = rowsByStableId.get(story.stableClusterId) ?? [];
       const existing = new Set(story.memberArticleIds);
-      const newMemberIds = candidateIds.filter((id) => !existing.has(id));
+      const fresh = candidates.filter((r) => !existing.has(r.id)); // WMDB row id === server article _id
 
-      if (newMemberIds.length > 0) {
-        await applyUpdates(story.id, { newMemberIds });
+      if (fresh.length > 0) {
+        await applyUpdates(story.id, {
+          newMemberIds: fresh.map((r) => r.id),
+          newSnapshots: fresh.map(snapshotFromSuggestion),
+        });
       }
     } catch (err) {
       // Isolate per-story failures — one bad row must not block the rest or

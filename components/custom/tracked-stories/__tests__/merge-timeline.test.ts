@@ -107,4 +107,38 @@ describe('mergeTimeline', () => {
     );
     expect(out).toHaveLength(0);
   });
+
+  // ── r6 P6 regression: freshness refetch + backfill ordering ──────────────
+  it('server pubDate wins over a legacy local track-time stamp on re-merge', () => {
+    // The local seed historically stamped Date.now() at track time; a refetch
+    // that pairs it with the authoritative server archive must sort by the real
+    // publication time, not the (much later) track moment.
+    const localSeed = [
+      local({ articleId: 'seed', title: 'Seed', pubDateMs: 9_999_999_999 }),
+    ];
+    const serverArchive = [
+      server({ articleId: 'seed', title_en: 'Seed', pubDate: new Date(5000).toISOString() }),
+      server({ articleId: 'newer', title_en: 'Newer', pubDate: new Date(8000).toISOString() }),
+    ];
+    const merged = mergeTimeline(localSeed, serverArchive);
+    expect(idOf(merged)).toEqual(['newer', 'seed']);
+    // The legacy track-time stamp is discarded in favour of the server pubDate.
+    expect(merged.find((c) => c.articleId === 'seed')!.pubDateMs).toBe(5000);
+  });
+
+  it('re-merge after refetch keeps strict pubDate-desc with backfilled older articles below newer', () => {
+    const localSeed = [
+      local({ articleId: 'seed', title: 'Seed', pubDateMs: 9_999_999_999 }),
+    ];
+    // The refetched archive gained a BACKFILLED older article and a genuinely
+    // newer one. Latest-published must stay on top; the backfill sinks below.
+    const refetched = [
+      server({ articleId: 'seed', title_en: 'Seed', pubDate: new Date(5000).toISOString() }),
+      server({ articleId: 'newer', title_en: 'Newer', pubDate: new Date(8000).toISOString() }),
+      server({ articleId: 'backfill-old', title_en: 'Old', pubDate: new Date(1000).toISOString() }),
+      server({ articleId: 'newest', title_en: 'Newest', pubDate: new Date(9000).toISOString() }),
+    ];
+    const merged = mergeTimeline(localSeed, refetched);
+    expect(idOf(merged)).toEqual(['newest', 'newer', 'seed', 'backfill-old']);
+  });
 });

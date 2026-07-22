@@ -203,6 +203,23 @@ describe('specific migration versions', () => {
     expect(colNames).toContain('processed_at');
   });
 
+  it('v44 additively adds seen_pub_watermark_ms to tracked_stories', () => {
+    const m = byVersion.get(44);
+    expect(m).toBeDefined();
+    // Additive only — never a drop/recreate of the long-lived user-owned table.
+    const creates = m!.steps.filter(
+      (s: any) => s && s.type === 'create_table' && s.schema?.name === 'tracked_stories',
+    );
+    expect(creates).toHaveLength(0);
+    const addStep = m!.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'tracked_stories',
+    );
+    expect(addStep).toBeDefined();
+    const colNames = addStep.columns.map((c: any) => c.name);
+    expect(colNames).toEqual(['seen_pub_watermark_ms']);
+    expect(!!addStep.columns[0].isOptional).toBe(true);
+  });
+
   it('v32 creates article_suggestions with cluster_memberships_json', () => {
     const m = byVersion.get(32);
     expect(m).toBeDefined();

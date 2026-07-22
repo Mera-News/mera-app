@@ -20,6 +20,7 @@ import {
   isTracked,
   markSeen,
   applyUpdates,
+  advanceSeenWatermark,
   resolveStableId,
   setLlmHeadline,
   recordMiss,
@@ -50,6 +51,7 @@ function makeStory(overrides: Record<string, any> = {}) {
     topicId: overrides.topicId ?? null,
     topicText: overrides.topicText ?? null,
     memberSnapshots: overrides.memberSnapshots ?? [],
+    seenPubWatermarkMs: overrides.seenPubWatermarkMs ?? null,
     createdAt: overrides.createdAt ?? new Date(1700000000000),
     ...overrides,
   });
@@ -350,6 +352,118 @@ describe('applyUpdates — member snapshots (v40)', () => {
     db._setRows('tracked_stories', [row]);
     await applyUpdates('s1', { newMemberIds: ['a2'] });
     expect(row.memberSnapshots).toEqual([{ articleId: 'a1', title: 'Keep', pubDateMs: 1 }]);
+  });
+});
+
+describe('applyUpdates — watermark-gated unseen count (v44)', () => {
+  it('null watermark → legacy count (bumps by number of new ids)', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberArticleIds: ['a1'],
+      unseenCount: 0,
+      seenPubWatermarkMs: null,
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await applyUpdates('s1', {
+      newMemberIds: ['a2', 'a3'],
+      // Even with snapshots, a null watermark means the user never opened the
+      // timeline → fall back to the legacy count.
+      newSnapshots: [
+        { articleId: 'a2', title: 'A2', pubDateMs: 500 }, // older than any watermark
+        { articleId: 'a3', title: 'A3', pubDateMs: 9000 },
+      ],
+    });
+
+    expect(row.unseenCount).toBe(2); // legacy: both new ids
+  });
+
+  it('watermark set → counts only members published AFTER the watermark', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberArticleIds: ['a1'],
+      unseenCount: 0,
+      seenPubWatermarkMs: 1000,
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await applyUpdates('s1', {
+      newMemberIds: ['newer1', 'newer2', 'newer3', 'backfilled'],
+      newSnapshots: [
+        { articleId: 'newer1', title: 'N1', pubDateMs: 2000 }, // newer ✓
+        { articleId: 'newer2', title: 'N2', pubDateMs: 3000 }, // newer ✓
+        { articleId: 'newer3', title: 'N3', pubDateMs: 4000 }, // newer ✓
+        { articleId: 'backfilled', title: 'Old', pubDateMs: 500 }, // older ✗
+      ],
+    });
+
+    // Only the 3 published after the watermark count; the backfilled old one doesn't.
+    expect(row.unseenCount).toBe(3);
+    // All four still join the timeline (snapshots merged, pubDate-desc).
+    expect(row.memberSnapshots.map((s: any) => s.articleId)).toEqual([
+      'newer3',
+      'newer2',
+      'newer1',
+      'backfilled',
+    ]);
+  });
+
+  it('snapshots with pubDateMs 0/undefined count as OLD (backfill safety)', async () => {
+    const row = makeStory({ id: 's1', unseenCount: 0, seenPubWatermarkMs: 1000 });
+    db._setRows('tracked_stories', [row]);
+
+    await applyUpdates('s1', {
+      newMemberIds: ['zero', 'undef', 'real'],
+      newSnapshots: [
+        { articleId: 'zero', title: 'Z', pubDateMs: 0 },
+        { articleId: 'undef', title: 'U' } as any, // pubDateMs undefined
+        { articleId: 'real', title: 'R', pubDateMs: 5000 },
+      ],
+    });
+
+    expect(row.unseenCount).toBe(1); // only 'real'
+  });
+
+  it('no snapshots (legacy poll path) → legacy count even with a watermark set', async () => {
+    const row = makeStory({ id: 's1', unseenCount: 0, seenPubWatermarkMs: 1000 });
+    db._setRows('tracked_stories', [row]);
+
+    await applyUpdates('s1', { newMemberIds: ['a2', 'a3'] });
+
+    expect(row.unseenCount).toBe(2); // legacy count — no per-member pubDates to gate on
+  });
+});
+
+describe('advanceSeenWatermark (v44)', () => {
+  it('sets the watermark when previously null', async () => {
+    const row = makeStory({ id: 's1', seenPubWatermarkMs: null });
+    db._setRows('tracked_stories', [row]);
+    await advanceSeenWatermark('s1', 5000);
+    expect(row.seenPubWatermarkMs).toBe(5000);
+  });
+
+  it('advances forward but never backwards (max semantics)', async () => {
+    const row = makeStory({ id: 's1', seenPubWatermarkMs: 5000 });
+    db._setRows('tracked_stories', [row]);
+
+    await advanceSeenWatermark('s1', 9000);
+    expect(row.seenPubWatermarkMs).toBe(9000); // moved forward
+
+    await advanceSeenWatermark('s1', 3000);
+    expect(row.seenPubWatermarkMs).toBe(9000); // stays — never moves back
+  });
+
+  it('ignores non-positive / non-finite watermarks', async () => {
+    const row = makeStory({ id: 's1', seenPubWatermarkMs: 5000 });
+    db._setRows('tracked_stories', [row]);
+    await advanceSeenWatermark('s1', 0);
+    await advanceSeenWatermark('s1', -1);
+    await advanceSeenWatermark('s1', NaN);
+    expect(row.seenPubWatermarkMs).toBe(5000);
+  });
+
+  it('never throws on a missing row', async () => {
+    await expect(advanceSeenWatermark('nope', 1234)).resolves.toBeUndefined();
   });
 });
 

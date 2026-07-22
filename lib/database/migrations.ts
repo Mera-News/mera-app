@@ -1169,5 +1169,20 @@ export default schemaMigrations({
         unsafeExecuteSql("DELETE FROM notifications WHERE type = 'tracked_story_update';"),
       ],
     },
+    {
+      // ── Watermark-gated tracked-story badge (schema v44) ────────────────
+      // Additive `seen_pub_watermark_ms` on the long-lived, user-owned
+      // `tracked_stories` table — the newest SEEN member pubDate (ms). The
+      // reconcile counts only members published after it toward `unseen_count`,
+      // so backfilled OLD articles stop inflating the "N new" badge. Optional —
+      // existing rows keep null (⇒ legacy count) and NEVER wipe.
+      toVersion: 44,
+      steps: [
+        addColumns({
+          table: 'tracked_stories',
+          columns: [{ name: 'seen_pub_watermark_ms', type: 'number', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

@@ -66,16 +66,24 @@ describe('reconcileTrackedStories', () => {
       { id: 's2', stableClusterId: 'clu-2', memberArticleIds: ['b1'], latestArticleId: 'b1' },
     ]);
     mockFetch.mockResolvedValue([
-      { id: 'a1', stableClusterId: 'clu-1' },
-      { id: 'a2', stableClusterId: 'clu-1' }, // new for s1
-      { id: 'a3', stableClusterId: 'clu-1' }, // new for s1
-      { id: 'b1', stableClusterId: 'clu-2' }, // already known for s2 — no new members
+      { id: 'a1', stableClusterId: 'clu-1', titleEn: 'A1', firstPubDate: new Date(1000) },
+      { id: 'a2', stableClusterId: 'clu-1', titleEn: 'A2', firstPubDate: new Date(2000) }, // new for s1
+      { id: 'a3', stableClusterId: 'clu-1', titleEn: 'A3', firstPubDate: new Date(3000) }, // new for s1
+      { id: 'b1', stableClusterId: 'clu-2', titleEn: 'B1', firstPubDate: new Date(4000) }, // already known for s2 — no new members
     ]);
 
     await reconcileTrackedStories();
 
     expect(mockApplyUpdates).toHaveBeenCalledTimes(1);
-    expect(mockApplyUpdates).toHaveBeenCalledWith('s1', { newMemberIds: ['a2', 'a3'] });
+    // Cluster pass now passes lean snapshots per new member (v44) — same shape
+    // as the topic pass — so cluster-path stories get watermark-accurate badges.
+    expect(mockApplyUpdates).toHaveBeenCalledWith('s1', {
+      newMemberIds: ['a2', 'a3'],
+      newSnapshots: [
+        { articleId: 'a2', title: 'A2', pubDateMs: 2000, imageUrl: undefined, publicationName: undefined },
+        { articleId: 'a3', title: 'A3', pubDateMs: 3000, imageUrl: undefined, publicationName: undefined },
+      ],
+    });
 
     expect(mockNotify).not.toHaveBeenCalled();
 
@@ -106,8 +114,8 @@ describe('reconcileTrackedStories', () => {
       { id: 's2', stableClusterId: 'clu-2', memberArticleIds: [], latestArticleId: null },
     ]);
     mockFetch.mockResolvedValue([
-      { id: 'a1', stableClusterId: 'clu-1' },
-      { id: 'b1', stableClusterId: 'clu-2' },
+      { id: 'a1', stableClusterId: 'clu-1', titleEn: 'A1', firstPubDate: new Date(1000) },
+      { id: 'b1', stableClusterId: 'clu-2', titleEn: 'B1', firstPubDate: new Date(4000) },
     ]);
     mockApplyUpdates.mockImplementationOnce(() => {
       throw new Error('boom');
@@ -124,7 +132,12 @@ describe('reconcileTrackedStories', () => {
     );
     // s2's own applyUpdates still ran despite s1's failure.
     expect(mockApplyUpdates).toHaveBeenCalledTimes(2);
-    expect(mockApplyUpdates).toHaveBeenNthCalledWith(2, 's2', { newMemberIds: ['b1'] });
+    expect(mockApplyUpdates).toHaveBeenNthCalledWith(2, 's2', {
+      newMemberIds: ['b1'],
+      newSnapshots: [
+        { articleId: 'b1', title: 'B1', pubDateMs: 4000, imageUrl: undefined, publicationName: undefined },
+      ],
+    });
     // Both get stamped, including the one that threw.
     expect(mockStampChecked).toHaveBeenCalledWith('s1');
     expect(mockStampChecked).toHaveBeenCalledWith('s2');
@@ -213,7 +226,9 @@ describe('reconcileTrackedStories — topic path (v40)', () => {
     // First fetch (topic pass) then second fetch (cluster pass).
     mockFetch
       .mockResolvedValueOnce([sug('a2', ['top-1'])])
-      .mockResolvedValueOnce([{ id: 'b1', stableClusterId: 'clu-1' }]);
+      .mockResolvedValueOnce([
+        { id: 'b1', stableClusterId: 'clu-1', titleEn: 'B1', firstPubDate: new Date(4000) },
+      ]);
 
     await reconcileTrackedStories();
 
@@ -221,7 +236,10 @@ describe('reconcileTrackedStories — topic path (v40)', () => {
       't1',
       expect.objectContaining({ newMemberIds: ['a2'] }),
     );
-    expect(mockApplyUpdates).toHaveBeenCalledWith('s1', { newMemberIds: ['b1'] });
+    expect(mockApplyUpdates).toHaveBeenCalledWith(
+      's1',
+      expect.objectContaining({ newMemberIds: ['b1'] }),
+    );
     expect(mockStampChecked).toHaveBeenCalledWith('t1');
     expect(mockStampChecked).toHaveBeenCalledWith('s1');
   });

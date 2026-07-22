@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 43,
+  version: 44,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -444,6 +444,13 @@ export default appSchema({
         { name: 'topic_id', type: 'string', isOptional: true },
         { name: 'topic_text', type: 'string', isOptional: true },
         { name: 'member_snapshots_json', type: 'string', isOptional: true },
+        // ── Watermark-gated "new" badge (schema v44) ───────────────────
+        // Epoch ms of the newest member pubDate the user has SEEN (stamped
+        // when the timeline screen finishes a successful load). The reconcile
+        // then counts only members published strictly after this toward
+        // `unseen_count`, so backfilled OLD articles no longer inflate the
+        // "N new" badge. Null ⇒ never opened ⇒ fall back to legacy count.
+        { name: 'seen_pub_watermark_ms', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],

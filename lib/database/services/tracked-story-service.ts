@@ -225,9 +225,18 @@ export async function markSeen(id: string): Promise<void> {
 
 /**
  * Grow a story with newly-found member articles: prepend the new ids
- * (newest-first, capped at 30), bump `unseen_count` by the number added, stamp
- * `last_update_at`, and reset the miss streak. Optionally refresh the "latest"
- * pointer. Never throws.
+ * (newest-first, capped at 30), bump `unseen_count`, stamp `last_update_at`,
+ * and reset the miss streak. Optionally refresh the "latest" pointer. Never
+ * throws.
+ *
+ * The `unseen_count` bump is WATERMARK-GATED (schema v44): when the caller
+ * passes `newSnapshots` (so we know each new member's pubDate) AND the story
+ * has a `seen_pub_watermark_ms` set (the user has opened the timeline at least
+ * once), only members published strictly AFTER that watermark count as "new" —
+ * so backfilled OLD articles the pipeline just discovered don't inflate the
+ * badge. A snapshot with pubDateMs 0/undefined counts as OLD (deliberate
+ * backfill safety). Otherwise (no snapshots — the legacy cluster/poll path — or
+ * a null watermark) we fall back to the legacy `+= newIds.length`.
  */
 export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Promise<void> {
   const newIds = (updates.newMemberIds ?? []).filter(
@@ -239,14 +248,23 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
       await record.update((m) => {
         const existing = m.memberArticleIds ?? [];
         m.memberArticleIds = [...newIds, ...existing].slice(0, MAX_MEMBER_IDS);
-        m.unseenCount = (m.unseenCount ?? 0) + newIds.length;
+
+        const snapshots = updates.newSnapshots;
+        const watermark = m.seenPubWatermarkMs;
+        if (snapshots && snapshots.length > 0 && watermark != null) {
+          // Watermark-gated: only members newer than the last-seen watermark.
+          m.unseenCount =
+            (m.unseenCount ?? 0) +
+            snapshots.filter((s) => (s.pubDateMs ?? 0) > watermark).length;
+        } else {
+          // Legacy path — no per-member pubDate, or never opened yet.
+          m.unseenCount = (m.unseenCount ?? 0) + newIds.length;
+        }
+
         m.lastUpdateAt = new Date();
         m.missCount = 0;
-        if (updates.newSnapshots && updates.newSnapshots.length > 0) {
-          m.memberSnapshots = mergeMemberSnapshots(
-            m.memberSnapshots ?? [],
-            updates.newSnapshots,
-          );
+        if (snapshots && snapshots.length > 0) {
+          m.memberSnapshots = mergeMemberSnapshots(m.memberSnapshots ?? [], snapshots);
         }
         if (updates.latestArticleId) m.latestArticleId = updates.latestArticleId;
         if (updates.latestTitle) m.latestTitle = updates.latestTitle;
@@ -254,6 +272,28 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
     });
   } catch (err) {
     logger.warn('[tracked-story] applyUpdates failed', { id, error: String(err) });
+  }
+}
+
+/**
+ * Advance a story's seen-pubDate watermark (schema v44) — the newest member
+ * pubDate the user has actually seen. Called by the timeline screen after a
+ * SUCCESSFUL load with the max pubDate on screen. Monotonic: never moves the
+ * watermark backwards (`Math.max(current ?? 0, watermarkMs)`), so a later load
+ * that happens to render an older subset can't re-inflate future badges. Swallows
+ * errors (never throws — a failed watermark write must not break the screen).
+ */
+export async function advanceSeenWatermark(id: string, watermarkMs: number): Promise<void> {
+  if (!Number.isFinite(watermarkMs) || watermarkMs <= 0) return;
+  try {
+    const record = await collection.find(id);
+    await database.write(async () => {
+      await record.update((m) => {
+        m.seenPubWatermarkMs = Math.max(m.seenPubWatermarkMs ?? 0, watermarkMs);
+      });
+    });
+  } catch (err) {
+    logger.warn('[tracked-story] advanceSeenWatermark failed', { id, error: String(err) });
   }
 }
 

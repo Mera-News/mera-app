@@ -75,6 +75,12 @@ export default class TrackedStory extends Model {
   @field('topic_text') topicText!: string | null;
   @json('member_snapshots_json', sanitizeSnapshots)
   memberSnapshots!: TrackedStoryMemberSnapshot[];
+  // ── Watermark-gated "new" badge (schema v44) ─────────────────────────
+  // Epoch ms of the newest member pubDate the user has SEEN (stamped by the
+  // timeline screen after a successful load). The reconcile counts only
+  // members published strictly after this toward `unseen_count`, so backfilled
+  // OLD articles don't inflate the badge. Null ⇒ never opened ⇒ legacy count.
+  @field('seen_pub_watermark_ms') seenPubWatermarkMs!: number | null;
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
 }
