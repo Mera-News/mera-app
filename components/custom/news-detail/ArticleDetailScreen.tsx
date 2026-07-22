@@ -1,13 +1,12 @@
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
-import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -22,13 +21,11 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { buildGoogleTranslateUrl, getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { sortRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
-import { openArticleInAppBrowser, openInAppBrowser } from '@/lib/web-browser-utils';
+import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -83,7 +80,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
-    const appLanguage = useAppLanguage();
     const userCtx = useUserGeoLanguageContext();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
@@ -329,75 +325,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         sourceLanguage: article.original_language_code,
                                     }}
                                 />
-                                <Button
-                                    variant="outline"
-                                    action="primary"
-                                    className="rounded-full"
-                                    onPress={() => handleArticleUrlPress(articleUrl)}
-                                >
-                                    <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                    <ButtonText className="text-white ml-2">{t('articleDetail.readArticle')}</ButtonText>
-                                </Button>
-                                {(() => {
-                                    const status = getArticleTranslatableStatus(
-                                        sourceLanguage,
-                                        appLanguage,
-                                    );
-                                    if (status === 'same-language') return null;
-                                    const translatable = status === 'translatable';
-                                    const languageName =
-                                        getLanguageName(sourceLanguage)
-                                        ?? t('clusterDetail.unknownLanguage');
-                                    return (
-                                        <HStack className="items-center justify-center px-2" space="xs">
-                                            <MaterialIcons
-                                                name="translate"
-                                                size={14}
-                                                color={translatable ? '#86EFAC' : '#FCA5A5'}
-                                            />
-                                            <Text
-                                                size="xs"
-                                                italic
-                                                className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
-                                            >
-                                                {t(
-                                                    translatable
-                                                        ? 'clusterDetail.translatable'
-                                                        : 'clusterDetail.notTranslatable',
-                                                    { language: languageName },
-                                                )}
-                                            </Text>
-                                        </HStack>
-                                    );
-                                })()}
-                                {(() => {
-                                    const status = getArticleTranslatableStatus(
-                                        sourceLanguage,
-                                        appLanguage,
-                                    );
-                                    if (status === 'same-language') return null;
-                                    return (
-                                        <Button
-                                            variant="outline"
-                                            action="secondary"
-                                            size="sm"
-                                            className="rounded-full"
-                                            onPress={() =>
-                                                openInAppBrowser(
-                                                    buildGoogleTranslateUrl(
-                                                        articleUrl,
-                                                        appLanguage,
-                                                    ),
-                                                )
-                                            }
-                                        >
-                                            <ButtonIcon as={() => <MaterialIcons name="translate" size={16} color="#ffffff" />} />
-                                            <ButtonText className="text-white ml-2">
-                                                {t('clusterDetail.viewInGoogleTranslate')}
-                                            </ButtonText>
-                                        </Button>
-                                    );
-                                })()}
+                                <ReadTranslateActions
+                                    articleUrl={articleUrl}
+                                    publicationName={article.publicationSource?.publication_name}
+                                    sourceLanguage={sourceLanguage}
+                                    onOpenUrl={handleArticleUrlPress}
+                                />
                             </VStack>
                         ) : null}
 

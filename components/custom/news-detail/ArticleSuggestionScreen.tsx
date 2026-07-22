@@ -1,13 +1,12 @@
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
-import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -27,7 +26,6 @@ import {
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -42,10 +40,7 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
-import { buildGoogleTranslateUrl, getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
-import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
-import { openArticleInAppBrowser, openInAppBrowser } from '@/lib/web-browser-utils';
-import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
+import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -195,9 +190,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
-    const [showGuideVideo, setShowGuideVideo] = useState(false);
     const insets = useSafeAreaInsets();
-    const appLanguage = useAppLanguage();
     const userCtx = useUserGeoLanguageContext();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
 
@@ -488,89 +481,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         sourceLanguage: suggestion.language_code,
                                     }}
                                 />
-                                <Button
-                                    variant="outline"
-                                    action="primary"
-                                    className="rounded-full"
-                                    onPress={() => handleArticleUrlPress(suggestion.article_url)}
-                                >
-                                    <ButtonIcon as={() => <MaterialIcons name="open-in-new" size={18} color="#ffffff" />} />
-                                    <ButtonText className="text-white ml-2">
-                                        {suggestion.publication_name
-                                            ? t('articleDetail.readOn', { publication: suggestion.publication_name })
-                                            : t('articleDetail.readArticle')}
-                                    </ButtonText>
-                                </Button>
-                                {(() => {
-                                    const status = getArticleTranslatableStatus(
-                                        sourceLanguage,
-                                        appLanguage,
-                                    );
-                                    if (status === 'same-language') return null;
-                                    const translatable = status === 'translatable';
-                                    const languageName =
-                                        getLanguageName(sourceLanguage)
-                                        ?? t('clusterDetail.unknownLanguage');
-                                    return (
-                                        <HStack className="items-center justify-center px-2" space="xs">
-                                            <MaterialIcons
-                                                name="translate"
-                                                size={14}
-                                                color={translatable ? '#86EFAC' : '#FCA5A5'}
-                                            />
-                                            <Text
-                                                size="xs"
-                                                italic
-                                                className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
-                                            >
-                                                {t(
-                                                    translatable
-                                                        ? 'clusterDetail.translatable'
-                                                        : 'clusterDetail.notTranslatable',
-                                                    { language: languageName },
-                                                )}
-                                                {translatable && (
-                                                    <Text
-                                                        size="xs"
-                                                        italic
-                                                        className="text-orange-400 underline"
-                                                        onPress={() => setShowGuideVideo(true)}
-                                                    >
-                                                        {' '}{t('clusterDetail.translationGuideLink')}
-                                                    </Text>
-                                                )}
-                                            </Text>
-                                        </HStack>
-                                    );
-                                })()}
-                                {(() => {
-                                    const status = getArticleTranslatableStatus(
-                                        sourceLanguage,
-                                        appLanguage,
-                                    );
-                                    if (status === 'same-language') return null;
-                                    return (
-                                        <Button
-                                            variant="outline"
-                                            action="secondary"
-                                            size="sm"
-                                            className="rounded-full"
-                                            onPress={() =>
-                                                openInAppBrowser(
-                                                    buildGoogleTranslateUrl(
-                                                        suggestion.article_url!,
-                                                        appLanguage,
-                                                    ),
-                                                )
-                                            }
-                                        >
-                                            <ButtonIcon as={() => <MaterialIcons name="translate" size={16} color="#ffffff" />} />
-                                            <ButtonText className="text-white ml-2">
-                                                {t('clusterDetail.viewInGoogleTranslate')}
-                                            </ButtonText>
-                                        </Button>
-                                    );
-                                })()}
+                                <ReadTranslateActions
+                                    articleUrl={suggestion.article_url}
+                                    publicationName={suggestion.publication_name}
+                                    sourceLanguage={sourceLanguage}
+                                    onOpenUrl={handleArticleUrlPress}
+                                />
                             </VStack>
                         ) : null}
 
@@ -617,12 +533,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 }
             />
             <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
-
-            <VideoPlayerModal
-                visible={showGuideVideo}
-                uri={TRANSLATION_GUIDE_URL}
-                onClose={() => setShowGuideVideo(false)}
-            />
         </Box>
     );
 };

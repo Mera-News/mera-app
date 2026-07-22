@@ -208,6 +208,9 @@
   "articleDetail": {
     "readArticle": "Read Article",
     "readOn": "Read on {{publication}}",
+    "translateAndRead": "Translate & Read",
+    "translateAndReadOn": "Translate & Read on {{publication}}",
+    "viewOriginal": "View original",
     "relatedArticles": "Related Articles",
     "articleUnavailable": "This article is no longer available",
     "storyUnavailable": "This story is no longer available",
@@ -344,11 +347,12 @@
     "dailyLimitBody": "You've reached today's article limit. It resets soon."
   },
   "clusterDetail": {
-    "translatable": "This article is in {{language}} and can be translated into your language",
-    "notTranslatable": "This article is in {{language}} and may not be translated",
+    "translatable": "This article is in {{language}} — your device can translate it while you read.",
+    "notTranslatable": "This article is in {{language}}. On-device translation isn't available for it — use Google Translate below to read it in your language.",
     "unknownLanguage": "another language",
     "translationGuideLink": "Show me how to translate the article",
     "viewInGoogleTranslate": "View in Google Translate",
+    "readViaGoogleTranslate": "Read in your language (Google Translate)",
     "showOriginal": "Show original",
     "showTranslation": "Show translation"
   },
