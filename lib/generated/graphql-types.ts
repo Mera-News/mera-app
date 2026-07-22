@@ -482,8 +482,6 @@ export type Query = {
   relatedArticles: Array<ArticleSummary>;
   /** Vector search using cosine similarity (scores 0–1). */
   searchArticlesVector: EmbeddingSearchResponse;
-  /** Vector search on user topics using cosine similarity (scores 0–1). */
-  searchTopicsVector: TopicSearchResponse;
   /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
   topHeadlinesForCountry: TopHeadlinesForCountryResponse;
   /** A tracked story's archive by stableClusterId. Reading it slides the 90-day retention forward. Returns null when the story is not (or no longer) tracked. */
@@ -560,7 +558,6 @@ export type QueryNewsClustersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   countryCodes?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
-  userTopicId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -605,14 +602,6 @@ export type QueryRelatedArticlesArgs = {
 
 export type QuerySearchArticlesVectorArgs = {
   cutoffHours?: InputMaybe<Scalars['Int']['input']>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  minScore?: InputMaybe<Scalars['Float']['input']>;
-  numCandidates?: InputMaybe<Scalars['Int']['input']>;
-  query: Scalars['String']['input'];
-};
-
-
-export type QuerySearchTopicsVectorArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   minScore?: InputMaybe<Scalars['Float']['input']>;
   numCandidates?: InputMaybe<Scalars['Int']['input']>;
@@ -684,19 +673,6 @@ export type TopicPaginationInput = {
   /** articleId of the last item on the previous page; omit for first page */
   afterCursor?: InputMaybe<Scalars['String']['input']>;
   topicText: Scalars['String']['input'];
-};
-
-export type TopicSearchResponse = {
-  __typename?: 'TopicSearchResponse';
-  query: Scalars['String']['output'];
-  results: Array<TopicSearchResult>;
-  totalResults: Scalars['Float']['output'];
-};
-
-export type TopicSearchResult = {
-  __typename?: 'TopicSearchResult';
-  score: Scalars['Float']['output'];
-  topic: UserTopic;
 };
 
 /** A durable, self-contained archive of one stable cluster's coverage, returned by trackStory (seed/refresh) and trackedStory (read). Carries its own trimmed article snapshots so it renders even after the underlying NewsArticle rows TTL out. */
@@ -794,17 +770,4 @@ export type UserPersona = {
   processingMode: ProcessingMode;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['String']['output'];
-  /** @deprecated Topics are device-owned; the server keeps no per-user topic state. Always returns []. */
-  userTopics?: Maybe<Array<UserTopic>>;
-};
-
-export type UserTopic = {
-  __typename?: 'UserTopic';
-  _id: Scalars['ID']['output'];
-  article_count: Scalars['Int']['output'];
-  cluster_count: Scalars['Int']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  is_canonical: Scalars['Boolean']['output'];
-  news_topic_text: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
 };

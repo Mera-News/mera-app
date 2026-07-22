@@ -469,7 +469,6 @@ type Query {
 
     """Number of items to fetch"""
     first: Int = 20
-    userTopicId: ID
   ): NewsClustersResponse!
   newsClustersForTopicText(after: String, first: Int = 20, topicText: String!): NewsClustersResponse!
   newsPublishers(
@@ -516,21 +515,6 @@ type Query {
     """Search text"""
     query: String!
   ): EmbeddingSearchResponse!
-
-  """Vector search on user topics using cosine similarity (scores 0–1)."""
-  searchTopicsVector(
-    """Max results to return"""
-    limit: Int = 10
-
-    """Minimum cosine similarity score (0–1)"""
-    minScore: Float = 0
-
-    """Number of candidates for vector search pre-filter"""
-    numCandidates: Int = 5000
-
-    """Search text"""
-    query: String!
-  ): TopicSearchResponse!
 
   """
   A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet.
@@ -602,17 +586,6 @@ input TopicPaginationInput {
   """articleId of the last item on the previous page; omit for first page"""
   afterCursor: String
   topicText: String!
-}
-
-type TopicSearchResponse {
-  query: String!
-  results: [TopicSearchResult!]!
-  totalResults: Float!
-}
-
-type TopicSearchResult {
-  score: Float!
-  topic: UserTopic!
 }
 
 """
@@ -717,15 +690,4 @@ type UserPersona {
   processingMode: ProcessingMode!
   updatedAt: DateTime!
   userId: String!
-  userTopics: [UserTopic!] @deprecated(reason: "Topics are device-owned; the server keeps no per-user topic state. Always returns [].")
-}
-
-type UserTopic {
-  _id: ID!
-  article_count: Int!
-  cluster_count: Int!
-  createdAt: DateTime!
-  is_canonical: Boolean!
-  news_topic_text: String!
-  updatedAt: DateTime!
 }
