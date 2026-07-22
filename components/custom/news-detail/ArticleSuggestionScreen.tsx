@@ -394,7 +394,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-black items-center justify-center">
+            <Box className="flex-1 bg-background-50 items-center justify-center">
                 <Spinner size="large" />
             </Box>
         );
@@ -407,7 +407,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             useForYouStore.getState().removeSuggestion(articleSuggestionId);
         }
         return (
-            <Box className="flex-1 bg-black items-center justify-center p-5">
+            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
                 <MaterialIcons name="error-outline" size={48} color="#EF4444" />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
@@ -423,7 +423,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const read = isSuggestionOpened(suggestion, openedIds);
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-50">
             {/* Floating Back Button */}
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable

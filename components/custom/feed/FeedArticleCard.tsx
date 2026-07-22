@@ -1,6 +1,6 @@
 // FeedArticleCard — one card in the Instagram-style vertical Feed. An optional
 // full-bleed hero image (omitted entirely when the article has no image or it
-// fails to load — no placeholder), then the body (meta → 3-line title → compact
+// fails to load — no placeholder), then the body (meta → 5-line title → compact
 // reason box), and the small borderless CardActionBar beneath the body. Tapping
 // the BODY opens the story detail; the action bar carries like/dislike/Mera/save.
 // No read button on the face — that lives on the detail screen. Save state is
@@ -145,7 +145,10 @@ const FeedArticleCard: React.FC<FeedArticleCardProps> = ({
             originalLanguage={suggestion.language_code}
             as="heading"
             size="lg"
-            numberOfLines={3}
+            // Prod headline lengths (title_en, n=296k, last 7 days): avg 80,
+            // p90 116, p95 131, p99 168 chars. At ~34 chars/line, 5 lines
+            // (~170 chars) covers ~99% of headlines without truncation.
+            numberOfLines={5}
             className="text-white leading-7"
           />
           {relevanceReady && reason ? (

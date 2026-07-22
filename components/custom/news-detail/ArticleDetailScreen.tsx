@@ -11,9 +11,15 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
+import {
+    deleteSavedSuggestion,
+    isSuggestionSaved,
+    saveStandaloneArticle,
+} from '@/lib/database/services/saved-article-suggestion-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -68,8 +74,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     stableClusterId,
 }) => {
     const { t } = useTranslation();
+    const toast = useToast();
     const [article, setArticle] = useState<NewsArticle | null>(null);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
+    const [isSaved, setIsSaved] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -157,6 +165,60 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         };
     }, [article?._id]);
 
+    // Reflect whether this standalone article is already saved for later. The
+    // saved row id for a standalone article is the article's own `_id`.
+    useEffect(() => {
+        const id = article?._id;
+        if (!id) return;
+        let cancelled = false;
+        isSuggestionSaved(id)
+            .then((saved) => {
+                if (!cancelled) setIsSaved(saved);
+            })
+            .catch(() => {
+                /* non-fatal — default to unsaved */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [article?._id]);
+
+    const showSavedToast = useCallback(
+        (message: string) => {
+            toast.show({
+                placement: 'top',
+                duration: 3000,
+                render: ({ id }: { id: string }) => (
+                    <Toast nativeID={id} action="success" variant="solid">
+                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastDescription>{message}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        },
+        [toast, t],
+    );
+
+    const handleToggleSave = useCallback(async () => {
+        if (!article) return;
+        try {
+            if (isSaved) {
+                await deleteSavedSuggestion(article._id);
+                setIsSaved(false);
+                showSavedToast(t('savedSuggestions.removedToastMessage'));
+            } else {
+                await saveStandaloneArticle(article, { surface: 'detail' });
+                setIsSaved(true);
+                showSavedToast(t('savedSuggestions.savedToastMessage'));
+            }
+        } catch (err) {
+            logger.captureException(err, {
+                tags: { screen: 'ArticleDetailScreen', method: 'toggleSave' },
+                extra: { articleId: article._id ?? articleId },
+            });
+        }
+    }, [article, isSaved, showSavedToast, t, articleId]);
+
     const handleArticleUrlPress = async (url: string | null | undefined) => {
         if (!url) return;
         if (article) {
@@ -190,7 +252,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-black items-center justify-center">
+            <Box className="flex-1 bg-background-50 items-center justify-center">
                 <Spinner size="large" />
             </Box>
         );
@@ -198,7 +260,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     if (error || !article) {
         return (
-            <Box className="flex-1 bg-black items-center justify-center p-5">
+            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
                 <MaterialIcons name="error-outline" size={48} color="#EF4444" />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
@@ -215,7 +277,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const read = isOpenedId(article._id, stableClusterId, openedIds);
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-background-50">
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
@@ -250,6 +312,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
+                                    save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'article',
                                         surface: 'detail',
