@@ -223,8 +223,8 @@ const GET_ARTICLES_FOR_PUBLISHER = gql`
 
 // GraphQL Query for fetching news clusters (paginated, unordered)
 const GET_NEWS_CLUSTERS = gql`
-  query GetNewsClusters($userTopicId: ID, $countryCodes: [String!], $first: Int, $after: String) {
-    newsClusters(userTopicId: $userTopicId, countryCodes: $countryCodes, first: $first, after: $after) {
+  query GetNewsClusters($countryCodes: [String!], $first: Int, $after: String) {
+    newsClusters(countryCodes: $countryCodes, first: $first, after: $after) {
       newsClusters {
         _id
         createdAt
@@ -1001,11 +1001,12 @@ export class ArticleService {
 
     /**
      * Get news clusters (paginated, server returns them unordered)
-     * Used by Persona L3 (with userTopicId) and Sources L3 (with countryCodes)
+     * Used by Sources L3 (with countryCodes)
+     *
+     * NOTE: currently has no call sites — dead code, not load-bearing.
      */
     static async getNewsClusters(
         options?: {
-            userTopicId?: string;
             countryCodes?: string[];
             first?: number;
             after?: string;
@@ -1015,7 +1016,6 @@ export class ArticleService {
             const { data } = await client.query<{ newsClusters: NewsClustersResponse }>({
                 query: GET_NEWS_CLUSTERS,
                 variables: {
-                    userTopicId: options?.userTopicId,
                     countryCodes: options?.countryCodes,
                     first: options?.first ?? 20,
                     after: options?.after,

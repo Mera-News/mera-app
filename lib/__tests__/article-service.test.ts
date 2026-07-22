@@ -679,12 +679,12 @@ describe('ArticleService.getNewsClusters', () => {
         expect(result.pageInfo.pageSize).toBe(20);
     });
 
-    it('passes userTopicId and countryCodes as variables', async () => {
+    it('passes countryCodes as a variable', async () => {
         mockQuery.mockResolvedValueOnce({ data: { newsClusters: null } });
-        await ArticleService.getNewsClusters({ userTopicId: 'ut-1', countryCodes: ['US', 'UK'] });
+        await ArticleService.getNewsClusters({ countryCodes: ['US', 'UK'] });
         expect(mockQuery).toHaveBeenCalledWith(
             expect.objectContaining({
-                variables: expect.objectContaining({ userTopicId: 'ut-1', countryCodes: ['US', 'UK'] }),
+                variables: expect.objectContaining({ countryCodes: ['US', 'UK'] }),
             }),
         );
     });
