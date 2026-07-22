@@ -34,8 +34,12 @@ export interface FeedBootstrapState {
 export function useFeedBootstrap(): FeedBootstrapState {
   const { t } = useTranslation();
   const { data: session } = authClient.useSession();
-  const { fetchUserPersona } = useUserStore();
+  const { fetchUserPersonaOrThrow } = useUserStore();
   const isFocused = useIsFocused();
+  // Reactive subscription: a persisted-false flag (e.g. from a prior transient
+  // failure, before this fix, or a confirmed-empty persona) must retrigger the
+  // fetch on a later tab visit rather than being sticky for the session.
+  const hasGeneratedTopics = useForYouStore((s) => s.hasGeneratedTopics);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,12 +53,18 @@ export function useFeedBootstrap(): FeedBootstrapState {
     if (isFocused) void useOpenedStoriesStore.getState().hydrate();
   }, [isFocused]);
 
-  // First-visit persona fetch — only when the store is empty (first visit /
-  // after logout). Idempotent + double-mount safe via the module-level guard.
+  // Self-heal persona fetch — runs when the store is empty (first visit /
+  // after logout) OR the persisted hasGeneratedTopics flag is false (a prior
+  // fetch never confirmed interests, whether from a transient error or a
+  // stale false). Idempotent + double-mount safe via the module-level guard,
+  // and rate-bounded by the user-store's 5-min cache + in-flight dedupe so
+  // this does not hammer the server on every focus.
   useEffect(() => {
     const userId = session?.user?.id;
     if (!userId) return;
-    if (useForYouStore.getState().suggestions.length > 0) return;
+    if (!isFocused) return;
+    const suggestionsEmpty = useForYouStore.getState().suggestions.length === 0;
+    if (!suggestionsEmpty && useForYouStore.getState().hasGeneratedTopics) return;
     if (inFlightUserId === userId) return; // another mount is already bootstrapping this user
 
     inFlightUserId = userId;
@@ -64,19 +74,25 @@ export function useFeedBootstrap(): FeedBootstrapState {
 
     (async () => {
       try {
-        const persona = await fetchUserPersona(userId);
+        const persona = await fetchUserPersonaOrThrow(userId);
+        // A SUCCESSFUL query is authoritative even when it returns no topics —
+        // that is a confirmed-empty persona, not a failure, and may set false.
         const hasInterests = !!(
           persona?._id &&
           persona?.userTopics &&
           persona.userTopics.length > 0
         );
-        getForYouActions().setHasGeneratedTopics(hasInterests);
+        if (!cancelled) {
+          getForYouActions().setHasGeneratedTopics(hasInterests);
+        }
       } catch (error: any) {
         logger.captureException(error, {
           tags: { hook: 'use-feed-bootstrap', method: 'bootstrap' },
           extra: { userId },
         });
         if (!cancelled) {
+          // Do NOT touch hasGeneratedTopics here — a transient network/auth
+          // failure must not overwrite a healthy persisted flag.
           const isNetworkError =
             error?.networkError ||
             error?.message?.includes('Network request failed');
@@ -94,7 +110,7 @@ export function useFeedBootstrap(): FeedBootstrapState {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id]);
+  }, [session?.user?.id, isFocused, hasGeneratedTopics]);
 
   return { isLoading, errorMessage };
 }

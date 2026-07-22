@@ -324,6 +324,89 @@ describe('useUserStore', () => {
         expect(mockGetUserPersona).toHaveBeenCalledWith('user-2');
     });
 
+    // ── fetchUserPersonaOrThrow ──────────────────────────────────────────────
+
+    it('fetchUserPersonaOrThrow returns null for empty userId (not an error)', async () => {
+        const result = await useUserStore.getState().fetchUserPersonaOrThrow('');
+        expect(result).toBeNull();
+        expect(mockGetUserPersona).not.toHaveBeenCalled();
+    });
+
+    it('fetchUserPersonaOrThrow fetches persona and updates state on success', async () => {
+        const persona = makePersona();
+        mockGetUserPersona.mockResolvedValueOnce(persona);
+
+        const result = await useUserStore.getState().fetchUserPersonaOrThrow('user-1');
+
+        expect(result).toEqual(persona);
+        const state = useUserStore.getState();
+        expect(state.userPersona).toEqual(persona);
+        expect(state.isLoading).toBe(false);
+        expect(state.lastFetchedAt).not.toBeNull();
+    });
+
+    it('fetchUserPersonaOrThrow persists persona after a successful fetch', async () => {
+        const persona = makePersona();
+        mockGetUserPersona.mockResolvedValueOnce(persona);
+
+        await useUserStore.getState().fetchUserPersonaOrThrow('user-1');
+
+        await Promise.resolve();
+        expect(mockPersistUserPersona).toHaveBeenCalledWith('user-1', persona);
+    });
+
+    it('fetchUserPersonaOrThrow returns cached persona within 5 minutes (cache hit, no network call)', async () => {
+        const persona = makePersona();
+        const recentFetch = Date.now() - 1000; // 1 second ago — within 5-min window
+        useUserStore.setState({
+            userId: 'user-1',
+            userPersona: persona,
+            lastFetchedAt: recentFetch,
+        });
+
+        const result = await useUserStore.getState().fetchUserPersonaOrThrow('user-1');
+
+        expect(result).toEqual(persona);
+        expect(mockGetUserPersona).not.toHaveBeenCalled();
+    });
+
+    it('fetchUserPersonaOrThrow bypasses cache when force=true', async () => {
+        const oldPersona = makePersona({ _id: 'old' });
+        const newPersona = makePersona({ _id: 'new' });
+        useUserStore.setState({
+            userId: 'user-1',
+            userPersona: oldPersona,
+            lastFetchedAt: Date.now() - 1000,
+        });
+        mockGetUserPersona.mockResolvedValueOnce(newPersona);
+
+        const result = await useUserStore.getState().fetchUserPersonaOrThrow('user-1', true);
+
+        expect(result).toEqual(newPersona);
+        expect(mockGetUserPersona).toHaveBeenCalledWith('user-1');
+    });
+
+    it('fetchUserPersonaOrThrow rethrows on AccountService failure (unlike fetchUserPersona)', async () => {
+        const error = new Error('network error');
+        mockGetUserPersona.mockRejectedValueOnce(error);
+
+        await expect(useUserStore.getState().fetchUserPersonaOrThrow('user-1')).rejects.toThrow(
+            'network error',
+        );
+
+        expect(useUserStore.getState().isLoading).toBe(false);
+        expect(logger.captureException).toHaveBeenCalled();
+    });
+
+    it('legacy fetchUserPersona still returns null (does not throw) for the same failure', async () => {
+        mockGetUserPersona.mockRejectedValueOnce(new Error('network error'));
+
+        const result = await useUserStore.getState().fetchUserPersona('user-1');
+
+        expect(result).toBeNull();
+        expect(useUserStore.getState().isLoading).toBe(false);
+    });
+
     // ── clearUser ─────────────────────────────────────────────────────────────
 
     it('clearUser resets all fields to null/false and clears DB', async () => {
