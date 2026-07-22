@@ -29,6 +29,7 @@ jest.mock('lucide-react-native', () => {
     ThumbsUp: (p: any) => <View testID="icon-thumbsup" fill={p.fill} color={p.color} />,
     ThumbsDown: (p: any) => <View testID="icon-thumbsdown" fill={p.fill} color={p.color} />,
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
+    Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
   };
 });
 
@@ -41,6 +42,7 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
   const onDislike = jest.fn();
   const onAskMera = jest.fn();
   const onToggleSave = jest.fn();
+  const onShare = jest.fn();
   const utils = render(
     <CardActionBar
       verdict={overrides.verdict ?? null}
@@ -49,9 +51,11 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
       onDislike={onDislike}
       onAskMera={onAskMera}
       onToggleSave={onToggleSave}
+      onShare={'onShare' in overrides ? overrides.onShare : onShare}
+      horizontalPadding={overrides.horizontalPadding}
     />,
   );
-  return { ...utils, onLike, onDislike, onAskMera, onToggleSave };
+  return { ...utils, onLike, onDislike, onAskMera, onToggleSave, onShare };
 }
 
 describe('CardActionBar', () => {
@@ -89,5 +93,18 @@ describe('CardActionBar', () => {
   it('fills the bookmark accent when saved', () => {
     const { getByTestId } = setup({ saved: true });
     expect(getByTestId('icon-bookmark').props.fill).toBe('rgb(231,138,83)');
+  });
+
+  it('renders the share icon and fires onShare when a share handler is provided', () => {
+    const { getByLabelText, getByTestId, onShare } = setup();
+    expect(getByTestId('icon-share')).toBeTruthy();
+    fireEvent.press(getByLabelText('articleDetail.share'));
+    expect(onShare).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the share icon when no share handler is provided', () => {
+    const { queryByTestId, queryByLabelText } = setup({ onShare: undefined });
+    expect(queryByTestId('icon-share')).toBeNull();
+    expect(queryByLabelText('articleDetail.share')).toBeNull();
   });
 });

@@ -63,6 +63,16 @@ jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
   return { MaterialIcons: (p: any) => <View {...p} /> };
 });
+// lucide icons (the CardActionBar row on ArticleSuggestionCard) → plain views.
+jest.mock('lucide-react-native', () => {
+  const { View } = require('react-native');
+  return {
+    ThumbsUp: (p: any) => <View testID="icon-thumbsup" fill={p.fill} color={p.color} />,
+    ThumbsDown: (p: any) => <View testID="icon-thumbsdown" fill={p.fill} color={p.color} />,
+    Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
+    Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+  };
+});
 
 // ── Custom children → light stubs that surface the props we assert on ──
 jest.mock('@/components/custom/TranslatableDynamic', () => {
@@ -216,6 +226,18 @@ function makeArticle(overrides: Partial<NewsArticle> = {}): NewsArticle {
   } as NewsArticle;
 }
 
+/** Walk up from a node to find the nearest resolved `opacity` style. */
+function opacityOf(node: any): number | undefined {
+  let n: any = node;
+  while (n) {
+    const st = n.props?.style;
+    const flat = Array.isArray(st) ? Object.assign({}, ...st) : st;
+    if (flat && typeof flat.opacity === 'number') return flat.opacity;
+    n = n.parent;
+  }
+  return undefined;
+}
+
 beforeEach(() => jest.clearAllMocks());
 
 describe('ArticleSuggestionCard', () => {
@@ -237,11 +259,66 @@ describe('ArticleSuggestionCard', () => {
     expect(queryByTestId('relevance-chip')).toBeNull();
   });
 
-  it('does not render the actions row unless showActions is set (pixel-identical default)', () => {
+  it('does not render the action row without onVerdict (pixel-identical default)', () => {
     const { queryByLabelText } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
     );
     expect(queryByLabelText('articleFeedback.likeLabel')).toBeNull();
+  });
+
+  it('renders the action row when onVerdict is provided', () => {
+    const { getByLabelText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} />,
+    );
+    expect(getByLabelText('articleFeedback.likeLabel')).toBeTruthy();
+    expect(getByLabelText('articleFeedback.dislikeLabel')).toBeTruthy();
+  });
+
+  it('fires onVerdict with its own suggestion for like + dislike', () => {
+    const onVerdict = jest.fn();
+    const s = makeSuggestion();
+    const { getByLabelText } = render(
+      <ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={onVerdict} />,
+    );
+    fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
+    expect(onVerdict).toHaveBeenCalledWith(s, 'like');
+    fireEvent.press(getByLabelText('articleFeedback.dislikeLabel'));
+    expect(onVerdict).toHaveBeenCalledWith(s, 'dislike');
+  });
+
+  it('fills the thumb-up green when the verdict is like', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} verdict="like" />,
+    );
+    expect(getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
+  });
+
+  it('toggles the card-internal save via the bookmark', async () => {
+    const { getByLabelText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} />,
+    );
+    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    await waitFor(() => expect(mockSaveSuggestion).toHaveBeenCalled());
+  });
+
+  it('shows the share icon only when the suggestion has an article url', () => {
+    const withUrl = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ article_url: 'https://example.com/a' })}
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+      />,
+    );
+    expect(withUrl.getByLabelText('articleDetail.share')).toBeTruthy();
+
+    const noUrl = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ article_url: null })}
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+      />,
+    );
+    expect(noUrl.queryByLabelText('articleDetail.share')).toBeNull();
   });
 
   it('fires onPress with its own suggestion', () => {
@@ -250,6 +327,13 @@ describe('ArticleSuggestionCard', () => {
     const { getByText } = render(<ArticleSuggestionCard suggestion={s} onPress={onPress} />);
     fireEvent.press(getByText('A headline'));
     expect(onPress).toHaveBeenCalledWith(s);
+  });
+
+  it('dims the whole card when dimmed (opacity 0.75)', () => {
+    const { getByText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} dimmed />,
+    );
+    expect(opacityOf(getByText('A headline'))).toBe(0.75);
   });
 
   it('does not render the read eye icon by default', () => {

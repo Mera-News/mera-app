@@ -13,11 +13,9 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
-import FeedArticleCard from './FeedArticleCard';
-import FeedbackTreeSheet from './FeedbackTreeSheet';
+import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useVisibleIndex } from './use-visible-index';
-import { swipeCallbacks } from './swipe-callbacks';
-import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
+import { useFeedbackSheet, type VerdictStoreAdapter } from './use-feedback-sheet';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -61,21 +59,10 @@ const REFRESH_TINT = '#EDA77E';
 // for NEW ids inside `ingest`.
 const EMPTY_SET: Set<string> = new Set();
 
-// Install the real Feed-signal implementations onto the swipe-callbacks contract
-// once, when this screen's module loads (before any render). Idempotent.
-wireSwipeCallbacks();
-
-interface ActiveFeedback {
-  /** The list-item id (feed-order key) — verdict/path are keyed by this, which
-   *  survives rep-switches (it stays the original order id). */
-  itemId: string;
-  suggestion: ForYouSuggestion;
-  verdict: Verdict;
-  initialPathIds?: string[];
-}
-
 /** One rendered feed row. Subscribes to its OWN verdict + opened state so a
- *  verdict/open change re-renders only this row, not the whole list. */
+ *  verdict/open change re-renders only this row, not the whole list. The action
+ *  handlers are the (stable) card-action handlers from `useFeedbackSheet`, which
+ *  resolve the suggestion → list-item verdict key via the screen's adapter. */
 const FeedRow = React.memo(function FeedRow({
   item,
   onPress,
@@ -84,19 +71,23 @@ const FeedRow = React.memo(function FeedRow({
 }: {
   item: FeedListItem;
   onPress: (suggestion: ForYouSuggestion) => void;
-  onVerdict: (item: FeedListItem, verdict: Verdict) => void;
-  onAskMera: (item: FeedListItem) => void;
+  onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
+  onAskMera: (suggestion: ForYouSuggestion) => void;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   const read = useOpenedStoriesStore((s) => isSuggestionOpened(item.suggestion, s.ids));
+  const extraSources = item.memberCount > 1 ? item.memberCount - 1 : 0;
   return (
-    <FeedArticleCard
-      item={item}
-      verdict={verdict}
-      read={read}
+    <ArticleSuggestionCard
+      suggestion={item.suggestion}
       onPress={onPress}
+      moreSourcesCount={extraSources}
+      verdict={verdict}
       onVerdict={onVerdict}
       onAskMera={onAskMera}
+      dimmed={verdict != null || read}
+      read={read}
+      flat
     />
   );
 });
@@ -163,90 +154,28 @@ const FeedScreen: React.FC = () => {
   );
   const listData = data;
 
-  // ── Feedback sheet ──
-  const [activeFeedback, setActiveFeedback] = useState<ActiveFeedback | null>(null);
-  const activeFeedbackRef = useRef<ActiveFeedback | null>(null);
-  activeFeedbackRef.current = activeFeedback;
-  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (settleTimer.current) clearTimeout(settleTimer.current);
-    },
-    [],
-  );
-
-  // ── Handlers ──
+  // ── Feedback sheet (shared plumbing) ──
+  // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
+  // list-item id. The card hands back the suggestion, so the adapter resolves
+  // suggestion._id → list-item id via a ref map rebuilt from the live order.
   const openSuggestion = useOpenSuggestion('feed');
 
-  const handleVerdict = useCallback((item: FeedListItem, next: Verdict) => {
-    const store = useFeedOrderStore.getState();
-    const existing = store.verdicts[item.id]?.verdict ?? null;
-    if (existing === next) {
-      // Re-tap of the same thumb — reopen the sheet on the stored path; no re-record.
-    } else if (existing != null) {
-      store.setVerdict(item.id, next);
-      swipeCallbacks.onVerdictChanged(item.suggestion, existing, next);
-    } else {
-      store.setVerdict(item.id, next);
-      swipeCallbacks.onVerdict(item.suggestion, next);
-    }
-    setActiveFeedback({
-      itemId: item.id,
-      suggestion: item.suggestion,
-      verdict: next,
-      initialPathIds: useFeedOrderStore.getState().verdicts[item.id]?.path,
-    });
-  }, []);
+  const suggestionToItemId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const it of data) m.set(it.suggestion._id, it.id);
+    return m;
+  }, [data]);
+  const suggestionToItemIdRef = useRef(suggestionToItemId);
+  suggestionToItemIdRef.current = suggestionToItemId;
 
-  const handleAskMera = useCallback((item: FeedListItem) => {
-    swipeCallbacks.onOpenArticleChat(item.suggestion);
-  }, []);
-
-  const closeSheet = useCallback(() => setActiveFeedback(null), []);
-
-  // Sheet callbacks — path is keyed by the list-item id (rep-switch-safe),
-  // taken from the active feedback record rather than the suggestion's articleId.
-  const handleTreePathChanged = useCallback(
-    (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
-      const id = activeFeedbackRef.current?.itemId;
-      if (id) useFeedOrderStore.getState().setPath(id, pathIds);
-      swipeCallbacks.onTreePathChanged(s, v, pathIds);
-    },
-    [],
-  );
-
-  const handleTreeInvokeMera = useCallback(
-    (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
-      swipeCallbacks.onInvokeMera(s, v, pathIds);
-    },
-    [],
-  );
-
-  // Terminal (non-openChat) leaf: path already recorded — settle briefly, close.
-  const handleLeafCommitted = useCallback(
-    (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
-      const id = activeFeedbackRef.current?.itemId;
-      if (id) useFeedOrderStore.getState().setPath(id, pathIds);
-      if (settleTimer.current) clearTimeout(settleTimer.current);
-      settleTimer.current = setTimeout(() => setActiveFeedback(null), 250);
-    },
-    [],
-  );
-
-  // Sheet's Mera entry row — the verdict + path-primed handoff.
-  const handleSheetAskMera = useCallback(() => {
-    setActiveFeedback((current) => {
-      if (current) {
-        const rec = useFeedOrderStore.getState().verdicts[current.itemId];
-        swipeCallbacks.onInvokeMera(
-          current.suggestion,
-          rec?.verdict ?? current.verdict,
-          rec?.path ?? [],
-        );
-      }
-      return current;
-    });
-  }, []);
+  const feedAdapter: VerdictStoreAdapter = {
+    keyFor: (s) => suggestionToItemIdRef.current.get(s._id) ?? null,
+    getVerdict: (key) => useFeedOrderStore.getState().verdicts[key]?.verdict ?? null,
+    setVerdict: (key, v) => useFeedOrderStore.getState().setVerdict(key, v),
+    getPath: (key) => useFeedOrderStore.getState().verdicts[key]?.path,
+    setPath: (key, path) => useFeedOrderStore.getState().setPath(key, path),
+  };
+  const { onVerdict, onAskMera, sheet } = useFeedbackSheet(feedAdapter);
 
   // ── Pull-to-refresh — trigger a feed sync ONLY. New completes then flow in
   //    via the ingest effect (inserted below the viewport); the order is never
@@ -263,11 +192,11 @@ const FeedScreen: React.FC = () => {
       <FeedRow
         item={item}
         onPress={openSuggestion}
-        onVerdict={handleVerdict}
-        onAskMera={handleAskMera}
+        onVerdict={onVerdict}
+        onAskMera={onAskMera}
       />
     ),
-    [openSuggestion, handleVerdict, handleAskMera],
+    [openSuggestion, onVerdict, onAskMera],
   );
 
   const keyExtractor = useCallback((item: FeedListItem) => item.id, []);
@@ -374,17 +303,8 @@ const FeedScreen: React.FC = () => {
         removeClippedSubviews={false}
       />
 
-      {/* Feedback tree sheet — mounted once, driven by activeFeedback. */}
-      <FeedbackTreeSheet
-        suggestion={activeFeedback?.suggestion ?? null}
-        verdict={activeFeedback?.verdict ?? null}
-        initialPathIds={activeFeedback?.initialPathIds}
-        onClose={closeSheet}
-        onTreePathChanged={handleTreePathChanged}
-        onInvokeMera={handleTreeInvokeMera}
-        onLeafCommitted={handleLeafCommitted}
-        onAskMera={handleSheetAskMera}
-      />
+      {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
+      {sheet}
 
       {/* One-time "What's new" sheet (carried over from the old feed screen). */}
       <WhatsNewSheet />

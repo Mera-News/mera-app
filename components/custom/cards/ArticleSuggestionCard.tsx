@@ -1,7 +1,6 @@
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
-import ArticleActionsRow from '@/components/custom/cards/ArticleActionsRow';
+import CardActionBar from '@/components/custom/cards/CardActionBar';
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
-import type { FeedbackSubject, FeedbackSurface } from '@/components/custom/cards/feedback-subject';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
@@ -10,8 +9,16 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
+import {
+  saveSuggestion,
+  deleteSavedSuggestion,
+  isSuggestionSaved,
+} from '@/lib/database/services/saved-article-suggestion-service';
+import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useEffect, useState } from 'react';
 
@@ -28,11 +35,17 @@ interface ArticleCardProps {
   isNew?: boolean;
   /** Number of additional source publications collapsed into this story card. */
   moreSourcesCount?: number;
-  // ── Additive, optional (keeps this a drop-in for ArticleCard) ──────────
-  // The universal actions row is OFF by default so existing surfaces (For You,
-  // Saved) stay pixel-identical. Future surfaces (e.g. triage) opt in.
-  showActions?: boolean;
-  surface?: FeedbackSurface;
+  // ── Action row (the small borderless CardActionBar) ────────────────────
+  // The action row renders ONLY when `onVerdict` is provided. Surfaces that use
+  // it (the For You feed + the fact feed) pass the flat trio below; surfaces that
+  // don't (Saved) omit them and get a pixel-identical action-less card. Kept as
+  // FLAT, memo-safe props so a row re-renders only when its own verdict flips.
+  /** The card's currently-stored verdict (null when undecided). */
+  verdict?: Verdict | null;
+  /** A thumb was tapped — the host records the verdict + floats the sheet. */
+  onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
+  /** The Mera icon was tapped — open the default article chat. */
+  onAskMera?: (suggestion: ForYouSuggestion) => void;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
   /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
@@ -59,13 +72,53 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   timestamp,
   isNew = false,
   moreSourcesCount,
-  showActions = false,
-  surface = 'for_you',
+  verdict = null,
+  onVerdict,
+  onAskMera,
   dimmed = false,
   read = false,
   flat = false,
 }) => {
   const [facts, setFacts] = useState<Fact[]>([]);
+
+  // Card-local saved state — restored across remounts (ported verbatim from
+  // FeedArticleCard, which mirrored ArticleActionsRow). Only wired when the
+  // action row is present (onVerdict provided).
+  const savedId = suggestion._id;
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (!onVerdict) return;
+    let cancelled = false;
+    isSuggestionSaved(savedId)
+      .then((v) => {
+        if (!cancelled && v) setSaved(true);
+      })
+      .catch(() => {
+        /* non-fatal */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [savedId, onVerdict]);
+
+  const handleToggleSave = () => {
+    if (saved) {
+      hapticLight();
+      setSaved(false);
+      void deleteSavedSuggestion(savedId);
+    } else {
+      hapticSuccess();
+      setSaved(true);
+      void saveSuggestion(suggestion);
+    }
+  };
+
+  const handleShare = useShareArticle({
+    url: suggestion.article_url,
+    titleEnglish: suggestion.title_en,
+    titleOriginal: suggestion.title_original,
+    sourceLanguage: suggestion.language_code,
+  });
 
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
@@ -158,22 +211,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : undefined;
 
-  const subject: FeedbackSubject = {
-    origin: 'suggestion',
-    surface,
-    articleId: suggestion.articleId,
-    suggestionId: suggestion._id,
-    title: suggestion.title_en ?? '',
-    pubDate: suggestion.firstPubDate ?? null,
-    publicationName: suggestion.publication_name,
-    countryCode: suggestion.country_code,
-    stableClusterId:
-      suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? undefined,
-    eventType: suggestion.eventType ?? undefined,
-    matchedTopics: suggestion.matchedTopics,
-    relevance: suggestion.relevance,
-  };
-
   return (
     <ArticleCardBase
       imageUrl={suggestion.image_url}
@@ -195,16 +232,19 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     >
       {factChipsEl}
       {reasonBoxEl}
-      {showActions ? (
-        <ArticleActionsRow
-          subject={subject}
-          suggestion={suggestion}
-          share={{
-            url: suggestion.article_url,
-            titleEnglish: suggestion.title_en,
-            titleOriginal: suggestion.title_original,
-            sourceLanguage: suggestion.language_code,
-          }}
+      {onVerdict ? (
+        // Action row as the last child inside ArticleCardBase — `horizontalPadding
+        // = 0` because the base's `p-4` VStack already insets it (no double pad).
+        // Share is offered only when the story has a URL to share.
+        <CardActionBar
+          verdict={verdict}
+          saved={saved}
+          onLike={() => onVerdict(suggestion, 'like')}
+          onDislike={() => onVerdict(suggestion, 'dislike')}
+          onAskMera={() => onAskMera?.(suggestion)}
+          onToggleSave={handleToggleSave}
+          onShare={suggestion.article_url ? () => void handleShare() : undefined}
+          horizontalPadding={0}
         />
       ) : null}
     </ArticleCardBase>

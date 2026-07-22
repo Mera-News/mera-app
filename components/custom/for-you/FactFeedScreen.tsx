@@ -1,5 +1,6 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
+import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import { Box } from '@/components/ui/box';
@@ -20,10 +21,11 @@ import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -107,13 +109,35 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     return rows.find((r) => r.factId === factId)?.groups ?? [];
   }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx]);
 
+  // ── Feedback sheet ──
+  // Unlike the For You feed (which persists its order + verdicts), this screen
+  // keeps verdicts in a component-local store keyed by articleId. The signal
+  // persistence (article_feedback rows / Mera handoff) still goes through the
+  // shared `swipeCallbacks` inside the hook, identical to the feed.
+  const [verdicts, setVerdicts] = useState<Record<string, { verdict: Verdict; path: string[] }>>({});
+  const verdictsRef = useRef(verdicts);
+  verdictsRef.current = verdicts;
+
+  const factAdapter: VerdictStoreAdapter = {
+    keyFor: (s) => s.articleId,
+    getVerdict: (key) => verdictsRef.current[key]?.verdict ?? null,
+    setVerdict: (key, v) =>
+      setVerdicts((prev) => ({ ...prev, [key]: { verdict: v, path: prev[key]?.path ?? [] } })),
+    getPath: (key) => verdictsRef.current[key]?.path,
+    setPath: (key, path) =>
+      setVerdicts((prev) => (prev[key] ? { ...prev, [key]: { ...prev[key], path } } : prev)),
+  };
+  const { onVerdict, onAskMera, sheet } = useFeedbackSheet(factAdapter);
+
   const renderItem = useCallback(
     ({ item }: { item: FactRowGroup }) => (
       <ArticleSuggestionCard
         suggestion={item.data}
         moreSourcesCount={moreSourcesCount(item.data, item.members)}
         onPress={handlePress}
-        surface="for_you"
+        verdict={verdicts[item.data.articleId]?.verdict ?? null}
+        onVerdict={onVerdict}
+        onAskMera={onAskMera}
         read={isSuggestionOpened(item.data, openedIds)}
         // NEW pill only for stories that became visible since the last visit —
         // and never on a first-ever visit (prevVisitMs 0).
@@ -121,7 +145,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         flat
       />
     ),
-    [handlePress, openedIds, prevVisitMs],
+    [handlePress, openedIds, prevVisitMs, verdicts, onVerdict, onAskMera],
   );
 
   return (
@@ -172,6 +196,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<AllCaughtUpCard />}
       />
+
+      {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
+      {sheet}
     </Box>
   );
 };

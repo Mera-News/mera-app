@@ -129,7 +129,6 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                     <ArticleSuggestionCard
                         suggestion={item.suggestion}
                         onPress={(s) => handleSuggestionPress(s._id)}
-                        surface="saved"
                     />
                 )}
                 <Pressable

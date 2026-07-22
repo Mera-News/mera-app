@@ -54,9 +54,14 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const showPublicationSlot = !!publication;
 
     return (
-        <HStack className="items-center justify-between">
-            {/* 1. Age (+ optional NEW badge) */}
-            <HStack className="items-center" space="xs">
+        // No `justify-between`: the slots size themselves. Slot 1 (age group) is
+        // fixed-width (`flex-shrink-0`); the language slot shrinks; the
+        // publication slot takes the remaining room and right-aligns its (single-
+        // line, truncating) name; the flag is fixed-width — so a long publication
+        // name truncates instead of bleeding across / pushing the flag off-row.
+        <HStack className="items-center" space="sm">
+            {/* 1. Age (+ optional read eye / NEW badge / +N sources) */}
+            <HStack className="items-center flex-shrink-0" space="xs">
                 <MaterialIcons name="schedule" size={14} color={iconColor} />
                 <Text size="sm" className={ageColor}>
                     {age}
@@ -69,7 +74,8 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         accessibilityLabel="read"
                     />
                 ) : null}
-                {isCard && isNew ? (
+                {/* A read card never shows NEW — read wins. */}
+                {isCard && isNew && !read ? (
                     <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
                         <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                             {t('feed.newBadge')}
@@ -87,7 +93,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
 
             {/* 2. Translate icon + language name */}
             {showLanguageSlot ? (
-                <HStack className="items-center flex-shrink" space="xs">
+                <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
                     <MaterialIcons name="translate" size={12} color={translateColor} />
                     {language ? (
                         <Text
@@ -99,11 +105,12 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         </Text>
                     ) : null}
                 </HStack>
-            ) : <Box />}
+            ) : null}
 
-            {/* 3. Newspaper icon + publication name */}
+            {/* 3. Newspaper icon + publication name — takes the remaining room and
+                right-aligns, truncating a long name instead of bleeding. */}
             {showPublicationSlot ? (
-                <HStack className="items-center flex-shrink" space="xs">
+                <HStack className="items-center flex-1 justify-end" space="xs" style={{ minWidth: 0 }}>
                     <MaterialIcons name="newspaper" size={12} color={iconColor} />
                     <Text
                         size="xs"
@@ -113,10 +120,12 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         {publication}
                     </Text>
                 </HStack>
-            ) : <Box />}
+            ) : null}
 
             {/* 4. Country flag */}
-            <SourceFlag countryCode={countryCode} size="sm" iconClassName={isCard ? 'text-typography-500' : 'text-gray-400'} />
+            <Box className="flex-shrink-0">
+                <SourceFlag countryCode={countryCode} size="sm" iconClassName={isCard ? 'text-typography-500' : 'text-gray-400'} />
+            </Box>
         </HStack>
     );
 };
