@@ -1184,5 +1184,30 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Clear a stale persisted scoring-pipeline run (schema v45) ────────
+      // The multi-batch cloud scoring run is persisted in the `settings` row
+      // keyed `async_pipeline_run` (scoring-pipeline-store) and survives OTA
+      // upgrades. Whenever `article_suggestions` was wiped underneath it — an
+      // earlier drop/recreate migration, or a runtime TTL/clear path
+      // (deleteOldSuggestions / clearSuggestions / pruneOrphanedSuggestions) —
+      // the persisted run kept referencing now-deleted rows, and the 7s poller
+      // re-drove those batches forever, throwing `Record article_suggestions#…
+      // not found` on every tick (MERA-APP-53/55).
+      //
+      // Drop the persisted run once, on upgrade, so the pipeline starts clean; a
+      // fresh run is re-created from the current unscored rows on the next
+      // scoring trigger. This is settings-only (never user-owned scoring state),
+      // and article_suggestions itself is left untouched (additive-migration
+      // policy — no feed wipe). The run's keychain secret is intentionally left
+      // in place: it is harmless without its settings row (getPipeline()
+      // self-heals to null) and a migration cannot touch the keychain anyway.
+      toVersion: 45,
+      steps: [
+        unsafeExecuteSql(
+          "DELETE FROM settings WHERE key = 'async_pipeline_run';",
+        ),
+      ],
+    },
   ],
 });

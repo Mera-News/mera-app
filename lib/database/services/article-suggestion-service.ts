@@ -618,7 +618,16 @@ export async function batchSaveComputedScores(
  */
 export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
-  const rows = await Promise.all(ids.map((id) => articleSuggestionsCol.find(id)));
+  // Delete-tolerant: a row can be hard-deleted underneath an in-flight scoring
+  // batch (48h TTL sweep, clearSuggestions, pruneOrphanedSuggestions, migration
+  // wipes). A bare find(id) throws `Record ... not found` and rejects the whole
+  // Promise.all, so resolve missing rows to null and update only the survivors.
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
       rows.map((row) =>
@@ -639,7 +648,16 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
  */
 export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
-  const rows = await Promise.all(ids.map((id) => articleSuggestionsCol.find(id)));
+  // Delete-tolerant (see batchMarkAsScoredByIds): a row deleted mid-flight must
+  // not reject the whole batch — update only the rows still present. This is the
+  // writer behind discardLowRelevance, the path the pipeline's apply step drove
+  // forever when a row vanished (MERA-APP-53/55).
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
       rows.map((row) =>
@@ -661,8 +679,15 @@ export async function batchPropagateScores(
   entries: { id: string; relevance: number; reason: string }[],
 ): Promise<void> {
   if (entries.length === 0) return;
-  const rows = await Promise.all(entries.map((e) => articleSuggestionsCol.find(e.id)));
+  // Delete-tolerant (see batchMarkAsScoredByIds): skip entries whose row was
+  // deleted mid-flight rather than rejecting the whole batch.
   const entryById = new Map(entries.map((e) => [e.id, e]));
+  const rows = (
+    await Promise.all(
+      entries.map((e) => articleSuggestionsCol.find(e.id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
   await database.write(async () => {
     await database.batch(
       rows.map((row) => {

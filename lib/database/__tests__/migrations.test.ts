@@ -220,6 +220,26 @@ describe('specific migration versions', () => {
     expect(!!addStep.columns[0].isOptional).toBe(true);
   });
 
+  it('v45 clears the stale persisted async_pipeline_run settings row', () => {
+    const m = byVersion.get(45);
+    expect(m).toBeDefined();
+    const sqlStep = m!.steps.find(
+      (s: any) =>
+        s &&
+        s.type === 'sql' &&
+        /DELETE FROM settings/i.test(String(s.sql ?? s.text ?? '')) &&
+        /async_pipeline_run/.test(String(s.sql ?? s.text ?? '')),
+    );
+    expect(sqlStep).toBeDefined();
+    // Additive w.r.t. article_suggestions — the feed cache is NOT wiped here.
+    const offending = m!.steps.filter(
+      (s: any) =>
+        (s && s.type === 'sql' && /article_suggestion/.test(String(s.sql ?? s.text ?? ''))) ||
+        (s && s.type === 'create_table' && /article_suggestion/.test(String(s.schema?.name ?? ''))),
+    );
+    expect(offending).toHaveLength(0);
+  });
+
   it('v32 creates article_suggestions with cluster_memberships_json', () => {
     const m = byVersion.get(32);
     expect(m).toBeDefined();

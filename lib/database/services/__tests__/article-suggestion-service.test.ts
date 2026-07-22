@@ -662,6 +662,28 @@ describe('batchMarkAsScoredByIds', () => {
     expect(sug1.status).toBe('complete');
     expect(sug2.status).toBe('complete');
   });
+
+  it('tolerates a row deleted mid-flight: updates present rows, skips missing ids, no throw', async () => {
+    const sug1 = makeSuggestion({ id: 'sug-1' });
+    // sug-2 is intentionally absent (hard-deleted underneath the batch).
+    db._setRows('article_suggestions', [sug1]);
+
+    await expect(
+      batchMarkAsScoredByIds(['sug-1', 'sug-2']),
+    ).resolves.toBeUndefined();
+
+    expect(database.write).toHaveBeenCalledTimes(1);
+    const batchArgs = (database.batch as jest.Mock).mock.calls[0][0];
+    expect(batchArgs).toHaveLength(1); // only the present row was prepared
+    expect(sug1.status).toBe('complete');
+    expect(sug1.relevance).toBe(0);
+  });
+
+  it('skips the write entirely when every id is missing', async () => {
+    db._setRows('article_suggestions', []);
+    await batchMarkAsScoredByIds(['gone-1', 'gone-2']);
+    expect(database.write).not.toHaveBeenCalled();
+  });
 });
 
 // ===========================================================================
@@ -683,6 +705,27 @@ describe('batchMarkReasonSkipped', () => {
     expect(database.write).toHaveBeenCalledTimes(1);
     expect(database.batch).toHaveBeenCalledTimes(1);
     expect(sug.status).toBe('complete');
+  });
+
+  it('tolerates a row deleted mid-flight: marks present rows complete, skips missing ids, no throw', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', status: 'reason_pending' });
+    // 'deleted-2' was hard-deleted underneath the in-flight discard.
+    db._setRows('article_suggestions', [sug]);
+
+    await expect(
+      batchMarkReasonSkipped(['sug-1', 'deleted-2']),
+    ).resolves.toBeUndefined();
+
+    expect(database.write).toHaveBeenCalledTimes(1);
+    const batchArgs = (database.batch as jest.Mock).mock.calls[0][0];
+    expect(batchArgs).toHaveLength(1);
+    expect(sug.status).toBe('complete');
+  });
+
+  it('skips the write entirely when every id is missing', async () => {
+    db._setRows('article_suggestions', []);
+    await batchMarkReasonSkipped(['gone']);
+    expect(database.write).not.toHaveBeenCalled();
   });
 });
 
@@ -724,6 +767,31 @@ describe('batchPropagateScores', () => {
 
     expect(sug.reason).toBe('');
     expect(sug.status).toBe('complete');
+  });
+
+  it('tolerates a row deleted mid-flight: applies scores to present rows, skips missing ids, no throw', async () => {
+    const sug1 = makeSuggestion({ id: 'sug-1', status: 'unscored' });
+    // 'sug-gone' was hard-deleted underneath the propagation batch.
+    db._setRows('article_suggestions', [sug1]);
+
+    await expect(
+      batchPropagateScores([
+        { id: 'sug-1', relevance: 0.72, reason: 'Same story as your donor article' },
+        { id: 'sug-gone', relevance: 0.72, reason: 'Same story as your donor article' },
+      ]),
+    ).resolves.toBeUndefined();
+
+    expect(database.write).toHaveBeenCalledTimes(1);
+    const batchArgs = (database.batch as jest.Mock).mock.calls[0][0];
+    expect(batchArgs).toHaveLength(1);
+    expect(sug1.relevance).toBe(0.72);
+    expect(sug1.status).toBe('complete');
+  });
+
+  it('skips the write entirely when every entry row is missing', async () => {
+    db._setRows('article_suggestions', []);
+    await batchPropagateScores([{ id: 'gone', relevance: 0.5, reason: 'x' }]);
+    expect(database.write).not.toHaveBeenCalled();
   });
 });
 
