@@ -53,7 +53,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
   const { t } = useTranslation();
   const [locations, setLocations] = useState<LocationModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<LocationModel | null>(null);
 
   // Reactive, weight-desc. Add/delete/weight edits all flow back through here.
@@ -183,9 +183,44 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
     [handlePin, handleWeightChange, t],
   );
 
-  if (adding) {
-    return <AddLocationView onClose={() => setAdding(false)} onSaved={() => setAdding(false)} />;
-  }
+  // Saved-places list (or its loading/empty state) — rendered directly when
+  // the inline search panel is closed, and handed to it as `renderIdle` so the
+  // list stays visible under the search bar while the query is empty.
+  const renderSavedList = useCallback(() => {
+    if (isLoading) {
+      return (
+        <Box className="flex-1 items-center justify-center">
+          <Spinner size="large" />
+        </Box>
+      );
+    }
+    if (locations.length === 0) {
+      return (
+        <VStack className="flex-1 items-center justify-center px-8" space="md">
+          <MaterialIcons name="add-location-alt" size={56} color="#666666" />
+          <Text size="md" className="text-gray-400 text-center">
+            {t('locations.empty')}
+          </Text>
+          <Button
+            variant="outline"
+            className="rounded-full border-primary-500 mt-1"
+            onPress={() => setSearchOpen(true)}
+          >
+            <ButtonText className="text-primary-400">{t('locations.addFirst')}</ButtonText>
+          </Button>
+        </VStack>
+      );
+    }
+    return (
+      <FlatList
+        data={locations}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: 48 }}
+        showsVerticalScrollIndicator={false}
+      />
+    );
+  }, [isLoading, locations, renderItem, t]);
 
   return (
     <Box className="flex-1 bg-black">
@@ -195,43 +230,25 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
         onBack={onBack}
         rightAction={
           <Pressable
-            onPress={() => setAdding(true)}
+            onPress={() => setSearchOpen((open) => !open)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={t('locations.add')}
+            accessibilityLabel={searchOpen ? t('common.cancel') : t('locations.add')}
             className="p-2 rounded-full border border-primary-500"
           >
-            <MaterialIcons name="add" size={20} color={ACCENT} />
+            <MaterialIcons name={searchOpen ? 'close' : 'add'} size={20} color={ACCENT} />
           </Pressable>
         }
       />
 
-      {isLoading ? (
-        <Box className="flex-1 items-center justify-center">
-          <Spinner size="large" />
-        </Box>
-      ) : locations.length === 0 ? (
-        <VStack className="flex-1 items-center justify-center px-8" space="md">
-          <MaterialIcons name="add-location-alt" size={56} color="#666666" />
-          <Text size="md" className="text-gray-400 text-center">
-            {t('locations.empty')}
-          </Text>
-          <Button
-            variant="outline"
-            className="rounded-full border-primary-500 mt-1"
-            onPress={() => setAdding(true)}
-          >
-            <ButtonText className="text-primary-400">{t('locations.addFirst')}</ButtonText>
-          </Button>
-        </VStack>
-      ) : (
-        <FlatList
-          data={locations}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 48 }}
-          showsVerticalScrollIndicator={false}
+      {searchOpen ? (
+        <AddLocationView
+          onClose={() => setSearchOpen(false)}
+          onSaved={() => setSearchOpen(false)}
+          renderIdle={renderSavedList}
         />
+      ) : (
+        renderSavedList()
       )}
 
       <Modal isOpen={confirmDelete !== null} onClose={() => setConfirmDelete(null)} size="sm">

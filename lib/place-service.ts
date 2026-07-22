@@ -32,26 +32,36 @@ export const PLACE_SEARCH_MIN_CHARS = 2;
 export type { Place };
 
 /**
- * Prefix-search places for the add-location type-ahead. Returns
- * population-sorted matches, or [] for short queries / an unseeded collection /
- * any error (the add-flow falls back to manual entry on an empty result).
+ * Discriminated result for `searchPlaces` — lets callers tell an honest "no
+ * matches" apart from "the search itself failed" (network/server error) so the
+ * UI can show a distinct "search unavailable" state instead of silently
+ * reading as zero results.
  */
-export async function searchPlaces(query: string, limit = 8): Promise<Place[]> {
+export type SearchPlacesResult = { readonly ok: true; readonly places: Place[] } | { readonly ok: false };
+
+/**
+ * Prefix-search places for the add-location type-ahead. Returns
+ * population-sorted matches on success (`ok: true`, possibly an empty list for
+ * short queries / an unseeded collection), or `ok: false` on any error — the
+ * add-flow distinguishes "no matches" from "search unavailable" using this and
+ * still offers manual entry as a fallback either way.
+ */
+export async function searchPlaces(query: string, limit = 8): Promise<SearchPlacesResult> {
   const trimmed = query.trim();
   // Skip the round-trip for queries the server would reject anyway.
-  if (trimmed.length < PLACE_SEARCH_MIN_CHARS) return [];
+  if (trimmed.length < PLACE_SEARCH_MIN_CHARS) return { ok: true, places: [] };
   try {
     const { data } = await client.query<{ placeSearch: Place[] }>({
       query: PLACE_SEARCH,
       variables: { query: trimmed, limit },
       fetchPolicy: 'no-cache',
     });
-    return data?.placeSearch ?? [];
+    return { ok: true, places: data?.placeSearch ?? [] };
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'place-service', method: 'searchPlaces' },
       extra: { query: trimmed, limit },
     });
-    return [];
+    return { ok: false };
   }
 }

@@ -42,16 +42,27 @@ interface ChosenPlace {
 }
 
 interface Props {
+  /** Collapses the whole inline panel back to the plain saved-places list. */
   readonly onClose: () => void;
+  /** A place was saved — parent collapses the panel back to the list. */
   readonly onSaved: () => void;
+  /**
+   * The saved-places list (or its loading/empty state) — rendered below the
+   * search bar while idle (search step, empty query) so the list stays part
+   * of the same screen instead of being replaced by a full-screen swap.
+   */
+  readonly renderIdle: () => React.ReactNode;
 }
 
 /**
- * Full-screen add-a-place flow. Step 1 = debounced placeSearch type-ahead with a
- * manual fallback (the `places` collection may be unseeded); step 2 = role +
- * weight, then save via the change-logged `addUserLocation`.
+ * Embeddable inline add-a-place panel — lives inside LocationsScreen (no own
+ * route, no full-screen swap). Step 1 = debounced placeSearch type-ahead with
+ * a manual fallback (the `places` collection may be unseeded); step 2 = role +
+ * weight, then save via the change-logged `addUserLocation`. While idle (empty
+ * query, search step) it defers to `renderIdle` so the saved-places list stays
+ * visible under the search bar.
  */
-const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
+const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
   const { t } = useTranslation();
 
   const [chosen, setChosen] = useState<ChosenPlace | null>(null);
@@ -65,6 +76,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
   const [results, setResults] = useState<Place[]>([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
   const reqId = useRef(0);
 
   // ── Manual-entry state ────────────────────────────────────────────────────
@@ -83,14 +95,22 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
       setResults([]);
       setSearched(false);
       setSearching(false);
+      setSearchFailed(false);
       return;
     }
     const id = ++reqId.current;
     setSearching(true);
+    setSearchFailed(false);
     searchPlaces(trimmed)
-      .then((rows) => {
+      .then((result) => {
         if (id !== reqId.current) return; // a newer query superseded this one
-        setResults(rows);
+        if (result.ok) {
+          setResults(result.places);
+          setSearchFailed(false);
+        } else {
+          setResults([]);
+          setSearchFailed(true);
+        }
         setSearched(true);
       })
       .finally(() => {
@@ -168,7 +188,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
   // ── Configure step ────────────────────────────────────────────────────────
   if (chosen) {
     return (
-      <Box className="flex-1 bg-black">
+      <Box className="flex-1">
         <DrillDownHeader title={t('locations.addTitle')} onBack={() => setChosen(null)} />
         <VStack className="flex-1 px-5 pt-4" space="lg">
           <HStack className="items-center rounded-xl border border-gray-800 p-3" space="sm">
@@ -207,7 +227,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
       ? { name: getCountryName(manualCountryA3), flag: getFlagEmoji(manualCountryA3) }
       : null;
     return (
-      <Box className="flex-1 bg-black">
+      <Box className="flex-1">
         <DrillDownHeader title={t('locations.addManualTitle')} onBack={() => setManual(false)} />
         <VStack className="flex-1 px-5 pt-4" space="lg">
           <VStack space="xs">
@@ -302,11 +322,15 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
     );
   }
 
-  // ── Search step ───────────────────────────────────────────────────────────
-  const showNoMatches = searched && !searching && results.length === 0 && debouncedQuery.trim().length >= 2;
+  // ── Search step (embedded inline — no own header, no route swap) ──────────
+  const trimmedQuery = query.trim();
+  const isIdle = trimmedQuery.length === 0;
+  const showUnavailable = searchFailed && !searching && debouncedQuery.trim().length >= 2;
+  const showNoMatches =
+    !showUnavailable && searched && !searching && results.length === 0 && debouncedQuery.trim().length >= 2;
+
   return (
-    <Box className="flex-1 bg-black">
-      <DrillDownHeader title={t('locations.addTitle')} onBack={onClose} />
+    <Box className="flex-1">
       <Box className="px-5 pt-4 pb-2">
         <Input variant="outline" size="md" className="border-gray-700">
           <InputSlot className="pl-3">
@@ -325,50 +349,72 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved }) => {
             <InputSlot className="pr-3">
               <Spinner size="small" />
             </InputSlot>
-          ) : null}
+          ) : (
+            <InputSlot className="pr-3">
+              <Pressable
+                onPress={() => (query.length > 0 ? setQuery('') : onClose())}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.cancel')}
+              >
+                <MaterialIcons name="close" size={18} color="#999999" />
+              </Pressable>
+            </InputSlot>
+          )}
         </Input>
       </Box>
 
-      <FlatList
-        data={results}
-        keyExtractor={(item) => item._id}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => handlePickPlace(item)}
-            className="flex-row items-center px-5 py-3 border-b border-gray-800"
-          >
-            <Text className="text-xl mr-3">{flagForAlpha2(item.countryCode) || '📍'}</Text>
-            <Text className="text-white text-base flex-1" numberOfLines={1}>
-              {item.displayName}
-            </Text>
-            <MaterialIcons name="add" size={20} color={ACCENT} />
-          </Pressable>
-        )}
-        ListEmptyComponent={
-          showNoMatches ? (
-            <VStack className="items-center px-8 py-10" space="sm">
-              <MaterialIcons name="search-off" size={40} color="#666666" />
-              <Text className="text-gray-400 text-center text-sm">{t('locations.noMatches')}</Text>
-            </VStack>
-          ) : null
-        }
-        ListFooterComponent={
-          <Pressable
-            onPress={() => {
-              setManual(true);
-              setCountryPickerOpen(false);
-            }}
-            className="flex-row items-center justify-center px-5 py-4"
-            accessibilityRole="button"
-          >
-            <MaterialIcons name="edit-location-alt" size={18} color={ACCENT} />
-            <Text className="ml-2 text-sm" style={{ color: ACCENT }}>
-              {t('locations.addManuallyCta')}
-            </Text>
-          </Pressable>
-        }
-      />
+      {isIdle ? (
+        renderIdle()
+      ) : (
+        <FlatList
+          data={results}
+          keyExtractor={(item) => item._id}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => handlePickPlace(item)}
+              className="flex-row items-center px-5 py-3 border-b border-gray-800"
+            >
+              <Text className="text-xl mr-3">{flagForAlpha2(item.countryCode) || '📍'}</Text>
+              <Text className="text-white text-base flex-1" numberOfLines={1}>
+                {item.displayName}
+              </Text>
+              <MaterialIcons name="add" size={20} color={ACCENT} />
+            </Pressable>
+          )}
+          ListEmptyComponent={
+            showUnavailable ? (
+              <VStack className="items-center px-8 py-10" space="sm">
+                <MaterialIcons name="cloud-off" size={40} color="#666666" />
+                <Text className="text-gray-400 text-center text-sm">
+                  {t('locations.searchUnavailable')}
+                </Text>
+              </VStack>
+            ) : showNoMatches ? (
+              <VStack className="items-center px-8 py-10" space="sm">
+                <MaterialIcons name="search-off" size={40} color="#666666" />
+                <Text className="text-gray-400 text-center text-sm">{t('locations.noMatches')}</Text>
+              </VStack>
+            ) : null
+          }
+          ListFooterComponent={
+            <Pressable
+              onPress={() => {
+                setManual(true);
+                setCountryPickerOpen(false);
+              }}
+              className="flex-row items-center justify-center px-5 py-4"
+              accessibilityRole="button"
+            >
+              <MaterialIcons name="edit-location-alt" size={18} color={ACCENT} />
+              <Text className="ml-2 text-sm" style={{ color: ACCENT }}>
+                {t('locations.addManuallyCta')}
+              </Text>
+            </Pressable>
+          }
+        />
+      )}
     </Box>
   );
 };

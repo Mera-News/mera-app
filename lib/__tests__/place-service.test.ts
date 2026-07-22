@@ -42,7 +42,7 @@ describe('searchPlaces', () => {
 
         const result = await searchPlaces('amster');
 
-        expect(result).toEqual(rows);
+        expect(result).toEqual({ ok: true, places: rows });
         expect(mockQuery).toHaveBeenCalledTimes(1);
         const call = mockQuery.mock.calls[0][0];
         expect(call.variables).toEqual({ query: 'amster', limit: 8 });
@@ -57,25 +57,25 @@ describe('searchPlaces', () => {
 
     it('short-circuits queries below the server minimum without a round-trip', async () => {
         const result = await searchPlaces('a');
-        expect(result).toEqual([]);
+        expect(result).toEqual({ ok: true, places: [] });
         expect(mockQuery).not.toHaveBeenCalled();
         expect(PLACE_SEARCH_MIN_CHARS).toBe(2);
     });
 
-    it('degrades to an empty list (manual-entry fallback) when the collection is unseeded', async () => {
+    it('degrades to an ok empty list (manual-entry fallback) when the collection is unseeded', async () => {
         mockQuery.mockResolvedValueOnce({ data: { placeSearch: [] } });
-        expect(await searchPlaces('nowhere')).toEqual([]);
+        expect(await searchPlaces('nowhere')).toEqual({ ok: true, places: [] });
     });
 
-    it('returns [] and logs on a network error (never throws into the type-ahead)', async () => {
+    it('returns ok:false and logs on a network error (distinguishable from an empty result)', async () => {
         mockQuery.mockRejectedValueOnce(new Error('boom'));
         const result = await searchPlaces('berlin');
-        expect(result).toEqual([]);
+        expect(result).toEqual({ ok: false });
         expect(logger.captureException).toHaveBeenCalled();
     });
 
     it('tolerates a null data payload', async () => {
         mockQuery.mockResolvedValueOnce({ data: null });
-        expect(await searchPlaces('tokyo')).toEqual([]);
+        expect(await searchPlaces('tokyo')).toEqual({ ok: true, places: [] });
     });
 });
