@@ -28,19 +28,6 @@ import Animated, {
   useComposedEventHandler,
 } from 'react-native-reanimated';
 
-/** Distinct extra source publications a collapsed story carries ("+N sources").
- *  Mirrors FactFeedScreen's helper so Dashboard cards show the same chip. */
-function moreSourcesCount(rep: ForYouSuggestion, members: ForYouSuggestion[]): number {
-  if (members.length === 0) return 0;
-  const repPub = (rep.publication_name ?? '').trim().toLowerCase();
-  const distinct = new Set<string>();
-  for (const m of members) {
-    const pub = (m.publication_name ?? '').trim().toLowerCase();
-    if (pub !== repPub) distinct.add(pub || `__unknown_${m._id}`);
-  }
-  return distinct.size > 0 ? distinct.size : members.length;
-}
-
 // Flattened list model: per section a gradient-panel header, up to 3 preview
 // cards, and (only when the section has more than the preview count) a
 // "View all" footer.
@@ -146,7 +133,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       return (
         <ArticleSuggestionCompactCard
           suggestion={group.data}
-          moreSourcesCount={moreSourcesCount(group.data, group.members)}
           onPress={onPressSuggestion}
           surface="sectioned"
           read={isSuggestionOpened(group.data, openedIds)}

@@ -10,7 +10,7 @@ import {
     getArticleTranslatableStatus,
     getLanguageName,
 } from '@/lib/translation-service';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { appendReferrer, openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -44,7 +44,7 @@ interface ReadTranslateActionsProps {
  *   helper line inviting the on-device translator (with a link to the guide
  *   video), then the secondary Google Translate button.
  * - `not-translatable`: a red-outline "View original" button, a neutral
- *   (non-alarming) helper line, then a SOLID primary "Read in your language
+ *   (non-alarming) helper line, then an OUTLINE primary "Read in your language
  *   (Google Translate)" button — the suggested path when the device can't
  *   translate this source language.
  */
@@ -60,7 +60,10 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
 
     const status = getArticleTranslatableStatus(sourceLanguage, appLanguage);
     const languageName = getLanguageName(sourceLanguage) ?? t('clusterDetail.unknownLanguage');
-    const googleTranslateUrl = buildGoogleTranslateUrl(articleUrl, appLanguage);
+    // Wrap the article URL with Mera's UTM referrer params BEFORE handing it to
+    // Google Translate, so the article the reader lands on stays attributed to
+    // Mera (Google Translate carries the wrapped `u` param through).
+    const googleTranslateUrl = buildGoogleTranslateUrl(appendReferrer(articleUrl), appLanguage);
 
     const googleTranslateButton = (
         <Button
@@ -99,7 +102,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                         </Text>
                     </HStack>
                     <Button
-                        variant="solid"
+                        variant="outline"
                         action="primary"
                         className="rounded-full"
                         onPress={() => openInAppBrowser(googleTranslateUrl)}

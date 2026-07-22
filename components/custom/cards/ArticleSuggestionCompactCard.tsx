@@ -13,15 +13,11 @@ import React, { useState } from 'react';
 interface ArticleSuggestionCompactCardProps {
   suggestion: ForYouSuggestion;
   onPress: (suggestion: ForYouSuggestion) => void;
-  hideSource?: boolean;
   surface?: FeedbackSurface;
   /** Dims the row (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
   /** Marks the row as read — green tick chip instead of dimming (Dashboard). */
   read?: boolean;
-  /** Number of additional source publications collapsed into this story — the
-   *  "+N sources" pill (Dashboard section cards). */
-  moreSourcesCount?: number;
   /** Renders the green "NEW" pill in the meta row (Dashboard section cards). */
   isNew?: boolean;
 }
@@ -35,11 +31,9 @@ interface ArticleSuggestionCompactCardProps {
 const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardProps> = ({
   suggestion,
   onPress,
-  hideSource = false,
   surface = 'triage',
   dimmed = false,
   read = false,
-  moreSourcesCount,
   isNew = false,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -97,14 +91,11 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         sourceLanguage={suggestion.language_code ?? undefined}
         pubDate={suggestion.firstPubDate ?? suggestion.createdAt}
         languageCode={suggestion.language_code}
-        publicationName={suggestion.publication_name}
         countryCode={suggestion.country_code}
-        hideSource={hideSource}
         recyclingKey={suggestion._id}
         dimmed={dimmed}
         read={read}
         isNew={isNew}
-        moreSourcesCount={moreSourcesCount}
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
         metaAccessory={metaAccessory}

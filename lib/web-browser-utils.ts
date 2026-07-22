@@ -4,8 +4,6 @@ import { Platform } from 'react-native';
 import { REFERRER_SOURCE } from './config/branding';
 import { useAppLanguageStore } from './stores/app-language-store';
 
-const REFERRER_PARAMS = `utm_source=${REFERRER_SOURCE}&utm_medium=referral`;
-
 // The website's supported locale codes (mirrors mera-promo-website
 // lib/languages.ts). Used to avoid double-injecting a locale segment.
 const WEB_LOCALES = new Set([
@@ -43,17 +41,21 @@ export function withAppLanguage(url: string): string {
  * publisher can attribute the visit to Mera. Handles existing query strings
  * and fragments, and leaves URLs that already carry a utm_source untouched
  * (so we don't clobber a publisher's own campaign tracking).
+ *
+ * `medium` becomes the `utm_medium` value so callers can distinguish an
+ * in-app open (`referral`, the default) from a share (`share`).
  */
-export function appendReferrer(url: string): string {
+export function appendReferrer(url: string, medium: string = 'referral'): string {
     if (!url) return url;
     // Don't override an existing campaign source.
     if (/[?&]utm_source=/i.test(url)) return url;
 
+    const params = `utm_source=${REFERRER_SOURCE}&utm_medium=${medium}`;
     const hashIndex = url.indexOf('#');
     const fragment = hashIndex >= 0 ? url.slice(hashIndex) : '';
     const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
     const separator = base.includes('?') ? '&' : '?';
-    return `${base}${separator}${REFERRER_PARAMS}${fragment}`;
+    return `${base}${separator}${params}${fragment}`;
 }
 
 /**

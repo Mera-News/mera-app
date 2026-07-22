@@ -378,17 +378,12 @@ describe('ArticleStandaloneCard', () => {
 });
 
 describe('ArticleStandaloneCompactCard', () => {
-  it('shows the publisher name by default', () => {
-    const { getByText } = render(
+  it('never renders the publication name on the compact meta row', () => {
+    const { queryByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
-    expect(getByText('Die Zeit')).toBeTruthy();
-  });
-
-  it('hides the source when hideSource is set', () => {
-    const { queryByText } = render(
-      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} hideSource />,
-    );
+    // Compact cards drop the publication + "+N sources" badge (they collided
+    // at compact width) — only time-ago, translate chip, flag, eye/NEW remain.
     expect(queryByText('Die Zeit')).toBeNull();
   });
 

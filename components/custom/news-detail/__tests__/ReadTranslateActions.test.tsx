@@ -27,8 +27,10 @@ jest.mock('@/lib/translation-service', () => ({
 }));
 
 const mockOpenInAppBrowser = jest.fn();
+const mockAppendReferrer = jest.fn();
 jest.mock('@/lib/web-browser-utils', () => ({
     openInAppBrowser: (...args: unknown[]) => mockOpenInAppBrowser(...args),
+    appendReferrer: (...args: unknown[]) => mockAppendReferrer(...args),
 }));
 
 jest.mock('@/lib/config/branding', () => ({
@@ -70,6 +72,9 @@ import React from 'react';
 import ReadTranslateActions from '../ReadTranslateActions';
 
 const ARTICLE_URL = 'https://publisher.example.com/story';
+// What appendReferrer returns for ARTICLE_URL — the UTM-wrapped article URL
+// that must be fed into buildGoogleTranslateUrl so the reader lands attributed.
+const ARTICLE_URL_REF = 'https://publisher.example.com/story?utm_source=mera.news&utm_medium=referral';
 const GT_URL = 'https://translate.google.com/translate?sl=auto&tl=en&u=story';
 
 describe('ReadTranslateActions', () => {
@@ -77,6 +82,7 @@ describe('ReadTranslateActions', () => {
         jest.clearAllMocks();
         mockGetLanguageName.mockReturnValue('Odia');
         mockBuildGoogleTranslateUrl.mockReturnValue(GT_URL);
+        mockAppendReferrer.mockReturnValue(ARTICLE_URL_REF);
     });
 
     it('same-language: renders "Read on <publication>" and ALWAYS renders the Google Translate button', () => {
@@ -196,7 +202,9 @@ describe('ReadTranslateActions', () => {
             />,
         );
         fireEvent.press(getByText('clusterDetail.viewInGoogleTranslate'));
-        expect(mockBuildGoogleTranslateUrl).toHaveBeenCalledWith(ARTICLE_URL, 'en');
+        // GT URL is built from the UTM-wrapped article URL, not the raw one.
+        expect(mockAppendReferrer).toHaveBeenCalledWith(ARTICLE_URL);
+        expect(mockBuildGoogleTranslateUrl).toHaveBeenCalledWith(ARTICLE_URL_REF, 'en');
         expect(mockOpenInAppBrowser).toHaveBeenCalledWith(GT_URL);
     });
 
@@ -210,7 +218,9 @@ describe('ReadTranslateActions', () => {
             />,
         );
         fireEvent.press(getByText('clusterDetail.readViaGoogleTranslate'));
-        expect(mockBuildGoogleTranslateUrl).toHaveBeenCalledWith(ARTICLE_URL, 'en');
+        // GT URL is built from the UTM-wrapped article URL, not the raw one.
+        expect(mockAppendReferrer).toHaveBeenCalledWith(ARTICLE_URL);
+        expect(mockBuildGoogleTranslateUrl).toHaveBeenCalledWith(ARTICLE_URL_REF, 'en');
         expect(mockOpenInAppBrowser).toHaveBeenCalledWith(GT_URL);
     });
 });

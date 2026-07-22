@@ -162,6 +162,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const suggestions = useForYouStore((s) => s.suggestions);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
 
+    // Mirror the title variant the reader currently sees (original vs
+    // translated) so sharing carries that exact text.
+    const [displayedTitle, setDisplayedTitle] = useState<string | null>(null);
+    const handleTitleDisplayChange = useCallback(
+        (s: { showingOriginal: boolean; displayedText: string }) => setDisplayedTitle(s.displayedText),
+        [],
+    );
+
     // Defer the (potentially large) `buildStoryGroups` union-find over the
     // entire suggestion pool until after the screen's mount interactions
     // (navigation transition, first paint) have settled, so the header
@@ -472,6 +480,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 suggestion={suggestion}
                 variant="screen"
                 read={read}
+                onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
                 onEndReached={handleRelatedEndReached}
@@ -516,6 +525,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         titleEnglish: suggestion.title_en,
                                         titleOriginal: suggestion.title_original,
                                         sourceLanguage: suggestion.language_code,
+                                        displayedTitle,
                                     }}
                                 />
                                 <ReadTranslateActions

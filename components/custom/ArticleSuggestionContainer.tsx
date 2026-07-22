@@ -53,6 +53,10 @@ interface BaseProps {
      *  small eye icon next to the time group. Screen-variant only (detail
      *  screens); the card variant has no live consumers. Default false. */
     read?: boolean;
+    /** Forwarded to the TITLE's TranslatableDynamic (the toggle-enabled screen
+     *  instance) — fires whenever the displayed title variant changes so the
+     *  detail screen can share whichever title the reader currently sees. */
+    onTitleDisplayChange?: (state: { showingOriginal: boolean; displayedText: string }) => void;
 }
 
 type SuggestionProps = BaseProps & { suggestion: ForYouSuggestion; article?: never };
@@ -116,6 +120,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         footer,
         aboveReason,
         read = false,
+        onTitleDisplayChange,
     } = props;
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
@@ -237,6 +242,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             className={isCard ? 'leading-6' : 'text-white'}
             style={isCard ? undefined : { paddingTop: 8 }}
             showToggle={!isCard}
+            onDisplayChange={onTitleDisplayChange}
         />
     );
 

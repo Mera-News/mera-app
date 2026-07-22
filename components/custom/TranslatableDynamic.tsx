@@ -49,6 +49,13 @@ interface TranslatableProps {
      * screen (detail) variant where there is space for it.
      */
     readonly showToggle?: boolean;
+    /**
+     * Fired (in an effect, never during render) whenever the effective
+     * displayed text changes — covers the Show original/Show translation toggle
+     * and async translation resolution. Lets a parent (e.g. the detail screen's
+     * share sheet) mirror the exact title variant the user is looking at.
+     */
+    readonly onDisplayChange?: (state: { showingOriginal: boolean; displayedText: string }) => void;
 }
 
 /** Loose match so `hi-IN` ≈ `hi`, `zh-Hans` ≈ `zh-CN`, etc. */
@@ -118,9 +125,16 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     bold,
     italic,
     showToggle = false,
+    onDisplayChange,
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
+
+    // Keep the latest callback in a ref so the notify-effect can depend only on
+    // the displayed values, not on an unstable inline callback identity (which
+    // would otherwise re-fire — or loop — on every parent render).
+    const onDisplayChangeRef = useRef(onDisplayChange);
+    onDisplayChangeRef.current = onDisplayChange;
 
     // Local toggle state: lets the user flip between original and translated
     // text on the detail screen (only when `showToggle` is set).
@@ -249,6 +263,16 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         displayText = text;
     }
     displayText = stripUnkTokens(displayText);
+
+    // Whether the text on screen is the original-language variant (user toggled
+    // to it, or it's already in their app language).
+    const showingOriginal = effectiveShowOriginal || originalIsTargetLang;
+
+    // Notify the parent (in an effect, never during render) whenever the
+    // effective displayed text changes.
+    useEffect(() => {
+        onDisplayChangeRef.current?.({ showingOriginal, displayedText: displayText });
+    }, [showingOriginal, displayText]);
 
     // Show the translate icon whenever the displayed text differs from the
     // original-language text. This covers both machine translations (iOS

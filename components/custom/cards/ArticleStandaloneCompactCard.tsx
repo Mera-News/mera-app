@@ -11,7 +11,6 @@ import React, { useState } from 'react';
 interface ArticleStandaloneCompactCardProps {
   article: NewsArticle;
   onPress: () => void;
-  hideSource?: boolean;
   /** Origin-aware overrides (surface, scopeKey, …) merged into the subject. */
   subjectExtras?: Partial<FeedbackSubject>;
   // ── Additive, optional ─────────────────────────────────────────────────
@@ -44,7 +43,6 @@ function extractDomain(url: string): string {
 const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardProps> = ({
   article,
   onPress,
-  hideSource = false,
   subjectExtras,
   showActions = false,
 }) => {
@@ -97,9 +95,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         sourceLanguage={article.original_language_code ?? undefined}
         pubDate={article.pubDate}
         languageCode={article.original_language_code}
-        publicationName={publisherName}
         countryCode={article.publicationSource?.country_code}
-        hideSource={hideSource}
         onPress={onPress}
         onLongPress={showActions ? () => setSheetOpen(true) : undefined}
         metaAccessory={metaAccessory}

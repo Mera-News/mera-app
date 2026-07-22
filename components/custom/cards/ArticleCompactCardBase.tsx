@@ -31,13 +31,8 @@ export interface ArticleCompactCardBaseProps {
   sourceLanguage?: string;
   pubDate?: string | null;
   languageCode?: string | null;
-  publicationName?: string | null;
   countryCode?: string | null;
   isNew?: boolean;
-  /** Number of additional source publications collapsed into this story row —
-   *  forwarded to the meta row's "+N sources" pill. */
-  moreSourcesCount?: number;
-  hideSource?: boolean;
   recyclingKey?: string;
   /** Dims the whole row (~0.55 opacity) — used to fade already-opened rows in
    *  the Earlier zone. No visual change when undefined. */
@@ -59,11 +54,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   sourceLanguage,
   pubDate,
   languageCode,
-  publicationName,
   countryCode,
   isNew = false,
-  moreSourcesCount,
-  hideSource = false,
   recyclingKey,
   dimmed = false,
   read = false,
@@ -106,11 +98,9 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 <ArticleMetaRow
                   pubDate={pubDate}
                   languageCode={languageCode}
-                  publicationName={hideSource ? null : publicationName}
                   countryCode={countryCode}
                   variant="card"
                   isNew={isNew}
-                  moreSourcesCount={moreSourcesCount}
                   read={read}
                 />
               </Box>

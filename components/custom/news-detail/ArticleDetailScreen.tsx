@@ -79,6 +79,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
+    // Mirror the title variant the reader currently sees (original vs
+    // translated) so sharing carries that exact text.
+    const [displayedTitle, setDisplayedTitle] = useState<string | null>(null);
+    const handleTitleDisplayChange = useCallback(
+        (s: { showingOriginal: boolean; displayedText: string }) => setDisplayedTitle(s.displayedText),
+        [],
+    );
     const insets = useSafeAreaInsets();
     const userCtx = useUserGeoLanguageContext();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
@@ -291,6 +298,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 article={article}
                 variant="screen"
                 read={read}
+                onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
                 contentTopInset={insets.top}
@@ -323,6 +331,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         titleEnglish: article.title_en_internal_only ?? article.title,
                                         titleOriginal: article.title,
                                         sourceLanguage: article.original_language_code,
+                                        displayedTitle,
                                     }}
                                 />
                                 <ReadTranslateActions

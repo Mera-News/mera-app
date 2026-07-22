@@ -104,7 +104,6 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                 <ArticleStandaloneCompactCard
                     article={visitedToNewsArticle(item)}
                     onPress={() => handleArticlePress(item.articleUrl)}
-                    hideSource
                     subjectExtras={{ surface: 'detail' }}
                 />
             </Box>
