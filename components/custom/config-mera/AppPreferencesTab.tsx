@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
@@ -131,6 +131,12 @@ const AppPreferencesTab: React.FC = () => {
             title: t('preferences.support'),
             icon: 'support-agent',
             onPress: () => Linking.openURL(`mailto:${SUPPORT_EMAIL}`),
+        },
+        {
+            id: 'faq',
+            title: t('preferences.faq'),
+            icon: 'help-outline',
+            onPress: () => openInAppBrowser(withAppLanguage(FAQ_URL)),
         },
         {
             id: 'manage-data',

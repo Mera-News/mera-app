@@ -49,7 +49,8 @@
       "switchConfirm": "是的，清除資料並切換使用者",
       "switchCancel": "取消"
     },
-    "contentPolicy": "內容政策"
+    "contentPolicy": "內容政策",
+    "faq": "常見問題"
   },
   "account": {
     "pendingTitle": "帳號待審核",
@@ -440,6 +441,7 @@
     "user": "使用者：{{email}}",
     "appVersion": "應用程式版本：{{version}}",
     "contentPolicy": "內容政策",
+    "faq": "常見問題",
     "reportBug": "回報問題"
   },
   "configPanel": {

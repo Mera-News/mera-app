@@ -49,7 +49,8 @@
       "switchConfirm": "Sì, cancella i dati e cambia utente",
       "switchCancel": "Annulla"
     },
-    "contentPolicy": "Norme sui contenuti"
+    "contentPolicy": "Norme sui contenuti",
+    "faq": "FAQ"
   },
   "account": {
     "pendingTitle": "Account in attesa di approvazione",
@@ -442,6 +443,7 @@
     "user": "Utente: {{email}}",
     "appVersion": "Versione app: {{version}}",
     "contentPolicy": "Norme sui contenuti",
+    "faq": "FAQ",
     "reportBug": "Segnala un bug"
   },
   "configPanel": {

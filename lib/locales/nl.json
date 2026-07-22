@@ -49,7 +49,8 @@
       "switchConfirm": "Ja, gegevens wissen en van gebruiker wisselen",
       "switchCancel": "Annuleren"
     },
-    "contentPolicy": "Inhoudsbeleid"
+    "contentPolicy": "Inhoudsbeleid",
+    "faq": "FAQ"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",
@@ -442,6 +443,7 @@
     "user": "Gebruiker: {{email}}",
     "appVersion": "App-versie: {{version}}",
     "contentPolicy": "Inhoudsbeleid",
+    "faq": "FAQ",
     "reportBug": "Een bug melden"
   },
   "configPanel": {

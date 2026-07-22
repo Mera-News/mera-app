@@ -49,7 +49,8 @@
       "switchConfirm": "Có, xóa dữ liệu và chuyển tài khoản",
       "switchCancel": "Hủy"
     },
-    "contentPolicy": "Chính sách nội dung"
+    "contentPolicy": "Chính sách nội dung",
+    "faq": "Câu hỏi thường gặp"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",
@@ -440,6 +441,7 @@
     "user": "Người dùng: {{email}}",
     "appVersion": "Phiên bản ứng dụng: {{version}}",
     "contentPolicy": "Chính sách nội dung",
+    "faq": "Câu hỏi thường gặp",
     "reportBug": "Báo lỗi"
   },
   "configPanel": {

@@ -49,7 +49,8 @@
       "switchConfirm": "Oui, effacer les données et changer d'utilisateur",
       "switchCancel": "Annuler"
     },
-    "contentPolicy": "Politique de contenu"
+    "contentPolicy": "Politique de contenu",
+    "faq": "FAQ"
   },
   "account": {
     "pendingTitle": "Compte en attente d'approbation",
@@ -442,6 +443,7 @@
     "user": "Utilisateur : {{email}}",
     "appVersion": "Version de l'app : {{version}}",
     "contentPolicy": "Politique de contenu",
+    "faq": "FAQ",
     "reportBug": "Signaler un bug"
   },
   "configPanel": {

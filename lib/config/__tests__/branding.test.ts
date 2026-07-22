@@ -16,6 +16,7 @@ describe('config/branding — default values (iOS)', () => {
     delete process.env.EXPO_PUBLIC_PRIVACY_URL;
     delete process.env.EXPO_PUBLIC_TERMS_URL;
     delete process.env.EXPO_PUBLIC_CONTENT_POLICY_URL;
+    delete process.env.EXPO_PUBLIC_FAQ_URL;
     delete process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
     delete process.env.EXPO_PUBLIC_WEBSITE_URL;
     delete process.env.EXPO_PUBLIC_GITHUB_URL;
@@ -36,6 +37,11 @@ describe('config/branding — default values (iOS)', () => {
   it('CONTENT_POLICY_URL defaults to https://mera.news/content-policy', () => {
     const { CONTENT_POLICY_URL } = require('../branding');
     expect(CONTENT_POLICY_URL).toBe('https://mera.news/content-policy');
+  });
+
+  it('FAQ_URL defaults to https://mera.news/faq', () => {
+    const { FAQ_URL } = require('../branding');
+    expect(FAQ_URL).toBe('https://mera.news/faq');
   });
 
   it('SUPPORT_EMAIL defaults to contact@mera.news', () => {
@@ -76,6 +82,7 @@ describe('config/branding — env overrides', () => {
     delete process.env.EXPO_PUBLIC_PRIVACY_URL;
     delete process.env.EXPO_PUBLIC_TERMS_URL;
     delete process.env.EXPO_PUBLIC_CONTENT_POLICY_URL;
+    delete process.env.EXPO_PUBLIC_FAQ_URL;
     delete process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
     delete process.env.EXPO_PUBLIC_WEBSITE_URL;
     delete process.env.EXPO_PUBLIC_GITHUB_URL;
@@ -92,6 +99,12 @@ describe('config/branding — env overrides', () => {
     process.env.EXPO_PUBLIC_TERMS_URL = 'https://custom.example/terms';
     const { TERMS_URL } = require('../branding');
     expect(TERMS_URL).toBe('https://custom.example/terms');
+  });
+
+  it('FAQ_URL uses env override when set', () => {
+    process.env.EXPO_PUBLIC_FAQ_URL = 'https://custom.example/faq';
+    const { FAQ_URL } = require('../branding');
+    expect(FAQ_URL).toBe('https://custom.example/faq');
   });
 
   it('SUPPORT_EMAIL uses env override when set', () => {

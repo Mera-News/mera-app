@@ -49,7 +49,8 @@
       "switchConfirm": "Tak, wyczyść dane i zmień użytkownika",
       "switchCancel": "Anuluj"
     },
-    "contentPolicy": "Zasady dotyczące treści"
+    "contentPolicy": "Zasady dotyczące treści",
+    "faq": "FAQ"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",
@@ -446,6 +447,7 @@
     "user": "Użytkownik: {{email}}",
     "appVersion": "Wersja aplikacji: {{version}}",
     "contentPolicy": "Zasady dotyczące treści",
+    "faq": "FAQ",
     "reportBug": "Zgłoś błąd"
   },
   "configPanel": {

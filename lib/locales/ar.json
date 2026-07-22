@@ -49,7 +49,8 @@
       "switchConfirm": "نعم، امسح البيانات وانتقل إلى مستخدم آخر",
       "switchCancel": "إلغاء"
     },
-    "contentPolicy": "سياسة المحتوى"
+    "contentPolicy": "سياسة المحتوى",
+    "faq": "الأسئلة الشائعة"
   },
   "account": {
     "pendingTitle": "الحساب بانتظار الموافقة",
@@ -450,6 +451,7 @@
     "user": "المستخدم: {{email}}",
     "appVersion": "إصدار التطبيق: {{version}}",
     "contentPolicy": "سياسة المحتوى",
+    "faq": "الأسئلة الشائعة",
     "reportBug": "الإبلاغ عن خطأ"
   },
   "configPanel": {

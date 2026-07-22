@@ -49,7 +49,8 @@
       "switchConfirm": "हाँ, डेटा मिटाएं और उपयोगकर्ता बदलें",
       "switchCancel": "रद्द करें"
     },
-    "contentPolicy": "कंटेंट नीति"
+    "contentPolicy": "कंटेंट नीति",
+    "faq": "अक्सर पूछे जाने वाले प्रश्न"
   },
   "account": {
     "pendingTitle": "खाता अनुमोदन लंबित",
@@ -442,6 +443,7 @@
     "user": "उपयोगकर्ता: {{email}}",
     "appVersion": "ऐप संस्करण: {{version}}",
     "contentPolicy": "कंटेंट नीति",
+    "faq": "अक्सर पूछे जाने वाले प्रश्न",
     "reportBug": "बग रिपोर्ट करें"
   },
   "configPanel": {

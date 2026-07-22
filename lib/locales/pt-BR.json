@@ -49,7 +49,8 @@
       "switchConfirm": "Sim, limpar dados e trocar de usuário",
       "switchCancel": "Cancelar"
     },
-    "contentPolicy": "Política de conteúdo"
+    "contentPolicy": "Política de conteúdo",
+    "faq": "Perguntas frequentes"
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",
@@ -442,6 +443,7 @@
     "user": "Usuário: {{email}}",
     "appVersion": "Versão do app: {{version}}",
     "contentPolicy": "Política de conteúdo",
+    "faq": "Perguntas frequentes",
     "reportBug": "Relatar um bug"
   },
   "configPanel": {

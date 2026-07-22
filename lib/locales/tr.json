@@ -49,7 +49,8 @@
       "switchConfirm": "Evet, verileri sil ve kullanıcı değiştir",
       "switchCancel": "İptal"
     },
-    "contentPolicy": "İçerik Politikası"
+    "contentPolicy": "İçerik Politikası",
+    "faq": "SSS"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -442,6 +443,7 @@
     "user": "Kullanıcı: {{email}}",
     "appVersion": "Uygulama Sürümü: {{version}}",
     "contentPolicy": "İçerik Politikası",
+    "faq": "SSS",
     "reportBug": "Hata bildir"
   },
   "configPanel": {

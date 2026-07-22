@@ -10,6 +10,8 @@ export const TERMS_URL =
 export const CONTENT_POLICY_URL =
   process.env.EXPO_PUBLIC_CONTENT_POLICY_URL ||
   'https://mera.news/content-policy';
+export const FAQ_URL =
+  process.env.EXPO_PUBLIC_FAQ_URL || 'https://mera.news/faq';
 export const SUPPORT_EMAIL =
   process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'contact@mera.news';
 export const WEBSITE_URL =

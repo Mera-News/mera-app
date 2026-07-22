@@ -14,7 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { CONTENT_POLICY_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
@@ -48,6 +48,10 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
 
     const handleContentPolicyPress = async () => {
         await openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL));
+    };
+
+    const handleFAQPress = async () => {
+        await openInAppBrowser(withAppLanguage(FAQ_URL));
     };
 
     const handleGithubPress = async () => {
@@ -182,6 +186,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                     <PolicyPill label={t('auth.privacyPolicy')} onPress={handlePrivacyPolicyPress} />
                     <PolicyPill label={t('auth.termsOfService')} onPress={handleTermsOfServicePress} />
                     <PolicyPill label={t('auth.contentPolicy')} onPress={handleContentPolicyPress} />
+                    <PolicyPill label={t('auth.faq')} onPress={handleFAQPress} />
                 </HStack>
                 <HStack space="lg" className="items-center mt-3">
                     <Pressable onPress={handleGithubPress} hitSlop={8}>
