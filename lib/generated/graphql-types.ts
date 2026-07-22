@@ -133,12 +133,6 @@ export type CursorPageInfo = {
   pageSize: Scalars['Int']['output'];
 };
 
-export type DeleteAllUserTopicsResponse = {
-  __typename?: 'DeleteAllUserTopicsResponse';
-  removedCount: Scalars['Int']['output'];
-  success: Scalars['Boolean']['output'];
-};
-
 export type DeleteExpoPushTokenInput = {
   userId: Scalars['ID']['input'];
 };
@@ -204,11 +198,9 @@ export type IssueLlmWarningInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   advanceOnboardingStage: UserPersona;
-  deleteAllUserTopics: DeleteAllUserTopicsResponse;
   deleteExpoPushToken: UserPersona;
   issueLlmWarning: UserPersona;
   requestUnblock: UnblockRequest;
-  submitUserTopics: SubmitUserTopicsResponse;
   /** Start (or refresh) tracking a story by its stableClusterId. Seeds a durable archive from the live cluster on first track, or slides an existing archive's 90-day retention forward. Returns null when no live cluster exists to seed from — the client then falls back to newsClusterForArticle. */
   trackStory?: Maybe<TrackedStoryArchive>;
   updateExpoPushToken: UserPersona;
@@ -216,17 +208,11 @@ export type Mutation = {
   updateNotificationsEnabled: UserPersona;
   updateProcessingMode: UserPersona;
   updateUserConfig: UserPersona;
-  withdrawUserTopics: WithdrawUserTopicsResponse;
 };
 
 
 export type MutationAdvanceOnboardingStageArgs = {
   stage: OnboardingStage;
-  userId: Scalars['ID']['input'];
-};
-
-
-export type MutationDeleteAllUserTopicsArgs = {
   userId: Scalars['ID']['input'];
 };
 
@@ -243,11 +229,6 @@ export type MutationIssueLlmWarningArgs = {
 
 export type MutationRequestUnblockArgs = {
   input: RequestUnblockInput;
-};
-
-
-export type MutationSubmitUserTopicsArgs = {
-  input: SubmitUserTopicsInput;
 };
 
 
@@ -278,11 +259,6 @@ export type MutationUpdateProcessingModeArgs = {
 
 export type MutationUpdateUserConfigArgs = {
   input: UpdateUserConfigInput;
-};
-
-
-export type MutationWithdrawUserTopicsArgs = {
-  input: WithdrawUserTopicsInput;
 };
 
 export type NewsArticle = {
@@ -427,6 +403,7 @@ export type Place = {
   normalized: Scalars['String']['output'];
   population?: Maybe<Scalars['Int']['output']>;
   region?: Maybe<Scalars['String']['output']>;
+  search_keys: Array<Scalars['String']['output']>;
 };
 
 /** Which inference backend handles Mera Protocol work for this user. ON_DEVICE runs fully offline on the user device; CLOUD uses end-to-end encrypted inference. */
@@ -670,31 +647,6 @@ export type RequestUnblockInput = {
   userId: Scalars['ID']['input'];
 };
 
-export type SubmitUserTopicItemInput = {
-  sourceFactLocalId: Scalars['String']['input'];
-  text: Scalars['String']['input'];
-};
-
-export type SubmitUserTopicsInput = {
-  topics: Array<SubmitUserTopicItemInput>;
-  userId: Scalars['ID']['input'];
-};
-
-export type SubmitUserTopicsResponse = {
-  __typename?: 'SubmitUserTopicsResponse';
-  message: Scalars['String']['output'];
-  success: Scalars['Boolean']['output'];
-  topics: Array<SubmittedUserTopic>;
-};
-
-export type SubmittedUserTopic = {
-  __typename?: 'SubmittedUserTopic';
-  sourceFactLocalId: Scalars['String']['output'];
-  status: Scalars['String']['output'];
-  text: Scalars['String']['output'];
-  topicId?: Maybe<Scalars['ID']['output']>;
-};
-
 /** One top-headline slot: the representative article plus its cluster metadata (stableClusterId, clusterSize). Both are null/0 for an unclustered singleton. */
 export type TopHeadline = {
   __typename?: 'TopHeadline';
@@ -821,7 +773,7 @@ export type UserBillingInfo = {
   entitlementExpiresAt?: Maybe<Scalars['String']['output']>;
   /** ISO timestamp of the next UTC midnight — when usage resets. */
   resetAt: Scalars['String']['output'];
-  /** Subscription tier: 'none' | 'individual' | 'professional'. */
+  /** Subscription tier: 'none' | 'starter' | 'individual' | 'professional'. */
   subscriptionTier: Scalars['String']['output'];
 };
 
@@ -842,6 +794,7 @@ export type UserPersona = {
   processingMode: ProcessingMode;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['String']['output'];
+  /** @deprecated Topics are device-owned; the server keeps no per-user topic state. Always returns []. */
   userTopics?: Maybe<Array<UserTopic>>;
 };
 
@@ -854,15 +807,4 @@ export type UserTopic = {
   is_canonical: Scalars['Boolean']['output'];
   news_topic_text: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
-};
-
-export type WithdrawUserTopicsInput = {
-  topicIds: Array<Scalars['ID']['input']>;
-  userId: Scalars['ID']['input'];
-};
-
-export type WithdrawUserTopicsResponse = {
-  __typename?: 'WithdrawUserTopicsResponse';
-  removedCount: Scalars['Int']['output'];
-  success: Scalars['Boolean']['output'];
 };

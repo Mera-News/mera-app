@@ -131,11 +131,6 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type DeleteAllUserTopicsResponse {
-  removedCount: Int!
-  success: Boolean!
-}
-
 input DeleteExpoPushTokenInput {
   userId: ID!
 }
@@ -206,11 +201,9 @@ input IssueLlmWarningInput {
 
 type Mutation {
   advanceOnboardingStage(stage: OnboardingStage!, userId: ID!): UserPersona!
-  deleteAllUserTopics(userId: ID!): DeleteAllUserTopicsResponse!
   deleteExpoPushToken(input: DeleteExpoPushTokenInput!): UserPersona!
   issueLlmWarning(input: IssueLlmWarningInput!): UserPersona!
   requestUnblock(input: RequestUnblockInput!): UnblockRequest!
-  submitUserTopics(input: SubmitUserTopicsInput!): SubmitUserTopicsResponse!
 
   """
   Start (or refresh) tracking a story by its stableClusterId. Seeds a durable archive from the live cluster on first track, or slides an existing archive's 90-day retention forward. Returns null when no live cluster exists to seed from — the client then falls back to newsClusterForArticle.
@@ -221,7 +214,6 @@ type Mutation {
   updateNotificationsEnabled(input: UpdateNotificationsEnabledInput!): UserPersona!
   updateProcessingMode(input: UpdateProcessingModeInput!): UserPersona!
   updateUserConfig(input: UpdateUserConfigInput!): UserPersona!
-  withdrawUserTopics(input: WithdrawUserTopicsInput!): WithdrawUserTopicsResponse!
 }
 
 type NewsArticle {
@@ -367,6 +359,7 @@ type Place {
   normalized: String!
   population: Int
   region: String
+  search_keys: [String!]!
 }
 
 """
@@ -463,6 +456,7 @@ type Query {
   The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response.
   """
   feedbackTree(currentVersion: Int): FeedbackTreeResponse
+
   """
   The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. Used as the live fallback when a story isn't archived (trackStory returned null).
   """
@@ -565,29 +559,6 @@ input RequestUnblockInput {
   chatHistory: [ChatMessageInput!]!
   feedback: String!
   userId: ID!
-}
-
-input SubmitUserTopicItemInput {
-  sourceFactLocalId: String!
-  text: String!
-}
-
-input SubmitUserTopicsInput {
-  topics: [SubmitUserTopicItemInput!]!
-  userId: ID!
-}
-
-type SubmitUserTopicsResponse {
-  message: String!
-  success: Boolean!
-  topics: [SubmittedUserTopic!]!
-}
-
-type SubmittedUserTopic {
-  sourceFactLocalId: String!
-  status: String!
-  text: String!
-  topicId: ID
 }
 
 """
@@ -726,7 +697,7 @@ type UserBillingInfo {
   """ISO timestamp of the next UTC midnight — when usage resets."""
   resetAt: String!
 
-  """Subscription tier: 'none' | 'individual' | 'professional'."""
+  """Subscription tier: 'none' | 'starter' | 'individual' | 'professional'."""
   subscriptionTier: String!
 }
 
@@ -746,7 +717,7 @@ type UserPersona {
   processingMode: ProcessingMode!
   updatedAt: DateTime!
   userId: String!
-  userTopics: [UserTopic!]
+  userTopics: [UserTopic!] @deprecated(reason: "Topics are device-owned; the server keeps no per-user topic state. Always returns [].")
 }
 
 type UserTopic {
@@ -757,14 +728,4 @@ type UserTopic {
   is_canonical: Boolean!
   news_topic_text: String!
   updatedAt: DateTime!
-}
-
-input WithdrawUserTopicsInput {
-  topicIds: [ID!]!
-  userId: ID!
-}
-
-type WithdrawUserTopicsResponse {
-  removedCount: Int!
-  success: Boolean!
 }
