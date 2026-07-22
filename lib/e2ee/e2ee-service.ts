@@ -93,7 +93,10 @@ export interface E2EEContext {
 function fetchWithTimeout(
   url: string,
   opts: RequestInit,
-  ms = 15_000,
+  // 30s to match the inference gateway's own attestation upstream timeout — a
+  // shorter client abort would give up while the gateway is still fetching the
+  // report, wasting the round trip and forcing a retry.
+  ms = 30_000,
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
@@ -116,6 +119,52 @@ function hexToBytes(hex: string): Uint8Array {
   }
   return out;
 }
+
+/** Structured detail attached to a {@link ModelKeyValidationError}. The key is
+ *  PUBLIC data — capturing/logging it is safe and intentional. */
+export interface ModelKeyValidationDetails {
+  keyHex: string;
+  algo: SigningAlgo;
+  model: string;
+  endpoint: string;
+  cause?: unknown;
+}
+
+/**
+ * Thrown when the model's attestation key cannot be used for E2EE — currently a
+ * 64-byte ecdsa key that is NOT a valid raw secp256k1 (x, y) point. NEAR's fleet
+ * occasionally attests a same-length key that is not on the secp256k1 curve; the
+ * legacy path only discovered this deep inside noble's `getSharedSecret` at
+ * ENCRYPT time ("bad point: is not on curve"), which was uncaught at submit and
+ * re-drove the scoring poller every ~7s (MERA-APP-39, 60 events). Detecting it
+ * at attestation-fetch time and surfacing a TYPED error lets the caller
+ * terminate the affected batch/run instead of looping.
+ */
+export class ModelKeyValidationError extends Error {
+  readonly keyHex: string;
+  readonly algo: SigningAlgo;
+  readonly model: string;
+  readonly endpoint: string;
+  constructor(message: string, details: ModelKeyValidationDetails) {
+    super(message);
+    this.name = 'ModelKeyValidationError';
+    this.keyHex = details.keyHex;
+    this.algo = details.algo;
+    this.model = details.model;
+    this.endpoint = details.endpoint;
+    if (details.cause !== undefined) {
+      (this as { cause?: unknown }).cause = details.cause;
+    }
+    // Preserve instanceof across the TS/Babel transpile of `extends Error`.
+    Object.setPrototypeOf(this, ModelKeyValidationError.prototype);
+  }
+}
+
+// De-dupe Sentry captures by the raw bad-key hex: a run can build E2EE context
+// for many batches against the same off-curve key, and we want exactly ONE event
+// per distinct encoding (the next prod occurrence must reveal the actual bytes),
+// not one per batch.
+const reportedBadModelKeys = new Set<string>();
 
 export async function fetchModelPublicKey(model: string): Promise<ModelAttestation> {
   const cached = getCachedAttestation(model);
@@ -166,6 +215,37 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
     algo = 'ed25519';
   } else if (keyLen === 64) {
     algo = 'ecdsa';
+    // Fail-fast validation: reconstruct the 65-byte uncompressed point
+    // (0x04 ‖ x ‖ y) exactly as encryptEcdsa will, and assert it is actually on
+    // secp256k1 NOW. Without this the off-curve key is only rejected later, deep
+    // inside secp256k1.getSharedSecret at encrypt time, as an untyped
+    // "bad point: is not on curve" that re-drove the poller every ~7s
+    // (MERA-APP-39). The reconstructed point is NOT cached below — we throw
+    // before setCachedAttestation, so a later run's fresh attestation fetch
+    // (fleet load-balances curves) naturally retries.
+    const raw = hexToBytes(pub);
+    const point65 = new Uint8Array(65);
+    point65[0] = 0x04;
+    point65.set(raw, 1);
+    try {
+      // fromBytes does NOT check the curve (per @noble/curves v2) — assertValidity does.
+      secp256k1.Point.fromBytes(point65).assertValidity();
+    } catch (cause) {
+      const err = new ModelKeyValidationError(
+        `NEAR attestation: 64-byte ecdsa key is not a valid secp256k1 point (model=${model})`,
+        { keyHex: pub, algo, model, endpoint: ATTESTATION_API, cause },
+      );
+      // Capture ONCE per distinct bad key — the hex is public data, logged
+      // intentionally so the next occurrence reveals the real encoding.
+      if (!reportedBadModelKeys.has(pub)) {
+        reportedBadModelKeys.add(pub);
+        logger.captureException(err, {
+          tags: { service: 'e2ee', step: 'model-key-validate' },
+          extra: { keyHex: pub, algo, model, endpoint: ATTESTATION_API },
+        });
+      }
+      throw err;
+    }
   } else {
     throw new Error(
       `NEAR attestation: unsupported signing-key length ${keyLen} (expected 32 Ed25519 or 64 secp256k1)`,

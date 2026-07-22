@@ -105,10 +105,30 @@ jest.mock('@/lib/llm/submitInferenceJob', () => ({
   bytesToHex: (...args: any[]) => mockBytesToHex(...args),
 }));
 
-jest.mock('@/lib/e2ee/e2ee-service', () => ({
-  prepareE2EEContext: (...args: any[]) => mockPrepareE2EEContext(...args),
-  rebuildE2EEContext: (...args: any[]) => mockRebuildE2EEContext(...args),
-}));
+jest.mock('@/lib/e2ee/e2ee-service', () => {
+  // Faithful stand-in so `err instanceof ModelKeyValidationError` works in the
+  // pipeline's submit-site catches.
+  class ModelKeyValidationError extends Error {
+    keyHex: string;
+    algo: string;
+    model: string;
+    endpoint: string;
+    constructor(message: string, details: any = {}) {
+      super(message);
+      this.name = 'ModelKeyValidationError';
+      this.keyHex = details.keyHex ?? '';
+      this.algo = details.algo ?? 'ecdsa';
+      this.model = details.model ?? '';
+      this.endpoint = details.endpoint ?? '';
+      Object.setPrototypeOf(this, ModelKeyValidationError.prototype);
+    }
+  }
+  return {
+    ModelKeyValidationError,
+    prepareE2EEContext: (...args: any[]) => mockPrepareE2EEContext(...args),
+    rebuildE2EEContext: (...args: any[]) => mockRebuildE2EEContext(...args),
+  };
+});
 
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscored(...args),
@@ -239,6 +259,7 @@ import {
   COLD_START_MIN_BATCH,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
+import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
 
 // ---- helpers ----
 const NOW = 1_700_000_000_000;
@@ -365,6 +386,57 @@ afterEach(() => {
 });
 
 // ---------------------------------------------------------------------------
+
+describe('model-key validation fail-fast (MERA-APP-39)', () => {
+  it('fails a relevance batch terminally when the E2EE rebuild rejects with ModelKeyValidationError — no submit, no loop', async () => {
+    mockRebuildE2EEContext.mockRejectedValue(
+      new ModelKeyValidationError('bad point: is not on curve', {
+        keyHex: 'deadbeef',
+        algo: 'ecdsa',
+        model: 'test-small-model',
+        endpoint: 'https://inference.test/api/attestation/report',
+      }),
+    );
+
+    await enqueueCandidates(ids(25)); // 1 batch
+
+    // The bad key is rejected BEFORE any gateway POST.
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    // The run finalized (batch went terminal) instead of re-driving forever.
+    expect(mockMarkProcessingRunFinished).toHaveBeenCalled();
+    expect(await getPipelineStatus()).toBe('idle');
+  });
+
+  it('does not re-drive a poll tick after a model-key failure (loop is dead)', async () => {
+    mockRebuildE2EEContext.mockRejectedValue(
+      new ModelKeyValidationError('bad point: is not on curve', {
+        keyHex: 'deadbeef',
+        algo: 'ecdsa',
+        model: 'test-small-model',
+        endpoint: 'https://inference.test/api/attestation/report',
+      }),
+    );
+
+    await enqueueCandidates(ids(25));
+    mockRebuildE2EEContext.mockClear();
+    mockSendInferenceRequest.mockClear();
+
+    // A subsequent tick finds no run and does nothing — the ~7s re-drive is gone.
+    await pollTick('foreground');
+
+    expect(mockRebuildE2EEContext).not.toHaveBeenCalled();
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+
+  it('surfaces non-ModelKeyValidationError rebuild throws (unchanged behavior)', async () => {
+    // A generic rebuild error is NOT swallowed by the fail-fast catch — it
+    // propagates so the existing poller-tick capture handles it.
+    mockRebuildE2EEContext.mockRejectedValue(new Error('some other failure'));
+
+    await expect(enqueueCandidates(ids(25))).rejects.toThrow('some other failure');
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+});
 
 describe('enqueueCandidates', () => {
   it('creates a run and submits up to MAX_IN_FLIGHT batches', async () => {
@@ -1317,5 +1389,108 @@ describe('derivePipelineBatchProgress', () => {
         ]),
       ),
     ).toEqual({ done: 1, total: 3 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// apply-step throw → attempt cap (MERA-APP-53/55)
+//
+// A throw in the apply step (decode/save racing a row deleted underneath the
+// batch) used to leave the batch in waiting-* with no attempt++ and no terminal
+// transition, so the 7s poller re-fetched the SAME server-cached results and
+// re-threw on every tick for up to RUN_ABANDON_MS (24h) — one production device
+// looping. The apply catch now routes through requeueWaitingOrFail so the batch
+// terminates after MAX_BATCH_ATTEMPTS.
+// ---------------------------------------------------------------------------
+
+describe('apply-step throw → attempt cap (MERA-APP-53/55)', () => {
+  // Force the BACKSTOP relevance path so the apply step runs decodeResults (the
+  // throw seam below). The global beforeEach does NOT reset computeMathStage, so
+  // a prior judge-mode test could otherwise leave it returning math-mode
+  // candidates → the judge decode path, bypassing decodeResults entirely.
+  beforeEach(() => {
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map(),
+      componentsMap: new Map(),
+      modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+    }));
+  });
+
+  // Restore the throwing decode/fetch impls so they can't leak into later tests
+  // (a mockImplementation wins over the beforeEach mockReturnValue default).
+  afterEach(() => {
+    mockDecodeResults.mockReset();
+    mockFetchResults.mockReset();
+  });
+
+  it('terminates a poisoned waiting-relevance batch after MAX_BATCH_ATTEMPTS instead of re-throwing forever', async () => {
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+
+    // Server returns the same cached results on every poll; the apply step
+    // (decodeResults) throws every time — the exact loop the fix bounds.
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    // Reset first so the throwing impl replaces the beforeEach mockReturnValue
+    // default (a lingering return value would otherwise win).
+    mockDecodeResults.mockReset();
+    mockDecodeResults.mockImplementation(() => {
+      throw new Error('Record article_suggestions#a0 not found');
+    });
+
+    // Poll 1: apply throws → attempt 1 (< MAX=2) → requeued to queued, re-drained
+    // → back in flight (submit succeeds via the default mocks).
+    await handlePush(batch.requestId, 'foreground');
+    const afterFirst = currentRun()?.batches[0];
+    expect(afterFirst).toBeDefined();
+    expect(afterFirst.attempt).toBe(1);
+    expect(['queued', 'submitting-relevance', 'waiting-relevance']).toContain(
+      afterFirst.phase,
+    );
+
+    // Poll 2: apply throws again → attempt 2 (== MAX) → failed → single batch →
+    // run finalized + cleared, so the poller stops re-driving it.
+    jest.setSystemTime(NOW + 20_000);
+    const b1 = currentRun().batches[0];
+    await handlePush(b1.requestId, 'foreground');
+
+    const finalBatch = currentRun()?.batches[0];
+    expect(finalBatch === undefined || finalBatch.phase === 'failed').toBe(true);
+  });
+
+  it('bounds the apply captureException to at most MAX_BATCH_ATTEMPTS per batch', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const logger = require('@/lib/logger').default;
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    mockDecodeResults.mockReset();
+    mockDecodeResults.mockImplementation(() => {
+      throw new Error('boom');
+    });
+
+    (logger.captureException as jest.Mock).mockClear();
+    await handlePush(batch.requestId, 'foreground'); // attempt 1
+    jest.setSystemTime(NOW + 20_000);
+    const b1 = currentRun()?.batches[0];
+    if (b1) await handlePush(b1.requestId, 'foreground'); // attempt 2 → failed
+
+    const applyCaptures = (logger.captureException as jest.Mock).mock.calls.filter(
+      (c: any[]) => c[1]?.tags?.step === 'apply',
+    );
+    // Fired for the poisoned applies but bounded (≤ MAX_BATCH_ATTEMPTS), not forever.
+    expect(applyCaptures.length).toBeGreaterThanOrEqual(1);
+    expect(applyCaptures.length).toBeLessThanOrEqual(2);
+    // The run is terminal now → no further polling of this batch.
+    expect(currentRun()).toBeNull();
   });
 });

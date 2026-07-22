@@ -25,6 +25,7 @@ import {
   sendInferenceRequest,
 } from '@/lib/llm/submitInferenceJob';
 import {
+  ModelKeyValidationError,
   prepareE2EEContext,
   rebuildE2EEContext,
 } from '@/lib/e2ee/e2ee-service';
@@ -702,12 +703,29 @@ async function doSubmit(
   ) {
     return;
   }
+  const fromPhase = batch.phase;
 
-  if (batch.reasonsOnly) {
-    await doSubmitReasonsOnly(run, batch, privKeyHex, context);
-    return;
+  try {
+    if (batch.reasonsOnly) {
+      await doSubmitReasonsOnly(run, batch, privKeyHex, context);
+      return;
+    }
+    await doSubmitRelevance(run, batch, privKeyHex, context);
+  } catch (err) {
+    // The E2EE context (re)build validates the model attestation key up front;
+    // an off-curve ecdsa key throws ModelKeyValidationError here BEFORE any POST
+    // (MERA-APP-39). It is non-retryable within this run — fail the batch
+    // terminally so revertStuckSubmitters + the poller stop re-driving it. All
+    // other throws propagate unchanged.
+    if (err instanceof ModelKeyValidationError) {
+      logger.warn(
+        `${TAG} batch ${batchId} submit aborted — model key invalid (${err.message}); failing batch (non-retryable this run)`,
+      );
+      await failSubmitModelKeyInvalid(batchId, fromPhase);
+      return;
+    }
+    throw err;
   }
-  await doSubmitRelevance(run, batch, privKeyHex, context);
 }
 
 /**
@@ -1081,6 +1099,32 @@ async function failOrRetrySubmit(
   });
 }
 
+/**
+ * Non-retryable submit failure: the model's TEE attestation key can't be used
+ * for E2EE (ModelKeyValidationError — an off-curve secp256k1 key, MERA-APP-39).
+ * Unlike failOrRetrySubmit, this fails the batch IMMEDIATELY (no attempt cap /
+ * requeue) — resubmitting within THIS run reuses the run's bound algo/keypair
+ * and refetches the same bad key, so retrying only re-drives the poller every
+ * ~7s. A later run's fresh prepareE2EEContext (fleet load-balances curves, bad
+ * keys are never cached) retries naturally. Reuses the existing 'submit-failed'
+ * reason (the failureReason enum lives in the DB store, which this track must not
+ * touch); the specific cause is logged + captured once in fetchModelPublicKey.
+ * In-loop safe (mirrors failOrRetrySubmit): sets terminal phase only, letting
+ * doDrain's tail maybeFinalize finalize — never calls drain/afterTerminal.
+ */
+async function failSubmitModelKeyInvalid(
+  batchId: number,
+  fromPhase: 'submitting-relevance' | 'submitting-reasons',
+): Promise<void> {
+  await mutatePipeline((run) => {
+    const b = run.batches.find((x) => x.batchId === batchId);
+    if (!b || b.phase !== fromPhase) return null;
+    b.phase = 'failed';
+    b.failureReason = 'submit-failed';
+    return true;
+  });
+}
+
 async function markBatchDone(batchId: number): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -1152,6 +1196,18 @@ async function checkBatch(
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'apply', batchId: String(batch.batchId) },
     });
+    // A throw in the apply step (e.g. a decode/save racing a row deleted
+    // underneath the batch) used to leave the batch in waiting-* with no
+    // attempt++ and no terminal transition, so the 7s poller re-fetched the SAME
+    // server-cached results and re-threw on the same id every tick for up to
+    // RUN_ABANDON_MS (24h) — a production wedge (MERA-APP-53/55, one device
+    // looping). Attempt-cap it through the shared requeue/fail path: the batch
+    // requeues (relevance→queued, reasons→needs-reasons-submit) until it exhausts
+    // MAX_BATCH_ATTEMPTS, then goes terminal — so captureException fires at most
+    // MAX_BATCH_ATTEMPTS times per batch instead of forever. If the handler had
+    // already advanced the batch past `batch.phase` before throwing (progress was
+    // made), requeueWaitingOrFail's guarded CAS no-ops and nothing is double-failed.
+    await requeueWaitingOrFail(batch, 'attempts-exhausted', context);
   }
 }
 
@@ -1497,7 +1553,33 @@ async function submitNeedsReasons(
   if (claim === 'aborted' || claim === 'no-run') return;
 
   const token = AppState.currentState !== 'active' ? run.expoPushToken : null;
-  const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+  let ctx;
+  try {
+    ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+  } catch (err) {
+    // Off-curve model attestation key (MERA-APP-39). The relevance scores are
+    // already persisted, so mirror the reasons-submit hard-failure path: mark
+    // the batch done (scores kept — orphaned-reasons recovery re-submits the
+    // notes on a later run whose fresh attestation validates), NOT a poller
+    // loop. Non-ModelKeyValidationError throws propagate unchanged.
+    if (!(err instanceof ModelKeyValidationError)) throw err;
+    logger.warn(
+      `${TAG} batch ${batchId} reasons submit aborted — model key invalid (${err.message}); marking done (scores kept)`,
+    );
+    await markBatchDone(batchId);
+    const discarded = await discardLowRelevance(
+      batch.candidateIds,
+      batch.relevanceMap ?? {},
+    );
+    await refreshUi();
+    if (discarded > 0) {
+      logger.info(
+        `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
+      );
+    }
+    await afterTerminal(context);
+    return;
+  }
   const reasonIds = bundle.eligibleCandidates.map((c) => c.id);
   logger.info(
     `${TAG} batch ${batchId} submit reasons: ${reasonIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
@@ -1556,7 +1638,7 @@ async function submitNeedsReasons(
 
 async function requeueWaitingOrFail(
   batch: PipelineBatch,
-  reason: 'stale' | 'not-found' | 'unauthorized',
+  reason: 'stale' | 'not-found' | 'unauthorized' | 'attempts-exhausted',
   context: ExecutionContext,
 ): Promise<void> {
   const wasReasons = batch.phase === 'waiting-reasons';

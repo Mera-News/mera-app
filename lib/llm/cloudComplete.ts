@@ -24,6 +24,17 @@ const TAG = '[CloudLLM]';
 const CHAT_API = `${INFERENCE_ENDPOINT}/v1/chat/completions`;
 const BATCH_API = `${INFERENCE_ENDPOINT}/v1/chat/completions/batch`;
 
+/** Chat per-attempt timeout — must exceed the gateway's UPSTREAM_TIMEOUT_MS
+ *  (120s) so the gateway's own 200/502 verdict lands before the client aborts.
+ *  130s = 120s gateway + 10s slack. */
+const CHAT_REQUEST_TIMEOUT_MS = 130_000;
+
+/** Chat 502/timeout attempt cap. A cold NEAR model can exceed even 120s, and
+ *  retrying the SAME cold model storms; cap at 2 total attempts so a persistent
+ *  cold model surfaces the gateway 502 in bounded time. The model is warmed
+ *  ahead of the first turn by prewarmCloudChat() (lib/llm/prewarm). */
+const CHAT_MAX_TIMEOUT_ATTEMPTS = 2;
+
 /** Build auth headers, fetching a fresh JWT from the auth service. Throws if
  *  no token is available — sending an unauthenticated request just produces
  *  10 useless 401 retries (see authFetch) and surfaces as a confusing HTTP
@@ -42,24 +53,53 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 const MAX_RETRIES = 10;
 const BASE_DELAY_MS = 500;
 
-/** Per-attempt timeout for cloud requests. Inference can take a while on a
- *  cold model + large prompt, but anything past this is almost certainly a
- *  hung connection and we'd rather surface the error to the caller. */
+/** Default per-attempt timeout for cloud requests (scoring/batch). Inference can
+ *  take a while on a cold model + large prompt, but anything past this is almost
+ *  certainly a hung connection and we'd rather surface the error to the caller. */
 const REQUEST_TIMEOUT_MS = 60_000;
+
+/** Per-call overrides for {@link authFetch}. Defaults preserve the original
+ *  shared behavior for every existing caller (scoring, batch); only the chat
+ *  path opts into different values. */
+export interface AuthFetchOptions {
+  /** Per-attempt timeout (ms). Default {@link REQUEST_TIMEOUT_MS}. The chat path
+   *  sets this ABOVE the gateway's own UPSTREAM_TIMEOUT_MS (120s) so the
+   *  gateway's verdict (200, or a 502 it decides to emit) arrives before the
+   *  client aborts. A client abort earlier than the gateway timeout just
+   *  triggers a fresh attempt against a model that is still warming — the storm
+   *  this whole change exists to kill. */
+  requestTimeoutMs?: number;
+  /** Cap on the number of attempts that end in a 502 (the gateway's own
+   *  upstream-timeout verdict) or a client timeout/network abort. Default
+   *  MAX_RETRIES + 1 (i.e. the original behavior — retry every 5xx/timeout up to
+   *  MAX_RETRIES). The chat path caps this at 2 so a persistently-cold model
+   *  surfaces the gateway's 502 in bounded time instead of a multi-minute loop.
+   *  401 refresh and non-502 5xx retries are unaffected. */
+  maxTimeoutAttempts?: number;
+}
 
 /**
  * Fetch with exponential backoff and a per-attempt timeout.
  * Retries on 401 (refreshes JWT), 5xx, timeout, and network errors.
+ *
+ * `options` tunes the timeout + the 502/timeout retry budget per call without
+ * changing the shared defaults every other caller relies on.
  */
 export async function authFetch(
   url: string,
   init: RequestInit,
+  options: AuthFetchOptions = {},
 ): Promise<Response> {
+  const requestTimeoutMs = options.requestTimeoutMs ?? REQUEST_TIMEOUT_MS;
+  const maxTimeoutAttempts = options.maxTimeoutAttempts ?? MAX_RETRIES + 1;
   let lastError: Error | null = null;
+  // Counts attempts that ended in a 502 or a client timeout/network abort —
+  // i.e. the "upstream is cold / unreachable" family the chat path caps.
+  let timeoutAttempts = 0;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
     try {
       const response = await (expoFetch as unknown as typeof globalThis.fetch)(url, {
@@ -79,7 +119,26 @@ export async function authFetch(
         continue;
       }
 
+      if (response.status === 502) {
+        // 502 = the gateway couldn't get a verdict from NEAR within its own
+        // UPSTREAM_TIMEOUT_MS (a cold model). Retrying against the SAME cold
+        // model just storms, so this counts against the (chat-capped) timeout
+        // budget; once exhausted we surface the 502 rather than loop.
+        timeoutAttempts += 1;
+        if (timeoutAttempts < maxTimeoutAttempts && attempt < MAX_RETRIES) {
+          logger.warn(`${TAG} 502 on attempt ${attempt + 1}, retrying`);
+          await sleep(BASE_DELAY_MS * 2 ** attempt);
+          continue;
+        }
+        logger.warn(
+          `${TAG} 502 on attempt ${attempt + 1} — timeout budget exhausted (${timeoutAttempts}/${maxTimeoutAttempts}), surfacing`,
+        );
+        return response;
+      }
+
       if (response.status >= 500 && attempt < MAX_RETRIES) {
+        // Non-502 5xx (500/503/504) — transient gateway/app errors, keep the
+        // original sane retry budget.
         logger.warn(`${TAG} ${response.status} on attempt ${attempt + 1}, retrying`);
         await sleep(BASE_DELAY_MS * 2 ** attempt);
         continue;
@@ -93,16 +152,20 @@ export async function authFetch(
         lastError.message.toLowerCase().includes('abort');
       if (isAbort) {
         logger.warn(
-          `${TAG} request timed out after ${REQUEST_TIMEOUT_MS}ms (attempt ${attempt + 1})`,
+          `${TAG} request timed out after ${requestTimeoutMs}ms (attempt ${attempt + 1})`,
           { url },
         );
       }
-      if (attempt < MAX_RETRIES) {
+      // Timeout/network failures share the cold-upstream budget with 502s.
+      timeoutAttempts += 1;
+      if (attempt < MAX_RETRIES && timeoutAttempts < maxTimeoutAttempts) {
         logger.warn(`${TAG} fetch error on attempt ${attempt + 1}, retrying`, {
           error: lastError.message,
           timedOut: isAbort,
         });
         await sleep(BASE_DELAY_MS * 2 ** attempt);
+      } else {
+        break;
       }
     } finally {
       clearTimeout(timeoutId);
@@ -188,12 +251,16 @@ export async function cloudComplete(request: CloudCompleteRequest): Promise<stri
 
   const baseHeaders = await getAuthHeaders();
   const allHeaders = { ...baseHeaders, ...ctx.headers };
+  const maxTokens = request.maxTokens ?? request.maxCompletionTokens;
   const response = await authFetch(CHAT_API, {
     method: 'POST',
     headers: allHeaders,
     body: JSON.stringify({
       messages, stream: false, temperature, model,
       chat_template_kwargs: { enable_thinking: false },
+      // Honor the caller's output cap — lets the prewarm warmup request a single
+      // throwaway token instead of a full completion.
+      ...(maxTokens !== undefined && { max_tokens: maxTokens }),
     }),
   });
 
@@ -431,11 +498,20 @@ export async function* cloudChatStream(
   // the non-streaming double-turn when a tool fires). Tagged for first-chat
   // latency attribution.
   const postStartMs = Date.now();
-  const response = await authFetch(CHAT_API, {
-    method: 'POST',
-    headers: allHeaders,
-    body: JSON.stringify(body),
-  });
+  const response = await authFetch(
+    CHAT_API,
+    {
+      method: 'POST',
+      headers: allHeaders,
+      body: JSON.stringify(body),
+    },
+    {
+      // Outlast the gateway's 120s upstream timeout and stop the 502/timeout
+      // storm on a cold model (see the constants above).
+      requestTimeoutMs: CHAT_REQUEST_TIMEOUT_MS,
+      maxTimeoutAttempts: CHAT_MAX_TIMEOUT_ATTEMPTS,
+    },
+  );
   logger.debug('[chat-timing] chat POST→response', {
     ms: Date.now() - postStartMs,
     status: response.status,

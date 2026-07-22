@@ -90,10 +90,21 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // `includeContext` re-injects fresh context onto the last user message
       // for the first turn only — on a continuation turn the wire already ends
       // with tool results and context was already injected on the prior call.
+      // First-pass tool choice is 'auto' (was 'required'): forcing a tool call
+      // on the opening turn meant even a purely conversational reply ("hi",
+      // "thanks") emitted a spurious tool call, then required a SECOND full
+      // inference to produce the text (see the continuation pass below) —
+      // doubling first-turn latency. Both agents that drive this hook
+      // (PersonaUpdateAgent, ArticleFeedbackAgent) are conversational: the
+      // system prompt tells the model WHEN to call its record/update tools, so
+      // 'auto' still fires the tool whenever the user actually supplies
+      // fact-worthy input, and a text-only turn now completes in one round trip.
+      // The continuation pass keeps its own 'auto' (unchanged) for when the
+      // model does return tool calls but no text.
       const streamOne = async (
         targetId: string,
         includeContext: boolean,
-        toolChoice: 'required' | 'auto' = 'required',
+        toolChoice: 'required' | 'auto' = 'auto',
       ): Promise<{ accContent: string; toolCalls: ReturnType<typeof finalizeToolCalls> }> => {
         let accContent = '';
         const toolCallAccumulators = new Map<number, ToolCallAccumulator>();
@@ -266,7 +277,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const placeholder: ConversationMessage = { id: assistantId, role: 'assistant', content: '' };
       useCloudChatStore.getState().setMessages((prev) => [...prev, placeholder]);
 
-      const first = await streamOne(assistantId, true);
+      // 'auto' (explicit): a text-only reply finishes in one round trip; the
+      // model still calls a tool when the turn warrants one (→ continuation).
+      const first = await streamOne(assistantId, true, 'auto');
       pushAssistantToWire(first.accContent, first.toolCalls);
 
       if (first.toolCalls.length === 0) return;

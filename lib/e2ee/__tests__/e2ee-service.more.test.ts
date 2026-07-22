@@ -55,6 +55,7 @@ import { gcm } from '@noble/ciphers/aes.js';
 import { randomBytes } from '@noble/ciphers/utils.js';
 import {
   fetchModelPublicKey,
+  ModelKeyValidationError,
   prepareE2EEContext,
   encryptMessages,
   encryptContent,
@@ -63,6 +64,7 @@ import {
   type E2EEContext,
 } from '../e2ee-service';
 import { withRetry } from '../../utils/retry';
+import logger from '../../logger';
 
 function toHex(b: Uint8Array): string {
   return Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -291,6 +293,89 @@ describe('fetchModelPublicKey', () => {
     const result = await fetchModelPublicKey('test-model');
     expect(result.algo).toBe('ecdsa');
     expect(result.publicKey).toBe(publicKeyHex);
+  });
+
+  // ─── Fail-fast: hostile 64-byte key that is NOT on secp256k1 (MERA-APP-39) ───
+
+  /** A 64-byte value that is NOT a valid raw secp256k1 (x, y) point: an ed25519
+   *  public key concatenated with itself. Reconstructing 0x04‖x‖y and asserting
+   *  validity throws "bad point: is not on curve". */
+  function makeOffCurve64Hex(): string {
+    const edPub = ed25519.getPublicKey(ed25519.utils.randomSecretKey()); // 32 bytes
+    const off = new Uint8Array(64);
+    off.set(edPub, 0);
+    off.set(edPub, 32);
+    return toHex(off);
+  }
+
+  it('throws a typed ModelKeyValidationError for an off-curve 64-byte key (not a deep noble throw)', async () => {
+    const offCurveHex = makeOffCurve64Hex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(offCurveHex)),
+    );
+
+    await expect(fetchModelPublicKey('test-model')).rejects.toBeInstanceOf(
+      ModelKeyValidationError,
+    );
+  });
+
+  it('carries the raw key hex + algo + model + endpoint on the thrown error', async () => {
+    const offCurveHex = makeOffCurve64Hex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(offCurveHex)),
+    );
+
+    let caught: ModelKeyValidationError | undefined;
+    try {
+      await fetchModelPublicKey('near-cold-model');
+    } catch (err) {
+      caught = err as ModelKeyValidationError;
+    }
+    expect(caught).toBeInstanceOf(ModelKeyValidationError);
+    expect(caught!.keyHex).toBe(offCurveHex);
+    expect(caught!.algo).toBe('ecdsa');
+    expect(caught!.model).toBe('near-cold-model');
+    expect(caught!.endpoint).toContain('/api/attestation/report');
+  });
+
+  it('captures the off-curve key to Sentry ONCE with the raw hex in extras', async () => {
+    const offCurveHex = makeOffCurve64Hex();
+    // Two fetches of the SAME bad key → still exactly one capture (deduped by hex).
+    mockGlobalFetch
+      .mockResolvedValueOnce(makeResponse(200, makeAttestationBody(offCurveHex)))
+      .mockResolvedValueOnce(makeResponse(200, makeAttestationBody(offCurveHex)));
+
+    await expect(fetchModelPublicKey('m')).rejects.toBeInstanceOf(ModelKeyValidationError);
+    await expect(fetchModelPublicKey('m')).rejects.toBeInstanceOf(ModelKeyValidationError);
+
+    expect(logger.captureException).toHaveBeenCalledTimes(1);
+    const [, meta] = (logger.captureException as jest.Mock).mock.calls[0] as [
+      unknown,
+      { tags: Record<string, string>; extra: Record<string, unknown> },
+    ];
+    expect(meta.tags).toMatchObject({ service: 'e2ee', step: 'model-key-validate' });
+    expect(meta.extra).toMatchObject({ keyHex: offCurveHex, algo: 'ecdsa', model: 'm' });
+  });
+
+  it('does NOT cache an off-curve key (a later fetch can still succeed)', async () => {
+    const offCurveHex = makeOffCurve64Hex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(offCurveHex)),
+    );
+    await expect(fetchModelPublicKey('m')).rejects.toBeInstanceOf(ModelKeyValidationError);
+    expect(mockSetCachedAttestation).not.toHaveBeenCalled();
+  });
+
+  it('still accepts a valid secp256k1 raw (x, y) key', async () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+
+    const result = await fetchModelPublicKey('test-model');
+    expect(result.algo).toBe('ecdsa');
+    expect(result.publicKey).toBe(publicKeyHex);
+    expect(logger.captureException).not.toHaveBeenCalled();
   });
 
   it('throws when HTTP response is not ok (non-5xx, e.g. 403)', async () => {

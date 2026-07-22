@@ -213,6 +213,34 @@ describe('useCloudPersonaChat', () => {
         { timeout: 3000 },
       );
     });
+
+    it("first pass requests toolChoice 'auto' and a text-only reply is one round trip", async () => {
+      // Part 2h: first-pass tool choice relaxed 'required' → 'auto', so a
+      // conversational reply completes in ONE inference (no forced tool call +
+      // continuation).
+      mockCloudChatStream.mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Hi! How can I help?' },
+          { type: 'finish', reason: 'stop' },
+        ]),
+      );
+
+      const agent = makeAgent();
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+
+      await waitFor(
+        () => expect(result.current.status).toBe('idle'),
+        { timeout: 3000 },
+      );
+
+      expect(mockCloudChatStream).toHaveBeenCalledTimes(1);
+      const [firstArg] = mockCloudChatStream.mock.calls[0] as [{ toolChoice?: string }];
+      expect(firstArg.toolChoice).toBe('auto');
+    });
   });
 
   describe('tool call handling', () => {

@@ -283,6 +283,59 @@ describe('authFetch', () => {
     expect(result.status).toBe(200);
     expect(mockFetch).toHaveBeenCalledTimes(3);
   }, 10_000);
+
+  // ─── per-call options: chat timeout budget (Part 2e) ────────────────────────
+
+  it('retries 502 like other 5xx under default options', async () => {
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(200));
+    const result = await authFetch('https://test.test/api', { method: 'POST' });
+    expect(result.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  }, 10_000);
+
+  it('caps 502 attempts via maxTimeoutAttempts and surfaces the 502 (no storm)', async () => {
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(200)); // would succeed if it kept retrying
+    const result = await authFetch(
+      'https://test.test/api',
+      { method: 'POST' },
+      { maxTimeoutAttempts: 2 },
+    );
+    expect(result.status).toBe(502);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  }, 10_000);
+
+  it('caps client-timeout/network attempts via maxTimeoutAttempts', async () => {
+    const abortError = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    mockFetch
+      .mockRejectedValueOnce(abortError)
+      .mockRejectedValueOnce(abortError)
+      .mockResolvedValueOnce(makeResponse(200));
+    await expect(
+      authFetch('https://test.test/api', { method: 'POST' }, { maxTimeoutAttempts: 2 }),
+    ).rejects.toThrow(/aborted/);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  }, 10_000);
+
+  it('does NOT count 401 refresh against the timeout budget', async () => {
+    // 401 → refresh → then a 200. Even with a tight timeout cap, the 401 retry
+    // is unaffected (only 502/timeout count).
+    mockGetJwtToken.mockResolvedValue('jwt');
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(401))
+      .mockResolvedValueOnce(makeResponse(200));
+    const result = await authFetch(
+      'https://test.test/api',
+      { method: 'POST', headers: {} },
+      { maxTimeoutAttempts: 1 },
+    );
+    expect(result.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  }, 10_000);
 });
 
 // ─── cloudComplete ─────────────────────────────────────────────────────────────
@@ -438,6 +491,27 @@ describe('cloudComplete', () => {
       '[CloudLLM:complete] Token estimate',
       expect.objectContaining({ systemTokens: expect.any(Number) }),
     );
+  });
+
+  it('includes max_tokens when maxTokens is provided (used by the prewarm warmup)', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p', maxTokens: 1 });
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).max_tokens).toBe(1);
+  });
+
+  it('falls back to maxCompletionTokens for max_tokens when maxTokens absent', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p', maxCompletionTokens: 8 });
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).max_tokens).toBe(8);
+  });
+
+  it('omits max_tokens when neither is provided', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).max_tokens).toBeUndefined();
   });
 });
 
@@ -948,6 +1022,19 @@ describe('cloudChatStream', () => {
       collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
     ).rejects.toThrow(/no JWT token available/);
   });
+
+  it('caps 502 retries on the chat path (surfaces the gateway 502 without storming)', async () => {
+    // Chat passes maxTimeoutAttempts=2 → the 3rd fetch never happens; the 502 is
+    // surfaced as an E2EE chat failure instead of a multi-minute retry storm.
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(200));
+    await expect(
+      collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
+    ).rejects.toThrow(/E2EE chat failed: 502/);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  }, 10_000);
 
   it('sends tools and tool_choice when tools are provided', async () => {
     mockFetch.mockResolvedValueOnce(
