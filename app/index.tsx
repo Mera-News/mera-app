@@ -9,7 +9,7 @@ export default function Index() {
   if (isPending) {
     return (
       <Box className="flex-1 justify-center items-center bg-black">
-        <MeraLogo size={96} />
+        <MeraLogo size={96} animated />
       </Box>
     );
   }

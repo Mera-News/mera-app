@@ -235,7 +235,9 @@
     "noArticlesFound": "No articles found",
     "viewTopHeadlines": "Top headlines",
     "topHeadlines": "Top headlines",
-    "togglePin": "Toggle pin"
+    "togglePin": "Toggle pin",
+    "addToLocations": "Add to your places",
+    "addedToLocations": "Added to your places"
   },
   "tabs": {
     "deck": "Deck",
@@ -745,7 +747,8 @@
     "actionPinTopic": "Pin a topic",
     "actionUnpinTopic": "Unpin a topic",
     "actionRetireTopic": "Retire a topic",
-    "chooseOneHint": "Pick one option"
+    "chooseOneHint": "Pick one option",
+    "toggleLabels": "Show button labels"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publications you've been reading",
@@ -999,6 +1002,7 @@
     "searchPlaceholder": "Search for a city",
     "searchCountries": "Search countries",
     "noMatches": "No matching places found",
+    "searchUnavailable": "Search is unavailable right now — try again in a moment.",
     "addManuallyCta": "Can't find it? Add manually",
     "cityLabel": "City",
     "cityPlaceholder": "Enter a city name",

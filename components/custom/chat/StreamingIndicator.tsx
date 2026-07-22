@@ -115,7 +115,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false
 
     return (
         <View style={streamingIndicatorStyles.container}>
-            <MeraLogo size={48} />
+            <MeraLogo size={48} animated />
             {labelRow}
         </View>
     );

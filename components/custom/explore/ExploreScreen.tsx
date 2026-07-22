@@ -1,12 +1,14 @@
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
 import logger from '@/lib/logger';
-import { useFocusEffect } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -104,12 +106,21 @@ const ExploreScreen: React.FC = () => {
 
     return (
         <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
-                {/* Header — title only (the notification bell now lives solely on
-                    the Dashboard). */}
-                <HStack className="items-start justify-between px-5 mb-2">
-                    <Heading size="3xl" className="text-white" numberOfLines={1}>
+                {/* Header — title + a right-slot Sources button (mirrors the
+                    Dashboard's circular outline icon-button pattern). */}
+                <HStack className="items-center justify-between px-5 mb-2">
+                    <Heading size="3xl" className="text-white flex-shrink mr-3" numberOfLines={1}>
                         {t('explore.title')}
                     </Heading>
+                    <Pressable
+                        onPress={() => router.push('/logged-in/sources')}
+                        hitSlop={12}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('settings.sources')}
+                        className="p-3 rounded-full border border-primary-500 bg-transparent flex-shrink-0"
+                    >
+                        <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
+                    </Pressable>
                 </HStack>
 
                 {/* Scope chips */}

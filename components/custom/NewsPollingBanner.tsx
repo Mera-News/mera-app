@@ -34,7 +34,7 @@ export default function NewsPollingBanner() {
 
     return (
         <HStack className="items-center" space="sm">
-            <MeraLogo size={BANNER_HEIGHT} />
+            <MeraLogo size={BANNER_HEIGHT} animated />
             {isStage1Active && stage1AmberSubline ? (
                 <Text size="sm" className="text-amber-400">
                     {stage1AmberSubline}

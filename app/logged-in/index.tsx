@@ -78,7 +78,7 @@ export default function LoggedInIndex() {
     if (isSessionPending || isCheckingRoute) {
         return (
             <Box className="flex-1 justify-center items-center bg-black">
-                <MeraLogo size={96} />
+                <MeraLogo size={96} animated />
             </Box>
         );
     }
@@ -87,7 +87,7 @@ export default function LoggedInIndex() {
     if (shouldRedirect) {
         return (
             <Box className="flex-1 justify-center items-center bg-black">
-                <MeraLogo size={96} />
+                <MeraLogo size={96} animated />
             </Box>
         );
     }
@@ -100,7 +100,7 @@ export default function LoggedInIndex() {
     // Show spinner while redirecting
     return (
         <Box className="flex-1 justify-center items-center bg-black">
-            <MeraLogo size={96} />
+            <MeraLogo size={96} animated />
         </Box>
     );
 }

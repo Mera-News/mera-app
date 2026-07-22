@@ -312,7 +312,7 @@ const FloatingMeraBubble: React.FC<FloatingMeraBubbleProps> = ({ context, extraB
                     </>
                 )}
                 <View style={styles.bubble}>
-                    <MeraLogo size={56} />
+                    <MeraLogo size={56} animated />
                 </View>
                 {showHint && (
                     <Animated.View

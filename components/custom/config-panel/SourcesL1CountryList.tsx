@@ -7,12 +7,16 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import TopVisitedPublicationsCard from '@/components/custom/config-panel/TopVisitedPublicationsCard';
+import { alpha3ToAlpha2, weightForBucket } from '@/components/custom/locations/location-display';
 import { AccountService } from '@/lib/account-service';
 import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
+import { addUserLocation } from '@/lib/database/services/location-persona-actions';
+import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import {
     getTopVisitedPublications,
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
+import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { usePinnedCountriesStore } from '@/lib/stores/pinned-countries-store';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -41,10 +45,46 @@ const SourcesL1CountryList: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    // Set of alpha-2 country codes the user already keeps as a country-only
+    // 'interest' location (city null) — drives the +/check state on each row.
+    const [addedAlpha2, setAddedAlpha2] = useState<Set<string>>(new Set());
     const hasFetched = useRef(false);
     const pinnedCodes = usePinnedCountriesStore((s) => s.pinnedCodes);
     const togglePin = usePinnedCountriesStore((s) => s.togglePin);
     const hydratePinned = usePinnedCountriesStore((s) => s.hydrate);
+
+    // Reactive: which countries are already saved as interest locations.
+    useEffect(() => {
+        const sub = observeAllLocations().subscribe((rows) => {
+            const next = new Set<string>();
+            for (const l of rows) {
+                if (l.role === 'interest' && !l.city && l.countryCode) {
+                    next.add(l.countryCode.toUpperCase());
+                }
+            }
+            setAddedAlpha2(next);
+        });
+        return () => sub.unsubscribe();
+    }, []);
+
+    const handleAddCountry = useCallback((item: CountryItem) => {
+        const alpha2 = alpha3ToAlpha2(item.code);
+        if (!alpha2) return;
+        void hapticLight();
+        // Optimistic flip; the observe subscription reconciles the true state.
+        setAddedAlpha2((prev) => new Set(prev).add(alpha2.toUpperCase()));
+        addUserLocation({
+            countryCode: alpha2,
+            city: null,
+            region: null,
+            role: 'interest',
+            weight: weightForBucket('medium'),
+        }).catch((error) => {
+            logger.captureException(error, {
+                tags: { screen: 'SourcesL1CountryList', method: 'handleAddCountry' },
+            });
+        });
+    }, []);
 
     const loadCountries = useCallback(async () => {
         try {
@@ -132,9 +172,13 @@ const SourcesL1CountryList: React.FC = () => {
     );
 
     const renderItem: ListRenderItem<CountryItem> = useCallback(
-        ({ item }) => (
+        ({ item }) => {
+            const alpha2 = item.code === 'GLOBAL' ? null : alpha3ToAlpha2(item.code);
+            const isAdded = !!alpha2 && addedAlpha2.has(alpha2.toUpperCase());
+            return (
             // Outer Pressable opens the country's publishers; the inner "top
-            // headlines" Button is a separate touchable that fetches on tap.
+            // headlines" Button and "+ add location" button are separate
+            // touchables that act on tap.
             <Pressable
                 onPress={() => handleCountryPress(item)}
                 className="mx-4 mb-3 h-auto px-4 py-3 justify-start rounded-lg border border-gray-700"
@@ -163,6 +207,22 @@ const SourcesL1CountryList: React.FC = () => {
                         <Text className="text-base text-white">{item.name}</Text>
                     </HStack>
                     <HStack className="items-center" space="sm">
+                        {item.code === 'GLOBAL' ? null : (
+                            <Pressable
+                                onPress={() => handleAddCountry(item)}
+                                className="p-1"
+                                accessibilityRole="button"
+                                accessibilityLabel={t(
+                                    isAdded ? 'sources.addedToLocations' : 'sources.addToLocations',
+                                )}
+                            >
+                                <MaterialIcons
+                                    name={isAdded ? 'check-circle' : 'add-circle-outline'}
+                                    size={24}
+                                    color={isAdded ? '#4ade80' : '#EDA77E'}
+                                />
+                            </Pressable>
+                        )}
                         <Button
                             variant="outline"
                             size="xs"
@@ -179,8 +239,9 @@ const SourcesL1CountryList: React.FC = () => {
                     </HStack>
                 </HStack>
             </Pressable>
-        ),
-        [handleCountryPress, handleTopHeadlinesPress, togglePin, t]
+            );
+        },
+        [handleCountryPress, handleTopHeadlinesPress, handleAddCountry, togglePin, addedAlpha2, t]
     );
 
     const keyExtractor = useCallback((item: CountryItem) => item.code, []);

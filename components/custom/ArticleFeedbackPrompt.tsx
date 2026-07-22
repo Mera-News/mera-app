@@ -2,6 +2,8 @@
 // New card/feed code should use components/custom/cards/ArticleActionsRow (the
 // origin-aware universal actions row) instead of this widget.
 import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';
 import { Pressable } from '@/components/ui/pressable';
@@ -10,6 +12,7 @@ import {
     recordArticleFeedback,
     removeArticleFeedback,
 } from '@/lib/database/services/article-feedback-service';
+import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
@@ -60,6 +63,9 @@ const SELECTED_ICON = '#1a1a1a';
 const ICON_SIZE = 19;
 const BUTTON_SIZE = 45;
 
+// Settings-KV key for the "show button labels" toggle ('1' on / '0' off).
+const ACTION_LABELS_KEY = 'action_labels_enabled';
+
 /**
  * Prominent feedback widget rendered directly under the reason box on the
  * article detail screens. Single row of round, primary-orange-outlined
@@ -104,7 +110,34 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // can gate nodes + resolve leaf-action placeholders.
     const [overlayOpen, setOverlayOpen] = useState(false);
     const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({ articleTitle: title });
+    // "i" toggle — when ON each button shows its label as a caption. Persisted
+    // in settings-KV so the choice sticks across screens/sessions (default OFF).
+    const [labelsEnabled, setLabelsEnabled] = useState(false);
     const handleShare = useShareArticle(share);
+
+    // Hydrate the labels toggle from settings-KV on mount.
+    useEffect(() => {
+        let cancelled = false;
+        getSetting(ACTION_LABELS_KEY)
+            .then((v) => {
+                if (!cancelled && v === '1') setLabelsEnabled(true);
+            })
+            .catch(() => {
+                /* non-fatal — default to labels off */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const toggleLabels = useCallback(() => {
+        hapticLight();
+        setLabelsEnabled((prev) => {
+            const next = !prev;
+            void setSetting(ACTION_LABELS_KEY, next ? '1' : '0');
+            return next;
+        });
+    }, []);
 
     // Restore the "liked" acknowledgment across remounts (e.g. leaving and
     // reopening the article).
@@ -181,47 +214,64 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         void handleShare();
     }, [handleShare]);
 
+    // A single action button. `selected` fills it; when the labels toggle is on
+    // the button's label renders as a caption below it. Each button lives in a
+    // flex-1 cell so buttons stay evenly aligned with or without captions.
     const renderButton = (
         icon: React.ReactNode,
         label: string,
         onPress: () => void,
         selected: boolean,
     ) => (
-        <Pressable
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityLabel={label}
-            className="items-center justify-center rounded-full"
-            style={{
-                width: BUTTON_SIZE,
-                height: BUTTON_SIZE,
-                backgroundColor: selected ? PRIMARY : 'transparent',
-                borderWidth: 1.75,
-                borderColor: PRIMARY,
-            }}
-        >
-            {icon}
-        </Pressable>
-    );
-
-    return (
-        <>
-        <HStack className="items-center justify-evenly px-1 py-3">
+        <VStack className="flex-1 items-center" space="xs">
             <Pressable
-                onPress={handleChatPress}
+                onPress={onPress}
                 accessibilityRole="button"
-                accessibilityLabel="Mera"
+                accessibilityLabel={label}
                 className="items-center justify-center rounded-full"
                 style={{
                     width: BUTTON_SIZE,
                     height: BUTTON_SIZE,
-                    backgroundColor: 'transparent',
+                    backgroundColor: selected ? PRIMARY : 'transparent',
                     borderWidth: 1.75,
                     borderColor: PRIMARY,
                 }}
             >
-                <MeraLogo size={28} />
+                {icon}
             </Pressable>
+            {labelsEnabled ? (
+                <Text size="2xs" className="text-typography-400 text-center" numberOfLines={1}>
+                    {label}
+                </Text>
+            ) : null}
+        </VStack>
+    );
+
+    return (
+        <>
+        <HStack className="items-start px-1 py-3">
+            <VStack className="flex-1 items-center" space="xs">
+                <Pressable
+                    onPress={handleChatPress}
+                    accessibilityRole="button"
+                    accessibilityLabel="Mera"
+                    className="items-center justify-center rounded-full"
+                    style={{
+                        width: BUTTON_SIZE,
+                        height: BUTTON_SIZE,
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.75,
+                        borderColor: PRIMARY,
+                    }}
+                >
+                    <MeraLogo size={28} />
+                </Pressable>
+                {labelsEnabled ? (
+                    <Text size="2xs" className="text-typography-400 text-center" numberOfLines={1}>
+                        Mera
+                    </Text>
+                ) : null}
+            </VStack>
             {renderButton(
                 <MaterialIcons
                     name="thumb-up"
@@ -268,6 +318,28 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 handleSharePress,
                 false,
             ) : null}
+            {/* "i" toggle — filled when labels are shown; itself never captioned. */}
+            <VStack className="flex-1 items-center" space="xs">
+                <Pressable
+                    onPress={toggleLabels}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('articleFeedback.toggleLabels')}
+                    className="items-center justify-center rounded-full"
+                    style={{
+                        width: BUTTON_SIZE,
+                        height: BUTTON_SIZE,
+                        backgroundColor: labelsEnabled ? PRIMARY : 'transparent',
+                        borderWidth: 1.75,
+                        borderColor: PRIMARY,
+                    }}
+                >
+                    <MaterialIcons
+                        name="info-outline"
+                        size={ICON_SIZE}
+                        color={labelsEnabled ? SELECTED_ICON : PRIMARY}
+                    />
+                </Pressable>
+            </VStack>
         </HStack>
         <FeedbackTreeOverlay
             visible={overlayOpen}
