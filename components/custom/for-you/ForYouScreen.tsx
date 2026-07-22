@@ -11,7 +11,7 @@ import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
-import { buildFactRows, buildProvisionalRow } from '@/lib/stores/fact-rows-selector';
+import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -39,6 +39,7 @@ import {
     useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
@@ -135,14 +136,7 @@ const MeraNewsScreen: React.FC = () => {
 
     const lastProcessedLabel = useMemo(() => {
         if (!lastProcessingRunFinishedAt) return null;
-        const diffSec = Math.max(0, Math.floor((nowTick - lastProcessingRunFinishedAt) / 1000));
-        if (diffSec < 60) return t('feed.justNow');
-        const diffMin = Math.floor(diffSec / 60);
-        if (diffMin < 60) return t('feed.minutesAgo', { count: diffMin });
-        const diffHour = Math.floor(diffMin / 60);
-        if (diffHour < 24) return t('feed.hoursAgo', { count: diffHour });
-        const diffDay = Math.floor(diffHour / 24);
-        return t('feed.daysAgo', { count: diffDay });
+        return formatTimeAgo(t, lastProcessingRunFinishedAt, { now: nowTick });
     }, [lastProcessingRunFinishedAt, nowTick, t]);
 
     const isAnySyncActive =
@@ -206,22 +200,6 @@ const MeraNewsScreen: React.FC = () => {
     }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
-
-    // Provisional (pre-scoring) placeholder row — the Dashboard fallback while
-    // the REAL feed is empty (post-wipe / fresh install / ManageData clear), so
-    // the newest stories show within seconds instead of an empty screen. Only
-    // computed when there is no real content; swapped out wholesale the moment
-    // real rows/breaking exist. `hasRenderableContent` + the empty-feed watchdog
-    // stay keyed to the REAL selector output — `hasProvisional` is separate and
-    // gates ONLY the render branch, never the watchdog.
-    const provisionalRow = useMemo(
-        () =>
-            hasRenderableContent
-                ? null
-                : buildProvisionalRow(suggestions, openedIds, Date.now(), userGeoLanguageCtx),
-        [hasRenderableContent, suggestions, openedIds, userGeoLanguageCtx],
-    );
-    const displayRows = provisionalRow ? [provisionalRow] : feed.rows;
 
     // First arrival from onboarding: show waiting card if user has any facts.
     useEffect(() => {
@@ -378,7 +356,7 @@ const MeraNewsScreen: React.FC = () => {
                 <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
                     <DashboardSectionsFeed
                         breaking={feed.breaking}
-                        rows={displayRows}
+                        rows={feed.rows}
                         openedIds={openedIds}
                         onPressSuggestion={handleSuggestionPress}
                         scrollHandler={scrollHandler}

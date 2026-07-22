@@ -13,9 +13,8 @@ const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 interface FactSectionHeaderProps {
   /** `fact` rows show the "News about:" prefix + the fact title; `also` renders
-   *  the static "Also for you" string; `provisional` renders the static
-   *  "personalizing your feed" placeholder label and is never pressable. */
-  kind: 'fact' | 'also' | 'provisional';
+   *  the static "Also for you" string. */
+  kind: 'fact' | 'also';
   /** The fact's display title (fact rows only — ignored for `also`). */
   title: string;
   /** event_type of the row's top item — drives the icon prefix. */
@@ -35,9 +34,7 @@ interface FactSectionHeaderProps {
  * translated via TranslatableDynamic), an optional event-type icon, and — when
  * `onPress` is supplied — a chevron affordance whose tap opens the fact's full
  * feed (`FactFeedScreen`). The "Also for you" catch-all header renders just its
- * static title (no prefix / navigation). The `provisional` header renders the
- * static "personalizing your feed" placeholder label and is NEVER pressable
- * (there is no fact feed behind it).
+ * static title (no prefix / navigation).
  */
 const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
   kind,
@@ -49,11 +46,10 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
   const { t } = useTranslation();
 
   const isFact = kind === 'fact';
-  const isProvisional = kind === 'provisional';
   const icon = eventTypeIcon(eventType);
   // fact + "also" rows navigate into the section's full feed when `onPress` is
-  // supplied. The provisional placeholder header is never pressable.
-  const canPress = !isProvisional && !!onPress;
+  // supplied.
+  const canPress = !!onPress;
 
   const titleNode = isFact ? (
     <TranslatableDynamic
@@ -66,7 +62,7 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
     />
   ) : (
     <Text size="lg" bold numberOfLines={1} className="text-white">
-      {isProvisional ? t('feed.personalizingFeed') : t('forYou.alsoForYou')}
+      {t('forYou.alsoForYou')}
     </Text>
   );
 

@@ -4,6 +4,7 @@ import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { getArticleTranslatableStatus, getNativeLanguageName } from '@/lib/translation-service';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,30 +39,12 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
 
-    const formatAge = (dateString: string | null | undefined) => {
-        if (!dateString) return t('feed.justNow');
-        try {
-            const date = new Date(dateString);
-            const diffMs = Date.now() - date.getTime();
-            const mins = Math.floor(diffMs / 60000);
-            const hours = Math.floor(diffMs / 3600000);
-            const days = Math.floor(diffMs / 86400000);
-            if (mins < 1) return t('feed.justNow');
-            if (mins < 60) return t('feed.minutesAgo', { count: mins });
-            if (hours < 24) return t('feed.hoursAgo', { count: hours });
-            if (days < 7) return t('feed.daysAgo', { count: days });
-            return date.toLocaleDateString();
-        } catch {
-            return t('feed.justNow');
-        }
-    };
-
     const isCard = variant === 'card';
     const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
     const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
     const iconColor = isCard ? '#6B7280' : '#9CA3AF';
 
-    const age = formatAge(pubDate);
+    const age = formatTimeAgo(t, pubDate, { emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
     const language = getNativeLanguageName(languageCode) ?? '';
     const publication = publicationName ?? '';
 

@@ -32,15 +32,9 @@ import {
   isVisible,
   isBreaking,
   isSuggestionOpened,
-  isProvisionalCandidate,
 } from './fact-rows-selector';
 import { repPriorityTier, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from './for-you-store';
-
-/** Cap on the provisional (pre-scoring) feed list — enough to fill a few
- *  screens of newest stories while the first real scoring round-trip runs.
- *  See `buildProvisionalFeedList`. */
-export const PROVISIONAL_FEED_CAP = 30;
 
 /** Exponential-decay half-life (hours) for the recency term of `feedScore`. */
 export const FEED_HALF_LIFE_HOURS = 6;
@@ -70,10 +64,6 @@ export interface FeedListItem {
    *  clock) — captured once so list ordering doesn't drift mid-session as
    *  real time advances under the list. */
   score: number;
-  /** True only for items produced by `buildProvisionalFeedList` — the newest
-   *  in-window stories shown UNSCORED as a placeholder feed while the first
-   *  scoring round-trip runs. Absent/false for the real ranked list. */
-  provisional?: boolean;
 }
 
 interface GroupItem extends GroupableItem {
@@ -224,77 +214,4 @@ export function buildFeedList(
   // 4. Deterministic list order.
   list.sort(feedCompare);
   return list;
-}
-
-/**
- * Build a PROVISIONAL feed list from the live pool — the fallback the Feed tab
- * renders while the real ranked list (`buildFeedList`) is empty (post-wipe /
- * fresh install / ManageData clear), so the screen shows the newest stories
- * within seconds instead of an empty feed for tens of seconds to minutes.
- *
- * Pool = in-window rows minus discarded (`complete && relevance ≤ RENDER_GATE`)
- * minus excluded (opened ∪ viewed). Story-grouped + representative-picked the
- * same way as `buildFeedList` (so a given story fronts the same article), then
- * sorted newest-`firstPubDate`-first → id asc (there is no relevance to rank
- * on), capped at `cap`. Every item carries `score: 0, provisional: true`.
- *
- * Deliberately NOT wired inside `buildFeedList` — callers gate this fallback
- * (render it only when the real list is empty, and swap wholesale the instant
- * the real list is non-empty).
- *
- * @param suggestions the live `ForYouSuggestion` pool.
- * @param excludedIds article_id ∪ stable_cluster_id of every opened OR viewed
- *                    story.
- * @param nowMs       injected clock (deterministic testing).
- * @param cap         max items (default `PROVISIONAL_FEED_CAP`).
- * @param userCtx     geo/language context for tier-aware representative
- *                    election (see `makeRepCompare`); `null` = legacy pick.
- */
-export function buildProvisionalFeedList(
-  suggestions: ForYouSuggestion[],
-  excludedIds: Set<string>,
-  nowMs: number = Date.now(),
-  cap: number = PROVISIONAL_FEED_CAP,
-  userCtx: UserGeoLanguageContext | null = null,
-): FeedListItem[] {
-  const cutoffMs = nowMs - FEED_WINDOW_MS;
-  const repCompareForGroups = makeRepCompare(userCtx);
-
-  // 1. Provisional pool (in-window, minus discards) — INCLUDES unscored rows.
-  const pool = suggestions.filter((s) => isProvisionalCandidate(s, cutoffMs));
-  if (pool.length === 0) return [];
-
-  // 2. Story-group (same display thresholds as the real list).
-  const items: GroupItem[] = pool.map((s) => ({
-    id: s._id,
-    title: s.title_en ?? s.title_original ?? null,
-    clusters: s.clusters,
-    s,
-  }));
-  const groups = buildStoryGroups(items, {
-    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-  });
-
-  // 3. One representative per group; drop reps already excluded. No composite
-  //    score exists pre-scoring, so every item is `score: 0, provisional: true`.
-  const list: FeedListItem[] = [];
-  for (const g of groups) {
-    const rep = pickRepresentative(g, repCompareForGroups).s;
-    if (isSuggestionOpened(rep, excludedIds)) continue;
-    list.push({
-      id: rep.articleId,
-      suggestion: rep,
-      memberCount: g.length,
-      breaking: isBreaking(rep),
-      score: 0,
-      provisional: true,
-    });
-  }
-
-  // 4. Newest-first (feedCompare on a uniform 0 score reduces to firstPubDate
-  //    desc → id asc), then cap.
-  list.sort(feedCompare);
-  return list.slice(0, cap);
 }

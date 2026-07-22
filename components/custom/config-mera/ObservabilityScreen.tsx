@@ -10,6 +10,7 @@ import type Setting from '@/lib/database/models/Setting';
 import type { TaskProgress } from '@/lib/scheduler/scheduler-types';
 import schema from '@/lib/database/schema';
 import logger from '@/lib/logger';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -69,12 +70,7 @@ const INFERENCE_STATUSES = ['pending', 'running', 'done', 'failed'] as const;
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function relativeTime(ms: number | null | undefined, t: TFunction): string {
-    if (!ms) return t('observability.never');
-    const diff = Date.now() - ms;
-    if (diff < 60_000) return t('feed.justNow');
-    if (diff < 3_600_000) return t('feed.minutesAgo', { count: Math.floor(diff / 60_000) });
-    if (diff < 86_400_000) return t('feed.hoursAgo', { count: Math.floor(diff / 3_600_000) });
-    return t('feed.daysAgo', { count: Math.floor(diff / 86_400_000) });
+    return formatTimeAgo(t, ms, { emptyLabel: t('observability.never') });
 }
 
 function statusDotColor(status: string | null | undefined): string {

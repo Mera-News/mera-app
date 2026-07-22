@@ -16,10 +16,10 @@ import {
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { toastManager } from '@/lib/toast-manager';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { FlatList, View } from 'react-native';
 import { actionDisplay, isRevertible, sourceLabelKey } from './action-display';
 
@@ -29,18 +29,6 @@ const SUBTLE = 'rgb(163,163,163)';
 
 interface PersonaAuditScreenProps {
     readonly onBack: () => void;
-}
-
-/** "Just now" / "Nm ago" / "Nh ago" / "Nd ago" via shared feed.* i18n keys. */
-function formatRelativeAgo(timestamp: number, t: TFunction): string {
-    const diffMs = Date.now() - timestamp;
-    const mins = Math.max(0, Math.floor(diffMs / 60000));
-    if (mins < 1) return t('feed.justNow');
-    if (mins < 60) return t('feed.minutesAgo', { count: mins });
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('feed.hoursAgo', { count: hours });
-    const days = Math.floor(hours / 24);
-    return t('feed.daysAgo', { count: days });
 }
 
 const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
@@ -147,7 +135,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                                 </View>
                             ) : null}
                             <Text className="text-xs" style={{ color: MUTED }}>
-                                {formatRelativeAgo(item.createdAt.getTime(), t)}
+                                {formatTimeAgo(t, item.createdAt.getTime())}
                             </Text>
                         </HStack>
                     </VStack>

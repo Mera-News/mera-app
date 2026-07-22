@@ -20,11 +20,11 @@ import {
 } from '@/lib/database/services/tracked-story-service';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { FlatList, ListRenderItem } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,20 +34,6 @@ interface TrackedStoriesScreenProps {
     embedded?: boolean;
     /** Back handler for the non-embedded (route/deep-link) variant. */
     onBack?: () => void;
-}
-
-/** Milliseconds → localized "Xm ago" using the shared feed.* relative labels. */
-function formatRelative(t: TFunction, value: Date | number | null): string {
-    if (value == null) return '';
-    const ms = value instanceof Date ? value.getTime() : Number(value);
-    if (!Number.isFinite(ms) || ms <= 0) return '';
-    const diffSec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
-    if (diffSec < 60) return t('feed.justNow');
-    const min = Math.floor(diffSec / 60);
-    if (min < 60) return t('feed.minutesAgo', { count: min });
-    const hr = Math.floor(min / 60);
-    if (hr < 24) return t('feed.hoursAgo', { count: hr });
-    return t('feed.daysAgo', { count: Math.floor(hr / 24) });
 }
 
 /**
@@ -93,7 +79,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
             const latest = item.latestTitle;
             const showLatest = !!latest && latest.trim().length > 0 && latest !== headline;
             const unseen = item.unseenCount ?? 0;
-            const relative = formatRelative(t, item.lastUpdateAt ?? item.createdAt);
+            const relative = formatTimeAgo(t, item.lastUpdateAt ?? item.createdAt);
             return (
                 <Pressable
                     onPress={() => openTimeline(item)}

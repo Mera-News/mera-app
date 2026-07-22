@@ -10,28 +10,17 @@ import {
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
+import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 
 interface Props {
     readonly onBack: () => void;
 }
-
-const formatRelativeAgo = (timestamp: number, t: TFunction): string => {
-    const diffMs = Date.now() - timestamp;
-    const mins = Math.max(0, Math.floor(diffMs / 60000));
-    if (mins < 1) return t('feed.justNow');
-    if (mins < 60) return t('feed.minutesAgo', { count: mins });
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('feed.hoursAgo', { count: hours });
-    const days = Math.floor(hours / 24);
-    return t('feed.daysAgo', { count: days });
-};
 
 const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
     const { t } = useTranslation();
@@ -93,7 +82,7 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                             {item.publicationName}
                         </Text>
                         <Text size="xs" className="text-gray-400">
-                            {t('publicationVisits.lastRead', { time: formatRelativeAgo(item.lastVisitedAt, t) })}
+                            {t('publicationVisits.lastRead', { time: formatTimeAgo(t, item.lastVisitedAt) })}
                         </Text>
                     </VStack>
                     <Box className="px-2.5 py-1 rounded-full border border-white">

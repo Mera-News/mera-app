@@ -86,18 +86,14 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   const flatData = useMemo(() => {
     const data: FeedItem[] = [];
     for (const row of rows) {
-      // The provisional (pre-scoring) placeholder row has no fact feed behind
-      // it: no "+N new" badge, render ALL its cards inline, and no "View all"
-      // footer (which would navigate into a non-existent fact feed).
-      const isProvisional = row.kind === 'provisional';
-      const newCount = isProvisional ? 0 : countNewGroups(row.groups, visits[row.factId]);
+      const newCount = countNewGroups(row.groups, visits[row.factId]);
       data.push({ type: 'header', key: `h:${row.factId}`, row, newCount });
-      const previewGroups = isProvisional ? row.groups : selectTopGroups(row.groups);
+      const previewGroups = selectTopGroups(row.groups);
       for (const group of previewGroups) {
         data.push({ type: 'card', key: `c:${group.data._id}`, row, group });
       }
       // Footer only when there are more stories than the preview shows.
-      if (!isProvisional && row.groups.length > SECTION_PREVIEW_COUNT) {
+      if (row.groups.length > SECTION_PREVIEW_COUNT) {
         data.push({ type: 'footer', key: `f:${row.factId}`, row, total: row.groups.length });
       }
     }

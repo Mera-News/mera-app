@@ -54,10 +54,6 @@ export const RENDER_GATE = 0.3;
  *  are UUIDs, so this never collides. */
 export const ALSO_ROW_ID = 'also';
 
-/** Sentinel factId for the single provisional (pre-scoring) placeholder row —
- *  see `buildProvisionalRow`. Real factIds are UUIDs, so this never collides. */
-export const PROVISIONAL_ROW_ID = 'provisional';
-
 const BREAKING_EVENT_TYPES = new Set(['disaster', 'weather', 'conflict']);
 
 /** One breaking-strip entry (representative + collapsed members). Consumed by
@@ -90,10 +86,9 @@ export interface FactRowGroup {
 
 /** One fact row: a fact's stories laid out as a horizontal strip. */
 export interface FactRow {
-  /** Real factId, `ALSO_ROW_ID` for the catch-all, or `PROVISIONAL_ROW_ID` for
-   *  the pre-scoring placeholder row. */
+  /** Real factId, or `ALSO_ROW_ID` for the catch-all. */
   factId: string;
-  kind: 'fact' | 'also' | 'provisional';
+  kind: 'fact' | 'also';
   /** Display title (fact section-title for fact rows; unused for `also`, whose
    *  header renders a static i18n string). */
   statement: string;
@@ -103,11 +98,9 @@ export interface FactRow {
    *  though the Dashboard resort no longer keys on it. */
   latestAddedMs: number;
   /** Number of groups whose representative is NOT in the opened set — drives the
-   *  section-header unread badge. */
+   *  section-header unread badge AND the Dashboard section-order sort (unread
+   *  count desc). */
   unreadCount: number;
-  /** True when the row has an unread high-priority group — sorts these sections
-   *  first on the Dashboard. */
-  hasUnreadHighPriority: boolean;
   groups: FactRowGroup[];
 }
 
@@ -140,19 +133,6 @@ export function isVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
   if ((s.relevance ?? 0) <= RENDER_GATE) return false;
   const pub = parseMs(s.firstPubDate);
   return pub >= cutoffMs;
-}
-
-/** Provisional-pool membership: an in-window row that has NOT been discarded.
- *  A discard = a row that COMPLETED scoring but landed at/below the render gate
- *  (deliberately judged not-for-you). Unlike `isVisible`, this deliberately
- *  ADMITS unscored / reason_pending rows — that's the whole point of the
- *  provisional feed (`buildProvisionalRow` / `buildProvisionalFeedList`): show
- *  the newest stories before the first scoring round-trip finishes rather than
- *  an empty screen. */
-export function isProvisionalCandidate(s: ForYouSuggestion, cutoffMs: number): boolean {
-  if (parseMs(s.firstPubDate) < cutoffMs) return false;
-  if (s.status === ArticleSuggestionStatus.Complete && (s.relevance ?? 0) <= RENDER_GATE) return false;
-  return true;
 }
 
 /** scoredAt ?? createdAt in epoch ms — the row's "added to feed" time. */
@@ -339,7 +319,6 @@ export function buildFactRows(
           factStatement: snapshots.factStatements.get(factId) ?? null,
           latestAddedMs: 0,
           unreadCount: 0,
-          hasUnreadHighPriority: false,
           groups: [],
         };
         factRows.set(factId, row);
@@ -358,17 +337,15 @@ export function buildFactRows(
     row.groups.sort(cardCompare);
     row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
     row.unreadCount = row.groups.filter(isGroupUnread).length;
-    row.hasUnreadHighPriority = row.groups.some((g) => g.highPriority && isGroupUnread(g));
     rows.push(row);
   }
 
-  // Section order (Dashboard live resort): sections with an unread high-priority
-  // group first, then by group count desc, ties broken by factId asc for
-  // determinism. The "also" row is appended after this sort (always last).
+  // Section order (Dashboard live resort): unread count desc (a fully-read
+  // section sinks below any section with at least one unread story), then by
+  // group count desc, ties broken by factId asc for determinism. The "also"
+  // row is appended after this sort (always last).
   rows.sort((a, b) => {
-    if (a.hasUnreadHighPriority !== b.hasUnreadHighPriority) {
-      return a.hasUnreadHighPriority ? -1 : 1;
-    }
+    if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
     if (a.groups.length !== b.groups.length) return b.groups.length - a.groups.length;
     return a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0;
   });
@@ -383,98 +360,11 @@ export function buildFactRows(
       factStatement: null,
       latestAddedMs: alsoGroups.reduce((mx, g) => Math.max(mx, g.addedMs), 0),
       unreadCount: alsoGroups.filter(isGroupUnread).length,
-      hasUnreadHighPriority: alsoGroups.some((g) => g.highPriority && isGroupUnread(g)),
       groups: alsoGroups,
     });
   }
 
   return { breaking, rows };
-}
-
-/**
- * Build the single PROVISIONAL (pre-scoring) placeholder row — the fallback the
- * Dashboard renders while `buildFactRows` produces nothing (post-wipe / fresh
- * install / ManageData clear), so the feed shows the newest stories within
- * seconds instead of an empty screen. Returns `null` when the pool is empty.
- *
- * Pool = in-window rows minus discarded (`complete && relevance ≤ RENDER_GATE`)
- * minus excluded (opened/viewed) — the SAME rule as `buildProvisionalFeedList`,
- * and (unlike `buildFactRows`) it ADMITS unscored / reason_pending rows. There
- * is no ownership / breaking-extraction: every surviving story-group lands in
- * one `kind: 'provisional'` row (`bucket: 'UNSCORED'`), cards ordered
- * newest-`firstPubDate`-first. Callers render its header non-pressable with the
- * "personalizing" label and swap wholesale to the real feed once it exists.
- *
- * @param suggestions the live `ForYouSuggestion` pool.
- * @param excludedIds article_id ∪ stable_cluster_id of every opened/viewed story.
- * @param nowMs       injected clock (deterministic testing).
- * @param userCtx     geo/language context for tier-aware representative
- *                    election (see `makeRepCompare`); `null` = legacy pick.
- */
-export function buildProvisionalRow(
-  suggestions: ForYouSuggestion[],
-  excludedIds: Set<string> = new Set(),
-  nowMs: number = Date.now(),
-  userCtx: UserGeoLanguageContext | null = null,
-): FactRow | null {
-  const cutoffMs = nowMs - FEED_WINDOW_MS;
-  const repCompareForGroups = makeRepCompare(userCtx);
-
-  // 1. Provisional pool (in-window, minus discards) — INCLUDES unscored rows.
-  const pool = suggestions.filter((s) => isProvisionalCandidate(s, cutoffMs));
-  if (pool.length === 0) return null;
-
-  // 2. Story-group (same display thresholds as the real feed).
-  const items: GroupItem[] = pool.map((s) => ({
-    id: s._id,
-    title: s.title_en ?? s.title_original ?? null,
-    clusters: s.clusters,
-    s,
-  }));
-  const groups = buildStoryGroups(items, {
-    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
-    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
-    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
-  });
-
-  // 3. Collapse each group to a single UNSCORED card; drop reps already excluded.
-  const rowGroups: FactRowGroup[] = [];
-  for (const g of groups) {
-    const rep = pickRepresentative(g, repCompareForGroups).s;
-    if (isSuggestionOpened(rep, excludedIds)) continue;
-    const members = g.map((it) => it.s).filter((m) => m._id !== rep._id);
-    const all = [rep, ...members];
-    const pubDateMs = all.reduce((mx, m) => Math.max(mx, parseMs(m.firstPubDate)), 0);
-    const addedMs = all.reduce((mx, m) => Math.max(mx, addedMsOf(m)), 0);
-    rowGroups.push({
-      data: rep,
-      members,
-      rawScore: rep.rawScore,
-      bucket: 'UNSCORED',
-      pubDateMs,
-      addedMs,
-      createdAtMs: parseMs(rep.createdAt),
-      highPriority: false,
-    });
-  }
-  if (rowGroups.length === 0) return null;
-
-  // 4. Cards newest-`firstPubDate`-first (there is no score to rank on), id asc.
-  rowGroups.sort((a, b) => {
-    if (a.pubDateMs !== b.pubDateMs) return b.pubDateMs - a.pubDateMs;
-    return a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0;
-  });
-
-  return {
-    factId: PROVISIONAL_ROW_ID,
-    kind: 'provisional',
-    statement: PROVISIONAL_ROW_ID,
-    factStatement: null,
-    latestAddedMs: rowGroups.reduce((mx, g) => Math.max(mx, g.addedMs), 0),
-    unreadCount: rowGroups.length,
-    hasUnreadHighPriority: false,
-    groups: rowGroups,
-  };
 }
 
 /** Raw predicate behind `isSuggestionOpened`: true when `articleId` OR

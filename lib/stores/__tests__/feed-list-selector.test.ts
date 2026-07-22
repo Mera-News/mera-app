@@ -7,13 +7,11 @@
 
 import {
   buildFeedList,
-  buildProvisionalFeedList,
   feedCompare,
   feedScore,
   FEED_HALF_LIFE_HOURS,
   FEED_RECENCY_WEIGHT,
   FEED_BREAKING_RECENCY_BONUS,
-  PROVISIONAL_FEED_CAP,
   type FeedListItem,
 } from '../feed-list-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -314,87 +312,5 @@ describe('feedCompare', () => {
       suggestion: sugg({ _id: 'a', articleId: 'art-a', firstPubDate: new Date(NOW).toISOString() }),
     });
     expect([a, b].sort(feedCompare).map((c) => c.id)).toEqual(['art-a', 'art-z']);
-  });
-});
-
-describe('buildProvisionalFeedList', () => {
-  it('admits UNSCORED rows (which buildFeedList hides) and stamps score 0 + provisional:true', () => {
-    const u = sugg({ _id: 'u', status: ArticleSuggestionStatus.Unscored, relevance: 0 });
-    // buildFeedList's render gate hides it…
-    expect(buildFeedList([u], new Set(), NOW)).toEqual([]);
-    // …but the provisional list surfaces it.
-    const list = buildProvisionalFeedList([u], new Set(), NOW);
-    expect(list).toHaveLength(1);
-    expect(list[0].suggestion._id).toBe('u');
-    expect(list[0].score).toBe(0);
-    expect(list[0].provisional).toBe(true);
-  });
-
-  it('orders newest firstPubDate first, id ascending on a pubDate tie', () => {
-    const older = sugg({ _id: 'a', articleId: 'art-a', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - 3 * H).toISOString() });
-    const newer = sugg({ _id: 'b', articleId: 'art-b', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - H).toISOString() });
-    const tie = sugg({ _id: 'c', articleId: 'art-c', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - H).toISOString() });
-    const list = buildProvisionalFeedList([older, newer, tie], new Set(), NOW);
-    // newer & tie share pubDate → id asc (art-b before art-c); older last.
-    expect(list.map((c) => c.id)).toEqual(['art-b', 'art-c', 'art-a']);
-  });
-
-  it('drops out-of-window rows, keeps in-window unscored', () => {
-    const stale = sugg({ _id: 'old', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - 30 * H).toISOString() });
-    const fresh = sugg({ _id: 'ok', status: ArticleSuggestionStatus.Unscored, firstPubDate: new Date(NOW - H).toISOString() });
-    const list = buildProvisionalFeedList([stale, fresh], new Set(), NOW);
-    expect(list.map((c) => c.suggestion._id)).toEqual(['ok']);
-  });
-
-  it('drops discarded (complete && relevance ≤ gate) but keeps a sub-gate UNSCORED / reason_pending row', () => {
-    const discarded = sugg({ _id: 'disc', status: ArticleSuggestionStatus.Complete, relevance: 0.3 });
-    const unscoredLow = sugg({ _id: 'ulow', status: ArticleSuggestionStatus.Unscored, relevance: 0.1 });
-    const pending = sugg({ _id: 'pend', status: ArticleSuggestionStatus.ReasonPending, relevance: 0.1 });
-    const list = buildProvisionalFeedList([discarded, unscoredLow, pending], new Set(), NOW);
-    expect(list.map((c) => c.suggestion._id).sort()).toEqual(['pend', 'ulow']);
-  });
-
-  it('excludes opened ∪ viewed ids (by article id and stable cluster id)', () => {
-    const a = sugg({ _id: 'a', articleId: 'art-a', status: ArticleSuggestionStatus.Unscored });
-    const b = sugg({ _id: 'b', articleId: 'art-b', status: ArticleSuggestionStatus.Unscored, clusters: [cluster('story-x')] });
-    const c = sugg({ _id: 'c', articleId: 'art-c', status: ArticleSuggestionStatus.Unscored });
-    const list = buildProvisionalFeedList([a, b, c], new Set(['art-a', 'story-x']), NOW);
-    expect(list.map((x) => x.suggestion._id)).toEqual(['c']);
-  });
-
-  it('collapses a shared-stable-cluster story to one item with memberCount (dedup)', () => {
-    const a = sugg({ _id: 'a', status: ArticleSuggestionStatus.Unscored, clusters: [cluster('s1')], firstPubDate: new Date(NOW - 2 * H).toISOString() });
-    const b = sugg({ _id: 'b', status: ArticleSuggestionStatus.Unscored, clusters: [cluster('s1')], firstPubDate: new Date(NOW - H).toISOString() });
-    const list = buildProvisionalFeedList([a, b], new Set(), NOW);
-    expect(list).toHaveLength(1);
-    expect(list[0].memberCount).toBe(2);
-    expect(list[0].suggestion._id).toBe('b'); // newest fronts
-  });
-
-  it('caps the list at the requested cap, keeping the newest', () => {
-    const rows: ForYouSuggestion[] = [];
-    for (let i = 0; i < 5; i++) {
-      rows.push(
-        sugg({
-          _id: `r${i}`,
-          status: ArticleSuggestionStatus.Unscored,
-          firstPubDate: new Date(NOW - (i + 1) * H).toISOString(),
-        }),
-      );
-    }
-    const list = buildProvisionalFeedList(rows, new Set(), NOW, 2);
-    expect(list).toHaveLength(2);
-    // r0 = NOW-1H (newest), r1 = NOW-2H.
-    expect(list.map((c) => c.suggestion._id)).toEqual(['r0', 'r1']);
-  });
-
-  it('defaults the cap to PROVISIONAL_FEED_CAP (30)', () => {
-    expect(PROVISIONAL_FEED_CAP).toBe(30);
-  });
-
-  it('returns [] for an empty / all-discarded pool', () => {
-    expect(buildProvisionalFeedList([], new Set(), NOW)).toEqual([]);
-    const disc = sugg({ status: ArticleSuggestionStatus.Complete, relevance: 0.2 });
-    expect(buildProvisionalFeedList([disc], new Set(), NOW)).toEqual([]);
   });
 });
