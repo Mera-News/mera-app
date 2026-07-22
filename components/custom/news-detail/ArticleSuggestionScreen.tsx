@@ -45,6 +45,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { InteractionManager } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ArticleSuggestionScreenProps {
@@ -54,6 +55,12 @@ interface ArticleSuggestionScreenProps {
 }
 
 const SCROLL_THRESHOLD = 300;
+// The related-articles footer list renders unvirtualized (`.map`), so on
+// mount it's capped to a small initial window and grows as the user scrolls
+// near the bottom — keeps first-render cost bounded on stories with a large
+// related set.
+const INITIAL_RELATED_COUNT = 6;
+const RELATED_COUNT_INCREMENT = 10;
 
 // Map ArticleSummary → NewsArticle-shaped object for ArticleStandaloneCompactCard
 // (the existing card type works against NewsArticle fields). Hoisted to module
@@ -155,12 +162,27 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const suggestions = useForYouStore((s) => s.suggestions);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
 
+    // Defer the (potentially large) `buildStoryGroups` union-find over the
+    // entire suggestion pool until after the screen's mount interactions
+    // (navigation transition, first paint) have settled, so the header
+    // content renders immediately and the sibling-grouping work doesn't
+    // compete with the transition for the JS thread.
+    const [afterInteractions, setAfterInteractions] = useState(false);
+    useEffect(() => {
+        const handle = InteractionManager.runAfterInteractions(() => {
+            setAfterInteractions(true);
+        });
+        return () => handle.cancel();
+    }, []);
+
     // Locally-derived "More coverage" siblings: the user's other personalized
     // cards for the same story that the feed collapsed away. We deliberately
     // group over the ENTIRE store pool (not just feed-visible rows) so that
     // low-relevance or still-unscored coverage of the same story surfaces here.
+    // Withheld until `afterInteractions` (see effect above) — see downstream
+    // memos (`relatedEntries`) for the knock-on effect.
     const localSiblings = useMemo<ForYouSuggestion[]>(() => {
-        if (!suggestion) return [];
+        if (!afterInteractions || !suggestion) return [];
         // The DB-fallback-loaded row (deep link before hydration) may not be in
         // the store yet — include it so its group can form.
         const pool = suggestions.some((x) => x._id === suggestion._id)
@@ -183,7 +205,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         return (mine ?? [])
             .filter((m) => m.id !== suggestion._id)
             .map((m) => m.s);
-    }, [suggestions, suggestion]);
+    }, [afterInteractions, suggestions, suggestion]);
     const [isSaved, setIsSaved] = useState(false);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [isLoading, setIsLoading] = useState(!storeSuggestion);
@@ -241,6 +263,20 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const scrollToTop = useCallback(() => {
         scrollViewRef.current?.scrollToTop(true);
     }, []);
+
+    // Related-list lazy growth: start small, grow when the user scrolls near
+    // the bottom (SmoothScrollView's `onEndReached`, FlatList-like — fires
+    // once per approach, re-arms after scrolling back up).
+    const [visibleRelatedCount, setVisibleRelatedCount] = useState(INITIAL_RELATED_COUNT);
+    const handleRelatedEndReached = useCallback(() => {
+        setVisibleRelatedCount((prev) => prev + RELATED_COUNT_INCREMENT);
+    }, []);
+    // Reset the visible window when the underlying list identity changes
+    // (navigating to a different suggestion re-mounts nothing here since this
+    // screen instance is keyed per-route, but guard anyway for safety).
+    useEffect(() => {
+        setVisibleRelatedCount(INITIAL_RELATED_COUNT);
+    }, [suggestion?._id]);
 
     // Hydrate the suggestion from local DB if it wasn't already in the store
     // (e.g. deep-link from notification before store hydration completes).
@@ -438,6 +474,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 read={read}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
+                onEndReached={handleRelatedEndReached}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}
                 aboveReason={
@@ -498,13 +535,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             deduped by article id and ordered by the user's
                             language/country signals first. Local rows render
                             immediately; the spinner row is appended while the
-                            server join is still loading. */}
+                            server join is still loading. Renders unvirtualized
+                            (`.map`), so only a `visibleRelatedCount` window is
+                            shown initially and grows as the user scrolls near
+                            the bottom (see `handleRelatedEndReached`). */}
                         {(relatedEntries.length > 0 || isLoadingRelated) && (
                             <VStack space="md">
                                 <Heading size="md" className="text-gray-300">
                                     {t('articleDetail.relatedArticles')}
                                 </Heading>
-                                {relatedEntries.map((entry, index) => (
+                                {relatedEntries.slice(0, visibleRelatedCount).map((entry, index) => (
                                     <ArticleStandaloneCompactCard
                                         key={entry.id || `related-${index}`}
                                         article={entry.article}

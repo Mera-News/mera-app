@@ -26,13 +26,14 @@ const SectionViewAllRow: React.FC<SectionViewAllRowProps> = ({ total, onPress })
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={t('forYou.openFactFeed')}
-      className="mb-3 self-end px-1 py-1.5"
+      className="self-end mb-3 rounded-full border px-4 py-1.5"
+      style={{ borderColor: ACCENT, borderWidth: 1.25 }}
     >
       <HStack className="items-center" space="xs">
         <Text size="sm" style={{ color: ACCENT, fontWeight: '600' }}>
           {t('forYou.viewAllStories', { count: total })}
         </Text>
-        <MaterialIcons name="chevron-right" size={18} color={ACCENT} />
+        <MaterialIcons name="chevron-right" size={16} color={ACCENT} />
       </HStack>
     </Pressable>
   );

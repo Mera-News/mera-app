@@ -5,6 +5,7 @@
 // only difference is the `surface` tag passed at the call site.
 
 import { useCallback } from 'react';
+import { InteractionManager } from 'react-native';
 import { router } from 'expo-router';
 import { authClient } from '@/lib/auth-client';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
@@ -25,18 +26,6 @@ export function useOpenSuggestion(surface: ImpressionSurface) {
       const stableClusterId =
         suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null;
 
-      // Optimistically dim the story immediately.
-      useOpenedStoriesStore.getState().markOpened(suggestion.articleId, stableClusterId);
-
-      void recordOpen({
-        articleId: suggestion.articleId,
-        suggestionId: suggestion._id,
-        stableClusterId,
-        titleNorm:
-          (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
-        surface,
-      });
-
       const userPersonaId = useUserStore.getState().userPersona?._id || '';
       router.push({
         pathname: '/logged-in/suggestion-detail',
@@ -45,6 +34,23 @@ export function useOpenSuggestion(surface: ImpressionSurface) {
           userId: session?.user?.id || '',
           userPersonaId,
         },
+      });
+
+      // Defer the dim + impression bookkeeping past navigation so the
+      // synchronous markOpened (which triggers Dashboard's buildFactRows
+      // recompute + list re-renders) doesn't block the push and cause tap lag.
+      InteractionManager.runAfterInteractions(() => {
+        // Optimistically dim the story.
+        useOpenedStoriesStore.getState().markOpened(suggestion.articleId, stableClusterId);
+
+        void recordOpen({
+          articleId: suggestion.articleId,
+          suggestionId: suggestion._id,
+          stableClusterId,
+          titleNorm:
+            (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
+          surface,
+        });
       });
     },
     [surface, session?.user?.id],
