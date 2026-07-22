@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Actualizado {{time}}",
     "allCaughtUp": "Estás al día con todo lo que te afecta.",
-    "preparingFeed": "Estamos buscando y personalizando noticias recientes para ti — esto puede tardar un minuto.",
+    "preparingFeed": "Mera está preparando tu feed.",
     "preparingFeedExploreHint": "Mientras tanto, echa un vistazo a la pestaña Explorar para ver las noticias principales.",
-    "personalizingFeed": "Personalizando tu feed — se muestran las noticias más recientes mientras Mera las clasifica",
     "noInterests": "Mera no puede analizar noticias para ti",
     "noInterestsDescription": "Por favor, crea tu perfil de usuario para que Mera pueda empezar a generar noticias para ti.",
     "dashboardTitle": "Panel",
@@ -210,6 +209,9 @@
     "failedToLoad": "Error al cargar el artículo",
     "articleNotFound": "Artículo no encontrado",
     "readOn": "Leer en {{publication}}",
+    "translateAndRead": "Traducir y leer",
+    "translateAndReadOn": "Traducir y leer en {{publication}}",
+    "viewOriginal": "Ver original",
     "share": "Compartir",
     "shareVia": "Compartido a través de Mera News — noticias personalizadas para ti. Descarga la app: {{downloadUrl}}"
   },
@@ -232,11 +234,12 @@
     "viewTopHeadlines": "Titulares principales"
   },
   "clusterDetail": {
-    "translatable": "Este artículo está en {{language}} y puede traducirse a tu idioma",
-    "notTranslatable": "Este artículo está en {{language}} y puede que no se pueda traducir",
+    "translatable": "Este artículo está en {{language}} — tu dispositivo puede traducirlo mientras lees.",
+    "notTranslatable": "Este artículo está en {{language}}. La traducción en el dispositivo no está disponible para él — usa Google Traductor abajo para leerlo en tu idioma.",
     "unknownLanguage": "otro idioma",
     "translationGuideLink": "Muéstrame cómo traducir el artículo",
     "viewInGoogleTranslate": "Ver en Google Traductor",
+    "readViaGoogleTranslate": "Leer en tu idioma (Google Traductor)",
     "showOriginal": "Mostrar original",
     "showTranslation": "Mostrar traducción"
   },

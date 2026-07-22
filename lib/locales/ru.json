@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Обновлено {{time}}",
     "allCaughtUp": "Вы в курсе всего, что касается вас.",
-    "preparingFeed": "Свежие новости загружаются и подготавливаются специально для вас — это может занять минуту.",
+    "preparingFeed": "Mera готовит вашу ленту.",
     "preparingFeedExploreHint": "А пока загляните во вкладку «Обзор», чтобы увидеть главные новости.",
-    "personalizingFeed": "Персонализируем вашу ленту — сначала показываются самые новые статьи, пока Mera их ранжирует",
     "noInterests": "Mera не может анализировать новости для вас",
     "noInterestsDescription": "Создайте свой профиль пользователя, чтобы Mera начала подбирать для вас новости.",
     "dashboardTitle": "Дашборд",
@@ -214,6 +213,9 @@
     "failedToLoad": "Не удалось загрузить статью",
     "articleNotFound": "Статья не найдена",
     "readOn": "Читать на {{publication}}",
+    "translateAndReadOn": "Перевести и читать на {{publication}}",
+    "translateAndRead": "Перевести и читать",
+    "viewOriginal": "Показать оригинал",
     "share": "Поделиться",
     "shareVia": "Отправлено через Mera News — новости, подобранные специально для вас. Скачать приложение: {{downloadUrl}}"
   },
@@ -236,11 +238,12 @@
     "viewTopHeadlines": "Главные новости"
   },
   "clusterDetail": {
-    "translatable": "Эта статья на {{language}} и может быть переведена на ваш язык",
-    "notTranslatable": "Эта статья на {{language}} и может не поддерживать перевод",
+    "translatable": "Эта статья на {{language}} — ваше устройство может перевести её во время чтения.",
+    "notTranslatable": "Эта статья на {{language}}. Перевод на устройстве для неё недоступен — используйте Google Переводчик ниже, чтобы прочитать её на вашем языке.",
     "unknownLanguage": "другом языке",
     "translationGuideLink": "Показать, как перевести статью",
     "viewInGoogleTranslate": "Просмотреть в Google Переводчике",
+    "readViaGoogleTranslate": "Читать на вашем языке (Google Переводчик)",
     "showOriginal": "Показать оригинал",
     "showTranslation": "Показать перевод"
   },

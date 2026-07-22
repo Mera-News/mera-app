@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Bijgewerkt {{time}}",
     "allCaughtUp": "Je bent helemaal bij met wat voor jou relevant is.",
-    "preparingFeed": "Vers nieuws wordt opgehaald en voor je gepersonaliseerd — dit kan een minuutje duren.",
+    "preparingFeed": "Mera bereidt je feed voor.",
     "preparingFeedExploreHint": "Bekijk ondertussen het tabblad Verkennen voor de belangrijkste verhalen.",
-    "personalizingFeed": "Je feed wordt gepersonaliseerd — de nieuwste verhalen worden getoond terwijl Mera ze rangschikt",
     "noInterests": "Mera kan geen nieuws voor je analyseren",
     "noInterestsDescription": "Maak je gebruikersprofiel aan zodat Mera nieuws voor je kan genereren.",
     "dashboardTitle": "Dashboard",
@@ -210,6 +209,9 @@
     "failedToLoad": "Artikel laden mislukt",
     "articleNotFound": "Artikel niet gevonden",
     "readOn": "Lezen op {{publication}}",
+    "translateAndReadOn": "Vertalen & lezen op {{publication}}",
+    "translateAndRead": "Vertalen & lezen",
+    "viewOriginal": "Origineel bekijken",
     "share": "Delen",
     "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}"
   },
@@ -232,11 +234,12 @@
     "viewTopHeadlines": "Topnieuws"
   },
   "clusterDetail": {
-    "translatable": "Dit artikel is in {{language}} en kan naar jouw taal worden vertaald",
-    "notTranslatable": "Dit artikel is in {{language}} en kan mogelijk niet worden vertaald",
+    "translatable": "Dit artikel is in {{language}} — je apparaat kan het vertalen terwijl je leest.",
+    "notTranslatable": "Dit artikel is in {{language}}. Vertaling op het apparaat is hiervoor niet beschikbaar — gebruik Google Translate hieronder om het in jouw taal te lezen.",
     "unknownLanguage": "een andere taal",
     "translationGuideLink": "Laat me zien hoe ik het artikel kan vertalen",
     "viewInGoogleTranslate": "Bekijken in Google Translate",
+    "readViaGoogleTranslate": "Lees in jouw taal (Google Translate)",
     "showOriginal": "Origineel tonen",
     "showTranslation": "Vertaling tonen"
   },

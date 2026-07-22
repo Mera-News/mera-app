@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Mis à jour {{time}}",
     "allCaughtUp": "Vous êtes à jour avec ce qui vous concerne.",
-    "preparingFeed": "Les dernières actualités sont récupérées et personnalisées pour vous — cela peut prendre une minute.",
+    "preparingFeed": "Mera prépare votre fil.",
     "preparingFeedExploreHint": "En attendant, consultez l'onglet Explorer pour découvrir les principales actualités.",
-    "personalizingFeed": "Personnalisation de votre fil — les actualités les plus récentes sont affichées pendant que Mera les classe",
     "noInterests": "Mera ne peut pas analyser les actualités pour vous",
     "noInterestsDescription": "Veuillez créer votre profil utilisateur pour que Mera commence à générer des actualités pour vous.",
     "dashboardTitle": "Tableau de bord",
@@ -210,6 +209,9 @@
     "failedToLoad": "Impossible de charger l'article",
     "articleNotFound": "Article introuvable",
     "readOn": "Lire sur {{publication}}",
+    "translateAndRead": "Traduire et lire",
+    "translateAndReadOn": "Traduire et lire sur {{publication}}",
+    "viewOriginal": "Afficher l'original",
     "share": "Partager",
     "shareVia": "Partagé via Mera News — l'actualité personnalisée pour vous. Téléchargez l'application : {{downloadUrl}}"
   },
@@ -232,11 +234,12 @@
     "viewTopHeadlines": "À la une"
   },
   "clusterDetail": {
-    "translatable": "Cet article est en {{language}} et peut être traduit dans votre langue",
-    "notTranslatable": "Cet article est en {{language}} et pourrait ne pas être traduit",
+    "translatable": "Cet article est en {{language}} — votre appareil peut le traduire pendant que vous lisez.",
+    "notTranslatable": "Cet article est en {{language}}. La traduction sur l'appareil n'est pas disponible pour celui-ci — utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
     "unknownLanguage": "une autre langue",
     "translationGuideLink": "Montrez-moi comment traduire l'article",
     "viewInGoogleTranslate": "Voir dans Google Traduction",
+    "readViaGoogleTranslate": "Lire dans votre langue (Google Traduction)",
     "showOriginal": "Afficher l'original",
     "showTranslation": "Afficher la traduction"
   },

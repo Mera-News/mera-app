@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "अपडेट हुआ {{time}}",
     "allCaughtUp": "आप अपने लिए महत्वपूर्ण सभी समाचारों से अवगत हैं।",
-    "preparingFeed": "आपके लिए ताज़ी खबरें लाई और वैयक्तिकृत की जा रही हैं — इसमें एक मिनट लग सकता है।",
+    "preparingFeed": "Mera आपकी फ़ीड तैयार कर रहा है।",
     "preparingFeedExploreHint": "इस बीच, शीर्ष खबरों के लिए एक्सप्लोर टैब देखें।",
-    "personalizingFeed": "आपकी फ़ीड को वैयक्तिकृत किया जा रहा है — जब तक Mera उन्हें रैंक करता है, तब तक नवीनतम खबरें दिखाई जा रही हैं",
     "noInterests": "Mera आपके लिए समाचारों का विश्लेषण नहीं कर सकता",
     "noInterestsDescription": "कृपया अपना उपयोगकर्ता प्रोफ़ाइल बनाएं ताकि Mera आपके लिए समाचार तैयार करना शुरू कर सके।",
     "dashboardTitle": "डैशबोर्ड",
@@ -210,6 +209,9 @@
     "failedToLoad": "लेख लोड करने में विफल",
     "articleNotFound": "लेख नहीं मिला",
     "readOn": "{{publication}} पर पढ़ें",
+    "translateAndRead": "अनुवाद करें और पढ़ें",
+    "translateAndReadOn": "अनुवाद करें और {{publication}} पर पढ़ें",
+    "viewOriginal": "मूल देखें",
     "share": "साझा करें",
     "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}"
   },
@@ -232,11 +234,12 @@
     "viewTopHeadlines": "मुख्य सुर्खियाँ"
   },
   "clusterDetail": {
-    "translatable": "यह लेख {{language}} में है और आपकी भाषा में अनुवादित हो सकता है",
-    "notTranslatable": "यह लेख {{language}} में है और इसे अनुवादित नहीं किया जा सकता",
+    "translatable": "यह लेख {{language}} में है — पढ़ते समय आपका डिवाइस इसे अनुवादित कर सकता है।",
+    "notTranslatable": "यह लेख {{language}} में है। इसके लिए ऑन-डिवाइस अनुवाद उपलब्ध नहीं है — इसे अपनी भाषा में पढ़ने के लिए नीचे Google अनुवाद का उपयोग करें।",
     "unknownLanguage": "कोई अन्य भाषा",
     "translationGuideLink": "मुझे लेख अनुवाद करने का तरीका बताएं",
     "viewInGoogleTranslate": "Google अनुवाद में देखें",
+    "readViaGoogleTranslate": "अपनी भाषा में पढ़ें (Google अनुवाद)",
     "showOriginal": "मूल दिखाएं",
     "showTranslation": "अनुवाद दिखाएं"
   },

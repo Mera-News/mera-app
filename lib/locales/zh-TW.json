@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "更新於 {{time}}",
     "allCaughtUp": "您已瀏覽完所有與您相關的新聞。",
-    "preparingFeed": "正在為您擷取並個人化最新資訊 — 這可能需要一分鐘。",
+    "preparingFeed": "Mera 正在為您準備動態。",
     "preparingFeedExploreHint": "與此同時，可前往「探索」標籤頁查看熱門報導。",
-    "personalizingFeed": "正在為您個人化資訊 — Mera 排序期間，將先顯示最新報導",
     "noInterests": "Mera 無法為您分析新聞",
     "noInterestsDescription": "請建立您的使用者人物誌，讓 Mera 開始為您產生新聞。",
     "dashboardTitle": "儀表板",
@@ -208,6 +207,9 @@
     "failedToLoad": "文章載入失敗",
     "articleNotFound": "找不到文章",
     "readOn": "在 {{publication}} 上閱讀",
+    "translateAndReadOn": "翻譯並在 {{publication}} 上閱讀",
+    "translateAndRead": "翻譯並閱讀",
+    "viewOriginal": "檢視原文",
     "share": "分享",
     "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}"
   },
@@ -230,11 +232,12 @@
     "viewTopHeadlines": "頭條新聞"
   },
   "clusterDetail": {
-    "translatable": "這篇文章是 {{language}} 的，可以翻譯成您的語言",
-    "notTranslatable": "此文章為 {{language}} 語言，可能無法翻譯",
+    "translatable": "這篇文章是{{language}}的 — 您的裝置可以在您閱讀時為您翻譯。",
+    "notTranslatable": "這篇文章是{{language}}的。裝置端翻譯不支援此語言 — 請使用下方的 Google 翻譯以您的語言閱讀。",
     "unknownLanguage": "另一種語言",
     "translationGuideLink": "告訴我如何翻譯這篇文章",
     "viewInGoogleTranslate": "在 Google 翻譯中查看",
+    "readViaGoogleTranslate": "以您的語言閱讀（Google 翻譯）",
     "showOriginal": "顯示原文",
     "showTranslation": "顯示譯文"
   },

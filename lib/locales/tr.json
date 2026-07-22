@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "{{time}} güncellendi",
     "allCaughtUp": "Seni etkileyen tüm haberleri okudun.",
-    "preparingFeed": "Senin için taze haberler getiriliyor ve kişiselleştiriliyor — bu bir dakika sürebilir.",
+    "preparingFeed": "Mera haber akışını hazırlıyor.",
     "preparingFeedExploreHint": "Bu arada, öne çıkan haberler için Keşfet sekmesine göz at.",
-    "personalizingFeed": "Akışın kişiselleştiriliyor — Mera sıralarken en yeni haberler gösteriliyor",
     "noInterests": "Mera senin için haberleri analiz edemiyor",
     "noInterestsDescription": "Mera'nın sana haber üretmeye başlaması için lütfen kullanıcı profilini oluştur.",
     "dashboardTitle": "Panel",
@@ -210,6 +209,9 @@
     "failedToLoad": "Makale yüklenemedi",
     "articleNotFound": "Makale bulunamadı",
     "readOn": "{{publication}} üzerinde oku",
+    "translateAndReadOn": "Çevir ve {{publication}} üzerinde oku",
+    "translateAndRead": "Çevir ve oku",
+    "viewOriginal": "Orijinali görüntüle",
     "share": "Paylaş",
     "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}"
   },
@@ -232,11 +234,12 @@
     "viewTopHeadlines": "Öne çıkan başlıklar"
   },
   "clusterDetail": {
-    "translatable": "Bu makale {{language}} dilinde ve senin diline çevrilebilir",
-    "notTranslatable": "Bu makale {{language}} dilindedir ve çevrilemeyebilir",
+    "translatable": "Bu makale {{language}} dilinde — okurken cihazın çevirebilir.",
+    "notTranslatable": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri bunun için kullanılamıyor — kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
     "unknownLanguage": "başka bir dil",
     "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
     "viewInGoogleTranslate": "Google Çeviri'de görüntüle",
+    "readViaGoogleTranslate": "Kendi dilinde oku (Google Çeviri)",
     "showOriginal": "Orijinali göster",
     "showTranslation": "Çeviriyi göster"
   },

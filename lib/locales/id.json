@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Diperbarui {{time}}",
     "allCaughtUp": "Anda sudah membaca semua berita yang relevan untuk Anda.",
-    "preparingFeed": "Berita terbaru sedang diambil dan dipersonalisasi untuk Anda — ini bisa memakan waktu beberapa saat.",
+    "preparingFeed": "Mera sedang menyiapkan feed Anda.",
     "preparingFeedExploreHint": "Sementara itu, lihat tab Eksplor untuk berita utama.",
-    "personalizingFeed": "Mempersonalisasi feed Anda — berita terbaru ditampilkan selagi Mera mengurutkannya",
     "noInterests": "Mera tidak dapat menganalisis berita untuk Anda",
     "noInterestsDescription": "Silakan buat persona pengguna Anda agar Mera dapat mulai menghasilkan berita untuk Anda.",
     "dashboardTitle": "Dasbor",
@@ -208,6 +207,9 @@
     "failedToLoad": "Gagal memuat artikel",
     "articleNotFound": "Artikel tidak ditemukan",
     "readOn": "Baca di {{publication}}",
+    "translateAndReadOn": "Terjemahkan & Baca di {{publication}}",
+    "translateAndRead": "Terjemahkan & Baca",
+    "viewOriginal": "Lihat asli",
     "share": "Bagikan",
     "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}"
   },
@@ -230,11 +232,12 @@
     "viewTopHeadlines": "Berita utama"
   },
   "clusterDetail": {
-    "translatable": "Artikel ini dalam bahasa {{language}} dan dapat diterjemahkan ke bahasa Anda",
-    "notTranslatable": "Artikel ini dalam bahasa {{language}} dan mungkin tidak dapat diterjemahkan",
+    "translatable": "Artikel ini dalam bahasa {{language}} — perangkat Anda dapat menerjemahkannya saat Anda membaca.",
+    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat tidak tersedia untuk artikel ini — gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
     "unknownLanguage": "bahasa lain",
     "translationGuideLink": "Tunjukkan cara menerjemahkan artikel",
     "viewInGoogleTranslate": "Lihat di Google Terjemahan",
+    "readViaGoogleTranslate": "Baca dalam bahasa Anda (Google Terjemahan)",
     "showOriginal": "Tampilkan asli",
     "showTranslation": "Tampilkan terjemahan"
   },

@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "更新于 {{time}}",
     "allCaughtUp": "您已浏览完所有与您相关的新闻。",
-    "preparingFeed": "正在为您获取并个性化最新资讯 — 这可能需要一分钟。",
+    "preparingFeed": "Mera 正在为您准备资讯。",
     "preparingFeedExploreHint": "与此同时，可前往「探索」标签页查看热门报道。",
-    "personalizingFeed": "正在为您个性化资讯 — Mera 排序期间，将先显示最新报道",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
     "dashboardTitle": "仪表盘",
@@ -208,6 +207,9 @@
     "failedToLoad": "文章加载失败",
     "articleNotFound": "文章未找到",
     "readOn": "在 {{publication}} 上阅读",
+    "translateAndReadOn": "翻译并在 {{publication}} 上阅读",
+    "translateAndRead": "翻译并阅读",
+    "viewOriginal": "查看原文",
     "share": "分享",
     "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}"
   },
@@ -230,11 +232,12 @@
     "viewTopHeadlines": "头条新闻"
   },
   "clusterDetail": {
-    "translatable": "这篇文章是{{language}}的，可以翻译成您的语言",
-    "notTranslatable": "此文章为 {{language}} 语言，可能无法翻译",
+    "translatable": "这篇文章是{{language}}的 — 您的设备可以在您阅读时为您翻译。",
+    "notTranslatable": "这篇文章是{{language}}的。设备端翻译不支持该语言 — 请使用下方的 Google 翻译以您的语言阅读。",
     "unknownLanguage": "其他语言",
     "translationGuideLink": "告诉我如何翻译这篇文章",
     "viewInGoogleTranslate": "在 Google 翻译中查看",
+    "readViaGoogleTranslate": "以您的语言阅读（Google 翻译）",
     "showOriginal": "显示原文",
     "showTranslation": "显示译文"
   },

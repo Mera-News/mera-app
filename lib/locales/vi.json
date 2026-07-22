@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Cập nhật lúc {{time}}",
     "allCaughtUp": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
-    "preparingFeed": "Các tin tức mới đang được tìm và cá nhân hóa cho bạn — quá trình này có thể mất một phút.",
+    "preparingFeed": "Mera đang chuẩn bị bảng tin của bạn.",
     "preparingFeedExploreHint": "Trong lúc chờ, hãy xem tab Khám phá để biết những tin tức hàng đầu.",
-    "personalizingFeed": "Đang cá nhân hóa bảng tin của bạn — các tin mới nhất được hiển thị trong khi Mera xếp hạng chúng",
     "noInterests": "Mera không thể phân tích tin tức cho bạn",
     "noInterestsDescription": "Vui lòng tạo hồ sơ người dùng để Mera bắt đầu tạo tin tức cho bạn.",
     "dashboardTitle": "Bảng điều khiển",
@@ -208,6 +207,9 @@
     "failedToLoad": "Không thể tải bài viết",
     "articleNotFound": "Không tìm thấy bài viết",
     "readOn": "Đọc trên {{publication}}",
+    "translateAndReadOn": "Dịch & Đọc trên {{publication}}",
+    "translateAndRead": "Dịch & Đọc",
+    "viewOriginal": "Xem bản gốc",
     "share": "Chia sẻ",
     "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}"
   },
@@ -230,11 +232,12 @@
     "viewTopHeadlines": "Tin nổi bật"
   },
   "clusterDetail": {
-    "translatable": "Bài viết này bằng {{language}} và có thể được dịch sang ngôn ngữ của bạn",
-    "notTranslatable": "Bài viết này bằng {{language}} và có thể không được dịch",
+    "translatable": "Bài viết này bằng {{language}} — thiết bị của bạn có thể dịch trong khi bạn đọc.",
+    "notTranslatable": "Bài viết này bằng {{language}}. Không có bản dịch trên thiết bị cho ngôn ngữ này — hãy dùng Google Dịch bên dưới để đọc bằng ngôn ngữ của bạn.",
     "unknownLanguage": "ngôn ngữ khác",
     "translationGuideLink": "Hướng dẫn tôi cách dịch bài viết",
     "viewInGoogleTranslate": "Xem trong Google Dịch",
+    "readViaGoogleTranslate": "Đọc bằng ngôn ngữ của bạn (Google Dịch)",
     "showOriginal": "Hiển thị bản gốc",
     "showTranslation": "Hiển thị bản dịch"
   },

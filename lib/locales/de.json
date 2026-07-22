@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Aktualisiert {{time}}",
     "allCaughtUp": "Sie sind auf dem neuesten Stand mit allem, was Sie betrifft.",
-    "preparingFeed": "Aktuelle Nachrichten werden für Sie abgerufen und personalisiert — das kann eine Minute dauern.",
+    "preparingFeed": "Mera bereitet Ihren Feed vor.",
     "preparingFeedExploreHint": "Schauen Sie in der Zwischenzeit im Tab „Entdecken“ nach den Top-Nachrichten vorbei.",
-    "personalizingFeed": "Ihr Feed wird personalisiert — die neuesten Nachrichten werden angezeigt, während Mera sie einordnet",
     "noInterests": "Mera kann keine Nachrichten für Sie analysieren",
     "noInterestsDescription": "Bitte erstellen Sie Ihre Benutzerpersona, damit Mera Nachrichten für Sie generieren kann.",
     "dashboardTitle": "Dashboard",
@@ -210,6 +209,9 @@
     "failedToLoad": "Artikel konnte nicht geladen werden",
     "articleNotFound": "Artikel nicht gefunden",
     "readOn": "Auf {{publication}} lesen",
+    "translateAndRead": "Übersetzen & lesen",
+    "translateAndReadOn": "Übersetzen & auf {{publication}} lesen",
+    "viewOriginal": "Original anzeigen",
     "share": "Teilen",
     "shareVia": "Geteilt über Mera News — Nachrichten, die auf dich zugeschnitten sind. Lade die App herunter: {{downloadUrl}}"
   },
@@ -232,11 +234,12 @@
     "viewTopHeadlines": "Top-Schlagzeilen"
   },
   "clusterDetail": {
-    "translatable": "Dieser Artikel ist auf {{language}} und kann in Ihre Sprache übersetzt werden",
-    "notTranslatable": "Dieser Artikel ist auf {{language}} und kann möglicherweise nicht übersetzt werden",
+    "translatable": "Dieser Artikel ist auf {{language}} — Ihr Gerät kann ihn während des Lesens übersetzen.",
+    "notTranslatable": "Dieser Artikel ist auf {{language}}. Die Übersetzung auf dem Gerät ist dafür nicht verfügbar — verwenden Sie unten Google Übersetzer, um ihn in Ihrer Sprache zu lesen.",
     "unknownLanguage": "einer anderen Sprache",
     "translationGuideLink": "Zeig mir, wie ich den Artikel übersetze",
     "viewInGoogleTranslate": "In Google Übersetzer ansehen",
+    "readViaGoogleTranslate": "In Ihrer Sprache lesen (Google Übersetzer)",
     "showOriginal": "Original anzeigen",
     "showTranslation": "Übersetzung anzeigen"
   },

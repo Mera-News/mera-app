@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "อัปเดตเมื่อ {{time}}",
     "allCaughtUp": "คุณอัปเดตข่าวที่เกี่ยวข้องกับคุณครบแล้ว",
-    "preparingFeed": "กำลังดึงข่าวใหม่ล่าสุดและปรับให้เหมาะกับคุณอยู่ — อาจใช้เวลาสักครู่",
+    "preparingFeed": "Mera กำลังเตรียมฟีดของคุณ",
     "preparingFeedExploreHint": "ระหว่างนี้ ลองดูแท็บสำรวจเพื่อดูข่าวเด่นได้เลย",
-    "personalizingFeed": "กำลังปรับฟีดของคุณให้เหมาะสม — แสดงข่าวล่าสุดไปก่อนระหว่างที่ Mera กำลังจัดอันดับ",
     "noInterests": "Mera ไม่สามารถวิเคราะห์ข่าวให้คุณได้",
     "noInterestsDescription": "กรุณาสร้างโปรไฟล์ผู้ใช้ของคุณเพื่อให้ Mera เริ่มสร้างข่าวสำหรับคุณ",
     "dashboardTitle": "แดชบอร์ด",
@@ -208,6 +207,9 @@
     "failedToLoad": "โหลดบทความไม่สำเร็จ",
     "articleNotFound": "ไม่พบบทความ",
     "readOn": "อ่านต่อที่ {{publication}}",
+    "translateAndReadOn": "แปลและอ่านที่ {{publication}}",
+    "translateAndRead": "แปลและอ่าน",
+    "viewOriginal": "ดูต้นฉบับ",
     "share": "แชร์",
     "shareVia": "แชร์ผ่าน Mera News — ข่าวที่คัดสรรมาเพื่อคุณโดยเฉพาะ ดาวน์โหลดแอปได้ที่: {{downloadUrl}}"
   },
@@ -230,11 +232,12 @@
     "viewTopHeadlines": "พาดหัวข่าวเด่น"
   },
   "clusterDetail": {
-    "translatable": "บทความนี้อยู่ในภาษา {{language}} และสามารถแปลเป็นภาษาของคุณได้",
-    "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} และอาจไม่สามารถแปลได้",
+    "translatable": "บทความนี้อยู่ในภาษา {{language}} — อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน",
+    "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} การแปลบนอุปกรณ์ไม่พร้อมใช้งานสำหรับบทความนี้ — ใช้ Google แปลภาษาด้านล่างเพื่ออ่านเป็นภาษาของคุณ",
     "unknownLanguage": "ภาษาอื่น",
     "translationGuideLink": "แสดงวิธีแปลบทความ",
     "viewInGoogleTranslate": "ดูใน Google แปลภาษา",
+    "readViaGoogleTranslate": "อ่านเป็นภาษาของคุณ (Google แปลภาษา)",
     "showOriginal": "แสดงต้นฉบับ",
     "showTranslation": "แสดงคำแปล"
   },

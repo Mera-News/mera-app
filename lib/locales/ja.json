@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "{{time}}に更新",
     "allCaughtUp": "あなたに影響するすべてのニュースを確認しました。",
-    "preparingFeed": "最新のニュースを取得し、あなたのためにパーソナライズしています — 少し時間がかかる場合があります。",
+    "preparingFeed": "Meraがあなたのフィードを準備しています。",
     "preparingFeedExploreHint": "その間、注目のニュースは探索タブでご覧いただけます。",
-    "personalizingFeed": "フィードをパーソナライズ中 — Meraがランク付けする間、最新の記事を表示しています",
     "noInterests": "Meraはあなたのためにニュースを分析できません",
     "noInterestsDescription": "Meraがニュースの生成を開始するには、ユーザーペルソナを作成してください。",
     "dashboardTitle": "ダッシュボード",
@@ -208,6 +207,9 @@
     "failedToLoad": "記事の読み込みに失敗しました",
     "articleNotFound": "記事が見つかりません",
     "readOn": "{{publication}}で読む",
+    "translateAndReadOn": "翻訳して{{publication}}で読む",
+    "translateAndRead": "翻訳して読む",
+    "viewOriginal": "原文を表示",
     "share": "共有",
     "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}"
   },
@@ -230,11 +232,12 @@
     "viewTopHeadlines": "トップニュース"
   },
   "clusterDetail": {
-    "translatable": "この記事は{{language}}で書かれており、あなたの言語に翻訳できます",
-    "notTranslatable": "この記事は{{language}}で書かれており、翻訳できない場合があります",
+    "translatable": "この記事は{{language}}で書かれています — 読んでいる間、端末が翻訳できます。",
+    "notTranslatable": "この記事は{{language}}で書かれています。この記事にはオンデバイス翻訳を利用できません — 下のGoogle 翻訳を使ってあなたの言語で読んでください。",
     "unknownLanguage": "別の言語",
     "translationGuideLink": "記事の翻訳方法を教えてください",
     "viewInGoogleTranslate": "Google 翻訳で見る",
+    "readViaGoogleTranslate": "あなたの言語で読む（Google 翻訳）",
     "showOriginal": "原文を表示",
     "showTranslation": "翻訳を表示"
   },

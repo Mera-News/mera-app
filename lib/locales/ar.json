@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "تم التحديث {{time}}",
     "allCaughtUp": "لقد اطلعت على كل ما يهمك.",
-    "preparingFeed": "يتم جلب أحدث الأخبار وتخصيصها لك الآن — قد يستغرق ذلك دقيقة.",
+    "preparingFeed": "Mera يُجهّز خلاصتك الآن.",
     "preparingFeedExploreHint": "في هذه الأثناء، ألقِ نظرة على تبويب استكشاف لأهم الأخبار.",
-    "personalizingFeed": "جارٍ تخصيص خلاصتك — تُعرض أحدث الأخبار بينما يقوم Mera بترتيبها",
     "noInterests": "لا يمكن لـ Mera تحليل الأخبار لك",
     "noInterestsDescription": "يرجى إنشاء ملفك الشخصي ليتمكن Mera من البدء في توليد الأخبار لك.",
     "dashboardTitle": "لوحة التحكم",
@@ -218,6 +217,9 @@
     "failedToLoad": "فشل تحميل المقال",
     "articleNotFound": "المقال غير موجود",
     "readOn": "اقرأ على {{publication}}",
+    "translateAndRead": "ترجمة وقراءة",
+    "translateAndReadOn": "ترجمة وقراءة على {{publication}}",
+    "viewOriginal": "عرض الأصلي",
     "share": "مشاركة",
     "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}"
   },
@@ -240,11 +242,12 @@
     "viewTopHeadlines": "أبرز العناوين"
   },
   "clusterDetail": {
-    "translatable": "هذا المقال باللغة {{language}} ويمكن ترجمته إلى لغتك",
-    "notTranslatable": "هذا المقال باللغة {{language}} وقد لا يكون قابلاً للترجمة",
+    "translatable": "هذا المقال مكتوب بلغة {{language}} — يمكن لجهازك ترجمته أثناء القراءة.",
+    "notTranslatable": "هذا المقال مكتوب بلغة {{language}}. الترجمة على الجهاز غير متاحة له — استخدم ترجمة Google أدناه لقراءته بلغتك.",
     "unknownLanguage": "لغة أخرى",
     "translationGuideLink": "أرني كيفية ترجمة المقال",
     "viewInGoogleTranslate": "عرض في ترجمة Google",
+    "readViaGoogleTranslate": "اقرأ بلغتك (ترجمة Google)",
     "showOriginal": "عرض النص الأصلي",
     "showTranslation": "عرض الترجمة"
   },

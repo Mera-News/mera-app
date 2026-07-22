@@ -62,9 +62,8 @@
   "feed": {
     "updatedAt": "Zaktualizowano {{time}}",
     "allCaughtUp": "Jesteś na bieżąco z tym, co Cię dotyczy.",
-    "preparingFeed": "Świeże wiadomości są pobierane i personalizowane dla Ciebie — może to zająć chwilę.",
+    "preparingFeed": "Mera przygotowuje Twój kanał.",
     "preparingFeedExploreHint": "W międzyczasie sprawdź zakładkę Odkrywaj, aby zobaczyć najważniejsze wiadomości.",
-    "personalizingFeed": "Personalizujemy Twój kanał — najnowsze wiadomości są wyświetlane, podczas gdy Mera je szereguje",
     "noInterests": "Mera nie może analizować wiadomości dla Ciebie",
     "noInterestsDescription": "Utwórz swoją personę użytkownika, aby Mera zaczęła generować wiadomości dla Ciebie.",
     "dashboardTitle": "Pulpit",
@@ -214,6 +213,9 @@
     "failedToLoad": "Nie udało się załadować artykułu",
     "articleNotFound": "Nie znaleziono artykułu",
     "readOn": "Czytaj w {{publication}}",
+    "translateAndReadOn": "Przetłumacz i czytaj w {{publication}}",
+    "translateAndRead": "Przetłumacz i czytaj",
+    "viewOriginal": "Pokaż oryginał",
     "share": "Udostępnij",
     "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}"
   },
@@ -236,11 +238,12 @@
     "viewTopHeadlines": "Najważniejsze nagłówki"
   },
   "clusterDetail": {
-    "translatable": "Ten artykuł jest w języku {{language}} i może zostać przetłumaczony na Twój język",
-    "notTranslatable": "Ten artykuł jest w języku {{language}} i może nie być przetłumaczony",
+    "translatable": "Ten artykuł jest w języku {{language}} — Twoje urządzenie może go przetłumaczyć podczas czytania.",
+    "notTranslatable": "Ten artykuł jest w języku {{language}}. Tłumaczenie na urządzeniu nie jest dla niego dostępne — użyj Tłumacza Google poniżej, aby przeczytać go w swoim języku.",
     "unknownLanguage": "innym języku",
     "translationGuideLink": "Pokaż mi, jak przetłumaczyć artykuł",
     "viewInGoogleTranslate": "Zobacz w Tłumaczu Google",
+    "readViaGoogleTranslate": "Czytaj w swoim języku (Tłumacz Google)",
     "showOriginal": "Pokaż oryginał",
     "showTranslation": "Pokaż tłumaczenie"
   },
