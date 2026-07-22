@@ -67,6 +67,58 @@ describe('useNetworkStore', () => {
         expect(registeredListener).toBeInstanceOf(Function);
     });
 
+    // ── cold-start seeding via NetInfo.fetch() ──────────────────────────────
+    it('initNetworkListener seeds isConnected from NetInfo.fetch() on cold start', async () => {
+        const NetInfo = require('@react-native-community/netinfo').default;
+        (NetInfo.fetch as jest.Mock).mockResolvedValueOnce({
+            isConnected: false,
+            isInternetReachable: false,
+        });
+        // Store defaults to true (module-present) before the fetch resolves.
+        expect(useNetworkStore.getState().isConnected).toBe(true);
+
+        initNetworkListener();
+        expect(NetInfo.fetch).toHaveBeenCalledTimes(1);
+
+        // Flush the fetch() promise microtask.
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(useNetworkStore.getState().isConnected).toBe(false);
+    });
+
+    it('initNetworkListener treats a null isConnected from NetInfo.fetch() as true (conservative default)', async () => {
+        const NetInfo = require('@react-native-community/netinfo').default;
+        (NetInfo.fetch as jest.Mock).mockResolvedValueOnce({
+            isConnected: null,
+            isInternetReachable: null,
+        });
+
+        initNetworkListener();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(useNetworkStore.getState().isConnected).toBe(true);
+    });
+
+    it('initNetworkListener captures NetInfo.fetch() rejections without throwing', async () => {
+        const NetInfo = require('@react-native-community/netinfo').default;
+        const logger = require('@/lib/logger').default;
+        const fetchError = new Error('fetch failed');
+        (NetInfo.fetch as jest.Mock).mockRejectedValueOnce(fetchError);
+
+        expect(() => initNetworkListener()).not.toThrow();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(logger.captureException).toHaveBeenCalledWith(
+            fetchError,
+            expect.objectContaining({
+                tags: expect.objectContaining({ store: 'network-store' }),
+            }),
+        );
+    });
+
     it('initNetworkListener is idempotent — second call does not double-subscribe', () => {
         const NetInfo = require('@react-native-community/netinfo').default;
         initNetworkListener();

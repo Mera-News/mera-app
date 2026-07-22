@@ -29,9 +29,24 @@ let unsubscribe: (() => void) | null = null;
 /**
  * Start listening to network state changes via NetInfo.
  * Call once from the root layout on app start.
+ *
+ * Seeds the store with a real `NetInfo.fetch()` read before wiring the event
+ * listener — `addEventListener`'s first callback can lag, so without this a
+ * cold start in airplane mode is misreported as "online" (the module-present
+ * default) until that first event finally arrives.
  */
 export function initNetworkListener(): void {
     if (!NetInfo || unsubscribe) return;
+
+    NetInfo.fetch()
+        .then((state) => {
+            useNetworkStore.getState().setIsConnected(state.isConnected ?? true);
+        })
+        .catch((err) => {
+            logger.captureException(err, {
+                tags: { store: 'network-store', method: 'initNetworkListener-fetch' },
+            });
+        });
 
     unsubscribe = NetInfo.addEventListener((state) => {
         useNetworkStore.getState().setIsConnected(state.isConnected ?? true);

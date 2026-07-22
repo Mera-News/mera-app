@@ -34,6 +34,7 @@ import {
 import { useFeedOrderStore, type Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useDatabaseReady } from '@/lib/stores/database-store';
+import { useIsConnected } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -98,6 +99,7 @@ const FeedScreen: React.FC = () => {
   const isFocused = useIsFocused();
 
   const { isLoading, errorMessage } = useFeedBootstrap();
+  const isConnected = useIsConnected();
 
   // ── Live inputs ──
   const suggestions = useForYouSuggestions();
@@ -265,6 +267,13 @@ const FeedScreen: React.FC = () => {
           </HStack>
         </HStack>
         <FeedStatsSentence />
+
+        {!isConnected && (
+          <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-1" space="sm">
+            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+            <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
+          </HStack>
+        )}
       </VStack>
 
       <FlatList

@@ -17,6 +17,7 @@ import { authClient } from './auth-client';
 import { recordAuthFailure, recordAuthSuccess } from './auth-failure-breaker';
 import logger from './logger';
 import { useForYouStore } from './stores/for-you-store';
+import { useNetworkStore } from './stores/network-store';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
 
@@ -134,8 +135,22 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             },
         });
 
-        // Show user-friendly toast notification for network errors
-        toastManager.showNetworkError();
+        // Show a user-friendly toast — but only when we're actually online.
+        // Every no-cache query fails the same way while offline (there's no
+        // cache to fall back to), so without this gate a screen with a few
+        // background queries spams several toasts per second in airplane
+        // mode. The offline banners (Feed/Dashboard headers) already cover
+        // that state; a breadcrumb is enough here for diagnostics.
+        if (useNetworkStore.getState().isConnected) {
+            toastManager.showNetworkError();
+        } else {
+            logger.addBreadcrumb(
+                'Network error while offline — toast suppressed',
+                'apollo-error-link',
+                { operationName: operation.operationName },
+                'info',
+            );
+        }
     }
 });
 
@@ -158,24 +173,33 @@ const authSuccessLink = new ApolloLink((operation, forward) =>
     }),
 );
 
+// Whether a failed operation should be retried. Exported for testing.
+// Two gates:
+//  1. Connectivity — never retry with no network. There's nothing to retry
+//     against, and reconnect already triggers refetches elsewhere (feed-sync,
+//     FeedSyncMachine); retrying anyway just burns 3 backoff cycles per
+//     operation for a guaranteed failure.
+//  2. Error shape — only retry transient/transport failures. Never retry
+//     client (4xx) errors — e.g. a 402 "not subscribed" is deterministic, so
+//     retrying just multiplies the request storm while the gate is active.
+export function shouldRetryOperation(error: unknown): boolean {
+    if (!useNetworkStore.getState().isConnected) return false;
+    if (!error || (error as { result?: unknown }).result) return false;
+    const status =
+        (error as { statusCode?: number }).statusCode ??
+        (error as { response?: { status?: number } }).response?.status;
+    if (typeof status === 'number' && status >= 400 && status < 500) {
+        return false;
+    }
+    return true;
+}
+
 // Create retry link with exponential backoff for network errors
 // This prevents infinite error loops when network is unavailable
 const retryLink = new RetryLink({
     attempts: {
         max: 3, // Maximum 3 retry attempts
-        retryIf: (error) => {
-            // Only retry transient/transport failures. Never retry client (4xx)
-            // errors — e.g. a 402 "not subscribed" is deterministic, so retrying
-            // just multiplies the request storm while the gate is active.
-            if (!error || (error as { result?: unknown }).result) return false;
-            const status =
-                (error as { statusCode?: number }).statusCode ??
-                (error as { response?: { status?: number } }).response?.status;
-            if (typeof status === 'number' && status >= 400 && status < 500) {
-                return false;
-            }
-            return true;
-        },
+        retryIf: (error) => shouldRetryOperation(error),
     },
     delay: {
         initial: 300,    // Start with 300ms delay

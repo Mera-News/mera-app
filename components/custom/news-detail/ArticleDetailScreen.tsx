@@ -7,6 +7,8 @@ import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -16,12 +18,15 @@ import { ArticleService } from '@/lib/article-service';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import {
     deleteSavedSuggestion,
+    getSavedSuggestionByServerId,
     isSuggestionSaved,
     saveStandaloneArticle,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { sortRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -64,6 +69,30 @@ const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
         : undefined,
 } as NewsArticle);
 
+// Map a saved-suggestion snapshot (ForYouSuggestion) to the NewsArticle shape
+// this screen renders. Used for the offline fallback: a standalone article's
+// saved row is keyed by the article's own `_id` (see
+// saved-article-suggestion-service.ts), so a prior "save for later" doubles
+// as an offline cache for this screen's card fields (title/description/image).
+const savedSuggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
+    _id: s.articleId,
+    title: s.title_en ?? s.title_original ?? '',
+    title_en_internal_only: s.title_en ?? undefined,
+    description: s.description_en ?? undefined,
+    description_en_internal_only: s.description_en ?? undefined,
+    pubDate: s.firstPubDate ?? s.createdAt,
+    article_url: s.article_url ?? undefined,
+    image_url: s.image_url ?? undefined,
+    original_language_code: s.language_code ?? undefined,
+    publicationSource: s.publication_name || s.country_code
+        ? ({
+            _id: s.articleId,
+            publication_name: s.publication_name,
+            country_code: s.country_code,
+        } as NewsArticle['publicationSource'])
+        : undefined,
+} as NewsArticle);
+
 const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     articleId,
     onBack,
@@ -78,6 +107,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Offline, and no local snapshot exists — a dedicated empty state instead
+    // of the generic error card. Auto-retries when connectivity returns (see
+    // the retryNonce effect below).
+    const [offlineUnavailable, setOfflineUnavailable] = useState(false);
+    // Article is rendered from a saved-suggestion snapshot (offline fallback)
+    // rather than the live query.
+    const [isOfflineSnapshot, setIsOfflineSnapshot] = useState(false);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     // Mirror the title variant the reader currently sees (original vs
     // translated) so sharing carries that exact text.
@@ -90,6 +126,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const userCtx = useUserGeoLanguageContext();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
     const openedIds = useOpenedStoriesStore((s) => s.ids);
+    const isConnected = useIsConnected();
+    // Bumped to re-run the fetch effect when connectivity returns while the
+    // offline-unavailable empty state is showing (see the retry effect below).
+    const [retryNonce, setRetryNonce] = useState(0);
+    const hadOfflineFailureRef = useRef(false);
 
     // Server related rows, ordered by the user's language/country signals first
     // (then publication → date → id). Non-mutating; `userCtx === null` (still
@@ -121,13 +162,58 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         let cancelled = false;
         setIsLoading(true);
         setError(null);
+        setOfflineUnavailable(false);
+        setIsOfflineSnapshot(false);
+
+        // Offline fallback: `getArticleById` is a live no-cache query, so it
+        // fails deterministically with no network. Try a saved snapshot
+        // instead of surfacing that as a generic failure — a standalone
+        // article's saved row is keyed by the article's own id (see
+        // saved-article-suggestion-service.ts).
+        const attemptOfflineFallback = () => {
+            getSavedSuggestionByServerId(articleId)
+                .then((saved) => {
+                    if (cancelled) return;
+                    if (saved) {
+                        setArticle(savedSuggestionToNewsArticle(saved));
+                        setIsOfflineSnapshot(true);
+                    } else {
+                        setArticle(null);
+                        hadOfflineFailureRef.current = true;
+                        setOfflineUnavailable(true);
+                    }
+                })
+                .catch((err) => {
+                    if (cancelled) return;
+                    logger.captureException(err, {
+                        tags: { screen: 'ArticleDetailScreen', method: 'offlineSnapshotFallback' },
+                        extra: { articleId },
+                    });
+                    setArticle(null);
+                    hadOfflineFailureRef.current = true;
+                    setOfflineUnavailable(true);
+                })
+                .finally(() => {
+                    if (!cancelled) setIsLoading(false);
+                });
+        };
+
+        if (!isConnected) {
+            attemptOfflineFallback();
+            return () => {
+                cancelled = true;
+            };
+        }
+
         ArticleService.getArticleById(articleId)
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
                     setError(t('articleDetail.articleUnavailable'));
+                    setIsLoading(false);
                 } else {
                     setArticle(row);
+                    setIsLoading(false);
                 }
             })
             .catch((err) => {
@@ -136,18 +222,40 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     tags: { screen: 'ArticleDetailScreen', method: 'getArticleById' },
                     extra: { articleId },
                 });
+                // Connectivity may have dropped mid-request — fall back to a
+                // local snapshot instead of a generic failure in that case.
+                if (!useNetworkStore.getState().isConnected) {
+                    attemptOfflineFallback();
+                    return;
+                }
                 setError(t('articleDetail.failedToLoad'));
-            })
-            .finally(() => {
-                if (!cancelled) setIsLoading(false);
+                setIsLoading(false);
             });
         return () => {
             cancelled = true;
         };
-    }, [articleId, t]);
+        // isConnected is intentionally read (not a dep) so this only re-runs
+        // via articleId/retryNonce — a transient online↔offline flip while an
+        // article is already loaded shouldn't wipe it. Reconnecting after the
+        // offlineUnavailable empty state DOES retry, via the effect below
+        // bumping retryNonce.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [articleId, t, retryNonce]);
+
+    // Auto-retry: once connectivity returns after the offlineUnavailable
+    // empty state was shown, re-run the fetch effect above.
+    useEffect(() => {
+        if (isConnected && hadOfflineFailureRef.current) {
+            hadOfflineFailureRef.current = false;
+            setRetryNonce((n) => n + 1);
+        }
+    }, [isConnected]);
 
     useEffect(() => {
-        if (!article?._id) return;
+        // No point round-tripping a live query with no network — leave the
+        // related-articles section empty rather than logging a guaranteed
+        // failure on every offline article view.
+        if (!article?._id || !isConnected) return;
         let cancelled = false;
         setIsLoadingRelated(true);
         ArticleService.getRelatedArticles(article._id)
@@ -166,7 +274,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [article?._id]);
+    }, [article?._id, isConnected]);
 
     // Reflect whether this standalone article is already saved for later. The
     // saved row id for a standalone article is the article's own `_id`.
@@ -261,6 +369,24 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         );
     }
 
+    if (offlineUnavailable) {
+        // Offline, and no local snapshot to fall back to — a friendlier,
+        // non-alarming empty state (not the red "error" card) since this is
+        // an expected condition, not a failure. Auto-retries when
+        // connectivity returns (see the retryNonce effect above).
+        return (
+            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
+                <MaterialIcons name="wifi-off" size={48} color="#9CA3AF" />
+                <Text size="lg" className="text-white mt-4 text-center">
+                    {t('articleDetail.offlineUnavailable')}
+                </Text>
+                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
+                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                </Pressable>
+            </Box>
+        );
+    }
+
     if (error || !article) {
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
@@ -304,10 +430,18 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}
                 aboveReason={
-                    <PublicationVisitBadge
-                        publicationName={article.publicationSource?.publication_name}
-                        countryCode={article.publicationSource?.country_code}
-                    />
+                    <>
+                        {isOfflineSnapshot && (
+                            <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mb-2" space="sm">
+                                <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                                <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
+                            </HStack>
+                        )}
+                        <PublicationVisitBadge
+                            publicationName={article.publicationSource?.publication_name}
+                            countryCode={article.publicationSource?.country_code}
+                        />
+                    </>
                 }
                 footer={
                     <>

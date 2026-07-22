@@ -1,12 +1,15 @@
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
+import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
 import logger from '@/lib/logger';
+import { useIsConnected } from '@/lib/stores/network-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -36,6 +39,7 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
 const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const isConnected = useIsConnected();
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
     // Cold-mount always opens on Top stories; the persisted LAST_SCOPE_KEY is intentionally not read for the initial selection (taps still persist below, for potential future use).
@@ -122,6 +126,19 @@ const ExploreScreen: React.FC = () => {
                         <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
                     </Pressable>
                 </HStack>
+
+                {/* Offline banner — Explore is direct server-paginated (no local
+                    cache), so an offline visit here would otherwise just look
+                    like a jarring generic "no articles found" empty state from
+                    ScopeArticleList/TopStoriesList. This makes the reason
+                    explicit and non-blocking; those lists already fall back to
+                    their friendly empty state, not a hard error, on fetch failure. */}
+                {!isConnected && (
+                    <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
+                        <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                        <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
+                    </HStack>
+                )}
 
                 {/* Scope chips */}
                 <Box className="mb-2">
