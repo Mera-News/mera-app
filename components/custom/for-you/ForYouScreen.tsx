@@ -2,6 +2,7 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
+import ReauthBanner from '@/components/custom/ReauthBanner';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
@@ -436,6 +437,8 @@ const MeraNewsScreen: React.FC = () => {
                             <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
                         </HStack>
                     )}
+
+                    {activeSubTab === 'feed' && <ReauthBanner />}
                 </VStack>
             </Animated.View>
 

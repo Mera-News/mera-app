@@ -8,13 +8,16 @@ import { Text } from '@/components/ui/text';
 import { authClient, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { setSetting } from '@/lib/database/services/setting-service';
+import { useUserStore } from '@/lib/stores/user-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface OTPVerificationViewProps {
     email: string;
-    onVerificationSuccess?: () => void;
+    // Receives the verified userId so callers (e.g. the reauth flow) can compare
+    // against the locally cached user.
+    onVerificationSuccess?: (userId: string) => void;
     onBack?: () => void;
 }
 
@@ -78,7 +81,9 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                 // screen if the session is ever cleared / the user lands back
                 // on /login (transient connectivity, expired cookie, etc.).
                 setSetting('cached_user_email', email).catch(() => {});
-                onVerificationSuccess?.();
+                // A successful sign-in resolves any pending re-auth prompt.
+                useUserStore.getState().setNeedsReauth(false);
+                onVerificationSuccess?.(data.user.id);
             } else {
                 setErrorMessage(t('auth.invalidOtpServer'));
             }

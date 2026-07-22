@@ -13,15 +13,22 @@ interface UserState {
     userPersona: UserPersona | null;
     isLoading: boolean;
     lastFetchedAt: number | null;
+    // Set by the auth-failure breaker when the server session is confirmed dead.
+    // The user is NOT ejected — data + PIN stay intact; a banner prompts a
+    // re-login, which clears this. Persisted so it survives relaunch.
+    needsReauth: boolean;
 
     // Actions
     setUserId: (id: string | null) => void;
     setUserPersona: (persona: UserPersona | null) => void;
+    setNeedsReauth: (v: boolean) => void;
     fetchUserPersona: (userId: string, force?: boolean) => Promise<UserPersona | null>;
     fetchUserPersonaOrThrow: (userId: string, force?: boolean) => Promise<UserPersona | null>;
     clearUser: () => void;
     hydrateFromDb: () => Promise<void>;
 }
+
+const NEEDS_REAUTH_KEY = 'needs_reauth';
 
 // Cache duration: 5 minutes (in milliseconds)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -103,6 +110,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
     userPersona: null,
     isLoading: false,
     lastFetchedAt: null,
+    needsReauth: false,
 
     setUserId: (id) => {
         set({ userId: id });
@@ -125,6 +133,18 @@ export const useUserStore = create<UserState>()((set, get) => ({
         }
     },
 
+    // Idempotent: only touches state/DB when the value actually changes, so the
+    // breaker and success paths can call it freely without chatty writes.
+    setNeedsReauth: (v) => {
+        if (get().needsReauth === v) return;
+        set({ needsReauth: v });
+        if (v) {
+            setSetting(NEEDS_REAUTH_KEY, '1').catch(() => {});
+        } else {
+            deleteSetting(NEEDS_REAUTH_KEY).catch(() => {});
+        }
+    },
+
     fetchUserPersona: async (userId, force = false) => {
         try {
             return await fetchUserPersonaCore(set, get, userId, force);
@@ -143,16 +163,23 @@ export const useUserStore = create<UserState>()((set, get) => ({
             userPersona: null,
             isLoading: false,
             lastFetchedAt: null,
+            needsReauth: false,
         });
         clearUserPersona().catch(() => {});
         deleteSetting('cached_user_id').catch(() => {});
         deleteSetting('cached_user_email').catch(() => {});
+        deleteSetting(NEEDS_REAUTH_KEY).catch(() => {});
     },
 
     hydrateFromDb: async () => {
         try {
             const userId = await getSetting('cached_user_id');
             if (!userId) return;
+
+            // Restore the persisted re-auth flag alongside identity (only
+            // meaningful when a user exists on-device).
+            const needsReauth = (await getSetting(NEEDS_REAUTH_KEY)) === '1';
+            if (needsReauth) set({ needsReauth: true });
 
             const persona = await loadUserPersona(userId);
             if (persona) {

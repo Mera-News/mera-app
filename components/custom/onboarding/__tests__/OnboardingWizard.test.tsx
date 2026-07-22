@@ -64,6 +64,13 @@ jest.mock('@/components/custom/chat/OnboardingNavBar', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: (p: any) => <View testID="onboarding-nav-bar" {...p} /> };
 });
+// SetPinStep pulls in PinSetupScreen → MeraLogo (reanimated) at module load;
+// stub it so the wizard's step-rendering can be asserted without native deps.
+jest.mock('@/components/custom/onboarding/SetPinStep', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: (p: any) => <View testID="set-pin-step" {...p} /> };
+});
+jest.mock('@/lib/security/pin-service', () => ({ isPinSet: jest.fn(() => Promise.resolve(true)) }));
 
 // --- services / stores ------------------------------------------------------
 jest.mock('@/lib/account-service', () => ({
@@ -112,8 +119,18 @@ beforeEach(() => {
 });
 
 describe('OnboardingWizard step rendering', () => {
-    it('renders NotificationSettingsScreen on step 0 (not the persona chat)', async () => {
+    it('renders the mandatory SetPinStep on step 0', async () => {
         mockStep = 0;
+        const { queryByTestId } = render(<OnboardingWizard onComplete={jest.fn()} />);
+        await waitFor(() => {
+            expect(queryByTestId('set-pin-step')).toBeTruthy();
+        });
+        expect(queryByTestId('notification-settings-screen')).toBeNull();
+        expect(queryByTestId('persona-update-chat-step')).toBeNull();
+    });
+
+    it('renders NotificationSettingsScreen on step 1 (not the persona chat)', async () => {
+        mockStep = 1;
         const { queryByTestId } = render(<OnboardingWizard onComplete={jest.fn()} />);
         await waitFor(() => {
             expect(queryByTestId('notification-settings-screen')).toBeTruthy();
@@ -121,8 +138,8 @@ describe('OnboardingWizard step rendering', () => {
         expect(queryByTestId('persona-update-chat-step')).toBeNull();
     });
 
-    it('renders the inline PersonaUpdateChatStep on step 1', async () => {
-        mockStep = 1;
+    it('renders the inline PersonaUpdateChatStep on step 2', async () => {
+        mockStep = 2;
         const { queryByTestId } = render(<OnboardingWizard onComplete={jest.fn()} />);
         await waitFor(() => {
             expect(queryByTestId('persona-update-chat-step')).toBeTruthy();
@@ -131,7 +148,7 @@ describe('OnboardingWizard step rendering', () => {
     });
 
     it('never mounts the floating ScreenChatBubble (removed in r3)', async () => {
-        mockStep = 1;
+        mockStep = 2;
         const { queryByTestId } = render(<OnboardingWizard onComplete={jest.fn()} />);
         await waitFor(() => {
             expect(queryByTestId('persona-update-chat-step')).toBeTruthy();

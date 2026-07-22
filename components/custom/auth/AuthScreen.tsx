@@ -214,7 +214,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
 };
 
 interface AuthScreenProps {
-    onLoginSuccess?: () => void;
+    onLoginSuccess?: (userId: string) => void;
 }
 
 type ViewMode = 'loading' | 'previous' | 'email' | 'otp';
@@ -259,9 +259,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         setCurrentView('otp');
     };
 
-    const handleVerificationSuccess = () => {
+    const handleVerificationSuccess = (userId: string) => {
         setPendingEmail('');
-        onLoginSuccess?.();
+        onLoginSuccess?.(userId);
     };
 
     const handleBackToEmail = () => {

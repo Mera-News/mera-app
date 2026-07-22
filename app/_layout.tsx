@@ -7,7 +7,7 @@ import 'react-native-get-random-values';
 import { ApolloProvider } from '@apollo/client/react';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { ThemeProvider } from '@react-navigation/native';
-import { Stack, useNavigationContainerRef, usePathname } from 'expo-router';
+import { router, Stack, useNavigationContainerRef, usePathname } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -39,6 +39,7 @@ import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-s
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
+import { usePinStore } from '@/lib/stores/pin-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import {
   configureRevenueCat,
@@ -117,6 +118,26 @@ function AppRoot() {
   useEffect(() => {
     initNetworkListener();
   }, []);
+
+  // Initialise the PIN gate once (reads the on-device record, engages the lock
+  // on cold start, and wires the single AppState listener that re-locks after
+  // >5 min in the background).
+  useEffect(() => {
+    void usePinStore.getState().init();
+  }, []);
+
+  // Runtime foreground re-lock: when the gate engages while the user is inside
+  // the app, push the lock screen over whatever they were on. The cold-start
+  // case is handled by app/index.tsx, and the login/setup/lock routes gate
+  // themselves — so we only act on protected (/logged-in) routes here.
+  const pinLocked = usePinStore((s) => s.locked);
+  const pinSet = usePinStore((s) => s.pinSet);
+  useEffect(() => {
+    if (!isNavigationReady) return;
+    if (pinLocked && pinSet && pathname.startsWith('/logged-in')) {
+      router.replace('/pin-lock' as any);
+    }
+  }, [pinLocked, pinSet, isNavigationReady, pathname]);
 
   // Configure RevenueCat once and keep the subscription store in sync with
   // entitlement changes (purchases, renewals, expirations). No-op when no
@@ -260,6 +281,22 @@ function AppRoot() {
                 options={{
                   headerShown: false,
                   animation: 'fade'
+                }}
+              />
+              <Stack.Screen
+                name="pin-lock"
+                options={{
+                  headerShown: false,
+                  animation: 'fade',
+                  gestureEnabled: false,
+                }}
+              />
+              <Stack.Screen
+                name="pin-setup"
+                options={{
+                  headerShown: false,
+                  animation: 'fade',
+                  gestureEnabled: false,
                 }}
               />
             </Stack>

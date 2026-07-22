@@ -64,6 +64,20 @@ function resumeFeedSync(): void {
   }
 }
 
+// Flip the persisted needs-reauth flag WITHOUT ejecting the user. A confirmed
+// dead server session no longer wipes local auth/data — the app stays
+// offline-usable behind the PIN, and a banner prompts a re-login (which clears
+// the flag). Lazy-require to avoid an import cycle through the user store.
+function setNeedsReauth(value: boolean): void {
+  try {
+    const { useUserStore } =
+      require('./stores/user-store') as typeof import('./stores/user-store');
+    useUserStore.getState().setNeedsReauth(value);
+  } catch {
+    // best-effort — store may not be available (e.g. in unit tests)
+  }
+}
+
 /**
  * Records one auth failure (a 401 / UNAUTHENTICATED observed by the Apollo
  * ErrorLink). On the AUTH_FAILURE_THRESHOLD-th consecutive failure the breaker
@@ -106,6 +120,9 @@ export function recordAuthFailure(): void {
 export function recordAuthSuccess(): void {
   const wasOpen = breakerOpen;
   consecutiveFailures = 0;
+  // A successful authenticated op proves the session is alive — clear any
+  // stale needs-reauth flag (idempotent no-op if it wasn't set).
+  setNeedsReauth(false);
   if (wasOpen) {
     breakerOpen = false;
     resumeFeedSync();
@@ -131,7 +148,8 @@ export function onAppForeground(): void {
  * Single deduped server-truth session re-check. Only one runs at a time
  * (mirrors auth-client's _pendingJwtRequest pattern).
  *  - alive     → transient: reset counter, close breaker, resume feed-sync.
- *  - dead      → clearAuthStorage() so app/index.tsx's useSession() routes to /login.
+ *  - dead      → set the persisted needsReauth flag (no eject); feed-sync stays
+ *                paused and a banner prompts re-login. Local data + PIN survive.
  *  - offline   → keep breaker open; a later recordAuthFailure retries after cooldown.
  */
 function triggerRecheck(): Promise<void> {
@@ -139,7 +157,7 @@ function triggerRecheck(): Promise<void> {
 
   pendingRecheck = (async () => {
     lastRecheckAt = Date.now();
-    const { authClient, clearAuthStorage } =
+    const { authClient } =
       require('./auth-client') as typeof import('./auth-client');
 
     try {
@@ -159,15 +177,17 @@ function triggerRecheck(): Promise<void> {
 
       const error = result?.error;
       if (!error) {
-        // Server responded with no session — genuinely logged out.
-        await clearAuthStorage();
+        // Server responded with no session — genuinely logged out. Flag for
+        // re-auth instead of ejecting; keep the breaker open so feed-sync
+        // stays paused until the user signs in again.
+        setNeedsReauth(true);
         return;
       }
 
       const status = error.status ?? error.statusCode;
       if (status === 401 || status === 403) {
-        // Server explicitly rejected the session — logged out.
-        await clearAuthStorage();
+        // Server explicitly rejected the session — flag for re-auth, no eject.
+        setNeedsReauth(true);
         return;
       }
 

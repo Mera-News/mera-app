@@ -8,6 +8,7 @@ const mockAddBreadcrumb = jest.fn();
 
 const mockGetSession = jest.fn();
 const mockClearAuthStorage = jest.fn((..._args: any[]) => Promise.resolve());
+const mockSetNeedsReauth = jest.fn();
 
 const mockPauseTask = jest.fn();
 const mockResumeTask = jest.fn();
@@ -31,6 +32,12 @@ jest.mock('../scheduler/AppScheduler', () => ({
   AppScheduler: {
     pauseTask: (...args: any[]) => mockPauseTask(...args),
     resumeTask: (...args: any[]) => mockResumeTask(...args),
+  },
+}));
+
+jest.mock('../stores/user-store', () => ({
+  useUserStore: {
+    getState: () => ({ setNeedsReauth: (...args: any[]) => mockSetNeedsReauth(...args) }),
   },
 }));
 
@@ -126,17 +133,20 @@ describe('recordAuthSuccess — reset', () => {
     recordAuthFailure();
     recordAuthFailure();
     await flush();
-    // dead session -> logout was called, breaker still open
-    expect(mockClearAuthStorage).toHaveBeenCalledTimes(1);
+    // dead session -> needsReauth flagged (NOT ejected), breaker still open
+    expect(mockClearAuthStorage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).toHaveBeenCalledWith(true);
 
     recordAuthSuccess();
+    // success clears the reauth flag and resumes the poller
+    expect(mockSetNeedsReauth).toHaveBeenLastCalledWith(false);
     expect(mockResumeTask).toHaveBeenCalledWith('feed-sync');
     expect(_getBreakerState().breakerOpen).toBe(false);
   });
 });
 
 describe('re-check outcomes', () => {
-  it('alive session → resume feed-sync, breaker closed', async () => {
+  it('alive session → resume feed-sync, breaker closed, no reauth flag', async () => {
     mockGetSession.mockResolvedValueOnce({ data: { session: { id: 's1' } } });
     recordAuthFailure();
     recordAuthFailure();
@@ -144,32 +154,37 @@ describe('re-check outcomes', () => {
     await flush();
 
     expect(mockClearAuthStorage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).not.toHaveBeenCalledWith(true);
     expect(mockResumeTask).toHaveBeenCalledWith('feed-sync');
     expect(_getBreakerState().breakerOpen).toBe(false);
     expect(_getBreakerState().consecutiveFailures).toBe(0);
   });
 
-  it('dead session (null data, no error) → clearAuthStorage', async () => {
+  it('dead session (null data, no error) → flags needsReauth, no eject', async () => {
     mockGetSession.mockResolvedValueOnce({ data: null });
     recordAuthFailure();
     recordAuthFailure();
     recordAuthFailure();
     await flush();
 
-    expect(mockClearAuthStorage).toHaveBeenCalledTimes(1);
+    expect(mockClearAuthStorage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).toHaveBeenCalledWith(true);
+    // breaker stays open so feed-sync remains paused until re-login
+    expect(_getBreakerState().breakerOpen).toBe(true);
   });
 
-  it('401 error → clearAuthStorage', async () => {
+  it('401 error → flags needsReauth, no eject', async () => {
     mockGetSession.mockResolvedValueOnce({ data: null, error: { status: 401 } });
     recordAuthFailure();
     recordAuthFailure();
     recordAuthFailure();
     await flush();
 
-    expect(mockClearAuthStorage).toHaveBeenCalledTimes(1);
+    expect(mockClearAuthStorage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).toHaveBeenCalledWith(true);
   });
 
-  it('network/offline error → does NOT log out, breaker stays open', async () => {
+  it('network/offline error → does NOT flag reauth, breaker stays open', async () => {
     mockGetSession.mockResolvedValueOnce({ data: null, error: { status: 0 } });
     recordAuthFailure();
     recordAuthFailure();
@@ -177,10 +192,11 @@ describe('re-check outcomes', () => {
     await flush();
 
     expect(mockClearAuthStorage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).not.toHaveBeenCalledWith(true);
     expect(_getBreakerState().breakerOpen).toBe(true);
   });
 
-  it('thrown error (offline) → does NOT log out, breaker stays open', async () => {
+  it('thrown error (offline) → does NOT flag reauth, breaker stays open', async () => {
     mockGetSession.mockRejectedValueOnce(new Error('Network request failed'));
     recordAuthFailure();
     recordAuthFailure();
@@ -188,6 +204,7 @@ describe('re-check outcomes', () => {
     await flush();
 
     expect(mockClearAuthStorage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).not.toHaveBeenCalledWith(true);
     expect(_getBreakerState().breakerOpen).toBe(true);
   });
 });

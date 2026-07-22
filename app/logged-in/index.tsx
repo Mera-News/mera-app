@@ -1,103 +1,100 @@
 import { Box } from "@/components/ui/box";
 import MeraLogo from "@/components/custom/MeraLogo";
-import { AccountService } from "@/lib/account-service";
 import { OnboardingStage } from "@/lib/generated/graphql-types";
 import { authClient } from "@/lib/auth-client";
 import { clearPreviousUserData } from "@/lib/stores";
+import { getSetting } from "@/lib/database/services/setting-service";
 import { useUserStore } from "@/lib/stores/user-store";
+import { useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
-import { Redirect, router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router } from "expo-router";
+import { useEffect } from "react";
 
 export default function LoggedInIndex() {
-    const { data: session, isPending: isSessionPending } = authClient.useSession();
-    const [isCheckingRoute, setIsCheckingRoute] = useState(true);
-    const [shouldRedirect, setShouldRedirect] = useState(false);
+    // useSession is a non-blocking enhancement — routing is driven by LOCAL
+    // persona state so the app works offline and a dead session never bounces
+    // the user out.
+    const { data: session } = authClient.useSession();
 
     useEffect(() => {
+        let cancelled = false;
+
         const determineRoute = async () => {
-            const userId = session?.user?.id;
+            // Identity is local-first: the persisted userId survives a dead
+            // session. Fall back to a live session id if nothing is persisted yet.
+            const localUserId = await getSetting('cached_user_id');
+            const userId = session?.user?.id ?? localUserId;
+
             if (!userId) {
-                router.dismissAll();
-                router.replace('/');
-                setIsCheckingRoute(false);
+                // No local identity at all — back to the launch gate → login.
+                if (!cancelled) {
+                    router.dismissAll();
+                    router.replace('/');
+                }
                 return;
             }
 
+            const userStore = useUserStore.getState();
+
             try {
-                await clearPreviousUserData(userId);
-
-                const userPersona = await AccountService.getUserPersona(userId);
-
-                const userStore = useUserStore.getState();
+                // Only a genuinely different signed-in user wipes local data.
+                if (session?.user?.id) {
+                    await clearPreviousUserData(session.user.id);
+                }
                 userStore.setUserId(userId);
-                userStore.setUserPersona(userPersona);
 
-                // Identify the RevenueCat customer as this user so the webhook's
-                // app_user_id maps back to the same id the server gates on.
-                // Fire-and-forget — must not block routing into the app.
-                void loginRevenueCat(userId).then((info) => {
-                    if (info) useSubscriptionStore.getState().setCustomerInfo(info);
-                });
+                // Local-first: hydrate the persisted persona and route on its
+                // (possibly stale) onboardingStage immediately — no network.
+                await userStore.hydrateFromDb();
+                let persona = useUserStore.getState().userPersona;
 
-                const stage = userPersona?.onboardingStage ?? OnboardingStage.Notifications;
-                const needsOnboarding = stage !== OnboardingStage.Finished;
+                const isConnected = useNetworkStore.getState().isConnected;
 
-                if (needsOnboarding) {
-                    router.replace('/logged-in/onboarding');
-                    return;
+                if (isConnected) {
+                    // Background refresh — must never block routing.
+                    void userStore.fetchUserPersona(userId, true);
+                    void loginRevenueCat(userId).then((info) => {
+                        if (info) useSubscriptionStore.getState().setCustomerInfo(info);
+                    });
+
+                    // No cached persona yet (fresh login) — we genuinely can't
+                    // know the stage without the server, so wait for it here.
+                    if (!persona) {
+                        try {
+                            persona = await userStore.fetchUserPersonaOrThrow(userId, true);
+                        } catch {
+                            persona = null;
+                        }
+                    }
                 }
 
-                router.replace('/logged-in/app_container/for_you');
-            } catch {
-                // The subscription paywall is no longer triggered here — the
-                // server never gates login/onboarding. It's owned by the For You
-                // feed (see article-service), so unsubscribed users still reach
-                // the app; the paywall appears when the feed loads (if forced).
+                // Unknown stage (offline with no cache, or a server error) →
+                // fall through to the feed rather than trapping a returning user
+                // in onboarding.
+                const stage = persona?.onboardingStage ?? OnboardingStage.Finished;
 
-                // 401 here used to clear auth and bounce to login — that
-                // turned a single transient failure into a forced logout.
-                // Now: fall through to for_you on any error. useSession()
-                // is the source of truth for "is the user signed in"; if
-                // the session is genuinely invalid, the next render cycle
-                // will reflect that and the gate above will redirect.
-                router.replace('/logged-in/app_container/for_you');
-            } finally {
-                setShouldRedirect(true);
-                setIsCheckingRoute(false);
+                if (cancelled) return;
+                if (stage !== OnboardingStage.Finished) {
+                    router.replace('/logged-in/onboarding');
+                } else {
+                    router.replace('/logged-in/app_container/for_you');
+                }
+            } catch {
+                if (!cancelled) router.replace('/logged-in/app_container/for_you');
             }
         };
 
-        if (!isSessionPending && !shouldRedirect) {
-            determineRoute();
-        }
-    }, [session, isSessionPending, shouldRedirect]);
+        determineRoute();
 
-    // Show loading while checking session or route
-    if (isSessionPending || isCheckingRoute) {
-        return (
-            <Box className="flex-1 justify-center items-center bg-black">
-                <MeraLogo size={96} animated />
-            </Box>
-        );
-    }
+        return () => {
+            cancelled = true;
+        };
+        // Re-run only when the session id changes (login/logout), not on every
+        // useSession poll tick.
+    }, [session?.user?.id]);
 
-    // If a redirect was already initiated (including offline mode), show spinner while navigating
-    if (shouldRedirect) {
-        return (
-            <Box className="flex-1 justify-center items-center bg-black">
-                <MeraLogo size={96} animated />
-            </Box>
-        );
-    }
-
-    // No session and no local token — redirect to login
-    if (!session) {
-        return <Redirect href="/login" />;
-    }
-
-    // Show spinner while redirecting
+    // Spinner while (and after) routing — the replace() unmounts this screen.
     return (
         <Box className="flex-1 justify-center items-center bg-black">
             <MeraLogo size={96} animated />

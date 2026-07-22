@@ -24,22 +24,29 @@ import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
+import SetPinStep from './SetPinStep';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
+import { isPinSet } from '@/lib/security/pin-service';
 
-// Stage <-> step index mapping for the 2-step wizard. The server stage
-// represents the furthest stage the user has reached; on mount we seed
-// `currentStep` from it so refresh/cold-start resumes correctly.
+// 3-step wizard: 0 = SetPin (local-only, mandatory), 1 = Notifications,
+// 2 = PersonaChat. The PIN step is NOT part of the server OnboardingStage enum
+// — it's tracked locally (a PIN record exists ⇒ skip step 0). The server stage
+// maps to the SERVER-backed steps (1 and 2); on mount we seed `currentStep`
+// from it so refresh/cold-start resumes correctly.
 const STAGE_TO_STEP: Record<OnboardingStage, number> = {
-    [OnboardingStage.Notifications]: 0,
-    [OnboardingStage.ProcessingMode]: 1,
-    [OnboardingStage.PersonaChat]: 1,
-    [OnboardingStage.Finished]: 1,
+    [OnboardingStage.Notifications]: 1,
+    [OnboardingStage.ProcessingMode]: 2,
+    [OnboardingStage.PersonaChat]: 2,
+    [OnboardingStage.Finished]: 2,
 };
 
-// Stage to advance to when the user clicks Next on a given step.
+const TOTAL_STEPS = 3;
+
+// Stage to advance to when the user clicks Next on a given step. Step 0 (PIN)
+// has no server stage — it advances locally via SetPinStep's onDone.
 const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
-    0: OnboardingStage.PersonaChat,
-    1: OnboardingStage.Finished,
+    1: OnboardingStage.PersonaChat,
+    2: OnboardingStage.Finished,
 };
 
 // OnboardingWizard now uses Zustand store for state persistence
@@ -75,8 +82,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     const userId = sessionData.data.user.id;
                     updatePreferences('userId', userId);
 
+                    // If no local PIN exists yet, the mandatory PIN step (0) comes
+                    // first regardless of server stage. Otherwise resume at the
+                    // server-authoritative step.
+                    const pinAlreadySet = await isPinSet();
+
                     // Fetch existing user persona to pre-populate form
                     const userPersona = await AccountService.getUserPersona(userId);
+
+                    let serverStep = STAGE_TO_STEP[OnboardingStage.Notifications];
                     if (userPersona) {
                         // Pre-populate notification hours (convert from UTC to local)
                         if (userPersona.preferredNotificationWindow && userPersona.preferredNotificationWindow.length > 0) {
@@ -84,13 +98,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                             updatePreferences('notificationHours', localHours);
                         }
 
-                        // Server stage is authoritative for which step to show on
-                        // resume. If FINISHED, the wizard shouldn't be mounted
-                        // anyway (logged-in/index.tsx redirects away) — defensively
-                        // map to the last step.
+                        // Server stage is authoritative for which server-backed
+                        // step to show on resume. If FINISHED, the wizard
+                        // shouldn't be mounted anyway (logged-in/index.tsx
+                        // redirects away) — defensively map to the last step.
                         const serverStage = userPersona.onboardingStage ?? OnboardingStage.Notifications;
-                        setStep(STAGE_TO_STEP[serverStage]);
+                        serverStep = STAGE_TO_STEP[serverStage];
                     }
+
+                    setStep(pinAlreadySet ? serverStep : 0);
                 }
             } catch {
                 // Error initializing - silently handle
@@ -165,7 +181,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         try {
             const userId = await getCurrentUserId();
             switch (currentStep) {
-                case 0:
+                case 1:
                     if (userPreferences.notificationHours.length > 0) {
                         await AccountService.updateNotificationPreferences(
                             userId,
@@ -179,11 +195,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     // registration; if the user left the switch off we still
                     // register provisionally here so silent wakes deliver.
                     await ensurePushTokenRegistered(userId);
-                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
-                    setStep(1);
-                    break;
-                case 1: {
                     await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
+                    setStep(2);
+                    break;
+                case 2: {
+                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2]);
                     resetOnboarding();
                     onComplete();
                     break;
@@ -197,6 +213,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     const renderStep = () => {
         switch (currentStep) {
             case 0:
+                // Mandatory local PIN — advances the wizard once persisted.
+                return <SetPinStep onDone={() => setStep(1)} />;
+            case 1:
                 return (
                     <NotificationSettingsScreen
                         isOnboarding={true}
@@ -204,7 +223,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                         onHoursChange={(hours) => updatePreferences('notificationHours', hours)}
                     />
                 );
-            case 1:
+            case 2:
                 return (
                     <PersonaUpdateChatStep userId={userPreferences.userId} />
                 );
@@ -227,16 +246,19 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         <Box className="flex-1 bg-black" style={{ paddingBottom: insets.bottom }}>
             {/* Progress Indicator */}
             <Box className="pb-5 px-5" style={{ paddingTop: insets.top + 16 }}>
-                <Progress value={((currentStep + 1) / 2) * 100} size="sm">
+                <Progress value={((currentStep + 1) / TOTAL_STEPS) * 100} size="sm">
                     <ProgressFilledTrack />
                 </Progress>
             </Box>
 
+            {/* Step 0 (PIN) is mandatory and self-driving: no Back (can't return
+                to a completed PIN step) and no Next/Skip (PinKeypad advances on
+                confirm). Steps 1–2 use the standard nav bar. */}
             <OnboardingNavBar
-                onBack={currentStep > 0 ? handleBack : undefined}
-                onSkip={handleNext}
+                onBack={currentStep > 1 ? handleBack : undefined}
+                onSkip={currentStep === 0 ? undefined : handleNext}
                 skipLabel={t('common.next')}
-                stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: 2 })}
+                stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
             />
 
             {renderStep()}

@@ -7,6 +7,8 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
+import { clearPin } from '@/lib/security/pin-service';
+import { usePinStore } from '@/lib/stores/pin-store';
 import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
@@ -65,6 +67,10 @@ const AppPreferencesTab: React.FC = () => {
 
             await authClient.signOut();
             await clearAuthStorage();
+            // Explicit logout clears the local PIN too — the next user must
+            // re-identify via OTP and set a fresh PIN.
+            await clearPin();
+            usePinStore.getState().setPinSet(false);
 
             router.dismissAll();
             router.replace('/');
@@ -125,6 +131,12 @@ const AppPreferencesTab: React.FC = () => {
             title: t('preferences.meraProtocol'),
             icon: 'security',
             onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
+        },
+        {
+            id: 'security',
+            title: t('security.title'),
+            icon: 'lock',
+            onPress: () => routerHook.push('/logged-in/preferences/security' as any),
         },
         {
             id: 'support',

@@ -22,6 +22,7 @@
     "saving": "Saving..."
   },
   "auth": {
+    "reauthBanner": "Sign in again to sync",
     "emailPlaceholder": "Enter your email address",
     "otpPlaceholder": "Enter 6-digit code",
     "codeSentTitle": "Code Sent!",
@@ -216,6 +217,7 @@
     "storyUnavailable": "This story is no longer available",
     "failedToLoad": "Failed to load article",
     "articleNotFound": "Article not found",
+    "offlineUnavailable": "You're offline and this article isn't saved for offline reading",
     "share": "Share",
     "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}"
   },
@@ -274,7 +276,8 @@
     "sheetTitle": "Manage sources",
     "close": "Close",
     "topStoriesIntro": "What people are talking about right now — sorted for what matters to you.",
-    "addPlaces": "Add places"
+    "addPlaces": "Add places",
+    "offlineUnavailable": "You're offline — Explore needs an internet connection"
   },
   "forYou": {
     "sectionPrefix": "News about:",
@@ -1116,5 +1119,34 @@
     "appliedToast": "{{count}} changes applied",
     "appliedTitle": "Feed tuned up",
     "empty": "Nothing to tune up right now."
+  },
+  "pin": {
+    "lockTitle": "Enter your PIN",
+    "lockSubtitle": "Enter your 4-digit PIN to unlock Mera",
+    "incorrect": "Incorrect PIN. Try again.",
+    "lockedTryAgain": "Too many attempts. Try again in {{time}}",
+    "forgot": "Forgot PIN?",
+    "forgotTitle": "Reset your PIN",
+    "forgotBody": "To reset your PIN, sign in again with a one-time email code. Your saved data stays on this device.",
+    "forgotOffline": "Resetting your PIN needs an internet connection to send a sign-in code. Connect to the internet and try again.",
+    "forgotConfirm": "Sign in to reset",
+    "setupTitle": "Set a PIN",
+    "setupSubtitle": "Choose a 4-digit PIN to protect the app on this device",
+    "confirmTitle": "Confirm your PIN",
+    "confirmSubtitle": "Re-enter your 4-digit PIN",
+    "mismatch": "PINs didn't match. Start again.",
+    "onboardingTitle": "Secure your app",
+    "onboardingSubtitle": "Set a 4-digit PIN. You'll enter it each time you open Mera."
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Manage your app PIN",
+    "changePin": "Change PIN",
+    "verifyCurrentTitle": "Enter current PIN",
+    "verifyCurrentSubtitle": "Confirm your current PIN to continue",
+    "newPinTitle": "Set a new PIN",
+    "newPinSubtitle": "Choose a new 4-digit PIN",
+    "pinChangedTitle": "PIN updated",
+    "pinChangedDescription": "Your PIN has been changed."
   }
 }
