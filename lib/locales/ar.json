@@ -239,7 +239,9 @@
     "noArticlesFound": "لم يتم العثور على مقالات",
     "togglePin": "تثبيت / إلغاء التثبيت",
     "topHeadlines": "أبرز العناوين",
-    "viewTopHeadlines": "أبرز العناوين"
+    "viewTopHeadlines": "أبرز العناوين",
+    "addToLocations": "أضف إلى أماكنك",
+    "addedToLocations": "أُضيف إلى أماكنك"
   },
   "clusterDetail": {
     "translatable": "هذا المقال مكتوب بلغة {{language}} — يمكن لجهازك ترجمته أثناء القراءة.",
@@ -637,7 +639,8 @@
     "actionPinTopic": "تثبيت موضوع",
     "actionUnpinTopic": "إلغاء تثبيت موضوع",
     "actionRetireTopic": "إنهاء موضوع",
-    "chooseOneHint": "اختر خيارًا واحدًا"
+    "chooseOneHint": "اختر خيارًا واحدًا",
+    "toggleLabels": "إظهار تسميات الأزرار"
   },
   "publicationVisits": {
     "topVisitedTitle": "المنشورات التي كنت تقرأها",
@@ -1059,6 +1062,7 @@
     "searchPlaceholder": "ابحث عن مدينة",
     "searchCountries": "ابحث عن دول",
     "noMatches": "لم يتم العثور على أماكن مطابقة",
+    "searchUnavailable": "البحث غير متاح حاليًا — يرجى المحاولة مرة أخرى بعد قليل.",
     "addManuallyCta": "لم تجده؟ أضفه يدويًا",
     "cityLabel": "المدينة",
     "cityPlaceholder": "أدخل اسم المدينة",

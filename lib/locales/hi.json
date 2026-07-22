@@ -231,7 +231,9 @@
     "noArticlesFound": "कोई लेख नहीं मिला",
     "togglePin": "पिन टॉगल करें",
     "topHeadlines": "मुख्य सुर्खियाँ",
-    "viewTopHeadlines": "मुख्य सुर्खियाँ"
+    "viewTopHeadlines": "मुख्य सुर्खियाँ",
+    "addToLocations": "अपनी जगहों में जोड़ें",
+    "addedToLocations": "आपकी जगहों में जोड़ा गया"
   },
   "clusterDetail": {
     "translatable": "यह लेख {{language}} में है — पढ़ते समय आपका डिवाइस इसे अनुवादित कर सकता है।",
@@ -629,7 +631,8 @@
     "actionPinTopic": "किसी विषय को पिन करें",
     "actionUnpinTopic": "किसी विषय को अनपिन करें",
     "actionRetireTopic": "किसी विषय को रिटायर करें",
-    "chooseOneHint": "एक विकल्प चुनें"
+    "chooseOneHint": "एक विकल्प चुनें",
+    "toggleLabels": "बटन लेबल दिखाएं"
   },
   "publicationVisits": {
     "topVisitedTitle": "आप जो प्रकाशन पढ़ रहे हैं",
@@ -1035,6 +1038,7 @@
     "searchPlaceholder": "किसी शहर को खोजें",
     "searchCountries": "देश खोजें",
     "noMatches": "कोई मेल खाती जगह नहीं मिली",
+    "searchUnavailable": "खोज अभी उपलब्ध नहीं है — कृपया थोड़ी देर बाद पुनः प्रयास करें।",
     "addManuallyCta": "नहीं मिल रही? मैन्युअल रूप से जोड़ें",
     "cityLabel": "शहर",
     "cityPlaceholder": "शहर का नाम दर्ज करें",

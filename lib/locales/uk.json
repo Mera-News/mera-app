@@ -235,7 +235,9 @@
     "noArticlesFound": "Статей не знайдено",
     "togglePin": "Закріпити/відкріпити",
     "topHeadlines": "Головні новини",
-    "viewTopHeadlines": "Головні новини"
+    "viewTopHeadlines": "Головні новини",
+    "addToLocations": "Додати до ваших місць",
+    "addedToLocations": "Додано до ваших місць"
   },
   "clusterDetail": {
     "translatable": "Ця стаття мовою {{language}} — ваш пристрій може перекласти її під час читання.",
@@ -633,7 +635,8 @@
     "actionPinTopic": "Закріпити тему",
     "actionUnpinTopic": "Відкріпити тему",
     "actionRetireTopic": "Деактивувати тему",
-    "chooseOneHint": "Оберіть один варіант"
+    "chooseOneHint": "Оберіть один варіант",
+    "toggleLabels": "Показувати підписи кнопок"
   },
   "publicationVisits": {
     "topVisitedTitle": "Видання, які ви читаєте",
@@ -1047,6 +1050,7 @@
     "searchPlaceholder": "Знайти місто",
     "searchCountries": "Пошук країн",
     "noMatches": "Відповідних місць не знайдено",
+    "searchUnavailable": "Пошук зараз недоступний — спробуйте ще раз за хвилину.",
     "addManuallyCta": "Не знайшли? Додайте вручну",
     "cityLabel": "Місто",
     "cityPlaceholder": "Введіть назву міста",

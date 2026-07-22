@@ -231,7 +231,9 @@
     "noArticlesFound": "Makale bulunamadı",
     "togglePin": "Sabitlemeyi değiştir",
     "topHeadlines": "Öne çıkan başlıklar",
-    "viewTopHeadlines": "Öne çıkan başlıklar"
+    "viewTopHeadlines": "Öne çıkan başlıklar",
+    "addToLocations": "Yerlerine ekle",
+    "addedToLocations": "Yerlerine eklendi"
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde — okurken cihazın çevirebilir.",
@@ -629,7 +631,8 @@
     "actionPinTopic": "Konuyu sabitle",
     "actionUnpinTopic": "Konunun sabitini kaldır",
     "actionRetireTopic": "Konuyu emekliye ayır",
-    "chooseOneHint": "Bir seçenek seç"
+    "chooseOneHint": "Bir seçenek seç",
+    "toggleLabels": "Düğme etiketlerini göster"
   },
   "publicationVisits": {
     "topVisitedTitle": "Okuduğun yayınlar",
@@ -1035,6 +1038,7 @@
     "searchPlaceholder": "Bir şehir ara",
     "searchCountries": "Ülkeleri ara",
     "noMatches": "Eşleşen yer bulunamadı",
+    "searchUnavailable": "Arama şu anda kullanılamıyor — birazdan tekrar deneyin.",
     "addManuallyCta": "Bulamadın mı? Manuel ekle",
     "cityLabel": "Şehir",
     "cityPlaceholder": "Bir şehir adı gir",

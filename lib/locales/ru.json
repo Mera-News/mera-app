@@ -235,7 +235,9 @@
     "noArticlesFound": "Статьи не найдены",
     "togglePin": "Закрепить/открепить",
     "topHeadlines": "Главные новости",
-    "viewTopHeadlines": "Главные новости"
+    "viewTopHeadlines": "Главные новости",
+    "addToLocations": "Добавить в ваши места",
+    "addedToLocations": "Добавлено в ваши места"
   },
   "clusterDetail": {
     "translatable": "Эта статья на {{language}} — ваше устройство может перевести её во время чтения.",
@@ -633,7 +635,8 @@
     "actionPinTopic": "Закрепить тему",
     "actionUnpinTopic": "Открепить тему",
     "actionRetireTopic": "Отключить тему",
-    "chooseOneHint": "Выберите один вариант"
+    "chooseOneHint": "Выберите один вариант",
+    "toggleLabels": "Показывать подписи кнопок"
   },
   "publicationVisits": {
     "topVisitedTitle": "Издания, которые вы читаете",
@@ -1042,6 +1045,7 @@
     "searchPlaceholder": "Найти город",
     "searchCountries": "Поиск стран",
     "noMatches": "Совпадающих мест не найдено",
+    "searchUnavailable": "Поиск сейчас недоступен — попробуйте снова через некоторое время.",
     "addManuallyCta": "Не нашли? Добавьте вручную",
     "cityLabel": "Город",
     "cityPlaceholder": "Введите название города",

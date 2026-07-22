@@ -231,7 +231,9 @@
     "noArticlesFound": "Geen artikelen gevonden",
     "togglePin": "Vastzetten in-/uitschakelen",
     "topHeadlines": "Topnieuws",
-    "viewTopHeadlines": "Topnieuws"
+    "viewTopHeadlines": "Topnieuws",
+    "addToLocations": "Toevoegen aan jouw plaatsen",
+    "addedToLocations": "Toegevoegd aan jouw plaatsen"
   },
   "clusterDetail": {
     "translatable": "Dit artikel is in {{language}} — je apparaat kan het vertalen terwijl je leest.",
@@ -629,7 +631,8 @@
     "actionPinTopic": "Een onderwerp vastzetten",
     "actionUnpinTopic": "Een onderwerp losmaken",
     "actionRetireTopic": "Een onderwerp verwijderen",
-    "chooseOneHint": "Kies één optie"
+    "chooseOneHint": "Kies één optie",
+    "toggleLabels": "Knoplabels weergeven"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publicaties die je leest",
@@ -1034,6 +1037,7 @@
     "searchPlaceholder": "Zoek een stad",
     "searchCountries": "Landen zoeken",
     "noMatches": "Geen overeenkomende plaatsen gevonden",
+    "searchUnavailable": "Zoeken is momenteel niet beschikbaar — probeer het over een moment opnieuw.",
     "addManuallyCta": "Kun je het niet vinden? Handmatig toevoegen",
     "cityLabel": "Stad",
     "cityPlaceholder": "Voer een stadsnaam in",

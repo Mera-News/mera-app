@@ -229,7 +229,9 @@
     "noArticlesFound": "기사를 찾을 수 없습니다",
     "togglePin": "고정 전환",
     "topHeadlines": "주요 뉴스",
-    "viewTopHeadlines": "주요 뉴스"
+    "viewTopHeadlines": "주요 뉴스",
+    "addToLocations": "내 장소에 추가",
+    "addedToLocations": "내 장소에 추가됨"
   },
   "clusterDetail": {
     "translatable": "이 기사는 {{language}}로 작성되었습니다 — 읽는 동안 기기에서 번역할 수 있습니다.",
@@ -627,7 +629,8 @@
     "actionPinTopic": "주제 고정",
     "actionUnpinTopic": "주제 고정 해제",
     "actionRetireTopic": "주제 제거",
-    "chooseOneHint": "옵션 하나 선택"
+    "chooseOneHint": "옵션 하나 선택",
+    "toggleLabels": "버튼 라벨 표시"
   },
   "publicationVisits": {
     "topVisitedTitle": "읽고 계신 발행사",
@@ -1029,6 +1032,7 @@
     "searchPlaceholder": "도시 검색",
     "searchCountries": "국가 검색",
     "noMatches": "일치하는 장소를 찾을 수 없습니다",
+    "searchUnavailable": "지금은 검색을 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "addManuallyCta": "찾을 수 없나요? 직접 추가하기",
     "cityLabel": "도시",
     "cityPlaceholder": "도시 이름을 입력하세요",

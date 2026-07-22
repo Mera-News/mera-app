@@ -229,7 +229,9 @@
     "noArticlesFound": "找不到文章",
     "togglePin": "切換釘選",
     "topHeadlines": "頭條新聞",
-    "viewTopHeadlines": "頭條新聞"
+    "viewTopHeadlines": "頭條新聞",
+    "addToLocations": "新增至你的地點",
+    "addedToLocations": "已新增至你的地點"
   },
   "clusterDetail": {
     "translatable": "這篇文章是{{language}}的 — 您的裝置可以在您閱讀時為您翻譯。",
@@ -627,7 +629,8 @@
     "actionPinTopic": "釘選某個主題",
     "actionUnpinTopic": "取消釘選某個主題",
     "actionRetireTopic": "停用某個主題",
-    "chooseOneHint": "請選擇一項"
+    "chooseOneHint": "請選擇一項",
+    "toggleLabels": "顯示按鈕標籤"
   },
   "publicationVisits": {
     "topVisitedTitle": "您正在閱讀的媒體",
@@ -1029,6 +1032,7 @@
     "searchPlaceholder": "搜尋城市",
     "searchCountries": "搜尋國家",
     "noMatches": "找不到符合的地點",
+    "searchUnavailable": "搜尋目前無法使用 — 請稍後再試。",
     "addManuallyCta": "找不到？手動新增",
     "cityLabel": "城市",
     "cityPlaceholder": "輸入城市名稱",

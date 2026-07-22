@@ -229,7 +229,9 @@
     "noArticlesFound": "Tidak ada artikel yang ditemukan",
     "togglePin": "Alihkan sematan",
     "topHeadlines": "Berita utama",
-    "viewTopHeadlines": "Berita utama"
+    "viewTopHeadlines": "Berita utama",
+    "addToLocations": "Tambahkan ke tempat Anda",
+    "addedToLocations": "Ditambahkan ke tempat Anda"
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}} — perangkat Anda dapat menerjemahkannya saat Anda membaca.",
@@ -627,7 +629,8 @@
     "actionPinTopic": "Sematkan suatu topik",
     "actionUnpinTopic": "Lepas sematan suatu topik",
     "actionRetireTopic": "Hentikan suatu topik",
-    "chooseOneHint": "Pilih salah satu opsi"
+    "chooseOneHint": "Pilih salah satu opsi",
+    "toggleLabels": "Tampilkan label tombol"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publikasi yang Anda baca",
@@ -1029,6 +1032,7 @@
     "searchPlaceholder": "Cari kota",
     "searchCountries": "Cari negara",
     "noMatches": "Tidak ada tempat yang cocok ditemukan",
+    "searchUnavailable": "Pencarian sedang tidak tersedia — coba lagi sesaat lagi.",
     "addManuallyCta": "Tidak menemukannya? Tambah secara manual",
     "cityLabel": "Kota",
     "cityPlaceholder": "Masukkan nama kota",

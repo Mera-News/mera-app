@@ -231,7 +231,9 @@
     "noArticlesFound": "Keine Artikel gefunden",
     "togglePin": "Anpinnen umschalten",
     "topHeadlines": "Top-Schlagzeilen",
-    "viewTopHeadlines": "Top-Schlagzeilen"
+    "viewTopHeadlines": "Top-Schlagzeilen",
+    "addToLocations": "Zu Ihren Orten hinzufügen",
+    "addedToLocations": "Zu Ihren Orten hinzugefügt"
   },
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} — Ihr Gerät kann ihn während des Lesens übersetzen.",
@@ -629,7 +631,8 @@
     "actionPinTopic": "Ein Thema anheften",
     "actionUnpinTopic": "Ein Thema loslösen",
     "actionRetireTopic": "Ein Thema stilllegen",
-    "chooseOneHint": "Eine Option auswählen"
+    "chooseOneHint": "Eine Option auswählen",
+    "toggleLabels": "Schaltflächenbeschriftungen anzeigen"
   },
   "publicationVisits": {
     "topVisitedTitle": "Zuletzt gelesene Publikationen",
@@ -1034,6 +1037,7 @@
     "searchPlaceholder": "Nach einer Stadt suchen",
     "searchCountries": "Länder suchen",
     "noMatches": "Keine passenden Orte gefunden",
+    "searchUnavailable": "Die Suche ist momentan nicht verfügbar — versuchen Sie es gleich noch einmal.",
     "addManuallyCta": "Nicht gefunden? Manuell hinzufügen",
     "cityLabel": "Stadt",
     "cityPlaceholder": "Stadtnamen eingeben",

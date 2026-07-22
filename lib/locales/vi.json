@@ -229,7 +229,9 @@
     "noArticlesFound": "Không tìm thấy bài viết nào",
     "togglePin": "Bật/tắt ghim",
     "topHeadlines": "Tin nổi bật",
-    "viewTopHeadlines": "Tin nổi bật"
+    "viewTopHeadlines": "Tin nổi bật",
+    "addToLocations": "Thêm vào địa điểm của bạn",
+    "addedToLocations": "Đã thêm vào địa điểm của bạn"
   },
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}} — thiết bị của bạn có thể dịch trong khi bạn đọc.",
@@ -627,7 +629,8 @@
     "actionPinTopic": "Ghim một chủ đề",
     "actionUnpinTopic": "Bỏ ghim một chủ đề",
     "actionRetireTopic": "Ngừng theo dõi một chủ đề",
-    "chooseOneHint": "Chọn một tùy chọn"
+    "chooseOneHint": "Chọn một tùy chọn",
+    "toggleLabels": "Hiện nhãn nút"
   },
   "publicationVisits": {
     "topVisitedTitle": "Ấn phẩm bạn đang đọc",
@@ -1029,6 +1032,7 @@
     "searchPlaceholder": "Tìm kiếm một thành phố",
     "searchCountries": "Tìm kiếm quốc gia",
     "noMatches": "Không tìm thấy địa điểm phù hợp",
+    "searchUnavailable": "Tìm kiếm hiện không khả dụng — vui lòng thử lại sau ít phút.",
     "addManuallyCta": "Không tìm thấy? Thêm thủ công",
     "cityLabel": "Thành phố",
     "cityPlaceholder": "Nhập tên thành phố",

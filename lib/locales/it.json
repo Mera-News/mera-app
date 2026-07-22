@@ -231,7 +231,9 @@
     "noArticlesFound": "Nessun articolo trovato",
     "togglePin": "Attiva/disattiva fissaggio",
     "topHeadlines": "Notizie principali",
-    "viewTopHeadlines": "Notizie principali"
+    "viewTopHeadlines": "Notizie principali",
+    "addToLocations": "Aggiungi ai tuoi luoghi",
+    "addedToLocations": "Aggiunto ai tuoi luoghi"
   },
   "clusterDetail": {
     "translatable": "Questo articolo è in {{language}} — il tuo dispositivo può tradurlo mentre leggi.",
@@ -629,7 +631,8 @@
     "actionPinTopic": "Fissa un argomento",
     "actionUnpinTopic": "Rimuovi il fissaggio di un argomento",
     "actionRetireTopic": "Ritira un argomento",
-    "chooseOneHint": "Scegli un'opzione"
+    "chooseOneHint": "Scegli un'opzione",
+    "toggleLabels": "Mostra etichette dei pulsanti"
   },
   "publicationVisits": {
     "topVisitedTitle": "Pubblicazioni che stai leggendo",
@@ -1034,6 +1037,7 @@
     "searchPlaceholder": "Cerca una città",
     "searchCountries": "Cerca paesi",
     "noMatches": "Nessun luogo corrispondente trovato",
+    "searchUnavailable": "La ricerca non è al momento disponibile — riprova tra poco.",
     "addManuallyCta": "Non lo trovi? Aggiungi manualmente",
     "cityLabel": "Città",
     "cityPlaceholder": "Inserisci il nome di una città",

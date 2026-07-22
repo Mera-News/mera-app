@@ -231,7 +231,9 @@
     "noArticlesFound": "No se encontraron artículos",
     "togglePin": "Fijar o desfijar",
     "topHeadlines": "Titulares principales",
-    "viewTopHeadlines": "Titulares principales"
+    "viewTopHeadlines": "Titulares principales",
+    "addToLocations": "Añadir a tus lugares",
+    "addedToLocations": "Añadido a tus lugares"
   },
   "clusterDetail": {
     "translatable": "Este artículo está en {{language}} — tu dispositivo puede traducirlo mientras lees.",
@@ -629,7 +631,8 @@
     "actionPinTopic": "Fijar un tema",
     "actionUnpinTopic": "Dejar de fijar un tema",
     "actionRetireTopic": "Retirar un tema",
-    "chooseOneHint": "Elige una opción"
+    "chooseOneHint": "Elige una opción",
+    "toggleLabels": "Mostrar etiquetas de los botones"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publicaciones que has estado leyendo",
@@ -1034,6 +1037,7 @@
     "searchPlaceholder": "Buscar una ciudad",
     "searchCountries": "Buscar países",
     "noMatches": "No se encontraron lugares coincidentes",
+    "searchUnavailable": "La búsqueda no está disponible en este momento — inténtalo de nuevo en un momento.",
     "addManuallyCta": "¿No lo encuentras? Añádelo manualmente",
     "cityLabel": "Ciudad",
     "cityPlaceholder": "Introduce el nombre de una ciudad",

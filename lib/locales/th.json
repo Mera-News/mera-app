@@ -229,7 +229,9 @@
     "noArticlesFound": "ไม่พบบทความ",
     "togglePin": "สลับการปักหมุด",
     "topHeadlines": "พาดหัวข่าวเด่น",
-    "viewTopHeadlines": "พาดหัวข่าวเด่น"
+    "viewTopHeadlines": "พาดหัวข่าวเด่น",
+    "addToLocations": "เพิ่มไปยังสถานที่ของคุณ",
+    "addedToLocations": "เพิ่มไปยังสถานที่ของคุณแล้ว"
   },
   "clusterDetail": {
     "translatable": "บทความนี้อยู่ในภาษา {{language}} — อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน",
@@ -627,7 +629,8 @@
     "actionPinTopic": "ปักหมุดหัวข้อ",
     "actionUnpinTopic": "เลิกปักหมุดหัวข้อ",
     "actionRetireTopic": "ปิดใช้งานหัวข้อ",
-    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก"
+    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก",
+    "toggleLabels": "แสดงป้ายกำกับปุ่ม"
   },
   "publicationVisits": {
     "topVisitedTitle": "สำนักพิมพ์ที่คุณกำลังอ่าน",
@@ -1029,6 +1032,7 @@
     "searchPlaceholder": "ค้นหาเมือง",
     "searchCountries": "ค้นหาประเทศ",
     "noMatches": "ไม่พบสถานที่ที่ตรงกัน",
+    "searchUnavailable": "ขณะนี้ไม่สามารถค้นหาได้ — ลองอีกครั้งในอีกสักครู่",
     "addManuallyCta": "หาไม่เจอ? เพิ่มด้วยตนเอง",
     "cityLabel": "เมือง",
     "cityPlaceholder": "กรอกชื่อเมือง",

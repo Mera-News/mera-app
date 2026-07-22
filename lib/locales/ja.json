@@ -229,7 +229,9 @@
     "noArticlesFound": "記事が見つかりません",
     "togglePin": "ピン留めを切り替え",
     "topHeadlines": "トップニュース",
-    "viewTopHeadlines": "トップニュース"
+    "viewTopHeadlines": "トップニュース",
+    "addToLocations": "自分の場所に追加",
+    "addedToLocations": "自分の場所に追加しました"
   },
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれています — 読んでいる間、端末が翻訳できます。",
@@ -627,7 +629,8 @@
     "actionPinTopic": "トピックをピン留めする",
     "actionUnpinTopic": "トピックのピン留めを解除する",
     "actionRetireTopic": "トピックを停止する",
-    "chooseOneHint": "1つ選んでください"
+    "chooseOneHint": "1つ選んでください",
+    "toggleLabels": "ボタンのラベルを表示"
   },
   "publicationVisits": {
     "topVisitedTitle": "読んでいた出版社",
@@ -1029,6 +1032,7 @@
     "searchPlaceholder": "都市を検索",
     "searchCountries": "国を検索",
     "noMatches": "一致する場所が見つかりません",
+    "searchUnavailable": "現在検索を利用できません。しばらくしてからもう一度お試しください。",
     "addManuallyCta": "見つかりませんか？手動で追加",
     "cityLabel": "都市",
     "cityPlaceholder": "都市名を入力",
