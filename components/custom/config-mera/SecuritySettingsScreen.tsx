@@ -6,8 +6,9 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
+import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,10 +24,16 @@ const SecuritySettingsScreen: React.FC<SecuritySettingsScreenProps> = ({ onBack 
   const insets = useSafeAreaInsets();
   const toast = useToast();
   const [mode, setMode] = useState<Mode>('menu');
+  // Tracks the full verify→set journey (two sequential pin-service hashes,
+  // split across PinLockScreen and PinSetupScreen) for [pin-timing] logging.
+  const changePinStartRef = useRef(0);
 
   const handleNewPinComplete = async () => {
     // PinSetupScreen already persisted via its own setPin; nothing extra to do
     // besides confirming and returning to the menu.
+    logger.info(
+      `[pin-timing] SecuritySettingsScreen submit→done ${Date.now() - changePinStartRef.current}ms`,
+    );
     setMode('menu');
     toast.show({
       placement: 'top',
@@ -79,7 +86,10 @@ const SecuritySettingsScreen: React.FC<SecuritySettingsScreenProps> = ({ onBack 
       <VStack className="px-5">
         <Pressable
           className="flex-row items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg"
-          onPress={() => setMode('verify')}
+          onPress={() => {
+            changePinStartRef.current = Date.now();
+            setMode('verify');
+          }}
         >
           <Text className="text-base text-white">{t('security.changePin')}</Text>
           <MaterialIcons name="chevron-right" size={20} color="#999999" />

@@ -1,5 +1,13 @@
 // pin-service tests. The secure-store adapter is mocked with an in-memory map
-// so we exercise the real scrypt hashing + attempt-limiting logic end to end.
+// so we exercise the real hashing + attempt-limiting logic end to end.
+//
+// expo-crypto's native digestStringAsync isn't available under Jest, and the
+// global jest.setup.js mock returns a constant 'deadbeef' regardless of
+// input — fine for smoke tests elsewhere, but useless here since we need
+// different (salt, pin) pairs to produce different digests (otherwise a
+// wrong PIN would "verify" as correct). This file-local mock overrides it
+// with a small deterministic hash that's a pure function of the input
+// string, which is all these tests need.
 
 const mockStore = new Map<string, string>();
 
@@ -20,6 +28,17 @@ jest.mock('../../utils/secure-store-adapter', () => ({
 jest.mock('expo-constants', () => ({
   __esModule: true,
   default: { expoConfig: { slug: 'testslug' } },
+}));
+
+jest.mock('expo-crypto', () => ({
+  CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+  digestStringAsync: jest.fn((_algo: string, data: string) => {
+    let h = 0;
+    for (let i = 0; i < data.length; i++) {
+      h = (h * 31 + data.charCodeAt(i)) >>> 0;
+    }
+    return Promise.resolve(h.toString(16).padStart(8, '0'));
+  }),
 }));
 
 jest.mock('../../logger', () => ({
@@ -145,6 +164,60 @@ describe('changePin', () => {
     expect(res.success).toBe(true);
     expect((await verifyPin('2222')).success).toBe(true);
     expect((await verifyPin('1111')).success).toBe(false);
+  });
+});
+
+describe('legacy (pre sha256-v1) records', () => {
+  const legacyRecord = () =>
+    JSON.stringify({
+      // Old scrypt-era shape: no `algo` field at all (records written before
+      // this field existed) — the mismatch check must treat this the same as
+      // an explicitly different algo value.
+      saltHex: 'aa'.repeat(16),
+      hashHex: 'bb'.repeat(32),
+      createdAt: Date.now(),
+    });
+
+  it('isPinSet treats an algo-mismatched record as if no PIN were set', async () => {
+    mockStore.set('testslug_pin_record', legacyRecord());
+    expect(await isPinSet()).toBe(false);
+  });
+
+  it('verifyPin rejects a legacy record without burning an attempt or arming a cooldown', async () => {
+    mockStore.set('testslug_pin_record', legacyRecord());
+    const res = await verifyPin('1234');
+    expect(res.success).toBe(false);
+    expect(res.failCount).toBe(0);
+    expect(res.lockedUntil).toBeUndefined();
+    // No attempt-state was even written — a legacy record shouldn't count
+    // against the cooldown budget since it can never be satisfied.
+    expect(mockStore.has('testslug_pin_attempts')).toBe(false);
+  });
+
+  it('an explicit non-current algo value is treated the same as a missing one', async () => {
+    mockStore.set(
+      'testslug_pin_record',
+      JSON.stringify({
+        algo: 'scrypt-legacy',
+        saltHex: 'aa'.repeat(16),
+        hashHex: 'bb'.repeat(32),
+        createdAt: Date.now(),
+      }),
+    );
+    expect(await isPinSet()).toBe(false);
+    expect((await verifyPin('1234')).success).toBe(false);
+  });
+
+  it('self-heals: setPin after a legacy record overwrites it with the current algo', async () => {
+    mockStore.set('testslug_pin_record', legacyRecord());
+    expect(await isPinSet()).toBe(false);
+
+    await setPin('1234');
+
+    expect(await isPinSet()).toBe(true);
+    expect((await verifyPin('1234')).success).toBe(true);
+    const rec = JSON.parse(mockStore.get('testslug_pin_record')!);
+    expect(rec.algo).toBe('sha256-v1');
   });
 });
 

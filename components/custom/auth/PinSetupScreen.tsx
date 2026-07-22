@@ -47,8 +47,10 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
       if (savingRef.current) return;
       savingRef.current = true;
       setSaving(true);
+      const submitStart = Date.now();
       try {
         await savePin(value);
+        logger.info(`[pin-timing] PinSetupScreen submit→done ${Date.now() - submitStart}ms`);
         usePinStore.getState().setPinSet(true);
         onComplete();
       } catch (err) {

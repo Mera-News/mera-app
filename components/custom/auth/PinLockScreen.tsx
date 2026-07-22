@@ -77,8 +77,10 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
       if (submittingRef.current) return;
       submittingRef.current = true;
       setVerifying(true);
+      const submitStart = Date.now();
       try {
         const result = await verifyPin(candidate);
+        logger.info(`[pin-timing] PinLockScreen submit→done ${Date.now() - submitStart}ms`);
         if (result.success) {
           usePinStore.getState().unlock();
           onUnlock();
