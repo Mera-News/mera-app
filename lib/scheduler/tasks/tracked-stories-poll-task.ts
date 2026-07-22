@@ -116,6 +116,7 @@ AppScheduler.register({
   frequency: POLL_INTERVAL_MS,
   triggers: ['app-foreground'],
   conditions: [
+    { type: 'network' },
     { type: 'authenticated' },
     // Skip while gated behind the paywall (server calls would 402).
     {

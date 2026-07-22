@@ -18,7 +18,8 @@ import {
   encryptContent,
   type E2EEContext,
 } from '@/lib/e2ee/e2ee-service';
-import { getJwtToken } from '@/lib/auth-client';
+import { getJwtToken, invalidateJwtCache } from '@/lib/auth-client';
+import { recordAuthFailure } from '@/lib/auth-failure-breaker';
 import pako from 'pako';
 import { Directory, File, Paths } from 'expo-file-system';
 import { INFERENCE_ENDPOINT, DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
@@ -177,9 +178,8 @@ export async function sendInferenceRequest(args: {
   // both) well under the limit before we even attempt the POST.
   await gatewayRateLimiter.acquire();
 
-  let res: Response;
-  try {
-    res = await withRetry(
+  const doSubmitPost = (bearer: string): Promise<Response> =>
+    withRetry(
       async () => {
         const r = await (expoFetch as unknown as typeof globalThis.fetch)(
           JOBS_API,
@@ -188,7 +188,7 @@ export async function sendInferenceRequest(args: {
             headers: {
               'Content-Type': 'application/json',
               'Content-Encoding': 'gzip',
-              Authorization: authHeader,
+              Authorization: bearer,
             },
             body: gzipped as unknown as BodyInit,
           },
@@ -203,12 +203,44 @@ export async function sendInferenceRequest(args: {
       4,
       TAG,
     );
+
+  let res: Response;
+  try {
+    res = await doSubmitPost(authHeader);
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'submitInferenceJob', status: 'retry-exhausted' },
       extra: { url: JOBS_API },
     });
     return { status: 'failed' };
+  }
+
+  // 401/403 recovery — foreground (JWT) only. Mirrors authFetch's idiom
+  // (lib/llm/cloudComplete.ts): invalidate the cached JWT, re-mint once, retry
+  // the POST once. A background submit has no re-mint path (the keychain is
+  // never read in that context — see ExecutionContext) so a stale capability
+  // token there is left alone: it says nothing about the Better Auth session,
+  // so recordAuthFailure() would be a false signal. Both cases fall through to
+  // the standard non-202 handling below, which captures + returns failed.
+  if ((res.status === 401 || res.status === 403) && context === 'foreground') {
+    logger.warn(`${TAG} ${res.status} on submit — invalidating JWT cache and re-minting once`);
+    invalidateJwtCache();
+    const freshJwt = await getJwtToken().catch(() => null);
+    if (freshJwt) {
+      authHeader = `Bearer ${freshJwt}`;
+      try {
+        res = await doSubmitPost(authHeader);
+      } catch (err) {
+        logger.captureException(err, {
+          tags: { service: 'submitInferenceJob', status: 'retry-exhausted-after-401' },
+          extra: { url: JOBS_API },
+        });
+        return { status: 'failed' };
+      }
+    }
+    if (res.status === 401 || res.status === 403) {
+      recordAuthFailure();
+    }
   }
 
   if (res.status === 429) {

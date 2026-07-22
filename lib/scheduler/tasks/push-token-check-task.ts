@@ -8,6 +8,7 @@ AppScheduler.register({
   frequency: 60 * 60 * 1000,
   triggers: ['app-foreground'],
   conditions: [
+    { type: 'network' },
     { type: 'authenticated' },
     // Skip while gated behind the paywall (server calls would 402).
     {

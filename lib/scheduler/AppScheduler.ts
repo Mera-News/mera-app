@@ -2,6 +2,7 @@ import { AppState } from 'react-native';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
+import { getJwtToken } from '@/lib/auth-client';
 import type { Job, TaskCondition, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
@@ -135,7 +136,7 @@ class _AppScheduler {
       const isTimerDriven = task.frequency > 0;
       if (!isTimerDriven) continue;
 
-      if (!this._conditionsMet(task)) continue;
+      if (!(await this._conditionsMet(task))) continue;
 
       logger.info(`[AppScheduler] tick-firing task=${task.name} lastRun=${lastRun ? Math.round((now - lastRun) / 1000) + 's ago' : 'never'}`);
       await this._enqueueAndRun(task);
@@ -158,7 +159,7 @@ class _AppScheduler {
     // A6: defer the task-enqueue kick past in-flight interactions so a
     // foreground transition's animations/gestures aren't janked by the sync
     // work. The auth-breaker reset above stays synchronous.
-    void yieldToInteractions().then(() => {
+    void yieldToInteractions().then(async () => {
       for (const task of this.tasks.values()) {
         if (this.pausedTasks.has(task.name)) continue;
         if (!task.triggers?.includes('app-foreground')) continue;
@@ -168,25 +169,27 @@ class _AppScheduler {
         const isDue = task.frequency === 0 || (Date.now() - lastRun) >= task.frequency;
         if (!isDue) continue;
 
-        if (!this._conditionsMet(task)) continue;
+        if (!(await this._conditionsMet(task))) continue;
         void this._enqueueAndRun(task);
       }
     });
   }
 
   private _onNetworkReconnect(): void {
-    for (const task of this.tasks.values()) {
-      if (this.pausedTasks.has(task.name)) continue;
-      if (!task.triggers?.includes('network-reconnect')) continue;
-      if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
-      if (!this._conditionsMet(task)) continue;
-      void this._enqueueAndRun(task);
-    }
+    void (async () => {
+      for (const task of this.tasks.values()) {
+        if (this.pausedTasks.has(task.name)) continue;
+        if (!task.triggers?.includes('network-reconnect')) continue;
+        if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
+        if (!(await this._conditionsMet(task))) continue;
+        void this._enqueueAndRun(task);
+      }
+    })();
   }
 
-  private _conditionsMet(task: TaskDefinition): boolean {
+  private async _conditionsMet(task: TaskDefinition): Promise<boolean> {
     for (const cond of task.conditions ?? []) {
-      if (!this._checkCondition(cond)) {
+      if (!(await this._checkCondition(cond))) {
         logger.info(`[AppScheduler] task=${task.name} blocked by condition type=${cond.type}`);
         return false;
       }
@@ -194,12 +197,42 @@ class _AppScheduler {
     return true;
   }
 
-  private _checkCondition(cond: TaskCondition): boolean {
+  private async _checkCondition(cond: TaskCondition): Promise<boolean> {
     if (cond.type === 'network') return useNetworkStore.getState().isConnected;
-    if (cond.type === 'authenticated') return useUserStore.getState().userPersona !== null;
+    if (cond.type === 'authenticated') return this._checkAuthenticated();
     if (cond.type === 'db-ready') return useDatabaseStore.getState().ready;
     if (cond.type === 'custom') return cond.check();
     return true;
+  }
+
+  /**
+   * Real auth pre-flight, not just "did we ever log in". Order matters:
+   *  1. Fast local check — no persona means there is nothing to authenticate
+   *     with, online or off.
+   *  2. needsReauth — set by the auth-failure breaker once a server-truth
+   *     re-check confirms the session is dead (lib/auth-failure-breaker.ts).
+   *     Unconditional: a confirmed-dead session shouldn't fire tasks even
+   *     while offline, since it'll still be dead once connectivity returns.
+   *  3. Credential freshness — only checked when the network is up. A task
+   *     that merely needs local auth identity (e.g. one that queues work for
+   *     later) must still be allowed to run offline; `getJwtToken()` would
+   *     just fail on the network call anyway. Tasks that truly need
+   *     connectivity are also gated by a `{ type: 'network' }` condition.
+   * A failed pre-flight is a quiet skip — no Sentry event, no attempt
+   * consumed — mirroring how every other unmet condition behaves in
+   * `_conditionsMet` above.
+   */
+  private async _checkAuthenticated(): Promise<boolean> {
+    if (useUserStore.getState().userPersona === null) return false;
+    if (useUserStore.getState().needsReauth) return false;
+    if (!useNetworkStore.getState().isConnected) return true;
+
+    try {
+      const jwt = await getJwtToken();
+      return jwt !== null;
+    } catch {
+      return false;
+    }
   }
 
   private async _enqueueAndRun(task: TaskDefinition, input?: unknown): Promise<void> {

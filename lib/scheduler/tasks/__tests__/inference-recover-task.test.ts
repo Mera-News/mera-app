@@ -66,6 +66,11 @@ describe('inference-recover-task registration', () => {
     expect(types).toContain('db-ready');
   });
 
+  it('has a network condition (skips offline)', () => {
+    const types = registeredDef.conditions.map((c: any) => c.type);
+    expect(types).toContain('network');
+  });
+
   it('is exclusive', () => {
     expect(registeredDef.exclusive).toBe(true);
   });

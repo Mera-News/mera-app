@@ -65,6 +65,11 @@ describe('push-token-check-task registration', () => {
     expect(types).toContain('authenticated');
   });
 
+  it('has a network condition (skips offline)', () => {
+    const types = registeredDef.conditions.map((c: any) => c.type);
+    expect(types).toContain('network');
+  });
+
   it('is exclusive', () => {
     expect(registeredDef.exclusive).toBe(true);
   });

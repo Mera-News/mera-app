@@ -102,6 +102,11 @@ describe('tracked-stories-poll-task registration', () => {
     expect(types).toContain('authenticated');
   });
 
+  it('has a network condition (skips offline — polling is a network call)', () => {
+    const types = registeredDef.conditions.map((c: any) => c.type);
+    expect(types).toContain('network');
+  });
+
   it('is exclusive', () => {
     expect(registeredDef.exclusive).toBe(true);
   });

@@ -26,8 +26,10 @@ const mockNetworkStoreSubscribe = jest.fn((...args: any[]) => {
 const mockNetworkState = { isConnected: true };
 
 // User-store and database-store mocks
-const mockUserStore = { userPersona: { _id: 'p-1' } };
+const mockUserStore = { userPersona: { _id: 'p-1' }, needsReauth: false };
 const mockDbStore = { ready: true };
+
+const mockGetJwtToken = jest.fn();
 
 jest.mock('react-native', () => ({
   AppState: {
@@ -52,6 +54,10 @@ jest.mock('@/lib/stores/database-store', () => ({
   useDatabaseStore: {
     getState: () => mockDbStore,
   },
+}));
+
+jest.mock('@/lib/auth-client', () => ({
+  getJwtToken: (...args: any[]) => mockGetJwtToken(...args),
 }));
 
 jest.mock('@/lib/scheduler/scheduler-store', () => ({
@@ -121,7 +127,9 @@ beforeEach(() => {
   networkSubscribeFn = null;
   mockNetworkState.isConnected = true;
   mockUserStore.userPersona = { _id: 'p-1' } as any;
+  mockUserStore.needsReauth = false;
   mockDbStore.ready = true;
+  mockGetJwtToken.mockReset().mockResolvedValue('jwt-token');
 
   // Return a remove function from addEventListener
   mockAppStateAddEventListener.mockReturnValue({ remove: jest.fn() });
@@ -362,6 +370,135 @@ describe('AppScheduler — condition checks', () => {
 
     // Unknown condition type → _checkCondition returns true → task should run
     expect(mockCreateJob).toHaveBeenCalled();
+  });
+});
+
+describe('AppScheduler — authenticated condition (real credential pre-flight)', () => {
+  function makeAuthTask(name: string) {
+    return makeTask({ name, frequency: 10_000, conditions: [{ type: 'authenticated' }] });
+  }
+
+  it('allows: persona present, online, jwt ok, needsReauth false', async () => {
+    AppScheduler.register(makeAuthTask('auth-ok'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = false;
+    mockNetworkState.isConnected = true;
+    mockGetJwtToken.mockResolvedValue('jwt-token');
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+    expect(mockGetJwtToken).toHaveBeenCalled();
+  });
+
+  it('blocks: persona present, online, jwt null, needsReauth false', async () => {
+    AppScheduler.register(makeAuthTask('auth-jwt-null'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = false;
+    mockNetworkState.isConnected = true;
+    mockGetJwtToken.mockResolvedValue(null);
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('blocks: persona present, online, getJwtToken throws, needsReauth false', async () => {
+    AppScheduler.register(makeAuthTask('auth-jwt-throws'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = false;
+    mockNetworkState.isConnected = true;
+    mockGetJwtToken.mockRejectedValue(new Error('keychain unavailable'));
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('allows: persona present, offline — credential check is skipped entirely', async () => {
+    AppScheduler.register(makeAuthTask('auth-offline'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = false;
+    mockNetworkState.isConnected = false;
+    // Even if it were called, it would fail — proves the check is genuinely skipped.
+    mockGetJwtToken.mockResolvedValue(null);
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+    expect(mockGetJwtToken).not.toHaveBeenCalled();
+  });
+
+  it('blocks: persona absent, online, jwt ok — fast local check short-circuits', async () => {
+    AppScheduler.register(makeAuthTask('auth-no-persona'));
+    mockUserStore.userPersona = null as any;
+    mockUserStore.needsReauth = false;
+    mockNetworkState.isConnected = true;
+    mockGetJwtToken.mockResolvedValue('jwt-token');
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+    expect(mockGetJwtToken).not.toHaveBeenCalled();
+  });
+
+  it('blocks: persona absent, offline', async () => {
+    AppScheduler.register(makeAuthTask('auth-no-persona-offline'));
+    mockUserStore.userPersona = null as any;
+    mockNetworkState.isConnected = false;
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('blocks: persona present, online, jwt ok, but needsReauth true', async () => {
+    AppScheduler.register(makeAuthTask('auth-needs-reauth'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = true;
+    mockNetworkState.isConnected = true;
+    mockGetJwtToken.mockResolvedValue('jwt-token');
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+    // needsReauth short-circuits before the network-gated jwt check.
+    expect(mockGetJwtToken).not.toHaveBeenCalled();
+  });
+
+  it('blocks: persona present, offline, needsReauth true — checked unconditionally', async () => {
+    AppScheduler.register(makeAuthTask('auth-needs-reauth-offline'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = true;
+    mockNetworkState.isConnected = false;
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('a failed auth pre-flight does not consume an attempt or capture to Sentry (quiet skip)', async () => {
+    AppScheduler.register(makeAuthTask('auth-quiet-skip'));
+    mockUserStore.userPersona = { _id: 'p-1' } as any;
+    mockUserStore.needsReauth = false;
+    mockNetworkState.isConnected = true;
+    mockGetJwtToken.mockResolvedValue(null);
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+    expect(mockRunnerRun).not.toHaveBeenCalled();
+    const loggerMock = jest.requireMock('@/lib/logger').default;
+    expect(loggerMock.captureException).not.toHaveBeenCalled();
   });
 });
 

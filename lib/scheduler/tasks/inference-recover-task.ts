@@ -6,7 +6,7 @@ AppScheduler.register({
   displayName: 'Inference Recovery',
   frequency: 0,
   triggers: ['app-foreground'],
-  conditions: [{ type: 'authenticated' }, { type: 'db-ready' }],
+  conditions: [{ type: 'network' }, { type: 'authenticated' }, { type: 'db-ready' }],
   timeout: 120_000,
   maxAttempts: 1,
   exclusive: true,

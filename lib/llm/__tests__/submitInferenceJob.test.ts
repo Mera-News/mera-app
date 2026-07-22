@@ -32,8 +32,15 @@ jest.mock('@/lib/e2ee/e2ee-service', () => ({
 }));
 
 const mockGetJwtToken = jest.fn();
+const mockInvalidateJwtCache = jest.fn();
 jest.mock('@/lib/auth-client', () => ({
   getJwtToken: (...args: unknown[]) => mockGetJwtToken(...args),
+  invalidateJwtCache: (...args: unknown[]) => mockInvalidateJwtCache(...args),
+}));
+
+const mockRecordAuthFailure = jest.fn();
+jest.mock('@/lib/auth-failure-breaker', () => ({
+  recordAuthFailure: (...args: unknown[]) => mockRecordAuthFailure(...args),
 }));
 
 jest.mock('pako', () => ({
@@ -383,5 +390,106 @@ describe('sendInferenceRequest', () => {
     expect(result).toEqual({ status: 'ok', requestId: 'req-throw-fb', capabilityToken: '' });
     const fetchCall = mockExpoFetch.mock.calls[0];
     expect(fetchCall[1].headers.Authorization).toBe('Bearer fallback-cap');
+  });
+
+  describe('401/403 recovery (foreground JWT path)', () => {
+    it('401 then a successful re-mint retries the POST once and succeeds', async () => {
+      const unauthorized = makeResponse(401, { error: 'unauthorized' });
+      const success = makeResponse(202, { requestId: 'req-401-retry', capabilityToken: 'cap' });
+      mockExpoFetch.mockResolvedValueOnce(unauthorized).mockResolvedValueOnce(success);
+      mockGetJwtToken.mockResolvedValueOnce('jwt-token').mockResolvedValueOnce('fresh-jwt');
+
+      const result = await sendInferenceRequest({
+        bundle: makeBundle(),
+        ctx: makeE2EEContext(),
+        token: null,
+        model: 'test-model',
+        context: 'foreground',
+      });
+
+      expect(result).toEqual({ status: 'ok', requestId: 'req-401-retry', capabilityToken: 'cap' });
+      expect(mockInvalidateJwtCache).toHaveBeenCalledTimes(1);
+      expect(mockGetJwtToken).toHaveBeenCalledTimes(2);
+      expect(mockExpoFetch).toHaveBeenCalledTimes(2);
+      expect(mockExpoFetch.mock.calls[1][1].headers.Authorization).toBe('Bearer fresh-jwt');
+      expect(mockRecordAuthFailure).not.toHaveBeenCalled();
+    });
+
+    it('still 401 after the re-mint retry → failed + recordAuthFailure called', async () => {
+      const unauthorized = makeResponse(401, { error: 'unauthorized' });
+      mockExpoFetch.mockResolvedValue(unauthorized);
+      mockGetJwtToken.mockResolvedValueOnce('jwt-token').mockResolvedValueOnce('fresh-jwt-2');
+
+      const result = await sendInferenceRequest({
+        bundle: makeBundle(),
+        ctx: makeE2EEContext(),
+        token: null,
+        model: 'test-model',
+        context: 'foreground',
+      });
+
+      expect(result).toEqual({ status: 'failed' });
+      expect(mockInvalidateJwtCache).toHaveBeenCalledTimes(1);
+      expect(mockExpoFetch).toHaveBeenCalledTimes(2);
+      expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+    });
+
+    it('403 behaves the same as 401 — invalidate, re-mint, retry, still-403 records auth failure', async () => {
+      const forbidden = makeResponse(403, { error: 'forbidden' });
+      mockExpoFetch.mockResolvedValue(forbidden);
+      mockGetJwtToken.mockResolvedValueOnce('jwt-token').mockResolvedValueOnce('fresh-jwt-3');
+
+      const result = await sendInferenceRequest({
+        bundle: makeBundle(),
+        ctx: makeE2EEContext(),
+        token: null,
+        model: 'test-model',
+        context: 'foreground',
+      });
+
+      expect(result).toEqual({ status: 'failed' });
+      expect(mockInvalidateJwtCache).toHaveBeenCalledTimes(1);
+      expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+    });
+
+    it('401 with no fresh JWT available → no retry POST attempted, still records auth failure', async () => {
+      const unauthorized = makeResponse(401, { error: 'unauthorized' });
+      mockExpoFetch.mockResolvedValue(unauthorized);
+      mockGetJwtToken.mockResolvedValueOnce('jwt-token').mockResolvedValueOnce(null);
+
+      const result = await sendInferenceRequest({
+        bundle: makeBundle(),
+        ctx: makeE2EEContext(),
+        token: null,
+        model: 'test-model',
+        context: 'foreground',
+      });
+
+      expect(result).toEqual({ status: 'failed' });
+      expect(mockInvalidateJwtCache).toHaveBeenCalledTimes(1);
+      // No fresh JWT → no second fetch attempt.
+      expect(mockExpoFetch).toHaveBeenCalledTimes(1);
+      expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+    });
+
+    it('background 401 does NOT invalidate/re-mint/record an auth failure (stale capability token proves nothing about the session)', async () => {
+      const unauthorized = makeResponse(401, { error: 'unauthorized' });
+      mockExpoFetch.mockResolvedValue(unauthorized);
+
+      const result = await sendInferenceRequest({
+        bundle: makeBundle(),
+        ctx: makeE2EEContext(),
+        token: null,
+        model: 'test-model',
+        context: 'background',
+        capabilityToken: 'bg-cap-token',
+      });
+
+      expect(result).toEqual({ status: 'failed' });
+      expect(mockGetJwtToken).not.toHaveBeenCalled();
+      expect(mockInvalidateJwtCache).not.toHaveBeenCalled();
+      expect(mockRecordAuthFailure).not.toHaveBeenCalled();
+      expect(mockExpoFetch).toHaveBeenCalledTimes(1);
+    });
   });
 });
