@@ -31,9 +31,10 @@ function resolveApiKey(): string {
 
 // Entitlement identifiers configured in the RevenueCat dashboard. Must match
 // the server (mera-server-auth REVENUECAT_ENTITLEMENT_* env vars). Store
-// purchases grant `mera-news-*-plan`; legacy promotional grants used the bare
-// tier name — accept both. Professional outranks individual when both are
-// active.
+// purchases grant `mera-news-*-plan`; legacy promotional grants for the
+// individual/professional tiers used the bare tier name — accept both.
+// Starter is new and has no legacy bare alias. Professional outranks
+// individual outranks starter when more than one is active.
 export const INDIVIDUAL_ENTITLEMENT_IDS = [
   'mera-news-individual-plan',
   'individual',
@@ -42,14 +43,15 @@ export const PROFESSIONAL_ENTITLEMENT_IDS = [
   'mera-news-professional-plan',
   'professional',
 ];
+export const STARTER_ENTITLEMENT_IDS = ['mera-news-starter-plan'];
 
 // Offering identifier (RevenueCat dashboard) whose paywall the app presents.
-// Holds both tiers (individual + professional) as packages; the paywall splits
-// them via its Tabs component. This is the SDK identifier, not the REST
-// `ofrng…` id (which the client SDK never uses).
+// Holds all three tiers (starter + individual + professional) as packages;
+// the paywall splits them via its Tabs component. This is the SDK identifier,
+// not the REST `ofrng…` id (which the client SDK never uses).
 export const OFFERING_SUBSCRIPTION = 'mera-news-subscription';
 
-export type SubscriptionTier = 'individual' | 'professional' | null;
+export type SubscriptionTier = 'starter' | 'individual' | 'professional' | null;
 
 let configured = false;
 
@@ -137,6 +139,7 @@ export function getActiveTier(
     return 'professional';
   }
   if (INDIVIDUAL_ENTITLEMENT_IDS.some((id) => active[id])) return 'individual';
+  if (STARTER_ENTITLEMENT_IDS.some((id) => active[id])) return 'starter';
   return null;
 }
 
@@ -148,6 +151,7 @@ export function getActiveEntitlementInfo(
   for (const id of [
     ...PROFESSIONAL_ENTITLEMENT_IDS,
     ...INDIVIDUAL_ENTITLEMENT_IDS,
+    ...STARTER_ENTITLEMENT_IDS,
   ]) {
     if (active[id]) return active[id];
   }

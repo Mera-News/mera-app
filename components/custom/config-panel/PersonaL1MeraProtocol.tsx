@@ -451,7 +451,9 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                                 ? t('configPanel.professionalPlan')
                                 : billing?.subscriptionTier === 'individual'
                                     ? t('configPanel.individualPlan')
-                                    : t('configPanel.promoPlan')
+                                    : billing?.subscriptionTier === 'starter'
+                                        ? t('configPanel.starterPlan')
+                                        : t('configPanel.promoPlan')
                         }
                         onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
                         upgradeLabel={t('subscription.upgrade')}

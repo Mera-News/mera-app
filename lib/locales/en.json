@@ -71,6 +71,7 @@
     "planLabel": "Plan",
     "priceLabel": "Price",
     "planPromo": "Promo",
+    "planStarter": "Starter",
     "planIndividual": "Individual",
     "planProfessional": "Professional",
     "usageSection": "Usage",
@@ -618,6 +619,7 @@
     "promoInfoTitleEmoji": "🎉 Launch offer 🎊",
     "promoTooltip": "You're free to test the Individual plan as part of our app launch. This is a limited-time offer.",
     "gotItPromo": "Awesome! 🎉",
+    "starterPlan": "Starter Plan",
     "individualPlan": "Individual Plan",
     "professionalPlan": "Professional Plan"
   },

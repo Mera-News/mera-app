@@ -33,6 +33,25 @@ describe('subscription-store', () => {
     expect(useSubscriptionStore.getState().isPremium).toBe(true);
   });
 
+  it('derives starter tier + isPremium from customer info', () => {
+    useSubscriptionStore
+      .getState()
+      .setCustomerInfo(customerInfo({ 'mera-news-starter-plan': {} }));
+    const s = useSubscriptionStore.getState();
+    expect(s.tier).toBe('starter');
+    expect(s.isPremium).toBe(true);
+  });
+
+  it('prefers professional over starter when both are active', () => {
+    useSubscriptionStore.getState().setCustomerInfo(
+      customerInfo({
+        professional: {},
+        'mera-news-starter-plan': {},
+      }),
+    );
+    expect(useSubscriptionStore.getState().tier).toBe('professional');
+  });
+
   it('treats no active entitlements as not premium', () => {
     useSubscriptionStore.getState().setCustomerInfo(customerInfo());
     expect(useSubscriptionStore.getState().tier).toBeNull();

@@ -138,6 +138,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const planName = (tier: string | null | undefined): string => {
         if (tier === 'professional') return t('subscription.planProfessional');
         if (tier === 'individual') return t('subscription.planIndividual');
+        if (tier === 'starter') return t('subscription.planStarter');
         return t('subscription.planPromo');
     };
 
@@ -166,7 +167,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         ? billing.subscriptionTier
         : rcTier;
 
-    const isPaid = effectiveTier === 'individual' || effectiveTier === 'professional';
+    const isPaid = effectiveTier === 'individual' || effectiveTier === 'professional' || effectiveTier === 'starter';
 
     // Glanceable status pill for the hero card.
     const statusPill: { text: string; color: string } | null = activeEntitlement

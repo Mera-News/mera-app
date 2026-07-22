@@ -40,6 +40,25 @@ describe('revenuecat', () => {
       );
     });
 
+    it('returns starter when only the starter entitlement is active', () => {
+      const { rc } = load();
+      expect(
+        rc.getActiveTier(customerInfo({ 'mera-news-starter-plan': {} })),
+      ).toBe('starter');
+    });
+
+    it('prefers professional over starter when both are active', () => {
+      const { rc } = load();
+      expect(
+        rc.getActiveTier(
+          customerInfo({
+            professional: {},
+            'mera-news-starter-plan': {},
+          }),
+        ),
+      ).toBe('professional');
+    });
+
     it('returns null when no entitlements are active', () => {
       const { rc } = load();
       expect(rc.getActiveTier(customerInfo())).toBeNull();
