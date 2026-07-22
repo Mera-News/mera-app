@@ -7,7 +7,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
 import { Box } from '@/components/ui/box';
 import MeraLogo from '@/components/custom/MeraLogo';
-import type { Verdict } from '@/lib/stores/feed-session-store';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ThumbsUp, ThumbsDown, Bookmark } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';

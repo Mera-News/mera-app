@@ -3,6 +3,14 @@
 // mutate topics/facts/locations. One row per article_id, upserted;
 // `opened` upgrades in place and never downgrades. TTL 30d via
 // `deleteOlderThan` (data-cleanup-task).
+//
+// OPENS-ONLY (r6 P2 — read = tapped): only `recordOpen` writes rows now (each
+// with opened=true); there is no view/impression write path. The seen readers
+// are opens-only by construction — `getOpenedSeenSet` (Dashboard read-ticks +
+// P_SEEN scoring) and `getOpenedTitleNorms` (title-Jaccard dedup fallback).
+// The old view-inclusive `getSeenSet` / `recordImpression` (which fed the Feed
+// tab's viewed-elimination) were removed with that machinery; any legacy
+// opened=false rows still on-device are inert and TTL out within 30d.
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
@@ -71,11 +79,6 @@ async function upsertImpression(
   }
 }
 
-/** Records a card-displayed impression (opened stays false if new). */
-export async function recordImpression(input: RecordImpressionInput): Promise<void> {
-  await upsertImpression(input, false);
-}
-
 /** Records an open/read — upgrades `opened` in place. */
 export async function recordOpen(input: RecordImpressionInput): Promise<void> {
   await upsertImpression(input, true);
@@ -97,9 +100,9 @@ export async function getAll(): Promise<StoryImpressionModel[]> {
  * path, so tab-1 scrolling can only demote (via P_SEEN if the article is later
  * opened) — it can never exclude a story from the deck.
  *
- * OPENS-ONLY consumers ONLY: Dashboard read-ticks + P_SEEN scoring. The Feed
- * tab's exclusion uses `getSeenSet()` below instead (opened OR merely viewed) —
- * do not repoint Dashboard/scoring at that set, it would change their semantics.
+ * OPENS-ONLY consumers: Dashboard read-ticks + P_SEEN scoring. (The Feed tab no
+ * longer excludes on views — read = tapped only, r6 P2 — so there is no
+ * view-inclusive seen set anymore.)
  *
  * Returns article_ids ∪ non-null stable_cluster_ids of opened rows. The
  * `Q.where('opened', true)` is the production filter; the JS `r.opened === true`
@@ -112,24 +115,6 @@ export async function getOpenedSeenSet(): Promise<Set<string>> {
   const seen = new Set<string>();
   for (const r of rows) {
     if (r.opened !== true) continue;
-    if (r.articleId) seen.add(r.articleId);
-    if (r.stableClusterId) seen.add(r.stableClusterId);
-  }
-  return seen;
-}
-
-/**
- * ALL-impressions seen set (opened OR merely viewed) — feeds ONLY the Feed
- * tab's exclusion. Dashboard read-ticks + P_SEEN scoring stay on
- * `getOpenedSeenSet` (opens-only); do not swap them to this set.
- *
- * Returns article_ids ∪ non-null stable_cluster_ids of every impression row,
- * regardless of `opened`.
- */
-export async function getSeenSet(): Promise<Set<string>> {
-  const rows = await impressionsCollection.query().fetch();
-  const seen = new Set<string>();
-  for (const r of rows) {
     if (r.articleId) seen.add(r.articleId);
     if (r.stableClusterId) seen.add(r.stableClusterId);
   }

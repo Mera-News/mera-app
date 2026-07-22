@@ -20,7 +20,7 @@ import type {
   LocalFeedbackContext,
 } from '@/lib/news-harness/feedback-tree';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import type { Verdict } from '@/lib/stores/feed-session-store';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';

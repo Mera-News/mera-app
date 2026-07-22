@@ -13,6 +13,7 @@ import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as scoringPipeline from '@/lib/services/scoring-pipeline';
 import { clearAllStores, useForYouStore } from '@/lib/stores';
+import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useDeleteAccountModal, useUIStore } from '@/lib/stores/ui-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Q } from '@nozbe/watermelondb';
@@ -109,6 +110,9 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 case 'feedCache': {
                     await deleteTables(FEED_CACHE_TABLES);
                     await useForYouStore.getState().clearData();
+                    // The persisted feed order points at now-gone suggestions —
+                    // clear it so the feed rebuilds cleanly from the re-sync.
+                    useFeedOrderStore.getState().reset();
                     // Deleting article_suggestions leaves the persisted scoring
                     // run pointing at now-gone rows; without clearing it, its
                     // stuck batches keep getPipelineStatus()==='running' forever
@@ -125,6 +129,9 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 case 'factsTopics': {
                     await deleteTables(FACTS_AND_TOPICS_TABLES);
                     await useForYouStore.getState().clearData();
+                    // The persisted feed order points at now-gone suggestions —
+                    // clear it so the feed rebuilds cleanly from the re-sync.
+                    useFeedOrderStore.getState().reset();
                     // Same clear-feed deadlock guard as the feedCache case — the
                     // orphaned run must be force-cleared before re-syncing.
                     await scoringPipeline.abortRun('cache-clear');

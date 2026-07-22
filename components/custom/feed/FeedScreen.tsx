@@ -1,7 +1,10 @@
-// FeedScreen — the "For you" tab (landing tab). An Instagram-style vertical
-// scroll feed of personalized story cards (replaces the retired Tinder swipe
-// deck). Each card carries a small borderless action bar (like / dislike / Mera
-// / save); tapping a thumb records a verdict and floats the FeedbackTreeSheet.
+// FeedScreen — the "For you" tab (landing tab). A static, insert-only vertical
+// scroll feed of personalized story cards. The order is built ONCE when empty
+// (first launch / post-wipe) and NEVER fully rebuilt — new Complete suggestions
+// are INSERTED beyond the current viewport, and read (tapped) cards stay in
+// place, dimmed. The order persists across app restarts (feed-order-store).
+// Each card carries a small borderless action bar (like / dislike / Mera /
+// save); tapping a thumb records a verdict and floats the FeedbackTreeSheet.
 // The header is the "For you" heading + notification bell + 24h stats sentence.
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
@@ -12,7 +15,7 @@ import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import FeedArticleCard from './FeedArticleCard';
 import FeedbackTreeSheet from './FeedbackTreeSheet';
-import { markViewedImpression, useFeedImpressions } from './use-feed-impressions';
+import { useVisibleIndex } from './use-visible-index';
 import { swipeCallbacks } from './swipe-callbacks';
 import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
 import { Box } from '@/components/ui/box';
@@ -28,18 +31,13 @@ import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import {
   buildFeedList,
-  buildProvisionalFeedList,
-  PROVISIONAL_FEED_CAP,
   type FeedListItem,
 } from '@/lib/stores/feed-list-selector';
-import {
-  useFeedSessionStore,
-  type Verdict,
-} from '@/lib/stores/feed-session-store';
-import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useFeedOrderStore, type Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { useViewedStoriesStore } from '@/lib/stores/viewed-stories-store';
+import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
   useForYouAsyncJobPhase,
@@ -50,7 +48,6 @@ import {
   useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl } from 'react-native';
@@ -59,22 +56,50 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
 
+// Module-constant empty exclusion set: candidates keep opened items (they back
+// frozen rows for refresh + hydrate survival). Opened-exclusion happens only
+// for NEW ids inside `ingest`.
+const EMPTY_SET: Set<string> = new Set();
+
 // Install the real Feed-signal implementations onto the swipe-callbacks contract
 // once, when this screen's module loads (before any render). Idempotent.
 wireSwipeCallbacks();
 
-/** Union of the opened + viewed seen sets — the exclusion buildFeedList uses. */
-function excludedUnion(opened: Set<string>, viewed: Set<string>): Set<string> {
-  const out = new Set(opened);
-  for (const id of viewed) out.add(id);
-  return out;
-}
-
 interface ActiveFeedback {
+  /** The list-item id (feed-order key) — verdict/path are keyed by this, which
+   *  survives rep-switches (it stays the original order id). */
+  itemId: string;
   suggestion: ForYouSuggestion;
   verdict: Verdict;
   initialPathIds?: string[];
 }
+
+/** One rendered feed row. Subscribes to its OWN verdict + opened state so a
+ *  verdict/open change re-renders only this row, not the whole list. */
+const FeedRow = React.memo(function FeedRow({
+  item,
+  onPress,
+  onVerdict,
+  onAskMera,
+}: {
+  item: FeedListItem;
+  onPress: (suggestion: ForYouSuggestion) => void;
+  onVerdict: (item: FeedListItem, verdict: Verdict) => void;
+  onAskMera: (item: FeedListItem) => void;
+}) {
+  const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
+  const read = useOpenedStoriesStore((s) => isSuggestionOpened(item.suggestion, s.ids));
+  return (
+    <FeedArticleCard
+      item={item}
+      verdict={verdict}
+      read={read}
+      onPress={onPress}
+      onVerdict={onVerdict}
+      onAskMera={onAskMera}
+    />
+  );
+});
 
 const FeedScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -85,83 +110,63 @@ const FeedScreen: React.FC = () => {
 
   // ── Live inputs ──
   const suggestions = useForYouSuggestions();
-  const openedIds = useOpenedStoriesStore((s) => s.ids);
-  const viewedIds = useViewedStoriesStore((s) => s.ids);
-
-  // Hydrate the viewed-story set on mount + refocus (useFeedBootstrap already
-  // hydrates the opened set the same way).
-  useEffect(() => {
-    void useViewedStoriesStore.getState().hydrate();
-  }, []);
-  useEffect(() => {
-    if (isFocused) void useViewedStoriesStore.getState().hydrate();
-  }, [isFocused]);
 
   // The user's geo/language context (home/other countries + app language) —
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
+  // Candidates keep opened items in (they back frozen rows + survive hydrate) —
+  // no exclusion here; opened-filtering happens only for NEW ids in ingest.
   const candidates = useMemo(
-    () => buildFeedList(suggestions, excludedUnion(openedIds, viewedIds), Date.now(), userGeoLanguageCtx),
-    [suggestions, openedIds, viewedIds, userGeoLanguageCtx],
+    () => buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx),
+    [suggestions, userGeoLanguageCtx],
   );
   const candidatesRef = useRef(candidates);
   candidatesRef.current = candidates;
 
-  // ── Session order store (reactive) ──
-  const order = useFeedSessionStore((s) => s.order);
-  const itemsById = useFeedSessionStore((s) => s.itemsById);
-  const verdicts = useFeedSessionStore((s) => s.verdicts);
+  // ── Persisted order store (reactive) ──
+  const order = useFeedOrderStore((s) => s.order);
+  const itemsById = useFeedOrderStore((s) => s.itemsById);
+  const orderHydrated = useFeedOrderStore((s) => s.hydrated);
+  const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
 
-  // Snapshot-vs-resume decision runs ONCE per focus (reads latest candidates).
-  useFocusEffect(
-    useCallback(() => {
-      useFeedSessionStore.getState().onTabFocus(candidatesRef.current);
-    }, []),
-  );
-  // Pick up newly-synced / rescored candidates while the tab is active (frozen
-  // ingest — never reorders rows already laid out in front of the user).
+  // ── Freeze boundary (viewability → ref only; no store/DB writes mid-scroll) ──
+  const { viewabilityConfigCallbackPairs, maxVisibleIndexRef } = useVisibleIndex();
+
+  // Hydrate the persisted order ONCE, when the DB is ready. Evicts persisted ids
+  // with no live backing item; restores survivors in their persisted order.
+  const dbReady = useDatabaseReady();
+  const didHydrate = useRef(false);
   useEffect(() => {
-    if (!isFocused) return;
-    useFeedSessionStore.getState().ingest(candidates);
-  }, [candidates, isFocused]);
+    if (!dbReady || didHydrate.current) return;
+    didHydrate.current = true;
+    void useFeedOrderStore.getState().hydrate(candidatesRef.current);
+  }, [dbReady]);
+
+  // Insert newly-Complete candidates while the tab is active (frozen ingest —
+  // never reorders rows already laid out; freezes through viewport + 2).
+  useEffect(() => {
+    if (!isFocused || !orderHydrated || !openedHydrated) return;
+    useFeedOrderStore
+      .getState()
+      .ingest(
+        candidates,
+        useOpenedStoriesStore.getState().ids,
+        maxVisibleIndexRef.current + 2,
+      );
+  }, [candidates, isFocused, orderHydrated, openedHydrated, maxVisibleIndexRef]);
 
   const data = useMemo(
     () => order.map((id) => itemsById[id]).filter((it): it is FeedListItem => !!it),
     [order, itemsById],
   );
-
-  // ── Provisional feed (P7c) — the pre-scoring fallback. When the real ranked
-  //    list is empty (post-wipe / fresh install / ManageData clear), render the
-  //    newest in-window stories UNSCORED so the feed isn't blank for tens of
-  //    seconds to minutes. It DELIBERATELY BYPASSES the feed-session-store — the
-  //    frozen session order starts only from the real ranked list, so scrolled
-  //    provisional cards are never baked into the session — and is swapped out
-  //    wholesale the moment ≥1 real row exists (`data.length > 0`).
-  const provisional = useMemo(
-    () =>
-      data.length === 0
-        ? buildProvisionalFeedList(
-            suggestions,
-            excludedUnion(openedIds, viewedIds),
-            Date.now(),
-            PROVISIONAL_FEED_CAP,
-            userGeoLanguageCtx,
-          )
-        : [],
-    [data.length, suggestions, openedIds, viewedIds, userGeoLanguageCtx],
-  );
-  const showProvisional = data.length === 0 && provisional.length > 0;
-  const listData = showProvisional ? provisional : data;
-
-  // ── Impressions (viewability → mark-viewed) ──
-  // Suppressed while provisional: scrolled-past UNSCORED cards must NOT be added
-  // to the viewed set, or they'd be excluded forever once the real feed lands.
-  const { viewabilityConfigCallbackPairs } = useFeedImpressions(isFocused && !showProvisional);
+  const listData = data;
 
   // ── Feedback sheet ──
   const [activeFeedback, setActiveFeedback] = useState<ActiveFeedback | null>(null);
+  const activeFeedbackRef = useRef<ActiveFeedback | null>(null);
+  activeFeedbackRef.current = activeFeedback;
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
@@ -174,7 +179,7 @@ const FeedScreen: React.FC = () => {
   const openSuggestion = useOpenSuggestion('feed');
 
   const handleVerdict = useCallback((item: FeedListItem, next: Verdict) => {
-    const store = useFeedSessionStore.getState();
+    const store = useFeedOrderStore.getState();
     const existing = store.verdicts[item.id]?.verdict ?? null;
     if (existing === next) {
       // Re-tap of the same thumb — reopen the sheet on the stored path; no re-record.
@@ -185,11 +190,11 @@ const FeedScreen: React.FC = () => {
       store.setVerdict(item.id, next);
       swipeCallbacks.onVerdict(item.suggestion, next);
     }
-    markViewedImpression(item.suggestion);
     setActiveFeedback({
+      itemId: item.id,
       suggestion: item.suggestion,
       verdict: next,
-      initialPathIds: useFeedSessionStore.getState().verdicts[item.id]?.path,
+      initialPathIds: useFeedOrderStore.getState().verdicts[item.id]?.path,
     });
   }, []);
 
@@ -199,10 +204,12 @@ const FeedScreen: React.FC = () => {
 
   const closeSheet = useCallback(() => setActiveFeedback(null), []);
 
-  // Sheet callbacks (map 1:1 to the old overlay handlers, minus deck advance).
+  // Sheet callbacks — path is keyed by the list-item id (rep-switch-safe),
+  // taken from the active feedback record rather than the suggestion's articleId.
   const handleTreePathChanged = useCallback(
     (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
-      useFeedSessionStore.getState().setPath(s.articleId, pathIds);
+      const id = activeFeedbackRef.current?.itemId;
+      if (id) useFeedOrderStore.getState().setPath(id, pathIds);
       swipeCallbacks.onTreePathChanged(s, v, pathIds);
     },
     [],
@@ -218,7 +225,8 @@ const FeedScreen: React.FC = () => {
   // Terminal (non-openChat) leaf: path already recorded — settle briefly, close.
   const handleLeafCommitted = useCallback(
     (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
-      useFeedSessionStore.getState().setPath(s.articleId, pathIds);
+      const id = activeFeedbackRef.current?.itemId;
+      if (id) useFeedOrderStore.getState().setPath(id, pathIds);
       if (settleTimer.current) clearTimeout(settleTimer.current);
       settleTimer.current = setTimeout(() => setActiveFeedback(null), 250);
     },
@@ -229,7 +237,7 @@ const FeedScreen: React.FC = () => {
   const handleSheetAskMera = useCallback(() => {
     setActiveFeedback((current) => {
       if (current) {
-        const rec = useFeedSessionStore.getState().verdicts[current.suggestion.articleId];
+        const rec = useFeedOrderStore.getState().verdicts[current.itemId];
         swipeCallbacks.onInvokeMera(
           current.suggestion,
           rec?.verdict ?? current.verdict,
@@ -240,31 +248,26 @@ const FeedScreen: React.FC = () => {
     });
   }, []);
 
-  // ── Pull-to-refresh — trigger a feed sync, then rebuild from the latest pool. ──
+  // ── Pull-to-refresh — trigger a feed sync ONLY. New completes then flow in
+  //    via the ingest effect (inserted below the viewport); the order is never
+  //    rebuilt. ──
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await AppScheduler.trigger('feed-sync').catch(() => {});
-    const latest = useForYouStore.getState().suggestions;
-    const excluded = excludedUnion(
-      useOpenedStoriesStore.getState().ids,
-      useViewedStoriesStore.getState().ids,
-    );
-    useFeedSessionStore.getState().rebuild(buildFeedList(latest, excluded, Date.now(), userGeoLanguageCtx));
     setRefreshing(false);
-  }, [userGeoLanguageCtx]);
+  }, []);
 
   const renderItem = useCallback(
     ({ item }: { item: FeedListItem }) => (
-      <FeedArticleCard
+      <FeedRow
         item={item}
-        verdict={verdicts[item.id]?.verdict ?? null}
         onPress={openSuggestion}
         onVerdict={handleVerdict}
         onAskMera={handleAskMera}
       />
     ),
-    [verdicts, openSuggestion, handleVerdict, handleAskMera],
+    [openSuggestion, handleVerdict, handleAskMera],
   );
 
   const keyExtractor = useCallback((item: FeedListItem) => item.id, []);
@@ -356,15 +359,6 @@ const FeedScreen: React.FC = () => {
           paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
           flexGrow: 1,
         }}
-        ListHeaderComponent={
-          showProvisional ? (
-            <Box className="px-1 pb-2">
-              <Text size="xs" className="text-typography-400 leading-4">
-                {t('feed.personalizingFeed')}
-              </Text>
-            </Box>
-          ) : null
-        }
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={
           data.length > 0 ? (

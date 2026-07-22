@@ -13,7 +13,6 @@ import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import {
   getOpenedSeenSet,
   getOpenedTitleNorms,
-  getSeenSet,
 } from '../story-impression-service';
 
 const db = database as any;
@@ -71,29 +70,6 @@ describe('getOpenedTitleNorms (opens-only fallback)', () => {
     ]);
     return getOpenedTitleNorms().then((norms) => {
       expect(norms).toEqual(['russia summons envoy']);
-    });
-  });
-});
-
-describe('getSeenSet (opened OR merely viewed — feeds the Feed tab only)', () => {
-  it('includes rows with opened=false AND opened=true', () => {
-    db._setRows(TABLE, [
-      row({ articleId: 'opened1', opened: true }),
-      row({ articleId: 'impressed1', opened: false }),
-    ]);
-    return getSeenSet().then((set) => {
-      expect(set.has('opened1')).toBe(true);
-      expect(set.has('impressed1')).toBe(true);
-    });
-  });
-
-  it('adds both article_id and stable_cluster_id regardless of opened', () => {
-    db._setRows(TABLE, [
-      row({ articleId: 'a1', stableClusterId: 'story-1', opened: false }),
-      row({ articleId: 'a2', stableClusterId: null, opened: true }),
-    ]);
-    return getSeenSet().then((set) => {
-      expect([...set].sort()).toEqual(['a1', 'a2', 'story-1']);
     });
   });
 });

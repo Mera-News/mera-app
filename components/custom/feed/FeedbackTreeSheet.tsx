@@ -16,7 +16,7 @@ import InlineFeedbackTree from './InlineFeedbackTree';
 import ReadArticleButton from './ReadArticleButton';
 import { useOpenArticleUrl } from './use-open-article-url';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import type { Verdict } from '@/lib/stores/feed-session-store';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';

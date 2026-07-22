@@ -25,7 +25,7 @@ import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { reasonBoxColors } from '@/lib/relevance-utils';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
-import type { Verdict } from '@/lib/stores/feed-session-store';
+import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
@@ -38,6 +38,8 @@ interface FeedArticleCardProps {
   item: FeedListItem;
   /** The card's currently-stored verdict (null when undecided). */
   verdict: Verdict | null;
+  /** True once the story has been opened/read — keeps it in place, dimmed. */
+  read?: boolean;
   /** Body tap → open the story detail. */
   onPress: (suggestion: ForYouSuggestion) => void;
   /** A thumb was tapped — the screen records + opens the feedback sheet. */
@@ -49,6 +51,7 @@ interface FeedArticleCardProps {
 const FeedArticleCard: React.FC<FeedArticleCardProps> = ({
   item,
   verdict,
+  read = false,
   onPress,
   onVerdict,
   onAskMera,
@@ -94,7 +97,7 @@ const FeedArticleCard: React.FC<FeedArticleCardProps> = ({
   const relevance = suggestion.relevance ?? 0;
   const reason = relevanceReady ? suggestion.reason ?? '' : '';
   const extraSources = item.memberCount > 1 ? item.memberCount - 1 : 0;
-  const dimmed = verdict != null;
+  const dimmed = verdict != null || read;
 
   return (
     <Box
