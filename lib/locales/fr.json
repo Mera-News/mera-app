@@ -229,15 +229,14 @@
     "publishers": "Éditeurs",
     "noPublishers": "Aucun éditeur pour ce pays",
     "noArticlesFound": "Aucun article trouvé",
-    "togglePin": "Épingler / désépingler",
     "topHeadlines": "À la une",
     "viewTopHeadlines": "À la une",
     "addToLocations": "Ajouter à vos lieux",
     "addedToLocations": "Ajouté à vos lieux"
   },
   "clusterDetail": {
-    "translatable": "Cet article est en {{language}} — votre appareil peut le traduire pendant que vous lisez.",
-    "notTranslatable": "Cet article est en {{language}}. La traduction sur l'appareil n'est pas disponible pour celui-ci — utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
+    "translatable": "Cet article est en {{language}} — votre appareil peut le traduire pendant que vous lisez. Si la traduction ne fonctionne pas, vous pouvez ouvrir le site dans Google Traduction ci-dessous — notez simplement que vous le consulterez alors via Google.",
+    "notTranslatable": "Cet article est en {{language}}. La traduction sur l'appareil n'est peut-être pas disponible pour celui-ci — utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
     "unknownLanguage": "une autre langue",
     "translationGuideLink": "Montrez-moi comment traduire l'article",
     "viewInGoogleTranslate": "Voir dans Google Traduction",
@@ -631,8 +630,7 @@
     "actionPinTopic": "Épingler un sujet",
     "actionUnpinTopic": "Désépingler un sujet",
     "actionRetireTopic": "Retirer un sujet",
-    "chooseOneHint": "Choisissez une option",
-    "toggleLabels": "Afficher les libellés des boutons"
+    "chooseOneHint": "Choisissez une option"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publications que vous lisez",

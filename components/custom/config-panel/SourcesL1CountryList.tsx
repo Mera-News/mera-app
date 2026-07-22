@@ -18,8 +18,7 @@ import {
 } from '@/lib/database/services/publication-visit-service';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
-import { usePinnedCountriesStore } from '@/lib/stores/pinned-countries-store';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +28,6 @@ interface CountryItem {
     code: string;
     name: string;
     flag: string;
-    isPinned: boolean;
 }
 
 const GLOBAL_COUNTRY = {
@@ -49,9 +47,6 @@ const SourcesL1CountryList: React.FC = () => {
     // 'interest' location (city null) — drives the +/check state on each row.
     const [addedAlpha2, setAddedAlpha2] = useState<Set<string>>(new Set());
     const hasFetched = useRef(false);
-    const pinnedCodes = usePinnedCountriesStore((s) => s.pinnedCodes);
-    const togglePin = usePinnedCountriesStore((s) => s.togglePin);
-    const hydratePinned = usePinnedCountriesStore((s) => s.hydrate);
 
     // Reactive: which countries are already saved as interest locations.
     useEffect(() => {
@@ -106,12 +101,11 @@ const SourcesL1CountryList: React.FC = () => {
         if (!hasFetched.current) {
             hasFetched.current = true;
             setIsLoading(true);
-            hydratePinned();
             Promise.all([loadCountries(), loadTopPublications()]).finally(() =>
                 setIsLoading(false),
             );
         }
-    }, [loadCountries, loadTopPublications, hydratePinned]);
+    }, [loadCountries, loadTopPublications]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -121,7 +115,6 @@ const SourcesL1CountryList: React.FC = () => {
 
     const countryList: CountryItem[] = useMemo(() => {
         const query = searchQuery.toLowerCase().trim();
-        const pinnedSet = new Set(pinnedCodes);
 
         const countryItems: CountryItem[] = countryCodes
             .filter((code) => code !== 'GLOBAL')
@@ -129,27 +122,19 @@ const SourcesL1CountryList: React.FC = () => {
                 code,
                 name: getCountryName(code),
                 flag: getFlagEmoji(code),
-                isPinned: pinnedSet.has(code),
             }))
-            .filter((item) => !query || item.name.toLowerCase().includes(query));
-
-        // Order: pinned countries first, then the fixed Global item, then the
-        // rest. Each country group is alphabetical by name; Global is not pinnable.
-        const pinned = countryItems
-            .filter((item) => item.isPinned)
-            .sort((a, b) => a.name.localeCompare(b.name));
-        const rest = countryItems
-            .filter((item) => !item.isPinned)
+            .filter((item) => !query || item.name.toLowerCase().includes(query))
             .sort((a, b) => a.name.localeCompare(b.name));
 
+        // Order: the fixed Global item first (when it matches the search), then
+        // every country alphabetical by name.
         const globalMatchesSearch = !query || GLOBAL_COUNTRY.name.toLowerCase().includes(query);
 
         return [
-            ...pinned,
-            ...(globalMatchesSearch ? [{ ...GLOBAL_COUNTRY, isPinned: false }] : []),
-            ...rest,
+            ...(globalMatchesSearch ? [{ ...GLOBAL_COUNTRY }] : []),
+            ...countryItems,
         ];
-    }, [countryCodes, searchQuery, pinnedCodes]);
+    }, [countryCodes, searchQuery]);
 
     const handleCountryPress = useCallback(
         (item: CountryItem) => {
@@ -176,38 +161,21 @@ const SourcesL1CountryList: React.FC = () => {
             const alpha2 = item.code === 'GLOBAL' ? null : alpha3ToAlpha2(item.code);
             const isAdded = !!alpha2 && addedAlpha2.has(alpha2.toUpperCase());
             return (
-            // Outer Pressable opens the country's publishers; the inner "top
-            // headlines" Button and "+ add location" button are separate
-            // touchables that act on tap.
+            // Outer Pressable opens the country's publishers; the inner "+ add
+            // location" button (left) and "top headlines" Button (right) are
+            // separate touchables that act on tap.
             <Pressable
                 onPress={() => handleCountryPress(item)}
-                className="mx-4 mb-3 h-auto px-4 py-3 justify-start rounded-lg border border-gray-700"
+                className="mx-4 mb-3 h-auto px-4 py-3 justify-start"
             >
                 <HStack className="items-center justify-between w-full" space="sm">
                     <HStack className="items-center flex-1 mr-3" space="md">
                         {item.code === 'GLOBAL' ? (
-                            // Global is not pinnable — keep an equal-width spacer so
-                            // the flags/names stay aligned with the pinnable rows.
-                            <Box className="w-[30px]" />
+                            // Global can't be added as a location — keep an
+                            // equal-width spacer so flags/names stay aligned with
+                            // the country rows' +/check control.
+                            <Box className="w-[26px]" />
                         ) : (
-                            <Pressable
-                                onPress={() => togglePin(item.code)}
-                                className="p-1"
-                                accessibilityRole="button"
-                                accessibilityLabel={t('sources.togglePin')}
-                            >
-                                <MaterialCommunityIcons
-                                    name={item.isPinned ? 'pin' : 'pin-outline'}
-                                    size={22}
-                                    color={item.isPinned ? '#3b82f6' : '#666666'}
-                                />
-                            </Pressable>
-                        )}
-                        <Text className="text-2xl">{item.flag}</Text>
-                        <Text className="text-base text-white">{item.name}</Text>
-                    </HStack>
-                    <HStack className="items-center" space="sm">
-                        {item.code === 'GLOBAL' ? null : (
                             <Pressable
                                 onPress={() => handleAddCountry(item)}
                                 className="p-1"
@@ -223,6 +191,10 @@ const SourcesL1CountryList: React.FC = () => {
                                 />
                             </Pressable>
                         )}
+                        <Text className="text-2xl">{item.flag}</Text>
+                        <Text className="text-base text-white">{item.name}</Text>
+                    </HStack>
+                    <HStack className="items-center" space="sm">
                         <Button
                             variant="outline"
                             size="xs"
@@ -241,7 +213,7 @@ const SourcesL1CountryList: React.FC = () => {
             </Pressable>
             );
         },
-        [handleCountryPress, handleTopHeadlinesPress, handleAddCountry, togglePin, addedAlpha2, t]
+        [handleCountryPress, handleTopHeadlinesPress, handleAddCountry, addedAlpha2, t]
     );
 
     const keyExtractor = useCallback((item: CountryItem) => item.code, []);

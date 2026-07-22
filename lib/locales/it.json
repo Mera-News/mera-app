@@ -229,15 +229,14 @@
     "publishers": "Editori",
     "noPublishers": "Nessun editore per questo paese",
     "noArticlesFound": "Nessun articolo trovato",
-    "togglePin": "Attiva/disattiva fissaggio",
     "topHeadlines": "Notizie principali",
     "viewTopHeadlines": "Notizie principali",
     "addToLocations": "Aggiungi ai tuoi luoghi",
     "addedToLocations": "Aggiunto ai tuoi luoghi"
   },
   "clusterDetail": {
-    "translatable": "Questo articolo è in {{language}} — il tuo dispositivo può tradurlo mentre leggi.",
-    "notTranslatable": "Questo articolo è in {{language}}. La traduzione sul dispositivo non è disponibile per questo articolo — usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
+    "translatable": "Questo articolo è in {{language}} — il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Traduttore qui sotto — tieni presente che lo visualizzerai tramite Google.",
+    "notTranslatable": "Questo articolo è in {{language}}. La traduzione sul dispositivo potrebbe non essere disponibile per questo articolo — usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
     "unknownLanguage": "un'altra lingua",
     "translationGuideLink": "Mostrami come tradurre l'articolo",
     "viewInGoogleTranslate": "Visualizza in Google Traduttore",
@@ -631,8 +630,7 @@
     "actionPinTopic": "Fissa un argomento",
     "actionUnpinTopic": "Rimuovi il fissaggio di un argomento",
     "actionRetireTopic": "Ritira un argomento",
-    "chooseOneHint": "Scegli un'opzione",
-    "toggleLabels": "Mostra etichette dei pulsanti"
+    "chooseOneHint": "Scegli un'opzione"
   },
   "publicationVisits": {
     "topVisitedTitle": "Pubblicazioni che stai leggendo",

@@ -227,15 +227,14 @@
     "publishers": "出版社",
     "noPublishers": "この国に出版社がありません",
     "noArticlesFound": "記事が見つかりません",
-    "togglePin": "ピン留めを切り替え",
     "topHeadlines": "トップニュース",
     "viewTopHeadlines": "トップニュース",
     "addToLocations": "自分の場所に追加",
     "addedToLocations": "自分の場所に追加しました"
   },
   "clusterDetail": {
-    "translatable": "この記事は{{language}}で書かれています — 読んでいる間、端末が翻訳できます。",
-    "notTranslatable": "この記事は{{language}}で書かれています。この記事にはオンデバイス翻訳を利用できません — 下のGoogle 翻訳を使ってあなたの言語で読んでください。",
+    "translatable": "この記事は{{language}}で書かれています — 読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、下のGoogle 翻訳でサイトを開くこともできます — その場合、Google経由での閲覧になる点にご注意ください。",
+    "notTranslatable": "この記事は{{language}}で書かれています。この記事にはオンデバイス翻訳を利用できない場合があります — 下のGoogle 翻訳を使ってあなたの言語で読んでください。",
     "unknownLanguage": "別の言語",
     "translationGuideLink": "記事の翻訳方法を教えてください",
     "viewInGoogleTranslate": "Google 翻訳で見る",
@@ -629,8 +628,7 @@
     "actionPinTopic": "トピックをピン留めする",
     "actionUnpinTopic": "トピックのピン留めを解除する",
     "actionRetireTopic": "トピックを停止する",
-    "chooseOneHint": "1つ選んでください",
-    "toggleLabels": "ボタンのラベルを表示"
+    "chooseOneHint": "1つ選んでください"
   },
   "publicationVisits": {
     "topVisitedTitle": "読んでいた出版社",

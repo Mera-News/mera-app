@@ -229,15 +229,14 @@
     "publishers": "Publicaciones",
     "noPublishers": "No hay publicaciones para este país",
     "noArticlesFound": "No se encontraron artículos",
-    "togglePin": "Fijar o desfijar",
     "topHeadlines": "Titulares principales",
     "viewTopHeadlines": "Titulares principales",
     "addToLocations": "Añadir a tus lugares",
     "addedToLocations": "Añadido a tus lugares"
   },
   "clusterDetail": {
-    "translatable": "Este artículo está en {{language}} — tu dispositivo puede traducirlo mientras lees.",
-    "notTranslatable": "Este artículo está en {{language}}. La traducción en el dispositivo no está disponible para él — usa Google Traductor abajo para leerlo en tu idioma.",
+    "translatable": "Este artículo está en {{language}} — tu dispositivo puede traducirlo mientras lees. Si la traducción no funciona, puedes abrir el sitio en Google Traductor abajo — solo ten en cuenta que lo estarás navegando a través de Google.",
+    "notTranslatable": "Este artículo está en {{language}}. Es posible que la traducción en el dispositivo no esté disponible para él — usa Google Traductor abajo para leerlo en tu idioma.",
     "unknownLanguage": "otro idioma",
     "translationGuideLink": "Muéstrame cómo traducir el artículo",
     "viewInGoogleTranslate": "Ver en Google Traductor",
@@ -631,8 +630,7 @@
     "actionPinTopic": "Fijar un tema",
     "actionUnpinTopic": "Dejar de fijar un tema",
     "actionRetireTopic": "Retirar un tema",
-    "chooseOneHint": "Elige una opción",
-    "toggleLabels": "Mostrar etiquetas de los botones"
+    "chooseOneHint": "Elige una opción"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publicaciones que has estado leyendo",

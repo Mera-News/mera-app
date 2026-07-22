@@ -233,15 +233,14 @@
     "publishers": "Видавці",
     "noPublishers": "Немає видавців для цієї країни",
     "noArticlesFound": "Статей не знайдено",
-    "togglePin": "Закріпити/відкріпити",
     "topHeadlines": "Головні новини",
     "viewTopHeadlines": "Головні новини",
     "addToLocations": "Додати до ваших місць",
     "addedToLocations": "Додано до ваших місць"
   },
   "clusterDetail": {
-    "translatable": "Ця стаття мовою {{language}} — ваш пристрій може перекласти її під час читання.",
-    "notTranslatable": "Ця стаття мовою {{language}}. Переклад на пристрої для неї недоступний — скористайтеся Google Перекладачем нижче, щоб прочитати її вашою мовою.",
+    "translatable": "Ця стаття мовою {{language}} — ваш пристрій може перекласти її під час читання. Якщо переклад не працює, ви можете відкрити сайт у Google Перекладачі нижче — лише майте на увазі, що ви переглядатимете його через Google.",
+    "notTranslatable": "Ця стаття мовою {{language}}. Переклад на пристрої може бути недоступний для неї — скористайтеся Google Перекладачем нижче, щоб прочитати її вашою мовою.",
     "unknownLanguage": "іншою мовою",
     "translationGuideLink": "Покажи, як перекласти статтю",
     "viewInGoogleTranslate": "Переглянути в Google Перекладачі",
@@ -635,8 +634,7 @@
     "actionPinTopic": "Закріпити тему",
     "actionUnpinTopic": "Відкріпити тему",
     "actionRetireTopic": "Деактивувати тему",
-    "chooseOneHint": "Оберіть один варіант",
-    "toggleLabels": "Показувати підписи кнопок"
+    "chooseOneHint": "Оберіть один варіант"
   },
   "publicationVisits": {
     "topVisitedTitle": "Видання, які ви читаєте",

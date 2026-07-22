@@ -227,15 +227,14 @@
     "publishers": "สำนักพิมพ์",
     "noPublishers": "ไม่มีสำนักพิมพ์สำหรับประเทศนี้",
     "noArticlesFound": "ไม่พบบทความ",
-    "togglePin": "สลับการปักหมุด",
     "topHeadlines": "พาดหัวข่าวเด่น",
     "viewTopHeadlines": "พาดหัวข่าวเด่น",
     "addToLocations": "เพิ่มไปยังสถานที่ของคุณ",
     "addedToLocations": "เพิ่มไปยังสถานที่ของคุณแล้ว"
   },
   "clusterDetail": {
-    "translatable": "บทความนี้อยู่ในภาษา {{language}} — อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน",
-    "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} การแปลบนอุปกรณ์ไม่พร้อมใช้งานสำหรับบทความนี้ — ใช้ Google แปลภาษาด้านล่างเพื่ออ่านเป็นภาษาของคุณ",
+    "translatable": "บทความนี้อยู่ในภาษา {{language}} — อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน หากการแปลไม่ทำงาน คุณสามารถเปิดเว็บไซต์ใน Google แปลภาษาด้านล่างได้ — เพียงแต่โปรดทราบว่าคุณจะเรียกดูผ่าน Google",
+    "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} การแปลบนอุปกรณ์อาจไม่พร้อมใช้งานสำหรับบทความนี้ — ใช้ Google แปลภาษาด้านล่างเพื่ออ่านเป็นภาษาของคุณ",
     "unknownLanguage": "ภาษาอื่น",
     "translationGuideLink": "แสดงวิธีแปลบทความ",
     "viewInGoogleTranslate": "ดูใน Google แปลภาษา",
@@ -629,8 +628,7 @@
     "actionPinTopic": "ปักหมุดหัวข้อ",
     "actionUnpinTopic": "เลิกปักหมุดหัวข้อ",
     "actionRetireTopic": "ปิดใช้งานหัวข้อ",
-    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก",
-    "toggleLabels": "แสดงป้ายกำกับปุ่ม"
+    "chooseOneHint": "เลือกได้หนึ่งตัวเลือก"
   },
   "publicationVisits": {
     "topVisitedTitle": "สำนักพิมพ์ที่คุณกำลังอ่าน",

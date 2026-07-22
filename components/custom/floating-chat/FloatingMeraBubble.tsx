@@ -348,8 +348,6 @@ const styles = StyleSheet.create({
         height: BUBBLE_SIZE,
         borderRadius: BUBBLE_SIZE / 2,
         backgroundColor: '#1a1a1a',
-        borderWidth: 1.5,
-        borderColor: PRIMARY,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',

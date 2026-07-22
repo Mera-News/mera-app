@@ -58,8 +58,10 @@ jest.mock('@/components/ui/input', () => { const { View, TextInput } = require('
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} />, MaterialCommunityIcons: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/custom/config-panel/TopVisitedPublicationsCard', () => { const { View } = require('react-native'); return { __esModule: true, default: (p: any) => <View {...p} /> }; });
 
+// Returned unsorted on purpose — the component must sort countries
+// alphabetically (Global pinned to the front).
 jest.mock('@/lib/account-service', () => ({
-    AccountService: { getAllCountries: jest.fn(() => Promise.resolve(['IND', 'USA'])) },
+    AccountService: { getAllCountries: jest.fn(() => Promise.resolve(['USA', 'IND'])) },
 }));
 jest.mock('@/lib/country-utils', () => ({
     getCountryName: (code: string) => code,
@@ -85,10 +87,6 @@ jest.mock('@/lib/database/services/location-service', () => ({
 }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
-jest.mock('@/lib/stores/pinned-countries-store', () => ({
-    usePinnedCountriesStore: (sel: (s: any) => unknown) =>
-        sel({ pinnedCodes: [], togglePin: jest.fn(), hydrate: jest.fn() }),
-}));
 
 import SourcesL1CountryList from '../SourcesL1CountryList';
 
@@ -129,5 +127,24 @@ describe('SourcesL1CountryList — add to locations', () => {
             expect(queryAllByLabelText('sources.addedToLocations')).toHaveLength(1),
         );
         expect(await findAllByLabelText('sources.addToLocations')).toHaveLength(1);
+    });
+
+    it('orders Global first, then countries alphabetically (no pin control)', async () => {
+        const { findByText, toJSON, queryByLabelText } = render(<SourcesL1CountryList />);
+        // Names come through as the raw codes via the country-utils mock.
+        await findByText('Global');
+        // Flatten the tree into its ordered string leaves.
+        const leaves: string[] = [];
+        const walk = (node: any) => {
+            if (node == null) return;
+            if (typeof node === 'string') { leaves.push(node); return; }
+            if (Array.isArray(node)) { node.forEach(walk); return; }
+            if (node.children) walk(node.children);
+        };
+        walk(toJSON());
+        const order = leaves.filter((s) => ['Global', 'IND', 'USA'].includes(s));
+        expect(order).toEqual(['Global', 'IND', 'USA']);
+        // The removed pin feature leaves no pin toggle behind.
+        expect(queryByLabelText('sources.togglePin')).toBeNull();
     });
 });

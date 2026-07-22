@@ -229,15 +229,14 @@
     "publishers": "Yayıncılar",
     "noPublishers": "Bu ülke için yayıncı yok",
     "noArticlesFound": "Makale bulunamadı",
-    "togglePin": "Sabitlemeyi değiştir",
     "topHeadlines": "Öne çıkan başlıklar",
     "viewTopHeadlines": "Öne çıkan başlıklar",
     "addToLocations": "Yerlerine ekle",
     "addedToLocations": "Yerlerine eklendi"
   },
   "clusterDetail": {
-    "translatable": "Bu makale {{language}} dilinde — okurken cihazın çevirebilir.",
-    "notTranslatable": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri bunun için kullanılamıyor — kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
+    "translatable": "Bu makale {{language}} dilinde — okurken cihazın çevirebilir. Çeviri çalışmazsa aşağıdaki Google Çeviri'de siteyi açabilirsin — sadece Google üzerinden gezindiğini unutma.",
+    "notTranslatable": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri bunun için kullanılamayabilir — kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
     "unknownLanguage": "başka bir dil",
     "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
     "viewInGoogleTranslate": "Google Çeviri'de görüntüle",
@@ -631,8 +630,7 @@
     "actionPinTopic": "Konuyu sabitle",
     "actionUnpinTopic": "Konunun sabitini kaldır",
     "actionRetireTopic": "Konuyu emekliye ayır",
-    "chooseOneHint": "Bir seçenek seç",
-    "toggleLabels": "Düğme etiketlerini göster"
+    "chooseOneHint": "Bir seçenek seç"
   },
   "publicationVisits": {
     "topVisitedTitle": "Okuduğun yayınlar",

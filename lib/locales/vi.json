@@ -227,15 +227,14 @@
     "publishers": "Nhà xuất bản",
     "noPublishers": "Không có nhà xuất bản nào cho quốc gia này",
     "noArticlesFound": "Không tìm thấy bài viết nào",
-    "togglePin": "Bật/tắt ghim",
     "topHeadlines": "Tin nổi bật",
     "viewTopHeadlines": "Tin nổi bật",
     "addToLocations": "Thêm vào địa điểm của bạn",
     "addedToLocations": "Đã thêm vào địa điểm của bạn"
   },
   "clusterDetail": {
-    "translatable": "Bài viết này bằng {{language}} — thiết bị của bạn có thể dịch trong khi bạn đọc.",
-    "notTranslatable": "Bài viết này bằng {{language}}. Không có bản dịch trên thiết bị cho ngôn ngữ này — hãy dùng Google Dịch bên dưới để đọc bằng ngôn ngữ của bạn.",
+    "translatable": "Bài viết này bằng {{language}} — thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu bản dịch không hoạt động, bạn có thể mở trang web trong Google Dịch bên dưới — chỉ cần lưu ý rằng bạn sẽ duyệt web qua Google.",
+    "notTranslatable": "Bài viết này bằng {{language}}. Bản dịch trên thiết bị có thể không khả dụng cho ngôn ngữ này — hãy dùng Google Dịch bên dưới để đọc bằng ngôn ngữ của bạn.",
     "unknownLanguage": "ngôn ngữ khác",
     "translationGuideLink": "Hướng dẫn tôi cách dịch bài viết",
     "viewInGoogleTranslate": "Xem trong Google Dịch",
@@ -629,8 +628,7 @@
     "actionPinTopic": "Ghim một chủ đề",
     "actionUnpinTopic": "Bỏ ghim một chủ đề",
     "actionRetireTopic": "Ngừng theo dõi một chủ đề",
-    "chooseOneHint": "Chọn một tùy chọn",
-    "toggleLabels": "Hiện nhãn nút"
+    "chooseOneHint": "Chọn một tùy chọn"
   },
   "publicationVisits": {
     "topVisitedTitle": "Ấn phẩm bạn đang đọc",

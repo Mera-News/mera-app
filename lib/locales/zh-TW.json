@@ -227,15 +227,14 @@
     "publishers": "出版商",
     "noPublishers": "此國家沒有出版商",
     "noArticlesFound": "找不到文章",
-    "togglePin": "切換釘選",
     "topHeadlines": "頭條新聞",
     "viewTopHeadlines": "頭條新聞",
     "addToLocations": "新增至你的地點",
     "addedToLocations": "已新增至你的地點"
   },
   "clusterDetail": {
-    "translatable": "這篇文章是{{language}}的 — 您的裝置可以在您閱讀時為您翻譯。",
-    "notTranslatable": "這篇文章是{{language}}的。裝置端翻譯不支援此語言 — 請使用下方的 Google 翻譯以您的語言閱讀。",
+    "translatable": "這篇文章是{{language}}的 — 您的裝置可以在您閱讀時為您翻譯。如果翻譯無法使用，您可以在下方透過 Google 翻譯開啟該網站 — 請注意，您將透過 Google 瀏覽該網站。",
+    "notTranslatable": "這篇文章是{{language}}的。裝置端翻譯可能不支援此語言 — 請使用下方的 Google 翻譯以您的語言閱讀。",
     "unknownLanguage": "另一種語言",
     "translationGuideLink": "告訴我如何翻譯這篇文章",
     "viewInGoogleTranslate": "在 Google 翻譯中查看",
@@ -629,8 +628,7 @@
     "actionPinTopic": "釘選某個主題",
     "actionUnpinTopic": "取消釘選某個主題",
     "actionRetireTopic": "停用某個主題",
-    "chooseOneHint": "請選擇一項",
-    "toggleLabels": "顯示按鈕標籤"
+    "chooseOneHint": "請選擇一項"
   },
   "publicationVisits": {
     "topVisitedTitle": "您正在閱讀的媒體",

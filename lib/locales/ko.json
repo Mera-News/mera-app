@@ -227,15 +227,14 @@
     "publishers": "발행사",
     "noPublishers": "이 국가에 발행사가 없습니다",
     "noArticlesFound": "기사를 찾을 수 없습니다",
-    "togglePin": "고정 전환",
     "topHeadlines": "주요 뉴스",
     "viewTopHeadlines": "주요 뉴스",
     "addToLocations": "내 장소에 추가",
     "addedToLocations": "내 장소에 추가됨"
   },
   "clusterDetail": {
-    "translatable": "이 기사는 {{language}}로 작성되었습니다 — 읽는 동안 기기에서 번역할 수 있습니다.",
-    "notTranslatable": "이 기사는 {{language}}로 작성되었습니다. 이 기사에는 기기 내 번역을 사용할 수 없습니다 — 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
+    "translatable": "이 기사는 {{language}}로 작성되었습니다 — 읽는 동안 기기에서 번역할 수 있습니다. 번역이 작동하지 않으면 아래의 Google 번역에서 사이트를 열 수 있습니다 — 이 경우 Google을 통해 열람하게 된다는 점을 참고하세요.",
+    "notTranslatable": "이 기사는 {{language}}로 작성되었습니다. 이 기사에는 기기 내 번역을 사용할 수 없을 수도 있습니다 — 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
     "unknownLanguage": "다른 언어",
     "translationGuideLink": "기사 번역 방법 알아보기",
     "viewInGoogleTranslate": "Google 번역에서 보기",
@@ -629,8 +628,7 @@
     "actionPinTopic": "주제 고정",
     "actionUnpinTopic": "주제 고정 해제",
     "actionRetireTopic": "주제 제거",
-    "chooseOneHint": "옵션 하나 선택",
-    "toggleLabels": "버튼 라벨 표시"
+    "chooseOneHint": "옵션 하나 선택"
   },
   "publicationVisits": {
     "topVisitedTitle": "읽고 계신 발행사",

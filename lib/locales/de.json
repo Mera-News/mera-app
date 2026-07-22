@@ -229,15 +229,14 @@
     "publishers": "Herausgeber",
     "noPublishers": "Keine Herausgeber für dieses Land",
     "noArticlesFound": "Keine Artikel gefunden",
-    "togglePin": "Anpinnen umschalten",
     "topHeadlines": "Top-Schlagzeilen",
     "viewTopHeadlines": "Top-Schlagzeilen",
     "addToLocations": "Zu Ihren Orten hinzufügen",
     "addedToLocations": "Zu Ihren Orten hinzugefügt"
   },
   "clusterDetail": {
-    "translatable": "Dieser Artikel ist auf {{language}} — Ihr Gerät kann ihn während des Lesens übersetzen.",
-    "notTranslatable": "Dieser Artikel ist auf {{language}}. Die Übersetzung auf dem Gerät ist dafür nicht verfügbar — verwenden Sie unten Google Übersetzer, um ihn in Ihrer Sprache zu lesen.",
+    "translatable": "Dieser Artikel ist auf {{language}} — Ihr Gerät kann ihn während des Lesens übersetzen. Falls die Übersetzung nicht funktioniert, können Sie die Seite unten in Google Übersetzer öffnen — beachten Sie dabei, dass Sie sie dann über Google aufrufen.",
+    "notTranslatable": "Dieser Artikel ist auf {{language}}. Die Übersetzung auf dem Gerät ist dafür möglicherweise nicht verfügbar — verwenden Sie unten Google Übersetzer, um ihn in Ihrer Sprache zu lesen.",
     "unknownLanguage": "einer anderen Sprache",
     "translationGuideLink": "Zeig mir, wie ich den Artikel übersetze",
     "viewInGoogleTranslate": "In Google Übersetzer ansehen",
@@ -631,8 +630,7 @@
     "actionPinTopic": "Ein Thema anheften",
     "actionUnpinTopic": "Ein Thema loslösen",
     "actionRetireTopic": "Ein Thema stilllegen",
-    "chooseOneHint": "Eine Option auswählen",
-    "toggleLabels": "Schaltflächenbeschriftungen anzeigen"
+    "chooseOneHint": "Eine Option auswählen"
   },
   "publicationVisits": {
     "topVisitedTitle": "Zuletzt gelesene Publikationen",

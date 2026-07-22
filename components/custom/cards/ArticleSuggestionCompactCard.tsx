@@ -2,9 +2,7 @@ import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCard
 import CompactActionsSheet from '@/components/custom/cards/CompactActionsSheet';
 import type { FeedbackSubject, FeedbackSurface } from '@/components/custom/cards/feedback-subject';
 import RelevanceChip from '@/components/custom/RelevanceChip';
-import { Box } from '@/components/ui/box';
 import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -24,9 +22,9 @@ interface ArticleSuggestionCompactCardProps {
 
 /**
  * The compact suggestion variant — a personalized row for dense lists (the
- * upcoming triage screen). `metaAccessory` surfaces a 1-line reason snippet (or
- * the RelevanceChip when there's no reason yet); `trailingAccessory` is the "…"
- * button that opens the compact actions sheet (also reachable by long-press).
+ * upcoming triage screen). `metaAccessory` is the compact RelevanceChip (once
+ * relevance is ready); `trailingAccessory` is the "…" button that opens the
+ * compact actions sheet (also reachable by long-press).
  */
 const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardProps> = ({
   suggestion,
@@ -40,17 +38,11 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
 
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
-  const reasonReady = status === ArticleSuggestionStatus.Complete;
   const relevance = suggestion.relevance ?? 0;
-  const reason = reasonReady ? suggestion.reason ?? '' : '';
 
-  const metaAccessory = reason ? (
-    <Box style={{ maxWidth: 140 }}>
-      <Text size="xs" numberOfLines={1} className="text-typography-400 italic">
-        {reason}
-      </Text>
-    </Box>
-  ) : relevanceReady ? (
+  // Compact cards never show reason text — the accessory is always the
+  // fixed-size RelevanceChip (once relevance is ready), which can't bleed.
+  const metaAccessory = relevanceReady ? (
     <RelevanceChip relevance={relevance} />
   ) : undefined;
 

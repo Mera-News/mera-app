@@ -227,15 +227,14 @@
     "publishers": "Penerbit",
     "noPublishers": "Tidak ada penerbit untuk negara ini",
     "noArticlesFound": "Tidak ada artikel yang ditemukan",
-    "togglePin": "Alihkan sematan",
     "topHeadlines": "Berita utama",
     "viewTopHeadlines": "Berita utama",
     "addToLocations": "Tambahkan ke tempat Anda",
     "addedToLocations": "Ditambahkan ke tempat Anda"
   },
   "clusterDetail": {
-    "translatable": "Artikel ini dalam bahasa {{language}} — perangkat Anda dapat menerjemahkannya saat Anda membaca.",
-    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat tidak tersedia untuk artikel ini — gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
+    "translatable": "Artikel ini dalam bahasa {{language}} — perangkat Anda dapat menerjemahkannya saat Anda membaca. Jika terjemahan tidak berfungsi, Anda dapat membuka situs ini di Google Terjemahan di bawah — perlu diketahui bahwa Anda akan menjelajahinya melalui Google.",
+    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat mungkin tidak tersedia untuk artikel ini — gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
     "unknownLanguage": "bahasa lain",
     "translationGuideLink": "Tunjukkan cara menerjemahkan artikel",
     "viewInGoogleTranslate": "Lihat di Google Terjemahan",
@@ -629,8 +628,7 @@
     "actionPinTopic": "Sematkan suatu topik",
     "actionUnpinTopic": "Lepas sematan suatu topik",
     "actionRetireTopic": "Hentikan suatu topik",
-    "chooseOneHint": "Pilih salah satu opsi",
-    "toggleLabels": "Tampilkan label tombol"
+    "chooseOneHint": "Pilih salah satu opsi"
   },
   "publicationVisits": {
     "topVisitedTitle": "Publikasi yang Anda baca",

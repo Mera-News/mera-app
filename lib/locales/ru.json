@@ -233,15 +233,14 @@
     "publishers": "Издатели",
     "noPublishers": "Нет издателей для этой страны",
     "noArticlesFound": "Статьи не найдены",
-    "togglePin": "Закрепить/открепить",
     "topHeadlines": "Главные новости",
     "viewTopHeadlines": "Главные новости",
     "addToLocations": "Добавить в ваши места",
     "addedToLocations": "Добавлено в ваши места"
   },
   "clusterDetail": {
-    "translatable": "Эта статья на {{language}} — ваше устройство может перевести её во время чтения.",
-    "notTranslatable": "Эта статья на {{language}}. Перевод на устройстве для неё недоступен — используйте Google Переводчик ниже, чтобы прочитать её на вашем языке.",
+    "translatable": "Эта статья на {{language}} — ваше устройство может перевести её во время чтения. Если перевод не сработает, вы можете открыть сайт в Google Переводчике ниже — учтите, что вы будете просматривать его через Google.",
+    "notTranslatable": "Эта статья на {{language}}. Перевод на устройстве может быть недоступен для неё — используйте Google Переводчик ниже, чтобы прочитать её на вашем языке.",
     "unknownLanguage": "другом языке",
     "translationGuideLink": "Показать, как перевести статью",
     "viewInGoogleTranslate": "Просмотреть в Google Переводчике",
@@ -635,8 +634,7 @@
     "actionPinTopic": "Закрепить тему",
     "actionUnpinTopic": "Открепить тему",
     "actionRetireTopic": "Отключить тему",
-    "chooseOneHint": "Выберите один вариант",
-    "toggleLabels": "Показывать подписи кнопок"
+    "chooseOneHint": "Выберите один вариант"
   },
   "publicationVisits": {
     "topVisitedTitle": "Издания, которые вы читаете",

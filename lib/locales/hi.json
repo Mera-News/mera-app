@@ -229,15 +229,14 @@
     "publishers": "प्रकाशक",
     "noPublishers": "इस देश के लिए कोई प्रकाशक नहीं",
     "noArticlesFound": "कोई लेख नहीं मिला",
-    "togglePin": "पिन टॉगल करें",
     "topHeadlines": "मुख्य सुर्खियाँ",
     "viewTopHeadlines": "मुख्य सुर्खियाँ",
     "addToLocations": "अपनी जगहों में जोड़ें",
     "addedToLocations": "आपकी जगहों में जोड़ा गया"
   },
   "clusterDetail": {
-    "translatable": "यह लेख {{language}} में है — पढ़ते समय आपका डिवाइस इसे अनुवादित कर सकता है।",
-    "notTranslatable": "यह लेख {{language}} में है। इसके लिए ऑन-डिवाइस अनुवाद उपलब्ध नहीं है — इसे अपनी भाषा में पढ़ने के लिए नीचे Google अनुवाद का उपयोग करें।",
+    "translatable": "यह लेख {{language}} में है — पढ़ते समय आपका डिवाइस इसे अनुवादित कर सकता है। अगर अनुवाद काम न करे, तो आप नीचे दी गई साइट को Google अनुवाद में खोल सकते हैं — बस ध्यान रखें कि आप इसे Google के ज़रिए ब्राउज़ कर रहे होंगे।",
+    "notTranslatable": "यह लेख {{language}} में है। हो सकता है इसके लिए ऑन-डिवाइस अनुवाद उपलब्ध न हो — इसे अपनी भाषा में पढ़ने के लिए नीचे Google अनुवाद का उपयोग करें।",
     "unknownLanguage": "कोई अन्य भाषा",
     "translationGuideLink": "मुझे लेख अनुवाद करने का तरीका बताएं",
     "viewInGoogleTranslate": "Google अनुवाद में देखें",
@@ -631,8 +630,7 @@
     "actionPinTopic": "किसी विषय को पिन करें",
     "actionUnpinTopic": "किसी विषय को अनपिन करें",
     "actionRetireTopic": "किसी विषय को रिटायर करें",
-    "chooseOneHint": "एक विकल्प चुनें",
-    "toggleLabels": "बटन लेबल दिखाएं"
+    "chooseOneHint": "एक विकल्प चुनें"
   },
   "publicationVisits": {
     "topVisitedTitle": "आप जो प्रकाशन पढ़ रहे हैं",
