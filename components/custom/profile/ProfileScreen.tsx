@@ -1,25 +1,16 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import UsageWidget from '@/components/custom/UsageWidget';
+import FactsList from '@/components/custom/facts/FactsList';
 import HubRow from '@/components/custom/profile-hub/HubRow';
-import PersonaStringSheet from '@/components/custom/profile/PersonaStringSheet';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
-import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { fetchUserBilling } from '@/lib/billing-service';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
-import {
-    observeSummaryStrings,
-    toRow,
-    type PersonaSummaryStringRow,
-} from '@/lib/database/services/persona-summary-service';
-import { maybeRegeneratePersonaSummary } from '@/lib/database/services/persona-summary-trigger';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import { hapticMedium } from '@/lib/haptics';
 import logger from '@/lib/logger';
@@ -29,7 +20,7 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
@@ -42,37 +33,26 @@ interface ProfileScreenProps {
  * Mirror-first Profile tab (redesign). A completely non-technical user sees:
  *   1. The daily-usage card (articles analyzed today, plan + upgrade, reset
  *      time) — moved here from the Advanced hub so usage is always visible.
- *   2. "About you" — plain-language strings the LLM generated from the full
- *      persona; tap one to nudge importance, refine with Mera, or remove it.
- *      (A brand-new user with no persona instead sees a "Start talking" CTA.)
+ *   2. "About you" — the real facts list (`FactsList`, shared with the Your
+ *      Facts screen under Advanced): delete, N-articles pill, chevron expand
+ *      → topics. (A brand-new user with no persona instead sees a "Start
+ *      talking" CTA.)
  *   3. One "Advanced" row → the full power-user hub (AdvancedHubScreen).
  *
- * Strings are generated canonically in English and rendered via
- * TranslatableDynamic. Regeneration is triggered (debounced) on focus and after
- * a chat mutates facts; old strings keep rendering until replaced.
+ * Wave r6b replaced the old LLM-generated persona-summary strings (+
+ * PersonaStringSheet nudge/refine/remove flow) with this list — `FactsList`
+ * owns its own real-time refresh (chat mutations, queue drains); this screen
+ * only tracks the fact count to drive the empty-persona CTA.
  */
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const { t } = useTranslation();
     const { userPersona, fetchUserPersona } = useUserStore();
     const factMutationVersion = useFloatingChatFactMutationVersion();
 
-    const [strings, setStrings] = useState<PersonaSummaryStringRow[]>([]);
     const [factCount, setFactCount] = useState<number | null>(null);
-    const [sheetRow, setSheetRow] = useState<PersonaSummaryStringRow | null>(null);
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
-
-    const lastRegenRef = useRef(0);
-
-    // Reactive strings — replaceAll/delete flow back here (old rows render until
-    // a regeneration replaces them; no blocking spinner).
-    useEffect(() => {
-        const sub = observeSummaryStrings().subscribe((rows) => {
-            setStrings(rows.map(toRow));
-        });
-        return () => sub.unsubscribe();
-    }, []);
 
     // Fact count (drives the empty-persona state) + persona (blocked banner).
     const refreshFactCount = useCallback(() => {
@@ -91,29 +71,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         getTotalArticleSuggestionCount().then(setTotalArticleCount).catch(() => { /* keep last */ });
     }, []);
 
-    // Debounced regeneration on focus (tabs stay mounted → focus fires on every
-    // switch back; gate to once/30s). Also refresh the fact count on focus.
-    const triggerRegen = useCallback(() => {
-        lastRegenRef.current = Date.now();
-        void maybeRegeneratePersonaSummary();
-    }, []);
-
+    // Refresh the fact count on focus (tabs stay mounted → focus fires on every
+    // switch back) — drives the empty-persona CTA. FactsList (rendered below)
+    // owns its own real-time refresh for the list itself.
     useFocusEffect(
         useCallback(() => {
             refreshFactCount();
-            if (Date.now() - lastRegenRef.current > 30_000) {
-                triggerRegen();
-            }
-        }, [refreshFactCount, triggerRegen]),
+        }, [refreshFactCount]),
     );
 
-    // A chat (or sheet) that mutated facts bumps this — refresh count + regen.
+    // A chat (or sheet) that mutated facts bumps this — refresh the count so the
+    // empty-persona CTA flips promptly.
     useEffect(() => {
         if (factMutationVersion > 0) {
             refreshFactCount();
-            triggerRegen();
         }
-    }, [factMutationVersion, refreshFactCount, triggerRegen]);
+    }, [factMutationVersion, refreshFactCount]);
 
     const openChat = useCallback(() => {
         void hapticMedium();
@@ -136,7 +109,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
 
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
-    const isUpdating = strings.some((s) => s.stale);
 
     return (
         <Box className="flex-1 bg-black">
@@ -177,58 +149,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     onInfoPress={() => setShowArticleCountInfo(true)}
                 />
 
-                {/* 2 — About you */}
+                {/* 2 — About you (the real facts list — same component FactsScreen uses).
+                    No outer px-4 here: FactAccordion carries its own mx-4 inset, matching
+                    FactsScreen's layout — an extra wrapper padding would double-indent it. */}
                 {!isEmptyPersona && (
-                    <Box className="px-4 mb-4">
-                        <HStack className="items-center justify-between mb-2 px-1">
+                    <Box className="mb-4">
+                        <HStack className="mx-4 mb-2 items-center justify-between">
                             <Text className="text-gray-400" style={{ fontSize: 13, fontWeight: '600', letterSpacing: 0.4 }}>
                                 {t('profile.aboutYou', { defaultValue: 'ABOUT YOU' }).toUpperCase()}
                             </Text>
-                            {isUpdating && (
-                                <HStack space="xs" className="items-center">
-                                    <Spinner size="small" />
-                                    <Text size="xs" className="text-gray-500">
-                                        {t('profile.updating', { defaultValue: 'Updating…' })}
-                                    </Text>
-                                </HStack>
-                            )}
                         </HStack>
 
-                        {strings.length === 0 ? (
-                            <Box className="px-4 py-5 rounded-2xl" style={{ backgroundColor: '#141414' }}>
-                                <HStack space="sm" className="items-center">
-                                    <MaterialIcons name="auto-awesome" size={18} color="#93c5fd" />
-                                    <Text className="text-gray-400 flex-1" style={{ fontSize: 14 }}>
-                                        {t('profile.gettingToKnowYou', { defaultValue: "I'm still getting to know you — check back in a moment." })}
-                                    </Text>
-                                </HStack>
-                            </Box>
-                        ) : (
-                            // Flat list on a single surface — no per-row outlines, just a
-                            // hairline separator between rows (last row has none).
-                            <Box className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#141414' }}>
-                                {strings.map((s, index) => (
-                                    <Pressable
-                                        key={s.id}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={s.text}
-                                        onPress={() => setSheetRow(s)}
-                                        className={`flex-row items-center justify-between px-4 py-3.5 active:bg-white/5${
-                                            index < strings.length - 1 ? ' border-b border-gray-800' : ''
-                                        }`}
-                                        style={{ opacity: s.stale ? 0.6 : 1 }}
-                                    >
-                                        <TranslatableDynamic
-                                            text={s.text}
-                                            size="md"
-                                            className="text-white flex-1 mr-2"
-                                            numberOfLines={2}
-                                        />
-                                        <MaterialIcons name="chevron-right" size={20} color="#6b7280" />
-                                    </Pressable>
-                                ))}
-                            </Box>
-                        )}
+                        <FactsList />
                     </Box>
                 )}
 
@@ -253,13 +185,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     />
                 </Box>
             </ScrollView>
-
-            <PersonaStringSheet
-                visible={sheetRow !== null}
-                row={sheetRow}
-                onClose={() => setSheetRow(null)}
-                onRemoved={() => setSheetRow(null)}
-            />
 
             <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
                 <ModalBackdrop />

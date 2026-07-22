@@ -107,7 +107,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     );
 
     return (
-        <Box className="mx-4 mb-3 border border-gray-700 rounded-lg overflow-hidden">
+        <Box className="mx-4 mb-3">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
                 <Pressable onPress={() => onDeletePress(fact)} hitSlop={8} className="mr-3">
@@ -145,9 +145,9 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
 
             {/* Accordion body */}
             {isExpanded && (
-                <Box className="border-t border-gray-700 px-4 py-3">
+                <Box className="px-4 py-3">
                     {/* Influence — how strongly this fact dampens its topics */}
-                    <HStack className="items-center justify-between pb-3 mb-3 border-b border-gray-700">
+                    <HStack className="items-center justify-between pb-3 mb-3">
                         <Text size="sm" className="text-gray-400 font-medium">
                             {t('facts.influence', { defaultValue: 'Influence' })}
                         </Text>

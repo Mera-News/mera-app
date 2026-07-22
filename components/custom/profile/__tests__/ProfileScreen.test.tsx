@@ -79,17 +79,13 @@ jest.mock('@/components/custom/UsageWidget', () => {
         ),
     };
 });
-jest.mock('@/components/custom/TranslatableDynamic', () => {
-    const { Text } = require('react-native');
-    return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
-});
 jest.mock('@/components/custom/profile-hub/HubRow', () => {
     const { Pressable, Text } = require('react-native');
     return { __esModule: true, default: ({ label, onPress }: any) => <Pressable accessibilityLabel={label} onPress={onPress}><Text>{label}</Text></Pressable> };
 });
-jest.mock('@/components/custom/profile/PersonaStringSheet', () => {
+jest.mock('@/components/custom/facts/FactsList', () => {
     const { Text } = require('react-native');
-    return { __esModule: true, default: ({ visible, row }: any) => (visible ? <Text>sheet:{row?.text}</Text> : null) };
+    return { __esModule: true, default: () => <Text>facts-list</Text> };
 });
 
 // --- services / stores ------------------------------------------------------
@@ -107,15 +103,6 @@ const mockPresentPaywall = jest.fn();
 jest.mock('react-native-purchases-ui', () => ({ __esModule: true, default: { presentPaywall: (...a: unknown[]) => mockPresentPaywall(...a) } }));
 jest.mock('@/lib/revenuecat', () => ({ getOfferingSafe: () => Promise.resolve(null) }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
-
-let mockObservedRows: any[] = [];
-jest.mock('@/lib/database/services/persona-summary-service', () => ({
-    observeSummaryStrings: () => ({ subscribe: (cb: (rows: any[]) => void) => { cb(mockObservedRows); return { unsubscribe: jest.fn() }; } }),
-    toRow: (r: any) => r,
-}));
-
-const mockRegen = jest.fn();
-jest.mock('@/lib/database/services/persona-summary-trigger', () => ({ maybeRegeneratePersonaSummary: (...a: unknown[]) => mockRegen(...a) }));
 
 jest.mock('@/lib/haptics', () => ({ hapticMedium: jest.fn() }));
 
@@ -135,7 +122,6 @@ import ProfileScreen from '../ProfileScreen';
 
 beforeEach(() => {
     jest.clearAllMocks();
-    mockObservedRows = [];
     mockFetchUserBilling.mockResolvedValue(null);
 });
 
@@ -153,26 +139,22 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByText('tabs.profile')).toBeTruthy());
     });
 
-    it('empty persona → shows the Start-talking CTA and no About-you rows', async () => {
+    it('empty persona → shows the Start-talking CTA and no About-you section', async () => {
         mockGetFacts.mockResolvedValue([]);
         const { getByText, queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('Start talking')).toBeTruthy());
         expect(queryByText('ABOUT YOU')).toBeNull();
+        expect(queryByText('facts-list')).toBeNull();
         // Usage card + Advanced row still present.
         expect(getByTestId('usage-widget')).toBeTruthy();
         expect(getByText('Advanced')).toBeTruthy();
     });
 
-    it('with facts + strings → renders the About-you strings and opens the sheet on tap', async () => {
+    it('with facts → renders the About-you heading and the real facts list (FactsList)', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
-        mockObservedRows = [
-            { id: 's1', text: 'Lives in Pune with family', linkedFactIds: ['f1'], linkedTopicIds: ['t1'], generatedAt: 1, personaVersion: 'v', stale: false },
-        ];
         const { getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('Lives in Pune with family')).toBeTruthy());
-
-        fireEvent.press(getByText('Lives in Pune with family'));
-        expect(getByText('sheet:Lives in Pune with family')).toBeTruthy();
+        await waitFor(() => expect(getByText('ABOUT YOU')).toBeTruthy());
+        expect(getByText('facts-list')).toBeTruthy();
     });
 
     it('empty-persona Start-talking CTA opens the persona chat', async () => {
@@ -189,11 +171,5 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByLabelText('usage-info')).toBeTruthy());
         fireEvent.press(getByLabelText('usage-info'));
         expect(getByText('configPanel.articleAnalysisTitle')).toBeTruthy();
-    });
-
-    it('regenerates the summary on focus', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(mockRegen).toHaveBeenCalled());
     });
 });
