@@ -23,6 +23,7 @@ import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -49,8 +50,13 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, RefreshControl } from 'react-native';
+import { RefreshControl } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
+import Animated, {
+  runOnJS,
+  useAnimatedScrollHandler,
+  useComposedEventHandler,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
@@ -100,6 +106,11 @@ const FeedScreen: React.FC = () => {
 
   const { isLoading, errorMessage } = useFeedBootstrap();
   const isConnected = useIsConnected();
+
+  // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
+  // with the Dashboard tab.
+  const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
+    useCollapsibleHeader();
 
   // ── Live inputs ──
   const suggestions = useForYouSuggestions();
@@ -184,10 +195,21 @@ const FeedScreen: React.FC = () => {
   //    rebuilt. ──
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
+    reveal();
     setRefreshing(true);
     await AppScheduler.trigger('feed-sync').catch(() => {});
     setRefreshing(false);
-  }, []);
+  }, [reveal]);
+
+  // Compose the collapsible-header handler with a scroll-tick notifier (drives
+  // deferred TranslatableDynamic translation as items enter the viewport) —
+  // mirrors DashboardSectionsFeed's composition.
+  const tickHandler = useAnimatedScrollHandler({
+    onScroll: () => {
+      runOnJS(notifyScrollTick)();
+    },
+  });
+  const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
     ({ item }: { item: FeedListItem }) => (
@@ -218,6 +240,19 @@ const FeedScreen: React.FC = () => {
     syncStatusMessage.state !== 'paused-offline';
   const isFeedProcessing =
     isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+
+  // Auto-reveal the header on an error state or while the list is empty
+  // (preparing / no interests yet) so the header chrome is never hidden
+  // under a collapsed header when the user most needs it — mirrors
+  // ForYouScreen's auto-reveal rationale.
+  useEffect(() => {
+    const isEmptyState =
+      data.length === 0 &&
+      (!hasGeneratedInterests || isFeedProcessing || lastProcessingRunFinishedAt === null);
+    if (errorMessage || isEmptyState) {
+      reveal();
+    }
+  }, [errorMessage, data.length, hasGeneratedInterests, isFeedProcessing, lastProcessingRunFinishedAt, reveal]);
 
   const renderEmpty = () => {
     if (isLoading) {
@@ -253,37 +288,14 @@ const FeedScreen: React.FC = () => {
 
   return (
     <Box className="flex-1 bg-black">
-      {/* Header — "For you" heading (top-left) + notification bell (top-right),
-          with the 24h stats sentence beneath. */}
-      <VStack className="px-5 pb-2" space="xs" style={{ paddingTop: insets.top + 16 }}>
-        <HStack className="items-start justify-between">
-          <VStack className="flex-1 min-w-0 mr-3">
-            <Heading size="3xl" className="text-white" numberOfLines={1}>
-              {t('swipeFeed.yourDeck')}
-            </Heading>
-          </VStack>
-          <HStack className="items-center flex-shrink-0" space="sm">
-            <NotificationBellButton />
-          </HStack>
-        </HStack>
-        <FeedStatsSentence />
-
-        {!isConnected && (
-          <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-1" space="sm">
-            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-            <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
-          </HStack>
-        )}
-      </VStack>
-
-      <FlatList
+      <Animated.FlatList
         data={listData}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
-        onScroll={() => notifyScrollTick()}
+        onScroll={onScroll}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -293,6 +305,7 @@ const FeedScreen: React.FC = () => {
           />
         }
         contentContainerStyle={{
+          paddingTop: headerHeight,
           paddingHorizontal: 12,
           paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
           flexGrow: 1,
@@ -311,6 +324,38 @@ const FeedScreen: React.FC = () => {
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
       />
+
+      {/* Collapsing header — "For you" heading (top-left) + notification bell
+          (top-right), with the 24h stats sentence beneath. Absolute overlay,
+          translates up on scroll-down and back on scroll-up / reveal(). */}
+      <Animated.View
+        onLayout={onHeaderLayout}
+        style={[
+          { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
+          headerStyle,
+        ]}
+      >
+        <VStack className="px-5 pb-2" space="xs" style={{ paddingTop: insets.top + 16 }}>
+          <HStack className="items-start justify-between">
+            <VStack className="flex-1 min-w-0 mr-3">
+              <Heading size="3xl" className="text-white" numberOfLines={1}>
+                {t('swipeFeed.yourDeck')}
+              </Heading>
+            </VStack>
+            <HStack className="items-center flex-shrink-0" space="sm">
+              <NotificationBellButton />
+            </HStack>
+          </HStack>
+          <FeedStatsSentence />
+
+          {!isConnected && (
+            <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-1" space="sm">
+              <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+              <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
+            </HStack>
+          )}
+        </VStack>
+      </Animated.View>
 
       {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
       {sheet}
