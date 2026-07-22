@@ -3,7 +3,9 @@
 // Covers the r6 P3 empty-state fix: a transient persona-fetch failure must NOT
 // overwrite the persisted `hasGeneratedTopics` flag (that was the root cause of
 // the "Mera cannot analyze news for you" false-empty state), while a genuinely
-// successful fetch — including one that confirms zero topics — is authoritative.
+// successful persona fetch — regardless of what it returns — is authoritative,
+// since `hasGeneratedTopics` is now derived from the on-device topics table
+// (topic-decouple A1) rather than the retired server userTopics linkage.
 //
 // jest.mock() factories are hoisted above imports/consts, so every factory below
 // only references either (a) values it creates inline, or (b) lazy wrappers
@@ -22,6 +24,11 @@ jest.mock('@/lib/stores/user-store', () => ({
   useUserStore: () => ({
     fetchUserPersonaOrThrow: (...args: unknown[]) => mockFetchUserPersonaOrThrow(...args),
   }),
+}));
+
+const mockGetActive = jest.fn();
+jest.mock('@/lib/database/services/topic-service', () => ({
+  getActive: (...args: unknown[]) => mockGetActive(...args),
 }));
 
 const mockHydrate = jest.fn(() => Promise.resolve());
@@ -83,30 +90,41 @@ describe('useFeedBootstrap', () => {
     mockIsFocusedRef.current = true;
     setForYouState({ suggestions: [], hasGeneratedTopics: true });
     mockFetchUserPersonaOrThrow.mockReset();
+    mockGetActive.mockReset();
+    mockGetActive.mockResolvedValue([]);
   });
 
-  it('confirmed-empty: a successful fetch with zero topics sets hasGeneratedTopics false', async () => {
+  it('confirmed-empty: a successful fetch with zero local topics sets hasGeneratedTopics false', async () => {
     setForYouState({ suggestions: [], hasGeneratedTopics: true });
-    mockFetchUserPersonaOrThrow.mockResolvedValueOnce({
-      _id: 'persona-1',
-      userTopics: [],
-    });
+    mockFetchUserPersonaOrThrow.mockResolvedValueOnce({ _id: 'persona-1' });
+    mockGetActive.mockResolvedValueOnce([]);
 
     const { result } = renderHook(() => useFeedBootstrap());
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(mockFetchUserPersonaOrThrow).toHaveBeenCalledWith('user-1');
+    expect(mockGetActive).toHaveBeenCalled();
     expect(mockSetHasGeneratedTopics).toHaveBeenCalledWith(false);
     expect(result.current.errorMessage).toBeNull();
   });
 
-  it('confirmed-non-empty: a successful fetch with topics sets hasGeneratedTopics true', async () => {
+  it('confirmed-non-empty: a successful fetch with local topics sets hasGeneratedTopics true', async () => {
     setForYouState({ suggestions: [], hasGeneratedTopics: false });
-    mockFetchUserPersonaOrThrow.mockResolvedValueOnce({
-      _id: 'persona-1',
-      userTopics: [{ topic: 'cricket' }],
-    });
+    mockFetchUserPersonaOrThrow.mockResolvedValueOnce({ _id: 'persona-1' });
+    mockGetActive.mockResolvedValueOnce([{ id: 't1' }]);
+
+    const { result } = renderHook(() => useFeedBootstrap());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(mockSetHasGeneratedTopics).toHaveBeenCalledWith(true);
+  });
+
+  it('local topics decide the flag even when the persona fetch resolves null', async () => {
+    setForYouState({ suggestions: [], hasGeneratedTopics: false });
+    mockFetchUserPersonaOrThrow.mockResolvedValueOnce(null);
+    mockGetActive.mockResolvedValueOnce([{ id: 't1' }]);
 
     const { result } = renderHook(() => useFeedBootstrap());
 
@@ -145,10 +163,8 @@ describe('useFeedBootstrap', () => {
   it('flag-false with non-empty suggestions does not fetch while unfocused, but refetches on focus', async () => {
     mockIsFocusedRef.current = false;
     setForYouState({ suggestions: [{ id: 'a' }], hasGeneratedTopics: false });
-    mockFetchUserPersonaOrThrow.mockResolvedValue({
-      _id: 'persona-1',
-      userTopics: [{ topic: 'cricket' }],
-    });
+    mockFetchUserPersonaOrThrow.mockResolvedValue({ _id: 'persona-1' });
+    mockGetActive.mockResolvedValue([{ id: 't1' }]);
 
     const { result, rerender } = renderHook(() => useFeedBootstrap());
 

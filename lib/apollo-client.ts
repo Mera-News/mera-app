@@ -237,15 +237,6 @@ const cache = new InMemoryCache({
                 // Add type policies here if needed for specific query field caching
             },
         },
-        UserPersona: {
-            fields: {
-                userTopics: {
-                    merge(_existing, incoming) {
-                        return incoming;
-                    },
-                },
-            },
-        },
     },
 });
 

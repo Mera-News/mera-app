@@ -70,7 +70,6 @@ export async function loadUserPersona(
     notificationsEnabled: persona.notificationsEnabled,
     preferredNotificationWindow: persona.preferredNotificationWindow,
     language_codes: persona.languageCodes,
-    userTopics: [],
     createdAt: persona.createdAt.toISOString(),
     updatedAt: persona.updatedAt.toISOString(),
   } as UserPersona;

@@ -36,7 +36,6 @@ function makePersona(overrides: Record<string, unknown> = {}) {
     return {
         _id: 'persona-1',
         userId: 'user-1',
-        userTopics: [],
         preferredNotificationWindow: [9, 10, 11],
         notificationsEnabled: true,
         expoPushToken: 'ExponentPushToken[abc123]',

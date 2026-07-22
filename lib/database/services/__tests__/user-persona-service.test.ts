@@ -55,7 +55,6 @@ function makeServerPersona(overrides: Record<string, unknown> = {}) {
     notificationsEnabled: true,
     preferredNotificationWindow: [9, 10],
     language_codes: ['en'],
-    userTopics: [],
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-06-01T00:00:00.000Z',
     ...overrides,
@@ -252,13 +251,6 @@ describe('loadUserPersona', () => {
     expect(result!.notificationsEnabled).toBe(true);
     expect(result!.createdAt).toBe(createdAt.toISOString());
     expect(result!.updatedAt).toBe(updatedAt.toISOString());
-  });
-
-  it('maps userTopics as empty array', async () => {
-    const rec = makePersonaRecord();
-    db._setRows('user_personas', [rec]);
-    const result = await loadUserPersona('user-1');
-    expect(result!.userTopics).toEqual([]);
   });
 
   it('maps ON_DEVICE processingMode correctly', async () => {

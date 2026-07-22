@@ -53,7 +53,6 @@ function makePersona(overrides: Partial<UserPersona> = {}): UserPersona {
     return {
         _id: 'persona-1',
         userId: 'user-1',
-        userTopics: [],
         preferredNotificationWindow: [9, 18],
         notificationsEnabled: true,
         expoPushToken: null,

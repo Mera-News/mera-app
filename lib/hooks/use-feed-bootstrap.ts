@@ -3,9 +3,14 @@
 // tab can mount it. Two responsibilities:
 //   1. Opened-story set hydration (on mount + on every refocus) so opens
 //      recorded on other surfaces dim/exclude here too.
-//   2. First-visit persona fetch: when the store is empty, fetch the user
-//      persona and set `hasGeneratedTopics`. Returns `{ isLoading, errorMessage }`
-//      for the caller's empty-state chain.
+//   2. First-visit persona fetch + local `hasGeneratedTopics` derivation: when
+//      the store is empty, fetch the user persona (still needed to hydrate
+//      onboarding stage / blocked-by-LLM / notification state into the store)
+//      and, on a successful fetch, set `hasGeneratedTopics` from the on-device
+//      `topics` table — the app owns the authoritative topic list locally, so
+//      the server's (retired) userTopics linkage is no longer the source of
+//      truth. Returns `{ isLoading, errorMessage }` for the caller's
+//      empty-state chain.
 //
 // DOUBLE-MOUNT SAFE: the persona fetch is guarded by a MODULE-LEVEL in-flight
 // key (the two feed tabs stay mounted simultaneously under NativeTabs, so both
@@ -21,6 +26,7 @@ import { getForYouActions } from '@/lib/stores/selectors';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { getActive } from '@/lib/database/services/topic-service';
 
 /** Module-level guard: the user id whose bootstrap fetch is currently running,
  *  or null. Shared across every mount of this hook this session. */
@@ -74,14 +80,16 @@ export function useFeedBootstrap(): FeedBootstrapState {
 
     (async () => {
       try {
-        const persona = await fetchUserPersonaOrThrow(userId);
-        // A SUCCESSFUL query is authoritative even when it returns no topics —
-        // that is a confirmed-empty persona, not a failure, and may set false.
-        const hasInterests = !!(
-          persona?._id &&
-          persona?.userTopics &&
-          persona.userTopics.length > 0
-        );
+        // Persona fetch still hydrates onboarding stage / blocked-by-LLM /
+        // notification state into the store — only the hasGeneratedTopics
+        // source changes below.
+        await fetchUserPersonaOrThrow(userId);
+        // The device is the authority on topics now: a SUCCESSFUL persona
+        // fetch (regardless of what it returns) means we can confidently read
+        // the local topics table — an empty table is a confirmed-empty
+        // persona, not a failure, and may set false.
+        const localTopics = await getActive();
+        const hasInterests = localTopics.length > 0;
         if (!cancelled) {
           getForYouActions().setHasGeneratedTopics(hasInterests);
         }

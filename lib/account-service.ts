@@ -8,15 +8,6 @@ const GET_USER_PERSONA = gql`
     userPersonaByUserId(userId: $userId) {
       _id
       userId
-      userTopics {
-        _id
-        news_topic_text
-        cluster_count
-        article_count
-        is_canonical
-        createdAt
-        updatedAt
-      }
       preferredNotificationWindow
       notificationsEnabled
       expoPushToken
@@ -179,20 +170,9 @@ const GET_UNBLOCK_REQUEST_STATUS = gql`
 
 // Types
 
-export interface UserTopic {
-    _id: string;
-    news_topic_text: string;
-    cluster_count: number;
-    article_count: number;
-    is_canonical: boolean;
-    createdAt: string;
-    updatedAt: string;
-}
-
 export interface UserPersona {
     _id: string;
     userId: string;
-    userTopics?: UserTopic[] | null;
     preferredNotificationWindow: number[];
     notificationsEnabled: boolean;
     expoPushToken?: string | null;
