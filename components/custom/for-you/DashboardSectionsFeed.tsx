@@ -9,7 +9,6 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import {
   countNewGroups,
   selectTopGroups,
-  SECTION_PREVIEW_COUNT,
 } from '@/lib/stores/dashboard-section-selector';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import {
@@ -75,17 +74,26 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     for (const row of rows) {
       const newCount = countNewGroups(row.groups, visits[row.factId]);
       data.push({ type: 'header', key: `h:${row.factId}`, row, newCount });
-      const previewGroups = selectTopGroups(row.groups);
+      // Only surface UNSEEN suggestions in the compact preview — a story the
+      // user already opened is dropped here (still reachable via "View all").
+      // If nothing unopened remains, the section shows just header + footer.
+      const unopened = row.groups.filter(
+        (g) => !isSuggestionOpened(g.data, openedIds),
+      );
+      const previewGroups = selectTopGroups(unopened);
       for (const group of previewGroups) {
         data.push({ type: 'card', key: `c:${group.data._id}`, row, group });
       }
-      // Footer only when there are more stories than the preview shows.
-      if (row.groups.length > SECTION_PREVIEW_COUNT) {
+      // Footer whenever the section holds more stories than the preview shows
+      // (including opened ones filtered out above), so the full feed stays
+      // reachable.
+      if (row.groups.length > previewGroups.length) {
         data.push({ type: 'footer', key: `f:${row.factId}`, row, total: row.groups.length });
       }
     }
     return data;
-  }, [rows, visits]);
+    // openedIds is a dep: the preview must drop a card as soon as it's opened.
+  }, [rows, visits, openedIds]);
 
   const openFactFeed = useCallback((row: FactRow) => {
     router.push({

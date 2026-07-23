@@ -523,6 +523,65 @@ describe('stepHydratePersistEnqueue', () => {
     expect(result.dailyLimitReached).toBe(false);
   });
 
+  it('flushes the gate-deferred trailing partial with flushPartial=true once the lot is hydrated', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-1'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    // The pipeline held art-1 back as a sub-25 trailing partial (returned to us).
+    mockEnqueueCandidates.mockResolvedValue({ deferred: ['art-1'] });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map([['art-1', ['topic-a']]]),
+      missingIds: ['art-1'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // Greedy enqueue (one arg) then a direct tail flush with flushPartial=true —
+    // no extra gate pass (the ids were already elected).
+    expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(1, ['art-1']);
+    expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(2, ['art-1'], true);
+    expect(mockGateUnscoredForScoring).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT flush a tail when the pipeline deferred nothing', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-1'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    mockEnqueueCandidates.mockResolvedValue({ deferred: [] });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map([['art-1', ['topic-a']]]),
+      missingIds: ['art-1'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // Greedy enqueue only — nothing deferred, so no flush call.
+    expect(mockEnqueueCandidates).toHaveBeenCalledTimes(1);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1']);
+  });
+
   it('fires reconcileTrackedStories fire-and-forget after a successful persist', async () => {
     mockGetArticlesForTopicsByIds.mockResolvedValue({
       articles: [{ _id: 'art-1' }],

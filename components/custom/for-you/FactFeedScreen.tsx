@@ -3,6 +3,7 @@ import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggesti
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
+import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -27,8 +28,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList } from 'react-native';
+import { FlatList, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+/** Show the scroll-to-top FAB once the list is scrolled past this many px. */
+const SCROLL_THRESHOLD = 300;
 
 interface FactFeedScreenProps {
   factId: string;
@@ -106,8 +110,29 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const groups: FactRowGroup[] = useMemo(() => {
     if (!snapshots) return [];
     const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    return rows.find((r) => r.factId === factId)?.groups ?? [];
+    const found = rows.find((r) => r.factId === factId)?.groups ?? [];
+    // Order this screen by article publication freshness — newest PUBLISHED on
+    // top (`pubDateMs`), not suggestion-creation time (the shared `cardCompare`
+    // the Dashboard uses). Copy before sorting so the selector's array is left
+    // untouched. Tiebreak on `_id` for a stable order.
+    return [...found].sort(
+      (a, b) =>
+        b.pubDateMs - a.pubDateMs ||
+        (a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0),
+    );
   }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx]);
+
+  // ── Scroll-to-top FAB ──
+  const listRef = useRef<FlatList<FactRowGroup>>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = e.nativeEvent.contentOffset.y > SCROLL_THRESHOLD;
+    // Functional update → only re-render when the boolean actually flips.
+    setShowScrollToTop((prev) => (prev === next ? prev : next));
+  }, []);
+  const scrollToTop = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
 
   // ── Feedback sheet ──
   // Unlike the For You feed (which persists its order + verdicts), this screen
@@ -189,13 +214,18 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         </HStack>
       </SectionGradientPanel>
       <FlatList
+        ref={listRef}
         data={groups}
         keyExtractor={(g) => g.data._id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         ListEmptyComponent={<AllCaughtUpCard />}
       />
+
+      <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
 
       {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
       {sheet}

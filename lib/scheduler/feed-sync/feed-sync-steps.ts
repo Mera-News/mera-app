@@ -152,7 +152,11 @@ async function fetchTopicIdsPersona(
 
   const query: PersonaQueryInput = {
     topics: profile.topics.map((t) => ({ text: t.text, limit: t.limit })),
-    limitPerTopic: 20,
+    // Fetch everything the server can give per topic (its ceiling is 100 —
+    // cold-path VECTOR_SEARCH_LIMIT / warm-path TOPIC_LINKING_LIMIT, all at
+    // score ≥0.78). We then process the whole lot serially in 25-batches and
+    // don't refetch until it's fully scored. (Was 20 — only the top slice.)
+    limitPerTopic: 100,
     topHeadlines: {
       scopes: profile.headlineScopes.map((s) => ({
         scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
@@ -243,7 +247,9 @@ async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResul
     () =>
       ArticleService.getArticleIdsForTopics(
         topicTexts.map((text) => ({ topicText: text })),
-        { limitPerTopic: 20 },
+        // Fetch everything per topic (server ceiling 100), same as the persona
+        // path above. Was 20.
+        { limitPerTopic: 100 },
       ),
     ctx.signal,
   );
@@ -350,6 +356,10 @@ export async function stepHydratePersistEnqueue(
   // failed batch on a prior chunk/sync is re-considered. Self-healing with no
   // persisted held-back state: a held-back sibling is either propagated (its rep
   // scored) or re-enqueued next pass.
+  // The trailing sub-25 partial the most recent enqueue held back (empty when
+  // nothing was deferred). Flushed to scoring once the whole lot is hydrated.
+  let pendingDeferred: string[] = [];
+
   const gateAndEnqueue = async (): Promise<void> => {
     const inFlight = await getNonTerminalCandidateIds();
     const gate = await gateUnscoredForScoring(inFlight, userCtx);
@@ -358,7 +368,8 @@ export async function stepHydratePersistEnqueue(
       await opts.refreshStore();
     }
     if (gate.enqueueIds.length > 0) {
-      await enqueueCandidates(gate.enqueueIds);
+      const res = await enqueueCandidates(gate.enqueueIds);
+      pendingDeferred = res?.deferred ?? [];
     }
     enqueuedCount += gate.enqueueIds.length;
     ctx.log(
@@ -422,7 +433,7 @@ export async function stepHydratePersistEnqueue(
         // gate+enqueue now (serialized) so accumulated full quanta dispatch
         // mid-hydration instead of only once at the end.
         if (eligibleIds.length > 0) {
-          await runGateSerialized(gateAndEnqueue);
+          await runGateSerialized(() => gateAndEnqueue());
         }
       }
 
@@ -450,6 +461,22 @@ export async function stepHydratePersistEnqueue(
   // Drain any still-pending serialized gate invocation before deciding the
   // outcome / returning.
   await gateChain;
+
+  // Tail flush: the whole lot is now hydrated and we won't refetch until it's
+  // scored, so dispatch the trailing sub-25 partial the gate held back instead
+  // of letting it wait out MAX_UNSCORED_WAIT_MS (~30 min) for a quantum that
+  // will never fill this cycle. These ids were already gate-elected, so we
+  // enqueue them directly with flushPartial=true (no extra gate pass). Skip on
+  // abort; never let a flush failure fail the (already-hydrated) step.
+  if (!ctx.signal.aborted && pendingDeferred.length > 0) {
+    try {
+      await enqueueCandidates(pendingDeferred, true);
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { component: 'feed-sync-steps', method: 'tailFlush' },
+      });
+    }
+  }
 
   // Daily-limit outcome: throw ONLY if the cap blocked the entire run.
   if (dailyLimitReached && !deliveredAny) {

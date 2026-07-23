@@ -432,8 +432,11 @@ function makeRunId(): string {
  * trickle can't hide news for hours. The rule is uniform for run creation AND
  * appends — no foreground special-case.
  */
-export async function enqueueCandidates(ids: string[]): Promise<void> {
-  if (ids.length === 0) return;
+export async function enqueueCandidates(
+  ids: string[],
+  flushPartial = false,
+): Promise<{ deferred: string[] }> {
+  if (ids.length === 0) return { deferred: [] };
   const snap = await getPipeline();
 
   const existing = snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
@@ -443,7 +446,7 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
       await drain('foreground');
       ensurePoller();
     }
-    return;
+    return { deferred: [] };
   }
 
   // FIFO 25-article quanta. chunkIds yields at most one trailing partial (the
@@ -452,6 +455,9 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
   const chunks = chunkIds(fresh, BATCH_SIZE);
   const dispatch: string[][] = [];
   let deferred = 0;
+  // The trailing partial's ids when it's held back — returned to the caller so
+  // feed-sync can flush it once the whole lot is hydrated (flushPartial pass).
+  let deferredIds: string[] = [];
   for (const chunk of chunks) {
     if (chunk.length === BATCH_SIZE) {
       dispatch.push(chunk);
@@ -459,6 +465,18 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
     }
     // Trailing partial (<BATCH_SIZE). chunkIds only ever yields one, as the last
     // chunk, so the cold read below runs at most once per enqueue.
+    //
+    // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
+    // everything now. We don't refetch until the whole lot is scored, so a
+    // deferred trailing partial would sit idle for up to MAX_UNSCORED_WAIT_MS
+    // with no next fetch coming to fill the quantum — dispatch it immediately.
+    if (flushPartial) {
+      logger.info(
+        `${TAG} enqueueCandidates: flush — dispatching trailing partial of ${chunk.length} (lot fully hydrated)`,
+      );
+      dispatch.push(chunk);
+      continue;
+    }
     //
     // Knob 1 (P7d): on a COLD feed the first scored paint is gated entirely on
     // this partial — the warm "accumulate to 25 / 30-min staleness escape" rule
@@ -483,6 +501,7 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
       dispatch.push(chunk);
     } else {
       deferred = chunk.length;
+      deferredIds = chunk;
       logger.info(
         `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${BATCH_SIZE} quantum, oldest ${Math.round(oldestAgeMs / 60_000)}min)`,
       );
@@ -494,7 +513,7 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
       await drain('foreground');
       ensurePoller();
     }
-    return;
+    return { deferred: deferredIds };
   }
 
   logger.info(
@@ -512,6 +531,7 @@ export async function enqueueCandidates(ids: string[]): Promise<void> {
 
   await drain('foreground');
   ensurePoller();
+  return { deferred: deferredIds };
 }
 
 /**

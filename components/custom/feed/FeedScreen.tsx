@@ -14,6 +14,7 @@ import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
+import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedbackSheet, type VerdictStoreAdapter } from './use-feedback-sheet';
 import { Box } from '@/components/ui/box';
@@ -56,10 +57,14 @@ import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
+  useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
+
+/** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
+const SCROLL_THRESHOLD = 300;
 
 // Module-constant empty exclusion set: candidates keep opened items (they back
 // frozen rows for refresh + hydrate survival). Opened-exclusion happens only
@@ -92,7 +97,9 @@ const FeedRow = React.memo(function FeedRow({
       verdict={verdict}
       onVerdict={onVerdict}
       onAskMera={onAskMera}
-      dimmed={verdict != null || read}
+      // Viewed (opened) stories get ONLY the eye indicator (`read`) — no
+      // dimming. Dimming is reserved for a recorded verdict (like/dislike).
+      dimmed={verdict != null}
       read={read}
       flat
     />
@@ -137,6 +144,17 @@ const FeedScreen: React.FC = () => {
 
   // ── Freeze boundary (viewability → ref only; no store/DB writes mid-scroll) ──
   const { viewabilityConfigCallbackPairs, maxVisibleIndexRef } = useVisibleIndex();
+
+  // ── Scroll-to-top FAB ── The list ref forwards to the underlying FlatList
+  // (Animated.createAnimatedComponent), so scrollToOffset is available. The
+  // visibility boolean is driven from the scroll worklet (below) but only
+  // crosses the JS bridge when it actually flips (showFabShared guard).
+  const listRef = useRef<Animated.FlatList<FeedListItem>>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const showFabShared = useSharedValue(false);
+  const scrollToTop = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
 
   // Hydrate the persisted order ONCE, when the DB is ready. Evicts persisted ids
   // with no live backing item; restores survivors in their persisted order.
@@ -205,8 +223,15 @@ const FeedScreen: React.FC = () => {
   // deferred TranslatableDynamic translation as items enter the viewport) —
   // mirrors DashboardSectionsFeed's composition.
   const tickHandler = useAnimatedScrollHandler({
-    onScroll: () => {
+    onScroll: (e) => {
       runOnJS(notifyScrollTick)();
+      // Toggle the scroll-to-top FAB — cross the JS bridge only when the
+      // threshold boolean actually flips, not on every scroll frame.
+      const next = e.contentOffset.y > SCROLL_THRESHOLD;
+      if (next !== showFabShared.value) {
+        showFabShared.value = next;
+        runOnJS(setShowScrollToTop)(next);
+      }
     },
   });
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
@@ -289,6 +314,7 @@ const FeedScreen: React.FC = () => {
   return (
     <Box className="flex-1 bg-black">
       <Animated.FlatList
+        ref={listRef}
         data={listData}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
@@ -302,6 +328,9 @@ const FeedScreen: React.FC = () => {
             onRefresh={handleRefresh}
             tintColor={REFRESH_TINT}
             colors={[REFRESH_TINT]}
+            // Push the spinner below the absolute collapsing header so it isn't
+            // hidden behind it (Android).
+            progressViewOffset={headerHeight}
           />
         }
         contentContainerStyle={{
@@ -330,6 +359,12 @@ const FeedScreen: React.FC = () => {
           translates up on scroll-down and back on scroll-up / reveal(). */}
       <Animated.View
         onLayout={onHeaderLayout}
+        // box-none: the header overlay must not swallow the top-of-list
+        // pull-to-refresh gesture — touches pass through its empty area to the
+        // FlatList beneath, while its interactive children (the bell) still
+        // receive taps. Without this the absolute header intercepted the pull
+        // and pull-to-refresh appeared "gone".
+        pointerEvents="box-none"
         style={[
           { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
           headerStyle,
@@ -356,6 +391,12 @@ const FeedScreen: React.FC = () => {
           )}
         </VStack>
       </Animated.View>
+
+      <ScrollToTopFab
+        visible={showScrollToTop}
+        onPress={scrollToTop}
+        extraBottomOffset={TAB_BAR_HEIGHT}
+      />
 
       {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
       {sheet}

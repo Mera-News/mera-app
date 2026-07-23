@@ -521,6 +521,27 @@ describe('enqueueCandidates: strict quantum gate', () => {
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 
+  it('returns the deferred trailing-partial ids when it holds a sub-25 quantum back', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — no escape
+
+    const res = await enqueueCandidates(ids(5));
+
+    expect(res.deferred).toHaveLength(5);
+    expect(currentRun()).toBeNull(); // nothing dispatched
+  });
+
+  it('flushPartial=true dispatches the sub-25 partial and returns no deferred ids', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — would normally defer
+
+    const res = await enqueueCandidates(ids(5), true);
+
+    expect(res.deferred).toHaveLength(0);
+    const run = currentRun();
+    expect(run).not.toBeNull();
+    expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(5);
+  });
+
   it('dispatches exactly floor(n/25) full quanta and defers the remainder (run creation)', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — no escape for the partial
 

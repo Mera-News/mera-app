@@ -24,6 +24,13 @@ import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 
 const TAG = '[inference-results]';
 
+// Hard wall-clock timeout on the /results GET. Without it a hung socket
+// (captive portal / dead connection) leaves the await pending forever, which
+// freezes the scoring poller's `runPollerTick` finally, pins `pollTickRunning`
+// true, kills the 7s poller, and leaves the pipeline stuck 'running' — so
+// feed-sync (which skips while scoring is in flight) never fetches again.
+const RESULTS_FETCH_TIMEOUT_MS = 30_000;
+
 // Bucketed-relevance floor that gates phase-2 LLM reason generation. Replaces
 // the old per-user notificationSensitivity knob — kept at the same value the
 // old code defaulted to so behaviour is unchanged for users who never moved
@@ -120,13 +127,21 @@ export async function fetchResults(
   //     on a silent-push wake (locked-device → SecureStore throws).
   const authHeader = await pickResultsAuthHeader(context, requestId, capabilityToken);
 
-  const res = await (expoFetch as unknown as typeof globalThis.fetch)(
-    `${INFERENCE_ENDPOINT}/v1/inference/jobs/${requestId}/results`,
-    {
-      method: 'GET',
-      headers: { Authorization: authHeader },
-    },
-  );
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), RESULTS_FETCH_TIMEOUT_MS);
+  let res: Awaited<ReturnType<typeof globalThis.fetch>>;
+  try {
+    res = await (expoFetch as unknown as typeof globalThis.fetch)(
+      `${INFERENCE_ENDPOINT}/v1/inference/jobs/${requestId}/results`,
+      {
+        method: 'GET',
+        headers: { Authorization: authHeader },
+        signal: controller.signal,
+      },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (res.status === 404) return 'not-found';
   // The capability token carries a 2h TTL. A 401/403 here means the token

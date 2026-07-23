@@ -60,15 +60,15 @@ describe('inference-recover-task registration', () => {
     expect(registeredDef.frequency).toBe(0);
   });
 
-  it('has authenticated and db-ready conditions', () => {
+  it('is gated on db-ready ONLY', () => {
     const types = registeredDef.conditions.map((c: any) => c.type);
-    expect(types).toContain('authenticated');
-    expect(types).toContain('db-ready');
+    expect(types).toEqual(['db-ready']);
   });
 
-  it('has a network condition (skips offline)', () => {
+  it('is deliberately NOT gated on authenticated or network, so a wedged local run can self-heal during a needsReauth / offline window', () => {
     const types = registeredDef.conditions.map((c: any) => c.type);
-    expect(types).toContain('network');
+    expect(types).not.toContain('authenticated');
+    expect(types).not.toContain('network');
   });
 
   it('is exclusive', () => {

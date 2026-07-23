@@ -178,21 +178,34 @@ export async function sendInferenceRequest(args: {
   // both) well under the limit before we even attempt the POST.
   await gatewayRateLimiter.acquire();
 
+  // Hard wall-clock timeout per POST attempt. A hung submit socket would
+  // otherwise pin the poller's drain/tick in-flight, leaving the pipeline stuck
+  // 'running' and blocking all future feed-sync fetches. On timeout the abort
+  // throws, so withRetry retries; exhausting retries returns { status: 'failed' }.
+  const SUBMIT_TIMEOUT_MS = 30_000;
   const doSubmitPost = (bearer: string): Promise<Response> =>
     withRetry(
       async () => {
-        const r = await (expoFetch as unknown as typeof globalThis.fetch)(
-          JOBS_API,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Encoding': 'gzip',
-              Authorization: bearer,
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
+        let r: Response;
+        try {
+          r = await (expoFetch as unknown as typeof globalThis.fetch)(
+            JOBS_API,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Content-Encoding': 'gzip',
+                Authorization: bearer,
+              },
+              body: gzipped as unknown as BodyInit,
+              signal: controller.signal,
             },
-            body: gzipped as unknown as BodyInit,
-          },
-        );
+          );
+        } finally {
+          clearTimeout(timer);
+        }
         if (r.status >= 500) {
           const text = await r.text().catch(() => '');
           throw new Error(`${TAG} submit failed (${r.status}): ${text.slice(0, 200)}`);
