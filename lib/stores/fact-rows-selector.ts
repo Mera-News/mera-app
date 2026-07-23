@@ -1,7 +1,6 @@
 // fact-rows-selector — the pure selector behind the Round-3 fact-rows For-You
 // view. Turns the render-gated 24h suggestion pool into per-fact horizontal rows
-// (one row per owning fact + a trailing "Also for you" catch-all) plus the
-// breaking strip pinned above them.
+// (one row per owning fact) plus the breaking strip pinned above them.
 //
 // PURE: RN-free. It consumes the store's `ForYouSuggestion` rows + the persona
 // snapshots and returns plain data the screen renders verbatim; no DB / expo /
@@ -9,9 +8,12 @@
 //
 // Pipeline (mirrors the proven Wave-7 selector, minus the sectioned/two-zone
 // machinery): filter to visible → story-group → pick a representative per group
-// → pull breaking out → assign each remaining group to its owning fact via
-// `resolveOwnership` (negative → dropped; zero-signal orphan → "Also for you")
-// → order cards newest-first within a row and rows by their newest "added" time.
+// → pull breaking out → assign each remaining group to a fact section via
+// `resolveOwningFactLenient` (a story folds into the fact it matched even at
+// zero signal, so low-priority suggestions live inside their fact section; a
+// negative/suppressed or factless match resolves to null and is DROPPED — there
+// is no "Also for you" catch-all) → order cards newest-first within a row and
+// rows by their newest "added" time.
 //
 // Visibility rule (user-specified, Round-3 C1): a card enters its row once its
 // NOTE exists — i.e. the row reached `complete` (terminal: note text present OR
@@ -22,7 +24,7 @@
 import {
   bucketOf,
   bucketRank,
-  resolveOwnership,
+  resolveOwningFactLenient,
   type FeedBucket,
   type ScoredSuggestionProjection,
   type TopicSnapshot,
@@ -49,10 +51,6 @@ export const FEED_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** The render gate — a scored row must clear this to be shown. Exported so the
  *  swipe-stack selector reuses the exact same threshold. */
 export const RENDER_GATE = 0.3;
-
-/** Sentinel factId for the trailing "Also for you" catch-all row. Real factIds
- *  are UUIDs, so this never collides. */
-export const ALSO_ROW_ID = 'also';
 
 const BREAKING_EVENT_TYPES = new Set(['disaster', 'weather', 'conflict']);
 
@@ -86,13 +84,11 @@ export interface FactRowGroup {
 
 /** One fact row: a fact's stories laid out as a horizontal strip. */
 export interface FactRow {
-  /** Real factId, or `ALSO_ROW_ID` for the catch-all. */
+  /** The owning fact's id. */
   factId: string;
-  kind: 'fact' | 'also';
-  /** Display title (fact section-title for fact rows; unused for `also`, whose
-   *  header renders a static i18n string). */
+  /** Display title (the fact's section title). */
   statement: string;
-  /** The underlying real fact statement (header reveal); null for `also`. */
+  /** The underlying real fact statement (header reveal). */
   factStatement: string | null;
   /** Newest `addedMs` across the row's groups. KEPT for other consumers even
    *  though the Dashboard resort no longer keys on it. */
@@ -235,8 +231,6 @@ export function buildFactRows(
   const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
   if (visible.length === 0) return { breaking: [], rows: [] };
 
-  const byId = new Map<string, ForYouSuggestion>(visible.map((s) => [s._id, s]));
-
   // 2. Story-group the visible pool (display thresholds incl. the weighted edge).
   const items: GroupItem[] = visible.map((s) => ({
     id: s._id,
@@ -299,35 +293,36 @@ export function buildFactRows(
     return a.data._id < b.data._id ? -1 : 1;
   });
 
-  // 4. Assign each remaining group to its owning fact (owned) or the "also" row
-  //    (zero-signal orphan). Negative matches drop.
+  // 4. Assign each remaining group to a fact section. A story folds into the
+  //    fact it matched even at ZERO signal (lenient ownership), so low-priority
+  //    suggestions live inside the fact section they're part of rather than a
+  //    separate "Also for you" catch-all. A group with no fact to belong to —
+  //    a negative (suppressed) match, or a factless one (tracked/exploration/
+  //    deleted-fact topics) — resolves to null and is dropped from the Dashboard.
   const factRows = new Map<string, FactRow>();
-  const alsoGroups: FactRowGroup[] = [];
 
   for (const { rep, group } of assignable) {
-    const ownership = resolveOwnership(ownershipProjection(rep), snapshots.topics, snapshots.facts, hpMult);
-    if (ownership.kind === 'negative') continue; // suppression — dropped
-    if (ownership.kind === 'owned') {
-      const factId = ownership.factId;
-      let row = factRows.get(factId);
-      if (!row) {
-        const fact = snapshots.facts.get(factId);
-        row = {
-          factId,
-          kind: 'fact',
-          statement: fact?.statement?.trim() || factId,
-          factStatement: snapshots.factStatements.get(factId) ?? null,
-          latestAddedMs: 0,
-          unreadCount: 0,
-          groups: [],
-        };
-        factRows.set(factId, row);
-      }
-      row.groups.push(group);
-      continue;
+    const factId = resolveOwningFactLenient(
+      ownershipProjection(rep),
+      snapshots.topics,
+      snapshots.facts,
+      hpMult,
+    );
+    if (!factId) continue; // negative or factless → not shown on the Dashboard
+    let row = factRows.get(factId);
+    if (!row) {
+      const fact = snapshots.facts.get(factId);
+      row = {
+        factId,
+        statement: fact?.statement?.trim() || factId,
+        factStatement: snapshots.factStatements.get(factId) ?? null,
+        latestAddedMs: 0,
+        unreadCount: 0,
+        groups: [],
+      };
+      factRows.set(factId, row);
     }
-    // orphan → "Also for you" (already past the render gate).
-    alsoGroups.push(group);
+    row.groups.push(group);
   }
 
   // 5. Finalize each row: order cards createdAt-desc, compute unread counts.
@@ -342,27 +337,12 @@ export function buildFactRows(
 
   // Section order (Dashboard live resort): unread count desc (a fully-read
   // section sinks below any section with at least one unread story), then by
-  // group count desc, ties broken by factId asc for determinism. The "also"
-  // row is appended after this sort (always last).
+  // group count desc, ties broken by factId asc for determinism.
   rows.sort((a, b) => {
     if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
     if (a.groups.length !== b.groups.length) return b.groups.length - a.groups.length;
     return a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0;
   });
-
-  // 6. Trailing "Also for you" row (always last).
-  if (alsoGroups.length > 0) {
-    alsoGroups.sort(cardCompare);
-    rows.push({
-      factId: ALSO_ROW_ID,
-      kind: 'also',
-      statement: ALSO_ROW_ID,
-      factStatement: null,
-      latestAddedMs: alsoGroups.reduce((mx, g) => Math.max(mx, g.addedMs), 0),
-      unreadCount: alsoGroups.filter(isGroupUnread).length,
-      groups: alsoGroups,
-    });
-  }
 
   return { breaking, rows };
 }

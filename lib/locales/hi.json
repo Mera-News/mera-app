@@ -213,7 +213,9 @@
     "translateAndReadOn": "अनुवाद करें और {{publication}} पर पढ़ें",
     "viewOriginal": "मूल देखें",
     "share": "साझा करें",
-    "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}"
+    "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}",
+    "sourceCountryGlobal": "वैश्विक",
+    "sourceCountryA11y": "स्रोत देश: {{country}}। देश का नाम दिखाने के लिए टैप करें।"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "इस बारे में समाचार:",
-    "alsoForYou": "आपके लिए ये भी",
     "breaking": "ब्रेकिंग",
     "showMore": "{{count}} और दिखाएं",
     "subTabFeed": "फ़ीड",

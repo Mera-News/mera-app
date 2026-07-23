@@ -204,11 +204,6 @@ type Mutation {
   deleteExpoPushToken(input: DeleteExpoPushTokenInput!): UserPersona!
   issueLlmWarning(input: IssueLlmWarningInput!): UserPersona!
   requestUnblock(input: RequestUnblockInput!): UnblockRequest!
-
-  """
-  Start (or refresh) tracking a story by its stableClusterId. Seeds a durable archive from the live cluster on first track, or slides an existing archive's 90-day retention forward. Returns null when no live cluster exists to seed from — the client then falls back to newsClusterForArticle.
-  """
-  trackStory(stableClusterId: String!): TrackedStoryArchive
   updateExpoPushToken(input: UpdateExpoPushTokenInput!): UserPersona!
   updateNotificationWindow(input: UpdateNotificationWindowInput!): UserPersona!
   updateNotificationsEnabled(input: UpdateNotificationsEnabledInput!): UserPersona!
@@ -458,7 +453,7 @@ type Query {
   feedbackTree(currentVersion: Int): FeedbackTreeResponse
 
   """
-  The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. Used as the live fallback when a story isn't archived (trackStory returned null).
+  The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. The app uses this to read a story cluster's member articles (e.g. to ground the follow-a-story scope proposals).
   """
   newsClusterForArticle(articleId: ID!): NewsCluster
   newsClusterForUser(clusterId: ID!): NewsCluster!
@@ -529,11 +524,6 @@ type Query {
     """Number of items to fetch"""
     first: Int = 20
   ): TopHeadlinesForCountryResponse!
-
-  """
-  A tracked story's archive by stableClusterId. Reading it slides the 90-day retention forward. Returns null when the story is not (or no longer) tracked.
-  """
-  trackedStory(stableClusterId: String!): TrackedStoryArchive
   unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
@@ -586,29 +576,6 @@ input TopicPaginationInput {
   """articleId of the last item on the previous page; omit for first page"""
   afterCursor: String
   topicText: String!
-}
-
-"""
-A durable, self-contained archive of one stable cluster's coverage, returned by trackStory (seed/refresh) and trackedStory (read). Carries its own trimmed article snapshots so it renders even after the underlying NewsArticle rows TTL out.
-"""
-type TrackedStoryArchive {
-  articles: [TrackedStoryArticleSnapshot!]!
-  clusterSize: Int!
-  lastRefreshedAt: DateTime!
-  stableClusterId: String!
-}
-
-"""
-A trimmed, denormalized article snapshot inside a tracked-story archive: only the fields the archive screen renders (no vectors or bodies). All content fields are nullable.
-"""
-type TrackedStoryArticleSnapshot {
-  articleId: ID!
-  article_url: String
-  country_code: String
-  image_url: String
-  pubDate: DateTime
-  publication_name: String
-  title_en: String
 }
 
 type UnblockRequest {

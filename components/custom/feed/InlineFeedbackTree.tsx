@@ -1,6 +1,6 @@
-// InlineFeedbackTree — the Feed-tab feedback tree, rendered inside the
-// FeedbackTreeSheet once a verdict exists. Unlike the dislike
-// overlay it applies NO persona mutations: every tap simply enriches the stored
+// InlineFeedbackTree — the Feed-tab feedback tree, rendered inside the card's
+// inline feedback surface (CardFeedbackSurface) once a verdict exists. Unlike the
+// dislike overlay it applies NO persona mutations: every tap simply enriches the stored
 // verdict row's path (onTreePathChanged), and an `openChat` leaf escalates to
 // the Mera chat (onInvokeMera). The tree content + gating come from the shared
 // engine (like OR dislike root depending on the verdict).

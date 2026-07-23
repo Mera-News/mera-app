@@ -201,8 +201,6 @@ export type Mutation = {
   deleteExpoPushToken: UserPersona;
   issueLlmWarning: UserPersona;
   requestUnblock: UnblockRequest;
-  /** Start (or refresh) tracking a story by its stableClusterId. Seeds a durable archive from the live cluster on first track, or slides an existing archive's 90-day retention forward. Returns null when no live cluster exists to seed from — the client then falls back to newsClusterForArticle. */
-  trackStory?: Maybe<TrackedStoryArchive>;
   updateExpoPushToken: UserPersona;
   updateNotificationWindow: UserPersona;
   updateNotificationsEnabled: UserPersona;
@@ -229,11 +227,6 @@ export type MutationIssueLlmWarningArgs = {
 
 export type MutationRequestUnblockArgs = {
   input: RequestUnblockInput;
-};
-
-
-export type MutationTrackStoryArgs = {
-  stableClusterId: Scalars['String']['input'];
 };
 
 
@@ -467,7 +460,7 @@ export type Query = {
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
   feedbackTree?: Maybe<FeedbackTreeResponse>;
-  /** The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. Used as the live fallback when a story isn't archived (trackStory returned null). */
+  /** The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. The app uses this to read a story cluster's member articles (e.g. to ground the follow-a-story scope proposals). */
   newsClusterForArticle?: Maybe<NewsCluster>;
   newsClusterForUser: NewsCluster;
   newsClusters: NewsClustersResponse;
@@ -484,8 +477,6 @@ export type Query = {
   searchArticlesVector: EmbeddingSearchResponse;
   /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
   topHeadlinesForCountry: TopHeadlinesForCountryResponse;
-  /** A tracked story's archive by stableClusterId. Reading it slides the 90-day retention forward. Returns null when the story is not (or no longer) tracked. */
-  trackedStory?: Maybe<TrackedStoryArchive>;
   unblockRequestStatus?: Maybe<UnblockRequest>;
   userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
@@ -616,11 +607,6 @@ export type QueryTopHeadlinesForCountryArgs = {
 };
 
 
-export type QueryTrackedStoryArgs = {
-  stableClusterId: Scalars['String']['input'];
-};
-
-
 export type QueryUnblockRequestStatusArgs = {
   userId: Scalars['ID']['input'];
 };
@@ -673,27 +659,6 @@ export type TopicPaginationInput = {
   /** articleId of the last item on the previous page; omit for first page */
   afterCursor?: InputMaybe<Scalars['String']['input']>;
   topicText: Scalars['String']['input'];
-};
-
-/** A durable, self-contained archive of one stable cluster's coverage, returned by trackStory (seed/refresh) and trackedStory (read). Carries its own trimmed article snapshots so it renders even after the underlying NewsArticle rows TTL out. */
-export type TrackedStoryArchive = {
-  __typename?: 'TrackedStoryArchive';
-  articles: Array<TrackedStoryArticleSnapshot>;
-  clusterSize: Scalars['Int']['output'];
-  lastRefreshedAt: Scalars['DateTime']['output'];
-  stableClusterId: Scalars['String']['output'];
-};
-
-/** A trimmed, denormalized article snapshot inside a tracked-story archive: only the fields the archive screen renders (no vectors or bodies). All content fields are nullable. */
-export type TrackedStoryArticleSnapshot = {
-  __typename?: 'TrackedStoryArticleSnapshot';
-  articleId: Scalars['ID']['output'];
-  article_url?: Maybe<Scalars['String']['output']>;
-  country_code?: Maybe<Scalars['String']['output']>;
-  image_url?: Maybe<Scalars['String']['output']>;
-  pubDate?: Maybe<Scalars['DateTime']['output']>;
-  publication_name?: Maybe<Scalars['String']['output']>;
-  title_en?: Maybe<Scalars['String']['output']>;
 };
 
 export type UnblockRequest = {

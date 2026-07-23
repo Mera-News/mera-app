@@ -213,7 +213,9 @@
     "translateAndRead": "Çevir ve oku",
     "viewOriginal": "Orijinali görüntüle",
     "share": "Paylaş",
-    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}"
+    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}",
+    "sourceCountryGlobal": "Dünya Geneli",
+    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun."
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Haberler:",
-    "alsoForYou": "Senin için de",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
     "subTabFeed": "Akış",

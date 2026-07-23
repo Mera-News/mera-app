@@ -2,10 +2,8 @@ import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCard
 import CompactActionsSheet from '@/components/custom/cards/CompactActionsSheet';
 import type { FeedbackSubject, FeedbackSurface } from '@/components/custom/cards/feedback-subject';
 import RelevanceChip from '@/components/custom/RelevanceChip';
-import { Pressable } from '@/components/ui/pressable';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 
 interface ArticleSuggestionCompactCardProps {
@@ -23,8 +21,8 @@ interface ArticleSuggestionCompactCardProps {
 /**
  * The compact suggestion variant — a personalized row for dense lists (the
  * upcoming triage screen). `metaAccessory` is the compact RelevanceChip (once
- * relevance is ready); `trailingAccessory` is the "…" button that opens the
- * compact actions sheet (also reachable by long-press).
+ * relevance is ready). The compact actions sheet is reached by long-pressing
+ * the row.
  */
 const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardProps> = ({
   suggestion,
@@ -40,23 +38,11 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
   const relevance = suggestion.relevance ?? 0;
 
-  // Compact cards never show reason text — the accessory is always the
-  // fixed-size RelevanceChip (once relevance is ready), which can't bleed.
-  const metaAccessory = relevanceReady ? (
+  // Compact cards never show reason text — the footer carries the fixed-size
+  // RelevanceChip (once relevance is ready), right-aligned opposite the source.
+  const footerAccessory = relevanceReady ? (
     <RelevanceChip relevance={relevance} />
   ) : undefined;
-
-  const trailingAccessory = (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="More actions"
-      hitSlop={8}
-      onPress={() => setSheetOpen(true)}
-      className="px-1"
-    >
-      <MaterialIcons name="more-horiz" size={20} color="#9CA3AF" />
-    </Pressable>
-  );
 
   const subject: FeedbackSubject = {
     origin: 'suggestion',
@@ -84,14 +70,14 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         pubDate={suggestion.firstPubDate ?? suggestion.createdAt}
         languageCode={suggestion.language_code}
         countryCode={suggestion.country_code}
+        publicationName={suggestion.publication_name}
         recyclingKey={suggestion._id}
         dimmed={dimmed}
         read={read}
         isNew={isNew}
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
-        metaAccessory={metaAccessory}
-        trailingAccessory={trailingAccessory}
+        footerAccessory={footerAccessory}
       />
       <CompactActionsSheet
         visible={sheetOpen}

@@ -211,7 +211,9 @@
     "translateAndRead": "번역 후 읽기",
     "viewOriginal": "원문 보기",
     "share": "공유",
-    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}"
+    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}",
+    "sourceCountryGlobal": "글로벌",
+    "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가 이름이 표시됩니다."
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "관련 뉴스:",
-    "alsoForYou": "이런 소식도 있어요",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
     "subTabFeed": "피드",

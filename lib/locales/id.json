@@ -211,7 +211,9 @@
     "translateAndRead": "Terjemahkan & Baca",
     "viewOriginal": "Lihat asli",
     "share": "Bagikan",
-    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}"
+    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}",
+    "sourceCountryGlobal": "Global",
+    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara."
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
-    "alsoForYou": "Juga untuk Anda",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
     "subTabFeed": "Feed",

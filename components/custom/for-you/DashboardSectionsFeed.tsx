@@ -20,7 +20,6 @@ import {
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
@@ -65,7 +64,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   headerHeight,
   ListEmptyComponent,
 }) => {
-  const { t } = useTranslation();
   // Subscribe to visits so newness badges recompute after a section is visited.
   const visits = useSectionVisitsStore((s) => s.visits);
 
@@ -100,11 +98,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       pathname: '/logged-in/fact-feed',
       params: {
         factId: row.factId,
-        // The "also" catch-all navigates too, with its static i18n title.
-        statement: row.kind === 'also' ? t('forYou.alsoForYou') : row.statement,
+        statement: row.statement,
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
@@ -125,7 +121,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
             style={{ marginTop: 16, marginBottom: 8 }}
           >
             <FactSectionHeader
-              kind={item.row.kind}
               title={item.row.statement}
               eventType={item.row.groups[0]?.data.eventType ?? null}
               newCount={item.newCount}

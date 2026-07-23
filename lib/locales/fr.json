@@ -213,7 +213,9 @@
     "translateAndReadOn": "Traduire et lire sur {{publication}}",
     "viewOriginal": "Afficher l'original",
     "share": "Partager",
-    "shareVia": "Partagé via Mera News — l'actualité personnalisée pour vous. Téléchargez l'application : {{downloadUrl}}"
+    "shareVia": "Partagé via Mera News — l'actualité personnalisée pour vous. Téléchargez l'application : {{downloadUrl}}",
+    "sourceCountryGlobal": "International",
+    "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays."
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Actualités sur :",
-    "alsoForYou": "Aussi pour vous",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
     "openFactFeed": "Voir toutes les actualités sur ce sujet",

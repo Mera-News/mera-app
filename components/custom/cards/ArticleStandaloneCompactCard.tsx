@@ -5,6 +5,7 @@ import { Box } from '@/components/ui/box';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { extractDomain } from '@/lib/publisher-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 
@@ -18,20 +19,6 @@ interface ArticleStandaloneCompactCardProps {
   // existing surface (Explore, config-panel, news-detail) stays pixel-identical
   // to the old CompactPublisherNewsCard. Future surfaces (triage) opt in.
   showActions?: boolean;
-}
-
-// Extract a readable domain from a source_uri as a publisher-name fallback —
-// preserved verbatim from CompactPublisherNewsCard.
-function extractDomain(url: string): string {
-  try {
-    const match = url.match(/^https?:\/\/(?:www\.)?([^/]+)/);
-    if (match && match[1]) {
-      return match[1].replace(/\.(com|org|net|edu|gov|co\.uk|co|io|ai)$/i, '');
-    }
-    return url;
-  } catch {
-    return url;
-  }
 }
 
 /**
@@ -62,7 +49,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       </Box>
     ) : undefined;
 
-  const trailingAccessory = showActions ? (
+  const footerAccessory = showActions ? (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="More actions"
@@ -96,10 +83,11 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         pubDate={article.pubDate}
         languageCode={article.original_language_code}
         countryCode={article.publicationSource?.country_code}
+        publicationName={publisherName}
         onPress={onPress}
         onLongPress={showActions ? () => setSheetOpen(true) : undefined}
         metaAccessory={metaAccessory}
-        trailingAccessory={trailingAccessory}
+        footerAccessory={footerAccessory}
       />
       {showActions ? (
         <CompactActionsSheet

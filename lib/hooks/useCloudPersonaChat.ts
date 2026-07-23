@@ -273,6 +273,33 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         }
       };
 
+      // ---------- Forced extraction safety-net ----------
+      // The first pass runs with tool_choice:'auto' for a fast, single-round-trip
+      // reply — but 'auto' lets the model answer conversationally and skip the
+      // mandatory saveExtractedFacts call (DeepSeek-V4-Flash does exactly this on
+      // fact-worthy messages). When the first pass returns text but ZERO tool
+      // calls, run a background pass with tool_choice:'required' so extraction
+      // always happens, WITHOUT blocking the reply the user already sees. It
+      // streams into a hidden id that is never inserted via setMessages, so no
+      // second bubble renders; the side effects that matter (fact save →
+      // topic-gen, conflict/proposal cards) still fire from executeTool. Runs at
+      // most once — 'required' obliges ≥1 tool call, so there is no recursion.
+      const runForcedExtraction = async () => {
+        try {
+          const hiddenId = `forced-extract-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          logger.debug(`${TAG} forced extraction pass (required)`, {
+            wireMessages: useCloudChatStore.getState().wireMessages.length,
+          });
+          const forced = await streamOne(hiddenId, true, 'required');
+          pushAssistantToWire(forced.accContent, forced.toolCalls);
+          if (forced.toolCalls.length > 0) {
+            await executeToolsAndPushResults(hiddenId, forced.toolCalls);
+          }
+        } catch (err) {
+          logger.error(`${TAG} forced extraction failed`, undefined, { error: String(err) });
+        }
+      };
+
       // ---------- First pass ----------
       const placeholder: ConversationMessage = { id: assistantId, role: 'assistant', content: '' };
       useCloudChatStore.getState().setMessages((prev) => [...prev, placeholder]);
@@ -282,7 +309,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const first = await streamOne(assistantId, true, 'auto');
       pushAssistantToWire(first.accContent, first.toolCalls);
 
-      if (first.toolCalls.length === 0) return;
+      if (first.toolCalls.length === 0) {
+        // Model skipped its mandatory tool call. Guarantee extraction in the
+        // background; do not block the reply the user already has.
+        void runForcedExtraction();
+        return;
+      }
 
       await executeToolsAndPushResults(assistantId, first.toolCalls);
 

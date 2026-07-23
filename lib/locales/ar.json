@@ -221,7 +221,9 @@
     "translateAndReadOn": "ترجمة وقراءة على {{publication}}",
     "viewOriginal": "عرض الأصلي",
     "share": "مشاركة",
-    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}"
+    "shareVia": "تمت المشاركة عبر Mera News — أخبار مخصصة لك. حمّل التطبيق: {{downloadUrl}}",
+    "sourceCountryGlobal": "عالمي",
+    "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد."
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -825,7 +827,6 @@
   },
   "forYou": {
     "sectionPrefix": "أخبار عن:",
-    "alsoForYou": "أيضًا لك",
     "breaking": "عاجل",
     "showMore": "عرض {{count}} أخرى",
     "subTabFeed": "الخلاصة",

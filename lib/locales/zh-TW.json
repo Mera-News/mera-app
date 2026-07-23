@@ -211,7 +211,9 @@
     "translateAndRead": "翻譯並閱讀",
     "viewOriginal": "檢視原文",
     "share": "分享",
-    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}"
+    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}",
+    "sourceCountryGlobal": "全球",
+    "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "關於：",
-    "alsoForYou": "也為你推薦",
     "breaking": "突發",
     "showMore": "顯示更多 {{count}} 則",
     "openFactFeed": "查看關於此主題的所有報導",

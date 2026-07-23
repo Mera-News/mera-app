@@ -211,7 +211,9 @@
     "translateAndRead": "แปลและอ่าน",
     "viewOriginal": "ดูต้นฉบับ",
     "share": "แชร์",
-    "shareVia": "แชร์ผ่าน Mera News — ข่าวที่คัดสรรมาเพื่อคุณโดยเฉพาะ ดาวน์โหลดแอปได้ที่: {{downloadUrl}}"
+    "shareVia": "แชร์ผ่าน Mera News — ข่าวที่คัดสรรมาเพื่อคุณโดยเฉพาะ ดาวน์โหลดแอปได้ที่: {{downloadUrl}}",
+    "sourceCountryGlobal": "ทั่วโลก",
+    "sourceCountryA11y": "ประเทศต้นทาง: {{country}} แตะเพื่อแสดงชื่อประเทศ"
   },
   "newsCluster": {
     "failedToLoad": "โหลดรายละเอียดกลุ่มข่าวไม่สำเร็จ",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "ข่าวเกี่ยวกับ:",
-    "alsoForYou": "อาจสนใจด้วย",
     "breaking": "ข่าวด่วน",
     "showMore": "แสดงอีก {{count}} รายการ",
     "subTabFeed": "ฟีด",

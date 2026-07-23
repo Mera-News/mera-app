@@ -214,10 +214,11 @@ describe('useCloudPersonaChat', () => {
       );
     });
 
-    it("first pass requests toolChoice 'auto' and a text-only reply is one round trip", async () => {
-      // Part 2h: first-pass tool choice relaxed 'required' → 'auto', so a
-      // conversational reply completes in ONE inference (no forced tool call +
-      // continuation).
+    it("first pass uses toolChoice 'auto'; a text-only reply triggers a background forced-extraction pass", async () => {
+      // The first pass runs 'auto' for a fast single-round-trip reply. When the
+      // model returns text with ZERO tool calls it skipped its mandatory
+      // saveExtractedFacts call, so a background pass with toolChoice:'required'
+      // fires to guarantee extraction (facts + topics are never silently dropped).
       mockCloudChatStream.mockImplementation(() =>
         makeSseStream([
           { type: 'text-delta', delta: 'Hi! How can I help?' },
@@ -233,13 +234,14 @@ describe('useCloudPersonaChat', () => {
       });
 
       await waitFor(
-        () => expect(result.current.status).toBe('idle'),
+        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(2),
         { timeout: 3000 },
       );
 
-      expect(mockCloudChatStream).toHaveBeenCalledTimes(1);
       const [firstArg] = mockCloudChatStream.mock.calls[0] as [{ toolChoice?: string }];
+      const [secondArg] = mockCloudChatStream.mock.calls[1] as [{ toolChoice?: string }];
       expect(firstArg.toolChoice).toBe('auto');
+      expect(secondArg.toolChoice).toBe('required');
     });
   });
 

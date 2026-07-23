@@ -24,6 +24,8 @@ jest.mock('@expo/vector-icons', () => {
   return { MaterialIcons: (p: any) => <View {...p} /> };
 });
 jest.mock('@/components/custom/SourceFlag', () => ({ SourceFlag: () => null }));
+// SourceCountryFlag pulls in the popover ESM (un-transformable under jest-expo).
+jest.mock('@/components/custom/SourceCountryFlag', () => ({ SourceCountryFlag: () => null }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguage: () => 'en' }));
 jest.mock('@/lib/translation-service', () => ({
   getArticleTranslatableStatus: () => 'translatable',

@@ -41,6 +41,11 @@ jest.mock('../handlers/story-headline-handler', () => ({
   handleStoryHeadlineJob: (...args: unknown[]) => mockHandleStoryHeadlineJob(...args),
 }));
 
+const mockHandleTrackedStoryMigrateJob = jest.fn();
+jest.mock('../handlers/tracked-story-migrate-handler', () => ({
+  handleTrackedStoryMigrateJob: (...args: unknown[]) => mockHandleTrackedStoryMigrateJob(...args),
+}));
+
 const mockResetContext = jest.fn();
 
 jest.mock('../../mera-protocol-toolkit', () => ({

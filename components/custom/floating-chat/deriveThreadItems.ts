@@ -11,6 +11,7 @@ import type {
   StagedProposal,
   ToolCallRecord,
 } from '@/lib/llm/types';
+import { parseTrackScopeOptions } from '@/lib/news-harness/article-feedback/agent-core';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
@@ -273,10 +274,11 @@ function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
 
 /**
  * Rebuilds a track StagedProposal from a completed `proposeTrack` tool call. The
- * tool INPUT carries only `{ track }`; the confirmable origin `subject` is
- * echoed in the RESULT (see decideProposeTrack), so we recover the full
- * `track_story` action from input + result. On resume without a result the card
- * still renders (dimmed, no confirm) from the track text alone.
+ * tool INPUT carries the scope `options` (label + hidden search); the confirmable
+ * origin `subject` and the parsed options are echoed in the RESULT (see
+ * decideProposeTrack), so we recover the full `track_story` actions from input +
+ * result via the same parser the live path uses. On resume without a result the
+ * card still renders (dimmed, no confirm) from the options alone.
  */
 function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | null {
   if (toolCall.status !== 'done' || toolCall.name !== 'proposeTrack') return null;
@@ -301,46 +303,30 @@ function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | null {
     ...(typeof subjectRec?.pubDate === 'string' ? { pubDate: subjectRec.pubDate } : {}),
   };
 
-  // Multi-option (scope choice): rebuild from input.options (result.options as a
-  // fallback), deduped. ≥2 → a single-select proposal of track_story actions.
+  // Rebuild the scope pills from input.options (result.options as fallback), or a
+  // legacy `track` string. Same parser as the live path → identical actions.
   const rawOptions =
     (Array.isArray(input.options) && input.options) ||
     (Array.isArray(result?.options) && result.options) ||
+    (typeof input.track === 'string' && input.track.trim() ? [input.track] : []) ||
     [];
-  const options = Array.from(
-    new Set(
-      rawOptions
-        .filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
-        .map((o) => o.trim()),
-    ),
-  );
+  const options = parseTrackScopeOptions(rawOptions);
+  if (options.length === 0) return null;
 
   const echoedId = typeof result?.proposalId === 'string' ? result.proposalId : null;
-
-  if (options.length >= 2) {
-    const actions: ProposalAction[] = options.map((trackText) => ({
-      type: 'track_story',
-      trackText,
-      subject,
-    }));
-    return {
-      id: echoedId ?? toolCall.id,
-      explanation: '',
-      expectedEffects: '',
-      actions,
-      chooseOne: true,
-    };
-  }
-
-  const trackText =
-    (typeof input.track === 'string' && input.track.trim()) ||
-    (typeof result?.track === 'string' && result.track.trim()) ||
-    options[0] ||
-    '';
-  if (!trackText) return null;
-
-  const actions: ProposalAction[] = [{ type: 'track_story', trackText, subject }];
-  return { id: echoedId ?? toolCall.id, explanation: '', expectedEffects: '', actions };
+  const actions: ProposalAction[] = options.map((o) => ({
+    type: 'track_story',
+    label: o.label,
+    searchText: o.search,
+    subject,
+  }));
+  return {
+    id: echoedId ?? toolCall.id,
+    explanation: '',
+    expectedEffects: '',
+    actions,
+    ...(actions.length >= 2 ? { chooseOne: true } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------

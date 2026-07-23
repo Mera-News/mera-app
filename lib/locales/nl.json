@@ -213,7 +213,9 @@
     "translateAndRead": "Vertalen & lezen",
     "viewOriginal": "Origineel bekijken",
     "share": "Delen",
-    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}"
+    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}",
+    "sourceCountryGlobal": "Wereldwijd",
+    "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen."
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Nieuws over:",
-    "alsoForYou": "Ook voor jou",
     "breaking": "Breaking",
     "showMore": "Toon {{count}} meer",
     "subTabFeed": "Feed",

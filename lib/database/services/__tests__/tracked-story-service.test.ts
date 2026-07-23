@@ -21,14 +21,12 @@ import {
   markSeen,
   applyUpdates,
   advanceSeenWatermark,
-  resolveStableId,
   setLlmHeadline,
-  recordMiss,
-  getActiveForReconcile,
   getActiveForTopicReconcile,
+  getLegacyTrackedForMigration,
+  bindTrackedTopic,
   sortTrackedStories,
   mergeMemberSnapshots,
-  MISSES_TO_END,
 } from '../tracked-story-service';
 
 const db = database as any;
@@ -184,14 +182,7 @@ describe('applyUpdates', () => {
   });
 });
 
-describe('resolveStableId / setLlmHeadline', () => {
-  it('binds a resolved stable cluster id', async () => {
-    const row = makeStory({ id: 's1', stableClusterId: null });
-    db._setRows('tracked_stories', [row]);
-    await resolveStableId('s1', 'clu-x');
-    expect(row.stableClusterId).toBe('clu-x');
-  });
-
+describe('setLlmHeadline', () => {
   it('writes a trimmed headline, no-ops on blank', async () => {
     const row = makeStory({ id: 's1' });
     db._setRows('tracked_stories', [row]);
@@ -200,39 +191,6 @@ describe('resolveStableId / setLlmHeadline', () => {
 
     await setLlmHeadline('s1', '   ');
     expect(row.llmHeadline).toBe('Headline here'); // unchanged
-  });
-});
-
-describe('recordMiss', () => {
-  it('increments the streak and stamps last_checked_at', async () => {
-    const row = makeStory({ id: 's1', missCount: 2 });
-    db._setRows('tracked_stories', [row]);
-    await recordMiss('s1');
-    expect(row.missCount).toBe(3);
-    expect(row.status).toBe('active');
-    expect(row.lastCheckedAt).toBeInstanceOf(Date);
-  });
-
-  it('auto-ends the story once the streak hits MISSES_TO_END', async () => {
-    const row = makeStory({ id: 's1', missCount: MISSES_TO_END - 1 });
-    db._setRows('tracked_stories', [row]);
-    await recordMiss('s1');
-    expect(row.missCount).toBe(MISSES_TO_END);
-    expect(row.status).toBe('ended');
-  });
-});
-
-describe('getActiveForReconcile', () => {
-  it('returns lean rows for active stories with a resolved stable id', async () => {
-    db._setRows('tracked_stories', [
-      makeStory({ id: 's1', status: 'active', stableClusterId: 'clu-1', memberArticleIds: ['a'] }),
-      makeStory({ id: 's2', status: 'active', stableClusterId: null }),
-      makeStory({ id: 's3', status: 'ended', stableClusterId: 'clu-3' }),
-    ]);
-    const rows = await getActiveForReconcile();
-    expect(rows).toEqual([
-      { id: 's1', stableClusterId: 'clu-1', memberArticleIds: ['a'], latestArticleId: 'a1' },
-    ]);
   });
 });
 
@@ -493,13 +451,100 @@ describe('getActiveForTopicReconcile', () => {
   });
 });
 
-describe('getActiveForReconcile — excludes topic-linked stories', () => {
-  it('returns only legacy (no topic id) active stories with a stable id', async () => {
+describe('getLegacyTrackedForMigration', () => {
+  it('returns active, topic-less rows with de-duplicated headline/fallback/snapshot titles', async () => {
     db._setRows('tracked_stories', [
-      makeStory({ id: 'legacy', status: 'active', stableClusterId: 'clu-1', topicId: null }),
-      makeStory({ id: 'topic', status: 'active', stableClusterId: 'clu-2', topicId: 'top-1' }),
+      // Active, no topicId → titles = dedup of [headline, fallback, snapshot titles].
+      makeStory({
+        id: 'legacy-a',
+        status: 'active',
+        topicId: null,
+        llmHeadline: '  Protest updates  ',
+        fallbackTitle: 'Protest hits capital',
+        memberSnapshots: [
+          { articleId: 's1', title: 'Protest hits capital', pubDateMs: 2 }, // dupe of fallback
+          { articleId: 's2', title: 'Thousands march downtown', pubDateMs: 1 },
+          { articleId: 's3', title: '   ', pubDateMs: 3 }, // blank → dropped
+        ],
+      }),
+      // Active, no topicId, no headline → titles start from fallback + snapshots.
+      makeStory({
+        id: 'legacy-b',
+        status: 'active',
+        topicId: null,
+        llmHeadline: null,
+        fallbackTitle: '  Fallback only  ',
+        memberSnapshots: [],
+      }),
+      // Already topic-linked → excluded.
+      makeStory({
+        id: 'topic-linked',
+        status: 'active',
+        topicId: 'top-1',
+        llmHeadline: 'Has a headline',
+      }),
+      // Ended → excluded even though topic-less.
+      makeStory({
+        id: 'ended',
+        status: 'ended',
+        topicId: null,
+        llmHeadline: 'Ended headline',
+      }),
+      // Active, topic-less, but no usable titles (all blank) → dropped.
+      makeStory({
+        id: 'no-titles',
+        status: 'active',
+        topicId: null,
+        llmHeadline: '   ',
+        fallbackTitle: '',
+        memberSnapshots: [{ articleId: 's1', title: '  ', pubDateMs: 1 }],
+      }),
     ]);
-    const rows = await getActiveForReconcile();
-    expect(rows.map((r) => r.id)).toEqual(['legacy']);
+
+    const rows = await getLegacyTrackedForMigration();
+    expect(rows).toEqual([
+      {
+        id: 'legacy-a',
+        titles: ['Protest updates', 'Protest hits capital', 'Thousands march downtown'],
+      },
+      { id: 'legacy-b', titles: ['Fallback only'] },
+    ]);
+  });
+
+  it('never throws — returns [] when the query errors', async () => {
+    db._collections['tracked_stories'].query = jest.fn(() => {
+      throw new Error('boom');
+    });
+    await expect(getLegacyTrackedForMigration()).resolves.toEqual([]);
+  });
+});
+
+describe('bindTrackedTopic', () => {
+  it('binds topicId and trims topicText', async () => {
+    const row = makeStory({ id: 's1', topicId: null, topicText: null });
+    db._setRows('tracked_stories', [row]);
+    await bindTrackedTopic('s1', 'top-9', '  Updates on the protest  ');
+    expect(row.topicId).toBe('top-9');
+    expect(row.topicText).toBe('Updates on the protest');
+  });
+
+  it('allows a null topicId (unbind) while still setting text', async () => {
+    const row = makeStory({ id: 's1', topicId: 'old-top', topicText: 'old text' });
+    db._setRows('tracked_stories', [row]);
+    await bindTrackedTopic('s1', null, 'New text');
+    expect(row.topicId).toBeNull();
+    expect(row.topicText).toBe('New text');
+  });
+
+  it('no-ops on blank topicText', async () => {
+    const row = makeStory({ id: 's1', topicId: 'top-1', topicText: 'kept' });
+    db._setRows('tracked_stories', [row]);
+    await bindTrackedTopic('s1', 'top-2', '   ');
+    expect(row.topicId).toBe('top-1');
+    expect(row.topicText).toBe('kept');
+  });
+
+  it('never throws on a missing row', async () => {
+    await expect(bindTrackedTopic('nope', 'top-1', 'text')).resolves.toBeUndefined();
   });
 });

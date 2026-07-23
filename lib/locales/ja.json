@@ -211,7 +211,9 @@
     "translateAndRead": "翻訳して読む",
     "viewOriginal": "原文を表示",
     "share": "共有",
-    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}"
+    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}",
+    "sourceCountryGlobal": "グローバル",
+    "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "関連ニュース：",
-    "alsoForYou": "あなたへのその他のおすすめ",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
     "openFactFeed": "このトピックのすべてのストーリーを見る",

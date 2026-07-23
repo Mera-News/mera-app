@@ -22,6 +22,13 @@ jest.mock('expo-localization', () => ({
     getLocales: () => mockGetLocales(),
 }));
 
+// language-sync: mock the seam so the store stays decoupled from the
+// account-service / user-store chain in this unit test.
+const mockSyncAppLanguageToPersona = jest.fn((..._args: any[]) => Promise.resolve());
+jest.mock('@/lib/language-sync', () => ({
+    syncAppLanguageToPersona: (...args: any[]) => mockSyncAppLanguageToPersona(...args),
+}));
+
 // translation-service: mock only the SUPPORTED_LANGUAGES export
 jest.mock('@/lib/translation-service', () => ({
     SUPPORTED_LANGUAGES: [
@@ -114,6 +121,29 @@ describe('useAppLanguageStore', () => {
     it('setAppLanguage persists normalized value to DB', async () => {
         await useAppLanguageStore.getState().setAppLanguage('de');
         expect(mockSetSetting).toHaveBeenCalledWith('app_language', 'de');
+    });
+
+    // ── persona sync (one-way picker → DB) ─────────────────────────────────────
+
+    it('setAppLanguage syncs the normalized language to the persona', async () => {
+        await useAppLanguageStore.getState().setAppLanguage('fr');
+        expect(mockSyncAppLanguageToPersona).toHaveBeenCalledWith('fr');
+    });
+
+    it('setAppLanguage syncs the normalized (not raw) code for legacy inputs', async () => {
+        await useAppLanguageStore.getState().setAppLanguage('zh-CN');
+        expect(mockSyncAppLanguageToPersona).toHaveBeenCalledWith('zh-Hans');
+    });
+
+    it('setAppLanguage still changes the local language when the sync throws', async () => {
+        mockSyncAppLanguageToPersona.mockImplementationOnce(() => {
+            throw new Error('sync boom');
+        });
+        await expect(
+            useAppLanguageStore.getState().setAppLanguage('de'),
+        ).resolves.toBeUndefined();
+        expect(useAppLanguageStore.getState().appLanguage).toBe('de');
+        expect(mockApplyLanguage).toHaveBeenCalledWith('de');
     });
 
     // ── cacheTranslation ──────────────────────────────────────────────────────

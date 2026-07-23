@@ -3,6 +3,7 @@ import { deleteOlderThan as deleteOldImpressions } from '@/lib/database/services
 import { deleteOlderThan as deleteOldNotifications } from '@/lib/database/services/notification-service';
 import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
 import { AppScheduler } from '../AppScheduler';
+import { backgroundWorkIsIdle } from '../background-idle';
 import { pruneOldJobs } from '../scheduler-persistence';
 
 const SUGGESTION_TTL_MS = 48 * 60 * 60 * 1000;
@@ -14,7 +15,9 @@ AppScheduler.register({
   displayName: 'Data Cleanup',
   frequency: 24 * 60 * 60 * 1000,
   triggers: [],
-  conditions: [{ type: 'db-ready' }],
+  // db-ready + idle: a low-priority sweep that defers to the feed sync /
+  // inference queue and re-checks on the next tick when the app is busy.
+  conditions: [{ type: 'db-ready' }, { type: 'custom', check: backgroundWorkIsIdle }],
   timeout: 30_000,
   maxAttempts: 2,
   exclusive: true,

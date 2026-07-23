@@ -448,7 +448,6 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         try {
             const rows = await loadSuggestions();
             rows.sort(byRelevanceDesc);
-            dumpFeedForClusterAnalysis(rows);
             const scoredCount = rows.filter(
                 (s) => s.status !== ArticleSuggestionStatus.Unscored,
             ).length;
@@ -514,40 +513,3 @@ function byRelevanceDesc(
     return bv - av;
 }
 
-// Dev-only, one-shot startup dump of headline + cluster memberships per
-// article suggestion, used to design a better cluster-grouping strategy for
-// the For You feed (each article can belong to multiple clusters; see
-// CLUSTER_CORE_CONFIDENCE_THRESHOLD in components/custom/for-you/ForYouScreen.tsx
-// for the current collapse logic). Local debug aid only — logs via plain
-// console.log (never Sentry) and must never break hydration.
-function dumpFeedForClusterAnalysis(rows: ForYouSuggestion[]): void {
-    if (!__DEV__) return;
-    try {
-        console.log(`[ForYou] startup feed dump — ${rows.length} suggestions`);
-        const CHUNK_SIZE = 25;
-        const chunks = Math.ceil(rows.length / CHUNK_SIZE) || 1;
-        for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
-            const chunkIndex = i / CHUNK_SIZE + 1;
-            const batch = rows.slice(i, i + CHUNK_SIZE).map((s) => ({
-                articleId: s.articleId,
-                title: s.title_en ?? s.title_original,
-                relevance: s.relevance,
-                status: s.status,
-                firstPubDate: s.firstPubDate,
-                // stableClusterId included so dumps show the cross-run story key
-                // alongside the per-run clusterId.
-                clusters: s.clusters.map((c) => ({
-                    clusterId: c.clusterId,
-                    confidence: c.confidence,
-                    stableClusterId: c.stableClusterId ?? null,
-                })),
-            }));
-            console.log(
-                `[ForYou] feed dump chunk ${chunkIndex}/${chunks}`,
-                JSON.stringify(batch),
-            );
-        }
-    } catch {
-        // Debug dump must never break hydration.
-    }
-}

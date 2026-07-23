@@ -62,7 +62,6 @@ import '@/lib/scheduler/tasks/data-cleanup-task';
 import '@/lib/scheduler/tasks/persona-migration-task';
 import '@/lib/scheduler/tasks/persona-hygiene-task';
 import '@/lib/scheduler/tasks/feedback-cycle-task';
-import '@/lib/scheduler/tasks/tracked-stories-poll-task';
 
 // Register the inference TaskManager task at module load so the
 // expo-notifications silent-push wake (phase-1-done / phase-2-done from the

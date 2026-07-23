@@ -150,11 +150,14 @@ export type ProposalAction =
   // -- Legacy fact/topic CRUD (applied directly against fact-service) --
   | { type: 'add_fact'; statement: string }
   // -- Follow-a-story (the article-feedback agent's `proposeTrack` tool) --
-  /** Follow the tapped article's unfolding story as a durable topic. `trackText`
-   *  is the accepted one-sentence topic; `subject` is the self-contained origin
-   *  snapshot the executor hands to trackStoryWithProposal (embedded so the
-   *  confirm is reconstructable from the persisted tool call, with no store read). */
-  | { type: 'track_story'; trackText: string; subject: TrackFeedbackSubject }
+  /** Follow the tapped article's unfolding story as a durable topic. A scope
+   *  pill: `label` is the short display name shown to the user (e.g. "Russia–
+   *  Ukraine war"); `searchText` is the hidden retrieval query minted as the
+   *  tracked topic (e.g. "russia ukraine civilian infrastructure attacks").
+   *  `subject` is the self-contained origin snapshot the executor hands to
+   *  trackStoryWithProposal (embedded so the confirm is reconstructable from the
+   *  persisted tool call, with no store read). */
+  | { type: 'track_story'; label: string; searchText: string; subject: TrackFeedbackSubject }
   | { type: 'update_fact'; fact_id: string; new_statement: string }
   | { type: 'delete_fact'; fact_id: string }
   | { type: 'add_topics'; fact_id: string; topics: string[] }

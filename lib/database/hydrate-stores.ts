@@ -9,6 +9,7 @@
 
 import { pruneStaleVisits } from './services/publication-visit-service';
 import { useDatabaseStore } from '../stores/database-store';
+import { reconcileAppLanguageWithPersona } from '../language-sync';
 import logger from '../logger';
 
 export function hydrateAllStores(): Promise<void> {
@@ -47,13 +48,23 @@ export function hydrateAllStores(): Promise<void> {
     useAppStateStore.getState().hydrateFromDb(),
     useForYouPrefsStore.getState().hydrate(),
   ])
-    .then(() =>
-      pruneStaleVisits().catch((err: unknown) => {
+    .then(() => {
+      // Fire-and-forget: back-fill the persona's primary language_codes from the
+      // (now-hydrated) app UI language for users who picked a language before the
+      // sync existed. Deliberately NOT awaited — it must never gate
+      // database-store.ready or first-paint.
+      reconcileAppLanguageWithPersona().catch((err: unknown) => {
+        logger.captureException(err, {
+          tags: { module: 'hydrate-stores', step: 'reconcile-app-language' },
+        });
+      });
+
+      return pruneStaleVisits().catch((err: unknown) => {
         logger.captureException(err, {
           tags: { module: 'hydrate-stores', step: 'prune-stale-visits' },
         });
-      }),
-    )
+      });
+    })
     .finally(() => useDatabaseStore.getState().setReady(true))
     .then(() => undefined);
 }

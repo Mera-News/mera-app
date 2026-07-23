@@ -105,11 +105,14 @@ function actionToRow(action: ProposalAction): ActionRow {
         detail: action.summary,
       };
     case 'track_story':
+      // The scope label is the load-bearing choice, so render it as the bold
+      // heading with "Follow story" as the small category line above it. This
+      // reads cleanly when the card offers 3–4 scope pills to pick between.
       return {
         icon: 'track-changes',
         labelKey: 'trackedStories.trackAction',
         labelDefault: 'Follow story',
-        detail: action.trackText,
+        heading: action.label,
       };
     // -- Wave-9 rails-backed feed-tuning actions (the "less of this" choose-one
     //    alternatives) — each renders its own labelled row so the radio card is

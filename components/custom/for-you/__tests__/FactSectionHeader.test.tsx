@@ -52,7 +52,7 @@ import FactSectionHeader from '../FactSectionHeader';
 describe('FactSectionHeader', () => {
     it('renders a "+N" pill when newCount > 0', () => {
         const { getByText, getByLabelText } = render(
-            <FactSectionHeader kind="fact" title="Elections" eventType={null} newCount={3} onPress={jest.fn()} />,
+            <FactSectionHeader title="Elections" eventType={null} newCount={3} onPress={jest.fn()} />,
         );
         expect(getByText('+3')).toBeTruthy();
         // a11y label uses the pluralized i18n key.
@@ -61,22 +61,22 @@ describe('FactSectionHeader', () => {
 
     it('caps the pill display at "+99"', () => {
         const { getByText } = render(
-            <FactSectionHeader kind="fact" title="Elections" eventType={null} newCount={250} onPress={jest.fn()} />,
+            <FactSectionHeader title="Elections" eventType={null} newCount={250} onPress={jest.fn()} />,
         );
         expect(getByText('+99')).toBeTruthy();
     });
 
     it('hides the pill when newCount is 0', () => {
         const { queryByLabelText } = render(
-            <FactSectionHeader kind="fact" title="Elections" eventType={null} newCount={0} onPress={jest.fn()} />,
+            <FactSectionHeader title="Elections" eventType={null} newCount={0} onPress={jest.fn()} />,
         );
         expect(queryByLabelText('forYou.newInSection')).toBeNull();
     });
 
-    it('makes the "also" row pressable', () => {
+    it('is pressable — opens the fact feed on tap', () => {
         const onPress = jest.fn();
         const { getByLabelText } = render(
-            <FactSectionHeader kind="also" title="ignored" eventType={null} onPress={onPress} />,
+            <FactSectionHeader title="Elections" eventType={null} onPress={onPress} />,
         );
         const pressable = getByLabelText('forYou.openFactFeed');
         fireEvent.press(pressable);

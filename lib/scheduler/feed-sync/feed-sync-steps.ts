@@ -24,6 +24,7 @@ import { withRetry } from '@/lib/utils/retry';
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 import { reconcileTrackedStories } from './tracked-story-reconcile';
+import { migrateLegacyTrackedStories } from '@/lib/tracking/track-actions';
 
 /** Number of missing ids hydrated + persisted + enqueued per iteration. Kept at
  *  25 so each `getArticlesForTopicsByIds` call is a single server query (its
@@ -489,16 +490,26 @@ export async function stepHydratePersistEnqueue(
 
   ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}`);
 
-  // Fire-and-forget: grow followed stories from whatever this run just
-  // persisted (article_suggestions.stable_cluster_id). Runs after every
-  // persist attempt — including a partial/daily-limit-clipped one, since
-  // whatever landed is still a valid reconcile source — but must never fail
-  // or delay the sync itself.
-  reconcileTrackedStories().catch((err) => {
-    logger.captureException(err, {
-      tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+  // Fire-and-forget: first upgrade any legacy stable-cluster follows to the
+  // topic model (one-shot + idempotent — a cheap no-op once none remain), THEN
+  // grow every followed topic from whatever this run just persisted (the
+  // suggestions' matched_topics). Chained so a just-migrated story also grows
+  // this same cycle. Runs after every persist attempt — including a
+  // partial/daily-limit-clipped one, since whatever landed is still a valid
+  // reconcile source — but must never fail or delay the sync itself.
+  migrateLegacyTrackedStories()
+    .catch((err) => {
+      logger.captureException(err, {
+        tags: { component: 'feed-sync-steps', method: 'migrateLegacyTrackedStories' },
+      });
+    })
+    .finally(() => {
+      reconcileTrackedStories().catch((err) => {
+        logger.captureException(err, {
+          tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+        });
+      });
     });
-  });
 
   return {
     insertedCount,

@@ -67,6 +67,7 @@ import { swipeCallbacks } from '@/components/custom/feed/swipe-callbacks';
 import {
   recordSwipeVerdict,
   changeSwipeVerdict,
+  removeSwipeVerdict,
   updateFeedbackTreePath,
   openFeedbackChatWithPath,
   openArticleChat,
@@ -135,6 +136,13 @@ describe('changeSwipeVerdict', () => {
   });
 });
 
+describe('removeSwipeVerdict', () => {
+  it('destroys the stored feedback row for the un-voted sentiment', async () => {
+    await removeSwipeVerdict(makeSuggestion(), 'like');
+    expect(removeArticleFeedback).toHaveBeenCalledWith('art-1', 'like');
+  });
+});
+
 describe('updateFeedbackTreePath', () => {
   it('forwards to updateFeedbackContextPath', async () => {
     await updateFeedbackTreePath(makeSuggestion(), 'dislike', ['a', 'b']);
@@ -191,6 +199,14 @@ describe('wireSwipeCallbacks', () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(recordVerdictFeedback).toHaveBeenCalled();
+  });
+
+  it('wires onVerdictRemoved to destroy the stored feedback row', async () => {
+    wireSwipeCallbacks();
+    swipeCallbacks.onVerdictRemoved(makeSuggestion(), 'like');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(removeArticleFeedback).toHaveBeenCalledWith('art-1', 'like');
   });
 
   it('wires the VerdictBar Mera icon to the plain article chat (expand, no prime)', () => {

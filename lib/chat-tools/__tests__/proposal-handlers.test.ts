@@ -418,23 +418,24 @@ describe('executeProposalActions — track_story (follow-in-chat)', () => {
     const result = await executeProposalActions([
       {
         type: 'track_story',
-        trackText: 'Updates on the student protest in Sonbhadra over exam results',
+        label: 'Sonbhadra exam protest',
+        searchText: 'sonbhadra student exam result protest',
         subject,
       },
     ]);
 
-    expect(mockTrackStoryWithProposal).toHaveBeenCalledWith(
-      subject,
-      'Updates on the student protest in Sonbhadra over exam results',
-    );
+    expect(mockTrackStoryWithProposal).toHaveBeenCalledWith(subject, {
+      label: 'Sonbhadra exam protest',
+      searchText: 'sonbhadra student exam result protest',
+    });
     expect(result.applied).toBe(1);
     expect(result.summaries).toHaveLength(1);
     expect(result.errors).toEqual([]);
   });
 
-  it('records an error (no track call) when trackText is empty', async () => {
+  it('records an error (no track call) when searchText is empty', async () => {
     const result = await executeProposalActions([
-      { type: 'track_story', trackText: '   ', subject },
+      { type: 'track_story', label: 'Some label', searchText: '   ', subject },
     ]);
 
     expect(mockTrackStoryWithProposal).not.toHaveBeenCalled();
@@ -446,7 +447,7 @@ describe('executeProposalActions — track_story (follow-in-chat)', () => {
     mockTrackStoryWithProposal.mockRejectedValueOnce(new Error('mint boom'));
 
     const result = await executeProposalActions([
-      { type: 'track_story', trackText: 'Follow this', subject },
+      { type: 'track_story', label: 'Follow this', searchText: 'follow this story', subject },
     ]);
 
     expect(result.applied).toBe(0);

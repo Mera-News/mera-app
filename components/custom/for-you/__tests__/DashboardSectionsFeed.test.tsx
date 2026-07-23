@@ -83,14 +83,14 @@ jest.mock('@/components/custom/for-you/FactSectionHeader', () => {
     const { Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ title, newCount, onPress, kind }: any) => {
+        default: ({ title, newCount, onPress }: any) => {
             const canPress = !!onPress;
             return canPress ? (
-                <Pressable accessibilityLabel={`header:${kind}:${title}`} onPress={onPress}>
+                <Pressable accessibilityLabel={`header:${title}`} onPress={onPress}>
                     <Text>{`new:${newCount}`}</Text>
                 </Pressable>
             ) : (
-                <Text accessibilityLabel={`statichdr:${kind}:${title}`}>{`new:${newCount}`}</Text>
+                <Text accessibilityLabel={`statichdr:${title}`}>{`new:${newCount}`}</Text>
             );
         },
     };
@@ -139,7 +139,6 @@ function makeGroup(id: string, addedMs: number, createdAtMs: number): FactRowGro
 function makeRow(factId: string, groups: FactRowGroup[]): FactRow {
     return {
         factId,
-        kind: 'fact',
         statement: `Statement ${factId}`,
         factStatement: null,
         latestAddedMs: 0,
@@ -175,7 +174,7 @@ describe('DashboardSectionsFeed', () => {
                 headerHeight={100}
             />,
         );
-        expect(getByLabelText('header:fact:Statement f1')).toBeTruthy();
+        expect(getByLabelText('header:Statement f1')).toBeTruthy();
         expect(getAllByText(/^card:/)).toHaveLength(3);
         expect(getByText('footer:5')).toBeTruthy();
     });
@@ -208,7 +207,7 @@ describe('DashboardSectionsFeed', () => {
                 headerHeight={100}
             />,
         );
-        fireEvent.press(getByLabelText('header:fact:Statement f1'));
+        fireEvent.press(getByLabelText('header:Statement f1'));
         expect(mockRouterPush).toHaveBeenCalledWith({
             pathname: '/logged-in/fact-feed',
             params: { factId: 'f1', statement: 'Statement f1' },

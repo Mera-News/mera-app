@@ -219,7 +219,9 @@
     "articleNotFound": "Article not found",
     "offlineUnavailable": "You're offline and this article isn't saved for offline reading",
     "share": "Share",
-    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}"
+    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}",
+    "sourceCountryGlobal": "Worldwide",
+    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name."
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
@@ -280,7 +282,6 @@
   },
   "forYou": {
     "sectionPrefix": "News about:",
-    "alsoForYou": "Also for you",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
     "openFactFeed": "See all stories for this topic",

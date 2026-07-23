@@ -14,6 +14,7 @@ import { markOrphanedFactsAsFailed } from '../database/services/fact-service';
 import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
+import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
 import { resetContext } from '../mera-protocol-toolkit';
 import type { InferenceJobType } from '../database/models/InferenceJob';
 import logger from '../logger';
@@ -35,6 +36,7 @@ const JOB_HANDLERS: Record<InferenceJobType, JobHandler> = {
   topic_gen: adaptHandler(handleTopicGenJob),
   persona_summary: adaptHandler(handlePersonaSummaryJob),
   story_headline: adaptHandler(handleStoryHeadlineJob),
+  tracked_story_migrate: adaptHandler(handleTrackedStoryMigrateJob),
 };
 
 /** Delay between queue polls when no jobs are available (ms). */
@@ -150,6 +152,17 @@ class InferenceQueueImpl {
   /** Current queue state. */
   getState(): QueueState {
     return this.state;
+  }
+
+  /**
+   * Synchronous "is on-device inference busy right now?" signal for low-priority
+   * background schedulers to yield to. True when a job is actively executing OR
+   * the queue is paused for chat's exclusive llama.rn access. Deliberately does
+   * NOT count merely-pending jobs (the loop is idle between 2s polls) — this is a
+   * best-effort "something important is running" check, not a backlog gauge.
+   */
+  isBusy(): boolean {
+    return this.currentJobPromise !== null || this.state === 'paused';
   }
 
   /**

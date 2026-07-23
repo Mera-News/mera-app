@@ -19,6 +19,7 @@ const mockLogInfo = jest.fn();
 const mockGetActive = jest.fn();
 const mockGetAllLocations = jest.fn();
 const mockReconcileTrackedStories = jest.fn();
+const mockMigrateLegacyTrackedStories = jest.fn();
 const mockCaptureException = jest.fn();
 const mockRunPersonaMigrationIfNeeded = jest.fn();
 
@@ -77,6 +78,10 @@ jest.mock('@/lib/user-context/user-geo-language-context', () => ({
 
 jest.mock('../tracked-story-reconcile', () => ({
   reconcileTrackedStories: (...args: any[]) => mockReconcileTrackedStories(...args),
+}));
+
+jest.mock('@/lib/tracking/track-actions', () => ({
+  migrateLegacyTrackedStories: (...args: any[]) => mockMigrateLegacyTrackedStories(...args),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -152,6 +157,7 @@ beforeEach(() => {
     heldBackCount: 0,
   });
   mockReconcileTrackedStories.mockResolvedValue(undefined);
+  mockMigrateLegacyTrackedStories.mockResolvedValue(0);
   mockLoadUserGeoLanguageContext.mockResolvedValue(null);
   mockRunPersonaMigrationIfNeeded.mockResolvedValue({
     ran: false,
@@ -582,7 +588,7 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1']);
   });
 
-  it('fires reconcileTrackedStories fire-and-forget after a successful persist', async () => {
+  it('migrates legacy follows then fires reconcileTrackedStories fire-and-forget after a successful persist', async () => {
     mockGetArticlesForTopicsByIds.mockResolvedValue({
       articles: [{ _id: 'art-1' }],
       dailyLimitReached: false,
@@ -596,6 +602,11 @@ describe('stepHydratePersistEnqueue', () => {
 
     await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
+    // Migration runs synchronously; the reconcile is chained after it resolves,
+    // so flush the fire-and-forget microtasks before asserting it ran.
+    expect(mockMigrateLegacyTrackedStories).toHaveBeenCalledTimes(1);
+    await Promise.resolve();
+    await Promise.resolve();
     expect(mockReconcileTrackedStories).toHaveBeenCalledTimes(1);
   });
 

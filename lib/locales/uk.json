@@ -217,7 +217,9 @@
     "translateAndRead": "Перекласти та читати",
     "viewOriginal": "Переглянути оригінал",
     "share": "Поділитися",
-    "shareVia": "Надіслано через Mera News — новини, підібрані спеціально для вас. Завантажте застосунок: {{downloadUrl}}"
+    "shareVia": "Надіслано через Mera News — новини, підібрані спеціально для вас. Завантажте застосунок: {{downloadUrl}}",
+    "sourceCountryGlobal": "Світове видання",
+    "sourceCountryA11y": "Країна джерела: {{country}}. Торкніться, щоб показати назву країни."
   },
   "newsCluster": {
     "failedToLoad": "Не вдалося завантажити деталі кластера",
@@ -821,7 +823,6 @@
   },
   "forYou": {
     "sectionPrefix": "Новини про:",
-    "alsoForYou": "Також для вас",
     "breaking": "Термінові новини",
     "showMore": "Показати ще {{count}}",
     "subTabFeed": "Стрічка",

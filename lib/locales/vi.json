@@ -211,7 +211,9 @@
     "translateAndRead": "Dịch & Đọc",
     "viewOriginal": "Xem bản gốc",
     "share": "Chia sẻ",
-    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}"
+    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}",
+    "sourceCountryGlobal": "Toàn cầu",
+    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia."
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "Tin tức về:",
-    "alsoForYou": "Cũng dành cho bạn",
     "breaking": "Nóng",
     "showMore": "Hiện thêm {{count}}",
     "openFactFeed": "Xem tất cả bài viết về chủ đề này",

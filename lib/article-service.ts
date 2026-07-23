@@ -13,7 +13,6 @@ import {
     PersonaQueryResult,
     TopHeadlinesForCountryResponse,
     TopicPaginationInput,
-    TrackedStoryArchive,
 } from './generated/graphql-types';
 import logger from './logger';
 import { isNotSubscribedError } from './subscription/not-subscribed-error';
@@ -344,9 +343,9 @@ const GET_NEWS_CLUSTER_FOR_USER = gql`
 
 // GraphQL Query for the live cluster an article currently belongs to (via its
 // newest cluster-article-link). Null when the article is unclustered or its
-// cluster has aged out. Used as the live fallback when a story isn't archived
-// (trackStory/trackedStory returned null). Mirrors GET_NEWS_CLUSTER_FOR_USER's
-// selection, plus the cluster's own stableClusterId/clusterSize.
+// cluster has aged out. The follow-a-story flow uses it to read a story's
+// current member articles (to ground the LLM's scope-pill proposals). Mirrors
+// GET_NEWS_CLUSTER_FOR_USER's selection, plus stableClusterId/clusterSize.
 const GET_NEWS_CLUSTER_FOR_ARTICLE = gql`
   query GetNewsClusterForArticle($articleId: ID!, $first: Int, $after: String) {
     newsClusterForArticle(articleId: $articleId) {
@@ -390,51 +389,8 @@ const GET_NEWS_CLUSTER_FOR_ARTICLE = gql`
   }
 `;
 
-// GraphQL Mutation to start (or refresh) tracking a story by its
-// stableClusterId. Seeds a durable archive from the live cluster on first
-// track, or slides an existing archive's 90-day retention forward. Returns
-// null when no live cluster exists to seed from — the caller then falls back
-// to newsClusterForArticle.
-const TRACK_STORY = gql`
-  mutation TrackStory($stableClusterId: String!) {
-    trackStory(stableClusterId: $stableClusterId) {
-      stableClusterId
-      clusterSize
-      lastRefreshedAt
-      articles {
-        articleId
-        title_en
-        pubDate
-        image_url
-        publication_name
-        article_url
-        country_code
-      }
-    }
-  }
-`;
-
-// GraphQL Query to read a tracked story's archive by stableClusterId. Reading
-// it slides the 90-day retention forward. Returns null when the story is not
-// (or no longer) tracked.
-const GET_TRACKED_STORY = gql`
-  query GetTrackedStory($stableClusterId: String!) {
-    trackedStory(stableClusterId: $stableClusterId) {
-      stableClusterId
-      clusterSize
-      lastRefreshedAt
-      articles {
-        articleId
-        title_en
-        pubDate
-        image_url
-        publication_name
-        article_url
-        country_code
-      }
-    }
-  }
-`;
+// (removed: trackStory / trackedStory — followed stories are now pure on-device
+// topics, grown by the persona query each fetch cycle; no server archive.)
 
 // (removed: GET_SERVER_PROCESSING_METADATA_FOR_USER — serverProcessingMetadataForUser no longer exists)
 
@@ -565,8 +521,6 @@ export type {
     TopHeadlinesForCountryResponse,
     TopicArticleIdsResult,
     TopicPaginationInput,
-    TrackedStoryArchive,
-    TrackedStoryArticleSnapshot,
 } from './generated/graphql-types';
 
 // [Flow v2] The server rejects an articleIdsForTopics request carrying more than
@@ -1135,55 +1089,6 @@ export class ArticleService {
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getNewsClusterForArticle' },
                 extra: { articleId },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Start (or refresh) tracking a story by its stableClusterId. Seeds a
-     * durable archive from the live cluster on first track, or slides an
-     * existing archive's 90-day retention forward. Returns null when no live
-     * cluster exists to seed from — the caller should then fall back to
-     * getNewsClusterForArticle.
-     */
-    static async trackStory(stableClusterId: string): Promise<TrackedStoryArchive | null> {
-        try {
-            const { data, error } = await client.mutate<{ trackStory: TrackedStoryArchive | null }>({
-                mutation: TRACK_STORY,
-                variables: { stableClusterId },
-            });
-            if (error) {
-                throw error;
-            }
-            return data?.trackStory ?? null;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'trackStory' },
-                extra: { stableClusterId },
-            });
-            throw error;
-        }
-    }
-
-    /**
-     * Read a tracked story's archive by stableClusterId. Reading it slides
-     * the 90-day retention forward. Returns null when the story is not (or
-     * no longer) tracked.
-     */
-    static async getTrackedStory(stableClusterId: string): Promise<TrackedStoryArchive | null> {
-        try {
-            const { data } = await client.query<{ trackedStory: TrackedStoryArchive | null }>({
-                query: GET_TRACKED_STORY,
-                variables: { stableClusterId },
-                fetchPolicy: 'no-cache',
-            });
-
-            return data?.trackedStory ?? null;
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getTrackedStory' },
-                extra: { stableClusterId },
             });
             throw error;
         }

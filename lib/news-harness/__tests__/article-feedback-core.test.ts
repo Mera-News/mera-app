@@ -642,71 +642,88 @@ describe('decideProposeTrack', () => {
     publicationName: 'The Hindu',
   };
 
-  it('stages a single track_story action carrying the embedded subject', () => {
-    const out = decideProposeTrack(
-      { track: 'Updates on the student protest in Sonbhadra over exam results' },
-      subject,
-    );
-    expect(out.sideEffects?.proposal?.actions).toEqual([
-      {
-        type: 'track_story',
-        trackText: 'Updates on the student protest in Sonbhadra over exam results',
-        subject,
-      },
-    ]);
-    // Echoes id + subject so deriveThreadItems can rebuild the confirm card.
-    expect(out.result.proposalId).toBe(out.sideEffects?.proposal?.id);
-    expect(out.result.subject).toEqual(subject);
-  });
-
-  it('errors on empty track text', () => {
-    const out = decideProposeTrack({ track: '   ' }, subject);
-    expect(out.result.error).toContain('track is required');
-    expect(out.sideEffects).toBeUndefined();
-  });
-
-  it('stages a single-select proposal of track_story actions when ≥2 options', () => {
+  it('stages a single-select proposal of track_story scope pills (label + hidden search)', () => {
     const out = decideProposeTrack(
       {
-        track: 'The Sonbhadra exam protest',
         options: [
-          'The Sonbhadra exam-result protest',
-          'The wider UP student exam-reform movement',
-          'The Sonbhadra exam-result protest', // dup — deduped
+          { label: 'Attacks on Ukraine infrastructure', search: 'russia ukraine civilian infrastructure attacks' },
+          { label: 'Russia–Ukraine war', search: 'russia ukraine war' },
+          { label: 'Attacks on Ukraine infrastructure', search: 'dup — deduped by label' },
         ],
       },
       subject,
     );
     const proposal = out.sideEffects?.proposal;
     expect(proposal?.chooseOne).toBe(true);
-    expect(proposal?.actions).toHaveLength(2);
-    expect(proposal?.actions.every((a) => a.type === 'track_story' && a.subject === subject)).toBe(true);
+    expect(proposal?.actions).toHaveLength(2); // third deduped by (case-insensitive) label
+    expect(proposal?.actions).toEqual([
+      {
+        type: 'track_story',
+        label: 'Attacks on Ukraine infrastructure',
+        searchText: 'russia ukraine civilian infrastructure attacks',
+        subject,
+      },
+      {
+        type: 'track_story',
+        label: 'Russia–Ukraine war',
+        searchText: 'russia ukraine war',
+        subject,
+      },
+    ]);
+    // Echoes id + subject + parsed options so deriveThreadItems rebuilds the card.
+    expect(out.result.proposalId).toBe(proposal?.id);
+    expect(out.result.subject).toEqual(subject);
     expect(out.result.chooseOne).toBe(true);
     expect(out.result.options).toEqual([
-      'The Sonbhadra exam-result protest',
-      'The wider UP student exam-reform movement',
+      { label: 'Attacks on Ukraine infrastructure', search: 'russia ukraine civilian infrastructure attacks' },
+      { label: 'Russia–Ukraine war', search: 'russia ukraine war' },
     ]);
   });
 
-  it('falls back to the single-option flow when fewer than 2 valid options', () => {
+  it('stages a single (non-choose-one) pill when only one option is valid', () => {
     const out = decideProposeTrack(
-      { track: 'The Sonbhadra exam protest', options: ['only one'] },
+      { options: [{ label: 'Russia–Ukraine war', search: 'russia ukraine war' }] },
       subject,
     );
     const proposal = out.sideEffects?.proposal;
     expect(proposal?.chooseOne).toBeUndefined();
     expect(proposal?.actions).toEqual([
-      { type: 'track_story', trackText: 'The Sonbhadra exam protest', subject },
+      {
+        type: 'track_story',
+        label: 'Russia–Ukraine war',
+        searchText: 'russia ukraine war',
+        subject,
+      },
     ]);
   });
 
-  it('trims overly long track text', () => {
+  it('tolerates a legacy `track` string as a single lone option (label === search)', () => {
+    const out = decideProposeTrack({ track: 'The Sonbhadra exam protest' }, subject);
+    expect(out.sideEffects?.proposal?.actions).toEqual([
+      {
+        type: 'track_story',
+        label: 'The Sonbhadra exam protest',
+        searchText: 'The Sonbhadra exam protest',
+        subject,
+      },
+    ]);
+  });
+
+  it('errors when no valid option is provided', () => {
+    const out = decideProposeTrack({ options: [{ label: '   ', search: '' }] }, subject);
+    expect(out.result.error).toContain('options is required');
+    expect(out.sideEffects).toBeUndefined();
+  });
+
+  it('trims overly long label + search text', () => {
     const long = 'a'.repeat(400);
-    const out = decideProposeTrack({ track: long }, subject);
+    const out = decideProposeTrack({ options: [{ label: long, search: long }] }, subject);
     const action = out.sideEffects?.proposal?.actions[0] as {
       type: 'track_story';
-      trackText: string;
+      label: string;
+      searchText: string;
     };
-    expect(action.trackText.length).toBeLessThanOrEqual(200);
+    expect(action.label.length).toBeLessThanOrEqual(200);
+    expect(action.searchText.length).toBeLessThanOrEqual(200);
   });
 });

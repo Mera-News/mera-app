@@ -118,7 +118,7 @@ describe('runOptimisationCycle — guards', () => {
   });
 
   it('skips on cooldown when a recent run stamp exists', async () => {
-    mockKv.set('optimisation_last_run_at', String(NOW - 60 * 60 * 1000)); // 1h ago < 20h
+    mockKv.set('optimisation_last_run_at', String(NOW - 60 * 60 * 1000)); // 1h ago < 2.5h cooldown
     seedActionable();
     const res = await runOptimisationCycle({ now: NOW });
     expect(res.ran).toBe(false);

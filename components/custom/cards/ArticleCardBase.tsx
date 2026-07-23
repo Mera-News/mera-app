@@ -56,6 +56,14 @@ export interface ArticleCardBaseProps {
   onPress?: () => void;
   children?: React.ReactNode;
   metaAccessory?: React.ReactNode;
+  /** A control row pinned at the bottom of the card, OUTSIDE the region the
+   *  `overlay` covers (e.g. the like/dislike action bar) — stays visible while
+   *  the overlay is up. When omitted the card is unchanged (pixel-identical). */
+  footer?: React.ReactNode;
+  /** A floating panel that covers the card's content region (hero + meta + title
+   *  + children) but NOT the `footer`. Clipped to the card's rounded corners by
+   *  its `overflow-hidden`. Used for the inline feedback surface. */
+  overlay?: React.ReactNode;
 }
 
 const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
@@ -76,6 +84,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   onPress,
   children,
   metaAccessory,
+  footer,
+  overlay,
 }) => {
   const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
@@ -85,49 +95,63 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
 
   const innerContent = (
     <>
-      {showImage && (
-        <Box
-          className={
-            flat ? 'w-full h-48 overflow-hidden rounded-t-2xl' : 'w-full h-48 overflow-hidden rounded-t-lg'
-          }
-        >
-          <Image
-            source={{ uri: imageUrl! }}
-            alt={displayTitle}
-            className="w-full h-full"
-            resizeMode="cover"
-            recyclingKey={recyclingKey}
-            onError={() => setImageFailed(true)}
+      {/* Content region — the `overlay` (when present) floats over exactly this,
+          clipped to the card's rounded corners by the outer overflow-hidden. */}
+      <Box className="relative">
+        {showImage && (
+          <Box
+            className={
+              flat ? 'w-full h-48 overflow-hidden rounded-t-2xl' : 'w-full h-48 overflow-hidden rounded-t-lg'
+            }
+          >
+            <Image
+              source={{ uri: imageUrl! }}
+              alt={displayTitle}
+              className="w-full h-full"
+              resizeMode="cover"
+              recyclingKey={recyclingKey}
+              onError={() => setImageFailed(true)}
+            />
+          </Box>
+        )}
+        {/* When a footer is present it owns the bottom padding, so the content
+            VStack drops its own (pb-0) to avoid a doubled gap. */}
+        <VStack className={footer ? 'px-4 pt-4' : 'p-4'} space="sm">
+          <Box>
+            <ArticleMetaRow
+              pubDate={pubDate}
+              languageCode={languageCode}
+              publicationName={publicationName}
+              countryCode={countryCode}
+              variant="card"
+              isNew={isNew}
+              moreSourcesCount={moreSourcesCount}
+              read={read}
+            />
+            {metaAccessory ? (
+              <HStack className="self-end mt-1">{metaAccessory}</HStack>
+            ) : null}
+          </Box>
+          <TranslatableDynamic
+            as="heading"
+            text={displayTitle}
+            originalText={titleOriginal}
+            originalLanguage={sourceLanguage}
+            size="md"
+            className="leading-6"
+            showToggle={false}
           />
-        </Box>
-      )}
-      <VStack className="p-4" space="sm">
-        <Box>
-          <ArticleMetaRow
-            pubDate={pubDate}
-            languageCode={languageCode}
-            publicationName={publicationName}
-            countryCode={countryCode}
-            variant="card"
-            isNew={isNew}
-            moreSourcesCount={moreSourcesCount}
-            read={read}
-          />
-          {metaAccessory ? (
-            <HStack className="self-end mt-1">{metaAccessory}</HStack>
-          ) : null}
-        </Box>
-        <TranslatableDynamic
-          as="heading"
-          text={displayTitle}
-          originalText={titleOriginal}
-          originalLanguage={sourceLanguage}
-          size="md"
-          className="leading-6"
-          showToggle={false}
-        />
-        {children}
-      </VStack>
+          {children}
+        </VStack>
+        {overlay ? (
+          // Absolute fill of the content region. Claims stray taps so the grey
+          // backdrop doesn't fall through to the card's open-article press.
+          <Box className="absolute inset-0" onStartShouldSetResponder={() => true}>
+            {overlay}
+          </Box>
+        ) : null}
+      </Box>
+      {footer ? <Box className="px-4 pb-4 pt-2">{footer}</Box> : null}
     </>
   );
 

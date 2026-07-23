@@ -1,5 +1,6 @@
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import { SourceCountryFlag } from '@/components/custom/SourceCountryFlag';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -24,6 +25,9 @@ interface ArticleMetaRowProps {
     /** Marks the article as already-read — renders a small eye icon immediately
      *  after the time group. Default false — no visual change when omitted. */
     read?: boolean;
+    /** Whether to render the trailing country flag. Default true. The compact
+     *  card sets this false and shows the flag in its footer instead. */
+    showFlag?: boolean;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -35,6 +39,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     isNew = false,
     moreSourcesCount,
     read = false,
+    showFlag = true,
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
@@ -54,12 +59,13 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const showPublicationSlot = !!publication;
 
     return (
-        // No `justify-between`: the slots size themselves. Slot 1 (age group) is
-        // fixed-width (`flex-shrink-0`); the language slot shrinks; the
-        // publication slot takes the remaining room and right-aligns its (single-
-        // line, truncating) name; the flag is fixed-width — so a long publication
-        // name truncates instead of bleeding across / pushing the flag off-row.
-        <HStack className="items-center" space="sm">
+        // `justify-between` spreads the slots evenly: time anchors at the start,
+        // the flag at the end, and the language (+ optional publication) slots
+        // distribute across the free space between them. Time and flag are
+        // fixed-width (`flex-shrink-0`); the language and publication slots may
+        // shrink (single-line, truncating) so a long publication name truncates
+        // instead of bleeding across / pushing the flag off-row.
+        <HStack className="items-center justify-between" space="sm">
             {/* 1. Age (+ optional read eye / NEW badge / +N sources) */}
             <HStack className="items-center flex-shrink-0" space="xs">
                 <MaterialIcons name="schedule" size={14} color={iconColor} />
@@ -107,10 +113,10 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 </HStack>
             ) : null}
 
-            {/* 3. Newspaper icon + publication name — takes the remaining room and
-                right-aligns, truncating a long name instead of bleeding. */}
+            {/* 3. Newspaper icon + publication name — natural width, truncating a
+                long name instead of bleeding when the row runs tight. */}
             {showPublicationSlot ? (
-                <HStack className="items-center flex-1 justify-end" space="xs" style={{ minWidth: 0 }}>
+                <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
                     <MaterialIcons name="newspaper" size={12} color={iconColor} />
                     <Text
                         size="xs"
@@ -122,10 +128,17 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 </HStack>
             ) : null}
 
-            {/* 4. Country flag */}
-            <Box className="flex-shrink-0">
-                <SourceFlag countryCode={countryCode} size="sm" iconClassName={isCard ? 'text-typography-500' : 'text-gray-400'} />
-            </Box>
+            {/* 4. Country flag — tappable on the detail screen to name the country.
+                Hidden when `showFlag` is false (compact card shows it in its footer). */}
+            {showFlag ? (
+                <Box className="flex-shrink-0">
+                    {isCard ? (
+                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
+                    ) : (
+                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
+                    )}
+                </Box>
+            ) : null}
         </HStack>
     );
 };

@@ -94,6 +94,21 @@ jest.mock('@/components/custom/RelevanceChip', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID="relevance-chip" /> };
 });
+// Mocked to avoid the InlineFeedbackTree → feedback-tree-service → DB import chain.
+jest.mock('@/components/custom/cards/CardFeedbackSurface', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: () => <View testID="card-feedback-surface" /> };
+});
+// Mocked to avoid pulling in the (un-transformable) gluestack icon ESM via
+// @/components/ui/icon — ArticleCompactCardBase imports SourceFlag directly.
+jest.mock('@/components/custom/SourceFlag', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    SourceFlag: (p: any) => <View testID="source-flag" {...p} />,
+    default: (p: any) => <View testID="source-flag" {...p} />,
+  };
+});
 jest.mock('@/components/custom/chat/StreamingIndicator', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID="streaming" /> };
@@ -378,13 +393,13 @@ describe('ArticleStandaloneCard', () => {
 });
 
 describe('ArticleStandaloneCompactCard', () => {
-  it('never renders the publication name on the compact meta row', () => {
+  it('renders the publication name in the compact footer', () => {
     const { queryByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
-    // Compact cards drop the publication + "+N sources" badge (they collided
-    // at compact width) — only time-ago, translate chip, flag, eye/NEW remain.
-    expect(queryByText('Die Zeit')).toBeNull();
+    // The redesigned compact card surfaces the source publication in its footer
+    // (flag + publisher name), so the name is now expected to render.
+    expect(queryByText('Die Zeit')).toBeTruthy();
   });
 
   it('does not mount the "…" actions button by default (pixel-identical)', () => {

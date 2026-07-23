@@ -50,9 +50,9 @@ const LAST_RUN_KEY = 'optimisation_last_run_at';
 
 /** Don't run unless at least this many verdicts are waiting — too little to plan. */
 export const MIN_UNPROCESSED_FOR_RUN = 3;
-/** Minimum gap between real cycles (ms). Slightly under the 24h task frequency so
- *  a due tick isn't rejected by rounding. 20 hours. */
-export const RUN_COOLDOWN_MS = 20 * 60 * 60 * 1000;
+/** Minimum gap between real cycles (ms). Slightly under the 3h task frequency so
+ *  a due (and idle-gated) tick isn't rejected by rounding. 2.5 hours. */
+export const RUN_COOLDOWN_MS = 2.5 * 60 * 60 * 1000;
 /** Newest N verdicts folded per cycle — keeps the digest + prompt bounded. */
 export const MAX_SIGNALS_PER_RUN = 40;
 /** Unprocessed verdicts older than this are swept as processed when a cycle

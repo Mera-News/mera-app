@@ -43,13 +43,6 @@ export function mergeMemberSnapshots(
     .slice(0, MAX_MEMBER_SNAPSHOTS);
 }
 
-/**
- * Consecutive reconcile misses before a story auto-ends. The reconcile poll
- * runs at least twice a day, so 14 misses ≈ 7 days of no new members — after
- * which we stop tracking (the user can always re-follow).
- */
-export const MISSES_TO_END = 14;
-
 export interface TrackStoryInput {
   stableClusterId?: string | null;
   articleId: string;
@@ -75,19 +68,19 @@ export interface ApplyUpdatesInput {
   newSnapshots?: TrackedStoryMemberSnapshot[];
 }
 
-/** Lean projection for the reconcile poll (avoids passing live models around). */
-export interface TrackedStoryReconcileRow {
-  id: string;
-  stableClusterId: string;
-  memberArticleIds: string[];
-  latestArticleId: string | null;
-}
-
 /** Lean projection for the topic-linked reconcile path (v40). */
 export interface TrackedStoryTopicReconcileRow {
   id: string;
   topicId: string;
   memberArticleIds: string[];
+}
+
+/** Lean projection of a legacy (topic-less) active story awaiting migration to
+ *  the topic model. `titles` are the known member titles fed to the LLM scope
+ *  generator that mints the tracked topic + display headline. */
+export interface LegacyTrackedStoryRow {
+  id: string;
+  titles: string[];
 }
 
 /**
@@ -298,45 +291,6 @@ export async function advanceSeenWatermark(id: string, watermarkMs: number): Pro
 }
 
 /**
- * Seed a freshly-tracked story with the member articles discovered at track
- * time (from the server archive or the live cluster). UNLIKE {@link applyUpdates}
- * this does NOT bump `unseen_count` or stamp `last_update_at` — the user is
- * actively following the story right now, so its initial coverage is "seen".
- * Merges the seeds after any ids already present (the tapped article stays
- * first), de-dupes, and caps newest-first at 30. Optionally refreshes the
- * "latest" pointer. Never throws.
- */
-export async function seedMembers(
-  id: string,
-  memberIds: string[],
-  latest?: { latestArticleId?: string | null; latestTitle?: string | null },
-): Promise<void> {
-  const seeds = (memberIds ?? []).filter(
-    (x): x is string => typeof x === 'string' && x.trim().length > 0,
-  );
-  try {
-    const record = await collection.find(id);
-    await database.write(async () => {
-      await record.update((m) => {
-        const existing = m.memberArticleIds ?? [];
-        const merged: string[] = [];
-        const seen = new Set<string>();
-        for (const idv of [...existing, ...seeds]) {
-          if (seen.has(idv)) continue;
-          seen.add(idv);
-          merged.push(idv);
-        }
-        m.memberArticleIds = merged.slice(0, MAX_MEMBER_IDS);
-        if (latest?.latestArticleId) m.latestArticleId = latest.latestArticleId;
-        if (latest?.latestTitle) m.latestTitle = latest.latestTitle;
-      });
-    });
-  } catch (err) {
-    logger.warn('[tracked-story] seedMembers failed', { id, error: String(err) });
-  }
-}
-
-/**
  * Resolve the row id of the ACTIVE story matching a subject (by stable cluster
  * id or member article id) — the seam the follow UI uses to untrack from a card
  * subject. Returns null when nothing matches. Mirrors {@link isTracked}'s match
@@ -373,22 +327,6 @@ export async function getTrackedStoryById(id: string): Promise<TrackedStoryModel
   }
 }
 
-/** Bind a resolved server stable_cluster_id to a story. Never throws. */
-export async function resolveStableId(id: string, stableClusterId: string): Promise<void> {
-  const sid = (stableClusterId ?? '').trim();
-  if (!sid) return;
-  try {
-    const record = await collection.find(id);
-    await database.write(async () => {
-      await record.update((m) => {
-        m.stableClusterId = sid;
-      });
-    });
-  } catch (err) {
-    logger.warn('[tracked-story] resolveStableId failed', { id, error: String(err) });
-  }
-}
-
 /** Write the generated English headline for a story. No-op on blank. Never throws. */
 export async function setLlmHeadline(id: string, headline: string): Promise<void> {
   const h = (headline ?? '').trim();
@@ -403,48 +341,6 @@ export async function setLlmHeadline(id: string, headline: string): Promise<void
   } catch (err) {
     logger.warn('[tracked-story] setLlmHeadline failed', { id, error: String(err) });
   }
-}
-
-/**
- * Record a reconcile miss (poll found no new members). Increments the streak,
- * stamps `last_checked_at`, and auto-ends the story once the streak hits
- * `MISSES_TO_END`. Never throws.
- */
-export async function recordMiss(id: string): Promise<void> {
-  try {
-    const record = await collection.find(id);
-    await database.write(async () => {
-      await record.update((m) => {
-        const next = (m.missCount ?? 0) + 1;
-        m.missCount = next;
-        m.lastCheckedAt = new Date();
-        if (next >= MISSES_TO_END) m.status = 'ended';
-      });
-    });
-  } catch (err) {
-    logger.warn('[tracked-story] recordMiss failed', { id, error: String(err) });
-  }
-}
-
-/**
- * Active stories that have a resolved stable id — the reconcile poll's work
- * list. Returns a lean projection so the poll never holds live models.
- */
-export async function getActiveForReconcile(): Promise<TrackedStoryReconcileRow[]> {
-  const rows = await collection
-    .query(Q.where('status', 'active'), Q.where('stable_cluster_id', Q.notEq(null)))
-    .fetch();
-  return rows
-    // Legacy (cluster-id) path only: topic-linked stories (v40) reconcile via
-    // `getActiveForTopicReconcile` instead — excluded here so they aren't
-    // double-processed / double-notified.
-    .filter((r) => r.status === 'active' && !!r.stableClusterId && !r.topicId)
-    .map((r) => ({
-      id: r.id,
-      stableClusterId: r.stableClusterId as string,
-      memberArticleIds: r.memberArticleIds ?? [],
-      latestArticleId: r.latestArticleId ?? null,
-    }));
 }
 
 /**
@@ -464,57 +360,69 @@ export async function getActiveForTopicReconcile(): Promise<TrackedStoryTopicRec
     }));
 }
 
-/** Lean projection for the 30-min tracked-stories-poll-task. Unlike
- *  `getActiveForReconcile`, includes stories with no resolved stable id yet
- *  (singletons) — the poll task promotes those via `getNewsClusterForArticle`
- *  + `resolveStableId`. */
-export interface TrackedStoryPollRow {
-  id: string;
-  stableClusterId: string | null;
-  memberArticleIds: string[];
-  latestArticleId: string | null;
-}
-
-// --- Coordination note (feed-sync/reconcile wave, 2026-07-20) ---
-// `getActiveForPoll` and `stampChecked` below are additive: a lean read
-// projection + a single-field setter, following the exact shape of the
-// existing `getActiveForReconcile` / `recordMiss` functions above. Added so
-// `lib/scheduler/tasks/tracked-stories-poll-task.ts` can select due stories
-// and stamp `last_checked_at` without reaching into the WatermelonDB
-// collection directly (this service owns that collection). No existing
-// exports were changed.
-
 /**
- * Active stories due for a poll check: `last_checked_at` is null (never
- * checked) or older than `staleBeforeMs`, oldest-checked-first, capped at
- * `limit`. Never throws (falls back to an empty list).
+ * Active stories still on the legacy stable-cluster model (no `topic_id`) — the
+ * one-shot migration work list. Each carries the story's known `titles` (its
+ * display headline, fallback title, and member-snapshot titles, de-duplicated)
+ * that the LLM scope generator turns into a tracked topic + display headline.
+ * Rows with no usable titles are dropped (nothing to scope on). Never throws.
  */
-export async function getActiveForPoll(
-  staleBeforeMs: number,
-  limit: number,
-): Promise<TrackedStoryPollRow[]> {
+export async function getLegacyTrackedForMigration(): Promise<LegacyTrackedStoryRow[]> {
   try {
     const rows = await collection.query(Q.where('status', 'active')).fetch();
-    const time = (r: TrackedStoryModel): number =>
-      r.lastCheckedAt instanceof Date ? r.lastCheckedAt.getTime() : 0;
     return rows
-      .filter((r) => r.status === 'active') // JS guard for test mock
-      .filter((r) => time(r) < staleBeforeMs) // never-checked (time=0) always qualifies
-      .sort((a, b) => time(a) - time(b)) // oldest/never-checked first
-      .slice(0, limit)
-      .map((r) => ({
-        id: r.id,
-        stableClusterId: r.stableClusterId ?? null,
-        memberArticleIds: r.memberArticleIds ?? [],
-        latestArticleId: r.latestArticleId ?? null,
-      }));
+      .filter((r) => r.status === 'active' && !r.topicId) // JS guard for test mock
+      .map((r) => {
+        const seen = new Set<string>();
+        const titles: string[] = [];
+        for (const raw of [
+          r.llmHeadline,
+          r.fallbackTitle,
+          ...(r.memberSnapshots ?? []).map((s) => s.title),
+        ]) {
+          const t = (raw ?? '').trim();
+          if (t && !seen.has(t)) {
+            seen.add(t);
+            titles.push(t);
+          }
+        }
+        return { id: r.id, titles };
+      })
+      .filter((r) => r.titles.length > 0);
   } catch (err) {
-    logger.warn('[tracked-story] getActiveForPoll failed', { error: String(err) });
+    logger.warn('[tracked-story] getLegacyTrackedForMigration failed', {
+      error: String(err),
+    });
     return [];
   }
 }
 
-/** Stamp a story as just-checked (poll ran, whatever the outcome). Never throws. */
+/**
+ * Bind a minted topic (id + text) onto a story — the migration setter that
+ * converts a legacy stable-cluster follow into a topic-linked one. No-op on
+ * blank text. Never throws.
+ */
+export async function bindTrackedTopic(
+  id: string,
+  topicId: string | null,
+  topicText: string,
+): Promise<void> {
+  const text = (topicText ?? '').trim();
+  if (!text) return;
+  try {
+    const record = await collection.find(id);
+    await database.write(async () => {
+      await record.update((m) => {
+        m.topicId = topicId;
+        m.topicText = text;
+      });
+    });
+  } catch (err) {
+    logger.warn('[tracked-story] bindTrackedTopic failed', { id, error: String(err) });
+  }
+}
+
+/** Stamp a story as just-checked by the reconcile. Never throws. */
 export async function stampChecked(id: string): Promise<void> {
   try {
     const record = await collection.find(id);

@@ -211,7 +211,9 @@
     "translateAndRead": "翻译并阅读",
     "viewOriginal": "查看原文",
     "share": "分享",
-    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}"
+    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}",
+    "sourceCountryGlobal": "全球",
+    "sourceCountryA11y": "来源国家：{{country}}。点按可显示国家名称。"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "关于：",
-    "alsoForYou": "也为你推荐",
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
     "openFactFeed": "查看关于此主题的所有报道",

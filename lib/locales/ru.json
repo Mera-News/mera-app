@@ -217,7 +217,9 @@
     "translateAndRead": "Перевести и читать",
     "viewOriginal": "Показать оригинал",
     "share": "Поделиться",
-    "shareVia": "Отправлено через Mera News — новости, подобранные специально для вас. Скачать приложение: {{downloadUrl}}"
+    "shareVia": "Отправлено через Mera News — новости, подобранные специально для вас. Скачать приложение: {{downloadUrl}}",
+    "sourceCountryGlobal": "Весь мир",
+    "sourceCountryA11y": "Страна источника: {{country}}. Нажмите, чтобы показать название страны."
   },
   "newsCluster": {
     "failedToLoad": "Не удалось загрузить детали кластера",
@@ -821,7 +823,6 @@
   },
   "forYou": {
     "sectionPrefix": "Новости о:",
-    "alsoForYou": "Также для вас",
     "breaking": "Срочно",
     "showMore": "Показать ещё {{count}}",
     "subTabFeed": "Лента",
