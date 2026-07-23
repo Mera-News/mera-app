@@ -1,6 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
+import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
@@ -35,7 +36,7 @@ const SettingsTabScreen: React.FC = () => {
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ flexGrow: 1 }}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24 }}
                 showsVerticalScrollIndicator={false}
             >
                 <AppPreferencesTab />

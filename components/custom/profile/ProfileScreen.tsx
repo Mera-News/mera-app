@@ -1,6 +1,7 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
 import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
+import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -12,10 +13,9 @@ import { fetchUserBilling } from '@/lib/billing-service';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
-import { hapticMedium } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { getOfferingSafe } from '@/lib/revenuecat';
-import { useFloatingChatFactMutationVersion, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -88,11 +88,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         }
     }, [factMutationVersion, refreshFactCount]);
 
-    const openChat = useCallback(() => {
-        void hapticMedium();
-        useFloatingChatStore.getState().expand({ kind: 'persona' });
-    }, []);
-
     const handleUpgrade = useCallback(async () => {
         try {
             const offering = await getOfferingSafe();
@@ -149,6 +144,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     onInfoPress={() => setShowArticleCountInfo(true)}
                 />
 
+                {/* Mera chat invite — static comic speech bubble + logo, replaces
+                    the former floating bubble. Taps open the persona chat. */}
+                <MeraChatInvite />
+
                 {/* 2 — About you (the real facts list — same component FactsScreen uses).
                     No outer px-4 here: FactAccordion carries its own mx-4 inset, matching
                     FactsScreen's layout — an extra wrapper padding would double-indent it. */}
@@ -161,17 +160,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         </HStack>
 
                         <FactsList />
-                    </Box>
-                )}
-
-                {isEmptyPersona && (
-                    <Box className="px-4 mb-4">
-                        <Button variant="outline" action="primary" onPress={openChat}>
-                            <HStack space="sm" className="items-center">
-                                <MaterialIcons name="chat-bubble-outline" size={18} color="#60a5fa" />
-                                <ButtonText>{t('profile.startTalking', { defaultValue: 'Start talking' })}</ButtonText>
-                            </HStack>
-                        </Button>
                     </Box>
                 )}
 
