@@ -26,10 +26,31 @@
 
 import { swipeCallbacks } from './swipe-callbacks';
 import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
+import { recordOpen } from '@/lib/database/services/story-impression-service';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useCallback, useMemo, useRef } from 'react';
+
+/**
+ * Giving feedback on a suggestion counts as reading it — mark it opened (the
+ * same optimistic-dim + persisted-open-row path a tap uses), so it gets the read
+ * treatment and drops from the unopened surfaces. Tagged `swipe` (the feedback
+ * surface). Idempotent, so a flip re-marking is harmless.
+ */
+function markSuggestionRead(suggestion: ForYouSuggestion): void {
+  const stableClusterId =
+    suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null;
+  useOpenedStoriesStore.getState().markOpened(suggestion.articleId, stableClusterId);
+  void recordOpen({
+    articleId: suggestion.articleId,
+    suggestionId: suggestion._id,
+    stableClusterId,
+    titleNorm: (suggestion.title_en ?? '').toLowerCase().trim().replace(/\s+/g, ' ') || null,
+    surface: 'swipe',
+  });
+}
 
 // Install the real Feed-signal implementations onto the swipe-callbacks contract
 // once, when this module loads (before any render). Idempotent — mirrors the
@@ -104,11 +125,13 @@ export function useFeedbackSheet(adapter: VerdictStoreAdapter): UseFeedbackSheet
       a.setPath(key, []);
       dismiss.undismiss(key);
       swipeCallbacks.onVerdictChanged(suggestion, existing, next);
+      markSuggestionRead(suggestion);
     } else {
       // Fresh verdict — record + reveal the surface.
       a.setVerdict(key, next);
       dismiss.undismiss(key);
       swipeCallbacks.onVerdict(suggestion, next);
+      markSuggestionRead(suggestion);
     }
   }, []);
 
