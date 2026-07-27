@@ -86,6 +86,7 @@ jest.mock('../logger', () => ({
   __esModule: true,
   default: {
     captureException: jest.fn(),
+    addBreadcrumb: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
   },
@@ -146,6 +147,7 @@ const mockDeleteExpoPushToken: jest.Mock = MockAccountService.deleteExpoPushToke
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mockLogger = require('../logger').default;
 const mockLoggerCaptureException: jest.Mock = mockLogger.captureException;
+const mockLoggerAddBreadcrumb: jest.Mock = mockLogger.addBreadcrumb;
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mockSettingService = require('../database/services/setting-service');
@@ -613,6 +615,25 @@ describe('checkPushTokenRevocation', () => {
     mockGetPermissionsAsync.mockRejectedValueOnce(new Error('check failed'));
     await checkPushTokenRevocation();
     expect(mockLoggerCaptureException).toHaveBeenCalled();
+  });
+
+  // Sentry MERA-APP-5G: a bare "Network request failed" is the same
+  // transient-connectivity signal the push-token-fetch fail-streak above
+  // already treats gently — this task reruns hourly + on foreground, so a
+  // single network blip self-heals. Downgrade to a breadcrumb instead of
+  // filing a Sentry exception; anything else still reports normally.
+  it('breadcrumbs (does not captureException) on a "Network request failed" error', async () => {
+    mockGetPermissionsAsync.mockRejectedValueOnce(new Error('Network request failed'));
+    await checkPushTokenRevocation();
+    expect(mockLoggerCaptureException).not.toHaveBeenCalled();
+    expect(mockLoggerAddBreadcrumb).toHaveBeenCalled();
+  });
+
+  it('still captures exception when the error is not a network failure', async () => {
+    mockGetPermissionsAsync.mockRejectedValueOnce(new Error('some other failure'));
+    await checkPushTokenRevocation();
+    expect(mockLoggerCaptureException).toHaveBeenCalled();
+    expect(mockLoggerAddBreadcrumb).not.toHaveBeenCalled();
   });
 
   it('skips re-register when granted but token already cached (line 414 false branch)', async () => {

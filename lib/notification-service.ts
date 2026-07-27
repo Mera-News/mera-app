@@ -444,9 +444,27 @@ export async function checkPushTokenRevocation(): Promise<void> {
             }
         }
     } catch (err) {
-        logger.captureException(err, {
-            tags: { service: 'notification-service', method: 'checkPushTokenRevocation' },
-        });
+        // A bare "Network request failed" here (Sentry MERA-APP-5G) is the
+        // same transient-connectivity signal `registerForPushNotificationsAsync`
+        // above already treats with a fail-streak before escalating — this
+        // call runs on a 1-hour schedule + app-foreground, so a lost network
+        // blip is expected and self-heals on the next tick. Downgrade that
+        // specific case to a breadcrumb rather than a Sentry exception; any
+        // other failure (e.g. a real AccountService/GraphQL error) still gets
+        // reported normally since that's a real signal.
+        const message = err instanceof Error ? err.message : String(err);
+        if (message.includes('Network request failed')) {
+            logger.addBreadcrumb(
+                'checkPushTokenRevocation: network request failed — will retry next tick',
+                'notification-service',
+                { message },
+                'warning',
+            );
+        } else {
+            logger.captureException(err, {
+                tags: { service: 'notification-service', method: 'checkPushTokenRevocation' },
+            });
+        }
     }
 }
 

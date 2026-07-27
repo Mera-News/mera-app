@@ -684,4 +684,74 @@ describe('useForYouStore', () => {
     it('hydrateMetadataFromDb does not throw to the caller (error is swallowed)', async () => {
         await expect(useForYouStore.getState().hydrateMetadataFromDb()).resolves.toBeUndefined();
     });
+
+    // ── Sentry MERA-APP-4W: distinguishing `method` tags ─────────────────────
+    // The Sentry issue was mistitled "removeSuggestion" because every
+    // persistFeedMetadata-failure capture in this file shared the same bare
+    // `{ store: 'for-you-store' }` tag, so Sentry merged unrelated failures
+    // into one issue. Each capture site must now carry a distinct `method`
+    // tag so the real failing operation is visible.
+    describe('captureException tags are distinguishable per call site', () => {
+        it('setCounts tags its capture with method: setCounts', async () => {
+            mockPersistFeedMetadata.mockRejectedValueOnce(new Error('fail'));
+            useForYouStore.getState().setCounts(1, 0);
+            await new Promise((r) => setImmediate(r));
+            expect(logger.captureException).toHaveBeenCalledWith(
+                expect.any(Error),
+                expect.objectContaining({
+                    tags: expect.objectContaining({ store: 'for-you-store', method: 'setCounts' }),
+                }),
+            );
+        });
+
+        it('setHasGeneratedTopics tags its capture with method: setHasGeneratedTopics', async () => {
+            mockPersistFeedMetadata.mockRejectedValueOnce(new Error('fail'));
+            useForYouStore.getState().setHasGeneratedTopics(true);
+            await new Promise((r) => setImmediate(r));
+            expect(logger.captureException).toHaveBeenCalledWith(
+                expect.any(Error),
+                expect.objectContaining({
+                    tags: expect.objectContaining({
+                        store: 'for-you-store',
+                        method: 'setHasGeneratedTopics',
+                    }),
+                }),
+            );
+        });
+
+        it('removeSuggestion tags its capture with method: removeSuggestion (not the bare shared tag)', async () => {
+            mockPersistFeedMetadata.mockRejectedValueOnce(new Error('fail'));
+            const s1 = makeSuggestion({ _id: 'srv-1', relevance: 0.9, relevanceGenerationCompleted: true });
+            useForYouStore.setState({ suggestions: [s1], relevantArticleCount: 1, articleCount: 1 });
+            useForYouStore.getState().removeSuggestion('srv-1');
+            await new Promise((r) => setImmediate(r));
+            expect(logger.captureException).toHaveBeenCalledWith(
+                expect.any(Error),
+                expect.objectContaining({
+                    tags: expect.objectContaining({
+                        store: 'for-you-store',
+                        method: 'removeSuggestion',
+                    }),
+                }),
+            );
+        });
+
+        it('markProcessingRunFinished and removeSuggestion produce different method tags', async () => {
+            mockPersistFeedMetadata.mockRejectedValueOnce(new Error('fail-1'));
+            useForYouStore.getState().markProcessingRunFinished();
+            await new Promise((r) => setImmediate(r));
+
+            mockPersistFeedMetadata.mockRejectedValueOnce(new Error('fail-2'));
+            const s1 = makeSuggestion({ _id: 'srv-1', relevance: 0.9, relevanceGenerationCompleted: true });
+            useForYouStore.setState({ suggestions: [s1], relevantArticleCount: 1, articleCount: 1 });
+            useForYouStore.getState().removeSuggestion('srv-1');
+            await new Promise((r) => setImmediate(r));
+
+            const calls = (logger.captureException as jest.Mock).mock.calls;
+            const methods = calls.map((c) => c[1]?.tags?.method);
+            expect(methods).toContain('markProcessingRunFinished');
+            expect(methods).toContain('removeSuggestion');
+            expect(methods[0]).not.toBe(methods[1]);
+        });
+    });
 });

@@ -86,6 +86,17 @@ describe('secureStore.setItem (sync)', () => {
     secureStore.setItem('syncKey', 'syncVal');
     expect(mockSetItem).toHaveBeenCalledWith('syncKey', 'syncVal', EXPECTED_OPTS);
   });
+
+  // Sentry MERA-APP-5J: better-auth's expoClient calls this synchronously
+  // with no try/catch of its own. A locked keychain (pre-first-unlock
+  // background wake) must degrade silently rather than throw into
+  // better-auth.
+  it('does not throw when the underlying sync setItem throws', () => {
+    mockSetItem.mockImplementationOnce(() => {
+      throw new Error('keychain locked');
+    });
+    expect(() => secureStore.setItem('syncKey', 'syncVal')).not.toThrow();
+  });
 });
 
 describe('secureStore.getItem (sync)', () => {
@@ -101,6 +112,19 @@ describe('secureStore.getItem (sync)', () => {
   it('returns null when item is absent', () => {
     mockGetItem.mockReturnValueOnce(null);
     expect(secureStore.getItem('absent')).toBeNull();
+  });
+
+  // Sentry MERA-APP-5J: same rationale as setItem above — a synchronous
+  // keychain-locked throw must degrade to "nothing cached" (null), not an
+  // uncaught exception straight into better-auth.
+  it('returns null (does not throw) when the underlying sync getItem throws', () => {
+    mockGetItem.mockImplementationOnce(() => {
+      throw new Error('keychain locked');
+    });
+    expect(() => {
+      const result = secureStore.getItem('syncKey');
+      expect(result).toBeNull();
+    }).not.toThrow();
   });
 });
 

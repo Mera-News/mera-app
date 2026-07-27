@@ -126,30 +126,59 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             return;
         }
 
-        // Log network errors to Sentry
-        logger.captureException(error, {
-            tags: { source: 'apollo-error-link', type: 'network' },
-            extra: {
-                operationName: operation.operationName,
-                statusCode,
-            },
-        });
+        // Read once so the Sentry-capture decision and the toast decision
+        // below can't disagree with each other.
+        //
+        // `isConnected` is a plain boolean, not a tri-state — it is seeded to
+        // `NetInfo !== null` at store-init (see network-store.ts), i.e.
+        // "assume online" for as long as the NetInfo module loaded, and only
+        // flips to a real reading once `NetInfo.fetch()` / `addEventListener`
+        // resolve. That means the brief pre-fetch() window where we don't yet
+        // *know* connectivity already reads `true` here, which is exactly the
+        // behavior we want: an unknown state must still report, only a
+        // confirmed-offline device should suppress. Gate on `=== false`
+        // specifically (not `!isConnected`) so that window, and any future
+        // genuinely-unknown value, falls on the "report" side.
+        const isConnected = useNetworkStore.getState().isConnected;
+
+        if (isConnected === false) {
+            // Known offline: every no-cache query fails the same way in
+            // airplane mode (there's no cache to fall back to), so without
+            // this gate a screen with a few background queries files a
+            // Sentry exception per query, per offline user, for as long as
+            // they're offline (Sentry MERA-APP-5F/4P/4N, 42 events, stack
+            // frames all landing in FileReader/whatwg-fetch/Headers —
+            // fetch-polyfill internals, not app code). Degrade to a
+            // breadcrumb instead — the offline banners (Feed/Dashboard
+            // headers) already cover this state for the user, and the
+            // breadcrumb is enough for diagnostics if a nearby real error
+            // needs the context.
+            logger.addBreadcrumb(
+                'Network error while offline — Sentry capture suppressed',
+                'apollo-error-link',
+                { operationName: operation.operationName },
+                'info',
+            );
+        } else {
+            // Online (or not yet known to be otherwise) — a real signal, log
+            // it as before.
+            logger.captureException(error, {
+                tags: { source: 'apollo-error-link', type: 'network' },
+                extra: {
+                    operationName: operation.operationName,
+                    statusCode,
+                },
+            });
+        }
 
         // Show a user-friendly toast — but only when we're actually online.
         // Every no-cache query fails the same way while offline (there's no
         // cache to fall back to), so without this gate a screen with a few
         // background queries spams several toasts per second in airplane
         // mode. The offline banners (Feed/Dashboard headers) already cover
-        // that state; a breadcrumb is enough here for diagnostics.
-        if (useNetworkStore.getState().isConnected) {
+        // that state; the breadcrumb above is enough here for diagnostics.
+        if (isConnected) {
             toastManager.showNetworkError();
-        } else {
-            logger.addBreadcrumb(
-                'Network error while offline — toast suppressed',
-                'apollo-error-link',
-                { operationName: operation.operationName },
-                'info',
-            );
         }
     }
 });

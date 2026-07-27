@@ -277,7 +277,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: relevant,
             hasGeneratedTopics: state.hasGeneratedTopics,
             lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'setCounts' },
+        }));
     },
 
     setHasGeneratedTopics: (value) => {
@@ -288,7 +290,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: state.relevantArticleCount,
             hasGeneratedTopics: value,
             lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'setHasGeneratedTopics' },
+        }));
     },
 
     setUnscoredCount: (count) => set({ unscoredCount: count }),
@@ -315,7 +319,16 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: nextRelevantCount,
             hasGeneratedTopics: state.hasGeneratedTopics,
             lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            // Sentry MERA-APP-4W was titled "removeSuggestion", but
+            // `removeSuggestion` itself is pure state math and can't throw —
+            // the actual failure is always this trailing persistFeedMetadata
+            // (WatermelonDB setSetting) write. This tag is what makes that
+            // visible instead of merging with every other bare
+            // `{ store: 'for-you-store' }` capture in this file into one
+            // indistinguishable Sentry issue.
+            tags: { store: 'for-you-store', method: 'removeSuggestion' },
+        }));
     },
 
     startDeviceProcessing: (total) => set({
@@ -382,7 +395,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: state.relevantArticleCount,
             hasGeneratedTopics: state.hasGeneratedTopics,
             lastProcessingRunFinishedAt: ts,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'markProcessingRunFinished' },
+        }));
     },
 
     setFeedNeedsRefresh: (val) => set({ feedNeedsRefresh: val }),
@@ -403,7 +418,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 lastProcessingRunFinishedAt: null,
             });
         } catch (err) {
-            logger.captureException(err, { tags: { store: 'for-you-store' } });
+            logger.captureException(err, {
+                tags: { store: 'for-you-store', method: 'clearData' },
+            });
         }
     },
 
@@ -419,7 +436,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 relevantArticleCount: 0,
                 hasGeneratedTopics,
                 lastProcessingRunFinishedAt: null,
-            }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+            }).catch((err) => logger.captureException(err, {
+                tags: { store: 'for-you-store', method: 'pruneOrphanedData:fullClear' },
+            }));
             return;
         }
 
@@ -440,7 +459,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 relevantArticleCount: relevantCount,
                 hasGeneratedTopics: state.hasGeneratedTopics,
                 lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-            }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+            }).catch((err) => logger.captureException(err, {
+                tags: { store: 'for-you-store', method: 'pruneOrphanedData:reload' },
+            }));
         }
     },
 
