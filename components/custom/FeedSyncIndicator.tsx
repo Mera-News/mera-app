@@ -133,8 +133,15 @@ export interface FeedSyncRefresh {
  * @param onPullStart Fired on every pull, before any guard — the screens pass
  *   their collapsible-header `reveal()` so the status chrome is on screen even
  *   when the pull is a no-op.
+ * @param onPullAccepted Fired only once the pull has cleared the offline +
+ *   auth-paused guards — i.e. a sync really is going to run. The Feed tab hangs
+ *   its force card-eviction sweep here so an offline pull can't wipe every card
+ *   with no sync able to refill it.
  */
-export function useFeedSyncRefresh(onPullStart?: () => void): FeedSyncRefresh {
+export function useFeedSyncRefresh(
+    onPullStart?: () => void,
+    onPullAccepted?: () => void,
+): FeedSyncRefresh {
     const schedulerRunning = useFeedSyncRunning();
     const [userPulled, setUserPulled] = useState(false);
 
@@ -150,6 +157,10 @@ export function useFeedSyncRefresh(onPullStart?: () => void): FeedSyncRefresh {
     // a caller passes an inline closure.
     const onPullStartRef = useRef(onPullStart);
     onPullStartRef.current = onPullStart;
+
+    // Same rationale as onPullStartRef — must not enter onRefresh's dep array.
+    const onPullAcceptedRef = useRef(onPullAccepted);
+    onPullAcceptedRef.current = onPullAccepted;
 
     const onRefresh = useCallback(() => {
         onPullStartRef.current?.();
@@ -173,6 +184,7 @@ export function useFeedSyncRefresh(onPullStart?: () => void): FeedSyncRefresh {
 
         // Past the guards, this pull owns the spinner until the run ends.
         setUserPulled(true);
+        onPullAcceptedRef.current?.();
 
         // Already running: skip the trigger entirely — a sync genuinely is in
         // flight, so holding the control down is honest, and re-triggering

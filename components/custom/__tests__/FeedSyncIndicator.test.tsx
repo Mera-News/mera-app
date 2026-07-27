@@ -105,8 +105,14 @@ function isVisible(getByTestId: (id: string) => any): boolean {
 
 /** Minimal harness so `useFeedSyncRefresh` can be exercised without a screen. */
 let lastRefresh: { refreshing: boolean; onRefresh: () => void };
-function RefreshProbe({ onPullStart }: { onPullStart?: () => void }) {
-    lastRefresh = useFeedSyncRefresh(onPullStart);
+function RefreshProbe({
+    onPullStart,
+    onPullAccepted,
+}: {
+    onPullStart?: () => void;
+    onPullAccepted?: () => void;
+}) {
+    lastRefresh = useFeedSyncRefresh(onPullStart, onPullAccepted);
     return null;
 }
 
@@ -268,6 +274,64 @@ describe('useFeedSyncRefresh', () => {
 
         expect(onPullStart).toHaveBeenCalledTimes(1);
         expect(trigger).not.toHaveBeenCalled();
+    });
+
+    it('calls onPullAccepted once the pull has cleared both guards', () => {
+        const onPullAccepted = jest.fn();
+        jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+
+        render(<RefreshProbe onPullAccepted={onPullAccepted} />);
+        act(() => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(onPullAccepted).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call onPullAccepted when offline', () => {
+        const onPullAccepted = jest.fn();
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        useNetworkStore.setState({ isConnected: false });
+
+        render(<RefreshProbe onPullAccepted={onPullAccepted} />);
+        act(() => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(onPullAccepted).not.toHaveBeenCalled();
+        expect(trigger).not.toHaveBeenCalled();
+    });
+
+    it('does not call onPullAccepted when feed-sync is paused by the auth breaker', () => {
+        const onPullAccepted = jest.fn();
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        AppScheduler.pauseTask('feed-sync');
+
+        render(<RefreshProbe onPullAccepted={onPullAccepted} />);
+        act(() => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(onPullAccepted).not.toHaveBeenCalled();
+        expect(trigger).not.toHaveBeenCalled();
+    });
+
+    it('still works when called with a single argument (onPullAccepted omitted)', () => {
+        const trigger = jest
+            .spyOn(AppScheduler, 'trigger')
+            .mockImplementation(async (name: string) => {
+                useSchedulerStore.getState().reserveTask(name);
+            });
+
+        render(<RefreshProbe />);
+        expect(() => {
+            act(() => {
+                lastRefresh.onRefresh();
+            });
+        }).not.toThrow();
+
+        expect(trigger).toHaveBeenCalledWith('feed-sync');
+        expect(lastRefresh.refreshing).toBe(true);
     });
 
     it('does not flash the loader when the pull is a no-op — offline', () => {

@@ -58,6 +58,13 @@ export interface FeedListItem {
   /** Total members in the collapsed story (rep included). `> 1` ⇒ "+N
    *  sources". */
   memberCount: number;
+  /** Every member's `articleId` (rep included), in group order. This is the
+   *  only STABLE story identity the list has: `id` is whichever article
+   *  currently fronts the group, and a group formed by title-Jaccard alone
+   *  (no `stableClusterId`) re-elects that rep whenever a fresher member
+   *  arrives. The feed-order store's eviction tombstones key on this set so an
+   *  evicted story can't walk back in under a new representative. */
+  memberIds: string[];
   /** Whether the representative is a breaking story. */
   breaking: boolean;
   /** Frozen composite score at build time (`feedScore` at the injected
@@ -206,6 +213,9 @@ export function buildFeedList(
       id: rep.articleId,
       suggestion: rep,
       memberCount: g.length,
+      // articleId, not `_id` — the tombstone/rep-switch keys downstream are
+      // compared against future `FeedListItem.id`s, which are article ids.
+      memberIds: g.map((m) => m.s.articleId),
       breaking: isBreaking(rep),
       score: feedScore(rep, nowMs),
     });
