@@ -1,5 +1,8 @@
 import { gql } from '@apollo/client';
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
+import { StatusCodes } from 'http-status-codes';
 import client from './apollo-client';
+import { recordAuthFailure } from './auth-failure-breaker';
 import {
     ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
@@ -530,6 +533,37 @@ export type {
 // the server a Jina embed + vector search, so parallel batches would spike load.
 const MAX_TOPICS_PER_BATCH = 150;
 
+interface UnauthenticatedLikeError {
+    statusCode?: number;
+    response?: { status?: number };
+    networkError?: { statusCode?: number };
+}
+
+/**
+ * True when `error` is a 401 / UNAUTHENTICATED, in any of the shapes Apollo
+ * Client v4 surfaces it in (GraphQL extensions, network error, wrapped network
+ * error). Mirrors isNotSubscribedError's multi-shape approach so the two gates
+ * can't drift.
+ */
+function isUnauthenticatedError(error: unknown): boolean {
+    if (CombinedGraphQLErrors.is(error)) {
+        return error.errors.some((e) => {
+            const ext = e.extensions as
+                | { code?: string; statusCode?: number }
+                | undefined;
+            return (
+                ext?.code === 'UNAUTHENTICATED' ||
+                ext?.statusCode === StatusCodes.UNAUTHORIZED
+            );
+        });
+    }
+
+    const ne = error as UnauthenticatedLikeError | undefined;
+    const status =
+        ne?.statusCode ?? ne?.response?.status ?? ne?.networkError?.statusCode;
+    return status === StatusCodes.UNAUTHORIZED;
+}
+
 // Article Service Class
 export class ArticleService {
     /**
@@ -551,6 +585,48 @@ export class ArticleService {
         return this.getFloorOfHour(date).toISOString();
     }
 
+    /**
+     * One error-reporting policy for every read query below. Extracted because
+     * the 401 rule has to be identical at a dozen catch sites — copies of it
+     * would drift, and a single drifting copy is enough to re-open the storm.
+     *
+     * A 401 / UNAUTHENTICATED is NOT a per-request Sentry event. One dead
+     * session makes every query in the app fail the same way, so capturing each
+     * one buys hundreds of duplicate events for a single root cause (this is
+     * MERA-APP-3P/49/5P: 324 events from one user). Leave a breadcrumb and let
+     * the auth breaker's single trip event be the signal — the same policy the
+     * Apollo error link applies (see lib/apollo-client.ts).
+     *
+     * recordAuthFailure() is called here as well as in the error link. That
+     * double-counts a failure the link already saw, which only makes the
+     * breaker trip a request earlier — harmless now that tripping repairs
+     * before it pauses anything — and it keeps the policy correct for any
+     * rejection that never passes through the link.
+     *
+     * Non-401 errors keep the unconditional capture they always had.
+     */
+    private static reportQueryError(
+        method: string,
+        error: unknown,
+        extra?: Record<string, unknown>,
+    ): void {
+        if (isUnauthenticatedError(error)) {
+            logger.addBreadcrumb(
+                `[ArticleService] ${method} UNAUTHENTICATED`,
+                'article-service',
+                { method, ...extra },
+                'warning',
+            );
+            recordAuthFailure();
+            return;
+        }
+
+        logger.captureException(error, {
+            tags: { service: 'article-service', method },
+            ...(extra ? { extra } : {}),
+        });
+    }
+
     static async getRecentArticleCount(): Promise<number> {
         try {
             const { data } = await client.query<{ recentArticleCount: number }>({
@@ -559,9 +635,7 @@ export class ArticleService {
             });
             return data?.recentArticleCount ?? 0;
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getRecentArticleCount' },
-            });
+            this.reportQueryError('getRecentArticleCount', error);
             return 0;
         }
     }
@@ -631,16 +705,42 @@ export class ArticleService {
         query: PersonaQueryInput,
     ): Promise<PersonaQueryResult> {
         try {
-            const { data } = await client.query<{
-                articleIdsForPersona: PersonaQueryResult;
-            }>({
-                query: GET_ARTICLE_IDS_FOR_PERSONA,
-                variables: { query },
-                fetchPolicy: 'no-cache',
-            });
-            return (
-                data?.articleIdsForPersona ?? { topicResults: [], headlineResults: [] }
-            );
+            // Same server cap as articleIdsForTopics (MAX_TOPICS_PER_REQUEST,
+            // default 200 and env-overridable). buildRetrievalProfile slices to
+            // 200 today, so nothing exceeds it — but that is zero headroom, and
+            // "219 exceeds the maximum of 200" was a 2209-event Sentry issue
+            // before the slice landed. Batch here so a lower server cap, or a
+            // caller that forgets to slice, degrades instead of failing.
+            if (query.topics.length <= MAX_TOPICS_PER_BATCH) {
+                return await this.queryPersonaBatch(query);
+            }
+
+            const topicResults: PersonaQueryResult['topicResults'] = [];
+            const headlineResults: PersonaQueryResult['headlineResults'] = [];
+            const seenTopics = new Set<string>();
+
+            for (let i = 0; i < query.topics.length; i += MAX_TOPICS_PER_BATCH) {
+                const batch: PersonaQueryInput = {
+                    ...query,
+                    topics: query.topics.slice(i, i + MAX_TOPICS_PER_BATCH),
+                    // Headline scopes are query-level, not per-topic: repeating
+                    // them on every chunk would re-run the same scope lookup and
+                    // multiply headlineResults. First chunk only.
+                    topHeadlines: i === 0 ? query.topHeadlines : undefined,
+                };
+                // Sequential, matching the topics path — each cold topic costs
+                // the server a Jina embed + vector search.
+                const result = await this.queryPersonaBatch(batch);
+                // Preserve order; de-dup by topicText so a topic never appears twice.
+                for (const topicResult of result.topicResults) {
+                    if (seenTopics.has(topicResult.topicText)) continue;
+                    seenTopics.add(topicResult.topicText);
+                    topicResults.push(topicResult);
+                }
+                headlineResults.push(...result.headlineResults);
+            }
+
+            return { topicResults, headlineResults };
         } catch (error) {
             // The For You feed is the sole subscription gate — surface the paywall
             // here, scoped to For You (mirrors getArticleIdsForTopics).
@@ -656,6 +756,27 @@ export class ArticleService {
             );
             throw error;
         }
+    }
+
+    /**
+     * Single-request articleIdsForPersona call (one batch of ≤ server cap topics).
+     *
+     * NOTE: `query.maxArticles` is a cap on the TOTAL ids across topicResults,
+     * so a chunked call applies it once per chunk. No caller sets it today
+     * (feed-sync-steps builds the query without it), so splitting it across
+     * chunks would be speculative machinery — revisit if one ever does.
+     */
+    private static async queryPersonaBatch(
+        query: PersonaQueryInput,
+    ): Promise<PersonaQueryResult> {
+        const { data } = await client.query<{
+            articleIdsForPersona: PersonaQueryResult;
+        }>({
+            query: GET_ARTICLE_IDS_FOR_PERSONA,
+            variables: { query },
+            fetchPolicy: 'no-cache',
+        });
+        return data?.articleIdsForPersona ?? { topicResults: [], headlineResults: [] };
     }
 
     /** Single-request articleIdsForTopics call (one batch of ≤ server cap topics). */
@@ -769,10 +890,7 @@ export class ArticleService {
             });
             return data?.relatedArticles ?? [];
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getRelatedArticles' },
-                extra: { articleId, stableClusterId },
-            });
+            this.reportQueryError('getRelatedArticles', error, { articleId, stableClusterId });
             throw error;
         }
     }
@@ -791,10 +909,7 @@ export class ArticleService {
             });
             return data?.articleById ?? null;
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticleById' },
-                extra: { articleId },
-            });
+            this.reportQueryError('getArticleById', error, { articleId });
             throw error;
         }
     }
@@ -818,10 +933,7 @@ export class ArticleService {
 
             return data?.articlesForCluster || [];
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticlesForCluster' },
-                extra: { clusterId, articleIdsToExclude },
-            });
+            this.reportQueryError('getArticlesForCluster', error, { clusterId, articleIdsToExclude });
             throw error;
         }
     }
@@ -849,10 +961,7 @@ export class ArticleService {
                 pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
             };
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticlesForPublicationSource' },
-                extra: { publicationSourceId },
-            });
+            this.reportQueryError('getArticlesForPublicationSource', error, { publicationSourceId });
             throw error;
         }
     }
@@ -882,10 +991,7 @@ export class ArticleService {
                 pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
             };
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticlesForCountry' },
-                extra: { countryCode },
-            });
+            this.reportQueryError('getArticlesForCountry', error, { countryCode });
             throw error;
         }
     }
@@ -918,10 +1024,7 @@ export class ArticleService {
                 pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
             };
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getTopHeadlinesForCountry' },
-                extra: { countryCode },
-            });
+            this.reportQueryError('getTopHeadlinesForCountry', error, { countryCode });
             throw error;
         }
     }
@@ -951,10 +1054,7 @@ export class ArticleService {
                 pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
             };
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getArticlesForPublisher' },
-                extra: { newsPublisherId },
-            });
+            this.reportQueryError('getArticlesForPublisher', error, { newsPublisherId });
             throw error;
         }
     }
@@ -992,10 +1092,7 @@ export class ArticleService {
                 },
             };
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getNewsClusters' },
-                extra: { options },
-            });
+            this.reportQueryError('getNewsClusters', error, { options });
             throw error;
         }
     }
@@ -1028,10 +1125,7 @@ export class ArticleService {
                 },
             };
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getNewsClustersForTopicText' },
-                extra: { topicText },
-            });
+            this.reportQueryError('getNewsClustersForTopicText', error, { topicText });
             throw error;
         }
     }
@@ -1061,10 +1155,7 @@ export class ArticleService {
 
             return data.newsClusterForUser;
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getNewsClusterForUser' },
-                extra: { clusterId },
-            });
+            this.reportQueryError('getNewsClusterForUser', error, { clusterId });
             throw error;
         }
     }
@@ -1092,10 +1183,7 @@ export class ArticleService {
 
             return data?.newsClusterForArticle ?? null;
         } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'article-service', method: 'getNewsClusterForArticle' },
-                extra: { articleId },
-            });
+            this.reportQueryError('getNewsClusterForArticle', error, { articleId });
             throw error;
         }
     }

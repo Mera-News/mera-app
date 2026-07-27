@@ -12,6 +12,15 @@ jest.mock('@/lib/apollo-client', () => ({
     },
 }));
 
+// The 401 policy calls into the auth breaker; stub it so the tests observe the
+// call instead of driving real scheduler/auth-client side effects.
+const mockRecordAuthFailure = jest.fn();
+jest.mock('@/lib/auth-failure-breaker', () => ({
+    __esModule: true,
+    recordAuthFailure: (...a: any[]) => mockRecordAuthFailure(...a),
+    recordAuthSuccess: jest.fn(),
+}));
+
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
     default: {
@@ -25,6 +34,7 @@ jest.mock('@/lib/logger', () => ({
     },
 }));
 
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import ArticleService from '../article-service';
 import logger from '@/lib/logger';
 
@@ -303,6 +313,145 @@ describe('ArticleService.getArticleIdsForTopics', () => {
         expect(mockQuery).toHaveBeenCalledTimes(2);
         expect(mockQuery.mock.calls[0][0].variables.limitPerTopic).toBe(7);
         expect(mockQuery.mock.calls[1][0].variables.limitPerTopic).toBe(7);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getArticleIdsForPersona — chunking (defense in depth against the server's
+// MAX_TOPICS_PER_REQUEST cap, which is env-overridable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.getArticleIdsForPersona', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    const personaTopics = (n: number, offset = 0) =>
+        Array.from({ length: n }, (_, i) => ({ text: `t${i + offset}` }));
+
+    const personaResult = (topics: { text: string }[], headlineScopes: string[] = []) => ({
+        data: {
+            articleIdsForPersona: {
+                topicResults: topics.map((t) => ({
+                    topicText: t.text,
+                    articleIds: [`a-${t.text}`],
+                    matchMeta: [],
+                    nextCursor: null,
+                    hasNextPage: false,
+                })),
+                headlineResults: headlineScopes.map((scope) => ({
+                    scope,
+                    countryCode: null,
+                    articleIds: [`h-${scope}`],
+                    clusterSizes: [1],
+                    stableClusterIds: ['sc-1'],
+                })),
+            },
+        },
+    });
+
+    const topHeadlines = { scopes: [{ scope: 'GLOBAL', countryCode: null }], limitPerScope: 5 } as any;
+
+    it('sends a single request when topics ≤ 150', async () => {
+        const topics = personaTopics(150);
+        mockQuery.mockResolvedValueOnce(personaResult(topics));
+
+        await ArticleService.getArticleIdsForPersona({ topics, topHeadlines } as any);
+
+        expect(mockQuery).toHaveBeenCalledTimes(1);
+        expect(mockQuery.mock.calls[0][0].variables.query.topics).toHaveLength(150);
+        expect(mockQuery.mock.calls[0][0].variables.query.topHeadlines).toBe(topHeadlines);
+    });
+
+    it('chunks 219 topics into 2 sequential requests of 150 + 69', async () => {
+        const topics = personaTopics(219);
+        mockQuery.mockResolvedValueOnce(personaResult(topics.slice(0, 150), ['GLOBAL']));
+        mockQuery.mockResolvedValueOnce(personaResult(topics.slice(150)));
+
+        const result = await ArticleService.getArticleIdsForPersona({ topics, topHeadlines } as any);
+
+        expect(mockQuery).toHaveBeenCalledTimes(2);
+        expect(mockQuery.mock.calls[0][0].variables.query.topics).toHaveLength(150);
+        expect(mockQuery.mock.calls[1][0].variables.query.topics).toHaveLength(69);
+        // Merged, order-preserving across both chunks.
+        expect(result.topicResults).toHaveLength(219);
+        expect(result.topicResults.map((r) => r.topicText)).toEqual(topics.map((t) => t.text));
+    });
+
+    it('sends topHeadlines on the FIRST chunk only', async () => {
+        const topics = personaTopics(219);
+        mockQuery.mockResolvedValue(personaResult([]));
+
+        await ArticleService.getArticleIdsForPersona({ topics, topHeadlines } as any);
+
+        // Headline scopes are query-level, not per-topic — repeating them would
+        // multiply headlineResults across chunks.
+        expect(mockQuery.mock.calls[0][0].variables.query.topHeadlines).toBe(topHeadlines);
+        expect(mockQuery.mock.calls[1][0].variables.query.topHeadlines).toBeUndefined();
+    });
+
+    it('concatenates headlineResults and de-dupes topicResults by topicText', async () => {
+        const topics = personaTopics(200);
+        // Chunk 2 echoes a topicText already returned by chunk 1.
+        mockQuery.mockResolvedValueOnce(personaResult([{ text: 't0' }], ['GLOBAL']));
+        mockQuery.mockResolvedValueOnce(personaResult([{ text: 't0' }, { text: 't150' }]));
+
+        const result = await ArticleService.getArticleIdsForPersona({ topics, topHeadlines } as any);
+
+        const t0 = result.topicResults.filter((r) => r.topicText === 't0');
+        expect(t0).toHaveLength(1);
+        expect(t0[0].articleIds).toEqual(['a-t0']); // first occurrence wins
+        expect(result.topicResults.map((r) => r.topicText)).toEqual(['t0', 't150']);
+        expect(result.headlineResults).toHaveLength(1);
+    });
+
+    it('carries the rest of the query (limitPerTopic) onto every chunk', async () => {
+        const topics = personaTopics(160);
+        mockQuery.mockResolvedValue(personaResult([]));
+
+        await ArticleService.getArticleIdsForPersona({ topics, limitPerTopic: 40 } as any);
+
+        expect(mockQuery).toHaveBeenCalledTimes(2);
+        expect(mockQuery.mock.calls[0][0].variables.query.limitPerTopic).toBe(40);
+        expect(mockQuery.mock.calls[1][0].variables.query.limitPerTopic).toBe(40);
+    });
+
+    it('returns the empty shape when data is null', async () => {
+        mockQuery.mockResolvedValueOnce({ data: null });
+        const result = await ArticleService.getArticleIdsForPersona({ topics: [] } as any);
+        expect(result).toEqual({ topicResults: [], headlineResults: [] });
+    });
+
+    it('re-throws on error and leaves a breadcrumb (no duplicate captureException)', async () => {
+        const err = new Error('persona query failed');
+        mockQuery.mockRejectedValueOnce(err);
+
+        await expect(
+            ArticleService.getArticleIdsForPersona({ topics: personaTopics(1) } as any),
+        ).rejects.toThrow('persona query failed');
+
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getArticleIdsForPersona FAILED'),
+            'article-service',
+            expect.objectContaining({ topicCount: 1, method: 'getArticleIdsForPersona' }),
+            'warning',
+        );
+    });
+
+    it('reports the FULL topic count on a mid-chunk failure', async () => {
+        const topics = personaTopics(219);
+        mockQuery.mockResolvedValueOnce(personaResult(topics.slice(0, 150)));
+        mockQuery.mockRejectedValueOnce(new Error('chunk 2 failed'));
+
+        await expect(
+            ArticleService.getArticleIdsForPersona({ topics } as any),
+        ).rejects.toThrow('chunk 2 failed');
+
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getArticleIdsForPersona FAILED'),
+            'article-service',
+            expect.objectContaining({ topicCount: 219 }),
+            'warning',
+        );
     });
 });
 
@@ -855,6 +1004,46 @@ describe('ArticleService.getTopHeadlinesForCountry', () => {
                 tags: { service: 'article-service', method: 'getTopHeadlinesForCountry' },
             }),
         );
+    });
+
+    // ── 401 policy: a dead session fails every query in the app the same way,
+    //    so each one must NOT become its own Sentry event (MERA-APP-3P/49/5P
+    //    was 324 of them). Breadcrumb + breaker, never captureException. ─────
+    it('does not capture a network 401 to Sentry — breadcrumb + recordAuthFailure', async () => {
+        mockQuery.mockRejectedValueOnce(Object.assign(new Error('Unauthorized'), { statusCode: 401 }));
+
+        await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow('Unauthorized');
+
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getTopHeadlinesForCountry UNAUTHENTICATED'),
+            'article-service',
+            expect.objectContaining({ method: 'getTopHeadlinesForCountry', countryCode: 'USA' }),
+            'warning',
+        );
+    });
+
+    it('treats a GraphQL UNAUTHENTICATED the same as a network 401', async () => {
+        mockQuery.mockRejectedValueOnce(
+            new CombinedGraphQLErrors({
+                data: null,
+                errors: [{ message: 'Unauthorized', extensions: { code: 'UNAUTHENTICATED' } }],
+            }),
+        );
+
+        await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow();
+
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+    });
+
+    it('still captures non-401 network errors', async () => {
+        mockQuery.mockRejectedValueOnce(Object.assign(new Error('Server error'), { statusCode: 500 }));
+
+        await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow('Server error');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalled();
+        expect(mockRecordAuthFailure).not.toHaveBeenCalled();
     });
 });
 
