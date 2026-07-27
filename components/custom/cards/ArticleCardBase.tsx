@@ -38,9 +38,9 @@ export interface ArticleCardBaseProps {
   /** Dims the whole card (~0.55 opacity) — used to fade already-opened rows in
    *  the Earlier zone. No visual change when undefined. */
   dimmed?: boolean;
-  /** Marks the card as already-read — shows a small eye icon in the meta row
-   *  next to the time group, instead of dimming. The Dashboard surfaces use
-   *  this. */
+  /** Marks the card as already-read. Draws NO indicator — the eye glyph was
+   *  deliberately removed — it only suppresses the NEW badge in the meta row.
+   *  The seen mechanism itself is untouched. The Dashboard surfaces use this. */
   read?: boolean;
   /** Renders as a "floating" neumorphic card instead of the default `Card`
    *  chrome: rounded-2xl, a hairline low-opacity border, a subtle drop shadow,
