@@ -17,6 +17,12 @@ export interface TaskContext {
   signal: AbortSignal;
   reportProgress: (progress: TaskProgress) => void;
   log: (message: string) => void;
+  /** Declare that this run did no real work (an early return, an abort, a
+   *  guard that skipped the whole cycle). The runner still marks the job
+   *  completed, but does NOT stamp `lastRun` — so the task's frequency gate
+   *  isn't armed off a run that accomplished nothing and the next tick /
+   *  foreground can retry immediately. */
+  markNoOp: () => void;
 }
 
 export interface TaskProgress {

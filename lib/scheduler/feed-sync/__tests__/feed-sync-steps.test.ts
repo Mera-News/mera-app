@@ -116,6 +116,7 @@ function makeCtx(aborted = false) {
     signal: controller.signal,
     reportProgress: jest.fn(),
     log: jest.fn(),
+    markNoOp: jest.fn(),
     controller,
   };
 }
@@ -558,6 +559,68 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(1, ['art-1']);
     expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(2, ['art-1'], true);
     expect(mockGateUnscoredForScoring).toHaveBeenCalledTimes(1);
+  });
+
+  it('suppressEnqueue: propagates scores but hands nothing to the pipeline', async () => {
+    // Set while a scoring run is already in flight. Rows stay Unscored and the
+    // pipeline's post-finalize kick re-derives them, so nothing is lost.
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-1'],
+      propagatedCount: 2,
+      heldBackCount: 0,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map([['art-1', ['topic-a']]]),
+      missingIds: ['art-1'],
+    };
+    const opts = makeOpts({ suppressEnqueue: true });
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), opts);
+
+    // Hydration + persistence happened as normal...
+    expect(mockPersistAndLinkV2Suggestions).toHaveBeenCalled();
+    expect(result.insertedCount).toBe(1);
+    // ...the propagation half of the gate still ran (that's the cheap win)...
+    expect(mockGateUnscoredForScoring).toHaveBeenCalled();
+    expect(opts.refreshStore).toHaveBeenCalled();
+    // ...but nothing was dispatched, and the count doesn't lie about it.
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+    expect(result.enqueuedCount).toBe(0);
+  });
+
+  it('suppressEnqueue: skips the trailing tail flush too', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['art-1'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    mockEnqueueCandidates.mockResolvedValue({ deferred: ['art-1'] });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map([['art-1', ['topic-a']]]),
+      missingIds: ['art-1'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts({ suppressEnqueue: true }));
+
+    expect(mockEnqueueCandidates).not.toHaveBeenCalled();
   });
 
   it('does NOT flush a tail when the pipeline deferred nothing', async () => {

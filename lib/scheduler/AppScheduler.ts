@@ -7,8 +7,35 @@ import type { Job, TaskCondition, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import * as runner from './scheduler-runner';
-import { yieldToInteractions } from './idle';
+import { yieldToInteractionsWithTimeout } from './idle';
 import logger from '@/lib/logger';
+
+/** Ceiling on the "let the foreground transition's animations finish first"
+ *  deferral. A leaked InteractionManager handle would otherwise swallow the
+ *  kick entirely; 200ms is below the threshold where a user perceives the sync
+ *  as not having started. */
+export const FOREGROUND_YIELD_TIMEOUT_MS = 200;
+
+/** Cooldown applied to an EXPLICIT foreground event, in place of the task's own
+ *  frequency. A deliberate app-open should sync, not be swallowed by a 60s
+ *  timer the previous (possibly no-op) run armed. Not zero: rapid app-switching
+ *  would otherwise let a user storm the server. */
+export const FOREGROUND_MIN_GAP_MS = 5_000;
+
+/** Budget for the `getJwtToken()` credential pre-flight. Exceeding it passes
+ *  the check optimistically rather than skipping the task — see
+ *  `_checkAuthenticated`. */
+export const AUTH_PREFLIGHT_TIMEOUT_MS = 1_500;
+
+/** Post-hydration settle before the cold-start foreground kick. Long enough for
+ *  the first paint to land, short enough that a cold start still syncs
+ *  promptly. */
+export const COLD_START_SETTLE_MS = 250;
+
+/** Returned by the auth pre-flight race when `getJwtToken()` outlasts its
+ *  budget. A distinct sentinel, not `null` — a timeout and an explicitly-absent
+ *  token mean opposite things here. */
+const AUTH_TIMED_OUT = Symbol('auth-preflight-timeout');
 
 class _AppScheduler {
   private tasks = new Map<string, TaskDefinition>();
@@ -20,6 +47,11 @@ class _AppScheduler {
   // down the scheduler. Used by the auth-failure breaker to stop the feed-sync
   // poll loop once a session looks dead, and resumed once auth recovers.
   private pausedTasks = new Set<string>();
+  // A foreground event that arrives while init() is still awaiting persistence
+  // has no task state to act on yet, so it is recorded here and replayed once
+  // init finishes. Previously such an event was simply dropped — and on a cold
+  // resume that is exactly when it arrives.
+  private pendingForegroundKick = false;
 
   register<T>(definition: TaskDefinition<T>): void {
     this.tasks.set(definition.name, definition as TaskDefinition);
@@ -48,22 +80,46 @@ class _AppScheduler {
     // The mandatory-update gate may suspend us mid-boot (the version check and
     // store hydration race). Don't re-arm the tick/listeners if that happened.
     if (this.suspended) return;
-    const times = await persistence.loadLastRunTimes(this.tasks.keys());
-    useSchedulerStore.getState().loadLastRunTimes(times);
+    // A kick left over from a previous init/dispose cycle is stale — this init
+    // is the new baseline.
+    this.pendingForegroundKick = false;
 
-    await persistence.markStaleCrashedJobs();
-
+    // Register the triggers BEFORE the persistence awaits. Those awaits are a
+    // real window on a cold resume (two DB round-trips), and a foreground event
+    // landing inside it used to be lost outright — the app came back to the
+    // user with no sync until the next 5s tick happened to find the task due.
     this.appStateSubscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') this._onForeground();
+      if (state !== 'active') return;
+      // Last-run times aren't loaded yet, so _onForeground can't judge dueness
+      // correctly. Remember the event and replay it below.
+      if (useSchedulerStore.getState().status === 'initializing') {
+        this.pendingForegroundKick = true;
+        return;
+      }
+      this._onForeground();
     });
 
     this.networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
       if (state.isConnected && !prev.isConnected) this._onNetworkReconnect();
     });
 
+    const times = await persistence.loadLastRunTimes(this.tasks.keys());
+    useSchedulerStore.getState().loadLastRunTimes(times);
+
+    await persistence.markStaleCrashedJobs();
+
+    // The mandatory-update gate can fire during the awaits above (suspend()
+    // already tore the listeners down) — don't re-arm the tick behind its back.
+    if (this.suspended) return;
+
     this.tickInterval = setInterval(() => { void this._tick(); }, 5_000);
     useSchedulerStore.getState().setStatus('running');
     void this._tick();
+
+    if (this.pendingForegroundKick) {
+      this.pendingForegroundKick = false;
+      this._onForeground();
+    }
   }
 
   async trigger(taskName: string, input?: unknown): Promise<void> {
@@ -112,12 +168,14 @@ class _AppScheduler {
    *  and re-foreground the app. */
   onStoresHydrated(): void {
     // A6: let hydration + first paint win the JS thread on cold start. Defer the
-    // initial foreground task kick past pending interactions AND a ~1s settle so
-    // the first render is smooth before feed-sync/inference-recover fire.
-    void yieldToInteractions().then(() => {
+    // initial foreground task kick past pending interactions AND a short settle
+    // so the first render is smooth before feed-sync/inference-recover fire.
+    // Both waits are bounded — the whole point of a cold start is that the user
+    // is looking at an empty feed right now.
+    void yieldToInteractionsWithTimeout(FOREGROUND_YIELD_TIMEOUT_MS).then(() => {
       setTimeout(() => {
         this._onForeground();
-      }, 1_000);
+      }, COLD_START_SETTLE_MS);
     });
   }
 
@@ -156,17 +214,39 @@ class _AppScheduler {
       // best-effort
     }
 
+    // Recover any task whose in-memory 'running' flag outlived its run. The
+    // runner aborts at `task.timeout`, but that setTimeout is frozen while the
+    // app is backgrounded on iOS — so a run interrupted mid-flight never
+    // completes, never fails, and blocks the exclusivity guard forever. A
+    // foreground is the natural place to notice: the freeze is over. The +30s
+    // margin keeps us clear of a run that legitimately finished right at the
+    // timeout. Done BEFORE the yield so the isRunning() checks below see it.
+    for (const task of this.tasks.values()) {
+      const maxAgeMs = (task.timeout ?? 120_000) + 30_000;
+      if (useSchedulerStore.getState().clearStaleRunning(task.name, maxAgeMs)) {
+        logger.warn(
+          `[AppScheduler] cleared a stale 'running' flag on foreground — task=${task.name} (older than ${Math.round(maxAgeMs / 1000)}s)`,
+        );
+      }
+    }
+
     // A6: defer the task-enqueue kick past in-flight interactions so a
     // foreground transition's animations/gestures aren't janked by the sync
-    // work. The auth-breaker reset above stays synchronous.
-    void yieldToInteractions().then(async () => {
+    // work — but only briefly. The auth-breaker reset above stays synchronous.
+    void yieldToInteractionsWithTimeout(FOREGROUND_YIELD_TIMEOUT_MS).then(async () => {
       for (const task of this.tasks.values()) {
         if (this.pausedTasks.has(task.name)) continue;
         if (!task.triggers?.includes('app-foreground')) continue;
         if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
 
         const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
-        const isDue = task.frequency === 0 || (Date.now() - lastRun) >= task.frequency;
+        // An explicit foreground is a user intent, not a timer tick, so the
+        // task's own frequency (60s for feed-sync) is the wrong gate — it gets
+        // armed by runs the user never saw. Fall back to a short floor that
+        // still stops rapid app-switching from storming the server. Tasks with
+        // frequency 0 stay always-due, as everywhere else.
+        const minGap = Math.min(task.frequency, FOREGROUND_MIN_GAP_MS);
+        const isDue = task.frequency === 0 || (Date.now() - lastRun) >= minGap;
         if (!isDue) continue;
 
         if (!(await this._conditionsMet(task))) continue;
@@ -218,6 +298,13 @@ class _AppScheduler {
    *     later) must still be allowed to run offline; `getJwtToken()` would
    *     just fail on the network call anyway. Tasks that truly need
    *     connectivity are also gated by a `{ type: 'network' }` condition.
+   *     Time-boxed: `getJwtToken()` is a network round-trip that can hang on a
+   *     flaky connection, and blocking a foreground sync behind it is worse
+   *     than letting a doomed request through. A TIMEOUT therefore passes
+   *     optimistically — a session that really is dead gets caught by the
+   *     request's own 401 → auth breaker → `needsReauth`, which gate 2 above
+   *     then enforces. An explicit null (or a throw) is a real answer and
+   *     still fails.
    * A failed pre-flight is a quiet skip — no Sentry event, no attempt
    * consumed — mirroring how every other unmet condition behaves in
    * `_conditionsMet` above.
@@ -227,11 +314,23 @@ class _AppScheduler {
     if (useUserStore.getState().needsReauth) return false;
     if (!useNetworkStore.getState().isConnected) return true;
 
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      const jwt = await getJwtToken();
+      const jwt = await Promise.race([
+        getJwtToken(),
+        new Promise<typeof AUTH_TIMED_OUT>((resolve) => {
+          timeoutId = setTimeout(() => resolve(AUTH_TIMED_OUT), AUTH_PREFLIGHT_TIMEOUT_MS);
+        }),
+      ]);
+      if (jwt === AUTH_TIMED_OUT) {
+        logger.info('[AppScheduler] auth pre-flight timed out — proceeding optimistically');
+        return true;
+      }
       return jwt !== null;
     } catch {
       return false;
+    } finally {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
     }
   }
 

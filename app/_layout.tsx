@@ -187,7 +187,7 @@ function AppRoot() {
     // the instant it resolves — the screen re-renders with cached rows
     // without the rest of hydration needing to complete.
     hydrateAllStores()
-      .then(async () => {
+      .then(() => {
         // Post-hydration tasks that need hydrated store state.
         applyLanguage(useAppLanguageStore.getState().appLanguage);
 
@@ -215,11 +215,22 @@ function AppRoot() {
         // Re-register the Expo push token on every boot. This is idempotent —
         // only POSTs to the server when the token has changed vs the cached
         // persona. Handles reinstalls, iOS→Android migrations, and token
-        // rotation events. Awaited before onStoresHydrated so the token is
-        // in memory when the first feed-sync scoring pass runs.
+        // rotation events.
+        //
+        // Deliberately NOT awaited: it is a network POST sitting directly on the
+        // critical path to the first sync, and cold start is exactly when the
+        // user is looking at an empty feed. Tradeoff — `getExpoPushToken()`
+        // reads `userPersona?.expoPushToken`, so on a very first cold start the
+        // scoring run may be minted with a null token and fall back to polling
+        // for its result instead of a push wake-up. Latency now beats a
+        // slightly cheaper first run.
         const { userId } = useUserStore.getState();
         if (userId) {
-          await ensurePushTokenRegistered(userId);
+          void ensurePushTokenRegistered(userId).catch((err) =>
+            logger.captureException(err, {
+              tags: { component: 'RootLayout', method: 'ensurePushTokenRegistered' },
+            }),
+          );
         }
 
         // Treat cold start like an app-foreground event so tasks that

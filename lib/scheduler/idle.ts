@@ -21,6 +21,21 @@ export function yieldToInteractions(): Promise<void> {
 }
 
 /**
+ * `yieldToInteractions` with a hard ceiling. `runAfterInteractions` only fires
+ * once every registered interaction handle is cleared — a leaked handle (a
+ * gesture responder or animation that never completes) means it never fires at
+ * all, and the deferred work is lost silently. Use this wherever the deferral
+ * is a politeness rather than a requirement: we still let interactions win when
+ * they finish promptly, but never wait on them indefinitely.
+ */
+export function yieldToInteractionsWithTimeout(ms: number): Promise<void> {
+  return Promise.race([
+    yieldToInteractions(),
+    new Promise<void>((resolve) => setTimeout(resolve, ms)),
+  ]);
+}
+
+/**
  * Resolve on the next macrotask (setTimeout 0). Lets the JS thread drain pending
  * work (renders, touch handling) between tight loop iterations without waiting
  * for all interactions to settle.

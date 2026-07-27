@@ -30,6 +30,14 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     transaction = null;
   }
 
+  // Set via ctx.markNoOp() by a handler that returned without doing real work
+  // (a guard that skipped the cycle, a mid-run abort). The job still counts as
+  // completed, but `lastRun` is left alone: stamping it would arm the task's
+  // frequency gate off a run that accomplished nothing, so the next tick /
+  // foreground would skip too. That is how a single skipped feed-sync cycle
+  // used to turn into a 60s dead zone repeated indefinitely.
+  let noOp = false;
+
   try {
     await definition.handler(job.input as never, {
       jobId: job.id,
@@ -40,12 +48,13 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
         logger.info(`[${definition.name}] ${msg}`);
         try { transaction?.setAttribute?.('last_log', msg); } catch { /* best-effort */ }
       },
+      markNoOp: () => { noOp = true; },
     });
 
     const now = Date.now();
     await persistence.markCompleted(job.id, now);
-    await persistence.saveLastRun(definition.name, now);
-    useSchedulerStore.getState().setJobCompleted(job.id, now);
+    if (!noOp) await persistence.saveLastRun(definition.name, now);
+    useSchedulerStore.getState().setJobCompleted(job.id, now, !noOp);
     try { transaction?.setStatus?.('ok'); } catch { /* best-effort */ }
 
   } catch (err) {

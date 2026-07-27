@@ -6,16 +6,27 @@ const mockMarkStaleCrashedJobs = jest.fn();
 const mockCreateJob = jest.fn();
 const mockRunnerRun = jest.fn();
 
-// Scheduler-store state
+// Scheduler-store state. `status` is mutable + written by setStatus so the
+// init()-window foreground-replay path can be exercised.
 const mockSchedulerStore = {
-  setStatus: jest.fn(),
+  status: 'initializing' as 'initializing' | 'running' | 'paused',
+  setStatus: jest.fn((s: 'initializing' | 'running' | 'paused') => {
+    mockSchedulerStore.status = s;
+  }),
   loadLastRunTimes: jest.fn(),
   isRunning: jest.fn(() => false),
   getLastRun: jest.fn((): number | null => null),
   addJob: jest.fn(),
   reserveTask: jest.fn(),
   clearTaskReservation: jest.fn(),
+  clearStaleRunning: jest.fn((): boolean => false),
 };
+
+// `yieldToInteractions` falls back to setTimeout(0) unless InteractionManager
+// exposes runAfterInteractions. Tests that need the never-resolving case flip
+// this flag; leaving it off keeps every existing foreground test on the fast
+// path (no 200ms timeout to advance past).
+let mockHangInteractions = false;
 
 // Network-store state + subscription
 let networkSubscribeFn: ((state: any, prev: any) => void) | null = null;
@@ -34,6 +45,14 @@ const mockGetJwtToken = jest.fn();
 jest.mock('react-native', () => ({
   AppState: {
     addEventListener: (...args: any[]) => mockAppStateAddEventListener(...args),
+  },
+  InteractionManager: {
+    // Only defined while `mockHangInteractions` is set — otherwise idle.ts takes its
+    // "InteractionManager unavailable" setTimeout(0) fallback, which is what the
+    // rest of this suite has always exercised.
+    get runAfterInteractions() {
+      return mockHangInteractions ? () => { /* never resolves */ } : undefined;
+    },
   },
 }));
 
@@ -85,7 +104,11 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-import { AppScheduler } from '../AppScheduler';
+import {
+  AppScheduler,
+  AUTH_PREFLIGHT_TIMEOUT_MS,
+  FOREGROUND_YIELD_TIMEOUT_MS,
+} from '../AppScheduler';
 import type { TaskDefinition, TaskContext } from '../scheduler-types';
 
 const NOW = 1_700_000_000_000;
@@ -124,6 +147,10 @@ beforeEach(() => {
   mockRunnerRun.mockResolvedValue(undefined);
   mockSchedulerStore.isRunning.mockReturnValue(false);
   mockSchedulerStore.getLastRun.mockReturnValue(null);
+  mockSchedulerStore.clearStaleRunning.mockReturnValue(false);
+  mockSchedulerStore.status = 'initializing';
+  mockSchedulerStore.setStatus.mockImplementation((s) => { mockSchedulerStore.status = s; });
+  mockHangInteractions = false;
   networkSubscribeFn = null;
   mockNetworkState.isConnected = true;
   mockUserStore.userPersona = { _id: 'p-1' } as any;
@@ -787,6 +814,177 @@ describe('AppScheduler — exclusive reservation (close check-then-run gap)', ()
 
     expect(mockSchedulerStore.reserveTask).toHaveBeenCalledWith('reserve-fail-task');
     expect(mockSchedulerStore.clearTaskReservation).toHaveBeenCalledWith('reserve-fail-task');
+  });
+});
+
+// Registers the task AFTER init() so the init-time _tick() can't be what fires
+// it — every assertion below must be attributable to the foreground path.
+async function initThenRegisterForeground(task: TaskDefinition): Promise<(state: string) => void> {
+  let appStateHandler: ((state: string) => void) | null = null;
+  mockAppStateAddEventListener.mockImplementation((_event: string, handler: (s: string) => void) => {
+    appStateHandler = handler;
+    return { remove: jest.fn() };
+  });
+
+  await AppScheduler.init();
+  jest.clearAllMocks();
+  AppScheduler.register(task);
+  mockCreateJob.mockResolvedValue(makeJob({ taskName: task.name }));
+  mockSchedulerStore.clearStaleRunning.mockReturnValue(false);
+  mockSchedulerStore.isRunning.mockReturnValue(false);
+  mockSchedulerStore.getLastRun.mockReturnValue(null);
+  return appStateHandler as unknown as (state: string) => void;
+}
+
+describe('AppScheduler — bounded foreground kick', () => {
+  it('still fires the task when runAfterInteractions never resolves', async () => {
+    // A leaked InteractionManager handle used to swallow the foreground kick
+    // outright; FOREGROUND_YIELD_TIMEOUT_MS is the escape hatch.
+    mockHangInteractions = true;
+    const appStateHandler = await initThenRegisterForeground(makeTask({
+      name: 'hang-fg-task',
+      frequency: 10_000,
+      triggers: ['app-foreground'],
+    }));
+
+    appStateHandler('active');
+
+    // Nothing yet — the interaction promise is still pending.
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockCreateJob).not.toHaveBeenCalled();
+
+    await jest.advanceTimersByTimeAsync(FOREGROUND_YIELD_TIMEOUT_MS);
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('fires when the task ran 10s ago (the frequency gate no longer applies)', async () => {
+    const appStateHandler = await initThenRegisterForeground(makeTask({
+      name: 'recent-run-fg-task',
+      frequency: 60_000,
+      triggers: ['app-foreground'],
+    }));
+    // 10s ago: inside the 60s frequency (would have been skipped before), but
+    // outside FOREGROUND_MIN_GAP_MS.
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 10_000);
+
+    appStateHandler('active');
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('holds the 5s floor so rapid app-switching cannot storm the server', async () => {
+    const appStateHandler = await initThenRegisterForeground(makeTask({
+      name: 'floor-fg-task',
+      frequency: 60_000,
+      triggers: ['app-foreground'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 2_000);
+
+    appStateHandler('active');
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('keeps frequency-0 tasks always-due on foreground', async () => {
+    const appStateHandler = await initThenRegisterForeground(makeTask({
+      name: 'always-due-fg-task',
+      frequency: 0,
+      triggers: ['app-foreground'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 100);
+
+    appStateHandler('active');
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('replays a foreground event that arrived during init()\'s awaits', async () => {
+    let appStateHandler: ((state: string) => void) | null = null;
+    mockAppStateAddEventListener.mockImplementation((_event: string, handler: (s: string) => void) => {
+      appStateHandler = handler;
+      return { remove: jest.fn() };
+    });
+
+    // Hold loadLastRunTimes open so we can fire the event mid-init.
+    let releaseLoad: (v: Record<string, number>) => void = () => {};
+    mockLoadLastRunTimes.mockReturnValue(
+      new Promise<Record<string, number>>((resolve) => { releaseLoad = resolve; }),
+    );
+
+    // frequency 0 = event-driven only, so the init-time _tick() skips it
+    // entirely and the foreground replay is the only thing that can fire it.
+    AppScheduler.register(makeTask({
+      name: 'replay-fg-task',
+      frequency: 0,
+      triggers: ['app-foreground'],
+    }));
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'replay-fg-task' }));
+
+    const initPromise = AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    // The listener is already registered — this is the whole point of moving it
+    // above the awaits.
+    expect(appStateHandler).not.toBeNull();
+    (appStateHandler as ((state: string) => void) | null)?.('active');
+    await jest.advanceTimersByTimeAsync(0);
+    // Deferred, not dropped: last-run times aren't loaded, so dueness is unknown.
+    expect(mockCreateJob).not.toHaveBeenCalled();
+
+    releaseLoad({});
+    await initPromise;
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('clears a stale running flag on foreground and logs it', async () => {
+    const appStateHandler = await initThenRegisterForeground(makeTask({
+      name: 'stale-flag-task',
+      frequency: 10_000,
+      triggers: ['app-foreground'],
+      timeout: 180_000,
+    }));
+    mockSchedulerStore.clearStaleRunning.mockReturnValue(true);
+
+    appStateHandler('active');
+    await jest.advanceTimersByTimeAsync(0);
+
+    // timeout (180s) + the 30s margin.
+    expect(mockSchedulerStore.clearStaleRunning).toHaveBeenCalledWith('stale-flag-task', 210_000);
+    const loggerMock = jest.requireMock('@/lib/logger').default;
+    expect(loggerMock.warn).toHaveBeenCalledWith(expect.stringContaining("stale 'running' flag"));
+  });
+});
+
+describe('AppScheduler — auth pre-flight time-box', () => {
+  function makeAuthTask(name: string) {
+    return makeTask({ name, frequency: 10_000, conditions: [{ type: 'authenticated' }] });
+  }
+
+  it('passes optimistically when getJwtToken hangs past the budget', async () => {
+    // A hung credential check must not block the sync — a genuinely dead
+    // session is caught by the request's own 401 → breaker → needsReauth.
+    AppScheduler.register(makeAuthTask('auth-hangs'));
+    mockGetJwtToken.mockImplementation(() => new Promise(() => { /* never settles */ }));
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(AUTH_PREFLIGHT_TIMEOUT_MS + 10);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('still blocks on an explicit null even though the check is time-boxed', async () => {
+    AppScheduler.register(makeAuthTask('auth-null-timeboxed'));
+    mockGetJwtToken.mockResolvedValue(null);
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(AUTH_PREFLIGHT_TIMEOUT_MS + 10);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
   });
 });
 
