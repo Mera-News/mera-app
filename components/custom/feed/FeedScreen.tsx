@@ -10,6 +10,10 @@
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
+import FeedSyncIndicator, {
+  useFeedSyncRefresh,
+  useIsFeedProcessing,
+} from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
@@ -39,7 +43,6 @@ import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
-import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import {
   buildFeedList,
   type FeedListItem,
@@ -47,17 +50,13 @@ import {
 import { useFeedOrderStore, type Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useDatabaseReady } from '@/lib/stores/database-store';
-import { useIsConnected } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
-  useForYouAsyncJobPhase,
-  useForYouDeviceProcessing,
   useForYouHasGeneratedTopics,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
-  useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -130,7 +129,6 @@ const FeedScreen: React.FC = () => {
   const isFocused = useIsFocused();
 
   const { isLoading, errorMessage } = useFeedBootstrap();
-  const isConnected = useIsConnected();
 
   // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
   // with the Dashboard tab.
@@ -237,14 +235,13 @@ const FeedScreen: React.FC = () => {
 
   // ── Pull-to-refresh — trigger a feed sync ONLY. Viewed stories are never
   //    removed (they live below the "All Caught Up" divider); the sync's new
-  //    completes flow into the unread block above the divider via ingest. ──
-  const [refreshing, setRefreshing] = useState(false);
-  const handleRefresh = useCallback(async () => {
-    reveal();
-    setRefreshing(true);
-    await AppScheduler.trigger('feed-sync').catch(() => {});
-    setRefreshing(false);
-  }, [reveal]);
+  //    completes flow into the unread block above the divider via ingest.
+  //    `refreshing` now tracks the scheduler's feed-sync flag rather than local
+  //    state: `trigger()` has four silent early-returns, three of which resolve
+  //    in the same tick, so the old setRefreshing(true)/await/false pattern
+  //    collapsed the spinner instantly and the user saw nothing. See
+  //    components/custom/FeedSyncIndicator. ──
+  const { refreshing, onRefresh } = useFeedSyncRefresh(reveal);
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
   // deferred TranslatableDynamic translation as items enter the viewport) —
@@ -285,19 +282,11 @@ const FeedScreen: React.FC = () => {
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
-  const asyncJobPhase = useForYouAsyncJobPhase();
-  const { isDeviceProcessing } = useForYouDeviceProcessing();
-  const syncStatusMessage = useForYouSyncStatusMessage();
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
-
-  const isAnySyncActive =
-    syncStatusMessage !== null &&
-    syncStatusMessage.state !== 'idle' &&
-    syncStatusMessage.state !== 'done' &&
-    syncStatusMessage.state !== 'failed' &&
-    syncStatusMessage.state !== 'paused-offline';
-  const isFeedProcessing =
-    isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+  // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
+  // for the empty-state chain and the header auto-reveal. The header indicator
+  // OR-s in the scheduler flag on its own.
+  const isFeedProcessing = useIsFeedProcessing();
 
   // Auto-reveal the header on an error state or while the list is empty
   // (preparing / no interests yet) so the header chrome is never hidden
@@ -358,7 +347,7 @@ const FeedScreen: React.FC = () => {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={handleRefresh}
+            onRefresh={onRefresh}
             tintColor={REFRESH_TINT}
             colors={[REFRESH_TINT]}
             // Push the spinner below the absolute collapsing header so it isn't
@@ -409,12 +398,10 @@ const FeedScreen: React.FC = () => {
           </HStack>
           <FeedStatsSentence />
 
-          {!isConnected && (
-            <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-1" space="sm">
-              <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-              <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
-            </HStack>
-          )}
+          {/* Shared sync surface — the same indeterminate bar the Dashboard
+              shows, plus the offline notice and the re-auth prompt. It goes up
+              on the same frame as a pull on EITHER screen. */}
+          <FeedSyncIndicator />
         </VStack>
       </Animated.View>
 

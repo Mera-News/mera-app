@@ -1,13 +1,15 @@
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
+import FeedSyncIndicator, {
+    useFeedSyncRefresh,
+    useIsFeedProcessing,
+} from '@/components/custom/FeedSyncIndicator';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import ReauthBanner from '@/components/custom/ReauthBanner';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
-import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
@@ -30,7 +32,6 @@ import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
     useForYouAsyncJobPhase,
-    useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
     useForYouLastProcessingRunFinishedAt,
     useForYouNoisyDiscardedCount,
@@ -110,13 +111,19 @@ const MeraNewsScreen: React.FC = () => {
     const [statusSheetOpen, setStatusSheetOpen] = useState(false);
     const openStatusSheet = useCallback(() => setStatusSheetOpen(true), []);
 
+    // Pull-to-refresh — the SAME handler the Feed tab uses. `refreshing` tracks
+    // the scheduler's feed-sync flag (not local state), so it rises on the same
+    // frame as the pull and stays up for the real duration of the sync. This is
+    // also what finally makes the "pull down to retry" copy in renderEmpty true;
+    // the Dashboard list had no refresh control at all before.
+    const { refreshing, onRefresh } = useFeedSyncRefresh(reveal);
+
     // The live store array — now rendered directly (no held-feed pill hop).
     const suggestions = useForYouSuggestions();
 
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
-    const { isDeviceProcessing } = useForYouDeviceProcessing();
     const unscoredCount = useForYouUnscoredCount();
     const syncStatusMessage = useForYouSyncStatusMessage();
     const scoringError = useForYouScoringError();
@@ -140,20 +147,11 @@ const MeraNewsScreen: React.FC = () => {
         return formatTimeAgo(t, lastProcessingRunFinishedAt, { now: nowTick });
     }, [lastProcessingRunFinishedAt, nowTick, t]);
 
-    const isAnySyncActive =
-        syncStatusMessage !== null &&
-        syncStatusMessage.state !== 'idle' &&
-        syncStatusMessage.state !== 'done' &&
-        syncStatusMessage.state !== 'failed' &&
-        syncStatusMessage.state !== 'paused-offline';
-
-    // Any client-visible fetch/scoring work still in flight. Round-4 B: dropped
-    // the `unscoredCount > 0` term — deliberately-deferred rows (a sub-25 quantum
-    // waiting for the next batch) are NOT "processing", so the shimmer no longer
-    // spins forever while they wait. The deferred rows surface as a static note
-    // via FeedStatusShimmer's `unscoredCount` prop instead.
-    const isFeedProcessing =
-        isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+    // Any client-visible fetch/scoring work still in flight — the shared
+    // derivation (see components/custom/FeedSyncIndicator). Used here only for
+    // the empty-state chain and the header auto-reveal; the header indicator
+    // OR-s in the scheduler flag on its own.
+    const isFeedProcessing = useIsFeedProcessing();
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes).
@@ -363,6 +361,8 @@ const MeraNewsScreen: React.FC = () => {
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
                         ListEmptyComponent={renderEmpty}
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
                     />
                 </View>
 
@@ -386,6 +386,13 @@ const MeraNewsScreen: React.FC = () => {
                 scroll-down and back on scroll-up / reveal(). */}
             <Animated.View
                 onLayout={onHeaderLayout}
+                // box-none: the absolute header must not swallow the top-of-list
+                // pull-to-refresh gesture — touches pass through its empty area
+                // to the FlatList beneath, while its interactive children (bell,
+                // sub-tab pills, status bar) still receive taps. Without this the
+                // Dashboard's new pull-to-refresh simply never fires (the Feed
+                // tab hit exactly this and carries the same note).
+                pointerEvents="box-none"
                 style={[
                     { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
                     headerStyle,
@@ -417,28 +424,14 @@ const MeraNewsScreen: React.FC = () => {
                     {/* Sub-tab pills — Feed / Stories / Saved. */}
                     <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
 
-                    {/* Feed-status shimmer — indeterminate bar + expand accordion. */}
-                    <FeedStatusShimmer
-                        processing={isFeedProcessing}
-                        error={scoringError !== null}
-                        dailyLimited={isDailyLimited}
-                        unscoredCount={unscoredCount}
-                        processedCount={articleCount}
-                        analysedCount={analysedCount}
-                        relevantCount={relevantCount}
-                        noiseRemovedCount={noisyDiscardedCount ?? 0}
-                        injectNoiseEnabled={injectNoiseEnabled}
+                    {/* Shared sync surface — indeterminate bar + expand accordion,
+                        plus the offline notice and the re-auth prompt. Identical
+                        to the Feed tab's, and it goes up on the same frame as a
+                        pull on EITHER screen (see FeedSyncIndicator). */}
+                    <FeedSyncIndicator
                         lastProcessedLabel={lastProcessedLabel}
+                        showConnectivityNotices={activeSubTab === 'feed'}
                     />
-
-                    {activeSubTab === 'feed' && !isConnected && (
-                        <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
-                            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                            <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
-                        </HStack>
-                    )}
-
-                    {activeSubTab === 'feed' && <ReauthBanner />}
                 </VStack>
             </Animated.View>
 

@@ -1,10 +1,14 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
+import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 
 export default function LoggedInLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={{ flex: 1 }}>
       <Stack
@@ -184,6 +188,25 @@ export default function LoggedInLayout() {
           }}
         />
       </Stack>
+      {/* Mounted once for the whole logged-in tree rather than per-screen. The
+          auth breaker no longer auto-resumes feed-sync while `needsReauth` is
+          set — a proven-dead session must be re-authenticated, not retried — so
+          this banner is the ONLY self-heal path. Previously it lived in the two
+          feed headers, which left a user sitting on Explore/Profile/Settings
+          with no visible way out. It self-gates on needsReauth + online, so it
+          renders nothing in the common case. */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: 'absolute',
+          top: insets.top + 8,
+          left: 16,
+          right: 16,
+          zIndex: 20,
+        }}
+      >
+        <ReauthBanner />
+      </View>
       <FloatingChatHost />
       <FeedbackWidgetModal />
     </View>

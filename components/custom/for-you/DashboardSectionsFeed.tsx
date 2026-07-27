@@ -20,11 +20,15 @@ import {
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
+import { RefreshControl } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
 } from 'react-native-reanimated';
+
+/** Pull-to-refresh spinner tint — same value the Feed tab uses. */
+const REFRESH_TINT = '#EDA77E';
 
 // Flattened list model: per section a gradient-panel header, up to 3 preview
 // cards, and (only when the section has more than the preview count) a
@@ -45,6 +49,12 @@ interface DashboardSectionsFeedProps {
   /** Dashboard header height — content top padding. */
   headerHeight: number;
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
+   *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
+   *  frame as the pull and stays up for the real duration of the sync. */
+  refreshing?: boolean;
+  /** Pull-to-refresh handler. Omit both props to render no refresh control. */
+  onRefresh?: () => void;
 }
 
 /**
@@ -63,6 +73,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   scrollHandler,
   headerHeight,
   ListEmptyComponent,
+  refreshing,
+  onRefresh,
 }) => {
   // Subscribe to visits so newness badges recompute after a section is visited.
   const visits = useSectionVisitsStore((s) => s.visits);
@@ -161,6 +173,19 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={ListEmptyComponent}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={!!refreshing}
+              onRefresh={onRefresh}
+              tintColor={REFRESH_TINT}
+              colors={[REFRESH_TINT]}
+              // Push the spinner below the absolute collapsing header so it
+              // isn't hidden behind it (Android). Mirrors FeedScreen.
+              progressViewOffset={headerHeight}
+            />
+          ) : undefined
+        }
         contentContainerStyle={{
           paddingTop: headerHeight + 12,
           paddingHorizontal: 12,
