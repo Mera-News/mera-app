@@ -29,7 +29,7 @@ import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { sortRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
+import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -138,9 +138,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [retryNonce, setRetryNonce] = useState(0);
     const hadOfflineFailureRef = useRef(false);
 
-    // Server related rows, ordered by the user's language/country signals first
-    // (then publication → date → id). Non-mutating; `userCtx === null` (still
-    // loading) degrades to the legacy publication/date/id order.
+    // Country of the article being viewed — anchors the related list's first
+    // block (see `orderRelatedArticles`). Null until the article resolves, which
+    // costs at most one reorder of the memo below.
+    const currentCountryAlpha3 = article?.publicationSource?.country_code ?? null;
+
+    // Server related rows, ordered into contiguous per-country blocks: this
+    // article's country first, then the remaining countries biggest-block first,
+    // countryless rows last; within a block, language → publication → date → id.
+    // Non-mutating; `userCtx === null` (still loading) only relaxes the
+    // language/rank preferences, the blocks still form.
     const sortedRelated = useMemo(() => {
         const entries = related.map((a) => ({
             id: a._id,
@@ -153,8 +160,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             })(),
             summary: a,
         }));
-        return sortRelatedArticles(entries, userCtx);
-    }, [related, userCtx]);
+        return orderRelatedArticles(entries, currentCountryAlpha3, userCtx);
+    }, [related, currentCountryAlpha3, userCtx]);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -362,8 +369,17 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         }
     };
 
+    // `push`, not `replace`: chaining from one article into a related one must
+    // add a stack entry so back returns to the article the user came from
+    // rather than jumping straight out to the feed.
+    //
+    // `stableClusterId` is deliberately NOT forwarded. The next hop is a member
+    // of the same cluster, so passing it would look right — but it's also the
+    // read-dimming key (`isOpenedId` matches article id OR cluster id, and
+    // `markOpened` puts the opened article's cluster id in the set), so the
+    // chained article would render as already-read the moment it opens.
     const handleRelatedPress = useCallback((relatedArticleId: string) => {
-        router.replace({
+        router.push({
             pathname: '/logged-in/article-detail',
             params: { articleId: relatedArticleId },
         });

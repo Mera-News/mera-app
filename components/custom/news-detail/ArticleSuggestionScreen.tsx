@@ -37,7 +37,7 @@ import {
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
 import {
-    sortRelatedArticles,
+    orderRelatedArticles,
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -119,7 +119,7 @@ const toPubDateMs = (raw: string | null | undefined): number | null => {
  * A single row in the merged "Related Articles" list — either a local cluster
  * sibling (`suggestionId` set → taps into the richer suggestion-detail route)
  * or a server `relatedArticles` row (`suggestionId` undefined → taps into the
- * article-detail route). Sorted via {@link sortRelatedArticles}.
+ * article-detail route). Ordered via {@link orderRelatedArticles}.
  */
 interface RelatedEntry extends RelatedSortable {
     article: NewsArticle;
@@ -144,8 +144,10 @@ interface RelatedEntry extends RelatedSortable {
  *      grouping catches; rows already shown as local siblings (or the opened
  *      article itself) are filtered out, and the survivors tap into the
  *      article-detail route.
- * Both origins are merged and ordered by the user's language/country signals
- * first (via `sortRelatedArticles`), then publication → date → id.
+ * Both origins are merged and ordered into contiguous per-country blocks (via
+ * `orderRelatedArticles`): this suggestion's country first, then the remaining
+ * countries biggest-block first, countryless rows last; within a block,
+ * language → publication → date → id.
  */
 const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     articleSuggestionId,
@@ -232,10 +234,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     // Merged, flat "Related Articles" list: local cluster siblings + the server
     // `relatedArticles` join, deduped by article id (drop rows whose id equals
-    // the opened article or any local sibling), then ordered by the user's
-    // language/country signals first via `sortRelatedArticles`. Local siblings
-    // navigate to the richer suggestion-detail route; server rows to the
-    // article-detail route (encoded by whether `suggestionId` is set).
+    // the opened article or any local sibling), then ordered into contiguous
+    // per-country blocks via `orderRelatedArticles` — this suggestion's country
+    // first, then the remaining countries biggest-block first. Ordering runs over
+    // the FULL list here, before the render-time `visibleRelatedCount` window, so
+    // block sizes never become window-relative. Local siblings navigate to the
+    // richer suggestion-detail route; server rows to the article-detail route
+    // (encoded by whether `suggestionId` is set).
     const relatedEntries = useMemo<RelatedEntry[]>(() => {
         if (!suggestion) return [];
         const siblingArticleIds = new Set<string>(
@@ -264,8 +269,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 pubDateMs: toPubDateMs(a.pubDate),
                 article: toNewsArticle(a),
             }));
-        return sortRelatedArticles(
+        return orderRelatedArticles(
             [...siblingEntries, ...serverEntries],
+            suggestion.country_code ?? null,
             userCtx,
         );
     }, [localSiblings, related, suggestion, userCtx]);
@@ -564,7 +570,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     <ArticleStandaloneCompactCard
                                         key={entry.id || `related-${index}`}
                                         article={entry.article}
-                                        onPress={() => router.replace(
+                                        // `push`, not `replace`: chaining into a
+                                        // related story adds a stack entry so
+                                        // back returns here, not to the feed.
+                                        onPress={() => router.push(
                                             entry.suggestionId
                                                 ? {
                                                     pathname: '/logged-in/suggestion-detail',

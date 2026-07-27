@@ -41,6 +41,8 @@ function snapshotFromSuggestion(row: ArticleSuggestionModel): TrackedStoryMember
     pubDateMs: pubDateMs(row),
     imageUrl: row.imageUrl ?? undefined,
     publicationName: row.publicationName ?? undefined,
+    languageCode: row.languageCode ?? undefined,
+    countryCode: row.countryCode ?? undefined,
   };
 }
 

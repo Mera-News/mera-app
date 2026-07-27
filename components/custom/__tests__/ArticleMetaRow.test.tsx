@@ -62,9 +62,21 @@ describe('ArticleMetaRow', () => {
     expect(queryByText('feed.newBadge')).toBeNull();
   });
 
-  it('renders the read eye icon when read', () => {
-    const { UNSAFE_getAllByProps } = render(<ArticleMetaRow variant="card" read {...base} />);
-    expect(UNSAFE_getAllByProps({ accessibilityLabel: 'read' }).length).toBeGreaterThan(0);
+  // The eye glyph is deliberately gone: `read` drives the "All caught up"
+  // partition and the NEW-badge suppression, but is never drawn to the user.
+  it('renders NO read indicator when read', () => {
+    const { UNSAFE_queryAllByProps } = render(<ArticleMetaRow variant="card" read {...base} />);
+    expect(UNSAFE_queryAllByProps({ accessibilityLabel: 'read' })).toHaveLength(0);
+  });
+
+  it('renders NO read indicator on the screen variant either', () => {
+    const { UNSAFE_queryAllByProps } = render(<ArticleMetaRow variant="screen" read {...base} />);
+    expect(UNSAFE_queryAllByProps({ accessibilityLabel: 'read' })).toHaveLength(0);
+  });
+
+  it('still renders the age when read — hiding the eye must not hide the row', () => {
+    const { getByText } = render(<ArticleMetaRow variant="card" read {...base} />);
+    expect(getByText('2h')).toBeTruthy(); // formatTimeAgo is stubbed to '2h'
   });
 
   it('renders the publication name (single line)', () => {

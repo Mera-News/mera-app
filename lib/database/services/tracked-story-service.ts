@@ -268,6 +268,63 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
   }
 }
 
+/** The source fields a snapshot can be missing — see {@link backfillSnapshotSource}. */
+export interface SnapshotSourcePatch {
+  languageCode?: string;
+  countryCode?: string;
+  publicationName?: string;
+}
+
+/**
+ * Fill in `languageCode` / `countryCode` / `publicationName` on member snapshots
+ * that predate those fields (or were seeded from a source that never carried
+ * them, e.g. the originating article of a freshly-followed story). The timeline
+ * screen resolves them from the local `article_suggestions` rows and persists
+ * them here, so the row keeps its language label and flag after the suggestion
+ * is pruned out of the 24h window.
+ *
+ * FILL-ONLY: a field already present on the snapshot is never overwritten, and
+ * a story with nothing to fill is not written at all. Swallows errors — a failed
+ * backfill must not break the timeline.
+ */
+export async function backfillSnapshotSource(
+  id: string,
+  patches: Map<string, SnapshotSourcePatch>,
+): Promise<void> {
+  if (patches.size === 0) return;
+  try {
+    const record = await collection.find(id);
+    const current = record.memberSnapshots ?? [];
+    let changed = false;
+    const next = current.map((s) => {
+      const p = patches.get(s.articleId);
+      if (!p) return s;
+      const merged = { ...s };
+      if (!merged.languageCode && p.languageCode) merged.languageCode = p.languageCode;
+      if (!merged.countryCode && p.countryCode) merged.countryCode = p.countryCode;
+      if (!merged.publicationName && p.publicationName)
+        merged.publicationName = p.publicationName;
+      if (
+        merged.languageCode === s.languageCode &&
+        merged.countryCode === s.countryCode &&
+        merged.publicationName === s.publicationName
+      ) {
+        return s;
+      }
+      changed = true;
+      return merged;
+    });
+    if (!changed) return;
+    await database.write(async () => {
+      await record.update((m) => {
+        m.memberSnapshots = next;
+      });
+    });
+  } catch (err) {
+    logger.warn('[tracked-story] backfillSnapshotSource failed', { id, error: String(err) });
+  }
+}
+
 /**
  * Advance a story's seen-pubDate watermark (schema v44) — the newest member
  * pubDate the user has actually seen. Called by the timeline screen after a

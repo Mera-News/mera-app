@@ -15,6 +15,11 @@ export interface TrackedStoryMemberSnapshot {
   pubDateMs: number;
   imageUrl?: string;
   publicationName?: string;
+  /** Original language of the article — renders the timeline row's language
+   *  label. Absent on snapshots written before this field existed. */
+  languageCode?: string;
+  /** Publisher country — renders the timeline row's source flag. Same caveat. */
+  countryCode?: string;
 }
 
 /** Coerce the persisted JSON column into a clean string[] (defensive). */
@@ -35,6 +40,14 @@ const sanitizeSnapshots = (raw: unknown): TrackedStoryMemberSnapshot[] =>
           publicationName:
             typeof (x as any).publicationName === 'string'
               ? (x as any).publicationName
+              : undefined,
+          languageCode:
+            typeof (x as any).languageCode === 'string'
+              ? (x as any).languageCode
+              : undefined,
+          countryCode:
+            typeof (x as any).countryCode === 'string'
+              ? (x as any).countryCode
               : undefined,
         }))
         .filter((x) => x.articleId.length > 0)

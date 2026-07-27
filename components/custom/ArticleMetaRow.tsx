@@ -21,8 +21,9 @@ interface ArticleMetaRowProps {
     countryCode?: string | null;
     variant: ArticleMetaRowVariant;
     isNew?: boolean;
-    /** Marks the article as already-read — renders a small eye icon immediately
-     *  after the time group. Default false — no visual change when omitted. */
+    /** Marks the article as already-read. Draws NO indicator of its own — the
+     *  eye glyph was deliberately removed — but still SUPPRESSES the NEW badge,
+     *  since a story you have already read is not new to you. Default false. */
     read?: boolean;
     /** Whether to render the trailing country flag. Default true. The compact
      *  card sets this false and shows the flag in its footer instead. */
@@ -68,20 +69,16 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         // shrink (single-line, truncating) so a long publication name truncates
         // instead of bleeding across / pushing the flag off-row.
         <HStack className="items-center justify-between" space="sm">
-            {/* 1. Age (+ optional read eye / NEW badge) */}
+            {/* 1. Age (+ optional NEW badge) */}
             <HStack className="items-center flex-shrink-0" space="xs">
                 <MaterialIcons name="schedule" size={14} color={iconColor} />
                 <Text size="sm" className={ageColor}>
                     {age}
                 </Text>
-                {read ? (
-                    <MaterialIcons
-                        name="visibility"
-                        size={14}
-                        color={iconColor}
-                        accessibilityLabel="read"
-                    />
-                ) : null}
+                {/* No read indicator is drawn. `read` still SUPPRESSES the NEW
+                    badge below — the seen mechanism is intact end to end (card
+                    state, the "All caught up" partition, scoring); it is only
+                    the eye glyph that is deliberately not shown. */}
                 {/* A read card never shows NEW — read wins. */}
                 {isCard && isNew && !read ? (
                     <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>

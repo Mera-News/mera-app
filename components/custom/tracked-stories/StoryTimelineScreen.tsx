@@ -7,10 +7,13 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
+import { getGroupingRowsByIds } from '@/lib/database/services/article-suggestion-service';
 import {
     advanceSeenWatermark,
+    backfillSnapshotSource,
     getTrackedStoryById,
     markSeen,
+    type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
@@ -34,6 +37,57 @@ interface StoryTimelineScreenProps {
  *  cards from pre-fix archives (Part E stopgap). */
 const MAX_TITLE_BACKFILL = 6;
 
+/**
+ * Fill in the language / country / publisher a card is missing from the local
+ * `article_suggestions` row of the same article, and persist what we resolve
+ * back into the story's snapshots.
+ *
+ * Two kinds of card arrive bare: members snapshotted before those fields existed
+ * on `TrackedStoryMemberSnapshot`, and the originating article of a freshly
+ * followed story (seeded from a FeedbackSubject, which carries no language).
+ * Without this they would never gain a language label or source flag — the
+ * reconcile only snapshots members it has not seen before, so it never revisits
+ * an existing one.
+ *
+ * Local read only (no network). Members already pruned out of the 24h suggestion
+ * window simply stay bare — which is why the resolved fields are written back.
+ */
+async function hydrateSource(
+    trackedStoryId: string,
+    cards: TimelineCard[],
+): Promise<TimelineCard[]> {
+    const bare = cards.filter((c) => c.articleId && (!c.languageCode || !c.countryCode));
+    if (bare.length === 0) return cards;
+
+    try {
+        const rows = await getGroupingRowsByIds(bare.map((c) => c.articleId));
+        const patches = new Map<string, SnapshotSourcePatch>();
+        for (const r of rows) {
+            const patch: SnapshotSourcePatch = {
+                languageCode: r.languageCode ?? undefined,
+                countryCode: r.countryCode ?? undefined,
+            };
+            if (patch.languageCode || patch.countryCode) patches.set(r.id, patch);
+        }
+        if (patches.size === 0) return cards;
+
+        void backfillSnapshotSource(trackedStoryId, patches);
+
+        return cards.map((c) => {
+            const p = patches.get(c.articleId);
+            if (!p) return c;
+            return {
+                ...c,
+                languageCode: c.languageCode ?? p.languageCode,
+                countryCode: c.countryCode ?? p.countryCode,
+            };
+        });
+    } catch (err) {
+        logger.warn('[story-timeline] source hydrate failed', { error: String(err) });
+        return cards;
+    }
+}
+
 /** Map a merged timeline card onto the NewsArticle shape the compact card
  *  expects. Cards are lean (no descriptions / language), so unmappable fields
  *  are left undefined — the card degrades gracefully. */
@@ -45,7 +99,7 @@ function cardToNewsArticle(card: TimelineCard): NewsArticle {
         pubDate: card.pubDateMs ? new Date(card.pubDateMs).toISOString() : undefined,
         image_url: card.imageUrl,
         article_url: card.articleUrl,
-        original_language_code: undefined,
+        original_language_code: card.languageCode,
         publicationSource:
             card.publicationName || card.countryCode
                 ? ({
@@ -103,7 +157,8 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 const localSnapshots = story.memberSnapshots ?? [];
                 setStableClusterId(story.stableClusterId ?? null);
 
-                const merged = buildTimeline(localSnapshots);
+                const merged = await hydrateSource(trackedStoryId, buildTimeline(localSnapshots));
+                if (!alive()) return;
                 setCards(merged);
 
                 // Successful build → advance the seen-pubDate watermark to the

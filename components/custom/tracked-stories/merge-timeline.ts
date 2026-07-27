@@ -17,6 +17,7 @@ export interface TimelineCard {
   pubDateMs: number;
   imageUrl?: string;
   publicationName?: string;
+  languageCode?: string;
   countryCode?: string;
   articleUrl?: string;
 }
@@ -28,6 +29,8 @@ export function localToCard(snap: TrackedStoryMemberSnapshot): TimelineCard {
     pubDateMs: snap.pubDateMs ?? 0,
     imageUrl: snap.imageUrl,
     publicationName: snap.publicationName,
+    languageCode: snap.languageCode,
+    countryCode: snap.countryCode,
   };
 }
 
