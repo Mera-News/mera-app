@@ -477,15 +477,27 @@ export async function stepHydratePersistEnqueue(
   await gateChain;
 
   // Tail flush: the whole lot is now hydrated and we won't refetch until it's
-  // scored, so dispatch the trailing sub-25 partial the gate held back instead
-  // of letting it wait out MAX_UNSCORED_WAIT_MS (~30 min) for a quantum that
-  // will never fill this cycle. These ids were already gate-elected, so we
-  // enqueue them directly with flushPartial=true (no extra gate pass). Skip on
-  // abort or when enqueueing is suppressed; never let a flush failure fail the
-  // (already-hydrated) step.
-  if (!opts.suppressEnqueue && !ctx.signal.aborted && pendingDeferred.length > 0) {
+  // scored, so dispatch the sub-MIN_DISPATCH remainder the gate held back
+  // instead of letting it wait out MAX_UNSCORED_WAIT_MS (~30 min) for articles
+  // that will never arrive this cycle. These ids were already gate-elected, so
+  // we enqueue them directly with flushPartial=true (no extra gate pass). Never
+  // let a flush failure fail the (already-hydrated) step.
+  if (!ctx.signal.aborted) {
     try {
-      await enqueueCandidates(pendingDeferred, true);
+      if (!opts.suppressEnqueue && pendingDeferred.length > 0) {
+        await enqueueCandidates(pendingDeferred, true);
+      } else if (
+        opts.suppressEnqueue &&
+        (await scoringPipeline.getPipelineStatus()) === 'idle'
+      ) {
+        // Suppressed cycle: we hydrated rows but never enqueued them, because a
+        // scoring run was in flight. If that run finished while we were
+        // hydrating, WE are the handoff — the pipeline's own post-finalize kick
+        // either ran before these rows landed, or skipped its flush precisely
+        // because it saw feed-sync busy. Re-elect from the DB and flush, or
+        // these rows sit unscored until the 30-minute staleness escape.
+        await scoringPipeline.enqueueUnscoredEligible({ flushRemainder: true });
+      }
     } catch (err) {
       logger.captureException(err, {
         tags: { component: 'feed-sync-steps', method: 'tailFlush' },

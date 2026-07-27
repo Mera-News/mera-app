@@ -90,34 +90,42 @@ import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-groupin
 
 const TAG = '[scoring-pipeline]';
 
-// Round-4 B: cloud scoring dispatches in STRICT 25-article quanta. The former
-// per-fact batch grouping (factId/factStatement) is gone — batches are FIFO
-// quanta of BATCH_SIZE eligible candidates in delivery order. factId/
-// factStatement remain OPTIONAL persisted fields (always null for new batches)
-// only so a run persisted by an older build still parses.
+// Cloud scoring dispatches FIFO batches of eligible candidates in delivery
+// order. The former per-fact batch grouping (factId/factStatement) is gone;
+// factId/factStatement remain OPTIONAL persisted fields (always null for new
+// batches) only so a run persisted by an older build still parses.
+//
+// Sizing rule (supersedes the Round-4 B "strict 25-article quanta"): dispatch as
+// soon as MIN_DISPATCH articles are ready, and let the batch absorb everything
+// else that is ready, up to MAX_BATCH_ARTICLES. The old rule dispatched only
+// FULL 25-quanta, which meant a user with a handful of fresh articles waited out
+// the 30-minute staleness escape to see anything — the common case on a quiet
+// feed, and the one the "4 articles were analysed for you" report came from.
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-export const BATCH_SIZE = 25;
+/** Dispatch floor: enough articles to be worth a round trip. Exactly one cloud
+ *  scoring chunk (CLOUD_SCORE_CHUNK_SIZE = articlesPerScorePrompt), i.e. ONE LLM
+ *  call, so the smallest thing we ever send is also the cheapest useful thing. */
+export const MIN_DISPATCH = CLOUD_SCORE_CHUNK_SIZE;
+/** Safety ceiling on a single batch. A batch becomes one HTTP job carrying
+ *  ceil(n / CLOUD_SCORE_CHUNK_SIZE) LLM calls, so this caps a backlog burst at
+ *  10 calls per request rather than letting a 500-row backlog build one enormous
+ *  job that risks the gateway's 120s upstream timeout. Overflow spills into
+ *  further batches, which drain MAX_IN_FLIGHT at a time. */
+export const MAX_BATCH_ARTICLES = 10 * CLOUD_SCORE_CHUNK_SIZE;
+/** Legacy alias, kept exported for back-compat with older persisted-run readers
+ *  and tests. Points at the dispatch floor, which is what now gates a run. */
+export const BATCH_SIZE = MIN_DISPATCH;
 export const MAX_IN_FLIGHT = 3;
-/** Legacy alias for BATCH_SIZE, kept exported for back-compat. The quantum rule
- *  (dispatch every full BATCH_SIZE, defer the remainder) uses BATCH_SIZE. */
-export const MIN_RUN_CANDIDATES = BATCH_SIZE;
-/** Escape hatch: if the oldest unscored row has been waiting this long, also
- *  dispatch the trailing partial (<BATCH_SIZE) quantum — unscored articles
- *  don't render, so a strict quantum gate could hide news for hours on slow
- *  days. */
+/** @deprecated Legacy alias for the dispatch floor. Use MIN_DISPATCH. */
+export const MIN_RUN_CANDIDATES = MIN_DISPATCH;
+/** Escape hatch: if the oldest unscored row has been waiting this long, dispatch
+ *  the sub-MIN_DISPATCH remainder too — unscored articles don't render, so the
+ *  floor could otherwise hide a 1-4 article day indefinitely. */
 export const MAX_UNSCORED_WAIT_MS = 30 * 60_000;
-/** P7d cold-start floor: on a COLD feed (no scored donor in the 48h window) the
- *  first paint is gated on the trailing partial quantum, so we dispatch it
- *  immediately once it holds at least this many rows rather than waiting for a
- *  full BATCH_SIZE or the 30-min staleness escape. Derived as two cloud-scoring
- *  chunks (2 × CLOUD_SCORE_CHUNK_SIZE) — one chunk is too little to be worth a
- *  run, two guarantees a multi-chunk prompt shaped like a steady-state batch, so
- *  the per-prompt content stays byte-identical to the warm path. */
-export const COLD_START_MIN_BATCH = 2 * CLOUD_SCORE_CHUNK_SIZE;
 const SUBMIT_STUCK_MS = 60_000;
 const BATCH_STALE_MS = 15 * 60_000;
 /** A run whose `startedAt` is older than this is treated as wedged: the
@@ -135,9 +143,21 @@ const MAX_BATCH_ATTEMPTS = 2;
  *  it if it turns out to abandon runs that would have recovered. */
 export const POLLER_FAILURE_ABORT_THRESHOLD = 3;
 const RUN_ABANDON_MS = 24 * 3600_000;
-const POLL_INTERVAL_MS = 7_000;
-const MIN_POLL_AGE_MS = 15_000;
-const PER_BATCH_POLL_SPACING_MS = 20_000;
+/** Poller tick cadence while a run is active. The gateway rate limiter
+ *  (MIN_GATEWAY_INTERVAL_MS, 3s, shared by submits AND polls) is the real
+ *  governor — ticks that can't take a slot are cheap no-ops. Ticking faster than
+ *  the limiter simply means we claim the next slot the moment it frees, instead
+ *  of idling up to a full tick past it. */
+const POLL_INTERVAL_MS = 2_000;
+/** No settling delay before a batch's first poll. This used to be 15s on the
+ *  theory that asking early is wasted, but it put a hard 15s floor under the
+ *  first scored paint even when the job was already done. The rate limiter
+ *  already stops us hammering; an early 'pending' costs one cheap GET. */
+const MIN_POLL_AGE_MS = 0;
+/** Minimum gap between polls OF THE SAME batch. Matched to the tick so a single
+ *  batch isn't artificially held back — with MAX_IN_FLIGHT = 3 and a 3s limiter
+ *  slot, the limiter still decides actual cadence. */
+const PER_BATCH_POLL_SPACING_MS = POLL_INTERVAL_MS;
 
 // ---------------------------------------------------------------------------
 // Phase predicates
@@ -431,16 +451,20 @@ function makeRunId(): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Add fresh unscored candidate ids into the pipeline in STRICT 25-article
- * quanta (Round-4 B). ids already in a non-terminal batch are deduped out; the
- * remaining fresh ids (delivery order preserved) are chunked into BATCH_SIZE
- * quanta. Every FULL quantum is dispatched immediately — creating the run
- * (minting the E2EE keypair) if none exists, else appending to it. The trailing
- * partial (<BATCH_SIZE) stays unscored/deferred and re-enters the next cycle
- * (greedy accumulation), UNLESS the oldest unscored row has aged past
- * MAX_UNSCORED_WAIT_MS, in which case the partial is dispatched too so a slow
- * trickle can't hide news for hours. The rule is uniform for run creation AND
- * appends — no foreground special-case.
+ * Add fresh unscored candidate ids into the pipeline. ids already in a
+ * non-terminal batch are deduped out; the remaining fresh ids (delivery order
+ * preserved) are chunked into batches of at most MAX_BATCH_ARTICLES.
+ *
+ * A chunk is dispatched as soon as it holds MIN_DISPATCH (= one LLM call) —
+ * creating the run (minting the E2EE keypair) if none exists, else appending to
+ * it. Only a sub-MIN_DISPATCH remainder is deferred to accumulate, and even that
+ * is dispatched when `flushPartial` is set (the caller knows no more are coming)
+ * or when the oldest unscored row has aged past MAX_UNSCORED_WAIT_MS.
+ *
+ * So 5 ready articles go out now as a single one-call request, while 40 go out
+ * as one request carrying 8 calls — small feeds get latency, busy feeds keep
+ * throughput. The rule is uniform for run creation AND appends; no foreground
+ * special-case.
  */
 export async function enqueueCandidates(
   ids: string[],
@@ -459,61 +483,51 @@ export async function enqueueCandidates(
     return { deferred: [] };
   }
 
-  // FIFO 25-article quanta. chunkIds yields at most one trailing partial (the
-  // last chunk); dispatch every full quantum, defer the partial unless the
-  // staleness escape fires.
-  const chunks = chunkIds(fresh, BATCH_SIZE);
+  // FIFO batches capped at MAX_BATCH_ARTICLES. chunkIds yields at most one
+  // trailing short chunk (the last one); dispatch anything that reaches
+  // MIN_DISPATCH, defer only a sub-MIN_DISPATCH remainder.
+  const chunks = chunkIds(fresh, MAX_BATCH_ARTICLES);
   const dispatch: string[][] = [];
   let deferred = 0;
   // The trailing partial's ids when it's held back — returned to the caller so
   // feed-sync can flush it once the whole lot is hydrated (flushPartial pass).
   let deferredIds: string[] = [];
   for (const chunk of chunks) {
-    if (chunk.length === BATCH_SIZE) {
+    if (chunk.length >= MIN_DISPATCH) {
       dispatch.push(chunk);
       continue;
     }
-    // Trailing partial (<BATCH_SIZE). chunkIds only ever yields one, as the last
-    // chunk, so the cold read below runs at most once per enqueue.
+    // Sub-MIN_DISPATCH remainder — not yet worth its own LLM call. chunkIds only
+    // ever yields one such chunk, as the last, so the DB read below runs at most
+    // once per enqueue.
     //
     // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
     // everything now. We don't refetch until the whole lot is scored, so a
-    // deferred trailing partial would sit idle for up to MAX_UNSCORED_WAIT_MS
-    // with no next fetch coming to fill the quantum — dispatch it immediately.
+    // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
+    // next fetch coming to top it up — dispatch it immediately.
     if (flushPartial) {
       logger.info(
-        `${TAG} enqueueCandidates: flush — dispatching trailing partial of ${chunk.length} (lot fully hydrated)`,
+        `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
       );
       dispatch.push(chunk);
       continue;
     }
-    //
-    // Knob 1 (P7d): on a COLD feed the first scored paint is gated entirely on
-    // this partial — the warm "accumulate to 25 / 30-min staleness escape" rule
-    // would leave the feed empty until a full quantum arrives. Dispatch it
-    // straight away once it holds at least COLD_START_MIN_BATCH rows so the very
-    // first hydration chunk starts scoring. Warm feeds keep the exact prior
-    // behavior (isFeedCold returns false → falls through to the escape below).
-    if ((await isFeedCold()) && chunk.length >= COLD_START_MIN_BATCH) {
-      logger.info(
-        `${TAG} enqueueCandidates: cold-start — dispatching partial batch of ${chunk.length} (>=${COLD_START_MIN_BATCH}, no scored donors in 48h)`,
-      );
-      dispatch.push(chunk);
-      continue;
-    }
+    // (The P7d cold-start knob that dispatched a >=10-row partial on a cold feed
+    // is gone: MIN_DISPATCH is 5, so every chunk it would have caught now
+    // dispatches on the fast path above regardless of feed warmth.)
     const oldestCreatedAt = await getOldestUnscoredCreatedAt();
     const oldestAgeMs =
       oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : 0;
     if (oldestCreatedAt !== null && oldestAgeMs >= MAX_UNSCORED_WAIT_MS) {
       logger.info(
-        `${TAG} enqueueCandidates: staleness escape — dispatching partial batch of ${chunk.length} (oldest unscored waited ${Math.round(oldestAgeMs / 60_000)}min)`,
+        `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(oldestAgeMs / 60_000)}min)`,
       );
       dispatch.push(chunk);
     } else {
       deferred = chunk.length;
       deferredIds = chunk;
       logger.info(
-        `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${BATCH_SIZE} quantum, oldest ${Math.round(oldestAgeMs / 60_000)}min)`,
+        `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${MIN_DISPATCH} dispatch floor, oldest ${Math.round(oldestAgeMs / 60_000)}min)`,
       );
     }
   }
@@ -1820,25 +1834,69 @@ function schedulePostFinalizeKick(): void {
   }, 0);
 }
 
-/** Gather the still-unscored eligible rows and re-enqueue them. enqueueCandidates
- *  itself applies the strict quantum gate, so this dispatches a fresh run only
- *  when ≥ BATCH_SIZE remain (or the staleness escape fires). */
+/** Is a feed-sync job in flight right now? Read lazily so this module keeps no
+ *  static edge into the scheduler graph (AppScheduler → task defs →
+ *  FeedSyncMachine → this file). scheduler-store itself is a leaf, but the lazy
+ *  require matches how the rest of the codebase crosses this boundary and keeps
+ *  the pipeline importable from a bare background wake. */
+function isFeedSyncRunning(): boolean {
+  try {
+    const { useSchedulerStore } =
+      require('@/lib/scheduler/scheduler-store') as typeof import('@/lib/scheduler/scheduler-store');
+    return useSchedulerStore.getState().taskCurrentStatus['feed-sync'] === 'running';
+  } catch {
+    // Scheduler not loaded (e.g. a background wake that never booted it) —
+    // nothing can be mid-hydration, so flushing is safe.
+    return false;
+  }
+}
+
+/** Gather the still-unscored eligible rows and re-enqueue them.
+ *
+ *  This is the handoff for rows that feed-sync hydrated while a run was already
+ *  in flight (its `suppressEnqueue` path, which skips both the enqueue and its
+ *  own tail flush). We flush the remainder here rather than deferring it: the
+ *  run has just finalized, so nothing is in flight and nothing is going to top a
+ *  sub-MIN_DISPATCH remainder up — exactly the argument feed-sync's tail flush
+ *  makes. Without the flush those rows waited out MAX_UNSCORED_WAIT_MS (30 min)
+ *  on a quiet feed, since the `missingIds === 0` branch never hydrates and so
+ *  never reaches a tail flush of its own.
+ *
+ *  The one case we must NOT flush is a finalize landing while feed-sync is still
+ *  hydrating later chunks — dispatching 3 rows when 50 are a second away wastes
+ *  a round trip. There, feed-sync's own end-of-cycle flush owns the remainder,
+ *  so we fall back to the normal accumulate-and-gate behaviour. */
 async function runPostFinalizeKick(): Promise<void> {
   try {
     // A concurrent trigger (feed-sync / scoring-pass) may already have started a
     // run between finalize and now — enqueueCandidates dedups + gates, so this
     // is safe either way.
-    const candidates = await getUnscoredSuggestionsWithFacts();
-    const eligibleIds = candidates
-      .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
-      .map((c) => c.id);
-    if (eligibleIds.length === 0) return;
-    await enqueueCandidates(eligibleIds);
+    await enqueueUnscoredEligible({ flushRemainder: !isFeedSyncRunning() });
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'post-finalize-kick' },
     });
   }
+}
+
+/**
+ * Re-elect every still-unscored eligible row from the DB and enqueue it.
+ *
+ * Shared by the post-finalize kick and by feed-sync's suppressed cycle, which
+ * both face the same question: rows exist that nothing has dispatched, and we
+ * need to know whether to respect the MIN_DISPATCH floor or push the remainder
+ * through. Pass `flushRemainder` when the caller knows no more rows are coming.
+ */
+export async function enqueueUnscoredEligible(
+  opts: { flushRemainder?: boolean } = {},
+): Promise<{ enqueued: number }> {
+  const candidates = await getUnscoredSuggestionsWithFacts();
+  const eligibleIds = candidates
+    .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
+    .map((c) => c.id);
+  if (eligibleIds.length === 0) return { enqueued: 0 };
+  await enqueueCandidates(eligibleIds, opts.flushRemainder === true);
+  return { enqueued: eligibleIds.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -1870,25 +1928,22 @@ export async function pollTick(context: ExecutionContext): Promise<void> {
     .filter((b) => isWaiting(b.phase))
     .sort((a, b) => (a.submittedAt ?? 0) - (b.submittedAt ?? 0));
 
-  // Knob 2 (P7d): on a COLD feed the first scored paint waits on the first
-  // poll, so relax the poll-age gate and per-batch spacing to the poller's own
-  // tick cadence (POLL_INTERVAL_MS, 7s) instead of the warm 15s min-age / 20s
-  // spacing — a batch that finished fast is picked up on the very next tick
-  // rather than one or two ticks later. Derived from the tick cadence (no point
-  // gating tighter than the poller can fire); the rate limiter still applies and
-  // the window ends the moment the first batch completes (warm thereafter).
-  // Computed once per tick.
-  const cold = await isFeedCold();
-  const minPollAge = cold ? POLL_INTERVAL_MS : MIN_POLL_AGE_MS;
-  const pollSpacing = cold ? POLL_INTERVAL_MS : PER_BATCH_POLL_SPACING_MS;
-
+  // The old P7d "knob 2" relaxed a 15s min-age / 20s spacing down to the tick
+  // cadence on a cold feed only. Both gates are now at/below the tick for EVERY
+  // feed (MIN_POLL_AGE_MS = 0, spacing = the tick), so the cold branch computed
+  // the same numbers as the warm one while paying an `isFeedCold()` DB read on
+  // every tick. Dropped.
+  //
+  // Cadence is governed by the gateway rate limiter (MIN_GATEWAY_INTERVAL_MS,
+  // 3s, shared with submits), not by these gates — `tryTakeImmediate()` below is
+  // what actually paces us, and a tick that can't take a slot costs nothing.
   const cap = context === 'background' ? 3 : Infinity;
   let polled = 0;
   for (const b of waiting) {
     if (polled >= cap) break;
     const nowTick = Date.now();
-    if (nowTick - (b.submittedAt ?? 0) < minPollAge) continue;
-    if (nowTick - (lastPolledAt.get(b.batchId) ?? 0) < pollSpacing)
+    if (nowTick - (b.submittedAt ?? 0) < MIN_POLL_AGE_MS) continue;
+    if (nowTick - (lastPolledAt.get(b.batchId) ?? 0) < PER_BATCH_POLL_SPACING_MS)
       continue;
     if (!gatewayRateLimiter.tryTakeImmediate()) break;
     lastPolledAt.set(b.batchId, nowTick);
