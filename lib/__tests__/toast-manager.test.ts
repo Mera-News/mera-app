@@ -26,7 +26,7 @@ jest.mock('../logger', () => ({
 }));
 
 import logger from '../logger';
-import { toastManager } from '../toast-manager';
+import { toastManager, TOAST_MIN_DURATION_MS } from '../toast-manager';
 
 const mockLoggerWarn = logger.warn as jest.Mock;
 const mockLoggerInfo = logger.info as jest.Mock;
@@ -187,11 +187,22 @@ describe('ToastManager — with instance', () => {
       expect(toast.show).toHaveBeenCalledTimes(1);
     });
 
-    it('shows with placement "bottom" and 1.5s duration', () => {
+    it('shows with placement "bottom" at the shared minimum duration', () => {
       toastManager.showInfo('For You');
       const [opts] = toast.show.mock.calls[0];
       expect(opts.placement).toBe('bottom');
-      expect(opts.duration).toBe(1500);
+      // Derived, not hardcoded: this used to be 1500ms, which read as a flicker.
+      expect(opts.duration).toBe(TOAST_MIN_DURATION_MS);
+    });
+
+    it('never shows a toast for less than the readable minimum', () => {
+      toastManager.showInfo('For You');
+      toastManager.showSuccess('Saved', 'Done');
+      toastManager.resetDebounce();
+      toastManager.showError('Oops', 'Broke');
+      for (const [opts] of toast.show.mock.calls) {
+        expect(opts.duration).toBeGreaterThanOrEqual(TOAST_MIN_DURATION_MS);
+      }
     });
 
     it('is NOT debounced — shows even after an error toast', () => {

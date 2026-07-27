@@ -1,7 +1,13 @@
 'use client';
 import React from 'react';
 import { createToastHook } from '@gluestack-ui/core/toast/creator';
-import { AccessibilityInfo, Text, View, ViewStyle } from 'react-native';
+import {
+  AccessibilityInfo,
+  Text,
+  View,
+  ViewStyle,
+  useWindowDimensions,
+} from 'react-native';
 import {
   tva,
   withStyleContext,
@@ -156,16 +162,36 @@ type IToastProps = React.ComponentProps<typeof Root> & {
   className?: string;
 } & VariantProps<typeof toastStyle>;
 
+/**
+ * Fraction of the screen width kept clear on EACH side of every toast.
+ *
+ * Toasts render in a full-width, centre-aligned overlay container, so without a
+ * cap they stretch nearly edge to edge and sit on top of the screen chrome —
+ * the top-left back button and the top-right notification bell both became
+ * unreadable and untappable behind one. Capping the toast to the middle 60%
+ * leaves both corners clear. A long message then WRAPS (the toast grows
+ * downward) instead of widening.
+ *
+ * Applied as a measured pixel `maxWidth` rather than a percentage class: the
+ * overlay nests the toast several Views deep, none of which carry an explicit
+ * width, so a percentage would have nothing dependable to resolve against.
+ */
+export const TOAST_EDGE_INSET_RATIO = 0.2;
+
 const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
   function Toast(
-    { className, variant = 'solid', action = 'muted', ...props },
+    { className, variant = 'solid', action = 'muted', style, ...props },
     ref
   ) {
+    const { width } = useWindowDimensions();
+    const maxWidth = Math.round(width * (1 - 2 * TOAST_EDGE_INSET_RATIO));
     return (
       <Root
         ref={ref}
         className={toastStyle({ variant, action, class: className })}
         context={{ variant, action }}
+        // Caller style last so a specific toast can still opt out.
+        style={[{ maxWidth }, style]}
         {...props}
       />
     );

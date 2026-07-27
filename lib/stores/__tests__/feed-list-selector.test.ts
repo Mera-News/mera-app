@@ -14,6 +14,7 @@ import {
   FEED_BREAKING_RECENCY_BONUS,
   type FeedListItem,
 } from '../feed-list-selector';
+import { FEED_WINDOW_MS } from '../fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ClusterMembership, ForYouSuggestion } from '../for-you-store';
@@ -130,7 +131,7 @@ describe('buildFeedList — visibility gate', () => {
     const unscored = sugg({ _id: 'u', status: ArticleSuggestionStatus.Unscored });
     const pending = sugg({ _id: 'p', status: ArticleSuggestionStatus.ReasonPending });
     const subGate = sugg({ _id: 'g', relevance: 0.3 }); // must be > 0.3
-    const stale = sugg({ _id: 'old', firstPubDate: new Date(NOW - 30 * H).toISOString() });
+    const stale = sugg({ _id: 'old', firstPubDate: new Date(NOW - FEED_WINDOW_MS - H).toISOString() });
     const good = sugg({ _id: 'ok', relevance: 0.6 });
 
     const list = buildFeedList([unscored, pending, subGate, stale, good], new Set(), NOW);

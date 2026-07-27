@@ -10,6 +10,12 @@
 import {
   buildFactRows,
   isSuggestionOpened,
+  isComplete,
+  isVisible,
+  isWithinWindow,
+  passesRenderGate,
+  FEED_WINDOW_MS,
+  RENDER_GATE,
   type FactRowsSnapshots,
 } from '../fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -175,10 +181,10 @@ describe('buildFactRows visibility', () => {
     expect(rows.flatMap((r) => r.groups.map((g) => g.data._id))).toContain('skip');
   });
 
-  it('drops rows outside the 24h window', () => {
+  it('drops rows outside the publication window', () => {
     const old = sugg({
       _id: 'old',
-      firstPubDate: new Date(NOW - 30 * H).toISOString(),
+      firstPubDate: new Date(NOW - FEED_WINDOW_MS - H).toISOString(),
       matchedTopics: [{ topicId: 't1', text: 'x' }],
     });
     const { rows } = buildFactRows([old], snap, new Set(), NOW);
@@ -454,5 +460,74 @@ describe('isSuggestionOpened', () => {
     expect(isSuggestionOpened(s, new Set(['art1']))).toBe(true);
     expect(isSuggestionOpened(s, new Set(['stable1']))).toBe(true);
     expect(isSuggestionOpened(s, new Set(['other']))).toBe(false);
+  });
+});
+
+// --- isVisible ⇄ sub-predicate drift guard --------------------------------
+//
+// `isVisible` was split into `isComplete` / `passesRenderGate` /
+// `isWithinWindow` so `feed-diagnostics.computeFeedFunnel` can attribute WHICH
+// gate rejected a row without re-implementing the comparisons. That only holds
+// while the composition — and its conjunction ORDER, which the diagnostic's
+// first-failure-wins attribution mirrors — stays exact. Each row below asserts
+// the sub-predicates' own values AND the expected literal, so inverting all
+// three (which would keep the equality tautologically true) still fails.
+
+const CUTOFF = NOW - FEED_WINDOW_MS;
+
+describe('isVisible composition (drift guard)', () => {
+  it('equals isComplete && passesRenderGate && isWithinWindow across all 8 combinations', () => {
+    const seen: boolean[] = [];
+    for (const complete of [true, false]) {
+      for (const aboveGate of [true, false]) {
+        for (const inWindow of [true, false]) {
+          const s = sugg({
+            _id: `tt-${complete}-${aboveGate}-${inWindow}`,
+            status: complete ? ArticleSuggestionStatus.Complete : ArticleSuggestionStatus.ReasonPending,
+            relevance: aboveGate ? 0.6 : 0.2,
+            firstPubDate: new Date(
+              inWindow ? NOW - FEED_WINDOW_MS / 2 : NOW - FEED_WINDOW_MS - H,
+            ).toISOString(),
+          });
+          const label = `${complete}/${aboveGate}/${inWindow}`;
+
+          // The sub-predicates individually report what the fixture encodes...
+          expect(`${label}:${isComplete(s)}`).toBe(`${label}:${complete}`);
+          expect(`${label}:${passesRenderGate(s)}`).toBe(`${label}:${aboveGate}`);
+          expect(`${label}:${isWithinWindow(s, CUTOFF)}`).toBe(`${label}:${inWindow}`);
+
+          // ...and `isVisible` is exactly their conjunction. Both the literal
+          // expectation (only TTT is visible) and the equality are asserted.
+          const expected = complete && aboveGate && inWindow;
+          expect(`${label}:${isVisible(s, CUTOFF)}`).toBe(`${label}:${expected}`);
+          expect(isVisible(s, CUTOFF)).toBe(
+            isComplete(s) && passesRenderGate(s) && isWithinWindow(s, CUTOFF),
+          );
+          seen.push(expected);
+        }
+      }
+    }
+    expect(seen).toHaveLength(8);
+    expect(seen.filter(Boolean)).toHaveLength(1); // exactly one visible combination
+  });
+
+  it('EXCLUDES relevance exactly at RENDER_GATE (the gate is strictly >)', () => {
+    const at = sugg({ _id: 'gate-at', relevance: RENDER_GATE });
+    expect(passesRenderGate(at)).toBe(false);
+    expect(isVisible(at, CUTOFF)).toBe(false);
+
+    const just = sugg({ _id: 'gate-over', relevance: RENDER_GATE + 0.01 });
+    expect(passesRenderGate(just)).toBe(true);
+    expect(isVisible(just, CUTOFF)).toBe(true);
+  });
+
+  it('INCLUDES firstPubDate exactly at the cutoff (the window is >=)', () => {
+    const at = sugg({ _id: 'cut-at', firstPubDate: new Date(CUTOFF).toISOString() });
+    expect(isWithinWindow(at, CUTOFF)).toBe(true);
+    expect(isVisible(at, CUTOFF)).toBe(true);
+
+    const justOutside = sugg({ _id: 'cut-out', firstPubDate: new Date(CUTOFF - 1).toISOString() });
+    expect(isWithinWindow(justOutside, CUTOFF)).toBe(false);
+    expect(isVisible(justOutside, CUTOFF)).toBe(false);
   });
 });

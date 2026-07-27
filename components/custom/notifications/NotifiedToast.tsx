@@ -5,8 +5,30 @@ import { Dimensions } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
+    withDelay,
     withTiming,
 } from 'react-native-reanimated';
+
+/**
+ * How long the toast sits FULLY OPAQUE before it starts leaving.
+ *
+ * This used to be zero: the fly-to-bell animation began on mount and had faded
+ * the toast to nothing within 700ms, so a notification read as "something flew
+ * into the top-right corner" and could not actually be read. The hold is the
+ * whole point — the flight is the epilogue, not the message.
+ */
+export const NOTIFIED_TOAST_HOLD_MS = 2000;
+/** Fly-to-bell leg (motion enabled + a known bell anchor). */
+export const NOTIFIED_TOAST_FLY_MS = 700;
+/** Plain fade-out leg (reduce-motion, or no anchor to fly to). */
+export const NOTIFIED_TOAST_FADE_MS = 1500;
+
+/** Total on-screen lifetime, so the caller can size the toast's `duration` to
+ *  match exactly — an over-long duration would leave an invisible toast mounted
+ *  over the UI after the animation finished. */
+export function notifiedToastDurationMs(canFly: boolean): number {
+    return NOTIFIED_TOAST_HOLD_MS + (canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS);
+}
 
 export interface NotifiedToastProps {
     title: string;
@@ -46,9 +68,15 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const deltaY = canFly ? anchor!.y - startY : 0;
 
     useEffect(() => {
-        // Fade-only (reduce-motion / no anchor): slower, no movement.
-        // Fly-to-bell: faster translate + shrink + fade.
-        progress.value = withTiming(1, { duration: canFly ? 700 : 1500 });
+        // HOLD fully opaque first so the notification is actually readable, then
+        // leave: fly-to-bell (translate + shrink + fade), or a plain slower fade
+        // when motion is reduced / there is no bell to fly to.
+        progress.value = withDelay(
+            NOTIFIED_TOAST_HOLD_MS,
+            withTiming(1, {
+                duration: canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS,
+            }),
+        );
     }, [progress, canFly]);
 
     const animatedStyle = useAnimatedStyle(() => {
@@ -67,7 +95,10 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     });
 
     return (
-        <Animated.View style={animatedStyle}>
+        // Purely informational and self-dismissing — it must never swallow a tap
+        // aimed at the chrome behind it, least of all during the fade where it
+        // is present but invisible.
+        <Animated.View style={animatedStyle} pointerEvents="none">
             <Toast action={action} variant="solid">
                 <ToastTitle>{title}</ToastTitle>
                 {body ? <ToastDescription>{body}</ToastDescription> : null}

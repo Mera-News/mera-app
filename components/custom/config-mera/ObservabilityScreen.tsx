@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Share } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +17,12 @@ import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
+import { computeFeedFunnel, type FeedFunnelReport } from '@/lib/stores/feed-diagnostics';
+import { getOpenedSeenBreakdown } from '@/lib/database/services/story-impression-service';
+import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
@@ -32,6 +38,7 @@ import {
 } from '@/components/ui/table';
 import TableDetailScreen from './TableDetailScreen';
 import {
+    FEED_FUNNEL_LABELS,
     FIELD_LABELS,
     STATUS_LABELS,
     TABLE_LABELS,
@@ -125,6 +132,81 @@ async function loadDbStats(): Promise<DbStats> {
     const settings = settingRows.map((s) => ({ key: s.key, value: s.value }));
 
     return { tableCounts, schedulerJobsByStatus, inferenceJobsByStatus, settings };
+}
+
+// Feed-funnel rows, ordered by the stage an article passes through: stored →
+// gated → grouped → laid out → read. Every nullable field is rendered as '—'
+// rather than the literal "null".
+function feedFunnelRows(r: FeedFunnelReport, t: TFunction): [string, string][] {
+    const L = FEED_FUNNEL_LABELS;
+    const rows: [string, string][] = [];
+
+    // A false self-check (or an unattributed drop) means the DIAGNOSTIC is stale
+    // — a gate was added without a matching sub-predicate — not that the feed is
+    // broken. Say so first so nothing below is read at face value.
+    const broken: string[] = [];
+    if (!r.sumsCheck.visibilityAttributionSums) broken.push('gate totals');
+    if (!r.sumsCheck.memberSumMatchesVisible) broken.push('story members');
+    if (!r.sumsCheck.orderReasonsSum) broken.push('order reasons');
+    if (r.dropped.unknownGate > 0) broken.push(`${r.dropped.unknownGate} unexplained`);
+    if (broken.length > 0) rows.push([L.inconsistent, broken.join(' · ')]);
+
+    rows.push(
+        [L.rows, String(r.totals.rows)],
+        [L.statusUnscored, String(r.totals.status.unscored)],
+        [L.statusReasonPending, String(r.totals.status.reasonPending)],
+        [L.statusComplete, String(r.totals.status.complete)],
+        [L.headerRelevant, String(r.header.relevantCount)],
+        [L.visible, String(r.visibleCount)],
+        [L.droppedNotComplete, String(r.dropped.notComplete)],
+        [L.droppedBelowGate, String(r.dropped.belowRelevanceGate)],
+        [L.droppedOutsideWindow, String(r.dropped.outsideWindow)],
+    );
+    if (r.dropped.unknownGate > 0) rows.push([L.droppedUnknownGate, String(r.dropped.unknownGate)]);
+
+    rows.push(
+        [L.groups, String(r.groups.count)],
+        [L.collapseRatio, String(r.groups.collapseRatio)],
+        [L.largestGroup, String(r.groups.largestSize)],
+        [L.candidates, String(r.candidates.count)],
+        [L.orderBuiltAt, relativeTime(r.orderStage.builtAtMs, t)],
+        [L.orderLength, String(r.orderStage.length)],
+        [L.rendered, String(r.orderStage.renderedCount)],
+        [L.orphans, String(r.orderStage.orphanCount)],
+        [L.aboveDivider, r.orderStage.aboveDividerCount?.toString() ?? '—'],
+        [L.belowDivider, r.orderStage.belowDividerCount?.toString() ?? '—'],
+        [L.skipped, String(r.cardStates.skipped)],
+        [L.viewed, String(r.cardStates.viewed)],
+        [L.unviewed, String(r.cardStates.unviewed)],
+        [L.staleCardStates, String(r.cardStates.staleEntries)],
+        [L.missingFromOrder, String(r.candidatesNotInOrder.absent)],
+    );
+
+    // One sub-row per reason that actually fired — a table of four permanent
+    // zeroes would bury the one that matters.
+    for (const [reason, count] of Object.entries(r.candidatesNotInOrder.byReason)) {
+        if (count > 0) rows.push([L[reason] ?? humanizeKey(reason), String(count)]);
+    }
+
+    const st = r.opened.stats;
+    rows.push(
+        [L.wouldBeBlockedByClusterGate, String(r.wouldBeBlockedByClusterGate)],
+        [
+            L.openedSet,
+            st
+                ? `${r.opened.unionSetSize} · ${st.unionSize} = ${st.articleIdCount} + ${st.clusterIdCount}`
+                : `${r.opened.unionSetSize} · —`,
+        ],
+        [L.openedOlderThan7d, st ? String(st.ageBuckets.d7to30) : '—'],
+        [L.orderHydrated, humanizeValue(String(r.hydrated.order))],
+        // Called out because a `No` here makes the four opened-set rows above
+        // read as legitimate zeroes: this screen opens from Settings without the
+        // Feed tab ever mounting, which is exactly when that flag is false.
+        [L.openedHydrated, humanizeValue(String(r.hydrated.opened))],
+        [L.launchWipeSuspected, humanizeValue(String(r.launchWipeSuspected))],
+    );
+
+    return rows;
 }
 
 // ─── Shared table styles ──────────────────────────────────────────────────────
@@ -238,6 +320,16 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     const [dbStats, setDbStats] = useState<DbStats | null>(null);
     const [loadingDb, setLoadingDb] = useState(false);
     const [selectedTable, setSelectedTable] = useState<string | null>(null);
+    const [funnel, setFunnel] = useState<FeedFunnelReport | null>(null);
+
+    // The header numbers the funnel reconciles against, held in a ref so
+    // `refresh` can read them without a dependency (it must stay `[]` — a new
+    // identity on every count change would re-run the whole diagnostic).
+    const feedCounts = useFeedCounts();
+    const feedCountsRef = useRef(feedCounts);
+    // Declared ABOVE the refresh effect on purpose: effects fire in declaration
+    // order, so the mount run reads live counts rather than stale zeroes.
+    useEffect(() => { feedCountsRef.current = feedCounts; }, [feedCounts]);
 
     const refresh = useCallback(async () => {
         setLoadingDb(true);
@@ -247,6 +339,41 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
             logger.warn('[ObservabilityScreen] loadDbStats failed', { error: String(err) });
         } finally {
             setLoadingDb(false);
+        }
+
+        // Feed funnel — ON DEMAND ONLY (this mount + the header refresh button).
+        // It is strictly read-only: it snapshots store state via `getState()` and
+        // never hydrates, ingests, or marks anything. Its own try/catch so a
+        // diagnostic failure can never take the rest of the screen down.
+        try {
+            const [breakdown, userCtx] = await Promise.all([
+                getOpenedSeenBreakdown().catch(() => null),
+                loadUserGeoLanguageContext(),
+            ]);
+            const fo = useFeedOrderStore.getState();
+            const os = useOpenedStoriesStore.getState();
+            const counts = feedCountsRef.current;
+            setFunnel(
+                computeFeedFunnel({
+                    suggestions: useForYouStore.getState().suggestions,
+                    openedArticleIds: os.articleIds,
+                    openedUnionIds: os.ids,
+                    order: fo.order,
+                    itemsById: fo.itemsById,
+                    cardStates: fo.cardStates,
+                    builtAt: fo.builtAt,
+                    orderHydrated: fo.hydrated,
+                    openedHydrated: os.hydrated,
+                    hydrateStats: fo.hydrateStats,
+                    headerAnalysedCount: counts.analysedCount,
+                    headerRelevantCount: counts.relevantCount,
+                    openedStats: breakdown?.stats ?? null,
+                    userCtx,
+                    nowMs: Date.now(),
+                }),
+            );
+        } catch (err) {
+            logger.warn('[ObservabilityScreen] feed funnel failed', { error: String(err) });
         }
     }, []);
 
@@ -276,6 +403,11 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 lastSyncAt,
                 syncState: syncStatusMessage?.state ?? 'idle',
             },
+            // The FULL report, samples included. The OS share sheet neither caps
+            // nor truncates, so the per-article rows ride out intact. Never route
+            // this to Sentry: `capStringValues` skips arrays, so sample titles
+            // would bypass the 200-char PII redaction.
+            feed_funnel: funnel,
             protocol: { processingMode, modelState, downloadProgress, isProcessing, hasPushToken: useUserStore.getState().userPersona?.expoPushToken != null },
             system: {
                 network: isConnected,
@@ -300,7 +432,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         taskCurrentStatus, taskLastRun, dbStats, schedulerStatus, runningCount, failedCount,
         pendingCount, articleCount, relevantArticleCount, unscoredCount,
         asyncJobPhase, lastSyncAt, syncStatusMessage, processingMode, modelState,
-        downloadProgress, isProcessing, isConnected, dbReady, userId,
+        downloadProgress, isProcessing, isConnected, dbReady, userId, funnel,
     ]);
 
     const relevantPct = articleCount > 0 ? Math.round((relevantArticleCount / articleCount) * 100) : 0;
@@ -557,6 +689,17 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     [FIELD_LABELS.unscoredCount, String(unscoredCount)],
                     [FIELD_LABELS.lastSyncAt, relativeTime(lastSyncAt, t)],
                 ]} />
+
+                {/* Feed funnel — why the feed shows N cards. Recomputed only by
+                    `refresh` (mount + the header button), never on render. */}
+                <SectionHeader title={t('observability.feedFunnel')} />
+                {funnel ? (
+                    <KVTable rows={feedFunnelRows(funnel, t)} />
+                ) : (
+                    <Text size="sm" className="text-gray-600 py-2">
+                        {loadingDb ? t('common.loading') : t('observability.notLoaded')}
+                    </Text>
+                )}
 
                 {/* Protocol */}
                 <SectionHeader title={t('observability.protocol')} />

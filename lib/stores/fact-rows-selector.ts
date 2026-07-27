@@ -1,5 +1,5 @@
 // fact-rows-selector — the pure selector behind the Round-3 fact-rows For-You
-// view. Turns the render-gated 24h suggestion pool into per-fact horizontal rows
+// view. Turns the render-gated suggestion pool into per-fact horizontal rows
 // (one row per owning fact) plus the breaking strip pinned above them.
 //
 // PURE: RN-free. It consumes the store's `ForYouSuggestion` rows + the persona
@@ -37,6 +37,7 @@ import {
   TITLE_JACCARD_DISPLAY_THRESHOLD,
   CLUSTER_CORE_CONFIDENCE_THRESHOLD,
   WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+  SCORE_PROPAGATION_LOOKBACK_MS,
   type GroupableItem,
 } from '@/lib/feed-grouping/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
@@ -44,9 +45,23 @@ import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-statu
 import { repPriorityTier, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from './for-you-store';
 
-/** Only stories from the last 24h are eligible (matches the legacy feed).
- *  Exported so the swipe-stack selector reuses the exact same window. */
-export const FEED_WINDOW_MS = 24 * 60 * 60 * 1000;
+/**
+ * Publication window for everything the user can see — the Feed tab, the
+ * Dashboard, and the swipe stack all gate on this one constant.
+ *
+ * 48h, and deliberately not a second hardcoded copy: it IS
+ * `SCORE_PROPAGATION_LOOKBACK_MS`, which is also what the header sentence
+ * counts over (see lib/hooks/use-feed-counts.ts) and what the storage TTL keeps
+ * (`SUGGESTION_TTL_MS` in lib/scheduler/tasks/data-cleanup-task.ts). Binding
+ * them together is the point: this was 24h while the header counted 48h, so the
+ * header advertised a pile of articles the feed then silently refused to render,
+ * and there was no way to tell that apart from a bug.
+ *
+ * Widening it also simply gives the user more to read — rows in the 24-48h band
+ * were already on the device, already scored, and already being kept alive as
+ * score-propagation donors; they were just never shown.
+ */
+export const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
 
 /** The render gate — a scored row must clear this to be shown. Exported so the
  *  swipe-stack selector reuses the exact same threshold. */
@@ -121,14 +136,32 @@ function parseMs(iso: string | null | undefined): number {
   return Number.isFinite(t) ? t : 0;
 }
 
+/** Terminal note-gate: the note exists, or was deliberately skipped. */
+export function isComplete(s: ForYouSuggestion): boolean {
+  return s.status === ArticleSuggestionStatus.Complete;
+}
+
+/** The render gate — strictly above `RENDER_GATE`. */
+export function passesRenderGate(s: ForYouSuggestion): boolean {
+  return (s.relevance ?? 0) > RENDER_GATE;
+}
+
+/** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). */
+export function isWithinWindow(s: ForYouSuggestion, cutoffMs: number): boolean {
+  return parseMs(s.firstPubDate) >= cutoffMs;
+}
+
 /** A row is VISIBLE once its note exists (status `complete`) — see the module
- *  header. Must also clear the render gate and the 24h window. Exported so the
- *  swipe-stack selector applies the identical visibility gate. */
+ *  header. Must also clear the render gate and the publication window (see
+ *  FEED_WINDOW_MS). Exported so the
+ *  swipe-stack selector applies the identical visibility gate.
+ *
+ *  Composed from the three named sub-predicates above so the funnel diagnostic
+ *  can attribute WHICH gate rejected a row without re-implementing (and then
+ *  drifting from) the comparisons. Keep the conjunction order in sync with the
+ *  diagnostic's attribution order. */
 export function isVisible(s: ForYouSuggestion, cutoffMs: number): boolean {
-  if (s.status !== ArticleSuggestionStatus.Complete) return false;
-  if ((s.relevance ?? 0) <= RENDER_GATE) return false;
-  const pub = parseMs(s.firstPubDate);
-  return pub >= cutoffMs;
+  return isComplete(s) && passesRenderGate(s) && isWithinWindow(s, cutoffMs);
 }
 
 /** scoredAt ?? createdAt in epoch ms — the row's "added to feed" time. */
@@ -227,7 +260,7 @@ export function buildFactRows(
   const hpMult = config.scoringEngine.HP_MULT;
   const repCompareForGroups = makeRepCompare(userCtx);
 
-  // 1. Visible pool (note-gated + render gate + 24h window).
+  // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS).
   const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
   if (visible.length === 0) return { breaking: [], rows: [] };
 

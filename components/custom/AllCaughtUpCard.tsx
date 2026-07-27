@@ -26,9 +26,11 @@ const AllCaughtUpCard: React.FC = () => {
             className="mb-4 overflow-hidden bg-black border-black"
         >
             <Box className="w-full py-20 px-6 items-center justify-center">
-                {/* Mera Logo */}
+                {/* Mera logo — animated: this card is a rest stop the user
+                    actually dwells on, so the spotlight sweeps rather than
+                    sitting on a frozen frame. */}
                 <Box className="mb-6">
-                    <MeraLogo size={100} />
+                    <MeraLogo size={100} animated />
                 </Box>
 
                 {/* "You're all caught up" text */}
