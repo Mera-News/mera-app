@@ -277,7 +277,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: relevant,
             hasGeneratedTopics: state.hasGeneratedTopics,
             lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'setCounts' },
+        }));
     },
 
     setHasGeneratedTopics: (value) => {
@@ -288,7 +290,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: state.relevantArticleCount,
             hasGeneratedTopics: value,
             lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'setHasGeneratedTopics' },
+        }));
     },
 
     setUnscoredCount: (count) => set({ unscoredCount: count }),
@@ -315,7 +319,16 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: nextRelevantCount,
             hasGeneratedTopics: state.hasGeneratedTopics,
             lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            // Sentry MERA-APP-4W was titled "removeSuggestion", but
+            // `removeSuggestion` itself is pure state math and can't throw —
+            // the actual failure is always this trailing persistFeedMetadata
+            // (WatermelonDB setSetting) write. This tag is what makes that
+            // visible instead of merging with every other bare
+            // `{ store: 'for-you-store' }` capture in this file into one
+            // indistinguishable Sentry issue.
+            tags: { store: 'for-you-store', method: 'removeSuggestion' },
+        }));
     },
 
     startDeviceProcessing: (total) => set({
@@ -382,7 +395,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: state.relevantArticleCount,
             hasGeneratedTopics: state.hasGeneratedTopics,
             lastProcessingRunFinishedAt: ts,
-        }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+        }).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'markProcessingRunFinished' },
+        }));
     },
 
     setFeedNeedsRefresh: (val) => set({ feedNeedsRefresh: val }),
@@ -403,7 +418,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 lastProcessingRunFinishedAt: null,
             });
         } catch (err) {
-            logger.captureException(err, { tags: { store: 'for-you-store' } });
+            logger.captureException(err, {
+                tags: { store: 'for-you-store', method: 'clearData' },
+            });
         }
     },
 
@@ -419,7 +436,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 relevantArticleCount: 0,
                 hasGeneratedTopics,
                 lastProcessingRunFinishedAt: null,
-            }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+            }).catch((err) => logger.captureException(err, {
+                tags: { store: 'for-you-store', method: 'pruneOrphanedData:fullClear' },
+            }));
             return;
         }
 
@@ -440,7 +459,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 relevantArticleCount: relevantCount,
                 hasGeneratedTopics: state.hasGeneratedTopics,
                 lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-            }).catch((err) => logger.captureException(err, { tags: { store: 'for-you-store' } }));
+            }).catch((err) => logger.captureException(err, {
+                tags: { store: 'for-you-store', method: 'pruneOrphanedData:reload' },
+            }));
         }
     },
 
@@ -448,7 +469,6 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         try {
             const rows = await loadSuggestions();
             rows.sort(byRelevanceDesc);
-            dumpFeedForClusterAnalysis(rows);
             const scoredCount = rows.filter(
                 (s) => s.status !== ArticleSuggestionStatus.Unscored,
             ).length;
@@ -514,40 +534,3 @@ function byRelevanceDesc(
     return bv - av;
 }
 
-// Dev-only, one-shot startup dump of headline + cluster memberships per
-// article suggestion, used to design a better cluster-grouping strategy for
-// the For You feed (each article can belong to multiple clusters; see
-// CLUSTER_CORE_CONFIDENCE_THRESHOLD in components/custom/for-you/ForYouScreen.tsx
-// for the current collapse logic). Local debug aid only — logs via plain
-// console.log (never Sentry) and must never break hydration.
-function dumpFeedForClusterAnalysis(rows: ForYouSuggestion[]): void {
-    if (!__DEV__) return;
-    try {
-        console.log(`[ForYou] startup feed dump — ${rows.length} suggestions`);
-        const CHUNK_SIZE = 25;
-        const chunks = Math.ceil(rows.length / CHUNK_SIZE) || 1;
-        for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
-            const chunkIndex = i / CHUNK_SIZE + 1;
-            const batch = rows.slice(i, i + CHUNK_SIZE).map((s) => ({
-                articleId: s.articleId,
-                title: s.title_en ?? s.title_original,
-                relevance: s.relevance,
-                status: s.status,
-                firstPubDate: s.firstPubDate,
-                // stableClusterId included so dumps show the cross-run story key
-                // alongside the per-run clusterId.
-                clusters: s.clusters.map((c) => ({
-                    clusterId: c.clusterId,
-                    confidence: c.confidence,
-                    stableClusterId: c.stableClusterId ?? null,
-                })),
-            }));
-            console.log(
-                `[ForYou] feed dump chunk ${chunkIndex}/${chunks}`,
-                JSON.stringify(batch),
-            );
-        }
-    } catch {
-        // Debug dump must never break hydration.
-    }
-}

@@ -208,10 +208,9 @@
   },
   "articleDetail": {
     "readArticle": "Read Article",
-    "readOn": "Read on {{publication}}",
-    "translateAndRead": "Translate & Read",
-    "translateAndReadOn": "Translate & Read on {{publication}}",
-    "viewOriginal": "View original",
+    "viewAndTranslateOnDevice": "View article & translate on device",
+    "viewOriginal": "View original article",
+    "viewOriginalIn": "View original article in {{language}}",
     "relatedArticles": "Related Articles",
     "articleUnavailable": "This article is no longer available",
     "storyUnavailable": "This story is no longer available",
@@ -219,7 +218,9 @@
     "articleNotFound": "Article not found",
     "offlineUnavailable": "You're offline and this article isn't saved for offline reading",
     "share": "Share",
-    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}"
+    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}",
+    "sourceCountryGlobal": "Worldwide",
+    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name."
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
@@ -280,7 +281,6 @@
   },
   "forYou": {
     "sectionPrefix": "News about:",
-    "alsoForYou": "Also for you",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
     "openFactFeed": "See all stories for this topic",
@@ -352,7 +352,8 @@
   },
   "clusterDetail": {
     "translatable": "This article is in {{language}} — your device can translate it while you read. If translation doesn't work, you can open the site in Google Translate below — just note you'll be browsing it through Google.",
-    "notTranslatable": "This article is in {{language}}. On-device translation may not be available for it — use Google Translate below to read it in your language.",
+    "notTranslatable": "This article is in {{language}}. Your device can't translate it — use Google Translate below to read it in your language.",
+    "notTranslatableOsOutdated": "This article is in {{language}}. On-device translation needs iOS {{requiredVersion}} — you're on iOS {{currentVersion}}. Update iOS, or use Google Translate below to read it in your language.",
     "unknownLanguage": "another language",
     "translationGuideLink": "Show me how to translate the article",
     "viewInGoogleTranslate": "View in Google Translate",
@@ -1066,6 +1067,7 @@
     "emptyTitle": "I don't know you yet",
     "emptyBody": "Tell me about yourself so I can find news that matters to you.",
     "startTalking": "Start talking",
+    "meraInvite": "Hey! Tell me what you're into and I'll tune your feed for you.",
     "aboutYou": "About you",
     "gettingToKnowYou": "I'm still getting to know you — check back in a moment.",
     "updating": "Updating…",

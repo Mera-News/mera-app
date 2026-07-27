@@ -10,9 +10,14 @@ import logger from './logger';
 // of 401s (this shipped a two-week, ~700-event Sentry storm in prod).
 //
 // This breaker is that escape hatch. After AUTH_FAILURE_THRESHOLD consecutive
-// auth failures it trips ONCE: captures a single Sentry event, pauses the
-// feed-sync task (stopping the poll loop), and kicks off a single deduped
-// server-truth session re-check to decide transient-vs-dead.
+// auth failures it trips ONCE: it kicks off a single deduped server-truth
+// session re-check to decide transient-vs-dead, and only pauses the feed-sync
+// task (stopping the poll loop) + captures a single Sentry event when that
+// re-check does NOT come back alive.
+//
+// Repair before pause is deliberate. The original order paused first and
+// re-checked afterwards, so a merely-stale session cost the user a stopped
+// poller even though the very next call proved it healthy.
 
 const AUTH_FAILURE_THRESHOLD = 3;
 
@@ -27,8 +32,16 @@ const FEED_SYNC_TASK = 'feed-sync';
 // cache). Reset in tests via _resetForTests().
 let consecutiveFailures = 0;
 let breakerOpen = false;
-let pendingRecheck: Promise<void> | null = null;
+let pendingRecheck: Promise<RecheckOutcome> | null = null;
 let lastRecheckAt = 0;
+// Monotonic — deliberately NOT reset by _resetForTests, so an abandoned run can
+// never collide with the token of the run that replaced it.
+let recheckToken = 0;
+
+// What the server-truth re-check concluded. Returned (rather than inferred
+// from breakerOpen) so callers can't confuse "session proved alive" with
+// "breaker closed by a concurrent recordAuthSuccess".
+type RecheckOutcome = 'alive' | 'dead' | 'inconclusive';
 
 interface AuthErrorLike {
   status?: number;
@@ -64,6 +77,21 @@ function resumeFeedSync(): void {
   }
 }
 
+// Drop the cached inference-gateway JWT. GraphQL auth is the better-auth
+// COOKIE (apollo-client's SetContextLink), which getSession refreshes for us,
+// so this alone never repairs a GraphQL 401 — but the JWT is the second thing
+// a dead-then-revived session leaves stale, and re-minting it is free.
+// Lazy-required for the same no-cycle-at-module-eval reason as above.
+function invalidateJwtCache(): void {
+  try {
+    const { invalidateJwtCache: invalidate } =
+      require('./auth-client') as typeof import('./auth-client');
+    invalidate();
+  } catch {
+    // best-effort
+  }
+}
+
 // Flip the persisted needs-reauth flag WITHOUT ejecting the user. A confirmed
 // dead server session no longer wipes local auth/data — the app stays
 // offline-usable behind the PIN, and a banner prompts a re-login (which clears
@@ -78,10 +106,25 @@ function setNeedsReauth(value: boolean): void {
   }
 }
 
+/** Current persisted needs-reauth flag; false when the store isn't available. */
+function getNeedsReauth(): boolean {
+  try {
+    const { useUserStore } =
+      require('./stores/user-store') as typeof import('./stores/user-store');
+    return useUserStore.getState().needsReauth === true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Records one auth failure (a 401 / UNAUTHENTICATED observed by the Apollo
- * ErrorLink). On the AUTH_FAILURE_THRESHOLD-th consecutive failure the breaker
- * trips: one Sentry event, feed-sync paused, one deduped session re-check.
+ * ErrorLink or by a service-level catch). On the AUTH_FAILURE_THRESHOLD-th
+ * consecutive failure the breaker trips: it attempts repair first (drop the
+ * cached JWT + one deduped server-truth session re-check) and only pauses
+ * feed-sync + captures a single Sentry event if that re-check does NOT come
+ * back alive. An alive session means the failures were transient and the
+ * poller is never stopped.
  *
  * While the breaker is already open and a re-check is pending we do NOT re-trip
  * or re-capture. If a prior re-check failed offline, a later failure re-attempts
@@ -93,14 +136,28 @@ export function recordAuthFailure(): void {
   if (!breakerOpen) {
     if (consecutiveFailures < AUTH_FAILURE_THRESHOLD) return;
 
+    // Mark the breaker open immediately so concurrent failures dedupe onto
+    // this repair attempt rather than starting their own.
     breakerOpen = true;
-    logger.captureMessage('Auth circuit breaker tripped', {
-      level: 'warning',
-      tags: { source: 'auth-breaker', type: 'auth' },
-      extra: { consecutiveFailures },
+    const failuresAtTrip = consecutiveFailures;
+
+    invalidateJwtCache();
+    void triggerRecheck().then((outcome) => {
+      // Alive → transient. triggerRecheck already closed the breaker and reset
+      // the counter; feed-sync was never paused and Sentry never heard about it.
+      if (outcome === 'alive') return;
+      // The verdict is now several hundred ms old. If a successful
+      // authenticated op closed the breaker while we were asking the server,
+      // that is fresher and stronger proof — pausing here would strand
+      // feed-sync paused with breakerOpen === false, which nothing resumes.
+      if (!breakerOpen) return;
+      logger.captureMessage('Auth circuit breaker tripped', {
+        level: 'warning',
+        tags: { source: 'auth-breaker', type: 'auth' },
+        extra: { consecutiveFailures: failuresAtTrip, recheck: outcome },
+      });
+      pauseFeedSync();
     });
-    pauseFeedSync();
-    void triggerRecheck();
     return;
   }
 
@@ -130,18 +187,47 @@ export function recordAuthSuccess(): void {
 }
 
 /**
- * Treats an app-foreground event as a fresh start: if the breaker had tripped,
- * reset it and resume feed-sync so a user who re-authenticated (or whose
- * keychain is now unlocked) isn't stuck behind a paused poller. If the session
- * is still dead, the next run's 401s will simply re-trip the breaker.
+ * Treats an app-foreground event as a chance to recover: if the breaker had
+ * tripped, revalidate against the server and resume feed-sync only once the
+ * session is proven alive (a user who re-authenticated, or whose keychain is
+ * now unlocked, shouldn't stay stuck behind a paused poller).
+ *
+ * Stays SYNCHRONOUS — AppScheduler._onForeground calls this inline on the
+ * foreground path and must not be delayed by a network round-trip, so the
+ * re-check is fired and the resume happens from its callback.
  */
 export function onAppForeground(): void {
   if (!breakerOpen && consecutiveFailures === 0) return;
+
+  // A confirmed-dead session does not heal on its own. ReauthBanner is the
+  // recovery path, and re-login clears the flag; resuming here would only buy
+  // AUTH_FAILURE_THRESHOLD more 401s and an immediate re-trip.
+  if (getNeedsReauth()) return;
+
+  const wasOpen = breakerOpen;
   consecutiveFailures = 0;
-  breakerOpen = false;
+  // Nothing was paused, so there is nothing to revalidate — don't spend a
+  // getSession round-trip on every foreground after one or two stray 401s.
+  if (!wasOpen) return;
+
+  // Deliberately do NOT close the breaker here. The old code did, which meant
+  // every single foreground resumed the poller unconditionally and bought
+  // exactly AUTH_FAILURE_THRESHOLD more 401s before re-tripping — that loop is
+  // what a 324-event Sentry issue looks like. Only triggerRecheck's 'alive'
+  // branch may close it.
+  //
+  // Clearing pendingRecheck/lastRecheckAt forces a genuinely fresh round-trip:
+  // the cooldown shouldn't apply to an explicit foreground, and a re-check
+  // started before backgrounding may never settle (iOS freezes timers), so we
+  // abandon rather than join it. triggerRecheck's finally is identity-guarded,
+  // so the abandoned run can't clear the handle of the one we start here.
   pendingRecheck = null;
   lastRecheckAt = 0;
-  resumeFeedSync();
+
+  // Note: an inconclusive re-check (offline foreground) now leaves feed-sync
+  // paused where the old code resumed. It self-heals on the next foreground
+  // with connectivity, or on any successful request via recordAuthSuccess.
+  void triggerRecheck();
 }
 
 /**
@@ -150,19 +236,26 @@ export function onAppForeground(): void {
  *  - alive     → transient: reset counter, close breaker, resume feed-sync.
  *  - dead      → set the persisted needsReauth flag (no eject); feed-sync stays
  *                paused and a banner prompts re-login. Local data + PIN survive.
- *  - offline   → keep breaker open; a later recordAuthFailure retries after cooldown.
+ *  - offline   → 'inconclusive': keep breaker open; a later recordAuthFailure
+ *                retries after cooldown.
  */
-function triggerRecheck(): Promise<void> {
+function triggerRecheck(): Promise<RecheckOutcome> {
   if (pendingRecheck) return pendingRecheck;
 
-  pendingRecheck = (async () => {
+  // Monotonic identity for this run, used by the guard in the finally below.
+  // (A token rather than the promise itself: a const can't be referenced from
+  // inside its own initializer.)
+  const token = ++recheckToken;
+
+  const run: Promise<RecheckOutcome> = (async (): Promise<RecheckOutcome> => {
     lastRecheckAt = Date.now();
     const { authClient } =
       require('./auth-client') as typeof import('./auth-client');
 
     try {
       // disableCookieCache forces a server round-trip instead of trusting the
-      // locally cached cookie — we need server truth here.
+      // locally cached cookie — we need server truth here. (better-auth-expo
+      // rewrites secure-store from this response, which is the actual repair.)
       const result = (await authClient.getSession({
         query: { disableCookieCache: true },
       })) as SessionResult | null | undefined;
@@ -171,8 +264,11 @@ function triggerRecheck(): Promise<void> {
         // Transient — session is actually alive. Close the breaker.
         consecutiveFailures = 0;
         breakerOpen = false;
+        // Server truth beats a stale flag: a live session means the banner has
+        // nothing left to prompt for (same policy as recordAuthSuccess).
+        setNeedsReauth(false);
         resumeFeedSync();
-        return;
+        return 'alive';
       }
 
       const error = result?.error;
@@ -181,14 +277,14 @@ function triggerRecheck(): Promise<void> {
         // re-auth instead of ejecting; keep the breaker open so feed-sync
         // stays paused until the user signs in again.
         setNeedsReauth(true);
-        return;
+        return 'dead';
       }
 
       const status = error.status ?? error.statusCode;
       if (status === 401 || status === 403) {
         // Server explicitly rejected the session — flag for re-auth, no eject.
         setNeedsReauth(true);
-        return;
+        return 'dead';
       }
 
       // Any other error (offline, 5xx, unknown) — can't conclude the session is
@@ -199,6 +295,7 @@ function triggerRecheck(): Promise<void> {
         { status },
         'warning',
       );
+      return 'inconclusive';
     } catch (e) {
       // Threw (typically a network failure) — keep the breaker open for retry.
       logger.addBreadcrumb(
@@ -207,12 +304,17 @@ function triggerRecheck(): Promise<void> {
         { error: String(e) },
         'warning',
       );
+      return 'inconclusive';
     } finally {
-      pendingRecheck = null;
+      // Identity guard: onAppForeground abandons an in-flight re-check by
+      // nulling the handle, so a late-settling run must not clear the handle of
+      // the fresh run that replaced it.
+      if (recheckToken === token) pendingRecheck = null;
     }
   })();
 
-  return pendingRecheck;
+  pendingRecheck = run;
+  return run;
 }
 
 /** Test-only: reset all module-level breaker state. */

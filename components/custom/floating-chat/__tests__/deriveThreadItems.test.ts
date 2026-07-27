@@ -497,8 +497,19 @@ describe('deriveThreadItems', () => {
       id: 'tc-track',
       name: 'proposeTrack',
       status: 'done',
-      input: { track: 'Updates on the student protest in Sonbhadra' },
-      result: { staged: true, proposalId: 'track-nonce', track: 'Updates on the student protest in Sonbhadra', subject },
+      input: {
+        options: [
+          { label: 'Sonbhadra exam protest', search: 'sonbhadra student exam result protest' },
+        ],
+      },
+      result: {
+        staged: true,
+        proposalId: 'track-nonce',
+        options: [
+          { label: 'Sonbhadra exam protest', search: 'sonbhadra student exam result protest' },
+        ],
+        subject,
+      },
     };
     const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Want to follow this?', [tc])] }));
     const card = items.find((i) => i.kind === 'proposal-card');
@@ -506,7 +517,12 @@ describe('deriveThreadItems', () => {
     if (card && card.kind === 'proposal-card') {
       expect(card.proposal.id).toBe('track-nonce'); // echoed proposalId wins
       expect(card.proposal.actions).toEqual([
-        { type: 'track_story', trackText: 'Updates on the student protest in Sonbhadra', subject },
+        {
+          type: 'track_story',
+          label: 'Sonbhadra exam protest',
+          searchText: 'sonbhadra student exam result protest',
+          subject,
+        },
       ]);
     }
   });
@@ -646,8 +662,10 @@ describe('deriveThreadItems', () => {
       name: 'proposeTrack',
       status: 'done',
       input: {
-        track: 'The Sonbhadra protest',
-        options: ['The Sonbhadra exam-result protest', 'The wider UP exam-reform movement'],
+        options: [
+          { label: 'Sonbhadra exam protest', search: 'sonbhadra exam result protest' },
+          { label: 'UP exam-reform movement', search: 'uttar pradesh student exam reform' },
+        ],
       },
       result: { staged: true, proposalId: 'track-nonce', chooseOne: true, subject },
     };
@@ -657,8 +675,18 @@ describe('deriveThreadItems', () => {
     expect(card.proposal.id).toBe('track-nonce');
     expect(card.proposal.chooseOne).toBe(true);
     expect(card.proposal.actions).toEqual([
-      { type: 'track_story', trackText: 'The Sonbhadra exam-result protest', subject },
-      { type: 'track_story', trackText: 'The wider UP exam-reform movement', subject },
+      {
+        type: 'track_story',
+        label: 'Sonbhadra exam protest',
+        searchText: 'sonbhadra exam result protest',
+        subject,
+      },
+      {
+        type: 'track_story',
+        label: 'UP exam-reform movement',
+        searchText: 'uttar pradesh student exam reform',
+        subject,
+      },
     ]);
   });
 

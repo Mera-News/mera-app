@@ -14,7 +14,9 @@
 //    frozen prefix (and read/opened cards anywhere) never move.
 //  • The ONLY removal point is `hydrate`, which evicts persisted ids that no
 //    longer have a backing item in the live candidate pool (retention purge /
-//    24h-window ageing between sessions).
+//    24h-window ageing between sessions). Viewed (opened) stories are NEVER
+//    removed — the Feed screen relocates them below the "All Caught Up" divider
+//    at render time (see components/custom/feed/feed-entries.ts).
 
 import { create } from 'zustand';
 import logger from '@/lib/logger';
@@ -58,6 +60,8 @@ interface FeedOrderState {
     frozenThroughIndex: number,
   ) => void;
   setVerdict: (id: string, verdict: Verdict) => void;
+  /** Drop a verdict (+ its tree path) — the un-vote path. No-op if absent. */
+  clearVerdict: (id: string) => void;
   setPath: (id: string, path: string[]) => void;
   reset: () => void;
 }
@@ -229,6 +233,14 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
         [id]: { verdict, path: s.verdicts[id]?.path ?? [] },
       },
     })),
+
+  clearVerdict: (id) =>
+    set((s) => {
+      if (!s.verdicts[id]) return {} as Partial<FeedOrderState>;
+      const next = { ...s.verdicts };
+      delete next[id];
+      return { verdicts: next };
+    }),
 
   setPath: (id, path) =>
     set((s) => {

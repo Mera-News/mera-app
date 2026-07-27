@@ -272,3 +272,44 @@ export async function hasLiked(articleId: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Returns the article's current verdict (like|dislike|null) plus any stored
+ * feedback-tree path — used to restore the detail screen's inline feedback
+ * surface across remounts. Under the verdict model (recordVerdictFeedback) at
+ * most one of like/dislike exists; a stray both-present state prefers 'like'.
+ */
+export async function getArticleVerdict(
+  articleId: string,
+): Promise<{ verdict: VerdictSentiment | null; path: string[] }> {
+  const id = (articleId ?? '').trim();
+  if (!id) return { verdict: null, path: [] };
+
+  try {
+    const rows = await articleFeedbackCol
+      .query(Q.where('article_id', id), Q.where('sentiment', Q.oneOf(['like', 'dislike'])))
+      .fetch();
+    if (rows.length === 0) return { verdict: null, path: [] };
+
+    const row = rows.find((r) => r.sentiment === 'like') ?? rows[0];
+    const verdict = row.sentiment === 'like' ? 'like' : 'dislike';
+
+    let path: string[] = [];
+    if (row.contextJson) {
+      try {
+        const parsed = JSON.parse(row.contextJson);
+        if (parsed && Array.isArray(parsed.treePath)) {
+          path = parsed.treePath.filter((x: unknown): x is string => typeof x === 'string');
+        }
+      } catch {
+        /* corrupt json — no path to restore */
+      }
+    }
+    return { verdict, path };
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'getArticleVerdict' },
+    });
+    return { verdict: null, path: [] };
+  }
+}

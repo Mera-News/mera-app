@@ -4,13 +4,12 @@
 // feed-sections-selector suite, adapted to the fact-rows output, and adds the
 // Round-3-specific rules: note-gated visibility, reorder-on-new-article, and the
 // cluster-timestamp (= newest member's pubDate) rule. The broad fixture models
-// the user's real device dump shape (37 fact rows + an eleven-story 0.6 orphan
-// cluster that degrades into "Also for you").
+// the user's real device dump shape (37 fact rows + eleven factless stories that
+// are now dropped — no "Also for you" catch-all).
 
 import {
   buildFactRows,
   isSuggestionOpened,
-  ALSO_ROW_ID,
   type FactRowsSnapshots,
 } from '../fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -91,12 +90,11 @@ describe('buildFactRows ownership', () => {
     const f1 = rows.find((r) => r.factId === 'f1');
     const f2 = rows.find((r) => r.factId === 'f2');
     expect(f1?.statement).toBe('Berlin tech');
-    expect(f1?.kind).toBe('fact');
     expect(f1?.groups.map((g) => g.data._id)).toEqual(['a']);
     expect(f2?.groups.map((g) => g.data._id)).toEqual(['b']);
   });
 
-  it('zero-signal orphan (retired topic) degrades into the "also" row', () => {
+  it('a factless orphan (retired topic → no active fact) is DROPPED — no "Also for you"', () => {
     const snap = snapshots(
       [['t-own', { factId: 'f-own' }], ['t-orph', { factId: 'f-orph', status: 'retired' }]],
       [['f-own', { statement: 'Owned' }], ['f-orph', { statement: 'Orphan' }]],
@@ -104,14 +102,24 @@ describe('buildFactRows ownership', () => {
     const owned = sugg({ _id: 'own', matchedTopics: [{ topicId: 't-own', text: 'o' }] });
     const orphan = sugg({ _id: 'orph', matchedTopics: [{ topicId: 't-orph', text: 'a' }] });
     const { rows } = buildFactRows([owned, orphan], snap, new Set(), NOW);
-    const also = rows.find((r) => r.factId === ALSO_ROW_ID);
-    expect(also?.kind).toBe('also');
-    expect(also?.groups.map((g) => g.data._id)).toEqual(['orph']);
-    // "also" is always last.
-    expect(rows[rows.length - 1].factId).toBe(ALSO_ROW_ID);
-    expect(rows.some((r) => r.factId === 'f-own')).toBe(true);
-    // orphan never forms a fact row.
+    // No catch-all row exists anymore; every row is a real fact section.
+    expect(rows.some((r) => r.factId === 'also')).toBe(false);
+    // The owned story shows; the factless orphan is dropped entirely.
+    expect(rows.find((r) => r.factId === 'f-own')?.groups.map((g) => g.data._id)).toEqual(['own']);
+    expect(rows.some((r) => r.groups.some((g) => g.data._id === 'orph'))).toBe(false);
     expect(rows.some((r) => r.factId === 'f-orph')).toBe(false);
+  });
+
+  it('a zero-signal but ACTIVE fact match folds into that fact section', () => {
+    const snap = snapshots(
+      [['t-zero', { factId: 'f-zero', weight: 0 }]], // active, but effective weight 0
+      [['f-zero', { statement: 'Low signal' }]],
+    );
+    const s = sugg({ _id: 'z', matchedTopics: [{ topicId: 't-zero', text: 'z' }] });
+    const { rows } = buildFactRows([s], snap, new Set(), NOW);
+    const fz = rows.find((r) => r.factId === 'f-zero');
+    expect(fz?.groups.map((g) => g.data._id)).toEqual(['z']);
+    expect(rows.some((r) => r.factId === 'also')).toBe(false);
   });
 
   it('negative match (down-weighted topic) is DROPPED, not shown', () => {
@@ -388,10 +396,10 @@ describe('buildFactRows breaking extraction', () => {
   });
 });
 
-// --- device-dump shape (37 fact rows + eleven-story 0.6 orphan cluster) ----
+// --- device-dump shape (37 fact rows; eleven factless stories dropped) ----
 
 describe('buildFactRows device-dump shape', () => {
-  it('produces 37 fact rows + one 11-story "also" row', () => {
+  it('produces 37 fact rows and drops the 11 factless (retired-topic) stories', () => {
     const topics: [string, { factId: string | null; status?: string }][] = [];
     const facts: [string, { statement?: string }][] = [];
     const rowsInput: ForYouSuggestion[] = [];
@@ -412,7 +420,8 @@ describe('buildFactRows device-dump shape', () => {
       );
     }
     // Eleven relevance-0.6 complete stories whose sole owning topic RETIRED —
-    // they degrade together into "Also for you" (the real incident).
+    // factless (no active fact), so they are DROPPED from the Dashboard (there is
+    // no "Also for you" catch-all anymore).
     topics.push(['t-ai', { factId: 'f-ai', status: 'retired' }]);
     facts.push(['f-ai', { statement: 'AI news' }]);
     for (let i = 0; i < 11; i++) {
@@ -428,12 +437,11 @@ describe('buildFactRows device-dump shape', () => {
 
     const snap = snapshots(topics, facts);
     const { rows } = buildFactRows(rowsInput, snap, new Set(), NOW);
-    const factRows = rows.filter((r) => r.kind === 'fact');
-    const also = rows.find((r) => r.factId === ALSO_ROW_ID);
-    expect(factRows).toHaveLength(37);
-    expect(also).toBeDefined();
-    expect(also!.groups).toHaveLength(11);
-    expect(rows[rows.length - 1].factId).toBe(ALSO_ROW_ID);
+    // Every row is a real fact section — 37 of them.
+    expect(rows).toHaveLength(37);
+    // No catch-all; the 11 retired-topic (factless) stories are dropped.
+    expect(rows.some((r) => r.factId === 'also')).toBe(false);
+    expect(rows.some((r) => r.groups.some((g) => g.data._id.startsWith('ai-')))).toBe(false);
   });
 });
 

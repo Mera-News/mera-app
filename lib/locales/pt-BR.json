@@ -208,12 +208,13 @@
     "storyUnavailable": "Esta história não está mais disponível",
     "failedToLoad": "Falha ao carregar artigo",
     "articleNotFound": "Artigo não encontrado",
-    "readOn": "Ler no {{publication}}",
-    "translateAndReadOn": "Traduzir e ler no {{publication}}",
-    "translateAndRead": "Traduzir e ler",
-    "viewOriginal": "Ver original",
+    "viewAndTranslateOnDevice": "Ver artigo e traduzir no seu dispositivo",
+    "viewOriginal": "Ver artigo original",
+    "viewOriginalIn": "Ver artigo original em {{language}}",
     "share": "Compartilhar",
-    "shareVia": "Compartilhado via Mera News — notícias personalizadas para você. Baixe o app: {{downloadUrl}}"
+    "shareVia": "Compartilhado via Mera News — notícias personalizadas para você. Baixe o app: {{downloadUrl}}",
+    "sourceCountryGlobal": "Mundial",
+    "sourceCountryA11y": "País de origem: {{country}}. Toque para exibir o nome do país."
   },
   "newsCluster": {
     "failedToLoad": "Falha ao carregar detalhes do grupo",
@@ -236,7 +237,8 @@
   },
   "clusterDetail": {
     "translatable": "Este artigo está em {{language}} — seu dispositivo pode traduzi-lo enquanto você lê. Se a tradução não funcionar, você pode abrir o site no Google Tradutor abaixo — apenas lembre-se de que você estará navegando por meio do Google.",
-    "notTranslatable": "Este artigo está em {{language}}. A tradução no dispositivo pode não estar disponível para ele — use o Google Tradutor abaixo para lê-lo no seu idioma.",
+    "notTranslatable": "Este artigo está em {{language}}. Seu dispositivo não pode traduzi-lo — use o Google Tradutor abaixo para lê-lo no seu idioma.",
+    "notTranslatableOsOutdated": "Este artigo está em {{language}}. A tradução no dispositivo requer iOS {{requiredVersion}} — você está usando o iOS {{currentVersion}}. Atualize o iOS ou use o Google Tradutor abaixo para lê-lo no seu idioma.",
     "unknownLanguage": "outro idioma",
     "translationGuideLink": "Mostre-me como traduzir o artigo",
     "viewInGoogleTranslate": "Ver no Google Tradutor",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Notícias sobre:",
-    "alsoForYou": "Também para você",
     "breaking": "Urgente",
     "showMore": "Mostrar mais {{count}}",
     "subTabFeed": "Feed",
@@ -1098,6 +1099,7 @@
     "emptyTitle": "Ainda não te conheço",
     "emptyBody": "Me conte sobre você para eu encontrar notícias que importam para você.",
     "startTalking": "Começar a conversar",
+    "meraInvite": "Oi! Me conta o que você curte e eu ajusto seu feed pra você.",
     "aboutYou": "Sobre você",
     "gettingToKnowYou": "Ainda estou te conhecendo — volte a checar em instantes.",
     "updating": "Atualizando…",

@@ -178,6 +178,29 @@ describe('fetchResults — status handling', () => {
     expect(res).toBe('not-found');
   });
 
+  // Our own 30s timeout firing is expected behaviour on a slow link, not an
+  // exception. It used to throw a literal `Error: aborted` from expo/fetch,
+  // which the caller captured to Sentry on every slow poll (MERA-APP-5N).
+  it('returns "pending" when our own timeout aborts the request', async () => {
+    mockExpoFetch.mockImplementation((_url: string, opts: { signal: AbortSignal }) => {
+      // Simulate the abort controller having fired, as the timeout does.
+      Object.defineProperty(opts.signal, 'aborted', { value: true, configurable: true });
+      const err = new Error('aborted');
+      err.name = 'AbortError';
+      return Promise.reject(err);
+    });
+
+    const res = await fetchResults('req-1', 'foreground');
+    expect(res).toBe('pending');
+  });
+
+  it('still throws on a genuine network failure (signal not aborted)', async () => {
+    mockExpoFetch.mockRejectedValue(new Error('Network request failed'));
+    await expect(fetchResults('req-1', 'foreground')).rejects.toThrow(
+      'Network request failed',
+    );
+  });
+
   it('returns "unauthorized" on 401', async () => {
     mockExpoFetch.mockResolvedValue({ status: 401, ok: false, text: jest.fn() });
     const res = await fetchResults('req-1', 'foreground');

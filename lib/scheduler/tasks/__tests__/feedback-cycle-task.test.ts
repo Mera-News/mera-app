@@ -42,13 +42,18 @@ describe('feedback-cycle-task registration', () => {
     expect(registeredDef.name).toBe('feedback-cycle');
   });
 
-  it('has a daily frequency', () => {
-    expect(registeredDef.frequency).toBe(24 * 60 * 60 * 1000);
+  it('comes due every 3h', () => {
+    expect(registeredDef.frequency).toBe(3 * 60 * 60 * 1000);
   });
 
-  it('is exclusive with a db-ready condition and no triggers', () => {
+  it('is exclusive, idle-gated (db-ready + custom), with no triggers', () => {
     expect(registeredDef.exclusive).toBe(true);
-    expect(registeredDef.conditions.map((c: any) => c.type)).toContain('db-ready');
+    const types = registeredDef.conditions.map((c: any) => c.type);
+    expect(types).toContain('db-ready');
+    // Low-priority: a custom idle guard defers to more important work.
+    expect(types).toContain('custom');
+    const custom = registeredDef.conditions.find((c: any) => c.type === 'custom');
+    expect(typeof custom.check).toBe('function');
     expect(registeredDef.triggers).toEqual([]);
   });
 });

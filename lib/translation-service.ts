@@ -1,22 +1,20 @@
 import { onTranslateTask } from 'expo-translate-text';
-import languages from '@cospired/i18n-iso-languages';
-import languagesEn from '@cospired/i18n-iso-languages/langs/en.json';
+import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import logger from '@/lib/logger';
-
-languages.registerLocale(languagesEn);
+import { canonicalizeLanguageCode, primarySubtag } from '@/lib/language-codes';
+import { getLanguageNameIn } from '@/lib/language-names';
 
 /**
- * Resolve a BCP-47 / ISO-639 language code to its English display name
- * via the @cospired/i18n-iso-languages library. Falls back to null if
- * the code is unknown — callers should handle that (e.g. show "another
- * language").
+ * Resolve a BCP-47 / ISO-639 language code to its English display name.
+ * Falls back to null if the code is unknown — callers should handle that
+ * (e.g. show "another language").
+ *
+ * Prefer {@link getLocalizedLanguageName} for anything user-facing: this
+ * one is English-only and reads as gibberish inside a translated sentence.
  */
 export function getLanguageName(code: string | null | undefined): string | null {
-    if (!code) return null;
-    const primary = code.split('-')[0];
-    const name = languages.getName(primary, 'en');
-    return name && name !== primary ? name : null;
+    return getLanguageNameIn(code, 'en');
 }
 
 /**
@@ -25,13 +23,20 @@ export function getLanguageName(code: string | null | undefined): string | null 
  * the curated SUPPORTED_LANGUAGES list first; falls back to the English
  * name from getLanguageName if no endonym is available; returns null if
  * the code is unknown.
+ *
+ * NOT used for article metadata — a reader who doesn't know the script
+ * can't read the endonym. That surface uses getLocalizedLanguageName.
+ * This stays for the UI-language pickers, which show a language to people
+ * who by definition read it.
  */
 export function getNativeLanguageName(code: string | null | undefined): string | null {
     if (!code) return null;
-    const normalized = code.split('-')[0];
-    const match = SUPPORTED_LANGUAGES.find(
-        (l) => l.code === code || l.code.split('-')[0] === normalized,
-    );
+    // Canonicalize first, so 'zh-TW' resolves to the Traditional entry
+    // rather than matching 'zh-Hans' on the bare primary subtag.
+    const canonical = canonicalizeLanguageCode(code);
+    if (!canonical) return null;
+    const match = SUPPORTED_LANGUAGES.find((l) => l.code === canonical)
+        ?? SUPPORTED_LANGUAGES.find((l) => l.code === canonical.split('-')[0]);
     if (match) return match.native;
     return getLanguageName(code);
 }
@@ -87,14 +92,35 @@ export function buildGoogleTranslateUrl(articleUrl: string, appLanguage: string)
     return `https://translate.google.com/translate?sl=auto&tl=${tl}&u=${encodeURIComponent(articleUrl)}`;
 }
 
-// Apple Translation framework (iOS 17.4+).
-const IOS_TRANSLATION_SOURCE_CODES = new Set<string>([
-    'ar', 'zh-Hans', 'zh-Hant', 'nl', 'en', 'fr', 'de', 'hi', 'id', 'it',
-    'ja', 'ko', 'pl', 'pt', 'ru', 'es', 'th', 'tr', 'uk', 'vi',
-]);
+// Apple's on-device translation (the Translate button in the in-app Safari
+// view), keyed to the iOS major that first supported the language as a
+// TRANSLATION SOURCE. The app's deployment target is iOS 15.1, so every
+// bucket from 15 up is reachable in the field.
+//
+//   14  launch set
+//   15  Chinese (Traditional)
+//   16  Dutch, Indonesian, Polish, Thai, Turkish, Vietnamese
+//   17  Ukrainian
+//   18  Hindi
+//   27  Cantonese, Danish, Hebrew, Malay, Norwegian Bokmål, Swedish
+//
+// iOS 27 also adds Portuguese (Portugal) and Spanish (Mexico/US), but those
+// are regional variants of languages whose SOURCE support dates to 14 — a
+// pt-PT article has been translatable all along, so they are not listed.
+const IOS_TRANSLATION_MIN_VERSION: Record<string, number> = {
+    ar: 14, 'zh-Hans': 14, en: 14, fr: 14, de: 14, it: 14, ja: 14,
+    ko: 14, pt: 14, ru: 14, es: 14,
+    'zh-Hant': 15,
+    nl: 16, id: 16, pl: 16, th: 16, tr: 16, vi: 16,
+    uk: 17,
+    hi: 18,
+    yue: 27, da: 27, he: 27, ms: 27, no: 27, sv: 27,
+};
 
 // Google ML Kit on-device translation. Source list per
 // https://developers.google.com/ml-kit/language/translation/translation-language-support
+// No version gate — ML Kit downloads models on demand rather than shipping
+// them with the OS.
 const ANDROID_TRANSLATION_SOURCE_CODES = new Set<string>([
     'af', 'ar', 'be', 'bg', 'bn', 'ca', 'cs', 'cy', 'da', 'de', 'el', 'en',
     'eo', 'es', 'et', 'fa', 'fi', 'fr', 'ga', 'gl', 'gu', 'he', 'hi', 'hr',
@@ -103,32 +129,111 @@ const ANDROID_TRANSLATION_SOURCE_CODES = new Set<string>([
     'sv', 'sw', 'ta', 'te', 'th', 'tl', 'tr', 'uk', 'ur', 'vi', 'zh',
 ]);
 
-// Web/other platforms have no on-device translator → empty set.
-const ACTIVE_TRANSLATION_SOURCE_CODES: Set<string> =
-    Platform.OS === 'ios' ? IOS_TRANSLATION_SOURCE_CODES
-        : Platform.OS === 'android' ? ANDROID_TRANSLATION_SOURCE_CODES
-            : new Set();
+/** Major version of the running OS, or null when it can't be determined. */
+function readOSMajor(): number | null {
+    const raw = Device.osVersion;
+    if (!raw) return null;
+    const major = parseInt(String(raw).split('.')[0], 10);
+    return Number.isNaN(major) ? null : major;
+}
+
+// Read once — the OS can't change under a running app.
+let cachedOSMajor: number | null | undefined;
+function currentOSMajor(): number | null {
+    if (cachedOSMajor === undefined) cachedOSMajor = readOSMajor();
+    return cachedOSMajor;
+}
+
+/** Test seam — resets the memoized OS version. */
+export function __resetOSMajorCacheForTests(): void {
+    cachedOSMajor = undefined;
+}
 
 export type TranslatableStatus = 'translatable' | 'not-translatable' | 'same-language';
+
+export type TranslationUnsupportedReason =
+    /** The OS supports this language, but on a newer version than this device runs. */
+    | 'os-outdated'
+    /** No on-device translator handles this language on this platform at all. */
+    | 'unsupported-language'
+    /** Platform has no on-device translator (web). */
+    | 'no-translator';
+
+export interface ArticleTranslationSupport {
+    status: TranslatableStatus;
+    /** Only set when status is 'not-translatable'. */
+    reason?: TranslationUnsupportedReason;
+    /** iOS major that would make this article translatable ('os-outdated' only). */
+    requiredOSMajor?: number;
+    /** The device's iOS major ('os-outdated' only). */
+    currentOSMajor?: number;
+}
+
+/**
+ * Whether the device can translate an article for the user, and — when it
+ * can't — why not, so the UI can tell the difference between "update iOS"
+ * and "this language isn't supported at all".
+ *
+ * `osMajorOverride` exists for tests; production callers omit it.
+ */
+export function getArticleTranslationSupport(
+    originalLang: string | null | undefined,
+    appLanguage: string,
+    osMajorOverride?: number,
+): ArticleTranslationSupport {
+    const canonical = canonicalizeLanguageCode(originalLang);
+    if (!canonical) return { status: 'same-language' };
+
+    const canonicalApp = canonicalizeLanguageCode(appLanguage);
+    // Chinese is compared at script level: a Simplified reader can't read a
+    // Traditional article, so those are genuinely different languages here.
+    if (canonicalApp && canonical === canonicalApp) return { status: 'same-language' };
+
+    if (Platform.OS === 'android') {
+        const supported = ANDROID_TRANSLATION_SOURCE_CODES.has(primarySubtag(canonical));
+        return supported
+            ? { status: 'translatable' }
+            : { status: 'not-translatable', reason: 'unsupported-language' };
+    }
+
+    if (Platform.OS !== 'ios') {
+        return { status: 'not-translatable', reason: 'no-translator' };
+    }
+
+    const required = IOS_TRANSLATION_MIN_VERSION[canonical]
+        ?? IOS_TRANSLATION_MIN_VERSION[primarySubtag(canonical)];
+    if (required === undefined) {
+        return { status: 'not-translatable', reason: 'unsupported-language' };
+    }
+
+    const osMajor = osMajorOverride ?? currentOSMajor();
+    // Unknown OS version: assume the language works rather than nagging the
+    // user to update to a version we can't prove they're missing.
+    if (osMajor === null || osMajor === undefined) return { status: 'translatable' };
+    if (osMajor >= required) return { status: 'translatable' };
+
+    return {
+        status: 'not-translatable',
+        reason: 'os-outdated',
+        requiredOSMajor: required,
+        currentOSMajor: osMajor,
+    };
+}
 
 /**
  * Determines translation status for an article vs the user's app language.
  * - 'same-language': article is already in the user's language — hide notice
  * - 'translatable': different language AND the device's on-device translator can handle it
- * - 'not-translatable': different language and the source locale is outside the device's supported list
+ * - 'not-translatable': different language and the device can't translate it
+ *
+ * Thin wrapper over {@link getArticleTranslationSupport} for callers that
+ * only need the three-way status.
  */
 export function getArticleTranslatableStatus(
     originalLang: string | null | undefined,
     appLanguage: string,
 ): TranslatableStatus {
-    if (!originalLang) return 'same-language';
-    const normalized = originalLang.split('-')[0];
-    const appNormalized = appLanguage.split('-')[0];
-    if (normalized === appNormalized) return 'same-language';
-    const supported =
-        ACTIVE_TRANSLATION_SOURCE_CODES.has(originalLang) ||
-        ACTIVE_TRANSLATION_SOURCE_CODES.has(normalized);
-    return supported ? 'translatable' : 'not-translatable';
+    return getArticleTranslationSupport(originalLang, appLanguage).status;
 }
 
 // Serializes native translation calls to prevent the OS from cancelling

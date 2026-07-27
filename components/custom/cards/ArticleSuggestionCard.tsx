@@ -1,5 +1,7 @@
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
+import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
+import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
@@ -46,6 +48,14 @@ interface ArticleCardProps {
   onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** The Mera icon was tapped — open the default article chat. */
   onAskMera?: (suggestion: ForYouSuggestion) => void;
+  // ── Inline feedback surface (floats over the card content once a verdict is
+  // set) ──────────────────────────────────────────────────────────────────
+  /** Whether to show the floating feedback surface (verdict set & not closed). */
+  feedbackVisible?: boolean;
+  /** Stored tree path to resume in the surface. */
+  feedbackInitialPath?: string[];
+  /** Stable per-card feedback handlers from `useFeedbackSheet`. */
+  feedbackHandlers?: CardFeedbackHandlers;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
   /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
@@ -75,6 +85,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   verdict = null,
   onVerdict,
   onAskMera,
+  feedbackVisible = false,
+  feedbackInitialPath,
+  feedbackHandlers,
   dimmed = false,
   read = false,
   flat = false,
@@ -211,6 +224,35 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : undefined;
 
+  // Action row lives in the base's `footer` slot so the feedback `overlay` can
+  // float over the card content ABOVE it while it stays visible/tappable.
+  // `horizontalPadding = 0` because the footer wrapper already insets it.
+  const actionBar = onVerdict ? (
+    <CardActionBar
+      verdict={verdict}
+      saved={saved}
+      onLike={() => onVerdict(suggestion, 'like')}
+      onDislike={() => onVerdict(suggestion, 'dislike')}
+      onAskMera={() => onAskMera?.(suggestion)}
+      onToggleSave={handleToggleSave}
+      onShare={suggestion.article_url ? () => void handleShare() : undefined}
+      horizontalPadding={0}
+    />
+  ) : undefined;
+
+  const overlay =
+    onVerdict && feedbackVisible && verdict && feedbackHandlers ? (
+      <CardFeedbackSurface
+        suggestion={suggestion}
+        verdict={verdict}
+        initialPathIds={feedbackInitialPath}
+        onClose={() => feedbackHandlers.onClose(suggestion)}
+        onTreePathChanged={feedbackHandlers.onPathChanged}
+        onInvokeMera={feedbackHandlers.onInvokeMera}
+        onLeafCommitted={feedbackHandlers.onLeafCommitted}
+      />
+    ) : undefined;
+
   return (
     <ArticleCardBase
       imageUrl={suggestion.image_url}
@@ -229,24 +271,11 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       flat={flat}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}
+      footer={actionBar}
+      overlay={overlay}
     >
       {factChipsEl}
       {reasonBoxEl}
-      {onVerdict ? (
-        // Action row as the last child inside ArticleCardBase — `horizontalPadding
-        // = 0` because the base's `p-4` VStack already insets it (no double pad).
-        // Share is offered only when the story has a URL to share.
-        <CardActionBar
-          verdict={verdict}
-          saved={saved}
-          onLike={() => onVerdict(suggestion, 'like')}
-          onDislike={() => onVerdict(suggestion, 'dislike')}
-          onAskMera={() => onAskMera?.(suggestion)}
-          onToggleSave={handleToggleSave}
-          onShare={suggestion.article_url ? () => void handleShare() : undefined}
-          horizontalPadding={0}
-        />
-      ) : null}
     </ArticleCardBase>
   );
 };

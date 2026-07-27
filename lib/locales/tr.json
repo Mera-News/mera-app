@@ -208,12 +208,13 @@
     "storyUnavailable": "Bu haber artık mevcut değil",
     "failedToLoad": "Makale yüklenemedi",
     "articleNotFound": "Makale bulunamadı",
-    "readOn": "{{publication}} üzerinde oku",
-    "translateAndReadOn": "Çevir ve {{publication}} üzerinde oku",
-    "translateAndRead": "Çevir ve oku",
-    "viewOriginal": "Orijinali görüntüle",
+    "viewOriginal": "Orijinal makaleyi görüntüle",
+    "viewOriginalIn": "Orijinal makaleyi {{language}} dilinde görüntüle",
+    "viewAndTranslateOnDevice": "Makaleyi görüntüle ve cihazda çevir",
     "share": "Paylaş",
-    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}"
+    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}",
+    "sourceCountryGlobal": "Dünya Geneli",
+    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun."
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -236,7 +237,8 @@
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde — okurken cihazın çevirebilir. Çeviri çalışmazsa aşağıdaki Google Çeviri'de siteyi açabilirsin — sadece Google üzerinden gezindiğini unutma.",
-    "notTranslatable": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri bunun için kullanılamayabilir — kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
+    "notTranslatable": "Bu makale {{language}} dilinde. Cihazın bunu çeviremiyor — kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
+    "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor — sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle veya kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
     "unknownLanguage": "başka bir dil",
     "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
     "viewInGoogleTranslate": "Google Çeviri'de görüntüle",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Haberler:",
-    "alsoForYou": "Senin için de",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
     "subTabFeed": "Akış",
@@ -1099,6 +1100,7 @@
     "emptyTitle": "Seni henüz tanımıyorum",
     "emptyBody": "Senin için önemli olan haberleri bulabilmem için kendinden bahset.",
     "startTalking": "Konuşmaya başla",
+    "meraInvite": "Selam! Neyle ilgilendiğini anlat, haber akışını senin için ayarlayayım.",
     "aboutYou": "Senin hakkında",
     "gettingToKnowYou": "Seni hâlâ tanıyorum — birazdan tekrar bak.",
     "updating": "Güncelleniyor…",

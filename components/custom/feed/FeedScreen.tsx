@@ -4,11 +4,16 @@
 // are INSERTED beyond the current viewport, and read (tapped) cards stay in
 // place, dimmed. The order persists across app restarts (feed-order-store).
 // Each card carries a small borderless action bar (like / dislike / Mera /
-// save); tapping a thumb records a verdict and floats the FeedbackTreeSheet.
+// save); tapping a thumb records a verdict and reveals the card's inline
+// feedback surface (CardFeedbackSurface).
 // The header is the "For you" heading + notification bell + 24h stats sentence.
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
+import FeedSyncIndicator, {
+  useFeedSyncRefresh,
+  useIsFeedProcessing,
+} from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
@@ -16,7 +21,17 @@ import NotificationBellButton from '@/components/custom/notifications/Notificati
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { useVisibleIndex } from './use-visible-index';
-import { useFeedbackSheet, type VerdictStoreAdapter } from './use-feedback-sheet';
+import {
+  partitionFeedEntries,
+  isCaughtUpEntry,
+  type FeedEntry,
+} from './feed-entries';
+import {
+  useFeedbackSheet,
+  type CardFeedbackHandlers,
+  type VerdictStoreAdapter,
+} from './use-feedback-sheet';
+import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -28,7 +43,6 @@ import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
-import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import {
   buildFeedList,
   type FeedListItem,
@@ -36,17 +50,13 @@ import {
 import { useFeedOrderStore, type Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useDatabaseReady } from '@/lib/stores/database-store';
-import { useIsConnected } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
-  useForYouAsyncJobPhase,
-  useForYouDeviceProcessing,
   useForYouHasGeneratedTopics,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
-  useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -80,13 +90,17 @@ const FeedRow = React.memo(function FeedRow({
   onPress,
   onVerdict,
   onAskMera,
+  feedbackHandlers,
 }: {
   item: FeedListItem;
   onPress: (suggestion: ForYouSuggestion) => void;
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   onAskMera: (suggestion: ForYouSuggestion) => void;
+  feedbackHandlers: CardFeedbackHandlers;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
+  const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
+  const surfaceClosed = useFeedbackDismissedStore((s) => !!s.dismissed[item.id]);
   const read = useOpenedStoriesStore((s) => isSuggestionOpened(item.suggestion, s.ids));
   const extraSources = item.memberCount > 1 ? item.memberCount - 1 : 0;
   return (
@@ -97,6 +111,9 @@ const FeedRow = React.memo(function FeedRow({
       verdict={verdict}
       onVerdict={onVerdict}
       onAskMera={onAskMera}
+      feedbackVisible={verdict != null && !surfaceClosed}
+      feedbackInitialPath={path}
+      feedbackHandlers={feedbackHandlers}
       // Viewed (opened) stories get ONLY the eye indicator (`read`) — no
       // dimming. Dimming is reserved for a recorded verdict (like/dislike).
       dimmed={verdict != null}
@@ -112,7 +129,6 @@ const FeedScreen: React.FC = () => {
   const isFocused = useIsFocused();
 
   const { isLoading, errorMessage } = useFeedBootstrap();
-  const isConnected = useIsConnected();
 
   // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
   // with the Dashboard tab.
@@ -141,6 +157,9 @@ const FeedScreen: React.FC = () => {
   const itemsById = useFeedOrderStore((s) => s.itemsById);
   const orderHydrated = useFeedOrderStore((s) => s.hydrated);
   const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
+  // Reactive opened set — drives the unread/viewed partition. Opening a story
+  // navigates away, so the reflow (it drops below the divider) lands off-screen.
+  const openedIds = useOpenedStoriesStore((s) => s.ids);
 
   // ── Freeze boundary (viewability → ref only; no store/DB writes mid-scroll) ──
   const { viewabilityConfigCallbackPairs, maxVisibleIndexRef } = useVisibleIndex();
@@ -149,7 +168,7 @@ const FeedScreen: React.FC = () => {
   // (Animated.createAnimatedComponent), so scrollToOffset is available. The
   // visibility boolean is driven from the scroll worklet (below) but only
   // crosses the JS bridge when it actually flips (showFabShared guard).
-  const listRef = useRef<Animated.FlatList<FeedListItem>>(null);
+  const listRef = useRef<Animated.FlatList<FeedEntry>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const showFabShared = useSharedValue(false);
   const scrollToTop = useCallback(() => {
@@ -183,7 +202,10 @@ const FeedScreen: React.FC = () => {
     () => order.map((id) => itemsById[id]).filter((it): it is FeedListItem => !!it),
     [order, itemsById],
   );
-  const listData = data;
+  // Display list: unread stories (priority order) → "All Caught Up" divider →
+  // viewed stories. Empty when there are no stories, so the empty-state chain
+  // (ListEmptyComponent) renders instead of a lone divider.
+  const listData = useMemo(() => partitionFeedEntries(data, openedIds), [data, openedIds]);
 
   // ── Feedback sheet (shared plumbing) ──
   // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
@@ -202,22 +224,24 @@ const FeedScreen: React.FC = () => {
   const feedAdapter: VerdictStoreAdapter = {
     keyFor: (s) => suggestionToItemIdRef.current.get(s._id) ?? null,
     getVerdict: (key) => useFeedOrderStore.getState().verdicts[key]?.verdict ?? null,
-    setVerdict: (key, v) => useFeedOrderStore.getState().setVerdict(key, v),
+    setVerdict: (key, v) =>
+      v == null
+        ? useFeedOrderStore.getState().clearVerdict(key)
+        : useFeedOrderStore.getState().setVerdict(key, v),
     getPath: (key) => useFeedOrderStore.getState().verdicts[key]?.path,
     setPath: (key, path) => useFeedOrderStore.getState().setPath(key, path),
   };
-  const { onVerdict, onAskMera, sheet } = useFeedbackSheet(feedAdapter);
+  const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(feedAdapter);
 
-  // ── Pull-to-refresh — trigger a feed sync ONLY. New completes then flow in
-  //    via the ingest effect (inserted below the viewport); the order is never
-  //    rebuilt. ──
-  const [refreshing, setRefreshing] = useState(false);
-  const handleRefresh = useCallback(async () => {
-    reveal();
-    setRefreshing(true);
-    await AppScheduler.trigger('feed-sync').catch(() => {});
-    setRefreshing(false);
-  }, [reveal]);
+  // ── Pull-to-refresh — trigger a feed sync ONLY. Viewed stories are never
+  //    removed (they live below the "All Caught Up" divider); the sync's new
+  //    completes flow into the unread block above the divider via ingest.
+  //    `refreshing` now tracks the scheduler's feed-sync flag rather than local
+  //    state: `trigger()` has four silent early-returns, three of which resolve
+  //    in the same tick, so the old setRefreshing(true)/await/false pattern
+  //    collapsed the spinner instantly and the user saw nothing. See
+  //    components/custom/FeedSyncIndicator. ──
+  const { refreshing, onRefresh } = useFeedSyncRefresh(reveal);
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
   // deferred TranslatableDynamic translation as items enter the viewport) —
@@ -237,34 +261,32 @@ const FeedScreen: React.FC = () => {
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedListItem }) => (
-      <FeedRow
-        item={item}
-        onPress={openSuggestion}
-        onVerdict={onVerdict}
-        onAskMera={onAskMera}
-      />
-    ),
-    [openSuggestion, onVerdict, onAskMera],
+    ({ item }: { item: FeedEntry }) =>
+      isCaughtUpEntry(item) ? (
+        <Box style={{ marginTop: 16 }}>
+          <AllCaughtUpCard />
+        </Box>
+      ) : (
+        <FeedRow
+          item={item}
+          onPress={openSuggestion}
+          onVerdict={onVerdict}
+          onAskMera={onAskMera}
+          feedbackHandlers={feedbackHandlers}
+        />
+      ),
+    [openSuggestion, onVerdict, onAskMera, feedbackHandlers],
   );
 
-  const keyExtractor = useCallback((item: FeedListItem) => item.id, []);
+  const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
-  const asyncJobPhase = useForYouAsyncJobPhase();
-  const { isDeviceProcessing } = useForYouDeviceProcessing();
-  const syncStatusMessage = useForYouSyncStatusMessage();
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
-
-  const isAnySyncActive =
-    syncStatusMessage !== null &&
-    syncStatusMessage.state !== 'idle' &&
-    syncStatusMessage.state !== 'done' &&
-    syncStatusMessage.state !== 'failed' &&
-    syncStatusMessage.state !== 'paused-offline';
-  const isFeedProcessing =
-    isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+  // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
+  // for the empty-state chain and the header auto-reveal. The header indicator
+  // OR-s in the scheduler flag on its own.
+  const isFeedProcessing = useIsFeedProcessing();
 
   // Auto-reveal the header on an error state or while the list is empty
   // (preparing / no interests yet) so the header chrome is never hidden
@@ -325,7 +347,7 @@ const FeedScreen: React.FC = () => {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={handleRefresh}
+            onRefresh={onRefresh}
             tintColor={REFRESH_TINT}
             colors={[REFRESH_TINT]}
             // Push the spinner below the absolute collapsing header so it isn't
@@ -340,13 +362,6 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
-        ListFooterComponent={
-          data.length > 0 ? (
-            <Box style={{ marginTop: 16 }}>
-              <AllCaughtUpCard />
-            </Box>
-          ) : null
-        }
         initialNumToRender={4}
         windowSize={7}
         maxToRenderPerBatch={3}
@@ -383,12 +398,10 @@ const FeedScreen: React.FC = () => {
           </HStack>
           <FeedStatsSentence />
 
-          {!isConnected && (
-            <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-1" space="sm">
-              <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-              <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
-            </HStack>
-          )}
+          {/* Shared sync surface — the same indeterminate bar the Dashboard
+              shows, plus the offline notice and the re-auth prompt. It goes up
+              on the same frame as a pull on EITHER screen. */}
+          <FeedSyncIndicator />
         </VStack>
       </Animated.View>
 
@@ -397,9 +410,6 @@ const FeedScreen: React.FC = () => {
         onPress={scrollToTop}
         extraBottomOffset={TAB_BAR_HEIGHT}
       />
-
-      {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
-      {sheet}
 
       {/* One-time "What's new" sheet (carried over from the old feed screen). */}
       <WhatsNewSheet />

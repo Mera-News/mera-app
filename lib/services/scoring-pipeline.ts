@@ -123,10 +123,17 @@ const BATCH_STALE_MS = 15 * 60_000;
 /** A run whose `startedAt` is older than this is treated as wedged: the
  *  FeedSyncMachine stale-guard aborts it (force-fail + finalize) and proceeds
  *  with the sync rather than skipping every cycle forever. Derived from
- *  BATCH_STALE_MS (two full stale windows — a healthy run's batches all clear
- *  well within one), so there is no independent magic number to keep in sync. */
-export const STALE_RUN_GUARD_MS = 2 * BATCH_STALE_MS;
+ *  BATCH_STALE_MS — a healthy run's batches all clear well within one window,
+ *  so there is no independent magic number to keep in sync. Was 2x this; halved
+ *  because a wedged run blocks EVERY feed-sync cycle for its whole duration, and
+ *  30 minutes of a dead feed is far worse than abandoning a run that might have
+ *  recovered (its rows stay Unscored and re-enter the next run). */
+export const STALE_RUN_GUARD_MS = BATCH_STALE_MS;
 const MAX_BATCH_ATTEMPTS = 2;
+/** Consecutive poller-tick throws before the run is abandoned outright. The one
+ *  behaviour-risky knob in the unwedge work — exported so a hotfix OTA can raise
+ *  it if it turns out to abandon runs that would have recovered. */
+export const POLLER_FAILURE_ABORT_THRESHOLD = 3;
 const RUN_ABANDON_MS = 24 * 3600_000;
 const POLL_INTERVAL_MS = 7_000;
 const MIN_POLL_AGE_MS = 15_000;
@@ -175,6 +182,9 @@ const lastPolledAt = new Map<number, number>();
 let pollerTimer: ReturnType<typeof setInterval> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
+/** Consecutive runPollerTick throws; reset on any clean tick. See
+ *  POLLER_FAILURE_ABORT_THRESHOLD. Reset by _resetForTests. */
+let consecutivePollerFailures = 0;
 
 // P7d cold-start cache: once the feed has ANY scored donor in the 48h window it
 // is WARM for the rest of the process. The cold→warm transition only ever
@@ -676,7 +686,24 @@ async function doDrain(context: ExecutionContext): Promise<void> {
       continue;
     }
 
-    await doSubmit(queued.batchId, context);
+    // doSubmit rethrows anything that isn't a ModelKeyValidationError. Before
+    // this catch that throw escaped doDrain → drain() → runPollerTick, leaving
+    // the batch stranded in submitting-* forever while revertStuckSubmitters
+    // requeued it every 60s — the MERA-APP-39 wedge. A throwing submit must
+    // never abort the admission loop or strand a batch, whatever the cause.
+    try {
+      await doSubmit(queued.batchId, context);
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'submit' },
+        extra: { batchId: queued.batchId, context },
+      });
+      await failOrRetrySubmit(
+        queued.batchId,
+        queued.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance',
+      );
+      continue;
+    }
   }
 
   // Submits this drain may have moved idle→relevance or admitted fresh batches
@@ -1237,6 +1264,15 @@ async function decodeBatch(
 ): Promise<{ batchResults: BatchCompletionResult[] }> {
   const snap = await getPipeline();
   const privKeyHex = snap?.privKeyHex ?? '';
+  // The 'ed25519' fallback is the correct default for jobs persisted before the
+  // ecdsa split, but a run reaching here WITHOUT an algo on a current build is
+  // a schema-1 leftover worth seeing — decrypting under the wrong curve is the
+  // MERA-APP-39 failure mode.
+  if (snap && !snap.run.algo) {
+    logger.warn(
+      `${TAG} decodeBatch: run has no persisted algo — assuming ed25519 (pre-split job)`,
+    );
+  }
   const algo = snap?.run.algo ?? 'ed25519';
   const privKey = hexToBytes(privKeyHex);
   const batchResults = server.results.map((r) =>
@@ -1881,6 +1917,16 @@ async function revertStuckSubmitters(
       const cur = r.batches.find((x) => x.batchId === b.batchId);
       if (!cur || cur.phase !== fromPhase) return null;
       cur.attempt = cur.attempt + 1;
+      // Honour the attempt cap, as failOrRetrySubmit does. Without it this
+      // requeued unboundedly: a submit that throws every time was reverted
+      // →requeued→claimed→thrown forever, and only FeedSyncMachine's 30-minute
+      // stale guard broke the loop (MERA-APP-39). An unbounded counter here is
+      // a defect independent of any specific throw cause.
+      if (cur.attempt >= MAX_BATCH_ATTEMPTS) {
+        cur.phase = 'failed';
+        cur.failureReason = 'submit-failed';
+        return true;
+      }
       // A stuck submitting-reasons on a RELEVANCE batch (relevance already
       // saved, not reasonsOnly) must go back to needs-reasons-submit — sending
       // it to queued would make drain redo relevance scoring. Everything else
@@ -2063,10 +2109,27 @@ async function runPollerTick(): Promise<void> {
     }
     await pollTick('foreground');
     await drain('foreground');
+    consecutivePollerFailures = 0;
   } catch (err) {
+    consecutivePollerFailures += 1;
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'poller-tick' },
+      extra: { consecutivePollerFailures },
     });
+    // Generic wedge backstop, independent of cause: a tick that throws leaves
+    // the run non-terminal, and a non-terminal run makes EVERY feed-sync cycle
+    // a no-op (FeedSyncMachine skips while the pipeline is 'running'). Rather
+    // than re-throwing every 7s until the 15-minute stale guard fires, abandon
+    // the run after a few consecutive failures — its rows stay Unscored and
+    // re-enter the next run under a fresh context, which is the outcome we
+    // want anyway.
+    if (consecutivePollerFailures >= POLLER_FAILURE_ABORT_THRESHOLD) {
+      logger.warn(
+        `${TAG} poller tick threw ${consecutivePollerFailures}x consecutively — aborting run to unblock feed-sync`,
+      );
+      consecutivePollerFailures = 0;
+      await abortRun('poller-tick-throw').catch(() => {});
+    }
   } finally {
     pollTickRunning = false;
   }
@@ -2081,6 +2144,7 @@ export function _resetForTests(): void {
   finalizeInFlight = null;
   lastPolledAt.clear();
   pollTickRunning = false;
+  consecutivePollerFailures = 0;
   feedWarmCached = false;
   if (postFinalizeKickTimer) {
     clearTimeout(postFinalizeKickTimer);

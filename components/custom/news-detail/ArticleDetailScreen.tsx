@@ -258,7 +258,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         if (!article?._id || !isConnected) return;
         let cancelled = false;
         setIsLoadingRelated(true);
-        ArticleService.getRelatedArticles(article._id)
+        // Pass stableClusterId through so the server can prefer the stable
+        // cross-run cluster over the (possibly already-wiped) live cluster id.
+        ArticleService.getRelatedArticles(article._id, stableClusterId)
             .then((rows) => {
                 if (!cancelled) setRelated(rows);
             })
@@ -274,7 +276,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [article?._id, isConnected]);
+    }, [article?._id, isConnected, stableClusterId]);
 
     // Reflect whether this standalone article is already saved for later. The
     // saved row id for a standalone article is the article's own `_id`.
@@ -470,7 +472,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 />
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
-                                    publicationName={article.publicationSource?.publication_name}
                                     sourceLanguage={sourceLanguage}
                                     onOpenUrl={handleArticleUrlPress}
                                 />

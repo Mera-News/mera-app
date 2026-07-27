@@ -1,5 +1,3 @@
-import { ALSO_ROW_ID } from './stores/fact-rows-selector';
-
 /** Gradient parameters for a fact-row header background. Consumed by the
  *  section-header renderer to composite a left-to-right fade. */
 export interface SectionGradientSpec {
@@ -23,8 +21,6 @@ export function hashString(input: string): number {
   return hash >>> 0; // force unsigned 32-bit
 }
 
-const NEUTRAL_BASE = 'hsl(0, 0%, 72%)';
-
 /**
  * Derives a stable pastel gradient spec for a fact row's header, keyed by
  * factId. Dark-mode tuning rationale: the app is dark-mode only (near-black
@@ -36,20 +32,8 @@ const NEUTRAL_BASE = 'hsl(0, 0%, 72%)';
  * possible hue (0-359) stays within the same safe brightness band, so text
  * contrast never depends on which factId happened to hash where — there's no
  * "unlucky" hue that comes out too dark or too neon.
- *
- * `ALSO_ROW_ID` (the trailing "Also for you" catch-all row) is special-cased
- * to a fixed neutral gray, since it isn't tied to a single persona fact and
- * shouldn't visually compete with the real, hash-colored fact rows.
  */
 export function sectionGradient(factId: string): SectionGradientSpec {
-  if (factId === ALSO_ROW_ID) {
-    return {
-      base: NEUTRAL_BASE,
-      startOpacity: 0.3,
-      endOpacity: 0,
-    };
-  }
-
   const hue = hashString(factId) % 360;
   return {
     base: `hsl(${hue}, 52%, 64%)`,

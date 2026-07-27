@@ -206,12 +206,13 @@
     "storyUnavailable": "此報導已不再提供",
     "failedToLoad": "文章載入失敗",
     "articleNotFound": "找不到文章",
-    "readOn": "在 {{publication}} 上閱讀",
-    "translateAndReadOn": "翻譯並在 {{publication}} 上閱讀",
-    "translateAndRead": "翻譯並閱讀",
     "viewOriginal": "檢視原文",
+    "viewOriginalIn": "檢視{{language}}原文",
+    "viewAndTranslateOnDevice": "檢視文章並在裝置上翻譯",
     "share": "分享",
-    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}"
+    "shareVia": "透過 Mera News 分享 — 為你量身打造的新聞。下載應用程式：{{downloadUrl}}",
+    "sourceCountryGlobal": "全球",
+    "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -234,7 +235,8 @@
   },
   "clusterDetail": {
     "translatable": "這篇文章是{{language}}的 — 您的裝置可以在您閱讀時為您翻譯。如果翻譯無法使用，您可以在下方透過 Google 翻譯開啟該網站 — 請注意，您將透過 Google 瀏覽該網站。",
-    "notTranslatable": "這篇文章是{{language}}的。裝置端翻譯可能不支援此語言 — 請使用下方的 Google 翻譯以您的語言閱讀。",
+    "notTranslatable": "這篇文章是{{language}}的。您的裝置無法翻譯它 — 請使用下方的 Google 翻譯以您的語言閱讀。",
+    "notTranslatableOsOutdated": "這篇文章是{{language}}的。裝置端翻譯需要 iOS {{requiredVersion}} — 您目前使用的是 iOS {{currentVersion}}。請更新 iOS，或使用下方的 Google 翻譯以您的語言閱讀。",
     "unknownLanguage": "另一種語言",
     "translationGuideLink": "告訴我如何翻譯這篇文章",
     "viewInGoogleTranslate": "在 Google 翻譯中查看",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "關於：",
-    "alsoForYou": "也為你推薦",
     "breaking": "突發",
     "showMore": "顯示更多 {{count}} 則",
     "openFactFeed": "查看關於此主題的所有報導",
@@ -1090,6 +1091,7 @@
     "emptyTitle": "我還不了解你",
     "emptyBody": "告訴我一些關於你的事，這樣我就能為你找到重要的新聞。",
     "startTalking": "開始聊天",
+    "meraInvite": "嘿！告訴我你喜歡什麼，我來幫你調整動態。",
     "aboutYou": "關於你",
     "gettingToKnowYou": "我還在慢慢了解你——稍後再回來看看吧。",
     "updating": "更新中…",

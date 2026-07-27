@@ -1,28 +1,24 @@
 // Tracked-Story Reconcile — piggybacks on every feed sync to grow followed
-// stories from articles the sync JUST persisted, with zero extra network
-// calls. Two passes:
+// stories from articles the sync JUST persisted, with zero extra network calls.
 //
-//   1. TOPIC pass (v40): the current model. A tracked story is a user-owned
-//      topic linked server-side every cycle. We match freshly-persisted
-//      suggestions whose `matched_topics` carry the story's `topic_id`, grow
-//      the story, and remember a lean card snapshot per new member so the
-//      timeline renders it without a server round trip. Topic-linked stories
-//      NEVER auto-end from a quiet run — the topic keeps linking server-side,
-//      so quiet ≠ dead (we deliberately do NOT recordMiss/end them here).
+// A followed story is a user-owned TOPIC, linked server-side every cycle by the
+// persona query. We match freshly-persisted suggestions whose `matched_topics`
+// carry the story's `topic_id`, grow the story, and remember a lean card
+// snapshot per new member so the timeline renders it without a server round
+// trip. Topic-linked stories NEVER auto-end from a quiet run — the topic keeps
+// linking server-side, so quiet ≠ dead (we deliberately do NOT end them here).
 //
-//   2. CLUSTER pass (legacy): stories tracked before v40 have no topic_id and
-//      still reconcile by stable_cluster_id via one indexed local query.
+// (Legacy stable-cluster-id stories are converted to this topic model on app
+// open by migrateLegacyTrackedStories, so there is no cluster pass anymore.)
 //
-// Both stamp `last_checked_at` so the 30-min poll task's staleness window skips
-// stories this reconcile just covered. Called fire-and-forget from the
-// feed-sync persist step — must never throw into that flow.
+// Called fire-and-forget from the feed-sync persist step — must never throw
+// into that flow.
 
 import { Q } from '@nozbe/watermelondb';
 import database from '@/lib/database';
 import type ArticleSuggestionModel from '@/lib/database/models/ArticleSuggestion';
 import type { TrackedStoryMemberSnapshot } from '@/lib/database/models/TrackedStory';
 import {
-  getActiveForReconcile,
   getActiveForTopicReconcile,
   applyUpdates,
   stampChecked,
@@ -111,64 +107,10 @@ async function reconcileByTopic(): Promise<void> {
 }
 
 /**
- * CLUSTER pass (legacy) — grow every active pre-v40 story (no topic_id) from
- * suggestions sharing its stable_cluster_id, via one indexed local query.
- */
-async function reconcileByCluster(): Promise<void> {
-  const stories = await getActiveForReconcile();
-  if (stories.length === 0) return;
-
-  const stableIds = stories.map((s) => s.stableClusterId);
-  const suggestionsCol = database.get<ArticleSuggestionModel>('article_suggestions');
-  const rows = await suggestionsCol
-    .query(Q.where('stable_cluster_id', Q.oneOf(stableIds)))
-    .fetch();
-
-  // Bucket the FULL suggestion rows (not just ids) per stable cluster id so the
-  // cluster pass can hand `applyUpdates` a lean snapshot per new member — this
-  // gives cluster-path stories watermark-accurate badges (v44) and locally
-  // renderable timeline cards, exactly like the topic pass above.
-  const rowsByStableId = new Map<string, ArticleSuggestionModel[]>();
-  for (const row of rows) {
-    const sid = row.stableClusterId;
-    if (!sid) continue; // JS guard for test mock (mirrors getActiveForReconcile)
-    const bucket = rowsByStableId.get(sid) ?? [];
-    bucket.push(row);
-    rowsByStableId.set(sid, bucket);
-  }
-
-  for (const story of stories) {
-    try {
-      const candidates = rowsByStableId.get(story.stableClusterId) ?? [];
-      const existing = new Set(story.memberArticleIds);
-      const fresh = candidates.filter((r) => !existing.has(r.id)); // WMDB row id === server article _id
-
-      if (fresh.length > 0) {
-        await applyUpdates(story.id, {
-          newMemberIds: fresh.map((r) => r.id),
-          newSnapshots: fresh.map(snapshotFromSuggestion),
-        });
-      }
-    } catch (err) {
-      // Isolate per-story failures — one bad row must not block the rest or
-      // bubble into the feed-sync flow.
-      logger.captureException(err, {
-        tags: { component: 'tracked-story-reconcile', method: 'reconcileByCluster' },
-        extra: { trackedStoryId: story.id },
-      });
-    } finally {
-      await stampChecked(story.id);
-    }
-  }
-}
-
-/**
  * Reconciles every actively-tracked story against the article_suggestions rows
- * currently on-device. Topic-linked stories (v40) match by `topic_id`; legacy
- * stories match by `stable_cluster_id`. Each pass is isolated so one failing
- * pass never blocks the other.
+ * currently on-device. A followed story is a topic, so growth matches by
+ * `topic_id`.
  */
 export async function reconcileTrackedStories(): Promise<void> {
   await reconcileByTopic();
-  await reconcileByCluster();
 }

@@ -4,7 +4,8 @@ import { field, json, date, writer } from '@nozbe/watermelondb/decorators';
 export type InferenceJobType =
   | 'topic_gen'
   | 'persona_summary'
-  | 'story_headline';
+  | 'story_headline'
+  | 'tracked_story_migrate';
 export type InferenceJobStatus = 'pending' | 'running' | 'done' | 'failed';
 
 const sanitizeJson = (raw: unknown) => raw || {};

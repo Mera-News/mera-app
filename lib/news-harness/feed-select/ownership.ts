@@ -165,13 +165,20 @@ export type OwnershipResolution =
  * own no row — already score-gutted by P_NEG). When no fact owns, the strongest
  * active effective weight decides orphan (≥ 0 / none) vs negative (< 0).
  */
-export function resolveOwnership(
+/**
+ * Build the `factId → { score, count }` candidate map from a rep's matched
+ * topics. `score` = max effective weight over that fact's matched ACTIVE topics,
+ * `w_eff = clamp(topic.weight × (fact.weight ?? 1) × (highPriority?hpMult:1), -1, 1)`;
+ * `count` = how many of the rep's topics resolved to that fact (breadth). Shared
+ * by the strict {@link resolveOwnership} and the lenient
+ * {@link resolveOwningFactLenient} so the two never drift.
+ */
+function computeFactCandidates(
   rep: ScoredSuggestionProjection,
   topics: Map<string, TopicSnapshot>,
   facts: Map<string, FactSnapshot>,
-  hpMult: number = DEFAULT_HARNESS_CONFIG.scoringEngine.HP_MULT,
-): OwnershipResolution {
-  // factId → { score, count } (score = max w_eff over that fact's matched topics)
+  hpMult: number,
+): Map<string, { score: number; count: number }> {
   const candidates = new Map<string, { score: number; count: number }>();
   for (const mt of rep.matchedTopics) {
     if (!mt.topicId) continue;
@@ -193,11 +200,21 @@ export function resolveOwnership(
       candidates.set(topic.factId, { score: wEff, count: 1 });
     }
   }
+  return candidates;
+}
 
+/** Pick the best-ranked candidate fact whose score passes the eligibility bar
+ *  (`> 0` strict / `>= 0` lenient), applying the {@link factBeats} tie-break
+ *  chain. Returns null when no candidate is eligible. */
+function pickWinner(
+  candidates: Map<string, { score: number; count: number }>,
+  facts: Map<string, FactSnapshot>,
+  allowZero: boolean,
+): string | null {
   let winner: string | null = null;
   let winStats: { score: number; count: number } | null = null;
   for (const [factId, stats] of candidates) {
-    if (stats.score <= 0) continue; // ≤ 0 → owns no row
+    if (allowZero ? stats.score < 0 : stats.score <= 0) continue;
     if (winner == null) {
       winner = factId;
       winStats = stats;
@@ -208,6 +225,17 @@ export function resolveOwnership(
       winStats = stats;
     }
   }
+  return winner;
+}
+
+export function resolveOwnership(
+  rep: ScoredSuggestionProjection,
+  topics: Map<string, TopicSnapshot>,
+  facts: Map<string, FactSnapshot>,
+  hpMult: number = DEFAULT_HARNESS_CONFIG.scoringEngine.HP_MULT,
+): OwnershipResolution {
+  const candidates = computeFactCandidates(rep, topics, facts, hpMult);
+  const winner = pickWinner(candidates, facts, false); // strict: score > 0 owns
   if (winner != null) return { kind: 'owned', factId: winner };
 
   // No positive-weight owner. Distinguish an ORPHAN (no active fact resolved,
@@ -236,6 +264,27 @@ export function resolveOwningFact(
 ): string | null {
   const res = resolveOwnership(rep, topics, facts, hpMult);
   return res.kind === 'owned' ? res.factId : null;
+}
+
+/**
+ * LENIENT owning-fact resolution for the Dashboard's fact sections. Unlike the
+ * strict {@link resolveOwningFact}, a fact whose best effective weight is exactly
+ * 0 (an ACTIVE but no-signal match) still OWNS the group — so a low-signal story
+ * folds into the fact it actually matched instead of a separate "Also for you"
+ * catch-all. Positive matches still win over zero ones (same {@link factBeats}
+ * tie-break). Returns null only when the group has no fact to belong to:
+ *  - every matched fact is NEGATIVE (suppressed — stays dropped), or
+ *  - it matched no active fact-linked topic at all (factless: tracked/exploration
+ *    /deleted-fact topics) — the Dashboard drops these rather than showing them.
+ */
+export function resolveOwningFactLenient(
+  rep: ScoredSuggestionProjection,
+  topics: Map<string, TopicSnapshot>,
+  facts: Map<string, FactSnapshot>,
+  hpMult: number = DEFAULT_HARNESS_CONFIG.scoringEngine.HP_MULT,
+): string | null {
+  const candidates = computeFactCandidates(rep, topics, facts, hpMult);
+  return pickWinner(candidates, facts, true); // lenient: score >= 0 owns
 }
 
 /** True when candidate fact (id `ca`) should beat the current winner (`cw`). */

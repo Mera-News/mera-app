@@ -71,6 +71,17 @@ export async function changeSwipeVerdict(
   });
 }
 
+/** Removes a card's verdict entirely (re-tapping the same thumb un-votes it):
+ *  destroys the stored `article_feedback` row, dropping the verdict + any tree
+ *  path recorded on it. */
+export async function removeSwipeVerdict(
+  suggestion: ForYouSuggestion,
+  verdict: Verdict,
+): Promise<void> {
+  const subject = feedbackSubjectFromSuggestion(suggestion, SURFACE);
+  await removeArticleFeedback(subject.articleId, verdict);
+}
+
 /** Merges the inline-tree node-id path into the stored verdict row. */
 export async function updateFeedbackTreePath(
   suggestion: ForYouSuggestion,
@@ -170,6 +181,9 @@ export function wireSwipeCallbacks(): void {
   };
   swipeCallbacks.onVerdictChanged = (suggestion, from, to) => {
     void changeSwipeVerdict(suggestion, from, to);
+  };
+  swipeCallbacks.onVerdictRemoved = (suggestion, verdict) => {
+    void removeSwipeVerdict(suggestion, verdict);
   };
   swipeCallbacks.onTreePathChanged = (suggestion, verdict, path) => {
     void updateFeedbackTreePath(suggestion, verdict, path);

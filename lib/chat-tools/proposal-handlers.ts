@@ -238,15 +238,20 @@ export async function executeProposalActions(
         case 'track_story': {
           // Follow the tapped article's story as a topic. The origin snapshot is
           // embedded in the action (staged by decideProposeTrack), so this stays
-          // self-contained — no store read. trackStoryWithProposal mints the
-          // topic + local TrackedStory row and fires archive backfill.
-          const text = action.trackText.trim();
-          if (!text) {
-            errors.push('track_story: empty trackText');
+          // self-contained — no store read. The scope pill carries a shown
+          // display `label` + a hidden `searchText`; trackStoryWithProposal mints
+          // the topic on the search text and shows the label.
+          const label = action.label.trim();
+          const searchText = action.searchText.trim();
+          if (!searchText) {
+            errors.push('track_story: empty searchText');
             break;
           }
-          await trackStoryWithProposal(action.subject as FeedbackSubject, text);
-          summaries.push(`Following "${text}"`);
+          await trackStoryWithProposal(action.subject as FeedbackSubject, {
+            label,
+            searchText,
+          });
+          summaries.push(`Following "${label || searchText}"`);
           applied++;
           break;
         }

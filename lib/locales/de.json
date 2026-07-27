@@ -208,12 +208,13 @@
     "storyUnavailable": "Diese Geschichte ist nicht mehr verfügbar",
     "failedToLoad": "Artikel konnte nicht geladen werden",
     "articleNotFound": "Artikel nicht gefunden",
-    "readOn": "Auf {{publication}} lesen",
-    "translateAndRead": "Übersetzen & lesen",
-    "translateAndReadOn": "Übersetzen & auf {{publication}} lesen",
-    "viewOriginal": "Original anzeigen",
+    "viewOriginal": "Originalartikel anzeigen",
+    "viewOriginalIn": "Originalartikel auf {{language}} anzeigen",
+    "viewAndTranslateOnDevice": "Artikel anzeigen & auf dem Gerät übersetzen",
     "share": "Teilen",
-    "shareVia": "Geteilt über Mera News — Nachrichten, die auf dich zugeschnitten sind. Lade die App herunter: {{downloadUrl}}"
+    "shareVia": "Geteilt über Mera News — Nachrichten, die auf dich zugeschnitten sind. Lade die App herunter: {{downloadUrl}}",
+    "sourceCountryGlobal": "Weltweit",
+    "sourceCountryA11y": "Quellenland: {{country}}. Tippen, um den Ländernamen anzuzeigen."
   },
   "newsCluster": {
     "failedToLoad": "Cluster-Details konnten nicht geladen werden",
@@ -236,7 +237,8 @@
   },
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} — Ihr Gerät kann ihn während des Lesens übersetzen. Falls die Übersetzung nicht funktioniert, können Sie die Seite unten in Google Übersetzer öffnen — beachten Sie dabei, dass Sie sie dann über Google aufrufen.",
-    "notTranslatable": "Dieser Artikel ist auf {{language}}. Die Übersetzung auf dem Gerät ist dafür möglicherweise nicht verfügbar — verwenden Sie unten Google Übersetzer, um ihn in Ihrer Sprache zu lesen.",
+    "notTranslatable": "Dieser Artikel ist auf {{language}}. Ihr Gerät kann ihn nicht übersetzen — verwenden Sie unten Google Übersetzer, um ihn in Ihrer Sprache zu lesen.",
+    "notTranslatableOsOutdated": "Dieser Artikel ist auf {{language}}. Für die Übersetzung auf dem Gerät ist iOS {{requiredVersion}} erforderlich — Sie verwenden iOS {{currentVersion}}. Aktualisieren Sie iOS, oder verwenden Sie unten Google Übersetzer, um ihn in Ihrer Sprache zu lesen.",
     "unknownLanguage": "einer anderen Sprache",
     "translationGuideLink": "Zeig mir, wie ich den Artikel übersetze",
     "viewInGoogleTranslate": "In Google Übersetzer ansehen",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Nachrichten zu:",
-    "alsoForYou": "Auch für Sie",
     "breaking": "Eilmeldung",
     "showMore": "{{count}} weitere anzeigen",
     "subTabFeed": "Feed",
@@ -1098,6 +1099,7 @@
     "emptyTitle": "Ich kenne Sie noch nicht",
     "emptyBody": "Erzählen Sie mir etwas über sich, damit ich Nachrichten finden kann, die für Sie wichtig sind.",
     "startTalking": "Gespräch beginnen",
+    "meraInvite": "Hey! Erzählen Sie mir, wofür Sie sich interessieren, und ich stimme Ihren Feed genau darauf ab.",
     "aboutYou": "Über Sie",
     "gettingToKnowYou": "Ich lerne Sie noch kennen — schauen Sie gleich wieder vorbei.",
     "updating": "Wird aktualisiert…",

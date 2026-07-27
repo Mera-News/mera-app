@@ -24,10 +24,14 @@ jest.mock('@expo/vector-icons', () => {
   return { MaterialIcons: (p: any) => <View {...p} /> };
 });
 jest.mock('@/components/custom/SourceFlag', () => ({ SourceFlag: () => null }));
+// SourceCountryFlag pulls in the popover ESM (un-transformable under jest-expo).
+jest.mock('@/components/custom/SourceCountryFlag', () => ({ SourceCountryFlag: () => null }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguage: () => 'en' }));
 jest.mock('@/lib/translation-service', () => ({
   getArticleTranslatableStatus: () => 'translatable',
-  getNativeLanguageName: (code: string | null | undefined) => (code ? 'German' : ''),
+}));
+jest.mock('@/lib/language-names', () => ({
+  getLocalizedLanguageName: (code: string | null | undefined) => (code ? 'German' : ''),
 }));
 jest.mock('@/lib/utils/time-ago', () => ({ formatTimeAgo: () => '2h' }));
 
@@ -66,5 +70,22 @@ describe('ArticleMetaRow', () => {
   it('renders the publication name (single line)', () => {
     const { getByText } = render(<ArticleMetaRow variant="card" {...base} />);
     expect(getByText('Der Spiegel')).toBeTruthy();
+  });
+
+  it('title-cases the publication name without mangling initialisms', () => {
+    const { getByText: getShouty } = render(
+      <ArticleMetaRow variant="card" {...base} publicationName="globoesporte.com" />,
+    );
+    expect(getShouty('Globoesporte.com')).toBeTruthy();
+
+    const { getByText: getAcronym } = render(
+      <ArticleMetaRow variant="card" {...base} publicationName="NDTV" />,
+    );
+    expect(getAcronym('NDTV')).toBeTruthy();
+  });
+
+  it('names the article language in the reader\'s language, not its endonym', () => {
+    const { getByText } = render(<ArticleMetaRow variant="card" {...base} />);
+    expect(getByText('German')).toBeTruthy();
   });
 });

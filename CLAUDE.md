@@ -2,12 +2,48 @@
 
 ## Model Usage Policy
 
-If the current model is Fable, use Fable **only for planning and orchestration** — do not implement directly. For implementation, delegate to Opus and Sonnet subagents (via the Agent tool, `model: "opus"` or `model: "sonnet"`), running them in parallel where tasks are independent:
+**Do it yourself when the context is already loaded and the change is small — ≤3 files and
+~150 lines.** A cold subagent costs ~30–60s of warm-up plus context rediscovery, so delegating
+under that line is slower *and* dearer. Past it, or whenever work can run in parallel, delegate.
+Applies to **Fable and Opus alike**.
 
-- **Opus** for complex tasks or those needing a large context (cross-cutting changes, tricky logic, large files).
-- **Sonnet** for simpler, well-scoped tasks (mechanical edits, boilerplate, isolated changes).
+### Delegate — match the row, don't deliberate
 
-When spawning these subagents, pass on **all relevant context** in the prompt — exact file paths, the plan/decisions already made, relevant code snippets, schema/contract details, and constraints — so the subagent can start implementing immediately instead of spending time rediscovering context.
+| Situation | Action |
+|---|---|
+| ≤3 files, ~150 lines, context already loaded | Do it yourself |
+| Must be serialized in one file | Do it yourself — never two agents on one file |
+| >3 files or >150 lines, or spans repos | Delegate |
+| ≥3 independent units that can run at once | Delegate, 1 agent per unit |
+| ≥5 near-identical edits (locales, DTOs, call sites) | Delegate, batched across Haiku agents |
+| Investigation that would flood context | Delegate to `Explore` |
+
+Units that share an undecided question are **not** independent. Decide it first and repeat the
+answer in every prompt, or keep them in one agent — parallel agents inventing their own answers
+to the same question is the top failure mode of fan-out.
+
+### Model per agent
+
+| Model | Use for |
+|---|---|
+| **Opus** | Tricky logic, cross-cutting or multi-repo changes, large files, and any scout that may later implement |
+| **Sonnet** | Well-scoped single-concern work: one feature file, one service, one test suite |
+| **Haiku** | Mechanical volume: locale translations, string/import/rename sweeps, boilerplate, log triage |
+
+### Plan with scouts, then reuse them
+
+For multi-area work, spawn one **Opus** scout per area to plan that area — use
+`general-purpose`, not `Plan`/`Explore`, which are read-only and can't implement. Then implement
+by `SendMessage`-ing the same agent: it resumes with its context intact and near-zero warm-up.
+A resumed agent keeps its spawn-time model, so spawn scouts at the model that should write the code.
+
+**How many:** 3–6 units → 1 agent each; 7–15 → batch into 6–10; 16+ → batch into 12–24.
+Ceiling 24 concurrent (Opus ≤6, Sonnet ≤12, Haiku ≤24). Send every agent for a stage in **one
+message** so they actually run concurrently.
+
+Every subagent prompt states: **objective, absolute file paths, decisions already made,
+constraints, output format, and what is out of scope.** Tell scouts to escalate ambiguity rather
+than guess. Never `git stash` / `git reset` in a subagent — they share this working tree.
 
 ## Project Overview
 
@@ -39,7 +75,7 @@ OTA updates work for JS/TS/styling/GraphQL changes. Native builds required for n
 
 - **Auth**: Better Auth with email OTP via `authClient` (`lib/auth-client.ts`). Tokens in expo-secure-store (native) / AsyncStorage (web). Auth cookies auto-injected into GraphQL via `SetContextLink` in `lib/apollo-client.ts`. Logout must call `clearAuthStorage()`.
 - **Data Fetching**: Apollo Client with `fetchPolicy: 'no-cache'` everywhere — intentional for real-time personalized content.
-- **Navigation**: Expo Router file-based routing. Stack (`app/_layout.tsx`) + Native Tabs (`app/logged-in/app_container/_layout.tsx`: Feed (swipe deck, landing tab), Dashboard (`for_you` route — sectioned news), Explore (`around`), Profile, Settings).
+- **Navigation**: Expo Router file-based routing. Stack (`app/_layout.tsx`) + Native Tabs (`app/logged-in/app_container/_layout.tsx`: Feed (scrolling insert-only feed, landing tab), Dashboard (`for_you` route — sectioned news), Explore (`around`), Profile, Settings).
 - **UI**: NativeWind + Gluestack UI v4. Dark mode only (`mode="dark"`). Colors in `tailwind.config.js`.
 - **GraphQL**: Schema in `schema.gql` → codegen → `lib/generated/graphql-types.ts`. Always regenerate after schema changes.
 
@@ -72,7 +108,7 @@ export default function MyRoute() {
     /config-mera/           # App preferences & settings screens
     /config-panel/          # Review panel (persona + sources drill-downs)
     /for-you/                # Dashboard screen (for_you route) — sectioned news
-    /swipe-feed/             # Feed tab: card deck + verdict bar + inline feedback tree
+    /feed/                   # Feed tab: scrolling insert-only feed + inline feedback surface
     /news-detail/            # Cluster/article detail screens
     /onboarding/             # Onboarding flow
     /persona-chat/           # Persona chat variants
@@ -134,7 +170,7 @@ Do NOT apply any of this — additive or wipe — to `facts`, `user_personas`, `
 
 **News-harness / AI flows**: For any task touching AI flows — prompts, relevance scoring, topic generation, feed relevance, or the article-feedback agent — the pure logic lives in `lib/news-harness/` (RN-free, ports-and-adapters; the `lib/mera-protocol/*` and `lib/llm/agents/*` files are thin shims over it). Read [NEWS_HARNESS.md](NEWS_HARNESS.md) first. It also documents `harness-local/` (Node/tsx), used whenever the user asks to iterate/tune the feed locally: tweak a prompt/config → run the pipeline script → `harness:compare` two runs → repeat, then verify with `tsc` + `jest lib/news-harness` since harness code is shipped app code.
 
-**Translation is always the last step.** When a task adds or changes user-facing strings, implement and verify the feature in English first (`lib/locales/en.json`), then translate to all other supported locales in `lib/locales/` (`ar`, `de`, `es`, `fr`, `hi`, `id`, `it`, `ja`, `ko`, `nl`, `pl`, `pt-BR`, `ru`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`) as the final step, once the English copy is settled. Do this by spawning up to 10 Sonnet/Haiku subagents in parallel (via the Agent tool), each given the exact new/changed keys, the English source strings, and the target locale file path, so each subagent can translate its batch of locales directly without rediscovering context. Batch multiple locales per subagent so no more than 10 subagents are spawned total.
+**Translation is always the last step.** When a task adds or changes user-facing strings, implement and verify the feature in English first (`lib/locales/en.json`), then translate to all other supported locales in `lib/locales/` (`ar`, `de`, `es`, `fr`, `hi`, `id`, `it`, `ja`, `ko`, `nl`, `pl`, `pt-BR`, `ru`, `th`, `tr`, `uk`, `vi`, `zh-CN`, `zh-TW`) as the final step, once the English copy is settled. Fan this out to **Haiku** subagents per the Model Usage Policy sizing rule, giving each the exact new/changed keys, the English source strings, and its target locale file paths, so each subagent can translate directly without rediscovering context.
 
 ## Design Pattern Guidelines
 

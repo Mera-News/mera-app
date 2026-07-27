@@ -4,6 +4,7 @@
 
 import {
   resolveOwningFact,
+  resolveOwningFactLenient,
   resolveOwnership,
   bucketOf,
   type ScoredSuggestionProjection,
@@ -206,5 +207,55 @@ describe('resolveOwnership classification', () => {
     const facts = new Map([['f', fact()]]);
     const s = sugg({ matchedTopics: [{ topicId: 't', text: 'x' }] });
     expect(resolveOwnership(s, topics, facts, HP)).toEqual({ kind: 'owned', factId: 'f' });
+  });
+});
+
+describe('resolveOwningFactLenient (Dashboard: zero-signal folds in)', () => {
+  const HP = 1.25;
+
+  it('effective weight exactly 0 with an active fact → OWNS that fact (unlike strict)', () => {
+    const topics = new Map([['t0', topic({ factId: 'f0', weight: 0 })]]);
+    const facts = new Map([['f0', fact()]]);
+    const s = sugg({ matchedTopics: [{ topicId: 't0', text: 'x' }] });
+    // Strict orphans it; lenient folds it into f0.
+    expect(resolveOwnership(s, topics, facts, HP).kind).toBe('orphan');
+    expect(resolveOwningFactLenient(s, topics, facts, HP)).toBe('f0');
+  });
+
+  it('active positive fact still wins (same as strict)', () => {
+    const topics = new Map([['t', topic({ factId: 'f', weight: 0.8 })]]);
+    const facts = new Map([['f', fact()]]);
+    const s = sugg({ matchedTopics: [{ topicId: 't', text: 'x' }] });
+    expect(resolveOwningFactLenient(s, topics, facts, HP)).toBe('f');
+  });
+
+  it('a positive fact beats a zero-signal one', () => {
+    const topics = new Map([
+      ['tp', topic({ factId: 'fp', weight: 0.5 })],
+      ['tz', topic({ factId: 'fz', weight: 0 })],
+    ]);
+    const facts = new Map([['fp', fact()], ['fz', fact()]]);
+    const s = sugg({
+      matchedTopics: [{ topicId: 'tz', text: 'z' }, { topicId: 'tp', text: 'p' }],
+    });
+    expect(resolveOwningFactLenient(s, topics, facts, HP)).toBe('fp');
+  });
+
+  it('factless (retired topic / null factId / deleted fact) → null (dropped)', () => {
+    const retired = new Map([['t', topic({ factId: 'f', status: 'retired' })]]);
+    const nullFact = new Map([['t', topic({ factId: null })]]);
+    const deleted = new Map([['t', topic({ factId: 'gone' })]]);
+    const facts = new Map([['f', fact()]]);
+    const s = sugg({ matchedTopics: [{ topicId: 't', text: 'x' }] });
+    expect(resolveOwningFactLenient(s, retired, facts, HP)).toBeNull();
+    expect(resolveOwningFactLenient(s, nullFact, new Map(), HP)).toBeNull();
+    expect(resolveOwningFactLenient(s, deleted, new Map(), HP)).toBeNull();
+  });
+
+  it('negative-only match → null (suppression stays dropped)', () => {
+    const topics = new Map([['tn', topic({ factId: 'fn', weight: -0.8 })]]);
+    const facts = new Map([['fn', fact()]]);
+    const s = sugg({ matchedTopics: [{ topicId: 'tn', text: 'x' }] });
+    expect(resolveOwningFactLenient(s, topics, facts, HP)).toBeNull();
   });
 });

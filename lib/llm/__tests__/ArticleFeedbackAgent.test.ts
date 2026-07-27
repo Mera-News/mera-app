@@ -261,13 +261,16 @@ describe('ArticleFeedbackAgent', () => {
     it('stages a track_story proposal carrying the embedded subject', async () => {
       mockIsSubjectTracked.mockResolvedValueOnce(false);
       const result = await makeTrackAgent().executeTool('proposeTrack', {
-        track: 'Updates on the student protest in Sonbhadra over exam results',
+        options: [
+          { label: 'Sonbhadra exam protest', search: 'sonbhadra student exam result protest' },
+        ],
       });
 
       expect(result.sideEffects?.proposal?.actions).toEqual([
         {
           type: 'track_story',
-          trackText: 'Updates on the student protest in Sonbhadra over exam results',
+          label: 'Sonbhadra exam protest',
+          searchText: 'sonbhadra student exam result protest',
           subject: trackSubject,
         },
       ]);
@@ -293,10 +296,12 @@ describe('ArticleFeedbackAgent', () => {
       expect(mockIsSubjectTracked).not.toHaveBeenCalled();
     });
 
-    it('rejects an empty track sentence', async () => {
+    it('rejects an empty set of options', async () => {
       mockIsSubjectTracked.mockResolvedValueOnce(false);
-      const result = await makeTrackAgent().executeTool('proposeTrack', { track: '   ' });
-      expect(result.result.error).toContain('track is required');
+      const result = await makeTrackAgent().executeTool('proposeTrack', {
+        options: [{ label: '   ', search: '' }],
+      });
+      expect(result.result.error).toContain('options is required');
       expect(result.sideEffects).toBeUndefined();
     });
   });

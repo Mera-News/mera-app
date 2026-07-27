@@ -206,12 +206,13 @@
     "storyUnavailable": "이 스토리는 더 이상 이용할 수 없습니다",
     "failedToLoad": "기사를 불러오지 못했습니다",
     "articleNotFound": "기사를 찾을 수 없습니다",
-    "readOn": "{{publication}}에서 읽기",
-    "translateAndReadOn": "번역 후 {{publication}}에서 읽기",
-    "translateAndRead": "번역 후 읽기",
-    "viewOriginal": "원문 보기",
+    "viewOriginal": "원본 기사 보기",
+    "viewOriginalIn": "{{language}}로 원본 기사 보기",
+    "viewAndTranslateOnDevice": "기사를 보고 기기에서 번역하기",
     "share": "공유",
-    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}"
+    "shareVia": "Mera News를 통해 공유됨 — 나를 위한 맞춤 뉴스. 앱 다운로드: {{downloadUrl}}",
+    "sourceCountryGlobal": "글로벌",
+    "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가 이름이 표시됩니다."
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -234,7 +235,8 @@
   },
   "clusterDetail": {
     "translatable": "이 기사는 {{language}}로 작성되었습니다 — 읽는 동안 기기에서 번역할 수 있습니다. 번역이 작동하지 않으면 아래의 Google 번역에서 사이트를 열 수 있습니다 — 이 경우 Google을 통해 열람하게 된다는 점을 참고하세요.",
-    "notTranslatable": "이 기사는 {{language}}로 작성되었습니다. 이 기사에는 기기 내 번역을 사용할 수 없을 수도 있습니다 — 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
+    "notTranslatable": "이 기사는 {{language}}로 작성되었습니다. 기기에서 번역할 수 없습니다 — 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
+    "notTranslatableOsOutdated": "이 기사는 {{language}}로 작성되었습니다. 기기 내 번역에는 iOS {{requiredVersion}}이 필요합니다 — 현재 iOS {{currentVersion}}을 사용 중입니다. iOS를 업데이트하거나, 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
     "unknownLanguage": "다른 언어",
     "translationGuideLink": "기사 번역 방법 알아보기",
     "viewInGoogleTranslate": "Google 번역에서 보기",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "관련 뉴스:",
-    "alsoForYou": "이런 소식도 있어요",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
     "subTabFeed": "피드",
@@ -1090,6 +1091,7 @@
     "emptyTitle": "아직 당신에 대해 잘 몰라요",
     "emptyBody": "자신에 대해 알려 주시면 당신에게 중요한 뉴스를 찾아 드릴게요.",
     "startTalking": "대화 시작하기",
+    "meraInvite": "안녕하세요! 관심사를 알려주시면 피드를 맞춤 설정해 드릴게요.",
     "aboutYou": "당신에 대해",
     "gettingToKnowYou": "아직 당신을 알아가는 중이에요 — 잠시 후 다시 확인해 주세요.",
     "updating": "업데이트 중…",

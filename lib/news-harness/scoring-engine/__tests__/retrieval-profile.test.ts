@@ -1,5 +1,9 @@
 import {
   buildRetrievalProfile,
+  TOPIC_LIMIT_BASE,
+  TOPIC_LIMIT_MAX,
+  TOPIC_LIMIT_MIN,
+  TOPIC_LIMIT_SPAN,
   type RetrievalLocationInput,
   type RetrievalTopicInput,
 } from '../retrieval-profile';
@@ -11,22 +15,24 @@ const topic = (t: Partial<RetrievalTopicInput> & { topicId: string; text: string
 });
 
 describe('buildRetrievalProfile — weight → limit mapping', () => {
-  it('weight 0.5, no high_priority → limit 15 (round(6+9))', () => {
+  // Formula: limit = clamp(round(TOPIC_LIMIT_BASE + TOPIC_LIMIT_SPAN * wForLimit), TOPIC_LIMIT_MIN, TOPIC_LIMIT_MAX)
+  // i.e. clamp(round(10 + 40 * wForLimit), 8, 40) (P5b — raised breadth to 40).
+  it('weight 0.5, no high_priority → limit 30 (round(10+20))', () => {
     const { topics } = buildRetrievalProfile({
       topics: [topic({ topicId: 't1', text: 'a', weight: 0.5 })],
       locations: [],
     });
     expect(topics).toHaveLength(1);
     expect(topics[0].effectiveWeight).toBeCloseTo(0.5, 6);
-    expect(topics[0].limit).toBe(15);
+    expect(topics[0].limit).toBe(30);
   });
 
-  it('weight 0.5, high_priority → limit 19 (round(6+18*0.7)=round(18.6))', () => {
+  it('weight 0.5, high_priority → limit 38 (round(10+40*0.7)=round(38))', () => {
     const { topics } = buildRetrievalProfile({
       topics: [topic({ topicId: 't1', text: 'a', weight: 0.5, highPriority: true })],
       locations: [],
     });
-    expect(topics[0].limit).toBe(19);
+    expect(topics[0].limit).toBe(38);
   });
 
   it('high_priority raises the limit vs the same weight without it', () => {
@@ -41,32 +47,80 @@ describe('buildRetrievalProfile — weight → limit mapping', () => {
     expect(withHp).toBeGreaterThan(withoutHp);
   });
 
-  it('weight 1.0, factWeight 1, no high_priority → limit 24 (round(6+18)=24)', () => {
+  it('weight 1.0, factWeight 1, no high_priority → limit 40 (round(10+40)=50, clamps to 40)', () => {
     const { topics } = buildRetrievalProfile({
       topics: [topic({ topicId: 't1', text: 'a', weight: 1.0, factWeight: 1 })],
       locations: [],
     });
     expect(topics[0].effectiveWeight).toBeCloseTo(1.0, 6);
-    expect(topics[0].limit).toBe(24);
+    expect(topics[0].limit).toBe(40);
   });
 
-  it('weight 1.0 with high_priority would exceed 24 unclamped (round(6+25.2)=31) but clamps to 24', () => {
+  it('weight 1.0 with high_priority would exceed 40 unclamped (round(10+56)=66) but clamps to 40', () => {
     const { topics } = buildRetrievalProfile({
       topics: [topic({ topicId: 't1', text: 'a', weight: 1.0, highPriority: true })],
       locations: [],
     });
-    expect(topics[0].limit).toBe(24);
+    expect(topics[0].limit).toBe(40);
+  });
+
+  // P5b — the shipped default seed weight (MIGRATION_TOPIC_SEED_WEIGHT /
+  // llmTopicWeight = 0.75) is the whole reason the breadth raise mattered:
+  // at this weight the old formula produced 20 (dead-code headroom under the
+  // client's limitPerTopic: 100), so the server's per-topic `limit` (which it
+  // prefers) was silently capping every persona topic at 20. Confirm the new
+  // formula lands exactly on the target the user chose (40).
+  it('default seed weight 0.75, no high_priority → limit exactly 40 (round(10+30)=40)', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [topic({ topicId: 't1', text: 'a', weight: 0.75 })],
+      locations: [],
+    });
+    expect(topics[0].limit).toBe(TOPIC_LIMIT_MAX);
+    expect(topics[0].limit).toBe(40);
+  });
+
+  it('default seed weight 0.75, high_priority → wForLimit 1.05, clamps to 40', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [topic({ topicId: 't1', text: 'a', weight: 0.75, highPriority: true })],
+      locations: [],
+    });
+    expect(topics[0].limit).toBe(TOPIC_LIMIT_MAX);
+  });
+
+  // NOTE on "floors at 8": buildRetrievalProfile only ever keeps topics with
+  // wEff > 0 (negatives/zero are excluded before the limit is computed), so
+  // wForLimit is always strictly positive and the formula's practical minimum
+  // is TOPIC_LIMIT_BASE (10), not TOPIC_LIMIT_MIN (8) — the same relationship
+  // the pre-existing formula had (base 6 vs floor 4, also never hit). The 8
+  // floor is a defensive clamp bound for callers/inputs outside that normal
+  // domain, not a value reachable via a real persona topic. This test
+  // documents the actual practical floor and confirms the defensive bound
+  // still holds.
+  it('near-zero-weight topic approaches the practical floor (BASE=10), never below TOPIC_LIMIT_MIN', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [topic({ topicId: 't1', text: 'a', weight: 0.001 })],
+      locations: [],
+    });
+    expect(topics[0].limit).toBe(TOPIC_LIMIT_BASE);
+    expect(topics[0].limit).toBeGreaterThanOrEqual(TOPIC_LIMIT_MIN);
+  });
+
+  it('exposes the coefficients as named exported constants matching the mandated values', () => {
+    expect(TOPIC_LIMIT_BASE).toBe(10);
+    expect(TOPIC_LIMIT_SPAN).toBe(40);
+    expect(TOPIC_LIMIT_MIN).toBe(8);
+    expect(TOPIC_LIMIT_MAX).toBe(40);
   });
 });
 
 describe('buildRetrievalProfile — factWeight multiplier', () => {
-  it('weight 0.8, factWeight 0.5 → w_eff 0.4 → limit 13 (round(6+7.2)=round(13.2))', () => {
+  it('weight 0.8, factWeight 0.5 → w_eff 0.4 → limit 26 (round(10+16))', () => {
     const { topics } = buildRetrievalProfile({
       topics: [topic({ topicId: 't1', text: 'a', weight: 0.8, factWeight: 0.5 })],
       locations: [],
     });
     expect(topics[0].effectiveWeight).toBeCloseTo(0.4, 6);
-    expect(topics[0].limit).toBe(13);
+    expect(topics[0].limit).toBe(26);
   });
 
   it('missing factWeight defaults to 1.0 (no multiplier applied)', () => {

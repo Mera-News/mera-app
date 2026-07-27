@@ -142,7 +142,7 @@ eas submit --platform ios --id <BUILD_ID>
 eas build --profile production --platform ios --auto-submit
 ```
 
-> iOS: first submit will prompt for Apple credentials / App Store Connect app selection.
+> iOS: first submit will prompt for Apple credentials / App Store Connect app selection. ⚠️ While the Apple org migration is in progress, always pick the **personal** team — see §10.
 > Android: uploads to the `internal` track — promote to production from the Play Console.
 
 ## 8. OTA Updates (`eas update`)
@@ -185,3 +185,28 @@ Requires `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` to be set (see 
 2. `eas build --profile production --platform all` (build number auto-increments).
 3. `eas submit --profile production --platform all` (or use `--auto-submit` in step 2).
 4. After release, OTA patches for that version: `eas update --channel production --message "..."`.
+
+## 10. Apple Account Migration (personal → organization) — 2026-07
+
+Status: the org enrollment is **still being processed by Apple**; the app (`com.mera.news`) has **NOT** been transferred and still lives under the personal team (the individual account). EAS-stored iOS credentials (dist cert + App Store profile) belong to that personal team and are valid until **2026-10-16**.
+
+The Apple ID now belongs to two teams, and interactive Apple login in EAS can land on the half-enrolled org team and fail. Until the migration completes:
+
+```bash
+# Build WITHOUT Apple login — uses EAS-stored personal-team credentials, bypasses the team picker
+eas build --profile production --platform ios --non-interactive
+
+# Submit (needs Apple login + 2FA): when asked, select the PERSONAL team
+# the individual account, NOT the company.
+eas submit --profile production --platform ios
+```
+
+**Do NOT initiate the App Store Connect app transfer until the current release is fully out** — a pending transfer freezes the app (no builds, submissions, or releases).
+
+Post-transfer checklist (only after the org enrollment is approved AND the release is shipped):
+
+1. **RevenueCat first** (integration is live): the org team issues a new In-App Purchase key / app-specific shared secret — update them in the RevenueCat dashboard or receipt validation for renewals breaks. Follow RevenueCat's app-transfer guide.
+2. Initiate the app transfer in App Store Connect (personal → org).
+3. Rotate EAS credentials to the org team: `eas credentials -p ios` → delete iOS credentials → regenerate selecting the **org** team.
+4. If a `submit.production.ios` block exists in `eas.json` by then, update its `appleTeamId` to the org team ID (`ascAppId` stays the same — it survives the transfer).
+5. Optional: create an App Store Connect API key under the org and add it to EAS so iOS submits become fully non-interactive.

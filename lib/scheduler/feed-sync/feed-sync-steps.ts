@@ -24,6 +24,7 @@ import { withRetry } from '@/lib/utils/retry';
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 import { reconcileTrackedStories } from './tracked-story-reconcile';
+import { migrateLegacyTrackedStories } from '@/lib/tracking/track-actions';
 
 /** Number of missing ids hydrated + persisted + enqueued per iteration. Kept at
  *  25 so each `getArticlesForTopicsByIds` call is a single server query (its
@@ -75,6 +76,13 @@ export interface HydratePersistEnqueueOptions {
   /** Refreshes the For You store so freshly-persisted (still-unscored) articles
    *  render progressively, one chunk at a time. */
   refreshStore: () => Promise<void>;
+  /** Hydrate and propagate, but hand nothing to the scoring pipeline: skips
+   *  `enqueueCandidates` and the tail flush. Set when a scoring run is already
+   *  in flight — appending fresh batches to a live run keeps it from ever
+   *  finishing. The rows simply stay `Unscored`; the gate is a pure read for
+   *  everything it elects (only propagated rows are written), so the pipeline's
+   *  post-finalize kick re-derives and enqueues them with nothing lost. */
+  suppressEnqueue?: boolean;
 }
 
 export async function stepFetchTopicIds(
@@ -152,11 +160,11 @@ async function fetchTopicIdsPersona(
 
   const query: PersonaQueryInput = {
     topics: profile.topics.map((t) => ({ text: t.text, limit: t.limit })),
-    // Fetch everything the server can give per topic (its ceiling is 100 —
-    // cold-path VECTOR_SEARCH_LIMIT / warm-path TOPIC_LINKING_LIMIT, all at
-    // score ≥0.78). We then process the whole lot serially in 25-batches and
-    // don't refetch until it's fully scored. (Was 20 — only the top slice.)
-    limitPerTopic: 100,
+    // Query-level fallback only: the server prefers each topic's own `limit`
+    // (set by buildRetrievalProfile, which now tops out at 40) and only falls
+    // back to this when a topic omits one. Kept in step with that ceiling so
+    // the two can't disagree — a larger value here was simply dead.
+    limitPerTopic: 40,
     topHeadlines: {
       scopes: profile.headlineScopes.map((s) => ({
         scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
@@ -367,16 +375,22 @@ export async function stepHydratePersistEnqueue(
       // Propagated rows are now terminal `Complete` — surface them immediately.
       await opts.refreshStore();
     }
-    if (gate.enqueueIds.length > 0) {
+    // The propagation half above always runs — it is what turns a duplicate of
+    // an already-scored story into a `Complete` row without any inference. Only
+    // the dispatch is suppressed.
+    if (!opts.suppressEnqueue && gate.enqueueIds.length > 0) {
       const res = await enqueueCandidates(gate.enqueueIds);
       pendingDeferred = res?.deferred ?? [];
     }
-    enqueuedCount += gate.enqueueIds.length;
+    if (!opts.suppressEnqueue) enqueuedCount += gate.enqueueIds.length;
+    const enqueuedLabel = opts.suppressEnqueue
+      ? `${gate.enqueueIds.length} left unscored (enqueue suppressed)`
+      : `enqueued ${gate.enqueueIds.length}`;
     ctx.log(
-      `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${gate.enqueueIds.length}`,
+      `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}`,
     );
     logger.info(
-      `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueued ${gate.enqueueIds.length}`,
+      `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}`,
     );
   };
 
@@ -467,8 +481,9 @@ export async function stepHydratePersistEnqueue(
   // of letting it wait out MAX_UNSCORED_WAIT_MS (~30 min) for a quantum that
   // will never fill this cycle. These ids were already gate-elected, so we
   // enqueue them directly with flushPartial=true (no extra gate pass). Skip on
-  // abort; never let a flush failure fail the (already-hydrated) step.
-  if (!ctx.signal.aborted && pendingDeferred.length > 0) {
+  // abort or when enqueueing is suppressed; never let a flush failure fail the
+  // (already-hydrated) step.
+  if (!opts.suppressEnqueue && !ctx.signal.aborted && pendingDeferred.length > 0) {
     try {
       await enqueueCandidates(pendingDeferred, true);
     } catch (err) {
@@ -489,16 +504,26 @@ export async function stepHydratePersistEnqueue(
 
   ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}`);
 
-  // Fire-and-forget: grow followed stories from whatever this run just
-  // persisted (article_suggestions.stable_cluster_id). Runs after every
-  // persist attempt — including a partial/daily-limit-clipped one, since
-  // whatever landed is still a valid reconcile source — but must never fail
-  // or delay the sync itself.
-  reconcileTrackedStories().catch((err) => {
-    logger.captureException(err, {
-      tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+  // Fire-and-forget: first upgrade any legacy stable-cluster follows to the
+  // topic model (one-shot + idempotent — a cheap no-op once none remain), THEN
+  // grow every followed topic from whatever this run just persisted (the
+  // suggestions' matched_topics). Chained so a just-migrated story also grows
+  // this same cycle. Runs after every persist attempt — including a
+  // partial/daily-limit-clipped one, since whatever landed is still a valid
+  // reconcile source — but must never fail or delay the sync itself.
+  migrateLegacyTrackedStories()
+    .catch((err) => {
+      logger.captureException(err, {
+        tags: { component: 'feed-sync-steps', method: 'migrateLegacyTrackedStories' },
+      });
+    })
+    .finally(() => {
+      reconcileTrackedStories().catch((err) => {
+        logger.captureException(err, {
+          tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+        });
+      });
     });
-  });
 
   return {
     insertedCount,

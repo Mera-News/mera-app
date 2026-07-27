@@ -142,6 +142,7 @@ describe('run — successful execution', () => {
         signal: expect.any(AbortSignal),
         reportProgress: expect.any(Function),
         log: expect.any(Function),
+        markNoOp: expect.any(Function),
       }),
     );
   });
@@ -151,7 +152,22 @@ describe('run — successful execution', () => {
 
     expect(mockMarkCompleted).toHaveBeenCalledWith('job-test-1', expect.any(Number));
     expect(mockSaveLastRun).toHaveBeenCalledWith('feed-sync', expect.any(Number));
-    expect(mockSetJobCompleted).toHaveBeenCalledWith('job-test-1', expect.any(Number));
+    expect(mockSetJobCompleted).toHaveBeenCalledWith('job-test-1', expect.any(Number), true);
+  });
+
+  it('does NOT stamp lastRun when the handler called ctx.markNoOp()', async () => {
+    // A handler that guarded itself out (or was aborted) must not arm the
+    // task's frequency gate — otherwise one skipped cycle costs a whole
+    // frequency window before the next attempt.
+    const handler = jest.fn().mockImplementation(async (_input, ctx) => {
+      ctx.markNoOp();
+    });
+
+    await run(makeJob(), makeDefinition({ handler }));
+
+    expect(mockMarkCompleted).toHaveBeenCalledWith('job-test-1', expect.any(Number));
+    expect(mockSaveLastRun).not.toHaveBeenCalled();
+    expect(mockSetJobCompleted).toHaveBeenCalledWith('job-test-1', expect.any(Number), false);
   });
 
   it('reportProgress callback calls updateProgress', async () => {

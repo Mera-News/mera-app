@@ -17,6 +17,29 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 const KEEP_AWAKE_TAG = 'mera-feed-sync';
 
+/**
+ * Kill-switch for the "fetch while the scoring pipeline is running" behaviour.
+ *
+ * A running pipeline used to skip the WHOLE cycle — fetch, diff, hydrate and
+ * score — for up to STALE_RUN_GUARD_MS at a time, which is the dominant cause
+ * of a user staring at an empty feed. Only SCORE actually needs skipping (the
+ * original concern was appending fresh batches to a live run and never letting
+ * it finish). With this true we fetch + hydrate normally, leave the new rows
+ * `Unscored`, and let `runPostFinalizeKick` pick them up when the live run
+ * finalizes.
+ *
+ * Flip to false to restore the old early-return exactly — this is the riskiest
+ * change in the wave, and it is a named export so a hotfix OTA can disable it
+ * without touching any other logic.
+ */
+export const FETCH_WHILE_SCORING = true;
+
+/** A run whose promise hasn't settled in this long is presumed dead — the
+ *  scheduler aborts the task at 3 min, so anything past 4 min means the run was
+ *  frozen (backgrounded) rather than slow. Joining such a promise would block
+ *  every future sync for the rest of the session. */
+export const INFLIGHT_STALE_MS = 4 * 60 * 1000;
+
 /** Epoch ms of the next 00:00 UTC — fallback reset time for the daily cap when
  *  the server response didn't carry one. */
 function nextUtcMidnightMs(): number {
@@ -58,6 +81,13 @@ class FeedSyncMachine {
    *  non-reentrancy an invariant of the machine itself, independent of the
    *  scheduler's exclusivity guard. */
   private _inFlight: Promise<void> | null = null;
+  /** Wall-clock start of `_inFlight`, so a promise that will never settle can
+   *  be recognised and abandoned rather than joined. */
+  private _inFlightStartedAt = 0;
+  /** Monotonic run id. The `_start` teardown touches instance fields
+   *  (keep-awake tag, network subscription); if an abandoned run settles late
+   *  it must not tear down the run that replaced it. */
+  private _runSeq = 0;
 
   get state(): FeedSyncState {
     return this._state;
@@ -78,16 +108,33 @@ class FeedSyncMachine {
     // check-then-run async gap and the retry path that bypasses the exclusivity
     // guard (AppScheduler.trigger).
     if (this._inFlight) {
-      logger.info('[FeedSyncMachine] start() called while a run is in flight — joining existing run');
-      return this._inFlight;
-    }
-    this._inFlight = this._start(personaId, ctx).finally(() => {
+      const age = Date.now() - this._inFlightStartedAt;
+      if (age <= INFLIGHT_STALE_MS) {
+        logger.info('[FeedSyncMachine] start() called while a run is in flight — joining existing run');
+        return this._inFlight;
+      }
+      // The previous run's promise is never going to settle (the JS timer that
+      // would have aborted it was frozen while the app was backgrounded).
+      // Joining it would wedge feed-sync for the rest of the session — drop the
+      // reference and start fresh instead.
+      logger.warn(
+        `[FeedSyncMachine] abandoning a stale in-flight run (${Math.round(age / 60_000)}min) — starting fresh`,
+      );
       this._inFlight = null;
+    }
+    this._inFlightStartedAt = Date.now();
+    // Identity guard: only the run that OWNS the current `_inFlight` slot may
+    // clear it. Without this, an abandoned run settling later would null out
+    // the reference to the live run and reopen the re-entrancy window.
+    const thisRun: Promise<void> = this._start(personaId, ctx).finally(() => {
+      if (this._inFlight === thisRun) this._inFlight = null;
     });
-    return this._inFlight;
+    this._inFlight = thisRun;
+    return thisRun;
   }
 
   private async _start(personaId: string, ctx: TaskContext): Promise<void> {
+    const runId = ++this._runSeq;
     const snap = await feedPersistence.loadValidSnapshot();
     if (snap && snap.state !== 'idle' && snap.state !== 'done' && snap.state !== 'failed') {
       logger.info(`[FeedSyncMachine] resuming from persisted state: ${snap.state}`);
@@ -117,9 +164,15 @@ class FeedSyncMachine {
       // return, error throw): flush any pending coalesced refresh so the store
       // reflects the final DB state before teardown.
       await flushSuggestionsRefresh();
-      deactivateKeepAwake(KEEP_AWAKE_TAG);
-      this._networkUnsubscribe?.();
-      this._networkUnsubscribe = null;
+      // Only the newest run owns the shared resources below. An abandoned run
+      // (see the INFLIGHT_STALE_MS branch in start()) can settle long after a
+      // replacement started; releasing the keep-awake tag and the network
+      // subscription then would silently maim the live run.
+      if (this._runSeq === runId) {
+        deactivateKeepAwake(KEEP_AWAKE_TAG);
+        this._networkUnsubscribe?.();
+        this._networkUnsubscribe = null;
+      }
     }
   }
 
@@ -129,14 +182,18 @@ class FeedSyncMachine {
     // header status reflects this cycle's outcome. It re-appears if scoring fails
     // again, and resolves on its own if scoring succeeds.
     useForYouStore.getState().setScoringError(null);
+    // Set when a scoring run is already in flight: this cycle fetches and
+    // hydrates as usual but does NOT dispatch anything to the pipeline.
+    let suppressScoring = false;
     try {
-      // Skip this cycle entirely when a scoring run is already in flight.
-      // Backend ingestion is continuous (20-25 new articles at a time); polling
-      // every 10s would keep appending fresh batches to the active run so it
-      // never finishes. Bail out here with the machine untouched (still
-      // `idle` — no transitions, no persisted state, no server calls). The
-      // pipeline self-drives via its internal poller; when it finalizes, the
-      // next 10s tick finds it idle and polls normally.
+      // A scoring run already in flight constrains this cycle. Backend ingestion
+      // is continuous (20-25 new articles at a time); dispatching every 60s
+      // would keep appending fresh batches to the active run so it never
+      // finishes. But that only rules out SCORING — fetching and hydrating are
+      // harmless, and skipping them (as this used to) starves the feed for as
+      // long as the run lives. So we fetch + hydrate, leave the new rows
+      // `Unscored`, and let the pipeline's own `runPostFinalizeKick` re-derive
+      // and enqueue them when it finalizes.
       //
       // Lazy require (not a static import) breaks the module-load cycle
       // feed-sync-steps → scoring-pipeline → SuggestionSyncService → run-inference-
@@ -148,8 +205,8 @@ class FeedSyncMachine {
         // Defense in depth against a wedged run (a batch stuck waiting-* on a
         // throwing /results, or a run orphaned by a cache-clear): if the run has
         // been alive longer than STALE_RUN_GUARD_MS it cannot be trusted to
-        // finish on its own, and skipping would strand feed-sync forever. Abort
-        // it (force-fail + finalize) and fall through to sync normally.
+        // finish on its own, and even the suppressed path below would never
+        // score again. Abort it (force-fail + finalize) and sync in full.
         const startedAt = await scoringPipeline.getRunStartedAt();
         const ageMs = startedAt !== null ? Date.now() - startedAt : 0;
         if (startedAt !== null && ageMs > scoringPipeline.STALE_RUN_GUARD_MS) {
@@ -157,8 +214,15 @@ class FeedSyncMachine {
             `[FeedSyncMachine] scoring pipeline running but run is stale (${Math.round(ageMs / 60_000)}min) — aborting and proceeding`,
           );
           await scoringPipeline.abortRun('stale-guard');
+        } else if (FETCH_WHILE_SCORING) {
+          suppressScoring = true;
+          logger.info('[FeedSyncMachine] scoring pipeline active — fetching without scoring');
         } else {
+          // Legacy behaviour, kept behind the kill-switch: bail out with the
+          // machine untouched (still `idle` — no transitions, no persisted
+          // state, no server calls).
           logger.info('[FeedSyncMachine] skipped — scoring pipeline active');
+          ctx.markNoOp();
           return;
         }
       }
@@ -174,7 +238,7 @@ class FeedSyncMachine {
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
       await this._awaitResumeIfPaused();
-      if (ctx.signal.aborted) return;
+      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
 
       const [topicResult, recentCount] = await Promise.all([
         steps.stepFetchTopicIds(personaId, ctx),
@@ -196,7 +260,7 @@ class FeedSyncMachine {
       logger.info('[FeedSyncMachine] → diffing');
       await feedPersistence.updateMachineState('diffing');
 
-      if (ctx.signal.aborted) return;
+      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
       const diffResult = await steps.stepDiff(topicResult, ctx);
 
       if (diffResult.missingIds.length === 0) {
@@ -213,8 +277,11 @@ class FeedSyncMachine {
         logger.info('[FeedSyncMachine] → scoring (no new articles, silent)');
         await feedPersistence.updateMachineState('scoring');
 
-        if (ctx.signal.aborted) return;
-        await steps.stepScore(ctx);
+        if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+        // Suppressed: a live scoring run already owns the unscored backlog and
+        // will re-derive it on finalize. Everything else about this branch is
+        // bookkeeping, so we still walk it to `done`.
+        if (!suppressScoring) await steps.stepScore(ctx);
 
         await flushSuggestionsRefresh();
         this._transitionTo('done');
@@ -235,7 +302,7 @@ class FeedSyncMachine {
       await feedPersistence.updateMachineState('hydrating');
 
       await this._awaitResumeIfPaused();
-      if (ctx.signal.aborted) return;
+      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
 
       const total = diffResult.missingIds.length;
       const hydrateResult = await steps.stepHydratePersistEnqueue(diffResult, ctx, {
@@ -247,6 +314,9 @@ class FeedSyncMachine {
         // A1: coalesce the per-chunk store refreshes into a leading+trailing
         // throttle instead of a full reload after every 25-item chunk.
         refreshStore: () => requestSuggestionsRefresh(),
+        // Hydrate, propagate scores from donors, but don't hand anything to the
+        // live pipeline run — rows stay `Unscored` for its post-finalize kick.
+        suppressEnqueue: suppressScoring,
       });
       useForYouStore.getState().resetHydrationProgress();
 
@@ -270,8 +340,11 @@ class FeedSyncMachine {
       publishSyncStatus('scoring');
       await feedPersistence.updateMachineState('scoring');
 
-      if (ctx.signal.aborted) return;
-      await steps.stepScore(ctx);
+      if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+      // See the no-op branch above: the `scoring` transition and its published
+      // status still happen (hydrating → done is not a legal transition), only
+      // the dispatch is suppressed.
+      if (!suppressScoring) await steps.stepScore(ctx);
 
       // Done
       await flushSuggestionsRefresh();

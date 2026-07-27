@@ -23,6 +23,9 @@ export interface SwipeCallbacks {
     from: Verdict,
     to: Verdict,
   ) => void;
+  /** A card's verdict was removed (re-tapping the same thumb un-votes it) —
+   *  destroys the stored feedback row (verdict + any tree path). */
+  onVerdictRemoved: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** The inline-feedback-tree path changed for a card's verdict (P4 tree). */
   onTreePathChanged: (
     suggestion: ForYouSuggestion,
@@ -46,6 +49,7 @@ export interface SwipeCallbacks {
 export const swipeCallbacks: SwipeCallbacks = {
   onVerdict: () => {},
   onVerdictChanged: () => {},
+  onVerdictRemoved: () => {},
   onTreePathChanged: () => {},
   onInvokeMera: () => {},
   onOpenArticleChat: () => {},

@@ -1,6 +1,7 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
+import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
@@ -11,7 +12,6 @@ import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
-  ALSO_ROW_ID,
   buildFactRows,
   isSuggestionOpened,
   type FactRowGroup,
@@ -66,7 +66,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
   const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
-  const isAlso = factId === ALSO_ROW_ID;
 
   // Last-visit timestamp captured on entry (before we mark this visit) — drives
   // the per-card NEW badge. `null` until hydrated; `0` on a first-ever visit
@@ -147,30 +146,46 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     keyFor: (s) => s.articleId,
     getVerdict: (key) => verdictsRef.current[key]?.verdict ?? null,
     setVerdict: (key, v) =>
-      setVerdicts((prev) => ({ ...prev, [key]: { verdict: v, path: prev[key]?.path ?? [] } })),
+      setVerdicts((prev) => {
+        if (v == null) {
+          if (!prev[key]) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        }
+        return { ...prev, [key]: { verdict: v, path: prev[key]?.path ?? [] } };
+      }),
     getPath: (key) => verdictsRef.current[key]?.path,
     setPath: (key, path) =>
       setVerdicts((prev) => (prev[key] ? { ...prev, [key]: { ...prev[key], path } } : prev)),
   };
-  const { onVerdict, onAskMera, sheet } = useFeedbackSheet(factAdapter);
+  const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter);
+  const dismissedMap = useFeedbackDismissedStore((s) => s.dismissed);
 
   const renderItem = useCallback(
-    ({ item }: { item: FactRowGroup }) => (
-      <ArticleSuggestionCard
-        suggestion={item.data}
-        moreSourcesCount={moreSourcesCount(item.data, item.members)}
-        onPress={handlePress}
-        verdict={verdicts[item.data.articleId]?.verdict ?? null}
-        onVerdict={onVerdict}
-        onAskMera={onAskMera}
-        read={isSuggestionOpened(item.data, openedIds)}
-        // NEW pill only for stories that became visible since the last visit —
-        // and never on a first-ever visit (prevVisitMs 0).
-        isNew={prevVisitMs != null && prevVisitMs > 0 && item.addedMs > prevVisitMs}
-        flat
-      />
-    ),
-    [handlePress, openedIds, prevVisitMs, verdicts, onVerdict, onAskMera],
+    ({ item }: { item: FactRowGroup }) => {
+      const rec = verdicts[item.data.articleId];
+      const verdict = rec?.verdict ?? null;
+      return (
+        <ArticleSuggestionCard
+          suggestion={item.data}
+          moreSourcesCount={moreSourcesCount(item.data, item.members)}
+          onPress={handlePress}
+          verdict={verdict}
+          onVerdict={onVerdict}
+          onAskMera={onAskMera}
+          feedbackVisible={verdict != null && !dismissedMap[item.data.articleId]}
+          feedbackInitialPath={rec?.path}
+          feedbackHandlers={feedbackHandlers}
+          read={isSuggestionOpened(item.data, openedIds)}
+          // NEW pill only for stories that became visible since the last visit —
+          // and never on a first-ever visit (prevVisitMs 0).
+          isNew={prevVisitMs != null && prevVisitMs > 0 && item.addedMs > prevVisitMs}
+          flat
+        />
+      );
+    },
+    [handlePress, openedIds, prevVisitMs, verdicts, dismissedMap, onVerdict, onAskMera, feedbackHandlers],
   );
 
   return (
@@ -190,26 +205,15 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
             <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
           </Pressable>
           <Box className="flex-1 min-w-0">
-            {/* The "also" catch-all has no owning fact statement — render its
-                passed title plainly (no "News about:" prefix, no dynamic
-                translation of the sentinel label). */}
-            {isAlso ? (
-              <Text size="lg" bold numberOfLines={1} className="text-white">
-                {statement}
-              </Text>
-            ) : (
-              <>
-                <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
-                <TranslatableDynamic
-                  text={statement}
-                  as="heading"
-                  size="lg"
-                  bold
-                  numberOfLines={1}
-                  className="text-white"
-                />
-              </>
-            )}
+            <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
+            <TranslatableDynamic
+              text={statement}
+              as="heading"
+              size="lg"
+              bold
+              numberOfLines={1}
+              className="text-white"
+            />
           </Box>
         </HStack>
       </SectionGradientPanel>
@@ -226,9 +230,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
       />
 
       <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
-
-      {/* Feedback tree sheet — mounted once, driven by the shared hook. */}
-      {sheet}
     </Box>
   );
 };

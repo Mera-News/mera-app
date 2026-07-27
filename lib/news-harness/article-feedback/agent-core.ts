@@ -73,12 +73,63 @@ const MAX_TOPIC_WEIGHT_DELTA = 0.5;
 const FEATURE_REQUEST_TITLE_MAX = 80;
 const FEATURE_REQUEST_SUMMARY_MAX = 500;
 
-/** Target ceiling on a proposed follow-topic sentence (prompt guidance). */
-const MAX_TRACK_WORDS = 18;
-/** Hard cap on the accepted track text we stage (defensive trim). */
+/** Target ceiling on a scope pill's display label (prompt guidance). */
+const MAX_TRACK_LABEL_WORDS = 5;
+/** Target ceiling on a scope pill's hidden search query (prompt guidance). */
+const MAX_TRACK_SEARCH_WORDS = 8;
+/** Hard cap on the display label / search text we stage (defensive trim). */
 const MAX_TRACK_CHARS = 200;
-/** Max distinct track-scope options a single choose-one track card offers. */
-const MAX_TRACK_OPTIONS = 3;
+/** Max distinct track-scope pills a single follow-a-story card offers. */
+const MAX_TRACK_OPTIONS = 4;
+
+/** One scope pill the follow-a-story flow offers: a shown display `label` + a
+ *  hidden `search` retrieval query. The LLM emits 3–4 of these at widening
+ *  scopes (narrow event → broad ongoing story); the user picks one by its
+ *  label, and `search` is what gets minted as the tracked topic. */
+export interface TrackScopeOption {
+  label: string;
+  search: string;
+}
+
+function trimTrack(s: string): string {
+  const t = (s ?? '').trim();
+  return t.length > MAX_TRACK_CHARS ? `${t.slice(0, MAX_TRACK_CHARS - 1)}…` : t;
+}
+
+/**
+ * Parse the LLM's raw `proposeTrack` options into clean scope pills. Accepts the
+ * structured shape (`[{ label, search }]`) and tolerates a legacy string option
+ * (`"scope text"` → label === search). Drops entries missing a label, trims, and
+ * dedupes by label (case-insensitive), capped at MAX_TRACK_OPTIONS. Shared by
+ * the live path (decideProposeTrack) and the resume path (deriveThreadItems) so
+ * both rebuild identical actions.
+ */
+export function parseTrackScopeOptions(raw: unknown): TrackScopeOption[] {
+  if (!Array.isArray(raw)) return [];
+  const out: TrackScopeOption[] = [];
+  const seen = new Set<string>();
+  for (const entry of raw) {
+    let label = '';
+    let search = '';
+    if (typeof entry === 'string') {
+      label = entry.trim();
+      search = label;
+    } else if (entry && typeof entry === 'object') {
+      const rec = entry as Record<string, unknown>;
+      label = typeof rec.label === 'string' ? rec.label.trim() : '';
+      search = typeof rec.search === 'string' ? rec.search.trim() : '';
+      // A label with no distinct search still tracks (search falls back to it).
+      if (!search) search = label;
+    }
+    if (!label) continue;
+    const key = label.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ label: trimTrack(label), search: trimTrack(search) });
+    if (out.length >= MAX_TRACK_OPTIONS) break;
+  }
+  return out;
+}
 
 function trunc(text: string, max: number): string {
   const t = (text ?? '').trim();
@@ -144,13 +195,16 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
 
 ## Following a story (the proposeTrack tool)
-When the user wants to FOLLOW / TRACK this unfolding story, call proposeTrack with ONE durable sentence (${MAX_TRACK_WORDS} words or fewer) describing what to keep following:
-- Describe the CONTINUING story (the protest, the trial, the negotiation, the outbreak…), NOT this single article, so future developments also match.
-- Include the concrete who / what / where anchors that keep it specific. Do not invent details absent from the ARTICLE.
-- Plain, neutral language. No clickbait, no ALL CAPS, no trailing punctuation.
-- If the user redirects ("track the protest itself, not this article"), call proposeTrack AGAIN with the re-scoped topic.
+When the user wants to FOLLOW / TRACK this unfolding story, call proposeTrack with 3–4 scope OPTIONS at widening scope — from the narrow specific event to the broad ongoing story — so the user can pick how much they want to follow. Read the ARTICLE and the RELATED COVERAGE titles to judge the real span of the story; base the options on what that coverage actually spans, not just this one article.
+Each option has TWO fields:
+- "label": the SHORT display name shown to the user (${MAX_TRACK_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation). This is a generic, recognisable topic name — e.g. "Russia–Ukraine war", "Attacks on Ukraine infrastructure".
+- "search": a plain lowercase retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "russia ukraine civilian infrastructure attacks". NOT shown to the user.
+Rules:
+- Order options narrow → broad. Make the labels GENERIC enough that future developments keep matching (track the CONTINUING story, not this single article).
+- Do not invent entities absent from the ARTICLE / RELATED COVERAGE. Plain, neutral language; no clickbait, no ALL CAPS.
+- If the user redirects ("track the protest itself, not this article"), call proposeTrack AGAIN with re-scoped options.
 - If TRACK STATE says already following, do NOT propose — just tell them it's already being followed.
-Example: proposeTrack {"track": "Updates on the student protest in Sonbhadra over exam results"}
+Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}
 
 ## Rules
 - NEVER change anything directly. ALWAYS stage changes via the proposeChanges tool — a ≤2-sentence explanation, a ≤2-sentence expected_effects, and a MINIMAL action list.
@@ -174,13 +228,13 @@ Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
 - proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "highPriority"?: boolean}]}
-- proposeTrack: {"track": string, "options"?: string[]}
+- proposeTrack: {"options": [{"label": string, "search": string}]}
 - applyProposal: {}
 - cancelProposal: {}
 
 ## Example (format only)
 <tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You want less of this.", "expected_effects": "Pick how far to go.", "choose_one": true, "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}, {"type": "retire_topic", "topicText": "cricket"}]}}</tool_call>
-<tool_call>{"name": "proposeTrack", "arguments": {"track": "Updates on the student protest in Sonbhadra over exam results", "options": ["The Sonbhadra exam-result protest", "The wider UP student exam-reform movement"]}}</tool_call>`;
+<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -375,21 +429,33 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
       function: {
         name: 'proposeTrack',
         description:
-          'Propose following this article\'s unfolding story as a durable topic. Never tracks directly — stages a confirm card. track = ONE plain sentence (≤18 words) describing the continuing story (who/what/where), not this single article. Optionally give 2–3 `options` (specific event ↔ bigger story) grounded ONLY in RELATED COVERAGE — the user then picks one scope.',
+          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden lowercase `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic.",
         parameters: {
           type: 'object',
           properties: {
-            track: {
-              type: 'string',
-              description: 'The durable follow-topic sentence (≤18 words).',
-            },
             options: {
               type: 'array',
-              items: { type: 'string' },
-              description: '2–3 alternative follow-topic sentences at different scopes (specific event ↔ wider story), each ≤18 words, grounded ONLY in RELATED COVERAGE. When ≥2 valid, the card becomes single-select.',
+              items: {
+                type: 'object',
+                properties: {
+                  label: {
+                    type: 'string',
+                    description:
+                      'Short display name shown to the user (≤5 words, Title Case, generic/recognisable, e.g. "Russia–Ukraine war").',
+                  },
+                  search: {
+                    type: 'string',
+                    description:
+                      'Hidden lowercase retrieval query with concrete who/what/where anchors (≤8 words, e.g. "russia ukraine civilian infrastructure attacks"). NOT shown to the user.',
+                  },
+                },
+                required: ['label', 'search'],
+              },
+              description:
+                '3–4 scope pills ordered narrow → broad, grounded ONLY in the ARTICLE + RELATED COVERAGE.',
             },
           },
-          required: ['track'],
+          required: ['options'],
         },
       },
     },
@@ -443,7 +509,7 @@ function describeAction(a: ProposalAction): string {
     case 'retire_topic':
       return `retire topic "${trunc(a.topicText, 60)}"`;
     case 'track_story':
-      return `follow "${trunc(a.trackText, 80)}"`;
+      return `follow "${trunc(a.label, 80)}"`;
   }
 }
 
@@ -617,11 +683,13 @@ export function decideProposeChanges(
 }
 
 /**
- * Pure decision for the `proposeTrack` tool: validates the LLM's one-sentence
- * `track` text and stages a single `track_story` action carrying the caller's
- * origin `subject` snapshot. The subject is embedded in the action (not read
- * from a store at confirm time) so the staged proposal is fully reconstructable
- * from the persisted tool call. Returns an error result on empty text.
+ * Pure decision for the `proposeTrack` tool: parses the LLM's 3–4 scope
+ * `options` (display label + hidden search query) into `track_story` actions,
+ * each carrying the caller's origin `subject` snapshot. The subject + the parsed
+ * options are echoed in the result so deriveThreadItems can rebuild the exact
+ * confirmable proposal from the persisted tool call (no store read). ≥2 pills →
+ * a single-select card (the user picks one scope). Returns an error result when
+ * no valid option survives parsing.
  *
  * The already-tracked guard lives in the RN adapter (it needs an async DB read);
  * this function assumes the caller decided a proposal is warranted.
@@ -630,58 +698,44 @@ export function decideProposeTrack(
   args: Record<string, unknown>,
   subject: TrackFeedbackSubject,
 ): ToolExecutionResult {
-  const trimTrack = (s: string): string =>
-    s.length > MAX_TRACK_CHARS ? `${s.slice(0, MAX_TRACK_CHARS - 1)}…` : s;
-
-  // Distinct, non-empty scope options (specific ↔ broad). ≥2 → single-select.
-  const options = Array.isArray(args.options)
-    ? Array.from(
-        new Set(
-          args.options
-            .filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
-            .map((o) => trimTrack(o.trim())),
-        ),
-      ).slice(0, MAX_TRACK_OPTIONS)
-    : [];
+  // Accept the structured `options` (label+search); tolerate a legacy `track`
+  // string as a single lone option so an older model output still tracks.
+  const rawOptions =
+    Array.isArray(args.options) && args.options.length > 0
+      ? args.options
+      : typeof args.track === 'string' && args.track.trim()
+        ? [args.track]
+        : [];
+  const options = parseTrackScopeOptions(rawOptions);
+  if (options.length === 0) return { result: { error: 'options is required' } };
 
   const id = `track-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-  if (options.length >= 2) {
-    const actions: ProposalAction[] = options.map((trackText) => ({
-      type: 'track_story',
-      trackText,
-      subject,
-    }));
-    const proposal: StagedProposal = {
-      id,
-      explanation: '',
-      expectedEffects: '',
-      actions,
-      chooseOne: true,
-    };
-    return {
-      result: { staged: true, proposalId: id, chooseOne: true, options, subject },
-      sideEffects: { proposal },
-    };
-  }
-
-  // Single-option flow (unchanged): fall back to `track` (or a lone option).
-  const raw =
-    (typeof args.track === 'string' && args.track.trim()) || options[0] || '';
-  if (!raw) return { result: { error: 'track is required' } };
-  const trackText = trimTrack(raw);
+  const actions: ProposalAction[] = options.map((o) => ({
+    type: 'track_story',
+    label: o.label,
+    searchText: o.search,
+    subject,
+  }));
+  const chooseOne = actions.length >= 2;
 
   const proposal: StagedProposal = {
     id,
     explanation: '',
     expectedEffects: '',
-    actions: [{ type: 'track_story', trackText, subject }],
+    actions,
+    ...(chooseOne ? { chooseOne: true } : {}),
   };
 
-  // subject is echoed so deriveThreadItems can rebuild the confirmable action
-  // from the persisted tool result (the tool INPUT carries only `track`).
+  // subject + options are echoed so deriveThreadItems can rebuild the confirmable
+  // actions from the persisted tool result identically to this live path.
   return {
-    result: { staged: true, proposalId: proposal.id, track: trackText, subject },
+    result: {
+      staged: true,
+      proposalId: proposal.id,
+      ...(chooseOne ? { chooseOne: true } : {}),
+      options,
+      subject,
+    },
     sideEffects: { proposal },
   };
 }

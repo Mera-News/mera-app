@@ -1,7 +1,8 @@
 // tracked-story-reconcile.test.ts — unit tests for the feed-sync-piggybacked
-// tracked-story reconcile step.
+// tracked-story reconcile step. A followed story is a TOPIC, so growth matches
+// suggestions by `topic_id` (the legacy stable-cluster pass was removed once
+// legacy follows auto-migrate to the topic model).
 
-const mockGetActiveForReconcile = jest.fn();
 const mockGetActiveForTopicReconcile = jest.fn();
 const mockApplyUpdates = jest.fn();
 const mockStampChecked = jest.fn();
@@ -12,7 +13,6 @@ const mockQuery = jest.fn((..._args: any[]) => ({ fetch: (...args: any[]) => moc
 const mockGet = jest.fn((..._args: any[]) => ({ query: (...args: any[]) => mockQuery(...args) }));
 
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
-  getActiveForReconcile: (...args: any[]) => mockGetActiveForReconcile(...args),
   getActiveForTopicReconcile: (...args: any[]) => mockGetActiveForTopicReconcile(...args),
   applyUpdates: (...args: any[]) => mockApplyUpdates(...args),
   stampChecked: (...args: any[]) => mockStampChecked(...args),
@@ -43,14 +43,24 @@ beforeEach(() => {
   mockApplyUpdates.mockResolvedValue(undefined);
   mockStampChecked.mockResolvedValue(undefined);
   mockNotify.mockResolvedValue(undefined);
-  // Default: no topic-linked stories, so the legacy cluster-pass tests below
-  // (which only stub getActiveForReconcile) exercise a single pass unchanged.
-  mockGetActiveForTopicReconcile.mockResolvedValue([]);
 });
 
-describe('reconcileTrackedStories', () => {
+const sug = (
+  id: string,
+  topicIds: string[],
+  extra: Record<string, any> = {},
+) => ({
+  id,
+  matchedTopicsJson: JSON.stringify(topicIds.map((t) => ({ topicId: t, text: t }))),
+  titleEn: extra.titleEn ?? `Title ${id}`,
+  firstPubDate: extra.firstPubDate ?? new Date(1700000000000),
+  imageUrl: extra.imageUrl ?? null,
+  publicationName: extra.publicationName ?? null,
+});
+
+describe('reconcileTrackedStories — topic path', () => {
   it('no-ops (no query, no writes) when nothing is tracked', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([]);
+    mockGetActiveForTopicReconcile.mockResolvedValue([]);
 
     await reconcileTrackedStories();
 
@@ -60,119 +70,7 @@ describe('reconcileTrackedStories', () => {
     expect(mockStampChecked).not.toHaveBeenCalled();
   });
 
-  it('applies updates but creates no notification for a story that gained members', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([
-      { id: 's1', stableClusterId: 'clu-1', memberArticleIds: ['a1'], latestArticleId: 'a1' },
-      { id: 's2', stableClusterId: 'clu-2', memberArticleIds: ['b1'], latestArticleId: 'b1' },
-    ]);
-    mockFetch.mockResolvedValue([
-      { id: 'a1', stableClusterId: 'clu-1', titleEn: 'A1', firstPubDate: new Date(1000) },
-      { id: 'a2', stableClusterId: 'clu-1', titleEn: 'A2', firstPubDate: new Date(2000) }, // new for s1
-      { id: 'a3', stableClusterId: 'clu-1', titleEn: 'A3', firstPubDate: new Date(3000) }, // new for s1
-      { id: 'b1', stableClusterId: 'clu-2', titleEn: 'B1', firstPubDate: new Date(4000) }, // already known for s2 — no new members
-    ]);
-
-    await reconcileTrackedStories();
-
-    expect(mockApplyUpdates).toHaveBeenCalledTimes(1);
-    // Cluster pass now passes lean snapshots per new member (v44) — same shape
-    // as the topic pass — so cluster-path stories get watermark-accurate badges.
-    expect(mockApplyUpdates).toHaveBeenCalledWith('s1', {
-      newMemberIds: ['a2', 'a3'],
-      newSnapshots: [
-        { articleId: 'a2', title: 'A2', pubDateMs: 2000, imageUrl: undefined, publicationName: undefined },
-        { articleId: 'a3', title: 'A3', pubDateMs: 3000, imageUrl: undefined, publicationName: undefined },
-      ],
-    });
-
-    expect(mockNotify).not.toHaveBeenCalled();
-
-    // Both examined stories get stamped, found-new or not.
-    expect(mockStampChecked).toHaveBeenCalledWith('s1');
-    expect(mockStampChecked).toHaveBeenCalledWith('s2');
-    expect(mockStampChecked).toHaveBeenCalledTimes(2);
-  });
-
-  it('runs one indexed query scoped to the tracked stable ids', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([
-      { id: 's1', stableClusterId: 'clu-1', memberArticleIds: [], latestArticleId: null },
-      { id: 's2', stableClusterId: 'clu-2', memberArticleIds: [], latestArticleId: null },
-    ]);
-    mockFetch.mockResolvedValue([]);
-
-    await reconcileTrackedStories();
-
-    expect(mockGet).toHaveBeenCalledTimes(1);
-    expect(mockGet).toHaveBeenCalledWith('article_suggestions');
-    expect(mockQuery).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('isolates a per-story failure — remaining stories are still processed and stamped', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([
-      { id: 's1', stableClusterId: 'clu-1', memberArticleIds: [], latestArticleId: null },
-      { id: 's2', stableClusterId: 'clu-2', memberArticleIds: [], latestArticleId: null },
-    ]);
-    mockFetch.mockResolvedValue([
-      { id: 'a1', stableClusterId: 'clu-1', titleEn: 'A1', firstPubDate: new Date(1000) },
-      { id: 'b1', stableClusterId: 'clu-2', titleEn: 'B1', firstPubDate: new Date(4000) },
-    ]);
-    mockApplyUpdates.mockImplementationOnce(() => {
-      throw new Error('boom');
-    });
-
-    await reconcileTrackedStories();
-
-    expect(mockCaptureException).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({
-        tags: expect.objectContaining({ component: 'tracked-story-reconcile' }),
-        extra: { trackedStoryId: 's1' },
-      }),
-    );
-    // s2's own applyUpdates still ran despite s1's failure.
-    expect(mockApplyUpdates).toHaveBeenCalledTimes(2);
-    expect(mockApplyUpdates).toHaveBeenNthCalledWith(2, 's2', {
-      newMemberIds: ['b1'],
-      newSnapshots: [
-        { articleId: 'b1', title: 'B1', pubDateMs: 4000, imageUrl: undefined, publicationName: undefined },
-      ],
-    });
-    // Both get stamped, including the one that threw.
-    expect(mockStampChecked).toHaveBeenCalledWith('s1');
-    expect(mockStampChecked).toHaveBeenCalledWith('s2');
-  });
-
-  it('rows with no stable_cluster_id on the suggestion are ignored (defensive)', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([
-      { id: 's1', stableClusterId: 'clu-1', memberArticleIds: [], latestArticleId: null },
-    ]);
-    mockFetch.mockResolvedValue([{ id: 'a1', stableClusterId: null }]);
-
-    await reconcileTrackedStories();
-
-    expect(mockApplyUpdates).not.toHaveBeenCalled();
-    expect(mockNotify).not.toHaveBeenCalled();
-    expect(mockStampChecked).toHaveBeenCalledWith('s1');
-  });
-});
-
-describe('reconcileTrackedStories — topic path (v40)', () => {
-  const sug = (
-    id: string,
-    topicIds: string[],
-    extra: Record<string, any> = {},
-  ) => ({
-    id,
-    matchedTopicsJson: JSON.stringify(topicIds.map((t) => ({ topicId: t, text: t }))),
-    titleEn: extra.titleEn ?? `Title ${id}`,
-    firstPubDate: extra.firstPubDate ?? new Date(1700000000000),
-    imageUrl: extra.imageUrl ?? null,
-    publicationName: extra.publicationName ?? null,
-  });
-
   it('grows a topic story from suggestions matching its topic id, with snapshots (no notification)', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([]);
     mockGetActiveForTopicReconcile.mockResolvedValue([
       { id: 't1', topicId: 'top-1', memberArticleIds: ['a1'] },
     ]);
@@ -203,7 +101,6 @@ describe('reconcileTrackedStories — topic path (v40)', () => {
   });
 
   it('stamps but does not grow / notify when no fresh members match', async () => {
-    mockGetActiveForReconcile.mockResolvedValue([]);
     mockGetActiveForTopicReconcile.mockResolvedValue([
       { id: 't1', topicId: 'top-1', memberArticleIds: ['a1'] },
     ]);
@@ -216,31 +113,56 @@ describe('reconcileTrackedStories — topic path (v40)', () => {
     expect(mockStampChecked).toHaveBeenCalledWith('t1');
   });
 
-  it('runs both passes when topic AND legacy stories coexist', async () => {
+  it('grows multiple topic stories, each from its own matched suggestions', async () => {
     mockGetActiveForTopicReconcile.mockResolvedValue([
       { id: 't1', topicId: 'top-1', memberArticleIds: [] },
+      { id: 't2', topicId: 'top-2', memberArticleIds: [] },
     ]);
-    mockGetActiveForReconcile.mockResolvedValue([
-      { id: 's1', stableClusterId: 'clu-1', memberArticleIds: [], latestArticleId: null },
+    mockFetch.mockResolvedValue([
+      sug('a1', ['top-1']),
+      sug('b1', ['top-2']),
     ]);
-    // First fetch (topic pass) then second fetch (cluster pass).
-    mockFetch
-      .mockResolvedValueOnce([sug('a2', ['top-1'])])
-      .mockResolvedValueOnce([
-        { id: 'b1', stableClusterId: 'clu-1', titleEn: 'B1', firstPubDate: new Date(4000) },
-      ]);
 
     await reconcileTrackedStories();
 
     expect(mockApplyUpdates).toHaveBeenCalledWith(
       't1',
-      expect.objectContaining({ newMemberIds: ['a2'] }),
+      expect.objectContaining({ newMemberIds: ['a1'] }),
     );
     expect(mockApplyUpdates).toHaveBeenCalledWith(
-      's1',
+      't2',
       expect.objectContaining({ newMemberIds: ['b1'] }),
     );
     expect(mockStampChecked).toHaveBeenCalledWith('t1');
-    expect(mockStampChecked).toHaveBeenCalledWith('s1');
+    expect(mockStampChecked).toHaveBeenCalledWith('t2');
+  });
+
+  it('isolates a per-story failure — remaining stories are still processed and stamped', async () => {
+    mockGetActiveForTopicReconcile.mockResolvedValue([
+      { id: 't1', topicId: 'top-1', memberArticleIds: [] },
+      { id: 't2', topicId: 'top-2', memberArticleIds: [] },
+    ]);
+    mockFetch.mockResolvedValue([
+      sug('a1', ['top-1']),
+      sug('b1', ['top-2']),
+    ]);
+    mockApplyUpdates.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+
+    await reconcileTrackedStories();
+
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        tags: expect.objectContaining({ component: 'tracked-story-reconcile' }),
+        extra: { trackedStoryId: 't1' },
+      }),
+    );
+    // t2's own applyUpdates still ran despite t1's failure.
+    expect(mockApplyUpdates).toHaveBeenCalledTimes(2);
+    // Both get stamped, including the one that threw.
+    expect(mockStampChecked).toHaveBeenCalledWith('t1');
+    expect(mockStampChecked).toHaveBeenCalledWith('t2');
   });
 });

@@ -208,12 +208,13 @@
     "storyUnavailable": "Cette histoire n'est plus disponible",
     "failedToLoad": "Impossible de charger l'article",
     "articleNotFound": "Article introuvable",
-    "readOn": "Lire sur {{publication}}",
-    "translateAndRead": "Traduire et lire",
-    "translateAndReadOn": "Traduire et lire sur {{publication}}",
-    "viewOriginal": "Afficher l'original",
+    "viewOriginal": "Voir l'article original",
+    "viewOriginalIn": "Voir l'article original en {{language}}",
+    "viewAndTranslateOnDevice": "Voir l'article et le traduire sur l'appareil",
     "share": "Partager",
-    "shareVia": "Partagé via Mera News — l'actualité personnalisée pour vous. Téléchargez l'application : {{downloadUrl}}"
+    "shareVia": "Partagé via Mera News — l'actualité personnalisée pour vous. Téléchargez l'application : {{downloadUrl}}",
+    "sourceCountryGlobal": "International",
+    "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays."
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -236,7 +237,8 @@
   },
   "clusterDetail": {
     "translatable": "Cet article est en {{language}} — votre appareil peut le traduire pendant que vous lisez. Si la traduction ne fonctionne pas, vous pouvez ouvrir le site dans Google Traduction ci-dessous — notez simplement que vous le consulterez alors via Google.",
-    "notTranslatable": "Cet article est en {{language}}. La traduction sur l'appareil n'est peut-être pas disponible pour celui-ci — utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
+    "notTranslatable": "Cet article est en {{language}}. Votre appareil ne peut pas le traduire — utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
+    "notTranslatableOsOutdated": "Cet article est en {{language}}. La traduction sur l'appareil nécessite iOS {{requiredVersion}} — vous utilisez iOS {{currentVersion}}. Mettez à jour iOS, ou utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
     "unknownLanguage": "une autre langue",
     "translationGuideLink": "Montrez-moi comment traduire l'article",
     "viewInGoogleTranslate": "Voir dans Google Traduction",
@@ -817,7 +819,6 @@
   },
   "forYou": {
     "sectionPrefix": "Actualités sur :",
-    "alsoForYou": "Aussi pour vous",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
     "openFactFeed": "Voir toutes les actualités sur ce sujet",
@@ -1098,6 +1099,7 @@
     "emptyTitle": "Je ne vous connais pas encore",
     "emptyBody": "Parlez-moi de vous pour que je puisse trouver des actualités qui comptent pour vous.",
     "startTalking": "Commencer à discuter",
+    "meraInvite": "Salut ! Dites-moi ce qui vous intéresse et j'ajusterai votre fil d'actualité pour vous.",
     "aboutYou": "À propos de vous",
     "gettingToKnowYou": "J'apprends encore à vous connaître — revenez dans un instant.",
     "updating": "Mise à jour…",

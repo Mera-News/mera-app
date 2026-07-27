@@ -62,8 +62,26 @@ export interface RetrievalProfile {
 }
 
 const DEFAULT_HEADLINE_LIMIT_PER_SCOPE = 10;
+// Must stay ≤ the server's MAX_TOPICS_PER_REQUEST (default 200,
+// articles-for-topics.service.ts) — another agent is adding client-side
+// batching (mirroring getArticleIdsForTopics' MAX_TOPICS_PER_BATCH) so 200
+// remains safe even without a per-request cap change here.
 const DEFAULT_MAX_TOPICS = 200;
 const MAX_COUNTRY_SCOPES = 5;
+
+// Per-topic retrieval limit: limit = clamp(round(BASE + SPAN * wForLimit), MIN, MAX).
+// At the shipped default seed weight (wEff = 0.75, MIGRATION_TOPIC_SEED_WEIGHT /
+// llmTopicWeight in persona-migration.ts / config.ts) this yields exactly 40:
+// round(10 + 40 * 0.75) = round(40) = 40. A high-priority topic (wForLimit =
+// 0.75 * 1.4 = 1.05) clamps at TOPIC_LIMIT_MAX. TOPIC_LIMIT_MAX must stay ≤ the
+// server's per-topic limitPerTopic (articles-for-topics.service.ts:356 —
+// `query.topics[i].limit ?? limitPerTopic`, sent as 40 by feed-sync-steps.ts) —
+// raising this above what the server allows per topic is silently truncated
+// server-side, so the two must be changed together.
+export const TOPIC_LIMIT_BASE = 10;
+export const TOPIC_LIMIT_SPAN = 40;
+export const TOPIC_LIMIT_MIN = 8;
+export const TOPIC_LIMIT_MAX = 40;
 
 const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, x));
 
@@ -92,7 +110,11 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
     const wEff = clamp(t.weight * factWeight, -1, 1);
     if (wEff <= 0) continue; // negatives / zero excluded — never sent
     const wForLimit = wEff * (t.highPriority ? 1.4 : 1);
-    const limit = clamp(Math.round(6 + 18 * wForLimit), 4, 24);
+    const limit = clamp(
+      Math.round(TOPIC_LIMIT_BASE + TOPIC_LIMIT_SPAN * wForLimit),
+      TOPIC_LIMIT_MIN,
+      TOPIC_LIMIT_MAX,
+    );
     kept.push({
       topicId: t.topicId,
       text: t.text,

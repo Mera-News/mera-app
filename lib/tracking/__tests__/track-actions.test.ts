@@ -1,19 +1,20 @@
 // track-actions unit tests — the follow flow's helper. Every collaborator
-// (tracked-story service, ArticleService, inference queue/job service,
-// mera-protocol store) is mocked so we assert ONLY the orchestration:
-//   - the local row is created synchronously from the subject,
-//   - enrichment resolves a stable id + seeds members,
-//   - the headline job is enqueued (deduped) on-device / run inline on cloud,
-//   - the archive-null path falls back to the live cluster.
+// (tracked-story service, topic service, inference queue) is mocked so we assert
+// ONLY the orchestration:
+//   - trackStoryWithProposal mints a topic from the accepted scope's search
+//     text and creates the local row with the display label as headline,
+//   - untrackStoryFromSubject retires the linked topic then untracks,
+//   - isSubjectTracked delegates to the service,
+//   - migrateLegacyTrackedStories routes each legacy row through the migrate
+//     handler inline (cloud) or a deduped enqueued job (on-device).
 
 jest.mock('../../database/services/tracked-story-service', () => ({
   trackStory: jest.fn(),
   untrackStory: jest.fn(),
   isTracked: jest.fn(),
-  resolveStableId: jest.fn(),
-  seedMembers: jest.fn(),
   findActiveTrackedId: jest.fn(),
   getTrackedStoryById: jest.fn(),
+  getLegacyTrackedForMigration: jest.fn(),
 }));
 
 jest.mock('../../database/services/topic-service', () => ({
@@ -21,32 +22,21 @@ jest.mock('../../database/services/topic-service', () => ({
   retire: jest.fn(),
 }));
 
-jest.mock('../../article-service', () => ({
-  ArticleService: {
-    trackStory: jest.fn(),
-    getNewsClusterForArticle: jest.fn(),
-    getTrackedStory: jest.fn(),
-  },
-}));
-
 jest.mock('../../database/services/inference-job-service', () => ({
   enqueueJob: jest.fn(),
   hasPendingJob: jest.fn(),
 }));
 
-jest.mock('../../inference/handlers/story-headline-handler', () => ({
-  handleStoryHeadlineJob: jest.fn(),
+jest.mock('../../inference/handlers/tracked-story-migrate-handler', () => ({
+  handleTrackedStoryMigrateJob: jest.fn(),
 }));
 
 jest.mock('../../inference/InferenceQueue', () => ({
   inferenceQueue: { notify: jest.fn() },
 }));
 
-const mockProcessingMode = { value: 'ON_DEVICE' as string };
 jest.mock('../../stores/mera-protocol-store', () => ({
-  useMeraProtocolStore: {
-    getState: () => ({ processingMode: mockProcessingMode.value }),
-  },
+  useMeraProtocolStore: { getState: jest.fn() },
 }));
 
 jest.mock('../../logger', () => ({
@@ -54,30 +44,33 @@ jest.mock('../../logger', () => ({
   default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn(), info: jest.fn() },
 }));
 
-import { ArticleService } from '../../article-service';
 import {
   trackStory,
   untrackStory,
   isTracked,
-  resolveStableId,
-  seedMembers,
   findActiveTrackedId,
   getTrackedStoryById,
+  getLegacyTrackedForMigration,
 } from '../../database/services/tracked-story-service';
 import { createTopics, retire } from '../../database/services/topic-service';
 import { enqueueJob, hasPendingJob } from '../../database/services/inference-job-service';
-import { handleStoryHeadlineJob } from '../../inference/handlers/story-headline-handler';
+import { handleTrackedStoryMigrateJob } from '../../inference/handlers/tracked-story-migrate-handler';
 import { inferenceQueue } from '../../inference/InferenceQueue';
+import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
+import { ProcessingMode } from '../../generated/graphql-types';
 import {
-  trackStoryFromSubject,
   trackStoryWithProposal,
   untrackStoryFromSubject,
   isSubjectTracked,
-  __test,
+  migrateLegacyTrackedStories,
+  type AcceptedTrackScope,
 } from '../track-actions';
 import type { FeedbackSubject } from '../../../components/custom/cards/feedback-subject';
 
 const asMock = (fn: unknown) => fn as jest.Mock;
+
+const setProcessingMode = (mode: ProcessingMode) =>
+  asMock(useMeraProtocolStore.getState).mockReturnValue({ processingMode: mode });
 
 const SUBJECT: FeedbackSubject = {
   origin: 'suggestion',
@@ -88,135 +81,25 @@ const SUBJECT: FeedbackSubject = {
   stableClusterId: 'clu-1',
 };
 
+const SCOPE: AcceptedTrackScope = {
+  label: 'Protest updates',
+  searchText: 'Updates on the protest',
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockProcessingMode.value = 'ON_DEVICE';
   asMock(trackStory).mockResolvedValue({ id: 'row-1' });
-  asMock(hasPendingJob).mockResolvedValue(false);
-  asMock(handleStoryHeadlineJob).mockResolvedValue({ ok: true });
   asMock(createTopics).mockResolvedValue([{ id: 'top-1' }]);
   asMock(getTrackedStoryById).mockResolvedValue(null);
-});
-
-describe('trackStoryFromSubject', () => {
-  it('creates the local row instantly from the subject', async () => {
-    await trackStoryFromSubject(SUBJECT);
-    expect(trackStory).toHaveBeenCalledWith({
-      stableClusterId: 'clu-1',
-      articleId: 'art-1',
-      title: 'A developing story',
-      originSurface: 'for_you',
-    });
-  });
-});
-
-describe('enrichTrackedStory — archive path', () => {
-  it('seeds members from the archive and enqueues a deduped headline job', async () => {
-    asMock(ArticleService.trackStory).mockResolvedValue({
-      stableClusterId: 'clu-1',
-      articles: [
-        { articleId: 'art-1', title_en: 'Title one' },
-        { articleId: 'art-2', title_en: 'Title two' },
-      ],
-    });
-
-    await __test.enrichTrackedStory('row-1', SUBJECT);
-
-    expect(ArticleService.trackStory).toHaveBeenCalledWith('clu-1');
-    // Members seeded (NOT via applyUpdates — no unseen bump at track time).
-    expect(seedMembers).toHaveBeenCalledWith(
-      'row-1',
-      ['art-1', 'art-2'],
-      expect.objectContaining({ latestArticleId: 'art-1' }),
-    );
-    // On-device: deduped enqueue + queue wake.
-    expect(hasPendingJob).toHaveBeenCalledWith('story_headline', 'trackedStoryId', 'row-1');
-    expect(enqueueJob).toHaveBeenCalledWith(
-      'story_headline',
-      expect.objectContaining({ trackedStoryId: 'row-1', titles: ['Title one', 'Title two'] }),
-    );
-    expect(inferenceQueue.notify).toHaveBeenCalled();
-    expect(handleStoryHeadlineJob).not.toHaveBeenCalled();
-  });
-
-  it('skips the enqueue when a headline job is already pending (dedupe)', async () => {
-    asMock(ArticleService.trackStory).mockResolvedValue({
-      stableClusterId: 'clu-1',
-      articles: [{ articleId: 'art-1', title_en: 'Title one' }],
-    });
-    asMock(hasPendingJob).mockResolvedValue(true);
-
-    await __test.enrichTrackedStory('row-1', SUBJECT);
-
-    expect(enqueueJob).not.toHaveBeenCalled();
-    expect(inferenceQueue.notify).not.toHaveBeenCalled();
-  });
-
-  it('runs the headline handler inline in cloud mode', async () => {
-    mockProcessingMode.value = 'CLOUD';
-    asMock(ArticleService.trackStory).mockResolvedValue({
-      stableClusterId: 'clu-1',
-      articles: [{ articleId: 'art-1', title_en: 'Title one' }],
-    });
-
-    await __test.enrichTrackedStory('row-1', SUBJECT);
-
-    expect(handleStoryHeadlineJob).toHaveBeenCalledWith(
-      expect.objectContaining({ trackedStoryId: 'row-1', titles: ['Title one'], useCloud: true }),
-    );
-    expect(enqueueJob).not.toHaveBeenCalled();
-  });
-});
-
-describe('enrichTrackedStory — archive-null fallback', () => {
-  it('resolves the stable id from the live cluster when no archive exists', async () => {
-    // No archive to seed from.
-    asMock(ArticleService.trackStory)
-      .mockResolvedValueOnce(null) // initial stableClusterId lookup
-      .mockResolvedValueOnce({
-        // second call: archive the resolved cluster
-        stableClusterId: 'clu-live',
-        articles: [{ articleId: 'art-1', title_en: 'Live title' }],
-      });
-    asMock(ArticleService.getNewsClusterForArticle).mockResolvedValue({
-      stableClusterId: 'clu-live',
-      articles: {
-        articles: [
-          { _id: 'art-1', title_en_internal_only: 'Live title' },
-          { _id: 'art-9', title: 'Sibling' },
-        ],
-      },
-    });
-
-    await __test.enrichTrackedStory('row-1', SUBJECT);
-
-    expect(ArticleService.getNewsClusterForArticle).toHaveBeenCalledWith('art-1');
-    expect(resolveStableId).toHaveBeenCalledWith('row-1', 'clu-live');
-    expect(seedMembers).toHaveBeenCalledWith('row-1', ['art-1'], expect.anything());
-    expect(enqueueJob).toHaveBeenCalled();
-  });
-
-  it('falls back to the tapped title when no server coverage resolves', async () => {
-    asMock(ArticleService.trackStory).mockResolvedValue(null);
-    asMock(ArticleService.getNewsClusterForArticle).mockResolvedValue(null);
-
-    await __test.enrichTrackedStory('row-1', {
-      ...SUBJECT,
-      stableClusterId: undefined,
-    });
-
-    // No stable id anywhere → no seed, headline built from the subject title.
-    expect(seedMembers).not.toHaveBeenCalled();
-    expect(enqueueJob).toHaveBeenCalledWith(
-      'story_headline',
-      expect.objectContaining({ titles: ['A developing story'] }),
-    );
-  });
+  asMock(hasPendingJob).mockResolvedValue(false);
+  asMock(enqueueJob).mockResolvedValue('job-1');
+  asMock(handleTrackedStoryMigrateJob).mockResolvedValue({ ok: true });
+  setProcessingMode(ProcessingMode.OnDevice);
 });
 
 describe('trackStoryWithProposal', () => {
-  it('mints a tracked topic and creates the story with headline + snapshot', async () => {
-    await trackStoryWithProposal(SUBJECT, '  Updates on the protest  ');
+  it('mints a tracked topic from the search text and creates the story row', async () => {
+    await trackStoryWithProposal(SUBJECT, SCOPE);
 
     expect(createTopics).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -229,20 +112,28 @@ describe('trackStoryWithProposal', () => {
     ]);
     expect(trackStory).toHaveBeenCalledWith(
       expect.objectContaining({
+        stableClusterId: 'clu-1',
         articleId: 'art-1',
+        title: 'A developing story',
+        originSurface: 'for_you',
         topicId: 'top-1',
         topicText: 'Updates on the protest',
-        llmHeadline: 'Updates on the protest',
+        llmHeadline: 'Protest updates',
         initialSnapshot: expect.objectContaining({ articleId: 'art-1' }),
       }),
     );
   });
 
-  it('stamps the subject real pubDate into the seed snapshot (Part E)', async () => {
-    await trackStoryWithProposal(
-      { ...SUBJECT, pubDate: '2026-07-15T09:30:00.000Z' },
-      'Track this',
+  it('falls back to the search text as the headline when label is blank', async () => {
+    await trackStoryWithProposal(SUBJECT, { label: '  ', searchText: 'Updates on the protest' });
+
+    expect(trackStory).toHaveBeenCalledWith(
+      expect.objectContaining({ llmHeadline: 'Updates on the protest' }),
     );
+  });
+
+  it('stamps the subject real pubDate into the seed snapshot (Part E)', async () => {
+    await trackStoryWithProposal({ ...SUBJECT, pubDate: '2026-07-15T09:30:00.000Z' }, SCOPE);
     expect(trackStory).toHaveBeenCalledWith(
       expect.objectContaining({
         initialSnapshot: expect.objectContaining({
@@ -255,26 +146,25 @@ describe('trackStoryWithProposal', () => {
 
   it('falls back to now for the seed snapshot pubDate when subject has none', async () => {
     const before = Date.now();
-    await trackStoryWithProposal(SUBJECT, 'Track this');
+    await trackStoryWithProposal(SUBJECT, SCOPE);
     const call = asMock(trackStory).mock.calls.at(-1)?.[0];
     expect(call.initialSnapshot.pubDateMs).toBeGreaterThanOrEqual(before);
   });
 
-  it('does not enqueue a separate headline job (headline is the proposal)', async () => {
-    asMock(ArticleService.trackStory).mockResolvedValue({
-      stableClusterId: 'clu-1',
-      articles: [{ articleId: 'art-1', title_en: 'Title one' }],
-    });
-    await trackStoryWithProposal(SUBJECT, 'Track this topic');
-    // Enrichment still runs for backfill, but skips the headline job.
-    expect(enqueueJob).not.toHaveBeenCalled();
-    expect(handleStoryHeadlineJob).not.toHaveBeenCalled();
-  });
-
-  it('no-ops on a blank proposal', async () => {
-    await trackStoryWithProposal(SUBJECT, '   ');
+  it('no-ops on a blank search text', async () => {
+    await trackStoryWithProposal(SUBJECT, { label: 'Protest updates', searchText: '   ' });
     expect(createTopics).not.toHaveBeenCalled();
     expect(trackStory).not.toHaveBeenCalled();
+  });
+
+  it('still creates the row with a null topicId when the topic mint throws', async () => {
+    asMock(createTopics).mockRejectedValue(new Error('mint failed'));
+
+    await trackStoryWithProposal(SUBJECT, SCOPE);
+
+    expect(trackStory).toHaveBeenCalledWith(
+      expect.objectContaining({ topicId: null, topicText: 'Updates on the protest' }),
+    );
   });
 });
 
@@ -304,5 +194,141 @@ describe('untrackStoryFromSubject / isSubjectTracked', () => {
     asMock(isTracked).mockResolvedValue(true);
     await expect(isSubjectTracked(SUBJECT)).resolves.toBe(true);
     expect(isTracked).toHaveBeenCalledWith({ stableClusterId: 'clu-1', articleId: 'art-1' });
+  });
+});
+
+describe('migrateLegacyTrackedStories', () => {
+  it('returns 0 and does nothing when there is nothing legacy to migrate', async () => {
+    asMock(getLegacyTrackedForMigration).mockResolvedValue([]);
+
+    await expect(migrateLegacyTrackedStories()).resolves.toBe(0);
+    expect(handleTrackedStoryMigrateJob).not.toHaveBeenCalled();
+    expect(enqueueJob).not.toHaveBeenCalled();
+    expect(inferenceQueue.notify).not.toHaveBeenCalled();
+  });
+
+  describe('CLOUD processing mode', () => {
+    beforeEach(() => setProcessingMode(ProcessingMode.Cloud));
+
+    it('runs the migrate handler inline per row and returns the ok count', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['Title A', 'Title B'] },
+        { id: 'row-2', titles: ['Title C'] },
+      ]);
+
+      const migrated = await migrateLegacyTrackedStories();
+
+      expect(migrated).toBe(2);
+      expect(handleTrackedStoryMigrateJob).toHaveBeenNthCalledWith(1, {
+        trackedStoryId: 'row-1',
+        titles: ['Title A', 'Title B'],
+        useCloud: true,
+      });
+      expect(handleTrackedStoryMigrateJob).toHaveBeenNthCalledWith(2, {
+        trackedStoryId: 'row-2',
+        titles: ['Title C'],
+        useCloud: true,
+      });
+      // Cloud path never touches the queue.
+      expect(enqueueJob).not.toHaveBeenCalled();
+      expect(inferenceQueue.notify).not.toHaveBeenCalled();
+    });
+
+    it('only counts rows the handler reports ok', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['A'] },
+        { id: 'row-2', titles: ['B'] },
+      ]);
+      asMock(handleTrackedStoryMigrateJob)
+        .mockResolvedValueOnce({ ok: false })
+        .mockResolvedValueOnce({ ok: true });
+
+      await expect(migrateLegacyTrackedStories()).resolves.toBe(1);
+    });
+
+    it('continues past a per-row handler throw', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['A'] },
+        { id: 'row-2', titles: ['B'] },
+      ]);
+      asMock(handleTrackedStoryMigrateJob)
+        .mockRejectedValueOnce(new Error('boom'))
+        .mockResolvedValueOnce({ ok: true });
+
+      await expect(migrateLegacyTrackedStories()).resolves.toBe(1);
+    });
+  });
+
+  describe('ON-DEVICE processing mode', () => {
+    beforeEach(() => setProcessingMode(ProcessingMode.OnDevice));
+
+    it('enqueues a deduped migrate job per row and notifies the queue', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['Title A', 'Title B'] },
+        { id: 'row-2', titles: ['Title C'] },
+      ]);
+
+      const migrated = await migrateLegacyTrackedStories();
+
+      expect(migrated).toBe(2);
+      expect(handleTrackedStoryMigrateJob).not.toHaveBeenCalled();
+      expect(enqueueJob).toHaveBeenNthCalledWith(1, 'tracked_story_migrate', {
+        trackedStoryId: 'row-1',
+        titles: ['Title A', 'Title B'],
+      });
+      expect(enqueueJob).toHaveBeenNthCalledWith(2, 'tracked_story_migrate', {
+        trackedStoryId: 'row-2',
+        titles: ['Title C'],
+      });
+      expect(inferenceQueue.notify).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips rows that already have a pending job (dedupe)', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['A'] },
+        { id: 'row-2', titles: ['B'] },
+      ]);
+      asMock(hasPendingJob)
+        .mockResolvedValueOnce(true) // row-1 already queued → skip
+        .mockResolvedValueOnce(false); // row-2 → enqueue
+
+      const migrated = await migrateLegacyTrackedStories();
+
+      expect(migrated).toBe(1);
+      expect(enqueueJob).toHaveBeenCalledTimes(1);
+      expect(enqueueJob).toHaveBeenCalledWith('tracked_story_migrate', {
+        trackedStoryId: 'row-2',
+        titles: ['B'],
+      });
+      expect(inferenceQueue.notify).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not notify when every row was deduped away', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['A'] },
+      ]);
+      asMock(hasPendingJob).mockResolvedValue(true);
+
+      const migrated = await migrateLegacyTrackedStories();
+
+      expect(migrated).toBe(0);
+      expect(enqueueJob).not.toHaveBeenCalled();
+      expect(inferenceQueue.notify).not.toHaveBeenCalled();
+    });
+
+    it('continues past a per-row enqueue throw', async () => {
+      asMock(getLegacyTrackedForMigration).mockResolvedValue([
+        { id: 'row-1', titles: ['A'] },
+        { id: 'row-2', titles: ['B'] },
+      ]);
+      asMock(enqueueJob)
+        .mockRejectedValueOnce(new Error('db full'))
+        .mockResolvedValueOnce('job-2');
+
+      const migrated = await migrateLegacyTrackedStories();
+
+      expect(migrated).toBe(1);
+      expect(inferenceQueue.notify).toHaveBeenCalledTimes(1);
+    });
   });
 });

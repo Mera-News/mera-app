@@ -3,6 +3,7 @@ import { FormattedDate } from '@/components/custom/FormattedDate';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import SmoothFlatList, { SmoothFlatListRef } from '@/components/custom/SmoothFlatList';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import TranslationNotice from '@/components/custom/news-detail/TranslationNotice';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -14,8 +15,6 @@ import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import type { NewsArticle, NewsCluster } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { useAppLanguage } from '@/lib/stores/app-language-store';
-import { getArticleTranslatableStatus, getLanguageName } from '@/lib/translation-service';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,7 +31,6 @@ const SCROLL_THRESHOLD = 300;
 
 const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack }) => {
     const { t } = useTranslation();
-    const appLanguage = useAppLanguage();
     const [clusterData, setClusterData] = useState<NewsCluster | null>(null);
     const [articles, setArticles] = useState<NewsArticle[]>([]);
     const [endCursor, setEndCursor] = useState<string | null>(null);
@@ -217,35 +215,7 @@ const NewsClusterScreen: React.FC<NewsClusterScreenProps> = ({ clusterId, onBack
                             />
 
                             {/* Translation status */}
-                            {(() => {
-                                const status = getArticleTranslatableStatus(sourceLanguage, appLanguage);
-                                if (status === 'same-language') return null;
-                                const translatable = status === 'translatable';
-                                const languageName =
-                                    getLanguageName(sourceLanguage)
-                                    ?? t('clusterDetail.unknownLanguage');
-                                return (
-                                    <HStack className="items-center justify-center px-2" space="xs">
-                                        <MaterialIcons
-                                            name="translate"
-                                            size={14}
-                                            color={translatable ? '#86EFAC' : '#FCA5A5'}
-                                        />
-                                        <Text
-                                            size="xs"
-                                            italic
-                                            className={`flex-1 ${translatable ? 'text-green-300' : 'text-red-300'}`}
-                                        >
-                                            {t(
-                                                translatable
-                                                    ? 'clusterDetail.translatable'
-                                                    : 'clusterDetail.notTranslatable',
-                                                { language: languageName },
-                                            )}
-                                        </Text>
-                                    </HStack>
-                                );
-                            })()}
+                            <TranslationNotice sourceLanguage={sourceLanguage} />
                         </VStack>
 
                         {/* Articles heading — 'lg' gap (16) from the block above, matching

@@ -12,8 +12,8 @@ import {
     getTrackedStoryById,
     markSeen,
 } from '@/lib/database/services/tracked-story-service';
-import type { NewsArticle, TrackedStoryArticleSnapshot } from '@/lib/generated/graphql-types';
-import { mergeTimeline, type TimelineCard } from './merge-timeline';
+import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -58,13 +58,15 @@ function cardToNewsArticle(card: TimelineCard): NewsArticle {
 }
 
 /**
- * A tracked story's timeline — the archived coverage gathered under its stable
- * cluster id, newest-first. Marks the story seen on every focus (clears its
- * unseen badge) and refetches the server archive on every focus + on
- * pull-to-refresh, so re-opening a story always shows the freshest coverage.
- * The header renders the LLM headline (falling back to the tracked title). When
- * no archive exists yet (never resolved a stable id, or the story ended before
- * coverage was captured), a quiet note stands in for the list.
+ * A tracked story's timeline — the coverage gathered under its tracked topic,
+ * newest-first. A followed story is just a topic: its members are the local
+ * snapshots seeded at track time and grown by the topic reconcile each fetch
+ * cycle (there is no server archive). Marks the story seen on every focus
+ * (clears its unseen badge) and re-reads the local row on focus +
+ * pull-to-refresh. The header renders the display label / headline (falling back
+ * to the tracked title). Until the reconcile adds more members, a freshly
+ * followed story shows only its originating article; a quiet note stands in when
+ * empty.
  *
  * After each SUCCESSFUL load, the newest pubDate on screen is stamped as the
  * story's seen watermark (schema v44) so the reconcile counts only members
@@ -99,28 +101,20 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
 
                 const localSnapshots = story.memberSnapshots ?? [];
-                const sid = story.stableClusterId;
-                setStableClusterId(sid ?? null);
+                setStableClusterId(story.stableClusterId ?? null);
 
-                let serverSnapshots: TrackedStoryArticleSnapshot[] = [];
-                if (sid) {
-                    const archive = await ArticleService.getTrackedStory(sid);
-                    if (!alive()) return;
-                    serverSnapshots = archive?.articles ?? [];
-                }
-                const merged = mergeTimeline(localSnapshots, serverSnapshots);
+                const merged = buildTimeline(localSnapshots);
                 setCards(merged);
 
-                // Successful merge → advance the seen-pubDate watermark to the
+                // Successful build → advance the seen-pubDate watermark to the
                 // newest pubDate on screen. Backfilled OLD articles (published
                 // before this) then won't count toward the "N new" badge.
                 const maxPub = Math.max(...merged.map((c) => c.pubDateMs || 0));
                 if (maxPub > 0) void advanceSeenWatermark(trackedStoryId, maxPub);
 
-                // Stopgap for pre-fix archives that persisted null titles: hydrate
+                // A reconcile snapshot can arrive with a blank title (rare); hydrate
                 // up to 6 still-blank cards via the quota-free getArticleById, then
-                // patch them in. (The durable server-side re-hydration ships in
-                // parallel; TTL'd-out articles simply stay blank.)
+                // patch them in. TTL'd-out articles simply stay blank.
                 const missing = merged
                     .filter((c) => c.articleId && !c.title.trim())
                     .slice(0, MAX_TITLE_BACKFILL);

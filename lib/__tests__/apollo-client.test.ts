@@ -12,6 +12,7 @@ import client, { shouldRetryOperation } from '@/lib/apollo-client';
 import { gql } from '@apollo/client';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { toastManager } from '@/lib/toast-manager';
+import logger from '@/lib/logger';
 
 describe('apollo-client', () => {
   beforeEach(() => {
@@ -95,6 +96,61 @@ describe('apollo-client', () => {
         client.query({ query: QUERY, fetchPolicy: 'network-only' }),
       ).rejects.toBeTruthy();
       expect(toastManager.showNetworkError).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ── errorLink Sentry-capture gating (Sentry MERA-APP-5F/4P/4N) ───────────
+  // Previously captureException fired unconditionally for every network
+  // error; the isConnected gate only suppressed the toast. That meant every
+  // offline user's every no-cache query filed a Sentry event. The capture
+  // itself must now move inside the isConnected gate: known-offline degrades
+  // to a breadcrumb, online (or not-yet-known) still reports.
+  describe('errorLink Sentry-capture gating', () => {
+    const QUERY = gql`query Smoke2 { smoke2 }`;
+    let fetchSpy: jest.SpyInstance;
+    let captureSpy: jest.SpyInstance;
+    let breadcrumbSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      fetchSpy = jest.spyOn(global, 'fetch').mockRejectedValue(new Error('network fail'));
+      jest.spyOn(toastManager, 'showNetworkError').mockImplementation(() => {});
+      captureSpy = jest.spyOn(logger, 'captureException');
+      breadcrumbSpy = jest.spyOn(logger, 'addBreadcrumb');
+    });
+
+    afterEach(() => {
+      fetchSpy.mockRestore();
+    });
+
+    it('produces a breadcrumb (not captureException) when isConnected is false (known offline)', async () => {
+      useNetworkStore.setState({ isConnected: false });
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+      expect(captureSpy).not.toHaveBeenCalled();
+      expect(breadcrumbSpy).toHaveBeenCalled();
+    });
+
+    it('still calls captureException when isConnected is true (known online)', async () => {
+      useNetworkStore.setState({ isConnected: true });
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+      expect(captureSpy).toHaveBeenCalled();
+    });
+
+    it('still calls captureException when isConnected is an unknown (non-boolean) value', async () => {
+      // Pins the actual behavior the fix hinges on: the gate must be
+      // `=== false`, not `!isConnected`. With `undefined` (simulating a
+      // not-yet-seeded value), `!isConnected` is truthy — it would wrongly
+      // suppress — while `=== false` is false, so it still reports. A test
+      // that only ever feeds the gate `true`/`false` can't distinguish the
+      // two operators; this one can.
+      useNetworkStore.setState({ isConnected: undefined as unknown as boolean });
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+      expect(captureSpy).toHaveBeenCalled();
     });
   });
 });

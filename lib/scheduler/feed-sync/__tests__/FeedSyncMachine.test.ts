@@ -22,7 +22,10 @@ const mockGetPipelineStatus = jest.fn();
 const mockGetRunStartedAt = jest.fn();
 const mockAbortRun = jest.fn();
 
-// Mirrors scoring-pipeline's STALE_RUN_GUARD_MS (2 * BATCH_STALE_MS = 30min).
+// Mirrors the STALE_RUN_GUARD_MS the scoring-pipeline mock below exports. Kept
+// as a local constant rather than imported so the machine's stale-guard
+// arithmetic is asserted against a fixed number, not against whatever the real
+// module currently ships.
 const STALE_RUN_GUARD_MS = 30 * 60_000;
 
 // Network store subscription support
@@ -125,6 +128,7 @@ function makeCtx(aborted = false) {
     signal: controller.signal,
     reportProgress: jest.fn(),
     log: jest.fn(),
+    markNoOp: jest.fn(),
   };
 }
 
@@ -172,6 +176,12 @@ beforeEach(() => {
   mockGetPipelineStatus.mockResolvedValue('idle');
   mockGetRunStartedAt.mockResolvedValue(null);
   mockAbortRun.mockResolvedValue(undefined);
+
+  // The machine is a module singleton: a test that deliberately leaves a run
+  // hung (the stale-_inFlight case) would otherwise poison every test after it.
+  // `private` is a compile-time fiction, so reach in directly.
+  (feedSyncMachine as any)._inFlight = null;
+  (feedSyncMachine as any)._inFlightStartedAt = 0;
 });
 
 afterEach(() => {
@@ -190,25 +200,57 @@ describe('FeedSyncMachine — isRunning', () => {
   });
 });
 
-describe('FeedSyncMachine — scoring-pipeline gate', () => {
-  it('skips the run when the pipeline is running: no fetch call, machine stays idle', async () => {
+describe('FeedSyncMachine — scoring-pipeline gate (FETCH_WHILE_SCORING)', () => {
+  it('still fetches and hydrates while the pipeline is running — only scoring is suppressed', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000); // fresh run
 
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
 
-    expect(mockStepFetchTopicIds).not.toHaveBeenCalled();
-    expect(mockStepDiff).not.toHaveBeenCalled();
-    expect(mockStepHydratePersistEnqueue).not.toHaveBeenCalled();
+    expect(mockStepFetchTopicIds).toHaveBeenCalled();
+    expect(mockStepDiff).toHaveBeenCalled();
+    expect(mockStepHydratePersistEnqueue).toHaveBeenCalled();
     expect(mockStepScore).not.toHaveBeenCalled();
-    expect(mockPublishSyncStatus).not.toHaveBeenCalledWith('fetching-topic-ids');
-    expect(feedSyncMachine.state).toBe('idle');
+    expect(feedSyncMachine.state).toBe('done');
   });
 
-  it('logs the skip reason', async () => {
+  it('passes suppressEnqueue to the hydrate step so nothing is handed to the live run', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepHydratePersistEnqueue).toHaveBeenCalledWith(
+      expect.anything(),
+      ctx,
+      expect.objectContaining({ suppressEnqueue: true }),
+    );
+  });
+
+  it('passes suppressEnqueue: false on a normal (pipeline-idle) cycle', async () => {
+    mockGetPipelineStatus.mockResolvedValue('idle');
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepHydratePersistEnqueue).toHaveBeenCalledWith(
+      expect.anything(),
+      ctx,
+      expect.objectContaining({ suppressEnqueue: false }),
+    );
+  });
+
+  it('logs that scoring was suppressed rather than that the cycle was skipped', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
 
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
@@ -216,24 +258,42 @@ describe('FeedSyncMachine — scoring-pipeline gate', () => {
     await startPromise;
 
     expect(mockLogInfo).toHaveBeenCalledWith(
-      expect.stringContaining('skipped — scoring pipeline active'),
+      expect.stringContaining('fetching without scoring'),
     );
   });
 
-  it('does not persist machine state or clear/save a snapshot when skipped', async () => {
+  it('still skips scoring on the no-new-articles branch', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
+    mockStepDiff.mockResolvedValue({ ...defaultDiffResult, missingIds: [] });
 
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
     await jest.advanceTimersByTimeAsync(0);
     await startPromise;
 
-    expect(mockUpdateMachineState).not.toHaveBeenCalled();
-    expect(mockClearMachineSnapshot).not.toHaveBeenCalled();
+    expect(mockStepScore).not.toHaveBeenCalled();
+    // The `scoring` transition itself must still happen — hydrating/diffing →
+    // done is not a legal transition.
+    expect(mockUpdateMachineState).toHaveBeenCalledWith('scoring');
+    expect(feedSyncMachine.state).toBe('done');
   });
 
-  it('resolves without throwing when skipped (job completes normally)', async () => {
+  it('does not mark the run a no-op (real work happened)', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(ctx.markNoOp).not.toHaveBeenCalled();
+  });
+
+  it('resolves without throwing while the pipeline is running (job completes normally)', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
 
     await expect(
       feedSyncMachine.start('persona-1', makeCtx()),
@@ -272,9 +332,9 @@ describe('FeedSyncMachine — scoring-pipeline stale-guard', () => {
     expect(feedSyncMachine.state).toBe('done');
   });
 
-  it('still skips a fresh running run (does not abort)', async () => {
+  it('leaves a fresh running run alone (no abort) and syncs without scoring', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
-    // Run started well within STALE_RUN_GUARD_MS → healthy, keep skipping.
+    // Run started well within STALE_RUN_GUARD_MS → healthy, let it finish.
     mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
 
     const ctx = makeCtx();
@@ -283,8 +343,8 @@ describe('FeedSyncMachine — scoring-pipeline stale-guard', () => {
     await startPromise;
 
     expect(mockAbortRun).not.toHaveBeenCalled();
-    expect(mockStepFetchTopicIds).not.toHaveBeenCalled();
-    expect(feedSyncMachine.state).toBe('idle');
+    expect(mockStepFetchTopicIds).toHaveBeenCalled();
+    expect(mockStepScore).not.toHaveBeenCalled();
   });
 });
 
@@ -659,6 +719,7 @@ describe('FeedSyncMachine — abort signal handling', () => {
       signal: controller.signal,
       reportProgress: jest.fn(),
       log: jest.fn(),
+      markNoOp: jest.fn(),
     };
 
     // Abort before scoring step runs
@@ -893,6 +954,7 @@ describe('FeedSyncMachine — abort in fetching-topic-ids before step resolves',
       signal: controller.signal,
       reportProgress: jest.fn(),
       log: jest.fn(),
+      markNoOp: jest.fn(),
     };
 
     const startPromise = feedSyncMachine.start('persona-1', ctx);
@@ -1033,6 +1095,67 @@ describe('FeedSyncMachine — setCounts called with article count', () => {
       defaultTopicResult.serverArticleIds.length,
       expect.any(Number),
     );
+  });
+});
+
+describe('FeedSyncMachine — stale in-flight run', () => {
+  it('joins a young in-flight run rather than starting a second one', async () => {
+    mockStepFetchTopicIds.mockImplementation(() => new Promise(() => { /* hangs */ }));
+
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(1);
+
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Joined — no second cycle was started.
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(1);
+  });
+
+  it('abandons a 5-minute-old in-flight run and starts fresh', async () => {
+    // iOS freezes the runner's abort setTimeout while backgrounded, so an
+    // interrupted run's promise never settles. Joining it would wedge feed-sync
+    // for the rest of the session.
+    mockStepFetchTopicIds.mockImplementationOnce(() => new Promise(() => { /* hangs */ }));
+
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(1);
+
+    await jest.advanceTimersByTimeAsync(5 * 60_000);
+
+    const secondPromise = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await secondPromise;
+
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(2);
+    expect(feedSyncMachine.state).toBe('done');
+  });
+
+  it('the abandoned run cannot clear the replacement\'s _inFlight slot', async () => {
+    let releaseFirst: (() => void) | null = null;
+    mockStepFetchTopicIds.mockImplementationOnce(
+      () => new Promise((resolve) => { releaseFirst = () => resolve(defaultTopicResult); }),
+    );
+
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(5 * 60_000);
+
+    // Second run hangs, so the slot must stay occupied by IT.
+    mockStepFetchTopicIds.mockImplementationOnce(() => new Promise(() => { /* hangs */ }));
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Now let the ABANDONED run finish. Its identity-guarded finally must not
+    // null out the live run's reference.
+    (releaseFirst as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect((feedSyncMachine as any)._inFlight).not.toBeNull();
+    // ...and it must not have torn down the live run's keep-awake either.
+    expect(mockDeactivateKeepAwake).not.toHaveBeenCalled();
   });
 });
 

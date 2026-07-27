@@ -260,6 +260,7 @@ import {
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
+import logger from '@/lib/logger';
 
 // ---- helpers ----
 const NOW = 1_700_000_000_000;
@@ -428,13 +429,39 @@ describe('model-key validation fail-fast (MERA-APP-39)', () => {
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 
-  it('surfaces non-ModelKeyValidationError rebuild throws (unchanged behavior)', async () => {
-    // A generic rebuild error is NOT swallowed by the fail-fast catch — it
-    // propagates so the existing poller-tick capture handles it.
+  it('contains a generic rebuild throw instead of letting it escape the drain', async () => {
+    // Previously this propagated out of doDrain → drain() → runPollerTick,
+    // leaving the batch stranded in submitting-* while revertStuckSubmitters
+    // requeued it every 60s — the MERA-APP-39 wedge, which made every
+    // feed-sync cycle a no-op for as long as the run stayed non-terminal.
+    // Now the throw is captured, the batch goes through failOrRetrySubmit, and
+    // the drain resolves normally.
     mockRebuildE2EEContext.mockRejectedValue(new Error('some other failure'));
 
-    await expect(enqueueCandidates(ids(25))).rejects.toThrow('some other failure');
+    await expect(enqueueCandidates(ids(25))).resolves.toBeDefined();
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    expect(logger.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'some other failure' }),
+      expect.objectContaining({
+        tags: expect.objectContaining({ step: 'submit' }),
+      }),
+    );
+  });
+
+  it('caps submit retries so a persistently-throwing batch cannot loop forever', async () => {
+    // revertStuckSubmitters used to requeue without checking MAX_BATCH_ATTEMPTS,
+    // so a submit that throws every time cycled indefinitely and only the
+    // FeedSyncMachine stale guard broke it. The batch must reach a terminal
+    // phase and let the run finalize.
+    mockRebuildE2EEContext.mockRejectedValue(new Error('always fails'));
+
+    await enqueueCandidates(ids(25));
+    // Drive further ticks; the batch must not come back around forever.
+    await pollTick('foreground');
+    await pollTick('foreground');
+
+    expect(await getPipelineStatus()).toBe('idle');
+    expect(mockMarkProcessingRunFinished).toHaveBeenCalled();
   });
 });
 

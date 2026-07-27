@@ -1,5 +1,4 @@
 import { hashString, sectionGradient } from '../section-color';
-import { ALSO_ROW_ID } from '../stores/fact-rows-selector';
 
 describe('hashString', () => {
   it('matches the known FNV-1a 32-bit answer for "abc"', () => {
@@ -58,17 +57,8 @@ describe('sectionGradient', () => {
     expect(hues.size).toBeGreaterThanOrEqual(3);
   });
 
-  it('maps ALSO_ROW_ID to the fixed neutral gray, not a hashed hue', () => {
-    const spec = sectionGradient(ALSO_ROW_ID);
-    expect(spec).toEqual({
-      base: 'hsl(0, 0%, 72%)',
-      startOpacity: 0.3,
-      endOpacity: 0,
-    });
-  });
-
   it('returns a spec whose shape matches the documented contract', () => {
-    const ids = ['507f1f77bcf86cd799439011', ALSO_ROW_ID, 'some-other-fact-id'];
+    const ids = ['507f1f77bcf86cd799439011', 'some-other-fact-id'];
     for (const id of ids) {
       const spec = sectionGradient(id);
       expect(spec.base).toMatch(/^hsl\(\d+, \d+%, \d+%\)$/);

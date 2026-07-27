@@ -212,12 +212,13 @@
     "storyUnavailable": "Ta historia nie jest już dostępna",
     "failedToLoad": "Nie udało się załadować artykułu",
     "articleNotFound": "Nie znaleziono artykułu",
-    "readOn": "Czytaj w {{publication}}",
-    "translateAndReadOn": "Przetłumacz i czytaj w {{publication}}",
-    "translateAndRead": "Przetłumacz i czytaj",
-    "viewOriginal": "Pokaż oryginał",
+    "viewAndTranslateOnDevice": "Zobacz artykuł i przetłumacz na urządzeniu",
+    "viewOriginal": "Pokaż oryginalny artykuł",
+    "viewOriginalIn": "Pokaż oryginalny artykuł w języku {{language}}",
     "share": "Udostępnij",
-    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}"
+    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}",
+    "sourceCountryGlobal": "Cały świat",
+    "sourceCountryA11y": "Kraj źródła: {{country}}. Dotknij, aby wyświetlić nazwę kraju."
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -240,7 +241,8 @@
   },
   "clusterDetail": {
     "translatable": "Ten artykuł jest w języku {{language}} — Twoje urządzenie może go przetłumaczyć podczas czytania. Jeśli tłumaczenie nie zadziała, możesz otworzyć stronę w Tłumaczu Google poniżej — pamiętaj tylko, że będziesz przeglądać ją za pośrednictwem Google.",
-    "notTranslatable": "Ten artykuł jest w języku {{language}}. Tłumaczenie na urządzeniu może nie być dla niego dostępne — użyj Tłumacza Google poniżej, aby przeczytać go w swoim języku.",
+    "notTranslatable": "Ten artykuł jest w języku {{language}}. Twoje urządzenie nie może go przetłumaczyć — użyj Tłumacza Google poniżej, aby przeczytać go w swoim języku.",
+    "notTranslatableOsOutdated": "Ten artykuł jest w języku {{language}}. Tłumaczenie na urządzeniu wymaga iOS {{requiredVersion}} — masz iOS {{currentVersion}}. Zaktualizuj iOS lub użyj Tłumacza Google poniżej, aby przeczytać go w swoim języku.",
     "unknownLanguage": "innym języku",
     "translationGuideLink": "Pokaż mi, jak przetłumaczyć artykuł",
     "viewInGoogleTranslate": "Zobacz w Tłumaczu Google",
@@ -821,7 +823,6 @@
   },
   "forYou": {
     "sectionPrefix": "Wiadomości o:",
-    "alsoForYou": "Także dla Ciebie",
     "breaking": "Pilne",
     "showMore": "Pokaż {{count}} więcej",
     "subTabFeed": "Kanał",
@@ -1114,6 +1115,7 @@
     "emptyTitle": "Jeszcze Cię nie znam",
     "emptyBody": "Opowiedz mi o sobie, abym mogła znaleźć wiadomości, które mają dla Ciebie znaczenie.",
     "startTalking": "Zacznij rozmowę",
+    "meraInvite": "Cześć! Powiedz mi, co Cię interesuje, a dostosuję dla Ciebie kanał.",
     "aboutYou": "O Tobie",
     "gettingToKnowYou": "Wciąż Cię poznaję — zajrzyj tu za chwilę.",
     "updating": "Aktualizowanie…",

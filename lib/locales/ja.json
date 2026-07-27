@@ -206,12 +206,13 @@
     "storyUnavailable": "このストーリーはもう利用できません",
     "failedToLoad": "記事の読み込みに失敗しました",
     "articleNotFound": "記事が見つかりません",
-    "readOn": "{{publication}}で読む",
-    "translateAndReadOn": "翻訳して{{publication}}で読む",
-    "translateAndRead": "翻訳して読む",
-    "viewOriginal": "原文を表示",
+    "viewOriginal": "元の記事を表示",
+    "viewOriginalIn": "{{language}}で元の記事を表示",
+    "viewAndTranslateOnDevice": "記事を表示して端末で翻訳",
     "share": "共有",
-    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}"
+    "shareVia": "Mera News経由で共有されました — あなたのためにパーソナライズされたニュース。アプリをダウンロード: {{downloadUrl}}",
+    "sourceCountryGlobal": "グローバル",
+    "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -234,7 +235,8 @@
   },
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれています — 読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、下のGoogle 翻訳でサイトを開くこともできます — その場合、Google経由での閲覧になる点にご注意ください。",
-    "notTranslatable": "この記事は{{language}}で書かれています。この記事にはオンデバイス翻訳を利用できない場合があります — 下のGoogle 翻訳を使ってあなたの言語で読んでください。",
+    "notTranslatable": "この記事は{{language}}で書かれています。端末では翻訳できません — 下のGoogle 翻訳を使ってあなたの言語で読んでください。",
+    "notTranslatableOsOutdated": "この記事は{{language}}で書かれています。端末上の翻訳にはiOS {{requiredVersion}}が必要です — 現在のバージョンはiOS {{currentVersion}}です。iOSを更新するか、下のGoogle 翻訳を使ってあなたの言語で読んでください。",
     "unknownLanguage": "別の言語",
     "translationGuideLink": "記事の翻訳方法を教えてください",
     "viewInGoogleTranslate": "Google 翻訳で見る",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "関連ニュース：",
-    "alsoForYou": "あなたへのその他のおすすめ",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
     "openFactFeed": "このトピックのすべてのストーリーを見る",
@@ -1090,6 +1091,7 @@
     "emptyTitle": "まだあなたのことを知りません",
     "emptyBody": "自己紹介をしていただければ、あなたに大切なニュースを見つけられます。",
     "startTalking": "会話を始める",
+    "meraInvite": "こんにちは!興味のあることを教えてください。あなたに合わせてフィードを調整しますね。",
     "aboutYou": "あなたについて",
     "gettingToKnowYou": "まだあなたのことを知っている途中です — 少し経ってからまた確認してください。",
     "updating": "更新中…",

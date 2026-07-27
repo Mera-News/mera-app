@@ -530,7 +530,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                 />
                                 <ReadTranslateActions
                                     articleUrl={suggestion.article_url}
-                                    publicationName={suggestion.publication_name}
                                     sourceLanguage={sourceLanguage}
                                     onOpenUrl={handleArticleUrlPress}
                                 />

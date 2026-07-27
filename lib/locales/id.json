@@ -206,12 +206,13 @@
     "storyUnavailable": "Berita ini sudah tidak tersedia",
     "failedToLoad": "Gagal memuat artikel",
     "articleNotFound": "Artikel tidak ditemukan",
-    "readOn": "Baca di {{publication}}",
-    "translateAndReadOn": "Terjemahkan & Baca di {{publication}}",
-    "translateAndRead": "Terjemahkan & Baca",
-    "viewOriginal": "Lihat asli",
+    "viewOriginal": "Lihat artikel asli",
+    "viewOriginalIn": "Lihat artikel asli dalam bahasa {{language}}",
+    "viewAndTranslateOnDevice": "Lihat artikel & terjemahkan di perangkat",
     "share": "Bagikan",
-    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}"
+    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}",
+    "sourceCountryGlobal": "Global",
+    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara."
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -234,7 +235,8 @@
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}} — perangkat Anda dapat menerjemahkannya saat Anda membaca. Jika terjemahan tidak berfungsi, Anda dapat membuka situs ini di Google Terjemahan di bawah — perlu diketahui bahwa Anda akan menjelajahinya melalui Google.",
-    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat mungkin tidak tersedia untuk artikel ini — gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
+    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Perangkat Anda tidak dapat menerjemahkannya — gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
+    "notTranslatableOsOutdated": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat memerlukan iOS {{requiredVersion}} — Anda menggunakan iOS {{currentVersion}}. Perbarui iOS, atau gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
     "unknownLanguage": "bahasa lain",
     "translationGuideLink": "Tunjukkan cara menerjemahkan artikel",
     "viewInGoogleTranslate": "Lihat di Google Terjemahan",
@@ -815,7 +817,6 @@
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
-    "alsoForYou": "Juga untuk Anda",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
     "subTabFeed": "Feed",
@@ -1090,6 +1091,7 @@
     "emptyTitle": "Saya belum mengenal Anda",
     "emptyBody": "Ceritakan tentang diri Anda agar saya bisa menemukan berita yang penting bagi Anda.",
     "startTalking": "Mulai bicara",
+    "meraInvite": "Hai! Ceritakan apa yang Anda sukai, dan saya akan menyesuaikan feed Anda.",
     "aboutYou": "Tentang Anda",
     "gettingToKnowYou": "Saya masih dalam proses mengenal Anda — coba lagi sebentar lagi.",
     "updating": "Memperbarui…",

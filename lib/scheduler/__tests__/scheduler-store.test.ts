@@ -24,6 +24,7 @@ describe('useSchedulerStore', () => {
             taskCurrentStatus: {},
             taskLastRun: {},
             taskProgress: {},
+            taskStartedAt: {},
             runningCount: 0,
             failedCount: 0,
             pendingCount: 0,
@@ -154,6 +155,93 @@ describe('useSchedulerStore', () => {
         useSchedulerStore.setState({ runningCount: 0 });
         useSchedulerStore.getState().setJobCompleted('job-1', 1);
         expect(useSchedulerStore.getState().runningCount).toBe(0);
+    });
+
+    it('setJobCompleted with stampLastRun=false leaves taskLastRun untouched', () => {
+        // The no-op path (ctx.markNoOp): the job completed, but nothing was
+        // accomplished, so the task's frequency gate must not be armed.
+        useSchedulerStore.getState().setLastRun('feed-sync', 111);
+        useSchedulerStore.getState().addJob(makeJob());
+        useSchedulerStore.getState().setJobRunning('job-1');
+        useSchedulerStore.getState().setJobCompleted('job-1', 9999, false);
+        const state = useSchedulerStore.getState();
+        expect(state.jobs['job-1'].status).toBe('completed');
+        expect(state.taskLastRun['feed-sync']).toBe(111);
+        expect(state.runningCount).toBe(0);
+    });
+
+    // ── clearStaleRunning ─────────────────────────────────────────────────
+    it('clearStaleRunning releases a reservation older than maxAgeMs', () => {
+        jest.useFakeTimers();
+        jest.setSystemTime(1_000_000);
+        useSchedulerStore.getState().reserveTask('feed-sync');
+        // 5 minutes later, still 'running' — the run was frozen, not slow.
+        jest.setSystemTime(1_000_000 + 5 * 60_000);
+
+        const cleared = useSchedulerStore.getState().clearStaleRunning('feed-sync', 210_000);
+
+        expect(cleared).toBe(true);
+        expect(useSchedulerStore.getState().taskCurrentStatus['feed-sync']).toBeNull();
+        expect(useSchedulerStore.getState().taskStartedAt['feed-sync']).toBeNull();
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(false);
+        jest.useRealTimers();
+    });
+
+    it('clearStaleRunning leaves a young reservation alone', () => {
+        jest.useFakeTimers();
+        jest.setSystemTime(1_000_000);
+        useSchedulerStore.getState().reserveTask('feed-sync');
+        jest.setSystemTime(1_000_000 + 10_000);
+
+        const cleared = useSchedulerStore.getState().clearStaleRunning('feed-sync', 210_000);
+
+        expect(cleared).toBe(false);
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(true);
+        jest.useRealTimers();
+    });
+
+    it('clearStaleRunning is a no-op when the task is not running', () => {
+        expect(useSchedulerStore.getState().clearStaleRunning('feed-sync', 0)).toBe(false);
+    });
+
+    it('clearStaleRunning refuses to act when the start time is unknown', () => {
+        // Guard against yanking the reservation off a genuinely-live run: with
+        // no timestamp we cannot date it, and `now - null` would read as
+        // infinitely old.
+        useSchedulerStore.setState({
+            taskCurrentStatus: { 'feed-sync': 'running' },
+            taskStartedAt: { 'feed-sync': null },
+        });
+        expect(useSchedulerStore.getState().clearStaleRunning('feed-sync', 0)).toBe(false);
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(true);
+    });
+
+    it('clearStaleRunning decrements runningCount without going negative', () => {
+        jest.useFakeTimers();
+        jest.setSystemTime(1_000_000);
+        useSchedulerStore.getState().addJob(makeJob());
+        useSchedulerStore.getState().setJobRunning('job-1');
+        expect(useSchedulerStore.getState().runningCount).toBe(1);
+        jest.setSystemTime(1_000_000 + 5 * 60_000);
+
+        useSchedulerStore.getState().clearStaleRunning('feed-sync', 210_000);
+
+        expect(useSchedulerStore.getState().runningCount).toBe(0);
+        jest.useRealTimers();
+    });
+
+    it('setJobCompleted clears taskStartedAt', () => {
+        useSchedulerStore.getState().addJob(makeJob());
+        useSchedulerStore.getState().setJobRunning('job-1');
+        expect(useSchedulerStore.getState().taskStartedAt['feed-sync']).toEqual(expect.any(Number));
+        useSchedulerStore.getState().setJobCompleted('job-1', 9999);
+        expect(useSchedulerStore.getState().taskStartedAt['feed-sync']).toBeNull();
+    });
+
+    it('clearTaskReservation clears taskStartedAt', () => {
+        useSchedulerStore.getState().reserveTask('feed-sync');
+        useSchedulerStore.getState().clearTaskReservation('feed-sync');
+        expect(useSchedulerStore.getState().taskStartedAt['feed-sync']).toBeNull();
     });
 
     // ── setJobFailed ──────────────────────────────────────────────────────

@@ -344,17 +344,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     bubble: {
+        // No filled circle / shadow — just the logo over the pulse glow. Keeps
+        // the fixed size + centering so the logo stays put and the pulse rings
+        // (which position against BUBBLE_SIZE) remain aligned.
         width: BUBBLE_SIZE,
         height: BUBBLE_SIZE,
-        borderRadius: BUBBLE_SIZE / 2,
-        backgroundColor: '#1a1a1a',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.35,
-        shadowRadius: 6,
-        elevation: 8,
     },
     pulseCircle: {
         position: 'absolute',

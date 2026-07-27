@@ -74,6 +74,17 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         set({ appLanguage: normalized, cache: new Map(), pending: new Set() });
         applyLanguage(normalized);
         await setSetting(APP_LANGUAGE_KEY, normalized);
+
+        // One-way sync: push the picked UI language into the persona's
+        // language_codes as the primary code (preserving any others). Dynamic
+        // require avoids a static store→services import cycle; fire-and-forget
+        // + internal error-swallowing so the sync never blocks the UI change.
+        try {
+            const { syncAppLanguageToPersona } = require('@/lib/language-sync');
+            void syncAppLanguageToPersona(normalized);
+        } catch {
+            // never block the local UI language change on the sync path
+        }
     },
 
     cacheTranslation: (original, translated) => {

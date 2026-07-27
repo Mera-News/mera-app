@@ -14,6 +14,7 @@ import { OnboardingStage } from '../../../lib/generated/graphql-types';
 import { authClient, clearAuthStorage } from '../../../lib/auth-client';
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '../../../lib/notificationSlotUtils';
 import { ensurePushTokenRegistered } from '../../../lib/notification-service';
+import { reconcileAppLanguageWithPersona } from '../../../lib/language-sync';
 import {
     useOnboardingIsInitializing,
     useOnboardingPreferences,
@@ -195,6 +196,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     // registration; if the user left the switch off we still
                     // register provisionally here so silent wakes deliver.
                     await ensurePushTokenRegistered(userId);
+                    // Now that the user is authenticated with a persona, push the
+                    // language they picked earlier (LanguageSelector, pre-auth)
+                    // into language_codes. Fire-and-forget so it can't block nav.
+                    void reconcileAppLanguageWithPersona({ userId });
                     await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
                     setStep(2);
                     break;

@@ -226,6 +226,20 @@ describe('verdict mirror', () => {
     store().setPath('ghost', ['x']);
     expect(store().verdicts.ghost).toBeUndefined();
   });
+
+  it('clearVerdict drops the verdict + its path (the un-vote path)', () => {
+    seed([item('a')]);
+    store().setVerdict('a', 'like');
+    store().setPath('a', ['too-much']);
+    store().clearVerdict('a');
+    expect(store().verdicts.a).toBeUndefined();
+  });
+
+  it('clearVerdict is a no-op when no verdict exists', () => {
+    const before = store().verdicts;
+    store().clearVerdict('ghost');
+    expect(store().verdicts).toBe(before);
+  });
 });
 
 describe('reset', () => {
