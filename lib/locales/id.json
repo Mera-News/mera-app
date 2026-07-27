@@ -188,8 +188,7 @@
       "title": "Batas artikel harian tercapai"
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
-    "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya",
-    "moreSources_other": "+{{count}} sumber"
+    "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya"
   },
   "relevance": {
     "emergency": "Darurat",

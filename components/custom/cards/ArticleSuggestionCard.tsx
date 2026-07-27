@@ -35,8 +35,6 @@ interface ArticleCardProps {
   onPress: (suggestion: ForYouSuggestion) => void;
   timestamp?: string;
   isNew?: boolean;
-  /** Number of additional source publications collapsed into this story card. */
-  moreSourcesCount?: number;
   // ── Action row (the small borderless CardActionBar) ────────────────────
   // The action row renders ONLY when `onVerdict` is provided. Surfaces that use
   // it (the For You feed + the fact feed) pass the flat trio below; surfaces that
@@ -85,7 +83,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   onPress,
   timestamp,
   isNew = false,
-  moreSourcesCount,
   verdict = null,
   onVerdict,
   onAskMera,
@@ -270,7 +267,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       publicationName={suggestion.publication_name}
       countryCode={suggestion.country_code}
       isNew={isNew}
-      moreSourcesCount={moreSourcesCount}
       recyclingKey={suggestion._id}
       dimmed={dimmed}
       read={read}

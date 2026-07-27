@@ -187,8 +187,6 @@
       "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden um {{time}} freigeschaltet.",
       "title": "Tägliches Artikellimit erreicht"
     },
-    "moreSources_one": "+{{count}} Quelle",
-    "moreSources_other": "+{{count}} Quellen",
     "analysingProgress": "{{done}} von {{total}} Artikeln werden analysiert",
     "waitingForNextBatch_one": "{{count}} neuer Artikel wartet auf die nächste Analyserunde",
     "waitingForNextBatch_other": "{{count}} neue Artikel warten auf die nächste Analyserunde"

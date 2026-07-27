@@ -197,7 +197,6 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 <ArticleStandaloneCompactCard
                     article={article}
                     onPress={() => handleArticlePress(item.articleId, stableClusterId)}
-                    showActions
                     subjectExtras={{
                         surface: 'tracked',
                         stableClusterId: stableClusterId ?? undefined,

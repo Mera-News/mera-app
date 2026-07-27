@@ -21,9 +21,6 @@ interface ArticleMetaRowProps {
     countryCode?: string | null;
     variant: ArticleMetaRowVariant;
     isNew?: boolean;
-    /** Number of additional source publications collapsed into this story card;
-     *  renders a "+N sources" pill next to the NEW badge (card variant only). */
-    moreSourcesCount?: number;
     /** Marks the article as already-read — renders a small eye icon immediately
      *  after the time group. Default false — no visual change when omitted. */
     read?: boolean;
@@ -39,7 +36,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     countryCode,
     variant,
     isNew = false,
-    moreSourcesCount,
     read = false,
     showFlag = true,
 }) => {
@@ -72,7 +68,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         // shrink (single-line, truncating) so a long publication name truncates
         // instead of bleeding across / pushing the flag off-row.
         <HStack className="items-center justify-between" space="sm">
-            {/* 1. Age (+ optional read eye / NEW badge / +N sources) */}
+            {/* 1. Age (+ optional read eye / NEW badge) */}
             <HStack className="items-center flex-shrink-0" space="xs">
                 <MaterialIcons name="schedule" size={14} color={iconColor} />
                 <Text size="sm" className={ageColor}>
@@ -91,13 +87,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
                         <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
                             {t('feed.newBadge')}
-                        </Text>
-                    </Box>
-                ) : null}
-                {isCard && moreSourcesCount && moreSourcesCount > 0 ? (
-                    <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#6366F1' }}>
-                        <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                            {t('feed.moreSources', { count: moreSourcesCount })}
                         </Text>
                     </Box>
                 ) : null}

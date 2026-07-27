@@ -126,12 +126,10 @@ const FeedRow = React.memo(function FeedRow({
   // clock. A `skipped` write leaves this selector false → false, so zustand
   // bails and the scroll-driven skip flush still costs zero re-renders.
   const viewed = useFeedOrderStore((s) => s.cardStates[item.id]?.state === 'viewed');
-  const extraSources = item.memberCount > 1 ? item.memberCount - 1 : 0;
   return (
     <ArticleSuggestionCard
       suggestion={item.suggestion}
       onPress={onPress}
-      moreSourcesCount={extraSources}
       verdict={verdict}
       onVerdict={onVerdict}
       onAskMera={onAskMera}

@@ -34,7 +34,6 @@ export interface ArticleCardBaseProps {
   publicationName?: string | null;
   countryCode?: string | null;
   isNew?: boolean;
-  moreSourcesCount?: number;
   recyclingKey?: string;
   /** Dims the whole card (~0.55 opacity) — used to fade already-opened rows in
    *  the Earlier zone. No visual change when undefined. */
@@ -76,7 +75,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   publicationName,
   countryCode,
   isNew = false,
-  moreSourcesCount,
   recyclingKey,
   dimmed = false,
   read = false,
@@ -125,7 +123,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               countryCode={countryCode}
               variant="card"
               isNew={isNew}
-              moreSourcesCount={moreSourcesCount}
               read={read}
             />
             {metaAccessory ? (

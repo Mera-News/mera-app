@@ -191,11 +191,7 @@
     "waitingForNextBatch_one": "{{count}} nowy artykuł czeka na kolejną turę analizy",
     "waitingForNextBatch_few": "{{count}} nowe artykuły czekają na kolejną turę analizy",
     "waitingForNextBatch_many": "{{count}} nowych artykułów czeka na kolejną turę analizy",
-    "waitingForNextBatch_other": "{{count}} nowe artykuły czekają na kolejną turę analizy",
-    "moreSources_one": "+{{count}} źródło",
-    "moreSources_few": "+{{count}} źródła",
-    "moreSources_many": "+{{count}} źródeł",
-    "moreSources_other": "+{{count}} źródła"
+    "waitingForNextBatch_other": "{{count}} nowe artykuły czekają na kolejną turę analizy"
   },
   "relevance": {
     "emergency": "Pilne",

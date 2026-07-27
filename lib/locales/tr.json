@@ -189,9 +189,7 @@
     },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
     "waitingForNextBatch_one": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
-    "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
-    "moreSources_one": "+{{count}} kaynak",
-    "moreSources_other": "+{{count}} kaynak"
+    "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor"
   },
   "relevance": {
     "emergency": "Acil",

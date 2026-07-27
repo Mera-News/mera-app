@@ -31,9 +31,6 @@ interface BaseProps {
     // card-only
     timestamp?: string;
     isNew?: boolean;
-    // card-only — number of additional source publications collapsed into this
-    // story card, rendered as the "+N sources" chip in the meta row.
-    moreSourcesCount?: number;
     onPress?: () => void;
     // screen-only
     scrollViewRef?: React.Ref<SmoothScrollViewRef>;
@@ -110,7 +107,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         variant,
         timestamp,
         isNew = false,
-        moreSourcesCount,
         onPress,
         scrollViewRef,
         onScrollPositionChange,
@@ -219,7 +215,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 countryCode={metaCountryCode}
                 variant={variant}
                 isNew={isNew}
-                moreSourcesCount={moreSourcesCount}
                 read={read}
             />
             {isCard && __DEV__ && relevanceReady ? (

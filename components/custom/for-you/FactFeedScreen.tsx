@@ -41,23 +41,11 @@ interface FactFeedScreenProps {
   statement: string;
 }
 
-/** Distinct extra source publications a collapsed story carries ("+N sources"). */
-function moreSourcesCount(rep: ForYouSuggestion, members: ForYouSuggestion[]): number {
-  if (members.length === 0) return 0;
-  const repPub = (rep.publication_name ?? '').trim().toLowerCase();
-  const distinct = new Set<string>();
-  for (const m of members) {
-    const pub = (m.publication_name ?? '').trim().toLowerCase();
-    if (pub !== repPub) distinct.add(pub || `__unknown_${m._id}`);
-  }
-  return distinct.size > 0 ? distinct.size : members.length;
-}
-
 /**
  * The full feed for a single fact (Round-3 C2). Reached by tapping a fact row's
  * header. Plain vertical list of full article cards, pubDate desc; each collapsed
  * story shows the newest member (so the card's timestamp is the newest member's
- * pubDate) with a "+N sources" chip.
+ * pubDate).
  */
 const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) => {
   const { t } = useTranslation();
@@ -169,7 +157,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
       return (
         <ArticleSuggestionCard
           suggestion={item.data}
-          moreSourcesCount={moreSourcesCount(item.data, item.members)}
           onPress={handlePress}
           verdict={verdict}
           onVerdict={onVerdict}
