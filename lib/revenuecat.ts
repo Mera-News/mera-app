@@ -20,13 +20,34 @@ import {
 } from '@/lib/config/endpoints';
 import logger from '@/lib/logger';
 
-// Resolve the platform-specific key, falling back to the generic (Test Store)
-// key. Done at call time — never at module load — so importing this module is
-// safe even where react-native's Platform isn't available yet.
+// Resolve the platform-specific key, falling back to the generic key. Done at
+// call time — never at module load — so importing this module is safe even
+// where react-native's Platform isn't available yet.
+//
+// The fallback is guarded because it has already shipped once: a release build
+// that resolved to the `test_` Test Store key crashed on launch in
+// SimulatedStoreErrorDialogActivity ("Test Store API key used in release
+// build") for 7 users on each of MERA-APP-3T and 3S. EXPO_PUBLIC_* values are
+// inlined by Metro at bundle time, so an empty platform key in the build
+// environment is enough to arm it, silently. Outside __DEV__ we surface that
+// rather than shipping a Test Store key to the store.
 function resolveApiKey(): string {
   const platformKey =
     Platform.OS === 'android' ? REVENUECAT_ANDROID_KEY : REVENUECAT_IOS_KEY;
-  return platformKey || REVENUECAT_API_KEY;
+  if (platformKey) return platformKey;
+
+  if (!__DEV__ && REVENUECAT_API_KEY.startsWith('test_')) {
+    logger.captureException(
+      new Error(
+        `RevenueCat: no ${Platform.OS} key in this bundle; refusing to fall back to a Test Store key in a release build`,
+      ),
+      { tags: { service: 'revenuecat', step: 'resolve-api-key' } },
+    );
+    // Empty string → configure() fails loudly and purchases stay unavailable,
+    // which is strictly better than a launch crash.
+    return '';
+  }
+  return REVENUECAT_API_KEY;
 }
 
 // Entitlement identifiers configured in the RevenueCat dashboard. Must match
