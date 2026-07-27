@@ -8,6 +8,7 @@
 import { fetch as expoFetch } from 'expo/fetch';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
+import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import type { ExecutionContext } from './execution-context';
 import {
@@ -27,6 +28,24 @@ import { INFERENCE_ENDPOINT, DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints
 const TAG = '[submitInferenceJob]';
 
 const JOBS_API = `${INFERENCE_ENDPOINT}/v1/inference/jobs`;
+
+/** Report a submit that exhausted its retries. Benign timeout/abort/offline
+ *  failures are logged as warnings rather than captured — the caller's outcome
+ *  is `{ status: 'failed' }` either way (the batch retries), so an exception
+ *  adds Sentry noise without adding signal. Genuine failures still capture. */
+function reportSubmitFailure(err: unknown, status: string): void {
+  if (isTransientNetworkError(err)) {
+    logger.warn(`${TAG} submit ${status} — transient network/abort`, {
+      url: JOBS_API,
+      message: err instanceof Error ? err.message : String(err),
+    });
+    return;
+  }
+  logger.captureException(err, {
+    tags: { service: 'submitInferenceJob', status },
+    extra: { url: JOBS_API },
+  });
+}
 
 /** Outcome of a single `sendInferenceRequest` call. `throttled` means the
  *  gateway returned 429 — the caller should treat this as a transient,
@@ -221,10 +240,12 @@ export async function sendInferenceRequest(args: {
   try {
     res = await doSubmitPost(authHeader);
   } catch (err) {
-    logger.captureException(err, {
-      tags: { service: 'submitInferenceJob', status: 'retry-exhausted' },
-      extra: { url: JOBS_API },
-    });
+    // Exhausting retries on a benign timeout/abort is expected on flaky mobile
+    // links, and the outcome ({ status: 'failed' } → the batch retries) is the
+    // same either way — so it doesn't warrant a Sentry exception. Our own 30s
+    // SUBMIT_TIMEOUT_MS abort surfaces here as a literal `Error: aborted`
+    // (MERA-APP-5N). Genuine failures still report.
+    reportSubmitFailure(err, 'retry-exhausted');
     return { status: 'failed' };
   }
 
@@ -244,10 +265,7 @@ export async function sendInferenceRequest(args: {
       try {
         res = await doSubmitPost(authHeader);
       } catch (err) {
-        logger.captureException(err, {
-          tags: { service: 'submitInferenceJob', status: 'retry-exhausted-after-401' },
-          extra: { url: JOBS_API },
-        });
+        reportSubmitFailure(err, 'retry-exhausted-after-401');
         return { status: 'failed' };
       }
     }

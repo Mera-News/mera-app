@@ -139,6 +139,24 @@ export async function fetchResults(
         signal: controller.signal,
       },
     );
+  } catch (err) {
+    // Our own timeout firing is expected behaviour, not an exception. expo/fetch
+    // surfaces it as a literal `Error: aborted`, which used to propagate to the
+    // caller's captureException and file a Sentry issue on every slow poll
+    // (MERA-APP-5N, new with the 30s timeouts). Report it as 'pending' — the
+    // job may well still be running server-side, and the caller's BATCH_STALE_MS
+    // bound already stops a permanently-silent job from waiting forever.
+    // `signal.aborted` is the exact test: OUR timer fired. A generic transient
+    // check would also swallow real network failures, which the caller should
+    // still see.
+    if (controller.signal.aborted) {
+      logger.warn(
+        `${TAG} results fetch timed out after ${RESULTS_FETCH_TIMEOUT_MS}ms — treating as pending`,
+        { requestId },
+      );
+      return 'pending';
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
