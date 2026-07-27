@@ -1,9 +1,13 @@
 // TranslatableDynamic (r6b) — verifies the `onDisplayChange` callback fires
-// (in an effect) with the effective displayed text, so a parent can mirror the
-// exact title variant the reader sees. Covers the two no-translation paths:
+// (in an effect) with the effective displayed text AND the language that text
+// is in, so a parent can mirror the exact title variant the reader sees. Covers
+// the no-translation paths:
 //   • appLanguage 'en' → the English `text` is shown (showingOriginal false);
 //   • original already in the app language → the original is shown
-//     (showingOriginal true).
+//     (showingOriginal true);
+//   • translation unavailable/pending → the ORIGINAL is shown while
+//     showingOriginal is still false, which is exactly why `displayedLanguage`
+//     exists and the boolean isn't enough (see lib/hooks/useShareArticle.ts).
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 let mockAppLanguage = 'en';
@@ -82,6 +86,7 @@ describe('TranslatableDynamic onDisplayChange', () => {
         expect(onDisplayChange).toHaveBeenLastCalledWith({
             showingOriginal: false,
             displayedText: 'Breaking news headline',
+            displayedLanguage: 'en',
         });
     });
 
@@ -100,6 +105,46 @@ describe('TranslatableDynamic onDisplayChange', () => {
         expect(onDisplayChange).toHaveBeenLastCalledWith({
             showingOriginal: true,
             displayedText: 'Manchete de última hora',
+            displayedLanguage: 'pt',
+        });
+    });
+
+    it('reports the original language while the translation is unavailable, though showingOriginal is false', async () => {
+        // translateText is mocked to resolve null, so this is the permanent
+        // "OS can't translate this" state as well as the pending window.
+        mockAppLanguage = 'de';
+        const onDisplayChange = jest.fn();
+        render(
+            <TranslatableDynamic
+                text="Breaking news headline"
+                originalText="Manchete de última hora"
+                originalLanguage="pt-BR"
+                onDisplayChange={onDisplayChange}
+            />,
+        );
+        await waitFor(() => expect(onDisplayChange).toHaveBeenCalled());
+        expect(onDisplayChange).toHaveBeenLastCalledWith({
+            showingOriginal: false,
+            displayedText: 'Manchete de última hora',
+            // canonicalized: `pt-BR` → `pt`
+            displayedLanguage: 'pt',
+        });
+    });
+
+    it('reports English when there is no original to fall back to', async () => {
+        mockAppLanguage = 'de';
+        const onDisplayChange = jest.fn();
+        render(
+            <TranslatableDynamic
+                text="Breaking news headline"
+                onDisplayChange={onDisplayChange}
+            />,
+        );
+        await waitFor(() => expect(onDisplayChange).toHaveBeenCalled());
+        expect(onDisplayChange).toHaveBeenLastCalledWith({
+            showingOriginal: false,
+            displayedText: 'Breaking news headline',
+            displayedLanguage: 'en',
         });
     });
 });

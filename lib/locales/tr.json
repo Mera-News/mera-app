@@ -210,7 +210,7 @@
     "viewOriginalIn": "Orijinal makaleyi {{language}} dilinde görüntüle",
     "viewAndTranslateOnDevice": "Makaleyi görüntüle ve cihazda çevir",
     "share": "Paylaş",
-    "shareVia": "Mera News ile paylaşıldı — sizin için kişiselleştirilmiş haberler. Uygulamayı indirin: {{downloadUrl}}",
+    "shareVia": "{{downloadUrl}} üzerinden paylaşıldı",
     "sourceCountryGlobal": "Dünya Geneli",
     "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun."
   },
@@ -696,6 +696,7 @@
     "progress": "İlerleme",
     "noTasksYet": "Henüz kayıtlı görev yok",
     "feed": "Akış",
+    "feedFunnel": "Akış hunisi",
     "protocol": "Protokol",
     "system": "Sistem",
     "settings": "Ayarlar",

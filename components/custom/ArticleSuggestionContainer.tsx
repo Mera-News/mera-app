@@ -6,7 +6,7 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
@@ -53,7 +53,7 @@ interface BaseProps {
     /** Forwarded to the TITLE's TranslatableDynamic (the toggle-enabled screen
      *  instance) — fires whenever the displayed title variant changes so the
      *  detail screen can share whichever title the reader currently sees. */
-    onTitleDisplayChange?: (state: { showingOriginal: boolean; displayedText: string }) => void;
+    onTitleDisplayChange?: (state: TranslatableDisplayState) => void;
 }
 
 type SuggestionProps = BaseProps & { suggestion: ForYouSuggestion; article?: never };

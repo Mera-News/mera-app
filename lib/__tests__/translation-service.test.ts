@@ -33,6 +33,7 @@ import {
     getNativeLanguageName,
     getArticleTranslatableStatus,
     getArticleTranslationSupport,
+    resolveUiLocale,
     SUPPORTED_LANGUAGES,
     translateText,
     translateTexts,
@@ -180,6 +181,51 @@ describe('SUPPORTED_LANGUAGES', () => {
             expect(typeof lang.code).toBe('string');
             expect(typeof lang.name).toBe('string');
             expect(typeof lang.native).toBe('string');
+        }
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// resolveUiLocale
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('resolveUiLocale', () => {
+    it('passes through a code the app has UI strings for', () => {
+        expect(resolveUiLocale('hi')).toBe('hi');
+        expect(resolveUiLocale('de')).toBe('de');
+    });
+
+    it('canonicalizes messy feed codes before matching', () => {
+        expect(resolveUiLocale('pt-BR')).toBe('pt');
+        expect(resolveUiLocale('ES')).toBe('es');
+        expect(resolveUiLocale('fr-fr')).toBe('fr');
+        expect(resolveUiLocale('ja-Latn')).toBe('ja');
+        expect(resolveUiLocale('in')).toBe('id'); // legacy alias
+    });
+
+    it('resolves Chinese to the script-suffixed bundles', () => {
+        expect(resolveUiLocale('zh')).toBe('zh-Hans');
+        expect(resolveUiLocale('zh-TW')).toBe('zh-Hant');
+        expect(resolveUiLocale('zh-Hant')).toBe('zh-Hant');
+    });
+
+    it('returns null for feed languages with no bundle — NOT "en"', () => {
+        // fallbackLng would silently answer English for these, which is why
+        // callers need the null instead of just handing the code to i18next.
+        for (const code of ['or', 'bn', 'ta', 'fa', 'el', 'he', 'yue']) {
+            expect(resolveUiLocale(code)).toBeNull();
+        }
+    });
+
+    it('returns null for empty input', () => {
+        expect(resolveUiLocale(null)).toBeNull();
+        expect(resolveUiLocale(undefined)).toBeNull();
+        expect(resolveUiLocale('')).toBeNull();
+    });
+
+    it('accepts every SUPPORTED_LANGUAGES code unchanged', () => {
+        for (const lang of SUPPORTED_LANGUAGES) {
+            expect(resolveUiLocale(lang.code)).toBe(lang.code);
         }
     });
 });

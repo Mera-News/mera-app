@@ -2,16 +2,20 @@
 // logger are mocked so importing the store never touches a real WatermelonDB.
 //
 // Covers: hydrate (KV load + eviction of ids with no backing item + builtAt
-// restore), first ingest into an empty order (feedCompare order + persist),
-// freeze-zone invariant (ids ≤ frozenThroughIndex never shift, even when a new
-// item outranks a frozen entry), insertion vs REFRESHED scores, opened-new-id
-// skip, rep-switch dedupe (position kept, no duplicate, fresh rep data),
-// missing-item entries ranking last, the verdict mirror, and reset (clears KV).
+// restore + the empty-pool guard + hydrateStats), ingest's PREPEND behaviour
+// (a new batch sorted among itself by feedCompare and unshifted onto `order`,
+// existing rows keeping their relative order and shifting by the batch size,
+// no insert-magnet effect from an unbacked "ghost" order id, newest-batch-first
+// across successive ingests, and no persisted write on a no-op ingest), the
+// narrowed (exact-articleId-only) opened-new-id skip, rep-switch dedupe
+// (position kept, no duplicate, fresh rep data), the verdict mirror, and reset
+// (clears KV).
 //
 // Plus the card lifecycle: the separate `feed_card_state_v1` blob (defensive
-// per-field parse + debounced round-trip), markSkipped/markViewed transitions,
-// sweep eviction + the four-axis tombstones it leaves, and the ingest gate
-// those tombstones drive (the sweep → ingest → skip → sweep re-insert loop).
+// per-field parse + debounced round-trip, with legacy `tombs` back-compat)
+// and the markSkipped/markViewed transitions. There is no eviction sweep any
+// more — a card's lifecycle state is a pure display input (which side of the
+// "All caught up" divider it renders on); it never removes a row from `order`.
 //
 // The whole file runs on FAKE timers with a pinned system clock: the store
 // coalesces card-state writes behind a 1s trailing timer and `hydrate` reads
@@ -43,10 +47,8 @@ jest.mock('@/lib/logger', () => ({
 
 // eslint-disable-next-line import/first
 import {
-  CARD_STATE_TTL_MS,
   FEED_CARD_STATE_SETTING_KEY,
   FEED_ORDER_SETTING_KEY,
-  TOMBSTONE_TTL_MS,
   useFeedOrderStore,
 } from '../feed-order-store';
 // eslint-disable-next-line import/first
@@ -97,7 +99,7 @@ const store = () => useFeedOrderStore.getState();
  *  `mockResolvedValueOnce` style can only ever stage the order key.) */
 let kv: Record<string, string> = {};
 
-/** `setSetting` writes are asserted per KEY — `ingest`/`sweep` write the order
+/** `setSetting` writes are asserted per KEY — `ingest` can write the order
  *  blob in the same tick as a card-state write, so a bare call count lies. */
 const cardWrites = () =>
   mockSetSetting.mock.calls.filter(([key]) => key === FEED_CARD_STATE_SETTING_KEY);
@@ -105,6 +107,8 @@ const lastCardBlob = () => {
   const calls = cardWrites();
   return calls.length > 0 ? (calls[calls.length - 1][1] as string) : null;
 };
+const orderWrites = () =>
+  mockSetSetting.mock.calls.filter(([key]) => key === FEED_ORDER_SETTING_KEY);
 
 /** Force the store into a hydrated state with a given order/itemsById.
  *  NOTE: zustand MERGES, so every field this file mutates must be listed
@@ -119,7 +123,7 @@ function seed(items: FeedListItem[], builtAt: number | null = 1) {
     hydrated: true,
     verdicts: {},
     cardStates: {},
-    tombstones: {},
+    hydrateStats: null,
   });
 }
 
@@ -138,7 +142,7 @@ beforeEach(() => {
     hydrated: false,
     verdicts: {},
     cardStates: {},
-    tombstones: {},
+    hydrateStats: null,
   });
 });
 
@@ -152,7 +156,7 @@ afterAll(() => {
 });
 
 describe('hydrate', () => {
-  it('loads the persisted order, evicts ids with no backing item, restores builtAt', async () => {
+  it('loads the persisted order, evicts ids with no backing item, restores builtAt, and reports hydrateStats', async () => {
     mockGetSetting.mockResolvedValueOnce(
       JSON.stringify({ order: ['a', 'b', 'c'], builtAt: 123 }),
     );
@@ -163,6 +167,12 @@ describe('hydrate', () => {
     expect(Object.keys(s.itemsById).sort()).toEqual(['a', 'c']);
     expect(s.builtAt).toBe(123);
     expect(s.hydrated).toBe(true);
+    expect(s.hydrateStats).toEqual({
+      persistedOrderCount: 3,
+      candidateCountAtHydrate: 2,
+      survivorCount: 2,
+      emptyPoolGuardTripped: false,
+    });
     expect(mockGetSetting).toHaveBeenCalledWith(FEED_ORDER_SETTING_KEY);
   });
 
@@ -178,24 +188,50 @@ describe('hydrate', () => {
     expect(store().order).toEqual([]);
     expect(store().hydrated).toBe(true);
   });
+
+  it('EMPTY-POOL GUARD: hydrate([]) against a persisted order skips the eviction pass entirely, so the persisted reading order survives a hydrate that races the suggestion store', async () => {
+    kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['a', 'b', 'c'], builtAt: 7 });
+    await store().hydrate([]);
+    const s = store();
+    expect(s.order).toEqual(['a', 'b', 'c']);
+    // The guard skips the backing pass entirely, so `itemsById` stays empty
+    // until the follow-up `ingest` below heals it — a deliberate ghost state.
+    expect(s.itemsById).toEqual({});
+    expect(s.hydrateStats).toEqual({
+      persistedOrderCount: 3,
+      candidateCountAtHydrate: 0,
+      survivorCount: 3,
+      emptyPoolGuardTripped: true,
+    });
+    // Survivor count matches the persisted count exactly, so hydrate must not
+    // re-persist the order key (or write anything at all).
+    expect(mockSetSetting).not.toHaveBeenCalled();
+
+    // …the suggestion store lands a moment later and `ingest` reconciles
+    // normally — nothing was lost by skipping the eviction pass.
+    store().ingest(
+      [item('a', { score: 0.9 }), item('b', { score: 0.8 }), item('c', { score: 0.7 })],
+      new Set(),
+    );
+    expect(store().order).toEqual(['a', 'b', 'c']);
+  });
 });
 
 describe('ingest — no-op until hydrated', () => {
   it('does nothing before hydrate', () => {
     // store starts unhydrated (beforeEach)
-    store().ingest([item('a')], new Set(), 0);
+    store().ingest([item('a')], new Set());
     expect(store().order).toEqual([]);
     expect(mockSetSetting).not.toHaveBeenCalled();
   });
 });
 
 describe('ingest — initial build (empty order)', () => {
-  it('inserts into the empty tail in pure feedCompare order and persists + stamps builtAt', () => {
+  it('inserts into the empty order in pure feedCompare order and persists + stamps builtAt', () => {
     useFeedOrderStore.setState({ hydrated: true });
     store().ingest(
       [item('a', { score: 0.8 }), item('b', { score: 1.0 }), item('c', { score: 0.5 })],
       new Set(),
-      5,
     );
     // feedCompare = score desc → b, a, c.
     expect(store().order).toEqual(['b', 'a', 'c']);
@@ -206,44 +242,132 @@ describe('ingest — initial build (empty order)', () => {
     );
   });
 
-  it('skips genuinely-new ids that are already opened', () => {
+  it('skips genuinely-new ids whose exact articleId is already opened', () => {
     useFeedOrderStore.setState({ hydrated: true });
-    store().ingest([item('a'), item('b')], new Set(['a']), 0);
+    store().ingest([item('a'), item('b')], new Set(['a']));
     expect(store().order).toEqual(['b']);
   });
 });
 
-describe('ingest — freeze-zone invariant', () => {
-  it('never shifts ids at or before frozenThroughIndex, even for a higher-scoring new item', () => {
-    seed([item('a', { score: 1.0 }), item('b', { score: 0.9 }), item('c', { score: 0.8 })]);
-    // Freeze through index 1 (a, b). z outranks everyone but must land AFTER the
-    // freeze boundary (before the first unfrozen entry it beats = c).
+describe('ingest — narrowed opened gate (exact articleId only)', () => {
+  // The gate used to match against the cluster-wide opened set (article ids
+  // ∪ stableClusterIds with a 30-day TTL), so reading one article suppressed
+  // every FUTURE article in that ongoing story for a month. It is now an
+  // EXACT articleId match only — a seen card sinks below the "All caught up"
+  // divider at render time instead of being withheld from ingest at all.
+  it('excludes a candidate whose own articleId is in openedArticleIds', () => {
+    useFeedOrderStore.setState({ hydrated: true });
+    store().ingest([item('a', { articleId: 'art-a' })], new Set(['art-a']));
+    expect(store().order).toEqual([]);
+  });
+
+  it('does NOT exclude a candidate merely because its stableClusterId is in the opened set — a brand-new article in a previously-read ongoing story must still reach the feed', () => {
+    useFeedOrderStore.setState({ hydrated: true });
     store().ingest(
-      [
-        item('a', { score: 1.0 }),
-        item('b', { score: 0.9 }),
-        item('c', { score: 0.8 }),
-        item('z', { score: 2.0 }),
-      ],
-      new Set(),
-      1,
+      [item('a', { articleId: 'art-a', cluster: 'C1' })],
+      new Set(['C1']), // a stableClusterId, not this article's own id
     );
-    expect(store().order).toEqual(['a', 'b', 'z', 'c']);
+    expect(store().order).toEqual(['a']);
+  });
+
+  // The opened gate sits in PASS B, which only ever considers ids not already
+  // in `order` — PASS A (the known-row check) claims an existing row before
+  // the gate is ever reached. This must stay true: tapping a card open is
+  // exactly what puts its articleId into `openedArticleIds` AND marks it
+  // `viewed`, so if the gate were ever hoisted ahead of the known-row check,
+  // every read card would vanish from the feed on its very next refresh.
+  it('never removes an already-laid-out row, even when its own articleId is in the opened set on the next sync', () => {
+    seed([item('a', { score: 0.9 })]);
+    store().markViewed('a', NOW); // the user tapped it open…
+    // …so its articleId is in the opened set on the next sync.
+    store().ingest([item('a', { score: 0.2 })], new Set(['a']));
+    expect(store().order).toEqual(['a']); // still laid out
+    expect(store().itemsById.a.score).toBe(0.2); // and refreshed in place
   });
 });
 
-describe('ingest — insertion respects refreshed scores', () => {
-  it('compares a new item against the CURRENT refreshed row, not the original score', () => {
-    seed([item('a', { score: 1.0 }), item('b', { score: 0.5 })]);
-    // Refresh b down to 0.2 in the same ingest; new c (0.3) must beat the
-    // refreshed b (0.2) and land between a and b. Freeze through index 0 (a).
+describe('ingest — prepend', () => {
+  it('lands a new batch at the FRONT, sorted among itself by feedCompare', () => {
+    seed([item('a', { score: 0.9 })]);
     store().ingest(
-      [item('a', { score: 1.0 }), item('b', { score: 0.2 }), item('c', { score: 0.3 })],
+      [
+        item('a', { score: 0.9 }),
+        item('x', { score: 0.5 }),
+        item('y', { score: 0.8 }),
+        item('z', { score: 0.5, pubMs: 2_000 }), // ties x on score, wins on pubDate
+      ],
       new Set(),
-      0,
     );
-    expect(store().order).toEqual(['a', 'c', 'b']);
-    expect(store().itemsById.b.score).toBe(0.2);
+    // feedCompare among the new batch: y (0.8) > z (0.5, newer pub) > x (0.5, older pub).
+    expect(store().order).toEqual(['y', 'z', 'x', 'a']);
+  });
+
+  it('keeps existing rows in their relative order, each shifted by exactly newOnes.length', () => {
+    seed([item('a', { score: 0.9 }), item('b', { score: 0.7 }), item('c', { score: 0.3 })]);
+    store().ingest(
+      [
+        item('a', { score: 0.9 }),
+        item('b', { score: 0.7 }),
+        item('c', { score: 0.3 }),
+        item('x', { score: 1.0 }),
+        item('y', { score: 0.95 }),
+      ],
+      new Set(),
+    );
+    expect(store().order).toEqual(['x', 'y', 'a', 'b', 'c']);
+  });
+
+  it('the first build into an empty order produces a fully feedCompare-sorted list (one sorted batch prepended onto [])', () => {
+    useFeedOrderStore.setState({ hydrated: true });
+    store().ingest(
+      [item('a', { score: 0.3 }), item('b', { score: 0.9 }), item('c', { score: 0.6 })],
+      new Set(),
+    );
+    expect(store().order).toEqual(['b', 'c', 'a']);
+  });
+
+  // Regression: the OLD insertion-sort scan broke on the first order id with
+  // no backing item, making that id a permanent insert magnet for every later
+  // ingest. Prepend never scans `order` at all, so a ghost id just sits where
+  // it was — it neither attracts nor repels new inserts.
+  it('an order id with no backing itemsById entry no longer attracts inserts', () => {
+    useFeedOrderStore.setState({
+      order: ['a', 'ghost'],
+      itemsById: { a: item('a', { score: 1.0 }) },
+      builtAt: 1,
+      hydrated: true,
+      verdicts: {},
+      cardStates: {},
+      hydrateStats: null,
+    });
+    store().ingest([item('a', { score: 1.0 }), item('z', { score: 0.1 })], new Set());
+    // z is new (unclaimed — 'ghost' has no itemsById row to match against), so
+    // it goes to the FRONT, not slotted in near the ghost by score.
+    expect(store().order).toEqual(['z', 'a', 'ghost']);
+  });
+
+  it('two successive ingests: the SECOND batch ends up above the first (newest-batch-first)', () => {
+    useFeedOrderStore.setState({ hydrated: true });
+    store().ingest([item('a', { score: 0.5 }), item('b', { score: 0.4 })], new Set());
+    expect(store().order).toEqual(['a', 'b']);
+    store().ingest(
+      [
+        item('a', { score: 0.5 }),
+        item('b', { score: 0.4 }),
+        item('c', { score: 0.2 }),
+        item('d', { score: 0.1 }),
+      ],
+      new Set(),
+    );
+    expect(store().order).toEqual(['c', 'd', 'a', 'b']);
+  });
+
+  it('a no-op ingest (no genuinely-new items) does not change order or write the order key', () => {
+    seed([item('a', { score: 0.9 }), item('b', { score: 0.5 })]);
+    mockSetSetting.mockClear();
+    store().ingest([item('a', { score: 0.9 }), item('b', { score: 0.5 })], new Set());
+    expect(store().order).toEqual(['a', 'b']);
+    expect(orderWrites()).toHaveLength(0);
   });
 });
 
@@ -251,7 +375,7 @@ describe('ingest — rep-switch dedupe', () => {
   it('updates the existing entry in place under its old id — no duplicate, position kept, fresh rep data', () => {
     seed([item('x', { score: 0.5, cluster: 'C1' })]);
     // New rep article y for the SAME stable cluster C1 (group grew).
-    store().ingest([item('y', { score: 0.9, cluster: 'C1' })], new Set(), 0);
+    store().ingest([item('y', { score: 0.9, cluster: 'C1' })], new Set());
     expect(store().order).toEqual(['x']); // position kept, no duplicate
     expect(store().itemsById.y).toBeUndefined();
     // Fresh rep data stored under the old order id.
@@ -264,7 +388,7 @@ describe('ingest — rep-switch dedupe', () => {
     // Title-Jaccard group (no cluster id): row 'x' knows member 'y'.
     seed([item('x', { score: 0.5, memberIds: ['x', 'y'] })]);
     // 'y' now fronts the same group.
-    store().ingest([item('y', { score: 0.9, memberIds: ['x', 'y'] })], new Set(), 0);
+    store().ingest([item('y', { score: 0.9, memberIds: ['x', 'y'] })], new Set());
     expect(store().order).toEqual(['x']);
     expect(store().itemsById.x.suggestion.articleId).toBe('y');
   });
@@ -283,9 +407,8 @@ describe('ingest — rep-switch dedupe', () => {
           item('y', { score: 0.4, memberIds: ['y'] }),
         ],
         new Set(),
-        0,
       );
-      expect(store().order).toEqual(['x', 'y']);
+      expect(store().order).toEqual(['y', 'x']);
       expect(store().itemsById.x.suggestion.articleId).toBe('x');
       expect(store().itemsById.y.suggestion.articleId).toBe('y');
     });
@@ -298,9 +421,8 @@ describe('ingest — rep-switch dedupe', () => {
           item('x', { score: 0.9, memberIds: ['x'] }),
         ],
         new Set(),
-        0,
       );
-      expect(store().order).toEqual(['x', 'y']);
+      expect(store().order).toEqual(['y', 'x']);
       expect(store().itemsById.x.suggestion.articleId).toBe('x');
       expect(store().itemsById.y.suggestion.articleId).toBe('y');
     });
@@ -314,30 +436,11 @@ describe('ingest — rep-switch dedupe', () => {
           item('q', { score: 0.3, memberIds: ['q'] }),
         ],
         new Set(),
-        0,
       );
-      // p takes the row in place; q becomes its own card. Nothing is lost.
+      // p takes the row in place; q becomes its own card (prepended — it's new).
       expect(store().itemsById.x.suggestion.articleId).toBe('p');
-      expect(store().order).toEqual(['x', 'q']);
+      expect(store().order).toEqual(['q', 'x']);
     });
-  });
-});
-
-describe('ingest — missing-item entries rank last', () => {
-  it('inserts a new item BEFORE an order id that has no backing item', () => {
-    // 'ghost' is in order but has no itemsById entry (a transient orphan).
-    useFeedOrderStore.setState({
-      order: ['a', 'ghost'],
-      itemsById: { a: item('a', { score: 1.0 }) },
-      builtAt: 1,
-      hydrated: true,
-      verdicts: {},
-      cardStates: {},
-      tombstones: {},
-    });
-    // Freeze through index 0 (a). New low-scoring z still beats the ghost.
-    store().ingest([item('a', { score: 1.0 }), item('z', { score: 0.1 })], new Set(), 0);
-    expect(store().order).toEqual(['a', 'z', 'ghost']);
   });
 });
 
@@ -373,25 +476,25 @@ describe('verdict mirror', () => {
 });
 
 describe('card state — parse / persistence', () => {
-  it('a device with no card-state key hydrates to empty maps and keeps the whole order (back-compat)', async () => {
+  it('a device with no card-state key hydrates to an empty map and keeps the whole order (back-compat)', async () => {
     kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['a', 'b', 'c'], builtAt: 123 });
     // No FEED_CARD_STATE_SETTING_KEY at all — the pre-lifecycle device.
     await store().hydrate([item('a'), item('b'), item('c')]);
     const s = store();
     expect(s.order).toEqual(['a', 'b', 'c']); // no wipe
     expect(s.cardStates).toEqual({});
-    expect(s.tombstones).toEqual({});
     expect(mockGetSetting).toHaveBeenCalledWith(FEED_CARD_STATE_SETTING_KEY);
   });
 
-  it('drops malformed state entries but keeps the valid ones, and a malformed `tombs` does not discard `states`', async () => {
+  it('drops malformed state entries but keeps the valid ones, and a malformed `tombs` does not crash or affect `states`', async () => {
     kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({
       order: ['ok', 'short', 'badcode', 'nullat', 'inf'],
       builtAt: 1,
     });
     // Raw literal on purpose: JSON.stringify turns Infinity/NaN into null, so a
     // genuinely non-finite `at` can only be written by hand (`1e999` parses
-    // back as Infinity).
+    // back as Infinity). `tombs` here is a leftover shape from the removed
+    // eviction mechanism — it must be ignored, not crash the parse.
     kv[FEED_CARD_STATE_SETTING_KEY] =
       `{"states":{"ok":["s",${NOW}],"short":["s"],"badcode":["x",${NOW}],` +
       `"nullat":["v",null],"inf":["s",1e999]},"tombs":"not-an-object"}`;
@@ -404,14 +507,28 @@ describe('card state — parse / persistence', () => {
     ]);
     const s = store();
     expect(s.cardStates).toEqual({ ok: { state: 'skipped', at: NOW } });
-    expect(s.tombstones).toEqual({});
     // The order blob lives under a DIFFERENT key, so it is untouched.
     expect(s.order).toEqual(['ok', 'short', 'badcode', 'nullat', 'inf']);
   });
 
-  it('round-trips: states serialize as [code, ms] under `states`, tombstones under `tombs`', async () => {
+  it('legacy blob back-compat: an old `{ states, tombs }` blob parses `states` fine, ignores `tombs`, and has no effect on ingest', async () => {
+    kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['a'], builtAt: 1 });
+    kv[FEED_CARD_STATE_SETTING_KEY] = JSON.stringify({
+      states: { a: ['s', NOW] },
+      tombs: { z: NOW }, // from the removed eviction mechanism
+    });
+    await store().hydrate([item('a')]);
+    expect(store().cardStates).toEqual({ a: { state: 'skipped', at: NOW } });
+
+    // A legacy tombstone entry for 'z' must not suppress 'z' on ingest — the
+    // whole tombstone mechanism is gone, `tombs` is inert dead weight now.
+    // 'z' is genuinely new, so it prepends to the FRONT of order.
+    store().ingest([item('z')], new Set());
+    expect(store().order).toEqual(['z', 'a']);
+  });
+
+  it('round-trips: states serialize as [code, ms] under `states`, with no `tombs` key', async () => {
     seed([item('a'), item('b')]);
-    useFeedOrderStore.setState({ tombstones: { gone: NOW - 1000 } });
     store().markSkipped(['a'], NOW);
     store().markViewed('b', NOW);
     jest.advanceTimersByTime(PERSIST_DEBOUNCE_MS);
@@ -420,8 +537,8 @@ describe('card state — parse / persistence', () => {
     expect(blob).not.toBeNull();
     expect(JSON.parse(blob as string)).toEqual({
       states: { a: ['s', NOW], b: ['v', NOW] },
-      tombs: { gone: NOW - 1000 },
     });
+    expect(blob as string).not.toContain('tombs');
 
     // Feed the exact bytes back through hydrate — must re-parse identically.
     kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['a', 'b'], builtAt: 1 });
@@ -431,14 +548,13 @@ describe('card state — parse / persistence', () => {
       itemsById: {},
       hydrated: false,
       cardStates: {},
-      tombstones: {},
+      hydrateStats: null,
     });
     await store().hydrate([item('a'), item('b')]);
     expect(store().cardStates).toEqual({
       a: { state: 'skipped', at: NOW },
       b: { state: 'viewed', at: NOW },
     });
-    expect(store().tombstones).toEqual({ gone: NOW - 1000 });
   });
 
   it('markSkipped/markViewed do not write synchronously; exactly one write lands after the debounce', () => {
@@ -481,7 +597,7 @@ describe('markSkipped', () => {
     expect(store().cardStates.a).toEqual({ state: 'skipped', at: NOW });
   });
 
-  it('is WRITE-ONCE — a second pass does not restart the eviction clock', () => {
+  it('is WRITE-ONCE — a second pass does not restamp `at`', () => {
     seed([item('a')]);
     store().markSkipped(['a'], NOW);
     store().markSkipped(['a'], NOW + 5 * MIN);
@@ -495,7 +611,7 @@ describe('markSkipped', () => {
     expect(store().cardStates.a).toEqual({ state: 'viewed', at: NOW });
   });
 
-  it('ignores ids that are not laid out (a debounced flush landing after a sweep)', () => {
+  it('ignores ids that are not laid out', () => {
     seed([item('a')]);
     store().markSkipped(['ghost', 'a'], NOW);
     expect(store().cardStates).toEqual({ a: { state: 'skipped', at: NOW } });
@@ -537,189 +653,6 @@ describe('markViewed', () => {
   });
 });
 
-describe('sweep', () => {
-  it('evicts a skipped card past the grace period and keeps one inside it', () => {
-    seed([item('stale'), item('recent')]);
-    store().markSkipped(['stale'], NOW - 11 * MIN);
-    store().markSkipped(['recent'], NOW - 9 * MIN);
-    expect(store().sweep({ force: false, nowMs: NOW })).toBe(1);
-    expect(store().order).toEqual(['recent']);
-  });
-
-  it('NEVER evicts an unviewed card (no record), whatever its age or the force flag', () => {
-    seed([item('a'), item('b')]);
-    expect(store().sweep({ force: false, nowMs: NOW + 365 * 24 * 60 * MIN })).toBe(0);
-    expect(store().sweep({ force: true, nowMs: NOW })).toBe(0);
-    expect(store().order).toEqual(['a', 'b']);
-    expect(store().tombstones).toEqual({});
-  });
-
-  it('force evicts stamped cards regardless of age, and returns the evicted count', () => {
-    seed([item('a'), item('b'), item('c')]);
-    store().markSkipped(['a'], NOW);
-    store().markViewed('b', NOW);
-    expect(store().sweep({ force: true, nowMs: NOW })).toBe(2);
-    expect(store().order).toEqual(['c']);
-  });
-
-  it('prunes cardStates entries for evicted ids', () => {
-    seed([item('a'), item('b')]);
-    store().markSkipped(['a'], NOW);
-    store().markViewed('b', NOW);
-    store().sweep({ force: true, nowMs: NOW });
-    expect(store().cardStates).toEqual({});
-  });
-
-  it('returns 0 and writes nothing when nothing is dirty', () => {
-    seed([item('a')]);
-    mockSetSetting.mockClear();
-    expect(store().sweep({ force: false, nowMs: NOW })).toBe(0);
-    expect(mockSetSetting).not.toHaveBeenCalled();
-  });
-
-  it('is a hard no-op before hydrate (an unhydrated sweep would persist an empty order)', () => {
-    useFeedOrderStore.setState({ order: ['a'], itemsById: { a: item('a') } });
-    expect(store().sweep({ force: true, nowMs: NOW })).toBe(0);
-    expect(store().order).toEqual(['a']);
-    expect(mockSetSetting).not.toHaveBeenCalled();
-  });
-
-  it('stamps `viewed` on a row opened on another surface that carries no state of its own', () => {
-    seed([item('a'), item('b')]);
-    expect(store().sweep({ force: false, nowMs: NOW, openedIds: new Set(['a']) })).toBe(0);
-    // Joins the normal grace period rather than lingering forever.
-    expect(store().cardStates).toEqual({ a: { state: 'viewed', at: NOW } });
-    expect(store().order).toEqual(['a', 'b']);
-  });
-
-  it('tombstones all four identity axes: order id, rep articleId, stableClusterId, memberIds', () => {
-    // A rep-switched row: `ingest` stored the fresh rep under the OLD order id,
-    // so `id` ('x') and `suggestion.articleId` ('y') genuinely diverge.
-    const repSwitched: FeedListItem = {
-      ...item('y', { cluster: 'C1', memberIds: ['y', 'm1'] }),
-      id: 'x',
-    };
-    useFeedOrderStore.setState({
-      order: ['x'],
-      itemsById: { x: repSwitched },
-      builtAt: 1,
-      hydrated: true,
-      verdicts: {},
-      cardStates: {},
-      tombstones: {},
-    });
-    store().markSkipped(['x'], NOW);
-    expect(store().sweep({ force: true, nowMs: NOW })).toBe(1);
-    expect(store().tombstones).toEqual({ x: NOW, y: NOW, C1: NOW, m1: NOW });
-  });
-});
-
-describe('ingest + tombstones — the re-insert loop', () => {
-  it('does not re-insert an id a sweep just evicted', () => {
-    const items = [item('a', { score: 0.5 }), item('b', { score: 0.4 })];
-    seed(items);
-    store().markSkipped(['a'], NOW);
-    expect(store().sweep({ force: true, nowMs: NOW })).toBe(1);
-    store().ingest(items, new Set(), 0);
-    expect(store().order).toEqual(['b']);
-  });
-
-  it('does not insert a NEW representative of a tombstoned group (overlapping memberIds)', () => {
-    // The oscillation case: a title-Jaccard group with no stableClusterId
-    // re-elects its representative whenever a fresher member lands, so the
-    // returning card has a different `it.id` than the one that was evicted.
-    seed([item('a', { memberIds: ['a', 'a2'] })]);
-    store().markSkipped(['a'], NOW);
-    store().sweep({ force: true, nowMs: NOW });
-    store().ingest([item('a2', { memberIds: ['a2', 'a'] })], new Set(), 0);
-    expect(store().order).toEqual([]);
-  });
-
-  it('does not insert a different article sharing the tombstoned stableClusterId', () => {
-    seed([item('a', { cluster: 'C9' })]);
-    store().markSkipped(['a'], NOW);
-    store().sweep({ force: true, nowMs: NOW });
-    store().ingest([item('z', { cluster: 'C9' })], new Set(), 0);
-    expect(store().order).toEqual([]);
-  });
-
-  it('an unrelated tombstone does not block an unrelated new item', () => {
-    seed([]);
-    useFeedOrderStore.setState({ tombstones: { unrelated: NOW } });
-    store().ingest([item('n', { score: 0.5 })], new Set(), 0);
-    expect(store().order).toEqual(['n']);
-  });
-
-  it('a tombstoned id already in `order` is still refreshed in place', () => {
-    // The tombstone gate sits AFTER the known-row check on purpose.
-    seed([item('a', { score: 0.9 })]);
-    useFeedOrderStore.setState({ tombstones: { a: NOW } });
-    store().ingest([item('a', { score: 0.2 })], new Set(), 0);
-    expect(store().order).toEqual(['a']);
-    expect(store().itemsById.a.score).toBe(0.2);
-  });
-
-  it('prunes a tombstone past TOMBSTONE_TTL_MS, after which the story ingests normally again', () => {
-    seed([]);
-    useFeedOrderStore.setState({ tombstones: { a: NOW - TOMBSTONE_TTL_MS - 1 } });
-    store().ingest([item('a')], new Set(), 0);
-    expect(store().order).toEqual([]); // still blocked
-
-    store().sweep({ force: false, nowMs: NOW });
-    expect(store().tombstones).toEqual({});
-    store().ingest([item('a')], new Set(), 0);
-    expect(store().order).toEqual(['a']);
-  });
-
-  it('keeps the NEWEST entries when the tombstone cap is exceeded', () => {
-    const CAP = 2000; // mirrors the store's module-private MAX_TOMBSTONES
-    const tombstones: Record<string, number> = {};
-    for (let i = 0; i < CAP + 500; i++) tombstones[`k${i}`] = NOW - i; // k0 = newest
-    seed([]);
-    useFeedOrderStore.setState({ tombstones });
-    store().sweep({ force: true, nowMs: NOW });
-    const kept = store().tombstones;
-    expect(Object.keys(kept)).toHaveLength(CAP);
-    expect(kept.k0).toBe(NOW);
-    expect(kept[`k${CAP - 1}`]).toBe(NOW - (CAP - 1));
-    expect(kept[`k${CAP}`]).toBeUndefined();
-  });
-});
-
-describe('hydrate — card lifecycle', () => {
-  it('an EMPTY candidate pool empties `order` WITHOUT tombstoning — hydrate races the suggestion store and must not brick the feed for 48h', async () => {
-    kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['a', 'b', 'c'], builtAt: 7 });
-    // FeedScreen fires hydrate on `dbReady`, often before any suggestion loads.
-    await store().hydrate([]);
-    expect(store().order).toEqual([]);
-    expect(store().tombstones).toEqual({});
-    expect(cardWrites()).toHaveLength(0);
-
-    // …the suggestion store lands a moment later and the rows come straight back.
-    store().ingest(
-      [item('a', { score: 0.9 }), item('b', { score: 0.8 }), item('c', { score: 0.7 })],
-      new Set(),
-      0,
-    );
-    expect(store().order).toEqual(['a', 'b', 'c']);
-  });
-
-  it('launch sweep evicts + tombstones a persisted `skipped` past the grace period, sparing a fresh one', async () => {
-    kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['old', 'fresh'], builtAt: 7 });
-    kv[FEED_CARD_STATE_SETTING_KEY] = JSON.stringify({
-      states: { old: ['s', NOW - 11 * MIN], fresh: ['s', NOW - MIN] },
-      tombs: {},
-    });
-    // Both still have a live backing item, so the launch sweep tombstones normally.
-    await store().hydrate([item('old', { cluster: 'C-old' }), item('fresh')]);
-    const s = store();
-    expect(s.order).toEqual(['fresh']);
-    expect(s.cardStates).toEqual({ fresh: { state: 'skipped', at: NOW - MIN } });
-    expect(s.tombstones).toEqual({ old: NOW, 'C-old': NOW });
-    expect(CARD_STATE_TTL_MS).toBe(10 * MIN);
-  });
-});
-
 describe('reset', () => {
   it('clears state and deletes the persisted KV', () => {
     seed([item('a'), item('b')]);
@@ -734,13 +667,11 @@ describe('reset', () => {
     expect(mockDeleteSetting).toHaveBeenCalledWith(FEED_ORDER_SETTING_KEY);
   });
 
-  it('clears cardStates + tombstones and deletes BOTH settings keys', () => {
+  it('clears cardStates and deletes BOTH settings keys', () => {
     seed([item('a')]);
     store().markSkipped(['a'], NOW);
-    useFeedOrderStore.setState({ tombstones: { t: NOW } });
     store().reset();
     expect(store().cardStates).toEqual({});
-    expect(store().tombstones).toEqual({});
     expect(mockDeleteSetting).toHaveBeenCalledWith(FEED_ORDER_SETTING_KEY);
     expect(mockDeleteSetting).toHaveBeenCalledWith(FEED_CARD_STATE_SETTING_KEY);
   });

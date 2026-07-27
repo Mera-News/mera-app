@@ -212,7 +212,7 @@
     "viewOriginal": "Pokaż oryginalny artykuł",
     "viewOriginalIn": "Pokaż oryginalny artykuł w języku {{language}}",
     "share": "Udostępnij",
-    "shareVia": "Udostępniono przez Mera News — spersonalizowane wiadomości dla Ciebie. Pobierz aplikację: {{downloadUrl}}",
+    "shareVia": "Udostępniono przez {{downloadUrl}}",
     "sourceCountryGlobal": "Cały świat",
     "sourceCountryA11y": "Kraj źródła: {{country}}. Dotknij, aby wyświetlić nazwę kraju."
   },
@@ -698,6 +698,7 @@
     "progress": "Postęp",
     "noTasksYet": "Brak zarejestrowanych zadań",
     "feed": "Kanał",
+    "feedFunnel": "Lejek kanału",
     "protocol": "Protokół",
     "system": "System",
     "settings": "Ustawienia",

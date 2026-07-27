@@ -20,6 +20,16 @@ import type { ImpressionSurface } from '../models/StoryImpression';
 
 const impressionsCollection = database.get<StoryImpressionModel>('story_impressions');
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** `@date` columns surface as `Date`, but the test mock hands back raw numbers
+ *  (and a partially-written row can be null). Normalize to epoch ms or null. */
+function toMs(v: Date | number | null | undefined): number | null {
+  if (v == null) return null;
+  const t = v instanceof Date ? v.getTime() : Number(v);
+  return Number.isFinite(t) ? t : null;
+}
+
 export interface RecordImpressionInput {
   articleId: string;
   stableClusterId?: string | null;
@@ -109,16 +119,100 @@ export async function getAll(): Promise<StoryImpressionModel[]> {
  * guard keeps the set opens-only even under the predicate-ignoring test mock.
  */
 export async function getOpenedSeenSet(): Promise<Set<string>> {
+  const { articleIds, clusterIds } = await getOpenedSeenBreakdown();
+  return new Set([...articleIds, ...clusterIds]);
+}
+
+/** Age buckets on `first_seen_at`, exclusive — they partition `rowCount`. */
+export interface OpenedSeenAgeBuckets {
+  le24h: number;
+  d1to7: number;
+  d7to30: number;
+}
+
+export interface OpenedSeenStats {
+  rowCount: number;
+  articleIdCount: number;
+  clusterIdCount: number;
+  /** Size of `articleIds ∪ clusterIds` — what `getOpenedSeenSet` returns. */
+  unionSize: number;
+  oldestFirstSeenAtMs: number | null;
+  newestLastSeenAtMs: number | null;
+  ageBuckets: OpenedSeenAgeBuckets;
+}
+
+export interface OpenedSeenBreakdown {
+  articleIds: Set<string>;
+  clusterIds: Set<string>;
+  stats: OpenedSeenStats;
+}
+
+/**
+ * The opened set, split by AXIS. `getOpenedSeenSet` merges the two, and once
+ * merged they are indistinguishable — but the two behave very differently:
+ * an article id identifies one story the user read, whereas a `stableClusterId`
+ * identifies an ONGOING story and keeps matching brand-new articles in it for
+ * the full 30-day impression TTL.
+ *
+ * The Feed's ingest gate deliberately uses `articleIds` only; the union still
+ * feeds the Dashboard's read-ticks and the P_SEEN scoring demotion. The funnel
+ * diagnostic uses the split + age buckets to show how much the cluster axis
+ * would suppress.
+ *
+ * `getOpenedSeenSet` is a thin wrapper over this so the union can never drift
+ * from the breakdown.
+ */
+export async function getOpenedSeenBreakdown(
+  nowMs: number = Date.now(),
+): Promise<OpenedSeenBreakdown> {
   const rows = await impressionsCollection
     .query(Q.where('opened', true))
     .fetch();
-  const seen = new Set<string>();
+
+  const articleIds = new Set<string>();
+  const clusterIds = new Set<string>();
+  const ageBuckets: OpenedSeenAgeBuckets = { le24h: 0, d1to7: 0, d7to30: 0 };
+  let rowCount = 0;
+  let oldestFirstSeenAtMs: number | null = null;
+  let newestLastSeenAtMs: number | null = null;
+
   for (const r of rows) {
+    // The JS guard keeps the set opens-only even under the predicate-ignoring
+    // test mock. It must live HERE, in the shared builder, and nowhere else.
     if (r.opened !== true) continue;
-    if (r.articleId) seen.add(r.articleId);
-    if (r.stableClusterId) seen.add(r.stableClusterId);
+    rowCount++;
+    if (r.articleId) articleIds.add(r.articleId);
+    if (r.stableClusterId) clusterIds.add(r.stableClusterId);
+
+    const first = toMs(r.firstSeenAt);
+    if (first !== null) {
+      oldestFirstSeenAtMs =
+        oldestFirstSeenAtMs === null ? first : Math.min(oldestFirstSeenAtMs, first);
+      const ageMs = nowMs - first;
+      if (ageMs <= DAY_MS) ageBuckets.le24h++;
+      else if (ageMs <= 7 * DAY_MS) ageBuckets.d1to7++;
+      else ageBuckets.d7to30++;
+    }
+    const last = toMs(r.lastSeenAt);
+    if (last !== null) {
+      newestLastSeenAtMs =
+        newestLastSeenAtMs === null ? last : Math.max(newestLastSeenAtMs, last);
+    }
   }
-  return seen;
+
+  return {
+    articleIds,
+    clusterIds,
+    stats: {
+      rowCount,
+      articleIdCount: articleIds.size,
+      clusterIdCount: clusterIds.size,
+      unionSize: new Set([...articleIds, ...clusterIds]).size,
+      oldestFirstSeenAtMs,
+      newestLastSeenAtMs,
+      ageBuckets,
+    },
+  };
 }
 
 /**

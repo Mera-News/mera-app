@@ -4,6 +4,13 @@ import type React from 'react';
 import { getBellAnchor } from './notifications/bell-anchor';
 import logger from './logger';
 
+/**
+ * Floor for how long ANY toast stays on screen. Anything shorter reads as a
+ * flicker — the user cannot finish reading it before it goes. Errors and
+ * successes deliberately sit longer; nothing sits shorter.
+ */
+export const TOAST_MIN_DURATION_MS = 2000;
+
 /** Options for a notification-center-backed toast (see showNotifiedToast). */
 export interface NotifiedToastOptions {
     type: string;
@@ -203,7 +210,7 @@ class ToastManager {
 
         this.toastInstance.show({
             placement: 'bottom',
-            duration: 1500,
+            duration: TOAST_MIN_DURATION_MS,
             render: ({ id }: { id: string }) => {
                 return React.createElement(
                     Toast,
@@ -254,16 +261,24 @@ class ToastManager {
 
         const React = require('react');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const NotifiedToast = require('@/components/custom/notifications/NotifiedToast').default;
+        const notifiedToastModule = require('@/components/custom/notifications/NotifiedToast');
+        const NotifiedToast = notifiedToastModule.default;
 
         const title = this.resolveI18n(opts.title);
         const body = this.resolveI18n(opts.body);
         const anchor = getBellAnchor();
         const reduceMotion = this.reduceMotion;
+        // Whether the toast will fly to the bell or just fade — the two legs
+        // have different lengths, and the component derives the same flag.
+        const canFly = !reduceMotion && anchor != null;
 
         this.toastInstance.show({
             placement: 'top',
-            duration: 2000,
+            // Match the toast's lifetime to the animation EXACTLY. NotifiedToast
+            // holds fully opaque (so it can be READ) and only then leaves. Too
+            // short and it is torn off mid-flight; too long and an invisible
+            // toast stays mounted over the UI after the animation has finished.
+            duration: notifiedToastModule.notifiedToastDurationMs(canFly),
             render: () =>
                 React.createElement(NotifiedToast, {
                     title,

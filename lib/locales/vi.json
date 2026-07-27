@@ -209,7 +209,7 @@
     "viewOriginalIn": "Xem bài viết gốc bằng {{language}}",
     "viewAndTranslateOnDevice": "Xem bài viết & dịch trên thiết bị",
     "share": "Chia sẻ",
-    "shareVia": "Chia sẻ qua Mera News — tin tức được cá nhân hóa dành riêng cho bạn. Tải ứng dụng: {{downloadUrl}}",
+    "shareVia": "Chia sẻ qua {{downloadUrl}}",
     "sourceCountryGlobal": "Toàn cầu",
     "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia."
   },
@@ -695,6 +695,7 @@
     "progress": "Tiến độ",
     "noTasksYet": "Chưa có nhiệm vụ nào được đăng ký",
     "feed": "Bản tin",
+    "feedFunnel": "Phễu bản tin",
     "protocol": "Giao thức",
     "system": "Hệ thống",
     "settings": "Cài đặt",

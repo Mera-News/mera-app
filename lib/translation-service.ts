@@ -71,6 +71,24 @@ export const SUPPORTED_LANGUAGES = [
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 
+const UI_LOCALE_CODES = new Set<string>(SUPPORTED_LANGUAGES.map((l) => l.code));
+
+/**
+ * Resolve an arbitrary feed language code to the i18next resource key for it,
+ * or null when the app ships no UI strings in that language. Mirrors the
+ * `resources` keys in `lib/i18n/index.ts`, which are exactly the
+ * SUPPORTED_LANGUAGES codes.
+ *
+ * The null matters: i18n is configured with `fallbackLng: 'en'`, so asking
+ * `t(key, { lng })` for a language with no bundle silently returns English.
+ * Only ~20 of the ~75 languages that actually appear in the feed have one, so
+ * callers need to distinguish "no bundle" from "English" themselves.
+ */
+export function resolveUiLocale(code: string | null | undefined): string | null {
+    const canonical = canonicalizeLanguageCode(code);
+    return canonical && UI_LOCALE_CODES.has(canonical) ? canonical : null;
+}
+
 // Google Translate's `tl` (target-language) param doesn't accept the
 // script-suffixed BCP-47 codes the app uses for Chinese — it wants the
 // region-based `zh-CN` / `zh-TW`. Every other SUPPORTED_LANGUAGES code

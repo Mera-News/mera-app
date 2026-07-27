@@ -1,6 +1,7 @@
 import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { canonicalizeLanguageCode } from '@/lib/language-codes';
 import { translateText } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
@@ -17,6 +18,20 @@ type MeasurableNode = {
 };
 
 type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '2xs' | '5xl' | '6xl';
+
+/** What a parent learns about the text currently on screen. */
+export interface TranslatableDisplayState {
+    /** The reader toggled to the original, or it was already in their language. */
+    readonly showingOriginal: boolean;
+    readonly displayedText: string;
+    /**
+     * Canonical language code of `displayedText`. Not derivable from
+     * `showingOriginal`: the original-language text is also what renders while
+     * a translation is pending and whenever the OS translator fails, and
+     * `showingOriginal` is false in both of those cases.
+     */
+    readonly displayedLanguage: string | null;
+}
 
 interface TranslatableProps {
     /** Translatable source. Assumed to be English. */
@@ -55,7 +70,7 @@ interface TranslatableProps {
      * and async translation resolution. Lets a parent (e.g. the detail screen's
      * share sheet) mirror the exact title variant the user is looking at.
      */
-    readonly onDisplayChange?: (state: { showingOriginal: boolean; displayedText: string }) => void;
+    readonly onDisplayChange?: (state: TranslatableDisplayState) => void;
 }
 
 /** Loose match so `hi-IN` ≈ `hi`, `zh-Hans` ≈ `zh-CN`, etc. */
@@ -244,23 +259,35 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         });
     }, [needsTranslation, isOnScreen, appLanguage, text, cachedTranslation, originalLanguage]);
 
+    // `displayText` and `displayedLanguage` are assigned together, branch by
+    // branch — deriving the language separately afterwards would drift from
+    // whichever variant actually rendered. Where the fallback is
+    // `originalText ?? text`, the language is the original's ONLY if
+    // `originalText` exists; otherwise `text` rendered, and `text` is English
+    // by this app's design (title_en, title_en_internal_only, reason).
     let displayText: string;
+    let displayedLanguage: string | null;
+    const originalLanguageCanonical = canonicalizeLanguageCode(originalLanguage);
     if (effectiveShowOriginal || originalIsTargetLang) {
         // User asked for the original, or it's already in their language.
         displayText = originalText ?? text;
+        displayedLanguage = originalText ? originalLanguageCanonical : 'en';
     } else if (needsTranslation && cachedTranslation != null) {
         // Machine-translated cache hit.
         displayText = cachedTranslation;
+        displayedLanguage = appLanguage;
     } else if (needsTranslation) {
         // Translation still pending — prefer the original-language version
         // over the English source so we never flash English at users who
         // picked a non-English app language.
         displayText = originalText ?? text;
+        displayedLanguage = originalText ? originalLanguageCanonical : 'en';
     } else {
         // appLanguage === 'en' or no translation needed — show the English
         // `text` (which for server-provided articles is the server-side
         // English translation of the original).
         displayText = text;
+        displayedLanguage = 'en';
     }
     displayText = stripUnkTokens(displayText);
 
@@ -271,8 +298,8 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // Notify the parent (in an effect, never during render) whenever the
     // effective displayed text changes.
     useEffect(() => {
-        onDisplayChangeRef.current?.({ showingOriginal, displayedText: displayText });
-    }, [showingOriginal, displayText]);
+        onDisplayChangeRef.current?.({ showingOriginal, displayedText: displayText, displayedLanguage });
+    }, [showingOriginal, displayText, displayedLanguage]);
 
     // Show the translate icon whenever the displayed text differs from the
     // original-language text. This covers both machine translations (iOS

@@ -58,6 +58,53 @@ export const FIELD_LABELS: Record<string, string> = {
     db: 'Storage',
 };
 
+// ─── Feed funnel (why the feed shows N cards) ────────────────────────────────
+//
+// Kept in its OWN map rather than folded into FIELD_LABELS: these ~30 keys
+// describe one diagnostic and several of them (`unscored`, `viewed`) would read
+// ambiguously next to the plain Feed rows above. The four order-reason keys are
+// the raw `FeedFunnelOrderReason` strings, which cannot collide with the
+// camelCase keys around them.
+
+export const FEED_FUNNEL_LABELS: Record<string, string> = {
+    inconsistent: '⚠ Report inconsistent',
+    rows: 'News stored on this device',
+    statusUnscored: 'Not yet scored',
+    statusReasonPending: 'Scored, reason still coming',
+    statusComplete: 'Ready to show',
+    headerRelevant: 'Relevant (header count)',
+    visible: 'Passed every gate (24h + score)',
+    droppedNotComplete: 'Held back — not ready yet',
+    droppedBelowGate: 'Held back — below the score bar',
+    droppedOutsideWindow: 'Held back — older than 24 hours',
+    droppedUnknownGate: 'Held back — reason unknown',
+    groups: 'Stories after grouping',
+    collapseRatio: 'Articles per story',
+    largestGroup: 'Biggest story',
+    candidates: 'Cards the feed could show',
+    orderBuiltAt: 'Reading order built',
+    orderLength: 'Cards in the reading order',
+    rendered: 'Cards actually on screen',
+    orphans: 'Order entries with no card',
+    aboveDivider: 'Above “All caught up”',
+    belowDivider: 'Below “All caught up”',
+    skipped: 'Scrolled past',
+    viewed: 'Opened or reacted to',
+    unviewed: 'Not looked at yet',
+    staleCardStates: 'Leftover card states',
+    missingFromOrder: 'Missing from the reading order',
+    'represented-under-other-id': '— already there under an older card',
+    'opened-by-article-id': '— you already opened this one',
+    'duplicate-candidate-id': '— duplicate of another card',
+    'not-yet-ingested': '— not added to the list yet',
+    wouldBeBlockedByClusterGate: 'Rescued from the old story-wide block',
+    openedSet: 'Opened set (memory · storage = articles + stories)',
+    openedOlderThan7d: 'Opened more than 7 days ago',
+    orderHydrated: 'Reading order loaded from storage',
+    openedHydrated: 'Opened set loaded from storage',
+    launchWipeSuspected: 'Reading order lost at launch',
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**

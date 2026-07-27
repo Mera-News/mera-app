@@ -1,5 +1,5 @@
 // feed-list-selector — a pure composite-score selector over the same
-// render-gated 24h suggestion pool the swipe deck and fact-rows feed consume.
+// render-gated suggestion pool the swipe deck and fact-rows feed consume.
 // Produces a single flat, ordered list (one card per collapsed story) ranked
 // by a frozen "importance + recency decay" score rather than the deck's
 // breaking-first / rawScore-desc ordering.
@@ -14,7 +14,7 @@
 // story-grouping primitives; only the final ranking differs, so per the repo's
 // "three similar lines beat a premature abstraction" rule this is copied, not
 // factored out of swipe-stack-selector.ts):
-//   filter to visible (note-gated + render gate + 24h window) → story-group →
+//   filter to visible (note-gated + render gate + FEED_WINDOW_MS) → story-group →
 //   pick a representative per group → drop reps already excluded (opened ∪
 //   viewed) → freeze each rep's composite `feedScore` → sort by
 //   `feedCompare` (score desc → pubDate desc → id asc).
@@ -62,8 +62,9 @@ export interface FeedListItem {
    *  only STABLE story identity the list has: `id` is whichever article
    *  currently fronts the group, and a group formed by title-Jaccard alone
    *  (no `stableClusterId`) re-elects that rep whenever a fresher member
-   *  arrives. The feed-order store's eviction tombstones key on this set so an
-   *  evicted story can't walk back in under a new representative. */
+   *  arrives. `feed-order-store.ingest` matches on this set so a story whose
+   *  representative changed updates its existing row instead of appearing as a
+   *  second, duplicate card. */
   memberIds: string[];
   /** Whether the representative is a breaking story. */
   breaking: boolean;
@@ -75,6 +76,39 @@ export interface FeedListItem {
 
 interface GroupItem extends GroupableItem {
   s: ForYouSuggestion;
+}
+
+/** The representative's top stable cluster id (the rep-switch dedupe key), or
+ *  null when the story has no stable cluster. Lives here rather than in
+ *  feed-order-store so pure consumers (the funnel diagnostic) can reuse it
+ *  without importing that store, which pulls in the SQLite adapter at module
+ *  load. */
+export function stableClusterIdOf(item: FeedListItem): string | null {
+  return item.suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? null;
+}
+
+/**
+ * Resolve an incoming item to an EXISTING feed-order id when it is the same
+ * story under a new representative. Checks the stable cluster id first (the
+ * strong signal), then any member article id.
+ *
+ * `identityToOrderId` must be built ONLY over order rows not already claimed by
+ * an exact-id match — see `feed-order-store.ingest`'s two-pass comment.
+ */
+export function resolveExistingOrderId(
+  it: FeedListItem,
+  identityToOrderId: Map<string, string>,
+): string | null {
+  const scid = stableClusterIdOf(it);
+  if (scid) {
+    const hit = identityToOrderId.get(scid);
+    if (hit) return hit;
+  }
+  for (const mid of it.memberIds ?? []) {
+    const hit = identityToOrderId.get(mid);
+    if (hit) return hit;
+  }
+  return null;
 }
 
 function parseMs(iso: string | null | undefined): number {
@@ -183,7 +217,7 @@ export function buildFeedList(
   const cutoffMs = nowMs - FEED_WINDOW_MS;
   const repCompareForGroups = makeRepCompare(userCtx);
 
-  // 1. Visible pool (note-gated + render gate + 24h window). Same gate the
+  // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS). Same gate the
   //    swipe deck / fact-rows feeds use, so every surface agrees on what is
   //    showable.
   const visible = suggestions.filter((s) => isVisible(s, cutoffMs));

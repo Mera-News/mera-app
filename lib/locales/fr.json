@@ -210,7 +210,7 @@
     "viewOriginalIn": "Voir l'article original en {{language}}",
     "viewAndTranslateOnDevice": "Voir l'article et le traduire sur l'appareil",
     "share": "Partager",
-    "shareVia": "Partagé via Mera News — l'actualité personnalisée pour vous. Téléchargez l'application : {{downloadUrl}}",
+    "shareVia": "Partagé via {{downloadUrl}}",
     "sourceCountryGlobal": "International",
     "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays."
   },
@@ -696,6 +696,7 @@
     "progress": "Progression",
     "noTasksYet": "Aucune tâche enregistrée pour l'instant",
     "feed": "Fil",
+    "feedFunnel": "Entonnoir du fil",
     "protocol": "Protocole",
     "system": "Système",
     "settings": "Paramètres",

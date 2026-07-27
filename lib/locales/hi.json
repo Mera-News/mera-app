@@ -210,7 +210,7 @@
     "viewOriginalIn": "{{language}} में मूल लेख देखें",
     "viewAndTranslateOnDevice": "लेख देखें और डिवाइस पर अनुवाद करें",
     "share": "साझा करें",
-    "shareVia": "Mera News के ज़रिए साझा किया गया — आपके लिए व्यक्तिगत समाचार। ऐप डाउनलोड करें: {{downloadUrl}}",
+    "shareVia": "{{downloadUrl}} के ज़रिए साझा किया गया",
     "sourceCountryGlobal": "वैश्विक",
     "sourceCountryA11y": "स्रोत देश: {{country}}। देश का नाम दिखाने के लिए टैप करें।"
   },
@@ -696,6 +696,7 @@
     "progress": "प्रगति",
     "noTasksYet": "अभी कोई टास्क पंजीकृत नहीं",
     "feed": "फ़ीड",
+    "feedFunnel": "फ़ीड फ़नल",
     "protocol": "प्रोटोकॉल",
     "system": "सिस्टम",
     "settings": "सेटिंग्स",
