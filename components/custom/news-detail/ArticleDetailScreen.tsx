@@ -470,7 +470,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 />
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
-                                    publicationName={article.publicationSource?.publication_name}
                                     sourceLanguage={sourceLanguage}
                                     onOpenUrl={handleArticleUrlPress}
                                 />

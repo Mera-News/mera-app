@@ -74,9 +74,12 @@ jest.mock('better-auth/client/plugins', () => ({
   jwtClient: jest.fn(() => ({})),
 }));
 
-// Mock expo-device
+// Mock expo-device. `osVersion` matters beyond telemetry — translation-service
+// gates Apple's per-language on-device translation on the iOS major, so leaving
+// it undefined silently changes what every translation test asserts.
 jest.mock('expo-device', () => ({
   isDevice: true,
+  osVersion: '18.0',
 }));
 
 // Mock expo-secure-store

@@ -1,9 +1,10 @@
 // ReadTranslateActions — shared read/translate CTA block used by both detail
-// screens (r6 P5). Verifies the three getArticleTranslatableStatus layouts:
-// same-language (Read-on + GT, GT ALWAYS present — prod has mislabeled-
-// language articles so GT must stay reachable even here), translatable
-// (Translate & Read + helper + GT), and not-translatable (red View-original +
-// neutral helper + solid suggested GT button).
+// screens. Verifies the three getArticleTranslationSupport layouts:
+// same-language (Read Article + GT, GT ALWAYS present — prod has mislabeled-
+// language articles so GT must stay reachable even here), translatable (green
+// "view & translate on device" + helper + GT), and not-translatable (white
+// View-original-in-<language> + informational helper + suggested GT button).
+// The publisher name deliberately appears on none of them.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -17,13 +18,16 @@ jest.mock('@/lib/stores/app-language-store', () => ({
     useAppLanguage: () => 'en',
 }));
 
-const mockGetArticleTranslatableStatus = jest.fn();
-const mockGetLanguageName = jest.fn();
+const mockGetArticleTranslationSupport = jest.fn();
 const mockBuildGoogleTranslateUrl = jest.fn();
 jest.mock('@/lib/translation-service', () => ({
-    getArticleTranslatableStatus: (...args: unknown[]) => mockGetArticleTranslatableStatus(...args),
-    getLanguageName: (...args: unknown[]) => mockGetLanguageName(...args),
+    getArticleTranslationSupport: (...args: unknown[]) => mockGetArticleTranslationSupport(...args),
     buildGoogleTranslateUrl: (...args: unknown[]) => mockBuildGoogleTranslateUrl(...args),
+}));
+
+const mockGetLocalizedLanguageName = jest.fn();
+jest.mock('@/lib/language-names', () => ({
+    getLocalizedLanguageName: (...args: unknown[]) => mockGetLocalizedLanguageName(...args),
 }));
 
 const mockOpenInAppBrowser = jest.fn();
@@ -80,58 +84,52 @@ const GT_URL = 'https://translate.google.com/translate?sl=auto&tl=en&u=story';
 describe('ReadTranslateActions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        mockGetLanguageName.mockReturnValue('Odia');
+        mockGetLocalizedLanguageName.mockReturnValue('Odia');
         mockBuildGoogleTranslateUrl.mockReturnValue(GT_URL);
         mockAppendReferrer.mockReturnValue(ARTICLE_URL_REF);
     });
 
-    it('same-language: renders "Read on <publication>" and ALWAYS renders the Google Translate button', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('same-language');
-        const onOpenUrl = jest.fn();
+    it('same-language: renders the generic read label and ALWAYS renders the Google Translate button', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
         const { getByText, queryByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}
-                publicationName="The Daily"
                 sourceLanguage="en"
-                onOpenUrl={onOpenUrl}
+                onOpenUrl={jest.fn()}
             />,
         );
 
-        expect(
-            getByText('articleDetail.readOn::{"publication":"The Daily"}'),
-        ).toBeTruthy();
+        expect(getByText('articleDetail.readArticle')).toBeTruthy();
         expect(getByText('clusterDetail.viewInGoogleTranslate')).toBeTruthy();
         // No helper copy in this state.
         expect(queryByText(/clusterDetail\.translatable::/)).toBeNull();
         expect(queryByText(/clusterDetail\.notTranslatable::/)).toBeNull();
     });
 
-    it('same-language: falls back to the generic label when no publication is known', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('same-language');
-        const { getByText } = render(
+    it('never names the publisher on the button — the card meta row owns that', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
+        const { queryByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}
                 sourceLanguage="en"
                 onOpenUrl={jest.fn()}
             />,
         );
-        expect(getByText('articleDetail.readArticle')).toBeTruthy();
+        expect(queryByText(/articleDetail\.readOn/)).toBeNull();
+        expect(queryByText(/articleDetail\.translateAndReadOn/)).toBeNull();
     });
 
-    it('translatable: renders "Translate & Read on <publication>", the helper line + guide link, and the GT button', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('translatable');
+    it('translatable: renders the on-device translate label, the helper line + guide link, and the GT button', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
         const { getByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}
-                publicationName="The Daily"
                 sourceLanguage="or"
                 onOpenUrl={jest.fn()}
             />,
         );
 
-        expect(
-            getByText('articleDetail.translateAndReadOn::{"publication":"The Daily"}'),
-        ).toBeTruthy();
+        expect(getByText('articleDetail.viewAndTranslateOnDevice')).toBeTruthy();
         expect(
             getByText(/clusterDetail\.translatable::\{"language":"Odia"\}/),
         ).toBeTruthy();
@@ -139,18 +137,22 @@ describe('ReadTranslateActions', () => {
         expect(getByText('clusterDetail.viewInGoogleTranslate')).toBeTruthy();
     });
 
-    it('not-translatable: renders "View original", the neutral helper, and the solid suggested-GT button (no secondary GT button)', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('not-translatable');
+    it('not-translatable: names the source language on the View-original button', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({
+            status: 'not-translatable',
+            reason: 'unsupported-language',
+        });
         const { getByText, queryByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}
-                publicationName="The Daily"
                 sourceLanguage="or"
                 onOpenUrl={jest.fn()}
             />,
         );
 
-        expect(getByText('articleDetail.viewOriginal')).toBeTruthy();
+        expect(
+            getByText('articleDetail.viewOriginalIn::{"language":"Odia"}'),
+        ).toBeTruthy();
         expect(
             getByText('clusterDetail.notTranslatable::{"language":"Odia"}'),
         ).toBeTruthy();
@@ -161,25 +163,62 @@ describe('ReadTranslateActions', () => {
         expect(queryByText('clusterDetail.translationGuideLink')).toBeNull();
     });
 
+    it('not-translatable: falls back to the unnamed label when the language is unknown', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({
+            status: 'not-translatable',
+            reason: 'unsupported-language',
+        });
+        mockGetLocalizedLanguageName.mockReturnValue(null);
+        const { getByText } = render(
+            <ReadTranslateActions
+                articleUrl={ARTICLE_URL}
+                sourceLanguage="zzz"
+                onOpenUrl={jest.fn()}
+            />,
+        );
+        expect(getByText('articleDetail.viewOriginal')).toBeTruthy();
+    });
+
+    it('os-outdated: tells the user which iOS version would fix it', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({
+            status: 'not-translatable',
+            reason: 'os-outdated',
+            requiredOSMajor: 18,
+            currentOSMajor: 17,
+        });
+        const { getByText } = render(
+            <ReadTranslateActions
+                articleUrl={ARTICLE_URL}
+                sourceLanguage="hi"
+                onOpenUrl={jest.fn()}
+            />,
+        );
+        expect(
+            getByText(
+                'clusterDetail.notTranslatableOsOutdated::{"language":"Odia","requiredVersion":18,"currentVersion":17}',
+            ),
+        ).toBeTruthy();
+    });
+
     it('calls onOpenUrl with the article URL when the primary button is pressed', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('translatable');
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
         const onOpenUrl = jest.fn();
         const { getByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}
-                publicationName="The Daily"
                 sourceLanguage="or"
                 onOpenUrl={onOpenUrl}
             />,
         );
-        fireEvent.press(
-            getByText('articleDetail.translateAndReadOn::{"publication":"The Daily"}'),
-        );
+        fireEvent.press(getByText('articleDetail.viewAndTranslateOnDevice'));
         expect(onOpenUrl).toHaveBeenCalledWith(ARTICLE_URL);
     });
 
     it('calls onOpenUrl with the article URL when the not-translatable "View original" button is pressed', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('not-translatable');
+        mockGetArticleTranslationSupport.mockReturnValue({
+            status: 'not-translatable',
+            reason: 'unsupported-language',
+        });
         const onOpenUrl = jest.fn();
         const { getByText } = render(
             <ReadTranslateActions
@@ -188,12 +227,12 @@ describe('ReadTranslateActions', () => {
                 onOpenUrl={onOpenUrl}
             />,
         );
-        fireEvent.press(getByText('articleDetail.viewOriginal'));
+        fireEvent.press(getByText('articleDetail.viewOriginalIn::{"language":"Odia"}'));
         expect(onOpenUrl).toHaveBeenCalledWith(ARTICLE_URL);
     });
 
     it('opens the built Google Translate URL when the GT button is pressed (same-language state)', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('same-language');
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
         const { getByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}
@@ -209,7 +248,10 @@ describe('ReadTranslateActions', () => {
     });
 
     it('opens the built Google Translate URL when the suggested GT button is pressed (not-translatable state)', () => {
-        mockGetArticleTranslatableStatus.mockReturnValue('not-translatable');
+        mockGetArticleTranslationSupport.mockReturnValue({
+            status: 'not-translatable',
+            reason: 'unsupported-language',
+        });
         const { getByText } = render(
             <ReadTranslateActions
                 articleUrl={ARTICLE_URL}

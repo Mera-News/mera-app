@@ -3,9 +3,11 @@ import { HStack } from '@/components/ui/hstack';
 import { SourceCountryFlag } from '@/components/custom/SourceCountryFlag';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
+import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
-import { getArticleTranslatableStatus, getNativeLanguageName } from '@/lib/translation-service';
+import { getArticleTranslatableStatus } from '@/lib/translation-service';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { toTitleCase } from '@/lib/utils/title-case';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -50,11 +52,15 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const iconColor = isCard ? '#6B7280' : '#9CA3AF';
 
     const age = formatTimeAgo(t, pubDate, { emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
-    const language = getNativeLanguageName(languageCode) ?? '';
-    const publication = publicationName ?? '';
+    // Named in the reader's own language, not its endonym — "简体中文" tells a
+    // reader who doesn't know the script nothing about what they're looking at.
+    const language = getLocalizedLanguageName(languageCode, appLanguage) ?? '';
+    const publication = toTitleCase(publicationName);
 
     const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
-    const translateColor = translateStatus === 'not-translatable' ? '#FCA5A5' : '#86EFAC';
+    // Pastel yellow, not red: the device can't translate this one, but Google
+    // Translate can — that's an alternative route, not a failure.
+    const translateColor = translateStatus === 'not-translatable' ? '#FDE68A' : '#86EFAC';
     const showLanguageSlot = !!languageCode;
     const showPublicationSlot = !!publication;
 
@@ -120,6 +126,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     <MaterialIcons name="newspaper" size={12} color={iconColor} />
                     <Text
                         size="xs"
+                        bold
                         className={`${secondaryColor} flex-shrink`}
                         numberOfLines={1}
                     >
