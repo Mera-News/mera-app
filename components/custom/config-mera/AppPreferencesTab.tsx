@@ -7,7 +7,6 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
-import { clearPin } from '@/lib/security/pin-service';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
@@ -67,10 +66,10 @@ const AppPreferencesTab: React.FC = () => {
 
             await authClient.signOut();
             await clearAuthStorage();
-            // Explicit logout clears the local PIN too — the next user must
-            // re-identify via OTP and set a fresh PIN.
-            await clearPin();
-            usePinStore.getState().setPinSet(false);
+            // Explicit logout clears the local PIN and the opt-in flag with it
+            // — the next user on this device starts with the lock off, and
+            // must turn it on themselves to get one.
+            await usePinStore.getState().setLockEnabled(false);
 
             router.dismissAll();
             router.replace('/');

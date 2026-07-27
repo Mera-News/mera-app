@@ -29,8 +29,8 @@ export default function Index() {
       // launch after login before /logged-in ran) still counts as identified.
       if (!hasIdentity && session?.user?.id) hasIdentity = true;
 
-      const { pinSet, locked } = usePinStore.getState();
-      const target = resolveLaunchRoute({ hasIdentity, pinSet, locked });
+      const { pinSet, lockEnabled, locked } = usePinStore.getState();
+      const target = resolveLaunchRoute({ hasIdentity, lockEnabled, pinSet, locked });
       if (!cancelled) setRoute(target);
     })();
 
@@ -40,7 +40,7 @@ export default function Index() {
   }, [session]);
 
   if (route) {
-    // Cast: pin-lock / pin-setup aren't in the generated typed-route map yet.
+    // Cast: pin-lock isn't in the generated typed-route map yet.
     return <Redirect href={route as any} />;
   }
 

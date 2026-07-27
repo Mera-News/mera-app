@@ -131,12 +131,13 @@ function AppRoot() {
   // themselves — so we only act on protected (/logged-in) routes here.
   const pinLocked = usePinStore((s) => s.locked);
   const pinSet = usePinStore((s) => s.pinSet);
+  const lockEnabled = usePinStore((s) => s.lockEnabled);
   useEffect(() => {
     if (!isNavigationReady) return;
-    if (pinLocked && pinSet && pathname.startsWith('/logged-in')) {
+    if (pinLocked && pinSet && lockEnabled && pathname.startsWith('/logged-in')) {
       router.replace('/pin-lock' as any);
     }
-  }, [pinLocked, pinSet, isNavigationReady, pathname]);
+  }, [pinLocked, pinSet, lockEnabled, isNavigationReady, pathname]);
 
   // Configure RevenueCat once and keep the subscription store in sync with
   // entitlement changes (purchases, renewals, expirations). No-op when no

@@ -13,7 +13,7 @@ export interface OnboardingPreferences {
 
 interface OnboardingState {
     // Current progress
-    currentStep: number; // 0-3
+    currentStep: number; // 0-1
     isInitializing: boolean;
 
     // User preferences being collected during onboarding
@@ -68,7 +68,7 @@ export const useOnboardingStore = create<OnboardingState>()((set, get) => ({
     },
 
     nextStep: () => {
-        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 3) }));
+        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 1) }));
     },
 
     prevStep: () => {

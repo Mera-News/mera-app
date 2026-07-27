@@ -46,11 +46,13 @@ describe('useOnboardingStore', () => {
     expect(state.preferences.processingMode).toBe(ProcessingMode.Cloud);
   });
 
-  it('advances and retreats steps within the [0, 3] bounds', () => {
+  it('advances and retreats steps within the [0, 1] bounds', () => {
+    // Two steps since the mandatory PIN step was removed: 0 = Notifications,
+    // 1 = PersonaChat.
     const { nextStep, prevStep, setStep } = useOnboardingStore.getState();
-    setStep(3);
-    nextStep(); // clamped at 3
-    expect(useOnboardingStore.getState().currentStep).toBe(3);
+    setStep(1);
+    nextStep(); // clamped at 1
+    expect(useOnboardingStore.getState().currentStep).toBe(1);
     setStep(0);
     prevStep(); // clamped at 0
     expect(useOnboardingStore.getState().currentStep).toBe(0);
