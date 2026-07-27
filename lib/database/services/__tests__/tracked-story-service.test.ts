@@ -21,6 +21,7 @@ import {
   markSeen,
   applyUpdates,
   advanceSeenWatermark,
+  backfillSnapshotSource,
   setLlmHeadline,
   getActiveForTopicReconcile,
   getLegacyTrackedForMigration,
@@ -422,6 +423,51 @@ describe('advanceSeenWatermark (v44)', () => {
 
   it('never throws on a missing row', async () => {
     await expect(advanceSeenWatermark('nope', 1234)).resolves.toBeUndefined();
+  });
+});
+
+describe('backfillSnapshotSource', () => {
+  it('fills blank language/country and leaves populated fields alone', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberSnapshots: [
+        { articleId: 'a1', title: 'Bare', pubDateMs: 9 },
+        { articleId: 'a2', title: 'Already', pubDateMs: 5, languageCode: 'de', countryCode: 'DEU' },
+      ],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await backfillSnapshotSource(
+      's1',
+      new Map([
+        ['a1', { languageCode: 'uk', countryCode: 'UKR' }],
+        ['a2', { languageCode: 'fr', countryCode: 'FRA' }],
+      ]),
+    );
+
+    expect(row.memberSnapshots).toEqual([
+      { articleId: 'a1', title: 'Bare', pubDateMs: 9, languageCode: 'uk', countryCode: 'UKR' },
+      { articleId: 'a2', title: 'Already', pubDateMs: 5, languageCode: 'de', countryCode: 'DEU' },
+    ]);
+  });
+
+  it('does not write when there is nothing to fill', async () => {
+    const snapshots = [
+      { articleId: 'a1', title: 'Has it', pubDateMs: 9, languageCode: 'uk', countryCode: 'UKR' },
+    ];
+    const row = makeStory({ id: 's1', memberSnapshots: snapshots });
+    db._setRows('tracked_stories', [row]);
+
+    await backfillSnapshotSource('s1', new Map([['a1', { languageCode: 'fr' }]]));
+
+    expect(row.memberSnapshots).toBe(snapshots); // same reference — never updated
+  });
+
+  it('never throws on a missing row or an empty patch set', async () => {
+    await expect(
+      backfillSnapshotSource('nope', new Map([['a1', { languageCode: 'uk' }]])),
+    ).resolves.toBeUndefined();
+    await expect(backfillSnapshotSource('s1', new Map())).resolves.toBeUndefined();
   });
 });
 

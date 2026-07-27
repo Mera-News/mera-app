@@ -56,6 +56,9 @@ function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapsh
     title: subject.title ?? '',
     pubDateMs,
     publicationName: subject.publicationName ?? undefined,
+    // No language on the subject — the timeline resolves it from the local
+    // suggestion row on first open (see `hydrateSource`).
+    countryCode: subject.countryCode ?? undefined,
   };
 }
 
