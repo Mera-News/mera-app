@@ -97,6 +97,46 @@ describe('i18n initialisation', () => {
     const result = i18n.t('common.cancel');
     expect(result).toBe('Cancel');
   });
+
+  // The share footer is rendered in the language of the shared TITLE, not the
+  // UI language (see lib/hooks/useShareArticle.ts). That relies on a per-call
+  // `lng` override resolving against the eagerly-bundled resources without
+  // changing the active language. Asserted here against the REAL instance —
+  // the hook's own test mocks react-i18next, so it cannot prove this.
+  it('honours a per-call lng override without changing the active language', () => {
+    expect(i18n.language).toBe('en');
+
+    const hi = i18n.t('articleDetail.shareVia', {
+      downloadUrl: 'https://mera.news',
+      lng: 'hi',
+    });
+    const en = i18n.t('articleDetail.shareVia', { downloadUrl: 'https://mera.news' });
+
+    expect(hi).toContain('https://mera.news');
+    expect(hi).not.toBe(en);
+    expect(i18n.language).toBe('en');
+  });
+
+  // ...and specifically on the `t` react-i18next hands components, which is a
+  // getFixedT closure, NOT i18n.t. If the fixed-t override didn't win, the
+  // footer would silently stay in the app language with nothing failing.
+  it('honours lng on the fixed t that useTranslation returns', () => {
+    const t = i18n.getFixedT(null);
+    const opts = { downloadUrl: 'https://mera.news' };
+
+    expect(t('articleDetail.shareVia', { ...opts, lng: 'hi' }))
+      .toBe(i18n.t('articleDetail.shareVia', { ...opts, lng: 'hi' }));
+
+    // Script-suffixed codes are the only ones resolveUiLocale emits that
+    // aren't bare primary subtags — check they resolve, not fall back.
+    expect(t('articleDetail.shareVia', { ...opts, lng: 'zh-Hant' }))
+      .not.toBe(t('articleDetail.shareVia', opts));
+  });
+
+  it('falls back to English for an lng with no bundle (why resolveUiLocale returns null)', () => {
+    const odia = i18n.t('common.cancel', { lng: 'or' });
+    expect(odia).toBe('Cancel');
+  });
 });
 
 describe('applyLanguage', () => {

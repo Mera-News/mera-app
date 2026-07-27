@@ -212,7 +212,7 @@
     "viewOriginalIn": "Показать оригинал статьи на {{language}}",
     "viewAndTranslateOnDevice": "Просмотреть статью и перевести на устройстве",
     "share": "Поделиться",
-    "shareVia": "Отправлено через Mera News — новости, подобранные специально для вас. Скачать приложение: {{downloadUrl}}",
+    "shareVia": "Отправлено через {{downloadUrl}}",
     "sourceCountryGlobal": "Весь мир",
     "sourceCountryA11y": "Страна источника: {{country}}. Нажмите, чтобы показать название страны."
   },

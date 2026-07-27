@@ -216,7 +216,7 @@
     "articleNotFound": "Article not found",
     "offlineUnavailable": "You're offline and this article isn't saved for offline reading",
     "share": "Share",
-    "shareVia": "Shared via Mera News — news personalised for you. Download the app: {{downloadUrl}}",
+    "shareVia": "Shared via {{downloadUrl}}",
     "sourceCountryGlobal": "Worldwide",
     "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name."
   },

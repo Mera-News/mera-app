@@ -210,7 +210,7 @@
     "viewOriginalIn": "Ver artículo original en {{language}}",
     "viewAndTranslateOnDevice": "Ver artículo y traducirlo en el dispositivo",
     "share": "Compartir",
-    "shareVia": "Compartido a través de Mera News — noticias personalizadas para ti. Descarga la app: {{downloadUrl}}",
+    "shareVia": "Compartido a través de {{downloadUrl}}",
     "sourceCountryGlobal": "Mundial",
     "sourceCountryA11y": "País de origen: {{country}}. Toca para mostrar el nombre del país."
   },

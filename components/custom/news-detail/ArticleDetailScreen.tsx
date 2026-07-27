@@ -1,5 +1,6 @@
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
+import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -116,10 +117,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [isOfflineSnapshot, setIsOfflineSnapshot] = useState(false);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     // Mirror the title variant the reader currently sees (original vs
-    // translated) so sharing carries that exact text.
-    const [displayedTitle, setDisplayedTitle] = useState<string | null>(null);
+    // translated) so sharing carries that exact text — and the language it's
+    // in, so the share footer can match it. Kept in ONE state object: text and
+    // language must never disagree.
+    const [titleDisplay, setTitleDisplay] = useState<
+        { text: string; language: string | null } | null
+    >(null);
     const handleTitleDisplayChange = useCallback(
-        (s: { showingOriginal: boolean; displayedText: string }) => setDisplayedTitle(s.displayedText),
+        (s: TranslatableDisplayState) =>
+            setTitleDisplay({ text: s.displayedText, language: s.displayedLanguage }),
         [],
     );
     const insets = useSafeAreaInsets();
@@ -467,7 +473,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         titleEnglish: article.title_en_internal_only ?? article.title,
                                         titleOriginal: article.title,
                                         sourceLanguage: article.original_language_code,
-                                        displayedTitle,
+                                        displayedTitle: titleDisplay?.text ?? null,
+                                        displayedLanguage: titleDisplay?.language ?? null,
                                     }}
                                 />
                                 <ReadTranslateActions

@@ -210,7 +210,7 @@
     "viewOriginalIn": "Originalartikel auf {{language}} anzeigen",
     "viewAndTranslateOnDevice": "Artikel anzeigen & auf dem Gerät übersetzen",
     "share": "Teilen",
-    "shareVia": "Geteilt über Mera News — Nachrichten, die auf dich zugeschnitten sind. Lade die App herunter: {{downloadUrl}}",
+    "shareVia": "Geteilt über {{downloadUrl}}",
     "sourceCountryGlobal": "Weltweit",
     "sourceCountryA11y": "Quellenland: {{country}}. Tippen, um den Ländernamen anzuzeigen."
   },

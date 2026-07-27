@@ -210,7 +210,7 @@
     "viewOriginal": "Origineel artikel bekijken",
     "viewOriginalIn": "Origineel artikel bekijken in het {{language}}",
     "share": "Delen",
-    "shareVia": "Gedeeld via Mera News — gepersonaliseerd nieuws voor jou. Download de app: {{downloadUrl}}",
+    "shareVia": "Gedeeld via {{downloadUrl}}",
     "sourceCountryGlobal": "Wereldwijd",
     "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen."
   },

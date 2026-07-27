@@ -209,7 +209,7 @@
     "viewOriginalIn": "查看{{language}}原文",
     "viewAndTranslateOnDevice": "查看文章并在设备上翻译",
     "share": "分享",
-    "shareVia": "通过 Mera News 分享 — 为你量身定制的新闻。下载应用：{{downloadUrl}}",
+    "shareVia": "分享自 {{downloadUrl}}",
     "sourceCountryGlobal": "全球",
     "sourceCountryA11y": "来源国家：{{country}}。点按可显示国家名称。"
   },

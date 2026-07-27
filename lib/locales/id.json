@@ -209,7 +209,7 @@
     "viewOriginalIn": "Lihat artikel asli dalam bahasa {{language}}",
     "viewAndTranslateOnDevice": "Lihat artikel & terjemahkan di perangkat",
     "share": "Bagikan",
-    "shareVia": "Dibagikan melalui Mera News — berita yang dipersonalisasi untuk Anda. Unduh aplikasinya: {{downloadUrl}}",
+    "shareVia": "Dibagikan melalui {{downloadUrl}}",
     "sourceCountryGlobal": "Global",
     "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara."
   },

@@ -2,6 +2,10 @@
 // native share sheet. Picks the title the user actually sees on screen
 // (original if the article is in the user's app language, otherwise the
 // English title), matching the copy previously used by ShareArticleButton.
+//
+// The "Shared via" footer goes out in the LANGUAGE OF THAT TITLE, not the
+// sharer's UI language — a German headline followed by a Hindi footer reads as
+// a bug to whoever receives it.
 
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +13,7 @@ import { Share } from 'react-native';
 import { WEBSITE_URL } from '../config/branding';
 import logger from '../logger';
 import { useAppLanguage } from '../stores/app-language-store';
-import { getArticleTranslatableStatus } from '../translation-service';
+import { getArticleTranslatableStatus, resolveUiLocale } from '../translation-service';
 import { appendReferrer } from '../web-browser-utils';
 
 export interface ShareArticleParams {
@@ -22,6 +26,10 @@ export interface ShareArticleParams {
      *  carries whichever title the reader was looking at. Falls back to the
      *  status-based original/English pick when absent. */
     displayedTitle?: string | null;
+    /** Language of {@link displayedTitle}. Drives the footer's language so the
+     *  attribution line matches the headline above it. Absent (feed cards, which
+     *  have no original/translation toggle) ⇒ footer stays in the app language. */
+    displayedLanguage?: string | null;
 }
 
 export function useShareArticle(params: ShareArticleParams | undefined): () => Promise<void> {
@@ -31,7 +39,9 @@ export function useShareArticle(params: ShareArticleParams | undefined): () => P
     return useCallback(async () => {
         if (!params?.url) return;
 
-        const { url, titleEnglish, titleOriginal, sourceLanguage, displayedTitle } = params;
+        const {
+            url, titleEnglish, titleOriginal, sourceLanguage, displayedTitle, displayedLanguage,
+        } = params;
         const status = getArticleTranslatableStatus(sourceLanguage ?? null, appLanguage);
         // Prefer the title variant the user is actually looking at; otherwise
         // fall back to the status-based original/English pick.
@@ -43,8 +53,17 @@ export function useShareArticle(params: ShareArticleParams | undefined): () => P
         // Attribute the shared link to Mera with a share-specific UTM medium.
         const shareUrl = url ? appendReferrer(url, 'share') : url;
 
+        // Falls back to the sharer's own language when the app ships no strings
+        // for the title's language — most feed source languages have no bundle,
+        // and `fallbackLng: 'en'` would silently hand back English otherwise.
+        const footerLng = resolveUiLocale(displayedLanguage) ?? appLanguage;
+
         try {
-            const message = [title, shareUrl, t('articleDetail.shareVia', { downloadUrl: WEBSITE_URL })]
+            const footer = t('articleDetail.shareVia', {
+                downloadUrl: WEBSITE_URL,
+                lng: footerLng,
+            });
+            const message = [title, shareUrl, footer]
                 .filter(Boolean)
                 .join('\n\n');
             await Share.share({ message }, { subject: title ?? undefined });
