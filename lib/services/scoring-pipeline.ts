@@ -143,12 +143,24 @@ const MAX_BATCH_ATTEMPTS = 2;
  *  it if it turns out to abandon runs that would have recovered. */
 export const POLLER_FAILURE_ABORT_THRESHOLD = 3;
 const RUN_ABANDON_MS = 24 * 3600_000;
-/** Poller tick cadence while a run is active. The gateway rate limiter
- *  (MIN_GATEWAY_INTERVAL_MS, 3s, shared by submits AND polls) is the real
- *  governor — ticks that can't take a slot are cheap no-ops. Ticking faster than
- *  the limiter simply means we claim the next slot the moment it frees, instead
- *  of idling up to a full tick past it. */
-const POLL_INTERVAL_MS = 2_000;
+/** Poller tick cadence while a run is active.
+ *
+ *  Derived from the gateway rate limiter rather than hard-coded: that limiter
+ *  (MIN_GATEWAY_INTERVAL_MS, shared by submits AND polls) is what actually paces
+ *  us, so the real polling cadence is its interval — 3s — no matter what we put
+ *  here. Ticking is only how we notice a slot has freed.
+ *
+ *  The lead matters. Ticking at EXACTLY the limiter interval works right up
+ *  until a submit takes a slot between two ticks: from then on every tick lands
+ *  a hair before `nextGrantAt`, `tryTakeImmediate()` returns false, and the poll
+ *  slips a whole interval — a permanent 2x slowdown with nothing to resync it.
+ *  Leading slightly means a missed tick is retried a fraction of a second later
+ *  instead of a full interval later, so the poller re-locks onto the limiter on
+ *  its own. A tick that can't take a slot is a cheap no-op, so the lead costs
+ *  nothing. */
+const POLL_TICK_LEAD_MS = 250;
+const POLL_INTERVAL_MS =
+  gatewayRateLimiter.MIN_GATEWAY_INTERVAL_MS - POLL_TICK_LEAD_MS;
 /** No settling delay before a batch's first poll. This used to be 15s on the
  *  theory that asking early is wasted, but it put a hard 15s floor under the
  *  first scored paint even when the job was already done. The rate limiter

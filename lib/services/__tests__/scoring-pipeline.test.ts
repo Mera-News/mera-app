@@ -95,6 +95,10 @@ jest.mock('@/lib/logger', () => ({
 jest.mock('@/lib/llm/constants', () => ({ SMALL_MODEL: 'test-small-model' }));
 
 jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
+  // Must mirror the real module's constant: scoring-pipeline derives its poll
+  // cadence from it at import time, so omitting it makes POLL_INTERVAL_MS NaN
+  // and silently disables the per-batch spacing gate.
+  MIN_GATEWAY_INTERVAL_MS: 3000,
   tryTakeImmediate: (...args: any[]) => mockTryTakeImmediate(...args),
   pauseFor: (...args: any[]) => mockPauseFor(...args),
   acquire: (...args: any[]) => mockAcquire(...args),
@@ -758,15 +762,19 @@ describe('cold-start poll latency (P7d Knob 2)', () => {
     await oneWaitingBatch();
     mockFetchResults.mockResolvedValue('pending');
 
+    // Step past the gateway slot the SUBMIT just consumed, so this first poll
+    // is gated only by the per-batch spacing we're actually testing.
+    jest.setSystemTime(NOW + 5_000);
     await pollTick('foreground');
+    expect(mockFetchResults).toHaveBeenCalled();
     mockFetchResults.mockClear();
 
     // Immediately again — inside the spacing window, so skipped.
     await pollTick('foreground');
     expect(mockFetchResults).not.toHaveBeenCalled();
 
-    // Past the window (and past the rate limiter's own interval) — polled.
-    jest.setSystemTime(NOW + 10_000);
+    // Past the window (and past the limiter's own interval) — polled again.
+    jest.setSystemTime(NOW + 15_000);
     await pollTick('foreground');
     expect(mockFetchResults).toHaveBeenCalled();
   });
