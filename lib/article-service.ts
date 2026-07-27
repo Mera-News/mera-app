@@ -400,8 +400,8 @@ const GET_NEWS_CLUSTER_FOR_ARTICLE = gql`
 // by the detail screen's "Related articles" section. Returns every sibling in
 // one shot; pagination can be added later if needed.
 const GET_RELATED_ARTICLES = gql`
-  query GetRelatedArticles($articleId: ID!) {
-    relatedArticles(articleId: $articleId) {
+  query GetRelatedArticles($articleId: ID!, $stableClusterId: String) {
+    relatedArticles(articleId: $articleId, stableClusterId: $stableClusterId) {
       _id
       title_en
       description_en
@@ -754,18 +754,24 @@ export class ArticleService {
      * articles" section. Returns the empty list if the article has no live
      * cluster (e.g. cluster TTL'd out).
      */
-    static async getRelatedArticles(articleId: string): Promise<ArticleSummary[]> {
+    static async getRelatedArticles(
+        articleId: string,
+        stableClusterId?: string,
+    ): Promise<ArticleSummary[]> {
         try {
             const { data } = await client.query<{ relatedArticles: ArticleSummary[] }>({
                 query: GET_RELATED_ARTICLES,
-                variables: { articleId },
+                // Prefer the retained stable-story id: the server maps it to the
+                // current clustering generation, so related siblings stay aligned
+                // with the size the headline card advertised even after re-clustering.
+                variables: { articleId, stableClusterId },
                 fetchPolicy: 'no-cache',
             });
             return data?.relatedArticles ?? [];
         } catch (error) {
             logger.captureException(error, {
                 tags: { service: 'article-service', method: 'getRelatedArticles' },
-                extra: { articleId },
+                extra: { articleId, stableClusterId },
             });
             throw error;
         }

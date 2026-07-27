@@ -588,6 +588,7 @@ export type QueryPublicationSourcesForNewsPublisherArgs = {
 
 export type QueryRelatedArticlesArgs = {
   articleId: Scalars['ID']['input'];
+  stableClusterId?: InputMaybe<Scalars['String']['input']>;
 };
 
 

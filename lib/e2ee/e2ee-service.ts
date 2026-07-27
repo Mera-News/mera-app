@@ -33,6 +33,22 @@ const TAG = '[E2EE]';
  *  32-byte model key → 'ed25519'; 64-byte secp256k1 key → 'ecdsa'. */
 export type SigningAlgo = 'ed25519' | 'ecdsa';
 
+/** Client secret length for BOTH families — Ed25519 seeds and secp256k1 scalars
+ *  are each 32 bytes. A persisted key of any other length is corrupt. */
+const CLIENT_SECRET_LEN = 32;
+
+/** The single place the key-length → curve mapping lives. Every path that pairs
+ *  a model key with an algo must agree, or the wrong curve's primitive receives
+ *  the key and throws an untyped noble error deep in the stack (see
+ *  {@link ModelKeyAlgoMismatchError}). */
+export function algoForKeyBytes(len: number): SigningAlgo {
+  if (len === 32) return 'ed25519';
+  if (len === 64) return 'ecdsa';
+  throw new Error(
+    `NEAR attestation: unsupported signing-key length ${len} (expected 32 Ed25519 or 64 secp256k1)`,
+  );
+}
+
 // ─── Per-algo wire constants ─────────────────────────────────────────────────
 // The HKDF `info` string mirrors NEAR's `{algo}_encryption` convention — the
 // working ed25519 path uses 'ed25519_encryption', so the ecdsa path uses
@@ -160,6 +176,35 @@ export class ModelKeyValidationError extends Error {
   }
 }
 
+/**
+ * Thrown when a model key and the algo it is paired with disagree — the model
+ * key is 64-byte secp256k1 but the context says 'ed25519', or vice versa.
+ *
+ * This is the root cause of MERA-APP-39. `rebuildE2EEContext` used to warn and
+ * keep the STORED algo while adopting the FRESHLY-ATTESTED model key; since
+ * NEAR's fleet load-balances curves and the attestation cache only lives 30
+ * minutes, a run persisted under ed25519 could be rebuilt against a 64-byte
+ * ecdsa key. `encryptEd25519` then fed 64 bytes to `ed25519.utils.toMontgomery`
+ * and threw an UNTYPED `"point" expected Uint8Array of length 32, got
+ * length=64` — at ENCRYPT time, before any POST, which the old comment here did
+ * not anticipate (it assumed a divergence would surface at decrypt). Nothing
+ * caught it, so it re-drove the scoring poller every ~7s and the run never
+ * terminated, which in turn made every feed-sync cycle a no-op for up to 30
+ * minutes at a stretch.
+ *
+ * Subclassing ModelKeyValidationError is deliberate: the existing terminal
+ * handlers in scoring-pipeline already catch that type, so a mismatch now fails
+ * the affected batch/run instead of looping, with no call-site changes.
+ */
+export class ModelKeyAlgoMismatchError extends ModelKeyValidationError {
+  constructor(message: string, details: ModelKeyValidationDetails) {
+    super(message, details);
+    this.name = 'ModelKeyAlgoMismatchError';
+    // Re-set after super(): the base ctor pins the prototype to its own.
+    Object.setPrototypeOf(this, ModelKeyAlgoMismatchError.prototype);
+  }
+}
+
 // De-dupe Sentry captures by the raw bad-key hex: a run can build E2EE context
 // for many batches against the same off-curve key, and we want exactly ONE event
 // per distinct encoding (the next prod occurrence must reveal the actual bytes),
@@ -210,11 +255,9 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
   // secp256k1 key (we request ed25519 as a preference, but the param is only
   // advisory — the node returns whatever key it attests).
   const keyLen = hexToBytes(pub).length;
-  let algo: SigningAlgo;
-  if (keyLen === 32) {
-    algo = 'ed25519';
-  } else if (keyLen === 64) {
-    algo = 'ecdsa';
+  // Throws for any length that is neither 32 nor 64 — same message as before.
+  const algo: SigningAlgo = algoForKeyBytes(keyLen);
+  if (algo === 'ecdsa') {
     // Fail-fast validation: reconstruct the 65-byte uncompressed point
     // (0x04 ‖ x ‖ y) exactly as encryptEcdsa will, and assert it is actually on
     // secp256k1 NOW. Without this the off-curve key is only rejected later, deep
@@ -246,10 +289,6 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
       }
       throw err;
     }
-  } else {
-    throw new Error(
-      `NEAR attestation: unsupported signing-key length ${keyLen} (expected 32 Ed25519 or 64 secp256k1)`,
-    );
   }
   const attestation: ModelAttestation = {
     publicKey: pub,
@@ -317,9 +356,17 @@ export async function prepareE2EEContext(model: string): Promise<E2EEContext> {
  *
  * The model public key is re-fetched from the (cached) attestation; the stored
  * `algo` governs the client-key curve. If the freshly-attested algo diverges
- * from the stored one (NEAR fleet load-balances curves) we keep the stored algo
- * — the keypair is bound to it — and log; a genuine divergence would fail the
- * run's decrypt and the rows simply re-enter the next run.
+ * from the stored one (NEAR's fleet load-balances curves, and the attestation
+ * cache only lives 30 minutes) the two halves are unusable together: the stored
+ * keypair is bound to one curve and the fresh model key to the other. We throw
+ * a TYPED {@link ModelKeyAlgoMismatchError} so the caller terminates the
+ * affected batch/run and its rows re-enter the next run under a fresh, coherent
+ * context.
+ *
+ * This previously warned and kept the stored algo, which produced MERA-APP-39:
+ * the mismatch surfaced as an untyped noble error inside `encryptEd25519` —
+ * NOT at decrypt, as the old comment assumed — uncaught, re-driving the poller
+ * every ~7s and wedging the whole feed pipeline.
  */
 export async function rebuildE2EEContext(
   model: string,
@@ -328,11 +375,23 @@ export async function rebuildE2EEContext(
 ): Promise<E2EEContext> {
   const attestation = await fetchModelPublicKey(model);
   if (attestation.algo !== algo) {
-    logger.warn(
-      `${TAG} rebuildE2EEContext: attested algo ${attestation.algo} != stored ${algo}; keeping stored`,
+    throw new ModelKeyAlgoMismatchError(
+      `${TAG} rebuildE2EEContext: attested algo ${attestation.algo} != stored ${algo} (model=${model}); cannot pair a ${algo} keypair with a ${attestation.algo} model key`,
+      {
+        keyHex: attestation.publicKey,
+        algo,
+        model,
+        endpoint: ATTESTATION_API,
+      },
     );
   }
   const privateKey = hexToBytes(privKeyHex);
+  if (privateKey.length !== CLIENT_SECRET_LEN) {
+    throw new ModelKeyAlgoMismatchError(
+      `${TAG} rebuildE2EEContext: stored client secret is ${privateKey.length} bytes, expected ${CLIENT_SECRET_LEN} (model=${model}, algo=${algo})`,
+      { keyHex: attestation.publicKey, algo, model, endpoint: ATTESTATION_API },
+    );
+  }
   const clientPubKeyHex =
     algo === 'ecdsa'
       ? bytesToHex(secp256k1.getPublicKey(privateKey, false))
@@ -368,6 +427,23 @@ export async function encryptMessages(
 }
 
 export function encryptContent(plaintext: string, ctx: E2EEContext): string {
+  // Last line of defence before the raw curve primitives. Any path that builds
+  // a context pairing a key with the wrong algo fails HERE, typed and
+  // attributable, rather than as an untyped noble error several frames deeper
+  // (MERA-APP-39). `rebuildE2EEContext` is the path that used to do this, but
+  // the assertion is cheap and covers callers not yet written.
+  const keyAlgo = algoForKeyBytes(hexToBytes(ctx.modelPubKeyHex).length);
+  if (keyAlgo !== ctx.algo) {
+    throw new ModelKeyAlgoMismatchError(
+      `${TAG} encryptContent: model key is ${keyAlgo} but context algo is ${ctx.algo}`,
+      {
+        keyHex: ctx.modelPubKeyHex,
+        algo: ctx.algo,
+        model: '(unknown)',
+        endpoint: ATTESTATION_API,
+      },
+    );
+  }
   return ctx.algo === 'ecdsa'
     ? encryptEcdsa(plaintext, ctx.modelPubKeyHex)
     : encryptEd25519(plaintext, ctx.modelPubKeyHex);
@@ -382,6 +458,14 @@ export function decryptContent(
   privateKey: Uint8Array,
   algo: SigningAlgo = 'ed25519',
 ): string {
+  // Both curves use a 32-byte client secret; anything else is a corrupt or
+  // truncated persisted key and would otherwise throw untyped inside noble.
+  if (privateKey.length !== CLIENT_SECRET_LEN) {
+    throw new ModelKeyAlgoMismatchError(
+      `${TAG} decryptContent: client secret is ${privateKey.length} bytes, expected ${CLIENT_SECRET_LEN} (algo=${algo})`,
+      { keyHex: '', algo, model: '(unknown)', endpoint: ATTESTATION_API },
+    );
+  }
   return algo === 'ecdsa'
     ? decryptEcdsa(hexBlob, privateKey)
     : decryptEd25519(hexBlob, privateKey);

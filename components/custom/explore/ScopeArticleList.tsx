@@ -98,15 +98,22 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         }
     }, [hasNextPage, isLoadingMore, endCursor, loadFrom, scope.kind]);
 
-    const handlePress = useCallback((article: NewsArticle) => {
-        router.push({ pathname: '/logged-in/article-detail', params: { articleId: article._id } });
+    const handlePress = useCallback((article: NewsArticle, stableClusterId?: string | null) => {
+        router.push({
+            pathname: '/logged-in/article-detail',
+            // Forward the stable story id so the detail screen resolves related
+            // articles from the same cluster this card was ranked by.
+            params: stableClusterId
+                ? { articleId: article._id, stableClusterId }
+                : { articleId: article._id },
+        });
     }, []);
 
     const renderItem: ListRenderItem<TopHeadline> = useCallback(
         ({ item }) => (
             <ArticleStandaloneCompactCard
                 article={item.article}
-                onPress={() => handlePress(item.article)}
+                onPress={() => handlePress(item.article, item.stableClusterId)}
                 showActions
                 subjectExtras={{
                     origin: 'article',

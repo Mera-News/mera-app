@@ -54,9 +54,12 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { gcm } from '@noble/ciphers/aes.js';
 import { randomBytes } from '@noble/ciphers/utils.js';
 import {
+  algoForKeyBytes,
   fetchModelPublicKey,
+  ModelKeyAlgoMismatchError,
   ModelKeyValidationError,
   prepareE2EEContext,
+  rebuildE2EEContext,
   encryptMessages,
   encryptContent,
   decryptContent,
@@ -765,6 +768,128 @@ describe('ecdsa (secp256k1) E2EE path', () => {
     const shortBlob = 'ab'.repeat(92);
     expect(() => decryptContent(shortBlob, new Uint8Array(32), 'ecdsa')).toThrow(
       /ecdsa blob too short/,
+    );
+  });
+});
+
+// ─── algo/key coherence (MERA-APP-39 root cause) ──────────────────────────────
+
+describe('algoForKeyBytes', () => {
+  it('maps 32 → ed25519 and 64 → ecdsa', () => {
+    expect(algoForKeyBytes(32)).toBe('ed25519');
+    expect(algoForKeyBytes(64)).toBe('ecdsa');
+  });
+
+  it('throws on any other length', () => {
+    expect(() => algoForKeyBytes(33)).toThrow(/unsupported signing-key length 33/);
+    expect(() => algoForKeyBytes(0)).toThrow(/unsupported signing-key length 0/);
+  });
+});
+
+describe('rebuildE2EEContext — algo/key coherence', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetCachedAttestation.mockReturnValue(null);
+  });
+
+  /** The exact production shape of MERA-APP-39: a run persisted under one curve
+   *  is rebuilt while the fleet is attesting the other. Pairing the stored
+   *  keypair with the fresh model key used to be a warn-and-continue, which
+   *  surfaced as an untyped `"point" expected Uint8Array of length 32, got
+   *  length=64` inside encryptEd25519 — at ENCRYPT time, uncaught, re-driving
+   *  the scoring poller every ~7s and wedging every feed-sync cycle. */
+  it('throws typed when the stored algo is ed25519 but the fleet attests a 64-byte ecdsa key', async () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, makeAttestationBody(publicKeyHex)));
+    const storedEd25519Secret = toHex(ed25519.utils.randomSecretKey());
+
+    await expect(
+      rebuildE2EEContext('test-model', storedEd25519Secret, 'ed25519'),
+    ).rejects.toBeInstanceOf(ModelKeyAlgoMismatchError);
+  });
+
+  it('throws typed in the reverse direction too (stored ecdsa, attested ed25519)', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, makeAttestationBody(publicKeyHex)));
+    const storedEcdsaSecret = toHex(secp256k1.utils.randomSecretKey());
+
+    await expect(
+      rebuildE2EEContext('test-model', storedEcdsaSecret, 'ecdsa'),
+    ).rejects.toBeInstanceOf(ModelKeyAlgoMismatchError);
+  });
+
+  /** The scoring-pipeline's terminal handlers catch ModelKeyValidationError.
+   *  Subclassing is what lets the mismatch fail the batch with no call-site
+   *  change, so the instanceof relationship is load-bearing, not cosmetic. */
+  it('is catchable as ModelKeyValidationError (the pipeline terminal handler relies on this)', async () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex();
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, makeAttestationBody(publicKeyHex)));
+
+    await expect(
+      rebuildE2EEContext('test-model', toHex(ed25519.utils.randomSecretKey()), 'ed25519'),
+    ).rejects.toBeInstanceOf(ModelKeyValidationError);
+  });
+
+  it('rejects a corrupt (non-32-byte) persisted client secret', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, makeAttestationBody(publicKeyHex)));
+
+    await expect(
+      rebuildE2EEContext('test-model', toHex(new Uint8Array(16)), 'ed25519'),
+    ).rejects.toBeInstanceOf(ModelKeyAlgoMismatchError);
+  });
+
+  it('still rebuilds normally when the attested algo matches the stored one', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, makeAttestationBody(publicKeyHex)));
+    const secret = ed25519.utils.randomSecretKey();
+
+    const ctx = await rebuildE2EEContext('test-model', toHex(secret), 'ed25519');
+
+    expect(ctx.algo).toBe('ed25519');
+    expect(ctx.modelPubKeyHex).toBe(publicKeyHex);
+    // Client pubkey is derived from the STORED secret, not freshly generated —
+    // the server must encrypt toward the key this run can actually decrypt with.
+    expect(ctx.clientPubKeyHex).toBe(toHex(ed25519.getPublicKey(secret)));
+  });
+});
+
+describe('encryptContent — algo/key mismatch guard', () => {
+  it('throws typed rather than letting a 64-byte key reach the ed25519 primitive', () => {
+    const { publicKeyHex } = makeEcdsaModelKeyHex(); // 64 bytes
+    const ctx = {
+      modelPubKeyHex: publicKeyHex,
+      privateKey: ed25519.utils.randomSecretKey(),
+      clientPubKeyHex: 'ff',
+      algo: 'ed25519' as const,
+      headers: {} as never,
+    };
+
+    expect(() => encryptContent('hello', ctx as unknown as E2EEContext)).toThrow(
+      ModelKeyAlgoMismatchError,
+    );
+  });
+
+  it('throws typed for the reverse pairing (32-byte key, ecdsa context)', () => {
+    const { publicKeyHex } = makeModelKeyHex(); // 32 bytes
+    const ctx = {
+      modelPubKeyHex: publicKeyHex,
+      privateKey: secp256k1.utils.randomSecretKey(),
+      clientPubKeyHex: 'ff',
+      algo: 'ecdsa' as const,
+      headers: {} as never,
+    };
+
+    expect(() => encryptContent('hello', ctx as unknown as E2EEContext)).toThrow(
+      ModelKeyAlgoMismatchError,
+    );
+  });
+});
+
+describe('decryptContent — client secret length guard', () => {
+  it('throws typed on a truncated persisted secret instead of an untyped noble error', () => {
+    expect(() => decryptContent('00'.repeat(80), new Uint8Array(16), 'ed25519')).toThrow(
+      ModelKeyAlgoMismatchError,
     );
   });
 });

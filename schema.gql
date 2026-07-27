@@ -491,7 +491,7 @@ type Query {
   ): PublicationSourcesResponse! @deprecated(reason: "Use newsPublishers and publicationSourcesForNewsPublisher queries instead")
   publicationSourcesForNewsPublisher(publisherId: ID!): PublicationSourcesForPublisherResponse!
   recentArticleCount: Int!
-  relatedArticles(articleId: ID!): [ArticleSummary!]!
+  relatedArticles(articleId: ID!, stableClusterId: String): [ArticleSummary!]!
 
   """Vector search using cosine similarity (scores 0–1)."""
   searchArticlesVector(
