@@ -187,12 +187,6 @@
       "bodyWithTime": "لا يمكن جلب مقالات جديدة في الوقت الحالي. تصفّح المقالات الموجودة على جهازك — تُتاح مقالات جديدة في {{time}}.",
       "title": "تم بلوغ الحد اليومي للمقالات"
     },
-    "moreSources_zero": "+{{count}} مصدر",
-    "moreSources_one": "+{{count}} مصدر",
-    "moreSources_two": "+{{count}} مصدران",
-    "moreSources_few": "+{{count}} مصادر",
-    "moreSources_many": "+{{count}} مصدرًا",
-    "moreSources_other": "+{{count}} مصدر",
     "analysingProgress": "جارٍ تحليل {{done}} من {{total}} مقالة",
     "waitingForNextBatch_zero": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
     "waitingForNextBatch_one": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",

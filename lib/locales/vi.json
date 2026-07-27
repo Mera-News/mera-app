@@ -188,8 +188,7 @@
       "title": "Đã đạt giới hạn bài viết hằng ngày"
     },
     "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
-    "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
-    "moreSources_other": "+{{count}} nguồn"
+    "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo"
   },
   "relevance": {
     "emergency": "Khẩn cấp",

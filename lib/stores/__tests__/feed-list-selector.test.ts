@@ -156,6 +156,19 @@ describe('buildFeedList — grouping + exclusion', () => {
     expect(list[0].id).toBe('art-b');
   });
 
+  it('populates memberIds with every grouped member articleId (not _id)', () => {
+    const a = sugg({ _id: 'a', clusters: [cluster('story-m')], firstPubDate: new Date(NOW - 2 * H).toISOString() });
+    const b = sugg({ _id: 'b', clusters: [cluster('story-m')], firstPubDate: new Date(NOW - H).toISOString() });
+    const list = buildFeedList([a, b], new Set(), NOW);
+    expect(list).toHaveLength(1);
+    expect(list[0].memberCount).toBe(2);
+    // Sorted so the assertion doesn't couple to buildStoryGroups' internal
+    // member ordering. `art-*` (articleId), NOT the bare `_id`s a/b — the
+    // feed-order store's tombstones compare these against future
+    // `FeedListItem.id`s, which are article ids.
+    expect([...list[0].memberIds].sort()).toEqual(['art-a', 'art-b']);
+  });
+
   it('excludes a group whose representative is excluded (by article id)', () => {
     const a = sugg({ _id: 'a' });
     const b = sugg({ _id: 'b' });
@@ -280,6 +293,7 @@ describe('feedCompare', () => {
     return {
       id: over.id,
       memberCount: over.memberCount ?? 1,
+      memberIds: over.memberIds ?? [over.id],
       breaking: over.breaking ?? false,
       score: over.score ?? 1,
       suggestion: over.suggestion ?? sugg({ _id: over.id, articleId: over.id }),

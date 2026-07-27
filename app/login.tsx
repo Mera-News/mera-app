@@ -26,9 +26,14 @@ export default function LoginScreen() {
     }
 
     // Reauth: on successful OTP verify, compare the verified user against the
-    // locally cached one. Same user → reset the PIN, keep all local data.
+    // locally cached one. Same user → reset the PIN, keep all local data. The
+    // opt-in flag is deliberately left ON: they chose the lock, so a forgotten
+    // PIN gets replaced rather than silently downgrading their security.
+    // /pin-setup offers a Cancel that turns it off if that's what they want.
     // Different user → normal path (logged-in/index wipes local data on a
-    // different userId).
+    // different userId), but the lock is turned off first: clearAllStores does
+    // not touch the keychain, so without this the new user would be met by the
+    // previous user's PIN screen on the next cold start.
     const handleReauthSuccess = async (userId: string) => {
         const cached = await getSetting('cached_user_id');
         if (cached && userId === cached) {
@@ -36,6 +41,7 @@ export default function LoginScreen() {
             usePinStore.getState().setPinSet(false);
             router.replace('/pin-setup' as any);
         } else {
+            await usePinStore.getState().setLockEnabled(false);
             router.replace('/logged-in');
         }
     };

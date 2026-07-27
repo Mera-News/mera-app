@@ -95,6 +95,10 @@ jest.mock('@/lib/logger', () => ({
 jest.mock('@/lib/llm/constants', () => ({ SMALL_MODEL: 'test-small-model' }));
 
 jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
+  // Must mirror the real module's constant: scoring-pipeline derives its poll
+  // cadence from it at import time, so omitting it makes POLL_INTERVAL_MS NaN
+  // and silently disables the per-batch spacing gate.
+  MIN_GATEWAY_INTERVAL_MS: 3000,
   tryTakeImmediate: (...args: any[]) => mockTryTakeImmediate(...args),
   pauseFor: (...args: any[]) => mockPauseFor(...args),
   acquire: (...args: any[]) => mockAcquire(...args),
@@ -256,7 +260,8 @@ import {
   _resetForTests,
   BATCH_SIZE,
   MAX_UNSCORED_WAIT_MS,
-  COLD_START_MIN_BATCH,
+  MIN_DISPATCH,
+  MAX_BATCH_ARTICLES,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
@@ -467,7 +472,7 @@ describe('model-key validation fail-fast (MERA-APP-39)', () => {
 
 describe('enqueueCandidates', () => {
   it('creates a run and submits up to MAX_IN_FLIGHT batches', async () => {
-    await enqueueCandidates(ids(100)); // 4 batches of 25
+    await enqueueCandidates(ids(4 * MAX_BATCH_ARTICLES)); // 4 batches of 25
 
     const run = currentRun();
     expect(run).not.toBeNull();
@@ -485,11 +490,11 @@ describe('enqueueCandidates', () => {
   });
 
   it('dedups ids already in a non-terminal batch on re-enqueue', async () => {
-    await enqueueCandidates(ids(50)); // 2 batches
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 batches
     const before = currentRun().batches.length;
     mockSendInferenceRequest.mockClear();
 
-    await enqueueCandidates(ids(50)); // identical ids
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // identical ids
 
     expect(currentRun().batches.length).toBe(before);
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
@@ -497,7 +502,7 @@ describe('enqueueCandidates', () => {
 
   it('attaches the push token only to the last relevance submit', async () => {
     // 2 batches, both admitted (MAX_IN_FLIGHT >= 2).
-    await enqueueCandidates(ids(50));
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES));
 
     // batch 0 submitted while batch 1 still queued → no token.
     // batch 1 submitted last → token attached.
@@ -525,7 +530,7 @@ describe('enqueueCandidates', () => {
       .mockResolvedValueOnce({ status: 'failed' })
       .mockResolvedValue({ status: 'ok', requestId: 'req-b1', capabilityToken: 'cap' });
 
-    await enqueueCandidates(ids(50)); // 2 batches
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 batches
 
     const run = currentRun();
     const b0 = run.batches[0];
@@ -538,49 +543,68 @@ describe('enqueueCandidates', () => {
   });
 });
 
-describe('enqueueCandidates: strict quantum gate', () => {
-  it('defers a sub-25 quantum when the oldest unscored row is fresh (no run created)', async () => {
+describe('enqueueCandidates: MIN_DISPATCH floor / MAX_BATCH_ARTICLES ceiling', () => {
+  it('dispatches at exactly MIN_DISPATCH — one LLM call, no waiting for a bigger batch', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — no escape needed
+
+    const res = await enqueueCandidates(ids(MIN_DISPATCH));
+
+    // The whole point of the floor: 5 ready articles go out NOW rather than
+    // waiting out MAX_UNSCORED_WAIT_MS for a quantum that may never fill.
+    expect(res.deferred).toHaveLength(0);
+    const run = currentRun();
+    expect(run).not.toBeNull();
+    expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
+  });
+
+  it('defers a sub-MIN_DISPATCH remainder when the oldest unscored row is fresh', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // age 0 — no escape
 
-    await enqueueCandidates(ids(5)); // 5 < BATCH_SIZE → trailing partial → deferred
+    const res = await enqueueCandidates(ids(MIN_DISPATCH - 1));
 
+    expect(res.deferred).toHaveLength(MIN_DISPATCH - 1);
     expect(currentRun()).toBeNull();
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 
-  it('returns the deferred trailing-partial ids when it holds a sub-25 quantum back', async () => {
-    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — no escape
-
-    const res = await enqueueCandidates(ids(5));
-
-    expect(res.deferred).toHaveLength(5);
-    expect(currentRun()).toBeNull(); // nothing dispatched
-  });
-
-  it('flushPartial=true dispatches the sub-25 partial and returns no deferred ids', async () => {
+  it('flushPartial=true dispatches a sub-MIN_DISPATCH remainder and returns no deferred ids', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — would normally defer
 
-    const res = await enqueueCandidates(ids(5), true);
+    const res = await enqueueCandidates(ids(2), true);
 
     expect(res.deferred).toHaveLength(0);
     const run = currentRun();
     expect(run).not.toBeNull();
     expect(run.batches).toHaveLength(1);
-    expect(run.batches[0].candidateIds).toHaveLength(5);
+    expect(run.batches[0].candidateIds).toHaveLength(2);
   });
 
-  it('dispatches exactly floor(n/25) full quanta and defers the remainder (run creation)', async () => {
-    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh — no escape for the partial
+  it('lets ONE batch absorb everything ready rather than splitting into MIN_DISPATCH pieces', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
 
-    await enqueueCandidates(ids(30)); // 30 = 1 full quantum (25) + 5 deferred
+    // 40 ready → a single batch (8 LLM calls inside one request), NOT 8 batches.
+    await enqueueCandidates(ids(40));
 
     const run = currentRun();
     expect(run).not.toBeNull();
     expect(run.batches).toHaveLength(1);
-    expect(run.batches[0].candidateIds).toHaveLength(BATCH_SIZE);
+    expect(run.batches[0].candidateIds).toHaveLength(40);
   });
 
-  it('dispatches a sub-25 partial once the oldest unscored row exceeds MAX_UNSCORED_WAIT_MS (escape)', async () => {
+  it('caps a batch at MAX_BATCH_ARTICLES and spills the rest into further batches', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
+
+    // One full ceiling batch + a second holding the overflow (still >= the floor).
+    await enqueueCandidates(ids(MAX_BATCH_ARTICLES + MIN_DISPATCH));
+
+    const run = currentRun();
+    expect(run.batches).toHaveLength(2);
+    expect(run.batches[0].candidateIds).toHaveLength(MAX_BATCH_ARTICLES);
+    expect(run.batches[1].candidateIds).toHaveLength(MIN_DISPATCH);
+  });
+
+  it('dispatches a sub-MIN_DISPATCH remainder once the oldest row exceeds MAX_UNSCORED_WAIT_MS (escape)', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW - MAX_UNSCORED_WAIT_MS - 1_000);
 
     await enqueueCandidates(ids(3));
@@ -591,24 +615,28 @@ describe('enqueueCandidates: strict quantum gate', () => {
     expect(run.batches[0].candidateIds).toHaveLength(3);
   });
 
-  it('applies the SAME quantum rule to appends: 30 fresh with an active run → one 25-batch appended, 5 deferred', async () => {
-    // Establish an active run with one full quantum.
-    await enqueueCandidates(ids(25, 'seed'));
+  it('applies the SAME rule to appends: ceiling+remainder with an active run', async () => {
+    // Establish an active run.
+    await enqueueCandidates(ids(MIN_DISPATCH, 'seed'));
     const before = currentRun().batches.length;
     expect(before).toBe(1);
 
-    // Fresh oldest → the trailing partial must defer even on an append.
+    // Fresh oldest → a sub-floor remainder must still defer on an append.
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
 
-    await enqueueCandidates(ids(30, 'more')); // 1 full quantum appended, 5 deferred
+    const res = await enqueueCandidates(
+      ids(MAX_BATCH_ARTICLES + MIN_DISPATCH - 1, 'more'),
+    );
 
     const run = currentRun();
     expect(run.batches).toHaveLength(before + 1);
-    const appended = run.batches[run.batches.length - 1];
-    expect(appended.candidateIds).toHaveLength(BATCH_SIZE);
+    expect(run.batches[run.batches.length - 1].candidateIds).toHaveLength(
+      MAX_BATCH_ARTICLES,
+    );
+    expect(res.deferred).toHaveLength(MIN_DISPATCH - 1);
   });
 
-  it('enqueueOrphanedReasons is ungated by the quantum rule', async () => {
+  it('enqueueOrphanedReasons is ungated by the dispatch floor', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
     mockGetScoredWithoutReasons.mockResolvedValue([
       { ...candidate('o0'), relevance: 0.8 },
@@ -655,35 +683,38 @@ describe('cold-start predicate (P7d isFeedCold)', () => {
   });
 });
 
-describe('cold-start partial quantum (P7d Knob 1)', () => {
-  it('dispatches a cold partial >= COLD_START_MIN_BATCH without the staleness escape', async () => {
+// The P7d "Knob 1" cold-start partial (dispatch a >=10-row partial only on a
+// cold feed) is gone: MIN_DISPATCH is 5, so every chunk that knob would have
+// caught now dispatches on the fast path regardless of feed warmth. These tests
+// pin the replacement invariant — warmth no longer affects dispatch at all.
+describe('dispatch floor is warmth-independent (replaces P7d Knob 1)', () => {
+  it('dispatches a >= MIN_DISPATCH batch on a COLD feed with no staleness escape', async () => {
     mockGetScoredDonorRows.mockResolvedValue([]); // cold: no scored donors
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
 
-    // COLD_START_MIN_BATCH (10) < BATCH_SIZE (25) → a single trailing partial.
-    await enqueueCandidates(ids(COLD_START_MIN_BATCH));
+    await enqueueCandidates(ids(MIN_DISPATCH));
 
     const run = currentRun();
     expect(run).not.toBeNull();
-    expect(run.batches).toHaveLength(1);
-    expect(run.batches[0].candidateIds).toHaveLength(COLD_START_MIN_BATCH);
+    expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
   });
 
-  it('defers a cold partial below COLD_START_MIN_BATCH (fresh oldest, no escape)', async () => {
-    mockGetScoredDonorRows.mockResolvedValue([]); // cold
-    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
-
-    await enqueueCandidates(ids(COLD_START_MIN_BATCH - 1));
-
-    expect(currentRun()).toBeNull();
-    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
-  });
-
-  it('defers a warm partial >= COLD_START_MIN_BATCH (fresh oldest) — the knob is cold-only', async () => {
+  it('dispatches the SAME batch on a WARM feed — warmth is no longer consulted', async () => {
     mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]); // warm
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
 
-    await enqueueCandidates(ids(COLD_START_MIN_BATCH));
+    await enqueueCandidates(ids(MIN_DISPATCH));
+
+    const run = currentRun();
+    expect(run).not.toBeNull();
+    expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
+  });
+
+  it('defers below the floor on a cold feed too (fresh oldest, no escape)', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([]); // cold
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
+
+    await enqueueCandidates(ids(MIN_DISPATCH - 1));
 
     expect(currentRun()).toBeNull();
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
@@ -700,29 +731,52 @@ describe('cold-start poll latency (P7d Knob 2)', () => {
     return b;
   }
 
-  it('cold table polls a batch aged between POLL_INTERVAL_MS (7s) and MIN_POLL_AGE_MS (15s)', async () => {
+  // MIN_POLL_AGE_MS is now 0 for every feed — the old 15s settling delay put a
+  // hard floor under the first scored paint even when the job was already done,
+  // and the gateway rate limiter (not this gate) is what stops us hammering. So
+  // the cold/warm split these tests pinned no longer exists; both poll at once.
+  it('polls a freshly-submitted batch immediately on a COLD feed (no settling delay)', async () => {
     mockGetScoredDonorRows.mockResolvedValue([]); // cold
     await oneWaitingBatch();
     mockFetchResults.mockClear();
     mockFetchResults.mockResolvedValue('pending');
 
-    // Age 10s: past the cold 7s min-poll-age but under the warm 15s gate.
-    jest.setSystemTime(NOW + 10_000);
     await pollTick('foreground');
 
     expect(mockFetchResults).toHaveBeenCalled();
   });
 
-  it('warm table does NOT poll a batch younger than MIN_POLL_AGE_MS (15s)', async () => {
+  it('polls a freshly-submitted batch immediately on a WARM feed too', async () => {
     mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]); // warm
     await oneWaitingBatch();
     mockFetchResults.mockClear();
     mockFetchResults.mockResolvedValue('pending');
 
-    jest.setSystemTime(NOW + 10_000);
     await pollTick('foreground');
 
+    expect(mockFetchResults).toHaveBeenCalled();
+  });
+
+  it('honours PER_BATCH_POLL_SPACING_MS between two polls of the SAME batch', async () => {
+    mockGetScoredDonorRows.mockResolvedValue([{ id: 'donor' }]);
+    await oneWaitingBatch();
+    mockFetchResults.mockResolvedValue('pending');
+
+    // Step past the gateway slot the SUBMIT just consumed, so this first poll
+    // is gated only by the per-batch spacing we're actually testing.
+    jest.setSystemTime(NOW + 5_000);
+    await pollTick('foreground');
+    expect(mockFetchResults).toHaveBeenCalled();
+    mockFetchResults.mockClear();
+
+    // Immediately again — inside the spacing window, so skipped.
+    await pollTick('foreground');
     expect(mockFetchResults).not.toHaveBeenCalled();
+
+    // Past the window (and past the limiter's own interval) — polled again.
+    jest.setSystemTime(NOW + 15_000);
+    await pollTick('foreground');
+    expect(mockFetchResults).toHaveBeenCalled();
   });
 });
 
@@ -785,7 +839,7 @@ describe('relevance completion', () => {
   });
 
   it('admits the next queued batch after a batch completes', async () => {
-    await enqueueCandidates(ids(100)); // 4 batches: 3 waiting, 1 queued
+    await enqueueCandidates(ids(4 * MAX_BATCH_ARTICLES)); // 4 batches: 3 waiting, 1 queued
     const b0 = currentRun().batches[0];
     mockDecodeResults.mockReturnValue({
       scoreMap: new Map([['id0', 0.1]]),
@@ -949,7 +1003,7 @@ describe('throwing /results fetch (catch-path staleness)', () => {
 
 describe('abortRun', () => {
   it('force-fails non-terminal batches, finalizes + clears the run, and stamps markProcessingRunFinished', async () => {
-    await enqueueCandidates(ids(50)); // 2 waiting-relevance (non-terminal) batches
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 waiting-relevance (non-terminal) batches
     expect(currentRun()).not.toBeNull();
     mockMarkProcessingRunFinished.mockClear();
 
@@ -1005,7 +1059,7 @@ describe('recover', () => {
 
 describe('handlePush', () => {
   it('checks only the batch matching the requestId', async () => {
-    await enqueueCandidates(ids(50)); // 2 batches, both waiting
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 batches, both waiting
     const run = currentRun();
     const target = run.batches[1];
     mockFetchResults.mockResolvedValue('pending');
@@ -1021,11 +1075,22 @@ describe('handlePush', () => {
   });
 
   it('falls back to a full pollTick when the requestId is unknown', async () => {
-    await enqueueCandidates(['a0']);
+    await enqueueCandidates(ids(MIN_DISPATCH));
+    const target = currentRun().batches[0];
+    mockFetchResults.mockClear();
     mockFetchResults.mockResolvedValue('pending');
-    // batch is younger than MIN_POLL_AGE → pollTick polls nothing
+
     await handlePush('nonexistent-req', 'foreground');
-    expect(mockFetchResults).not.toHaveBeenCalled();
+
+    // The unknown id can't target a batch, so it degrades to a full pollTick —
+    // which now polls the waiting batch straight away (MIN_POLL_AGE_MS is 0).
+    // This previously asserted "nothing polled", but that was only ever a
+    // side-effect of the old 15s settling delay, not the fallback's behaviour.
+    expect(mockFetchResults).toHaveBeenCalledWith(
+      target.requestId,
+      'foreground',
+      expect.anything(),
+    );
   });
 });
 
@@ -1062,7 +1127,7 @@ describe('background auth (per-batch capability token)', () => {
   });
 
   it('background drain does not admit queued batches (deferred to foreground)', async () => {
-    await enqueueCandidates(ids(100)); // 4 batches: 3 waiting-relevance, 1 queued
+    await enqueueCandidates(ids(4 * MAX_BATCH_ARTICLES)); // 4 batches: 3 waiting-relevance, 1 queued
     const b0 = currentRun().batches[0];
     expect(currentRun().batches[3].phase).toBe('queued');
 
@@ -1085,7 +1150,11 @@ describe('background auth (per-batch capability token)', () => {
     expect(run.batches[3].phase).toBe('queued');
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
 
-    // Foreground tick picks it up.
+    // Foreground tick picks it up. Pin the remaining batches to 'pending' first:
+    // MIN_POLL_AGE_MS is now 0, so a foreground tick polls EVERY waiting batch
+    // immediately — left on b0's completed payload they'd all complete and the
+    // run would finalize and clear, which is not what this test is about.
+    mockFetchResults.mockResolvedValue('pending');
     await pollTick('foreground');
     await recover();
     expect(currentRun().batches[3].phase).toBe('waiting-relevance');
@@ -1211,18 +1280,18 @@ describe('getPipelineUiState', () => {
   });
 
   it('projects the persisted run', async () => {
-    await enqueueCandidates(ids(50)); // 2 batches, both waiting-relevance
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 batches, both waiting-relevance
     const ui = await getPipelineUiState();
     expect(ui.phase).toBe('relevance');
     expect(ui.processedCount).toBe(0);
-    expect(ui.totalCount).toBe(50);
+    expect(ui.totalCount).toBe(2 * MAX_BATCH_ARTICLES);
   });
 });
 
 describe('live header progress push', () => {
   it('pushes relevance phase + totals into the store on enqueue', async () => {
-    await enqueueCandidates(ids(50)); // 2 batches submitted, 50 candidates
-    expect(mockSetAsyncJobPhase).toHaveBeenCalledWith('relevance', 0, 50);
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 batches submitted, 50 candidates
+    expect(mockSetAsyncJobPhase).toHaveBeenCalledWith('relevance', 0, 2 * MAX_BATCH_ARTICLES);
   });
 
   it('resets the header to idle once the run finalizes', async () => {

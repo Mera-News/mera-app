@@ -189,9 +189,7 @@
     },
     "analysingProgress": "Analizando {{done}} de {{total}} artículos",
     "waitingForNextBatch_one": "{{count}} artículo nuevo esperando el próximo lote de análisis",
-    "waitingForNextBatch_other": "{{count}} artículos nuevos esperando el próximo lote de análisis",
-    "moreSources_one": "+{{count}} fuente",
-    "moreSources_other": "+{{count}} fuentes"
+    "waitingForNextBatch_other": "{{count}} artículos nuevos esperando el próximo lote de análisis"
   },
   "relevance": {
     "emergency": "Emergencia",

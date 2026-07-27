@@ -1,40 +1,32 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
-import CompactActionsSheet from '@/components/custom/cards/CompactActionsSheet';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
-import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { extractDomain } from '@/lib/publisher-utils';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React from 'react';
 
 interface ArticleStandaloneCompactCardProps {
   article: NewsArticle;
   onPress: () => void;
-  /** Origin-aware overrides (surface, scopeKey, …) merged into the subject. */
+  /**
+   * Origin-aware overrides (surface, scopeKey, …). Currently INERT — the row no
+   * longer opens an actions sheet, so there is no subject to merge them into.
+   * Kept so the many call sites keep compiling; safe to delete in a cleanup pass.
+   */
   subjectExtras?: Partial<FeedbackSubject>;
-  // ── Additive, optional ─────────────────────────────────────────────────
-  // The "…" actions button + long-press sheet are OFF by default so every
-  // existing surface (Explore, config-panel, news-detail) stays pixel-identical
-  // to the old CompactPublisherNewsCard. Future surfaces (triage) opt in.
-  showActions?: boolean;
 }
 
 /**
  * The standalone compact article row — CompactPublisherNewsCard semantics
  * (source_uri → domain fallback, __DEV__ cluster-confidence chip) delegating all
- * layout to `ArticleCompactCardBase`. Optionally exposes the universal compact
- * actions sheet via a "…" trailing button + long-press.
+ * layout to `ArticleCompactCardBase`. Tap-only: no "…" button and no actions
+ * sheet (removed in the compact-card cleanup).
  */
 const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardProps> = ({
   article,
   onPress,
-  subjectExtras,
-  showActions = false,
 }) => {
-  const [sheetOpen, setSheetOpen] = useState(false);
-
   const publisherName =
     article.publicationSource?.publication_name ||
     (article.source_uri ? extractDomain(article.source_uri) : 'Source');
@@ -49,61 +41,19 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       </Box>
     ) : undefined;
 
-  const footerAccessory = showActions ? (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="More actions"
-      hitSlop={8}
-      onPress={() => setSheetOpen(true)}
-      className="px-1"
-    >
-      <MaterialIcons name="more-horiz" size={20} color="#9CA3AF" />
-    </Pressable>
-  ) : undefined;
-
-  const subject: FeedbackSubject = {
-    origin: 'article',
-    surface: 'detail',
-    articleId: article._id,
-    title: titleEnglish ?? article.title ?? '',
-    pubDate: article.pubDate ?? null,
-    publicationName: article.publicationSource?.publication_name ?? publisherName,
-    countryCode: article.publicationSource?.country_code ?? null,
-    category: article.category ?? null,
-    ...subjectExtras,
-  };
-
   return (
-    <>
-      <ArticleCompactCardBase
-        imageUrl={article.image_url}
-        titleEnglish={titleEnglish}
-        titleOriginal={article.title ?? undefined}
-        sourceLanguage={article.original_language_code ?? undefined}
-        pubDate={article.pubDate}
-        languageCode={article.original_language_code}
-        countryCode={article.publicationSource?.country_code}
-        publicationName={publisherName}
-        onPress={onPress}
-        onLongPress={showActions ? () => setSheetOpen(true) : undefined}
-        metaAccessory={metaAccessory}
-        footerAccessory={footerAccessory}
-      />
-      {showActions ? (
-        <CompactActionsSheet
-          visible={sheetOpen}
-          onClose={() => setSheetOpen(false)}
-          subject={subject}
-          article={article}
-          share={{
-            url: article.article_url ?? article.source_uri,
-            titleEnglish: titleEnglish ?? null,
-            titleOriginal: article.title,
-            sourceLanguage: article.original_language_code,
-          }}
-        />
-      ) : null}
-    </>
+    <ArticleCompactCardBase
+      imageUrl={article.image_url}
+      titleEnglish={titleEnglish}
+      titleOriginal={article.title ?? undefined}
+      sourceLanguage={article.original_language_code ?? undefined}
+      pubDate={article.pubDate}
+      languageCode={article.original_language_code}
+      countryCode={article.publicationSource?.country_code}
+      publicationName={publisherName}
+      onPress={onPress}
+      metaAccessory={metaAccessory}
+    />
   );
 };
 

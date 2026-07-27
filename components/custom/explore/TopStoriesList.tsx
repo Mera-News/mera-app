@@ -179,7 +179,6 @@ const TopStoriesList: React.FC<TopStoriesListProps> = ({ homeCountryAlpha3 }) =>
             <ArticleStandaloneCompactCard
                 article={item.article}
                 onPress={() => handlePress(item.article)}
-                showActions
                 subjectExtras={{
                     origin: 'article',
                     surface: 'explore',

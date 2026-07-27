@@ -25,29 +25,24 @@ import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
-import SetPinStep from './SetPinStep';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
-import { isPinSet } from '@/lib/security/pin-service';
 
-// 3-step wizard: 0 = SetPin (local-only, mandatory), 1 = Notifications,
-// 2 = PersonaChat. The PIN step is NOT part of the server OnboardingStage enum
-// — it's tracked locally (a PIN record exists ⇒ skip step 0). The server stage
-// maps to the SERVER-backed steps (1 and 2); on mount we seed `currentStep`
-// from it so refresh/cold-start resumes correctly.
+// 2-step wizard: 0 = Notifications, 1 = PersonaChat. Both steps are backed by
+// the server OnboardingStage enum, which is authoritative for `currentStep`
+// on mount so refresh/cold-start resumes correctly.
 const STAGE_TO_STEP: Record<OnboardingStage, number> = {
-    [OnboardingStage.Notifications]: 1,
-    [OnboardingStage.ProcessingMode]: 2,
-    [OnboardingStage.PersonaChat]: 2,
-    [OnboardingStage.Finished]: 2,
+    [OnboardingStage.Notifications]: 0,
+    [OnboardingStage.ProcessingMode]: 1,
+    [OnboardingStage.PersonaChat]: 1,
+    [OnboardingStage.Finished]: 1,
 };
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 2;
 
-// Stage to advance to when the user clicks Next on a given step. Step 0 (PIN)
-// has no server stage — it advances locally via SetPinStep's onDone.
+// Stage to advance to when the user clicks Next on a given step.
 const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
-    1: OnboardingStage.PersonaChat,
-    2: OnboardingStage.Finished,
+    0: OnboardingStage.PersonaChat,
+    1: OnboardingStage.Finished,
 };
 
 // OnboardingWizard now uses Zustand store for state persistence
@@ -83,11 +78,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     const userId = sessionData.data.user.id;
                     updatePreferences('userId', userId);
 
-                    // If no local PIN exists yet, the mandatory PIN step (0) comes
-                    // first regardless of server stage. Otherwise resume at the
-                    // server-authoritative step.
-                    const pinAlreadySet = await isPinSet();
-
                     // Fetch existing user persona to pre-populate form
                     const userPersona = await AccountService.getUserPersona(userId);
 
@@ -107,7 +97,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                         serverStep = STAGE_TO_STEP[serverStage];
                     }
 
-                    setStep(pinAlreadySet ? serverStep : 0);
+                    setStep(serverStep);
                 }
             } catch {
                 // Error initializing - silently handle
@@ -182,7 +172,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         try {
             const userId = await getCurrentUserId();
             switch (currentStep) {
-                case 1:
+                case 0:
                     if (userPreferences.notificationHours.length > 0) {
                         await AccountService.updateNotificationPreferences(
                             userId,
@@ -200,11 +190,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     // language they picked earlier (LanguageSelector, pre-auth)
                     // into language_codes. Fire-and-forget so it can't block nav.
                     void reconcileAppLanguageWithPersona({ userId });
-                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
-                    setStep(2);
+                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[0]);
+                    setStep(1);
                     break;
-                case 2: {
-                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[2]);
+                case 1: {
+                    await AccountService.advanceOnboardingStage(userId, NEXT_STAGE_FOR_STEP[1]);
                     resetOnboarding();
                     onComplete();
                     break;
@@ -218,9 +208,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     const renderStep = () => {
         switch (currentStep) {
             case 0:
-                // Mandatory local PIN — advances the wizard once persisted.
-                return <SetPinStep onDone={() => setStep(1)} />;
-            case 1:
                 return (
                     <NotificationSettingsScreen
                         isOnboarding={true}
@@ -228,7 +215,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                         onHoursChange={(hours) => updatePreferences('notificationHours', hours)}
                     />
                 );
-            case 2:
+            case 1:
                 return (
                     <PersonaUpdateChatStep userId={userPreferences.userId} />
                 );
@@ -256,12 +243,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 </Progress>
             </Box>
 
-            {/* Step 0 (PIN) is mandatory and self-driving: no Back (can't return
-                to a completed PIN step) and no Next/Skip (PinKeypad advances on
-                confirm). Steps 1–2 use the standard nav bar. */}
+            {/* Step 0 has no prior step to return to; step 1 can go back to it. */}
             <OnboardingNavBar
-                onBack={currentStep > 1 ? handleBack : undefined}
-                onSkip={currentStep === 0 ? undefined : handleNext}
+                onBack={currentStep > 0 ? handleBack : undefined}
+                onSkip={handleNext}
                 skipLabel={t('common.next')}
                 stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
             />

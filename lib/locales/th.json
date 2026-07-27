@@ -188,8 +188,7 @@
       "title": "ถึงขีดจำกัดบทความรายวันแล้ว"
     },
     "analysingProgress": "กำลังวิเคราะห์ {{done}} จาก {{total}} บทความ",
-    "waitingForNextBatch_other": "มีบทความใหม่ {{count}} รายการรอการวิเคราะห์รอบถัดไป",
-    "moreSources_other": "+{{count}} แหล่งข่าว"
+    "waitingForNextBatch_other": "มีบทความใหม่ {{count}} รายการรอการวิเคราะห์รอบถัดไป"
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",

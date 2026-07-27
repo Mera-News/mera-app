@@ -194,9 +194,7 @@
     },
     "analysingProgress": "Analysing {{done}} of {{total}} articles",
     "waitingForNextBatch_one": "{{count}} new article waiting for the next analysis batch",
-    "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch",
-    "moreSources_one": "+{{count}} source",
-    "moreSources_other": "+{{count}} sources"
+    "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch"
   },
   "relevance": {
     "emergency": "Emergency",
@@ -1134,13 +1132,19 @@
     "setupSubtitle": "Choose a 4-digit PIN to protect the app on this device",
     "confirmTitle": "Confirm your PIN",
     "confirmSubtitle": "Re-enter your 4-digit PIN",
-    "mismatch": "PINs didn't match. Start again.",
-    "onboardingTitle": "Secure your app",
-    "onboardingSubtitle": "Set a 4-digit PIN. You'll enter it each time you open Mera."
+    "mismatch": "PINs didn't match. Start again."
   },
   "security": {
     "title": "Security",
-    "subtitle": "Manage your app PIN",
+    "subtitle": "Choose whether Mera asks for a PIN on this device",
+    "requirePinTitle": "Require PIN to unlock",
+    "requirePinDescription": "Ask for a 4-digit PIN when you open Mera",
+    "setPinTitle": "Set a PIN",
+    "setPinSubtitle": "Choose a 4-digit PIN to unlock Mera on this device",
+    "lockEnabledTitle": "PIN unlock on",
+    "lockEnabledDescription": "You'll enter your PIN when you open Mera.",
+    "lockDisabledTitle": "PIN unlock off",
+    "lockDisabledDescription": "Mera will open without a PIN. Your PIN has been removed.",
     "changePin": "Change PIN",
     "verifyCurrentTitle": "Enter current PIN",
     "verifyCurrentSubtitle": "Confirm your current PIN to continue",

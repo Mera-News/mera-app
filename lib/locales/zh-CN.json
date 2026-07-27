@@ -188,8 +188,7 @@
       "title": "已达每日文章上限"
     },
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
-    "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析",
-    "moreSources_other": "+{{count}} 个来源"
+    "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析"
   },
   "relevance": {
     "emergency": "紧急",

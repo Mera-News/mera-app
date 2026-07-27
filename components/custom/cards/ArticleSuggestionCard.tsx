@@ -35,8 +35,6 @@ interface ArticleCardProps {
   onPress: (suggestion: ForYouSuggestion) => void;
   timestamp?: string;
   isNew?: boolean;
-  /** Number of additional source publications collapsed into this story card. */
-  moreSourcesCount?: number;
   // ── Action row (the small borderless CardActionBar) ────────────────────
   // The action row renders ONLY when `onVerdict` is provided. Surfaces that use
   // it (the For You feed + the fact feed) pass the flat trio below; surfaces that
@@ -64,6 +62,10 @@ interface ArticleCardProps {
    *  card (Dashboard's list treatment) instead of the default Card chrome.
    *  Default false. */
   flat?: boolean;
+  /** Fired when the user TOGGLES save (either direction). Optional — only the Feed tab
+   *  passes it, so every other surface is unaffected. NOT fired by the mount-time
+   *  `isSuggestionSaved` restore, which is not a user interaction. */
+  onSaveToggled?: (suggestion: ForYouSuggestion, saved: boolean) => void;
 }
 
 export type { ArticleCardProps };
@@ -81,7 +83,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   onPress,
   timestamp,
   isNew = false,
-  moreSourcesCount,
   verdict = null,
   onVerdict,
   onAskMera,
@@ -91,6 +92,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   dimmed = false,
   read = false,
   flat = false,
+  onSaveToggled,
 }) => {
   const [facts, setFacts] = useState<Fact[]>([]);
 
@@ -124,6 +126,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       setSaved(true);
       void saveSuggestion(suggestion);
     }
+    onSaveToggled?.(suggestion, !saved);
   };
 
   const handleShare = useShareArticle({
@@ -264,7 +267,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       publicationName={suggestion.publication_name}
       countryCode={suggestion.country_code}
       isNew={isNew}
-      moreSourcesCount={moreSourcesCount}
       recyclingKey={suggestion._id}
       dimmed={dimmed}
       read={read}

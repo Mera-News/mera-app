@@ -402,7 +402,7 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByText('Die Zeit')).toBeTruthy();
   });
 
-  it('does not mount the "…" actions button by default (pixel-identical)', () => {
+  it('never mounts a "…" actions button (the compact actions menu was removed)', () => {
     const { queryByLabelText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );

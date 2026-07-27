@@ -114,7 +114,6 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
             <ArticleStandaloneCompactCard
                 article={item.article}
                 onPress={() => handlePress(item.article, item.stableClusterId)}
-                showActions
                 subjectExtras={{
                     origin: 'article',
                     surface: 'explore',

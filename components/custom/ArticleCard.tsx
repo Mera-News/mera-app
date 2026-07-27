@@ -15,8 +15,6 @@ interface ArticleCardProps {
     onPress: (suggestion: ForYouSuggestion) => void;
     timestamp?: string;
     isNew?: boolean;
-    /** Number of additional source publications collapsed into this story card. */
-    moreSourcesCount?: number;
 }
 
 export type { ArticleCardProps };
@@ -31,7 +29,6 @@ export const ArticleCard: React.FC<ArticleCardProps> = React.memo(function Artic
     onPress,
     timestamp,
     isNew = false,
-    moreSourcesCount,
 }) {
     return (
         <ArticleSuggestionContainer
@@ -39,7 +36,6 @@ export const ArticleCard: React.FC<ArticleCardProps> = React.memo(function Artic
             variant="card"
             timestamp={timestamp}
             isNew={isNew}
-            moreSourcesCount={moreSourcesCount}
             onPress={() => onPress(suggestion)}
         />
     );

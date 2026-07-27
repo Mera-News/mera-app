@@ -39,7 +39,8 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   const relevance = suggestion.relevance ?? 0;
 
   // Compact cards never show reason text — the footer carries the fixed-size
-  // RelevanceChip (once relevance is ready), right-aligned opposite the source.
+  // RelevanceChip (once relevance is ready) on the LEFT, opposite the
+  // right-aligned source identity.
   const footerAccessory = relevanceReady ? (
     <RelevanceChip relevance={relevance} />
   ) : undefined;

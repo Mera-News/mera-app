@@ -188,8 +188,7 @@
       "title": "1日の記事上限に達しました"
     },
     "analysingProgress": "{{total}}件中{{done}}件の記事を分析中",
-    "waitingForNextBatch_other": "次の分析バッチを待っている新着記事が{{count}}件あります",
-    "moreSources_other": "+{{count}}件のソース"
+    "waitingForNextBatch_other": "次の分析バッチを待っている新着記事が{{count}}件あります"
   },
   "relevance": {
     "emergency": "緊急",

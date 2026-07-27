@@ -191,11 +191,7 @@
     "waitingForNextBatch_one": "{{count}} нова стаття очікує наступної партії аналізу",
     "waitingForNextBatch_few": "{{count}} нові статті очікують наступної партії аналізу",
     "waitingForNextBatch_many": "{{count}} нових статей очікують наступної партії аналізу",
-    "waitingForNextBatch_other": "{{count}} нові статті очікують наступної партії аналізу",
-    "moreSources_one": "+{{count}} джерело",
-    "moreSources_few": "+{{count}} джерела",
-    "moreSources_many": "+{{count}} джерел",
-    "moreSources_other": "+{{count}} джерела"
+    "waitingForNextBatch_other": "{{count}} нові статті очікують наступної партії аналізу"
   },
   "relevance": {
     "emergency": "Надзвичайна подія",

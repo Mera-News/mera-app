@@ -189,9 +189,7 @@
     },
     "analysingProgress": "{{total}} में से {{done}} लेखों का विश्लेषण हो रहा है",
     "waitingForNextBatch_one": "{{count}} नया लेख अगले विश्लेषण बैच का इंतज़ार कर रहा है",
-    "waitingForNextBatch_other": "{{count}} नए लेख अगले विश्लेषण बैच का इंतज़ार कर रहे हैं",
-    "moreSources_one": "+{{count}} स्रोत",
-    "moreSources_other": "+{{count}} स्रोत"
+    "waitingForNextBatch_other": "{{count}} नए लेख अगले विश्लेषण बैच का इंतज़ार कर रहे हैं"
   },
   "relevance": {
     "emergency": "आपातकालीन",

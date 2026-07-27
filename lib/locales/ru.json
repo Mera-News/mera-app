@@ -191,11 +191,7 @@
     "waitingForNextBatch_one": "{{count}} новая статья ожидает следующей партии анализа",
     "waitingForNextBatch_few": "{{count}} новые статьи ожидают следующей партии анализа",
     "waitingForNextBatch_many": "{{count}} новых статей ожидают следующей партии анализа",
-    "waitingForNextBatch_other": "{{count}} новые статьи ожидают следующей партии анализа",
-    "moreSources_one": "+{{count}} источник",
-    "moreSources_few": "+{{count}} источника",
-    "moreSources_many": "+{{count}} источников",
-    "moreSources_other": "+{{count}} источника"
+    "waitingForNextBatch_other": "{{count}} новые статьи ожидают следующей партии анализа"
   },
   "relevance": {
     "emergency": "Экстренное",

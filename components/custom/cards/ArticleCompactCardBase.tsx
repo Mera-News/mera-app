@@ -18,14 +18,14 @@ import React from 'react';
  * content stacked in three zones:
  *   1. meta row  — time + language (ArticleMetaRow, flag hidden) + `metaAccessory`
  *   2. title     — up to 3 lines
- *   3. footer    — country flag + publisher name (left) · `footerAccessory` (right)
+ *   3. footer    — `footerAccessory` (left) · country flag + publisher name (right)
  * ].
  *
  * • `metaAccessory`   — small adornment at the right of the meta row (e.g. the
  *                       __DEV__ cluster-confidence chip).
- * • `footerAccessory` — a control at the far right of the footer row (e.g. the
- *                       RelevanceChip, or the "…" actions button). Absent ⇒ the
- *                       footer is just the source identity.
+ * • `footerAccessory` — a control at the far left of the footer row (e.g. the
+ *                       RelevanceChip). Absent ⇒ the footer is just the source
+ *                       identity, still right-aligned.
  */
 const PLACEHOLDER = require('@/assets/images/news_card_placeholder_image.jpg');
 
@@ -133,9 +133,13 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               />
             </Box>
 
-            {/* 3. Footer: country flag + publisher (left) · footerAccessory (right) */}
-            <Box className="flex-row items-center justify-between" style={{ gap: 6 }}>
-              <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
+            {/* 3. Footer: footerAccessory (left) · country flag + publisher (right).
+                The source group is `flex-1 justify-end` rather than relying on
+                `justify-between`, so it stays right-aligned even when there is no
+                accessory (standalone rows, unscored suggestions). */}
+            <Box className="flex-row items-center" style={{ gap: 6 }}>
+              {footerAccessory ? <Box className="flex-shrink-0">{footerAccessory}</Box> : null}
+              <HStack className="items-center flex-1 justify-end" space="xs" style={{ minWidth: 0 }}>
                 <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
                 {publicationName ? (
                   <Text size="xs" className="text-typography-500 flex-shrink" numberOfLines={1}>
@@ -143,7 +147,6 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   </Text>
                 ) : null}
               </HStack>
-              {footerAccessory ? <Box className="flex-shrink-0">{footerAccessory}</Box> : null}
             </Box>
           </Box>
         </Box>

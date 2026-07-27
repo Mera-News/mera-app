@@ -4,13 +4,19 @@
 //
 // The gate is deliberately offline-first: it never consults the network. A
 // dead server session must not eject the user — identity is a LOCAL fact
-// (persisted userId / auth cookie) and app access is protected by the PIN.
+// (persisted userId / auth cookie).
+//
+// The PIN gate is OPT-IN (see app-lock-service.ts). Unless the user turned it
+// on in Settings → Security, an identified user goes straight into the app;
+// this gate never forces PIN setup.
 
-export type LaunchRoute = '/login' | '/pin-setup' | '/pin-lock' | '/logged-in';
+export type LaunchRoute = '/login' | '/pin-lock' | '/logged-in';
 
 export interface LaunchRouteInput {
   /** A persisted userId or auth cookie exists on this device. */
   hasIdentity: boolean;
+  /** The user opted into the PIN gate. */
+  lockEnabled: boolean;
   /** A local PIN record exists. */
   pinSet: boolean;
   /** The PIN gate is currently engaged (cold start / >5 min background). */
@@ -19,20 +25,19 @@ export interface LaunchRouteInput {
 
 export function resolveLaunchRoute({
   hasIdentity,
+  lockEnabled,
   pinSet,
   locked,
 }: LaunchRouteInput): LaunchRoute {
   // First install / logged-out: nothing local to protect.
   if (!hasIdentity) return '/login';
 
-  // Identified but no PIN yet — mandatory one-time setup (existing users on
-  // first launch after this update; new users who quit before setting one).
-  if (!pinSet) return '/pin-setup';
+  // Opted in + PIN set + gate engaged → require the PIN. `pinSet` is checked
+  // alongside the flag on purpose: a flag with no usable record would strand
+  // the user on a screen no entry can satisfy.
+  if (lockEnabled && pinSet && locked) return '/pin-lock';
 
-  // Identified + PIN set + gate engaged → require the PIN.
-  if (locked) return '/pin-lock';
-
-  // Identified, PIN set, already unlocked this session.
+  // Lock off, or already unlocked this session.
   return '/logged-in';
 }
 
