@@ -1,4 +1,5 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -15,9 +16,13 @@ import { useTranslation } from 'react-i18next';
  * decoupled from any data model: callers pass a flat view-model plus two slots.
  *
  * Layout (unchanged, pixel-identical to the old container card):
- *   Pressable → elevated Card → optional 192px (h-48) hero image (with an
- *   `imageFailed` fallback) → VStack{ meta row (+ metaAccessory), title,
- *   children }.
+ *   Pressable → elevated Card → 192px (h-48) hero — the article image, an
+ *   `ArticleImagePlaceholder` when there is none or it fails to load, →
+ *   VStack{ meta row (+ metaAccessory), title, children }.
+ *
+ * `metaRowRightReserve` keys off `showImage` (a REAL image, not the
+ * placeholder) — unaffected by the placeholder always occupying the hero
+ * region now.
  *
  * • `children`      — variant chrome rendered under the title (reason box, fact
  *                     chips, actions row, …).
@@ -122,12 +127,14 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
       {/* Content region — the `overlay` (when present) floats over exactly this,
           clipped to the card's rounded corners by the outer overflow-hidden. */}
       <Box className="relative">
-        {showImage && (
-          <Box
-            className={
-              flat ? 'w-full h-48 overflow-hidden rounded-t-2xl' : 'w-full h-48 overflow-hidden rounded-t-lg'
-            }
-          >
+        <Box
+          className={
+            flat
+              ? 'relative w-full h-48 overflow-hidden rounded-t-2xl'
+              : 'relative w-full h-48 overflow-hidden rounded-t-lg'
+          }
+        >
+          {showImage ? (
             <Image
               source={{ uri: imageUrl! }}
               alt={displayTitle}
@@ -136,8 +143,10 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               recyclingKey={recyclingKey}
               onError={() => setImageFailed(true)}
             />
-          </Box>
-        )}
+          ) : (
+            <ArticleImagePlaceholder />
+          )}
+        </Box>
         {/* When a footer is present it owns the bottom padding, so the content
             VStack drops its own (pb-0) to avoid a doubled gap. */}
         <VStack className={footer ? 'px-4 pt-4' : 'p-4'} space="sm">

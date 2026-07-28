@@ -1,4 +1,5 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -27,7 +28,6 @@ import React from 'react';
  *                       RelevanceChip). Absent ⇒ the footer is just the source
  *                       identity, still right-aligned.
  */
-const PLACEHOLDER = require('@/assets/images/news_card_placeholder_image.jpg');
 
 export interface ArticleCompactCardBaseProps {
   imageUrl?: string | null;
@@ -108,12 +108,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 recyclingKey={recyclingKey}
               />
             ) : (
-              <Image
-                source={PLACEHOLDER}
-                alt="News placeholder"
-                className="absolute inset-0 w-full h-full"
-                resizeMode="cover"
-              />
+              <ArticleImagePlaceholder />
             )}
           </Box>
 

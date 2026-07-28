@@ -860,7 +860,10 @@
     "goToStoryAction": "Zur Story gehen",
     "deleteStoryAction": "Story löschen",
     "deleteStoryConfirmTitle": "Diese Story löschen?",
-    "deleteStoryConfirmBody": "Das Löschen entfernt alles, was für diese Story gespeichert wurde."
+    "deleteStoryConfirmBody": "Das Löschen entfernt alles, was für diese Story gespeichert wurde.",
+    "emptyHint": "Öffnen Sie eine Geschichte aus dem Feed, und tippen Sie dann auf das Verfolgungssymbol in der Aktionsleiste, um ihr zu folgen.",
+    "emptyCta": "Zu Nachrichten",
+    "untrackConfirmCta": "Ja, nicht mehr folgen"
   },
   "whatsNew": {
     "title": "Neuigkeiten",
@@ -967,7 +970,9 @@
     "thanks": "Danke für Ihr Feedback",
     "seenAck": "Erledigt — wir zeigen weniger bereits Gesehenes",
     "nudgeSubscribe": "Ein Abonnement von {{publication}} schaltet vollständige Artikel frei",
-    "nudgeBrowse": "Suchen Sie nach verwandter Berichterstattung von anderen Quellen"
+    "nudgeBrowse": "Suchen Sie nach verwandter Berichterstattung von anderen Quellen",
+    "moreAboutTopicNamed": "Mehr über: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Mehr über: {{topic}} und {{extra}} weitere"
   },
   "topicPlan": {
     "title": "Themen, die ich verfolge",

@@ -850,6 +850,9 @@
     "timelineQuietNote": "Ainda não há nova cobertura reunida. Adicionaremos os desenvolvimentos aqui conforme esta história avança.",
     "untrackConfirmTitle": "Deixar de seguir?",
     "untrackConfirmBody": "Você não verá mais novos desenvolvimentos desta história.",
+    "untrackConfirmCta": "Parar de seguir",
+    "emptyHint": "Abra uma história do Feed, depois toque no ícone de acompanhamento em sua linha de ação para começar a seguir.",
+    "emptyCta": "Ir para Feed",
     "trackChatSeed": "Quero seguir esta história.",
     "trackProposalTitle": "Seguir esta história?",
     "articleCount_one": "{{count}} artigo",
@@ -951,6 +954,8 @@
     "failedBody": "Não consegui terminar a recalibração agora. Vou tentar novamente mais tarde."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Mais sobre: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Mais sobre: {{topic}} e {{extra}} mais",
     "title": "Conte mais",
     "contextFor": "Sobre: {{title}}",
     "back": "Voltar",

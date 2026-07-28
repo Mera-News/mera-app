@@ -856,6 +856,9 @@
     "timelineQuietNote": "Nie zebrano jeszcze nowych informacji. Będziemy dodawać tu rozwój wydarzeń w miarę rozwoju tej historii.",
     "untrackConfirmTitle": "Przestać śledzić?",
     "untrackConfirmBody": "Nie będziesz już widzieć nowych wydarzeń dotyczących tej historii.",
+    "untrackConfirmCta": "Przestań obserwować",
+    "emptyHint": "Otwórz artykuł ze Strumienia, a następnie dotknij ikony śledzenia w jego wierszu akcji, aby rozpocząć jego obserwowanie.",
+    "emptyCta": "Przejdź do Strumienia",
     "trackChatSeed": "Chcę śledzić tę historię.",
     "trackProposalTitle": "Śledzić tę historię?",
     "articleCount_one": "{{count}} artykuł",
@@ -959,6 +962,8 @@
     "failedBody": "Nie udało mi się teraz zakończyć ponownej kalibracji. Spróbuję ponownie później."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Więcej o: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Więcej o: {{topic}} i {{extra}} więcej",
     "title": "Powiedz nam więcej",
     "contextFor": "Dotyczy: {{title}}",
     "back": "Wstecz",

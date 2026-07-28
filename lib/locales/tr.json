@@ -851,6 +851,9 @@
     "timelineQuietNote": "Henüz yeni bir gelişme yok. Bu haber ilerledikçe gelişmeleri buraya ekleyeceğiz.",
     "untrackConfirmTitle": "Takibi bırakılsın mı?",
     "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin.",
+    "untrackConfirmCta": "İzlemeyi Durdur",
+    "emptyHint": "Akıştan bir haberi aç, ardından takip etmeye başlamak için işlem satırındaki izleme simgesine dokunun.",
+    "emptyCta": "Akışa Git",
     "trackChatSeed": "Bu haberi takip etmek istiyorum.",
     "trackProposalTitle": "Bu haberi takip et?",
     "articleCount_one": "{{count}} makale",
@@ -952,6 +955,8 @@
     "failedBody": "Şu anda kalibrasyonu tamamlayamadım. Daha sonra tekrar deneyeceğim."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Daha fazlası: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Daha fazlası: {{topic}} ve {{extra}} daha fazla",
     "title": "Bize daha fazlasını anlat",
     "contextFor": "Hakkında: {{title}}",
     "back": "Geri",

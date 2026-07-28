@@ -860,7 +860,10 @@
     "goToStoryAction": "Aller à l'actualité",
     "deleteStoryAction": "Supprimer l'actualité",
     "deleteStoryConfirmTitle": "Supprimer cette actualité ?",
-    "deleteStoryConfirmBody": "La suppression supprime tout ce qui a été enregistré pour cette actualité."
+    "deleteStoryConfirmBody": "La suppression supprime tout ce qui a été enregistré pour cette actualité.",
+    "emptyHint": "Ouvrez une actualité du Fil d'actu, puis appuyez sur l'icône de suivi dans la ligne d'action pour commencer à la suivre.",
+    "emptyCta": "Aller au Fil d'actu",
+    "untrackConfirmCta": "Arrêter de suivre"
   },
   "whatsNew": {
     "title": "Nouveautés",
@@ -967,7 +970,9 @@
     "thanks": "Merci pour votre retour",
     "seenAck": "Compris — nous en montrerons moins que vous avez déjà vus",
     "nudgeSubscribe": "S'abonner à {{publication}} débloque les articles complets",
-    "nudgeBrowse": "Cherchez une couverture connexe auprès d'autres sources"
+    "nudgeBrowse": "Cherchez une couverture connexe auprès d'autres sources",
+    "moreAboutTopicNamed": "Plus sur : {{topic}}",
+    "moreAboutTopicNamedWithCount": "Plus sur : {{topic}} et {{extra}} de plus"
   },
   "topicPlan": {
     "title": "Sujets que je vais suivre",

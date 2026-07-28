@@ -847,6 +847,9 @@
     "timelineQuietNote": "아직 새로운 보도가 없습니다. 이 스토리가 진행되는 대로 이곳에 소식을 추가해 드리겠습니다.",
     "untrackConfirmTitle": "팔로우를 취소할까요?",
     "untrackConfirmBody": "이 스토리의 새로운 진행 상황을 더 이상 확인할 수 없습니다.",
+    "untrackConfirmCta": "팔로우 중지",
+    "emptyHint": "피드에서 스토리를 열고 그 작업 행의 추적 아이콘을 탭하여 팔로우를 시작합니다.",
+    "emptyCta": "피드로 이동",
     "trackChatSeed": "이 스토리를 팔로우하고 싶어요.",
     "trackProposalTitle": "이 스토리를 팔로우할까요?",
     "articleCount_other": "{{count}}개 기사",
@@ -947,6 +950,8 @@
     "failedBody": "지금은 재조정을 완료하지 못했습니다. 나중에 다시 시도하겠습니다."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "더 알아보기: {{topic}}",
+    "moreAboutTopicNamedWithCount": "더 알아보기: {{topic}} 및 {{extra}} 개 더",
     "title": "더 알려주세요",
     "contextFor": "관련 항목: {{title}}",
     "back": "뒤로",

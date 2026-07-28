@@ -860,7 +860,10 @@
     "goToStoryAction": "Ir a la historia",
     "deleteStoryAction": "Eliminar historia",
     "deleteStoryConfirmTitle": "¿Eliminar esta historia?",
-    "deleteStoryConfirmBody": "Eliminarla quita todo lo que fue guardado para esta historia."
+    "deleteStoryConfirmBody": "Eliminarla quita todo lo que fue guardado para esta historia.",
+    "emptyHint": "Abre una historia de Noticias, luego toca el icono de seguimiento en su fila de acciones para empezar a seguirla.",
+    "emptyCta": "Ir a Noticias",
+    "untrackConfirmCta": "Sí, dejar de seguir"
   },
   "whatsNew": {
     "title": "Novedades",
@@ -967,7 +970,9 @@
     "thanks": "Gracias por tu opinión",
     "seenAck": "Listo — mostraremos menos de lo que ya has visto",
     "nudgeSubscribe": "Suscribirte a {{publication}} desbloquea los artículos completos",
-    "nudgeBrowse": "Busca cobertura relacionada de otras fuentes"
+    "nudgeBrowse": "Busca cobertura relacionada de otras fuentes",
+    "moreAboutTopicNamed": "Más sobre: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Más sobre: {{topic}} y {{extra}} más"
   },
   "topicPlan": {
     "title": "Temas que voy a seguir",

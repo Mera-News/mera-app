@@ -42,6 +42,7 @@ Output TWO fields:
 - "label": a short display name for the story, ${MAX_SCOPE_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation. Generic and recognisable (e.g. "Russia–Ukraine war").
 - "search": a plain lowercase search query, ${MAX_SCOPE_SEARCH_WORDS} words or fewer, with the concrete who / what / where entity anchors that make future articles match (e.g. "russia ukraine civilian infrastructure attacks").
 
+The topic must stay matchable indefinitely. Given the Today date: NEVER name an already-ended year, season or edition; prefer an UNDATED scope.
 Do not invent entities absent from the titles. Plain, neutral language; no clickbait, no ALL CAPS.
 
 Output ONLY a JSON object, nothing else:
@@ -50,13 +51,20 @@ Output ONLY a JSON object, nothing else:
 /**
  * Build the {system, user} pair for one story-scope generation call. Titles are
  * de-blanked, capped, sanitized, and truncated before numbering.
+ *
+ * `nowMs` is the reference "now" (epoch ms), INJECTED by the caller — the
+ * builder never reads the clock itself, so the rendered prompt stays a pure
+ * function of its inputs (pinnable goldens). It renders as a `Today: <ISO>`
+ * line that stops the model anchoring the scope to a season that is over.
  */
-export function buildStoryScopePrompt(titles: string[]): StoryScopePrompt {
+export function buildStoryScopePrompt(titles: string[], nowMs: number): StoryScopePrompt {
   const lines = (titles ?? [])
     .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
     .slice(0, MAX_SCOPE_TITLES)
     .map((t, i) => `${i + 1}. ${sanitizeForPrompt(t, MAX_SCOPE_TITLE_CHARS)}`);
-  const user = `Titles for this story:\n${lines.join('\n')}\n\nWrite the topic now as a JSON object with "label" and "search".`;
+  // UTC (not locale) so the prompt does not drift with the device timezone.
+  const today = Number.isFinite(nowMs) ? new Date(nowMs).toISOString().slice(0, 10) : 'unknown';
+  const user = `Today: ${today}\n\nTitles for this story:\n${lines.join('\n')}\n\nWrite the topic now as a JSON object with "label" and "search".`;
   return { system: STORY_SCOPE_SYSTEM_PROMPT, user };
 }
 

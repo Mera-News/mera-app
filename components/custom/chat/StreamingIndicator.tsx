@@ -3,8 +3,6 @@ import { Text } from '@/components/ui/text';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-    FadeIn,
-    FadeOut,
     useAnimatedStyle,
     useSharedValue,
     withDelay,
@@ -37,6 +35,13 @@ const STREAMING_LABELS = [
 ];
 
 const STREAMING_LABEL_CYCLE_MS = 2000;
+// Half of the label crossfade. The caption fades OUT over this window, swaps
+// text at the trough, then fades back IN — so exactly one caption is mounted
+// (and painted) at any instant. Do NOT go back to a keyed Animated.View with
+// entering/exiting: Reanimated keeps the exiting copy on screen (outside the
+// layout flow) while the new one mounts, which drew two captions on top of each
+// other inside the fixed-height labelRow.
+const LABEL_FADE_MS = 220;
 
 const DEFAULT_LABEL_COLOR = 'rgb(156, 163, 175)';
 const DEFAULT_DOT_COLOR = 'rgb(231, 138, 83)';
@@ -53,13 +58,25 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false
     const labelColor = color ?? DEFAULT_LABEL_COLOR;
     const dotColor = color ?? DEFAULT_DOT_COLOR;
 
-    // Cycle through labels
+    // Cycle through labels — fade the single caption out, swap the text while it
+    // is invisible, fade it back in. One mounted label, one visible caption.
+    const labelOpacity = useSharedValue(1);
     useEffect(() => {
+        let swapTimer: ReturnType<typeof setTimeout> | undefined;
         const interval = setInterval(() => {
-            setLabelIndex((i) => (i + 1) % STREAMING_LABELS.length);
+            labelOpacity.value = withTiming(0, { duration: LABEL_FADE_MS });
+            swapTimer = setTimeout(() => {
+                setLabelIndex((i) => (i + 1) % STREAMING_LABELS.length);
+                labelOpacity.value = withTiming(1, { duration: LABEL_FADE_MS });
+            }, LABEL_FADE_MS);
         }, STREAMING_LABEL_CYCLE_MS);
-        return () => clearInterval(interval);
-    }, []);
+        return () => {
+            clearInterval(interval);
+            if (swapTimer) clearTimeout(swapTimer);
+        };
+    }, [labelOpacity]);
+
+    const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.value }));
 
     // Dot pulse animations — each dot scales up then down in sequence
     // Cycle: 900ms total (300ms per dot), each dot 150ms up + 150ms down
@@ -91,21 +108,25 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false
 
     const labelRow = (
         <View style={streamingIndicatorStyles.labelRow}>
-            <Animated.View
-                key={labelIndex}
-                entering={FadeIn.duration(300)}
-                exiting={FadeOut.duration(300)}
-                style={streamingIndicatorStyles.labelInner}
-            >
-                <Text size="sm" style={[streamingIndicatorStyles.label, { color: labelColor }]}>
-                    {STREAMING_LABELS[labelIndex]}
-                </Text>
+            <View style={streamingIndicatorStyles.labelInner}>
+                {/* Only the WORD crossfades. The dots stay at full opacity: they
+                    are the liveness signal, and the fade trough would otherwise
+                    blank the whole indicator for a beat every cycle. */}
+                <Animated.View style={labelStyle}>
+                    <Text
+                        testID="streaming-caption"
+                        size="sm"
+                        style={[streamingIndicatorStyles.label, { color: labelColor }]}
+                    >
+                        {STREAMING_LABELS[labelIndex]}
+                    </Text>
+                </Animated.View>
                 <View style={streamingIndicatorStyles.dotsRow}>
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot1Style]} />
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot2Style]} />
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot3Style]} />
                 </View>
-            </Animated.View>
+            </View>
         </View>
     );
 

@@ -46,8 +46,16 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
         return () => sub.unsubscribe();
     }, []);
 
+    // box-none: this row spans the full header width, and the space to the right
+    // of the three pills would otherwise be an opaque band that swallows the
+    // Dashboard's pull-to-refresh. Only the pills themselves take touches.
     return (
-        <HStack className="items-center" space="sm" testID="dashboard-subtabs-row">
+        <HStack
+            className="items-center"
+            space="sm"
+            testID="dashboard-subtabs-row"
+            pointerEvents="box-none"
+        >
             {TABS.map((tab) => {
                 const active = tab.key === activeSubTab;
                 const showBadge = tab.key === 'stories' && unseenTotal > 0;

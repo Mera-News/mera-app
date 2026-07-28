@@ -12,7 +12,11 @@ interface ArticleSuggestionCompactCardProps {
   surface?: FeedbackSurface;
   /** Dims the row (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
-  /** Marks the row as read — green tick chip instead of dimming (Dashboard). */
+  /** Marks the row as already-read. Draws NO indicator of its own — there is no
+   *  green tick chip and no eye glyph; both were deliberately removed. It only
+   *  suppresses the NEW badge in the meta row, since a story you have read is
+   *  not new to you. Forwarded verbatim to `ArticleCompactCardBase`, whose doc
+   *  is the source of truth. The Dashboard surfaces use this. */
   read?: boolean;
   /** Renders the green "NEW" pill in the meta row (Dashboard section cards). */
   isNew?: boolean;

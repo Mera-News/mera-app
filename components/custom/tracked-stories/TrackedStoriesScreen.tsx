@@ -185,6 +185,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
 
     const keyExtractor = useCallback((item: TrackedStoryModel) => item.id, []);
 
+    const goToFeed = useCallback(() => {
+        router.push('/logged-in/app_container/feed');
+    }, []);
+
     const ListEmpty = (
         <Box className="flex-1 items-center justify-center px-8 py-20">
             <MaterialIcons name="auto-awesome" size={48} color="#6B7280" />
@@ -194,6 +198,29 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
             <Text size="sm" className="text-typography-400 text-center mt-2">
                 {t('trackedStories.emptyBody')}
             </Text>
+            {/* The empty body used to stop at "how" without saying "where". QA's
+                filed wording ("feed card → 👍 → the 'More like this' panel")
+                doesn't match the current wiring: Feed cards (CardActionBar) have
+                no track affordance at all — the track ("track-changes" /
+                crosshair) icon only exists in ArticleFeedbackPrompt's action row
+                on the article DETAIL screen (opened by tapping a Feed card), and
+                it sits in that row independent of the like/dislike panel, not
+                inside it. Hint text reflects that traced path rather than the
+                filed description. CTA styling matches the other
+                icon+text+outline-button empty state (locations.tsx's "Add a
+                place" pattern) — the two components named in the task have no
+                CTA to match. */}
+            <Text size="xs" className="text-typography-500 text-center mt-4">
+                {t('trackedStories.emptyHint')}
+            </Text>
+            <Button
+                variant="outline"
+                className="rounded-full border-primary-500 mt-4"
+                onPress={goToFeed}
+                testID="tracked-stories-empty-cta"
+            >
+                <ButtonText className="text-primary-400">{t('trackedStories.emptyCta')}</ButtonText>
+            </Button>
         </Box>
     );
 
@@ -253,8 +280,19 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                         >
                             <ButtonText>{t('common.cancel')}</ButtonText>
                         </Button>
-                        <Button action="negative" onPress={handleConfirmUntrack}>
-                            <ButtonText>{t('trackedStories.untrackAction')}</ButtonText>
+                        {/* Distinct copy from the trash icon that opens this
+                            dialog. Both used to read "Untrack story", so a
+                            screen-reader user heard two identically-named
+                            buttons and could not tell the trigger from the
+                            confirmation. The icon stays "Untrack story"; this
+                            one names the ACTION it commits. */}
+                        <Button
+                            action="negative"
+                            onPress={handleConfirmUntrack}
+                            testID="untrack-confirm"
+                            accessibilityLabel={t('trackedStories.untrackConfirmCta')}
+                        >
+                            <ButtonText>{t('trackedStories.untrackConfirmCta')}</ButtonText>
                         </Button>
                     </ModalFooter>
                 </ModalContent>

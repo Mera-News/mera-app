@@ -188,6 +188,11 @@ export class ArticleFeedbackAgent implements IAgent {
     const relatedCoverage = await this.getRelatedCoverage();
 
     return buildFeedbackContext({
+      // The real clock lives HERE (the adapter), never inside the pure builder —
+      // anchors proposeTrack scopes to the present instead of to whatever year
+      // dominates the model's training data.
+      nowMs: Date.now(),
+      articlePubDate: trackSubject?.pubDate ?? null,
       facts,
       context,
       fallbackTitle,

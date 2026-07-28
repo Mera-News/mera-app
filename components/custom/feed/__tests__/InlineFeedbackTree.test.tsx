@@ -5,8 +5,21 @@
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: Record<string, unknown>) =>
-      (opts && (opts.defaultValue as string)) || key,
+    // Mirrors real i18next's {{var}} interpolation against `defaultValue` (the
+    // new keys this suite exercises aren't in en.json yet — see the calling
+    // task's constraints — so every case here resolves via defaultValue).
+    // NOT a faithful stand-in for real i18next: this mock never resolves an
+    // actual key, and real i18next ALSO does plural-suffix key resolution
+    // (`_one`/`_other`) whenever a `count` var is present, tried before the
+    // base key — which is exactly why production code here uses `extra`,
+    // not `count`, for the "+N more" var (see InlineFeedbackTree.tsx).
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const base = (opts && (opts.defaultValue as string)) || key;
+      if (!opts) return base;
+      return base.replace(/\{\{(\w+)\}\}/g, (_match: string, name: string) =>
+        String(opts[name] ?? ''),
+      );
+    },
   }),
 }));
 jest.mock('@/components/ui/box', () => {
@@ -280,5 +293,118 @@ describe('InlineFeedbackTree', () => {
     fireEvent.press(await waitFor(() => getByText('Not a good suggestion')));
     expect(await waitFor(() => getByText('Custom Heading'))).toBeTruthy();
     expect(queryByText('Less like this')).toBeNull();
+  });
+
+  // "More about this topic" (production id `more_about_topic`) never named
+  // WHICH topic it means — its "A lot more" / "A bit more" leaves asked the
+  // user to weight an unnamed thing. `label()` interpolates the matched topic
+  // into this specific node's chip AND breadcrumb crumb.
+  describe('naming the matched topic on "more_about_topic"', () => {
+    const TREE_WITH_NAMED_NODE = {
+      version: 2,
+      root: [],
+      likeRoot: [
+        {
+          id: 'more_about_topic',
+          labelKey: 'feedback.more_about_topic',
+          labelDefault: 'More about this topic',
+          children: [
+            { id: 'a_lot_more', labelKey: 'k.alm', labelDefault: 'A lot more', leaf: { actions: [] } },
+          ],
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      jest
+        .requireMock('@/lib/services/feedback-tree-service')
+        .getFeedbackTree.mockResolvedValue(TREE_WITH_NAMED_NODE);
+    });
+
+    afterEach(() => {
+      jest.requireMock('@/lib/services/feedback-tree-service').getFeedbackTree.mockResolvedValue(TREE);
+    });
+
+    it('names a single real matched topic in the chip', async () => {
+      const suggestion = {
+        ...makeSuggestion(),
+        matchedTopics: [{ topicId: 't1', text: 'Formula 1' }],
+      };
+      const { getByText, queryByText } = render(
+        <InlineFeedbackTree
+          suggestion={suggestion}
+          verdict="like"
+          onTreePathChanged={jest.fn()}
+          onInvokeMera={jest.fn()}
+          onLeafCommitted={jest.fn()}
+        />,
+      );
+      expect(await waitFor(() => getByText('More about: Formula 1'))).toBeTruthy();
+      expect(queryByText('More about this topic')).toBeNull();
+    });
+
+    it('picks the first real topic and says how many more when there are several', async () => {
+      const suggestion = {
+        ...makeSuggestion(),
+        matchedTopics: [
+          { topicId: null, text: 'Synthetic headline' }, // ignored — no topicId
+          { topicId: 't1', text: 'Formula 1' },
+          { topicId: 't2', text: 'Motorsport' },
+        ],
+      };
+      const { getByText } = render(
+        <InlineFeedbackTree
+          suggestion={suggestion}
+          verdict="like"
+          onTreePathChanged={jest.fn()}
+          onInvokeMera={jest.fn()}
+          onLeafCommitted={jest.fn()}
+        />,
+      );
+      expect(await waitFor(() => getByText('More about: Formula 1 and 1 more'))).toBeTruthy();
+    });
+
+    it('falls back to the generic label when there are no real matched topics (never renders an empty "More about: ")', async () => {
+      const suggestion = {
+        ...makeSuggestion(),
+        matchedTopics: [{ topicId: null, text: 'Synthetic headline' }],
+      };
+      const { getByText, queryByText } = render(
+        <InlineFeedbackTree
+          suggestion={suggestion}
+          verdict="like"
+          onTreePathChanged={jest.fn()}
+          onInvokeMera={jest.fn()}
+          onLeafCommitted={jest.fn()}
+        />,
+      );
+      expect(await waitFor(() => getByText('More about this topic'))).toBeTruthy();
+      // The generic (non-interpolated) label never colon-suffixes a topic.
+      expect(queryByText(/^More about: /)).toBeNull();
+    });
+
+    it('names the topic in the breadcrumb crumb after descending', async () => {
+      const suggestion = {
+        ...makeSuggestion(),
+        matchedTopics: [{ topicId: 't1', text: 'Formula 1' }],
+      };
+      const { getByText, queryByText } = render(
+        <InlineFeedbackTree
+          suggestion={suggestion}
+          verdict="like"
+          onTreePathChanged={jest.fn()}
+          onInvokeMera={jest.fn()}
+          onLeafCommitted={jest.fn()}
+        />,
+      );
+      fireEvent.press(await waitFor(() => getByText('More about: Formula 1')));
+      // Post-descent: the chip list advanced to "A lot more" (the chip is
+      // gone), and the named text — rendered by the SAME `label()` callback —
+      // now shows up as the breadcrumb crumb instead of the generic
+      // "More about this topic".
+      expect(await waitFor(() => getByText('A lot more'))).toBeTruthy();
+      expect(getByText('More about: Formula 1')).toBeTruthy(); // now the crumb
+      expect(queryByText('More about this topic')).toBeNull();
+    });
   });
 });

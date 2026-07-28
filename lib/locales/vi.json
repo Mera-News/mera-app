@@ -847,6 +847,9 @@
     "timelineQuietNote": "Chưa có tin tức mới nào được tổng hợp. Chúng tôi sẽ thêm diễn biến tại đây khi câu chuyện này tiếp diễn.",
     "untrackConfirmTitle": "Ngừng theo dõi?",
     "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa.",
+    "untrackConfirmCta": "Ngừng theo dõi",
+    "emptyHint": "Mở một câu chuyện từ Bảng tin, rồi chạm vào biểu tượng theo dõi trong hàng hành động của nó để bắt đầu theo dõi.",
+    "emptyCta": "Đi tới Bảng tin",
     "trackChatSeed": "Tôi muốn theo dõi câu chuyện này.",
     "trackProposalTitle": "Theo dõi câu chuyện này?",
     "articleCount_other": "{{count}} bài viết",
@@ -947,6 +950,8 @@
     "failedBody": "Mình chưa thể hoàn tất việc hiệu chỉnh lúc này. Mình sẽ thử lại sau."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Thêm về: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Thêm về: {{topic}} và {{extra}} chủ đề khác",
     "title": "Cho chúng tôi biết thêm",
     "contextFor": "Về: {{title}}",
     "back": "Quay lại",

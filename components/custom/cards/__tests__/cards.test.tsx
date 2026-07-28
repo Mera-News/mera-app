@@ -115,7 +115,24 @@ jest.mock('@/components/custom/chat/StreamingIndicator', () => {
 });
 jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
-  return { __esModule: true, default: () => <View testID="mera-logo" /> };
+  return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
+});
+// ArticleImagePlaceholder draws its dark gradient with react-native-svg (same
+// house pattern as SectionGradientPanel) — mocked to plain views, same as
+// every other react-native-svg consumer's test (SectionGradientPanel.test.tsx,
+// MeraLogo.test.tsx).
+jest.mock('react-native-svg', () => {
+  const { View } = require('react-native');
+  const Passthrough = (props: any) => <View {...props} />;
+  return {
+    __esModule: true,
+    default: (props: any) => <View testID="placeholder-svg" {...props} />,
+    Svg: (props: any) => <View testID="placeholder-svg" {...props} />,
+    Defs: Passthrough,
+    LinearGradient: Passthrough,
+    Stop: Passthrough,
+    Rect: Passthrough,
+  };
 });
 jest.mock('@/components/custom/feedback-tree/FeedbackTreeOverlay', () => ({
   __esModule: true,
@@ -445,6 +462,66 @@ describe('ArticleStandaloneCompactCard', () => {
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
     expect(queryByLabelText('More actions')).toBeNull();
+  });
+});
+
+describe('ArticleImagePlaceholder (via the card bases)', () => {
+  // The placeholder wraps itself in accessible={false} +
+  // importantForAccessibility="no-hide-descendants" — RNTL v13 EXCLUDES that
+  // whole subtree from default queries (mirroring how aria-hidden works in
+  // DOM Testing Library), so every lookup into it needs
+  // `includeHiddenElements: true`. That exclusion is itself proof the
+  // decorative-hiding works: a sighted a11y query genuinely can't "see" it.
+  it('shows the dark-gradient watermark placeholder on a full-size card with no image', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('placeholder-svg', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it('hides the placeholder from the accessibility tree (decorative, not an article photo)', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
+    );
+    // Excluded from a default (non-hidden) query — this is the behavior we want.
+    expect(queryByTestId('placeholder-svg')).toBeNull();
+    // Walk up from the mocked Svg to the wrapping View that carries the
+    // accessibility-hiding props.
+    let n: any = getByTestId('placeholder-svg', { includeHiddenElements: true }).parent;
+    while (n && n.props?.accessible === undefined) n = n.parent;
+    expect(n?.props?.accessible).toBe(false);
+    expect(n?.props?.importantForAccessibility).toBe('no-hide-descendants');
+  });
+
+  it('renders the real image instead of the placeholder when the full-size card has an image', () => {
+    const { queryByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(queryByTestId('placeholder-svg', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('shows the placeholder on a compact card with no image', () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle({ image_url: null })} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('placeholder-svg', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it('renders the real image instead of the placeholder when the compact card has an image', () => {
+    const { queryByTestId } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(queryByTestId('placeholder-svg', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
   });
 });
 

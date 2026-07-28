@@ -847,6 +847,9 @@
     "timelineQuietNote": "まだ新しい報道は集まっていません。このストーリーが進展するたびに、ここに追加していきます。",
     "untrackConfirmTitle": "フォローを解除しますか？",
     "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
+    "untrackConfirmCta": "フォローを停止",
+    "emptyHint": "フィードからストーリーを開き、そのアクション行のフォローアイコンをタップしてフォロー開始します。",
+    "emptyCta": "フィードに移動",
     "trackChatSeed": "このストーリーをフォローしたいです。",
     "trackProposalTitle": "このストーリーをフォローしますか？",
     "articleCount_other": "{{count}}件の記事",
@@ -947,6 +950,8 @@
     "failedBody": "今回は再調整を完了できませんでした。後でもう一度お試しします。"
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "詳細：{{topic}}",
+    "moreAboutTopicNamedWithCount": "詳細：{{topic}} と {{extra}} 件の追加",
     "title": "詳しく教えてください",
     "contextFor": "対象：{{title}}",
     "back": "戻る",

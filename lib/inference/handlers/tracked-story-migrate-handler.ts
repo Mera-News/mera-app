@@ -57,7 +57,9 @@ export async function handleTrackedStoryMigrateJob(
     return { ok: false };
   }
 
-  const { system, user } = buildStoryScopePrompt(titles);
+  // Real clock supplied HERE — buildStoryScopePrompt takes the date as a
+  // parameter so its prompt stays deterministic/pinnable.
+  const { system, user } = buildStoryScopePrompt(titles, Date.now());
 
   let raw = '';
   try {

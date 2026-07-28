@@ -847,6 +847,9 @@
     "timelineQuietNote": "Belum ada liputan baru yang terkumpul. Kami akan menambahkan perkembangan di sini seiring cerita ini berlangsung.",
     "untrackConfirmTitle": "Berhenti mengikuti?",
     "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini.",
+    "untrackConfirmCta": "Berhenti mengikuti",
+    "emptyHint": "Buka cerita dari Feed, lalu ketuk ikon pelacak di baris tindakannya untuk mulai mengikutinya.",
+    "emptyCta": "Ke Umpan",
     "trackChatSeed": "Saya ingin mengikuti cerita ini.",
     "trackProposalTitle": "Ikuti cerita ini?",
     "articleCount_other": "{{count}} artikel",
@@ -947,6 +950,8 @@
     "failedBody": "Saya tidak dapat menyelesaikan kalibrasi ulang saat ini. Saya akan mencoba lagi nanti."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Lebih lanjut tentang: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Lebih lanjut tentang: {{topic}} dan {{extra}} lainnya",
     "title": "Beri tahu kami lebih lanjut",
     "contextFor": "Tentang: {{title}}",
     "back": "Kembali",

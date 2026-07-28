@@ -83,8 +83,10 @@ const MeraNewsScreen: React.FC = () => {
     // Collapsing Dashboard header (hides on scroll-down, reveals on scroll-up).
     const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
         useCollapsibleHeader();
-    // Live opened set — subscribed so the section resort + green ticks update as
-    // stories are opened.
+    // Live opened set — subscribed so the per-card read treatment updates as
+    // stories are opened. (There is no green tick; `read` only suppresses the
+    // NEW badge. Section ORDER comes from the throttled `sortSnapshot`, not from
+    // this live set.)
     const openedIds = useOpenedStoriesStore((s) => s.ids);
     const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>();
     const [showOnboardingWait, setShowOnboardingWait] = useState(false);
@@ -477,23 +479,39 @@ const MeraNewsScreen: React.FC = () => {
                     headerStyle,
                 ]}
             >
-                {/* box-none here TOO, not just on the Animated.View wrapper. The
-                    wrapper being box-none does nothing for THIS child: a plain
-                    VStack is `pointerEvents: auto`, so it hit-tests across the
-                    header's full width and height and swallows any drag starting
-                    inside it. This header is tall (title + stats + sub-tab pills
-                    + sync indicator), so a natural "pull down from the top"
-                    begins on it and never reaches the list underneath. Its
-                    interactive children (bell, status line, sub-tab pills) still
-                    receive taps. */}
+                {/* PULL-TO-REFRESH PASSTHROUGH — read this before adding a row.
+                    `box-none` makes a view itself untouchable but leaves its
+                    CHILDREN touchable. Putting it only on this VStack (and on the
+                    Animated.View above) was NOT enough: every direct child here
+                    is a full-width plain View, so the title row, the stats
+                    sentence, the sub-tab row and the sync indicator each formed an
+                    opaque full-width band. A downward pan starting anywhere in the
+                    header was consumed by whichever band it landed on and never
+                    reached the FlatList underneath — which is exactly why the
+                    gesture produced ZERO list displacement while a programmatic
+                    scroll worked fine.
+                    The Feed tab's header has two such bands and is much shorter,
+                    so its pull usually starts below the header and works; this
+                    header is tall enough that it almost never does.
+                    RULE: every non-interactive row in this header must be
+                    `pointerEvents="none"`, and every row that merely CONTAINS an
+                    interactive child must be `box-none`. Only genuine controls
+                    (bell, status line, sub-tab pills) may be `auto`. */}
                 <VStack
                     className="px-5 pb-2"
                     pointerEvents="box-none"
                     style={{ paddingTop: insets.top + 16 }}
                 >
-                    <HStack className="items-start justify-between mb-2">
-                        <VStack className="flex-1 min-w-0 mr-3">
-                            <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.dashboardTitle')}</Heading>
+                    <HStack className="items-start justify-between mb-2" pointerEvents="box-none">
+                        <VStack className="flex-1 min-w-0 mr-3" pointerEvents="box-none">
+                            <Heading
+                                size="3xl"
+                                className="text-white"
+                                numberOfLines={1}
+                                pointerEvents="none"
+                            >
+                                {t('feed.dashboardTitle')}
+                            </Heading>
                             {lastProcessedLabel && (
                                 <Pressable
                                     onPress={openStatusSheet}
@@ -506,25 +524,34 @@ const MeraNewsScreen: React.FC = () => {
                                 </Pressable>
                             )}
                         </VStack>
-                        <HStack className="items-center flex-shrink-0" space="sm">
+                        <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
                             <NotificationBellButton />
                         </HStack>
                     </HStack>
 
-                    {/* Stats sentence — always visible in the Dashboard header. */}
-                    <FeedStatsSentence className="text-typography-400 leading-6 mb-2" />
+                    {/* Stats sentence — decorative text, never tapped: fully
+                        transparent to touches so a pull can start on it. */}
+                    <View pointerEvents="none">
+                        <FeedStatsSentence className="text-typography-400 leading-6 mb-2" />
+                    </View>
 
-                    {/* Sub-tab pills — Feed / Stories / Saved. */}
-                    <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+                    {/* Sub-tab pills. box-none: the ROW is a full-width band and
+                        must not swallow a pull — only the pills themselves take
+                        touches (ForYouSubTabs' own HStack is box-none too). */}
+                    <View pointerEvents="box-none">
+                        <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+                    </View>
 
                     {/* Shared sync surface — indeterminate bar + expand accordion,
                         plus the offline notice and the re-auth prompt. Identical
                         to the Feed tab's, and it goes up on the same frame as a
                         pull on EITHER screen (see FeedSyncIndicator). */}
-                    <FeedSyncIndicator
-                        lastProcessedLabel={lastProcessedLabel}
-                        showConnectivityNotices={activeSubTab === 'feed'}
-                    />
+                    <View pointerEvents="box-none">
+                        <FeedSyncIndicator
+                            lastProcessedLabel={lastProcessedLabel}
+                            showConnectivityNotices={activeSubTab === 'feed'}
+                        />
+                    </View>
                 </VStack>
             </Animated.View>
 

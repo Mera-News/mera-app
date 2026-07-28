@@ -133,6 +133,16 @@ describe('TrackedStoriesScreen', () => {
         expect(getByText('trackedStories.emptyBody')).toBeTruthy();
     });
 
+    it('gives the empty state an actionable hint + a CTA to the Feed tab', () => {
+        const { getByText } = render(<TrackedStoriesScreen embedded />);
+        // The hint tells the user WHERE following happens (QA: the action was
+        // three levels deep with nothing on this screen pointing there).
+        expect(getByText('trackedStories.emptyHint')).toBeTruthy();
+        // The CTA routes to the Feed tab, where the follow action lives.
+        fireEvent.press(getByText('trackedStories.emptyCta'));
+        expect(router.push).toHaveBeenCalledWith('/logged-in/app_container/feed');
+    });
+
     it('gives the row a composite a11y label: title, unseen count, total, age', () => {
         mockRows = [story({ id: 's9', llmHeadline: 'Flood update', unseenCount: 2 })];
         const { getByLabelText } = render(<TrackedStoriesScreen embedded />);
@@ -167,16 +177,32 @@ describe('TrackedStoriesScreen', () => {
         );
     });
 
+    // Item 27: the trash icon and the confirm button used to share the exact
+    // string "Untrack story", so VoiceOver announced two buttons with the same
+    // name and the user could not tell the trigger from the confirmation.
+    it('gives the trash icon and the confirm button DIFFERENT labels', () => {
+        mockRows = [story({ id: 's5', llmHeadline: 'Two labels' })];
+        const { getByTestId, getByLabelText } = render(<TrackedStoriesScreen embedded />);
+        fireEvent(getByLabelText(/^Two labels,/), 'longPress');
+        const confirm = getByTestId('untrack-confirm');
+        expect(confirm.props.accessibilityLabel).toBe('trackedStories.untrackConfirmCta');
+        // …and it is NOT the icon's label.
+        expect(confirm.props.accessibilityLabel).not.toBe('trackedStories.untrackAction');
+        expect(getByLabelText('trackedStories.untrackAction')).toBeTruthy();
+    });
+
     it('untracks after confirming the modal', () => {
         mockRows = [story({ id: 's4', llmHeadline: 'Drop me', unseenCount: 1 })];
-        const { getByText, getByLabelText } = render(<TrackedStoriesScreen embedded />);
+        const { getByTestId, getByLabelText } = render(<TrackedStoriesScreen embedded />);
         // The row's a11y label is now COMPOSITE — headline + unseen badge +
         // total + age — so a screen-reader user hears the whole card, not just
         // its title. Match on a prefix regex rather than the bare headline.
         fireEvent(getByLabelText(/^Drop me,/), 'longPress');
-        // Confirm CTA — the only TEXT node reading untrackAction (the trash icon
-        // carries it as an a11y label, not text).
-        fireEvent.press(getByText('trackedStories.untrackAction'));
+        // Confirm CTA. It no longer shares copy with the trash icon that opens
+        // this dialog (they both read "Untrack story", so a screen reader
+        // announced two identically-named buttons); the confirm button now has
+        // its own string AND a stable testID.
+        fireEvent.press(getByTestId('untrack-confirm'));
         expect(mockUntrack).toHaveBeenCalledWith('s4');
     });
 });

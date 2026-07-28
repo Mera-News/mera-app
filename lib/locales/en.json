@@ -308,6 +308,9 @@
     "timelineQuietNote": "No new coverage gathered yet. We'll add developments here as this story unfolds.",
     "untrackConfirmTitle": "Stop following?",
     "untrackConfirmBody": "You'll no longer see new developments for this story.",
+    "untrackConfirmCta": "Stop following",
+    "emptyHint": "Open a story from the Feed, then tap the track icon in its action row to start following it.",
+    "emptyCta": "Go to Feed",
     "trackChatSeed": "I want to follow this story.",
     "trackProposalTitle": "Follow this story?",
     "articleCount_one": "{{count}} article",
@@ -919,6 +922,8 @@
     "failedBody": "I couldn't finish recalibrating just now. I'll try again later."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "More about: {{topic}}",
+    "moreAboutTopicNamedWithCount": "More about: {{topic}} and {{extra}} more",
     "title": "Tell us more",
     "contextFor": "About: {{title}}",
     "back": "Back",

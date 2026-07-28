@@ -53,7 +53,8 @@ interface BaseProps {
     // article-detail path).
     aboveReason?: React.ReactNode;
     /** Marks the article/suggestion as already-read — shows the meta row's
-     *  small eye icon next to the time group. Screen-variant only (detail
+     *  NEW badge in the meta row. It draws no indicator of its own — the eye glyph
+   *  it used to show was deliberately removed. Screen-variant only (detail
      *  screens); the card variant has no live consumers. Default false. */
     read?: boolean;
     /** Forwarded to the TITLE's TranslatableDynamic (the toggle-enabled screen

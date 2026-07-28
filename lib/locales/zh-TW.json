@@ -847,6 +847,9 @@
     "timelineQuietNote": "目前還沒有新的報導。隨著事態發展，我們會持續在這裡更新。",
     "untrackConfirmTitle": "確定要取消追蹤嗎？",
     "untrackConfirmBody": "你將不再看到這則報導的最新進展。",
+    "untrackConfirmCta": "停止追蹤",
+    "emptyHint": "從資訊流中打開報導，然後點擊其操作行中的追蹤圖示以開始追蹤。",
+    "emptyCta": "前往資訊流",
     "trackChatSeed": "我想追蹤這則報導。",
     "trackProposalTitle": "追蹤這則報導？",
     "articleCount_other": "{{count}} 篇文章",
@@ -947,6 +950,8 @@
     "failedBody": "我暫時無法完成重新校準，稍後會再試一次。"
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "更多內容：{{topic}}",
+    "moreAboutTopicNamedWithCount": "更多內容：{{topic}} 及其他 {{extra}} 個主題",
     "title": "告訴我們更多",
     "contextFor": "關於：{{title}}",
     "back": "返回",

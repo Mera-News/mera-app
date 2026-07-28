@@ -49,6 +49,7 @@ import NotificationBellButton from '@/components/custom/notifications/Notificati
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
+import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
@@ -94,7 +95,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, RefreshControl } from 'react-native';
+import { AppState, RefreshControl, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   runOnJS,
@@ -215,8 +216,13 @@ const FeedScreen: React.FC = () => {
   const listRef = useRef<Animated.FlatList<FeedEntry>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const showFabShared = useSharedValue(false);
+  // Raw offset mirror, updated on every scroll frame (see tickHandler below) —
+  // UI-thread only, no bridge crossing, no re-render. This exists solely so
+  // `scrollToTop` can tell "the call landed" from "it didn't" (see below);
+  // `showFabShared` only tracks the threshold boolean, not the offset itself.
+  const lastOffsetShared = useSharedValue(0);
   const scrollToTop = useCallback(() => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    scrollToTopWithRetry(listRef, () => lastOffsetShared.value);
   }, []);
 
   // Hydrate the persisted order ONCE, when the DB is ready. Evicts persisted ids
@@ -427,10 +433,17 @@ const FeedScreen: React.FC = () => {
   // scroll racing the re-layout produces the same mid-list landing.
   //
   // The extra `requestAnimationFrame` is not superstition: a scrollToOffset
-  // issued in the same frame as a re-layout on this very list is already known
-  // to be dropped — a post-refresh press of the scroll-to-top FAB (same ref,
-  // same call) reliably no-ops on the FIRST press and works on the second. One
-  // frame is imperceptible with the spinner still up.
+  // issued in the same frame as this re-layout is already known to be
+  // dropped. The scroll-to-top FAB hits the same CLASS of drop from a wider
+  // window — not this same frame (it's only reachable well after this reset,
+  // once the user has scrolled back down past SCROLL_THRESHOLD; the leading
+  // suspect for the wider window is `ingest` prepending post-refresh sync
+  // results while the user is scrolled down, each prepend re-triggering
+  // `maintainVisibleContentPosition`'s anchor adjustment, though that trigger
+  // isn't proven, only the drop itself is) — see `scrollToTopWithRetry` in
+  // ./scroll-to-top-with-retry.ts, which verifies the scroll landed and
+  // retries once if not, rather than trying to name the exact cause. One
+  // frame here is imperceptible with the spinner still up.
   useEffect(() => {
     if (!pendingScrollResetRef.current) return;
     pendingScrollResetRef.current = false;
@@ -450,6 +463,9 @@ const FeedScreen: React.FC = () => {
   const tickHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
       runOnJS(notifyScrollTick)();
+      // Mirror the raw offset every frame — cheap (UI thread, no bridge
+      // crossing, no re-render) and lets `scrollToTop` verify its own call.
+      lastOffsetShared.value = e.contentOffset.y;
       // Toggle the scroll-to-top FAB — cross the JS bridge only when the
       // threshold boolean actually flips, not on every scroll frame.
       const next = e.contentOffset.y > SCROLL_THRESHOLD;
@@ -632,23 +648,41 @@ const FeedScreen: React.FC = () => {
           headerStyle,
         ]}
       >
-        <VStack className="px-5 pb-2" space="xs" style={{ paddingTop: insets.top + 16 }}>
-          <HStack className="items-start justify-between">
-            <VStack className="flex-1 min-w-0 mr-3">
+        {/* PULL-TO-REFRESH PASSTHROUGH — see the matching note in ForYouScreen.
+            `box-none` on the header wrapper leaves its CHILDREN touchable, and
+            each row here is a full-width plain View, so every row is an opaque
+            band that can swallow a downward pan before it reaches the list. This
+            header is short enough that a pull usually starts below it — which is
+            why the bug surfaced on the Dashboard first — but the defect is the
+            same, so the same rule applies: non-interactive rows are
+            `pointerEvents="none"`, rows merely CONTAINING a control are
+            `box-none`, only real controls are `auto`. */}
+        <VStack
+          className="px-5 pb-2"
+          space="xs"
+          pointerEvents="box-none"
+          style={{ paddingTop: insets.top + 16 }}
+        >
+          <HStack className="items-start justify-between" pointerEvents="box-none">
+            <VStack className="flex-1 min-w-0 mr-3" pointerEvents="none">
               <Heading size="3xl" className="text-white" numberOfLines={1}>
                 {t('swipeFeed.yourDeck')}
               </Heading>
             </VStack>
-            <HStack className="items-center flex-shrink-0" space="sm">
+            <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
               <NotificationBellButton />
             </HStack>
           </HStack>
-          <FeedStatsSentence />
+          <View pointerEvents="none">
+            <FeedStatsSentence />
+          </View>
 
           {/* Shared sync surface — the same indeterminate bar the Dashboard
               shows, plus the offline notice and the re-auth prompt. It goes up
               on the same frame as a pull on EITHER screen. */}
-          <FeedSyncIndicator />
+          <View pointerEvents="box-none">
+            <FeedSyncIndicator />
+          </View>
         </VStack>
       </Animated.View>
 

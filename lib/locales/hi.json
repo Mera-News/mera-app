@@ -850,7 +850,10 @@
     "endedLabel": "समाप्त",
     "timelineQuietNote": "अभी तक कोई नई कवरेज नहीं मिली। जैसे-जैसे यह स्टोरी आगे बढ़ेगी, हम यहां घटनाक्रम जोड़ेंगे।",
     "untrackConfirmTitle": "फ़ॉलो करना बंद करें?",
+    "untrackConfirmCta": "फ़ॉलो करना बंद करें",
     "untrackConfirmBody": "अब आपको इस स्टोरी के नए घटनाक्रम नहीं दिखेंगे।",
+    "emptyHint": "फ़ीड से कोई स्टोरी खोलें, फिर इसे फ़ॉलो करना शुरू करने के लिए उसकी एक्शन पंक्ति में ट्रैक आइकन पर टैप करें।",
+    "emptyCta": "फ़ीड पर जाएं",
     "trackChatSeed": "मैं इस स्टोरी को फ़ॉलो करना चाहता हूँ।",
     "trackProposalTitle": "इस स्टोरी को फ़ॉलो करें?",
     "articleCount_one": "{{count}} लेख",
@@ -952,6 +955,8 @@
     "failedBody": "मैं अभी रीकैलिब्रेट करना पूरा नहीं कर सका। बाद में फिर कोशिश करूंगा।"
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "इसके बारे में और: {{topic}}",
+    "moreAboutTopicNamedWithCount": "इसके बारे में और: {{topic}} और {{extra}} और",
     "title": "हमें और बताएं",
     "contextFor": "इस बारे में: {{title}}",
     "back": "वापस",

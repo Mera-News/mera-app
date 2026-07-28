@@ -15,6 +15,7 @@ import { getVisitCountForPublication } from '@/lib/database/services/publication
 import { getSuggestionFeedbackContext } from '@/lib/database/services/article-suggestion-service';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import logger from '@/lib/logger';
+import { resolveTopicLabel } from '@/lib/news-harness/feedback-tree';
 import type {
   FeedbackTreeNode,
   LocalFeedbackContext,
@@ -29,6 +30,14 @@ const ACCENT = '#EDA77E';
 const CHIP_BG = '#1e1e1e';
 const CHIP_BORDER = '#333333';
 const SELECTED_BG = 'rgba(237,167,126,0.18)';
+/** Node whose leaves ask the user to weight a topic without ever naming it
+ *  (the like-tree's "More about this topic" → "A lot more" / "A bit more").
+ *  This is a well-known content id (mirrors the `findNode('not_important')`
+ *  fast-path convention in FeedbackTreeOverlay) rather than a structural
+ *  guess — the id is content the server/bundled-fallback own (see
+ *  `feedback-tree-v1.ts` server-side, `feedback-tree-snapshot.ts` bundled),
+ *  so a future re-shape of this submenu needs a matching update here anyway. */
+const TOPIC_NAMED_NODE_ID = 'more_about_topic';
 
 export interface InlineFeedbackTreeProps {
   suggestion: ForYouSuggestion;
@@ -153,9 +162,40 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tree]);
 
+  // Names the matched topic into the "More about this topic" branch's label
+  // (chip AND breadcrumb crumb, since both render via this same callback) so
+  // its "A lot more" / "A bit more" leaves aren't asking the user to weight an
+  // unnamed thing. Purely descriptive — this surface applies no persona
+  // mutations (see file header); falls back to the generic tree-supplied
+  // label when there's nothing real to name (defensive: the node is normally
+  // gated out via `has_matched_topics` in that case — see evaluateCondition).
   const label = useCallback(
-    (node: FeedbackTreeNode) => t(node.labelKey, { defaultValue: node.labelDefault }) as string,
-    [t],
+    (node: FeedbackTreeNode) => {
+      if (node.id === TOPIC_NAMED_NODE_ID) {
+        const choice = resolveTopicLabel(context);
+        if (choice) {
+          return (
+            choice.extraCount > 0
+              ? t('feedbackTree.moreAboutTopicNamedWithCount', {
+                  defaultValue: 'More about: {{topic}} and {{extra}} more',
+                  topic: choice.text,
+                  // NOT named `count` — i18next reserves that var name to
+                  // select `_one`/`_other` PLURAL SUFFIXES on the key itself
+                  // (looked up before the base key), which would silently
+                  // 404 to defaultValue on locales that only ship the base
+                  // key. `extra` carries the same value without engaging it.
+                  extra: choice.extraCount,
+                })
+              : t('feedbackTree.moreAboutTopicNamed', {
+                  defaultValue: 'More about: {{topic}}',
+                  topic: choice.text,
+                })
+          ) as string;
+        }
+      }
+      return t(node.labelKey, { defaultValue: node.labelDefault }) as string;
+    },
+    [t, context],
   );
 
   const handleSelect = useCallback(

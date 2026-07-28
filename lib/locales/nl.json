@@ -850,6 +850,9 @@
     "timelineQuietNote": "Nog geen nieuwe berichtgeving verzameld. We voegen hier ontwikkelingen toe zodra dit verhaal zich ontvouwt.",
     "untrackConfirmTitle": "Stoppen met volgen?",
     "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal.",
+    "untrackConfirmCta": "Stoppen met volgen",
+    "emptyHint": "Open een verhaal uit de Feed, tik dan op het volgpictogram in de actierij om het te volgen.",
+    "emptyCta": "Naar Feed gaan",
     "trackChatSeed": "Ik wil dit verhaal volgen.",
     "trackProposalTitle": "Dit verhaal volgen?",
     "articleCount_one": "{{count}} artikel",
@@ -951,6 +954,8 @@
     "failedBody": "Ik kon het herkalibreren nu niet voltooien. Ik probeer het later opnieuw."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Meer over: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Meer over: {{topic}} en {{extra}} meer",
     "title": "Vertel ons meer",
     "contextFor": "Over: {{title}}",
     "back": "Terug",

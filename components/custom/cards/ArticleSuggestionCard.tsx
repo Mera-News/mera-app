@@ -58,7 +58,10 @@ interface ArticleCardProps {
   feedbackHandlers?: CardFeedbackHandlers;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
-  /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
+  /** Marks the card as already-read. Draws NO indicator of its own — there is
+   *  no green tick chip and no eye glyph; both were deliberately removed. It
+   *  only suppresses the NEW badge. (`ArticleCardBase`'s doc is the source of
+   *  truth.) The Dashboard surfaces use this. */
   read?: boolean;
   /** Pass-through to `ArticleCardBase` — renders as the floating neumorphic
    *  card (Dashboard's list treatment) instead of the default Card chrome.

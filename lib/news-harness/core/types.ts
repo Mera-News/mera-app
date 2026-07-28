@@ -259,6 +259,16 @@ export interface SuggestionFeedbackContext {
 /** Plain inputs to buildFeedbackContext — everything the agent has already
  *  read from the DB / stores. */
 export interface FeedbackContextInput {
+  /** Reference "now" (epoch ms), INJECTED by the caller — never read from the
+   *  clock inside the builder, so the rendered context is a pure function of its
+   *  inputs and the prompt goldens stay pinnable. Rendered as a `Today: <ISO>`
+   *  line so proposeTrack can't propose a season/year that has already ended. */
+  nowMs: number;
+  /** The article's own publication date (ISO string), when the caller knows it
+   *  (the follow-a-story path carries it on TrackFeedbackSubject.pubDate).
+   *  Rendered as a `Published: <ISO>` line in the ARTICLE block — disambiguates
+   *  a story read weeks after it broke. Absent/unparseable = line omitted. */
+  articlePubDate?: string | null;
   /** All persona facts, newest-first. */
   facts: Fact[];
   /** The joined suggestion feedback context, or null when the article was NOT

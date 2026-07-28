@@ -847,6 +847,9 @@
     "timelineQuietNote": "目前还没有新的报道。随着事态发展，我们会持续在这里更新。",
     "untrackConfirmTitle": "确定要取消关注吗？",
     "untrackConfirmBody": "你将不再看到这则报道的最新进展。",
+    "untrackConfirmCta": "停止关注",
+    "emptyHint": "从信息流中打开报道，然后点击其操作行中的关注图标以开始关注。",
+    "emptyCta": "前往信息流",
     "trackChatSeed": "我想关注这则报道。",
     "trackProposalTitle": "关注这则报道？",
     "articleCount_other": "{{count}} 篇文章",
@@ -947,6 +950,8 @@
     "failedBody": "我暂时无法完成重新校准，稍后会再试一次。"
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "更多内容：{{topic}}",
+    "moreAboutTopicNamedWithCount": "更多内容：{{topic}} 及其他 {{extra}} 个主题",
     "title": "告诉我们更多",
     "contextFor": "关于：{{title}}",
     "back": "返回",
