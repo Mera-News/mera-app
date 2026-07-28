@@ -118,7 +118,7 @@ beforeEach(() => {
 });
 
 describe('ExploreScreen — cold-open flicker gate', () => {
-    it('holds the article list until locations emit, then mounts it exactly once on the primary country', () => {
+    it('holds the article list until locations emit, then mounts it exactly once on World', () => {
         const { queryByTestId, getByTestId } = render(<ExploreScreen />);
 
         // Before the emission the chip row renders (against the device-country
@@ -131,11 +131,12 @@ describe('ExploreScreen — cold-open flicker gate', () => {
             emitLocations!([row(), row({ id: 'loc2', city: 'paris', countryCode: 'FR', role: 'interest', weight: 0.4 })]);
         });
 
-        // Exactly one mount, and on the persona home country — never on the
-        // device fallback that the pre-emission render would have produced.
+        // Exactly one mount. World now leads the row, so that is the landing
+        // chip — the point of the gate is still that the pre-emission render
+        // (device-country fallback) never reaches the list.
         expect(mockListMount).toHaveBeenCalledTimes(1);
-        expect(mockListMount).toHaveBeenCalledWith('country:IND');
-        expect(getByTestId('scope-article-list').props.accessibilityLabel).toBe('country:IND');
+        expect(mockListMount).toHaveBeenCalledWith('world');
+        expect(getByTestId('scope-article-list').props.accessibilityLabel).toBe('world');
     });
 
     it('does not remount the list when the selection-resolving effect writes back the same id', () => {
@@ -162,15 +163,15 @@ describe('ExploreScreen — cold-open flicker gate', () => {
 });
 
 describe('ExploreScreen — scopes and selection', () => {
-    it('passes [primary country, …, World] to the chip row with the first chip selected', () => {
+    it('passes [World, primary country, …] to the chip row with the first chip selected', () => {
         render(<ExploreScreen />);
         act(() => {
             emitLocations!([row(), row({ id: 'loc2', countryCode: 'FR', role: 'interest', weight: 0.4 })]);
         });
 
         const props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
-        expect(props.scopes.map((s: any) => s.id)).toEqual(['country:IND', 'country:FRA', 'world']);
-        expect(props.selectedId).toBe('country:IND');
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world', 'country:IND', 'country:FRA']);
+        expect(props.selectedId).toBe('world');
         // No Top stories chip anywhere.
         expect(props.scopes.some((s: any) => s.id === 'top-stories')).toBe(false);
     });
@@ -183,14 +184,14 @@ describe('ExploreScreen — scopes and selection', () => {
         expect(mockListMount).toHaveBeenCalledTimes(1);
 
         const props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
-        const world = props.scopes.find((s: any) => s.id === 'world');
+        const india = props.scopes.find((s: any) => s.id === 'country:IND');
         act(() => {
-            props.onSelect(world);
+            props.onSelect(india);
         });
 
         expect(mockListMount).toHaveBeenCalledTimes(2);
-        expect(mockListMount).toHaveBeenLastCalledWith('world');
-        expect(mockSetSetting).toHaveBeenCalledWith('explore_last_scope', 'world');
+        expect(mockListMount).toHaveBeenLastCalledWith('country:IND');
+        expect(mockSetSetting).toHaveBeenCalledWith('explore_last_scope', 'country:IND');
     });
 
     it('snaps back to the first scope when the selected one disappears', () => {
@@ -209,6 +210,6 @@ describe('ExploreScreen — scopes and selection', () => {
         act(() => {
             emitLocations!([row()]);
         });
-        expect(mockListMount).toHaveBeenLastCalledWith('country:IND');
+        expect(mockListMount).toHaveBeenLastCalledWith('world');
     });
 });

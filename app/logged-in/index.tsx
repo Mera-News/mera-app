@@ -78,10 +78,10 @@ export default function LoggedInIndex() {
                 if (stage !== OnboardingStage.Finished) {
                     router.replace('/logged-in/onboarding');
                 } else {
-                    router.replace('/logged-in/app_container/for_you');
+                    router.replace('/logged-in/app_container/feed');
                 }
             } catch {
-                if (!cancelled) router.replace('/logged-in/app_container/for_you');
+                if (!cancelled) router.replace('/logged-in/app_container/feed');
             }
         };
 

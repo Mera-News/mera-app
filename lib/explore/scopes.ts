@@ -10,12 +10,13 @@
 // trending headlines mostly don't concern the user, so the tab no longer
 // leads with them.
 //
-// Order is `[primary country?, ...remaining countries weight-desc, World]`:
-// World is ALWAYS present and ALWAYS last, so the cap is applied to the
+// Order is `[World, primary country?, ...remaining countries weight-desc]`:
+// World is ALWAYS present and ALWAYS FIRST, so the cap is applied to the
 // country list only. The primary country is elected by
 // {@link electPrimaryCountry} (highest-weight `role: 'home'` row, else
 // highest-weight row overall, else the device country) and de-duped out of
-// the tail so it never appears twice. Cold-mount lands on the first chip.
+// the tail so it never appears twice. Cold-mount lands on the first chip,
+// which is now World.
 //
 // City/region derivation was removed in the app-rethink wave because geo-tags
 // are dormant in prod (all null), so those chips showed ~nothing. Each
@@ -146,7 +147,8 @@ function regionScope(alpha2: string, alpha3: string, region: string): ExploreSco
 }
 
 /**
- * Elect the user's primary country — the chip Explore cold-mounts on.
+ * Elect the user's primary country — the first COUNTRY chip (World now leads
+ * the row, so this is the second chip overall).
  *
  * Rule, in order:
  *   1. The highest-weight `role: 'home'` location with a mappable country.
@@ -196,15 +198,15 @@ export function electPrimaryCountry(
  * Build the Explore scope chips.
  *
  * Order:
- *   1. The primary country (see {@link electPrimaryCountry}). Omitted only
+ *   1. World — always present, always FIRST.
+ *   2. The primary country (see {@link electPrimaryCountry}). Omitted only
  *      when neither the locations nor the device country resolve.
- *   2. The remaining location-derived country scopes (weight-desc, the
+ *   3. The remaining location-derived country scopes (weight-desc, the
  *      primary excluded so it never appears twice). City/region scopes are no
  *      longer derived — see the module header.
- *   3. World — always present, always LAST.
  *
  * De-duped by scope id. The cap applies to the COUNTRY list only
- * ({@link MAX_SCOPES} - 1 countries); World is appended afterwards so it
+ * ({@link MAX_SCOPES} - 1 countries); World is prepended afterwards so it
  * always survives.
  */
 export function deriveExploreScopes(
@@ -226,5 +228,5 @@ export function deriveExploreScopes(
         countryScopes.push(countryScope(loc.countryCode.trim().toUpperCase(), alpha3));
     }
 
-    return [...countryScopes.slice(0, MAX_SCOPES - 1), worldScope()];
+    return [worldScope(), ...countryScopes.slice(0, MAX_SCOPES - 1)];
 }

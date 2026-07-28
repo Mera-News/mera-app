@@ -40,11 +40,12 @@ const ExploreScreen: React.FC = () => {
     const isConnected = useIsConnected();
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
-    // Cold-mount opens on the FIRST chip (the primary country); the persisted
+    // Cold-mount opens on the FIRST chip, which is World; the persisted
     // LAST_SCOPE_KEY is intentionally not read for the initial selection (taps
-    // still persist below, for potential future use). Starts null because that
-    // id is data-dependent (`country:<alpha3>`) and unknowable until the
-    // locations observable has emitted — see `locationsLoaded` below.
+    // still persist below, for potential future use). Still starts null and is
+    // still gated on `locationsLoaded`: the country chips behind World are
+    // data-dependent, and resolving the selection before they land would let
+    // the snap-back effect below re-key the list mid-load.
     const [selectedId, setSelectedId] = useState<string | null>(null);
     // Has `observeAllLocations()` emitted at least once? It emits ASYNCHRONOUSLY
     // on focus, so the first render has `locations === []` and `scopes` is the
