@@ -76,7 +76,15 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
             The COUNT lives on the section's closing row (SectionViewAllText,
             "View all N articles") — this button carries it in its a11y label
             only, so it is never shown twice per section. */}
-        {canPress && <SectionOpenButton total={total} onPress={onPress!} />}
+        {/* alignSelf center, NOT items-center on the row: the row stays
+            `items-start` so the event-type icon keeps hugging the title's FIRST
+            line, while this button centres against the whole title block — which
+            is what a two-line wrapped fact title needs. */}
+        {canPress && (
+          <Box style={{ alignSelf: 'center' }}>
+            <SectionOpenButton total={total} onPress={onPress!} />
+          </Box>
+        )}
       </HStack>
     </VStack>
   );

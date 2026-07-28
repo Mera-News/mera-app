@@ -104,11 +104,27 @@ surrounding `Box`/`View` instead. Text entry into gluestack inputs: tap the fiel
   can make a snapshot look like a black screen. `agent-device react-native dismiss-overlay`, or tap
   the toast's ✕. The app is usually fine underneath — check `agent-device logs` before assuming a
   crash.
-- **Compact cards merge their children** into one accessibility element (accessible container), so
-  child rows inside a card can't be addressed individually — target the card root by
-  `id=card-<mongoId>`, then tap child coordinates from `snapshot --raw --json` rects if needed.
+- **All feed/compact cards merge their children** into one accessibility element (accessible
+  container), so child controls (`card-action-*`) don't resolve as ids on list screens — target the
+  card root by `id=card-<mongoId>`, then tap child coordinates from `snapshot --raw --json` rects.
+  (They DO resolve on detail screens and drill-down lists.)
+- **iOS share-sheet a11y rects are in the sheet's own coordinate space**, not screen space (`Cell
+  "Copy"` can report y=228 while drawn at y≈777). Pressing by @ref/label taps whatever sits under
+  the reported rect — often the article behind the sheet, dismissing it, indistinguishable from a
+  Copy that wrote nothing. Press share-sheet activities by SCREEN coordinates from a screenshot.
+- **Clipboard reads round-trip through host pasteboard sync** (`simctl pbpaste`, `agent-device
+  clipboard read`) and can mask or fake an in-app write — verify clipboard content by pasting into
+  an in-app text field instead.
+- **agent-device serializes its own commands**, so you cannot screenshot mid-gesture with it —
+  capture mid-gesture evidence with a concurrent `xcrun simctl io booted screenshot` burst from a
+  second shell.
+- **A pull-to-refresh gesture that produces zero displacement** usually means an overlay view is
+  consuming the pan: `pointerEvents="box-none"` on a container still leaves its CHILDREN touchable
+  — full-width text rows in headers become invisible touch bands. Rows must be `none`, containers
+  `box-none`, controls `auto` (standing rule documented in the Feed/Dashboard header components).
 - Don't run file-editing subagents while a human is typing in the simulator — every save triggers a
-  Fast Refresh that stomps their input.
+  Fast Refresh that stomps their input. (For agent-driving sessions, Fast Refresh can be disabled in
+  the dev menu — saves then apply only on explicit reload via the dev-client URL.)
 
 ## Editing files with mixed user WIP
 

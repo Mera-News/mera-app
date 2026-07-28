@@ -40,12 +40,26 @@ const GRADIENT_ID = 'article-placeholder-gradient';
 const GROUND_LIGHT = '#F5F1EA';
 const GROUND_DEEP = '#E8E1D5';
 
-// Warm near-black ink for the glyph. 0.45 is the "subtle but clear" point: the
-// glyph's own internals are already semi-transparent (the grid strokes sit at
-// 0.18, the spotlight at 0.30), so this multiplies down to a soft watermark
-// while the hexagon outline stays plainly legible.
+// Warm near-black ink for the glyph.
+//
+// The opacity is COMPUTED, not eyeballed. At the original 0.45 the composited
+// hexagon outline measured 2.7:1 against the ground — under the 3:1 WCAG floor
+// for non-text graphics, and visibly faint across the wide full-size band at low
+// screen brightness.
+//
+// Compositing `GLYPH_INK` over the ground at alpha a gives
+// `ground*(1-a) + ink*a`; solving that for a ≥3.5:1 contrast ratio against BOTH
+// gradient stops (the deeper stop is the worst case, so it sets the floor):
+//
+//     a = 0.55 → 3.37 light / 3.27 deep   (still short)
+//     a = 0.57 → 3.56 light / 3.45 deep   (deep stop misses)
+//     a = 0.58 → 3.66 light / 3.52 deep   ← both clear 3.5
+//
+// Kept as an alpha rather than a pre-multiplied hex so the glyph's own internal
+// transparency still layers underneath (grid strokes 0.18, spotlight 0.30) — it
+// stays a watermark, just a legible one.
 const GLYPH_INK = '#2A2622';
-const GLYPH_OPACITY = 0.45;
+const GLYPH_OPACITY = 0.58;
 
 export interface ArticleImagePlaceholderProps {
   /** MeraLogo glyph size in dp. Default 40 — a modest watermark against both
