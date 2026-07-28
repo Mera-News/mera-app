@@ -47,7 +47,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
     }, []);
 
     return (
-        <HStack className="items-center" space="sm">
+        <HStack className="items-center" space="sm" testID="dashboard-subtabs-row">
             {TABS.map((tab) => {
                 const active = tab.key === activeSubTab;
                 const showBadge = tab.key === 'stories' && unseenTotal > 0;
@@ -58,6 +58,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                         accessibilityRole="button"
                         accessibilityState={{ selected: active }}
                         accessibilityLabel={t(tab.labelKey as any)}
+                        testID={`dashboard-tab-${tab.key}`}
                         className={`flex-row items-center rounded-full border px-4 py-2 ${
                             active ? 'bg-primary-400 border-primary-400' : 'border-primary-500 bg-transparent'
                         }`}
@@ -78,6 +79,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                         {showBadge && (
                             <View
                                 accessibilityLabel={`${unseenTotal}`}
+                                testID={`dashboard-tab-${tab.key}-badge`}
                                 className="ml-1.5 rounded-full items-center justify-center px-1.5"
                                 style={{
                                     minWidth: 18,

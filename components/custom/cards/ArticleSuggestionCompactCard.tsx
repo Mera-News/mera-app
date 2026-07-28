@@ -64,6 +64,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   return (
     <>
       <ArticleCompactCardBase
+        testID={`card-${suggestion._id}`}
         imageUrl={suggestion.image_url}
         titleEnglish={suggestion.title_en}
         titleOriginal={suggestion.title_original ?? undefined}

@@ -28,6 +28,7 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress, extra
 
     return (
         <AnimatedPressable
+            testID="feed-scroll-top-fab"
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(200)}
             onPress={onPress}

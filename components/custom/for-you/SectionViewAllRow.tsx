@@ -23,6 +23,7 @@ const SectionViewAllRow: React.FC<SectionViewAllRowProps> = ({ total, onPress })
   const { t } = useTranslation();
   return (
     <Pressable
+      testID="dashboard-view-all"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={t('forYou.openFactFeed')}

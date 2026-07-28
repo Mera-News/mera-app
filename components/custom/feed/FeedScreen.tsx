@@ -425,7 +425,7 @@ const FeedScreen: React.FC = () => {
   const renderItem = useCallback(
     ({ item }: { item: FeedEntry }) =>
       isCaughtUpEntry(item) ? (
-        <Box style={{ marginTop: 16 }}>
+        <Box style={{ marginTop: 16 }} testID="feed-caught-up-divider">
           <AllCaughtUpCard />
         </Box>
       ) : (
@@ -467,14 +467,14 @@ const FeedScreen: React.FC = () => {
   const renderEmpty = () => {
     if (isLoading) {
       return (
-        <Box className="items-center justify-center py-20">
+        <Box className="items-center justify-center py-20" testID="feed-loading">
           <Spinner size="large" />
         </Box>
       );
     }
     if (errorMessage) {
       return (
-        <Box className="items-center justify-center py-20 px-6">
+        <Box className="items-center justify-center py-20 px-6" testID="feed-error">
           <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
           <Text size="md" className="text-error-400 text-center font-semibold mb-1">
             {t('errors.failedToLoad')}
@@ -505,9 +505,10 @@ const FeedScreen: React.FC = () => {
   };
 
   return (
-    <Box className="flex-1 bg-black">
+    <Box className="flex-1 bg-black" testID="feed-screen">
       <Animated.FlatList
         ref={listRef}
+        testID="feed-list"
         data={listData}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
@@ -530,6 +531,7 @@ const FeedScreen: React.FC = () => {
         onScrollEndDrag={flushSkips}
         refreshControl={
           <RefreshControl
+            testID="feed-refresh"
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={REFRESH_TINT}
@@ -557,6 +559,7 @@ const FeedScreen: React.FC = () => {
           (top-right), with the 24h stats sentence beneath. Absolute overlay,
           translates up on scroll-down and back on scroll-up / reveal(). */}
       <Animated.View
+        testID="feed-header"
         onLayout={onHeaderLayout}
         // box-none: the header overlay must not swallow the top-of-list
         // pull-to-refresh gesture — touches pass through its empty area to the

@@ -57,6 +57,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       style={{ paddingHorizontal: horizontalPadding, paddingVertical: 12, gap: 16 }}
     >
       <Pressable
+        testID="card-action-like"
         onPress={onLike}
         hitSlop={10}
         accessibilityRole="button"
@@ -72,6 +73,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       </Pressable>
 
       <Pressable
+        testID="card-action-dislike"
         onPress={onDislike}
         hitSlop={10}
         accessibilityRole="button"
@@ -87,6 +89,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       </Pressable>
 
       <Pressable
+        testID="card-action-mera"
         onPress={onAskMera}
         hitSlop={10}
         accessibilityRole="button"
@@ -99,6 +102,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       <Box className="flex-1" />
 
       <Pressable
+        testID="card-action-save"
         onPress={onToggleSave}
         hitSlop={10}
         accessibilityRole="button"
@@ -115,6 +119,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
 
       {onShare ? (
         <Pressable
+          testID="card-action-share"
           onPress={onShare}
           hitSlop={10}
           accessibilityRole="button"

@@ -299,14 +299,14 @@ const MeraNewsScreen: React.FC = () => {
         }
         if (isLoading && !stuckOnEmpty) {
             return (
-                <Box className="items-center justify-center py-20">
+                <Box className="items-center justify-center py-20" testID="dashboard-loading">
                     <Spinner size="large" />
                 </Box>
             );
         }
         if (stuckOnEmpty) {
             return (
-                <Box className="items-center justify-center py-20 px-6">
+                <Box className="items-center justify-center py-20 px-6" testID="dashboard-stuck-empty">
                     <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
                     <Text size="md" className="text-error-400 text-center font-semibold mb-1">
                         {t('feed.stuckTitle')}
@@ -322,7 +322,7 @@ const MeraNewsScreen: React.FC = () => {
         }
         if (errorMessage) {
             return (
-                <Box className="items-center justify-center py-20 px-6">
+                <Box className="items-center justify-center py-20 px-6" testID="dashboard-error">
                     <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
                     <Text size="md" className="text-error-400 text-center font-semibold mb-1">
                         {t('errors.failedToLoad')}
@@ -346,13 +346,13 @@ const MeraNewsScreen: React.FC = () => {
     }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-black" testID="dashboard-screen">
             {/* Keep-mounted sub-tab content — rendered FIRST so the absolute
                 collapsing header paints on top of it. */}
             <View style={{ flex: 1 }}>
                 {/* Feed — the list handles its own top padding (contentContainer)
                     so it can scroll under the collapsing header. */}
-                <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
+                <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }} testID="dashboard-feed-content">
                     <DashboardSectionsFeed
                         breaking={feed.breaking}
                         rows={feed.rows}
@@ -369,14 +369,14 @@ const MeraNewsScreen: React.FC = () => {
                 {/* Stories (lazy-mounted on first visit) — header stays revealed,
                     so pad the content below its measured height. */}
                 {storiesVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'stories' ? 'flex' : 'none' }}>
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'stories' ? 'flex' : 'none' }} testID="dashboard-stories-content">
                         <StoriesSlotPlaceholder />
                     </View>
                 )}
 
                 {/* Saved (lazy-mounted on first visit) */}
                 {savedVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }}>
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }} testID="dashboard-saved-content">
                         <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} />
                     </View>
                 )}
@@ -385,6 +385,7 @@ const MeraNewsScreen: React.FC = () => {
             {/* Collapsing Dashboard header — absolute overlay, translates up on
                 scroll-down and back on scroll-up / reveal(). */}
             <Animated.View
+                testID="dashboard-header"
                 onLayout={onHeaderLayout}
                 // box-none: the absolute header must not swallow the top-of-list
                 // pull-to-refresh gesture — touches pass through its empty area
@@ -408,6 +409,7 @@ const MeraNewsScreen: React.FC = () => {
                                     hitSlop={8}
                                     accessibilityRole="button"
                                     accessibilityLabel={t('feedStatus.openA11y')}
+                                    testID="dashboard-open-status-sheet"
                                 >
                                     <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
                                 </Pressable>
@@ -437,7 +439,7 @@ const MeraNewsScreen: React.FC = () => {
 
             {/* Right edge swipe hitbox */}
             <GestureDetector gesture={edgeSwipeGesture}>
-                <View style={styles.edgeSwipeHitbox} />
+                <View style={styles.edgeSwipeHitbox} testID="dashboard-edge-swipe-hitbox" />
             </GestureDetector>
 
             {/* Feed-status detail sheet. */}

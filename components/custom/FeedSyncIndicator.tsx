@@ -259,6 +259,7 @@ const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
 
             {showConnectivityNotices && !isConnected && (
                 <HStack
+                    testID="feed-offline-notice"
                     className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2"
                     space="sm"
                 >

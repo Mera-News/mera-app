@@ -196,7 +196,7 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
     // flight — a static one-line note, no animated bar (honest shimmer).
     if (mode === 'deferred') {
         return (
-            <Animated.View layout={LinearTransition} style={{ marginTop: 8 }}>
+            <Animated.View layout={LinearTransition} style={{ marginTop: 8 }} testID="dashboard-status-shimmer">
                 <Text size="xs" className="text-typography-400 leading-4">
                     {t('feed.waitingForNextBatch', { count: unscoredCount })}
                 </Text>
@@ -214,12 +214,13 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
     const toggle = () => setExpanded((v) => !v);
 
     return (
-        <Animated.View layout={LinearTransition} style={{ marginTop: 8 }}>
+        <Animated.View layout={LinearTransition} style={{ marginTop: 8 }} testID="dashboard-status-shimmer">
             <HStack className="items-center" space="sm">
                 <Pressable
                     onPress={toggle}
                     accessibilityRole="button"
                     accessibilityLabel={t('feedStatus.openA11y')}
+                    testID="dashboard-status-bar-toggle"
                     style={{
                         flex: 1,
                         height: BAR_HEIGHT,
@@ -238,6 +239,7 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
                     accessibilityLabel={t(
                         expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y',
                     )}
+                    testID="dashboard-status-chevron-toggle"
                     style={{ padding: 2 }}
                 >
                     <Animated.View style={chevronStyle}>
@@ -251,7 +253,7 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
 
             {expanded && (
                 <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)}>
-                    <Box className="mt-2 rounded-lg border border-gray-800 bg-gray-950 px-3 py-2">
+                    <Box className="mt-2 rounded-lg border border-gray-800 bg-gray-950 px-3 py-2" testID="dashboard-status-details-panel">
                         <FeedStatusDetails {...detailProps} />
                     </Box>
                 </Animated.View>

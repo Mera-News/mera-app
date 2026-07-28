@@ -12,6 +12,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
             variant="elevated"
             size="md"
             className="mb-4 overflow-hidden bg-black border-black"
+            testID="no-interests-card"
         >
             <Box className="w-full py-20 px-6 items-center justify-center">
                 {/* Mera Logo */}

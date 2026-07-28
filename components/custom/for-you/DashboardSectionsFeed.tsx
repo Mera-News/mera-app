@@ -166,8 +166,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   );
 
   return (
-    <Box className="flex-1">
+    <Box className="flex-1" testID="dashboard-sections-feed-root">
       <Animated.FlatList
+        testID="dashboard-feed-list"
         data={flatData}
         keyExtractor={(it) => it.key}
         renderItem={renderItem}

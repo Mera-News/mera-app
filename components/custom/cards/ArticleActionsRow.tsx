@@ -207,8 +207,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     label: string,
     onPress: () => void,
     selected: boolean,
+    testID: string,
   ) => (
     <Pressable
+      testID={testID}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -229,6 +231,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     <>
       <HStack className="items-center justify-evenly px-1 py-3">
         <Pressable
+          testID="card-action-mera"
           onPress={handleChatPress}
           accessibilityRole="button"
           accessibilityLabel="Mera"
@@ -252,12 +255,14 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t('articleFeedback.likeLabel'),
           handleLike,
           liked,
+          'card-action-like',
         )}
         {renderButton(
           <MaterialIcons name="thumb-down" size={ICON_SIZE} color={PRIMARY} />,
           t('articleFeedback.dislikeLabel'),
           handleDislike,
           false,
+          'card-action-dislike',
         )}
         {renderButton(
           <MaterialIcons
@@ -268,6 +273,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t('savedSuggestions.savedToastTitle'),
           handleSave,
           saved,
+          'card-action-save',
         )}
         {renderButton(
           <MaterialIcons
@@ -278,6 +284,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
           toggleTrack,
           tracked,
+          'card-action-track',
         )}
         {share?.url ? renderButton(
           <MaterialIcons
@@ -288,6 +295,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t('articleDetail.share'),
           handleSharePress,
           false,
+          'card-action-share',
         ) : null}
       </HStack>
       <FeedbackTreeOverlay

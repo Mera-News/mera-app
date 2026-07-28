@@ -52,6 +52,10 @@ export interface ArticleCompactCardBaseProps {
   onLongPress?: () => void;
   metaAccessory?: React.ReactNode;
   footerAccessory?: React.ReactNode;
+  /** Optional testID passthrough for the card's root Pressable — used by
+   *  concrete card components to expose a stable, driver-targetable id
+   *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
+  testID?: string;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -71,11 +75,17 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   onLongPress,
   metaAccessory,
   footerAccessory,
+  testID,
 }) => {
   const displayTitle = titleEnglish || titleOriginal || '';
 
   return (
-    <Pressable onPress={onPress} onLongPress={onLongPress} style={dimmed ? { opacity: 0.75 } : undefined}>
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={dimmed ? { opacity: 0.75 } : undefined}
+    >
       <Card variant="elevated" size="sm" className="mb-3 overflow-hidden rounded-xl">
         <Box className="flex-row" style={{ minHeight: 128 }}>
           {/* Image Section - 1/4 width (25%). Article image, else placeholder.

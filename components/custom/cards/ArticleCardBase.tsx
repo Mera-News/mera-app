@@ -63,6 +63,10 @@ export interface ArticleCardBaseProps {
    *  + children) but NOT the `footer`. Clipped to the card's rounded corners by
    *  its `overflow-hidden`. Used for the inline feedback surface. */
   overlay?: React.ReactNode;
+  /** Optional testID passthrough for the card's root Pressable — used by
+   *  concrete card components to expose a stable, driver-targetable id
+   *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
+  testID?: string;
 }
 
 const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
@@ -84,6 +88,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   metaAccessory,
   footer,
   overlay,
+  testID,
 }) => {
   const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
@@ -153,7 +158,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   );
 
   return (
-    <Pressable onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
+    <Pressable testID={testID} onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       {flat ? (
         // Shadow lives on this outer, non-clipping Box — RN drops a view's
         // shadow the moment that same view also sets `overflow: hidden`, so
