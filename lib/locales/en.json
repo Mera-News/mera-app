@@ -307,7 +307,7 @@
     "untrackConfirmTitle": "Stop following?",
     "untrackConfirmBody": "You'll no longer see new developments for this story.",
     "untrackConfirmCta": "Stop following",
-    "emptyHint": "Open a story from the Feed, then tap the track icon in its action row to start following it.",
+    "emptyHint": "Open an article from the Feed to its full view, then tap the track icon in the row of buttons under the article.",
     "emptyCta": "Go to Feed",
     "trackChatSeed": "I want to follow this story.",
     "trackProposalTitle": "Follow this story?",

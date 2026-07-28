@@ -26,6 +26,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSavedOverride } from '@/lib/saved-state';
 import { Platform } from 'react-native';
 
 // Primary-orange accent — dark-locked, matches ArticleFeedbackPrompt exactly so
@@ -66,7 +67,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
 }) => {
   const { t } = useTranslation();
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [savedFromDb, setSavedFromDb] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({
     articleTitle: subject.title,
@@ -76,6 +77,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
 
   // The save/like restore keys off the same id used to persist them.
   const savedId = subject.suggestionId ?? subject.articleId;
+  // See lib/saved-state — a save/delete performed on ANY other surface corrects
+  // this row, instead of it holding a stale flag until remount.
+  const savedOverride = useSavedOverride(savedId);
+  const saved = savedOverride ?? savedFromDb;
 
   // Restore "liked" across remounts.
   useEffect(() => {
@@ -97,7 +102,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     let cancelled = false;
     isSuggestionSaved(savedId)
       .then((v) => {
-        if (!cancelled && v) setSaved(true);
+        if (!cancelled) setSavedFromDb(v);
       })
       .catch(() => {
         /* non-fatal */
@@ -174,12 +179,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
   const handleSave = useCallback(() => {
     if (saved) {
       hapticLight();
-      setSaved(false);
       void deleteSavedSuggestion(savedId);
       return;
     }
     hapticSuccess();
-    setSaved(true);
     if (subject.origin === 'article' && article) {
       void saveStandaloneArticle(article, { surface: subject.surface });
     } else if (suggestion) {

@@ -29,6 +29,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSavedOverride } from '@/lib/saved-state';
 import { Modal, Platform } from 'react-native';
 
 const ACCENT = '#EDA77E';
@@ -59,7 +60,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
 }) => {
   const { t } = useTranslation();
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [savedFromDb, setSavedFromDb] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({
     articleTitle: subject.title,
@@ -69,6 +70,10 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
   const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject, visible);
 
   const savedId = subject.suggestionId ?? subject.articleId;
+  // See lib/saved-state — a save/delete performed on ANY other surface corrects
+  // this row, instead of it holding a stale flag until remount.
+  const savedOverride = useSavedOverride(savedId);
+  const saved = savedOverride ?? savedFromDb;
 
   // Restore liked/saved state whenever the sheet opens.
   useEffect(() => {
@@ -78,7 +83,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
       .then((v) => !cancelled && setLiked(v))
       .catch(() => {});
     isSuggestionSaved(savedId)
-      .then((v) => !cancelled && setSaved(v))
+      .then((v) => !cancelled && setSavedFromDb(v))
       .catch(() => {});
     return () => {
       cancelled = true;
@@ -159,12 +164,10 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
   const handleSave = useCallback(() => {
     if (saved) {
       hapticLight();
-      setSaved(false);
       void deleteSavedSuggestion(savedId);
     } else {
       hapticSuccess();
-      setSaved(true);
-      if (subject.origin === 'article' && article) {
+        if (subject.origin === 'article' && article) {
         void saveStandaloneArticle(article, { surface: subject.surface });
       } else if (suggestion) {
         void saveSuggestion(suggestion);

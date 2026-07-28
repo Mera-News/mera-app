@@ -859,7 +859,7 @@
     "deleteStoryAction": "Story löschen",
     "deleteStoryConfirmTitle": "Diese Story löschen?",
     "deleteStoryConfirmBody": "Das Löschen entfernt alles, was für diese Story gespeichert wurde.",
-    "emptyHint": "Öffnen Sie eine Geschichte aus dem Feed, und tippen Sie dann auf das Verfolgungssymbol in der Aktionsleiste, um ihr zu folgen.",
+    "emptyHint": "Öffnen Sie einen Artikel aus dem Feed in die Vollansicht, und tippen Sie dann auf das Verfolgungssymbol in der Schaltflächenleiste unter dem Artikel.",
     "emptyCta": "Zu Nachrichten",
     "untrackConfirmCta": "Ja, nicht mehr folgen"
   },

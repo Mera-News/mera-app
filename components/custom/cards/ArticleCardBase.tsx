@@ -16,8 +16,8 @@ import { useTranslation } from 'react-i18next';
  * decoupled from any data model: callers pass a flat view-model plus two slots.
  *
  * Layout (unchanged, pixel-identical to the old container card):
- *   Pressable → elevated Card → 192px (h-48) hero — the article image, an
- *   `ArticleImagePlaceholder` when there is none or it fails to load, →
+ *   Pressable → elevated Card → hero (192px with a real image, a shorter 112px
+ *   band for the `ArticleImagePlaceholder` when there is none or it fails) →
  *   VStack{ meta row (+ metaAccessory), title, children }.
  *
  * `metaRowRightReserve` keys off `showImage` (a REAL image, not the
@@ -130,8 +130,15 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
         <Box
           className={
             flat
-              ? 'relative w-full h-48 overflow-hidden rounded-t-2xl'
-              : 'relative w-full h-48 overflow-hidden rounded-t-lg'
+              // A REAL image keeps the full 192px (h-48) hero. The imageless
+              // placeholder gets a shorter 112px (h-28) band: at full height it
+              // spent 192pt saying "there is no picture", which dominated cards
+              // whose actual content is the headline and rationale. Short enough
+              // to read as a deliberate marker, tall enough for the Mera
+              // watermark to be legible. Compact cards are untouched — their
+              // image column is width-driven, not height-driven.
+              ? `relative w-full ${showImage ? 'h-48' : 'h-28'} overflow-hidden rounded-t-2xl`
+              : `relative w-full ${showImage ? 'h-48' : 'h-28'} overflow-hidden rounded-t-lg`
           }
         >
           {showImage ? (

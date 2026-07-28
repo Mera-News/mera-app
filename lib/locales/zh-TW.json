@@ -847,7 +847,7 @@
     "untrackConfirmTitle": "確定要取消追蹤嗎？",
     "untrackConfirmBody": "你將不再看到這則報導的最新進展。",
     "untrackConfirmCta": "停止追蹤",
-    "emptyHint": "從資訊流中打開報導，然後點擊其操作行中的追蹤圖示以開始追蹤。",
+    "emptyHint": "從資訊流中打開報導至完整檢視，然後點擊其下方按鈕列中的追蹤圖示。",
     "emptyCta": "前往資訊流",
     "trackChatSeed": "我想追蹤這則報導。",
     "trackProposalTitle": "追蹤這則報導？",

@@ -24,6 +24,7 @@ import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSavedOverride } from '@/lib/saved-state';
 
 interface ArticleCardProps {
   suggestion: ForYouSuggestion;
@@ -110,13 +111,18 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // FeedArticleCard, which mirrored ArticleActionsRow). Only wired when the
   // action row is present (onVerdict provided).
   const savedId = suggestion._id;
-  const [saved, setSaved] = useState(false);
+  const [savedFromDb, setSavedFromDb] = useState(false);
+  // An override wins over the mount-time read: it means the row was saved or
+  // deleted somewhere else this session (e.g. the Dashboard's Saved list), which
+  // used to leave this bookmark filled against a row that no longer existed.
+  const savedOverride = useSavedOverride(savedId);
+  const saved = savedOverride ?? savedFromDb;
   useEffect(() => {
     if (!onVerdict) return;
     let cancelled = false;
     isSuggestionSaved(savedId)
       .then((v) => {
-        if (!cancelled && v) setSaved(true);
+        if (!cancelled) setSavedFromDb(v);
       })
       .catch(() => {
         /* non-fatal */
@@ -127,13 +133,14 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   }, [savedId, onVerdict]);
 
   const handleToggleSave = () => {
+    // The service publishes the new state, which flows back through
+    // `useSavedOverride` — so local state is only the pre-override seed and does
+    // not need to be nudged here.
     if (saved) {
       hapticLight();
-      setSaved(false);
       void deleteSavedSuggestion(savedId);
     } else {
       hapticSuccess();
-      setSaved(true);
       void saveSuggestion(suggestion);
     }
     onSaveToggled?.(suggestion, !saved);

@@ -6,6 +6,7 @@
 // feed cache is pruned. The WMDB row id == the source suggestion's server `_id`.
 
 import { Q } from '@nozbe/watermelondb';
+import { publishSavedState } from '@/lib/saved-state';
 import database from '../index';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import type SavedArticleSuggestionModel from '../models/SavedArticleSuggestion';
@@ -37,6 +38,10 @@ export type SavedItem =
  */
 export async function saveSuggestion(s: ForYouSuggestion): Promise<void> {
   const now = new Date();
+  // Announce BEFORE awaiting the write so the bookmark flips on the same frame
+  // as the tap; the write is local SQLite and does not fail in practice, and a
+  // stale-true is self-correcting on the next mount read.
+  publishSavedState(s._id, true);
   const existing = await findRow(s._id);
 
   await database.write(async () => {
@@ -69,6 +74,7 @@ export async function saveStandaloneArticle(
   const id = (article?._id ?? '').trim();
   if (!id) return;
   const now = new Date();
+  publishSavedState(id, true);
   const existing = await findRow(id);
 
   await database.write(async () => {
@@ -128,10 +134,18 @@ export async function loadSavedItems(): Promise<SavedItem[]> {
 
 export async function deleteSavedSuggestion(serverId: string): Promise<boolean> {
   const row = await findRow(serverId);
-  if (!row) return false;
+  if (!row) {
+    // Nothing to delete. Still publish `false`: reaching here means some surface
+    // believed the article was saved when it was not, and that surface needs
+    // correcting. The boolean return lets callers skip a "Removed" toast for a
+    // deletion that did not happen.
+    publishSavedState(serverId, false);
+    return false;
+  }
   await database.write(async () => {
     await row.destroyPermanently();
   });
+  publishSavedState(serverId, false);
   return true;
 }
 

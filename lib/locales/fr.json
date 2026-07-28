@@ -859,7 +859,7 @@
     "deleteStoryAction": "Supprimer l'actualité",
     "deleteStoryConfirmTitle": "Supprimer cette actualité ?",
     "deleteStoryConfirmBody": "La suppression supprime tout ce qui a été enregistré pour cette actualité.",
-    "emptyHint": "Ouvrez une actualité du Fil d'actu, puis appuyez sur l'icône de suivi dans la ligne d'action pour commencer à la suivre.",
+    "emptyHint": "Ouvrez un article du Fil d'actu pour le voir en entier, puis appuyez sur l'icône de suivi dans la rangée de boutons sous l'article.",
     "emptyCta": "Aller au Fil d'actu",
     "untrackConfirmCta": "Arrêter de suivre"
   },

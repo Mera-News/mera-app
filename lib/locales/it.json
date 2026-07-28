@@ -859,7 +859,7 @@
     "deleteStoryAction": "Elimina storia",
     "deleteStoryConfirmTitle": "Eliminare questa storia?",
     "deleteStoryConfirmBody": "L'eliminazione rimuove tutto ciò che era salvato per questa storia.",
-    "emptyHint": "Apri una storia da Notizie, quindi tocca l'icona di tracciamento nella sua riga d'azione per iniziare a seguirla.",
+    "emptyHint": "Apri un articolo da Notizie in visualizzazione completa, quindi tocca l'icona di tracciamento nella riga di pulsanti sotto l'articolo.",
     "emptyCta": "Vai a Notizie",
     "untrackConfirmCta": "Sì, smetti di seguire"
   },

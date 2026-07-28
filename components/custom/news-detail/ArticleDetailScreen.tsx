@@ -6,6 +6,7 @@ import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateA
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
+import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -25,6 +26,7 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { useSavedOverride } from '@/lib/saved-state';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
@@ -104,7 +106,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const toast = useToast();
     const [article, setArticle] = useState<NewsArticle | null>(null);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
-    const [isSaved, setIsSaved] = useState(false);
+    const [savedFromDb, setSavedFromDb] = useState(false);
+    // See lib/saved-state — a save/delete on any other surface (notably the
+    // Dashboard's Saved list) corrects this screen's bookmark without a remount.
+    const savedOverride = useSavedOverride(article?._id ?? articleId);
+    const isSaved = savedOverride ?? savedFromDb;
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -299,7 +305,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         let cancelled = false;
         isSuggestionSaved(id)
             .then((saved) => {
-                if (!cancelled) setIsSaved(saved);
+                if (!cancelled) setSavedFromDb(saved);
             })
             .catch(() => {
                 /* non-fatal — default to unsaved */
@@ -337,12 +343,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         if (!article) return;
         try {
             if (isSaved) {
-                await deleteSavedSuggestion(article._id);
-                setIsSaved(false);
-                showSavedToast(t('savedSuggestions.removedToastMessage'), true);
+                // The boolean matters: if the row was already gone (deleted
+                // from the Saved list while this screen sat mounted) nothing was
+                // removed, so a "Removed" toast would be a lie. The saved-state
+                // publish still corrects the bookmark either way.
+                const removed = await deleteSavedSuggestion(article._id);
+                if (removed) {
+                    showSavedToast(t('savedSuggestions.removedToastMessage'), true);
+                }
             } else {
                 await saveStandaloneArticle(article, { surface: 'detail' });
-                setIsSaved(true);
                 showSavedToast(t('savedSuggestions.savedToastMessage'));
             }
         } catch (err) {
@@ -451,6 +461,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     return (
         <Box className="flex-1 bg-background-50">
+            {/* Status bar scrim — this screen's hero image is a full-bleed
+                parallax header (ArticleSuggestionContainer's SmoothScrollView),
+                so without this a light photo makes the system clock/battery
+                glyphs illegible. StatusBarScrim's own zIndex (5) sits above the
+                container's default (0) but below the floating back button
+                below (zIndex 20), so the scrim darkens the image behind the
+                status bar without ever covering the tappable back button. */}
+            <StatusBarScrim />
+
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}

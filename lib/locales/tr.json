@@ -850,7 +850,7 @@
     "untrackConfirmTitle": "Takibi bırakılsın mı?",
     "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin.",
     "untrackConfirmCta": "İzlemeyi Durdur",
-    "emptyHint": "Akıştan bir haberi aç, ardından takip etmeye başlamak için işlem satırındaki izleme simgesine dokunun.",
+    "emptyHint": "Akıştan bir makaleyi tam görünüme açın, ardından makalenin altındaki düğme satırındaki takip simgesine dokunun.",
     "emptyCta": "Akışa Git",
     "trackChatSeed": "Bu haberi takip etmek istiyorum.",
     "trackProposalTitle": "Bu haberi takip et?",

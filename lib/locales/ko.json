@@ -847,7 +847,7 @@
     "untrackConfirmTitle": "팔로우를 취소할까요?",
     "untrackConfirmBody": "이 스토리의 새로운 진행 상황을 더 이상 확인할 수 없습니다.",
     "untrackConfirmCta": "팔로우 중지",
-    "emptyHint": "피드에서 스토리를 열고 그 작업 행의 추적 아이콘을 탭하여 팔로우를 시작합니다.",
+    "emptyHint": "피드에서 기사를 열어 전체 보기로 본 다음, 기사 아래의 버튼 행에서 팔로우 아이콘을 탭합니다.",
     "emptyCta": "피드로 이동",
     "trackChatSeed": "이 스토리를 팔로우하고 싶어요.",
     "trackProposalTitle": "이 스토리를 팔로우할까요?",

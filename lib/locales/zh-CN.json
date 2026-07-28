@@ -847,7 +847,7 @@
     "untrackConfirmTitle": "确定要取消关注吗？",
     "untrackConfirmBody": "你将不再看到这则报道的最新进展。",
     "untrackConfirmCta": "停止关注",
-    "emptyHint": "从信息流中打开报道，然后点击其操作行中的关注图标以开始关注。",
+    "emptyHint": "从信息流中打开报道至完整视图，然后点击其下方按钮行中的关注图标。",
     "emptyCta": "前往信息流",
     "trackChatSeed": "我想关注这则报道。",
     "trackProposalTitle": "关注这则报道？",
