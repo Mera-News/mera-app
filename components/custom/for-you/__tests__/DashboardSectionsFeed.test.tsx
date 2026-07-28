@@ -116,6 +116,10 @@ jest.mock('@/components/custom/for-you/BreakingStrip', () => ({
     default: () => null,
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+
 import DashboardSectionsFeed from '../DashboardSectionsFeed';
 
 function makeGroup(

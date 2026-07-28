@@ -3,6 +3,7 @@
 // without a hook. Updated from the root layout via usePathname().
 
 import { router } from 'expo-router';
+import { notifyTimeTick } from './time-tick';
 
 const PAYWALL_PATH = '/logged-in/not-subscribed';
 
@@ -14,10 +15,22 @@ let currentPathname = '';
 let navigatingToPaywall = false;
 
 export function setCurrentPathname(pathname: string): void {
+  const changed = pathname !== currentPathname;
   currentPathname = pathname;
   if (!pathname.includes('not-subscribed')) {
     navigatingToPaywall = false;
   }
+  // Route change ⇒ a screen just came into view: refresh every relative
+  // timestamp NOW rather than leaving it up to the 60s tick. This is the
+  // app-wide "on focus" signal the ticker needs — the root layout already calls
+  // this on every pathname change, so one call here covers every screen, and no
+  // screen needs its own focus effect.
+  //
+  // Ages ONLY. `notifyTimeTick` publishes to `lib/time-tick` subscribers, and
+  // the only subscriber is the leaf that renders an age (ArticleMetaRow) — it
+  // sits below every card's React.memo boundary, so this cannot re-render a list
+  // screen and cannot touch the Dashboard's 30-minute sort snapshot.
+  if (changed) notifyTimeTick();
 }
 
 export function getCurrentPathname(): string {

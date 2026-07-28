@@ -14,6 +14,7 @@ import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
+import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -450,6 +451,14 @@ const MeraNewsScreen: React.FC = () => {
                     </View>
                 )}
             </View>
+
+            {/* Status-bar scrim — covers the Dynamic Island/clock/battery region
+                so content is never visible behind it once the collapsing
+                header below translates away on scroll-down. Sits above the
+                sub-tab content, below the header (zIndex 10). Shared across
+                all three sub-tabs (Feed/Stories/Saved) since the header above
+                it is too. */}
+            <StatusBarScrim />
 
             {/* Collapsing Dashboard header — absolute overlay, translates up on
                 scroll-down and back on scroll-up / reveal(). */}

@@ -48,6 +48,7 @@ import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
@@ -607,6 +608,12 @@ const FeedScreen: React.FC = () => {
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
       />
+
+      {/* Status-bar scrim — covers the Dynamic Island/clock/battery region so
+          content is never visible behind it once the collapsing header below
+          translates away on scroll-down. Sits above the list, below the
+          header (zIndex 10). */}
+      <StatusBarScrim />
 
       {/* Collapsing header — "For you" heading (top-left) + notification bell
           (top-right), with the 24h stats sentence beneath. Absolute overlay,

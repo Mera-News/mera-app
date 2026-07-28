@@ -23,6 +23,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useComposedEventHandler,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Pull-to-refresh spinner tint — same value the Feed tab uses. */
 const REFRESH_TINT = '#EDA77E';
@@ -93,6 +94,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   refreshing,
   onRefresh,
 }) => {
+  const insets = useSafeAreaInsets();
   // Section content order: the SAME rule the Feed tab uses
   // (lib/feed-ordering/priority-order) — unviewed high→med→low, then viewed
   // high→med→low — so a story cannot be ranked differently on the two screens.
@@ -216,7 +218,11 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         contentContainerStyle={{
           paddingTop: headerHeight + 12,
           paddingHorizontal: 12,
-          paddingBottom: TAB_BAR_HEIGHT + 120,
+          // Bottom clearance for the floating tab bar — same expression as
+          // FeedScreen's list (safe-area bottom + tab-bar height + a fixed
+          // breathing-room tail), converged here from a previous ad-hoc
+          // `TAB_BAR_HEIGHT + 120` that omitted the safe-area inset entirely.
+          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
         }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}

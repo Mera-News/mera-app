@@ -343,9 +343,24 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         >
             <VStack className="p-5" space="lg">
                 {/* With an image, `mt-10` spaces the meta row below the hero;
-                    with no image, clear the floating back button instead. */}
+                    with no image, clear the floating back button instead.
+                    SmoothScrollView's parallax header uses Reanimated's default
+                    EXTEND extrapolation on translateY, so as the user scrolls
+                    down the header's *visual* bottom edge lags behind its
+                    layout box while opacity is still fading out (opacity only
+                    reaches 0 at scrollY = headerHeight*0.8) — there's a window
+                    where the header is a semi-transparent image sitting right
+                    behind this row. Rather than reworking the parallax math
+                    (SmoothScrollView is shared with other screens/behaviors we
+                    don't want to touch here), give the row its own opaque
+                    backdrop that exactly matches the screen's own root
+                    background (`bg-background-50` — see ArticleDetailScreen /
+                    ArticleSuggestionScreen root Box) so it's indistinguishable
+                    from empty space at every OTHER scroll position, and simply
+                    occludes whatever is behind it during the overlap window.
+                    No-image case is untouched (separate branch below). */}
                 <Box
-                    className={showImage ? 'mt-10' : undefined}
+                    className={showImage ? 'mt-10 py-1.5 bg-background-50' : undefined}
                     style={showImage ? undefined : { marginTop: NO_IMAGE_META_CLEARANCE }}
                 >
                     {metaRow}

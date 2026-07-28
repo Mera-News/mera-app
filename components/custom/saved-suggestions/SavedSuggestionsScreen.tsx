@@ -24,6 +24,7 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
 import { EDGE_SWIPE_SAFE_RIGHT_INSET } from '@/lib/navigation/edge-swipe';
+import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -252,7 +253,16 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     paddingTop: 12,
-                    paddingBottom: insets.bottom + 40,
+                    // Embedded = rendered inside the Dashboard's "Saved" sub-tab,
+                    // which sits INSIDE the floating tab navigator — needs the
+                    // same tab-bar clearance as FeedScreen/DashboardSectionsFeed
+                    // (safe-area bottom + tab-bar height + a fixed breathing-room
+                    // tail). The standalone route (app/logged-in/saved-suggestions)
+                    // is a Stack screen pushed OUTSIDE the tab navigator, so no
+                    // tab bar renders behind it — just the safe-area clearance.
+                    paddingBottom: embedded
+                        ? insets.bottom + TAB_BAR_HEIGHT + 24
+                        : insets.bottom + 40,
                 }}
                 showsVerticalScrollIndicator={false}
             />
