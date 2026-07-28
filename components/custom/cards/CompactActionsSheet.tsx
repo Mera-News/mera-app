@@ -22,7 +22,7 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
-import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
+import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -66,7 +66,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
   });
   const handleShare = useShareArticle(share);
   // Restore the tracked state only while the sheet is open (matches like/saved).
-  const { tracked, toggle: toggleTrack } = useTrackedSubject(subject, visible);
+  const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject, visible);
 
   const savedId = subject.suggestionId ?? subject.articleId;
 
@@ -180,9 +180,17 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
   }, [handleShare, onClose]);
 
   const handleTrack = useCallback(() => {
-    toggleTrack();
+    // Close the sheet FIRST when starting a follow — the proposal opens in the
+    // floating chat behind it. When the story is already tracked the press
+    // opens this sheet's own "already following" dialog instead, so the sheet
+    // must stay mounted to host it.
+    if (tracked) {
+      onTrackPress();
+      return;
+    }
+    onTrackPress();
     onClose();
-  }, [toggleTrack, onClose]);
+  }, [tracked, onTrackPress, onClose]);
 
   const closeOverlay = useCallback(() => setOverlayOpen(false), []);
 
@@ -212,6 +220,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
 
   return (
     <>
+      {trackDialog}
       {visible ? (
         <Modal visible transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
           <Pressable
@@ -242,7 +251,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
                   />
                   <Row
                     icon={<MaterialIcons name={saved ? 'bookmark' : 'bookmark-border'} size={22} color={ACCENT} />}
-                    label={t('savedSuggestions.savedToastTitle')}
+                    label={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
                     onPress={handleSave}
                   />
                   <Row

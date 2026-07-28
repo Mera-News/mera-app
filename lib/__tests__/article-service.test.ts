@@ -1048,69 +1048,6 @@ describe('ArticleService.getTopHeadlinesForCountry', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// getNewsClusterForUser
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('ArticleService.getNewsClusterForUser', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    it('returns the cluster on success', async () => {
-        const cluster = {
-            _id: 'cl-1',
-            createdAt: '2024-01-01',
-            updatedAt: '2024-01-02',
-            articles: { articles: [makeArticle()], pageInfo: { endCursor: null, hasNextPage: false, pageSize: 10 } },
-        };
-        mockQuery.mockResolvedValueOnce({ data: { newsClusterForUser: cluster } });
-        const result = await ArticleService.getNewsClusterForUser('cl-1');
-        expect(result).toEqual(cluster);
-    });
-
-    it('passes clusterId and default first=10', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { newsClusterForUser: { _id: 'cl-1', articles: { articles: [], pageInfo: {} } } } });
-        await ArticleService.getNewsClusterForUser('cl-1');
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: expect.objectContaining({ clusterId: 'cl-1', first: 10 }),
-            }),
-        );
-    });
-
-    it('respects custom first and after options', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { newsClusterForUser: { _id: 'cl-1', articles: { articles: [], pageInfo: {} } } } });
-        await ArticleService.getNewsClusterForUser('cl-1', { first: 5, after: 'page-2' });
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: expect.objectContaining({ first: 5, after: 'page-2' }),
-            }),
-        );
-    });
-
-    it('throws "News cluster not found" when data is null', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { newsClusterForUser: null } });
-        await expect(ArticleService.getNewsClusterForUser('cl-missing')).rejects.toThrow('News cluster not found');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalled();
-    });
-
-    it('throws "News cluster not found" when data itself is null', async () => {
-        mockQuery.mockResolvedValueOnce({ data: null });
-        await expect(ArticleService.getNewsClusterForUser('cl-missing')).rejects.toThrow('News cluster not found');
-    });
-
-    it('re-throws network errors', async () => {
-        const err = new Error('network down');
-        mockQuery.mockRejectedValueOnce(err);
-        await expect(ArticleService.getNewsClusterForUser('cl-1')).rejects.toThrow('network down');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getNewsClusterForUser' },
-            }),
-        );
-    });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // getNewsClusterForArticle
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -779,7 +779,7 @@
     "upgrade": "อัปเกรด"
   },
   "tabs": {
-    "deck": "เด็ค",
+    "deck": "ฟีด",
     "dashboard": "แดชบอร์ด",
     "around": "สำรวจ",
     "profile": "โปรไฟล์",
@@ -787,7 +787,7 @@
     "gotIt": "รับทราบ"
   },
   "swipeFeed": {
-    "yourDeck": "สำหรับคุณ",
+    "yourDeck": "ฟีด",
     "moreLikeThis": "แบบนี้อีก",
     "lessLikeThis": "แบบนี้น้อยลง",
     "askMera": "ถาม Mera",
@@ -809,12 +809,10 @@
     "sectionPrefix": "ข่าวเกี่ยวกับ:",
     "breaking": "ข่าวด่วน",
     "showMore": "แสดงอีก {{count}} รายการ",
-    "subTabFeed": "ฟีด",
+    "storiesCount_other": "{{count}} เรื่องราว",
+    "subTabFeed": "ภาพรวม",
     "subTabStories": "เรื่องราว",
-    "subTabSaved": "บันทึกไว้",
-    "openFactFeed": "ดูเรื่องราวทั้งหมดในหัวข้อนี้",
-    "viewAllStories": "ดูเรื่องราวทั้งหมด {{count}} เรื่อง",
-    "newInSection_other": "มีเรื่องราวใหม่ {{count}} เรื่องนับตั้งแต่ที่คุณเข้าชมล่าสุด"
+    "subTabSaved": "บันทึกไว้"
   },
   "feedStatus": {
     "title": "สถานะฟีด",
@@ -843,11 +841,18 @@
     "updatesBadge": "{{count}} ใหม่",
     "endedLabel": "สิ้นสุดแล้ว",
     "timelineQuietNote": "ยังไม่มีการรายงานใหม่ที่รวบรวมไว้ เราจะเพิ่มความคืบหน้าที่นี่เมื่อเรื่องราวนี้ดำเนินไป",
-    "railTitle": "กำลังติดตาม",
     "untrackConfirmTitle": "เลิกติดตามหรือไม่?",
     "untrackConfirmBody": "คุณจะไม่เห็นความคืบหน้าใหม่ของเรื่องราวนี้อีกต่อไป",
     "trackChatSeed": "ฉันต้องการติดตามเรื่องราวนี้",
-    "trackProposalTitle": "ติดตามเรื่องราวนี้?"
+    "trackProposalTitle": "ติดตามเรื่องราวนี้?",
+    "articleCount_other": "{{count}} บทความ",
+    "articleCountCapped": "{{count}}+ บทความ",
+    "alreadyTrackingTitle": "คุณกำลังติดตามนี้อยู่แล้ว",
+    "alreadyTrackingBody": "คุณไม่สามารถติดตามเรื่องราวนี้สองครั้งได้ การเลิกติดตามจะลบทุกอย่างที่บันทึกไว้สำหรับเรื่องนี้",
+    "goToStoryAction": "ไปที่เรื่องราว",
+    "deleteStoryAction": "ลบเรื่องราว",
+    "deleteStoryConfirmTitle": "ลบเรื่องราวนี้?",
+    "deleteStoryConfirmBody": "การลบจะนำเอาทุกสิ่งที่บันทึกไว้สำหรับเรื่องนี้ออกไป"
   },
   "whatsNew": {
     "title": "มีอะไรใหม่",

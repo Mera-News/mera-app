@@ -1,29 +1,40 @@
-// FeedScreen — the "For you" tab (landing tab). A static, insert-only vertical
-// scroll feed of personalized story cards. The order is built ONCE when empty
-// (first launch / post-wipe) and NEVER fully rebuilt — new Complete suggestions
-// are PREPENDED, and `maintainVisibleContentPosition` anchors the viewport so
-// the list grows UPWARD without moving the card being read. The order persists
-// across app restarts (feed-order-store).
+// FeedScreen — the "Feed" tab (landing tab). A static, insert-only vertical
+// scroll feed of personalized story cards. The candidate set is insert-only:
+// new Complete suggestions are PREPENDED into `feed-order-store.order` and
+// `maintainVisibleContentPosition` anchors the viewport, so the list grows
+// without moving the card being read. The order persists across app restarts.
 //
-// The unseen/seen partition is computed against a SNAPSHOT, so nothing ever
-// migrates across the "All Caught Up" divider mid-session. It refreshes at three
-// between-session moments only: app launch, app background, and an explicit
-// pull-to-refresh. Notably NOT on tab blur — opening an article blurs this tab,
-// and re-partitioning there made the card you just tapped vanish from its slot
-// while you were reading it.
-//
-// NOTHING is ever removed for being read. Every card carries a lifecycle state
-// (unviewed → skipped / viewed, see feed-order-store); a SEEN card sinks below
-// the "All Caught Up" divider (feed-entries.ts) rather than disappearing, so the
-// user can always scroll past it to re-read. Cards leave the feed by exactly one
-// route: `hydrate` dropping a persisted id whose story has aged out of the
+// DISPLAY ORDER (feed-entries.sortFeedEntries): unviewed high → medium → low,
+// then viewed high → medium → low, in one continuous run. There is no
+// "All Caught Up" DIVIDER — nothing partitions the list mid-scroll — but the
+// same card does render once as a static end-of-list FOOTER
+// (`ListFooterComponent`, testID `feed-caught-up-footer`) so the feed's end is
+// explicit. The footer is display-only: no lifecycle meaning, and no card ever
+// moves across it. NOTHING is ever removed for being read: a viewed card SINKS,
+// so it stays reachable by scrolling on. Cards leave the feed by exactly one
+// route: `hydrate` dropping a persisted id whose story aged out of the
 // publication window between sessions (FEED_WINDOW_MS).
 //
-// Each card carries a small borderless action bar (like / dislike / Mera /
-// save); tapping a thumb records a verdict and reveals the card's inline
-// feedback surface (CardFeedbackSurface). Every one of those interactions —
-// plus opening the card — marks it `viewed`.
-// The header is the "For you" heading + notification bell + 24h stats sentence.
+// The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
+// under the reader mid-session. It refreshes at exactly TWO moments: app launch,
+// and an explicit pull-to-refresh. Notably NOT on tab blur — opening an article
+// blurs this tab, and re-sorting there made the card you just tapped vanish from
+// its slot while you were reading it. And notably NOT on app-background either:
+// a re-sort on the next foreground would reshuffle the list under a reader
+// sitting mid-feed, with no scroll compensation.
+//
+// Pull-to-refresh RESETS TO TOP. That gesture is the one moment the user has
+// unambiguously asked for a fresh view, and it is the only moment rows move; the
+// reset happens once the re-sorted list has actually committed (see the effect
+// on `partitionSnapshot`), because scrolling before the commit just lets
+// `maintainVisibleContentPosition` re-anchor and land mid-list again.
+//
+// Each card carries a small borderless action bar (like / dislike / save /
+// share); Ask-Mera lives on the card's rationale block. Tapping a thumb records
+// a verdict and reveals the card's inline feedback surface
+// (CardFeedbackSurface). Every one of those interactions — plus opening the card
+// — marks it `viewed`.
+// The header is the "Feed" heading + notification bell + 24h stats sentence.
 
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
@@ -40,8 +51,8 @@ import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
-  partitionFeedEntries,
-  isCaughtUpEntry,
+  sortFeedEntries,
+  countUnviewed,
   type FeedEntry,
 } from './feed-entries';
 import {
@@ -124,11 +135,11 @@ const FeedRow = React.memo(function FeedRow({
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
   const surfaceClosed = useFeedbackDismissedStore((s) => !!s.dismissed[item.id]);
-  // ONE predicate decides both the read indicator and which side of the "All
-  // caught up" divider this card renders on — otherwise a card could show the
-  // eye while sitting in the unseen block. Note `articleIds`, not the union
-  // `ids`: a stableClusterId match would mark a brand-new article as read
-  // because a DIFFERENT article in the same ongoing story was opened.
+  // ONE predicate decides both the read indicator and which block of the sort
+  // this card lands in — otherwise a card could show the read state while
+  // sitting among the unviewed. Note `articleIds`, not the union `ids`: a
+  // stableClusterId match would mark a brand-new article as read because a
+  // DIFFERENT article in the same ongoing story was opened.
   const openedExactly = useOpenedStoriesStore((s) => {
     const articleId = item.suggestion.articleId;
     return !!articleId && s.articleIds.has(articleId);
@@ -217,12 +228,12 @@ const FeedScreen: React.FC = () => {
     void useFeedOrderStore.getState().hydrate(candidatesRef.current);
   }, [dbReady]);
 
-  // ── Partition snapshot ──
-  // The unseen/seen split is computed against a SNAPSHOT of card state, never
-  // the live store. Marking a card `skipped` mid-scroll would otherwise migrate
-  // it below the divider while the user is looking at it, closing the list up
-  // behind it — and that fires on every scroll-stop. The snapshot refreshes only
-  // at moments the user is not looking, so rows never move under them.
+  // ── Sort snapshot ──
+  // The unviewed/viewed input to the sort is a SNAPSHOT of card state, never the
+  // live store. Marking a card viewed-by-dwell mid-scroll would otherwise sink it
+  // while the user is looking at it, closing the list up behind it — and that
+  // fires on every scroll-stop. The snapshot refreshes at exactly two moments:
+  // first hydrate, and pull-to-refresh (which also resets the scroll to the top).
   const [partitionSnapshot, setPartitionSnapshot] = useState<{
     cardStates: Record<string, CardStateRecord>;
     openedArticleIds: Set<string>;
@@ -237,8 +248,8 @@ const FeedScreen: React.FC = () => {
 
   // Seed once BOTH stores are hydrated — deliberately not inside `hydrate`,
   // which resolves before the opened store has loaded. Seeding there would
-  // snapshot an empty `articleIds` and leave every previously-opened card above
-  // the divider for the whole first session, until the first blur.
+  // snapshot an empty `articleIds` and leave every previously-opened card in the
+  // unviewed block for the whole first session, until the first pull-to-refresh.
   const didSeedSnapshot = useRef(false);
   useEffect(() => {
     if (!orderHydrated || !openedHydrated || didSeedSnapshot.current) return;
@@ -246,17 +257,11 @@ const FeedScreen: React.FC = () => {
     refreshPartitionSnapshot();
   }, [orderHydrated, openedHydrated, refreshPartitionSnapshot]);
 
-  // Flush buffered dwell marks and re-partition at the two points the user is
-  // not looking: tab blur, and the app going to background ('background' only —
-  // iOS also fires 'inactive' for the app switcher and Control Centre). Order
-  // matters: `flushSkips` writes card state synchronously, so the snapshot taken
-  // right after includes it.
-  //
-  // BLUR ONLY FLUSHES — it must NOT re-partition. Opening a card pushes the
-  // detail screen, which blurs this tab, so re-partitioning here meant every
-  // article you read had already sunk below the divider by the time you came
-  // back: you tapped a card and returned to find it gone from where you were.
-  // That is the precise behaviour this whole redesign exists to remove.
+  // Flush buffered dwell marks when the user leaves the tab. FLUSH ONLY — it
+  // must NOT re-sort. Opening a card pushes the detail screen, which blurs this
+  // tab, so re-sorting here meant every article you read had already sunk by the
+  // time you came back: you tapped a card and returned to find it gone from
+  // where you were. That is the precise behaviour this redesign exists to remove.
   const wasFocusedRef = useRef(isFocused);
   useEffect(() => {
     const was = wasFocusedRef.current;
@@ -264,23 +269,26 @@ const FeedScreen: React.FC = () => {
     if (!isFocused && was) flushSkips();
   }, [isFocused, flushSkips]);
 
-  // The feed re-partitions BETWEEN sessions, never during one: on app
-  // background, on launch, and on an explicit pull-to-refresh (below). A tab
-  // switch or a trip into an article leaves the layout exactly as you left it.
+  // App background: persist, but deliberately do NOT re-sort ('background' only —
+  // iOS also fires 'inactive' for the app switcher and Control Centre). A
+  // background re-sort lands on the next foreground, reshuffling the list under a
+  // reader who is sitting mid-feed with no scroll compensation — the same
+  // "where did my place go?" jump that pull-to-refresh had to be fixed for.
+  // Pull-to-refresh is the ONLY re-sort, and it resets the scroll to the top.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
       if (next !== 'background') return;
       flushSkips();
       useFeedOrderStore.getState().flushPersist();
-      refreshPartitionSnapshot();
     });
     return () => sub.remove();
-  }, [flushSkips, refreshPartitionSnapshot]);
+  }, [flushSkips]);
 
   // Insert newly-Complete candidates while the tab is active. They are PREPENDED
   // (see feed-order-store) and the list is anchored by
-  // `maintainVisibleContentPosition`, so it grows upward without moving the card
-  // being read. `articleIds`, not the union set — see opened-stories-store.
+  // `maintainVisibleContentPosition`, so an insert above the reader does not move
+  // the card being read. `articleIds`, not the union set — see
+  // opened-stories-store.
   useEffect(() => {
     if (!isFocused || !orderHydrated || !openedHydrated) return;
     useFeedOrderStore
@@ -293,13 +301,12 @@ const FeedScreen: React.FC = () => {
     [order, itemsById],
   );
 
-  // Display list: unseen stories → "All Caught Up" divider → seen stories.
-  // Nothing is ever removed; a seen card sinks, it does not disappear. Empty
-  // when there are no stories, so the empty-state chain renders instead of a
-  // lone divider.
+  // Display list: unviewed (high → med → low), then viewed (high → med → low),
+  // one continuous run. Nothing is ever removed; a viewed card sinks, it does not
+  // disappear. Empty when there are no stories, so the empty-state chain renders.
   const listData = useMemo(
     () =>
-      partitionFeedEntries(
+      sortFeedEntries(
         data,
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
@@ -307,16 +314,21 @@ const FeedScreen: React.FC = () => {
     [data, partitionSnapshot],
   );
 
-  // Index of the divider within `listData` = how many rows sit above it. The
-  // partition always emits exactly one divider between the two blocks.
-  const dividerIndex = useMemo(() => {
-    const i = listData.findIndex(isCaughtUpEntry);
-    return i === -1 ? listData.length : i;
-  }, [listData]);
+  // How many rows sit in the unviewed block. No longer a rendered boundary — the
+  // funnel diagnostic still reports the split as its `dividerIdx`.
+  const unviewedCount = useMemo(
+    () =>
+      countUnviewed(
+        listData,
+        partitionSnapshot.cardStates,
+        partitionSnapshot.openedArticleIds,
+      ),
+    [listData, partitionSnapshot],
+  );
 
   // DEV-only Metro log of the whole funnel + the rendered cards. Compiled out of
   // release builds; throttled and count-gated in dev (see the hook).
-  useFeedFunnelLog(data, dividerIndex, userGeoLanguageCtx);
+  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx);
 
   // ── Feedback sheet (shared plumbing) ──
   // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
@@ -394,16 +406,42 @@ const FeedScreen: React.FC = () => {
   const { refreshing, onRefresh: onRefreshSync } = useFeedSyncRefresh(reveal);
 
   // Pull-to-refresh is the explicit "tidy up now" gesture — the one moment the
-  // user has unambiguously asked for a fresh view, and by definition they are at
-  // the top of the list, so read cards sinking below the divider cannot shift
-  // anything they are reading. Re-partitioning runs even when the sync itself
-  // early-returns (offline, paused): it only REORDERS what is already on screen,
-  // so there is nothing to be starved of.
+  // user has unambiguously asked for a fresh view, and the ONLY moment rows are
+  // allowed to move. Re-sorting runs even when the sync itself early-returns
+  // (offline, paused): it only REORDERS what is already on screen, so there is
+  // nothing to be starved of. Nothing is discarded either way.
+  const pendingScrollResetRef = useRef(false);
   const onRefresh = useCallback(() => {
     flushSkips();
+    pendingScrollResetRef.current = true;
     refreshPartitionSnapshot();
     onRefreshSync();
   }, [flushSkips, refreshPartitionSnapshot, onRefreshSync]);
+
+  // Reset to the top AFTER the re-sorted list has committed. Scrolling inside
+  // `onRefresh` would run before the snapshot state lands, letting
+  // `maintainVisibleContentPosition` re-anchor on the reshuffled content
+  // afterwards — which is exactly how a refresh from the top used to dump the
+  // user 1300–2000px down the feed. `animated: false`, because an animated
+  // scroll racing the re-layout produces the same mid-list landing.
+  //
+  // The extra `requestAnimationFrame` is not superstition: a scrollToOffset
+  // issued in the same frame as a re-layout on this very list is already known
+  // to be dropped — a post-refresh press of the scroll-to-top FAB (same ref,
+  // same call) reliably no-ops on the FIRST press and works on the second. One
+  // frame is imperceptible with the spinner still up.
+  useEffect(() => {
+    if (!pendingScrollResetRef.current) return;
+    pendingScrollResetRef.current = false;
+    // Deliberately NO cleanup cancelling this frame. An effect cleanup runs
+    // before EVERY re-run, not just unmount, and the flag above is already
+    // consumed — so an ingest landing in the next tick would cancel the reset
+    // and nothing would ever reschedule it. The `?.` guard makes a post-unmount
+    // callback a no-op, which is the only case cancelling would have bought.
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    });
+  }, [partitionSnapshot, listData]);
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
   // deferred TranslatableDynamic translation as items enter the viewport) —
@@ -423,25 +461,39 @@ const FeedScreen: React.FC = () => {
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedEntry }) =>
-      isCaughtUpEntry(item) ? (
-        <Box style={{ marginTop: 16 }} testID="feed-caught-up-divider">
-          <AllCaughtUpCard />
-        </Box>
-      ) : (
-        <FeedRow
-          item={item}
-          onPress={openSuggestion}
-          onVerdict={onVerdict}
-          onAskMera={onAskMera}
-          onSaveToggled={onSaveToggled}
-          feedbackHandlers={feedbackHandlers}
-        />
-      ),
+    ({ item }: { item: FeedEntry }) => (
+      <FeedRow
+        item={item}
+        onPress={openSuggestion}
+        onVerdict={onVerdict}
+        onAskMera={onAskMera}
+        onSaveToggled={onSaveToggled}
+        feedbackHandlers={feedbackHandlers}
+      />
+    ),
     [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
+
+  // End-of-feed marker. A static FOOTER after the last card — deliberately NOT
+  // the mid-list divider that was removed: it never partitions the list, carries
+  // no lifecycle meaning, and no card ever moves across it, so the sort and the
+  // viewed/unviewed blocks are untouched.
+  //
+  // Gated on a non-empty list because FlatList renders `ListFooterComponent`
+  // even when `data` is empty — without this, the zero-item case would show the
+  // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
+  // that case, and still does).
+  const listFooter = useMemo(
+    () =>
+      listData.length > 0 ? (
+        <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
+          <AllCaughtUpCard />
+        </Box>
+      ) : null,
+    [listData.length],
+  );
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
@@ -548,6 +600,7 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
+        ListFooterComponent={listFooter}
         initialNumToRender={4}
         windowSize={7}
         maxToRenderPerBatch={3}

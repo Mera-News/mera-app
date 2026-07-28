@@ -15,6 +15,15 @@
 // is no "Also for you" catch-all) → order cards newest-first within a row and
 // rows by their newest "added" time.
 //
+// Section membership additionally requires the fact link to be RELEVANCE-BACKED
+// (`isSectionMemberEligible` + `isFactSectionViable`, feed-select/ownership).
+// Ownership alone answers "which fact did this story MATCH?" from topic weights
+// and never looks at what the scorer concluded about the article, so a coarse
+// vector-search hit that was then scored to near-zero still claimed a section —
+// producing a "News about: Learning Dutch" section of EU-AI-labelling stories,
+// one of which rendered Mera's own "no direct tie to your Dutch learning"
+// rationale inside the section claiming it.
+//
 // Visibility rule (user-specified, Round-3 C1): a card enters its row once its
 // NOTE exists — i.e. the row reached `complete` (terminal: note text present OR
 // deliberately skipped for a sub-threshold-reason row). `reason_pending` rows
@@ -24,6 +33,8 @@
 import {
   bucketOf,
   bucketRank,
+  isSectionMemberEligible,
+  isFactSectionViable,
   resolveOwningFactLenient,
   type FeedBucket,
   type ScoredSuggestionProjection,
@@ -335,6 +346,11 @@ export function buildFactRows(
   const factRows = new Map<string, FactRow>();
 
   for (const { rep, group } of assignable) {
+    // RULE 1 (see feed-select/ownership): the pipeline already discarded this
+    // row — its relevance never cleared `discardFloor` — so its fact match is
+    // not relevance-backed and it must not claim a section. `RENDER_GATE` (0.3)
+    // is looser than `discardFloor` (0.4), which is how these rows got here.
+    if (!isSectionMemberEligible(group.bucket)) continue;
     const factId = resolveOwningFactLenient(
       ownershipProjection(rep),
       snapshots.topics,
@@ -362,6 +378,13 @@ export function buildFactRows(
   const isGroupUnread = (g: FactRowGroup) => !isSuggestionOpened(g.data, openedIds);
   const rows: FactRow[] = [];
   for (const row of factRows.values()) {
+    // RULE 2 (see feed-select/ownership): a section headed "News about: X" needs
+    // at least one story that is actually about X. When every surviving match is
+    // LOW, the fact has no coverage right now — only the tail of a similarity
+    // search — so the section is dropped rather than filled with articles whose
+    // own rationale disclaims the link. Sections WITH real coverage keep their
+    // LOW stories, so active sections are unchanged.
+    if (!isFactSectionViable(row.groups.map((g) => g.bucket))) continue;
     row.groups.sort(cardCompare);
     row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
     row.unreadCount = row.groups.filter(isGroupUnread).length;

@@ -62,13 +62,20 @@ jest.mock('react-native', () => {
 let mockRows: any[] = [];
 const mockUntrack = jest.fn();
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
+    MAX_MEMBER_IDS: 30,
     observeActive: () => ({
         subscribe: (observer: any) => {
             observer.next(mockRows);
             return { unsubscribe: jest.fn() };
         },
     }),
-    untrackStory: (...a: any[]) => mockUntrack(...a),
+}));
+
+// Deleting now goes through track-actions (it retires the linked TOPIC as well
+// as dropping the row). Mocked here because the real module reaches
+// topic-service → the native SQLite adapter.
+jest.mock('@/lib/tracking/track-actions', () => ({
+    deleteTrackedStoryById: (...a: any[]) => mockUntrack(...a),
 }));
 
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });

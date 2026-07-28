@@ -780,7 +780,7 @@
     "upgrade": "अपग्रेड करें"
   },
   "tabs": {
-    "deck": "डेक",
+    "deck": "फीड",
     "dashboard": "डैशबोर्ड",
     "around": "एक्सप्लोर",
     "profile": "प्रोफ़ाइल",
@@ -788,7 +788,7 @@
     "gotIt": "समझ गया"
   },
   "swipeFeed": {
-    "yourDeck": "For You",
+    "yourDeck": "फीड",
     "moreLikeThis": "इस जैसी और स्टोरीज़",
     "lessLikeThis": "ऐसी कम स्टोरीज़",
     "askMera": "Mera से पूछें",
@@ -810,13 +810,11 @@
     "sectionPrefix": "इस बारे में समाचार:",
     "breaking": "ब्रेकिंग",
     "showMore": "{{count}} और दिखाएं",
-    "subTabFeed": "फ़ीड",
+    "subTabFeed": "अवलोकन",
     "subTabStories": "स्टोरीज़",
     "subTabSaved": "सहेजे गए",
-    "openFactFeed": "इस विषय की सभी स्टोरीज़ देखें",
-    "viewAllStories": "सभी {{count}} स्टोरीज़ देखें",
-    "newInSection_one": "आपकी पिछली विज़िट के बाद से {{count}} नई स्टोरी",
-    "newInSection_other": "आपकी पिछली विज़िट के बाद से {{count}} नई स्टोरीज़"
+    "storiesCount_one": "{{count}} स्टोरी",
+    "storiesCount_other": "{{count}} स्टोरीज़"
   },
   "feedStatus": {
     "title": "फ़ीड स्थिति",
@@ -846,11 +844,19 @@
     "updatesBadge_other": "{{count}} नए",
     "endedLabel": "समाप्त",
     "timelineQuietNote": "अभी तक कोई नई कवरेज नहीं मिली। जैसे-जैसे यह स्टोरी आगे बढ़ेगी, हम यहां घटनाक्रम जोड़ेंगे।",
-    "railTitle": "फ़ॉलो की जा रही",
     "untrackConfirmTitle": "फ़ॉलो करना बंद करें?",
     "untrackConfirmBody": "अब आपको इस स्टोरी के नए घटनाक्रम नहीं दिखेंगे।",
     "trackChatSeed": "मैं इस स्टोरी को फ़ॉलो करना चाहता हूँ।",
-    "trackProposalTitle": "इस स्टोरी को फ़ॉलो करें?"
+    "trackProposalTitle": "इस स्टोरी को फ़ॉलो करें?",
+    "articleCount_one": "{{count}} लेख",
+    "articleCount_other": "{{count}} लेख",
+    "articleCountCapped": "{{count}}+ लेख",
+    "alreadyTrackingTitle": "आप पहले से इसे फ़ॉलो कर रहे हैं",
+    "alreadyTrackingBody": "आप एक स्टोरी को दो बार फ़ॉलो नहीं कर सकते। इसे अनफ़ॉलो करने से इसके लिए सहेजी गई सभी चीज़ें हट जाएंगी।",
+    "goToStoryAction": "स्टोरी पर जाएं",
+    "deleteStoryAction": "स्टोरी हटाएं",
+    "deleteStoryConfirmTitle": "यह स्टोरी हटाएं?",
+    "deleteStoryConfirmBody": "हटाने से इस स्टोरी के लिए सहेजी गई सभी चीज़ें हट जाएंगी।"
   },
   "whatsNew": {
     "title": "नया क्या है",

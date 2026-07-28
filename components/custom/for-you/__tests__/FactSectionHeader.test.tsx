@@ -50,36 +50,29 @@ jest.mock('@/components/custom/for-you/event-type-icons', () => ({
 import FactSectionHeader from '../FactSectionHeader';
 
 describe('FactSectionHeader', () => {
-    it('renders a "+N" pill when newCount > 0', () => {
-        const { getByText, getByLabelText } = render(
-            <FactSectionHeader title="Elections" eventType={null} newCount={3} onPress={jest.fn()} />,
-        );
-        expect(getByText('+3')).toBeTruthy();
-        // a11y label uses the pluralized i18n key.
-        expect(getByLabelText('forYou.newInSection')).toBeTruthy();
-    });
-
-    it('caps the pill display at "+99"', () => {
+    // The "+N new" badge was REMOVED (owner: not necessary). The section's TOTAL
+    // is the durable number, and it doubles as the CTA into the full panel.
+    it('renders the total as the "N stories" pill', () => {
         const { getByText } = render(
-            <FactSectionHeader title="Elections" eventType={null} newCount={250} onPress={jest.fn()} />,
+            <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(getByText('+99')).toBeTruthy();
+        expect(getByText('forYou.storiesCount')).toBeTruthy();
     });
 
-    it('hides the pill when newCount is 0', () => {
-        const { queryByLabelText } = render(
-            <FactSectionHeader title="Elections" eventType={null} newCount={0} onPress={jest.fn()} />,
+    it('no longer renders a "+N new" badge', () => {
+        const { queryByText } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(queryByLabelText('forYou.newInSection')).toBeNull();
+        expect(queryByText('+3')).toBeNull();
+        expect(queryByText('+12')).toBeNull();
     });
 
-    it('is pressable — opens the fact feed on tap', () => {
+    it('the pill opens the fact feed on tap', () => {
         const onPress = jest.fn();
-        const { getByLabelText } = render(
-            <FactSectionHeader title="Elections" eventType={null} onPress={onPress} />,
+        const { getByTestId } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={5} onPress={onPress} />,
         );
-        const pressable = getByLabelText('forYou.openFactFeed');
-        fireEvent.press(pressable);
+        fireEvent.press(getByTestId('dashboard-section-stories-pill'));
         expect(onPress).toHaveBeenCalled();
     });
 });

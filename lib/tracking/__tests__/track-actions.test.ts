@@ -124,6 +124,27 @@ describe('trackStoryWithProposal', () => {
     );
   });
 
+  // Duplicate followed stories: every confirmed proposal used to mint a fresh
+  // topic + row unconditionally. A stale button was one way in, but the floating
+  // chat outlives the screen, so guarding the WRITE is what makes duplicates
+  // impossible rather than merely unlikely.
+  it('does NOT mint a second topic or row when the story is already tracked', async () => {
+    asMock(findActiveTrackedId).mockResolvedValue('already-tracked-row');
+
+    await trackStoryWithProposal(SUBJECT, SCOPE);
+
+    expect(createTopics).not.toHaveBeenCalled();
+    expect(trackStory).not.toHaveBeenCalled();
+  });
+
+  it('still mints when no active story matches the subject', async () => {
+    asMock(findActiveTrackedId).mockResolvedValue(null);
+
+    await trackStoryWithProposal(SUBJECT, SCOPE);
+
+    expect(trackStory).toHaveBeenCalledTimes(1);
+  });
+
   it('falls back to the search text as the headline when label is blank', async () => {
     await trackStoryWithProposal(SUBJECT, { label: '  ', searchText: 'Updates on the protest' });
 
@@ -144,11 +165,15 @@ describe('trackStoryWithProposal', () => {
     );
   });
 
-  it('falls back to now for the seed snapshot pubDate when subject has none', async () => {
-    const before = Date.now();
+  // Was "falls back to now". `now` made a dateless seed claim to be seconds old
+  // and sort to the top of the timeline, where every row's clock chip means
+  // publication age — a 13h-old article rendered "4m ago" above fresher
+  // coverage. 0 is the service's existing "old / unknown" sentinel: sorts last,
+  // renders no timestamp at all.
+  it('falls back to 0 (unknown), NOT now, when the subject carries no pubDate', async () => {
     await trackStoryWithProposal(SUBJECT, SCOPE);
     const call = asMock(trackStory).mock.calls.at(-1)?.[0];
-    expect(call.initialSnapshot.pubDateMs).toBeGreaterThanOrEqual(before);
+    expect(call.initialSnapshot.pubDateMs).toBe(0);
   });
 
   it('no-ops on a blank search text', async () => {

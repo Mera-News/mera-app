@@ -38,12 +38,20 @@ export default function AppLayout() {
                     visible caption. `hidden` on NativeTabsTriggerLabelProps is the
                     supported cross-platform mechanism (iOS + Android). */}
                 <NativeTabs tintColor={ACCENT} minimizeBehavior="onScrollDown">
-                    {/* Deck (route `feed`) — the buttons-first swipe deck, landing tab. */}
+                    {/* Feed (route `feed`) — the scrolling story feed, landing tab.
+                        The glyph is a list-of-stories, not a house: this tab is no
+                        longer a "home", and the house read as one. `.fill` matches
+                        the other four triggers (none of them use a separate
+                        selected/unselected pair). MaterialIcons `view-agenda` is
+                        the Android counterpart — stacked cards, deliberately NOT
+                        `dynamic-feed`, which the Dashboard's "Overview" sub-tab
+                        already uses, and not `article`, which reads as a single
+                        document rather than a stream. */}
                     <NativeTabs.Trigger name="feed">
                         <Label hidden>{t('tabs.deck')}</Label>
                         <Icon
-                            sf="house.fill"
-                            src={<VectorIcon family={MaterialIcons} name="home" />}
+                            sf="list.bullet.rectangle.fill"
+                            src={<VectorIcon family={MaterialIcons} name="view-agenda" />}
                         />
                     </NativeTabs.Trigger>
                     {/* Dashboard (route `for_you`). */}

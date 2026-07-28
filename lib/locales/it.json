@@ -780,7 +780,7 @@
     "upgrade": "Aggiorna"
   },
   "tabs": {
-    "deck": "Mazzo",
+    "deck": "Notizie",
     "dashboard": "Dashboard",
     "around": "Esplora",
     "profile": "Profilo",
@@ -788,7 +788,7 @@
     "gotIt": "Capito"
   },
   "swipeFeed": {
-    "yourDeck": "Per te",
+    "yourDeck": "Notizie",
     "moreLikeThis": "Più come questo",
     "lessLikeThis": "Meno come questo",
     "askMera": "Chiedi a Mera",
@@ -810,11 +810,9 @@
     "sectionPrefix": "Notizie su:",
     "breaking": "Ultim'ora",
     "showMore": "Mostra altri {{count}}",
-    "openFactFeed": "Vedi tutte le storie su questo argomento",
-    "viewAllStories": "Vedi tutte le {{count}} storie",
-    "newInSection_one": "{{count}} nuova storia dalla tua ultima visita",
-    "newInSection_other": "{{count}} nuove storie dalla tua ultima visita",
-    "subTabFeed": "Feed",
+    "storiesCount_one": "{{count}} storia",
+    "storiesCount_other": "{{count}} storie",
+    "subTabFeed": "Panoramica",
     "subTabStories": "Storie",
     "subTabSaved": "Salvati"
   },
@@ -845,11 +843,19 @@
     "updatesBadge": "{{count}} nuovi",
     "endedLabel": "Conclusa",
     "timelineQuietNote": "Nessuna nuova copertura raccolta ancora. Aggiungeremo qui gli sviluppi man mano che questa storia si evolve.",
-    "railTitle": "Seguiti",
     "untrackConfirmTitle": "Smettere di seguire?",
     "untrackConfirmBody": "Non vedrai più nuovi sviluppi per questa storia.",
     "trackChatSeed": "Voglio seguire questa storia.",
-    "trackProposalTitle": "Seguire questa storia?"
+    "trackProposalTitle": "Seguire questa storia?",
+    "articleCount_one": "{{count}} articolo",
+    "articleCount_other": "{{count}} articoli",
+    "articleCountCapped": "{{count}}+ articoli",
+    "alreadyTrackingTitle": "Stai già seguendo questo",
+    "alreadyTrackingBody": "Non puoi seguire questa storia due volte. Smettere di seguirla eliminerebbe tutto ciò che è salvato per essa.",
+    "goToStoryAction": "Vai alla storia",
+    "deleteStoryAction": "Elimina storia",
+    "deleteStoryConfirmTitle": "Eliminare questa storia?",
+    "deleteStoryConfirmBody": "L'eliminazione rimuove tutto ciò che era salvato per questa storia."
   },
   "whatsNew": {
     "title": "Novità",

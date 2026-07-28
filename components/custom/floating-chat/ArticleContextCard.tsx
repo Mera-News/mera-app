@@ -73,7 +73,17 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
           <Text style={{ color: ACCENT, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>
             {t('floatingChat.aboutThisStory')}
           </Text>
-          <Text className="text-typography-0" style={{ fontSize: 13, fontWeight: '600' }} numberOfLines={2}>
+          {/* Explicit light value, NOT a `typography-*` class. This card paints
+              its own hardcoded dark surface (#1a1a1a) in every theme, so it needs
+              a colour that is readable against THAT, not against the app
+              background. `text-typography-0` resolves to rgb(23,23,23) under the
+              inverted dark ramp — near-black glyphs on a near-black card, ~1.03:1
+              contrast, i.e. invisible. Matches ChatThread's convention of
+              explicit rgb() values on this surface. */}
+          <Text
+            style={{ color: 'rgb(245, 245, 245)', fontSize: 13, fontWeight: '600' }}
+            numberOfLines={2}
+          >
             {title}
           </Text>
         </VStack>

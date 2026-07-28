@@ -71,6 +71,16 @@ describe('CardActionBar', () => {
     expect(onToggleSave).toHaveBeenCalledTimes(1);
   });
 
+  // Q21: the Mera button is BACK in this row, for view consistency with
+  // standalone cards (ArticleActionsRow always kept its own). It is the
+  // canonical affordance and owns `card-action-mera`; the rationale block's
+  // glyph is `rationale-mera` and calls the same handler.
+  it('renders the Mera button as the canonical card-action-mera affordance', () => {
+    const { getByTestId, onAskMera } = setup();
+    fireEvent.press(getByTestId('card-action-mera'));
+    expect(onAskMera).toHaveBeenCalledTimes(1);
+  });
+
   it('renders unselected icons hollow (fill none, white)', () => {
     const { getByTestId } = setup();
     expect(getByTestId('icon-thumbsup').props.fill).toBe('none');

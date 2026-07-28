@@ -66,7 +66,7 @@
     "preparingFeedExploreHint": "А пока загляните во вкладку «Обзор», чтобы увидеть главные новости.",
     "noInterests": "Mera не может анализировать новости для вас",
     "noInterestsDescription": "Создайте свой профиль пользователя, чтобы Mera начала подбирать для вас новости.",
-    "dashboardTitle": "Дашборд",
+    "dashboardTitle": "Панель",
     "pullDownToRetry": "Потяните вниз, чтобы повторить",
     "readArticleToast": "Вы прочитали эту статью",
     "stuckTitle": "Не удалось загрузить ленту",
@@ -782,15 +782,15 @@
     "upgrade": "Улучшить план"
   },
   "tabs": {
-    "deck": "Колода",
-    "dashboard": "Дашборд",
-    "around": "Обзор",
+    "deck": "Лента",
+    "dashboard": "Панель",
+    "around": "Мир",
     "profile": "Профиль",
     "settings": "Настройки",
     "gotIt": "Понятно"
   },
   "swipeFeed": {
-    "yourDeck": "Для вас",
+    "yourDeck": "Лента",
     "moreLikeThis": "Больше похожего на это",
     "lessLikeThis": "Меньше похожего на это",
     "askMera": "Спросить Mera",
@@ -812,15 +812,13 @@
     "sectionPrefix": "Новости о:",
     "breaking": "Срочно",
     "showMore": "Показать ещё {{count}}",
-    "subTabFeed": "Лента",
+    "subTabFeed": "Обзор",
     "subTabStories": "Истории",
     "subTabSaved": "Сохранённое",
-    "openFactFeed": "Смотреть все истории по этой теме",
-    "viewAllStories": "Показать все истории ({{count}})",
-    "newInSection_one": "{{count}} новая история с момента вашего последнего посещения",
-    "newInSection_few": "{{count}} новые истории с момента вашего последнего посещения",
-    "newInSection_many": "{{count}} новых историй с момента вашего последнего посещения",
-    "newInSection_other": "{{count}} новые истории с момента вашего последнего посещения"
+    "storiesCount_one": "{{count}} история",
+    "storiesCount_few": "{{count}} истории",
+    "storiesCount_many": "{{count}} историй",
+    "storiesCount_other": "{{count}} истории"
   },
   "feedStatus": {
     "title": "Статус ленты",
@@ -849,11 +847,21 @@
     "updatesBadge": "{{count}} новых",
     "endedLabel": "Завершено",
     "timelineQuietNote": "Пока нет новых материалов. Мы будем добавлять сюда развитие событий по мере того, как эта история будет разворачиваться.",
-    "railTitle": "Отслеживаемое",
     "untrackConfirmTitle": "Перестать отслеживать?",
     "untrackConfirmBody": "Вы больше не будете видеть новые события по этой истории.",
     "trackChatSeed": "Я хочу отслеживать эту историю.",
-    "trackProposalTitle": "Отслеживать эту историю?"
+    "trackProposalTitle": "Отслеживать эту историю?",
+    "articleCount_one": "{{count}} статья",
+    "articleCount_few": "{{count}} статьи",
+    "articleCount_many": "{{count}} статей",
+    "articleCount_other": "{{count}} статьи",
+    "articleCountCapped": "{{count}}+ статей",
+    "alreadyTrackingTitle": "Вы уже отслеживаете это",
+    "alreadyTrackingBody": "Вы не можете отслеживать одну и ту же историю дважды. Если перестать отслеживать, всё сохранённое для неё будет удалено.",
+    "goToStoryAction": "Перейти к истории",
+    "deleteStoryAction": "Удалить историю",
+    "deleteStoryConfirmTitle": "Удалить эту историю?",
+    "deleteStoryConfirmBody": "При удалении всё сохранённое для этой истории будет удалено."
   },
   "whatsNew": {
     "title": "Что нового",

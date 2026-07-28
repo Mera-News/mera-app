@@ -780,7 +780,7 @@
     "upgrade": "Upgraden"
   },
   "tabs": {
-    "deck": "Stapel",
+    "deck": "Feed",
     "dashboard": "Dashboard",
     "around": "Verkennen",
     "profile": "Profiel",
@@ -788,7 +788,7 @@
     "gotIt": "Begrepen"
   },
   "swipeFeed": {
-    "yourDeck": "Voor Jou",
+    "yourDeck": "Feed",
     "moreLikeThis": "Meer zoals dit",
     "lessLikeThis": "Minder zoals dit",
     "askMera": "Vraag het Mera",
@@ -810,13 +810,11 @@
     "sectionPrefix": "Nieuws over:",
     "breaking": "Breaking",
     "showMore": "Toon {{count}} meer",
-    "subTabFeed": "Feed",
+    "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen",
-    "openFactFeed": "Bekijk alle verhalen over dit onderwerp",
-    "viewAllStories": "Alle {{count}} verhalen bekijken",
-    "newInSection_one": "{{count}} nieuw verhaal sinds je laatste bezoek",
-    "newInSection_other": "{{count}} nieuwe verhalen sinds je laatste bezoek"
+    "storiesCount_one": "{{count}} verhaal",
+    "storiesCount_other": "{{count}} verhalen"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -845,11 +843,19 @@
     "updatesBadge": "{{count}} nieuw",
     "endedLabel": "Beëindigd",
     "timelineQuietNote": "Nog geen nieuwe berichtgeving verzameld. We voegen hier ontwikkelingen toe zodra dit verhaal zich ontvouwt.",
-    "railTitle": "Volgend",
     "untrackConfirmTitle": "Stoppen met volgen?",
     "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal.",
     "trackChatSeed": "Ik wil dit verhaal volgen.",
-    "trackProposalTitle": "Dit verhaal volgen?"
+    "trackProposalTitle": "Dit verhaal volgen?",
+    "articleCount_one": "{{count}} artikel",
+    "articleCount_other": "{{count}} artikelen",
+    "articleCountCapped": "{{count}}+ artikelen",
+    "alreadyTrackingTitle": "Je volgt dit verhaal al",
+    "alreadyTrackingBody": "Je kunt dit verhaal niet twee keer volgen. Als je het niet meer volgt, wordt alles wat je erover hebt opgeslagen verwijderd.",
+    "goToStoryAction": "Ga naar verhaal",
+    "deleteStoryAction": "Verhaal verwijderen",
+    "deleteStoryConfirmTitle": "Dit verhaal verwijderen?",
+    "deleteStoryConfirmBody": "Verwijderen verwijdert alles wat je voor dit verhaal hebt opgeslagen."
   },
   "whatsNew": {
     "title": "Wat is er nieuw",

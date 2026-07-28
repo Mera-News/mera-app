@@ -1,9 +1,16 @@
 // NOTE(app-rethink wave): the `card` variant is SUPERSEDED by
 // components/custom/cards/ (ArticleCardBase + ArticleSuggestionCard). Nothing
 // renders this component with variant="card" anymore. The `screen` variant is
-// STILL LIVE — the article/suggestion detail screens use it — so this file stays
-// as-is; do not change its behavior. New card work goes in components/custom/cards/.
+// STILL LIVE — the article/suggestion detail screens use it — so leave the CARD
+// path alone; new card work goes in components/custom/cards/.
+//
+// The screen path's rationale block was reworked into "Mera's voice": the
+// animated Mera glyph sits at its LEFT and is the Ask-Mera affordance (see
+// `askMeraEl` / the injected `onAskMera`), the text stays right-aligned and is no
+// longer italic, and the detail action row (ArticleFeedbackPrompt) dropped its
+// own Mera button in exchange.
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
@@ -54,6 +61,11 @@ interface BaseProps {
      *  instance) — fires whenever the displayed title variant changes so the
      *  detail screen can share whichever title the reader currently sees. */
     onTitleDisplayChange?: (state: TranslatableDisplayState) => void;
+    /** Opens the Mera chat for this story. When provided, the rationale block
+     *  renders the animated Mera glyph at its left as the Ask-Mera affordance.
+     *  Injected rather than reaching into the chat store here, so this shared
+     *  container keeps no business logic. */
+    onAskMera?: () => void;
 }
 
 type SuggestionProps = BaseProps & { suggestion: ForYouSuggestion; article?: never };
@@ -117,6 +129,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         aboveReason,
         read = false,
         onTitleDisplayChange,
+        onAskMera,
     } = props;
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
@@ -261,17 +274,41 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         </HStack>
     ) : null;
 
+    // "Mera's voice": the rationale is Mera talking, so her glyph sits at the LEFT
+    // of the block and IS the Ask-Mera affordance — it replaced the Mera button in
+    // the detail screen's action row (ArticleFeedbackPrompt, `showMeraButton`).
+    // ANIMATED here (the card variants use the frozen frame), and `hitSlop` lifts
+    // the 26px glyph to a ≥44pt target. testID `rationale-mera` — on the detail
+    // screen this is the ONLY Ask-Mera affordance (ArticleFeedbackPrompt's own
+    // button stays suppressed there via `showMeraButton={false}`), unlike cards,
+    // where the action bar carries the canonical `card-action-mera`.
+    const askMeraEl = onAskMera ? (
+        <Pressable
+            testID="rationale-mera"
+            onPress={onAskMera}
+            hitSlop={11}
+            accessibilityRole="button"
+            accessibilityLabel={t('swipeFeed.askMera')}
+        >
+            <MeraLogo size={26} animated />
+        </Pressable>
+    ) : null;
+
     const reasonBoxEl = isSuggestion && relevanceReady && (reason || reasonLoading) ? (
         <Box
             className="rounded-lg p-3 flex-row items-center"
             style={{ backgroundColor: reasonBoxColors.backgroundColor }}
         >
-            <RelevanceChip relevance={relevance} />
+            {/* Left COLUMN: priority chip on top, Mera glyph directly below it.
+                The rationale text sits to its right, still right-aligned. */}
+            <VStack className="items-center" space="xs">
+                <RelevanceChip relevance={relevance} />
+                {askMeraEl}
+            </VStack>
             {reason ? (
                 <TranslatableDynamic
                     text={reason}
                     size="sm"
-                    italic
                     bold
                     className="ml-3 flex-1 text-right"
                     style={{ color: reasonBoxColors.textColor }}
@@ -283,6 +320,17 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             )}
         </Box>
     ) : null;
+
+    // A suggestion can legitimately have NO rationale block — unscored (the
+    // Related-Articles list deliberately links low-relevance and still-unscored
+    // siblings here) or Complete-with-no-reason. The screen layout has no fact
+    // chips to fall back on, and the action row's own Mera button is suppressed
+    // once this container hosts the glyph, so without this row those stories
+    // would have no Ask-Mera affordance at all. Same left position, glyph only.
+    const askMeraOnlyRowEl =
+        askMeraEl && !reasonBoxEl ? (
+            <HStack className="items-center">{askMeraEl}</HStack>
+        ) : null;
 
     if (isCard) {
         return (
@@ -344,7 +392,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 </Box>
                 {titleEl}
                 {aboveReason}
-                {reasonBoxEl}
+                {reasonBoxEl ?? askMeraOnlyRowEl}
                 {footer}
                 <Box style={{ height: contentBottomInset }} />
             </VStack>

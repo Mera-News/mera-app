@@ -780,7 +780,7 @@
     "upgrade": "Fazer upgrade"
   },
   "tabs": {
-    "deck": "Baralho",
+    "deck": "Feed",
     "dashboard": "Painel",
     "around": "Explorar",
     "profile": "Perfil",
@@ -788,7 +788,7 @@
     "gotIt": "Entendi"
   },
   "swipeFeed": {
-    "yourDeck": "Para você",
+    "yourDeck": "Feed",
     "moreLikeThis": "Mais como este",
     "lessLikeThis": "Menos como este",
     "askMera": "Perguntar à Mera",
@@ -810,13 +810,11 @@
     "sectionPrefix": "Notícias sobre:",
     "breaking": "Urgente",
     "showMore": "Mostrar mais {{count}}",
-    "subTabFeed": "Feed",
+    "subTabFeed": "Visão",
     "subTabStories": "Histórias",
     "subTabSaved": "Salvos",
-    "openFactFeed": "Ver todas as histórias sobre este tópico",
-    "viewAllStories": "Ver todas as {{count}} histórias",
-    "newInSection_one": "{{count}} nova história desde sua última visita",
-    "newInSection_other": "{{count}} novas histórias desde sua última visita"
+    "storiesCount_one": "{{count}} história",
+    "storiesCount_other": "{{count}} histórias"
   },
   "feedStatus": {
     "title": "Status do feed",
@@ -845,11 +843,19 @@
     "updatesBadge": "{{count}} novos",
     "endedLabel": "Encerrada",
     "timelineQuietNote": "Ainda não há nova cobertura reunida. Adicionaremos os desenvolvimentos aqui conforme esta história avança.",
-    "railTitle": "Seguindo",
     "untrackConfirmTitle": "Deixar de seguir?",
     "untrackConfirmBody": "Você não verá mais novos desenvolvimentos desta história.",
     "trackChatSeed": "Quero seguir esta história.",
-    "trackProposalTitle": "Seguir esta história?"
+    "trackProposalTitle": "Seguir esta história?",
+    "articleCount_one": "{{count}} artigo",
+    "articleCount_other": "{{count}} artigos",
+    "articleCountCapped": "{{count}}+ artigos",
+    "alreadyTrackingTitle": "Você já está seguindo isto",
+    "alreadyTrackingBody": "Você não pode seguir esta história duas vezes. Deixar de acompanhá-la excluiria tudo que foi salvo para ela.",
+    "goToStoryAction": "Ir para a história",
+    "deleteStoryAction": "Deletar história",
+    "deleteStoryConfirmTitle": "Deletar esta história?",
+    "deleteStoryConfirmBody": "Deletar remove tudo que foi salvo para esta história."
   },
   "whatsNew": {
     "title": "Novidades",

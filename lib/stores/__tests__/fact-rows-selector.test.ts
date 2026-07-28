@@ -116,6 +116,77 @@ describe('buildFactRows ownership', () => {
     expect(rows.some((r) => r.factId === 'f-orph')).toBe(false);
   });
 
+  // --- relevance-backed section membership -------------------------------
+  //
+  // Regression suite for the "News about: Learning Dutch" bug: a section headed
+  // after a fact held five EU-AI-labelling stories, one of which rendered Mera's
+  // own "no direct tie to your Dutch learning" rationale INSIDE the section that
+  // claimed it. Ownership answers "which fact did this MATCH?" from topic
+  // weights alone; these two rules add the missing relevance backing.
+
+  it('RULE 1: a sub-discardFloor row never claims a section, even though it clears RENDER_GATE', () => {
+    const snap = snapshots(
+      [['t1', { factId: 'f1' }]],
+      [['f1', { statement: 'Learning Dutch' }]],
+    );
+    // 0.35 sits in the gap the bug lived in: above RENDER_GATE (0.3) so it is
+    // "visible", but below discardFloor (0.4) so the pipeline already discarded
+    // it — bucketOf → UNSCORED.
+    const discarded = sugg({ _id: 'sub', relevance: 0.35, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const real = sugg({ _id: 'real', relevance: 0.8, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    expect(passesRenderGate(discarded)).toBe(true); // it IS feed-visible
+    const { rows } = buildFactRows([discarded, real], snap, new Set(), NOW);
+    const f1 = rows.find((r) => r.factId === 'f1');
+    // The section exists (the HIGH story backs it) but the discard is not in it.
+    expect(f1?.groups.map((g) => g.data._id)).toEqual(['real']);
+  });
+
+  it('RULE 2: a fact whose every match is LOW gets NO section', () => {
+    const snap = snapshots(
+      [['t-nl', { factId: 'f-nl' }]],
+      [['f-nl', { statement: 'Learning Dutch' }]],
+    );
+    // The reported shape: five matched stories, every one of them LOW.
+    const lows = [1, 2, 3, 4, 5].map((n) =>
+      sugg({ _id: `low${n}`, relevance: 0.4, matchedTopics: [{ topicId: 't-nl', text: 'nl' }] }),
+    );
+    const { rows } = buildFactRows(lows, snap, new Set(), NOW);
+    expect(rows.some((r) => r.factId === 'f-nl')).toBe(false);
+  });
+
+  it('RULE 2: one MEDIUM story makes the section viable and its LOW stories are KEPT', () => {
+    const snap = snapshots(
+      [['t1', { factId: 'f1' }]],
+      [['f1', { statement: 'Berlin tech' }]],
+    );
+    const low = sugg({ _id: 'low', relevance: 0.4, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const med = sugg({ _id: 'med', relevance: 0.6, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const { rows } = buildFactRows([low, med], snap, new Set(), NOW);
+    const f1 = rows.find((r) => r.factId === 'f1');
+    // Active sections are NOT thinned — this is a per-section test, not per-card.
+    expect(f1?.groups.map((g) => g.data._id).sort()).toEqual(['low', 'med']);
+  });
+
+  it('an all-LOW fact is dropped WITHOUT disturbing a sibling fact that has real coverage', () => {
+    const snap = snapshots(
+      [['t-nl', { factId: 'f-nl' }], ['t-ok', { factId: 'f-ok' }]],
+      [['f-nl', { statement: 'Learning Dutch' }], ['f-ok', { statement: 'F1' }]],
+    );
+    const low = sugg({ _id: 'low', relevance: 0.4, matchedTopics: [{ topicId: 't-nl', text: 'nl' }] });
+    const ok = sugg({ _id: 'ok', relevance: 0.8, matchedTopics: [{ topicId: 't-ok', text: 'f1' }] });
+    const { rows } = buildFactRows([low, ok], snap, new Set(), NOW);
+    expect(rows.map((r) => r.factId)).toEqual(['f-ok']);
+  });
+
+  it('EMERGENCY/HIGH buckets also make a section viable', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', { statement: 'X' }]]);
+    // rawScore kept sub-breaking so the row stays a section member rather than
+    // being pulled into the breaking strip before assignment.
+    const high = sugg({ _id: 'h', relevance: 0.85, rawScore: 0.5, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const { rows } = buildFactRows([high], snap, new Set(), NOW);
+    expect(rows.find((r) => r.factId === 'f1')?.groups.map((g) => g.data._id)).toEqual(['h']);
+  });
+
   it('a zero-signal but ACTIVE fact match folds into that fact section', () => {
     const snap = snapshots(
       [['t-zero', { factId: 'f-zero', weight: 0 }]], // active, but effective weight 0
@@ -174,7 +245,10 @@ describe('buildFactRows visibility', () => {
       _id: 'skip',
       status: ArticleSuggestionStatus.Complete,
       reason: '', // note deliberately skipped for a sub-threshold-reason row
-      relevance: 0.4,
+      // MEDIUM, so the section-viability rule (all-LOW sections are dropped —
+      // see the relevance-backed-membership suite) can't mask what this case is
+      // actually about: the NOTE gate, not the bucket.
+      relevance: 0.6,
       matchedTopics: [{ topicId: 't1', text: 'x' }],
     });
     const { rows } = buildFactRows([skipped], snap, new Set(), NOW);

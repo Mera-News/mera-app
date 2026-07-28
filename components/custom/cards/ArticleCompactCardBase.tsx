@@ -87,7 +87,12 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       style={dimmed ? { opacity: 0.75 } : undefined}
     >
       <Card variant="elevated" size="sm" className="mb-3 overflow-hidden rounded-xl">
-        <Box className="flex-row" style={{ minHeight: 128 }}>
+        {/* No fixed minHeight: the card wraps its content. It was 128, which
+            left visible dead space under a short 2-line headline. The image
+            column is `self-stretch` with an ABSOLUTELY positioned image, so it
+            simply fills whatever height the content column resolves to — image
+            cards keep their layout, they just get shorter too. */}
+        <Box className="flex-row">
           {/* Image Section - 1/4 width (25%). Article image, else placeholder.
               The image is ABSOLUTELY positioned to fill the column so its intrinsic
               size never drives the row height — the content column (below) owns the
@@ -113,7 +118,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
           </Box>
 
           {/* Content Section - 3/4 width (75%), three stacked zones. */}
-          <Box className="flex-1 flex-col px-3 py-3">
+          <Box className="flex-1 flex-col px-3 py-2">
             {/* 1. Meta row: time + language (flag lives in the footer) + optional
                 metaAccessory. */}
             <Box className="flex-row items-center" style={{ gap: 6 }}>
@@ -131,15 +136,17 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               {metaAccessory}
             </Box>
 
-            {/* 2. Headline - takes the remaining height, up to 3 lines */}
-            <Box className="flex-1 justify-center">
+            {/* 2. Headline — clamped to 2 lines. `my-1` instead of
+                `flex-1 justify-center`: with no minHeight there is no spare
+                height to distribute, and flex-1 would have re-introduced it. */}
+            <Box className="my-1">
               <TranslatableDynamic
                 text={displayTitle}
                 originalText={titleOriginal}
                 originalLanguage={sourceLanguage}
                 size="md"
                 className="leading-5 font-medium"
-                numberOfLines={3}
+                numberOfLines={2}
               />
             </Box>
 

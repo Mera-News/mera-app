@@ -1,0 +1,105 @@
+// priority-order — THE ordering rule for personalized story surfaces, shared by
+// the Feed tab and the Dashboard so the two cannot drift.
+//
+//   unviewed (high → medium → low) … then viewed (high → medium → low)
+//
+// PURE and RN-free: no DB / expo / react-native imports, so it unit-tests
+// without a device.
+//
+// This exists because the same rule now has two consumers with two different row
+// shapes (`FeedListItem` on the Feed, `FactRowGroup` on the Dashboard). Encoding
+// it twice would guarantee divergence — and the failure would be silent and
+// user-visible: the same story ranked differently on two screens, or a "High"
+// chip rendered below a "Medium" one.
+
+/** What the ordering actually keys on, projected out of whatever row shape a
+ *  caller has. */
+export interface PriorityFacts {
+  /** The scored relevance the worded chip displays (`suggestion.relevance`). */
+  relevance: number;
+  /** Opened (tap) OR dwelt on for DWELL_READ_SECONDS — see `isViewedArticle`. */
+  viewed: boolean;
+}
+
+/**
+ * Relevance band rank, LOWER sorts first: 0 emergency, 1 high, 2 medium, 3 low,
+ * 4 irrelevant/unscored.
+ *
+ * Thresholds mirror `getRelevanceColors` (lib/relevance-utils.ts) EXACTLY, and
+ * must keep doing so: that function decides the worded chip printed on the card,
+ * so any drift would render a "High" card below a "Medium" one — a contradiction
+ * the user can see.
+ *
+ * Band off the scored relevance, NOT a composite score: the Feed's
+ * `FeedListItem.score` folds in a recency decay the chip knows nothing about.
+ */
+export function relevanceBandRank(relevance: number): number {
+  if (relevance > 1.0) return 0;
+  if (relevance >= 0.77) return 1;
+  if (relevance >= 0.53) return 2;
+  if (relevance > 0.3) return 3;
+  return 4;
+}
+
+/**
+ * The single "has the user seen this?" predicate.
+ *
+ * Two signals, deliberately equivalent for display: an explicit OPEN (tap,
+ * recorded on any surface) or a DWELL of `DWELL_READ_SECONDS` in the viewport
+ * (stamped into `feed-order-store.cardStates`).
+ *
+ * The two keys are SEPARATE parameters on purpose. In production they are the
+ * same string — a Feed row's id IS its representative's article id — but they
+ * are different NAMESPACES: `cardStates` is keyed by the feed-order row id
+ * (which survives a representative switch), while the opened set is keyed by
+ * article id. Collapsing them into one argument silently changed which set each
+ * lookup hit. The Dashboard has no row-id namespace and passes its
+ * representative's article id for both.
+ *
+ * `openedArticleIds` must be the EXACT-article set, never the cluster-wide union:
+ * a `stableClusterId` identifies an ONGOING story, so matching it would mark a
+ * brand-new article as seen because a DIFFERENT article in the same story was
+ * read up to 30 days ago.
+ */
+export function isViewedArticle(
+  cardStateKey: string | null | undefined,
+  articleId: string | null | undefined,
+  cardStates: Record<string, unknown>,
+  openedArticleIds: ReadonlySet<string>,
+): boolean {
+  if (cardStateKey && cardStates[cardStateKey] !== undefined) return true;
+  return !!articleId && openedArticleIds.has(articleId);
+}
+
+/**
+ * Order a list by the shared rule. Returns a NEW array; never mutates `items`.
+ *
+ * Ties inside a band keep the INCOMING order (an explicit index tie-break rather
+ * than leaning on sort stability, because that ordering is load-bearing): on the
+ * Feed it preserves the store's insert-only prepend, so a fresh arrival lands at
+ * the top of its own band rather than the top of the whole list.
+ */
+export function sortByPriority<T>(
+  items: readonly T[],
+  project: (item: T) => PriorityFacts,
+): T[] {
+  return items
+    .map((item, idx) => {
+      const f = project(item);
+      return { item, idx, viewed: f.viewed ? 1 : 0, band: relevanceBandRank(f.relevance) };
+    })
+    .sort((a, b) => a.viewed - b.viewed || a.band - b.band || a.idx - b.idx)
+    .map((d) => d.item);
+}
+
+/** How many rows at the head of a priority-sorted list are unviewed. */
+export function countUnviewedBy<T>(
+  items: readonly T[],
+  project: (item: T) => PriorityFacts,
+): number {
+  let n = 0;
+  for (const item of items) {
+    if (!project(item).viewed) n += 1;
+  }
+  return n;
+}

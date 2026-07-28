@@ -240,7 +240,7 @@
     "addedToLocations": "Added to your places"
   },
   "tabs": {
-    "deck": "Deck",
+    "deck": "Feed",
     "dashboard": "Dashboard",
     "around": "Explore",
     "profile": "Profile",
@@ -248,7 +248,7 @@
     "gotIt": "Got it"
   },
   "swipeFeed": {
-    "yourDeck": "For you",
+    "yourDeck": "Feed",
     "moreLikeThis": "More like this",
     "lessLikeThis": "Less like this",
     "askMera": "Ask Mera",
@@ -271,11 +271,9 @@
     "sectionPrefix": "News about:",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
-    "openFactFeed": "See all stories for this topic",
-    "viewAllStories": "View all {{count}} stories",
-    "newInSection_one": "{{count}} new story since your last visit",
-    "newInSection_other": "{{count}} new stories since your last visit",
-    "subTabFeed": "Feed",
+    "storiesCount_one": "{{count}} story",
+    "storiesCount_other": "{{count}} stories",
+    "subTabFeed": "Overview",
     "subTabStories": "Stories",
     "subTabSaved": "Saved"
   },
@@ -306,11 +304,19 @@
     "updatesBadge": "{{count}} new",
     "endedLabel": "Ended",
     "timelineQuietNote": "No new coverage gathered yet. We'll add developments here as this story unfolds.",
-    "railTitle": "Following",
     "untrackConfirmTitle": "Stop following?",
     "untrackConfirmBody": "You'll no longer see new developments for this story.",
     "trackChatSeed": "I want to follow this story.",
-    "trackProposalTitle": "Follow this story?"
+    "trackProposalTitle": "Follow this story?",
+    "articleCount_one": "{{count}} article",
+    "articleCount_other": "{{count}} articles",
+    "articleCountCapped": "{{count}}+ articles",
+    "alreadyTrackingTitle": "You're already following this",
+    "alreadyTrackingBody": "You can't follow this story twice. Untracking it would delete everything saved for it.",
+    "goToStoryAction": "Go to story",
+    "deleteStoryAction": "Delete story",
+    "deleteStoryConfirmTitle": "Delete this story?",
+    "deleteStoryConfirmBody": "Deleting removes everything saved for this story."
   },
   "whatsNew": {
     "title": "What's new",
@@ -761,6 +767,9 @@
     "title": "Saved",
     "note": "These articles are saved only on your device. Add or remove them anytime — they stay here until you delete them.",
     "savedToastTitle": "Saved",
+    "removedToastTitle": "Removed",
+    "saveAction": "Save",
+    "removeAction": "Remove from saved",
     "savedToastMessage": "Article saved for later",
     "removedToastMessage": "Removed from saved",
     "deleteConfirmTitle": "Remove saved article?",

@@ -55,6 +55,70 @@ export function bucketOf(
   return 'LOW';
 }
 
+// --- Section membership: the fact link must be RELEVANCE-BACKED -----------
+//
+// Matching a fact and being ABOUT that fact are different claims, and the
+// Dashboard makes the stronger one: its section header reads "News about: X".
+// Ownership (below) answers only "which fact did this story match?", from topic
+// weights — it never consults what the scorer concluded about THIS article. So a
+// story retrieved by coarse vector similarity and then scored down to near-zero
+// still landed under the fact, and the card rendered Mera's own rationale
+// denying the link ("no direct tie to your Dutch learning") INSIDE the section
+// that claimed it. The two rules below add the missing relevance backing.
+//
+// Both are expressed with EXISTING cutoffs — no new tunable was invented, since
+// there is no on-device corpus here to tune one against.
+
+/**
+ * RULE 1 — a story may only occupy a fact section if the scoring pipeline did
+ * not already discard it: its bucket must not be `UNSCORED`, i.e. its relevance
+ * cleared `articlePipeline.discardFloor`.
+ *
+ * This closes a genuine gap rather than adding a preference: the render gate
+ * that admits rows to the feed (`RENDER_GATE`, 0.3) is LOOSER than the
+ * pipeline's own `discardFloor` (0.4), so rows the engine had already classified
+ * as discards were still reaching the Dashboard and claiming a section.
+ */
+export function isSectionMemberEligible(bucket: FeedBucket): boolean {
+  return bucket !== 'UNSCORED';
+}
+
+/**
+ * The weakest bucket that can, on its own, justify a fact section existing.
+ * `MEDIUM` — an existing display tier, not a new threshold.
+ *
+ * THIS IS THE DIAL for Rule 2, and the one number here that could not be
+ * validated against real data: the article corpus lives on-device, so there is
+ * no way from here to measure what fraction of a real Dashboard's section
+ * membership is LOW. If sections turn out to be LOW-heavy in practice, this rule
+ * will visibly empty them.
+ *
+ * Setting this to `'LOW'` disables Rule 2 entirely (every bucket then clears the
+ * floor) while leaving Rule 1 — the sub-discardFloor exclusion — in force. That
+ * is the intended one-line retreat if MEDIUM proves too aggressive.
+ */
+export const SECTION_MIN_VIABLE_BUCKET: FeedBucket = 'MEDIUM';
+
+/**
+ * RULE 2 — a fact section must be backed by at least ONE member at
+ * {@link SECTION_MIN_VIABLE_BUCKET} or above. A fact whose every match is LOW
+ * has no news genuinely about it: those matches are the tail of a similarity
+ * search, not coverage. Dropping the whole section says "nothing about this
+ * right now", which is true, instead of filling it with articles that disclaim
+ * themselves.
+ *
+ * Deliberately a per-SECTION test, not a per-card one: once a fact has real
+ * coverage, its LOW-bucket stories are kept, so genuinely active sections stay
+ * as full as they are today. Only all-LOW sections disappear.
+ */
+export function isFactSectionViable(buckets: readonly FeedBucket[]): boolean {
+  const floor = bucketRank(SECTION_MIN_VIABLE_BUCKET);
+  for (const b of buckets) {
+    if (bucketRank(b) >= floor) return true;
+  }
+  return false;
+}
+
 // --- Input projections (plain; no DB/RN) ----------------------------------
 
 /** A cluster membership as story-grouping consumes it. Structurally identical

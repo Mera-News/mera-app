@@ -780,7 +780,7 @@
     "upgrade": "Passer à un forfait supérieur"
   },
   "tabs": {
-    "deck": "Paquet",
+    "deck": "Fil d'actu",
     "dashboard": "Tableau de bord",
     "around": "Explorer",
     "profile": "Profil",
@@ -788,7 +788,7 @@
     "gotIt": "Compris"
   },
   "swipeFeed": {
-    "yourDeck": "Pour vous",
+    "yourDeck": "Fil d'actu",
     "moreLikeThis": "Plus comme ceci",
     "lessLikeThis": "Moins comme ceci",
     "askMera": "Demander à Mera",
@@ -810,11 +810,9 @@
     "sectionPrefix": "Actualités sur :",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
-    "openFactFeed": "Voir toutes les actualités sur ce sujet",
-    "viewAllStories": "Voir les {{count}} actualités",
-    "newInSection_one": "{{count}} nouvelle actualité depuis votre dernière visite",
-    "newInSection_other": "{{count}} nouvelles actualités depuis votre dernière visite",
-    "subTabFeed": "Fil",
+    "storiesCount_one": "{{count}} actualité",
+    "storiesCount_other": "{{count}} actualités",
+    "subTabFeed": "Aperçu",
     "subTabStories": "Actualités",
     "subTabSaved": "Enregistrés"
   },
@@ -845,11 +843,19 @@
     "updatesBadge": "{{count}} nouveau(x)",
     "endedLabel": "Terminée",
     "timelineQuietNote": "Aucune nouvelle couverture pour le moment. Nous ajouterons les développements ici au fur et à mesure.",
-    "railTitle": "Suivi",
     "untrackConfirmTitle": "Arrêter de suivre ?",
     "untrackConfirmBody": "Vous ne verrez plus les nouveaux développements de cette actualité.",
     "trackChatSeed": "Je veux suivre cette actualité.",
-    "trackProposalTitle": "Suivre cette actualité ?"
+    "trackProposalTitle": "Suivre cette actualité ?",
+    "articleCount_one": "{{count}} article",
+    "articleCount_other": "{{count}} articles",
+    "articleCountCapped": "{{count}}+ articles",
+    "alreadyTrackingTitle": "Vous suivez déjà ceci",
+    "alreadyTrackingBody": "Vous ne pouvez pas suivre cette actualité deux fois. L'arrêter supprimerait tout ce qui est enregistré pour elle.",
+    "goToStoryAction": "Aller à l'actualité",
+    "deleteStoryAction": "Supprimer l'actualité",
+    "deleteStoryConfirmTitle": "Supprimer cette actualité ?",
+    "deleteStoryConfirmBody": "La suppression supprime tout ce qui a été enregistré pour cette actualité."
   },
   "whatsNew": {
     "title": "Nouveautés",

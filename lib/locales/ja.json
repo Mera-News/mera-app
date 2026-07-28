@@ -779,7 +779,7 @@
     "upgrade": "アップグレード"
   },
   "tabs": {
-    "deck": "デッキ",
+    "deck": "フィード",
     "dashboard": "ダッシュボード",
     "around": "探索",
     "profile": "プロフィール",
@@ -787,7 +787,7 @@
     "gotIt": "わかりました"
   },
   "swipeFeed": {
-    "yourDeck": "あなたへ",
+    "yourDeck": "フィード",
     "moreLikeThis": "こういう記事をもっと",
     "lessLikeThis": "こういう記事を減らす",
     "askMera": "Meraに聞く",
@@ -809,10 +809,8 @@
     "sectionPrefix": "関連ニュース：",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
-    "openFactFeed": "このトピックのすべてのストーリーを見る",
-    "viewAllStories": "すべての{{count}}件のストーリーを見る",
-    "newInSection_other": "前回の訪問以降、新着ストーリーが{{count}}件あります",
-    "subTabFeed": "フィード",
+    "storiesCount_other": "{{count}}件のストーリー",
+    "subTabFeed": "一覧",
     "subTabStories": "ストーリー",
     "subTabSaved": "保存済み"
   },
@@ -843,11 +841,18 @@
     "updatesBadge": "新着{{count}}件",
     "endedLabel": "終了",
     "timelineQuietNote": "まだ新しい報道は集まっていません。このストーリーが進展するたびに、ここに追加していきます。",
-    "railTitle": "フォロー中",
     "untrackConfirmTitle": "フォローを解除しますか？",
     "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
     "trackChatSeed": "このストーリーをフォローしたいです。",
-    "trackProposalTitle": "このストーリーをフォローしますか？"
+    "trackProposalTitle": "このストーリーをフォローしますか？",
+    "articleCount_other": "{{count}}件の記事",
+    "articleCountCapped": "{{count}}件以上の記事",
+    "alreadyTrackingTitle": "このストーリーをすでにフォロー中です",
+    "alreadyTrackingBody": "同じストーリーを2回フォローすることはできません。フォローを解除すると、このストーリーのすべての保存内容が削除されます。",
+    "goToStoryAction": "ストーリーに移動",
+    "deleteStoryAction": "ストーリーを削除",
+    "deleteStoryConfirmTitle": "このストーリーを削除しますか？",
+    "deleteStoryConfirmBody": "削除すると、このストーリーのすべての保存内容が削除されます。"
   },
   "whatsNew": {
     "title": "新機能",

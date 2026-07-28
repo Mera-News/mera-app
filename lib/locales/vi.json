@@ -779,7 +779,7 @@
     "upgrade": "Nâng cấp"
   },
   "tabs": {
-    "deck": "Bộ bài",
+    "deck": "Bảng tin",
     "dashboard": "Bảng điều khiển",
     "around": "Khám phá",
     "profile": "Hồ sơ",
@@ -787,7 +787,7 @@
     "gotIt": "Đã hiểu"
   },
   "swipeFeed": {
-    "yourDeck": "Dành cho bạn",
+    "yourDeck": "Bảng tin",
     "moreLikeThis": "Thêm như thế này",
     "lessLikeThis": "Bớt như thế này",
     "askMera": "Hỏi Mera",
@@ -809,10 +809,8 @@
     "sectionPrefix": "Tin tức về:",
     "breaking": "Nóng",
     "showMore": "Hiện thêm {{count}}",
-    "openFactFeed": "Xem tất cả bài viết về chủ đề này",
-    "viewAllStories": "Xem tất cả {{count}} bài viết",
-    "newInSection_other": "{{count}} bài viết mới kể từ lần truy cập gần nhất của bạn",
-    "subTabFeed": "Bản tin",
+    "storiesCount_other": "{{count}} bài viết",
+    "subTabFeed": "Tổng quan",
     "subTabStories": "Câu chuyện",
     "subTabSaved": "Đã lưu"
   },
@@ -843,11 +841,18 @@
     "updatesBadge": "{{count}} mới",
     "endedLabel": "Đã kết thúc",
     "timelineQuietNote": "Chưa có tin tức mới nào được tổng hợp. Chúng tôi sẽ thêm diễn biến tại đây khi câu chuyện này tiếp diễn.",
-    "railTitle": "Đang theo dõi",
     "untrackConfirmTitle": "Ngừng theo dõi?",
     "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa.",
     "trackChatSeed": "Tôi muốn theo dõi câu chuyện này.",
-    "trackProposalTitle": "Theo dõi câu chuyện này?"
+    "trackProposalTitle": "Theo dõi câu chuyện này?",
+    "articleCount_other": "{{count}} bài viết",
+    "articleCountCapped": "{{count}}+ bài viết",
+    "alreadyTrackingTitle": "Bạn đã theo dõi điều này",
+    "alreadyTrackingBody": "Bạn không thể theo dõi câu chuyện này hai lần. Ngừng theo dõi sẽ xóa mọi thứ được lưu cho câu chuyện này.",
+    "goToStoryAction": "Đi tới câu chuyện",
+    "deleteStoryAction": "Xóa câu chuyện",
+    "deleteStoryConfirmTitle": "Xóa câu chuyện này?",
+    "deleteStoryConfirmBody": "Xóa sẽ loại bỏ mọi thứ được lưu cho câu chuyện này."
   },
   "whatsNew": {
     "title": "Có gì mới",

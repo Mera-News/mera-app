@@ -782,7 +782,7 @@
     "upgrade": "Ulepsz"
   },
   "tabs": {
-    "deck": "Talia",
+    "deck": "Strumień",
     "dashboard": "Pulpit",
     "around": "Odkrywaj",
     "profile": "Profil",
@@ -790,7 +790,7 @@
     "gotIt": "Rozumiem"
   },
   "swipeFeed": {
-    "yourDeck": "Dla Ciebie",
+    "yourDeck": "Strumień",
     "moreLikeThis": "Więcej takich",
     "lessLikeThis": "Mniej takich",
     "askMera": "Zapytaj Mera",
@@ -812,15 +812,13 @@
     "sectionPrefix": "Wiadomości o:",
     "breaking": "Pilne",
     "showMore": "Pokaż {{count}} więcej",
-    "subTabFeed": "Kanał",
+    "subTabFeed": "Przegląd",
     "subTabStories": "Historie",
     "subTabSaved": "Zapisane",
-    "openFactFeed": "Zobacz wszystkie historie na ten temat",
-    "viewAllStories": "Zobacz wszystkie {{count}} historie",
-    "newInSection_one": "{{count}} nowa historia od Twojej ostatniej wizyty",
-    "newInSection_few": "{{count}} nowe historie od Twojej ostatniej wizyty",
-    "newInSection_many": "{{count}} nowych historii od Twojej ostatniej wizyty",
-    "newInSection_other": "{{count}} nowe historie od Twojej ostatniej wizyty"
+    "storiesCount_one": "{{count}} historia",
+    "storiesCount_few": "{{count}} historie",
+    "storiesCount_many": "{{count}} historii",
+    "storiesCount_other": "{{count}} historii"
   },
   "feedStatus": {
     "title": "Stan kanału",
@@ -849,11 +847,21 @@
     "updatesBadge": "{{count}} nowych",
     "endedLabel": "Zakończona",
     "timelineQuietNote": "Nie zebrano jeszcze nowych informacji. Będziemy dodawać tu rozwój wydarzeń w miarę rozwoju tej historii.",
-    "railTitle": "Śledzone",
     "untrackConfirmTitle": "Przestać śledzić?",
     "untrackConfirmBody": "Nie będziesz już widzieć nowych wydarzeń dotyczących tej historii.",
     "trackChatSeed": "Chcę śledzić tę historię.",
-    "trackProposalTitle": "Śledzić tę historię?"
+    "trackProposalTitle": "Śledzić tę historię?",
+    "articleCount_one": "{{count}} artykuł",
+    "articleCount_few": "{{count}} artykuły",
+    "articleCount_many": "{{count}} artykułów",
+    "articleCount_other": "{{count}} artykułu",
+    "articleCountCapped": "{{count}}+ artykułów",
+    "alreadyTrackingTitle": "Już śledzisz to",
+    "alreadyTrackingBody": "Nie możesz śledzić tej historii dwukrotnie. Przestanie śledzenia usunęłoby wszystko, co zostało dla niej zapisane.",
+    "goToStoryAction": "Przejdź do historii",
+    "deleteStoryAction": "Usuń historię",
+    "deleteStoryConfirmTitle": "Usunąć tę historię?",
+    "deleteStoryConfirmBody": "Usunięcie usuwa wszystko, co zostało zapisane dla tej historii."
   },
   "whatsNew": {
     "title": "Co nowego",

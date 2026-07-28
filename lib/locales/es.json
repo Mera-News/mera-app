@@ -780,7 +780,7 @@
     "upgrade": "Mejorar plan"
   },
   "tabs": {
-    "deck": "Mazo",
+    "deck": "Noticias",
     "dashboard": "Panel",
     "around": "Explorar",
     "profile": "Perfil",
@@ -788,7 +788,7 @@
     "gotIt": "Entendido"
   },
   "swipeFeed": {
-    "yourDeck": "Para ti",
+    "yourDeck": "Noticias",
     "moreLikeThis": "Más como esto",
     "lessLikeThis": "Menos como esto",
     "askMera": "Pregúntale a Mera",
@@ -810,11 +810,9 @@
     "sectionPrefix": "Noticias sobre:",
     "breaking": "Última hora",
     "showMore": "Mostrar {{count}} más",
-    "openFactFeed": "Ver todas las historias sobre este tema",
-    "viewAllStories": "Ver las {{count}} historias",
-    "newInSection_one": "{{count}} historia nueva desde tu última visita",
-    "newInSection_other": "{{count}} historias nuevas desde tu última visita",
-    "subTabFeed": "Feed",
+    "storiesCount_one": "{{count}} historia",
+    "storiesCount_other": "{{count}} historias",
+    "subTabFeed": "Panorama",
     "subTabStories": "Historias",
     "subTabSaved": "Guardados"
   },
@@ -845,11 +843,19 @@
     "updatesBadge": "{{count}} nuevo",
     "endedLabel": "Finalizada",
     "timelineQuietNote": "Todavía no se ha reunido nueva cobertura. Añadiremos aquí los desarrollos a medida que esta historia evolucione.",
-    "railTitle": "Siguiendo",
     "untrackConfirmTitle": "¿Dejar de seguir?",
     "untrackConfirmBody": "Ya no verás nuevos desarrollos de esta historia.",
     "trackChatSeed": "Quiero seguir esta historia.",
-    "trackProposalTitle": "¿Seguir esta historia?"
+    "trackProposalTitle": "¿Seguir esta historia?",
+    "articleCount_one": "{{count}} artículo",
+    "articleCount_other": "{{count}} artículos",
+    "articleCountCapped": "{{count}}+ artículos",
+    "alreadyTrackingTitle": "Ya estás siguiendo esto",
+    "alreadyTrackingBody": "No puedes seguir esta historia dos veces. Dejar de seguirla eliminaría todo lo guardado para ella.",
+    "goToStoryAction": "Ir a la historia",
+    "deleteStoryAction": "Eliminar historia",
+    "deleteStoryConfirmTitle": "¿Eliminar esta historia?",
+    "deleteStoryConfirmBody": "Eliminarla quita todo lo que fue guardado para esta historia."
   },
   "whatsNew": {
     "title": "Novedades",

@@ -779,7 +779,7 @@
     "upgrade": "Tingkatkan"
   },
   "tabs": {
-    "deck": "Tumpukan",
+    "deck": "Umpan",
     "dashboard": "Dasbor",
     "around": "Eksplor",
     "profile": "Profil",
@@ -787,7 +787,7 @@
     "gotIt": "Mengerti"
   },
   "swipeFeed": {
-    "yourDeck": "Untuk Anda",
+    "yourDeck": "Umpan",
     "moreLikeThis": "Lebih banyak seperti ini",
     "lessLikeThis": "Lebih sedikit seperti ini",
     "askMera": "Tanya Mera",
@@ -809,12 +809,10 @@
     "sectionPrefix": "Berita tentang:",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
-    "subTabFeed": "Feed",
+    "storiesCount_other": "{{count}} cerita",
+    "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
-    "subTabSaved": "Tersimpan",
-    "openFactFeed": "Lihat semua cerita untuk topik ini",
-    "viewAllStories": "Lihat semua {{count}} cerita",
-    "newInSection_other": "{{count}} cerita baru sejak kunjungan terakhir Anda"
+    "subTabSaved": "Tersimpan"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -843,11 +841,18 @@
     "updatesBadge": "{{count}} baru",
     "endedLabel": "Berakhir",
     "timelineQuietNote": "Belum ada liputan baru yang terkumpul. Kami akan menambahkan perkembangan di sini seiring cerita ini berlangsung.",
-    "railTitle": "Diikuti",
     "untrackConfirmTitle": "Berhenti mengikuti?",
     "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini.",
     "trackChatSeed": "Saya ingin mengikuti cerita ini.",
-    "trackProposalTitle": "Ikuti cerita ini?"
+    "trackProposalTitle": "Ikuti cerita ini?",
+    "articleCount_other": "{{count}} artikel",
+    "articleCountCapped": "{{count}}+ artikel",
+    "alreadyTrackingTitle": "Anda sudah mengikuti ini",
+    "alreadyTrackingBody": "Anda tidak dapat mengikuti cerita ini dua kali. Berhenti mengikutinya akan menghapus semua yang tersimpan untuknya.",
+    "goToStoryAction": "Buka cerita",
+    "deleteStoryAction": "Hapus cerita",
+    "deleteStoryConfirmTitle": "Hapus cerita ini?",
+    "deleteStoryConfirmBody": "Menghapus menghapus semua yang tersimpan untuk cerita ini."
   },
   "whatsNew": {
     "title": "Yang baru",

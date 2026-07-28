@@ -1,7 +1,17 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
+import {
+    Modal,
+    ModalBackdrop,
+    ModalBody,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+} from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -16,6 +26,7 @@ import {
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -135,6 +146,17 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const [cards, setCards] = useState<TimelineCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    // Deleting retires the linked TOPIC as well as dropping the row — without
+    // that the topic keeps pulling this story's coverage every fetch cycle for a
+    // story the user believes they deleted. Then leave: the screen's subject is
+    // gone.
+    const handleConfirmDelete = useCallback(async () => {
+        setConfirmDelete(false);
+        await deleteTrackedStoryById(trackedStoryId);
+        onBack();
+    }, [trackedStoryId, onBack]);
 
     // Monotonic run token — each load() invalidates prior in-flight runs, and
     // the focus-effect cleanup bumps it so a load resolving after blur/unmount
@@ -304,8 +326,56 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             />
                         )}
                     </Box>
+                    {/* Delete is the ONLY way to stop following a story (Q13):
+                        the track button no longer untracks, because doing so
+                        destroys everything saved here. Hence the confirm. */}
+                    <Pressable
+                        testID="story-timeline-delete"
+                        onPress={() => setConfirmDelete(true)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('trackedStories.deleteStoryAction')}
+                        hitSlop={8}
+                        className="p-2"
+                    >
+                        <MaterialIcons name="delete-outline" size={24} color="#ffffff" />
+                    </Pressable>
                 </HStack>
             </VStack>
+
+            {/* Delete confirmation — the same Gluestack Modal pattern the Saved
+                list's delete uses. */}
+            <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)}>
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader>
+                        <Heading size="md" className="text-white">
+                            {t('trackedStories.deleteStoryConfirmTitle')}
+                        </Heading>
+                    </ModalHeader>
+                    <ModalBody>
+                        <Text size="sm" className="text-typography-300">
+                            {t('trackedStories.deleteStoryConfirmBody')}
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={() => setConfirmDelete(false)}
+                            className="mr-3"
+                        >
+                            <ButtonText>{t('common.cancel')}</ButtonText>
+                        </Button>
+                        <Button
+                            action="negative"
+                            onPress={handleConfirmDelete}
+                            testID="story-timeline-delete-confirm"
+                        >
+                            <ButtonText>{t('trackedStories.deleteStoryAction')}</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             <FlatList
                 data={cards}

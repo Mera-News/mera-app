@@ -780,7 +780,7 @@
     "upgrade": "Upgrade"
   },
   "tabs": {
-    "deck": "Stapel",
+    "deck": "Nachrichten",
     "dashboard": "Dashboard",
     "around": "Entdecken",
     "profile": "Profil",
@@ -788,7 +788,7 @@
     "gotIt": "Verstanden"
   },
   "swipeFeed": {
-    "yourDeck": "Für Sie",
+    "yourDeck": "Nachrichten",
     "moreLikeThis": "Mehr davon",
     "lessLikeThis": "Weniger davon",
     "askMera": "Mera fragen",
@@ -810,13 +810,11 @@
     "sectionPrefix": "Nachrichten zu:",
     "breaking": "Eilmeldung",
     "showMore": "{{count}} weitere anzeigen",
-    "subTabFeed": "Feed",
+    "storiesCount_one": "{{count}} Geschichte",
+    "storiesCount_other": "{{count}} Geschichten",
+    "subTabFeed": "Übersicht",
     "subTabStories": "Geschichten",
-    "subTabSaved": "Gespeichert",
-    "openFactFeed": "Alle Geschichten zu diesem Thema anzeigen",
-    "viewAllStories": "Alle {{count}} Geschichten anzeigen",
-    "newInSection_one": "{{count}} neue Geschichte seit Ihrem letzten Besuch",
-    "newInSection_other": "{{count}} neue Geschichten seit Ihrem letzten Besuch"
+    "subTabSaved": "Gespeichert"
   },
   "feedStatus": {
     "title": "Feed-Status",
@@ -845,11 +843,19 @@
     "updatesBadge": "{{count}} neu",
     "endedLabel": "Beendet",
     "timelineQuietNote": "Noch keine neue Berichterstattung gesammelt. Wir fügen hier Entwicklungen hinzu, sobald sich diese Geschichte weiterentwickelt.",
-    "railTitle": "Gefolgt",
     "untrackConfirmTitle": "Nicht mehr folgen?",
     "untrackConfirmBody": "Sie sehen keine neuen Entwicklungen mehr zu dieser Geschichte.",
     "trackChatSeed": "Ich möchte dieser Geschichte folgen.",
-    "trackProposalTitle": "Dieser Geschichte folgen?"
+    "trackProposalTitle": "Dieser Geschichte folgen?",
+    "articleCount_one": "{{count}} Artikel",
+    "articleCount_other": "{{count}} Artikel",
+    "articleCountCapped": "{{count}}+ Artikel",
+    "alreadyTrackingTitle": "Sie folgen dieser Story bereits",
+    "alreadyTrackingBody": "Sie können dieser Story nicht zweimal folgen. Wenn Sie sie nicht mehr verfolgen, werden alle gespeicherten Informationen gelöscht.",
+    "goToStoryAction": "Zur Story gehen",
+    "deleteStoryAction": "Story löschen",
+    "deleteStoryConfirmTitle": "Diese Story löschen?",
+    "deleteStoryConfirmBody": "Das Löschen entfernt alles, was für diese Story gespeichert wurde."
   },
   "whatsNew": {
     "title": "Neuigkeiten",

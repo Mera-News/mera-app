@@ -782,15 +782,15 @@
     "upgrade": "Поліпшити"
   },
   "tabs": {
-    "deck": "Колода",
+    "deck": "Стрічка",
     "dashboard": "Панель",
-    "around": "Огляд",
+    "around": "Світ",
     "profile": "Профіль",
     "settings": "Налаштування",
     "gotIt": "Зрозуміло"
   },
   "swipeFeed": {
-    "yourDeck": "Для вас",
+    "yourDeck": "Стрічка",
     "moreLikeThis": "Більше такого",
     "lessLikeThis": "Менше такого",
     "askMera": "Запитати Mera",
@@ -812,15 +812,13 @@
     "sectionPrefix": "Новини про:",
     "breaking": "Термінові новини",
     "showMore": "Показати ще {{count}}",
-    "subTabFeed": "Стрічка",
+    "subTabFeed": "Огляд",
     "subTabStories": "Історії",
     "subTabSaved": "Збережене",
-    "openFactFeed": "Переглянути всі історії за цією темою",
-    "viewAllStories": "Переглянути всі історії ({{count}})",
-    "newInSection_one": "{{count}} нова історія з часу вашого останнього відвідування",
-    "newInSection_few": "{{count}} нові історії з часу вашого останнього відвідування",
-    "newInSection_many": "{{count}} нових історій з часу вашого останнього відвідування",
-    "newInSection_other": "{{count}} нові історії з часу вашого останнього відвідування"
+    "storiesCount_one": "{{count}} історія",
+    "storiesCount_few": "{{count}} історії",
+    "storiesCount_many": "{{count}} історій",
+    "storiesCount_other": "{{count}} історій"
   },
   "feedStatus": {
     "title": "Стан стрічки",
@@ -852,11 +850,21 @@
     "updatesBadge_other": "{{count}} оновлення",
     "endedLabel": "Завершено",
     "timelineQuietNote": "Поки що немає нового висвітлення. Ми додамо сюди події в міру розвитку цієї історії.",
-    "railTitle": "Відстежується",
     "untrackConfirmTitle": "Припинити відстеження?",
     "untrackConfirmBody": "Ви більше не бачитимете нових подій за цією історією.",
     "trackChatSeed": "Я хочу відстежувати цю історію.",
-    "trackProposalTitle": "Відстежувати цю історю?"
+    "trackProposalTitle": "Відстежувати цю історю?",
+    "articleCount_one": "{{count}} стаття",
+    "articleCount_few": "{{count}} статті",
+    "articleCount_many": "{{count}} статей",
+    "articleCount_other": "{{count}} статей",
+    "articleCountCapped": "{{count}}+ статей",
+    "alreadyTrackingTitle": "Ви вже відстежуєте це",
+    "alreadyTrackingBody": "Ви не можете відстежувати цю історію двічі. Припинення відстеження видалить усе збережене для цієї історії.",
+    "goToStoryAction": "Перейти до історії",
+    "deleteStoryAction": "Видалити історію",
+    "deleteStoryConfirmTitle": "Видалити цю історію?",
+    "deleteStoryConfirmBody": "Видалення видаляє усе збережене для цієї історії."
   },
   "whatsNew": {
     "title": "Що нового",

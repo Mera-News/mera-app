@@ -66,7 +66,7 @@
     "preparingFeedExploreHint": "与此同时，可前往「探索」标签页查看热门报道。",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
-    "dashboardTitle": "仪表盘",
+    "dashboardTitle": "概览",
     "pullDownToRetry": "下拉重试",
     "readArticleToast": "您已阅读过这篇文章",
     "stuckTitle": "无法加载您的资讯",
@@ -779,7 +779,7 @@
     "upgrade": "升级"
   },
   "tabs": {
-    "deck": "卡组",
+    "deck": "信息流",
     "dashboard": "仪表盘",
     "around": "探索",
     "profile": "我的",
@@ -787,7 +787,7 @@
     "gotIt": "知道了"
   },
   "swipeFeed": {
-    "yourDeck": "为你推荐",
+    "yourDeck": "信息流",
     "moreLikeThis": "多看这类",
     "lessLikeThis": "少看这类",
     "askMera": "问 Mera",
@@ -809,10 +809,8 @@
     "sectionPrefix": "关于：",
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
-    "openFactFeed": "查看关于此主题的所有报道",
-    "viewAllStories": "查看全部 {{count}} 条报道",
-    "newInSection_other": "自您上次访问以来有 {{count}} 条新报道",
-    "subTabFeed": "资讯",
+    "storiesCount_other": "{{count}} 条报道",
+    "subTabFeed": "一览",
     "subTabStories": "报道",
     "subTabSaved": "已保存"
   },
@@ -843,11 +841,18 @@
     "updatesBadge": "{{count}} 条更新",
     "endedLabel": "已结束",
     "timelineQuietNote": "目前还没有新的报道。随着事态发展，我们会持续在这里更新。",
-    "railTitle": "关注中",
     "untrackConfirmTitle": "确定要取消关注吗？",
     "untrackConfirmBody": "你将不再看到这则报道的最新进展。",
     "trackChatSeed": "我想关注这则报道。",
-    "trackProposalTitle": "关注这则报道？"
+    "trackProposalTitle": "关注这则报道？",
+    "articleCount_other": "{{count}} 篇文章",
+    "articleCountCapped": "{{count}}+ 篇文章",
+    "alreadyTrackingTitle": "你已在关注此报道",
+    "alreadyTrackingBody": "你不能关注同一则报道两次。取消关注会删除为此报道保存的所有内容。",
+    "goToStoryAction": "前往报道",
+    "deleteStoryAction": "删除报道",
+    "deleteStoryConfirmTitle": "删除此报道？",
+    "deleteStoryConfirmBody": "删除会移除为此报道保存的所有内容。"
   },
   "whatsNew": {
     "title": "更新内容",

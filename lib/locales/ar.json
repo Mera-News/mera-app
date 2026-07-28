@@ -784,7 +784,7 @@
     "upgrade": "الترقية"
   },
   "tabs": {
-    "deck": "الحزمة",
+    "deck": "الخلاصة",
     "dashboard": "لوحة التحكم",
     "around": "استكشاف",
     "profile": "الملف الشخصي",
@@ -792,7 +792,7 @@
     "gotIt": "فهمت"
   },
   "swipeFeed": {
-    "yourDeck": "لك",
+    "yourDeck": "الخلاصة",
     "moreLikeThis": "المزيد مثل هذا",
     "lessLikeThis": "أقل مثل هذا",
     "askMera": "اسأل Mera",
@@ -814,17 +814,15 @@
     "sectionPrefix": "أخبار عن:",
     "breaking": "عاجل",
     "showMore": "عرض {{count}} أخرى",
-    "subTabFeed": "الخلاصة",
+    "subTabFeed": "النظرة",
     "subTabStories": "القصص",
     "subTabSaved": "المحفوظات",
-    "openFactFeed": "عرض كل القصص لهذا الموضوع",
-    "viewAllStories": "عرض كل القصص ({{count}})",
-    "newInSection_zero": "{{count}} قصة جديدة منذ زيارتك الأخيرة",
-    "newInSection_one": "{{count}} قصة جديدة منذ زيارتك الأخيرة",
-    "newInSection_two": "{{count}} قصتان جديدتان منذ زيارتك الأخيرة",
-    "newInSection_few": "{{count}} قصص جديدة منذ زيارتك الأخيرة",
-    "newInSection_many": "{{count}} قصةً جديدة منذ زيارتك الأخيرة",
-    "newInSection_other": "{{count}} قصة جديدة منذ زيارتك الأخيرة"
+    "storiesCount_zero": "{{count}} قصة",
+    "storiesCount_one": "{{count}} قصة",
+    "storiesCount_two": "{{count}} قصتان",
+    "storiesCount_few": "{{count}} قصص",
+    "storiesCount_many": "{{count}} قصةً",
+    "storiesCount_other": "{{count}} قصة"
   },
   "feedStatus": {
     "title": "حالة الخلاصة",
@@ -858,11 +856,23 @@
     "updatesBadge_other": "{{count}} تطور جديد",
     "endedLabel": "انتهت",
     "timelineQuietNote": "لا تغطية جديدة بعد. سنضيف التطورات هنا مع تطوّر هذه القصة.",
-    "railTitle": "المتابَعة",
     "untrackConfirmTitle": "إيقاف المتابعة؟",
     "untrackConfirmBody": "لن ترى بعد الآن التطورات الجديدة لهذه القصة.",
     "trackChatSeed": "أريد متابعة هذه القصة.",
-    "trackProposalTitle": "متابعة هذه القصة؟"
+    "trackProposalTitle": "متابعة هذه القصة؟",
+    "articleCount_zero": "{{count}} مقال",
+    "articleCount_one": "{{count}} مقال",
+    "articleCount_two": "{{count}} مقالان",
+    "articleCount_few": "{{count}} مقالات",
+    "articleCount_many": "{{count}} مقالًا",
+    "articleCount_other": "{{count}} مقال",
+    "articleCountCapped": "{{count}}+ مقالات",
+    "alreadyTrackingTitle": "أنت تتابع هذه القصة بالفعل",
+    "alreadyTrackingBody": "لا يمكنك متابعة هذه القصة مرتين. إلغاء المتابعة سيحذف كل شيء محفوظ عنها.",
+    "goToStoryAction": "الذهاب إلى القصة",
+    "deleteStoryAction": "حذف القصة",
+    "deleteStoryConfirmTitle": "حذف هذه القصة؟",
+    "deleteStoryConfirmBody": "الحذف سيزيل كل شيء محفوظ عن هذه القصة."
   },
   "whatsNew": {
     "title": "ما الجديد",

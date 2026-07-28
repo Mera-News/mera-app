@@ -27,6 +27,8 @@ import {
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { hapticMedium } from '@/lib/haptics';
+import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -40,6 +42,7 @@ import {
     orderRelatedArticles,
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
+import { useIsConnected } from '@/lib/stores/network-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -230,6 +233,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
     const userCtx = useUserGeoLanguageContext();
+    const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
 
     // Merged, flat "Related Articles" list: local cluster siblings + the server
@@ -338,7 +342,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // Lazy-load related articles once we know the article id.
     useEffect(() => {
         const articleId = suggestion?.articleId;
-        if (!articleId) return;
+        // Parity with ArticleDetailScreen: no point round-tripping a live query
+        // with no network — leave the section to its LOCAL siblings rather than
+        // logging a guaranteed failure on every offline view. (The local-sibling
+        // half of this screen's two-source merge still works offline, which is
+        // why this screen degrades better than the article one.)
+        if (!articleId || !isConnected) return;
         let cancelled = false;
         setIsLoadingRelated(true);
         ArticleService.getRelatedArticles(articleId)
@@ -358,7 +367,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [suggestion?.articleId]);
+        // `isConnected` is a dep so the fetch RE-runs when connectivity returns —
+        // without it, a screen opened offline would never populate the server
+        // half of the related list even after the network came back.
+    }, [suggestion?.articleId, isConnected]);
 
     // Same-story siblings are surfaced two ways: `localSiblings` (above) groups
     // the user's own store rows that the feed collapsed, and
@@ -381,14 +393,22 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         };
     }, [articleSuggestionId]);
 
+    // Title tracks the DIRECTION of the toggle. It was hardcoded to "Saved", so
+    // un-saving produced the self-contradicting toast "Saved / Removed from
+    // saved". Success styling is unchanged either way — removing a saved article
+    // is a successful action, not an error.
     const showSavedToast = useCallback(
-        (message: string) => {
+        (message: string, removed: boolean = false) => {
             toast.show({
                 placement: 'top',
                 duration: 3000,
                 render: ({ id }: { id: string }) => (
                     <Toast nativeID={id} action="success" variant="solid">
-                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastTitle>
+                            {t(removed
+                                ? 'savedSuggestions.removedToastTitle'
+                                : 'savedSuggestions.savedToastTitle')}
+                        </ToastTitle>
                         <ToastDescription>{message}</ToastDescription>
                     </Toast>
                 ),
@@ -403,7 +423,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             if (isSaved) {
                 await deleteSavedSuggestion(suggestion._id);
                 setIsSaved(false);
-                showSavedToast(t('savedSuggestions.removedToastMessage'));
+                showSavedToast(t('savedSuggestions.removedToastMessage'), true);
             } else {
                 await saveSuggestion(suggestion);
                 setIsSaved(true);
@@ -416,6 +436,21 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             });
         }
     }, [suggestion, isSaved, showSavedToast, t, articleSuggestionId]);
+
+    // Ask Mera — the rationale block's glyph (ArticleSuggestionContainer's
+    // "Mera's voice"). Byte-for-byte the action row's old Mera handler
+    // (ArticleFeedbackPrompt.handleChatPress), which is why that button could be
+    // dropped from the row without losing anything.
+    const handleAskMera = useCallback(() => {
+        if (!suggestion) return;
+        hapticMedium();
+        useFloatingChatStore.getState().expand({
+            kind: 'article-suggestion',
+            articleId: suggestion.articleId,
+            suggestionId: suggestion._id,
+            articleTitle: suggestion.title_en ?? '',
+        });
+    }, [suggestion]);
 
     const handleArticleUrlPress = async (url: string | null | undefined) => {
         if (!url) return;
@@ -492,6 +527,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 suggestion={suggestion}
                 variant="screen"
                 read={read}
+                onAskMera={handleAskMera}
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
@@ -510,6 +546,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {suggestion.article_url ? (
                             <VStack space="xs">
                                 <ArticleFeedbackPrompt
+                                    // The rationale block above owns Ask-Mera now.
+                                    showMeraButton={false}
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}
@@ -525,6 +563,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         articleId: suggestion.articleId,
                                         suggestionId: suggestion._id,
                                         title: suggestion.title_en ?? '',
+                                        // REQUIRED: without it the tracked-story
+                                        // seed snapshot falls back to "now", so
+                                        // the timeline's first row showed the
+                                        // TRACK moment ("4m ago") under the same
+                                        // clock chip every other row uses for
+                                        // publication age — and pinned a 13h-old
+                                        // article above a 1h-old one.
+                                        pubDate: suggestion.firstPubDate ?? suggestion.createdAt,
                                         publicationName: suggestion.publication_name,
                                         countryCode: suggestion.country_code,
                                         stableClusterId: suggestion.clusters?.find(

@@ -25,9 +25,15 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { ViewToken } from 'react-native';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 
-/** How long a card must stay ≥75% visible before it counts as skipped. 3s is a
- *  deliberate read, not a brisk scroll-past. */
-export const SKIP_DWELL_MS = 3000;
+/** Seconds a card must stay ≥75% on screen before it counts as VIEWED by dwell.
+ *  "Viewed" is opened (tap) OR this much uninterrupted visibility — 3s is a
+ *  deliberate read, not a brisk scroll-past. Both signals feed the same
+ *  `feed-order-store` card state; only the sort order consumes it, nothing is
+ *  ever removed for being viewed. */
+export const DWELL_READ_SECONDS = 3;
+
+/** {@link DWELL_READ_SECONDS} in ms — what the dwell timer actually compares. */
+export const SKIP_DWELL_MS = DWELL_READ_SECONDS * 1000;
 
 /** Trailing coalesce window for flushing buffered skip marks. */
 const SKIP_FLUSH_DEBOUNCE_MS = 1200;

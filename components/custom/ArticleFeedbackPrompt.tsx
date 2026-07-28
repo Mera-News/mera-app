@@ -16,7 +16,7 @@ import {
 import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
-import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
+import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -50,6 +50,10 @@ interface ArticleFeedbackPromptProps {
      *  time via `getNewsClusterForArticle`. */
     track?: FeedbackSubject;
     share?: ShareArticleParams;
+    /** Renders the Mera button in this row. Default true. The suggestion detail
+     *  screen passes `false` — its rationale block hosts the Ask-Mera glyph, and
+     *  two Mera entry points on one screen is what that redesign removed. */
+    showMeraButton?: boolean;
 }
 
 // Primary-orange accent for the three feedback buttons. Dark-locked: these
@@ -60,8 +64,11 @@ const PRIMARY = '#EDA77E';
 // against the orange fill.
 const SELECTED_ICON = '#1a1a1a';
 
-const ICON_SIZE = 19;
-const BUTTON_SIZE = 45;
+// Slightly larger than the original 19/45 — the row lost the Mera button on the
+// suggestion detail screen, so the survivors get more room and `justify-evenly`
+// spreads them across the freed width.
+const ICON_SIZE = 22;
+const BUTTON_SIZE = 48;
 
 /**
  * Prominent feedback widget rendered directly under the reason box on the
@@ -87,6 +94,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     save,
     track,
     share,
+    showMeraButton = true,
 }) => {
     const { t } = useTranslation();
     const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -96,10 +104,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // fallback subject keeps the hook happy when the button is absent.
     const trackSubject: FeedbackSubject =
         track ?? { origin: 'article', surface: 'detail', articleId, title };
-    const { tracked: storyTracked, toggle: toggleTrack } = useTrackedSubject(
-        trackSubject,
-        !!track,
-    );
+    const {
+        tracked: storyTracked,
+        onPress: onTrackPress,
+        dialog: trackDialog,
+    } = useTrackButton(trackSubject, !!track);
     const handleShare = useShareArticle(share);
 
     // Restore the stored verdict + tree path across remounts (leaving/reopening).
@@ -250,6 +259,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
 
     return (
         <Box className="relative">
+            {trackDialog}
             {/* Floating feedback surface — anchored just above the action row
                 (bottom: 100%), so it floats over the content above it. */}
             {surfaceVisible && verdict ? (
@@ -268,21 +278,29 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             ) : null}
 
             <HStack className="items-center justify-evenly px-1 py-3">
-                <Pressable
-                    onPress={handleChatPress}
-                    accessibilityRole="button"
-                    accessibilityLabel="Mera"
-                    className="items-center justify-center rounded-full"
-                    style={{
-                        width: BUTTON_SIZE,
-                        height: BUTTON_SIZE,
-                        backgroundColor: 'transparent',
-                        borderWidth: 1.75,
-                        borderColor: PRIMARY,
-                    }}
-                >
-                    <MeraLogo size={28} />
-                </Pressable>
+                {/* Mera. Suppressed on the SUGGESTION detail screen, where the
+                    rationale block above now carries the Ask-Mera glyph
+                    ("Mera's voice" — see ArticleSuggestionContainer) and owns the
+                    `card-action-mera` testID. The standalone ARTICLE detail
+                    screen has no rationale block, so it keeps the button here
+                    rather than losing the affordance entirely. */}
+                {showMeraButton ? (
+                    <Pressable
+                        onPress={handleChatPress}
+                        accessibilityRole="button"
+                        accessibilityLabel="Mera"
+                        className="items-center justify-center rounded-full"
+                        style={{
+                            width: BUTTON_SIZE,
+                            height: BUTTON_SIZE,
+                            backgroundColor: 'transparent',
+                            borderWidth: 1.75,
+                            borderColor: PRIMARY,
+                        }}
+                    >
+                        <MeraLogo size={30} />
+                    </Pressable>
+                ) : null}
                 {renderButton(
                     <MaterialIcons
                         name="thumb-up"
@@ -309,7 +327,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                         size={ICON_SIZE}
                         color={save.saved ? SELECTED_ICON : PRIMARY}
                     />,
-                    t('savedSuggestions.savedToastTitle'),
+                    t(save.saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction'),
                     save.onToggle,
                     save.saved,
                 ) : null}
@@ -320,7 +338,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                         color={storyTracked ? SELECTED_ICON : PRIMARY}
                     />,
                     t(storyTracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
-                    toggleTrack,
+                    onTrackPress,
                     storyTracked,
                 ) : null}
                 {share?.url ? renderButton(

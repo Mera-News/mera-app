@@ -15,9 +15,10 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
+    MAX_MEMBER_IDS,
     observeActive,
-    untrackStory,
 } from '@/lib/database/services/tracked-story-service';
+import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
@@ -69,7 +70,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
         if (!confirmTarget) return;
         const id = confirmTarget.id;
         setConfirmTarget(null);
-        await untrackStory(id);
+        // deleteTrackedStoryById, not untrackStory: the latter drops the row but
+        // leaves the linked TOPIC active, so the story's coverage kept being
+        // fetched after the user deleted it.
+        await deleteTrackedStoryById(id);
         // The observeActive subscription drops the row automatically.
     }, [confirmTarget]);
 
@@ -79,6 +83,15 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
             const latest = item.latestTitle;
             const showLatest = !!latest && latest.trim().length > 0 && latest !== headline;
             const unseen = item.unseenCount ?? 0;
+            // Total coverage gathered under this story. `memberArticleIds` is
+            // capped at MAX_MEMBER_IDS, so at the cap the true total is
+            // unknowable from the row — render "30+" rather than a confidently
+            // wrong exact number.
+            const total = (item.memberArticleIds ?? []).length;
+            const totalLabel =
+                total >= MAX_MEMBER_IDS
+                    ? t('trackedStories.articleCountCapped', { count: MAX_MEMBER_IDS })
+                    : t('trackedStories.articleCount', { count: total });
             const relative = formatTimeAgo(t, item.lastUpdateAt ?? item.createdAt);
             return (
                 <Pressable
@@ -88,7 +101,17 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                         setConfirmTarget(item);
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={headline}
+                    // The card renders four things; a label of just the headline
+                    // dropped the rest for a screen-reader user. Order mirrors
+                    // the visual order: title, unseen badge, total, age.
+                    accessibilityLabel={[
+                        headline,
+                        unseen > 0 ? t('trackedStories.updatesBadge', { count: unseen }) : null,
+                        total > 0 ? totalLabel : null,
+                        relative || null,
+                    ]
+                        .filter(Boolean)
+                        .join(', ')}
                     className="mx-4 mb-3 rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3"
                 >
                     <HStack className="items-start" space="sm">
@@ -124,11 +147,25 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                                     className="text-typography-400"
                                 />
                             )}
-                            {!!relative && (
-                                <Text size="2xs" className="text-typography-500 mt-0.5">
-                                    {relative}
-                                </Text>
-                            )}
+                            {/* Meta line: total coverage + last-activity age,
+                                in the card's existing 2xs muted style. */}
+                            <HStack className="items-center mt-0.5" space="xs">
+                                {total > 0 && (
+                                    <Text size="2xs" className="text-typography-500">
+                                        {totalLabel}
+                                    </Text>
+                                )}
+                                {total > 0 && !!relative && (
+                                    <Text size="2xs" className="text-typography-600">
+                                        ·
+                                    </Text>
+                                )}
+                                {!!relative && (
+                                    <Text size="2xs" className="text-typography-500">
+                                        {relative}
+                                    </Text>
+                                )}
+                            </HStack>
                         </VStack>
                         <Pressable
                             onPress={() => setConfirmTarget(item)}

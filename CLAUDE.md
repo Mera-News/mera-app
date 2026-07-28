@@ -91,7 +91,9 @@ Rules that save time (details + more traps in the README):
   Convention: `{surface}-{element}` kebab-case; card roots `card-${suggestion._id}`; actions
   `card-action-{name}` (repeat per card — scope by card root). When adding UI, add testIDs.
 - testID works on `Pressable`/`View`/`Box`; gluestack `InputField` swallows it — tag the wrapper.
-  `NativeTabs.Trigger` accepts none — drive tabs by label/icon (`id=house.fill` etc.).
+  `NativeTabs.Trigger` accepts none — drive tabs by their SF Symbol id:
+  `id=list.bullet.rectangle.fill` (Feed), `id=square.grid.2x2.fill` (Dashboard),
+  `id=safari.fill` (Explore), `id=person.fill` (Profile), `id=gearshape.fill` (Settings).
 - Metro must be running (`npx expo run:ios --device "iPhone 17 Pro"` serves it); a `simctl launch`
   can boot a stale bundle — force reload via
   `xcrun simctl openurl booted "com.mera.news://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081"`.

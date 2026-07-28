@@ -30,8 +30,23 @@ agent-device close
 `card-action-{name}`. Action testIDs repeat per card by design — scope by card root first.
 
 **Tabs have no testIDs:** `NativeTabs.Trigger` (expo-router/unstable-native-tabs) does not accept
-`testID` (verified against its TS types). Drive tabs by their accessibility label ("Feed",
-"Dashboard", …) or position instead.
+`testID` (verified against its TS types). Drive them by their **SF Symbol id** instead:
+
+| Tab | Route | `press 'id=…'` | Android glyph |
+|---|---|---|---|
+| Feed | `feed` | `list.bullet.rectangle.fill` | `view-agenda` |
+| Dashboard | `for_you` | `square.grid.2x2.fill` | `dashboard` |
+| Explore | `around` | `safari.fill` | `explore` |
+| Profile | `profile` | `person.fill` | `person` |
+| Settings | `settings` | `gearshape.fill` | `settings` |
+
+The Feed tab was `house.fill` until the icon was changed to read as a feed rather than a home —
+update any saved script still pressing `id=house.fill`.
+
+Prefer the symbol id over the accessibility label: labels come from `t('tabs.*')`, so they change
+with the app language while the symbol id does not. The labels themselves are correct — the Feed
+tab's key is still named `tabs.deck` for historical reasons, but its value now reads "Feed" (and
+matches that locale's Feed header in all 20 languages).
 
 **Placement rule (verified):** testID surfaces as `accessibilityIdentifier` from `Pressable`,
 `View`, and gluestack layout components (`Box`, `HStack`, …). It is **swallowed by gluestack

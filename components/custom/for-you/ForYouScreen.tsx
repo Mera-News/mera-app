@@ -41,6 +41,14 @@ import {
     useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
+import { EDGE_SWIPE_HITBOX_WIDTH } from '@/lib/navigation/edge-swipe';
+import {
+    DASHBOARD_RESORT_INTERVAL_MS,
+    msUntilResortDue,
+    shouldResort,
+    type ResortTrigger,
+} from '@/lib/feed-ordering/dashboard-resort';
+import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
@@ -52,9 +60,9 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
@@ -84,6 +92,66 @@ const MeraNewsScreen: React.FC = () => {
     // Real navigator focus — used to pause the 30s timers (nowTick + empty-feed
     // watchdog) while this tab is blurred.
     const isFocused = useIsFocused();
+    // ── Section-order snapshot (THROTTLED) ──
+    // The Dashboard uses the Feed's priority order, but it is a browsing surface
+    // the user scans repeatedly — re-sorting on every focus or store tick would
+    // reshuffle sections under their eyes. So ORDER reads a frozen snapshot of
+    // the viewed-state, replaced at most once per DASHBOARD_RESORT_INTERVAL_MS.
+    //
+    // NEW ARRIVALS ARE NOT THROTTLED, and the separation is clean rather than
+    // approximate: the sort key is (viewed, relevance band, incoming index).
+    // Freezing only the VIEWED lookup leaves relevance and arrival order live,
+    // so a newly-synced story still slots into its band immediately while every
+    // already-present story keeps its relative position. The throttle governs
+    // re-RANKING, not arrival.
+    const [sortSnapshot, setSortSnapshot] = useState<{
+        cardStates: Record<string, unknown>;
+        openedArticleIds: Set<string>;
+    }>(() => ({ cardStates: {}, openedArticleIds: new Set() }));
+    const lastResortAtRef = useRef<number | null>(null);
+
+    const applyResort = useCallback((trigger: ResortTrigger) => {
+        const nowMs = Date.now();
+        if (!shouldResort({ lastAppliedMs: lastResortAtRef.current, nowMs, trigger })) return;
+        lastResortAtRef.current = nowMs;
+        setSortSnapshot({
+            cardStates: useFeedOrderStore.getState().cardStates,
+            openedArticleIds: useOpenedStoriesStore.getState().articleIds,
+        });
+    }, []);
+
+    // Seed once both stores have hydrated (an empty snapshot would rank every
+    // already-read story as unviewed for the whole first session).
+    const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
+    useEffect(() => {
+        if (!openedHydrated || lastResortAtRef.current !== null) return;
+        applyResort('unwatched');
+    }, [openedHydrated, applyResort]);
+
+    // PREFERRED moment: the user stopped looking (tab blur or app background).
+    useEffect(() => {
+        if (isFocused) return;
+        applyResort('unwatched');
+    }, [isFocused, applyResort]);
+
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (next) => {
+            if (next !== 'background') return;
+            applyResort('unwatched');
+        });
+        return () => sub.remove();
+    }, [applyResort]);
+
+    // FALLBACK: a user who never looks away still gets a converging order. One
+    // timer armed at the exact mark — not a poll — re-armed whenever the
+    // snapshot changes.
+    useEffect(() => {
+        if (!isFocused) return;
+        const delay = msUntilResortDue(lastResortAtRef.current, Date.now());
+        const timer = setTimeout(() => applyResort('elapsed'), delay || DASHBOARD_RESORT_INTERVAL_MS);
+        return () => clearTimeout(timer);
+    }, [isFocused, sortSnapshot, applyResort]);
+
     const edgeSwipeGesture = useMemo(() => Gesture.Pan()
         .activeOffsetX(-20)
         .failOffsetX(20)
@@ -357,6 +425,7 @@ const MeraNewsScreen: React.FC = () => {
                         breaking={feed.breaking}
                         rows={feed.rows}
                         openedIds={openedIds}
+                        sortSnapshot={sortSnapshot}
                         onPressSuggestion={handleSuggestionPress}
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
@@ -399,7 +468,20 @@ const MeraNewsScreen: React.FC = () => {
                     headerStyle,
                 ]}
             >
-                <VStack className="px-5 pb-2" style={{ paddingTop: insets.top + 16 }}>
+                {/* box-none here TOO, not just on the Animated.View wrapper. The
+                    wrapper being box-none does nothing for THIS child: a plain
+                    VStack is `pointerEvents: auto`, so it hit-tests across the
+                    header's full width and height and swallows any drag starting
+                    inside it. This header is tall (title + stats + sub-tab pills
+                    + sync indicator), so a natural "pull down from the top"
+                    begins on it and never reaches the list underneath. Its
+                    interactive children (bell, status line, sub-tab pills) still
+                    receive taps. */}
+                <VStack
+                    className="px-5 pb-2"
+                    pointerEvents="box-none"
+                    style={{ paddingTop: insets.top + 16 }}
+                >
                     <HStack className="items-start justify-between mb-2">
                         <VStack className="flex-1 min-w-0 mr-3">
                             <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.dashboardTitle')}</Heading>
@@ -463,7 +545,13 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 40,
+        // Rendered ON TOP of the sub-tab content, so every tap inside this band
+        // is swallowed (the pan never activates and RN's responder system does
+        // not fall through to the covered sibling). Width is shared via
+        // lib/navigation/edge-swipe.ts so controls pinned near the right edge —
+        // e.g. the Saved sub-tab's delete button, which this strip used to
+        // render completely unpressable — can derive their clearance from it.
+        width: EDGE_SWIPE_HITBOX_WIDTH,
     },
 });
 

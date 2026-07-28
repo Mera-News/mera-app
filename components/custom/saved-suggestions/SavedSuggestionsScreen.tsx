@@ -23,6 +23,7 @@ import {
     type SavedItem,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
+import { EDGE_SWIPE_SAFE_RIGHT_INSET } from '@/lib/navigation/edge-swipe';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -41,6 +42,23 @@ interface SavedSuggestionsScreenProps {
 /** The WMDB row id backing a saved item (suggestion `_id` or the article's savedId). */
 const itemId = (item: SavedItem): string =>
     item.origin === 'suggestion' ? item.suggestion._id : item.savedId;
+
+// ── Delete-button geometry ────────────────────────────────────────────────
+// The button floats over the card's top-right corner, so the card's own
+// right-aligned meta row (time · language · country flag) runs UNDERNEATH it.
+// On a card WITH a hero image the 192px image pushes that row far clear; on an
+// imageless card the row sits directly under the button and the country flag
+// was almost entirely covered — only a sliver of it showed past the trash
+// circle. Moving the button was not enough (a right-aligned row follows it
+// wherever it goes); the row has to RESERVE the space instead.
+//
+// Exported to the card via `metaRowRightReserve`, which is quoted from the
+// card's OUTER right edge — the card subtracts its own content padding, and
+// applies it only when it has no hero image.
+const DELETE_BUTTON_SIZE = 36; // p-2 (8px) × 2 + a 20px icon
+const DELETE_BUTTON_GAP = 8; // breathing room between the flag and the button
+const DELETE_BUTTON_RESERVE =
+    EDGE_SWIPE_SAFE_RIGHT_INSET + DELETE_BUTTON_SIZE + DELETE_BUTTON_GAP;
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack, embedded = false }) => {
     const { t } = useTranslation();
@@ -101,7 +119,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                 duration: 3000,
                 render: ({ id }: { id: string }) => (
                     <Toast nativeID={id} action="success" variant="solid">
-                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastTitle>{t('savedSuggestions.removedToastTitle')}</ToastTitle>
                         <ToastDescription>
                             {t('savedSuggestions.removedToastMessage')}
                         </ToastDescription>
@@ -124,20 +142,37 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                         article={item.article}
                         onPress={() => handleArticlePress(item.article._id)}
                         subjectExtras={{ surface: 'saved' }}
+                        metaRowRightReserve={DELETE_BUTTON_RESERVE}
                     />
                 ) : (
                     <ArticleSuggestionCard
                         suggestion={item.suggestion}
                         onPress={(s) => handleSuggestionPress(s._id)}
+                        metaRowRightReserve={DELETE_BUTTON_RESERVE}
                     />
                 )}
+                {/* Delete affordance. Kept clear of the Dashboard's right-edge
+                    swipe strip (EDGE_SWIPE_SAFE_RIGHT_INSET): when this screen is
+                    embedded as the Saved sub-tab, that strip is drawn OVER this
+                    row and silently eats every tap inside its band — at the old
+                    `right: 5%` the button's centre sat inside it, which is why
+                    the control appeared completely dead. `right` is a fixed
+                    inset, not a percentage, so the clearance can't drift with the
+                    card's width; `hitSlop` grows the target everywhere EXCEPT
+                    rightwards, so it never reaches back into the strip. */}
                 <Pressable
+                    testID="saved-delete"
                     onPress={() => setConfirmTarget(item)}
-                    hitSlop={12}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
                     accessibilityRole="button"
                     accessibilityLabel={t('savedSuggestions.deleteConfirmCta')}
                     className="bg-gray-900 rounded-full p-2 shadow-hard-2"
-                    style={{ position: 'absolute', top: '5%', right: '5%', zIndex: 10 }}
+                    style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: EDGE_SWIPE_SAFE_RIGHT_INSET,
+                        zIndex: 10,
+                    }}
                 >
                     <MaterialIcons name="delete" size={20} color="#ffffff" />
                 </Pressable>
@@ -210,7 +245,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                 data={saved}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                ListHeaderComponent={ListHeader}
+                // The banner explains how saving works on THIS device; over an
+                // empty list it explained a list that isn't there, stacked above
+                // the "you haven't saved anything" state. Only shown with rows.
+                ListHeaderComponent={saved.length > 0 ? ListHeader : null}
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     paddingTop: 12,

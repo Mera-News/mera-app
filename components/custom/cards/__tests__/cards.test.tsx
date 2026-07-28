@@ -148,8 +148,11 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
 // The universal actions row now hosts a "Track story" button backed by the
 // tracking layer (which reaches Apollo + WatermelonDB). Stub the hook so these
 // pure-render tests don't drag the native DB/network stack into the graph.
-jest.mock('@/lib/tracking/use-tracked-subject', () => ({
-  useTrackedSubject: () => ({ tracked: false, toggle: jest.fn() }),
+// The track button's press behaviour + its "already following" dialog. Mocked
+// because the real module renders a Gluestack Modal (which pulls @legendapp/motion,
+// untransformed ESM under jest) and is not what these card tests exercise.
+jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
+  useTrackButton: () => ({ tracked: false, onPress: jest.fn(), dialog: null }),
 }));
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFactsForTopicTexts: jest.fn(() => Promise.resolve([])),
@@ -272,6 +275,41 @@ describe('ArticleSuggestionCard', () => {
       />,
     );
     expect(queryByTestId('relevance-chip')).toBeNull();
+  });
+
+  // The Saved list floats a delete button over the card's top-right corner. The
+  // meta row (time · language · country FLAG) is right-aligned, so it runs under
+  // that button wherever the button is moved to — on an imageless card the flag
+  // was almost entirely covered. The row must reserve the space instead.
+  it('reserves meta-row space for a host control when the card has NO image', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion()} // image_url: null
+        onPress={jest.fn()}
+        metaRowRightReserve={72}
+      />,
+    );
+    // 72 quoted from the card's outer edge, minus the content VStack's own px-4.
+    expect(getByTestId('card-meta-row').props.style).toEqual({ paddingRight: 56 });
+  });
+
+  it('does NOT reserve when the card HAS a hero image (no layout regression)', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+        metaRowRightReserve={72}
+      />,
+    );
+    // The 192px hero already pushes the meta row clear of the control.
+    expect(getByTestId('card-meta-row').props.style).toBeUndefined();
+  });
+
+  it('does not reserve when no host control is declared', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('card-meta-row').props.style).toBeUndefined();
   });
 
   it('does not render the action row without onVerdict (pixel-identical default)', () => {

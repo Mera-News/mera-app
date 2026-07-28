@@ -83,25 +83,20 @@ jest.mock('@/components/custom/for-you/FactSectionHeader', () => {
     const { Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ title, newCount, onPress }: any) => {
-            const canPress = !!onPress;
-            return canPress ? (
-                <Pressable accessibilityLabel={`header:${title}`} onPress={onPress}>
-                    <Text>{`new:${newCount}`}</Text>
-                </Pressable>
-            ) : (
-                <Text accessibilityLabel={`statichdr:${title}`}>{`new:${newCount}`}</Text>
-            );
-        },
+        default: ({ title, total, onPress }: any) => (
+            <Pressable accessibilityLabel={`header:${title}`} onPress={onPress}>
+                <Text>{`total:${total}`}</Text>
+            </Pressable>
+        ),
     };
 });
-jest.mock('@/components/custom/for-you/SectionViewAllRow', () => {
+jest.mock('@/components/custom/for-you/SectionStoriesPill', () => {
     const { Text, Pressable } = require('react-native');
     return {
         __esModule: true,
         default: ({ total, onPress }: any) => (
-            <Pressable accessibilityLabel="footer" onPress={onPress}>
-                <Text>{`footer:${total}`}</Text>
+            <Pressable accessibilityLabel="pill" onPress={onPress}>
+                <Text>{`pill:${total}`}</Text>
             </Pressable>
         ),
     };
@@ -123,9 +118,20 @@ jest.mock('@/components/custom/for-you/BreakingStrip', () => ({
 
 import DashboardSectionsFeed from '../DashboardSectionsFeed';
 
-function makeGroup(id: string, addedMs: number, createdAtMs: number): FactRowGroup {
+function makeGroup(
+    id: string,
+    addedMs: number,
+    createdAtMs: number,
+    relevance = 0.6,
+): FactRowGroup {
     return {
-        data: { _id: id, publication_name: `pub-${id}`, eventType: null } as any,
+        data: {
+            _id: id,
+            articleId: `art-${id}`,
+            relevance,
+            publication_name: `pub-${id}`,
+            eventType: null,
+        } as any,
         members: [],
         rawScore: null,
         bucket: 'MEDIUM' as any,
@@ -149,13 +155,29 @@ function makeRow(factId: string, groups: FactRowGroup[]): FactRow {
 
 const noopHandler = {} as any;
 
+const EMPTY_SNAPSHOT = { cardStates: {}, openedArticleIds: new Set<string>() };
+
+function renderFeed(rows: FactRow[], overrides: Record<string, any> = {}) {
+    return render(
+        <DashboardSectionsFeed
+            breaking={[]}
+            rows={rows}
+            openedIds={new Set()}
+            sortSnapshot={EMPTY_SNAPSHOT}
+            onPressSuggestion={jest.fn()}
+            scrollHandler={noopHandler}
+            headerHeight={100}
+            {...overrides}
+        />,
+    );
+}
+
 describe('DashboardSectionsFeed', () => {
     beforeEach(() => {
         mockRouterPush.mockClear();
-        mockVisits = {};
     });
 
-    it('renders header + 3 preview cards + footer for a 5-group section', () => {
+    it('renders one section: header + 3 preview cards + closing pill', () => {
         const groups = [
             makeGroup('g1', 5000, 5000),
             makeGroup('g2', 4000, 4000),
@@ -163,50 +185,28 @@ describe('DashboardSectionsFeed', () => {
             makeGroup('g4', 2000, 2000),
             makeGroup('g5', 1000, 1000),
         ];
-        const rows = [makeRow('f1', groups)];
-        const { getAllByText, getByText, getByLabelText } = render(
-            <DashboardSectionsFeed
-                breaking={[]}
-                rows={rows}
-                openedIds={new Set()}
-                onPressSuggestion={jest.fn()}
-                scrollHandler={noopHandler}
-                headerHeight={100}
-            />,
-        );
+        const { getAllByText, getByText, getByLabelText } = renderFeed([makeRow('f1', groups)]);
         expect(getByLabelText('header:Statement f1')).toBeTruthy();
         expect(getAllByText(/^card:/)).toHaveLength(3);
-        expect(getByText('footer:5')).toBeTruthy();
+        // Both places show the section TOTAL, not the preview count.
+        expect(getByText('total:5')).toBeTruthy();
+        expect(getByText('pill:5')).toBeTruthy();
     });
 
-    it('omits the footer when a section has 3 or fewer groups', () => {
-        const rows = [makeRow('f1', [makeGroup('g1', 1000, 1000), makeGroup('g2', 900, 900)])];
-        const { queryByLabelText, getAllByText } = render(
-            <DashboardSectionsFeed
-                breaking={[]}
-                rows={rows}
-                openedIds={new Set()}
-                onPressSuggestion={jest.fn()}
-                scrollHandler={noopHandler}
-                headerHeight={100}
-            />,
-        );
+    // Previously the footer only rendered when a section had MORE than 3
+    // stories, so a one-story section looked broken next to its siblings. The
+    // pill is now unconditional — the two placements are identical by design.
+    it('renders the closing pill even for a section that fits in the preview', () => {
+        const { getAllByText, getByText, getByLabelText } = renderFeed([
+            makeRow('f1', [makeGroup('g1', 1000, 1000), makeGroup('g2', 900, 900)]),
+        ]);
         expect(getAllByText(/^card:/)).toHaveLength(2);
-        expect(queryByLabelText('footer')).toBeNull();
+        expect(getByLabelText('pill')).toBeTruthy();
+        expect(getByText('pill:2')).toBeTruthy();
     });
 
     it('navigates to the fact feed when the header is pressed', () => {
-        const rows = [makeRow('f1', [makeGroup('g1', 1000, 1000)])];
-        const { getByLabelText } = render(
-            <DashboardSectionsFeed
-                breaking={[]}
-                rows={rows}
-                openedIds={new Set()}
-                onPressSuggestion={jest.fn()}
-                scrollHandler={noopHandler}
-                headerHeight={100}
-            />,
-        );
+        const { getByLabelText } = renderFeed([makeRow('f1', [makeGroup('g1', 1000, 1000)])]);
         fireEvent.press(getByLabelText('header:Statement f1'));
         expect(mockRouterPush).toHaveBeenCalledWith({
             pathname: '/logged-in/fact-feed',
@@ -214,50 +214,47 @@ describe('DashboardSectionsFeed', () => {
         });
     });
 
-    it('navigates to the fact feed when the footer is pressed', () => {
-        const groups = [
-            makeGroup('g1', 5000, 5000),
-            makeGroup('g2', 4000, 4000),
-            makeGroup('g3', 3000, 3000),
-            makeGroup('g4', 2000, 2000),
-        ];
-        const { getByLabelText } = render(
-            <DashboardSectionsFeed
-                breaking={[]}
-                rows={[makeRow('f1', groups)]}
-                openedIds={new Set()}
-                onPressSuggestion={jest.fn()}
-                scrollHandler={noopHandler}
-                headerHeight={100}
-            />,
-        );
-        fireEvent.press(getByLabelText('footer'));
+    it('navigates to the fact feed when the closing pill is pressed', () => {
+        const { getByLabelText } = renderFeed([makeRow('f1', [makeGroup('g1', 1000, 1000)])]);
+        fireEvent.press(getByLabelText('pill'));
         expect(mockRouterPush).toHaveBeenCalledWith({
             pathname: '/logged-in/fact-feed',
             params: { factId: 'f1', statement: 'Statement f1' },
         });
     });
 
-    it('flows the new-since-last-visit count into the header badge', () => {
-        // Last visited at t=1500 → groups added after that are "new" (g1,g2,g3).
-        mockVisits = { f1: 1500 };
+    // The preview is the top 3 of the SHARED priority order (unviewed
+    // high→med→low, then viewed) — not a separate ranking, and not a
+    // pre-filtered "unopened only" list.
+    it('previews the top 3 by the shared priority order', () => {
         const groups = [
-            makeGroup('g1', 5000, 5000),
-            makeGroup('g2', 4000, 4000),
-            makeGroup('g3', 3000, 3000),
-            makeGroup('g4', 1000, 1000),
-            makeGroup('g5', 900, 900),
+            makeGroup('low', 1000, 1000, 0.4),
+            makeGroup('high', 2000, 2000, 0.9),
+            makeGroup('med', 3000, 3000, 0.6),
+            makeGroup('irrelevant', 4000, 4000, 0.1),
         ];
-        const { getByText } = render(
-            <DashboardSectionsFeed
-                breaking={[]}
-                rows={[makeRow('f1', groups)]}
-                openedIds={new Set()}
-                onPressSuggestion={jest.fn()}
-                scrollHandler={noopHandler}
-                headerHeight={100}
-            />,
-        );
-        expect(getByText('new:3')).toBeTruthy();
+        const { getAllByText } = renderFeed([makeRow('f1', groups)]);
+        expect(getAllByText(/^card:/).map((n: any) => n.props.children)).toEqual([
+            'card:high',
+            'card:med',
+            'card:low',
+        ]);
+    });
+
+    it('sinks viewed stories below unviewed ones, whatever their relevance', () => {
+        const groups = [
+            makeGroup('viewed-high', 1000, 1000, 0.9),
+            makeGroup('unviewed-low', 2000, 2000, 0.4),
+        ];
+        const { getAllByText } = renderFeed([makeRow('f1', groups)], {
+            sortSnapshot: {
+                cardStates: {},
+                openedArticleIds: new Set(['art-viewed-high']),
+            },
+        });
+        expect(getAllByText(/^card:/).map((n: any) => n.props.children)).toEqual([
+            'card:unviewed-low',
+            'card:viewed-high',
+        ]);
     });
 });

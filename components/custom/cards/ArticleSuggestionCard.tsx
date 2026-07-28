@@ -3,12 +3,15 @@ import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
+import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import {
@@ -23,6 +26,7 @@ import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ArticleCardProps {
   suggestion: ForYouSuggestion;
@@ -44,7 +48,8 @@ interface ArticleCardProps {
   verdict?: Verdict | null;
   /** A thumb was tapped — the host records the verdict + floats the sheet. */
   onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
-  /** The Mera icon was tapped — open the default article chat. */
+  /** The Mera glyph on the rationale block was tapped — open the default article
+   *  chat. Absent ⇒ no Ask-Mera affordance renders (e.g. the Saved list). */
   onAskMera?: (suggestion: ForYouSuggestion) => void;
   // ── Inline feedback surface (floats over the card content once a verdict is
   // set) ──────────────────────────────────────────────────────────────────
@@ -66,6 +71,9 @@ interface ArticleCardProps {
    *  passes it, so every other surface is unaffected. NOT fired by the mount-time
    *  `isSuggestionSaved` restore, which is not a user interaction. */
   onSaveToggled?: (suggestion: ForYouSuggestion, saved: boolean) => void;
+  /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
+   *  host-owned control floating over the card's top-right (Saved list). */
+  metaRowRightReserve?: number;
 }
 
 export type { ArticleCardProps };
@@ -93,7 +101,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   read = false,
   flat = false,
   onSaveToggled,
+  metaRowRightReserve,
 }) => {
+  const { t } = useTranslation();
   const [facts, setFacts] = useState<Fact[]>([]);
 
   // Card-local saved state — restored across remounts (ported verbatim from
@@ -176,6 +186,24 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canRenderFactChips, topicIdsKey]);
 
+  // ── "Mera's voice" ────────────────────────────────────────────────────────
+  // The rationale is Mera talking, so the Mera glyph sits at the LEFT of the
+  // block and IS the Ask-Mera affordance — it replaced the Mera button that used
+  // to live in `CardActionBar`. Unanimated on cards (the animated spotlight is
+  // reserved for the detail page); `hitSlop` lifts the ~22px glyph to a ≥44pt
+  // target. Carries the `card-action-mera` testID that moved off the action bar.
+  const askMeraEl = onAskMera ? (
+    <Pressable
+      testID="rationale-mera"
+      onPress={() => onAskMera(suggestion)}
+      hitSlop={11}
+      accessibilityRole="button"
+      accessibilityLabel={t('swipeFeed.askMera')}
+    >
+      <MeraLogo size={22} animated={false} />
+    </Pressable>
+  ) : null;
+
   const factChipsEl = reasonReady && !reason && facts.length > 0 ? (
     <HStack className="flex-wrap justify-end" space="xs">
       {facts.map((fact) => (
@@ -201,12 +229,16 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       className="rounded-lg p-3 flex-row items-center"
       style={{ backgroundColor: reasonBoxColors.backgroundColor }}
     >
-      <RelevanceChip relevance={relevance} />
+      {/* Left COLUMN: priority chip on top, Mera glyph directly below it. The
+          rationale text sits to its right, still right-aligned. */}
+      <VStack className="items-center" space="xs">
+        <RelevanceChip relevance={relevance} />
+        {askMeraEl}
+      </VStack>
       {reason ? (
         <TranslatableDynamic
           text={reason}
           size="sm"
-          italic
           bold
           className="ml-3 flex-1 text-right"
           style={{ color: reasonBoxColors.textColor }}
@@ -218,6 +250,22 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       )}
     </Box>
   ) : null;
+
+  // The Ask-Mera glyph rides the rationale block — but a card can legitimately
+  // have no rationale (scored yet reason-less: it shows fact chips, or nothing).
+  // Those cards get the glyph in the same LEFT position on the row that replaces
+  // the rationale, rather than being left with no way to reach Mera at all —
+  // which is what simply deleting the action-bar button would have done. The
+  // chips and the rationale are mutually exclusive (chips need a Complete status
+  // with no reason; the box needs a reason or a pending one), so this row and
+  // `reasonBoxEl` never both render.
+  const meraFallbackRowEl =
+    askMeraEl && !reasonBoxEl ? (
+      <HStack className="items-center" space="sm">
+        {askMeraEl}
+        <Box className="flex-1">{factChipsEl}</Box>
+      </HStack>
+    ) : null;
 
   const metaAccessory = __DEV__ && relevanceReady ? (
     <Box className="px-2 py-0.5 rounded bg-background-50">
@@ -274,10 +322,11 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       flat={flat}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}
+      metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
       overlay={overlay}
     >
-      {factChipsEl}
+      {meraFallbackRowEl ?? factChipsEl}
       {reasonBoxEl}
     </ArticleCardBase>
   );

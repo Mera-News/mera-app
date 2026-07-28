@@ -780,7 +780,7 @@
     "upgrade": "Yükselt"
   },
   "tabs": {
-    "deck": "Deste",
+    "deck": "Akış",
     "dashboard": "Panel",
     "around": "Keşfet",
     "profile": "Profil",
@@ -788,7 +788,7 @@
     "gotIt": "Anladım"
   },
   "swipeFeed": {
-    "yourDeck": "Senin için",
+    "yourDeck": "Akış",
     "moreLikeThis": "Bunun gibi daha fazlası",
     "lessLikeThis": "Bunun gibi daha azı",
     "askMera": "Mera'ya Sor",
@@ -810,13 +810,11 @@
     "sectionPrefix": "Haberler:",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
-    "subTabFeed": "Akış",
+    "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
     "subTabSaved": "Kaydedilenler",
-    "openFactFeed": "Bu konuyla ilgili tüm haberleri gör",
-    "viewAllStories": "Tüm {{count}} haberi gör",
-    "newInSection_one": "Son ziyaretinden bu yana {{count}} yeni haber",
-    "newInSection_other": "Son ziyaretinden bu yana {{count}} yeni haber"
+    "storiesCount_one": "{{count}} haber",
+    "storiesCount_other": "{{count}} haber"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -846,11 +844,19 @@
     "updatesBadge_other": "{{count}} yeni",
     "endedLabel": "Sona erdi",
     "timelineQuietNote": "Henüz yeni bir gelişme yok. Bu haber ilerledikçe gelişmeleri buraya ekleyeceğiz.",
-    "railTitle": "Takip edilenler",
     "untrackConfirmTitle": "Takibi bırakılsın mı?",
     "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin.",
     "trackChatSeed": "Bu haberi takip etmek istiyorum.",
-    "trackProposalTitle": "Bu haberi takip et?"
+    "trackProposalTitle": "Bu haberi takip et?",
+    "articleCount_one": "{{count}} makale",
+    "articleCount_other": "{{count}} makale",
+    "articleCountCapped": "{{count}}+ makale",
+    "alreadyTrackingTitle": "Bunu zaten takip ediyorsun",
+    "alreadyTrackingBody": "Bu haberi iki kez takip edemezsin. Takibi bırakmak, bunun için kaydedilmiş her şeyi silecektir.",
+    "goToStoryAction": "Haberi aç",
+    "deleteStoryAction": "Haberi sil",
+    "deleteStoryConfirmTitle": "Bu haberi silinsin mi?",
+    "deleteStoryConfirmBody": "Silme, bu haber için kaydedilmiş her şeyi kaldırır."
   },
   "whatsNew": {
     "title": "Yenilikler",

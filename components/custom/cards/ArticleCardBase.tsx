@@ -67,7 +67,27 @@ export interface ArticleCardBaseProps {
    *  concrete card components to expose a stable, driver-targetable id
    *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
   testID?: string;
+  /**
+   * Horizontal space, measured from the card's OUTER right edge, to keep clear
+   * at the meta row — for a host that floats a control over the card's
+   * top-right corner (the Saved list's delete button).
+   *
+   * Applied ONLY when there is no hero image. With an image the 192px hero
+   * pushes the meta row far below any such control, so reserving there would
+   * indent the flag for no reason and change a layout that is already correct.
+   *
+   * Reserving space is the fix, not nudging the button: the meta row is
+   * right-aligned, so it runs UNDER an overlaid button no matter where the
+   * button sits, and on an imageless card that button lands squarely on the
+   * country flag.
+   */
+  metaRowRightReserve?: number;
 }
+
+/** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
+ *  is quoted from the card's outer edge, so this is subtracted to get the extra
+ *  padding the meta row actually needs. */
+const CARD_CONTENT_PADDING = 16;
 
 const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   imageUrl,
@@ -89,6 +109,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   footer,
   overlay,
   testID,
+  metaRowRightReserve = 0,
 }) => {
   const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
@@ -120,7 +141,14 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
         {/* When a footer is present it owns the bottom padding, so the content
             VStack drops its own (pb-0) to avoid a doubled gap. */}
         <VStack className={footer ? 'px-4 pt-4' : 'p-4'} space="sm">
-          <Box>
+          <Box
+            testID="card-meta-row"
+            style={
+              metaRowRightReserve > 0 && !showImage
+                ? { paddingRight: Math.max(0, metaRowRightReserve - CARD_CONTENT_PADDING) }
+                : undefined
+            }
+          >
             <ArticleMetaRow
               pubDate={pubDate}
               languageCode={languageCode}

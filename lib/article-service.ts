@@ -301,54 +301,11 @@ const GET_NEWS_CLUSTERS_FOR_TOPIC_TEXT = gql`
   }
 `;
 
-// GraphQL Query for fetching a single news cluster with articles.
-// `articles` is a cursor-paginated connection; server caps each page at 10.
-const GET_NEWS_CLUSTER_FOR_USER = gql`
-  query GetNewsClusterForUser($clusterId: ID!, $first: Int, $after: String) {
-    newsClusterForUser(clusterId: $clusterId) {
-      _id
-      createdAt
-      updatedAt
-      articles(first: $first, after: $after) {
-        articles {
-          _id
-          title
-          title_en_internal_only
-          description
-          description_en_internal_only
-          pubDate
-          article_url
-          image_url
-          creator
-          source_uri
-          original_language_code
-          clusterConfidence
-          publicationSource {
-            _id
-            publication_name
-            publication_url
-            country_code
-            country_name
-            category
-            detected_language_code
-            feed_language_code
-          }
-        }
-        pageInfo {
-          endCursor
-          hasNextPage
-          pageSize
-        }
-      }
-    }
-  }
-`;
-
 // GraphQL Query for the live cluster an article currently belongs to (via its
 // newest cluster-article-link). Null when the article is unclustered or its
 // cluster has aged out. The follow-a-story flow uses it to read a story's
-// current member articles (to ground the LLM's scope-pill proposals). Mirrors
-// GET_NEWS_CLUSTER_FOR_USER's selection, plus stableClusterId/clusterSize.
+// current member articles (to ground the LLM's scope-pill proposals). Selects
+// the full article shape, plus stableClusterId/clusterSize.
 const GET_NEWS_CLUSTER_FOR_ARTICLE = gql`
   query GetNewsClusterForArticle($articleId: ID!, $first: Int, $after: String) {
     newsClusterForArticle(articleId: $articleId) {
@@ -1126,36 +1083,6 @@ export class ArticleService {
             };
         } catch (error) {
             this.reportQueryError('getNewsClustersForTopicText', error, { topicText });
-            throw error;
-        }
-    }
-
-    /**
-     * Get a single news cluster with resolved articles
-     * Used by the NewsClusterScreen
-     */
-    static async getNewsClusterForUser(
-        clusterId: string,
-        options?: { first?: number; after?: string }
-    ): Promise<NewsCluster> {
-        try {
-            const { data } = await client.query<{ newsClusterForUser: NewsCluster }>({
-                query: GET_NEWS_CLUSTER_FOR_USER,
-                variables: {
-                    clusterId,
-                    first: options?.first ?? 10,
-                    after: options?.after,
-                },
-                fetchPolicy: 'no-cache',
-            });
-
-            if (!data?.newsClusterForUser) {
-                throw new Error('News cluster not found');
-            }
-
-            return data.newsClusterForUser;
-        } catch (error) {
-            this.reportQueryError('getNewsClusterForUser', error, { clusterId });
             throw error;
         }
     }

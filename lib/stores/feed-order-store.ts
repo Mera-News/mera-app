@@ -3,29 +3,32 @@
 // `buildFeedList` into a STABLE scroll order the user reads top-to-bottom, and
 // it survives app restarts.
 //
-// Design (static insert-only, NOTHING is ever evicted for being read):
+// Design (static insert-only, NOTHING is ever evicted for being read; the SCREEN
+// re-sorts this order for display — see components/custom/feed/feed-entries.ts):
 //  • The list is built ONCE, the first time it is non-empty (first launch /
 //    post-wipe), and is NEVER fully rebuilt afterwards — not on tab focus, not
 //    on idle, not on pull-to-refresh. `order` (+ `builtAt`) is persisted as a
 //    settings-KV JSON blob so the order is identical across restarts.
 //  • As suggestions newly reach status Complete they are PREPENDED, never
 //    reordered: a new batch is sorted among itself by the composite
-//    `feedCompare` score and placed at the FRONT, so it renders at the top of
-//    the unseen block. Existing rows keep their relative order and every index
-//    simply shifts down. Paired with FlatList's
-//    `maintainVisibleContentPosition` on the screen, the list grows UPWARD and
-//    the card being read never moves on screen.
+//    `feedCompare` score and placed at the FRONT. Existing rows keep their
+//    relative order and every index simply shifts down. Because the screen's
+//    display sort tie-breaks on this index, a fresh arrival lands at the top of
+//    its own relevance band rather than the top of the whole feed. Paired with
+//    FlatList's `maintainVisibleContentPosition`, the card being read does not
+//    move on screen.
 //  • Every laid-out card carries a LIFECYCLE STATE: `unviewed` (the default,
 //    represented by the ABSENCE of a `cardStates` entry) → `skipped` (dwelt on
-//    in the viewport without being touched) or `viewed` (interacted with —
-//    tapped open, thumbed, saved, or handed to Mera). `viewed` never downgrades
-//    to `skipped`, and `skipped` is write-once.
-//  • Card state is a DISPLAY input only. It decides which side of the "All
-//    caught up" divider a card renders on (see components/custom/feed/
-//    feed-entries.ts) — it never removes anything. Cards leave the feed by
-//    exactly one route: `hydrate` dropping a persisted id that no longer has a
-//    live candidate (publication-window ageing / retention purge between
-//    sessions — see FEED_WINDOW_MS).
+//    in the viewport for DWELL_READ_SECONDS without being touched) or `viewed`
+//    (interacted with — tapped open, thumbed, saved, or handed to Mera).
+//    `viewed` never downgrades to `skipped`, and `skipped` is write-once. For
+//    DISPLAY the two are one concept: "viewed".
+//  • Card state is a DISPLAY input only. It decides which BLOCK a card sorts
+//    into — unviewed above viewed, each banded by relevance (see
+//    components/custom/feed/feed-entries.ts) — and never removes anything. Cards
+//    leave the feed by exactly one route: `hydrate` dropping a persisted id that
+//    no longer has a live candidate (publication-window ageing / retention purge
+//    between sessions — see FEED_WINDOW_MS).
 //
 //    An earlier revision evicted seen cards after 10 minutes and left
 //    "tombstones" so they could not be re-ingested. Those tombstones keyed on
@@ -370,8 +373,8 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
       // matched on article id alone, NOT the cluster-wide opened set: that set
       // also contains stable cluster ids with a 30-day TTL, so matching it here
       // meant reading one article suppressed every FUTURE article in that
-      // ongoing story for a month. A genuinely-seen card sinks below the "All
-      // caught up" divider at render time instead of being withheld.
+      // ongoing story for a month. A genuinely-viewed card sinks into the viewed
+      // block at render time instead of being withheld.
       if (it.suggestion.articleId && openedArticleIds.has(it.suggestion.articleId)) continue;
       if (seenNew.has(it.id)) continue;
       seenNew.add(it.id);
@@ -381,17 +384,19 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
     // PREPEND, best-first among themselves. Existing entries never move relative
     // to each other and never change their relative order; every one of them
     // simply shifts down by `newOnes.length`. The screen pairs this with
-    // FlatList's `maintainVisibleContentPosition`, so the list grows UPWARD —
-    // the card being read stays visually fixed while its index changes.
+    // FlatList's `maintainVisibleContentPosition`, so the list grows without
+    // moving the card being read.
     //
-    // Why this lands at the top of the UNSEEN block: NOT because index 0 of
-    // `order` is the top of that block — `order` interleaves seen and unseen
-    // rows (hydrate drops ids from arbitrary positions, and a rep-switch
-    // rewrites a row under an older id). The real invariant is narrower:
-    // `partitionFeedEntries` emits ALL unseen rows before the divider, in
-    // `order` order. A brand-new item has no card state, so it is unseen, so it
-    // renders first among unseen. If that partition ordering ever changes, this
-    // breaks — they are a PAIRED EDIT.
+    // What this position BUYS, given the screen re-sorts `order` for display
+    // (`sortFeedEntries`: unviewed → viewed, each banded by relevance): a
+    // brand-new item has no card state, so it is UNVIEWED, and within its
+    // relevance band the sort's final tie-break is the incoming `order` index.
+    // Prepending therefore puts an arrival at the TOP OF ITS BAND rather than the
+    // top of the list. `order` position and rendered position are NOT the same
+    // thing — `order` interleaves viewed and unviewed rows (hydrate drops ids
+    // from arbitrary positions, and a rep-switch rewrites a row under an older
+    // id) — so this and `sortFeedEntries`' tie-break are a PAIRED EDIT: drop the
+    // index tie-break there and prepending stops meaning anything here.
     //
     // This also replaced an insertion sort whose scan broke on the first order
     // id with no backing item, making any such id a permanent insert magnet for

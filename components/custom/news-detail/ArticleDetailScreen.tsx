@@ -309,14 +309,22 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         };
     }, [article?._id]);
 
+    // Title tracks the DIRECTION of the toggle. It was hardcoded to "Saved", so
+    // un-saving produced the self-contradicting toast "Saved / Removed from
+    // saved". Success styling is unchanged either way — removing a saved article
+    // is a successful action, not an error.
     const showSavedToast = useCallback(
-        (message: string) => {
+        (message: string, removed: boolean = false) => {
             toast.show({
                 placement: 'top',
                 duration: 3000,
                 render: ({ id }: { id: string }) => (
                     <Toast nativeID={id} action="success" variant="solid">
-                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastTitle>
+                            {t(removed
+                                ? 'savedSuggestions.removedToastTitle'
+                                : 'savedSuggestions.savedToastTitle')}
+                        </ToastTitle>
                         <ToastDescription>{message}</ToastDescription>
                     </Toast>
                 ),
@@ -331,7 +339,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             if (isSaved) {
                 await deleteSavedSuggestion(article._id);
                 setIsSaved(false);
-                showSavedToast(t('savedSuggestions.removedToastMessage'));
+                showSavedToast(t('savedSuggestions.removedToastMessage'), true);
             } else {
                 await saveStandaloneArticle(article, { surface: 'detail' });
                 setIsSaved(true);
@@ -480,6 +488,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         surface: 'detail',
                                         articleId: article._id ?? articleId,
                                         title: article.title_en_internal_only ?? article.title ?? '',
+                                        // See ArticleSuggestionScreen — omitting
+                                        // this makes the timeline's seed row show
+                                        // the track moment instead of the
+                                        // article's publication age.
+                                        pubDate: article.pubDate ?? null,
                                         publicationName: article.publicationSource?.publication_name,
                                         countryCode: article.publicationSource?.country_code,
                                         stableClusterId,
