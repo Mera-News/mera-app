@@ -11,9 +11,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
  * OpenAI story, an F1 standings story, a German data-deletion story) all
  * appear to share the same picture.
  *
- * Deliberately non-photographic: a neutral dark gradient built from the app's
- * own dark-mode surface ramp (`--color-background-50` → `--color-background-0`,
- * see `components/ui/gluestack-ui-provider/config.ts`) plus a faint MeraLogo
+ * Deliberately non-photographic: a warm off-white ground plus a dark MeraLogo
  * watermark, so it reads unambiguously as "no picture" rather than as the
  * article's own photo. Drawn with `react-native-svg` (already in the binary,
  * no `expo-linear-gradient` dependency) — same house pattern as
@@ -34,6 +32,21 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
  */
 const GRADIENT_ID = 'article-placeholder-gradient';
 
+// Warm off-white ground, NOT pure white. #FFFFFF next to these near-black cards
+// reads as a blown-out hole punched in the list; a warm paper tone sits with the
+// app's warm accent (primary-400 is rgb(231,138,83)) and stays comfortable in a
+// dark room. Kept as a gentle two-stop gradient rather than a flat fill so the
+// panel still reads as deliberate artwork rather than a failed image load.
+const GROUND_LIGHT = '#F5F1EA';
+const GROUND_DEEP = '#E8E1D5';
+
+// Warm near-black ink for the glyph. 0.45 is the "subtle but clear" point: the
+// glyph's own internals are already semi-transparent (the grid strokes sit at
+// 0.18, the spotlight at 0.30), so this multiplies down to a soft watermark
+// while the hexagon outline stays plainly legible.
+const GLYPH_INK = '#2A2622';
+const GLYPH_OPACITY = 0.45;
+
 export interface ArticleImagePlaceholderProps {
   /** MeraLogo glyph size in dp. Default 40 — a modest watermark against both
    *  the 192px full-size hero and the narrower compact-card image column. */
@@ -50,16 +63,14 @@ const ArticleImagePlaceholderImpl: React.FC<ArticleImagePlaceholderProps> = ({ s
     <Svg width="100%" height="100%" style={{ position: 'absolute' }} preserveAspectRatio="none">
       <Defs>
         <LinearGradient id={GRADIENT_ID} x1="0" y1="0" x2="1" y2="1">
-          {/* dark-mode --color-background-50 (rgb(34,34,34)) */}
-          <Stop offset="0" stopColor="rgb(34, 34, 34)" stopOpacity="1" />
-          {/* dark-mode --color-background-0 (rgb(18,17,19)) */}
-          <Stop offset="1" stopColor="rgb(18, 17, 19)" stopOpacity="1" />
+          <Stop offset="0" stopColor={GROUND_LIGHT} stopOpacity="1" />
+          <Stop offset="1" stopColor={GROUND_DEEP} stopOpacity="1" />
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${GRADIENT_ID})`} />
     </Svg>
-    <View style={{ opacity: 0.12 }}>
-      <MeraLogo size={size} animated={false} />
+    <View style={{ opacity: GLYPH_OPACITY }}>
+      <MeraLogo size={size} animated={false} color={GLYPH_INK} />
     </View>
   </View>
 );

@@ -63,3 +63,38 @@ describe('MeraLogo', () => {
     expect(getByTestId('svg-Svg').props.viewBox).toBe('255 146 514 732');
   });
 });
+
+// The `color` prop exists so the glyph can sit on a LIGHT ground (the article
+// image placeholder is a near-white panel). Every other call site is chrome on
+// the dark theme and relies on the white default, so the default is
+// load-bearing — a regression there would turn a dozen action-bar icons
+// invisible at once.
+describe('MeraLogo color', () => {
+  const inkOf = (utils: ReturnType<typeof render>) =>
+    utils.getAllByTestId('svg-Circle')[0].props.fill; // the focus dot
+
+  it('defaults to white for the dark-theme chrome call sites', () => {
+    expect(inkOf(render(<MeraLogo size={24} />))).toBe('#fff');
+  });
+
+  it('threads an override through every stroke and fill', () => {
+    const utils = render(<MeraLogo size={24} color="#2A2622" />);
+    expect(inkOf(utils)).toBe('#2A2622');
+    // hexagon outline + highlighted card + grid strokes all follow the same ink
+    const strokes = [
+      ...utils.getAllByTestId('svg-Path'),
+      ...utils.getAllByTestId('svg-Rect'),
+      ...utils.getAllByTestId('svg-G'),
+    ]
+      .map((n) => n.props.stroke)
+      .filter(Boolean);
+    expect(strokes.length).toBeGreaterThan(0);
+    expect(strokes.every((c: string) => c === '#2A2622')).toBe(true);
+  });
+
+  it('colours the frozen spotlight too (static path)', () => {
+    const utils = render(<MeraLogo size={24} color="#2A2622" />);
+    const fills = utils.getAllByTestId('svg-Path').map((n) => n.props.fill).filter(Boolean);
+    expect(fills).toContain('#2A2622');
+  });
+});

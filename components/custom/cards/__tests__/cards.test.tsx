@@ -117,7 +117,7 @@ jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
 });
-// ArticleImagePlaceholder draws its dark gradient with react-native-svg (same
+// ArticleImagePlaceholder draws its warm off-white gradient with react-native-svg (same
 // house pattern as SectionGradientPanel) — mocked to plain views, same as
 // every other react-native-svg consumer's test (SectionGradientPanel.test.tsx,
 // MeraLogo.test.tsx).
