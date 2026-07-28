@@ -262,18 +262,8 @@
   },
   "explore": {
     "title": "Explore",
-    "sources": "Sources",
     "scopeWorld": "World",
-    "scopeTopStories": "Top stories",
     "noArticles": "No articles found",
-    "thinContentTitle": "Want more {{place}} news?",
-    "thinContentBody": "Add {{place}} as a location to get more stories from here.",
-    "addLocation": "Add a location",
-    "noLocationsTitle": "See news from your places",
-    "noLocationsBody": "Add the places you care about to explore local news from them here.",
-    "sheetTitle": "Manage sources",
-    "close": "Close",
-    "topStoriesIntro": "What people are talking about right now — sorted for what matters to you.",
     "addPlaces": "Add places",
     "offlineUnavailable": "You're offline — Explore needs an internet connection"
   },
@@ -880,6 +870,7 @@
       "slider": "Manual",
       "migration": "Setup",
       "user": "You",
+      "llm": "Auto-detected",
       "unknown": "System"
     },
     "actionLabels": {
@@ -995,6 +986,7 @@
   "locations": {
     "title": "Your places",
     "subtitle": "Locations that shape your feed",
+    "autoDetectDisclaimer": "Mera detects your places automatically from your profile. You can add more here — but telling Mera directly works better, because it learns how each place relates to you and tunes your recommendations accordingly.",
     "empty": "Add the places you care about",
     "add": "Add a place",
     "addFirst": "Add a place",

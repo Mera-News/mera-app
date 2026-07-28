@@ -802,18 +802,8 @@
   },
   "explore": {
     "title": "Verkennen",
-    "sources": "Bronnen",
     "scopeWorld": "Wereld",
-    "scopeTopStories": "Topnieuws",
     "noArticles": "Geen artikelen gevonden",
-    "thinContentTitle": "Meer nieuws uit {{place}} willen?",
-    "thinContentBody": "Voeg {{place}} toe als locatie om meer verhalen van hier te krijgen.",
-    "addLocation": "Locatie toevoegen",
-    "noLocationsTitle": "Bekijk nieuws uit jouw plaatsen",
-    "noLocationsBody": "Voeg de plaatsen toe die je belangrijk vindt om hier lokaal nieuws te verkennen.",
-    "sheetTitle": "Bronnen beheren",
-    "close": "Sluiten",
-    "topStoriesIntro": "Waarover mensen nu spreken — gesorteerd op wat voor jou belangrijk is.",
     "addPlaces": "Plaatsen toevoegen"
   },
   "forYou": {
@@ -912,6 +902,7 @@
       "slider": "Handmatig",
       "migration": "Instellen",
       "user": "Jij",
+      "llm": "Automatisch gedetecteerd",
       "unknown": "Systeem"
     },
     "actionLabels": {
@@ -1027,6 +1018,7 @@
   "locations": {
     "title": "Jouw plaatsen",
     "subtitle": "Locaties die je feed bepalen",
+    "autoDetectDisclaimer": "Mera detecteert je plaatsen automatisch uit je profiel. Je kunt hier meer toevoegen — maar het werkt beter als je het Mera direct vertelt, omdat het leert hoe elke plaats voor jou relevant is en je aanbevelingen dienovereenkomstig aanpast.",
     "empty": "Voeg de plaatsen toe die je belangrijk vindt",
     "add": "Plaats toevoegen",
     "addFirst": "Plaats toevoegen",

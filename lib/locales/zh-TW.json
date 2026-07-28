@@ -801,19 +801,9 @@
   },
   "explore": {
     "title": "探索",
-    "sources": "來源",
     "scopeWorld": "全球",
-    "scopeTopStories": "頭條新聞",
     "noArticles": "找不到文章",
-    "thinContentTitle": "想看更多{{place}}的新聞？",
-    "thinContentBody": "將{{place}}新增為地點，即可取得更多相關報導。",
-    "addLocation": "新增地點",
-    "topStoriesIntro": "人們現在正在談論的話題 — 按對你重要的內容排序。",
-    "addPlaces": "新增地點",
-    "noLocationsTitle": "查看你所在地的新聞",
-    "noLocationsBody": "新增你關心的地點，即可在這裡探索來自當地的新聞。",
-    "sheetTitle": "管理來源",
-    "close": "關閉"
+    "addPlaces": "新增地點"
   },
   "forYou": {
     "sectionPrefix": "關於：",
@@ -910,6 +900,7 @@
       "slider": "手動",
       "migration": "初始設定",
       "user": "你",
+      "llm": "自動檢測",
       "unknown": "系統"
     },
     "actionLabels": {
@@ -1023,6 +1014,7 @@
   "locations": {
     "title": "你的地點",
     "subtitle": "影響你動態的地點",
+    "autoDetectDisclaimer": "Mera 會從您的個人資料自動檢測您的地點。您也可以在這裡新增更多地點——但直接告訴 Mera 更有效，因為它會學習每個地點與您的關係，並相應調整您的推薦。",
     "empty": "新增你關心的地點",
     "add": "新增地點",
     "addFirst": "新增地點",

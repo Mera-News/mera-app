@@ -804,18 +804,8 @@
   },
   "explore": {
     "title": "Odkrywaj",
-    "sources": "Źródła",
     "scopeWorld": "Świat",
-    "scopeTopStories": "Najważniejsze wiadomości",
     "noArticles": "Nie znaleziono artykułów",
-    "thinContentTitle": "Chcesz więcej wiadomości z {{place}}?",
-    "thinContentBody": "Dodaj {{place}} jako lokalizację, aby otrzymywać więcej wiadomości stamtąd.",
-    "addLocation": "Dodaj lokalizację",
-    "noLocationsTitle": "Zobacz wiadomości z Twoich miejsc",
-    "noLocationsBody": "Dodaj miejsca, na których Ci zależy, aby odkrywać lokalne wiadomości stamtąd.",
-    "sheetTitle": "Zarządzaj źródłami",
-    "close": "Zamknij",
-    "topStoriesIntro": "O czym ludzie mówią teraz — posortowane według tego, co dla Ciebie ważne.",
     "addPlaces": "Dodaj miejsca"
   },
   "forYou": {
@@ -916,6 +906,7 @@
       "slider": "Ręczne",
       "migration": "Konfiguracja",
       "user": "Ty",
+      "llm": "Automatycznie wykryte",
       "unknown": "System"
     },
     "actionLabels": {
@@ -1035,6 +1026,7 @@
   "locations": {
     "title": "Twoje miejsca",
     "subtitle": "Lokalizacje, które kształtują Twój kanał",
+    "autoDetectDisclaimer": "Mera automatycznie wykrywa Twoje miejsca z Twojego profilu. Możesz dodać więcej tutaj — ale jest lepiej, gdy mówisz to Merze bezpośrednio, ponieważ poznaje, jak każde miejsce się dla Ciebie wiąże, i odpowiednio dostosowuje Twoje rekomendacje.",
     "empty": "Dodaj miejsca, na których Ci zależy",
     "add": "Dodaj miejsce",
     "addFirst": "Dodaj miejsce",

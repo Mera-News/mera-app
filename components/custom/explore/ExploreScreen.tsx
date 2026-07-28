@@ -17,19 +17,17 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
-import TopStoriesList from './TopStoriesList';
 
 /** Persisted last-selected scope id (setting-service KV — same store as other flags). */
 const LAST_SCOPE_KEY = 'explore_last_scope';
 
 /**
- * Explore tab (Wave 10, N5; top-stories-blend wave adds the 'top' chip).
+ * Explore tab (Wave 10, N5; geo-derivation wave deleted the Top stories chip).
  * Scope chips derived from the user's on-device locations + device country
- * (see lib/explore/scopes); World/country scopes are DIRECT server-paginated
- * `topHeadlinesForCountry` queries (ScopeArticleList) — no article_suggestions,
- * no scoring, no LLM, nothing persisted. The 'top' scope instead renders
- * TopStoriesList, which blends the GLOBAL + home-country editions client-side
- * (lib/explore/top-stories.ts). Compact cards only.
+ * (see lib/explore/scopes), ordered `[primary country, …, World]`. Every scope
+ * is a DIRECT server-paginated `topHeadlinesForCountry` query
+ * (ScopeArticleList) — no article_suggestions, no scoring, no LLM, nothing
+ * persisted. Compact cards only.
  *
  * Sources management now lives in Profile (app-rethink wave) — the header
  * Sources action, the FAB, and the bottom sheet are removed; the header slot
@@ -42,9 +40,19 @@ const ExploreScreen: React.FC = () => {
     const isConnected = useIsConnected();
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
-    // Cold-mount always opens on Top stories; the persisted LAST_SCOPE_KEY is intentionally not read for the initial selection (taps still persist below, for potential future use).
-    const [selectedId, setSelectedId] = useState<string>('top-stories');
-    const [restoredSelection, setRestoredSelection] = useState(false);
+    // Cold-mount opens on the FIRST chip (the primary country); the persisted
+    // LAST_SCOPE_KEY is intentionally not read for the initial selection (taps
+    // still persist below, for potential future use). Starts null because that
+    // id is data-dependent (`country:<alpha3>`) and unknowable until the
+    // locations observable has emitted — see `locationsLoaded` below.
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    // Has `observeAllLocations()` emitted at least once? It emits ASYNCHRONOUSLY
+    // on focus, so the first render has `locations === []` and `scopes` is the
+    // device-country fallback. Rendering the list then would flash the wrong
+    // country and burn a server round-trip, because the real locations landing
+    // changes `scopes[0].id` and ScopeArticleList is keyed on it. Never reset:
+    // once loaded, refocusing must not unmount/refetch the list.
+    const [locationsLoaded, setLocationsLoaded] = useState(false);
 
     // Device country is stable for the session.
     const deviceCountry = useMemo(() => getDeviceCountryAlpha2(), []);
@@ -62,9 +70,11 @@ const ExploreScreen: React.FC = () => {
                         city: l.city,
                         region: l.region,
                         countryCode: l.countryCode,
+                        role: l.role,
                         weight: l.weight,
                     })),
                 );
+                setLocationsLoaded(true);
             });
             return () => sub.unsubscribe();
         }, []),
@@ -75,29 +85,24 @@ const ExploreScreen: React.FC = () => {
         [locations, deviceCountry],
     );
 
-    // No restore step needed anymore (selectedId already defaults to 'top-stories' above) — just clear the gate that guards the snap-back effect below.
-    useEffect(() => {
-        setRestoredSelection(true);
-    }, []);
-
-    // Resolve the active scope: the persisted/selected id when still available,
-    // otherwise fall back to the first scope (World).
+    // Resolve the active scope: the selected id when still available,
+    // otherwise the first scope (the primary country).
     const selectedScope: ExploreScope =
         scopes.find((s) => s.id === selectedId) ?? scopes[0];
 
-    // Home is always the 2nd chip when present (order guaranteed by
-    // deriveExploreScopes: [top, home?, world, ...]) — TopStoriesList needs
-    // its alpha-3 code to fetch the home edition alongside GLOBAL.
-    const homeCountryAlpha3 = scopes[1]?.kind === 'country' ? scopes[1].countryCodeAlpha3 : null;
-
-    // If the selection is no longer valid (e.g. a location was removed), snap
-    // back to World so the chip row and list stay consistent.
+    // Two jobs, both gated on locationsLoaded so neither can fire against the
+    // pre-emission device-country fallback:
+    //   • resolve the initial (null) selection to the first chip;
+    //   • snap back to the first chip when the selection stops existing (e.g. a
+    //     location was removed).
+    // On the render where locationsLoaded flips true, selectedId is still null,
+    // so selectedScope is ALREADY scopes[0] — this effect then writes that same
+    // id, leaving ScopeArticleList's key unchanged. Hence exactly one mount.
     useEffect(() => {
-        if (!restoredSelection) return;
-        if (!scopes.some((s) => s.id === selectedId)) {
-            setSelectedId(scopes[0]?.id ?? 'world');
-        }
-    }, [scopes, selectedId, restoredSelection]);
+        if (!locationsLoaded) return;
+        if (selectedId !== null && scopes.some((s) => s.id === selectedId)) return;
+        setSelectedId(scopes[0]?.id ?? 'world');
+    }, [scopes, selectedId, locationsLoaded]);
 
     const handleSelect = (scope: ExploreScope) => {
         setSelectedId(scope.id);
@@ -130,9 +135,9 @@ const ExploreScreen: React.FC = () => {
                 {/* Offline banner — Explore is direct server-paginated (no local
                     cache), so an offline visit here would otherwise just look
                     like a jarring generic "no articles found" empty state from
-                    ScopeArticleList/TopStoriesList. This makes the reason
-                    explicit and non-blocking; those lists already fall back to
-                    their friendly empty state, not a hard error, on fetch failure. */}
+                    ScopeArticleList. This makes the reason explicit and
+                    non-blocking; that list already falls back to its friendly
+                    empty state, not a hard error, on fetch failure. */}
                 {!isConnected && (
                     <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
                         <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
@@ -145,13 +150,14 @@ const ExploreScreen: React.FC = () => {
                     <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
                 </Box>
 
-                {/* Article list for the active scope — remounts on scope switch. */}
+                {/* Article list for the active scope — remounts on scope switch.
+                    Held back until the locations observable has emitted, so the
+                    first mount lands on the real primary country rather than the
+                    device-country fallback (which would remount + refetch). */}
                 <Box className="flex-1">
-                    {selectedScope.kind === 'top' ? (
-                        <TopStoriesList key={selectedScope.id} homeCountryAlpha3={homeCountryAlpha3} />
-                    ) : (
+                    {locationsLoaded ? (
                         <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
-                    )}
+                    ) : null}
                 </Box>
             </Box>
     );

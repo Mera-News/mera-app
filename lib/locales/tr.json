@@ -802,18 +802,8 @@
   },
   "explore": {
     "title": "Keşfet",
-    "sources": "Kaynaklar",
     "scopeWorld": "Dünya",
-    "scopeTopStories": "Öne çıkan haberler",
     "noArticles": "Makale bulunamadı",
-    "thinContentTitle": "{{place}} hakkında daha fazla haber ister misin?",
-    "thinContentBody": "Buradan daha fazla haber almak için {{place}}'i konum olarak ekle.",
-    "addLocation": "Konum ekle",
-    "noLocationsTitle": "Yerlerinden haberleri gör",
-    "noLocationsBody": "Önemsediğin yerleri ekleyerek buradan yerel haberleri keşfet.",
-    "sheetTitle": "Kaynakları yönet",
-    "close": "Kapat",
-    "topStoriesIntro": "İnsanların şu anda konuştuğu şeyler — sizin için önemli olanlar için sıralanmış.",
     "addPlaces": "Yerleri ekle"
   },
   "forYou": {
@@ -913,6 +903,7 @@
       "slider": "Manuel",
       "migration": "Kurulum",
       "user": "Sen",
+      "llm": "Otomatik olarak algılandı",
       "unknown": "Sistem"
     },
     "actionLabels": {
@@ -1028,6 +1019,7 @@
   "locations": {
     "title": "Yerlerin",
     "subtitle": "Akışını şekillendiren konumlar",
+    "autoDetectDisclaimer": "Mera, profilinden yerlerini otomatik olarak algılar. Burada daha fazla ekleyebilirsin — ama Mera'ya doğrudan söylemek daha iyi sonuç verir, çünkü her yerin seninle nasıl ilişkili olduğunu öğrenir ve tavsiyelerini buna göre ayarlar.",
     "empty": "Önemsediğin yerleri ekle",
     "add": "Yer ekle",
     "addFirst": "Yer ekle",

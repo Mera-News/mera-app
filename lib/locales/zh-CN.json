@@ -801,19 +801,9 @@
   },
   "explore": {
     "title": "探索",
-    "sources": "来源",
     "scopeWorld": "全球",
-    "scopeTopStories": "头条新闻",
     "noArticles": "未找到文章",
-    "thinContentTitle": "想看更多{{place}}的新闻？",
-    "thinContentBody": "将{{place}}添加为地点，即可获取更多相关报道。",
-    "addLocation": "添加地点",
-    "topStoriesIntro": "人们现在正在谈论的话题 — 按对你重要的内容排序。",
-    "addPlaces": "添加地点",
-    "noLocationsTitle": "查看你所在地的新闻",
-    "noLocationsBody": "添加你关心的地点，即可在这里探索来自当地的新闻。",
-    "sheetTitle": "管理来源",
-    "close": "关闭"
+    "addPlaces": "添加地点"
   },
   "forYou": {
     "sectionPrefix": "关于：",
@@ -910,6 +900,7 @@
       "slider": "手动",
       "migration": "初始设置",
       "user": "你",
+      "llm": "自动检测",
       "unknown": "系统"
     },
     "actionLabels": {
@@ -1023,6 +1014,7 @@
   "locations": {
     "title": "你的地点",
     "subtitle": "影响你资讯的地点",
+    "autoDetectDisclaimer": "Mera 会从您的个人资料自动检测您的地点。您也可以在这里添加更多地点——但直接告诉 Mera 更有效，因为它会学习每个地点与您的关系，并相应调整您的推荐。",
     "empty": "添加你关心的地点",
     "add": "添加地点",
     "addFirst": "添加地点",

@@ -802,18 +802,8 @@
   },
   "explore": {
     "title": "Entdecken",
-    "sources": "Quellen",
     "scopeWorld": "Welt",
-    "scopeTopStories": "Top-Meldungen",
     "noArticles": "Keine Artikel gefunden",
-    "thinContentTitle": "Mehr Nachrichten aus {{place}}?",
-    "thinContentBody": "Fügen Sie {{place}} als Ort hinzu, um mehr Geschichten von dort zu erhalten.",
-    "addLocation": "Ort hinzufügen",
-    "noLocationsTitle": "Nachrichten aus Ihren Orten",
-    "noLocationsBody": "Fügen Sie die Orte hinzu, die Ihnen wichtig sind, um dort lokale Nachrichten zu entdecken.",
-    "sheetTitle": "Quellen verwalten",
-    "close": "Schließen",
-    "topStoriesIntro": "Worüber die Menschen gerade sprechen — sortiert nach dem, was dir wichtig ist",
     "addPlaces": "Orte hinzufügen"
   },
   "forYou": {
@@ -912,6 +902,7 @@
       "slider": "Manuell",
       "migration": "Einrichtung",
       "user": "Sie",
+      "llm": "Automatisch erkannt",
       "unknown": "System"
     },
     "actionLabels": {
@@ -1027,6 +1018,7 @@
   "locations": {
     "title": "Ihre Orte",
     "subtitle": "Orte, die Ihren Feed prägen",
+    "autoDetectDisclaimer": "Mera erkennt Ihre Orte automatisch aus Ihrem Profil. Sie können weitere hinzufügen — aber Mera direkt mitzuteilen funktioniert besser, da es lernt, wie jeder Ort mit Ihnen zusammenhängt, und Ihre Empfehlungen entsprechend anpasst.",
     "empty": "Fügen Sie die Orte hinzu, die Ihnen wichtig sind",
     "add": "Ort hinzufügen",
     "addFirst": "Ort hinzufügen",

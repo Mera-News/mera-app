@@ -801,18 +801,8 @@
   },
   "explore": {
     "title": "탐색",
-    "sources": "소스",
     "scopeWorld": "전 세계",
-    "scopeTopStories": "주요 뉴스",
     "noArticles": "기사를 찾을 수 없습니다",
-    "thinContentTitle": "{{place}} 뉴스를 더 보고 싶으신가요?",
-    "thinContentBody": "{{place}}을(를) 위치로 추가하면 이곳 소식을 더 많이 받아볼 수 있습니다.",
-    "addLocation": "위치 추가",
-    "noLocationsTitle": "내 지역 소식 보기",
-    "noLocationsBody": "관심 있는 지역을 추가하면 그 지역의 뉴스를 여기서 탐색할 수 있습니다.",
-    "sheetTitle": "소스 관리",
-    "close": "닫기",
-    "topStoriesIntro": "지금 사람들이 이야기하고 있는 주제 — 나에게 중요한 것순으로 정렬됨.",
     "addPlaces": "위치 추가"
   },
   "forYou": {
@@ -910,6 +900,7 @@
       "slider": "수동",
       "migration": "초기 설정",
       "user": "회원님",
+      "llm": "자동 감지",
       "unknown": "시스템"
     },
     "actionLabels": {
@@ -1023,6 +1014,7 @@
   "locations": {
     "title": "내 장소",
     "subtitle": "피드에 영향을 주는 위치",
+    "autoDetectDisclaimer": "Mera가 프로필에서 회원님의 위치를 자동으로 감지합니다. 더 많은 장소를 추가할 수 있지만, Mera에 직접 알려주는 것이 더 효과적입니다. 각 위치가 회원님과 어떤 관계가 있는지 학습하고 추천을 최적화하기 때문입니다.",
     "empty": "관심 있는 장소를 추가해 보세요",
     "add": "장소 추가",
     "addFirst": "장소 추가",

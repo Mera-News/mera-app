@@ -1,14 +1,18 @@
 import {
     alpha2ToAlpha3,
     deriveExploreScopes,
+    electPrimaryCountry,
     MAX_SCOPES,
     type ScopeLocationInput,
 } from '../scopes';
 
+// `locations` always arrives pre-sorted weight-desc (the location-service query
+// sorts on weight), so fixtures below are written in that order.
 const loc = (over: Partial<ScopeLocationInput>): ScopeLocationInput => ({
     city: null,
     region: null,
     countryCode: 'US',
+    role: 'interest',
     weight: 0.5,
     ...over,
 });
@@ -27,21 +31,77 @@ describe('alpha2ToAlpha3', () => {
     });
 });
 
+describe('electPrimaryCountry', () => {
+    it('prefers the highest-weight role:"home" row over a heavier non-home row', () => {
+        const primary = electPrimaryCountry(
+            [
+                loc({ city: 'paris', countryCode: 'FR', role: 'interest', weight: 0.95 }),
+                loc({ city: 'mumbai', countryCode: 'IN', role: 'home', weight: 0.6 }),
+                loc({ city: 'delhi', countryCode: 'IN', role: 'home', weight: 0.5 }),
+            ],
+            'US',
+        );
+        expect(primary).toMatchObject({ id: 'country:IND', kind: 'country', countryCodeAlpha2: 'IN' });
+    });
+
+    it('falls back to the highest-weight row overall when no row is role:"home"', () => {
+        const primary = electPrimaryCountry(
+            [
+                loc({ countryCode: 'FR', role: 'travel', weight: 0.9 }),
+                loc({ countryCode: 'JP', role: 'interest', weight: 0.4 }),
+            ],
+            'US',
+        );
+        expect(primary?.id).toBe('country:FRA');
+    });
+
+    it('skips a role:"home" row with an unmappable country and falls through to the next mappable row', () => {
+        const primary = electPrimaryCountry(
+            [
+                loc({ countryCode: 'ZZ', role: 'home', weight: 0.9 }),
+                loc({ countryCode: 'JP', role: 'interest', weight: 0.4 }),
+            ],
+            'US',
+        );
+        expect(primary?.id).toBe('country:JPN');
+    });
+
+    it('falls back to the device country when there are no mappable locations', () => {
+        expect(electPrimaryCountry([], 'gb')?.id).toBe('country:GBR');
+        expect(electPrimaryCountry([loc({ countryCode: 'ZZ', role: 'home' })], 'gb')?.id).toBe('country:GBR');
+    });
+
+    it('returns null when nothing resolves (unreachable in-app — getDeviceCountryAlpha2 never returns null)', () => {
+        expect(electPrimaryCountry([], null)).toBeNull();
+        expect(electPrimaryCountry([loc({ countryCode: 'ZZ' })], 'ZZ')).toBeNull();
+    });
+});
+
 describe('deriveExploreScopes', () => {
-    it('is Top stories + World only with no locations and no device country', () => {
+    it('is World only with no locations and no device country', () => {
         const scopes = deriveExploreScopes([], null);
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'world']);
-        expect(scopes[0]).toMatchObject({ kind: 'top', countryCodeAlpha3: null });
-        expect(scopes[1]).toMatchObject({ kind: 'world', countryCodeAlpha3: null });
+        expect(scopes.map((s) => s.id)).toEqual(['world']);
+        expect(scopes[0]).toMatchObject({ kind: 'world', countryCodeAlpha3: null });
     });
 
-    it('promotes the device country to "home" (2nd chip, ahead of World) when there are no locations', () => {
+    it('leads with the device country when there are no locations, World last', () => {
         const scopes = deriveExploreScopes([], 'US');
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'country:USA', 'world']);
-        expect(scopes[1]).toMatchObject({ kind: 'country', countryCodeAlpha3: 'USA', countryCodeAlpha2: 'US' });
+        expect(scopes.map((s) => s.id)).toEqual(['country:USA', 'world']);
+        expect(scopes[0]).toMatchObject({ kind: 'country', countryCodeAlpha3: 'USA', countryCodeAlpha2: 'US' });
     });
 
-    it('falls back to the highest-weight location country as "home" when the device country is unmappable', () => {
+    it('leads with the role:"home" country, ahead of a heavier non-home one', () => {
+        const scopes = deriveExploreScopes(
+            [
+                loc({ city: 'paris', countryCode: 'FR', role: 'interest', weight: 0.95 }),
+                loc({ city: 'mumbai', countryCode: 'IN', role: 'home', weight: 0.6 }),
+            ],
+            'US',
+        );
+        expect(scopes.map((s) => s.id)).toEqual(['country:IND', 'country:FRA', 'world']);
+    });
+
+    it('leads with the highest-weight location country when none is role:"home"', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ city: 'paris', countryCode: 'FR', weight: 0.95 }),
@@ -49,12 +109,12 @@ describe('deriveExploreScopes', () => {
             ],
             'ZZ', // unmappable
         );
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'country:FRA', 'world', 'country:JPN']);
+        expect(scopes.map((s) => s.id)).toEqual(['country:FRA', 'country:JPN', 'world']);
     });
 
     it('derives only a country scope from a location with a city (city/region chips removed)', () => {
         const scopes = deriveExploreScopes([loc({ city: 'new delhi', region: 'delhi', countryCode: 'IN' })], null);
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'country:IND', 'world']);
+        expect(scopes.map((s) => s.id)).toEqual(['country:IND', 'world']);
         expect(scopes.every((s) => s.kind !== 'city' && s.kind !== 'region')).toBe(true);
         const country = scopes.find((s) => s.kind === 'country')!;
         expect(country).toMatchObject({ label: 'India', icon: 'flag', countryCodeAlpha3: 'IND' });
@@ -62,10 +122,10 @@ describe('deriveExploreScopes', () => {
 
     it('derives only a country scope from a location with a region but no city', () => {
         const scopes = deriveExploreScopes([loc({ region: 'bavaria', countryCode: 'DE' })], null);
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'country:DEU', 'world']);
+        expect(scopes.map((s) => s.id)).toEqual(['country:DEU', 'world']);
     });
 
-    it('dedupes the home country from the location-derived tail (device country matches a location)', () => {
+    it('dedupes the primary country out of the tail (several locations share it)', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ city: 'mumbai', countryCode: 'IN', weight: 0.9 }),
@@ -73,61 +133,80 @@ describe('deriveExploreScopes', () => {
             ],
             'IN',
         );
-        // top + a single shared home/country scope + world (no duplicate from
-        // the 2nd location or from home appearing again in the tail).
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'country:IND', 'world']);
+        // A single shared country scope + world — no duplicate from the 2nd
+        // location, and the primary never appears twice.
+        expect(scopes.map((s) => s.id)).toEqual(['country:IND', 'world']);
     });
 
-    it('preserves weight-desc order for the non-home location tail', () => {
+    it('preserves weight-desc order for the tail after the primary', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ city: 'paris', countryCode: 'FR', weight: 0.95 }),
                 loc({ city: 'tokyo', countryCode: 'JP', weight: 0.4 }),
                 loc({ city: 'berlin', countryCode: 'DE', weight: 0.2 }),
             ],
-            'US', // device country resolves home independently of the locations
+            'US', // no role:'home' row, so FR (heaviest) wins the primary slot
         );
         expect(scopes.map((s) => s.id)).toEqual([
-            'top-stories',
-            'country:USA',
-            'world',
             'country:FRA',
             'country:JPN',
             'country:DEU',
+            'world',
         ]);
     });
 
-    it('caps at MAX_SCOPES, always keeping Top stories/home/World and dropping the lowest-weight tail', () => {
+    it('fits exactly MAX_SCOPES - 1 countries plus World without dropping anything', () => {
         const scopes = deriveExploreScopes(
             [
-                loc({ city: 'a', countryCode: 'GB', weight: 0.9 }),
+                loc({ city: 'a', countryCode: 'GB', role: 'home', weight: 0.9 }),
                 loc({ city: 'b', countryCode: 'FR', weight: 0.8 }),
                 loc({ city: 'c', countryCode: 'DE', weight: 0.7 }),
                 loc({ city: 'd', countryCode: 'IT', weight: 0.6 }),
                 loc({ city: 'e', countryCode: 'ES', weight: 0.5 }),
             ],
-            'US', // home, distinct from every location — takes its own slot
+            'US', // device country is irrelevant once a location resolves
         );
         expect(scopes).toHaveLength(MAX_SCOPES);
-        expect(scopes[0].id).toBe('top-stories');
-        expect(scopes[1].id).toBe('country:USA');
-        expect(scopes[2].id).toBe('world');
-        // Only the 3 highest-weight locations fit after top+home+world; the
-        // lowest-weight ones (IT, ES) are dropped.
         expect(scopes.map((s) => s.id)).toEqual([
-            'top-stories',
-            'country:USA',
-            'world',
             'country:GBR',
             'country:FRA',
             'country:DEU',
+            'country:ITA',
+            'country:ESP',
+            'world',
         ]);
-        expect(scopes.some((s) => s.id === 'country:ITA')).toBe(false);
-        expect(scopes.some((s) => s.id === 'country:ESP')).toBe(false);
+    });
+
+    it('keeps World last even when the country count exceeds MAX_SCOPES', () => {
+        const scopes = deriveExploreScopes(
+            [
+                loc({ countryCode: 'GB', role: 'home', weight: 0.9 }),
+                loc({ countryCode: 'FR', weight: 0.8 }),
+                loc({ countryCode: 'DE', weight: 0.7 }),
+                loc({ countryCode: 'IT', weight: 0.6 }),
+                loc({ countryCode: 'ES', weight: 0.5 }),
+                loc({ countryCode: 'NL', weight: 0.4 }),
+                loc({ countryCode: 'PT', weight: 0.3 }),
+                loc({ countryCode: 'SE', weight: 0.2 }),
+            ],
+            'US',
+        );
+        expect(scopes).toHaveLength(MAX_SCOPES);
+        // World survives the cap because the slice applies to countries only.
+        expect(scopes[scopes.length - 1]).toMatchObject({ id: 'world', kind: 'world' });
+        expect(scopes.map((s) => s.id)).toEqual([
+            'country:GBR',
+            'country:FRA',
+            'country:DEU',
+            'country:ITA',
+            'country:ESP',
+            'world',
+        ]);
+        expect(scopes.some((s) => s.id === 'country:NLD')).toBe(false);
     });
 
     it('skips locations with an unmappable country code', () => {
         const scopes = deriveExploreScopes([loc({ city: 'nowhere', countryCode: 'ZZ' })], null);
-        expect(scopes.map((s) => s.id)).toEqual(['top-stories', 'world']);
+        expect(scopes.map((s) => s.id)).toEqual(['world']);
     });
 });

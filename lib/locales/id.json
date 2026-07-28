@@ -801,18 +801,8 @@
   },
   "explore": {
     "title": "Eksplor",
-    "sources": "Sumber",
     "scopeWorld": "Dunia",
-    "scopeTopStories": "Berita utama",
     "noArticles": "Tidak ada artikel yang ditemukan",
-    "thinContentTitle": "Ingin lebih banyak berita {{place}}?",
-    "thinContentBody": "Tambahkan {{place}} sebagai lokasi untuk mendapatkan lebih banyak cerita dari sini.",
-    "addLocation": "Tambah lokasi",
-    "noLocationsTitle": "Lihat berita dari tempat Anda",
-    "noLocationsBody": "Tambahkan tempat yang Anda pedulikan untuk menjelajahi berita lokal dari sana di sini.",
-    "sheetTitle": "Kelola sumber",
-    "close": "Tutup",
-    "topStoriesIntro": "Apa yang sedang dibicarakan orang — diurutkan sesuai dengan apa yang penting bagi Anda.",
     "addPlaces": "Tambah tempat"
   },
   "forYou": {
@@ -910,6 +900,7 @@
       "slider": "Manual",
       "migration": "Penyiapan",
       "user": "Anda",
+      "llm": "Terdeteksi otomatis",
       "unknown": "Sistem"
     },
     "actionLabels": {
@@ -1023,6 +1014,7 @@
   "locations": {
     "title": "Tempat Anda",
     "subtitle": "Lokasi yang membentuk feed Anda",
+    "autoDetectDisclaimer": "Mera mendeteksi tempat Anda secara otomatis dari profil Anda. Anda dapat menambahkan lebih banyak di sini — tetapi memberitahu Mera secara langsung bekerja lebih baik, karena ia belajar bagaimana setiap tempat berhubungan dengan Anda dan menyesuaikan rekomendasi Anda.",
     "empty": "Tambahkan tempat yang Anda pedulikan",
     "add": "Tambah tempat",
     "addFirst": "Tambah tempat",

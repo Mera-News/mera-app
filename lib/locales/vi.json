@@ -801,18 +801,8 @@
   },
   "explore": {
     "title": "Khám phá",
-    "sources": "Nguồn",
     "scopeWorld": "Thế giới",
-    "scopeTopStories": "Tin nổi bật",
     "noArticles": "Không tìm thấy bài viết nào",
-    "thinContentTitle": "Muốn thêm tin tức về {{place}}?",
-    "thinContentBody": "Thêm {{place}} làm một địa điểm để có thêm tin tức từ đây.",
-    "addLocation": "Thêm địa điểm",
-    "noLocationsTitle": "Xem tin tức từ những nơi của bạn",
-    "noLocationsBody": "Thêm những địa điểm bạn quan tâm để khám phá tin tức địa phương từ đó tại đây.",
-    "sheetTitle": "Quản lý nguồn",
-    "close": "Đóng",
-    "topStoriesIntro": "Mọi người đang nói gì ngay bây giờ — được sắp xếp theo những gì quan trọng với bạn.",
     "addPlaces": "Thêm địa điểm"
   },
   "forYou": {
@@ -910,6 +900,7 @@
       "slider": "Thủ công",
       "migration": "Thiết lập",
       "user": "Bạn",
+      "llm": "Được phát hiện tự động",
       "unknown": "Hệ thống"
     },
     "actionLabels": {
@@ -1023,6 +1014,7 @@
   "locations": {
     "title": "Địa điểm của bạn",
     "subtitle": "Địa điểm định hình bản tin của bạn",
+    "autoDetectDisclaimer": "Mera tự động phát hiện những nơi của bạn từ hồ sơ. Bạn có thể thêm thêm ở đây — nhưng nói cho Mera biết trực tiếp hoạt động tốt hơn, vì nó học cách mỗi nơi liên quan đến bạn và điều chỉnh các đề xuất của bạn tương ứng.",
     "empty": "Thêm những địa điểm bạn quan tâm",
     "add": "Thêm địa điểm",
     "addFirst": "Thêm địa điểm",

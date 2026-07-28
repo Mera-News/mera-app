@@ -161,7 +161,17 @@ function isContinent(segment: string): boolean {
   return CONTINENT_NAMES.has(normalizePlace(segment).toLowerCase());
 }
 
-function resolveCountryCode(segment: string): string | null {
+/**
+ * Curated country-name → alpha-2 lookup (the ~90-entry `COUNTRY_CODES` map).
+ *
+ * Exported because the ongoing geo-derivation sweep
+ * (lib/news-harness/persona-management/geo-derivation.ts) layers a wider
+ * full-ISO resolver on top of it: the curated map stays the *override* (it
+ * carries colloquial forms the ISO tables don't have — "holland" → NL,
+ * "uk" → GB), and it is the ONLY resolver allowed in a free (non
+ * place-anchored) position, because every entry in it is hand-picked.
+ */
+export function resolveCountryCode(segment: string): string | null {
   return COUNTRY_CODES[normalizePlace(segment).toLowerCase()] ?? null;
 }
 
@@ -198,9 +208,16 @@ export function inferLocationRole(statement: string): MigrationLocationRole {
  *     Neighborhood-vs-city ambiguity ("Nieuw-West, Amsterdam") is accepted —
  *     the city ends up one level too specific and the true city lands in
  *     `region` (still a REGION-level geo match); the LLM pass refines later.
+ *
+ * `resolveCountry` is injectable so the ongoing geo-derivation sweep can widen
+ * step 4 to the full ISO name set WITHOUT duplicating the chain walk. It
+ * defaults to the curated map, so the migration's behaviour is unchanged.
+ * A comma chain's terminal segment is the one position where full-ISO matching
+ * is unambiguous — see geo-derivation.ts for why free-position matching is not.
  */
 export function parseLocationFromStatement(
   statement: string,
+  resolveCountry: (segment: string) => string | null = resolveCountryCode,
 ): Omit<MigrationLocationCandidate, 'sourceFactId' | 'role' | 'weight' | 'validUntil'> | null {
   const segments = statement.split(',').map((s) => normalizePlace(s)).filter(Boolean);
   if (segments.length < 2) return null;
@@ -218,7 +235,7 @@ export function parseLocationFromStatement(
   if (isContinent(chain[chain.length - 1])) chain.pop();
   if (chain.length === 0) return null;
 
-  const countryCode = resolveCountryCode(chain[chain.length - 1]);
+  const countryCode = resolveCountry(chain[chain.length - 1]);
   if (!countryCode) return null;
   chain.pop();
 

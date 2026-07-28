@@ -14,6 +14,11 @@ jest.mock('../../database/services/setting-service', () => ({
   getSetting: jest.fn(() => Promise.resolve(null)),
   setSetting: jest.fn(() => Promise.resolve()),
 }));
+// Must be mocked, not merely stubbed: the real module reaches location-service
+// → lib/database → SQLiteAdapter, which cannot initialize under Jest.
+jest.mock('../../database/services/geo-derivation-service', () => ({
+  runGeoDerivationSweep: jest.fn(() => Promise.resolve({ ran: true, added: 0, reweighted: 0 })),
+}));
 jest.mock('../../account-service', () => ({
   AccountService: {
     updateUserConfig: jest.fn(() => Promise.resolve()),
@@ -83,6 +88,7 @@ import {
   setQuestionnaireLevel,
 } from '../../database/services/fact-service';
 import { getSetting, setSetting } from '../../database/services/setting-service';
+import { runGeoDerivationSweep } from '../../database/services/geo-derivation-service';
 import { AccountService } from '../../account-service';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
@@ -181,6 +187,22 @@ describe('handleSaveExtractedFacts', () => {
 
     expect(mockAddFact).toHaveBeenCalledWith('Lives in Amsterdam', undefined, undefined);
     expect(result).toMatchObject({ success: true, factsSaved: 1 });
+  });
+
+  // Without this trigger a newly-stated home country would not surface in
+  // Explore until the next 24h `persona-geo` run.
+  it('kicks off the geo-derivation sweep after saving facts', async () => {
+    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Lives in Amsterdam' } as never);
+
+    await handleSaveExtractedFacts({ extracted_user_information: ['Lives in Amsterdam'] });
+
+    expect(runGeoDerivationSweep).toHaveBeenCalledWith({ force: true });
+  });
+
+  it('does not run the geo sweep when nothing was saved', async () => {
+    await handleSaveExtractedFacts({ extracted_user_information: [] });
+
+    expect(runGeoDerivationSweep).not.toHaveBeenCalled();
   });
 
   it('saves a fact object with questionnaire metadata', async () => {

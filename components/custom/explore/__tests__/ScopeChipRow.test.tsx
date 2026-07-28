@@ -70,11 +70,14 @@ jest.mock('@expo/vector-icons', () => {
 
 import ScopeChipRow from '../ScopeChipRow';
 
+// Mirrors the real order: countries first, World always last. (The city scope
+// is a DEPRECATED kind kept only for already-persisted selection ids; it is
+// included here because ScopeChipRow still has to render one if it appears.)
 const scopes: ExploreScope[] = [
-    { id: 'top-stories', kind: 'top', label: '', icon: 'trending-up', countryCodeAlpha3: null },
-    { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null },
+    { id: 'country:FRA', kind: 'country', label: 'France', icon: 'flag', flagEmoji: '🇫🇷', countryCodeAlpha3: 'FRA' },
     { id: 'country:IND', kind: 'country', label: 'India', icon: 'flag', flagEmoji: '🇮🇳', countryCodeAlpha3: 'IND' },
     { id: 'city:IND:mumbai', kind: 'city', label: 'Mumbai', icon: 'location-city', countryCodeAlpha3: 'IND', city: 'mumbai' },
+    { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null },
 ];
 
 describe('ScopeChipRow', () => {
@@ -82,14 +85,16 @@ describe('ScopeChipRow', () => {
         mockRouterPush.mockClear();
     });
 
-    it('renders a chip per scope (Top stories/World use the translated label keys)', () => {
-        const { getByText } = render(
+    it('renders a chip per scope (World uses the translated label key, the rest their own label)', () => {
+        const { getByText, queryByText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} />,
         );
-        expect(getByText('explore.scopeTopStories')).toBeTruthy();
         expect(getByText('explore.scopeWorld')).toBeTruthy();
+        expect(getByText('France')).toBeTruthy();
         expect(getByText('India')).toBeTruthy();
         expect(getByText('Mumbai')).toBeTruthy();
+        // The Top stories chip was deleted outright (geo-derivation wave).
+        expect(queryByText('explore.scopeTopStories')).toBeNull();
     });
 
     it('fires onSelect with the tapped scope', () => {
@@ -98,7 +103,7 @@ describe('ScopeChipRow', () => {
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} />,
         );
         fireEvent.press(getByText('Mumbai'));
-        expect(onSelect).toHaveBeenCalledWith(scopes[3]);
+        expect(onSelect).toHaveBeenCalledWith(scopes[2]);
     });
 
     it('marks the selected chip via accessibilityState', () => {

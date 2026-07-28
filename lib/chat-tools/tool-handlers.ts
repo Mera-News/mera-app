@@ -11,6 +11,7 @@ import {
   setQuestionnaireLevel,
 } from '../database/services/fact-service';
 import { getSetting } from '../database/services/setting-service';
+import { runGeoDerivationSweep } from '../database/services/geo-derivation-service';
 import { AccountService } from '../account-service';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -111,6 +112,15 @@ export async function handleSaveExtractedFacts(
 
     // Generate topics for all new facts
     triggerTopicGeneration(savedFactEntries);
+
+    // Derive countries from the new facts now instead of waiting up to 24h for
+    // the `persona-geo` task. Called directly (not via AppScheduler.trigger) so
+    // it is independent of that task's frequency gate; `force` bypasses ONLY
+    // the cooldown, never the fact-fingerprint, so repeated saves in one chat
+    // session don't each fire a fresh LLM call. Fire-and-forget.
+    void runGeoDerivationSweep({ force: true }).catch((err: unknown) =>
+      logger.warn('[saveExtractedFacts] Geo derivation failed', { error: String(err) }),
+    );
   }
 
   return {

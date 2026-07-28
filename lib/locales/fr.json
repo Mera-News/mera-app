@@ -802,18 +802,8 @@
   },
   "explore": {
     "title": "Explorer",
-    "sources": "Sources",
     "scopeWorld": "Monde",
-    "scopeTopStories": "À la une",
     "noArticles": "Aucun article trouvé",
-    "thinContentTitle": "Plus d'actualités de {{place}} ?",
-    "thinContentBody": "Ajoutez {{place}} comme lieu pour voir plus d'articles de cet endroit.",
-    "addLocation": "Ajouter un lieu",
-    "noLocationsTitle": "Voir les actualités de vos lieux",
-    "noLocationsBody": "Ajoutez les lieux qui vous intéressent pour explorer leurs actualités locales ici.",
-    "sheetTitle": "Gérer les sources",
-    "close": "Fermer",
-    "topStoriesIntro": "Ce dont parlent les gens en ce moment — trié selon ce qui compte pour vous.",
     "addPlaces": "Ajouter des lieux"
   },
   "forYou": {
@@ -912,6 +902,7 @@
       "slider": "Manuel",
       "migration": "Configuration",
       "user": "Vous",
+      "llm": "Détecté automatiquement",
       "unknown": "Système"
     },
     "actionLabels": {
@@ -1027,6 +1018,7 @@
   "locations": {
     "title": "Vos lieux",
     "subtitle": "Lieux qui façonnent votre fil",
+    "autoDetectDisclaimer": "Mera détecte automatiquement vos lieux à partir de votre profil. Vous pouvez en ajouter d'autres ici — mais informer directement Mera fonctionne mieux, car il apprend comment chaque lieu vous concerne et adapte vos recommandations en conséquence.",
     "empty": "Ajoutez les lieux qui vous tiennent à cœur",
     "add": "Ajouter un lieu",
     "addFirst": "Ajouter un lieu",

@@ -801,18 +801,8 @@
   },
   "explore": {
     "title": "探索",
-    "sources": "ソース",
     "scopeWorld": "世界",
-    "scopeTopStories": "トップニュース",
     "noArticles": "記事が見つかりません",
-    "thinContentTitle": "{{place}}のニュースをもっと見たいですか？",
-    "thinContentBody": "{{place}}を場所として追加すると、ここからもっとニュースが届きます。",
-    "addLocation": "場所を追加",
-    "noLocationsTitle": "あなたの場所のニュースを見る",
-    "noLocationsBody": "気になる場所を追加すると、そこからのローカルニュースをここで探索できます。",
-    "sheetTitle": "ソースを管理",
-    "close": "閉じる",
-    "topStoriesIntro": "今、みんなが話題にしていることをご紹介します — あなたにとって重要なことでソートされています。",
     "addPlaces": "場所を追加"
   },
   "forYou": {
@@ -910,6 +900,7 @@
       "slider": "手動",
       "migration": "セットアップ",
       "user": "あなた",
+      "llm": "自動検出",
       "unknown": "システム"
     },
     "actionLabels": {
@@ -1023,6 +1014,7 @@
   "locations": {
     "title": "あなたの場所",
     "subtitle": "フィードを形作る場所",
+    "autoDetectDisclaimer": "Meraはプロフィールから自動的にあなたの場所を検出します。ここでさらに追加できます。ただし、Meraに直接伝える方がより良く機能します。なぜなら、各場所がどのようにあなたと関連しているかを学び、それに応じてあなたの推奨事項を調整するからです。",
     "empty": "気になる場所を追加してください",
     "add": "場所を追加",
     "addFirst": "場所を追加",

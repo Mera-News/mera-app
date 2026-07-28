@@ -802,18 +802,8 @@
   },
   "explore": {
     "title": "Esplora",
-    "sources": "Fonti",
     "scopeWorld": "Mondo",
-    "scopeTopStories": "Storie principali",
     "noArticles": "Nessun articolo trovato",
-    "thinContentTitle": "Vuoi più notizie su {{place}}?",
-    "thinContentBody": "Aggiungi {{place}} come posizione per ottenere più notizie da qui.",
-    "addLocation": "Aggiungi una posizione",
-    "noLocationsTitle": "Vedi le notizie dai tuoi luoghi",
-    "noLocationsBody": "Aggiungi i luoghi che ti interessano per esplorare qui le notizie locali che li riguardano.",
-    "sheetTitle": "Gestisci fonti",
-    "close": "Chiudi",
-    "topStoriesIntro": "Di cosa stanno parlando ora — ordinato per ciò che conta per te.",
     "addPlaces": "Aggiungi luoghi"
   },
   "forYou": {
@@ -912,6 +902,7 @@
       "slider": "Manuale",
       "migration": "Configurazione",
       "user": "Tu",
+      "llm": "Rilevato automaticamente",
       "unknown": "Sistema"
     },
     "actionLabels": {
@@ -1027,6 +1018,7 @@
   "locations": {
     "title": "I tuoi luoghi",
     "subtitle": "Le posizioni che modellano il tuo feed",
+    "autoDetectDisclaimer": "Mera rileva i tuoi luoghi automaticamente dal tuo profilo. Puoi aggiungerne altri qui — ma dire a Mera direttamente funziona meglio, perché impara come ogni luogo si relaziona a te e sintonizza le tue raccomandazioni di conseguenza.",
     "empty": "Aggiungi i luoghi che ti interessano",
     "add": "Aggiungi un luogo",
     "addFirst": "Aggiungi un luogo",
