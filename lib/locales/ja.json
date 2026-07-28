@@ -963,6 +963,7 @@
     "generateMore": "さらに生成",
     "generatingMore": "生成中…",
     "acceptAll": "これでいい",
+    "saveAll": "すべて保存 ({{count}})",
     "delete": "トピックを削除",
     "undo": "元に戻す",
     "highPriority": "トピックを優先",

@@ -933,6 +933,7 @@
     "generateMore": "Generate more",
     "generatingMore": "Generating…",
     "acceptAll": "Looks good",
+    "saveAll": "Save all ({{count}})",
     "delete": "Remove topic",
     "undo": "Undo",
     "highPriority": "Prioritize topic",

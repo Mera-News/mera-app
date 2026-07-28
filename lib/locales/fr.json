@@ -965,6 +965,7 @@
     "generateMore": "Générer plus",
     "generatingMore": "Génération…",
     "acceptAll": "Ça me va",
+    "saveAll": "Tout enregistrer ({{count}})",
     "delete": "Supprimer le sujet",
     "undo": "Annuler",
     "highPriority": "Prioriser le sujet",

@@ -26,6 +26,7 @@ import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
 import TopicPlanCard from './TopicPlanCard';
+import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
 import type { ChatThreadItem, ChatThreadProps } from './types';
@@ -74,6 +75,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     (item) => item.kind === 'message' && item.message.id !== 'intro',
   );
   const showChips = !hasRealMessage && starterChips.length > 0;
+
+  // Every topic-plan card in the thread — TopicPlanSaveAllRow filters these
+  // against the settled map itself, keeping this component store-free.
+  const topicPlanFactIds = items
+    .filter((item): item is Extract<ChatThreadItem, { kind: 'topic-plan-card' }> =>
+      item.kind === 'topic-plan-card',
+    )
+    .map((item) => item.factId);
 
   // The newest proposal card is the only one that can be pending; older ones
   // render expired. ProposalCard combines this with the store to decide status.
@@ -256,6 +265,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           </View>
         </View>
       )}
+
+      <TopicPlanSaveAllRow factIds={topicPlanFactIds} />
 
       <PromptInput
         ref={promptRef}

@@ -963,6 +963,7 @@
     "generateMore": "สร้างเพิ่มเติม",
     "generatingMore": "กำลังสร้าง…",
     "acceptAll": "ดูดีแล้ว",
+    "saveAll": "บันทึกทั้งหมด ({{count}})",
     "delete": "ลบหัวข้อ",
     "undo": "เลิกทำ",
     "highPriority": "ให้ความสำคัญกับหัวข้อนี้",

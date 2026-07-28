@@ -965,6 +965,7 @@
     "generateMore": "Genera altri",
     "generatingMore": "Generazione in corso…",
     "acceptAll": "Va bene così",
+    "saveAll": "Salva tutto ({{count}})",
     "delete": "Rimuovi argomento",
     "undo": "Annulla",
     "highPriority": "Dai priorità all'argomento",

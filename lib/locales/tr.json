@@ -966,6 +966,7 @@
     "generateMore": "Daha fazla oluştur",
     "generatingMore": "Oluşturuluyor…",
     "acceptAll": "İyi görünüyor",
+    "saveAll": "Tümünü kaydet ({{count}})",
     "delete": "Konuyu kaldır",
     "undo": "Geri al",
     "highPriority": "Konuyu önceliklendir",

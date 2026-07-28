@@ -972,6 +972,7 @@
     "generateMore": "Згенерувати ще",
     "generatingMore": "Генерація…",
     "acceptAll": "Все добре",
+    "saveAll": "Зберегти все ({{count}})",
     "delete": "Видалити тему",
     "undo": "Скасувати",
     "highPriority": "Підвищити пріоритет теми",

@@ -963,6 +963,7 @@
     "generateMore": "Tạo thêm",
     "generatingMore": "Đang tạo…",
     "acceptAll": "Được đấy",
+    "saveAll": "Lưu tất cả ({{count}})",
     "delete": "Xóa chủ đề",
     "undo": "Hoàn tác",
     "highPriority": "Ưu tiên chủ đề",

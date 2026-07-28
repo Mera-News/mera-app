@@ -963,6 +963,7 @@
     "generateMore": "더 생성하기",
     "generatingMore": "생성 중…",
     "acceptAll": "좋습니다",
+    "saveAll": "모두 저장 ({{count}})",
     "delete": "토픽 제거",
     "undo": "실행 취소",
     "highPriority": "토픽 우선순위 지정",

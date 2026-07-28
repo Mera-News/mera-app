@@ -963,6 +963,7 @@
     "generateMore": "Buat lebih banyak",
     "generatingMore": "Membuat…",
     "acceptAll": "Sudah bagus",
+    "saveAll": "Simpan semua ({{count}})",
     "delete": "Hapus topik",
     "undo": "Urungkan",
     "highPriority": "Prioritaskan topik",

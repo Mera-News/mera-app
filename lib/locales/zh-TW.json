@@ -963,6 +963,7 @@
     "generateMore": "產生更多",
     "generatingMore": "產生中…",
     "acceptAll": "看起來不錯",
+    "saveAll": "保存全部 ({{count}})",
     "delete": "移除主題",
     "undo": "復原",
     "highPriority": "優先此主題",

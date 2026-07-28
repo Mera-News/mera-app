@@ -965,6 +965,7 @@
     "generateMore": "Mehr generieren",
     "generatingMore": "Wird generiert…",
     "acceptAll": "Sieht gut aus",
+    "saveAll": "Alle speichern ({{count}})",
     "delete": "Thema entfernen",
     "undo": "Rückgängig machen",
     "highPriority": "Thema priorisieren",

@@ -966,6 +966,7 @@
     "generateMore": "और जनरेट करें",
     "generatingMore": "जनरेट हो रहा है…",
     "acceptAll": "ठीक लग रहा है",
+    "saveAll": "सभी सहेजें ({{count}})",
     "delete": "विषय हटाएं",
     "undo": "पूर्ववत करें",
     "highPriority": "विषय को प्राथमिकता दें",

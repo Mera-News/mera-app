@@ -77,3 +77,26 @@ surrounding `Box`/`View` instead. Text entry into gluestack inputs: tap the fiel
   (an "Open in Mera?" alert appears — press Open).
 - Metro must stay running; it's the `expo run:ios` process. Health check:
   `curl -fsS http://127.0.0.1:8081/status`.
+- **Dev-menu gear FAB steals taps** near the top-right (its hit target is much larger than its
+  26×26 icon — it swallowed the onboarding "Next" button). Disable it once per install: dev menu →
+  scroll down → "Tools button" switch off.
+- **Hardware-keyboard mode hides the software keyboard**, so keyboard-avoidance bugs are invisible
+  and `fill` still works (types via hardware). Toggle with **⌘K** in the Simulator, or set
+  `defaults write com.apple.iphonesimulator DevicePreferences -dict-add <UDID>
+  '{ConnectHardwareKeyboard = 0;}'` and reboot the device. Sending ⌘K from a script needs
+  macOS Accessibility permission for the terminal.
+- **LogBox warning toasts** (dev-only, e.g. the POP_TO_TOP nav warning) sit in front of the app and
+  can make a snapshot look like a black screen. `agent-device react-native dismiss-overlay`, or tap
+  the toast's ✕. The app is usually fine underneath — check `agent-device logs` before assuming a
+  crash.
+- **Compact cards merge their children** into one accessibility element (accessible container), so
+  child rows inside a card can't be addressed individually — target the card root by
+  `id=card-<mongoId>`, then tap child coordinates from `snapshot --raw --json` rects if needed.
+- Don't run file-editing subagents while a human is typing in the simulator — every save triggers a
+  Fast Refresh that stomps their input.
+
+## Editing files with mixed user WIP
+
+You (the user) often have uncommitted edits in the same tree. Stage by explicit path always; when a
+single file mixes harness edits with user WIP (e.g. locale JSONs), stage hunks selectively with
+`git diff -U0 -- <file> | <filter> | git apply --cached --unidiff-zero` rather than `git add <file>`.

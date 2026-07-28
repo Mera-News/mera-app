@@ -965,6 +965,7 @@
     "generateMore": "Gerar mais",
     "generatingMore": "Gerando…",
     "acceptAll": "Está bom",
+    "saveAll": "Salvar tudo ({{count}})",
     "delete": "Remover tópico",
     "undo": "Desfazer",
     "highPriority": "Priorizar tópico",

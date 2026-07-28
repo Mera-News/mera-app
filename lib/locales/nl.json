@@ -965,6 +965,7 @@
     "generateMore": "Meer genereren",
     "generatingMore": "Genereren…",
     "acceptAll": "Ziet er goed uit",
+    "saveAll": "Alles opslaan ({{count}})",
     "delete": "Onderwerp verwijderen",
     "undo": "Ongedaan maken",
     "highPriority": "Onderwerp prioriteren",
