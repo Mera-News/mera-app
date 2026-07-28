@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "cancel": "Annulla",
     "delete": "Elimina",
     "save": "Salva",
@@ -736,6 +737,9 @@
     "empty": "Non hai ancora salvato nessun articolo. Tocca il segnalibro su un articolo per salvarlo per dopo.",
     "note": "Questi articoli sono salvati solo sul tuo dispositivo. Aggiungili o rimuovili in qualsiasi momento — restano qui finché non li elimini.",
     "removedToastMessage": "Rimosso dai salvati",
+    "removedToastTitle": "Rimosso",
+    "saveAction": "Salva",
+    "removeAction": "Rimuovi dai salvati",
     "savedToastMessage": "Articolo salvato per dopo",
     "savedToastTitle": "Salvato",
     "title": "Salvati"
@@ -793,7 +797,6 @@
     "lessLikeThis": "Meno come questo",
     "askMera": "Chiedi a Mera",
     "closeTree": "Chiudi",
-    "treeRoot": "Tutto",
     "treeThanks": "Grazie — annotato.",
     "chatHandoffLike": "Mi è piaciuta questa storia — altre come questa: {{path}}.",
     "chatHandoffLikeNoPath": "Mi è piaciuta questa storia — vorrei vederne altre simili.",
@@ -810,8 +813,10 @@
     "sectionPrefix": "Notizie su:",
     "breaking": "Ultim'ora",
     "showMore": "Mostra altri {{count}}",
-    "storiesCount_one": "{{count}} storia",
-    "storiesCount_other": "{{count}} storie",
+    "articlesCount_one": "{{count}} articolo",
+    "articlesCount_other": "{{count}} articoli",
+    "viewAllArticles_one": "Visualizza tutti {{count}} articolo",
+    "viewAllArticles_other": "Visualizza tutti {{count}} articoli",
     "subTabFeed": "Panoramica",
     "subTabStories": "Storie",
     "subTabSaved": "Salvati"
@@ -822,7 +827,7 @@
     "stage": "Fase",
     "cloudProgress": "Punteggio nel cloud",
     "deviceProgress": "Punteggio sul dispositivo",
-    "processed": "Articoli recuperati",
+    "published": "Pubblicato",
     "analysed": "Analizzati",
     "relevant": "Rilevanti per te",
     "noiseRemoved": "Rumore rimosso",

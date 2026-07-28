@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Beranda",
     "cancel": "Batal",
     "delete": "Hapus",
     "save": "Simpan",
@@ -734,7 +735,10 @@
     "deleteConfirmTitle": "Hapus artikel tersimpan?",
     "empty": "Anda belum menyimpan artikel apa pun. Ketuk ikon penanda pada artikel untuk menyimpannya nanti.",
     "note": "Artikel ini hanya disimpan di perangkat Anda. Tambah atau hapus kapan saja — artikel tetap di sini sampai Anda menghapusnya.",
+    "removedToastTitle": "Dihapus",
     "removedToastMessage": "Dihapus dari tersimpan",
+    "saveAction": "Simpan",
+    "removeAction": "Hapus dari tersimpan",
     "savedToastMessage": "Artikel disimpan untuk nanti",
     "savedToastTitle": "Tersimpan",
     "title": "Tersimpan"
@@ -792,7 +796,6 @@
     "lessLikeThis": "Lebih sedikit seperti ini",
     "askMera": "Tanya Mera",
     "closeTree": "Tutup",
-    "treeRoot": "Semua",
     "treeThanks": "Terima kasih — dicatat.",
     "chatHandoffLike": "Saya suka cerita ini — lebih banyak seperti ini: {{path}}.",
     "chatHandoffLikeNoPath": "Saya suka cerita ini — saya ingin lebih banyak seperti ini.",
@@ -809,7 +812,8 @@
     "sectionPrefix": "Berita tentang:",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
-    "storiesCount_other": "{{count}} cerita",
+    "articlesCount_other": "{{count}} Artikel",
+    "viewAllArticles_other": "Lihat semua {{count}} artikel",
     "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan"
@@ -820,7 +824,7 @@
     "stage": "Tahap",
     "cloudProgress": "Penilaian cloud",
     "deviceProgress": "Penilaian di perangkat",
-    "processed": "Artikel diambil",
+    "published": "Dipublikasikan",
     "analysed": "Dianalisis",
     "relevant": "Relevan untuk Anda",
     "noiseRemoved": "Noise dihapus",

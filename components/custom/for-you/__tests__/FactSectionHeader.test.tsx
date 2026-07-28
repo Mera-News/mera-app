@@ -52,11 +52,11 @@ import FactSectionHeader from '../FactSectionHeader';
 describe('FactSectionHeader', () => {
     // The "+N new" badge was REMOVED (owner: not necessary). The section's TOTAL
     // is the durable number, and it doubles as the CTA into the full panel.
-    it('renders the total as the "N stories" pill', () => {
+    it('renders the total as the "N Articles" pill', () => {
         const { getByText } = render(
             <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(getByText('forYou.storiesCount')).toBeTruthy();
+        expect(getByText('forYou.articlesCount')).toBeTruthy();
     });
 
     it('no longer renders a "+N new" badge', () => {
@@ -72,7 +72,7 @@ describe('FactSectionHeader', () => {
         const { getByTestId } = render(
             <FactSectionHeader title="Elections" eventType={null} total={5} onPress={onPress} />,
         );
-        fireEvent.press(getByTestId('dashboard-section-stories-pill'));
+        fireEvent.press(getByTestId('dashboard-section-pill'));
         expect(onPress).toHaveBeenCalled();
     });
 });

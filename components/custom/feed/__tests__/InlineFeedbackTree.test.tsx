@@ -57,8 +57,36 @@ const TREE = {
         { id: 'something_else', labelKey: 'k.se', labelDefault: 'Something else', leaf: { openChat: true } },
       ],
     },
+    {
+      // Mirrors the production "paywall" node: a raw non-empty `children`
+      // array whose only child is gated on `cluster_size_gte` — a condition
+      // InlineFeedbackTree's local context never supplies (buildLocalContext
+      // never sets `clusterSize`). It must render WITHOUT a chevron: tapping
+      // it would otherwise descend into an empty "Thanks — noted." dead end.
+      id: 'gated_branch',
+      labelKey: 'k.gb',
+      labelDefault: 'Gated branch',
+      children: [
+        {
+          id: 'gated_leaf',
+          labelKey: 'k.gl',
+          labelDefault: 'Gated leaf',
+          visibleIf: { cluster_size_gte: 2 },
+          leaf: {},
+        },
+      ],
+    },
   ],
-  likeRoot: [],
+  likeRoot: [
+    {
+      id: 'more_topic',
+      labelKey: 'k.mt',
+      labelDefault: 'More about this topic',
+      children: [
+        { id: 'a_lot_more', labelKey: 'k.alm', labelDefault: 'A lot more', leaf: { actions: [] } },
+      ],
+    },
+  ],
 };
 jest.mock('@/lib/services/feedback-tree-service', () => ({
   getFeedbackTree: jest.fn(async () => TREE),
@@ -180,5 +208,77 @@ describe('InlineFeedbackTree', () => {
       'dislike',
       ['suggestion', 'wrong_topic'],
     );
+  });
+
+  it('shows NO chevron on a branch whose only child is gated out (dead-end affordance)', async () => {
+    const { getByText, UNSAFE_queryAllByProps } = render(
+      <InlineFeedbackTree
+        suggestion={makeSuggestion()}
+        verdict="dislike"
+        onTreePathChanged={jest.fn()}
+        onInvokeMera={jest.fn()}
+        onLeafCommitted={jest.fn()}
+      />,
+    );
+
+    await waitFor(() => getByText('Not a good suggestion'));
+    await waitFor(() => getByText('Gated branch'));
+
+    // `gated_branch` has a raw `children` array (length 1), but its only
+    // child is gated on cluster_size_gte — which this context never
+    // satisfies. Only the REAL branch ('suggestion') gets a chevron; the
+    // gated one must not, or tapping it would descend into an empty panel.
+    // The mocked MaterialIcons (a bare prop-spreading View) matches once as
+    // the composite fiber and once more for each RN View wrapper layer in
+    // between — filter to the host "View" string-type fiber so this counts
+    // rendered chevrons, not incidental fiber depth.
+    const chevrons = UNSAFE_queryAllByProps({ name: 'arrow-forward-ios' }).filter(
+      (node) => typeof node.type === 'string',
+    );
+    expect(chevrons).toHaveLength(1);
+  });
+
+  it('breadcrumb root renders the parent panel title, not a generic "All"', async () => {
+    const dislike = render(
+      <InlineFeedbackTree
+        suggestion={makeSuggestion()}
+        verdict="dislike"
+        onTreePathChanged={jest.fn()}
+        onInvokeMera={jest.fn()}
+        onLeafCommitted={jest.fn()}
+      />,
+    );
+    fireEvent.press(await waitFor(() => dislike.getByText('Not a good suggestion')));
+    expect(await waitFor(() => dislike.getByText('Less like this'))).toBeTruthy();
+    expect(dislike.queryByText('All')).toBeNull();
+
+    const like = render(
+      <InlineFeedbackTree
+        suggestion={makeSuggestion()}
+        verdict="like"
+        onTreePathChanged={jest.fn()}
+        onInvokeMera={jest.fn()}
+        onLeafCommitted={jest.fn()}
+      />,
+    );
+    fireEvent.press(await waitFor(() => like.getByText('More about this topic')));
+    expect(await waitFor(() => like.getByText('More like this'))).toBeTruthy();
+    expect(like.queryByText('All')).toBeNull();
+  });
+
+  it('an explicit rootLabel overrides the verdict-derived default (CardFeedbackSurface passes its own heading)', async () => {
+    const { getByText, queryByText } = render(
+      <InlineFeedbackTree
+        suggestion={makeSuggestion()}
+        verdict="dislike"
+        rootLabel="Custom Heading"
+        onTreePathChanged={jest.fn()}
+        onInvokeMera={jest.fn()}
+        onLeafCommitted={jest.fn()}
+      />,
+    );
+    fireEvent.press(await waitFor(() => getByText('Not a good suggestion')));
+    expect(await waitFor(() => getByText('Custom Heading'))).toBeTruthy();
+    expect(queryByText('Less like this')).toBeNull();
   });
 });

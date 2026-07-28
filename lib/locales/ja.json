@@ -19,7 +19,8 @@
     "never": "なし",
     "yes": "はい",
     "no": "いいえ",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "home": "ホーム"
   },
   "auth": {
     "emailPlaceholder": "メールアドレスを入力してください",
@@ -737,7 +738,10 @@
     "removedToastMessage": "保存済みから削除しました",
     "savedToastMessage": "記事を後で読むために保存しました",
     "savedToastTitle": "保存しました",
-    "title": "保存済み"
+    "title": "保存済み",
+    "removedToastTitle": "削除しました",
+    "saveAction": "保存",
+    "removeAction": "保存済みから削除"
   },
   "subscription": {
     "activating": "サブスクリプションを有効化しています…",
@@ -792,7 +796,6 @@
     "lessLikeThis": "こういう記事を減らす",
     "askMera": "Meraに聞く",
     "closeTree": "閉じる",
-    "treeRoot": "すべて",
     "treeThanks": "ありがとうございます — 記録しました。",
     "chatHandoffLike": "このストーリーが気に入りました — こういうのをもっと: {{path}}。",
     "chatHandoffLikeNoPath": "このストーリーが気に入りました — こういうのをもっと見たいです。",
@@ -809,10 +812,11 @@
     "sectionPrefix": "関連ニュース：",
     "breaking": "速報",
     "showMore": "あと{{count}}件表示",
-    "storiesCount_other": "{{count}}件のストーリー",
     "subTabFeed": "一覧",
     "subTabStories": "ストーリー",
-    "subTabSaved": "保存済み"
+    "subTabSaved": "保存済み",
+    "articlesCount_other": "{{count}}件の記事",
+    "viewAllArticles_other": "全{{count}}件の記事を表示"
   },
   "feedStatus": {
     "title": "フィードの状態",
@@ -820,7 +824,6 @@
     "stage": "段階",
     "cloudProgress": "クラウドでのスコアリング",
     "deviceProgress": "端末でのスコアリング",
-    "processed": "取得した記事",
     "analysed": "分析済み",
     "relevant": "あなたに関連",
     "noiseRemoved": "除外されたおとり",
@@ -829,7 +832,8 @@
     "openA11y": "フィードの状態を開く",
     "close": "閉じる",
     "expandA11y": "フィード状態の詳細を表示",
-    "collapseA11y": "フィード状態の詳細を隠す"
+    "collapseA11y": "フィード状態の詳細を隠す",
+    "published": "公開"
   },
   "trackedStories": {
     "emptyTitle": "まだフォローしているストーリーはありません",

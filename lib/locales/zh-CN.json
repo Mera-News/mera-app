@@ -19,7 +19,8 @@
     "never": "从未",
     "yes": "是",
     "no": "否",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "home": "主页"
   },
   "auth": {
     "emailPlaceholder": "请输入您的电子邮箱地址",
@@ -737,7 +738,10 @@
     "removedToastMessage": "已从收藏中移除",
     "savedToastMessage": "文章已保存以便稍后阅读",
     "savedToastTitle": "已保存",
-    "title": "已保存"
+    "title": "已保存",
+    "removedToastTitle": "已移除",
+    "saveAction": "保存",
+    "removeAction": "从已保存中移除"
   },
   "subscription": {
     "activating": "正在激活你的订阅…",
@@ -792,7 +796,6 @@
     "lessLikeThis": "少看这类",
     "askMera": "问 Mera",
     "closeTree": "关闭",
-    "treeRoot": "全部",
     "treeThanks": "谢谢——已记录。",
     "chatHandoffLike": "我喜欢这篇报道——多看这类：{{path}}。",
     "chatHandoffLikeNoPath": "我喜欢这篇报道——我想多看这类内容。",
@@ -809,10 +812,11 @@
     "sectionPrefix": "关于：",
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
-    "storiesCount_other": "{{count}} 条报道",
     "subTabFeed": "一览",
     "subTabStories": "报道",
-    "subTabSaved": "已保存"
+    "subTabSaved": "已保存",
+    "articlesCount_other": "{{count}} 篇文章",
+    "viewAllArticles_other": "查看全部 {{count}} 篇文章"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -820,7 +824,6 @@
     "stage": "阶段",
     "cloudProgress": "云端评分",
     "deviceProgress": "设备端评分",
-    "processed": "已获取文章",
     "analysed": "已分析",
     "relevant": "与你相关",
     "noiseRemoved": "已过滤干扰",
@@ -829,7 +832,8 @@
     "openA11y": "打开资讯状态",
     "expandA11y": "显示资讯状态详情",
     "collapseA11y": "隐藏资讯状态详情",
-    "close": "关闭"
+    "close": "关闭",
+    "published": "已发布"
   },
   "trackedStories": {
     "emptyTitle": "还没有关注任何报道",

@@ -50,10 +50,6 @@ interface ArticleFeedbackPromptProps {
      *  time via `getNewsClusterForArticle`. */
     track?: FeedbackSubject;
     share?: ShareArticleParams;
-    /** Renders the Mera button in this row. Default true. The suggestion detail
-     *  screen passes `false` — its rationale block hosts the Ask-Mera glyph, and
-     *  two Mera entry points on one screen is what that redesign removed. */
-    showMeraButton?: boolean;
 }
 
 // Primary-orange accent for the three feedback buttons. Dark-locked: these
@@ -94,7 +90,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     save,
     track,
     share,
-    showMeraButton = true,
 }) => {
     const { t } = useTranslation();
     const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -278,29 +273,26 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             ) : null}
 
             <HStack className="items-center justify-evenly px-1 py-3">
-                {/* Mera. Suppressed on the SUGGESTION detail screen, where the
-                    rationale block above now carries the Ask-Mera glyph
-                    ("Mera's voice" — see ArticleSuggestionContainer) and owns the
-                    `card-action-mera` testID. The standalone ARTICLE detail
-                    screen has no rationale block, so it keeps the button here
-                    rather than losing the affordance entirely. */}
-                {showMeraButton ? (
-                    <Pressable
-                        onPress={handleChatPress}
-                        accessibilityRole="button"
-                        accessibilityLabel="Mera"
-                        className="items-center justify-center rounded-full"
-                        style={{
-                            width: BUTTON_SIZE,
-                            height: BUTTON_SIZE,
-                            backgroundColor: 'transparent',
-                            borderWidth: 1.75,
-                            borderColor: PRIMARY,
-                        }}
-                    >
-                        <MeraLogo size={30} />
-                    </Pressable>
-                ) : null}
+                {/* Mera — the single Ask-Mera affordance on this screen. It
+                    briefly moved onto the rationale block above; that was
+                    reverted, so it lives here unconditionally, matching the
+                    card action bar. */}
+                <Pressable
+                    testID="card-action-mera"
+                    onPress={handleChatPress}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('swipeFeed.askMera')}
+                    className="items-center justify-center rounded-full"
+                    style={{
+                        width: BUTTON_SIZE,
+                        height: BUTTON_SIZE,
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.75,
+                        borderColor: PRIMARY,
+                    }}
+                >
+                    <MeraLogo size={30} />
+                </Pressable>
                 {renderButton(
                     <MaterialIcons
                         name="thumb-up"

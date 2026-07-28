@@ -19,7 +19,8 @@
     "never": "कभी नहीं",
     "yes": "हाँ",
     "no": "नहीं",
-    "saving": "सहेजा जा रहा है..."
+    "saving": "सहेजा जा रहा है...",
+    "home": "होम"
   },
   "auth": {
     "emailPlaceholder": "अपना ईमेल पता दर्ज करें",
@@ -736,6 +737,9 @@
     "empty": "आपने अभी तक कोई लेख नहीं सहेजा है। बाद में पढ़ने के लिए किसी लेख पर बुकमार्क टैप करें।",
     "note": "ये लेख सिर्फ़ आपके डिवाइस पर सहेजे जाते हैं। इन्हें कभी भी जोड़ें या हटाएँ — जब तक आप न हटाएँ, ये यहीं रहेंगे।",
     "removedToastMessage": "सहेजे गए से हटाया गया",
+    "removedToastTitle": "हटाया गया",
+    "saveAction": "सहेजें",
+    "removeAction": "सहेजे गए से हटाएँ",
     "savedToastMessage": "लेख बाद के लिए सहेजा गया",
     "savedToastTitle": "सहेजा गया",
     "title": "सहेजे गए"
@@ -793,7 +797,6 @@
     "lessLikeThis": "ऐसी कम स्टोरीज़",
     "askMera": "Mera से पूछें",
     "closeTree": "बंद करें",
-    "treeRoot": "सभी",
     "treeThanks": "धन्यवाद — नोट कर लिया।",
     "chatHandoffLike": "मुझे यह स्टोरी पसंद आई — इस जैसी और: {{path}}।",
     "chatHandoffLikeNoPath": "मुझे यह स्टोरी पसंद आई — मुझे इस जैसी और चाहिए।",
@@ -810,11 +813,13 @@
     "sectionPrefix": "इस बारे में समाचार:",
     "breaking": "ब्रेकिंग",
     "showMore": "{{count}} और दिखाएं",
+    "articlesCount_one": "{{count}} लेख",
+    "articlesCount_other": "{{count}} लेख",
+    "viewAllArticles_one": "सभी {{count}} लेख देखें",
+    "viewAllArticles_other": "सभी {{count}} लेख देखें",
     "subTabFeed": "अवलोकन",
     "subTabStories": "स्टोरीज़",
-    "subTabSaved": "सहेजे गए",
-    "storiesCount_one": "{{count}} स्टोरी",
-    "storiesCount_other": "{{count}} स्टोरीज़"
+    "subTabSaved": "सहेजे गए"
   },
   "feedStatus": {
     "title": "फ़ीड स्थिति",
@@ -822,7 +827,7 @@
     "stage": "चरण",
     "cloudProgress": "क्लाउड स्कोरिंग",
     "deviceProgress": "ऑन-डिवाइस स्कोरिंग",
-    "processed": "लेख प्राप्त हुए",
+    "published": "प्रकाशित",
     "analysed": "विश्लेषित",
     "relevant": "आपके लिए प्रासंगिक",
     "noiseRemoved": "शोर हटाया गया",

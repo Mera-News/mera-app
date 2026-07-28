@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "cancel": "Anuluj",
     "delete": "Usuń",
     "save": "Zapisz",
@@ -738,6 +739,9 @@
     "empty": "Nie masz jeszcze zapisanych artykułów. Dotknij zakładki przy artykule, aby zapisać go na później.",
     "note": "Te artykuły są zapisane tylko na Twoim urządzeniu. Dodawaj lub usuwaj je w dowolnym momencie — pozostaną tutaj, dopóki ich nie usuniesz.",
     "removedToastMessage": "Usunięto z zapisanych",
+    "removedToastTitle": "Usunięto",
+    "saveAction": "Zapisz",
+    "removeAction": "Usuń z zapisanych",
     "savedToastMessage": "Artykuł zapisany na później",
     "savedToastTitle": "Zapisano",
     "title": "Zapisane"
@@ -795,7 +799,6 @@
     "lessLikeThis": "Mniej takich",
     "askMera": "Zapytaj Mera",
     "closeTree": "Zamknij",
-    "treeRoot": "Wszystko",
     "treeThanks": "Dzięki — zanotowane.",
     "chatHandoffLike": "Podobała mi się ta historia — więcej takich: {{path}}.",
     "chatHandoffLikeNoPath": "Podobała mi się ta historia — chciałbym więcej takich.",
@@ -812,13 +815,17 @@
     "sectionPrefix": "Wiadomości o:",
     "breaking": "Pilne",
     "showMore": "Pokaż {{count}} więcej",
+    "articlesCount_one": "{{count}} artykuł",
+    "articlesCount_few": "{{count}} artykuły",
+    "articlesCount_many": "{{count}} artykułów",
+    "articlesCount_other": "{{count}} artykułów",
+    "viewAllArticles_one": "Wyświetl wszystkie {{count}} artykuł",
+    "viewAllArticles_few": "Wyświetl wszystkie {{count}} artykuły",
+    "viewAllArticles_many": "Wyświetl wszystkie {{count}} artykułów",
+    "viewAllArticles_other": "Wyświetl wszystkie {{count}} artykułów",
     "subTabFeed": "Przegląd",
-    "subTabStories": "Historie",
-    "subTabSaved": "Zapisane",
-    "storiesCount_one": "{{count}} historia",
-    "storiesCount_few": "{{count}} historie",
-    "storiesCount_many": "{{count}} historii",
-    "storiesCount_other": "{{count}} historii"
+    "subTabStories": "historie",
+    "subTabSaved": "Zapisane"
   },
   "feedStatus": {
     "title": "Stan kanału",
@@ -826,7 +833,7 @@
     "stage": "Etap",
     "cloudProgress": "Ocenianie w chmurze",
     "deviceProgress": "Ocenianie na urządzeniu",
-    "processed": "Pobrane artykuły",
+    "published": "Opublikowano",
     "analysed": "Przeanalizowane",
     "relevant": "Trafne dla Ciebie",
     "noiseRemoved": "Usunięty szum",

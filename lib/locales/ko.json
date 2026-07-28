@@ -19,7 +19,8 @@
     "never": "없음",
     "yes": "예",
     "no": "아니요",
-    "saving": "저장 중..."
+    "saving": "저장 중...",
+    "home": "홈"
   },
   "auth": {
     "emailPlaceholder": "이메일 주소를 입력하세요",
@@ -737,7 +738,10 @@
     "removedToastMessage": "저장 목록에서 제거됨",
     "savedToastMessage": "나중에 볼 기사로 저장됨",
     "savedToastTitle": "저장됨",
-    "title": "저장됨"
+    "title": "저장됨",
+    "removedToastTitle": "삭제됨",
+    "saveAction": "저장",
+    "removeAction": "저장에서 제거"
   },
   "subscription": {
     "activating": "구독을 활성화하는 중…",
@@ -792,7 +796,6 @@
     "lessLikeThis": "이런 소식 덜 보기",
     "askMera": "Mera에게 묻기",
     "closeTree": "닫기",
-    "treeRoot": "전체",
     "treeThanks": "감사합니다 — 반영했어요.",
     "chatHandoffLike": "이 소식이 마음에 들었어요 — 이런 소식 더 보고 싶어요: {{path}}.",
     "chatHandoffLikeNoPath": "이 소식이 마음에 들었어요 — 이런 소식을 더 보고 싶어요.",
@@ -809,10 +812,11 @@
     "sectionPrefix": "관련 뉴스:",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
-    "storiesCount_other": "{{count}}개 스토리",
     "subTabFeed": "종합",
     "subTabStories": "스토리",
-    "subTabSaved": "저장됨"
+    "subTabSaved": "저장됨",
+    "articlesCount_other": "{{count}}개 기사",
+    "viewAllArticles_other": "{{count}}개 기사 모두 보기"
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -820,7 +824,6 @@
     "stage": "단계",
     "cloudProgress": "클라우드 채점",
     "deviceProgress": "기기 내 점수 계산",
-    "processed": "가져온 기사",
     "analysed": "분석됨",
     "relevant": "나와 관련됨",
     "noiseRemoved": "제거된 디코이",
@@ -829,7 +832,8 @@
     "openA11y": "피드 상태 열기",
     "close": "닫기",
     "expandA11y": "피드 상태 세부 정보 표시",
-    "collapseA11y": "피드 상태 세부 정보 숨기기"
+    "collapseA11y": "피드 상태 세부 정보 숨기기",
+    "published": "게시됨"
   },
   "trackedStories": {
     "emptyTitle": "아직 팔로우한 스토리가 없습니다",

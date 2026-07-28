@@ -42,6 +42,10 @@ export interface InlineFeedbackTreeProps {
   onLeafCommitted?: (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => void;
   /** Stored node-id path to resume when revisiting a card (Back). */
   initialPathIds?: string[];
+  /** Breadcrumb ROOT label — the parent panel's own title (e.g. "More like
+   *  this" / "Less like this"), so the trail matches what the user just saw.
+   *  Defaults to the verdict-derived panel title when omitted. */
+  rootLabel?: string;
 }
 
 /** Builds the on-device gating/resolution context for a suggestion (async). */
@@ -90,6 +94,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   onInvokeMera,
   onLeafCommitted,
   initialPathIds,
+  rootLabel,
 }) => {
   const { t } = useTranslation();
 
@@ -114,7 +119,25 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     root: verdict === 'like' ? 'like' : 'dislike',
     context,
   });
-  const { tree, path, currentChildren, pathIds, descend, goToDepth, restorePath, findNode } = engine;
+  const {
+    tree,
+    path,
+    currentChildren,
+    pathIds,
+    descend,
+    goToDepth,
+    restorePath,
+    findNode,
+    hasVisibleChildren,
+  } = engine;
+
+  // The breadcrumb root: the parent panel's own title, so the trail matches
+  // what the user just saw there — reuses the existing panel-title keys
+  // (no new i18n key) rather than the unexplained generic "All".
+  const defaultRootLabel = t(verdict === 'like' ? 'swipeFeed.moreLikeThis' : 'swipeFeed.lessLikeThis', {
+    defaultValue: verdict === 'like' ? 'More like this' : 'Less like this',
+  }) as string;
+  const resolvedRootLabel = rootLabel ?? defaultRootLabel;
 
   // Selected-leaf styling (an actions/nudge/seenOnly leaf the user tapped).
   const [selectedLeafId, setSelectedLeafId] = useState<string | null>(null);
@@ -125,7 +148,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     restorePath(initialPathIds);
     const lastId = initialPathIds[initialPathIds.length - 1];
     const node = findNode(lastId);
-    if (node && !(node.children && node.children.length > 0)) setSelectedLeafId(lastId);
+    if (node && !hasVisibleChildren(node)) setSelectedLeafId(lastId);
     // Restore once per tree load; navigation thereafter is user-driven.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tree]);
@@ -138,7 +161,10 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   const handleSelect = useCallback(
     (node: FeedbackTreeNode) => {
       const nextIds = [...pathIds, node.id];
-      const isBranch = !!node.children && node.children.length > 0;
+      // A node only counts as a submenu if descending reveals at least one
+      // GATED-visible child — a node whose children are all filtered out by
+      // `evaluateCondition` is effectively terminal (see hasVisibleChildren).
+      const isBranch = hasVisibleChildren(node);
 
       if (isBranch) {
         hapticMedium();
@@ -163,7 +189,16 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       // Terminal (non-openChat) leaf — let the overlay settle + auto-advance.
       onLeafCommitted?.(suggestion, verdict, nextIds);
     },
-    [pathIds, descend, onTreePathChanged, onInvokeMera, onLeafCommitted, suggestion, verdict],
+    [
+      pathIds,
+      hasVisibleChildren,
+      descend,
+      onTreePathChanged,
+      onInvokeMera,
+      onLeafCommitted,
+      suggestion,
+      verdict,
+    ],
   );
 
   const handleCrumb = useCallback(
@@ -180,7 +215,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   if (!tree) return null;
 
   const renderChip = (node: FeedbackTreeNode) => {
-    const isBranch = !!node.children && node.children.length > 0;
+    const isBranch = hasVisibleChildren(node);
     const selected = selectedLeafId === node.id;
     return (
       <Pressable
@@ -224,11 +259,11 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
         <HStack className="flex-wrap items-center" space="xs">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('swipeFeed.treeRoot')}
+            accessibilityLabel={resolvedRootLabel}
             onPress={() => handleCrumb(0)}
           >
             <Text style={{ color: ACCENT, fontSize: 12, fontWeight: '700' }}>
-              {t('swipeFeed.treeRoot')}
+              {resolvedRootLabel}
             </Text>
           </Pressable>
           {breadcrumb.map((crumb, i) => (

@@ -1,7 +1,7 @@
 import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
-import SectionStoriesPill from '@/components/custom/for-you/SectionStoriesPill';
+import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -45,7 +45,7 @@ interface SectionItem {
   row: FactRow;
   /** The section's top-N preview groups, already priority-ordered. */
   preview: FactRowGroup[];
-  /** TOTAL stories in the section (what both "N stories" pills show). */
+  /** TOTAL articles in the section (header pill + closing row). */
   total: number;
 }
 
@@ -174,11 +174,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
               />
             ))}
           </Box>
-          {/* Closing pill — same component, same props as the header's, so the
-              two are identical by construction. */}
-          <Box className="px-3 pb-3 items-end">
-            <SectionStoriesPill total={total} onPress={open} />
-          </Box>
+          {/* Closing row: plain "View all N articles" + chevron in the section
+              title's type style — NOT a second pill. */}
+          <SectionViewAllText total={total} onPress={open} />
         </SectionGradientPanel>
       );
     },

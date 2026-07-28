@@ -27,8 +27,6 @@ import {
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { hapticMedium } from '@/lib/haptics';
-import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -437,21 +435,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         }
     }, [suggestion, isSaved, showSavedToast, t, articleSuggestionId]);
 
-    // Ask Mera — the rationale block's glyph (ArticleSuggestionContainer's
-    // "Mera's voice"). Byte-for-byte the action row's old Mera handler
-    // (ArticleFeedbackPrompt.handleChatPress), which is why that button could be
-    // dropped from the row without losing anything.
-    const handleAskMera = useCallback(() => {
-        if (!suggestion) return;
-        hapticMedium();
-        useFloatingChatStore.getState().expand({
-            kind: 'article-suggestion',
-            articleId: suggestion.articleId,
-            suggestionId: suggestion._id,
-            articleTitle: suggestion.title_en ?? '',
-        });
-    }, [suggestion]);
-
     const handleArticleUrlPress = async (url: string | null | undefined) => {
         if (!url) return;
         if (suggestion) {
@@ -492,7 +475,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         }
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
-                <MaterialIcons name="error-outline" size={48} color="#EF4444" />
+                <MaterialIcons
+                    name="error-outline"
+                    size={48}
+                    color="#EF4444"
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
@@ -512,6 +501,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
                     className="bg-gray-900 rounded-full p-3 shadow-hard-2"
                 >
                     <MaterialIcons
@@ -527,7 +518,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 suggestion={suggestion}
                 variant="screen"
                 read={read}
-                onAskMera={handleAskMera}
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
@@ -546,8 +536,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {suggestion.article_url ? (
                             <VStack space="xs">
                                 <ArticleFeedbackPrompt
-                                    // The rationale block above owns Ask-Mera now.
-                                    showMeraButton={false}
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}

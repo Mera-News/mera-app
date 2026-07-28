@@ -64,7 +64,7 @@ describe('CardActionBar', () => {
     fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
     fireEvent.press(getByLabelText('articleFeedback.dislikeLabel'));
     fireEvent.press(getByLabelText('swipeFeed.askMera'));
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     expect(onLike).toHaveBeenCalledTimes(1);
     expect(onDislike).toHaveBeenCalledTimes(1);
     expect(onAskMera).toHaveBeenCalledTimes(1);
@@ -98,6 +98,18 @@ describe('CardActionBar', () => {
     const { getByTestId } = setup({ verdict: 'dislike' });
     expect(getByTestId('icon-thumbsdown').props.fill).toBe('#EF4444');
     expect(getByTestId('icon-thumbsup').props.fill).toBe('none');
+  });
+
+  // Item F1-1: the label was the constant "Saved" on every card, so a screen
+  // reader could not tell saved from unsaved and it lied on unsaved cards.
+  it('labels the bookmark by STATE: Save when unsaved, Remove when saved', () => {
+    const unsaved = setup({ saved: false });
+    expect(unsaved.queryByLabelText('savedSuggestions.saveAction')).toBeTruthy();
+    expect(unsaved.queryByLabelText('savedSuggestions.removeAction')).toBeNull();
+
+    const saved = setup({ saved: true });
+    expect(saved.queryByLabelText('savedSuggestions.removeAction')).toBeTruthy();
+    expect(saved.queryByLabelText('savedSuggestions.saveAction')).toBeNull();
   });
 
   it('fills the bookmark accent when saved', () => {

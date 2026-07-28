@@ -117,6 +117,7 @@ const story = (o: Record<string, any>) => ({
     status: o.status ?? 'active',
     lastUpdateAt: o.lastUpdateAt ?? null,
     createdAt: o.createdAt ?? new Date(),
+    memberArticleIds: o.memberArticleIds ?? ['a1', 'a2', 'a3'],
     ...o,
 });
 
@@ -130,6 +131,15 @@ describe('TrackedStoriesScreen', () => {
         const { getByText } = render(<TrackedStoriesScreen embedded />);
         expect(getByText('trackedStories.emptyTitle')).toBeTruthy();
         expect(getByText('trackedStories.emptyBody')).toBeTruthy();
+    });
+
+    it('gives the row a composite a11y label: title, unseen count, total, age', () => {
+        mockRows = [story({ id: 's9', llmHeadline: 'Flood update', unseenCount: 2 })];
+        const { getByLabelText } = render(<TrackedStoriesScreen embedded />);
+        const label = getByLabelText(/^Flood update,/).props.accessibilityLabel;
+        expect(label).toContain('Flood update');
+        expect(label).toContain('trackedStories.updatesBadge'); // unseen count
+        expect(label).toContain('trackedStories.articleCount'); // total
     });
 
     it('renders a row with headline, unseen badge and ended pill', () => {
@@ -160,8 +170,10 @@ describe('TrackedStoriesScreen', () => {
     it('untracks after confirming the modal', () => {
         mockRows = [story({ id: 's4', llmHeadline: 'Drop me', unseenCount: 1 })];
         const { getByText, getByLabelText } = render(<TrackedStoriesScreen embedded />);
-        // Long-press the row (labelled by its headline) opens the confirm modal.
-        fireEvent(getByLabelText('Drop me'), 'longPress');
+        // The row's a11y label is now COMPOSITE — headline + unseen badge +
+        // total + age — so a screen-reader user hears the whole card, not just
+        // its title. Match on a prefix regex rather than the bare headline.
+        fireEvent(getByLabelText(/^Drop me,/), 'longPress');
         // Confirm CTA — the only TEXT node reading untrackAction (the trash icon
         // carries it as an a11y label, not text).
         fireEvent.press(getByText('trackedStories.untrackAction'));

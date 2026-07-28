@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Inicio",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "save": "Guardar",
@@ -736,6 +737,9 @@
     "empty": "Aún no has guardado ningún artículo. Toca el marcador de un artículo para guardarlo para más tarde.",
     "note": "Estos artículos se guardan solo en tu dispositivo. Añádelos o quítalos cuando quieras; permanecerán aquí hasta que los elimines.",
     "removedToastMessage": "Quitado de guardados",
+    "removedToastTitle": "Quitado",
+    "saveAction": "Guardar",
+    "removeAction": "Quitar de guardados",
     "savedToastMessage": "Artículo guardado para más tarde",
     "savedToastTitle": "Guardado",
     "title": "Guardados"
@@ -793,7 +797,6 @@
     "lessLikeThis": "Menos como esto",
     "askMera": "Pregúntale a Mera",
     "closeTree": "Cerrar",
-    "treeRoot": "Todo",
     "treeThanks": "Gracias — anotado.",
     "chatHandoffLike": "Me gustó esta historia — más como esta: {{path}}.",
     "chatHandoffLikeNoPath": "Me gustó esta historia — quiero ver más como esta.",
@@ -810,8 +813,10 @@
     "sectionPrefix": "Noticias sobre:",
     "breaking": "Última hora",
     "showMore": "Mostrar {{count}} más",
-    "storiesCount_one": "{{count}} historia",
-    "storiesCount_other": "{{count}} historias",
+    "articlesCount_one": "{{count}} artículo",
+    "articlesCount_other": "{{count}} artículos",
+    "viewAllArticles_one": "Ver todo {{count}} artículo",
+    "viewAllArticles_other": "Ver todos {{count}} artículos",
     "subTabFeed": "Panorama",
     "subTabStories": "Historias",
     "subTabSaved": "Guardados"
@@ -822,7 +827,7 @@
     "stage": "Etapa",
     "cloudProgress": "Puntuación en la nube",
     "deviceProgress": "Puntuación en el dispositivo",
-    "processed": "Artículos obtenidos",
+    "published": "Publicado",
     "analysed": "Analizados",
     "relevant": "Relevantes para ti",
     "noiseRemoved": "Ruido eliminado",

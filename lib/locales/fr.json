@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Accueil",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "save": "Enregistrer",
@@ -736,6 +737,9 @@
     "empty": "Vous n'avez encore enregistré aucun article. Touchez le signet d'un article pour l'enregistrer pour plus tard.",
     "note": "Ces articles sont enregistrés uniquement sur votre appareil. Ajoutez-les ou retirez-les à tout moment — ils restent ici jusqu'à ce que vous les supprimiez.",
     "removedToastMessage": "Retiré des enregistrés",
+    "removedToastTitle": "Retiré",
+    "saveAction": "Enregistrer",
+    "removeAction": "Retirer des enregistrés",
     "savedToastMessage": "Article enregistré pour plus tard",
     "savedToastTitle": "Enregistré",
     "title": "Enregistrés"
@@ -793,7 +797,6 @@
     "lessLikeThis": "Moins comme ceci",
     "askMera": "Demander à Mera",
     "closeTree": "Fermer",
-    "treeRoot": "Tout",
     "treeThanks": "Merci — noté.",
     "chatHandoffLike": "J'ai aimé cette histoire — plus comme ceci : {{path}}.",
     "chatHandoffLikeNoPath": "J'ai aimé cette histoire — j'aimerais en voir plus comme ceci.",
@@ -810,8 +813,10 @@
     "sectionPrefix": "Actualités sur :",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
-    "storiesCount_one": "{{count}} actualité",
-    "storiesCount_other": "{{count}} actualités",
+    "articlesCount_one": "{{count}} article",
+    "articlesCount_other": "{{count}} articles",
+    "viewAllArticles_one": "Afficher l'{{count}} article",
+    "viewAllArticles_other": "Afficher les {{count}} articles",
     "subTabFeed": "Aperçu",
     "subTabStories": "Actualités",
     "subTabSaved": "Enregistrés"
@@ -822,7 +827,7 @@
     "stage": "Étape",
     "cloudProgress": "Évaluation dans le cloud",
     "deviceProgress": "Évaluation sur l'appareil",
-    "processed": "Articles récupérés",
+    "published": "Publié",
     "analysed": "Analysés",
     "relevant": "Pertinents pour vous",
     "noiseRemoved": "Bruit supprimé",

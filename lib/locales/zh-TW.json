@@ -19,7 +19,8 @@
     "never": "從未",
     "yes": "是",
     "no": "否",
-    "saving": "儲存中..."
+    "saving": "儲存中...",
+    "home": "首頁"
   },
   "auth": {
     "emailPlaceholder": "輸入您的電子郵件地址",
@@ -737,7 +738,10 @@
     "removedToastMessage": "已從儲存項目移除",
     "savedToastMessage": "已儲存文章供稍後閱讀",
     "savedToastTitle": "已儲存",
-    "title": "已儲存"
+    "title": "已儲存",
+    "removedToastTitle": "已移除",
+    "saveAction": "儲存",
+    "removeAction": "從已儲存中移除"
   },
   "subscription": {
     "activating": "正在啟用你的訂閱…",
@@ -792,7 +796,6 @@
     "lessLikeThis": "少推薦類似的",
     "askMera": "詢問 Mera",
     "closeTree": "關閉",
-    "treeRoot": "全部",
     "treeThanks": "謝謝——已記錄。",
     "chatHandoffLike": "我喜歡這則報導 — 想看更多類似的：{{path}}。",
     "chatHandoffLikeNoPath": "我喜歡這則報導 — 我想看更多類似的。",
@@ -809,10 +812,11 @@
     "sectionPrefix": "關於：",
     "breaking": "突發",
     "showMore": "顯示更多 {{count}} 則",
-    "storiesCount_other": "{{count}} 則報導",
     "subTabFeed": "一覽",
     "subTabStories": "報導",
-    "subTabSaved": "已儲存"
+    "subTabSaved": "已儲存",
+    "articlesCount_other": "{{count}} 篇文章",
+    "viewAllArticles_other": "查看全部 {{count}} 篇文章"
   },
   "feedStatus": {
     "title": "動態狀態",
@@ -820,7 +824,6 @@
     "stage": "階段",
     "cloudProgress": "雲端評分",
     "deviceProgress": "裝置端評分",
-    "processed": "已擷取文章",
     "analysed": "已分析",
     "relevant": "與你相關",
     "noiseRemoved": "已過濾干擾",
@@ -829,7 +832,8 @@
     "openA11y": "開啟動態狀態",
     "expandA11y": "顯示動態狀態詳情",
     "collapseA11y": "隱藏動態狀態詳情",
-    "close": "關閉"
+    "close": "關閉",
+    "published": "已發佈"
   },
   "trackedStories": {
     "emptyTitle": "還沒有追蹤任何報導",

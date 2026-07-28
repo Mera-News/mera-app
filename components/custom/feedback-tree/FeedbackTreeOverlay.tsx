@@ -70,7 +70,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
 
   // Tree navigation (fetch + root selection + gated descent) lives in the shared
   // engine; the overlay keeps ONLY its dislike-specific chrome state below.
-  const { path, currentChildren, findNode, descend, backtrack } =
+  const { path, currentChildren, findNode, hasVisibleChildren, descend, backtrack } =
     useFeedbackTreeEngine({ active: visible, root: 'dislike', context });
 
   const [browsing, setBrowsing] = useState(false);
@@ -287,7 +287,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
         <Text className="flex-1 text-typography-0" style={{ fontSize: 15, fontWeight: '600' }}>
           {label(node)}
         </Text>
-        {node.children && node.children.length > 0 ? (
+        {hasVisibleChildren(node) ? (
           <MaterialIcons name="arrow-forward-ios" size={14} color="#8a8a8a" />
         ) : null}
       </HStack>

@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "cancel": "İptal",
     "delete": "Sil",
     "save": "Kaydet",
@@ -736,6 +737,9 @@
     "empty": "Henüz hiç makale kaydetmediniz. Bir makaleyi daha sonrası için kaydetmek üzere yer imine dokunun.",
     "note": "Bu makaleler yalnızca cihazınızda kaydedilir. İstediğiniz zaman ekleyin veya kaldırın — siz silene kadar burada kalırlar.",
     "removedToastMessage": "Kayıtlılardan kaldırıldı",
+    "removedToastTitle": "Kaldırıldı",
+    "saveAction": "Kaydet",
+    "removeAction": "Kaydedilenlerden kaldır",
     "savedToastMessage": "Makale daha sonrası için kaydedildi",
     "savedToastTitle": "Kaydedildi",
     "title": "Kaydedilenler"
@@ -793,7 +797,6 @@
     "lessLikeThis": "Bunun gibi daha azı",
     "askMera": "Mera'ya Sor",
     "closeTree": "Kapat",
-    "treeRoot": "Tümü",
     "treeThanks": "Teşekkürler — not edildi.",
     "chatHandoffLike": "Bu haberi beğendim — bunun gibi daha fazlası: {{path}}.",
     "chatHandoffLikeNoPath": "Bu haberi beğendim — bunun gibi daha fazlasını istiyorum.",
@@ -810,11 +813,13 @@
     "sectionPrefix": "Haberler:",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
+    "articlesCount_one": "{{count}} makale",
+    "articlesCount_other": "{{count}} makale",
+    "viewAllArticles_one": "Tüm {{count}} makaleyi görüntüle",
+    "viewAllArticles_other": "Tüm {{count}} makaleyi görüntüle",
     "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
-    "subTabSaved": "Kaydedilenler",
-    "storiesCount_one": "{{count}} haber",
-    "storiesCount_other": "{{count}} haber"
+    "subTabSaved": "Kaydedilenler"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -822,7 +827,7 @@
     "stage": "Aşama",
     "cloudProgress": "Bulut puanlama",
     "deviceProgress": "Cihaz üzerinde puanlama",
-    "processed": "Çekilen makaleler",
+    "published": "Yayınlandı",
     "analysed": "Analiz edildi",
     "relevant": "Senin için alakalı",
     "noiseRemoved": "Kaldırılan gürültü",

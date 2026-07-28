@@ -408,7 +408,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         // connectivity returns (see the retryNonce effect above).
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
-                <MaterialIcons name="wifi-off" size={48} color="#9CA3AF" />
+                <MaterialIcons
+                    name="wifi-off"
+                    size={48}
+                    color="#9CA3AF"
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {t('articleDetail.offlineUnavailable')}
                 </Text>
@@ -422,7 +428,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     if (error || !article) {
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
-                <MaterialIcons name="error-outline" size={48} color="#EF4444" />
+                <MaterialIcons
+                    name="error-outline"
+                    size={48}
+                    color="#EF4444"
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
@@ -442,6 +454,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
                     className="bg-gray-900 rounded-full p-3 shadow-hard-2"
                 >
                     <MaterialIcons

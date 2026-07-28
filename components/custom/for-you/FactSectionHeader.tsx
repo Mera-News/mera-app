@@ -4,7 +4,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import SectionStoriesPill from '@/components/custom/for-you/SectionStoriesPill';
+import SectionArticlesPill from '@/components/custom/for-you/SectionArticlesPill';
 import { eventTypeIcon } from '@/components/custom/for-you/event-type-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
@@ -17,7 +17,7 @@ interface FactSectionHeaderProps {
   title: string;
   /** event_type of the row's top item — drives the icon prefix. */
   eventType: string | null;
-  /** TOTAL stories in this section — rendered as the "N stories" pill on the
+  /** TOTAL articles in this section — rendered as the "N Articles" pill on the
    *  right, which also opens the full fact feed. */
   total: number;
   /** When set, the whole header is tappable and opens the full fact feed. */
@@ -72,15 +72,10 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       <HStack className="items-start" space="sm">
         {icon && <MaterialIcons name={icon} size={20} color={ACCENT} style={{ marginTop: 2 }} />}
         <Box className="flex-1 min-w-0">{titleNode}</Box>
-        {/* Right-aligned pill; the title above wraps to its left. Identical to
-            the one closing the section — same component, same props. */}
-        {canPress && (
-          <SectionStoriesPill
-            total={total}
-            onPress={onPress!}
-            testID="dashboard-section-stories-pill"
-          />
-        )}
+        {/* Right-aligned "N Articles" pill; the title wraps to its left. The
+            section's CLOSING row is plain text, not a second pill — see
+            SectionViewAllText. */}
+        {canPress && <SectionArticlesPill total={total} onPress={onPress!} />}
       </HStack>
     </VStack>
   );

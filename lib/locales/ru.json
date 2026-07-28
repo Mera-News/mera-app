@@ -19,7 +19,8 @@
     "never": "Никогда",
     "yes": "Да",
     "no": "Нет",
-    "saving": "Сохранение..."
+    "saving": "Сохранение...",
+    "home": "Главная"
   },
   "auth": {
     "emailPlaceholder": "Введите адрес электронной почты",
@@ -738,6 +739,9 @@
     "empty": "Вы ещё не сохранили ни одной статьи. Нажмите на закладку у статьи, чтобы сохранить её на потом.",
     "note": "Эти статьи сохранены только на вашем устройстве. Добавляйте или удаляйте их в любое время — они останутся здесь, пока вы их не удалите.",
     "removedToastMessage": "Удалено из сохранённого",
+    "removedToastTitle": "Удалено",
+    "saveAction": "Сохранить",
+    "removeAction": "Удалить из сохранённого",
     "savedToastMessage": "Статья сохранена на потом",
     "savedToastTitle": "Сохранено",
     "title": "Сохранённое"
@@ -795,7 +799,6 @@
     "lessLikeThis": "Меньше похожего на это",
     "askMera": "Спросить Mera",
     "closeTree": "Закрыть",
-    "treeRoot": "Все",
     "treeThanks": "Спасибо — учтено.",
     "chatHandoffLike": "Мне понравилась эта история — хочу больше такого: {{path}}.",
     "chatHandoffLikeNoPath": "Мне понравилась эта история — хочу больше похожего.",
@@ -812,13 +815,17 @@
     "sectionPrefix": "Новости о:",
     "breaking": "Срочно",
     "showMore": "Показать ещё {{count}}",
+    "articlesCount_one": "{{count}} статья",
+    "articlesCount_few": "{{count}} статьи",
+    "articlesCount_many": "{{count}} статей",
+    "articlesCount_other": "{{count}} статьи",
+    "viewAllArticles_one": "Просмотреть все {{count}} статью",
+    "viewAllArticles_few": "Просмотреть все {{count}} статьи",
+    "viewAllArticles_many": "Просмотреть все {{count}} статей",
+    "viewAllArticles_other": "Просмотреть все {{count}} статьи",
     "subTabFeed": "Обзор",
     "subTabStories": "Истории",
-    "subTabSaved": "Сохранённое",
-    "storiesCount_one": "{{count}} история",
-    "storiesCount_few": "{{count}} истории",
-    "storiesCount_many": "{{count}} историй",
-    "storiesCount_other": "{{count}} истории"
+    "subTabSaved": "Сохранённое"
   },
   "feedStatus": {
     "title": "Статус ленты",
@@ -826,7 +833,7 @@
     "stage": "Этап",
     "cloudProgress": "Оценка в облаке",
     "deviceProgress": "Оценка на устройстве",
-    "processed": "Загружено статей",
+    "published": "Опубликовано",
     "analysed": "Проанализировано",
     "relevant": "Актуально для вас",
     "noiseRemoved": "Шум удалён",

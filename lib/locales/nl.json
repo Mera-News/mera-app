@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "yes": "Ja",
     "no": "Nee",
     "cancel": "Annuleren",
@@ -736,6 +737,9 @@
     "empty": "Je hebt nog geen artikelen opgeslagen. Tik op de bladwijzer bij een artikel om het voor later op te slaan.",
     "note": "Deze artikelen worden alleen op je apparaat opgeslagen. Voeg ze op elk moment toe of verwijder ze — ze blijven hier tot je ze verwijdert.",
     "removedToastMessage": "Verwijderd uit opgeslagen",
+    "removedToastTitle": "Verwijderd",
+    "saveAction": "Opslaan",
+    "removeAction": "Verwijderen uit opgeslagen",
     "savedToastMessage": "Artikel opgeslagen voor later",
     "savedToastTitle": "Opgeslagen",
     "title": "Opgeslagen"
@@ -793,7 +797,6 @@
     "lessLikeThis": "Minder zoals dit",
     "askMera": "Vraag het Mera",
     "closeTree": "Sluiten",
-    "treeRoot": "Alles",
     "treeThanks": "Bedankt — genoteerd.",
     "chatHandoffLike": "Ik vond dit verhaal leuk — meer zoals dit: {{path}}.",
     "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk — ik wil graag meer zoals dit.",
@@ -810,11 +813,13 @@
     "sectionPrefix": "Nieuws over:",
     "breaking": "Breaking",
     "showMore": "Toon {{count}} meer",
+    "articlesCount_one": "{{count}} artikel",
+    "articlesCount_other": "{{count}} artikelen",
+    "viewAllArticles_one": "Bekijk alle {{count}} artikel",
+    "viewAllArticles_other": "Bekijk alle {{count}} artikelen",
     "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
-    "subTabSaved": "Opgeslagen",
-    "storiesCount_one": "{{count}} verhaal",
-    "storiesCount_other": "{{count}} verhalen"
+    "subTabSaved": "Opgeslagen"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -822,7 +827,7 @@
     "stage": "Fase",
     "cloudProgress": "Cloudscoring",
     "deviceProgress": "Scoren op apparaat",
-    "processed": "Opgehaalde artikelen",
+    "published": "Gepubliceerd",
     "analysed": "Geanalyseerd",
     "relevant": "Relevant voor jou",
     "noiseRemoved": "Ruis verwijderd",

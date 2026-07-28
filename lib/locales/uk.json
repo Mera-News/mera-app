@@ -19,7 +19,8 @@
     "never": "Ніколи",
     "yes": "Так",
     "no": "Ні",
-    "saving": "Збереження..."
+    "saving": "Збереження...",
+    "home": "Домівка"
   },
   "auth": {
     "emailPlaceholder": "Введіть вашу електронну адресу",
@@ -738,6 +739,9 @@
     "empty": "Ви ще не зберегли жодної статті. Натисніть закладку на статті, щоб зберегти її на потім.",
     "note": "Ці статті зберігаються лише на вашому пристрої. Додавайте чи вилучайте їх будь-коли — вони залишатимуться тут, доки ви їх не видалите.",
     "removedToastMessage": "Вилучено зі збережених",
+    "removedToastTitle": "Вилучено",
+    "saveAction": "Зберегти",
+    "removeAction": "Вилучити зі збережених",
     "savedToastMessage": "Статтю збережено на потім",
     "savedToastTitle": "Збережено",
     "title": "Збережені"
@@ -795,7 +799,6 @@
     "lessLikeThis": "Менше такого",
     "askMera": "Запитати Mera",
     "closeTree": "Закрити",
-    "treeRoot": "Усі",
     "treeThanks": "Дякую — враховано.",
     "chatHandoffLike": "Мені сподобалась ця новина — більше такого: {{path}}.",
     "chatHandoffLikeNoPath": "Мені сподобалась ця новина — хочу більше такого.",
@@ -812,13 +815,17 @@
     "sectionPrefix": "Новини про:",
     "breaking": "Термінові новини",
     "showMore": "Показати ще {{count}}",
+    "articlesCount_one": "{{count}} стаття",
+    "articlesCount_few": "{{count}} статті",
+    "articlesCount_many": "{{count}} статей",
+    "articlesCount_other": "{{count}} статей",
+    "viewAllArticles_one": "Переглянути усі {{count}} статтю",
+    "viewAllArticles_few": "Переглянути усі {{count}} статті",
+    "viewAllArticles_many": "Переглянути усі {{count}} статей",
+    "viewAllArticles_other": "Переглянути усі {{count}} статей",
     "subTabFeed": "Огляд",
     "subTabStories": "Історії",
-    "subTabSaved": "Збережене",
-    "storiesCount_one": "{{count}} історія",
-    "storiesCount_few": "{{count}} історії",
-    "storiesCount_many": "{{count}} історій",
-    "storiesCount_other": "{{count}} історій"
+    "subTabSaved": "Збережене"
   },
   "feedStatus": {
     "title": "Стан стрічки",
@@ -826,7 +833,7 @@
     "stage": "Етап",
     "cloudProgress": "Хмарна оцінка",
     "deviceProgress": "Оцінка на пристрої",
-    "processed": "Отримано статей",
+    "published": "Опубліковано",
     "analysed": "Проаналізовано",
     "relevant": "Релевантно для вас",
     "noiseRemoved": "Шум прибрано",

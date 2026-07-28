@@ -188,7 +188,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 accessibilityRole="button"
                 className="flex-row px-4 py-3 border-b border-gray-800"
             >
-                <MaterialIcons name={icon} size={22} color={ACCENT} style={{ marginTop: 2 }} />
+                <MaterialIcons
+                    name={icon}
+                    size={22}
+                    color={ACCENT}
+                    style={{ marginTop: 2 }}
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <VStack className="flex-1 ml-3" space="xs">
                     <HStack className="items-start justify-between">
                         <Text className="text-white font-semibold flex-1" numberOfLines={2}>

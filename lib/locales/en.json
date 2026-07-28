@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "yes": "Yes",
     "no": "No",
     "cancel": "Cancel",
@@ -253,7 +254,6 @@
     "lessLikeThis": "Less like this",
     "askMera": "Ask Mera",
     "closeTree": "Close",
-    "treeRoot": "All",
     "treeThanks": "Thanks — noted.",
     "chatHandoffLike": "I liked this story — more like this: {{path}}.",
     "chatHandoffLikeNoPath": "I liked this story — I'd like more like this.",
@@ -271,8 +271,10 @@
     "sectionPrefix": "News about:",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
-    "storiesCount_one": "{{count}} story",
-    "storiesCount_other": "{{count}} stories",
+    "articlesCount_one": "{{count}} Article",
+    "articlesCount_other": "{{count}} Articles",
+    "viewAllArticles_one": "View all {{count}} article",
+    "viewAllArticles_other": "View all {{count}} articles",
     "subTabFeed": "Overview",
     "subTabStories": "Stories",
     "subTabSaved": "Saved"
@@ -283,7 +285,7 @@
     "stage": "Stage",
     "cloudProgress": "Cloud scoring",
     "deviceProgress": "On-device scoring",
-    "processed": "Articles pulled",
+    "published": "Published",
     "analysed": "Analysed",
     "relevant": "Relevant to you",
     "noiseRemoved": "Noise removed",

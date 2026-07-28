@@ -3,6 +3,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
     useForYouAsyncJobPhase,
     useForYouAsyncJobProcessedCount,
@@ -12,6 +13,7 @@ import {
     useForYouScoringError,
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
+import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +21,8 @@ import { useTranslation } from 'react-i18next';
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 export interface FeedStatusDetailsProps {
-    /** Articles pulled this cycle (store `articleCount`). */
+    /** Articles published across the app's sources this cycle (store `articleCount`) —
+     *  NOT a device download count. Rendered against `feedStatus.published`. */
     readonly processedCount: number;
     /** Scored + in-window rows. */
     readonly analysedCount: number;
@@ -64,6 +67,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
 }) => {
     const { t } = useTranslation();
     const tAny = t as any;
+    const appLanguage = useAppLanguage();
 
     const syncStatusMessage = useForYouSyncStatusMessage();
     const asyncJobPhase = useForYouAsyncJobPhase();
@@ -120,13 +124,13 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                     {showCloudProgress && (
                         <StatRow
                             label={t('feedStatus.cloudProgress')}
-                            value={`${asyncJobProcessedCount} / ${asyncJobTotalCount}`}
+                            value={`${formatCount(asyncJobProcessedCount, appLanguage)} / ${formatCount(asyncJobTotalCount, appLanguage)}`}
                         />
                     )}
                     {showDeviceProgress && (
                         <StatRow
                             label={t('feedStatus.deviceProgress')}
-                            value={`${deviceProcessedCount} / ${deviceTotalCount}`}
+                            value={`${formatCount(deviceProcessedCount, appLanguage)} / ${formatCount(deviceTotalCount, appLanguage)}`}
                         />
                     )}
                 </VStack>
@@ -136,11 +140,11 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
 
             {/* Counts */}
             <VStack>
-                <StatRow label={t('feedStatus.processed')} value={processedCount} />
-                <StatRow label={t('feedStatus.analysed')} value={analysedCount} />
-                <StatRow label={t('feedStatus.relevant')} value={relevantCount} />
+                <StatRow label={t('feedStatus.published')} value={formatCount(processedCount, appLanguage)} />
+                <StatRow label={t('feedStatus.analysed')} value={formatCount(analysedCount, appLanguage)} />
+                <StatRow label={t('feedStatus.relevant')} value={formatCount(relevantCount, appLanguage)} />
                 {showNoise && (
-                    <StatRow label={t('feedStatus.noiseRemoved')} value={noiseRemovedCount} />
+                    <StatRow label={t('feedStatus.noiseRemoved')} value={formatCount(noiseRemovedCount, appLanguage)} />
                 )}
             </VStack>
 

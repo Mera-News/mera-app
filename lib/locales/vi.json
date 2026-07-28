@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Trang chủ",
     "cancel": "Hủy",
     "delete": "Xóa",
     "save": "Lưu",
@@ -734,7 +735,10 @@
     "deleteConfirmTitle": "Xóa bài viết đã lưu?",
     "empty": "Bạn chưa lưu bài viết nào. Chạm vào biểu tượng dấu trang trên một bài viết để lưu lại xem sau.",
     "note": "Những bài viết này chỉ được lưu trên thiết bị của bạn. Thêm hoặc xóa bất cứ lúc nào — chúng sẽ ở đây cho đến khi bạn xóa.",
+    "removedToastTitle": "Đã xóa",
     "removedToastMessage": "Đã xóa khỏi mục đã lưu",
+    "saveAction": "Lưu",
+    "removeAction": "Xóa khỏi mục đã lưu",
     "savedToastMessage": "Đã lưu bài viết để xem sau",
     "savedToastTitle": "Đã lưu",
     "title": "Đã lưu"
@@ -792,7 +796,6 @@
     "lessLikeThis": "Bớt như thế này",
     "askMera": "Hỏi Mera",
     "closeTree": "Đóng",
-    "treeRoot": "Tất cả",
     "treeThanks": "Cảm ơn — đã ghi nhận.",
     "chatHandoffLike": "Tôi thích câu chuyện này — thêm nội dung như: {{path}}.",
     "chatHandoffLikeNoPath": "Tôi thích câu chuyện này — tôi muốn xem thêm nội dung như thế này.",
@@ -809,7 +812,8 @@
     "sectionPrefix": "Tin tức về:",
     "breaking": "Nóng",
     "showMore": "Hiện thêm {{count}}",
-    "storiesCount_other": "{{count}} bài viết",
+    "articlesCount_other": "{{count}} Bài viết",
+    "viewAllArticles_other": "Xem tất cả {{count}} bài viết",
     "subTabFeed": "Tổng quan",
     "subTabStories": "Câu chuyện",
     "subTabSaved": "Đã lưu"
@@ -820,7 +824,7 @@
     "stage": "Giai đoạn",
     "cloudProgress": "Chấm điểm trên đám mây",
     "deviceProgress": "Chấm điểm trên thiết bị",
-    "processed": "Bài viết đã lấy",
+    "published": "Đã xuất bản",
     "analysed": "Đã phân tích",
     "relevant": "Liên quan đến bạn",
     "noiseRemoved": "Đã lọc nhiễu",

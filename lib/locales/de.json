@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Startseite",
     "yes": "Ja",
     "no": "Nein",
     "cancel": "Abbrechen",
@@ -736,6 +737,9 @@
     "empty": "Du hast noch keine Artikel gespeichert. Tippe auf das Lesezeichen bei einem Artikel, um ihn für später zu speichern.",
     "note": "Diese Artikel werden nur auf deinem Gerät gespeichert. Füge sie jederzeit hinzu oder entferne sie – sie bleiben hier, bis du sie löschst.",
     "removedToastMessage": "Aus Gespeichertem entfernt",
+    "removedToastTitle": "Entfernt",
+    "saveAction": "Speichern",
+    "removeAction": "Aus Gespeichertem entfernen",
     "savedToastMessage": "Artikel für später gespeichert",
     "savedToastTitle": "Gespeichert",
     "title": "Gespeichert"
@@ -793,7 +797,6 @@
     "lessLikeThis": "Weniger davon",
     "askMera": "Mera fragen",
     "closeTree": "Schließen",
-    "treeRoot": "Alle",
     "treeThanks": "Danke — notiert.",
     "chatHandoffLike": "Mir hat diese Geschichte gefallen — mehr davon: {{path}}.",
     "chatHandoffLikeNoPath": "Mir hat diese Geschichte gefallen — ich hätte gerne mehr davon.",
@@ -810,8 +813,10 @@
     "sectionPrefix": "Nachrichten zu:",
     "breaking": "Eilmeldung",
     "showMore": "{{count}} weitere anzeigen",
-    "storiesCount_one": "{{count}} Geschichte",
-    "storiesCount_other": "{{count}} Geschichten",
+    "articlesCount_one": "{{count}} Artikel",
+    "articlesCount_other": "{{count}} Artikel",
+    "viewAllArticles_one": "Alle {{count}} Artikel anzeigen",
+    "viewAllArticles_other": "Alle {{count}} Artikel anzeigen",
     "subTabFeed": "Übersicht",
     "subTabStories": "Geschichten",
     "subTabSaved": "Gespeichert"
@@ -822,7 +827,7 @@
     "stage": "Phase",
     "cloudProgress": "Cloud-Bewertung",
     "deviceProgress": "Bewertung auf dem Gerät",
-    "processed": "Abgerufene Artikel",
+    "published": "Veröffentlicht",
     "analysed": "Analysiert",
     "relevant": "Relevant für Sie",
     "noiseRemoved": "Rauschen entfernt",

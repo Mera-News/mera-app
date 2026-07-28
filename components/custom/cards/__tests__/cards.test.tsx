@@ -350,7 +350,7 @@ describe('ArticleSuggestionCard', () => {
     const { getByLabelText } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} />,
     );
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveSuggestion).toHaveBeenCalled());
   });
 
@@ -492,7 +492,7 @@ describe('ArticleActionsRow', () => {
     const { getByLabelText } = render(
       <ArticleActionsRow subject={subject} article={article} />,
     );
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveStandaloneArticle).toHaveBeenCalled());
     expect(mockSaveSuggestion).not.toHaveBeenCalled();
   });
@@ -509,7 +509,7 @@ describe('ArticleActionsRow', () => {
     const { getByLabelText } = render(
       <ArticleActionsRow subject={suggestionSubject} suggestion={s} />,
     );
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveSuggestion).toHaveBeenCalledWith(s));
     expect(mockSaveStandaloneArticle).not.toHaveBeenCalled();
   });
@@ -536,7 +536,7 @@ describe('CompactActionsSheet', () => {
     expect(getByText('Mera')).toBeTruthy();
     expect(getByText('articleFeedback.likeLabel')).toBeTruthy();
     expect(getByText('articleFeedback.dislikeLabel')).toBeTruthy();
-    expect(getByText('savedSuggestions.savedToastTitle')).toBeTruthy();
+    expect(getByText('savedSuggestions.saveAction')).toBeTruthy();
     expect(getByText('articleDetail.share')).toBeTruthy();
   });
 

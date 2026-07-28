@@ -15,7 +15,8 @@ import FeedStatusDetails from './FeedStatusDetails';
 interface FeedStatusSheetProps {
     readonly isOpen: boolean;
     readonly onClose: () => void;
-    /** Articles pulled this cycle (store `articleCount`). */
+    /** Articles published across the app's sources this cycle (store `articleCount`) —
+     *  NOT a device download count. */
     readonly processedCount: number;
     /** Scored + in-window rows. */
     readonly analysedCount: number;

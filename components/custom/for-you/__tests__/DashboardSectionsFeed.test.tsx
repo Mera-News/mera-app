@@ -90,13 +90,13 @@ jest.mock('@/components/custom/for-you/FactSectionHeader', () => {
         ),
     };
 });
-jest.mock('@/components/custom/for-you/SectionStoriesPill', () => {
+jest.mock('@/components/custom/for-you/SectionViewAllText', () => {
     const { Text, Pressable } = require('react-native');
     return {
         __esModule: true,
         default: ({ total, onPress }: any) => (
-            <Pressable accessibilityLabel="pill" onPress={onPress}>
-                <Text>{`pill:${total}`}</Text>
+            <Pressable accessibilityLabel="viewall" onPress={onPress}>
+                <Text>{`viewall:${total}`}</Text>
             </Pressable>
         ),
     };
@@ -177,7 +177,7 @@ describe('DashboardSectionsFeed', () => {
         mockRouterPush.mockClear();
     });
 
-    it('renders one section: header + 3 preview cards + closing pill', () => {
+    it('renders one section: header + 3 preview cards + closing view-all row', () => {
         const groups = [
             makeGroup('g1', 5000, 5000),
             makeGroup('g2', 4000, 4000),
@@ -188,21 +188,21 @@ describe('DashboardSectionsFeed', () => {
         const { getAllByText, getByText, getByLabelText } = renderFeed([makeRow('f1', groups)]);
         expect(getByLabelText('header:Statement f1')).toBeTruthy();
         expect(getAllByText(/^card:/)).toHaveLength(3);
-        // Both places show the section TOTAL, not the preview count.
+        // Header pill and closing row both show the section TOTAL.
         expect(getByText('total:5')).toBeTruthy();
-        expect(getByText('pill:5')).toBeTruthy();
+        expect(getByText('viewall:5')).toBeTruthy();
     });
 
     // Previously the footer only rendered when a section had MORE than 3
-    // stories, so a one-story section looked broken next to its siblings. The
-    // pill is now unconditional — the two placements are identical by design.
-    it('renders the closing pill even for a section that fits in the preview', () => {
+    // articles, so a one-article section looked broken next to its siblings.
+    // The closing row is now unconditional.
+    it('renders the closing row even for a section that fits in the preview', () => {
         const { getAllByText, getByText, getByLabelText } = renderFeed([
             makeRow('f1', [makeGroup('g1', 1000, 1000), makeGroup('g2', 900, 900)]),
         ]);
         expect(getAllByText(/^card:/)).toHaveLength(2);
-        expect(getByLabelText('pill')).toBeTruthy();
-        expect(getByText('pill:2')).toBeTruthy();
+        expect(getByLabelText('viewall')).toBeTruthy();
+        expect(getByText('viewall:2')).toBeTruthy();
     });
 
     it('navigates to the fact feed when the header is pressed', () => {
@@ -214,9 +214,9 @@ describe('DashboardSectionsFeed', () => {
         });
     });
 
-    it('navigates to the fact feed when the closing pill is pressed', () => {
+    it('navigates to the fact feed when the closing row is pressed', () => {
         const { getByLabelText } = renderFeed([makeRow('f1', [makeGroup('g1', 1000, 1000)])]);
-        fireEvent.press(getByLabelText('pill'));
+        fireEvent.press(getByLabelText('viewall'));
         expect(mockRouterPush).toHaveBeenCalledWith({
             pathname: '/logged-in/fact-feed',
             params: { factId: 'f1', statement: 'Statement f1' },

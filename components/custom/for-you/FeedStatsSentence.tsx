@@ -5,6 +5,8 @@
 
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { formatCount } from '@/lib/utils/format-count';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +18,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   className = 'text-typography-400 leading-6',
 }) => {
   const { t } = useTranslation();
+  const appLanguage = useAppLanguage();
   const { articleCount, analysedCount, relevantCount } = useFeedCounts();
 
   const articleWord =
@@ -25,14 +28,14 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
     <Text size="sm" className={className}>
       {analysedCount === 0
         ? t('feed.analysedArticlesPending', {
-            processed: articleCount,
+            processed: formatCount(articleCount, appLanguage),
             articleWord,
           })
         : t('feed.analysedArticles', {
-            processed: articleCount,
+            processed: formatCount(articleCount, appLanguage),
             articleWord,
-            analysed: analysedCount,
-            impactful: relevantCount,
+            analysed: formatCount(analysedCount, appLanguage),
+            impactful: formatCount(relevantCount, appLanguage),
           })}
     </Text>
   );
