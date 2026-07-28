@@ -813,8 +813,6 @@
     "sectionPrefix": "Nieuws over:",
     "breaking": "Breaking",
     "showMore": "Toon {{count}} meer",
-    "articlesCount_one": "{{count}} artikel",
-    "articlesCount_other": "{{count}} artikelen",
     "viewAllArticles_one": "Bekijk alle {{count}} artikel",
     "viewAllArticles_other": "Bekijk alle {{count}} artikelen",
     "subTabFeed": "Overzicht",

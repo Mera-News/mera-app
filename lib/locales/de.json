@@ -813,8 +813,6 @@
     "sectionPrefix": "Nachrichten zu:",
     "breaking": "Eilmeldung",
     "showMore": "{{count}} weitere anzeigen",
-    "articlesCount_one": "{{count}} Artikel",
-    "articlesCount_other": "{{count}} Artikel",
     "viewAllArticles_one": "Alle {{count}} Artikel anzeigen",
     "viewAllArticles_other": "Alle {{count}} Artikel anzeigen",
     "subTabFeed": "Übersicht",

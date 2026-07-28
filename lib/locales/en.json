@@ -271,8 +271,6 @@
     "sectionPrefix": "News about:",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
-    "articlesCount_one": "{{count}} Article",
-    "articlesCount_other": "{{count}} Articles",
     "viewAllArticles_one": "View all {{count}} article",
     "viewAllArticles_other": "View all {{count}} articles",
     "subTabFeed": "Overview",

@@ -815,7 +815,6 @@
     "subTabFeed": "一覽",
     "subTabStories": "報導",
     "subTabSaved": "已儲存",
-    "articlesCount_other": "{{count}} 篇文章",
     "viewAllArticles_other": "查看全部 {{count}} 篇文章"
   },
   "feedStatus": {

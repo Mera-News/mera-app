@@ -812,7 +812,6 @@
     "sectionPrefix": "ข่าวเกี่ยวกับ:",
     "breaking": "ข่าวด่วน",
     "showMore": "แสดงอีก {{count}} รายการ",
-    "articlesCount_other": "{{count}} บทความ",
     "viewAllArticles_other": "ดูบทความทั้งหมด {{count}} บทความ",
     "subTabFeed": "ภาพรวม",
     "subTabStories": "เรื่องราว",

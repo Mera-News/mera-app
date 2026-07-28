@@ -815,7 +815,6 @@
     "subTabFeed": "종합",
     "subTabStories": "스토리",
     "subTabSaved": "저장됨",
-    "articlesCount_other": "{{count}}개 기사",
     "viewAllArticles_other": "{{count}}개 기사 모두 보기"
   },
   "feedStatus": {

@@ -50,13 +50,25 @@ jest.mock('@/components/custom/for-you/event-type-icons', () => ({
 import FactSectionHeader from '../FactSectionHeader';
 
 describe('FactSectionHeader', () => {
-    // The "+N new" badge was REMOVED (owner: not necessary). The section's TOTAL
-    // is the durable number, and it doubles as the CTA into the full panel.
-    it('renders the total as the "N Articles" pill', () => {
-        const { getByText } = render(
+    // The header's open affordance is now an ICON-ONLY round arrow — the count
+    // moved to the section's closing "View all N articles" row so it isn't shown
+    // twice. Icon-only means the label is the only thing VoiceOver can announce,
+    // so it must still name the destination AND the count.
+    it('renders a round open button labelled with the destination and count', () => {
+        const { getByTestId } = render(
             <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(getByText('forYou.articlesCount')).toBeTruthy();
+        const btn = getByTestId('dashboard-section-open');
+        expect(btn.props.accessibilityLabel).toBe('forYou.viewAllArticles');
+        expect(btn.props.accessibilityRole).toBe('button');
+    });
+
+    it('no longer draws the article count in the header', () => {
+        const { queryByText } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
+        );
+        expect(queryByText('forYou.articlesCount')).toBeNull();
+        expect(queryByText('12')).toBeNull();
     });
 
     it('no longer renders a "+N new" badge', () => {
@@ -67,12 +79,12 @@ describe('FactSectionHeader', () => {
         expect(queryByText('+12')).toBeNull();
     });
 
-    it('the pill opens the fact feed on tap', () => {
+    it('the round button opens the fact feed on tap', () => {
         const onPress = jest.fn();
         const { getByTestId } = render(
             <FactSectionHeader title="Elections" eventType={null} total={5} onPress={onPress} />,
         );
-        fireEvent.press(getByTestId('dashboard-section-pill'));
+        fireEvent.press(getByTestId('dashboard-section-open'));
         expect(onPress).toHaveBeenCalled();
     });
 });

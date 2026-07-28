@@ -813,8 +813,6 @@
     "sectionPrefix": "Actualités sur :",
     "breaking": "Dernière minute",
     "showMore": "Afficher {{count}} de plus",
-    "articlesCount_one": "{{count}} article",
-    "articlesCount_other": "{{count}} articles",
     "viewAllArticles_one": "Afficher l'{{count}} article",
     "viewAllArticles_other": "Afficher les {{count}} articles",
     "subTabFeed": "Aperçu",

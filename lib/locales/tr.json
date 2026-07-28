@@ -813,8 +813,6 @@
     "sectionPrefix": "Haberler:",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
-    "articlesCount_one": "{{count}} makale",
-    "articlesCount_other": "{{count}} makale",
     "viewAllArticles_one": "Tüm {{count}} makaleyi görüntüle",
     "viewAllArticles_other": "Tüm {{count}} makaleyi görüntüle",
     "subTabFeed": "Bakış",

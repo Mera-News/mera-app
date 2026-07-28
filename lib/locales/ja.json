@@ -815,7 +815,6 @@
     "subTabFeed": "一覧",
     "subTabStories": "ストーリー",
     "subTabSaved": "保存済み",
-    "articlesCount_other": "{{count}}件の記事",
     "viewAllArticles_other": "全{{count}}件の記事を表示"
   },
   "feedStatus": {

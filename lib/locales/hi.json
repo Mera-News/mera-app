@@ -813,8 +813,6 @@
     "sectionPrefix": "इस बारे में समाचार:",
     "breaking": "ब्रेकिंग",
     "showMore": "{{count}} और दिखाएं",
-    "articlesCount_one": "{{count}} लेख",
-    "articlesCount_other": "{{count}} लेख",
     "viewAllArticles_one": "सभी {{count}} लेख देखें",
     "viewAllArticles_other": "सभी {{count}} लेख देखें",
     "subTabFeed": "अवलोकन",
