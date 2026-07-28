@@ -197,7 +197,7 @@ export default appSchema({
         { name: 'article_suggestion_id', type: 'string', isOptional: true },
         { name: 'article_url', type: 'string', isOptional: true },
         // Snapshotted at visit time so the per-publication history screen
-        // can render a CompactPublisherNewsCard even after the source
+        // can render a compact article row even after the source
         // article_suggestion row has been pruned by the 24h TTL.
         { name: 'title_en', type: 'string', isOptional: true },
         { name: 'title_original', type: 'string', isOptional: true },

@@ -7,7 +7,7 @@ import { useCallback, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import logger from '../logger';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
-import { BIG_MODEL } from '../llm/constants';
+import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
@@ -145,7 +145,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           tools,
           toolChoice,
           model: BIG_MODEL,
-          maxTokens: 300,
+          maxTokens: CHAT_MAX_OUTPUT_TOKENS,
         });
 
         let eventCount = 0;

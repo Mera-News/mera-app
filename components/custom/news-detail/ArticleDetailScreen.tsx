@@ -49,7 +49,7 @@ interface ArticleDetailScreenProps {
 
 const SCROLL_THRESHOLD = 300;
 
-// Map a sibling ArticleSummary to the NewsArticle shape CompactPublisherNewsCard
+// Map a sibling ArticleSummary to the NewsArticle shape ArticleStandaloneCompactCard
 // expects (same mapping the suggestion-detail screen uses).
 const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
     _id: a._id,

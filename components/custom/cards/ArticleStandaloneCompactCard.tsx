@@ -18,7 +18,7 @@ interface ArticleStandaloneCompactCardProps {
 }
 
 /**
- * The standalone compact article row — CompactPublisherNewsCard semantics
+ * The standalone compact article row — publisher-name semantics
  * (source_uri → domain fallback, __DEV__ cluster-confidence chip) delegating all
  * layout to `ArticleCompactCardBase`. Tap-only: no "…" button and no actions
  * sheet (removed in the compact-card cleanup).

@@ -5,6 +5,24 @@
 export const BIG_MODEL = 'deepseek-ai/DeepSeek-V4-Flash';
 export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
+/**
+ * Max output tokens for a CHAT turn — the on-device path and the cloud path
+ * share this so the same conversation can't be cut at two different lengths
+ * depending on which engine served it.
+ *
+ * The cloud path used to hardcode 300, which truncated Mera's narration
+ * mid-sentence whenever a turn also carried a tool call (a `proposeTrack` with
+ * 3–4 scope options routinely exceeds 300 output tokens) — the tool args
+ * survived, the prose did not. 1024 is the value the on-device chat has always
+ * used, so this raises the cloud path to the existing budget rather than
+ * inventing a new one.
+ *
+ * SCOPE: chat turns only. The scoring / reason / topic-generation pipelines have
+ * their own, much smaller output budgets (see HarnessConfig) and are deliberately
+ * NOT governed by this.
+ */
+export const CHAT_MAX_OUTPUT_TOKENS = 1024;
+
 // Noise injection — number of decoy topics generated per real topic when the
 // "Inject noise" Mera-Protocol setting is enabled. 1 = parity (one decoy per
 // real topic). Bumping this widens the obfuscation window at the cost of more

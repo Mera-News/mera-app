@@ -8,6 +8,7 @@ jest.mock('../../llm/cloudComplete', () => ({
 
 jest.mock('../../llm/constants', () => ({
   BIG_MODEL: 'test-big-model',
+  CHAT_MAX_OUTPUT_TOKENS: 1024,
 }));
 
 jest.mock('../../logger', () => ({
@@ -421,6 +422,25 @@ describe('useCloudPersonaChat', () => {
   });
 
   describe('error handling', () => {
+    // The cap was hardcoded at 300, which silently truncated Mera's narration
+    // mid-sentence on any turn that also carried a tool call — the tool args fit,
+    // the prose did not. Nothing surfaced it: the client collapses a `length`
+    // finish_reason into `stop`, so a cut turn is indistinguishable from a
+    // complete one. Pin the budget so a regression is loud.
+    it('requests the shared chat output budget, not a smaller hardcoded cap', async () => {
+      mockCloudChatStream.mockReturnValue(makeSseStream([
+        { type: 'text-delta', delta: 'hi' },
+        { type: 'finish' },
+      ] as SseEvent[]));
+      const agent = makeAgent();
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+      await act(async () => {
+        await result.current.sendMessage('hello');
+      });
+      const call = mockCloudChatStream.mock.calls[0][0] as { maxTokens?: number };
+      expect(call.maxTokens).toBe(1024);
+    });
+
     it('sets error when cloudChatStream throws', async () => {
       mockCloudChatStream.mockImplementation(async function* () {
         throw new Error('SSE connection failed');

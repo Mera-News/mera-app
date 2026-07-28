@@ -5,9 +5,9 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 /**
  * ArticleImagePlaceholder — the shared "no image" fallback for every article
- * card surface. Replaces the old photorealistic stock photo
- * (`assets/images/news_card_placeholder_image.jpg`, alt "News placeholder")
- * that QA found made unrelated stories (a Korean OpenAI story, an Indian
+ * card surface. Replaced a photorealistic stock-photo asset (since deleted;
+ * it was `assets/images/news_card_placeholder_image.jpg`, alt "News
+ * placeholder") that QA found made unrelated stories (a Korean OpenAI story, an Indian
  * OpenAI story, an F1 standings story, a German data-deletion story) all
  * appear to share the same picture.
  *
