@@ -126,7 +126,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   // keeps verdicts in a component-local store keyed by articleId. The signal
   // persistence (article_feedback rows / Mera handoff) still goes through the
   // shared `swipeCallbacks` inside the hook, identical to the feed.
-  const [verdicts, setVerdicts] = useState<Record<string, { verdict: Verdict; path: string[] }>>({});
+  const [verdicts, setVerdicts] = useState<
+    Record<string, { verdict: Verdict; path: string[]; committed?: boolean }>
+  >({});
   const verdictsRef = useRef(verdicts);
   verdictsRef.current = verdicts;
 
@@ -146,6 +148,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     getPath: (key) => verdictsRef.current[key]?.path,
     setPath: (key, path) =>
       setVerdicts((prev) => (prev[key] ? { ...prev, [key]: { ...prev[key], path } } : prev)),
+    getCommitted: (key) => !!verdictsRef.current[key]?.committed,
+    setCommitted: (key, committed) =>
+      setVerdicts((prev) =>
+        prev[key] ? { ...prev, [key]: { ...prev[key], committed } } : prev,
+      ),
   };
   const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter);
   const dismissedMap = useFeedbackDismissedStore((s) => s.dismissed);
@@ -163,6 +170,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
           onAskMera={onAskMera}
           feedbackVisible={verdict != null && !dismissedMap[item.data.articleId]}
           feedbackInitialPath={rec?.path}
+          feedbackCommitted={!!rec?.committed}
           feedbackHandlers={feedbackHandlers}
           read={isSuggestionOpened(item.data, openedIds)}
           // NEW pill only for stories that became visible since the last visit —

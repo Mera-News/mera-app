@@ -136,6 +136,8 @@ const FeedRow = React.memo(function FeedRow({
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
+  // NOT `path.length > 0` — a branch descent writes a path and commits nothing.
+  const committed = useFeedOrderStore((s) => !!s.verdicts[item.id]?.committed);
   const surfaceClosed = useFeedbackDismissedStore((s) => !!s.dismissed[item.id]);
   // ONE predicate decides both the read indicator and which block of the sort
   // this card lands in — otherwise a card could show the read state while
@@ -158,6 +160,7 @@ const FeedRow = React.memo(function FeedRow({
       onSaveToggled={onSaveToggled}
       feedbackVisible={verdict != null && !surfaceClosed}
       feedbackInitialPath={path}
+      feedbackCommitted={committed}
       feedbackHandlers={feedbackHandlers}
       // Seen stories get ONLY the eye indicator (`read`) — no dimming.
       // Dimming is reserved for a recorded verdict (like/dislike).
@@ -380,6 +383,9 @@ const FeedScreen: React.FC = () => {
     },
     getPath: (key) => useFeedOrderStore.getState().verdicts[key]?.path,
     setPath: (key, path) => useFeedOrderStore.getState().setPath(key, path),
+    getCommitted: (key) => !!useFeedOrderStore.getState().verdicts[key]?.committed,
+    setCommitted: (key, committed) =>
+      useFeedOrderStore.getState().setCommitted(key, committed),
   };
   const {
     onVerdict,

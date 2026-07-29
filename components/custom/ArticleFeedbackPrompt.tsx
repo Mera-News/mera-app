@@ -101,6 +101,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     const { t } = useTranslation();
     const [verdict, setVerdict] = useState<Verdict | null>(null);
     const [initialPath, setInitialPath] = useState<string[]>([]);
+    // F3 — the fill discriminator, restored from the row rather than inferred
+    // from `initialPath`: a path is written by a mere branch descent, so this
+    // surface used to show an ABANDONED verdict (even one abandoned on the feed)
+    // as a committed one, pixel-identical, across a process restart.
+    const [committed, setCommitted] = useState(false);
     const [surfaceClosed, setSurfaceClosed] = useState(false);
     // Self-managing track state. `track` carries the stable id when known; the
     // fallback subject keeps the hook happy when the button is absent.
@@ -117,10 +122,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     useEffect(() => {
         let cancelled = false;
         getArticleVerdict(articleId)
-            .then(({ verdict: v, path }) => {
+            .then(({ verdict: v, path, committed: c }) => {
                 if (cancelled) return;
                 setVerdict(v);
                 setInitialPath(path);
+                setCommitted(!!c);
             })
             .catch(() => {
                 /* non-fatal — default to no verdict */
@@ -169,6 +175,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 hapticLight();
                 setVerdict(null);
                 setInitialPath([]);
+                setCommitted(false);
                 setSurfaceClosed(false);
                 void removeArticleFeedback(articleId, next);
                 return;
@@ -176,6 +183,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             hapticSuccess();
             setVerdict(next);
             setInitialPath([]);
+            setCommitted(false);
             setSurfaceClosed(false);
             void (async () => {
                 const ctx = await ensureResolved();
@@ -203,22 +211,29 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         },
         [articleId],
     );
-    // A terminal leaf (the last input in the tree) — persist, then close.
+    // A terminal leaf (the last input in the tree) — COMMIT, then close. This is
+    // the only call that may fill the thumb, and it persists that fact so the
+    // fill survives a remount and a process restart.
     const handleLeafCommitted = useCallback(
         (_s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
             setInitialPath(pathIds);
-            void updateFeedbackContextPath(articleId, v, pathIds);
+            setCommitted(true);
+            void updateFeedbackContextPath(articleId, v, pathIds, true);
             setSurfaceClosed(true);
         },
         [articleId],
     );
     const handleInvokeMera = useCallback(
         (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
+            // Escalating counts as context supplied, so it commits — a forward
+            // promise: the chat stamps the row once its proposals are confirmed.
+            setCommitted(true);
+            void updateFeedbackContextPath(articleId, v, pathIds, true);
             void openFeedbackChatWithPath(s, v, pathIds);
             // Escalating to the chat is terminal — close the surface.
             setSurfaceClosed(true);
         },
-        [],
+        [articleId],
     );
     const handleCloseSurface = useCallback(() => setSurfaceClosed(true), []);
 
@@ -240,9 +255,10 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // The surface can only render once the real context has resolved — there is
     // no half-built stand-in to fall back on any more, by design.
     const surfaceVisible = verdict != null && !surfaceClosed && surfaceSuggestion != null;
-    // D15 — a verdict with no tapped tree path carries no reason: coloured
-    // outline + tint, never the filled promise. See CardActionBar.
-    const provisional = initialPath.length === 0;
+    // D15 — a verdict with no reason attached carries no promise: coloured
+    // outline + tint, never the filled treatment. F3 — keyed off the COMMITTED
+    // flag, not `initialPath`, which a branch descent also fills. See CardActionBar.
+    const provisional = !committed;
 
     // A single action button. `selected` fills it (filled/orange treatment);
     // `provisionalFill` is the softer "recorded, not yet explained" tint.
@@ -290,6 +306,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                         contextFallback={resolved?.contextFallback}
                         verdict={verdict}
                         initialPathIds={initialPath}
+                        committed={committed}
                         onClose={handleCloseSurface}
                         onTreePathChanged={handleTreePathChanged}
                         onInvokeMera={handleInvokeMera}

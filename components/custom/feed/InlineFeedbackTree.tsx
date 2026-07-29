@@ -12,8 +12,10 @@
 // provisional: it is written, shown unfilled, and discarded (see
 // article-feedback-service's D15 header).
 //
-// Nudge / seenOnly leaves stay informational here (path recorded, surface
-// closes) — they carry no persona actions on any surface.
+// Nudge leaves stay informational here (path recorded, surface closes) — they
+// carry no persona actions on any surface. A seenOnly leaf is informational too
+// but now says so out loud (acknowledgeSeenOnly): silent success on a surface
+// that has just promised "your feed changes right away" reads as a dead button.
 
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -21,6 +23,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useFeedbackTreeEngine } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
+import { acknowledgeSeenOnly } from '@/components/custom/feedback-tree/acknowledge-seen-only';
 import { applyLeafActions } from '@/components/custom/feedback-tree/apply-leaf-actions';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import { getSuggestionFeedbackContext } from '@/lib/database/services/article-suggestion-service';
@@ -277,6 +280,21 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       hapticLight();
       setSelectedLeafId(node.id);
       onTreePathChanged(suggestion, verdict, nextIds);
+
+      // A seenOnly leaf ("I've seen this already") changes NOTHING by design, so
+      // it must not COMMIT: a filled thumb promises "this changed your persona",
+      // and this leaf has nothing to promise. It says so out loud instead, and
+      // the panel deliberately stays open — the honest next move is to let the
+      // user pick a reason that WOULD change their feed.
+      //
+      // Gated on the DECLARED flag, not on `actions.length === 0` — that is also
+      // true when a leaf's placeholders couldn't be resolved, and cheerfully
+      // acknowledging THAT would be a different lie. See acknowledgeSeenOnly.
+      if (node.leaf?.seenOnly) {
+        void acknowledgeSeenOnly();
+        return;
+      }
+
       // Terminal (non-openChat) leaf — let the host settle + auto-advance.
       onLeafCommitted?.(suggestion, verdict, nextIds);
 

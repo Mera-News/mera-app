@@ -63,8 +63,14 @@ export type Verdict = 'like' | 'dislike';
 
 export interface VerdictRecord {
   verdict: Verdict;
-  /** The inline-feedback-tree path taken (empty until the tree is used). */
+  /** The inline-feedback-tree path taken (empty until the tree is used).
+   *  Records NAVIGATION — a branch descent writes one too, so this is not a
+   *  commit signal. See `committed`. */
   path: string[];
+  /** Set once a TERMINAL leaf settled (or the user escalated to Mera). The only
+   *  thing the filled-thumb treatment may read. Absent (not `false`) until then,
+   *  so the record shape is unchanged for every uncommitted verdict. */
+  committed?: boolean;
 }
 
 /** A feed card's lifecycle state. `unviewed` is the DEFAULT and is represented
@@ -124,6 +130,9 @@ interface FeedOrderState {
   /** Drop a verdict (+ its tree path) — the un-vote path. No-op if absent. */
   clearVerdict: (id: string) => void;
   setPath: (id: string, path: string[]) => void;
+  /** Mark/unmark a verdict as COMMITTED (a terminal leaf settled). No-op if
+   *  absent. Only ever stores `true`; unmarking deletes the key. */
+  setCommitted: (id: string, committed: boolean) => void;
   /** FILTER-SCOPED eviction — see `removeIds` in the implementation. */
   removeIds: (ids: string[]) => void;
   /** Stamp `skipped` on cards the user dwelt on. Write-once per id. */
@@ -441,6 +450,21 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
       const current = s.verdicts[id];
       if (!current) return {} as Partial<FeedOrderState>;
       return { verdicts: { ...s.verdicts, [id]: { ...current, path } } };
+    }),
+
+  setCommitted: (id, committed) =>
+    set((s) => {
+      const current = s.verdicts[id];
+      if (!current) return {} as Partial<FeedOrderState>;
+      if (!committed) {
+        if (current.committed === undefined) return {} as Partial<FeedOrderState>;
+        // Delete rather than store `false`, so an uncommitted record keeps the
+        // exact shape it had before this field existed.
+        const { committed: _dropped, ...rest } = current;
+        return { verdicts: { ...s.verdicts, [id]: rest } };
+      }
+      if (current.committed === true) return {} as Partial<FeedOrderState>;
+      return { verdicts: { ...s.verdicts, [id]: { ...current, committed: true } } };
     }),
 
   /**

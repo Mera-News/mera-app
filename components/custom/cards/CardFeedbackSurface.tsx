@@ -18,6 +18,9 @@ export interface CardFeedbackSurfaceProps {
    *  because there isn't one — a standalone article on the detail screen. */
   contextFallback?: Partial<LocalFeedbackContext>;
   initialPathIds?: string[];
+  /** True once a TERMINAL leaf settled (or the user escalated to Mera). Drives
+   *  whether the "a bare thumb is discarded" caption is still true. */
+  committed?: boolean;
   /** The × was tapped — hide the surface (keeps the verdict). */
   onClose: () => void;
   onTreePathChanged: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
@@ -41,6 +44,7 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
   verdict,
   contextFallback,
   initialPathIds,
+  committed = false,
   onClose,
   onTreePathChanged,
   onInvokeMera,
@@ -52,7 +56,12 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
   // D15 — say plainly what a bare thumb is worth, and stop saying it the
   // moment the user has answered. The app used to quietly speculate from
   // context-less taps; it now discards them, and the user is told so.
-  const uncommitted = (initialPathIds?.length ?? 0) === 0;
+  //
+  // F2 — "has answered" means COMMITTED, not "has navigated". Descending a
+  // branch used to retract the caption while the promise it made was still in
+  // force, so the panel stopped explaining itself exactly where it mattered
+  // most: mid-navigation, with the tap still discardable.
+  const uncommitted = !committed;
 
   return (
     <Box

@@ -53,8 +53,12 @@ interface ArticleCardProps {
   // set) ──────────────────────────────────────────────────────────────────
   /** Whether to show the floating feedback surface (verdict set & not closed). */
   feedbackVisible?: boolean;
-  /** Stored tree path to resume in the surface. */
+  /** Stored tree path to resume in the surface. Records NAVIGATION only — a
+   *  branch descent writes one — so it must NOT be read as a commit signal. */
   feedbackInitialPath?: string[];
+  /** True once a TERMINAL leaf settled (or the user escalated to Mera) for this
+   *  card. The only thing the filled-thumb treatment may be derived from. */
+  feedbackCommitted?: boolean;
   /** Stable per-card feedback handlers from `useFeedbackSheet`. */
   feedbackHandlers?: CardFeedbackHandlers;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
@@ -97,6 +101,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   onAskMera,
   feedbackVisible = false,
   feedbackInitialPath,
+  feedbackCommitted = false,
   feedbackHandlers,
   dimmed = false,
   read = false,
@@ -253,15 +258,18 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const actionBar = onVerdict ? (
     <CardActionBar
       verdict={verdict}
-      // D15 — a verdict with no tapped tree path has no reason attached, so it
-      // is provisional: shown hollow, and discarded rather than speculated on.
-      // The stored path IS the commit discriminator (see
-      // article-feedback-service), so no extra state is needed here.
+      // D15 — a verdict with no reason attached is provisional: shown hollow,
+      // and discarded rather than speculated on.
+      //
+      // F2 — the discriminator is `feedbackCommitted`, NOT the stored path. A
+      // path exists the moment the user opens a branch, which commits nothing;
+      // deriving fill from it promised "this changed your persona" one tap after
+      // the caption promised the opposite.
       //
       // Gated on `feedbackHandlers`: a host that doesn't wire the feedback
       // surface can never SHOW the tree, so its user has no way to commit —
       // a permanently hollow thumb there would be a dead end, not a prompt.
-      provisional={!!feedbackHandlers && (feedbackInitialPath?.length ?? 0) === 0}
+      provisional={!!feedbackHandlers && !feedbackCommitted}
       saved={saved}
       onLike={() => onVerdict(suggestion, 'like')}
       onDislike={() => onVerdict(suggestion, 'dislike')}
@@ -278,6 +286,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
         suggestion={suggestion}
         verdict={verdict}
         initialPathIds={feedbackInitialPath}
+        committed={feedbackCommitted}
         onClose={() => feedbackHandlers.onClose(suggestion)}
         onTreePathChanged={feedbackHandlers.onPathChanged}
         onInvokeMera={feedbackHandlers.onInvokeMera}

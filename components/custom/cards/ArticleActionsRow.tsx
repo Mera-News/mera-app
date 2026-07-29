@@ -106,9 +106,11 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     // lookup included — is non-fatal: this is decoration, never a reason to
     // take the actions row down.
     void (async () => {
-      const { verdict, path } = await getArticleVerdict(subject.articleId);
+      const { verdict, committed } = await getArticleVerdict(subject.articleId);
       if (cancelled || verdict !== 'like') return;
-      setLikeState(path.length > 0 ? 'committed' : 'provisional');
+      // F2/F3 — the stored PATH is not a commit signal (a branch descent writes
+      // one). Only the persisted `committed` flag is.
+      setLikeState(committed ? 'committed' : 'provisional');
     })().catch(() => {
       /* non-fatal */
     });
@@ -183,7 +185,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
       const sentiment = overlayRoot;
       if (sentiment === 'like') setLikeState('committed');
       void (async () => {
-        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds);
+        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, true);
         if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
       })();
     },

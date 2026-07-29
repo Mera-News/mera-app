@@ -87,13 +87,25 @@ export async function removeSwipeVerdict(
   await removeArticleFeedback(subject.articleId, verdict);
 }
 
-/** Merges the inline-tree node-id path into the stored verdict row. */
+/** Merges the inline-tree node-id path into the stored verdict row. Records
+ *  NAVIGATION only — a branch descent lands here and commits nothing. */
 export async function updateFeedbackTreePath(
   suggestion: ForYouSuggestion,
   verdict: Verdict,
   path: string[],
 ): Promise<void> {
   await updateFeedbackContextPath(suggestion.articleId, verdict, path);
+}
+
+/** Marks the stored verdict row COMMITTED — a terminal leaf settled, or the user
+ *  escalated to Mera along this path. This is the write a filled thumb is allowed
+ *  to read, and it is what makes the fill survive a process restart. */
+export async function commitFeedbackTreePath(
+  suggestion: ForYouSuggestion,
+  verdict: Verdict,
+  path: string[],
+): Promise<void> {
+  await updateFeedbackContextPath(suggestion.articleId, verdict, path, true);
 }
 
 /**
@@ -192,6 +204,9 @@ export function wireSwipeCallbacks(): void {
   };
   swipeCallbacks.onTreePathChanged = (suggestion, verdict, path) => {
     void updateFeedbackTreePath(suggestion, verdict, path);
+  };
+  swipeCallbacks.onLeafCommitted = (suggestion, verdict, path) => {
+    void commitFeedbackTreePath(suggestion, verdict, path);
   };
   swipeCallbacks.onInvokeMera = (suggestion, verdict, path) => {
     void openFeedbackChatWithPath(suggestion, verdict, path);

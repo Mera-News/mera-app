@@ -28,6 +28,23 @@
 //   • context COMMITS  → a terminal leaf applies its persona actions on the
 //     spot (D16, InlineFeedbackTree / FeedbackTreeOverlay) and then calls
 //     `markFeedbackProcessedFor`, so the digest can never double-apply it.
+//
+// ── F2/F3: what the UI may call "committed" ─────────────────────────────────
+// `treePath` is written on every tap in the tree — INCLUDING descending a
+// branch, which commits nothing. Deriving the filled thumb from
+// `treePath.length > 0` therefore promised "this changed your persona" the
+// instant the user merely navigated, one tap after the caption promised the
+// opposite; abandoning the panel with × left that promise standing, and it
+// survived a process restart because the path is a real row write.
+//
+// So the UI discriminator is now its OWN persisted field: `context_json.committed`,
+// set only by a call that passes `committed: true` — a TERMINAL leaf settling, or
+// a chat escalation. It is STICKY: once a leaf has applied, walking back up the
+// breadcrumb must not un-fill the thumb, because the change is still in force
+// and un-voting (which reverts it) is the only way out.
+//
+// `processed_at`'s re-open rule is deliberately NOT changed here — see
+// `updateFeedbackContextPath`.
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
@@ -60,6 +77,22 @@ function hasTreeContext(contextJson: string | null | undefined): boolean {
       Array.isArray(parsed.treePath) &&
       parsed.treePath.length > 0
     );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when a stored `context_json` snapshot has been COMMITTED — a terminal
+ * leaf settled (or the user escalated to Mera along the path). This, and not
+ * `treePath`, is what a filled thumb means: `treePath` also records a branch
+ * descent, which changes nothing.
+ */
+function isCommitted(contextJson: string | null | undefined): boolean {
+  if (!contextJson) return false;
+  try {
+    const parsed = JSON.parse(contextJson);
+    return !!parsed && typeof parsed === 'object' && parsed.committed === true;
   } catch {
     return false;
   }
@@ -295,15 +328,24 @@ export async function recordVerdictFeedback(
  * (under `treePath`). No-op if no matching (articleId, sentiment) row exists.
  * The path is the array of node ids/labels the user tapped in the inline tree.
  *
- * This is also the D15 commit gate: a NON-EMPTY path is the context that turns
- * a provisional tap into a real signal, so it clears `processed_at` (the row
- * becomes digestible via the contextful `pathCandidates`). An empty path (the
- * user backed all the way out) puts it back to provisional.
+ * A NON-EMPTY path clears `processed_at` (the row becomes digestible via the
+ * contextful `pathCandidates`); an empty path (the user backed all the way out)
+ * puts it back to provisional. That rule is UNCHANGED and deliberately so — a
+ * part-way path being digestible is the documented intent of D15 and is asserted
+ * by a pre-existing test.
+ *
+ * `committed` is a SEPARATE, narrower marker and the only thing the UI's filled
+ * state may read (F2/F3). Pass it from a terminal leaf or a chat escalation;
+ * a branch descent must not. It is sticky — once true it stays true for the life
+ * of the row, since the leaf's persona change is still in force until un-vote
+ * reverts it. It is written only when true, so an uncommitted row's snapshot is
+ * byte-for-byte what it was before this field existed.
  */
 export async function updateFeedbackContextPath(
   articleId: string,
   sentiment: VerdictSentiment,
   treePath: string[],
+  committed = false,
 ): Promise<void> {
   const id = (articleId ?? '').trim();
   if (!id) return;
@@ -325,10 +367,12 @@ export async function updateFeedbackContextPath(
           }
         }
         snapshot.treePath = treePath;
-        const committed = treePath.length > 0;
+        // Sticky, and written ONLY when true — never `committed: false`.
+        if (committed || snapshot.committed === true) snapshot.committed = true;
+        const contextful = treePath.length > 0;
         await row.update((r) => {
           r.contextJson = JSON.stringify(snapshot);
-          r.processedAt = committed ? null : Date.now();
+          r.processedAt = contextful ? null : Date.now();
         });
       }
     });
@@ -458,14 +502,20 @@ export async function hasLiked(articleId: string): Promise<boolean> {
 }
 
 /**
- * Returns the article's current verdict (like|dislike|null) plus any stored
- * feedback-tree path — used to restore the detail screen's inline feedback
- * surface across remounts. Under the verdict model (recordVerdictFeedback) at
- * most one of like/dislike exists; a stray both-present state prefers 'like'.
+ * Returns the article's current verdict (like|dislike|null), any stored
+ * feedback-tree path, and whether that verdict was ever COMMITTED — used to
+ * restore the detail screen's inline feedback surface across remounts. Under the
+ * verdict model (recordVerdictFeedback) at most one of like/dislike exists; a
+ * stray both-present state prefers 'like'.
+ *
+ * `path` restores WHERE the user was in the tree; `committed` is the only thing
+ * a filled thumb may be derived from. They are not the same question: a path
+ * exists the moment a branch is opened (F2). `committed` is optional on the
+ * return type so existing mocks of this function keep type-checking.
  */
 export async function getArticleVerdict(
   articleId: string,
-): Promise<{ verdict: VerdictSentiment | null; path: string[] }> {
+): Promise<{ verdict: VerdictSentiment | null; path: string[]; committed?: boolean }> {
   const id = (articleId ?? '').trim();
   if (!id) return { verdict: null, path: [] };
 
@@ -489,7 +539,7 @@ export async function getArticleVerdict(
         /* corrupt json — no path to restore */
       }
     }
-    return { verdict, path };
+    return { verdict, path, committed: isCommitted(row.contextJson) };
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'article-feedback', method: 'getArticleVerdict' },

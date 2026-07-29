@@ -88,9 +88,10 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     // Async IIFE — see ArticleActionsRow: the restore is decoration, so a
     // failure anywhere in it (lookup included) must stay non-fatal.
     void (async () => {
-      const { verdict, path } = await getArticleVerdict(subject.articleId);
+      const { verdict, committed } = await getArticleVerdict(subject.articleId);
       if (cancelled || verdict !== 'like') return;
-      setLikeState(path.length > 0 ? 'committed' : 'provisional');
+      // See ArticleActionsRow — `committed`, never the stored path.
+      setLikeState(committed ? 'committed' : 'provisional');
     })().catch(() => {});
     isSuggestionSaved(savedId)
       .then((v) => !cancelled && setSavedFromDb(v))
@@ -162,7 +163,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
       const sentiment = overlayRoot;
       if (sentiment === 'like') setLikeState('committed');
       void (async () => {
-        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds);
+        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, true);
         if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
       })();
     },
