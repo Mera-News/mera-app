@@ -14,10 +14,12 @@
 //      exposed separately in judgeScoreMap, and its `reason` is applied as the
 //      note. The `override` flag (|judge − computed| > OVERRIDE_DELTA) still
 //      feeds the calibration loop.
-//   3. BACKSTOP candidates (never tagged) → the legacy tiered LLM score call,
-//      unchanged (that path DOES apply the LLM score to rawScoreMap). Reasons
-//      for backstop stay the orchestrator's job (this stage returns only scores
-//      for them).
+//   3. BACKSTOP candidates (never tagged) → the legacy tiered LLM score call
+//      (that path DOES apply the LLM score to rawScoreMap), minus the SOFT
+//      suppression penalty the math already computed for the same candidate —
+//      otherwise a "shown less" filter would be silently inert on every untagged
+//      article. Reasons for backstop stay the orchestrator's job (this stage
+//      returns only scores for them).
 //
 // Pure except for the injected LlmPort. RN-free.
 
@@ -239,6 +241,7 @@ export async function computeAndJudge(
     });
     const results = await llm.batchComplete(calls, { model: pipe.model });
     const resultById = new Map(results.map((r) => [r.id, r]));
+    let penalised = 0;
     chunks.forEach((chunkItems, idx) => {
       const result = resultById.get(`score:${idx}`);
       if (!result || result.error) {
@@ -253,8 +256,39 @@ export async function computeAndJudge(
         pipe,
         logger,
       );
-      chunkItems.forEach((c, i) => rawScoreMap.set(c.input.id, scores[i]));
+      // SOFT suppression on the legacy path. The LLM knows nothing about the
+      // user's "shown less" filters, so its score REPLACES the math score that
+      // carried the penalty — which left soft filters inert for every untagged
+      // article (and, with enrichment unshipped, that is all of them). Re-apply
+      // the SAME penalty the math already computed for this candidate
+      // (components.suppressPenalty = Σ P_SUP·strength capped at P_SUP_CAP, via
+      // the one kind-aware matcher in suppression.ts). No second matcher, no
+      // second cap.
+      //
+      // Applied AT the overwrite site, not in a later sweep: a failed chunk
+      // fail-opens to the math score above, which ALREADY has the penalty
+      // subtracted — penalising that again would double-count.
+      //
+      // A candidate matching nothing takes the untouched `scores[i]` write, so
+      // the no-filter path stays byte-identical to the pre-change behaviour.
+      // Only the lower bound can bite: the parser already clamps to [0, 1.1] and
+      // the penalty is non-negative, so the score can only fall.
+      chunkItems.forEach((c, i) => {
+        const penalty = componentsMap.get(c.input.id)?.suppressPenalty ?? 0;
+        if (penalty > 0) {
+          penalised += 1;
+          rawScoreMap.set(c.input.id, Math.max(0, scores[i] - penalty));
+        } else {
+          rawScoreMap.set(c.input.id, scores[i]);
+        }
+      });
     });
+    if (penalised > 0) {
+      logger.info('[computeAndJudge] soft filters penalised backstop candidates', {
+        penalised,
+        of: scorable.length,
+      });
+    }
   }
 
   return {

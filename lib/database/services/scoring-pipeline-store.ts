@@ -88,6 +88,15 @@ export interface PipelineBatch {
   relevanceMap?: Record<string, number>;
   /** Raw relevance scores — fed into the reason prompts on resubmit. */
   rawRelevanceMap?: Record<string, number>;
+  /** BACKSTOP/legacy batches only: candidate id → the SOFT suppression penalty
+   *  the on-device math computed at submit, for the rows that matched a "shown
+   *  less" filter (non-zero entries only; the field is omitted entirely when
+   *  nothing matched). Decode subtracts it from the LLM's score, which would
+   *  otherwise discard the penalty wholesale. Never written for judge-mode
+   *  batches — there the applied score IS the math score and already carries the
+   *  penalty, so a map would double-count. Absent ⇒ no penalty, i.e. exactly the
+   *  pre-field behaviour for runs persisted by an older build. */
+  suppressPenaltyMap?: Record<string, number>;
   /** Reset at each phase submit. */
   submittedAt?: number;
   attempt: number;

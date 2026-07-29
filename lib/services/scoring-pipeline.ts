@@ -894,6 +894,29 @@ async function doSubmitRelevance(
     }
     const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
 
+    // SOFT suppression ("shown less") on the legacy path. The cloud LLM knows
+    // nothing about the user's filters and its score REPLACES the math score
+    // that carried the penalty, so a soft filter would do nothing at all on this
+    // path. Carry the penalty the math already computed for each candidate
+    // (components.suppressPenalty = Σ P_SUP·strength capped at P_SUP_CAP, via
+    // the one kind-aware matcher in suppression.ts) on the batch, and subtract
+    // it at decode. Keyed over the WHOLE stage, not just the backstop rows:
+    // line above sends `active` (every survivor) down the legacy prompt, so a
+    // math-mode row in a mixed batch loses its penalty too. Non-zero entries
+    // only, and the field stays undefined when nothing matched — a user with no
+    // soft filters takes the exact pre-change code path.
+    const suppressPenaltyMap: Record<string, number> = {};
+    for (const c of math.stage) {
+      const penalty = math.componentsMap.get(c.input.id)?.suppressPenalty ?? 0;
+      if (penalty > 0) suppressPenaltyMap[c.input.id] = penalty;
+    }
+    const penalisedCount = Object.keys(suppressPenaltyMap).length;
+    if (penalisedCount > 0) {
+      logger.info(
+        `${TAG} batch ${batch.batchId} soft filters will penalise ${penalisedCount}/${math.stage.length} at decode`,
+      );
+    }
+
     const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
     logger.info(
       `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
@@ -908,7 +931,13 @@ async function doSubmitRelevance(
 
     if (outcome.status === 'ok') {
       // judgeMode stays false (default) — decode routes to the legacy path.
-      await transitionToWaitingRelevance(batch.batchId, outcome, eligibleIds);
+      await transitionToWaitingRelevance(
+        batch.batchId,
+        outcome,
+        eligibleIds,
+        undefined,
+        penalisedCount > 0 ? suppressPenaltyMap : undefined,
+      );
       logger.info(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
       );
@@ -1119,6 +1148,10 @@ async function transitionToWaitingRelevance(
     relevanceMap: Record<string, number>;
     judgedIds: string[];
   },
+  /** BACKSTOP/legacy batches only — non-zero soft-suppression penalties to
+   *  subtract from the LLM scores at decode. Never passed with `judge` (there
+   *  the applied score is the math score, penalty already included). */
+  suppressPenaltyMap?: Record<string, number>,
 ): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -1128,6 +1161,10 @@ async function transitionToWaitingRelevance(
     b.capabilityToken = outcome.capabilityToken || undefined;
     b.candidateIds = eligibleIds; // eligible/submit order = decode join key
     b.submittedAt = Date.now();
+    // Assigned unconditionally (not only when present) so a retry that re-enters
+    // submit can never inherit a stale map from the previous attempt; judge-mode
+    // always clears it — there the applied score already carries the penalty.
+    b.suppressPenaltyMap = judge ? undefined : suppressPenaltyMap;
     if (judge) {
       // Judge-mode batch: flag it so decode routes to handleJudgeResults, stash
       // the computed (math) scores on rawRelevanceMap (decode fail-open + reason
@@ -1484,6 +1521,31 @@ async function handleRelevanceResults(
   });
 
   // (verifier pass removed — absorbed into the judge, Wave 7b M-P5)
+
+  // SOFT suppression ("shown less"): subtract the penalty the on-device math
+  // computed at submit from the LLM score that replaced it. Applied HERE —
+  // before rawRelevanceMap is captured and before bucketScores — so the
+  // demotion reaches every consumer at once: the persisted bucket, the raw
+  // scores fed to the reason prompts, the `impactfulIds` reason gate below and
+  // discardLowRelevance. Rows with no entry are never rewritten (byte-identical
+  // to the pre-change path), and the decoder already clamped to [0, 1.1], so
+  // only the lower bound can bite.
+  const suppressPenaltyMap = batch.suppressPenaltyMap;
+  if (suppressPenaltyMap) {
+    let penalised = 0;
+    for (const [id, penalty] of Object.entries(suppressPenaltyMap)) {
+      if (!(penalty > 0) || failedIds.has(id)) continue;
+      const scored = scoreMap.get(id);
+      if (scored === undefined) continue;
+      scoreMap.set(id, Math.max(0, scored - penalty));
+      penalised += 1;
+    }
+    if (penalised > 0) {
+      logger.info(
+        `${TAG} batch ${batch.batchId} soft filters penalised ${penalised}/${scoreMap.size}`,
+      );
+    }
+  }
 
   // Preserve raw pre-bucket scores for the reason prompts; storage + gating use
   // the bucketed values.

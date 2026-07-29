@@ -875,6 +875,149 @@ describe('relevance completion', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// P8 — SOFT suppression ("Shown less") on the BACKSTOP/legacy path.
+//
+// The cloud LLM knows nothing about the user's filters and its score REPLACES
+// the math score that carried the penalty, so a soft filter used to be computed
+// and then discarded on this path — which, with enrichment unshipped, is every
+// article. Submit carries the already-computed penalty on the batch; decode
+// subtracts it before bucketing, the reason gate and discardLowRelevance.
+// ---------------------------------------------------------------------------
+
+/** Backstop batch whose componentsMap carries the given suppression penalties. */
+function mockBackstopWithPenalties(penalties: Record<string, number>) {
+  mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+    persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+    stage: candidates.map((c) => ({ input: { id: c.id } })),
+    computedScoreMap: new Map(),
+    componentsMap: new Map(
+      candidates.map((c) => [c.id, { geoAlignment: 'NONE', suppressPenalty: penalties[c.id] ?? 0 }]),
+    ),
+    modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+  }));
+}
+
+describe('soft suppression on the legacy path', () => {
+  // jest.clearAllMocks() clears CALLS, not implementations — restore the
+  // module-level default so these overrides never leak into later suites.
+  afterEach(() => {
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map(),
+      componentsMap: new Map(),
+      modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+    }));
+    mockBuildJudgeCalls.mockReset();
+  });
+
+  it('carries only the NON-ZERO penalties on the batch at submit', async () => {
+    mockBackstopWithPenalties({ a0: 0.3, a1: 0 });
+    await enqueueCandidates(['a0', 'a1']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    expect(batch.suppressPenaltyMap).toEqual({ a0: 0.3 });
+  });
+
+  it('omits the field entirely when nothing matched (pre-change code path)', async () => {
+    mockBackstopWithPenalties({ a0: 0, a1: 0 });
+    await enqueueCandidates(['a0', 'a1']);
+
+    expect(currentRun().batches[0].suppressPenaltyMap).toBeUndefined();
+  });
+
+  it('subtracts the penalty from the persisted LLM score, leaving unmatched rows byte-identical', async () => {
+    mockBackstopWithPenalties({ a0: 0.3, a1: 0 });
+    await enqueueCandidates(['a0', 'a1']);
+    const batch = currentRun().batches[0];
+
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.8], ['a1', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([]);
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    const saved = Object.fromEntries(
+      mockSaveScoringResult.mock.calls.map((c: any[]) => [c[0], c[1].relevance]),
+    );
+    expect(saved.a0).toBeCloseTo(0.5, 10);
+    expect(saved.a1).toBe(0.8); // strict: matched nothing ⇒ untouched
+  });
+
+  it('never drives the persisted score below 0', async () => {
+    mockBackstopWithPenalties({ a0: 0.6 });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.1]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a0', expect.objectContaining({ relevance: 0 }));
+  });
+
+  it('demotes below the reason gate — a penalised row earns no reasons job', async () => {
+    mockBackstopWithPenalties({ a0: 0.3 });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    // 0.5 clears REASON_RELEVANCE_THRESHOLD (0.3); 0.5 − 0.3 = 0.2 does not.
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.5]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    mockSendInferenceRequest.mockClear();
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    expect(mockDiscardLowRelevance).toHaveBeenCalled();
+  });
+
+  it('never carries a penalty map on a judge-mode batch (the math score already has it)', async () => {
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map([['a0', 0.8]]),
+      componentsMap: new Map(
+        candidates.map((c) => [c.id, { geoAlignment: 'NONE', suppressPenalty: 0.3 }]),
+      ),
+      modeMap: new Map(candidates.map((c) => [c.id, 'math'])),
+    }));
+    mockBuildJudgeCalls.mockReturnValue({
+      calls: [{ id: 'judge:0', system: 's', prompt: 'p' }],
+      chunkIds: new Map(),
+    });
+    await enqueueCandidates(['a0']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.judgeMode).toBe(true);
+    expect(batch.suppressPenaltyMap).toBeUndefined();
+  });
+});
+
 describe('reasons completion', () => {
   it('saves reasons, discards low-relevance, marks done', async () => {
     // Build a single batch already in waiting-reasons via the relevance path.
