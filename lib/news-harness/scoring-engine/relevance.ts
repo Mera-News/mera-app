@@ -32,6 +32,10 @@ import {
   type GeoAlignment,
   type GeoMatchResult,
 } from './geo';
+import {
+  buildSuppressionHaystack,
+  suppressionMatchesCandidate,
+} from './suppression';
 
 export type ScoringMode = 'math' | 'backstop';
 
@@ -205,26 +209,21 @@ function pubPref(
   return prefs.get(normText(publicationName)) ?? 0;
 }
 
-/** suppressPenalty: Σ P_SUP·strength over soft suppressions whose keyword hits
- *  the article's title/description/entities; capped at P_SUP_CAP. */
+/** suppressPenalty: Σ P_SUP·strength over soft suppressions that MATCH the
+ *  candidate; capped at P_SUP_CAP. Matching (per kind) is the shared matcher in
+ *  suppression.ts — keyword / NULL-kind rows keep byte-identical semantics. */
 function suppressionPenalty(
   candidate: ScoredCandidateInput,
   ctx: PersonaScoringContext,
   cfg: ScoringEngineConfig,
 ): number {
   if (!ctx.softSuppressions?.length) return 0;
-  const haystack = [
-    normText(candidate.titleEn ?? ''),
-    normText(candidate.descriptionEn ?? ''),
-    ...(candidate.entities ?? []).map(normText),
-  ].join('  ');
+  const haystack = buildSuppressionHaystack(candidate);
   let sum = 0;
   for (const s of ctx.softSuppressions) {
-    const hit = s.keywords.some((k) => {
-      const kk = normText(k);
-      return kk.length > 0 && haystack.includes(kk);
-    });
-    if (hit) sum += cfg.P_SUP * s.strength;
+    if (suppressionMatchesCandidate(candidate, s, haystack)) {
+      sum += cfg.P_SUP * s.strength;
+    }
   }
   return Math.min(cfg.P_SUP_CAP, sum);
 }

@@ -6,6 +6,7 @@
 
 export * from './persona-context';
 export * from './geo';
+export * from './suppression';
 export * from './relevance';
 export * from './judge';
 export * from './judge-calls';

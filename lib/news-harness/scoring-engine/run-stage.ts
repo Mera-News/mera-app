@@ -3,6 +3,9 @@
 // and scoring-pipeline.ts (E2EE async) both call computeAndJudge, so the math +
 // judge behaviour can never drift between them.
 //
+//   0. HARD "not interested" screen (persona.hardSuppressions) — matching
+//      candidates are dropped here and returned in `excludedIds`; they never
+//      reach the math, the judge, the backstop or the reason pass.
 //   1. computeRelevance() per candidate (on-device math) → computed score +
 //      components + mode ('math' | 'backstop').
 //   2. MATH candidates → ONE combined judge+reason call per chunk
@@ -37,6 +40,7 @@ import {
 } from './relevance';
 import type { PersonaScoringContext } from './persona-context';
 import { summarizeComponents, parseJudgeResponse } from './judge';
+import { screenHardSuppressions } from './suppression';
 
 /** One candidate for the stage. `input` carries the rich metadata the math +
  *  judge need; `legacy` is the ScoringCandidate shape the backstop path scores
@@ -69,6 +73,14 @@ export interface StageResult {
   overrideMap: Map<string, boolean>;
   /** ids the judge adjusted at all (any magnitude). */
   adjustedIds: Set<string>;
+  /** ids a HARD "not interested" filter screened out (step 0). These get NO
+   *  entry in any of the maps above — no math, no judge, no backstop, no
+   *  reason — and the orchestrator persists them as terminal `excluded`
+   *  (relevance 0) rather than scoring them. */
+  excludedIds: Set<string>;
+  /** excluded id → the display value of the filter that matched it (for the
+   *  per-batch log / the user-facing "why is this gone" surface). */
+  excludedValueById: Map<string, string>;
 }
 
 export interface ComputeAndJudgeOptions {
@@ -108,10 +120,29 @@ export async function computeAndJudge(
   const overrideMap = new Map<string, boolean>();
   const adjustedIds = new Set<string>();
 
+  // --- 0. HARD "not interested" screen ---------------------------------------
+  // Runs BEFORE any math so an excluded row costs no compute, no judge tokens
+  // and no reason call. Absent/empty hardSuppressions ⇒ nothing is screened,
+  // i.e. exactly the pre-wave behaviour.
+  const excludedValueById = screenHardSuppressions(
+    candidates.map((c) => c.input),
+    persona.hardSuppressions,
+  );
+  const excludedIds = new Set(excludedValueById.keys());
+  const active =
+    excludedIds.size > 0 ? candidates.filter((c) => !excludedIds.has(c.input.id)) : candidates;
+  if (excludedIds.size > 0) {
+    logger.info('[computeAndJudge] hard filters excluded candidates', {
+      excluded: excludedIds.size,
+      of: candidates.length,
+      values: [...new Set(excludedValueById.values())].slice(0, 10),
+    });
+  }
+
   // --- 1. math for all; partition by mode -----------------------------------
   const mathItems: StageCandidate[] = [];
   const backstopItems: StageCandidate[] = [];
-  for (const c of candidates) {
+  for (const c of active) {
     const r = computeRelevance(c.input, persona, eng, nowMs);
     computedScoreMap.set(c.input.id, r.score);
     componentsMap.set(c.input.id, r.components);
@@ -235,5 +266,7 @@ export async function computeAndJudge(
     reasonMap,
     overrideMap,
     adjustedIds,
+    excludedIds,
+    excludedValueById,
   };
 }

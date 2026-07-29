@@ -32,14 +32,45 @@ export interface PersonaLocationSnapshot {
   validUntilMs?: number;
 }
 
-/** A soft (score-penalty) suppression. Hard suppressions (strength ≥ 0.8) are
- *  filtered out BEFORE the engine — the engine only demotes. */
+/** What a suppression matches against. Mirrors `SUPPRESSION_KINDS` in
+ *  `lib/database/models/PersonaSuppression` (duplicated here so the engine
+ *  stays RN-free / DB-free). An absent kind means 'keyword'. */
+export type SuppressionKind =
+  | 'keyword'
+  | 'category'
+  | 'event_type'
+  | 'entity'
+  | 'publication'
+  | 'place'
+  | 'topic';
+
+/**
+ * One suppression as the engine sees it. The SAME shape carries both flavours —
+ * the hard/soft split is made once by the persona loader (by comparing
+ * `strength` against the DB service's HARD_SUPPRESSION_STRENGTH) and surfaces
+ * here as two separate lists:
+ *
+ *  - `softSuppressions` → a capped score penalty (relevance.ts).
+ *  - `hardSuppressions` → the candidate is screened out entirely, before any
+ *    math or judge work (scoring-engine/suppression.ts::screenHardSuppressions,
+ *    called from both orchestrators).
+ *
+ * Matching for every kind lives in `scoring-engine/suppression.ts`.
+ */
 export interface SoftSuppression {
   /** Normalized (lower-cased) keywords; a substring hit on title/description/
-   *  entities counts as a match. */
+   *  entities counts as a match. Used by the `keyword` kind only. */
   keywords: string[];
   /** [0,1]. */
   strength: number;
+  /** Absent ⇒ 'keyword' (pre-v46 rows). */
+  kind?: SuppressionKind;
+  /** The single token the non-keyword kinds compare against. Pre-normalized by
+   *  the loader; the matcher normalizes again defensively (idempotent). */
+  value?: string;
+  /** Human-readable original phrase — display/fallback only, never matched
+   *  against directly. */
+  pattern?: string;
 }
 
 /** The plain persona snapshot computeRelevance() reads. Never leaves the device;
@@ -49,6 +80,10 @@ export interface PersonaScoringContext {
   /** normalizedPublicationName → weight [-1,1]. */
   pubPrefs: Map<string, number>;
   softSuppressions: SoftSuppression[];
+  /** Hard "not interested" filters — matching candidates are dropped entirely
+   *  rather than demoted. Optional: absent/empty ⇒ nothing is screened out
+   *  (which is exactly the pre-wave behaviour). */
+  hardSuppressions?: SoftSuppression[];
   /** normalizedEntity → interest weight [0,1]. Optional; from topics/facts. */
   entityInterest?: Map<string, number>;
   /** Article ids OR stable-cluster ids already seen → seenPenalty. */
