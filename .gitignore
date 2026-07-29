@@ -90,3 +90,5 @@ error-logs/
 harness-local/.env.harness
 .local-test-data/
 logs.md
+qa/*.png
+qa/*raw*.json
