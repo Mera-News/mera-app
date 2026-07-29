@@ -1,7 +1,12 @@
 // Build a unified per-article eval-score file for eval-golden.js.
 //
 //   npx tsx --tsconfig harness-local/tsconfig.json \
-//     eval/lib/build-eval-scores.ts <runDir> <engine: math|backstop>
+//     eval/lib/build-eval-scores.ts <runDir> <engine: math|backstop> [--persona <path>]
+//
+// --persona overrides the default eval/persona-v3.json. Used to hold a second,
+// suppression-carrying fixture (eval/persona-v3-suppress.json) so the keyword
+// matcher is exercised at corpus scale — persona-v3.json has suppressions: [],
+// which means suppressionPenalty() returns 0 without executing a single line.
 //
 // Both engines emit the SAME shape (id, titleEn, rawScore, wrongLocation, …) so
 // eval-golden.js reports tiers + the wrong-location leak counter identically:
@@ -78,12 +83,17 @@ async function main(): Promise<void> {
   const runDir = process.argv[2];
   const engine = (process.argv[3] as Engine) ?? 'math';
   if (!runDir || (engine !== 'math' && engine !== 'backstop' && engine !== 'pipeline')) {
-    console.error('usage: build-eval-scores.ts <runDir> <math|backstop|pipeline>');
+    console.error('usage: build-eval-scores.ts <runDir> <math|backstop|pipeline> [--persona <path>]');
     process.exit(1);
   }
+  const personaFlagIdx = process.argv.indexOf('--persona');
+  const personaArg = personaFlagIdx > -1 ? process.argv[personaFlagIdx + 1] : undefined;
 
   const evalDir = join(__dirname, '..');
-  const persona = readJson<PersonaV3>(join(evalDir, 'persona-v3.json'));
+  const personaPath = personaArg
+    ? (personaArg.startsWith('/') ? personaArg : join(__dirname, '..', '..', personaArg))
+    : join(evalDir, 'persona-v3.json');
+  const persona = readJson<PersonaV3>(personaPath);
   const tags = readJson<Record<string, GoldenTag>>(join(evalDir, 'golden-tags.json'));
   const candidates = readJson<Candidate[]>(join(runDir, 'candidates.json'));
   const articles = readJson<Article[]>(join(runDir, 'articles.json'));
@@ -178,6 +188,9 @@ async function main(): Promise<void> {
         pop: +r.components.popComp.toFixed(3),
         base: +r.components.base.toFixed(3),
         negP: +r.components.negTopicPenalty.toFixed(3),
+        // sup: without this a suppression change is only visible as a rawScore
+        // delta, with no way to localize it to the matcher.
+        sup: +r.components.suppressPenalty.toFixed(3),
         wrongP: +r.components.wrongLocPenalty.toFixed(3),
       });
     }
