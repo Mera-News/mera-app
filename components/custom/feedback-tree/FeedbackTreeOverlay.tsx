@@ -299,6 +299,19 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
               </Pressable>
             </HStack>
 
+            {/* D15 — the same sentence the inline surface shows, on the same
+                key, so the rule reads identically wherever a thumb is tinted.
+                Disappears the moment the user has answered. */}
+            {path.length === 0 && !confirming ? (
+              <Text
+                testID="feedback-caption"
+                className="text-typography-400"
+                style={{ fontSize: 11, lineHeight: 15, paddingBottom: 8 }}
+              >
+                {t('swipeFeed.feedbackCaption')}
+              </Text>
+            ) : null}
+
             {confirming ? (
               // Destructive confirm step.
               <VStack space="md" className="pt-1">

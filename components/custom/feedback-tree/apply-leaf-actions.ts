@@ -65,9 +65,12 @@ export async function applyLeafActions(
       .map((r) => r.changeLogId as string);
 
     if (spend) {
-      const { markFeedbackProcessedFor } = await import(
+      const { markFeedbackProcessedFor, recordFeedbackChangeLogIds } = await import(
         '@/lib/database/services/article-feedback-service'
       );
+      // Stamp the signal spent, and remember WHAT it changed: un-voting reverts
+      // exactly these ids, so "unfilled" can never mean "still in force".
+      await recordFeedbackChangeLogIds(spend.articleId, spend.sentiment, changeLogIds);
       await markFeedbackProcessedFor(spend.articleId, spend.sentiment);
     }
 

@@ -32,6 +32,7 @@
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import logger from '../../logger';
+import { revertChange } from './persona-change-log-service';
 import type ArticleFeedbackModel from '../models/ArticleFeedback';
 
 const articleFeedbackCol = database.get<ArticleFeedbackModel>('article_feedback');
@@ -123,10 +124,41 @@ export async function recordArticleFeedback(
   }
 }
 
+/** The persona-change-log ids a committed verdict's leaf actually applied, as
+ *  stored on its `context_json`. Empty for a verdict that never committed. */
+function readChangeLogIds(contextJson: string | null | undefined): string[] {
+  if (!contextJson) return [];
+  try {
+    const parsed = JSON.parse(contextJson);
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.changeLogIds)) return [];
+    return parsed.changeLogIds.filter((x: unknown): x is string => typeof x === 'string');
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Removes any feedback row(s) matching (articleId, sentiment) — e.g.
- * un-liking by re-tapping an already-liked button. No-op if no matching row
+ * un-liking by re-tapping an already-liked button — AND reverts whatever the
+ * verdict's tree leaf actually applied to the persona. No-op if no matching row
  * exists.
+ *
+ * The revert is the other half of D15's trust contract. Once a terminal leaf
+ * applies on the spot (D16), "unfilled" would otherwise be able to mean "this
+ * changed your persona, and the change is still in force" — the same
+ * UI-says-one-thing / persona-says-another problem this wave exists to remove.
+ * This is the single choke point every surface's un-vote (and every like↔dislike
+ * FLIP, via `recordVerdictFeedback`) already funnels through, so the contract
+ * cannot drift per surface.
+ *
+ * Best-effort, per id, exactly like the sweeps: the row deletion and the thumb
+ * state are the user's stated intent and are never blocked by a revert failure.
+ * A partial revert reverts what it can and logs the shortfall rather than
+ * rolling the successes back.
+ *
+ * `revertChange` (Phase 3) runs the retroactive sweeps and sets the feed-dirty
+ * flag itself, so reverting a leaf that minted a hard filter also un-excludes
+ * its casualties. Nothing here re-implements that.
  */
 export async function removeArticleFeedback(
   articleId: string,
@@ -135,11 +167,14 @@ export async function removeArticleFeedback(
   const id = (articleId ?? '').trim();
   if (!id) return;
 
+  let changeLogIds: string[] = [];
   try {
     const existing = await articleFeedbackCol
       .query(Q.where('article_id', id), Q.where('sentiment', sentiment))
       .fetch();
     if (existing.length === 0) return;
+
+    changeLogIds = existing.flatMap((row) => readChangeLogIds(row.contextJson));
 
     await database.write(async () => {
       for (const row of existing) {
@@ -149,6 +184,88 @@ export async function removeArticleFeedback(
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'article-feedback', method: 'remove' },
+    });
+  }
+
+  // Outside the try above: the verdict is already gone, and a revert failure
+  // must not be reported as a failure to un-vote.
+  await revertAppliedChanges(changeLogIds, id, sentiment);
+}
+
+/**
+ * Reverts the persona changes a verdict's leaf applied. Each id is independent:
+ * one failure never prevents the others, and the shortfall is logged with the
+ * counts so a systematic failure is visible.
+ */
+async function revertAppliedChanges(
+  changeLogIds: string[],
+  articleId: string,
+  sentiment: ArticleFeedbackSentiment,
+): Promise<void> {
+  if (changeLogIds.length === 0) return;
+  let reverted = 0;
+  for (const changeLogId of changeLogIds) {
+    try {
+      await revertChange(changeLogId);
+      reverted += 1;
+    } catch (error) {
+      logger.captureException(error, {
+        tags: { service: 'article-feedback', method: 'revertOnUnvote' },
+        extra: { changeLogId, articleId, sentiment },
+      });
+    }
+  }
+  if (reverted < changeLogIds.length) {
+    logger.addBreadcrumb(
+      '[article-feedback] un-vote reverted only part of the applied change',
+      'article-feedback',
+      { articleId, sentiment, reverted, total: changeLogIds.length },
+      'warning',
+    );
+  }
+}
+
+/**
+ * Records the persona-change-log ids a terminal leaf just applied onto the
+ * verdict row, so a later un-vote can revert exactly those changes. Merged into
+ * the same `context_json` snapshot as `treePath`; ids ACCUMULATE, since a user
+ * can pick more than one leaf before changing their mind.
+ */
+export async function recordFeedbackChangeLogIds(
+  articleId: string,
+  sentiment: VerdictSentiment,
+  changeLogIds: string[],
+): Promise<void> {
+  const id = (articleId ?? '').trim();
+  const ids = (changeLogIds ?? []).filter((x) => !!x);
+  if (!id || ids.length === 0) return;
+  try {
+    const existing = await articleFeedbackCol
+      .query(Q.where('article_id', id), Q.where('sentiment', sentiment))
+      .fetch();
+    if (existing.length === 0) return;
+
+    await database.write(async () => {
+      for (const row of existing) {
+        let snapshot: Record<string, unknown> = {};
+        if (row.contextJson) {
+          try {
+            const parsed = JSON.parse(row.contextJson);
+            if (parsed && typeof parsed === 'object') snapshot = parsed as Record<string, unknown>;
+          } catch {
+            /* corrupt json — overwrite with a fresh snapshot */
+          }
+        }
+        const merged = new Set([...readChangeLogIds(row.contextJson), ...ids]);
+        snapshot.changeLogIds = Array.from(merged);
+        await row.update((r) => {
+          r.contextJson = JSON.stringify(snapshot);
+        });
+      }
+    });
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-feedback', method: 'recordChangeLogIds' },
     });
   }
 }

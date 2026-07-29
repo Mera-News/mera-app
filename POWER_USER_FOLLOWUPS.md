@@ -78,7 +78,8 @@ informational toast for them.
 the feed's hot import path for two advisory strings; the surface already gives a check + close as
 acknowledgment.
 **Power user loses:** the subscribe / browse-related hints on the Feed tab (they still appear from
-the compact "…" sheet and the standalone-article actions row).
+the compact "…" sheet and the standalone-article actions row). The "a bare thumb is discarded"
+caption itself is NOT part of this gap — it now renders identically on both surfaces.
 **Cheapest way back:** route those two through the same `toastManager` the apply path now uses —
 about ten lines, no new host.
 
@@ -153,15 +154,15 @@ that fell off the end.
 seam (`ACTION_NAMES.RETIRE_SUPPRESSION` via `applyPersonaAction`) is already audited and
 revertible, so the screen is presentation only.
 
-### PU-9 · Un-voting does not revert a change the reason tree already applied
-**Simplified:** re-tapping a thumb clears the verdict and deletes its row, but a persona change
-that a tree leaf already applied stays applied. The Undo toast (6s) is the only revert path.
-**Why:** the leaf change is audited in the persona change log and individually revertible from the
-Activity list, so the state is recoverable — but wiring un-vote to auto-revert lands on the revert
-semantics Phase 3 had just reworked, and it cannot be exercised under jest.
-**Power user loses:** nothing they can't undo elsewhere; what they lose is the *expectation* that
-un-voting is a full undo. Note this makes "unfilled" ambiguous — it can now also mean "this changed
-your persona, and the change is still in force".
-**Cheapest way back:** `applyLeafActions` already has the `changeLogIds`; store them on the verdict
-row's `context_json` and have the un-vote path `revertChange` them. Contained, and the audit trail
-already supports it.
+### PU-12 · Un-voting reverts the change the reason tree applied — including partially
+**Simplified:** re-tapping a thumb clears the verdict, deletes its row, AND reverts whatever that
+verdict's tree leaf applied to the persona. Same for a like↔dislike flip. If some of the revert
+fails, the rest still goes through — un-voting is never blocked, and the shortfall is logged.
+**Why:** shipped rather than deferred. Without it "unfilled" could also mean "this changed your
+persona, and the change is still in force" — a new instance of the exact UI-says-one-thing problem
+D15 exists to remove. `applyLeafActions` records the `changeLogIds` on the verdict row and
+`removeArticleFeedback` — the single choke point every surface funnels through — reverts them.
+**Power user loses:** the ability to keep a leaf's change while dropping the verdict that carried
+it. There is no UI for that combination and no evidence anyone wants it.
+**Cheapest way back:** the changes remain individually revertible from the Activity list, so a user
+who wants the change back can re-apply it there; the leaf itself is one tap to re-pick.
