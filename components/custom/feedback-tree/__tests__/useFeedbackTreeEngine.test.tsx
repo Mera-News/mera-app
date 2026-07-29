@@ -82,6 +82,23 @@ const INERT_TREE = {
       leaf: { openChat: true, actions: [{ type: 'add_suppression', pattern: 'from_context_category' }] },
     },
     {
+      // QA's `paywall`: a BRANCH with no leaf whose children are all gated off.
+      // isInertActionLeaf can't see it (no leaf), so before the fix it rendered
+      // with a chevron and dead-ended.
+      id: 'dead_branch',
+      labelKey: 'k.db',
+      labelDefault: "It's paywalled",
+      children: [
+        {
+          id: 'gated_a',
+          labelKey: 'k.ga',
+          labelDefault: 'Subscribe',
+          visibleIf: { has_matched_topics: true },
+          leaf: { nudge: 'subscribe' },
+        },
+      ],
+    },
+    {
       // A branch whose only child is the inert leaf: the chevron must not
       // render, or it descends into an empty level.
       id: 'inert_branch',
@@ -119,12 +136,15 @@ describe('useFeedbackTreeEngine', () => {
       'gated_branch',
     ]);
 
-    // Remove the matched topic → the gated node drops out.
+    // not-interested P4i — conscious reversal: `gated_branch` used to REMAIN
+    // visible here (chevron suppressed, row still tappable). QA showed that is
+    // still a dead end — tapping it closes the panel and applies nothing — so a
+    // branch with no visible children is now hidden outright.
     rerender({ context: NO_TOPIC });
-    expect(result.current.currentChildren.map((n) => n.id)).toEqual(['not_important', 'gated_branch']);
+    expect(result.current.currentChildren.map((n) => n.id)).toEqual(['not_important']);
   });
 
-  it('hasVisibleChildren is false when a branch\'s only child is gated out, true once satisfied', async () => {
+  it('a branch whose only child is gated out is HIDDEN, and returns once satisfied', async () => {
     const { result, rerender } = renderHook<
       FeedbackTreeEngine,
       { context: LocalFeedbackContext }
@@ -133,12 +153,15 @@ describe('useFeedbackTreeEngine', () => {
     });
     await waitFor(() => expect(result.current.tree).not.toBeNull());
 
-    const gatedBranch = result.current.currentChildren.find((n) => n.id === 'gated_branch')!;
-    // Raw `children` is non-empty, but the only child is gated out — terminal.
-    expect(gatedBranch.children?.length).toBe(1);
-    expect(result.current.hasVisibleChildren(gatedBranch)).toBe(false);
+    // not-interested P4i — conscious reversal: this used to assert the branch
+    // stayed visible with hasVisibleChildren() false (a terminal-looking row).
+    // It is now hidden, because a row that does nothing when tapped is worse
+    // than an absent one.
+    expect(result.current.currentChildren.map((n) => n.id)).not.toContain('gated_branch');
 
     rerender({ context: WITH_TOPIC });
+    const gatedBranch = result.current.currentChildren.find((n) => n.id === 'gated_branch')!;
+    expect(gatedBranch).toBeDefined();
     expect(result.current.hasVisibleChildren(gatedBranch)).toBe(true);
   });
 
@@ -211,6 +234,22 @@ describe('useFeedbackTreeEngine', () => {
       );
       await waitFor(() => expect(result.current.tree).not.toBeNull());
       expect(result.current.currentChildren.map((n) => n.id)).toContain('chat_leaf');
+    });
+
+    it('hides a BRANCH whose children all gate out (QA: the paywall dead end)', async () => {
+      const { result } = renderHook(() =>
+        useFeedbackTreeEngine({ active: true, root: 'dislike', context: NO_TOPIC }),
+      );
+      await waitFor(() => expect(result.current.tree).not.toBeNull());
+      expect(result.current.currentChildren.map((n) => n.id)).not.toContain('dead_branch');
+    });
+
+    it('shows that branch again once a child can pass its gate', async () => {
+      const { result } = renderHook(() =>
+        useFeedbackTreeEngine({ active: true, root: 'dislike', context: WITH_TOPIC }),
+      );
+      await waitFor(() => expect(result.current.tree).not.toBeNull());
+      expect(result.current.currentChildren.map((n) => n.id)).toContain('dead_branch');
     });
 
     it('hides a branch whose only surviving child is inert, so no chevron dead-ends', async () => {

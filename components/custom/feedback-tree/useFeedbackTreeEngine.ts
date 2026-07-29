@@ -43,6 +43,33 @@ function isInertActionLeaf(node: FeedbackTreeNode, context: LocalFeedbackContext
   return resolveLeafActions(leaf, context).length === 0;
 }
 
+/** A BRANCH — children, no leaf of its own — whose children all gate out is the
+ *  same dead end one level up: it renders with a chevron, and tapping it either
+ *  does nothing or descends into an empty level.
+ *
+ *  Found by QA as `paywall`, whose only children (`nudge_subscribe`,
+ *  `nudge_browse_related`) are gated on visit count and cluster size and are
+ *  both off for most articles. `isInertActionLeaf` can't catch it — a branch has
+ *  no `leaf`, so it returns at the first guard.
+ *
+ *  Recursive on purpose: a branch whose only child is itself an empty branch is
+ *  equally dead, and the tree is authored deep enough for that to happen. */
+function isDeadBranch(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  if (node.leaf) return false;
+  const children = node.children;
+  if (!children?.length) return false;
+  return !children.some((c) => isVisibleNode(c, context));
+}
+
+/** The single visibility predicate. Every seam MUST use this one — QA found
+ *  `paywall` precisely because the children filter and `hasVisibleChildren` had
+ *  drifted into asking different questions. */
+function isVisibleNode(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  if (!evaluateCondition(node.visibleIf, context)) return false;
+  if (isInertActionLeaf(node, context)) return false;
+  return !isDeadBranch(node, context);
+}
+
 export interface FeedbackTreeEngine {
   /** The loaded tree (null until the first load resolves). */
   tree: FeedbackTree | null;
@@ -117,9 +144,7 @@ export function useFeedbackTreeEngine(params: {
 
   const currentChildren = useMemo(() => {
     const level = path.length > 0 ? (path[path.length - 1].children ?? []) : rootNodes;
-    return level.filter(
-      (n) => evaluateCondition(n.visibleIf, context) && !isInertActionLeaf(n, context),
-    );
+    return level.filter((n) => isVisibleNode(n, context));
   }, [path, rootNodes, context]);
 
   const findNode = useCallback(
@@ -139,14 +164,10 @@ export function useFeedbackTreeEngine(params: {
     [rootNodes],
   );
 
-  // Must apply the SAME two predicates as `currentChildren`, or a branch whose
-  // only survivors are inert action leaves would still render a chevron and
-  // then descend into an empty level — a worse dead end than the leaf itself.
+  // Same predicate as `currentChildren`, deliberately — these two drifting is
+  // what let the dead `paywall` branch through.
   const hasVisibleChildren = useCallback(
-    (node: FeedbackTreeNode) =>
-      (node.children ?? []).some(
-        (n) => evaluateCondition(n.visibleIf, context) && !isInertActionLeaf(n, context),
-      ),
+    (node: FeedbackTreeNode) => (node.children ?? []).some((n) => isVisibleNode(n, context)),
     [context],
   );
 
