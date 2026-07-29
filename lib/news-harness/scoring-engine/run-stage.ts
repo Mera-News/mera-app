@@ -42,7 +42,7 @@ import {
 } from './relevance';
 import type { PersonaScoringContext } from './persona-context';
 import { summarizeComponents, parseJudgeResponse } from './judge';
-import { screenHardSuppressions } from './suppression';
+import { screenHardSuppressionsDetailed } from './suppression';
 
 /** One candidate for the stage. `input` carries the rich metadata the math +
  *  judge need; `legacy` is the ScoringCandidate shape the backstop path scores
@@ -83,6 +83,11 @@ export interface StageResult {
   /** excluded id → the display value of the filter that matched it (for the
    *  per-batch log / the user-facing "why is this gone" surface). */
   excludedValueById: Map<string, string>;
+  /** P6. Top-headline ids that MATCHED a hard filter and were kept anyway →
+   *  the matching filter's display value. Unlike `excludedIds` these ARE scored
+   *  (demoted, floored at HEADLINE_BASE_FLOOR) and DO appear in every map above;
+   *  the value is what the card's "you filtered this" label names. */
+  exemptedValueById: Map<string, string>;
 }
 
 export interface ComputeAndJudgeOptions {
@@ -126,10 +131,16 @@ export async function computeAndJudge(
   // Runs BEFORE any math so an excluded row costs no compute, no judge tokens
   // and no reason call. Absent/empty hardSuppressions ⇒ nothing is screened,
   // i.e. exactly the pre-wave behaviour.
-  const excludedValueById = screenHardSuppressions(
-    candidates.map((c) => c.input),
-    persona.hardSuppressions,
-  );
+  //
+  // P6: top-headline rows that MATCH a hard filter are NOT excluded — they stay
+  // in `active` and computeRelevance demotes them (one shared predicate,
+  // suppression.ts::isHardFilterExempt). Logged separately so the split is
+  // visible in the field.
+  const { excluded: excludedValueById, exempted: exemptedValueById } =
+    screenHardSuppressionsDetailed(
+      candidates.map((c) => c.input),
+      persona.hardSuppressions,
+    );
   const excludedIds = new Set(excludedValueById.keys());
   const active =
     excludedIds.size > 0 ? candidates.filter((c) => !excludedIds.has(c.input.id)) : candidates;
@@ -138,6 +149,13 @@ export async function computeAndJudge(
       excluded: excludedIds.size,
       of: candidates.length,
       values: [...new Set(excludedValueById.values())].slice(0, 10),
+    });
+  }
+  if (exemptedValueById.size > 0) {
+    logger.info('[computeAndJudge] hard filters demoted (not removed) headlines', {
+      exempted: exemptedValueById.size,
+      of: candidates.length,
+      values: [...new Set(exemptedValueById.values())].slice(0, 10),
     });
   }
 
@@ -274,13 +292,23 @@ export async function computeAndJudge(
       // Only the lower bound can bite: the parser already clamps to [0, 1.1] and
       // the penalty is non-negative, so the score can only fall.
       chunkItems.forEach((c, i) => {
-        const penalty = componentsMap.get(c.input.id)?.suppressPenalty ?? 0;
+        const comps = componentsMap.get(c.input.id);
+        const penalty = comps?.suppressPenalty ?? 0;
+        let next = scores[i];
         if (penalty > 0) {
           penalised += 1;
-          rawScoreMap.set(c.input.id, Math.max(0, scores[i] - penalty));
-        } else {
-          rawScoreMap.set(c.input.id, scores[i]);
+          next = Math.max(0, next - penalty);
         }
+        // P6 — DEMOTED, NEVER REMOVED, on this path too. An exempt top headline
+        // carries a HARD filter's penalty in `suppressPenalty` (folded in by
+        // computeRelevance), and the LLM score it is subtracted from is not
+        // guaranteed to survive it. The math path floors such a row at
+        // HEADLINE_BASE_FLOOR; without the same floor here an untagged (backstop)
+        // headline would still vanish, which is exclusion under another name.
+        if (comps?.hardFilterExempt) {
+          next = Math.max(next, eng.HEADLINE_BASE_FLOOR);
+        }
+        rawScoreMap.set(c.input.id, next);
       });
     });
     if (penalised > 0) {
@@ -302,5 +330,6 @@ export async function computeAndJudge(
     adjustedIds,
     excludedIds,
     excludedValueById,
+    exemptedValueById,
   };
 }

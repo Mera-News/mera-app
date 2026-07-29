@@ -14,6 +14,12 @@
 //     through the scoring stage's hard screen: score propagation. See P9 note
 //     below.
 //
+//   refreshHardFilterLabels()        — P6. The screen run for its OTHER half:
+//     top-headline rows are EXEMPT from exclusion (demoted instead), so the two
+//     purges above walk straight past them. This recomputes which stored rows
+//     are in that state and publishes the labels the cards render, so a filtered
+//     subject on screen is never unexplained.
+//
 //   unexcludeRetiredHardFilters()    — the mirror. Re-screen the already-
 //     excluded rows against every STILL-ACTIVE hard filter; the ones nothing
 //     matches any more go back to `unscored` so the next pass scores them
@@ -52,8 +58,12 @@ import {
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 import type { SoftSuppression } from '@/lib/news-harness/scoring-engine';
 import { loadPersonaScoringContext } from '@/lib/mera-protocol/stage-scoring';
-import { screenHardSuppressions } from '@/lib/news-harness/scoring-engine';
+import {
+  screenHardSuppressions,
+  screenHardSuppressionsDetailed,
+} from '@/lib/news-harness/scoring-engine';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
+import { useHardFilterLabelStore } from '@/lib/stores/hard-filter-label-store';
 
 export interface HardFilterPurgeResult {
   /** Rows newly marked `excluded`. */
@@ -153,6 +163,11 @@ async function screenExcludeAndEvict(
 ): Promise<HardFilterPurgeResult> {
   if (rows.length === 0) return EMPTY_PURGE();
 
+  // `screenHardSuppressions` returns the rows to REMOVE only — since P6 that
+  // excludes top-headline rows, which stay (demoted) and are labelled instead by
+  // `refreshHardFilterLabels`. The exemption therefore cannot fight the purge:
+  // both read the one predicate through the one matcher, so a headline row is
+  // never marked `excluded` here only to be re-scored back in on the next pass.
   const valueById = screenHardSuppressions(
     rows.map((r) => buildStageCandidateInput(r, topicWeights)),
     hard,
@@ -176,6 +191,50 @@ async function screenExcludeAndEvict(
 
   await refreshUi();
   return { excludedIds, valueById, evictedFromFeed };
+}
+
+/**
+ * P6. Recompute — and publish — the "you filtered this, showing it because it's
+ * major news" labels.
+ *
+ * Runs the SAME hard screen the purge runs, over the SAME rehydrated candidate
+ * inputs, and keeps the half the purge discards: the top-headline rows that
+ * matched a filter and were exempted from exclusion. Nothing is written to the
+ * database; the result is a derived, in-memory map (see
+ * `stores/hard-filter-label-store`) so retiring a filter drops its labels on the
+ * next pass with no cleanup step.
+ *
+ * Cheap-path first: no hard filters ⇒ one persona read, zero row reads, and the
+ * store's own no-op guard means subscribed cards do not re-render.
+ *
+ * @returns the published map (suggestionId → filter display value).
+ */
+export async function refreshHardFilterLabels(
+  nowMs: number = Date.now(),
+): Promise<Map<string, string>> {
+  const publish = (m: Map<string, string>): Map<string, string> => {
+    useHardFilterLabelStore.getState().setLabels(Object.fromEntries(m));
+    return m;
+  };
+
+  const { persona, topicWeights } = await loadPersonaScoringContext(nowMs);
+  if (!persona.hardSuppressions?.length) return publish(new Map());
+
+  const rows = await getStageRowsForScreening();
+  if (rows.length === 0) return publish(new Map());
+
+  const { exempted } = screenHardSuppressionsDetailed(
+    rows.map((r) => buildStageCandidateInput(r, topicWeights)),
+    persona.hardSuppressions,
+  );
+  if (exempted.size > 0) {
+    logger.info('[suppression-sweep] labelled filtered-but-shown headlines', {
+      scanned: rows.length,
+      labelled: exempted.size,
+      values: [...new Set(exempted.values())].slice(0, 10),
+    });
+  }
+  return publish(exempted);
 }
 
 /**

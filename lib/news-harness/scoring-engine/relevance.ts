@@ -20,6 +20,10 @@
 //                            : mathBase                                   (before penalties)
 //   raw      = clamp(base − negTopicPenalty − suppressPenalty − wrongLocPenalty − seenPenalty,
 //                    BASE_MIN, BASE_MAX)
+//   (P6) a HEADLINE row matching a HARD filter is exempt from exclusion: its
+//        matching hard filters join the soft list for the one capped
+//        suppressPenalty, and `raw` is then floored at HEADLINE_BASE_FLOOR — so
+//        it is demoted to the bottom of what renders, never removed.
 
 import type { ScoringEngineConfig } from '../core/config';
 import {
@@ -34,6 +38,8 @@ import {
 } from './geo';
 import {
   buildSuppressionHaystack,
+  isHardFilterExempt,
+  matchingHardSuppressions,
   suppressionMatchesCandidate,
 } from './suppression';
 
@@ -102,6 +108,12 @@ export interface RelevanceComponents {
   seenPenalty: number;
   wrongLocationFlag: 0 | 1;
   matchedLocationId?: string;
+  /** P6 — this row matched a HARD "not interested" filter and was kept anyway
+   *  because it is a top headline: penalised, then floored at
+   *  HEADLINE_BASE_FLOOR. Optional so the many existing component literals keep
+   *  compiling; absent reads as false. The UI labels such a card so a filtered
+   *  subject on screen is never a surprise. */
+  hardFilterExempt?: boolean;
 }
 
 export interface RelevanceResult {
@@ -329,7 +341,26 @@ export function computeRelevance(
 
   // --- penalties ----------------------------------------------------------
   const negTopicPenalty = config.P_NEG * maxNegativeMatchedWeight;
-  const suppressPenalty = suppressionPenalty(candidate, persona, config);
+
+  // P6 — HEADLINE EXEMPTION. A top-headline row is exempt from HARD exclusion
+  // (suppression.ts::isHardFilterExempt), so unlike every other candidate it can
+  // reach the math while matching a hard "not interested" filter. It must not
+  // reach it UNPENALISED: the matching hard rows are folded into the soft list
+  // and run through the SAME `suppressionPenalty` call, so there is still one
+  // matcher and one P_SUP_CAP. Nothing changes for a non-headline row, or for a
+  // headline row matching only SOFT filters (which stays killed by the floor-is-
+  // before-penalties rule below).
+  const exemptHard = isHardFilterExempt(candidate)
+    ? matchingHardSuppressions(candidate, persona.hardSuppressions)
+    : [];
+  const hardFilterExempt = exemptHard.length > 0;
+  const suppressPenalty = suppressionPenalty(
+    candidate,
+    hardFilterExempt
+      ? { ...persona, softSuppressions: [...persona.softSuppressions, ...exemptHard] }
+      : persona,
+    config,
+  );
   const wrongLocPenalty = config.P_WRONG * geo.wrongLocationFlag;
   const seen =
     persona.seenStoryIds &&
@@ -339,11 +370,25 @@ export function computeRelevance(
       : 0;
   const seenPenalty = config.P_SEEN * seen;
 
-  const score = clamp(
+  const penalised = clamp(
     base - negTopicPenalty - suppressPenalty - wrongLocPenalty - seenPenalty,
     config.BASE_MIN,
     config.BASE_MAX,
   );
+
+  // P6 — DEMOTED, NEVER REMOVED. For an exempt row the headline floor moves from
+  // `base` (pre-penalty) to the FINAL score, minus its popularity lift. One hard
+  // filter is P_SUP·1.0 = 0.3 against a 0.35 floor, so leaving the penalty
+  // unclamped would sink every exempt headline under the 0.3 render gate —
+  // i.e. exclusion by another name, which is precisely what this phase removes.
+  // Pinning it to the bare HEADLINE_BASE_FLOOR keeps it visible while sorting it
+  // below every unfiltered headline (which additionally earns
+  // HEADLINE_POP_LIFT·popComp and its own mathBase) and below every topically
+  // relevant article. No new tunable: this reuses the constant that defines
+  // "a headline is worth showing" in the first place.
+  const score = hardFilterExempt
+    ? Math.max(penalised, config.HEADLINE_BASE_FLOOR)
+    : penalised;
 
   return {
     score,
@@ -366,6 +411,7 @@ export function computeRelevance(
       seenPenalty,
       wrongLocationFlag: geo.wrongLocationFlag,
       matchedLocationId: geo.matchedLocationId,
+      hardFilterExempt,
     },
   };
 }

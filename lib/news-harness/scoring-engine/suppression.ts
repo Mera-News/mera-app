@@ -7,7 +7,8 @@
 //     applied by relevance.ts::suppressionPenalty.
 //   - HARD (strength ≥ HARD_SUPPRESSION_STRENGTH) → the candidate is screened
 //     OUT before any math/judge work (screenHardSuppressions), invoked from
-//     both orchestrator convergence points.
+//     both orchestrator convergence points — UNLESS it is a top-headline row,
+//     which P6 exempts from exclusion and demotes instead (isHardFilterExempt).
 //
 // The hard/soft partition itself happens ONCE, in the RN-side persona loader
 // (mera-protocol/stage-scoring::loadPersonaScoringContext) — this module only
@@ -127,29 +128,89 @@ export function suppressionMatchesCandidate(
 }
 
 /**
+ * P6 — THE ONE headline-exemption predicate. Every hard-exclusion point must ask
+ * this and nothing else; a second copy of the rule is exactly the drift the
+ * one-matcher invariant exists to prevent.
+ *
+ * A row is headline-sourced when `headlineScope` is non-null (CITY/COUNTRY/
+ * GLOBAL — set by the top-headline injection, null for topic-retrieved rows).
+ * Such a row is exempt from HARD EXCLUSION only: a filter is about routine
+ * coverage, not about hiding major news. It is still penalised — see
+ * relevance.ts::computeRelevance, which folds the matching hard filters into the
+ * ONE capped `suppressionPenalty` and floors the result at HEADLINE_BASE_FLOOR
+ * so the row lands at the bottom of what renders rather than vanishing.
+ */
+export function isHardFilterExempt(candidate: ScoredCandidateInput): boolean {
+  return candidate.headlineScope != null;
+}
+
+/** The full result of a hard screen: what must go, and what MATCHED but stays. */
+export interface HardScreenResult {
+  /** id → display value of the first matching filter, for rows to REMOVE. */
+  excluded: Map<string, string>;
+  /** id → display value, for headline rows that matched but are EXEMPT (P6).
+   *  They stay in the feed, demoted, and this value is what the UI labels the
+   *  card with ("you filtered this — it's here because it's major news"). */
+  exempted: Map<string, string>;
+}
+
+/**
+ * Screen a batch of candidates against the HARD filters, partitioning the
+ * matches into must-remove and headline-exempt.
+ *
+ * The display value is the user-facing form of the FIRST matching filter
+ * (`value` ?? `pattern` ?? first keyword), so a caller can log/report/label
+ * *why* without re-running the match. Ids in neither map matched nothing.
+ */
+export function screenHardSuppressionsDetailed(
+  candidates: ScoredCandidateInput[],
+  hard: SoftSuppression[] | undefined,
+): HardScreenResult {
+  const excluded = new Map<string, string>();
+  const exempted = new Map<string, string>();
+  if (!hard?.length || !candidates.length) return { excluded, exempted };
+  for (const candidate of candidates) {
+    const haystack = buildSuppressionHaystack(candidate);
+    for (const s of hard) {
+      if (suppressionMatchesCandidate(candidate, s, haystack)) {
+        const bucket = isHardFilterExempt(candidate) ? exempted : excluded;
+        bucket.set(candidate.id, suppressionDisplayValue(s));
+        break;
+      }
+    }
+  }
+  return { excluded, exempted };
+}
+
+/**
  * Screen a batch of candidates against the HARD filters.
  *
  * Returns candidateId → the user-facing display value of the FIRST matching
- * filter (`value` ?? `pattern` ?? first keyword), so the caller can log/report
- * *why* a row was dropped without re-running the match. Ids absent from the map
- * survive.
+ * filter, for the rows that must be REMOVED. Ids absent from the map survive —
+ * which since P6 includes headline-sourced rows that matched a filter but are
+ * exempt from exclusion (`isHardFilterExempt`). Callers that need to know about
+ * those (to label them) call `screenHardSuppressionsDetailed` instead; this thin
+ * wrapper exists so every "which rows do I drop?" site keeps one answer.
  */
 export function screenHardSuppressions(
   candidates: ScoredCandidateInput[],
   hard: SoftSuppression[] | undefined,
 ): Map<string, string> {
-  const excluded = new Map<string, string>();
-  if (!hard?.length || !candidates.length) return excluded;
-  for (const candidate of candidates) {
-    const haystack = buildSuppressionHaystack(candidate);
-    for (const s of hard) {
-      if (suppressionMatchesCandidate(candidate, s, haystack)) {
-        excluded.set(candidate.id, suppressionDisplayValue(s));
-        break;
-      }
-    }
-  }
-  return excluded;
+  return screenHardSuppressionsDetailed(candidates, hard).excluded;
+}
+
+/**
+ * The hard filters that MATCH this candidate — the penalty side of the P6
+ * exemption. Returned as suppression rows (not a boolean) so the caller can hand
+ * them straight to `suppressionPenalty`, which owns the cap.
+ */
+export function matchingHardSuppressions(
+  candidate: ScoredCandidateInput,
+  hard: SoftSuppression[] | undefined,
+): SoftSuppression[] {
+  if (!hard?.length) return [];
+  const haystack = buildSuppressionHaystack(candidate);
+  return hard.filter((s) => suppressionMatchesCandidate(candidate, s, haystack));
 }
 
 /** What to show the user for a filter: its structured value, else its pattern,

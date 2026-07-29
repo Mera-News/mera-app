@@ -30,7 +30,7 @@ import {
   buildPubPrefs,
   normalizeLocation,
   normText,
-  screenHardSuppressions,
+  screenHardSuppressionsDetailed,
   type StageCandidate,
   type StageResult,
   type PersonaScoringContext,
@@ -325,6 +325,10 @@ export interface MathStageResult {
   excludedIds: Set<string>;
   /** excluded id → display value of the filter that matched it. */
   excludedValueById: Map<string, string>;
+  /** P6. Top-headline ids that matched a hard filter but are EXEMPT from
+   *  exclusion → that filter's display value. They ARE in `stage` and in every
+   *  map above, scored and demoted; this is the label the card shows. */
+  exemptedValueById: Map<string, string>;
 }
 
 /**
@@ -344,11 +348,14 @@ export async function computeMathStage(
   const allStage = buildStageCandidates(candidates, topicWeights);
 
   // HARD "not interested" screen — the E2EE path never enters computeAndJudge,
-  // so this is its own convergence point for the same shared matcher.
-  const excludedValueById = screenHardSuppressions(
-    allStage.map((c) => c.input),
-    persona.hardSuppressions,
-  );
+  // so this is its own convergence point for the same shared matcher. P6: a
+  // top-headline row that matches a hard filter lands in `exempted`, stays in
+  // `stage`, and is demoted by computeRelevance rather than removed.
+  const { excluded: excludedValueById, exempted: exemptedValueById } =
+    screenHardSuppressionsDetailed(
+      allStage.map((c) => c.input),
+      persona.hardSuppressions,
+    );
   const excludedIds = new Set(excludedValueById.keys());
   const stage =
     excludedIds.size > 0
@@ -377,6 +384,7 @@ export async function computeMathStage(
     modeMap,
     excludedIds,
     excludedValueById,
+    exemptedValueById,
   };
 }
 

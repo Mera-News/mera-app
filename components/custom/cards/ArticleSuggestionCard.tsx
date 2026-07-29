@@ -22,6 +22,7 @@ import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSavedOverride } from '@/lib/saved-state';
@@ -198,6 +199,30 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canRenderFactChips, topicIdsKey]);
 
+  // P6 — the filtered-but-shown label. A hard "not interested" filter no longer
+  // removes a TOP HEADLINE; the story is demoted instead, so it can legitimately
+  // appear on a subject the user asked to keep out. Seeing that with no
+  // explanation is worse than not having the feature, so the card says so
+  // outright, naming the filter that matched. `null` for every ordinary row —
+  // the store is empty unless the user has hard filters at all.
+  //
+  // Gated on `onVerdict` — the same discriminator the action row uses to tell a
+  // FEED surface from the Saved list. A saved row keeps the suggestion's `_id`
+  // (`saved-article-suggestion-service.saveSuggestion` assigns `r._raw.id =
+  // s._id`), so it would otherwise inherit the label; but a story the user
+  // deliberately saved is not a surprise that needs explaining.
+  const hardFilterLabel = useHardFilterLabel(suggestion._id);
+  const hardFilterLabelEl = onVerdict && hardFilterLabel ? (
+    <Box
+      testID="card-hard-filter-label"
+      className="bg-warning-900 rounded-lg px-3 py-2"
+    >
+      <Text size="xs" className="text-warning-400" numberOfLines={2}>
+        {t('notInterested.cardExemptLabel', { filter: hardFilterLabel })}
+      </Text>
+    </Box>
+  ) : null;
+
   const factChipsEl = reasonReady && !reason && facts.length > 0 ? (
     <HStack className="flex-wrap justify-end" space="xs">
       {facts.map((fact) => (
@@ -316,6 +341,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       footer={actionBar}
       overlay={overlay}
     >
+      {hardFilterLabelEl}
       {factChipsEl}
       {reasonBoxEl}
     </ArticleCardBase>
