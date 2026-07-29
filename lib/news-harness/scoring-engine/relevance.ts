@@ -73,6 +73,11 @@ export interface ScoredCandidateInput {
   entities?: string[];
   matchedTopics: MatchedTopicInput[];
   headlineScope?: HeadlineScope | null;
+  /** Uppercase ISO code of the country whose headline scope retrieved this
+   *  candidate; only set alongside headlineScope === 'COUNTRY'. Carried so a
+   *  per-country surface can tell one country's headlines from another's —
+   *  the scoring formula itself does NOT read it. */
+  headlineCountryCode?: string | null;
   /** Stable cluster id (for seen-story dedup against seenStoryIds). */
   stableClusterId?: string | null;
 }

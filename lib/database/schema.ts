@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 47,
+  version: 48,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -87,6 +87,12 @@ export default appSchema({
         { name: 'max_cluster_size', type: 'number', isOptional: true },
         { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
         { name: 'headline_scope', type: 'string', isOptional: true },
+        // Which COUNTRY a 'COUNTRY'-scope headline came from (uppercase ISO
+        // code). NULL for topic-retrieved rows and for GLOBAL headlines — a
+        // GLOBAL headline belongs to no single country by construction.
+        // Without this the scope LABEL alone cannot tell a reader's Indian
+        // headlines apart from their Dutch ones (schema v48).
+        { name: 'headline_country_code', type: 'string', isOptional: true },
         { name: 'matched_topics_json', type: 'string', isOptional: true },
         // Deterministic engine raw score (pre-judge) — audit.
         { name: 'computed_score', type: 'number', isOptional: true },

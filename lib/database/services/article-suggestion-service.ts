@@ -110,6 +110,9 @@ export function buildStageCandidateInput(
     entities,
     matchedTopics,
     headlineScope,
+    // Only carried when the label agrees — a stale country on a GLOBAL row
+    // would be worse than none.
+    headlineCountryCode: headlineScope === 'COUNTRY' ? row.headlineCountryCode ?? null : null,
     stableClusterId: row.stableClusterId,
   };
 }
@@ -140,6 +143,7 @@ function toStageRow(row: ArticleSuggestionModel): StageCandidateRow {
     entitiesJson: row.entitiesJson,
     matchedTopicsJson: row.matchedTopicsJson,
     headlineScope: row.headlineScope,
+    headlineCountryCode: row.headlineCountryCode,
     stableClusterId: row.stableClusterId,
   };
 }
@@ -1249,6 +1253,11 @@ export interface PersonaPersistMeta {
   matchedTopics: Map<string, MatchedTopicMeta[]>;
   /** articleId → 'CITY' | 'COUNTRY' | 'GLOBAL' (top-headline injection). */
   headlineScope?: Map<string, string>;
+  /** articleId → uppercase ISO country code the COUNTRY-scope headline came
+   *  from. Only populated for the article's WINNING headline scope, and only
+   *  when that scope is COUNTRY — a GLOBAL headline has no owning country, so
+   *  it is absent here rather than carrying a misleading code. */
+  headlineCountryCode?: Map<string, string>;
   /** articleId → stable cluster id (server's largest-cluster rule). */
   stableClusterId?: Map<string, string>;
 }
@@ -1410,6 +1419,13 @@ export async function persistAndLinkV2Suggestions(
         ? Array.from(new Set(matched.map((m) => m.text).filter((t) => t && t.length > 0)))
         : articleToTopicTexts.get(a._id) ?? [];
       const scope = personaMeta?.headlineScope?.get(a._id) ?? null;
+      // Only meaningful alongside a COUNTRY scope; feed-sync already writes the
+      // map under the same first-writer-wins guard as `headlineScope`, so the
+      // two can never describe different scopes for the same article.
+      const scopeCountry =
+        scope === 'COUNTRY'
+          ? personaMeta?.headlineCountryCode?.get(a._id) ?? null
+          : null;
       const stableId = pickStableClusterId(a, personaMeta?.stableClusterId?.get(a._id));
 
       const prepared = articleSuggestionsCol.prepareCreate((r) => {
@@ -1453,6 +1469,7 @@ export async function persistAndLinkV2Suggestions(
         r.maxClusterSize = a.maxClusterSize ?? null;
         r.stableClusterId = stableId;
         r.headlineScope = scope;
+        r.headlineCountryCode = scopeCountry;
         r.matchedTopicsJson = personaMeta ? buildMatchedTopicsJson(matched) : null;
         r.computedScore = null;
         r.rawScore = null;

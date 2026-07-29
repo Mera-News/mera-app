@@ -15,6 +15,7 @@ import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
+import { getHeadlineDepths } from '@/lib/database/services/headline-depth-service';
 import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
 import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
@@ -150,9 +151,16 @@ async function fetchTopicIdsPersona(
   activeTopics: Awaited<ReturnType<typeof getActiveTopics>>,
   ctx: TaskContext,
 ): Promise<FetchTopicIdsResult> {
-  const [factWeights, locations] = await Promise.all([
+  const [factWeights, locations, headlineDepths] = await Promise.all([
     getFactWeightById(),
     getAllLocations(),
+    // Per-scope depth is a personalization nicety; a read failure must degrade
+    // to the shipped default rather than wedge the whole feed sync (absence
+    // already means "use the default" everywhere downstream).
+    getHeadlineDepths().catch((err) => {
+      logger.warn('[feed-sync-steps] headline depths unreadable — using defaults', err);
+      return {} as Record<string, number>;
+    }),
   ]);
 
   const profile = buildRetrievalProfile({
@@ -169,6 +177,11 @@ async function fetchTopicIdsPersona(
       weight: l.weight,
       validUntilMs: l.validUntil ?? undefined,
     })),
+    // Absence-means-default: only scopes the reader actually overrode appear
+    // here, and buildRetrievalProfile emits a `limit` only where the override
+    // differs from the request-level default — so an untouched profile still
+    // sends the byte-identical payload it sent before per-scope depth existed.
+    headlineDepthByScope: headlineDepths,
   });
 
   if (profile.topics.length === 0) {
@@ -193,6 +206,11 @@ async function fetchTopicIdsPersona(
       scopes: profile.headlineScopes.map((s) => ({
         scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
         countryCode: s.countryCode ?? null,
+        // OMITTED, not null, when this scope uses the request-level default.
+        // buildRetrievalProfile only sets `limit` where an override actually
+        // differs, and sending an explicit null on every scope would change
+        // every user's payload for no behavioural gain.
+        ...(s.limit === undefined ? {} : { limit: s.limit }),
       })),
       limitPerScope: profile.headlineLimitPerScope,
     },
@@ -208,6 +226,7 @@ async function fetchTopicIdsPersona(
   const articleToTopicTexts = new Map<string, string[]>();
   const matchedTopics = new Map<string, MatchedTopicMeta[]>();
   const headlineScope = new Map<string, string>();
+  const headlineCountryCode = new Map<string, string>();
   const stableClusterId = new Map<string, string>();
 
   const pushMatched = (articleId: string, entry: MatchedTopicMeta) => {
@@ -243,12 +262,24 @@ async function fetchTopicIdsPersona(
   for (const hr of res.headlineResults ?? []) {
     const scopeLabel = hr.scope === HeadlineScope.Country ? 'COUNTRY' : 'GLOBAL';
     const label = `top headline · ${scopeLabel.toLowerCase()}`;
+    // The scope's own country, normalized. GLOBAL results carry none by
+    // construction; a COUNTRY result missing one is treated as unknown rather
+    // than persisting an empty string.
+    const scopeCountry =
+      scopeLabel === 'COUNTRY' ? (hr.countryCode ?? '').trim().toUpperCase() : '';
     const ids = hr.articleIds ?? [];
     const stableIds = hr.stableClusterIds ?? [];
     ids.forEach((articleId, i) => {
       pushMatched(articleId, { topicId: null, text: label, vectorScore: null, stableClusterId: stableIds[i] ?? null });
       // Topic-retrieved match wins over a headline scope when both apply.
-      if (!headlineScope.has(articleId)) headlineScope.set(articleId, scopeLabel);
+      // Scope LABEL and scope COUNTRY are written under the SAME first-writer
+      // guard: setting them independently would let an article that appeared
+      // in GLOBAL first and a COUNTRY scope second end up labelled GLOBAL
+      // while carrying a country code — an incoherent row.
+      if (!headlineScope.has(articleId)) {
+        headlineScope.set(articleId, scopeLabel);
+        if (scopeCountry) headlineCountryCode.set(articleId, scopeCountry);
+      }
       const sid = stableIds[i];
       if (sid && !stableClusterId.has(articleId)) stableClusterId.set(articleId, sid);
     });
@@ -261,7 +292,7 @@ async function fetchTopicIdsPersona(
   return {
     articleToTopicTexts,
     serverArticleIds,
-    personaMeta: { matchedTopics, headlineScope, stableClusterId },
+    personaMeta: { matchedTopics, headlineScope, headlineCountryCode, stableClusterId },
   };
 }
 

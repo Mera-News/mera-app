@@ -67,6 +67,10 @@ export interface StageCandidateRow {
   matchedTopicsJson: string | null;
   /** null | 'CITY' | 'COUNTRY' | 'GLOBAL'. */
   headlineScope: string | null;
+  /** Uppercase ISO code of the country whose headline scope retrieved this row.
+   *  Only set alongside headlineScope === 'COUNTRY'. Optional so the minimal
+   *  stage row built for pre-v48 candidates stays valid. */
+  headlineCountryCode?: string | null;
   stableClusterId: string | null;
 }
 

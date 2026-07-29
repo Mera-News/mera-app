@@ -1259,5 +1259,29 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Headline COUNTRY provenance (schema v48) ────────────────────────
+      // `headline_scope` records only the LABEL ('CITY'|'COUNTRY'|'GLOBAL'),
+      // so a row retrieved as a COUNTRY headline could not say WHICH country
+      // asked for it — the server sent `countryCode` on every headline result
+      // and feed-sync threw it away. Without it no per-country Dashboard
+      // section ("top Indian headlines") can be built from local rows.
+      //
+      // ADDITIVE `addColumns` ONLY. `article_suggestions` must NEVER be
+      // DROP+recreated for an additive change: that empties every device's
+      // feed until a full re-sync AND destroys the 48h score-propagation
+      // donor pool (the v37/v41 incident — see CLAUDE.md). One nullable
+      // column changes nothing for existing rows: NULL reads as "not a
+      // country-scoped headline", which is exactly what every pre-v48 row is.
+      toVersion: 48,
+      steps: [
+        addColumns({
+          table: 'article_suggestions',
+          columns: [
+            { name: 'headline_country_code', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

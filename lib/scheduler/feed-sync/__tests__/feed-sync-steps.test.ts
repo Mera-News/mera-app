@@ -18,6 +18,7 @@ const mockLoadUserGeoLanguageContext = jest.fn();
 const mockLogInfo = jest.fn();
 const mockGetActive = jest.fn();
 const mockGetAllLocations = jest.fn();
+const mockGetHeadlineDepths = jest.fn();
 const mockReconcileTrackedStories = jest.fn();
 const mockMigrateLegacyTrackedStories = jest.fn();
 const mockCaptureException = jest.fn();
@@ -37,6 +38,13 @@ jest.mock('@/lib/services/persona-migration-service', () => ({
 
 jest.mock('@/lib/database/services/location-service', () => ({
   getAll: (...args: any[]) => mockGetAllLocations(...args),
+}));
+
+// Mocked so the real module (settings → database/index → SQLiteAdapter) never
+// enters the graph here. Default is `{}` — no overrides — which is exactly the
+// path every pre-existing test in this file exercises.
+jest.mock('@/lib/database/services/headline-depth-service', () => ({
+  getHeadlineDepths: (...args: any[]) => mockGetHeadlineDepths(...args),
 }));
 
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
@@ -140,6 +148,7 @@ beforeEach(() => {
   mockGetFacts.mockResolvedValue([]);
   mockGetActive.mockResolvedValue([]);
   mockGetAllLocations.mockResolvedValue([]);
+  mockGetHeadlineDepths.mockResolvedValue({});
   mockGetFactWeightById.mockResolvedValue(new Map());
   mockGetLocalSuggestionServerIds.mockResolvedValue([]);
   mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
@@ -337,6 +346,123 @@ describe('stepFetchTopicIds', () => {
     expect(result.personaMeta?.stableClusterId?.get('art-1')).toBe('sc1');
     expect(mockGetArticleIdsForPersona).toHaveBeenCalled();
     expect(mockGetArticleIdsForTopics).not.toHaveBeenCalled();
+  });
+
+  // ── P3: the headline scope's COUNTRY survives to the persist metadata ────
+  it('records the headline scope COUNTRY (uppercased) alongside the scope label', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [],
+      headlineResults: [
+        {
+          scope: 'COUNTRY',
+          countryCode: 'in',
+          articleIds: ['art-in'],
+          clusterSizes: [3],
+          stableClusterIds: [],
+        },
+        {
+          scope: 'GLOBAL',
+          countryCode: null,
+          articleIds: ['art-global'],
+          clusterSizes: [9],
+          stableClusterIds: [],
+        },
+      ],
+    });
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.personaMeta?.headlineScope?.get('art-in')).toBe('COUNTRY');
+    expect(result.personaMeta?.headlineCountryCode?.get('art-in')).toBe('IN');
+    // A GLOBAL headline belongs to no single country — no code, not an empty one.
+    expect(result.personaMeta?.headlineScope?.get('art-global')).toBe('GLOBAL');
+    expect(result.personaMeta?.headlineCountryCode?.has('art-global')).toBe(false);
+  });
+
+  it('keeps scope label and scope country coherent when an article appears in two scopes', async () => {
+    // 'art-both' is carried by GLOBAL first, then by the COUNTRY scope. The
+    // first writer wins for BOTH fields together — never GLOBAL + a country.
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [],
+      headlineResults: [
+        { scope: 'GLOBAL', countryCode: null, articleIds: ['art-both'], clusterSizes: [], stableClusterIds: [] },
+        { scope: 'COUNTRY', countryCode: 'NL', articleIds: ['art-both'], clusterSizes: [], stableClusterIds: [] },
+      ],
+    });
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.personaMeta?.headlineScope?.get('art-both')).toBe('GLOBAL');
+    expect(result.personaMeta?.headlineCountryCode?.has('art-both')).toBe(false);
+  });
+
+  // ── P2b: per-scope headline depth reaches the GraphQL variables ──────────
+  it('sends NO per-scope limit when there are no depth overrides', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'IN', role: 'home', weight: 1, validUntil: null },
+    ] as any);
+    mockGetHeadlineDepths.mockResolvedValue({});
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    const query = mockGetArticleIdsForPersona.mock.calls[0][0];
+    expect(query.topHeadlines.scopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'IN' },
+      { scope: 'GLOBAL', countryCode: null },
+    ]);
+    // Absent, not null — an explicit null would change every untouched payload.
+    for (const s of query.topHeadlines.scopes) {
+      expect('limit' in s).toBe(false);
+    }
+  });
+
+  it('threads each overridden scope depth into topHeadlines.scopes[].limit', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'IN', role: 'home', weight: 1, validUntil: null },
+      { countryCode: 'NL', role: 'family', weight: 0.5, validUntil: null },
+    ] as any);
+    // NL is left at the default (10) → still no `limit` on the wire.
+    mockGetHeadlineDepths.mockResolvedValue({ IN: 25, GLOBAL: 3 });
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    const query = mockGetArticleIdsForPersona.mock.calls[0][0];
+    expect(query.topHeadlines.scopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'IN', limit: 25 },
+      { scope: 'COUNTRY', countryCode: 'NL' },
+      { scope: 'GLOBAL', countryCode: null, limit: 3 },
+    ]);
+    expect(query.topHeadlines.limitPerScope).toBe(10);
+  });
+
+  it('falls back to default depths (and still syncs) when the depth read throws', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetHeadlineDepths.mockRejectedValue(new Error('settings unreadable'));
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    await expect(stepFetchTopicIds('p-1', makeCtx())).resolves.toBeDefined();
+
+    const query = mockGetArticleIdsForPersona.mock.calls[0][0];
+    expect(query.topHeadlines.scopes).toEqual([{ scope: 'GLOBAL', countryCode: null }]);
   });
 
   // ── P7e: sync-vs-persona-migration race ──────────────────────────────────

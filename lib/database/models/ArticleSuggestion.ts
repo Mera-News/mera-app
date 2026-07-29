@@ -50,6 +50,9 @@ export default class ArticleSuggestion extends Model {
   @field('stable_cluster_id') stableClusterId!: string | null;
   // null = topic-retrieved; 'CITY'|'COUNTRY'|'GLOBAL' for top-headline injection.
   @field('headline_scope') headlineScope!: string | null;
+  // Uppercase ISO country code the COUNTRY-scope headline came from (schema
+  // v48). null for topic-retrieved rows and for GLOBAL headlines.
+  @field('headline_country_code') headlineCountryCode!: string | null;
   // [{ topicId, text, vectorScore? }] — inverted per-topic matchMeta.
   @field('matched_topics_json') matchedTopicsJson!: string | null;
   // Deterministic engine raw score (pre-judge) — the fail-open source of truth.
