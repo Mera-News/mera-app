@@ -32,6 +32,30 @@ jest.mock('../../database/services/calibration-service', () => ({
   runCalibration: (...args: unknown[]) => mockRunCalibration(...args),
 }));
 
+// not-interested P4a: PersonaUpdateAgent gained the staged filter-proposal path
+// (D6), so three more real modules would otherwise be pulled in — including
+// lib/database (a live SQLiteAdapter at import time). Mock scaffold only; no
+// pre-existing assertion in this file changed.
+const mockGetActiveSuppressions = jest.fn();
+
+jest.mock('../../database/services/suppression-service', () => ({
+  getActive: (...args: unknown[]) => mockGetActiveSuppressions(...args),
+}));
+
+const mockExecuteProposalActions = jest.fn();
+
+jest.mock('../../chat-tools/proposal-handlers', () => ({
+  executeProposalActions: (...args: unknown[]) => mockExecuteProposalActions(...args),
+}));
+
+const mockFloatingChatGetState = jest.fn();
+
+jest.mock('../../stores/floating-chat-store', () => ({
+  useFloatingChatStore: {
+    getState: (...args: unknown[]) => mockFloatingChatGetState(...args),
+  },
+}));
+
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn(), info: jest.fn() };
 
 jest.mock('../../logger', () => ({
@@ -113,6 +137,16 @@ describe('PersonaUpdateAgent', () => {
     mockSetQuestionnaireLevel.mockResolvedValue(undefined);
     mockGetAttributeKeysForLevel.mockReturnValue([]);
     mockBuildQuestionnaireGuide.mockReturnValue('guide');
+    // not-interested P4a defaults — no filters, no pending proposal, so every
+    // pre-existing expectation observes the same call args as before.
+    mockGetActiveSuppressions.mockResolvedValue([]);
+    mockFloatingChatGetState.mockReturnValue({ proposal: null });
+    mockExecuteProposalActions.mockResolvedValue({
+      applied: 1,
+      errors: [],
+      summaries: ['Hid "celebrity gossip"'],
+      changeLogIds: ['log-1'],
+    });
   });
 
   describe('constructor', () => {
@@ -244,6 +278,33 @@ describe('PersonaUpdateAgent', () => {
       const callArgs = mockBuildPersonaUpdateContext.mock.calls[0][0];
       expect(callArgs.knownFactsList).toContain("'interest': fact one");
       expect(callArgs.knownFactsList).toContain("'other': fact two");
+    });
+
+    // not-interested P4a: filters + the in-flight proposal reach <context> so
+    // the one-shot LOCAL path can still resolve a confirm.
+    it('threads active filters and the pending proposal into the context (CONFIG)', async () => {
+      mockGetActiveSuppressions.mockResolvedValue([
+        { id: 'sup-1', pattern: 'celebrity gossip', kind: 'keyword', value: null, strength: 0.9 },
+      ]);
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'p1',
+          explanation: 'You asked to hide that.',
+          expectedEffects: 'x',
+          actions: [{ type: 'retire_suppression', suppressionId: 'sup-1', pattern: 'celebrity gossip' }],
+        },
+      });
+      await makeAgent('CONFIG').buildContext();
+
+      const callArgs = mockBuildPersonaUpdateContext.mock.calls[0][0];
+      expect(callArgs.filtersList).toContain('- [sup-1] "celebrity gossip"');
+      expect(callArgs.pendingProposal).toContain('remove the filter "celebrity gossip"');
+    });
+
+    it('does NOT read filters on the ONBOARDING surface', async () => {
+      await makeAgent('ONBOARDING').buildContext();
+      expect(mockGetActiveSuppressions).not.toHaveBeenCalled();
+      expect(mockBuildPersonaUpdateContext.mock.calls[0][0].filtersList).toBeUndefined();
     });
 
     it('uses "Nothing yet." when facts are empty', async () => {
@@ -581,6 +642,80 @@ describe('PersonaUpdateAgent', () => {
         expect(result.result).toMatchObject({ status: 'failed' });
         expect(String(result.result.summary)).toMatch(/could not/i);
       });
+    });
+
+    // --- not-interested P4a (D6): the staged filter-proposal path ---
+
+    it('proposeChanges stages a filter proposal against the ACTIVE filters', async () => {
+      mockGetActiveSuppressions.mockResolvedValue([
+        { id: 'sup-1', pattern: 'celebrity gossip', kind: 'keyword', value: null, strength: 0.9 },
+      ]);
+      const agent = makeAgent('CONFIG');
+      const result = await agent.executeTool('proposeChanges', {
+        explanation: 'You want that gone.',
+        expected_effects: 'It stops showing up.',
+        actions: [{ type: 'retire_suppression', suppressionId: 'sup-1' }],
+      });
+
+      expect(result.result.staged).toBe(true);
+      expect(result.sideEffects?.proposal?.actions[0]).toEqual({
+        type: 'retire_suppression',
+        suppressionId: 'sup-1',
+        pattern: 'celebrity gossip',
+      });
+    });
+
+    it('proposeChanges never reads filters on ONBOARDING (no feed to filter yet)', async () => {
+      const agent = makeAgent('ONBOARDING');
+      const result = await agent.executeTool('proposeChanges', {
+        explanation: 'e',
+        expected_effects: 'x',
+        actions: [{ type: 'retire_suppression', suppressionId: 'sup-1' }],
+      });
+
+      expect(mockGetActiveSuppressions).not.toHaveBeenCalled();
+      expect(result.result.error).toContain('unknown suppressionId');
+    });
+
+    it('proposeChanges survives a suppression-service failure', async () => {
+      mockGetActiveSuppressions.mockRejectedValue(new Error('db down'));
+      const agent = makeAgent('CONFIG');
+      const result = await agent.executeTool('proposeChanges', {
+        explanation: 'e',
+        expected_effects: 'x',
+        actions: [{ type: 'add_suppression', suppressionPattern: 'celebrity gossip' }],
+      });
+      expect(result.result.staged).toBe(true);
+    });
+
+    it('applyProposal runs the shared executor and reports the resolution', async () => {
+      const proposal = {
+        id: 'p1',
+        explanation: 'e',
+        expectedEffects: 'x',
+        actions: [{ type: 'add_suppression', suppressionPattern: 'celebrity gossip' }],
+      };
+      mockFloatingChatGetState.mockReturnValue({ proposal });
+      const agent = makeAgent('CONFIG');
+      const result = await agent.executeTool('applyProposal', {});
+
+      expect(mockExecuteProposalActions).toHaveBeenCalledWith(proposal.actions);
+      expect(result.result.applied).toBe(1);
+      expect(result.sideEffects?.proposalResolved).toBe('applied');
+    });
+
+    it('applyProposal errors when nothing is pending', async () => {
+      mockFloatingChatGetState.mockReturnValue({ proposal: null });
+      const result = await makeAgent('CONFIG').executeTool('applyProposal', {});
+      expect(result.result).toEqual({ error: 'no pending proposal' });
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+    });
+
+    it('cancelProposal resolves the proposal without executing anything', async () => {
+      const result = await makeAgent('CONFIG').executeTool('cancelProposal', {});
+      expect(result.result).toEqual({ cancelled: true });
+      expect(result.sideEffects?.proposalResolved).toBe('cancelled');
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
     });
 
     it('returns error for unknown tool names', async () => {

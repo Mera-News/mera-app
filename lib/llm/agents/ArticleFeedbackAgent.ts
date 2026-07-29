@@ -16,6 +16,7 @@
 import { getFacts } from '../../database/services/fact-service';
 import { getSuggestionFeedbackContext } from '../../database/services/article-suggestion-service';
 import { markFeedbackProcessedFor } from '../../database/services/article-feedback-service';
+import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { ArticleService } from '../../article-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { ArticleSuggestionStatus } from '../../database/article-suggestion-status';
@@ -34,6 +35,7 @@ import {
   getArticleFeedbackToolDefinitions,
 } from '../../news-harness/article-feedback/agent-core';
 import type {
+  ActiveSuppressionView,
   SuggestionFeedbackContext,
   TrackFeedbackSubject,
 } from '../../news-harness/core/types';
@@ -92,6 +94,49 @@ export class ArticleFeedbackAgent implements IAgent {
     return this.relatedCoveragePromise;
   }
 
+  /** The user's ACTIVE "not interested" filters, as the RN-free plain view the
+   *  harness renders into <context> and validates `retire_suppression` against.
+   *  Read fresh on every turn AND on every proposeChanges (the user may have
+   *  just added one). Best-effort: a failure means no filters block and a
+   *  rejected retire_suppression, never a broken chat. */
+  private async loadActiveSuppressions(): Promise<ActiveSuppressionView[]> {
+    try {
+      const rows = await getActiveSuppressions();
+      return rows.map((s) => ({
+        id: s.id,
+        pattern: s.pattern,
+        kind: s.kind,
+        value: s.value,
+        strength: s.strength,
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  /** The joined suggestion row mapped into the harness's enum-free plain shape.
+   *  Shared by buildContext (renders it) and proposeChanges (corroborates a
+   *  structured suppression value against it). */
+  private async loadArticleContext(): Promise<SuggestionFeedbackContext | null> {
+    const ctx = await getSuggestionFeedbackContext(this.target);
+    if (!ctx) return null;
+    return {
+      suggestion: {
+        title_en: ctx.suggestion.title_en,
+        title_original: ctx.suggestion.title_original,
+        publication_name: ctx.suggestion.publication_name,
+        description_en: ctx.suggestion.description_en,
+        isScored: ctx.suggestion.status === ArticleSuggestionStatus.Complete,
+        relevance: ctx.suggestion.relevance,
+        reason: ctx.suggestion.reason,
+      },
+      matchedTopicTexts: ctx.matchedTopicTexts,
+      linkedFacts: ctx.linkedFacts,
+      entities: ctx.entities,
+      category: ctx.category,
+    };
+  }
+
   /** Resolve the subject the follow tool tracks against: the explicit
    *  trackSubject, else a minimal one built from the target + store title. */
   private resolveTrackSubject(): TrackFeedbackSubject | null {
@@ -141,7 +186,7 @@ export class ArticleFeedbackAgent implements IAgent {
   // --- IAgent: dynamic context (rebuilt every turn) ---
 
   async buildContext(): Promise<string> {
-    const ctx = await getSuggestionFeedbackContext(this.target);
+    const context = await this.loadArticleContext();
     const facts = await getFacts(); // newest-first (sorted created_at desc)
 
     const storeContext = useFloatingChatStore.getState().context;
@@ -153,25 +198,6 @@ export class ArticleFeedbackAgent implements IAgent {
     const tappedOptions =
       storeContext.kind === 'article-suggestion' ? storeContext.treePath : undefined;
     const proposal = useFloatingChatStore.getState().proposal;
-
-    // Map the RN suggestion row into the harness's enum-free plain shape.
-    const context: SuggestionFeedbackContext | null = ctx
-      ? {
-          suggestion: {
-            title_en: ctx.suggestion.title_en,
-            title_original: ctx.suggestion.title_original,
-            publication_name: ctx.suggestion.publication_name,
-            description_en: ctx.suggestion.description_en,
-            isScored: ctx.suggestion.status === ArticleSuggestionStatus.Complete,
-            relevance: ctx.suggestion.relevance,
-            reason: ctx.suggestion.reason,
-          },
-          matchedTopicTexts: ctx.matchedTopicTexts,
-          linkedFacts: ctx.linkedFacts,
-          entities: ctx.entities,
-          category: ctx.category,
-        }
-      : null;
 
     // Follow-state so the agent can decline a duplicate track (best-effort).
     let isTracked: boolean | undefined;
@@ -186,6 +212,8 @@ export class ArticleFeedbackAgent implements IAgent {
 
     // Sibling titles (only when following a story) ground multi-option tracks.
     const relatedCoverage = await this.getRelatedCoverage();
+    // Active filters so the agent can offer to REMOVE one (D6 chat-first parity).
+    const activeSuppressions = await this.loadActiveSuppressions();
 
     return buildFeedbackContext({
       // The real clock lives HERE (the adapter), never inside the pure builder —
@@ -201,6 +229,7 @@ export class ArticleFeedbackAgent implements IAgent {
       relatedCoverage,
       verdict,
       tappedOptions,
+      activeSuppressions,
     });
   }
 
@@ -218,10 +247,14 @@ export class ArticleFeedbackAgent implements IAgent {
     switch (name) {
       case 'proposeChanges': {
         // Validate referenced fact ids in a single getFacts pass, then let the
-        // pure brain decide the staged proposal / error.
+        // pure brain decide the staged proposal / error. The article context +
+        // active filters let it corroborate a structured suppression value (D9)
+        // and resolve a retire_suppression id against real rows.
         const facts = await getFacts();
         const factIds = new Set(facts.map((f) => f.id));
-        return decideProposeChanges(args, factIds);
+        const article = await this.loadArticleContext();
+        const activeSuppressions = await this.loadActiveSuppressions();
+        return decideProposeChanges(args, factIds, { article, activeSuppressions });
       }
 
       case 'proposeTrack': {

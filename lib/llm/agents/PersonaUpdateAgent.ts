@@ -11,6 +11,9 @@ import {
 } from '../../chat-tools/tool-handlers';
 import { getCoveredAttributeKeys, getFacts, getQuestionnaireLevel, setQuestionnaireLevel } from '../../database/services/fact-service';
 import { runCalibration } from '../../database/services/calibration-service';
+import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
+import { executeProposalActions } from '../../chat-tools/proposal-handlers';
+import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
 import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '../../mera-protocol/prompts';
 import {
@@ -25,10 +28,12 @@ import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import {
   buildPersonaContext,
   buildPersonaSystemPrompt,
+  decidePersonaProposeChanges,
   getPersonaToolDefinitions,
   recomputeQuestionnaireLevel,
   type PersonaMode,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
+import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
   ConversationMessage,
   IAgent,
@@ -105,14 +110,38 @@ export class PersonaUpdateAgent implements IAgent {
 
   // --- IAgent: dynamic context (injected into user messages each turn) ---
 
+  /** The user's ACTIVE "not interested" filters as the harness's plain view
+   *  (not-interested P4a / D6). CONFIG only — onboarding has no feed yet, so it
+   *  neither offers the filter tools nor pays the context tokens. Best-effort:
+   *  a failure means no filters block and a rejected retire_suppression, never a
+   *  broken chat. */
+  private async loadActiveSuppressions(): Promise<ActiveSuppressionView[]> {
+    if (this.surface !== 'CONFIG') return [];
+    try {
+      const rows = await getActiveSuppressions();
+      return rows.map((s) => ({
+        id: s.id,
+        pattern: s.pattern,
+        kind: s.kind,
+        value: s.value,
+        strength: s.strength,
+      }));
+    } catch {
+      return [];
+    }
+  }
+
   async buildContext(): Promise<string> {
     const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
 
     const facts = await getFacts();
+    const suppressions = await this.loadActiveSuppressions();
+    // Re-injected every turn so the one-shot LOCAL path can resolve a confirm.
+    const proposal = useFloatingChatStore.getState().proposal;
 
     if (!useLegacy) {
       return buildPersonaContext(
-        { facts, useLegacy: false },
+        { facts, useLegacy: false, suppressions, proposal },
         { buildContext: buildPersonaUpdateContext },
       );
     }
@@ -129,7 +158,7 @@ export class PersonaUpdateAgent implements IAgent {
     await setQuestionnaireLevel(currentLevel);
 
     return buildPersonaContext(
-      { facts, useLegacy: true, currentLevel, coveredAttributes },
+      { facts, useLegacy: true, currentLevel, coveredAttributes, suppressions, proposal },
       {
         buildContext: buildPersonaUpdateContext,
         buildGuide: buildQuestionnaireGuide,
@@ -227,6 +256,29 @@ export class PersonaUpdateAgent implements IAgent {
               : undefined,
         };
       }
+
+      // --- not-interested P4a (D6): the SAME staged-proposal path the
+      // ArticleFeedbackAgent has, so "Mera, stop showing me celebrity gossip"
+      // works in plain chat. Nothing is written until the user confirms.
+      case 'proposeChanges': {
+        const activeSuppressions = await this.loadActiveSuppressions();
+        return decidePersonaProposeChanges(args, activeSuppressions);
+      }
+
+      case 'applyProposal': {
+        const proposal = useFloatingChatStore.getState().proposal;
+        if (!proposal) return { result: { error: 'no pending proposal' } };
+        // Same executor as the article surface — one seam, one audit trail.
+        const { applied, errors, summaries, changeLogIds } =
+          await executeProposalActions(proposal.actions);
+        return {
+          result: { applied, errors, summaries, changeLogIds },
+          sideEffects: { proposalResolved: 'applied' },
+        };
+      }
+
+      case 'cancelProposal':
+        return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
 
       case 'runCalibration': {
         // The user was invited to recalibrate scoring (calibration notification)

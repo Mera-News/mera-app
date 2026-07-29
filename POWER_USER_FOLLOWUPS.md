@@ -104,3 +104,46 @@ to "is this the wrong place", which is worse than not asking.
 **Power user loses:** a one-tap "this is about the wrong city" on the dislike tree.
 **Cheapest way back:** thread the scoring engine's already-computed `wrongLocationFlag` onto the
 suggestion row at score time; the tree then reads it like any other gate.
+
+### PU-9 · Plain persona chat can only mint KEYWORD filters
+**Simplified:** in Mera chat (no article on screen), "stop showing me celebrity gossip" always
+stages a keyword filter — a normalized substring match over title + description + entities. The
+precise kinds (`category`, `entity`, `publication`, `place`, `topic`, `event_type`) are only
+reachable from the chat opened on an article.
+**Why:** every non-keyword kind matches by EXACT normalized equality against one article field, so
+a value the model invents ("celebrity stuff" as a category) is a filter that silently never fires.
+The article chat can corroborate a value verbatim against the `Category` / `Entities` /
+`Publication` / `MATCHED TOPICS` lines it was given; plain chat has nothing to check against, so
+the sanitizer drops `suppressionKind`/`suppressionValue` there rather than stage a dead filter.
+**Power user loses:** "mute the whole Sport category" as a single sentence in generic chat — they
+have to say it from any sports article instead (or say it as a phrase and accept a text match).
+**Cheapest way back:** put the real vocabularies in front of the model — inject the distinct
+`category` / `event_type` values actually present in the user's recent feed as a picklist in
+`<context>`, then reuse the same corroboration set the article sanitizer already builds.
+
+### PU-10 · `event_type` and `place` filters are never minted from an article either
+**Simplified:** the article chat exposes the full `SUPPRESSION_KINDS` enum, but a value claimed for
+`event_type` or `place` is downgraded to a keyword filter every time.
+**Why:** `SuggestionFeedbackContext` carries `category`, `entities`, `publicationName` and the
+matched topic texts — it carries no `eventType` and no `geoTags`. An uncheckable value gets the
+same treatment as an invented one (D9), rather than a special exemption that would let exactly the
+two unverifiable kinds through.
+**Power user loses:** "never show me obituaries" / "nothing from Bavaria" as a precise filter from
+an article; they get the keyword equivalent.
+**Cheapest way back:** add `eventType` and `geoTags` to `SuggestionFeedbackContext` (the suggestion
+row already has both) and to `CORROBORABLE_SUPPRESSION_KINDS` in
+`lib/news-harness/article-feedback/agent-core.ts` — the sanitizer, prompt mapping and tests are
+already shaped for it.
+
+### PU-11 · The filters list in `<context>` is capped and yields to a fact-heavy persona
+**Simplified:** the agents see at most 8 (article chat) / 10 (persona chat) of the user's active
+filters, and the persona chat drops the block entirely once the fact list alone crosses
+`PERSONA_CONTEXT_TOKEN_BUDGET`. A user with 40 filters cannot ask "what have I hidden?" and get a
+complete answer.
+**Why:** the on-device input budget is 3072 tokens and the persona prompt already runs at ~2900 of
+it at saturation; an auxiliary block must not be the thing that hard-errors the turn.
+**Power user loses:** conversational review of a long filter list, and removal-by-chat of a filter
+that fell off the end.
+**Cheapest way back:** a filters screen that lists all of them with a remove control — the removal
+seam (`ACTION_NAMES.RETIRE_SUPPRESSION` via `applyPersonaAction`) is already audited and
+revertible, so the screen is presentation only.

@@ -139,6 +139,49 @@ export interface HarnessArticle {
 // re-exports these so no importer changes.
 // ---------------------------------------------------------------------------
 
+/**
+ * What a "not interested" filter matches against. RUNTIME mirror of
+ * `SUPPRESSION_KINDS` in `lib/database/models/PersonaSuppression` (duplicated so
+ * the harness stays RN-free / DB-free), and of the type-only mirror
+ * `SuppressionKind` in `lib/news-harness/scoring-engine/persona-context.ts`.
+ * ORDER IS LOAD-BEARING — the agent tool schemas expose this array verbatim as a
+ * JSON-Schema `enum` and their tests assert it with an order-sensitive toEqual.
+ *
+ * `keyword` matches as a normalized SUBSTRING over title + description +
+ * entities. Every other kind is an EXACT normalized equality test against one
+ * article field (category / eventType / entities[] / publicationName / geoTags /
+ * matched topic text) — so an invented value silently never fires. An absent
+ * kind reads as `keyword`.
+ */
+export const SUPPRESSION_KINDS = [
+  'keyword',
+  'category',
+  'event_type',
+  'entity',
+  'publication',
+  'place',
+  'topic',
+] as const;
+
+export type SuppressionKindName = (typeof SUPPRESSION_KINDS)[number];
+
+/** One ACTIVE "not interested" filter as the chat agents see it — the minimal
+ *  plain projection of a `persona_suppressions` row (no WatermelonDB model).
+ *  Rendered into <context> so the agent can offer to REMOVE one, and used to
+ *  validate a `retire_suppression` proposal's `suppressionId`. */
+export interface ActiveSuppressionView {
+  /** The `persona_suppressions` row id — the only handle retire_suppression takes. */
+  id: string;
+  /** Human-readable original phrase (display only, never matched against). */
+  pattern: string;
+  /** Absent/null ⇒ 'keyword'. */
+  kind?: SuppressionKindName | null;
+  /** The token the non-keyword kinds compare against. */
+  value?: string | null;
+  /** [0,1]. ≥ HARD_SUPPRESSION_STRENGTH (0.8) ⇒ a genuine exclusion. */
+  strength?: number;
+}
+
 /** A single deterministic change the proposal executor can apply to the persona.
  *
  *  The first group is the legacy fact/topic-CRUD set (applied directly against
@@ -170,8 +213,26 @@ export type ProposalAction =
   | { type: 'add_negative_topic'; topicText: string; weight?: number }
   /** Boost / deprioritize / mute a named publication. */
   | { type: 'set_publication_pref'; publicationId: string; publicationPref: 'boost' | 'deprioritize' | 'mute' }
-  /** Add a soft/hard suppression rule (a phrase to filter out). */
-  | { type: 'add_suppression'; suppressionPattern: string; suppressionKeywords?: string[]; suppressionStrength?: number }
+  /** Add a soft/hard suppression rule (a "not interested" filter).
+   *  `suppressionKind` + `suppressionValue` make it STRUCTURED (exact match on
+   *  one article field); absent ⇒ a keyword filter over `suppressionPattern` /
+   *  `suppressionKeywords`. The sanitizer downgrades a structured filter whose
+   *  value the article context can't corroborate back to a keyword one (D9). */
+  | {
+      type: 'add_suppression';
+      suppressionPattern: string;
+      suppressionKeywords?: string[];
+      suppressionStrength?: number;
+      suppressionKind?: SuppressionKindName;
+      suppressionValue?: string;
+    }
+  /** Remove an ACTIVE "not interested" filter (D5: an audited mutation, not a
+   *  silent delete — routed through ACTION_NAMES.RETIRE_SUPPRESSION so it logs
+   *  and inverts). `suppressionId` is a `persona_suppressions` row id the
+   *  sanitizer resolved against the filters it put in <context>; `pattern` is
+   *  the resolved display phrase (looked up from that same list, never taken
+   *  from the model). */
+  | { type: 'retire_suppression'; suppressionId: string; pattern: string }
   /** Pin / unpin a matched topic as high-priority. */
   | { type: 'set_high_priority'; topicText: string; highPriority: boolean }
   /** Retire a matched topic entirely — stronger than a weight nudge ("I'm done
@@ -288,6 +349,12 @@ export interface FeedbackContextInput {
   /** The Feed-tab verdict the user gave on this article (Round-4 P4 handoff) —
    *  grounds the agent's proposals. Absent for chats opened outside the feed. */
   verdict?: 'like' | 'dislike';
+  /** The user's ACTIVE "not interested" filters, newest-first. Rendered as an
+   *  `## YOUR FILTERS` block (article-matching ones first, capped) so the agent
+   *  can offer to REMOVE one, and used to validate a `retire_suppression`
+   *  proposal. Absent/empty ⇒ the block is omitted and retire_suppression is
+   *  rejected outright. */
+  activeSuppressions?: ActiveSuppressionView[];
   /** Human-readable breadcrumb LABELS of the inline feedback-tree options the
    *  user tapped before opening chat (e.g. ["Not a good suggestion", "Wrong
    *  topic"]). Rendered as a `TAPPED OPTIONS` line. Absent/empty when none. */

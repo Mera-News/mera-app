@@ -104,6 +104,70 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy
         },
       },
     });
+    // not-interested P4a (D6): filters are manageable in PLAIN persona chat, not
+    // only from an article. Same staged-proposal contract as the
+    // ArticleFeedbackAgent — nothing is applied until the user taps confirm.
+    // CONFIG only: onboarding has no feed yet, so there is nothing to filter.
+    tools.push({
+      type: 'function',
+      function: {
+        name: 'proposeChanges',
+        description:
+          'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
+        parameters: {
+          type: 'object',
+          properties: {
+            explanation: { type: 'string', description: 'Why (≤2 sentences).' },
+            expected_effects: { type: 'string', description: 'What changes in the feed (≤2 sentences).' },
+            actions: {
+              type: 'array',
+              description: 'Minimal list of filter changes.',
+              items: {
+                type: 'object',
+                properties: {
+                  type: {
+                    type: 'string',
+                    enum: ['add_suppression', 'retire_suppression'],
+                    description: 'Action kind.',
+                  },
+                  suppressionPattern: {
+                    type: 'string',
+                    description:
+                      'add_suppression: the phrase to hide, in English, in the user\'s own words. Matched as text anywhere in a story — do not invent a category or section name.',
+                  },
+                  suppressionStrength: {
+                    type: 'number',
+                    description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).',
+                  },
+                  suppressionId: {
+                    type: 'string',
+                    description: 'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
+                  },
+                },
+                required: ['type'],
+              },
+            },
+          },
+          required: ['explanation', 'expected_effects', 'actions'],
+        },
+      },
+    });
+    tools.push({
+      type: 'function',
+      function: {
+        name: 'applyProposal',
+        description: 'Apply the pending filter proposal when the user confirms.',
+        parameters: { type: 'object', properties: {} },
+      },
+    });
+    tools.push({
+      type: 'function',
+      function: {
+        name: 'cancelProposal',
+        description: 'Discard the pending filter proposal when the user declines.',
+        parameters: { type: 'object', properties: {} },
+      },
+    });
     tools.push({
       type: 'function',
       function: {
@@ -210,6 +274,21 @@ ${examples}`;
 }
 
 /**
+ * The "not interested" FILTERS section (not-interested P4a, D6) — CONFIG only
+ * (onboarding has no feed yet, so there is nothing to filter). Shared verbatim
+ * by the CLOUD and LOCAL prompt variants so the two paths can't drift.
+ *
+ * Wording is deliberately keyword-first: this surface has no article in front
+ * of it, so there is nothing to copy a structured field value from and nothing
+ * to validate one against. A phrase the user said always matches as text; an
+ * invented category name would match nothing (see D9). The article-feedback
+ * agent is the surface that mints structured filters.
+ */
+const FILTERS_PROMPT_SECTION = `
+- FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in ENGLISH, the user's OWN words, never an invented category name; suppressionStrength 0.9 = never show it, 0.5 = less of it}. "Show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS in <context>} — never invent an id.
+- NEVER apply a filter directly: stage ONE proposeChanges, then applyProposal when the user confirms (yes / ok, any language) or cancelProposal when they decline. While a PENDING PROPOSAL is in <context> and they say anything else, leave it pending and reply normally.`;
+
+/**
  * Builds the STATIC persona update system prompt.
  * Contains only session-constant content: role, rules, fact rules, config rules, tool format.
  * Dynamic data (known facts, questionnaire, config) is provided via buildPersonaUpdateContext().
@@ -246,7 +325,7 @@ export function buildPersonaUpdateStaticPrompt(params: {
 
   const deletingFactsSection = isOnboarding ? '' : `
 - DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
-- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.`;
+- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.${FILTERS_PROMPT_SECTION}`;
 
   const conversationGuide = useLegacy
     ? `## Rules
@@ -327,7 +406,7 @@ function buildPersonaUpdateLocalPrompt(params: {
 
   const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
 
-  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.';
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.' + FILTERS_PROMPT_SECTION;
 
   const rulesSection = useLegacy
     ? `## Rules
@@ -390,23 +469,36 @@ export function buildPersonaUpdateContext(params: {
   questionnaireGuide?: string;
   currentLevel?: number;
   totalLevels?: number;
+  /** not-interested P4a: pre-rendered `- [id] "phrase"` rows of the user's
+   *  ACTIVE filters. Omitted (not empty-stated) when there are none, so a user
+   *  with no filters pays zero tokens for the feature. */
+  filtersList?: string;
+  /** not-interested P4a: pre-rendered body of the in-flight staged proposal.
+   *  Re-injected every turn so the one-shot LOCAL path can still confirm. */
+  pendingProposal?: string;
 }): string {
-  const { knownFactsList, useLegacy = false, questionnaireGuide, currentLevel, totalLevels } = params;
+  const { knownFactsList, useLegacy = false, questionnaireGuide, currentLevel, totalLevels, filtersList, pendingProposal } = params;
+
+  const blocks: string[] = [];
 
   if (useLegacy && questionnaireGuide !== undefined && currentLevel !== undefined && totalLevels !== undefined) {
-    return `<context>
-## Questionnaire: Level ${currentLevel}/${totalLevels}
-${questionnaireGuide}
-
-## Known Facts
-${knownFactsList}
-</context>`;
+    blocks.push(`## Questionnaire: Level ${currentLevel}/${totalLevels}\n${questionnaireGuide}`);
   }
 
-  return `<context>
-## Known Facts
-${knownFactsList}
-</context>`;
+  blocks.push(`## Known Facts\n${knownFactsList}`);
+
+  if (filtersList) {
+    blocks.push(
+      `## YOUR FILTERS (already hidden — retire_suppression removes one by [id])\n${filtersList}`,
+    );
+  }
+  if (pendingProposal) {
+    blocks.push(
+      `## PENDING PROPOSAL\n${pendingProposal}\nIf the user confirms call applyProposal; if they decline call cancelProposal.`,
+    );
+  }
+
+  return `<context>\n${blocks.join('\n\n')}\n</context>`;
 }
 
 // ============================================================
