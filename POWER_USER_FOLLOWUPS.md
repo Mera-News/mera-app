@@ -166,3 +166,35 @@ D15 exists to remove. `applyLeafActions` records the `changeLogIds` on the verdi
 it. There is no UI for that combination and no evidence anyone wants it.
 **Cheapest way back:** the changes remain individually revertible from the Activity list, so a user
 who wants the change back can re-apply it there; the leaf itself is one tap to re-pick.
+
+### PU-13 · A structured filter shows its KIND, but not the exact value it matches on
+**Simplified:** the chat confirm card renders a structured filter as a small kind chip
+("Category", "Event type", …) above the human phrase the user or the agent used. The
+`suppressionValue` — the exact field token the filter actually compares against — is not shown, and
+when the two differ (chat can stage a pattern in the user's own words with a verbatim value copied
+from the article) only the phrase appears.
+**Why:** two strings on one row is the kind of clutter the card exists to avoid, and the chip
+already carries the load-bearing difference — "this matches the category field" vs "this matches
+text anywhere in a story". A user who wants the exact value can find it on the Not-interested
+screen, where the detail already lives.
+**Power user loses:** verifying at confirm time that the value the agent copied is the one they
+meant, without going to another screen.
+**Cheapest way back:** render the value as a second dim line only when it differs from the pattern —
+two lines on the rare row rather than on every row.
+
+### PU-14 · Only the feedback tree's own placeholders can mint a structured filter
+**Simplified:** a tree leaf's `kind` is honoured only when its `pattern` is the context placeholder
+that reads exactly that field (`from_context_category` + `kind: 'category'`,
+`from_context_eventType` + `kind: 'event_type'`). A literal pattern with a kind, a mismatched pair,
+or an unknown kind all degrade to a keyword filter.
+**Why:** D9 — every non-keyword kind matches by exact normalized equality on one article field, so
+a value that did not come verbatim from that field is a filter that looks active and fires never.
+The placeholder is the only thing that proves provenance; trusting the leaf's `kind` alone would let
+a future server-authored tree ship dead filters that nothing in the app could detect.
+**Power user loses:** nothing today. A tree author loses the ability to hand-write, say, a
+`publication` or `entity` filter into a leaf.
+**Cheapest way back:** add the placeholder + accessor pair to `SUPPRESSION_SOURCES` in
+`lib/news-harness/feedback-tree/resolve-leaf-actions.ts` — one line per new field, and the guard
+keeps working. (Note the asymmetry with PU-10: the tree and the digest CAN mint `event_type`
+because they read the article's own snapshotted field, while the article chat still cannot, because
+its `SuggestionFeedbackContext` has no `eventType` to corroborate the model against.)

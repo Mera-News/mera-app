@@ -156,13 +156,24 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           id: 'this_category',
           labelKey: 'feedback.this_category',
           labelDefault: 'This category',
-          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_category', strength: 0.5 }] },
+          // D10: "this category" means the category, not any story that happens
+          // to mention its name — so it mints a STRUCTURED filter (exact match
+          // on the article's category field) rather than a substring scan.
+          leaf: {
+            actions: [
+              { type: 'add_suppression', pattern: 'from_context_category', kind: 'category', strength: 0.5 },
+            ],
+          },
         },
         {
           id: 'this_kind_of_event',
           labelKey: 'feedback.this_kind_of_event',
           labelDefault: 'This kind of event',
-          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_eventType', strength: 0.5 }] },
+          leaf: {
+            actions: [
+              { type: 'add_suppression', pattern: 'from_context_eventType', kind: 'event_type', strength: 0.5 },
+            ],
+          },
         },
         {
           id: 'tell_mera_why',

@@ -11,6 +11,7 @@
 // deltas) instead of negative.
 
 import type { ActionName } from '../persona-management/action-names';
+import type { SuppressionKindName } from '../core/types';
 
 /** visibleIf gate keys understood by this app schema. Server may add more — an
  *  unknown key is IGNORED (does not hide the node) for forward-compat. */
@@ -44,6 +45,11 @@ export interface FeedbackTreeAbstractAction {
   /** add_suppression → 'from_context_title' | 'from_context_category' |
    *  'from_context_eventType', or a literal pattern */
   pattern?: string;
+  /** add_suppression → a SUPPRESSION_KINDS name, promoting the filter from a
+   *  keyword substring scan to an exact match on one article field (D9). Only
+   *  honoured when `pattern` is the context placeholder that reads THAT field —
+   *  see resolve-leaf-actions. Anything else stays a keyword filter. */
+  kind?: string;
   weight?: number;
   delta?: number;
   strength?: number;
@@ -130,4 +136,8 @@ export interface ResolvedPersonaAction {
   suppressionPattern?: string;
   suppressionKeywords?: string[];
   suppressionStrength?: number;
+  /** D9 structured filter — set together, and only when `suppressionValue` is
+   *  the article's own field value copied verbatim (see resolve-leaf-actions). */
+  suppressionKind?: SuppressionKindName;
+  suppressionValue?: string;
 }

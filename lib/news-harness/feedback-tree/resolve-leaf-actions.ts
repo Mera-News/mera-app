@@ -7,12 +7,33 @@
 // is SKIPPED (never throws) — the app simply applies the actions it can resolve.
 
 import { ACTION_NAMES } from '../persona-management/action-names';
+import type { SuppressionKindName } from '../core/types';
 import type {
   FeedbackTreeAbstractAction,
   FeedbackTreeLeaf,
   LocalFeedbackContext,
   ResolvedPersonaAction,
 } from './types';
+
+/**
+ * `add_suppression` pattern placeholders → the context field they copy, plus the
+ * suppression KIND that field legitimately backs.
+ *
+ * D9: a structured filter matches by exact normalized equality against ONE
+ * article field, so its value must BE that field, verbatim. A placeholder is the
+ * only thing that guarantees it — hence the kind is tied to the placeholder
+ * rather than trusted from the leaf alone. `from_context_title` backs no kind: a
+ * headline is not a matchable field, so a title-derived filter is always a
+ * keyword one.
+ */
+const SUPPRESSION_SOURCES: Record<
+  string,
+  { read: (c: LocalFeedbackContext) => string | null | undefined; kind?: SuppressionKindName }
+> = {
+  from_context_title: { read: (c) => c.articleTitle },
+  from_context_category: { read: (c) => c.category, kind: 'category' },
+  from_context_eventType: { read: (c) => c.eventType, kind: 'event_type' },
+};
 
 /** Numeric passthrough — undefined when the field isn't a finite number. */
 function num(v: unknown): number | undefined {
@@ -85,22 +106,26 @@ function resolveOne(
     }
 
     case 'add_suppression': {
-      const pattern =
-        a.pattern === 'from_context_title'
-          ? ctx.articleTitle?.trim()
-          : a.pattern === 'from_context_category'
-            ? ctx.category?.trim()
-            : a.pattern === 'from_context_eventType'
-              ? ctx.eventType?.trim()
-              : typeof a.pattern === 'string'
-                ? a.pattern.trim()
-                : undefined;
+      const source = typeof a.pattern === 'string' ? SUPPRESSION_SOURCES[a.pattern] : undefined;
+      const pattern = source
+        ? source.read(ctx)?.trim()
+        : typeof a.pattern === 'string'
+          ? a.pattern.trim()
+          : undefined;
       if (!pattern) return [];
+      // The kind rides along ONLY when the leaf asks for exactly the kind its
+      // placeholder's field backs. A literal pattern, a mismatched kind or an
+      // unknown one degrades to a keyword filter: matching fewer things is
+      // fine, matching nothing while looking active is not.
+      const structuredKind = source?.kind && a.kind === source.kind ? source.kind : undefined;
       return [
         {
           action_type: ACTION_NAMES.ADD_SUPPRESSION,
           suppressionPattern: pattern,
           suppressionStrength: num(a.strength),
+          ...(structuredKind
+            ? { suppressionKind: structuredKind, suppressionValue: pattern }
+            : {}),
         },
       ];
     }

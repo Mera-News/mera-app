@@ -1,6 +1,10 @@
 import { resolveLeafActions } from '../resolve-leaf-actions';
 import { ACTION_NAMES } from '../../persona-management/action-names';
-import type { FeedbackTreeLeaf, LocalFeedbackContext } from '../types';
+import type {
+  FeedbackTreeAbstractAction,
+  FeedbackTreeLeaf,
+  LocalFeedbackContext,
+} from '../types';
 
 const ctx = (over: Partial<LocalFeedbackContext> = {}): LocalFeedbackContext => ({ ...over });
 
@@ -109,6 +113,76 @@ describe('resolveLeafActions', () => {
     };
     expect(resolveLeafActions(leaf, ctx({ publicationName: 'X' }))).toEqual([
       { action_type: ACTION_NAMES.SET_PUBLICATION_PREF, publicationId: 'X', publicationPref: 'mute' },
+    ]);
+  });
+});
+
+// D9/D10 — a STRUCTURED filter matches by exact normalized equality on ONE
+// article field, so its value must be that field verbatim. The kind is
+// therefore tied to the context PLACEHOLDER, never trusted from the leaf alone:
+// a value we can't guarantee came from the article silently matches nothing.
+describe('resolveLeafActions — structured suppression kinds', () => {
+  it('from_context_category + kind:category → an exact category filter', () => {
+    const leaf: FeedbackTreeLeaf = {
+      actions: [
+        { type: 'add_suppression', pattern: 'from_context_category', kind: 'category', strength: 0.5 },
+      ],
+    };
+    expect(resolveLeafActions(leaf, ctx({ category: '  Politics  ' }))).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'Politics',
+        suppressionStrength: 0.5,
+        suppressionKind: 'category',
+        suppressionValue: 'Politics',
+      },
+    ]);
+  });
+
+  it('from_context_eventType + kind:event_type → an exact event-type filter', () => {
+    const leaf: FeedbackTreeLeaf = {
+      actions: [
+        { type: 'add_suppression', pattern: 'from_context_eventType', kind: 'event_type', strength: 0.5 },
+      ],
+    };
+    expect(resolveLeafActions(leaf, ctx({ eventType: 'Earnings call' }))).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'Earnings call',
+        suppressionStrength: 0.5,
+        suppressionKind: 'event_type',
+        suppressionValue: 'Earnings call',
+      },
+    ]);
+  });
+
+  it('degrades to a keyword filter for a literal pattern, a mismatched kind, or an unknown kind', () => {
+    const cases: FeedbackTreeAbstractAction[] = [
+      // The author's own words — nothing guarantees an article field holds them.
+      { type: 'add_suppression', pattern: 'celebrity gossip', kind: 'category', strength: 0.5 },
+      // The placeholder reads the TITLE; a title is not the category field.
+      { type: 'add_suppression', pattern: 'from_context_title', kind: 'category', strength: 0.5 },
+      // Right field, wrong kind claimed.
+      { type: 'add_suppression', pattern: 'from_context_category', kind: 'entity', strength: 0.5 },
+      // Not a SUPPRESSION_KINDS member at all.
+      { type: 'add_suppression', pattern: 'from_context_category', kind: 'sentiment', strength: 0.5 },
+    ];
+    for (const action of cases) {
+      const [resolved] = resolveLeafActions(
+        { actions: [action] },
+        ctx({ category: 'Politics', articleTitle: 'A headline' }),
+      ) as { suppressionKind?: string; suppressionValue?: string }[];
+      expect(resolved.suppressionKind).toBeUndefined();
+      expect(resolved.suppressionValue).toBeUndefined();
+    }
+  });
+
+  it('a placeholder with no kind keeps the pre-existing keyword behaviour', () => {
+    const leaf: FeedbackTreeLeaf = {
+      actions: [{ type: 'add_suppression', pattern: 'from_context_category', strength: 0.5 }],
+    };
+    expect(resolveLeafActions(leaf, ctx({ category: 'Politics' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'Politics', suppressionStrength: 0.5 },
     ]);
   });
 });

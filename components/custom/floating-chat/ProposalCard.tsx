@@ -75,15 +75,17 @@ export interface ActionRow {
   chip?: { key: string; default: string };
 }
 
-/** Display label for a structured suppression kind. `keyword` is deliberately
- *  absent — it is the default and the row label already reads "a phrase". */
+/** Display label for a structured suppression kind — deliberately the SAME keys
+ *  the Not-interested screen uses, so a filter reads identically where it is
+ *  confirmed and where it is later managed. `keyword` is absent on purpose: it
+ *  is the default, and the row label already reads "a phrase". */
 const SUPPRESSION_KIND_CHIPS: Record<string, { key: string; default: string }> = {
-  category: { key: 'articleFeedback.suppressionKindCategory', default: 'Category' },
-  event_type: { key: 'articleFeedback.suppressionKindEventType', default: 'Event type' },
-  entity: { key: 'articleFeedback.suppressionKindEntity', default: 'Entity' },
-  publication: { key: 'articleFeedback.suppressionKindPublication', default: 'Publication' },
-  place: { key: 'articleFeedback.suppressionKindPlace', default: 'Place' },
-  topic: { key: 'articleFeedback.suppressionKindTopic', default: 'Topic' },
+  category: { key: 'notInterested.kinds.category', default: 'Category' },
+  event_type: { key: 'notInterested.kinds.event_type', default: 'Kind of story' },
+  entity: { key: 'notInterested.kinds.entity', default: 'Person or thing' },
+  publication: { key: 'notInterested.kinds.publication', default: 'Source' },
+  place: { key: 'notInterested.kinds.place', default: 'Place' },
+  topic: { key: 'notInterested.kinds.topic', default: 'Topic' },
 };
 
 /** Maps a ProposalAction to its display row. Exported for the action-type

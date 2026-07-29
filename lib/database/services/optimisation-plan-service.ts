@@ -737,6 +737,11 @@ async function toValidPersonaAction(
       ...(typeof op.suppressionStrength === 'number'
         ? { suppressionStrength: op.suppressionStrength }
         : {}),
+      // D9 — carry the structured pair through. The digest only sets it when the
+      // value is the article's own category/eventType verbatim; dropping it here
+      // would silently demote every digest filter to a keyword substring scan.
+      ...(op.suppressionKind ? { suppressionKind: op.suppressionKind } : {}),
+      ...(op.suppressionValue ? { suppressionValue: op.suppressionValue } : {}),
     };
   }
   if (type === ACTION_NAMES.SET_PUBLICATION_PREF) {
