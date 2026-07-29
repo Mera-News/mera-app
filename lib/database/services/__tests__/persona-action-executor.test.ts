@@ -13,8 +13,31 @@ jest.mock('../topic-service', () => ({
   retire: jest.fn(async () => {}),
 }));
 
+// Additive (P3): the executor now also reads HARD_SUPPRESSION_STRENGTH / kindOf
+// and calls getAll + retireSuppression. Without these the factory would hand
+// back `undefined` and the hard/soft branch would silently never fire.
 jest.mock('../suppression-service', () => ({
   addSuppression: jest.fn(async () => ({ id: 'sup-1' })),
+  getAll: jest.fn(async () => []),
+  retireSuppression: jest.fn(async () => {}),
+  kindOf: jest.fn((s: any) => s?.kind ?? 'keyword'),
+  HARD_SUPPRESSION_STRENGTH: 0.8,
+}));
+
+// Additive (P3): hard filters are retroactive, so the executor lazily requires
+// the sweep module. Mocked here so this suite stays a pure dispatch test.
+jest.mock('@/lib/services/suppression-sweep', () => ({
+  purgeHardFilteredSuggestions: jest.fn(async () => ({
+    excludedIds: [],
+    valueById: new Map(),
+    evictedFromFeed: 0,
+  })),
+  unexcludeRetiredHardFilters: jest.fn(async () => ({ resetIds: [], stillExcluded: 0 })),
+}));
+
+// Additive (P3): every applied mutation now marks the feed dirty (D18).
+jest.mock('@/lib/stores/for-you-store', () => ({
+  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
 }));
 
 jest.mock('../location-service', () => ({

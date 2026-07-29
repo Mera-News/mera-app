@@ -28,6 +28,12 @@ const ACTION_DISPLAY: Record<string, ActionDisplay> = {
     [ACTION_NAMES.RETIRE_TOPIC]: { icon: 'remove-circle-outline', labelKey: 'retireTopic' },
     [ACTION_NAMES.SUPPRESS_TOPIC]: { icon: 'visibility-off', labelKey: 'suppressTopic' },
     [ACTION_NAMES.ADD_SUPPRESSION]: { icon: 'visibility-off', labelKey: 'addSuppression' },
+    // NOTE: `isRevertible` below is a DENY-list — a new action type is offered a
+    // Revert button by default, while `revertChange` THROWS for types it can't
+    // invert. So this entry and the persona-change-log-service inverse case must
+    // always land in the same change, or the UI renders a button that can only
+    // produce an error toast.
+    [ACTION_NAMES.RETIRE_SUPPRESSION]: { icon: 'remove-circle-outline', labelKey: 'retireSuppression' },
     [ACTION_NAMES.SET_HIGH_PRIORITY]: { icon: 'flag', labelKey: 'setHighPriority' },
     [ACTION_NAMES.SET_PUBLICATION_PREF]: { icon: 'article', labelKey: 'setPublicationPref' },
     [ACTION_NAMES.NUDGE_SUBSCRIBE_PUBLICATION]: { icon: 'notifications-active', labelKey: 'nudgeSubscribePublication' },

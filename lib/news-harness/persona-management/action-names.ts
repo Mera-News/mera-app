@@ -21,6 +21,11 @@ export const ACTION_NAMES = {
   RETIRE_TOPIC: 'retire_topic',
   SUPPRESS_TOPIC: 'suppress_topic',
   ADD_SUPPRESSION: 'add_suppression',
+  // Removing a "not interested" filter is an AUDITED mutation, not a silent
+  // delete (D5): it logs like any other persona change and inverts via
+  // suppression-service.reactivateSuppression. Removal of a NEGATIVE TOPIC is
+  // a different thing and stays RETIRE_TOPIC.
+  RETIRE_SUPPRESSION: 'retire_suppression',
   SET_HIGH_PRIORITY: 'set_high_priority',
   SET_PUBLICATION_PREF: 'set_publication_pref',
   NUDGE_SUBSCRIBE_PUBLICATION: 'nudge_subscribe_publication',

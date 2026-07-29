@@ -131,6 +131,8 @@ function requireBooleanBefore(action: ChangeLogAction, rowId: string): boolean {
  *   set_high_priority  → restore the prior boolean flag
  *   add_negative_topic → retire the created (negative) topic
  *   add_suppression    → retire the created suppression
+ *   retire_suppression → reactivate the suppression (D5: removing a filter is
+ *                        an audited, undoable mutation, not a silent delete)
  *   suppress_topic     → reactivate the topic (forward-compat)
  *   set_publication_pref → restore the prior pref kind (or clear if it was none)
  * Anything else throws — later waves extend this switch as new action types
@@ -175,6 +177,14 @@ export async function revertChange(changeLogId: string): Promise<void> {
       break;
     }
     case 'retire_topic': {
+      // ACCEPTED DRIFT: `reactivate` restores status 'active', not whatever the
+      // row held before. Removing a NEGATIVE topic routes through retire_topic
+      // (there is no retire_negative_topic), so reverting the removal of a
+      // topic that had been 'suppressed' brings it back 'active' instead. The
+      // weight — which is what actually makes a negative topic negative — is
+      // untouched, so the topic is still disliked; it just loses hard-suppressed
+      // status. Not worth a second action type; revisit if suppressed topics
+      // ever become user-visible as a distinct state.
       const targetId = requireTargetId(action, row.id);
       await topicService.reactivate(targetId);
       break;
@@ -193,6 +203,14 @@ export async function revertChange(changeLogId: string): Promise<void> {
     case ACTION_NAMES.ADD_SUPPRESSION: {
       const targetId = requireTargetId(action, row.id);
       await suppressionService.retireSuppression(targetId);
+      break;
+    }
+    case ACTION_NAMES.RETIRE_SUPPRESSION: {
+      // Mirror of add_suppression's inverse. reactivateSuppression keeps the
+      // ORIGINAL expires_at, so undoing the removal of a long-expired SOFT
+      // filter is deliberately inert rather than a silent 30-day extension.
+      const targetId = requireTargetId(action, row.id);
+      await suppressionService.reactivateSuppression(targetId);
       break;
     }
     case ACTION_NAMES.SUPPRESS_TOPIC: {

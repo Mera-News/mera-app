@@ -65,6 +65,31 @@ export function observeByFact(factId: string) {
   return topicsCollection.query(Q.where('fact_id', factId)).observe();
 }
 
+/**
+ * Reactive query of the persona's NEGATIVE topics — the "things I don't want"
+ * section of the Not-interested screen.
+ *
+ * Two disjoint populations, deliberately unioned:
+ *   - `active` rows carrying a negative weight — a downrank the user can still
+ *     see the effect of, and can dial back.
+ *   - every `suppressed` row, at any weight — a suppressed topic is a hard
+ *     "never show me this" and belongs in the list regardless of its number.
+ * `retired` rows are excluded: they are dedup/history only and never scored.
+ *
+ * Sorted by weight ASCENDING, so the strongest dislikes surface first.
+ */
+export function observeNegative() {
+  return topicsCollection
+    .query(
+      Q.or(
+        Q.and(Q.where('status', 'active'), Q.where('weight', Q.lt(0))),
+        Q.where('status', 'suppressed'),
+      ),
+      Q.sortBy('weight', Q.asc),
+    )
+    .observe();
+}
+
 /** Active topics (any weight). */
 export async function getActive(): Promise<TopicModel[]> {
   return topicsCollection.query(Q.where('status', 'active')).fetch();
