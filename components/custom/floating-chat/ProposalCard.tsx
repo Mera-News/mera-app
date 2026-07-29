@@ -61,7 +61,7 @@ export interface ProposalCardProps {
   isLast: boolean;
 }
 
-interface ActionRow {
+export interface ActionRow {
   icon: keyof typeof MaterialIcons.glyphMap;
   labelKey: string;
   labelDefault?: string;
@@ -69,10 +69,27 @@ interface ActionRow {
   detail?: string;
   /** Optional bold heading above the detail (feature-request title). */
   heading?: string;
+  /** Optional small pill rendered before the detail — currently the structured
+   *  suppression KIND ("Category", "Publication", …). Absent for a plain
+   *  keyword filter, whose label already says "phrase". */
+  chip?: { key: string; default: string };
 }
 
-/** Maps a ProposalAction to its display row. */
-function actionToRow(action: ProposalAction): ActionRow {
+/** Display label for a structured suppression kind. `keyword` is deliberately
+ *  absent — it is the default and the row label already reads "a phrase". */
+const SUPPRESSION_KIND_CHIPS: Record<string, { key: string; default: string }> = {
+  category: { key: 'articleFeedback.suppressionKindCategory', default: 'Category' },
+  event_type: { key: 'articleFeedback.suppressionKindEventType', default: 'Event type' },
+  entity: { key: 'articleFeedback.suppressionKindEntity', default: 'Entity' },
+  publication: { key: 'articleFeedback.suppressionKindPublication', default: 'Publication' },
+  place: { key: 'articleFeedback.suppressionKindPlace', default: 'Place' },
+  topic: { key: 'articleFeedback.suppressionKindTopic', default: 'Topic' },
+};
+
+/** Maps a ProposalAction to its display row. Exported for the action-type
+ *  coverage test — a type that falls through to the guard renders a detail-less
+ *  "tune" row, which is a silent presentation bug, not a compile error. */
+export function actionToRow(action: ProposalAction): ActionRow {
   switch (action.type) {
     case 'add_fact':
       return { icon: 'add-circle', labelKey: 'articleFeedback.actionAddFact', detail: action.statement };
@@ -147,6 +164,20 @@ function actionToRow(action: ProposalAction): ActionRow {
         labelKey: 'articleFeedback.actionSuppress',
         labelDefault: 'Filter out a phrase',
         detail: action.suppressionPattern,
+        // A structured filter is a different promise from a keyword one (exact
+        // field match vs "anywhere in the story"), so the card has to say which.
+        ...(action.suppressionKind && SUPPRESSION_KIND_CHIPS[action.suppressionKind]
+          ? { chip: SUPPRESSION_KIND_CHIPS[action.suppressionKind] }
+          : {}),
+      };
+    case 'retire_suppression':
+      return {
+        icon: 'filter-alt-off',
+        labelKey: 'articleFeedback.actionRetireSuppression',
+        labelDefault: 'Remove a filter',
+        // Empty on a resumed card — the sanitizer resolves `pattern` from our
+        // own filter list and it is not echoed into the persisted tool result.
+        detail: action.pattern,
       };
     case 'set_high_priority':
       return {
@@ -284,6 +315,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                   <Text size="sm" bold style={styles.actionHeading}>
                     {row.heading}
                   </Text>
+                )}
+                {row.chip && (
+                  <View style={styles.chip}>
+                    <Text size="xs" style={styles.chipText}>
+                      {t(row.chip.key as TKey, { defaultValue: row.chip.default })}
+                    </Text>
+                  </View>
                 )}
                 {row.detail && (
                   <Text size="sm" style={styles.actionDetail}>
@@ -457,6 +495,18 @@ const styles = StyleSheet.create({
   },
   actionDetail: {
     color: 'rgb(193, 193, 193)',
+  },
+  chip: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(231, 138, 83, 0.5)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  chipText: {
+    color: ACCENT,
+    letterSpacing: 0.3,
   },
   effects: {
     color: 'rgb(180, 180, 180)',

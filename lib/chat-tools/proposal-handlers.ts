@@ -204,8 +204,32 @@ export async function executeProposalActions(
               ...(typeof action.suppressionStrength === 'number'
                 ? { suppressionStrength: action.suppressionStrength }
                 : {}),
+              // D9 — a STRUCTURED filter (kind + value) matches by exact
+              // normalized equality on one article field. These two fields were
+              // dropped here, so every structured filter the agents staged was
+              // flattened back to a keyword one at execution and the whole
+              // conversational-filter feature was a no-op end-to-end. The
+              // executor's normalizeSuppressionKind is the final gate: a kind
+              // with no usable value degrades to 'keyword' there.
+              ...(action.suppressionKind ? { suppressionKind: action.suppressionKind } : {}),
+              ...(action.suppressionValue ? { suppressionValue: action.suppressionValue } : {}),
             },
             'add_suppression',
+          );
+          break;
+        }
+        case 'retire_suppression': {
+          // D6 — removing a filter is an audited, invertible mutation, not a
+          // silent delete. The sanitizer already resolved `suppressionId`
+          // against the filters IT put in <context>, so there is nothing to
+          // re-resolve here; the executor re-reads the row for the change-log
+          // summary and the un-exclude sweep.
+          await runRails(
+            {
+              action_type: ACTION_NAMES.RETIRE_SUPPRESSION,
+              suppressionId: action.suppressionId,
+            },
+            'retire_suppression',
           );
           break;
         }

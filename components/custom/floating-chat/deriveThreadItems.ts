@@ -12,6 +12,10 @@ import type {
   ToolCallRecord,
 } from '@/lib/llm/types';
 import { parseTrackScopeOptions } from '@/lib/news-harness/article-feedback/agent-core';
+import {
+  SUPPRESSION_KINDS,
+  type SuppressionKindName,
+} from '@/lib/news-harness/core/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
@@ -142,7 +146,23 @@ function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
 // final pending/expired decision also uses "is this the LAST proposal card"
 // so correctness never depends on the echo. See ProposalCard.tsx.
 
-function parseProposalAction(value: unknown): ProposalAction | null {
+/**
+ * Re-validate ONE persisted proposal action into a `ProposalAction`.
+ *
+ * This deliberately stays a SECOND parser rather than reusing the harness
+ * sanitizer (`decideProposeChanges`/`validateAction`): that one is
+ * context-sensitive — it corroborates a structured filter's value against the
+ * live article context and resolves a `retire_suppression` id against the
+ * filter list it rendered into <context>. Neither input exists on resume. What
+ * we re-read here is already-sanitized output, so the job is a shape check, not
+ * a sanitize.
+ *
+ * The cost of that split is real (it is exactly what silently dropped
+ * structured filters and `retire_suppression` from every resumed card), so it
+ * is EXPORTED and covered by the action-type coverage test that walks both
+ * agents' tool enums.
+ */
+export function parseProposalAction(value: unknown): ProposalAction | null {
   const rec = asRecord(value);
   if (!rec) return null;
   const type = typeof rec.type === 'string' ? rec.type : '';
@@ -210,7 +230,28 @@ function parseProposalAction(value: unknown): ProposalAction | null {
       if (typeof rec.suppressionStrength === 'number' && Number.isFinite(rec.suppressionStrength)) {
         action.suppressionStrength = rec.suppressionStrength;
       }
+      // Structured filter (D9): kind + value travel together or not at all — a
+      // kind with no value matches NOTHING, so an incomplete pair degrades to
+      // the keyword filter the pattern already describes.
+      const kind =
+        typeof rec.suppressionKind === 'string' ? rec.suppressionKind.trim().toLowerCase() : '';
+      const value = typeof rec.suppressionValue === 'string' ? rec.suppressionValue.trim() : '';
+      if (value && (SUPPRESSION_KINDS as readonly string[]).includes(kind)) {
+        action.suppressionKind = kind as SuppressionKindName;
+        action.suppressionValue = value;
+      }
       return action;
+    }
+    case 'retire_suppression': {
+      const suppressionId =
+        typeof rec.suppressionId === 'string' ? rec.suppressionId.trim() : '';
+      if (!suppressionId) return null;
+      // `pattern` is resolved by the sanitizer from OUR filter list and is NOT
+      // echoed into the persisted tool result, so a resumed card usually has
+      // none. That costs a detail line — dropping the whole action (the old
+      // behaviour) cost the entire card.
+      const pattern = typeof rec.pattern === 'string' ? rec.pattern.trim() : '';
+      return { type: 'retire_suppression', suppressionId, pattern };
     }
     case 'set_high_priority': {
       const topicText = typeof rec.topicText === 'string' ? rec.topicText.trim() : '';
