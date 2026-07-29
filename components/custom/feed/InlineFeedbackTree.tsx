@@ -186,6 +186,8 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
 
   // Selected-leaf styling (an actions/nudge/seenOnly leaf the user tapped).
   const [selectedLeafId, setSelectedLeafId] = useState<string | null>(null);
+  // A destructive leaf that has been ARMED and is waiting for a second tap.
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
 
   // Resume a revisited card's stored path once the tree is loaded.
@@ -246,19 +248,31 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       if (isBranch) {
         hapticMedium();
         setSelectedLeafId(null);
+        setConfirmingId(null);
         descend(node);
         onTreePathChanged(suggestion, verdict, nextIds);
         return;
       }
 
-      // Leaf. openChat escalates to Mera; all others just record the path (no
-      // persona mutation — nudge/seenOnly/actions leaves are informational here).
+      // Leaf. openChat escalates to Mera.
       if (node.leaf?.openChat) {
         hapticMedium();
         onTreePathChanged(suggestion, verdict, nextIds);
         onInvokeMera(suggestion, verdict, nextIds);
         return;
       }
+
+      // A DESTRUCTIVE leaf (`confirm`, e.g. "Never show this publication") must
+      // not fire on a single tap now that leaves really apply — the modal tree
+      // has always had an explicit confirm step, and D17's "presentation may
+      // differ, semantics must not" cuts both ways. Tap-to-arm, tap-again-to-do:
+      // the same chip, relabelled, with no new surface.
+      if (node.leaf?.confirm && (node.leaf.actions?.length ?? 0) > 0 && confirmingId !== node.id) {
+        hapticMedium();
+        setConfirmingId(node.id);
+        return;
+      }
+      setConfirmingId(null);
 
       hapticLight();
       setSelectedLeafId(node.id);
@@ -290,6 +304,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       verdict,
       context,
       label,
+      confirmingId,
     ],
   );
 
@@ -297,6 +312,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     (depth: number) => {
       hapticLight();
       setSelectedLeafId(null);
+      setConfirmingId(null);
       goToDepth(depth);
     },
     [goToDepth],
@@ -309,18 +325,24 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   const renderChip = (node: FeedbackTreeNode) => {
     const isBranch = hasVisibleChildren(node);
     const selected = selectedLeafId === node.id;
+    const arming = confirmingId === node.id;
+    const chipLabel = arming
+      ? (t('swipeFeed.tapAgainToConfirm', {
+          defaultValue: 'Tap again to confirm',
+        }) as string)
+      : label(node);
     return (
       <Pressable
         key={node.id}
         testID={`feedback-tree-leaf-${node.id}`}
         accessibilityRole="button"
         accessibilityState={{ selected }}
-        accessibilityLabel={label(node)}
+        accessibilityLabel={chipLabel}
         onPress={() => handleSelect(node)}
         className="rounded-2xl"
         style={{
-          backgroundColor: selected ? SELECTED_BG : CHIP_BG,
-          borderColor: selected ? ACCENT : CHIP_BORDER,
+          backgroundColor: selected || arming ? SELECTED_BG : CHIP_BG,
+          borderColor: selected || arming ? ACCENT : CHIP_BORDER,
           borderWidth: 1,
         }}
       >
@@ -333,7 +355,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
             />
           ) : null}
           <Text className="flex-1" style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
-            {label(node)}
+            {chipLabel}
           </Text>
           {isBranch ? (
             <MaterialIcons name="arrow-forward-ios" size={12} color="#8a8a8a" />

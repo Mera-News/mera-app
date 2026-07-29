@@ -256,6 +256,7 @@
     "closeTree": "Close",
     "treeThanks": "Thanks — noted.",
     "feedbackCaption": "On its own, a thumb doesn't tell Mera enough — so it's discarded, to keep your feed healthy. Pick a reason and your feed changes right away.",
+    "tapAgainToConfirm": "Tap again to confirm",
     "chatHandoffLike": "I liked this story — more like this: {{path}}.",
     "chatHandoffLikeNoPath": "I liked this story — I'd like more like this.",
     "chatHandoffDislike": "I didn't like this story — {{path}}.",

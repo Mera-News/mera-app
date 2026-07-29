@@ -246,12 +246,21 @@ class ToastManager {
         }
 
         const React = require('react');
-        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
-        const { HStack } = require('@/components/ui/hstack');
-        const { VStack } = require('@/components/ui/vstack');
-        const { Pressable } = require('@/components/ui/pressable');
-        const { Text } = require('@/components/ui/text');
+        const { Toast } = require('@/components/ui/toast');
+        const { Text, Pressable } = require('react-native');
 
+        // VERIFIED ON DEVICE, and the shape matters more than it looks:
+        //   • FLAT children of Toast. Wrapping them in an HStack/VStack row (to
+        //     right-align the Undo) rendered as an EMPTY green pill — gluestack
+        //     styling and NativeWind `className` both resolve through the JSX
+        //     transform, which a hand-written `React.createElement` tree
+        //     bypasses, so the wrapper collapsed and clipped its own text.
+        //   • Plain RN `Text` with explicit styles, NOT ToastTitle /
+        //     ToastDescription. Those are className-styled too, and via
+        //     createElement they render invisibly — the Undo (plain Text) was
+        //     the only line that showed up.
+        // Do not "tidy" this back to the gluestack primitives without checking
+        // it on a device; jest cannot see any of this.
         this.toastInstance.show({
             placement: 'bottom',
             duration: 6000,
@@ -260,39 +269,43 @@ class ToastManager {
                     Toast,
                     { action: 'success', variant: 'solid' },
                     React.createElement(
-                        HStack,
-                        { className: 'flex-1 items-center justify-between', space: 'md' },
-                        React.createElement(
-                            VStack,
-                            { className: 'flex-1' },
-                            React.createElement(ToastTitle, null, opts.title),
-                            opts.body ? React.createElement(ToastDescription, null, opts.body) : null,
-                        ),
-                        React.createElement(
-                            Pressable,
-                            {
-                                testID: 'feedback-undo',
-                                accessibilityRole: 'button',
-                                accessibilityLabel: opts.undoLabel,
-                                onPress: () => {
-                                    void (async () => {
-                                        try {
-                                            await opts.onUndo();
-                                        } catch (err) {
-                                            logger.captureException(err, {
-                                                tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
-                                            });
-                                        }
-                                        this.toastInstance?.close(id);
-                                        this.showInfo(opts.undoneTitle);
-                                    })();
-                                },
+                        Text,
+                        { style: { color: '#1a1a1a', fontWeight: '700', fontSize: 15 } },
+                        opts.title,
+                    ),
+                    opts.body
+                        ? React.createElement(
+                              Text,
+                              { style: { color: '#1a1a1a', fontSize: 13, paddingTop: 2 } },
+                              opts.body,
+                          )
+                        : null,
+                    React.createElement(
+                        Pressable,
+                        {
+                            testID: 'feedback-undo',
+                            accessibilityRole: 'button',
+                            accessibilityLabel: opts.undoLabel,
+                            hitSlop: 10,
+                            style: { paddingTop: 6 },
+                            onPress: () => {
+                                void (async () => {
+                                    try {
+                                        await opts.onUndo();
+                                    } catch (err) {
+                                        logger.captureException(err, {
+                                            tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
+                                        });
+                                    }
+                                    this.toastInstance?.close(id);
+                                    this.showInfo(opts.undoneTitle);
+                                })();
                             },
-                            React.createElement(
-                                Text,
-                                { style: { color: '#1a1a1a', fontWeight: '700' } },
-                                opts.undoLabel,
-                            ),
+                        },
+                        React.createElement(
+                            Text,
+                            { style: { color: '#1a1a1a', fontWeight: '800', textDecorationLine: 'underline' } },
+                            opts.undoLabel,
                         ),
                     ),
                 ),
