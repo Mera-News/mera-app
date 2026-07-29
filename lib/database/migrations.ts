@@ -1209,5 +1209,27 @@ export default schemaMigrations({
         ),
       ],
     },
+    {
+      // ── Structured "not interested" filters (schema v46) ─────────────────
+      // `persona_suppressions` is a USER-OWNED table (long-lived negative
+      // preferences) — additive `addColumns` ONLY, never DROP+recreate.
+      //
+      // `kind` names WHAT the filter matches ('keyword' | 'category' |
+      // 'event_type' | 'entity' | 'publication' | 'place' | 'topic') and
+      // `value` is the single normalized token the non-keyword kinds compare
+      // against. Both are nullable and there is NO backfill: a NULL `kind`
+      // reads as 'keyword' (suppression-service.kindOf), so every pre-v46 row
+      // keeps its exact keyword-substring behaviour.
+      toVersion: 46,
+      steps: [
+        addColumns({
+          table: 'persona_suppressions',
+          columns: [
+            { name: 'kind', type: 'string', isOptional: true },
+            { name: 'value', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

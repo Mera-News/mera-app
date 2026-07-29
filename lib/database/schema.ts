@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 45,
+  version: 46,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -339,6 +339,10 @@ export default appSchema({
         { name: 'status', type: 'string' },
         { name: 'expires_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
+        // Structured "not interested" filters (v46). NULL `kind` reads as
+        // 'keyword' — pre-v46 rows keep their exact keyword-substring behaviour.
+        { name: 'kind', type: 'string', isOptional: true },
+        { name: 'value', type: 'string', isOptional: true },
       ],
     }),
 
