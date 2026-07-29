@@ -434,7 +434,11 @@ function pathCandidates(
       }
       break;
     case 'this_category':
-      if (signal.context.category) {
+      // A generic category mints NOTHING — not a keyword fallback. Same defect
+      // the tree resolver had: `keyword` is a substring scan, so falling back
+      // to it on "News" demotes a large slice of everything, which is worse
+      // than the exact-field filter the genericness gate is refusing.
+      if (signal.context.category && isDiscriminatingCategory(signal.context.category)) {
         const cat = signal.context.category;
         out.push(
           suppressionCandidate(
@@ -445,10 +449,7 @@ function pathCandidates(
             signal.id,
             c,
             { category: cat },
-            // Generic source categories ("News", "general_news", ~74% of the
-            // catalogue) stay KEYWORD — an exact match there is most of the
-            // feed, not a category. See category-specificity.
-            isDiscriminatingCategory(cat) ? { kind: 'category', value: cat } : undefined,
+            { kind: 'category', value: cat },
           ),
         );
       }
@@ -577,6 +578,8 @@ function aggregateCandidates(
   }
   for (const [k, b] of catDislikes) {
     if (b.rows.length < c.minDislikesForSuppress) continue;
+    // Generic source category → no candidate at all (see pathCandidates).
+    if (!isDiscriminatingCategory(b.label)) continue;
     const cand = suppressionCandidate(
       `cat:${k}`,
       b.label,
@@ -585,7 +588,7 @@ function aggregateCandidates(
       b.rows[0],
       c,
       { category: b.label },
-      isDiscriminatingCategory(b.label) ? { kind: 'category', value: b.label } : undefined,
+      { kind: 'category', value: b.label },
     );
     for (const id of b.rows) cand.sourceRowIds.add(id);
     out.push(cand);

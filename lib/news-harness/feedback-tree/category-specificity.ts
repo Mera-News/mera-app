@@ -24,9 +24,22 @@
 // One tap on a mainstream story would therefore have soft-penalised every
 // article from ~74% of the catalogue, invisibly, from a gesture the user thinks
 // is about ONE story — and 30 days later they cannot connect a flat feed to
-// that tap. So: a generic category degrades to a keyword filter (exactly
-// today's pre-D10 behaviour — safe, and already the established fallback for a
-// value whose provenance we can't prove).
+// that tap.
+//
+// ── A generic category mints NOTHING (not a keyword fallback) ───────────────
+// The first cut of this gate degraded a generic category to a KEYWORD filter,
+// and QA caught it (F4): tapping "This category" on a "News"-category article
+// produced an Activity entry `Suppressed: News` and a filter row literally
+// labelled "News". That is strictly worse than the structured filter being
+// refused — `keyword` is a normalized SUBSTRING scan over title + description +
+// entities, so the filter latches onto arbitrary stories that merely mention
+// the word, with no relation to what the user meant.
+//
+// The two failure modes need different answers and must not share one:
+//   • PROVENANCE — we cannot prove the value is the article's own field.
+//     Keyword is right: narrower than claimed, but honest, and it fires.
+//   • GENERICNESS — the value IS the article's field, and is simply useless.
+//     Mint nothing; `isInertActionLeaf` then hides the option on that article.
 //
 // ── The rule ────────────────────────────────────────────────────────────────
 // The STEM does the generalizing, not the word list. Stemming collapses the
@@ -78,10 +91,12 @@ export function categoryStem(category: string | null | undefined): string {
 }
 
 /**
- * True when a structured `kind: 'category'` filter on this value is a promise
- * we can keep. False for an empty value and for the generic "news" family —
- * callers must fall back to a keyword filter on the same text, which is silent
- * to the user and behaves exactly as it did before D10.
+ * True when a category filter on this value is a promise we can keep. False for
+ * an empty value and for the generic "news" family.
+ *
+ * A false here means the caller must mint NOTHING — NOT a keyword filter on the
+ * same text (see the F4 note in the header). The option then hides itself,
+ * because `isInertActionLeaf` drops an action leaf that resolves to no actions.
  */
 export function isDiscriminatingCategory(category: string | null | undefined): boolean {
   const stem = categoryStem(category);

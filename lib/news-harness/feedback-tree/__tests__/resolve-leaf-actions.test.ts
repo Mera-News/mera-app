@@ -187,34 +187,36 @@ describe('resolveLeafActions — structured suppression kinds', () => {
   });
 });
 
-// The category kind carries one extra gate: ~74% of the prod source catalogue
-// sits on the generic "news" family, where an exact match is most of the feed
-// rather than "this category". Those degrade to a keyword filter — silently,
-// and identically to the pre-D10 behaviour.
-describe('resolveLeafActions — generic categories stay keyword', () => {
-  const leaf: FeedbackTreeLeaf = {
+// The category kind carries one extra gate: 74% of the prod source catalogue
+// (and 80% of SERVED articles) sits on the generic "news" family. A generic
+// value mints NOTHING — not a keyword fallback. Keyword is a substring scan, so
+// falling back to it on "News" attaches a filter to arbitrary stories that
+// merely mention the word, which is worse than the exact-field filter being
+// refused. Returning [] is also what lets `isInertActionLeaf` hide the option.
+describe('resolveLeafActions — a generic category mints nothing', () => {
+  const withKind: FeedbackTreeLeaf = {
     actions: [
       { type: 'add_suppression', pattern: 'from_context_category', kind: 'category', strength: 0.5 },
     ],
   };
+  // The LIVE server tree still ships this_category with no `kind`, so the gate
+  // must key off the placeholder, not the leaf's declaration.
+  const withoutKind: FeedbackTreeLeaf = {
+    actions: [{ type: 'add_suppression', pattern: 'from_context_category', strength: 0.5 }],
+  };
 
-  it.each(['News', 'general_news', 'News (French)'])(
-    'mints a KEYWORD filter for the generic category %p',
+  it.each(['News', 'news', 'general_news', 'News (French)', 'News (English, Pidgin)'])(
+    'mints NO action for the generic category %p, with or without a declared kind',
     (category) => {
-      expect(resolveLeafActions(leaf, ctx({ category }))).toEqual([
-        {
-          action_type: ACTION_NAMES.ADD_SUPPRESSION,
-          suppressionPattern: category,
-          suppressionStrength: 0.5,
-        },
-      ]);
+      expect(resolveLeafActions(withKind, ctx({ category }))).toEqual([]);
+      expect(resolveLeafActions(withoutKind, ctx({ category }))).toEqual([]);
     },
   );
 
-  it.each(['Sports', 'Tech', 'Business'])(
+  it.each(['Sports', 'Tech', 'Business', 'Regional News: Kolkata'])(
     'still mints a STRUCTURED filter for the specific category %p',
     (category) => {
-      expect(resolveLeafActions(leaf, ctx({ category }))).toEqual([
+      expect(resolveLeafActions(withKind, ctx({ category }))).toEqual([
         {
           action_type: ACTION_NAMES.ADD_SUPPRESSION,
           suppressionPattern: category,
@@ -225,4 +227,30 @@ describe('resolveLeafActions — generic categories stay keyword', () => {
       ]);
     },
   );
+
+  it('a specific category with no declared kind still mints the keyword filter it always did', () => {
+    expect(resolveLeafActions(withoutKind, ctx({ category: 'Sports' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'Sports', suppressionStrength: 0.5 },
+    ]);
+  });
+
+  it('the PROVENANCE case still degrades to keyword rather than vanishing', () => {
+    // Unprovable value: the leaf claims a category but reads the TITLE. The
+    // value is not useless, just unverified — so it stays a keyword filter.
+    const mismatched: FeedbackTreeLeaf = {
+      actions: [
+        { type: 'add_suppression', pattern: 'from_context_title', kind: 'category', strength: 0.5 },
+      ],
+    };
+    expect(resolveLeafActions(mismatched, ctx({ articleTitle: 'A headline', category: 'News' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'A headline', suppressionStrength: 0.5 },
+    ]);
+    // A literal (author-authored) pattern is likewise keyword, never dropped.
+    const literal: FeedbackTreeLeaf = {
+      actions: [{ type: 'add_suppression', pattern: 'celebrity gossip', kind: 'category', strength: 0.5 }],
+    };
+    expect(resolveLeafActions(literal, ctx({ category: 'News' }))).toEqual([
+      { action_type: ACTION_NAMES.ADD_SUPPRESSION, suppressionPattern: 'celebrity gossip', suppressionStrength: 0.5 },
+    ]);
+  });
 });

@@ -114,19 +114,33 @@ function resolveOne(
           ? a.pattern.trim()
           : undefined;
       if (!pattern) return [];
+
+      // GENERIC CATEGORY ⇒ MINT NOTHING. Two different failures were sharing
+      // one answer, and that was a defect:
+      //   • PROVENANCE — we can't prove the value is the article's own field.
+      //     Keyword is right: narrower than claimed, but honest and it fires.
+      //   • GENERICNESS — the value IS proven and simply useless. Degrading to
+      //     keyword here is strictly WORSE than the structured filter it
+      //     replaces: `keyword` is a normalized SUBSTRING scan over title +
+      //     description + entities, so a filter on "News" demotes a large slice
+      //     of everything, where exact category equality would at least have
+      //     been confined to one field.
+      // Returning [] also makes the option DISAPPEAR instead of no-opping:
+      // `isInertActionLeaf` (useFeedbackTreeEngine) hides an action-declaring
+      // leaf whose actions resolve to nothing, so "This category" is absent on
+      // a generic-category article and present on a specific-category one.
+      //
+      // Gated on the PLACEHOLDER, not on `a.kind`: the tree is server-owned and
+      // the live prod tree still ships `this_category` with no `kind` at all, so
+      // keying off the leaf's declaration would leave that (majority) path
+      // minting exactly the "News" keyword filter this guard exists to stop.
+      if (source?.kind === 'category' && !isDiscriminatingCategory(pattern)) return [];
+
       // The kind rides along ONLY when the leaf asks for exactly the kind its
       // placeholder's field backs. A literal pattern, a mismatched kind or an
       // unknown one degrades to a keyword filter: matching fewer things is
       // fine, matching nothing while looking active is not.
-      //
-      // `category` carries one extra gate: ~74% of the source catalogue sits on
-      // the generic "news" family, where an exact match means "most of the
-      // feed" rather than "this category" (see category-specificity). A generic
-      // value degrades to a keyword filter — silently, and behaving exactly as
-      // it did before D10.
-      const asked = source?.kind && a.kind === source.kind ? source.kind : undefined;
-      const structuredKind =
-        asked === 'category' && !isDiscriminatingCategory(pattern) ? undefined : asked;
+      const structuredKind = source?.kind && a.kind === source.kind ? source.kind : undefined;
       return [
         {
           action_type: ACTION_NAMES.ADD_SUPPRESSION,

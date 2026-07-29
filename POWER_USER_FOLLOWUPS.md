@@ -227,18 +227,23 @@ too much?" actually wants, and the three per-section counts are one tap away.
 per-id), and make the hub subtitle a "2 filters · 3 sources" join. Both are contained; neither was
 needed to ship.
 
-### PU-17 · "This category" is precise only on specialist sources
-**Simplified:** "not important → this category" mints an exact category filter only when the
-category is discriminating. On the generic "news" family — `News`, `general_news`, and every
-`News (French)` / `News (English, Pidgin)` variant — it silently falls back to the keyword filter
-it was before D10. The user sees no difference either way.
-**Why:** the app's `category` is the PUBLICATION SOURCE's category, not the article's own, and
-2567 of 3475 prod sources (73.9%, measured 2026-07-29) sit on that generic family. An exact match
-there would soft-penalise most of the feed from a gesture the user believes is about one story —
-and 30 days later they cannot connect a flat feed to that tap. Matching fewer things is fine;
-matching most of the feed invisibly is not.
-**Power user loses:** category-precision when the story came from a general-news source — which is
-most of them. "Never show me this category" from a Reuters story is still only a text match.
+### PU-17 · "This category" is offered only on specialist sources
+**Simplified:** "not important → this category" appears only when the article's category is
+discriminating. On the generic "news" family — `News`, `general_news`, and every `News (French)` /
+`News (English, Pidgin)` variant — the option is **absent from the tree**, not shown-and-inert and
+not silently downgraded. It is present as normal on Sports / Tech / Business / `Regional News: <place>`
+stories.
+**Why:** the app's `category` is the PUBLICATION SOURCE's category, not the article's own. 2567 of
+3475 prod sources (73.9%) and **32,046 of the 40,000 most recent articles (80.1%)** sit on that
+generic family, so an exact match there means "most of the feed" rather than "this category" — from
+a gesture the user believes is about one story, with no way to connect a flat feed to that tap 30
+days later. The first cut degraded it to a keyword filter instead, which QA caught (F4): that
+produced a filter row literally labelled "News" matching arbitrary stories that merely mention the
+word — worse than the filter it was avoiding. A useless value earns nothing, and an option that can
+do nothing should not be on screen.
+**Power user loses:** any per-category control on general-news sources — most of them. "Never show
+me this category" from a Reuters story is not offered at all; they can still use the phrase filter
+or ask Mera in chat.
 **Cheapest way back:** a real article-level category from the tagging pipeline (the same enrichment
 that owes us `event_type`). The moment articles carry their own category, the gate in
 `lib/news-harness/feedback-tree/category-specificity.ts` can be deleted and every category becomes
