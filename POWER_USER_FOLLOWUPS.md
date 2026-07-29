@@ -147,3 +147,16 @@ that fell off the end.
 **Cheapest way back:** a filters screen that lists all of them with a remove control — the removal
 seam (`ACTION_NAMES.RETIRE_SUPPRESSION` via `applyPersonaAction`) is already audited and
 revertible, so the screen is presentation only.
+
+### PU-9 · Un-voting does not revert a change the reason tree already applied
+**Simplified:** re-tapping a thumb clears the verdict and deletes its row, but a persona change
+that a tree leaf already applied stays applied. The Undo toast (6s) is the only revert path.
+**Why:** the leaf change is audited in the persona change log and individually revertible from the
+Activity list, so the state is recoverable — but wiring un-vote to auto-revert lands on the revert
+semantics Phase 3 had just reworked, and it cannot be exercised under jest.
+**Power user loses:** nothing they can't undo elsewhere; what they lose is the *expectation* that
+un-voting is a full undo. Note this makes "unfilled" ambiguous — it can now also mean "this changed
+your persona, and the change is still in force".
+**Cheapest way back:** `applyLeafActions` already has the `changeLogIds`; store them on the verdict
+row's `context_json` and have the un-vote path `revertChange` them. Contained, and the audit trail
+already supports it.
