@@ -3,6 +3,7 @@ import {
     countryRank,
     normAlpha3,
     repPriorityTier,
+    sourcePriorityTier,
     type GeoLanguageTagged,
     type UserGeoLanguageContext,
 } from '../geo-language-priority';
@@ -154,5 +155,84 @@ describe('countryRank', () => {
         };
         expect(countryRank('GBR', noHome)).toBe(0);
         expect(countryRank('IND', noHome)).toBe(1);
+    });
+});
+
+// ===========================================================================
+// sourcePriorityTier (source-pref, D3)
+// ===========================================================================
+
+describe('sourcePriorityTier', () => {
+    const PREF_CTX: UserGeoLanguageContext = {
+        homeCountryAlpha3: 'USA',
+        otherCountriesAlpha3: ['GBR'],
+        appLanguageBase: 'en',
+        preferredPublications: new Set(['times of india']),
+        preferredCountriesAlpha3: new Set(['IND']),
+    };
+
+    function src(publicationName: string | null, countryCodeAlpha3: string | null) {
+        return { publicationName, countryCodeAlpha3 };
+    }
+
+    it('tier 0 for a publication the user named', () => {
+        expect(sourcePriorityTier(src('Times of India', 'IND'), PREF_CTX)).toBe(0);
+    });
+
+    it('normalizes the publication name (case + collapsed whitespace) before matching', () => {
+        expect(sourcePriorityTier(src('  TIMES   OF  India ', null), PREF_CTX)).toBe(0);
+    });
+
+    it('tier 1 for a source inside a preferred COUNTRY SCOPE', () => {
+        expect(sourcePriorityTier(src('The Hindu', 'IND'), PREF_CTX)).toBe(1);
+    });
+
+    it('a named publication BEATS a country scope — the narrower statement wins', () => {
+        // Both would match; the named-publication rule must be checked first.
+        expect(sourcePriorityTier(src('Times of India', 'IND'), PREF_CTX)).toBe(0);
+    });
+
+    it('country scope compares on normalized alpha-3', () => {
+        expect(sourcePriorityTier(src(null, ' ind '), PREF_CTX)).toBe(1);
+    });
+
+    it('tier 2 for a source matching neither', () => {
+        expect(sourcePriorityTier(src('Le Monde', 'FRA'), PREF_CTX)).toBe(2);
+    });
+
+    it('a preferred country does NOT leak from the geo tiers — home country is not a preference', () => {
+        // USA is the user's HOME country (geo tier 0) but was never asked for as
+        // a source preference, so it must stay source tier 2. Confusing the two
+        // would make every home-country article "preferred" for free.
+        expect(sourcePriorityTier(src('CNN', 'USA'), PREF_CTX)).toBe(2);
+    });
+
+    // --- Fail-open / regression contract ------------------------------------
+
+    it('null context ⇒ always tier 2', () => {
+        expect(sourcePriorityTier(src('Times of India', 'IND'), null)).toBe(2);
+    });
+
+    it('a context with NO preference fields (every pre-source-pref context) ⇒ always tier 2', () => {
+        expect(sourcePriorityTier(src('Times of India', 'IND'), CTX)).toBe(2);
+    });
+
+    it('a context with EMPTY preference sets ⇒ always tier 2', () => {
+        const empty: UserGeoLanguageContext = {
+            ...CTX,
+            preferredPublications: new Set(),
+            preferredCountriesAlpha3: new Set(),
+        };
+        expect(sourcePriorityTier(src('Times of India', 'IND'), empty)).toBe(2);
+    });
+
+    it('a null/empty publication name never matches an empty-string preference', () => {
+        const odd: UserGeoLanguageContext = {
+            ...CTX,
+            preferredPublications: new Set(['']),
+            preferredCountriesAlpha3: new Set(),
+        };
+        expect(sourcePriorityTier(src(null, 'IND'), odd)).toBe(2);
+        expect(sourcePriorityTier(src('   ', 'IND'), odd)).toBe(2);
     });
 });

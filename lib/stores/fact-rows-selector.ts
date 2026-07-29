@@ -53,7 +53,11 @@ import {
 } from '@/lib/feed-grouping/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { repPriorityTier, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import {
+  repPriorityTier,
+  sourcePriorityTier,
+  type UserGeoLanguageContext,
+} from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from './for-you-store';
 
 /**
@@ -219,14 +223,39 @@ function repCompare(a: GroupItem, b: GroupItem): number {
   return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
 }
 
-/** Tier-aware representative comparator: the user's geo/language priority
- *  tier (`repPriorityTier` — home country → other user country → app
- *  language → rest) is compared FIRST (lower tier wins); only on a tier tie
- *  does the existing `repCompare` (newest → rawScore → id) decide. A `null`
- *  `userCtx` collapses every item to tier 3, so this is byte-identical to
- *  `repCompare` alone — the pre-priority legacy behavior. */
+/** Tier-aware representative comparator, in three keys — kept BYTE-IDENTICAL to
+ *  `feed-list-selector.makeRepCompare` so every feed surface fronts the same
+ *  article for a given story:
+ *
+ *   1. `sourcePriorityTier` — the user's EXPLICIT source preferences (preferred
+ *      publication → preferred country scope → rest). An explicit request
+ *      outranks a derived signal, so it is compared FIRST.
+ *   2. `repPriorityTier` — the derived geo/language priority.
+ *   3. `repCompare` — newest → rawScore → id.
+ *
+ *  A `null` `userCtx` collapses every item to source tier 2 and geo tier 3, so
+ *  this is byte-identical to `repCompare` alone — the pre-priority legacy
+ *  behavior. So does a context with no source preferences, for key 1.
+ *
+ *  ASYMMETRY WITH THE FEED (deliberate): `feed-list-selector` also applies D4,
+ *  scoring a story group on its BEST member so electing a preferred source
+ *  cannot demote the story. There is no mirror here, because Dashboard card
+ *  order is `cardCompare` = representative `createdAtMs` desc — there is no
+ *  score to group-max. The analogous latent demotion therefore still exists on
+ *  the Dashboard (a preferred rep with an older `createdAt` sinks its card);
+ *  fixing it means group-maxing `createdAtMs`, a different semantic change that
+ *  was not in this wave's scope. Logged as a power-user follow-up. */
 function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
   return (a: GroupItem, b: GroupItem): number => {
+    const sa = sourcePriorityTier(
+      { publicationName: a.s.publication_name, countryCodeAlpha3: a.s.country_code },
+      userCtx,
+    );
+    const sb = sourcePriorityTier(
+      { publicationName: b.s.publication_name, countryCodeAlpha3: b.s.country_code },
+      userCtx,
+    );
+    if (sa !== sb) return sa - sb;
     const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
     const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
     if (ta !== tb) return ta - tb;

@@ -9,9 +9,19 @@ const mockGetAll = jest.fn();
 const mockGetDeviceCountryAlpha2 = jest.fn();
 const mockAppLanguageGetState = jest.fn();
 const mockUseAppLanguage = jest.fn();
+// source-pref: the loader now also reads the user's explicit source
+// preferences. Mocked exactly like location-service above — a static import of
+// the real service pulls in the SQLite adapter singleton at module load.
+const mockGetActivePubPrefs = jest.fn();
+const mockObserveActivePubPrefs = jest.fn();
 
 jest.mock('@/lib/database/services/location-service', () => ({
   getAll: (...args: any[]) => mockGetAll(...args),
+}));
+
+jest.mock('@/lib/database/services/publication-preference-service', () => ({
+  getActive: (...args: any[]) => mockGetActivePubPrefs(...args),
+  observeActive: (...args: any[]) => mockObserveActivePubPrefs(...args),
 }));
 
 // Deterministic alpha2→alpha3 mock (mirrors the real trim/upper-case + null-on-
@@ -51,6 +61,10 @@ beforeEach(() => {
   mockGetDeviceCountryAlpha2.mockReturnValue('US');
   mockAppLanguageGetState.mockReturnValue({ appLanguage: 'en' });
   mockUseAppLanguage.mockReturnValue('en');
+  mockGetActivePubPrefs.mockResolvedValue([]);
+  mockObserveActivePubPrefs.mockReturnValue({
+    subscribe: () => ({ unsubscribe: () => {} }),
+  });
 });
 
 // ===========================================================================
@@ -196,5 +210,119 @@ describe('useUserGeoLanguageContext', () => {
     rerender({});
 
     await waitFor(() => expect(mockGetAll.mock.calls.length).toBeGreaterThan(callsAfterFirst));
+  });
+});
+
+// ===========================================================================
+// source preferences (source-pref, D2/D3/D6)
+// ===========================================================================
+
+/** Minimal PublicationPreference stand-in (only the fields the loader reads). */
+function pref(o: {
+  publicationName: string;
+  weight: number;
+  scopeKind?: string | null;
+  scopeValue?: string | null;
+}) {
+  return { scopeKind: null, scopeValue: null, ...o };
+}
+
+describe('loadUserGeoLanguageContext — source preferences', () => {
+  it('collects positively-weighted NAMED publications, normalized', () => {
+    mockGetActivePubPrefs.mockResolvedValue([
+      pref({ publicationName: '  Times   OF India ', weight: 0.5 }),
+    ]);
+    return loadUserGeoLanguageContext().then((ctx) => {
+      expect(ctx!.preferredPublications).toEqual(new Set(['times of india']));
+      expect(ctx!.preferredCountriesAlpha3).toBeUndefined();
+    });
+  });
+
+  it('collects country SCOPE rows by scope_value, not by their display label', () => {
+    // The label lives in publication_name so the existing screen renders the
+    // row; it must never be read as a publication name.
+    mockGetActivePubPrefs.mockResolvedValue([
+      pref({ publicationName: 'India', weight: 0.5, scopeKind: 'country', scopeValue: 'ind' }),
+    ]);
+    return loadUserGeoLanguageContext().then((ctx) => {
+      expect(ctx!.preferredCountriesAlpha3).toEqual(new Set(['IND']));
+      expect(ctx!.preferredPublications).toBeUndefined();
+    });
+  });
+
+  it('ignores non-positive weights — a downrank or mute is not a preference', () => {
+    mockGetActivePubPrefs.mockResolvedValue([
+      pref({ publicationName: 'Daily Mail', weight: -0.5 }),
+      pref({ publicationName: 'Tabloid', weight: -1 }),
+      pref({ publicationName: 'Neutral', weight: 0 }),
+    ]);
+    return loadUserGeoLanguageContext().then((ctx) => {
+      expect(ctx!.preferredPublications).toBeUndefined();
+      expect(ctx!.preferredCountriesAlpha3).toBeUndefined();
+    });
+  });
+
+  it('ignores an unknown future scope kind rather than guessing it is a publication', () => {
+    mockGetActivePubPrefs.mockResolvedValue([
+      pref({ publicationName: 'Sport', weight: 0.5, scopeKind: 'category', scopeValue: 'sport' }),
+    ]);
+    return loadUserGeoLanguageContext().then((ctx) => {
+      expect(ctx!.preferredPublications).toBeUndefined();
+      expect(ctx!.preferredCountriesAlpha3).toBeUndefined();
+    });
+  });
+
+  it('REGRESSION CONTRACT: no preferences ⇒ the context object shape is unchanged', () => {
+    mockGetActivePubPrefs.mockResolvedValue([]);
+    return loadUserGeoLanguageContext().then((ctx) => {
+      expect(Object.keys(ctx!).sort()).toEqual([
+        'appLanguageBase',
+        'homeCountryAlpha3',
+        'otherCountriesAlpha3',
+      ]);
+    });
+  });
+
+  it('fails open to null when the preference read throws', () => {
+    mockGetActivePubPrefs.mockRejectedValue(new Error('db gone'));
+    return loadUserGeoLanguageContext().then((ctx) => {
+      expect(ctx).toBeNull();
+    });
+  });
+});
+
+describe('useUserGeoLanguageContext — preference refresh seam', () => {
+  it('re-loads when active source preferences change', async () => {
+    // Without this the whole feature would appear dead: it is applied at render
+    // time, but a hook memoized on [appLanguage] alone would not re-read the
+    // preferences until the language changed or the screen remounted.
+    let emit: (() => void) | null = null;
+    mockObserveActivePubPrefs.mockReturnValue({
+      subscribe: (cb: () => void) => {
+        emit = cb;
+        return { unsubscribe: () => {} };
+      },
+    });
+    mockGetActivePubPrefs.mockResolvedValue([]);
+
+    const { result } = renderHook(() => useUserGeoLanguageContext());
+    await waitFor(() => expect(result.current).not.toBeNull());
+    expect(result.current!.preferredPublications).toBeUndefined();
+
+    mockGetActivePubPrefs.mockResolvedValue([
+      pref({ publicationName: 'Times of India', weight: 0.5 }),
+    ]);
+    emit!();
+    await waitFor(() =>
+      expect(result.current!.preferredPublications).toEqual(new Set(['times of india'])),
+    );
+  });
+
+  it('still resolves a context when the preference observable cannot be built', async () => {
+    mockObserveActivePubPrefs.mockImplementation(() => {
+      throw new Error('no db');
+    });
+    const { result } = renderHook(() => useUserGeoLanguageContext());
+    await waitFor(() => expect(result.current).not.toBeNull());
   });
 });

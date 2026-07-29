@@ -13,9 +13,16 @@
  * util orders the list into contiguous per-country blocks — grouping is purely
  * an ordering property, nothing is sectioned:
  *
- *   1. Tier A — the CURRENT article's country. Always first, even when it holds
- *      one row and another country holds twenty. That country is then excluded
- *      from tier B, so it never renders as a second block.
+ *   0. Tier P (source-pref) — rows from a source the user EXPLICITLY prefers,
+ *      ordered preferred-publication before preferred-country-scope. This is the
+ *      literal product ask: "preferred sources should be at the top when
+ *      available." A preferred row LIFTS OUT of its country block to the head of
+ *      the list, so it is visible without scrolling past whichever country
+ *      happens to own the biggest block. Empty unless the user has said so.
+ *   1. Tier A — the CURRENT article's country. Always first among the country
+ *      blocks, even when it holds one row and another country holds twenty. That
+ *      country is then excluded from tier B, so it never renders as a second
+ *      block.
  *   2. Tier B — every other known country, by block size DESC (biggest coverage
  *      first), ties broken by `countryRank` (the user's home country, then their
  *      other ranked countries), then alpha-3 alphabetical.
@@ -33,19 +40,30 @@
  * and the comparator closes over that map. Caching the rank there also keeps
  * `countryRank` (which allocates) out of the per-comparison path.
  *
- * Contiguity invariant: all rows of a given country are adjacent, because
- * alpha-3 is a full tiebreak after size and rank — two distinct countries can
- * never compare equal.
+ * Contiguity invariant (updated by source-pref): all rows of a given country
+ * that are NOT in tier P are adjacent, because alpha-3 is a full tiebreak after
+ * size and rank — two distinct countries can never compare equal. Tier P is the
+ * one deliberate exception: it is a cross-country head block, so a country with
+ * a preferred source renders in two places (its preferred rows at the top, the
+ * rest in their own block). That is the point of the feature — a user who asked
+ * for the Times of India wants it first, not filed under IND.
+ *
+ * Block SIZES are counted over the rows that actually remain in the country
+ * blocks — rows lifted into tier P are excluded from `buildCountryBlocks`.
+ * Counting them would let a source preference silently reorder tier B (a country
+ * could out-rank another on the strength of rows that no longer render there),
+ * turning a "lift these to the top" request into a wholesale reshuffle.
  *
  * A `null` context degrades the language key and every `countryRank` to its
- * "last" bucket, so size ordering still applies and ties fall to alpha-3.
- * Never throws.
+ * "last" bucket and empties tier P, so size ordering still applies and ties fall
+ * to alpha-3. So does a context carrying no source preferences. Never throws.
  */
 
 import {
     baseLang,
     countryRank,
     normAlpha3,
+    sourcePriorityTier,
     type UserGeoLanguageContext,
 } from './geo-language-priority';
 
@@ -82,6 +100,12 @@ function buildCountryBlocks(
 ): Map<string, CountryBlock> {
     const blocks = new Map<string, CountryBlock>();
     for (const item of items) {
+        // Rows lifted into tier P do not render in a country block, so they must
+        // not count towards one — see the header's note on why counting them
+        // would let a preference reshuffle tier B.
+        if (sourceTierOf(item, ctx) !== null) {
+            continue;
+        }
         const a3 = normAlpha3(item.countryCodeAlpha3);
         if (a3 === null) {
             continue;
@@ -97,6 +121,24 @@ function buildCountryBlocks(
 }
 
 // --- Per-key ranking helpers (each returns a { group, tiebreak } shape) -----
+
+/**
+ * The source-preference tier that LIFTS a row into tier P, or `null` when the
+ * row stays in its country block. `0` = a publication the user named, `1` = a
+ * country scope they asked for; `sourcePriorityTier`'s `2` ("neither") is the
+ * non-lifting case and maps to `null` here so every caller reads it as "not
+ * preferred" rather than as a third head-block rank.
+ */
+function sourceTierOf(
+    item: RelatedSortable,
+    ctx: UserGeoLanguageContext | null,
+): 0 | 1 | null {
+    const tier = sourcePriorityTier(
+        { publicationName: item.publicationName, countryCodeAlpha3: item.countryCodeAlpha3 },
+        ctx,
+    );
+    return tier === 2 ? null : tier;
+}
 
 /**
  * Country-block key: tier 0 = the current article's country, 1 = another known
@@ -178,58 +220,98 @@ export function orderRelatedArticles<T extends RelatedSortable>(
     const blocks = buildCountryBlocks(items, ctx);
 
     return [...items].sort((a, b) => {
-        // 1. Country block: current country, then biggest block, then countryless.
-        const ka = countryBlockKey(a, current, blocks);
-        const kb = countryBlockKey(b, current, blocks);
-        if (ka.tier !== kb.tier) {
-            return ka.tier - kb.tier;
+        // 0. Tier P — preferred sources lift to the head of the list, ordered
+        //    named-publication (0) before country-scope (1). Rows that are not
+        //    preferred (null) fall through to the country blocks below. Encoded
+        //    as -1/0 vs 1 so a preferred row always sorts ahead of every country
+        //    block INCLUDING tier A (the current article's own country).
+        const sa = sourceTierOf(a, ctx);
+        const sb = sourceTierOf(b, ctx);
+        if (sa !== sb) {
+            if (sa === null) return 1;
+            if (sb === null) return -1;
+            return sa - sb;
         }
-        if (ka.tier === 1) {
-            if (ka.size !== kb.size) {
-                return kb.size - ka.size; // bigger block first
-            }
-            // Guarded compare: `rank` is `Infinity` for unranked countries and
-            // `Infinity - Infinity` is NaN, which would make `sort` return an
-            // arbitrary order and silently break block contiguity.
-            if (ka.rank !== kb.rank) {
-                return ka.rank - kb.rank;
-            }
-            if (ka.a3 !== kb.a3) {
-                return ka.a3 < kb.a3 ? -1 : 1;
-            }
-        }
-
-        // From here both rows are in the SAME block — order within it.
-
-        // 2. Language.
-        const la = languageKey(a, ctx);
-        const lb = languageKey(b, ctx);
-        if (la.group !== lb.group) {
-            return la.group - lb.group;
-        }
-        if (la.group === 1 && la.base !== lb.base) {
-            return la.base < lb.base ? -1 : 1;
+        // Both rows are now in the same head/country partition. Within tier P
+        // the country keys are deliberately SKIPPED — that is what makes it one
+        // cross-country block — and ordering falls straight to the within-block
+        // keys (language → publication → date → id).
+        if (sa === null) {
+            // 1. Country block: current country, then biggest block, then countryless.
+            const ka = countryBlockKey(a, current, blocks);
+            const kb = countryBlockKey(b, current, blocks);
+            const countryOrder = compareCountryBlocks(ka, kb);
+            if (countryOrder !== 0) return countryOrder;
         }
 
-        // 3. Publication name.
-        const pa = publicationKey(a);
-        const pb = publicationKey(b);
-        if (pa.group !== pb.group) {
-            return pa.group - pb.group;
-        }
-        if (pa.name !== pb.name) {
-            return pa.name < pb.name ? -1 : 1;
-        }
-
-        // 4. Date DESC, then id ASC (fully deterministic).
-        const da = dateMs(a);
-        const db = dateMs(b);
-        if (da !== db) {
-            return db - da;
-        }
-        if (a.id !== b.id) {
-            return a.id < b.id ? -1 : 1;
-        }
-        return 0;
+        return compareWithinBlock(a, b, ctx);
     });
+}
+
+/** Country-block ordering — extracted so the tier-P head block can skip it
+ *  wholesale rather than threading a flag through every key. Returns 0 when
+ *  both rows are in the SAME block. Body is unchanged from the original inline
+ *  keys 1a–1c. */
+function compareCountryBlocks(
+    ka: { tier: number; size: number; rank: number; a3: string },
+    kb: { tier: number; size: number; rank: number; a3: string },
+): number {
+    if (ka.tier !== kb.tier) {
+        return ka.tier - kb.tier;
+    }
+    if (ka.tier === 1) {
+        if (ka.size !== kb.size) {
+            return kb.size - ka.size; // bigger block first
+        }
+        // Guarded compare: `rank` is `Infinity` for unranked countries and
+        // `Infinity - Infinity` is NaN, which would make `sort` return an
+        // arbitrary order and silently break block contiguity.
+        if (ka.rank !== kb.rank) {
+            return ka.rank - kb.rank;
+        }
+        if (ka.a3 !== kb.a3) {
+            return ka.a3 < kb.a3 ? -1 : 1;
+        }
+    }
+    return 0;
+}
+
+/** Ordering WITHIN one block (a country block, or the tier-P head block):
+ *  language → publication name → date DESC → id ASC. Body is unchanged from the
+ *  original inline keys 2–4. */
+function compareWithinBlock(
+    a: RelatedSortable,
+    b: RelatedSortable,
+    ctx: UserGeoLanguageContext | null,
+): number {
+    // 2. Language.
+    const la = languageKey(a, ctx);
+    const lb = languageKey(b, ctx);
+    if (la.group !== lb.group) {
+        return la.group - lb.group;
+    }
+    if (la.group === 1 && la.base !== lb.base) {
+        return la.base < lb.base ? -1 : 1;
+    }
+
+    // 3. Publication name.
+    const pa = publicationKey(a);
+    const pb = publicationKey(b);
+    if (pa.group !== pb.group) {
+        return pa.group - pb.group;
+    }
+    if (pa.name !== pb.name) {
+        return pa.name < pb.name ? -1 : 1;
+    }
+
+    // 4. Date DESC, then id ASC (fully deterministic).
+    const da = dateMs(a);
+    const db = dateMs(b);
+    if (da !== db) {
+        return db - da;
+    }
+    if (a.id !== b.id) {
+        return a.id < b.id ? -1 : 1;
+    }
+    return 0;
 }
