@@ -9,7 +9,31 @@ import { buildExampleQuestionsText } from './questionnaire-data';
  * Same tools as the XML format in buildToolFormatSection() — single source of truth.
  * When useLegacy is false, advanceQuestionnaireLevel is omitted.
  */
-export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy = true): ToolDefinition[] {
+/**
+ * How much of the "not interested" FILTERS feature this turn's prompt can
+ * afford (not-interested P4a). The feature YIELDS TO THE USER'S DATA, never the
+ * reverse: the persona's facts are the whole point of this prompt, our filter
+ * rules are the newest and least essential thing in it.
+ *
+ *  - `full`    — the complete rules block + the three staged-proposal tools.
+ *  - `compact` — a one-line rule + the same three tools (Mera can still stage a
+ *                filter, it just gets less guidance).
+ *  - `off`     — no filter rules and no filter tools. BYTE-IDENTICAL to the
+ *                pre-P4a prompt, so a fact-saturated turn can never cost more
+ *                than it did before this wave (useLocalLLM HARD-ERRORS a turn
+ *                over budget — a dead turn is far worse than a turn where Mera
+ *                can't stage a filter).
+ *
+ * The variant is chosen by MEASUREMENT per turn — see
+ * persona-management/persona-agent-core::planPersonaPrompt.
+ */
+export type FilterToolsVariant = 'full' | 'compact' | 'off';
+
+export function buildToolDefinitions(
+  surface: 'ONBOARDING' | 'CONFIG',
+  useLegacy = true,
+  filterTools: FilterToolsVariant = 'full',
+): ToolDefinition[] {
   const tools: ToolDefinition[] = [
     {
       type: 'function',
@@ -108,66 +132,69 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy
     // only from an article. Same staged-proposal contract as the
     // ArticleFeedbackAgent — nothing is applied until the user taps confirm.
     // CONFIG only: onboarding has no feed yet, so there is nothing to filter.
-    tools.push({
-      type: 'function',
-      function: {
-        name: 'proposeChanges',
-        description:
-          'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
-        parameters: {
-          type: 'object',
-          properties: {
-            explanation: { type: 'string', description: 'Why (≤2 sentences).' },
-            expected_effects: { type: 'string', description: 'What changes in the feed (≤2 sentences).' },
-            actions: {
-              type: 'array',
-              description: 'Minimal list of filter changes.',
-              items: {
-                type: 'object',
-                properties: {
-                  type: {
-                    type: 'string',
-                    enum: ['add_suppression', 'retire_suppression'],
-                    description: 'Action kind.',
+    // Omitted entirely at the `off` variant (see FilterToolsVariant).
+    if (filterTools !== 'off') {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'proposeChanges',
+          description:
+            'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
+          parameters: {
+            type: 'object',
+            properties: {
+              explanation: { type: 'string', description: 'Why (≤2 sentences).' },
+              expected_effects: { type: 'string', description: 'What changes in the feed (≤2 sentences).' },
+              actions: {
+                type: 'array',
+                description: 'Minimal list of filter changes.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['add_suppression', 'retire_suppression'],
+                      description: 'Action kind.',
+                    },
+                    suppressionPattern: {
+                      type: 'string',
+                      description:
+                        'add_suppression: the phrase to hide, in English, in the user\'s own words. Matched as text anywhere in a story — do not invent a category or section name.',
+                    },
+                    suppressionStrength: {
+                      type: 'number',
+                      description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).',
+                    },
+                    suppressionId: {
+                      type: 'string',
+                      description: 'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
+                    },
                   },
-                  suppressionPattern: {
-                    type: 'string',
-                    description:
-                      'add_suppression: the phrase to hide, in English, in the user\'s own words. Matched as text anywhere in a story — do not invent a category or section name.',
-                  },
-                  suppressionStrength: {
-                    type: 'number',
-                    description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).',
-                  },
-                  suppressionId: {
-                    type: 'string',
-                    description: 'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
-                  },
+                  required: ['type'],
                 },
-                required: ['type'],
               },
             },
+            required: ['explanation', 'expected_effects', 'actions'],
           },
-          required: ['explanation', 'expected_effects', 'actions'],
         },
-      },
-    });
-    tools.push({
-      type: 'function',
-      function: {
-        name: 'applyProposal',
-        description: 'Apply the pending filter proposal when the user confirms.',
-        parameters: { type: 'object', properties: {} },
-      },
-    });
-    tools.push({
-      type: 'function',
-      function: {
-        name: 'cancelProposal',
-        description: 'Discard the pending filter proposal when the user declines.',
-        parameters: { type: 'object', properties: {} },
-      },
-    });
+      });
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'applyProposal',
+          description: 'Apply the pending filter proposal when the user confirms.',
+          parameters: { type: 'object', properties: {} },
+        },
+      });
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'cancelProposal',
+          description: 'Discard the pending filter proposal when the user declines.',
+          parameters: { type: 'object', properties: {} },
+        },
+      });
+    }
     tools.push({
       type: 'function',
       function: {
@@ -220,10 +247,14 @@ function schemaTypeToString(schema: Record<string, unknown>): string {
  * Builds the XML tool format section (tool definitions, rules, and examples).
  * Tool listing is derived from buildToolDefinitions() — single source of truth.
  */
-export function buildToolFormatSection(surface: 'ONBOARDING' | 'CONFIG', useLegacy = true): string {
+export function buildToolFormatSection(
+  surface: 'ONBOARDING' | 'CONFIG',
+  useLegacy = true,
+  filterTools: FilterToolsVariant = 'full',
+): string {
   const isOnboarding = surface === 'ONBOARDING';
 
-  const tools = buildToolDefinitions(surface, useLegacy);
+  const tools = buildToolDefinitions(surface, useLegacy, filterTools);
   const toolLines = tools
     .map((t) => `- ${t.function.name}: ${schemaToCompactSignature(t.function.parameters)}`)
     .join('\n');
@@ -284,9 +315,22 @@ ${examples}`;
  * invented category name would match nothing (see D9). The article-feedback
  * agent is the surface that mints structured filters.
  */
-const FILTERS_PROMPT_SECTION = `
+const FILTERS_PROMPT_SECTION_FULL = `
 - FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in ENGLISH, the user's OWN words, never an invented category name; suppressionStrength 0.9 = never show it, 0.5 = less of it}. "Show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS in <context>} — never invent an id.
 - NEVER apply a filter directly: stage ONE proposeChanges, then applyProposal when the user confirms (yes / ok, any language) or cancelProposal when they decline. While a PENDING PROPOSAL is in <context> and they say anything else, leave it pending and reply normally.`;
+
+/** The degraded rung: the same two actions and the same never-apply-directly
+ *  rule, minus the worked detail. ~a third of the full section's tokens. */
+const FILTERS_PROMPT_SECTION_COMPACT = `
+- FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in English}; "show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS}. Never applied directly — applyProposal on confirm, cancelProposal on decline.`;
+
+/** Resolves the FILTERS rules block for a variant. `off` contributes nothing at
+ *  all, which is what makes that rung byte-identical to the pre-P4a prompt. */
+function filtersPromptSection(variant: FilterToolsVariant): string {
+  if (variant === 'full') return FILTERS_PROMPT_SECTION_FULL;
+  if (variant === 'compact') return FILTERS_PROMPT_SECTION_COMPACT;
+  return '';
+}
 
 /**
  * Builds the STATIC persona update system prompt.
@@ -309,23 +353,27 @@ export function buildPersonaUpdateStaticPrompt(params: {
    *  autonomously picks questions based on Known Facts. When true, uses the legacy
    *  level-based questionnaire with [ASK]/[DONE] annotations. */
   useLegacy?: boolean;
+  /** not-interested P4a: how much of the FILTERS feature this turn can afford.
+   *  Chosen by measurement per turn (planPersonaPrompt); `off` reproduces the
+   *  pre-P4a prompt exactly. Defaults to `full`. */
+  filterTools?: FilterToolsVariant;
 }): string {
-  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', useLegacy = false } = params;
+  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', useLegacy = false, filterTools = 'full' } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   if (mode === 'LOCAL') {
-    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, useLegacy });
+    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, useLegacy, filterTools });
   }
 
   const languageRule = languageName
     ? `- LANGUAGE: User's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch languages even if the user writes in English, Chinese, or any other language; reply in ${languageName} regardless. Fact statements stay English (see Facts).`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English (see Facts).`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy, filterTools) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
 - DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
-- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.${FILTERS_PROMPT_SECTION}`;
+- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.${filtersPromptSection(filterTools)}`;
 
   const conversationGuide = useLegacy
     ? `## Rules
@@ -396,17 +444,18 @@ function buildPersonaUpdateLocalPrompt(params: {
   includeToolFormat: boolean;
   languageName?: string;
   useLegacy?: boolean;
+  filterTools?: FilterToolsVariant;
 }): string {
-  const { surface, includeToolFormat, languageName, useLegacy = false } = params;
+  const { surface, includeToolFormat, languageName, useLegacy = false, filterTools = 'full' } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
     ? `ALWAYS reply in **${languageName}**. NEVER switch languages, even if the user writes in English or any other language — reply in ${languageName} regardless. Fact statements stay English.`
     : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy, filterTools) : '';
 
-  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.' + FILTERS_PROMPT_SECTION;
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.' + filtersPromptSection(filterTools);
 
   const rulesSection = useLegacy
     ? `## Rules

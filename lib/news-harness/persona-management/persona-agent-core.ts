@@ -31,6 +31,7 @@ import {
   buildPersonaUpdateStaticPrompt,
   buildPersonaUpdateContext,
   buildToolDefinitions,
+  type FilterToolsVariant,
 } from '../prompts/prompts';
 import {
   buildQuestionnaireGuide,
@@ -65,15 +66,20 @@ export const MAX_FILTERS_IN_CONTEXT = 10;
 export const FILTERS_BLOCK_TOKEN_CEILING = 200;
 
 /**
- * The FILTERS block is omitted ENTIRELY once the rest of <context> is already
- * this large. The persona's facts are this agent's core job; an auxiliary block
- * must never be the thing that pushes a fact-saturated turn past the on-device
- * input budget. Derived, not guessed: 3072 (INPUT_TOKEN_BUDGET,
- * lib/llm/useLocalLLM.ts) − 1718 (the LARGEST persona system prompt, measured:
- * CONFIG + LOCAL + XML tool format + a pinned language) − 200
- * (FILTERS_BLOCK_TOKEN_CEILING) ≈ 1150.
+ * Mirror of `INPUT_TOKEN_BUDGET` in lib/llm/useLocalLLM.ts (4096 total − 1024
+ * max output). Over it, the local path does NOT degrade — it hard-errors the
+ * turn with "Context too long". Mirrored here so the harness stays free of the
+ * lib/llm import graph; if that constant moves, move this one.
  */
-export const PERSONA_CONTEXT_TOKEN_BUDGET = 1150;
+export const PERSONA_INPUT_TOKEN_BUDGET = 3072;
+
+/**
+ * Headroom left for the user's own message, which is appended to <context> on
+ * the same prompt (~500 characters of typing). Only affects how eagerly the
+ * FILTERS feature yields — it can never make a turn cost more than the pre-P4a
+ * prompt, because the last rung of the ladder reproduces that prompt exactly.
+ */
+export const PERSONA_TURN_RESERVE_TOKENS = 128;
 
 /** Defensive trim on a rendered filter phrase (a pattern is user/LLM text). */
 const FILTER_PATTERN_TRUNC = 60;
@@ -103,6 +109,9 @@ export interface PersonaSystemPromptInput {
   mode: PersonaMode;
   /** When true, uses the legacy level-based questionnaire with [ASK]/[DONE] annotations. */
   useLegacy: boolean;
+  /** not-interested P4a: how much of the FILTERS feature this turn can afford
+   *  (planPersonaPrompt). Defaults to `full`. */
+  filterTools?: FilterToolsVariant;
 }
 
 export type BuildStaticPromptFn = typeof buildPersonaUpdateStaticPrompt;
@@ -122,6 +131,9 @@ export function buildPersonaSystemPrompt(
     languageName: input.languageName,
     mode: input.mode,
     useLegacy: input.useLegacy,
+    // Spread CONDITIONALLY so a caller that never plans keeps the exact
+    // pre-P4a call-args shape the frozen PersonaUpdateAgent seam test observes.
+    ...(input.filterTools ? { filterTools: input.filterTools } : {}),
   });
 }
 
@@ -157,6 +169,79 @@ export function formatKnownFactsList(facts: ContextFact[]): string {
 // (not-interested P4a / D6: the same chat-first contract the
 // ArticleFeedbackAgent has, so filters are manageable in PLAIN persona chat)
 // ---------------------------------------------------------------------------
+
+/** What of the FILTERS feature a single turn can afford. */
+export interface PersonaPromptPlan {
+  /** How much of the filter tool documentation the system prompt carries. */
+  filterTools: FilterToolsVariant;
+  /** Whether <context> carries the `## YOUR FILTERS` block. */
+  includeFiltersBlock: boolean;
+}
+
+/**
+ * Rungs in yield order — MOST of the feature first, least last. The order is
+ * the product decision: our filter *context block* is the first thing to go
+ * (the user can still ask Mera to hide something, they just don't get the list
+ * read back), then the tool *documentation* degrades, and only then do the
+ * tools themselves disappear. A turn where Mera cannot stage a filter proposal
+ * is a far smaller failure than a turn that hard-errors.
+ *
+ * The LAST rung is load-bearing: `off` + no block reproduces the pre-P4a prompt
+ * BYTE-IDENTICALLY, which is what guarantees this wave cannot lock out a user
+ * who could hold a persona-chat turn before it.
+ */
+const PERSONA_PROMPT_LADDER: readonly PersonaPromptPlan[] = [
+  { filterTools: 'full', includeFiltersBlock: true },
+  { filterTools: 'full', includeFiltersBlock: false },
+  { filterTools: 'compact', includeFiltersBlock: false },
+  { filterTools: 'off', includeFiltersBlock: false },
+];
+
+/**
+ * Picks the richest FILTERS variant that actually fits this turn — by
+ * MEASURING the candidate prompts, not by comparing the facts against a
+ * hardcoded threshold. `systemTokensFor` is a callback so only the rungs we
+ * actually reach get built (the common case measures exactly one).
+ *
+ * Always returns a plan: when nothing fits, the `off` rung is returned anyway,
+ * because there is nothing further this feature can yield — at that point the
+ * turn costs exactly what it cost before this wave.
+ */
+export function planPersonaPrompt(params: {
+  /** estimateTokens of the system prompt built at that variant. */
+  systemTokensFor: (variant: FilterToolsVariant) => number;
+  /** estimateTokens of <context> WITHOUT the filters block. */
+  baseContextTokens: number;
+  /** What the filters block would ADD. 0 when the user has no filters. */
+  filtersBlockTokens: number;
+  budgetTokens?: number;
+  reserveTokens?: number;
+}): PersonaPromptPlan {
+  const budget =
+    (params.budgetTokens ?? PERSONA_INPUT_TOKEN_BUDGET)
+    - (params.reserveTokens ?? PERSONA_TURN_RESERVE_TOKENS);
+
+  const systemCache = new Map<FilterToolsVariant, number>();
+  const systemTokens = (v: FilterToolsVariant): number => {
+    const hit = systemCache.get(v);
+    if (hit !== undefined) return hit;
+    const measured = params.systemTokensFor(v);
+    systemCache.set(v, measured);
+    return measured;
+  };
+
+  for (const rung of PERSONA_PROMPT_LADDER) {
+    // Nothing to show ⇒ the two `full` rungs are the same prompt; skip the
+    // block-bearing one so we don't measure it twice.
+    if (rung.includeFiltersBlock && params.filtersBlockTokens <= 0) continue;
+    const total =
+      systemTokens(rung.filterTools)
+      + params.baseContextTokens
+      + (rung.includeFiltersBlock ? params.filtersBlockTokens : 0);
+    if (total <= budget) return rung;
+  }
+  return PERSONA_PROMPT_LADDER[PERSONA_PROMPT_LADDER.length - 1];
+}
 
 function truncFilter(text: string): string {
   const t = (text ?? '').trim();
@@ -372,6 +457,10 @@ export interface PersonaContextInput {
   suppressions?: ActiveSuppressionView[];
   /** not-interested P4a: the single in-flight staged proposal, or null. */
   proposal?: StagedProposal | null;
+  /** not-interested P4a: whether this turn can AFFORD the `## YOUR FILTERS`
+   *  block — decided by measurement in planPersonaPrompt, never by a threshold
+   *  hardcoded in here. Defaults to true (a caller with no plan renders it). */
+  includeFiltersBlock?: boolean;
 }
 
 export type BuildQuestionnaireGuideFn = typeof buildQuestionnaireGuide;
@@ -417,14 +506,10 @@ export function buildPersonaContext(
   // A pending proposal is NEVER dropped — without it the one-shot LOCAL path
   // cannot resolve a confirm at all, and it is a handful of tokens.
   const pendingProposal = formatPendingProposal(input.proposal);
-  // The FILTERS block yields to a fact-saturated persona (see
-  // PERSONA_CONTEXT_TOKEN_BUDGET) — an auxiliary block must not be what pushes
-  // a turn over the on-device input budget. Measured over the two variable-size
-  // payloads rather than the assembled string, so buildContextFn (an injectable
-  // seam) is still called exactly once.
-  const baseCost = estimateTokens(knownFactsList) + estimateTokens(questionnaireGuide ?? '');
+  // The FILTERS block is the FIRST thing this feature yields when a turn can't
+  // afford it (see PERSONA_PROMPT_LADDER); the caller's plan decides.
   const filtersList =
-    baseCost <= PERSONA_CONTEXT_TOKEN_BUDGET ? formatActiveFiltersList(input.suppressions) : undefined;
+    input.includeFiltersBlock === false ? undefined : formatActiveFiltersList(input.suppressions);
 
   // Spread CONDITIONALLY: with no filters and no pending proposal the call args
   // stay byte-identical to the pre-P4a shape, so the exact-match seam tests
@@ -442,11 +527,27 @@ export function buildPersonaContext(
 
 export type BuildToolDefinitionsFn = typeof buildToolDefinitions;
 
-/** Tool definitions for the persona-update agent (OpenAI JSON Schema, cloud). */
+/** The three tools the not-interested P4a filter path adds (D6). Stripped
+ *  together when a turn can't afford them — see FilterToolsVariant. */
+const FILTER_TOOL_NAMES: ReadonlySet<string> = new Set([
+  'proposeChanges',
+  'applyProposal',
+  'cancelProposal',
+]);
+
+/** Tool definitions for the persona-update agent (OpenAI JSON Schema, cloud).
+ *
+ *  `filterTools` is applied by FILTERING the builder's output rather than by
+ *  passing a third argument to `buildDefs` — that keeps the injected-seam call
+ *  exactly `buildDefs(surface, useLegacy)`, which the frozen
+ *  PersonaUpdateAgent.test.ts asserts on with an exact-arity toHaveBeenCalledWith. */
 export function getPersonaToolDefinitions(
   surface: PersonaSurface,
   useLegacy: boolean,
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
+  filterTools: FilterToolsVariant = 'full',
 ): ToolDefinition[] {
-  return buildDefs(surface, useLegacy);
+  const defs = buildDefs(surface, useLegacy);
+  if (filterTools !== 'off') return defs;
+  return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
 }

@@ -135,13 +135,18 @@ row already has both) and to `CORROBORABLE_SUPPRESSION_KINDS` in
 `lib/news-harness/article-feedback/agent-core.ts` — the sanitizer, prompt mapping and tests are
 already shaped for it.
 
-### PU-11 · The filters list in `<context>` is capped and yields to a fact-heavy persona
+### PU-11 · The filter feature yields to a fact-heavy persona, and the list is capped
 **Simplified:** the agents see at most 8 (article chat) / 10 (persona chat) of the user's active
-filters, and the persona chat drops the block entirely once the fact list alone crosses
-`PERSONA_CONTEXT_TOKEN_BUDGET`. A user with 40 filters cannot ask "what have I hidden?" and get a
-complete answer.
-**Why:** the on-device input budget is 3072 tokens and the persona prompt already runs at ~2900 of
-it at saturation; an auxiliary block must not be the thing that hard-errors the turn.
+filters. In persona chat the whole feature degrades under budget pressure, in this order: the
+`YOUR FILTERS` block drops, then the tool documentation shrinks to a one-liner, then the filter
+tools disappear for that turn. A user with 22 near-maximum-length facts gets no filter tooling in
+Mera chat at all, and a user with 40 filters cannot ask "what have I hidden?" and get a complete
+answer.
+**Why:** the on-device input budget is 3072 tokens and the persona prompt already runs at ~3008 of
+it at saturation, where `useLocalLLM` does not degrade — it hard-errors the turn with "Context too
+long". The user's facts are the whole point of that prompt; our filter rules are the newest and
+least essential thing in it, so they yield first. A turn where Mera cannot stage a filter proposal
+is a far smaller failure than a dead turn.
 **Power user loses:** conversational review of a long filter list, and removal-by-chat of a filter
 that fell off the end.
 **Cheapest way back:** a filters screen that lists all of them with a remove control — the removal

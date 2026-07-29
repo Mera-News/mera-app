@@ -301,6 +301,34 @@ describe('PersonaUpdateAgent', () => {
       expect(callArgs.pendingProposal).toContain('remove the filter "celebrity gossip"');
     });
 
+    // not-interested P4a: the filter feature YIELDS to the user's data. When the
+    // facts alone leave no room, the agent degrades its own prompt rather than
+    // letting the turn overflow (useLocalLLM hard-errors above the budget).
+    it('degrades the filter variant and drops the block when the facts leave no room', async () => {
+      // Variant-sized system prompts: only `off` is small enough to fit.
+      mockBuildPersonaUpdateStaticPrompt.mockImplementation(
+        (p: { filterTools?: string }) => (p.filterTools === 'off' ? 'tiny' : 'X'.repeat(12000)),
+      );
+      mockGetFacts.mockResolvedValue(
+        Array.from({ length: 22 }, (_, i) => ({
+          id: `f${i}`,
+          statement: 'A'.repeat(199),
+          questionnaireAttribute: 'location: residence',
+        })),
+      );
+      mockGetActiveSuppressions.mockResolvedValue([
+        { id: 'sup-1', pattern: 'celebrity gossip', kind: 'keyword', value: null, strength: 0.9 },
+      ]);
+
+      const agent = makeAgent('CONFIG');
+      expect(await agent.buildSystemPrompt(true)).toBe('tiny');
+      await agent.buildContext();
+      expect(mockBuildPersonaUpdateContext.mock.calls[0][0].filtersList).toBeUndefined();
+      // …and the cloud tool payload loses the three filter tools too.
+      agent.getToolDefinitions();
+      expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG', false);
+    });
+
     it('does NOT read filters on the ONBOARDING surface', async () => {
       await makeAgent('ONBOARDING').buildContext();
       expect(mockGetActiveSuppressions).not.toHaveBeenCalled();

@@ -14,11 +14,14 @@ import {
   FILTERS_BLOCK_TOKEN_CEILING,
   MAX_FACTS_IN_CONTEXT,
   MAX_FILTERS_IN_CONTEXT,
-  PERSONA_CONTEXT_TOKEN_BUDGET,
+  PERSONA_INPUT_TOKEN_BUDGET,
+  PERSONA_TURN_RESERVE_TOKENS,
+  planPersonaPrompt,
   type ContextFact,
 } from '../persona-management/persona-agent-core';
 import { estimateTokens } from '@/lib/llm/tokens';
 import type { ActiveSuppressionView, StagedProposal } from '../core/types';
+import type { FilterToolsVariant } from '../prompts/prompts';
 
 // --- not-interested P4a fixtures -------------------------------------------
 
@@ -49,15 +52,25 @@ function saturatedFilters(n = MAX_FILTERS_IN_CONTEXT): ActiveSuppressionView[] {
 /** The LARGEST persona system prompt: CONFIG (has the filter tools) + LOCAL
  *  (the path INPUT_TOKEN_BUDGET actually governs) + the XML tool-format block +
  *  a pinned language. */
-function worstCaseSystemPrompt(): string {
+function worstCaseSystemPrompt(filterTools: FilterToolsVariant = 'full'): string {
   return buildPersonaSystemPrompt({
     surface: 'CONFIG',
     includeToolFormat: true,
     languageName: 'French',
     mode: 'LOCAL',
     useLegacy: false,
+    filterTools,
   });
 }
+
+/**
+ * The PRE-P4a worst case, measured on 647bffb: the CONFIG/LOCAL/XML system
+ * prompt (1497) + <context> at 22 facts of the prompt's own 199-char limit
+ * (1511) = 3008, which fit the 3072 budget with 64 to spare. This wave must not
+ * make that user's turn cost MORE — over budget, useLocalLLM does not degrade,
+ * it hard-errors with "Context too long".
+ */
+const PRE_WAVE_WORST_CASE_TOKENS = 3008;
 
 describe('MAX_FACTS_IN_CONTEXT', () => {
   it('is 22', () => {
@@ -452,18 +465,18 @@ describe('buildPersonaContext — filters + pending proposal', () => {
     expect(out).toContain('retire_suppression removes one by [id]');
   });
 
-  it('DROPS the filters block once the facts alone exceed PERSONA_CONTEXT_TOKEN_BUDGET', () => {
-    // An auxiliary block must never be what pushes a fact-saturated turn over
-    // the on-device input budget.
+  it('DROPS the filters block when the turn plan says it cannot be afforded', () => {
     const mockBuildContext = jest.fn().mockReturnValue('ctx');
     buildPersonaContext(
-      { facts: saturatedFacts(199), useLegacy: false, suppressions: saturatedFilters() },
+      {
+        facts: saturatedFacts(199),
+        useLegacy: false,
+        suppressions: saturatedFilters(),
+        includeFiltersBlock: false,
+      },
       { buildContext: mockBuildContext },
     );
     expect(mockBuildContext.mock.calls[0][0].filtersList).toBeUndefined();
-    // Sanity: that fixture really is over the budget.
-    expect(estimateTokens(formatKnownFactsList(saturatedFacts(199))))
-      .toBeGreaterThan(PERSONA_CONTEXT_TOKEN_BUDGET);
   });
 });
 
@@ -498,18 +511,105 @@ describe('persona prompt token budget', () => {
     expect(marginal).toBeLessThanOrEqual(FILTERS_BLOCK_TOKEN_CEILING);
   });
 
-  it('the filters block contributes nothing at pathological fact lengths', () => {
-    // 22 facts at the prompt's own 199-char limit already overflow on their own
-    // (a PRE-EXISTING cliff — see the wave report). This wave's block must not
-    // be part of that: it self-drops.
-    const facts = saturatedFacts(199);
-    const without = buildPersonaContext({ facts, useLegacy: false });
-    const withFilters = buildPersonaContext({
-      facts,
-      useLegacy: false,
-      suppressions: saturatedFilters(),
+  // --- The no-regression gate ---------------------------------------------
+  //
+  // The FILTERS feature yields to the user's data, never the reverse. At the
+  // point where a turn cannot afford it, the ladder bottoms out at a prompt
+  // BYTE-IDENTICAL to the pre-P4a one — so no user who could hold a persona
+  // chat turn before this wave can be locked out by it.
+
+  function planFor(factChars: number, filterCount = MAX_FILTERS_IN_CONTEXT) {
+    const facts = saturatedFacts(factChars);
+    const block = formatActiveFiltersList(saturatedFilters(filterCount));
+    return planPersonaPrompt({
+      systemTokensFor: (v) => estimateTokens(worstCaseSystemPrompt(v)),
+      baseContextTokens: estimateTokens(formatKnownFactsList(facts)),
+      filtersBlockTokens: block ? estimateTokens(block) : 0,
     });
-    expect(estimateTokens(withFilters) - estimateTokens(without)).toBe(0);
+  }
+
+  /** What the planned turn actually costs, worst case (CONFIG/LOCAL/XML). */
+  function plannedTotal(factChars: number, filterCount = MAX_FILTERS_IN_CONTEXT) {
+    const plan = planFor(factChars, filterCount);
+    const facts = saturatedFacts(factChars);
+    return (
+      estimateTokens(worstCaseSystemPrompt(plan.filterTools))
+      + estimateTokens(
+        buildPersonaContext({
+          facts,
+          useLegacy: false,
+          suppressions: saturatedFilters(filterCount),
+          includeFiltersBlock: plan.includeFiltersBlock,
+        }),
+      )
+    );
+  }
+
+  it('the `off` rung reproduces the pre-P4a prompt — no filter rules, no filter tools', () => {
+    const off = worstCaseSystemPrompt('off');
+    expect(off).not.toContain('FILTERS:');
+    expect(off).not.toContain('proposeChanges');
+    expect(off).not.toContain('applyProposal');
+    expect(off).not.toContain('cancelProposal');
+    // The rest of the CONFIG prompt is untouched.
+    expect(off).toContain('deleteUserFacts');
+    expect(off).toContain('runCalibration');
+  });
+
+  it('yields the whole feature rather than overflow, at every fact length', () => {
+    // 22 facts at the prompt's own 199-char limit: the pre-wave prompt fit with
+    // 64 to spare, so the post-wave one must too.
+    expect(plannedTotal(199)).toBeLessThanOrEqual(PRE_WAVE_WORST_CASE_TOKENS);
+    expect(plannedTotal(199)).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
+    expect(planFor(199).filterTools).toBe('off');
+    expect(planFor(199).includeFiltersBlock).toBe(false);
+  });
+
+  it('degrades in the intended order — block first, then docs, then tools', () => {
+    const rungs = [88, 120, 150, 170, 199].map((n) => planFor(n));
+    // Never gets richer as the facts grow.
+    const rank = (p: { filterTools: string; includeFiltersBlock: boolean }) =>
+      p.filterTools === 'full' ? (p.includeFiltersBlock ? 3 : 2) : p.filterTools === 'compact' ? 1 : 0;
+    const ranks = rungs.map(rank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => b - a));
+    // The richest rung is reachable, and so is the poorest.
+    expect(ranks[0]).toBe(3);
+    expect(ranks[ranks.length - 1]).toBe(0);
+    // Every rung stays inside the budget.
+    for (const n of [88, 120, 150, 170, 199]) {
+      expect(plannedTotal(n)).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
+    }
+  });
+
+  it('never picks a rung that would overflow, even with the turn reserve applied', () => {
+    const plan = planFor(160);
+    const total =
+      estimateTokens(worstCaseSystemPrompt(plan.filterTools))
+      + estimateTokens(formatKnownFactsList(saturatedFacts(160)))
+      + (plan.includeFiltersBlock
+        ? estimateTokens(formatActiveFiltersList(saturatedFilters())!)
+        : 0);
+    expect(total).toBeLessThanOrEqual(PERSONA_INPUT_TOKEN_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
+  });
+
+  it('returns the `off` rung rather than throwing when nothing fits at all', () => {
+    const plan = planPersonaPrompt({
+      systemTokensFor: () => 99_999,
+      baseContextTokens: 99_999,
+      filtersBlockTokens: 10,
+    });
+    expect(plan).toEqual({ filterTools: 'off', includeFiltersBlock: false });
+  });
+
+  it('skips the block-bearing rung when the user has no filters', () => {
+    const measured: string[] = [];
+    const plan = planPersonaPrompt({
+      systemTokensFor: (v) => { measured.push(v); return 10; },
+      baseContextTokens: 10,
+      filtersBlockTokens: 0,
+    });
+    expect(plan).toEqual({ filterTools: 'full', includeFiltersBlock: false });
+    expect(measured).toEqual(['full']); // measured exactly once
   });
 });
 

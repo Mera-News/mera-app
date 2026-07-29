@@ -29,10 +29,15 @@ import {
   buildPersonaContext,
   buildPersonaSystemPrompt,
   decidePersonaProposeChanges,
+  formatActiveFiltersList,
+  formatKnownFactsList,
   getPersonaToolDefinitions,
+  planPersonaPrompt,
   recomputeQuestionnaireLevel,
   type PersonaMode,
+  type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
+import { estimateTokens } from '../tokens';
 import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
   ConversationMessage,
@@ -65,6 +70,16 @@ export class PersonaUpdateAgent implements IAgent {
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
   private lastUseLegacy: boolean | null = null;
+  private lastFilterTools: PersonaPromptPlan['filterTools'] | null = null;
+
+  /**
+   * This turn's FILTERS budget decision (not-interested P4a). Recomputed by
+   * MEASUREMENT in buildSystemPrompt — which both chat hooks call immediately
+   * before buildContext (useLocalLLM.ts:267/278, useCloudPersonaChat.ts:372/382)
+   * — and read back in buildContext. Defaults to the full feature so an agent
+   * whose buildSystemPrompt was never called still behaves.
+   */
+  private turnPlan: PersonaPromptPlan = { filterTools: 'full', includeFiltersBlock: true };
 
   async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
@@ -76,36 +91,95 @@ export class PersonaUpdateAgent implements IAgent {
         : 'CLOUD';
     const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
 
-    // Static prompt depends on surface + needsToolFormat + languageName + mode + useLegacy.
-    // All are fixed per session unless the user changes their app language or
-    // toggles on-device / cloud processing.
+    // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
+    // so persona-agent-core calls THIS function reference rather than its own
+    // default harness import — keeps the frozen unit-test mock seam intact.
+    // Memoized per call so the variant we MEASURE is the string we return —
+    // the common case builds exactly one prompt, as before.
+    const built = new Map<PersonaPromptPlan['filterTools'], string>();
+    const buildAt = (filterTools: PersonaPromptPlan['filterTools']): string => {
+      const hit = built.get(filterTools);
+      if (hit !== undefined) return hit;
+      const prompt = buildPersonaSystemPrompt(
+        {
+          surface: this.surface,
+          includeToolFormat: needsToolFormat,
+          languageName,
+          mode,
+          useLegacy,
+          // ONBOARDING carries no filter tools at all, so leave the pre-P4a
+          // call-args shape untouched there.
+          ...(this.surface === 'CONFIG' ? { filterTools } : {}),
+        },
+        buildPersonaUpdateStaticPrompt,
+      );
+      built.set(filterTools, prompt);
+      return prompt;
+    };
+
+    this.turnPlan = await this.planTurn({ useLegacy, buildAt });
+
+    // Static prompt depends on surface + needsToolFormat + languageName + mode +
+    // useLegacy — all fixed per session — PLUS this turn's filter variant, which
+    // is data-dependent and so must be part of the cache key.
     if (
       this.cachedSystemPrompt
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
       && this.lastMode === mode
       && this.lastUseLegacy === useLegacy
+      && this.lastFilterTools === this.turnPlan.filterTools
     ) {
       return this.cachedSystemPrompt;
     }
-    // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
-    // so persona-agent-core calls THIS function reference rather than its own
-    // default harness import — keeps the frozen unit-test mock seam intact.
-    this.cachedSystemPrompt = buildPersonaSystemPrompt(
-      {
-        surface: this.surface,
-        includeToolFormat: needsToolFormat,
-        languageName,
-        mode,
-        useLegacy,
-      },
-      buildPersonaUpdateStaticPrompt,
-    );
+    this.cachedSystemPrompt = buildAt(this.turnPlan.filterTools);
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
     this.lastUseLegacy = useLegacy;
+    this.lastFilterTools = this.turnPlan.filterTools;
     return this.cachedSystemPrompt;
+  }
+
+  /**
+   * Chooses how much of the FILTERS feature this turn can afford, by measuring
+   * the real candidate prompts against this turn's real data — never by
+   * comparing the facts to a hardcoded threshold.
+   *
+   * ONBOARDING short-circuits: it never carries the filter tools, so every
+   * variant renders the same prompt and there is nothing to yield.
+   */
+  private async planTurn(params: {
+    useLegacy: boolean;
+    buildAt: (v: PersonaPromptPlan['filterTools']) => string;
+  }): Promise<PersonaPromptPlan> {
+    if (this.surface !== 'CONFIG') {
+      return { filterTools: 'full', includeFiltersBlock: false };
+    }
+
+    const facts = await getFacts();
+    const suppressions = await this.loadActiveSuppressions();
+    const filtersBlock = formatActiveFiltersList(suppressions);
+
+    // The legacy questionnaire guide is the other variable-size payload in
+    // <context>; read-only here (buildContext still owns persisting the level).
+    let guideTokens = 0;
+    if (params.useLegacy) {
+      const coveredAttributes = await getCoveredAttributeKeys();
+      const storedLevel = await getQuestionnaireLevel();
+      const level = recomputeQuestionnaireLevel(
+        { currentLevel: storedLevel, coveredAttributes },
+        getAttributeKeysForLevel,
+        TOTAL_LEVELS,
+      );
+      guideTokens = estimateTokens(buildQuestionnaireGuide(level, coveredAttributes));
+    }
+
+    return planPersonaPrompt({
+      systemTokensFor: (variant) => estimateTokens(params.buildAt(variant)),
+      baseContextTokens: estimateTokens(formatKnownFactsList(facts)) + guideTokens,
+      filtersBlockTokens: filtersBlock ? estimateTokens(filtersBlock) : 0,
+    });
   }
 
   // --- IAgent: dynamic context (injected into user messages each turn) ---
@@ -141,7 +215,13 @@ export class PersonaUpdateAgent implements IAgent {
 
     if (!useLegacy) {
       return buildPersonaContext(
-        { facts, useLegacy: false, suppressions, proposal },
+        {
+          facts,
+          useLegacy: false,
+          suppressions,
+          proposal,
+          includeFiltersBlock: this.turnPlan.includeFiltersBlock,
+        },
         { buildContext: buildPersonaUpdateContext },
       );
     }
@@ -158,7 +238,15 @@ export class PersonaUpdateAgent implements IAgent {
     await setQuestionnaireLevel(currentLevel);
 
     return buildPersonaContext(
-      { facts, useLegacy: true, currentLevel, coveredAttributes, suppressions, proposal },
+      {
+        facts,
+        useLegacy: true,
+        currentLevel,
+        coveredAttributes,
+        suppressions,
+        proposal,
+        includeFiltersBlock: this.turnPlan.includeFiltersBlock,
+      },
       {
         buildContext: buildPersonaUpdateContext,
         buildGuide: buildQuestionnaireGuide,
@@ -171,7 +259,8 @@ export class PersonaUpdateAgent implements IAgent {
 
   getToolDefinitions(): ToolDefinition[] {
     const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
-    return getPersonaToolDefinitions(this.surface, useLegacy, buildToolDefinitions);
+    // The turn's plan also decides whether the cloud tool payload carries them.
+    return getPersonaToolDefinitions(this.surface, useLegacy, buildToolDefinitions, this.turnPlan.filterTools);
   }
 
   // --- IAgent: message formatting ---
