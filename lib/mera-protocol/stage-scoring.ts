@@ -29,12 +29,15 @@ import {
   applyScoringOverrides,
   buildPubPrefs,
   normalizeLocation,
+  normText,
+  screenHardSuppressions,
   type StageCandidate,
   type StageResult,
   type PersonaScoringContext,
   type PersonaLocationSnapshot,
   type RelevanceComponents,
   type ScoringMode,
+  type SoftSuppression,
 } from '@/lib/news-harness/scoring-engine';
 import {
   buildStageCandidateInput,
@@ -45,11 +48,20 @@ import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
 import { getActive as getActivePubPrefs } from '@/lib/database/services/publication-preference-service';
-import { getActive as getActiveSuppressions } from '@/lib/database/services/suppression-service';
+import {
+  getActive as getActiveSuppressions,
+  kindOf,
+  HARD_SUPPRESSION_STRENGTH,
+} from '@/lib/database/services/suppression-service';
 import { getOpenedSeenSet } from '@/lib/database/services/story-impression-service';
 
 const clamp = (x: number, lo: number, hi: number): number =>
   x < lo ? lo : x > hi ? hi : x;
+
+/** Publication-preference weight at or below which the publication counts as
+ *  MUTED and is synthesized into a hard filter (D4). Explicit "never show me
+ *  this source" writes -1; the small margin absorbs float drift. */
+const MUTED_PUBLICATION_WEIGHT = -0.9;
 
 const isOnDeviceMode = () =>
   useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
@@ -109,6 +121,8 @@ export interface PersonaScoringSnapshot {
  *   - topicWeights: active topics × fact-level weight, clamped to [-1,1].
  *   - locations: all non-expired locations (expired travel windows dropped).
  *   - pubPrefs / softSuppressions: explicit-only preferences.
+ *   - hardSuppressions: the ≥ HARD_SUPPRESSION_STRENGTH "not interested"
+ *     filters, PLUS a derived publication filter per muted source (D4).
  * NEVER leaves the device (privacy-lean).
  */
 export async function loadPersonaScoringContext(
@@ -152,18 +166,58 @@ export async function loadPersonaScoringContext(
     pubPrefRows.map((p) => ({ publicationName: p.publicationName, weight: p.weight })),
   );
 
-  // All active suppressions are treated as SOFT (score penalty, capped) here.
-  // Hard-filter (strength ≥ 0.8) pre-filtering is a later wave; the engine's
-  // P_SUP_CAP bounds the demotion regardless.
-  const softSuppressions = suppressions.map((s) => ({
-    keywords: s.keywords ?? [],
-    strength: s.strength,
-  }));
+  // Hard / soft partition — made HERE, exactly once, using the DB service's
+  // HARD_SUPPRESSION_STRENGTH (0.8). Deliberately NOT a harness config
+  // constant: the threshold is a property of how suppressions are stored, not a
+  // tunable scoring weight.
+  //   - soft (< 0.8) → capped score penalty (relevance.ts). UNCHANGED.
+  //   - hard (≥ 0.8) → screened out entirely before any math/judge work.
+  // `kind`/`value` are passed through as UNDEFINED when the column is null, so
+  // the pure matcher owns the "null kind means keyword" default in one place.
+  const softSuppressions: SoftSuppression[] = [];
+  const hardSuppressions: SoftSuppression[] = [];
+  for (const s of suppressions) {
+    const isHard = s.strength >= HARD_SUPPRESSION_STRENGTH;
+    const keywords = s.keywords ?? [];
+    const pattern = s.pattern?.trim() || undefined;
+    // A hard KEYWORD filter with no keywords would match nothing and silently
+    // do nothing — fall back to its human pattern. Soft rows keep their exact
+    // historical behaviour (empty keywords ⇒ no penalty), so this is hard-only.
+    const effectiveKeywords =
+      isHard && kindOf(s) === 'keyword' && keywords.length === 0 && pattern
+        ? [pattern]
+        : keywords;
+    const entry: SoftSuppression = {
+      keywords: effectiveKeywords,
+      strength: s.strength,
+      kind: s.kind ?? undefined,
+      value: s.value ? normText(s.value) : undefined,
+      pattern,
+    };
+    (isHard ? hardSuppressions : softSuppressions).push(entry);
+  }
+
+  // D4: a muted publication is a DERIVED hard filter, never a duplicated row.
+  // The Sources preferences screen stays the single manager — un-muting lifts
+  // the filter on the next load with nothing to clean up.
+  for (const p of pubPrefRows) {
+    if (p.weight > MUTED_PUBLICATION_WEIGHT) continue;
+    const value = normText(p.publicationName);
+    if (!value) continue;
+    hardSuppressions.push({
+      keywords: [],
+      strength: 1,
+      kind: 'publication',
+      value,
+      pattern: p.publicationName,
+    });
+  }
 
   const persona: PersonaScoringContext = {
     locations: personaLocations,
     pubPrefs,
     softSuppressions,
+    hardSuppressions,
     // seen = OPENS ONLY (user decision): the P_SEEN demotion input is opened
     // rows exclusively — mere impressions never demote. Ids cover both
     // article_id and stable_cluster_id (the engine checks either).
@@ -243,10 +297,16 @@ export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
 
 export interface MathStageResult {
   persona: PersonaScoringContext;
+  /** ACTIVE candidates only — hard-filtered ones are already removed. */
   stage: StageCandidate[];
   computedScoreMap: Map<string, number>;
   componentsMap: Map<string, RelevanceComponents>;
   modeMap: Map<string, ScoringMode>;
+  /** Screened out by a hard "not interested" filter: absent from `stage` and
+   *  from every map above. The caller persists these as terminal `excluded`. */
+  excludedIds: Set<string>;
+  /** excluded id → display value of the filter that matched it. */
+  excludedValueById: Map<string, string>;
 }
 
 /**
@@ -263,7 +323,20 @@ export async function computeMathStage(
     loadPersonaScoringContext(nowMs),
     effectiveHarnessConfig(),
   ]);
-  const stage = buildStageCandidates(candidates, topicWeights);
+  const allStage = buildStageCandidates(candidates, topicWeights);
+
+  // HARD "not interested" screen — the E2EE path never enters computeAndJudge,
+  // so this is its own convergence point for the same shared matcher.
+  const excludedValueById = screenHardSuppressions(
+    allStage.map((c) => c.input),
+    persona.hardSuppressions,
+  );
+  const excludedIds = new Set(excludedValueById.keys());
+  const stage =
+    excludedIds.size > 0
+      ? allStage.filter((c) => !excludedIds.has(c.input.id))
+      : allStage;
+
   const computedScoreMap = new Map<string, number>();
   const componentsMap = new Map<string, RelevanceComponents>();
   const modeMap = new Map<string, ScoringMode>();
@@ -278,7 +351,15 @@ export async function computeMathStage(
     componentsMap.set(c.input.id, r.components);
     modeMap.set(c.input.id, r.mode);
   }
-  return { persona, stage, computedScoreMap, componentsMap, modeMap };
+  return {
+    persona,
+    stage,
+    computedScoreMap,
+    componentsMap,
+    modeMap,
+    excludedIds,
+    excludedValueById,
+  };
 }
 
 /**

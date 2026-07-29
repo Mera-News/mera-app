@@ -20,6 +20,7 @@ import {
   buildReasonUserMessage,
 } from './prompts';
 import {
+  batchMarkExcluded,
   countUnscoredSuggestions,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
@@ -164,6 +165,12 @@ export interface BatchScoreResult {
   computedMap: Map<string, number>;
   /** Persona-v3 audit: JSON-encoded RelevanceComponents per id. */
   componentsJsonMap: Map<string, string>;
+  /** Screened out by a hard "not interested" filter. These ids get NO scoreMap
+   *  entry and are NOT in failedIds — they are not a failure, they are a user
+   *  decision. The caller persists them as terminal `excluded`. */
+  excludedIds: Set<string>;
+  /** excluded id → display value of the filter that matched it (logging). */
+  excludedValueById: Map<string, string>;
 }
 
 /**
@@ -188,6 +195,8 @@ export async function batchScoreAndReason(
   const failedIds = new Set<string>();
   const computedMap = new Map<string, number>();
   const componentsJsonMap = new Map<string, string>();
+  let excludedIds = new Set<string>();
+  let excludedValueById = new Map<string, string>();
 
   // Ineligible ones get a fixed low score, never hit the engine/LLM.
   const eligible: ScoringCandidate[] = [];
@@ -196,7 +205,15 @@ export async function batchScoreAndReason(
     else scoreMap.set(c.id, INELIGIBLE_RELEVANCE);
   }
   if (eligible.length === 0) {
-    return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+    return {
+      scoreMap,
+      reasonMap,
+      failedIds,
+      computedMap,
+      componentsJsonMap,
+      excludedIds,
+      excludedValueById,
+    };
   }
 
   // ---- ONE math + judge stage (shared by both orchestrators) ----
@@ -212,7 +229,32 @@ export async function batchScoreAndReason(
       scoreMap.set(c.id, FALLBACK_RELEVANCE);
       failedIds.add(c.id);
     });
-    return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+    return {
+      scoreMap,
+      reasonMap,
+      failedIds,
+      computedMap,
+      componentsJsonMap,
+      excludedIds,
+      excludedValueById,
+    };
+  }
+
+  // ---- HARD "not interested" filters: drop before anything else ----
+  // Excluded rows must never enter the scoring loop below — a missing
+  // rawScoreMap entry there means "the stage failed", which would hand them
+  // FALLBACK_RELEVANCE and add them to failedIds. They are neither scored nor
+  // failed; they are terminal by the user's request.
+  excludedIds = stage.excludedIds ?? new Set<string>();
+  excludedValueById = stage.excludedValueById ?? new Map<string, string>();
+  const active =
+    excludedIds.size > 0 ? eligible.filter((c) => !excludedIds.has(c.id)) : eligible;
+  if (excludedIds.size > 0) {
+    logger.info('[batchScoreAndReason] hard filters excluded rows', {
+      excluded: excludedIds.size,
+      of: eligible.length,
+      values: [...new Set(excludedValueById.values())].slice(0, 10),
+    });
   }
 
   // M-P5c: capture LARGE judge overrides (stage.overrideMap) for the on-device
@@ -227,7 +269,7 @@ export async function batchScoreAndReason(
   // stage.judgeScoreMap. applied = computed in every case.
   const overrideCases: import('@/lib/news-harness/scoring-engine').CalibrationCase[] = [];
 
-  for (const c of eligible) {
+  for (const c of active) {
     const raw = stage.rawScoreMap.get(c.id);
     if (raw === undefined) {
       scoreMap.set(c.id, FALLBACK_RELEVANCE);
@@ -261,7 +303,7 @@ export async function batchScoreAndReason(
 
   // ---- Reason pass: only survivors ≥ reasonRelevanceThreshold that the judge
   //      didn't already caption (backstop rows + un-captioned math rows). ----
-  const survivors = eligible.filter((c) => {
+  const survivors = active.filter((c) => {
     const r = scoreMap.get(c.id);
     return (
       typeof r === 'number' &&
@@ -300,7 +342,15 @@ export async function batchScoreAndReason(
     }
   }
 
-  return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+  return {
+    scoreMap,
+    reasonMap,
+    failedIds,
+    computedMap,
+    componentsJsonMap,
+    excludedIds,
+    excludedValueById,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -526,8 +576,14 @@ export async function processAllUnscored(
     const batch = await getUnscoredSuggestionsWithFacts(batchSize);
     if (batch.length === 0) break;
 
-    const { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap } =
-      await batchScoreAndReason(batch);
+    const {
+      scoreMap,
+      reasonMap,
+      failedIds,
+      computedMap,
+      componentsJsonMap,
+      excludedIds,
+    } = await batchScoreAndReason(batch);
 
     // Snapshot RAW (post-judge) scores before bucketing — persisted as
     // raw_score for within-section ordering (the bucketed value is `relevance`).
@@ -537,9 +593,26 @@ export async function processAllUnscored(
     bucketScores(scoreMap);
 
     const succeeded: { id: string; relevance: number; reason: string | null }[] = [];
+
+    // Hard-filtered rows: ONE terminal write, no scoring result. They count as
+    // processed (they DID leave `unscored`, so the loop still terminates and
+    // onProgress's denominator stays honest) and are emitted to
+    // onBatchComplete exactly like a discarded row so the store refreshes.
+    if (excludedIds.size > 0) {
+      const ids = [...excludedIds];
+      try {
+        await batchMarkExcluded(ids);
+        for (const id of ids) succeeded.push({ id, relevance: 0, reason: null });
+      } catch (err) {
+        logger.error('[processAllUnscored] batchMarkExcluded failed', err, {
+          count: ids.length,
+        });
+      }
+    }
+
     await Promise.all(
       batch.map(async (candidate) => {
-        if (failedIds.has(candidate.id)) return;
+        if (failedIds.has(candidate.id) || excludedIds.has(candidate.id)) return;
         const relevance = scoreMap.get(candidate.id) ?? 0.3;
         const reason = reasonMap.get(candidate.id) ?? '';
         // REASON_THRESHOLD = 0 → reasons generated for every row, including

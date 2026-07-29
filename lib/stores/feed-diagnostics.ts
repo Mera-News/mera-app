@@ -47,6 +47,11 @@ export const SAMPLE_TITLE_MAX = 120;
  *  failure in this exact order wins, mirroring `isVisible`'s conjunction, so
  *  `dropped.* + visibleCount === totals.rows`. */
 export type FeedFunnelVisibilityReason =
+  /** A hard "not interested" filter matched — the user asked never to see it.
+   *  Checked FIRST: an excluded row also fails `not-complete` and
+   *  `below-relevance-gate`, and attributing it to either would read as a
+   *  pipeline problem rather than as the user's own decision. */
+  | 'excluded'
   | 'not-complete'
   | 'below-relevance-gate'
   | 'outside-window'
@@ -148,7 +153,14 @@ export interface FeedFunnelReport {
 
   totals: {
     rows: number;
-    status: { unscored: number; reasonPending: number; complete: number; other: number };
+    status: {
+      unscored: number;
+      reasonPending: number;
+      complete: number;
+      /** Terminal, removed by a hard "not interested" filter. */
+      excluded: number;
+      other: number;
+    };
   };
 
   /** INCLUSIVE / overlapping — a row failing two axes counts in both. Does NOT
@@ -157,6 +169,7 @@ export interface FeedFunnelReport {
 
   /** EXCLUSIVE, first-failure-wins. `dropped.* + visibleCount === totals.rows`. */
   dropped: {
+    excluded: number;
     notComplete: number;
     belowRelevanceGate: number;
     outsideWindow: number;
@@ -298,9 +311,10 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
 
   // ── Stage 1: visibility, with exclusive reason attribution ────────────────
-  const status = { unscored: 0, reasonPending: 0, complete: 0, other: 0 };
+  const status = { unscored: 0, reasonPending: 0, complete: 0, excluded: 0, other: 0 };
   const failing = { notComplete: 0, belowRelevanceGate: 0, outsideWindow: 0 };
   const dropped = {
+    excluded: 0,
     notComplete: 0,
     belowRelevanceGate: 0,
     outsideWindow: 0,
@@ -314,6 +328,7 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     if (st === 'unscored') status.unscored++;
     else if (st === 'reason_pending') status.reasonPending++;
     else if (st === 'complete') status.complete++;
+    else if (st === 'excluded') status.excluded++;
     else status.other++;
 
     if (isVisible(s, cutoffMs)) {
@@ -328,21 +343,26 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     if (!okRelevance) failing.belowRelevanceGate++;
     if (!okWindow) failing.outsideWindow++;
 
-    const reason: FeedFunnelVisibilityReason = !okStatus
-      ? 'not-complete'
-      : !okRelevance
-        ? 'below-relevance-gate'
-        : !okWindow
-          ? 'outside-window'
-          : 'unknown-gate';
+    const reason: FeedFunnelVisibilityReason =
+      st === 'excluded'
+        ? 'excluded'
+        : !okStatus
+          ? 'not-complete'
+          : !okRelevance
+            ? 'below-relevance-gate'
+            : !okWindow
+              ? 'outside-window'
+              : 'unknown-gate';
     dropped[
-      reason === 'not-complete'
-        ? 'notComplete'
-        : reason === 'below-relevance-gate'
-          ? 'belowRelevanceGate'
-          : reason === 'outside-window'
-            ? 'outsideWindow'
-            : 'unknownGate'
+      reason === 'excluded'
+        ? 'excluded'
+        : reason === 'not-complete'
+          ? 'notComplete'
+          : reason === 'below-relevance-gate'
+            ? 'belowRelevanceGate'
+            : reason === 'outside-window'
+              ? 'outsideWindow'
+              : 'unknownGate'
     ]++;
     droppedSamples.push(makeSample(s, reason, nowMs));
   }
@@ -477,7 +497,8 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
 
   const memberSumMatchesVisible = memberSum === visibleCount;
   const visibilityAttributionSums =
-    dropped.notComplete +
+    dropped.excluded +
+      dropped.notComplete +
       dropped.belowRelevanceGate +
       dropped.outsideWindow +
       dropped.unknownGate +
@@ -573,7 +594,9 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     statusUnscored: r.totals.status.unscored,
     statusReasonPending: r.totals.status.reasonPending,
     statusComplete: r.totals.status.complete,
+    statusExcluded: r.totals.status.excluded,
     visible: r.visibleCount,
+    droppedExcluded: r.dropped.excluded,
     droppedNotComplete: r.dropped.notComplete,
     droppedBelowGate: r.dropped.belowRelevanceGate,
     droppedOutsideWindow: r.dropped.outsideWindow,

@@ -143,12 +143,14 @@ describe('computeFeedFunnel — visibility attribution', () => {
     expect(r.totals.rows).toBe(6);
     expect(r.visibleCount).toBe(1);
     expect(r.dropped).toEqual({
+      excluded: 0,
       notComplete: 3,
       belowRelevanceGate: 1,
       outsideWindow: 1,
       unknownGate: 0,
     });
     const sum =
+      r.dropped.excluded +
       r.dropped.notComplete +
       r.dropped.belowRelevanceGate +
       r.dropped.outsideWindow +
@@ -190,8 +192,32 @@ describe('computeFeedFunnel — visibility attribution', () => {
       unscored: 2,
       reasonPending: 1,
       complete: 3,
+      excluded: 0,
       other: 0,
     });
+  });
+
+  it('attributes hard-filtered rows to `excluded`, ahead of the other gates', () => {
+    // An excluded row fails the status gate AND the relevance gate (relevance
+    // 0). Attributing it to either would read as a pipeline problem instead of
+    // as the user's own "not interested" decision — and would double-count.
+    const r = computeFeedFunnel(
+      baseInput({
+        suggestions: [
+          ...mixedPool(),
+          sugg({ _id: 'nope', status: ArticleSuggestionStatus.Excluded, relevance: 0, reason: '' }),
+        ],
+      }),
+    );
+    expect(r.totals.rows).toBe(7);
+    expect(r.totals.status.excluded).toBe(1);
+    expect(r.totals.status.other).toBe(0); // NOT swept into the catch-all
+    expect(r.dropped.excluded).toBe(1);
+    expect(r.dropped.notComplete).toBe(3); // unchanged — no double-count
+    expect(r.dropped.belowRelevanceGate).toBe(1);
+    expect(r.sumsCheck.visibilityAttributionSums).toBe(true);
+    expect(feedFunnelScalars(r).statusExcluded).toBe(1);
+    expect(feedFunnelScalars(r).droppedExcluded).toBe(1);
   });
 
   it('echoes the gates and the header numbers it was handed', () => {
@@ -575,9 +601,16 @@ describe('computeFeedFunnel — edge cases', () => {
   it('produces zeroed, self-consistent output for an empty pool and empty order', () => {
     const r = computeFeedFunnel(baseInput());
     expect(r.totals.rows).toBe(0);
-    expect(r.totals.status).toEqual({ unscored: 0, reasonPending: 0, complete: 0, other: 0 });
+    expect(r.totals.status).toEqual({
+      unscored: 0,
+      reasonPending: 0,
+      complete: 0,
+      excluded: 0,
+      other: 0,
+    });
     expect(r.visibleCount).toBe(0);
     expect(r.dropped).toEqual({
+      excluded: 0,
       notComplete: 0,
       belowRelevanceGate: 0,
       outsideWindow: 0,

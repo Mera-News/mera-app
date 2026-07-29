@@ -37,6 +37,7 @@ import {
   saveReason,
   saveScoringResult,
   batchSaveMathScores,
+  batchMarkExcluded,
   getComputedComponentsByIds,
   batchMarkReasonSkipped,
   type ScoringCandidate,
@@ -831,6 +832,37 @@ async function doSubmitRelevance(
   // legacy tiered LLM relevance), and — for the judge path — gives us the
   // computed scores we persist so a judge failure fail-opens to the math.
   const math = await computeMathStage(subset);
+
+  // HARD "not interested" filters. `?? new Set()` because the orchestrator
+  // tests mock computeMathStage with the pre-wave shape — a missing field must
+  // mean "nothing excluded", never a crash.
+  const excludedIds = math.excludedIds ?? new Set<string>();
+  let active = subset;
+  if (excludedIds.size > 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} hard filters excluded ${excludedIds.size}/${subset.length}: ${[
+        ...new Set((math.excludedValueById ?? new Map<string, string>()).values()),
+      ]
+        .slice(0, 10)
+        .join(', ')}`,
+    );
+    await batchMarkExcluded([...excludedIds]);
+    await refreshUi();
+    active = subset.filter((c) => !excludedIds.has(c.id));
+  }
+
+  // Every candidate in the batch was filtered out — nothing left to submit.
+  // Terminal transition inside the drain loop (doDrain's maybeFinalize handles
+  // the run finalize); without this the batch would wedge in
+  // `submitting-relevance` or submit an empty inference request.
+  if (math.stage.length === 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} fully hard-filtered — marking done`,
+    );
+    await markBatchDone(batch.batchId);
+    return;
+  }
+
   const backstop = math.stage.filter(
     (c) => math.modeMap.get(c.input.id) === 'backstop',
   );
@@ -849,7 +881,7 @@ async function doSubmitRelevance(
   // Mixed/untagged batches keep the two-phase tiered LLM scoring exactly as
   // before (the plan's backstop path). No math audit is persisted here.
   if (backstop.length > 0) {
-    const bundle = await buildRelevanceCalls(subset);
+    const bundle = await buildRelevanceCalls(active);
     if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {
       logger.info(
         `${TAG} batch ${batch.batchId} relevance bundle empty — marking done`,
@@ -969,7 +1001,9 @@ async function doSubmitRelevance(
     calls,
     promptsById: new Map(),
     chunkIdToCandidates: new Map(),
-    eligibleCandidates: subset,
+    // Hard-filtered rows are already terminal (`excluded`) — never re-offer
+    // them to the judge/decode path.
+    eligibleCandidates: active,
   };
 
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);

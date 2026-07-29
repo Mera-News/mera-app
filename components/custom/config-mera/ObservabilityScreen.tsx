@@ -137,9 +137,9 @@ async function loadDbStats(): Promise<DbStats> {
 // Feed-funnel rows, ordered by the stage an article passes through: stored →
 // gated → grouped → laid out → read. Every nullable field is rendered as '—'
 // rather than the literal "null".
-function feedFunnelRows(r: FeedFunnelReport, t: TFunction): [string, string][] {
+function feedFunnelRows(r: FeedFunnelReport, t: TFunction): KVRow[] {
     const L = FEED_FUNNEL_LABELS;
-    const rows: [string, string][] = [];
+    const rows: KVRow[] = [];
 
     // A false self-check (or an unattributed drop) means the DIAGNOSTIC is stale
     // — a gate was added without a matching sub-predicate — not that the feed is
@@ -156,8 +156,20 @@ function feedFunnelRows(r: FeedFunnelReport, t: TFunction): [string, string][] {
         [L.statusUnscored, String(r.totals.status.unscored)],
         [L.statusReasonPending, String(r.totals.status.reasonPending)],
         [L.statusComplete, String(r.totals.status.complete)],
+        // Labels are literal here rather than in observability-labels.ts so the
+        // two "not interested" rows stay next to the report fields they read.
+        [
+            'Filtered out — you said not interested',
+            String(r.totals.status.excluded),
+            'funnel-row-status-excluded',
+        ],
         [L.headerRelevant, String(r.header.relevantCount)],
         [L.visible, String(r.visibleCount)],
+        [
+            'Held back — a “not interested” filter',
+            String(r.dropped.excluded),
+            'funnel-row-dropped-excluded',
+        ],
         [L.droppedNotComplete, String(r.dropped.notComplete)],
         [L.droppedBelowGate, String(r.dropped.belowRelevanceGate)],
         [L.droppedOutsideWindow, String(r.dropped.outsideWindow)],
@@ -235,16 +247,20 @@ const MetricCard = ({ title, value, subtitle }: { title: string; value: string; 
 );
 
 // 2-column key/value table used by Feed, Protocol, System, Settings
-const KVTable = ({ rows }: { rows: [string, string][] }) => (
+/** [label, value] — plus an OPTIONAL testID so a harness run can assert on a
+ *  specific row without matching its (freely reworded) label. */
+type KVRow = [label: string, value: string, testID?: string];
+
+const KVTable = ({ rows }: { rows: KVRow[] }) => (
     <Box className="rounded-xl overflow-hidden border border-gray-800">
         <Table className="w-full">
             <TableBody>
-                {rows.map(([k, v], i) => (
+                {rows.map(([k, v, testID], i) => (
                     <TableRow key={k} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
                         <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
                             <Text size="xs" className="text-gray-400">{k}</Text>
                         </TableData>
-                        <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
+                        <TableData useRNView testID={testID} className={TD_CLS} style={{ flex: 1 }}>
                             <Text size="xs" className="text-white text-right" numberOfLines={1}>{v}</Text>
                         </TableData>
                     </TableRow>

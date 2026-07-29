@@ -286,6 +286,12 @@ export async function getScoredSuggestionsWithoutReasons(
 ): Promise<ScoringCandidate[]> {
   // Re-attempt rows that are scored but still awaiting a reason. A failed reason
   // attempt leaves the row in reason_pending, so this query re-fetches it.
+  //
+  // The `reason_pending`-ONLY predicate (rather than "any non-unscored status
+  // without a reason") is what keeps terminally `excluded` rows out of
+  // retryMissingReasons / enqueueOrphanedReasons: an excluded row has no reason
+  // and will never get one, so a status-notEq(unscored) predicate here would
+  // re-spend LLM calls on it forever. Do not widen this query.
   const rows = await (limit !== undefined
     ? articleSuggestionsCol
         .query(Q.where('status', ArticleSuggestionStatus.ReasonPending), Q.take(limit))
@@ -639,6 +645,109 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
       ),
     );
   });
+}
+
+/**
+ * Mark rows as terminally EXCLUDED by a hard "not interested" filter — one
+ * batched write, no scoring of any kind. Relevance/rawScore/computedScore are
+ * zeroed and the reason cleared so every downstream gate reads them as
+ * invisible: the render gate needs relevance > 0.3, `getScoredDonorRows` needs
+ * relevance > 0, and `getScoredSuggestionsWithoutReasons` only ever selects
+ * `reason_pending`, so an excluded row is never swept for a missing reason.
+ *
+ * `scored_at` is stamped only when still null — the column means "when this row
+ * left `unscored`", and a purge sweep over already-scored rows must not slide
+ * an existing "added" time forward.
+ *
+ * Delete-tolerant, exactly like batchMarkAsScoredByIds: a row can be
+ * hard-deleted underneath an in-flight batch, and a bare find() would reject
+ * the whole write.
+ */
+export async function batchMarkExcluded(
+  ids: string[],
+  nowMs: number = Date.now(),
+): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.relevance = 0;
+          r.reason = '';
+          r.rawScore = 0;
+          r.computedScore = 0;
+          r.status = ArticleSuggestionStatus.Excluded;
+          if (r.scoredAt == null) r.scoredAt = nowMs;
+        }),
+      ),
+    );
+  });
+}
+
+/**
+ * The un-exclude direction (D12c): send rows back to `unscored` so the next
+ * scoring pass treats them as new. Used ONLY by the sweep that runs when a hard
+ * filter is retired, and only for rows the sweep has already re-screened
+ * against every still-active hard filter. Scores are cleared so a stale 0 can
+ * never be mistaken for a real verdict.
+ *
+ * Delete-tolerant (see batchMarkExcluded).
+ */
+export async function batchResetToUnscored(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.relevance = 0;
+          r.reason = '';
+          r.rawScore = null;
+          r.computedScore = null;
+          r.scoreComponentsJson = null;
+          r.scoredAt = null;
+          r.status = ArticleSuggestionStatus.Unscored;
+        }),
+      ),
+    );
+  });
+}
+
+/**
+ * Stage rows for the retroactive hard-filter sweep. `excluded: false` (default)
+ * returns every row a hard filter could still newly kill; `excluded: true`
+ * returns the already-excluded rows the un-exclude sweep re-screens.
+ *
+ * Deliberately does NOT load `article_suggestion_facts`: hard screening reads
+ * only the ScoredCandidateInput fields, and the fact links exist purely for the
+ * legacy backstop payload.
+ */
+export async function getStageRowsForScreening(
+  opts: { excluded?: boolean } = {},
+): Promise<StageCandidateRow[]> {
+  const wantExcluded = opts.excluded === true;
+  const rows = await articleSuggestionsCol
+    .query(
+      wantExcluded
+        ? Q.where('status', ArticleSuggestionStatus.Excluded)
+        : Q.where('status', Q.notEq(ArticleSuggestionStatus.Excluded)),
+    )
+    .fetch();
+  // Defensive re-filter — the unit-test fake DB layer ignores Q.where.
+  return rows
+    .filter((r) => (r.status === ArticleSuggestionStatus.Excluded) === wantExcluded)
+    .map(toStageRow);
 }
 
 /**

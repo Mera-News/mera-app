@@ -26,9 +26,12 @@
 //  • Card state is a DISPLAY input only. It decides which BLOCK a card sorts
 //    into — unviewed above viewed, each banded by relevance (see
 //    components/custom/feed/feed-entries.ts) — and never removes anything. Cards
-//    leave the feed by exactly one route: `hydrate` dropping a persisted id that
-//    no longer has a live candidate (publication-window ageing / retention purge
-//    between sessions — see FEED_WINDOW_MS).
+//    leave the feed by exactly TWO routes: (1) `hydrate` dropping a persisted id
+//    that no longer has a live candidate (publication-window ageing / retention
+//    purge between sessions — see FEED_WINDOW_MS), and (2) `removeIds`, the
+//    filter-scoped eviction the hard "not interested" purge calls with the exact
+//    ids it just marked `excluded`. Route (2) infers nothing and remembers
+//    nothing — it is deliberately NOT the eviction mechanism described below.
 //
 //    An earlier revision evicted seen cards after 10 minutes and left
 //    "tombstones" so they could not be re-ingested. Those tombstones keyed on
@@ -121,6 +124,8 @@ interface FeedOrderState {
   /** Drop a verdict (+ its tree path) — the un-vote path. No-op if absent. */
   clearVerdict: (id: string) => void;
   setPath: (id: string, path: string[]) => void;
+  /** FILTER-SCOPED eviction — see `removeIds` in the implementation. */
+  removeIds: (ids: string[]) => void;
   /** Stamp `skipped` on cards the user dwelt on. Write-once per id. */
   markSkipped: (ids: string[], nowMs?: number) => void;
   /** Stamp `viewed` on an interacted-with card. Upgrades `skipped`. */
@@ -437,6 +442,33 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
       if (!current) return {} as Partial<FeedOrderState>;
       return { verdicts: { ...s.verdicts, [id]: { ...current, path } } };
     }),
+
+  /**
+   * FILTER-SCOPED eviction. Removes EXACTLY the ids passed in — the ids a hard
+   * "not interested" purge just marked `excluded` — from `order` and
+   * `itemsById`, and persists.
+   *
+   * This is NOT the general eviction mechanism that was removed (see the header
+   * note on tombstone contagion). It infers NOTHING: no memberIds fan-out, no
+   * stable-cluster expansion, no tombstones, no "drop rows failing a gate".
+   * Nothing is remembered, so a row that stops being excluded (the un-exclude
+   * sweep) is simply re-ingested on the next `ingest`. Do not generalize it.
+   *
+   * If the removed id was a story group's REPRESENTATIVE, the whole card goes;
+   * its surviving siblings re-form under a new representative on the next
+   * ingest. That is the correct outcome — the user asked not to see that story.
+   */
+  removeIds: (ids) => {
+    const s = get();
+    if (!s.hydrated || ids.length === 0) return;
+    const drop = new Set(ids);
+    const order = s.order.filter((id) => !drop.has(id));
+    if (order.length === s.order.length) return; // nothing was laid out
+    const itemsById = { ...s.itemsById };
+    for (const id of drop) delete itemsById[id];
+    set({ order, itemsById });
+    persist(order, s.builtAt);
+  },
 
   markSkipped: (ids, nowMs = Date.now()) => {
     const s = get();
