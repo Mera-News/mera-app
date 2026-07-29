@@ -83,23 +83,23 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
             const scopeValue = pref.scopeValue;
             if (scopeKind != null) {
                 if (!scopeValue) return;
-                const scope: SourceScopeRef = { scopeKind, scopeValue };
-                // TODO(source-pref P3): once ACTION_NAMES.SET_SOURCE_SCOPE_PREF
-                // lands in persona-action-executor.ts, replace this hand-append
-                // with `applyPersonaAction({ action_type: ACTION_NAMES.SET_SOURCE_SCOPE_PREF, ... }, 'user')`
-                // so scope changes get the executor's D18 dirty-marking/sweep
-                // wiring for free, same as the named-publication branch below.
-                const before = await getScopePreferenceKind(scope);
-                await setScopePreferenceKind(scope, kind, pref.publicationName, 'user');
-                await changeLogService.append({
-                    actionType: SET_SOURCE_SCOPE_PREF_ACTION_TYPE,
-                    action: { targetId: `${scopeKind}:${scopeValue}`, before, after: kind },
-                    source: 'user',
-                    summary: `Set source-scope preference: ${pref.publicationName} → ${kind}`,
-                });
-                // Scopes are never hard filters (see stage-scoring.ts), so no
-                // sweep is possible here — only a rescore is needed.
-                markFeedNeedsRefresh();
+                // source-pref P5: routed through the executor now that
+                // ACTION_NAMES.SET_SOURCE_SCOPE_PREF exists, replacing this
+                // branch's hand-append. The executor owns the change-log row,
+                // the sweep decision and the D18 dirty-marking, so a chip tap
+                // here and a confirmed chat proposal now travel the exact same
+                // path — which is what keeps the Activity undo for both of them
+                // reading from one inverse implementation.
+                await applyPersonaAction(
+                    {
+                        action_type: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+                        scopeKind,
+                        scopeValue,
+                        scopeLabel: pref.publicationName,
+                        publicationPref: kind,
+                    },
+                    'user',
+                );
                 return;
             }
             await applyPersonaAction(

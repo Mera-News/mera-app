@@ -47,13 +47,17 @@ import {
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
-// source-pref v47 (D2/D6): NAMED-PUBLICATION rows only. `publication_preferences`
-// also holds live SCOPE rows (`scope_kind='country'`), whose `publication_name`
-// is a human label ("India"), not a publication. Those are a render-time
-// preference and must never reach `pubPrefs` (a W_PUB score term keyed by
-// publication name) or the muted-publication hard-filter derivation below —
-// either would silently match a real publication that happens to share the label.
-import { getActiveNamedPublications as getActivePubPrefs } from '@/lib/database/services/publication-preference-service';
+// source-pref v47 (D2/D6): this reads ALL active rows, including the live SCOPE
+// rows (`scope_kind='country'`) whose `publication_name` is a human label
+// ("India"), not a publication. A scope is a render-time preference and must
+// never reach `pubPrefs` (a W_PUB score term keyed by publication name) or the
+// muted-publication hard-filter derivation below — either would silently match a
+// real publication that happens to share the label. Both consumers below skip
+// `scopeKind != null` rows explicitly, which is deliberately where the filtering
+// lives: a narrower `getActiveNamedPublications()` import would put the guarantee
+// somewhere the two call sites can't show it, and each of them needs to be
+// independently correct anyway.
+import { getActive as getActivePubPrefs } from '@/lib/database/services/publication-preference-service';
 import {
   getActive as getActiveSuppressions,
   kindOf,

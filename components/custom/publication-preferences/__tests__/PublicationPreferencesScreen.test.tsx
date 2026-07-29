@@ -79,10 +79,10 @@ const mockObserveActive = jest.fn(() => ({
         return { unsubscribe: jest.fn() };
     },
 }));
-const mockGetPreferenceKind = jest.fn(async () => 'mute');
-const mockSetPreferenceKind = jest.fn(async () => {});
-const mockGetScopePreferenceKind = jest.fn(async () => 'none');
-const mockSetScopePreferenceKind = jest.fn(async () => {});
+const mockGetPreferenceKind = jest.fn(async (..._a: unknown[]) => 'mute');
+const mockSetPreferenceKind = jest.fn(async (..._a: unknown[]) => {});
+const mockGetScopePreferenceKind = jest.fn(async (..._a: unknown[]) => 'none');
+const mockSetScopePreferenceKind = jest.fn(async (..._a: unknown[]) => {});
 jest.mock('@/lib/database/services/publication-preference-service', () => ({
     observeActive: () => mockObserveActive(),
     getPreferenceKind: (...a: unknown[]) => mockGetPreferenceKind(...a),
@@ -91,19 +91,19 @@ jest.mock('@/lib/database/services/publication-preference-service', () => ({
     setScopePreferenceKind: (...a: unknown[]) => mockSetScopePreferenceKind(...a),
 }));
 
-const mockApplyPersonaAction = jest.fn(async () => ({ applied: true, summary: 'ok' }));
+const mockApplyPersonaAction = jest.fn(async (..._a: unknown[]) => ({ applied: true, summary: 'ok' }));
 jest.mock('@/lib/database/services/persona-action-executor', () => ({
     applyPersonaAction: (...a: unknown[]) => mockApplyPersonaAction(...a),
 }));
 
-const mockAppend = jest.fn(async () => ({ id: 'log1' }));
+const mockAppend = jest.fn(async (..._a: unknown[]) => ({ id: 'log1' }));
 jest.mock('@/lib/database/services/persona-change-log-service', () => ({
     append: (...a: unknown[]) => mockAppend(...a),
 }));
 
-const mockMarkFeedNeedsRefresh = jest.fn();
-const mockRunSweepFor = jest.fn(async () => false);
-const mockSweepForMutation = jest.fn(() => 'unexclude');
+const mockMarkFeedNeedsRefresh = jest.fn((..._a: unknown[]) => {});
+const mockRunSweepFor = jest.fn(async (..._a: unknown[]) => false);
+const mockSweepForMutation = jest.fn((..._a: unknown[]) => 'unexclude');
 jest.mock('@/lib/database/services/persona-mutation-sweeps', () => ({
     markFeedNeedsRefresh: (...a: unknown[]) => mockMarkFeedNeedsRefresh(...a),
     runSweepFor: (...a: unknown[]) => mockRunSweepFor(...a),
@@ -169,24 +169,30 @@ describe('PublicationPreferencesScreen', () => {
         expect(mockSetScopePreferenceKind).not.toHaveBeenCalled();
     });
 
-    it('scope set-kind does NOT go through applyPersonaAction — it calls setScopePreferenceKind + hand-appends the change-log row (TODO(source-pref P3))', async () => {
+    it('scope set-kind routes through applyPersonaAction, exactly like a confirmed chat proposal', async () => {
+        // source-pref P5: this branch used to hand-append its own change-log row
+        // because no executor action existed yet. Now that it does, a chip tap
+        // here and a confirmed chat proposal MUST travel the same path — that is
+        // what keeps Activity undo reading from one inverse implementation
+        // rather than two that can drift.
         mockObservedRows = [makeScopePref()];
         const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
         fireEvent.press(getByTestId('row-scope1-boost'));
-        await waitFor(() => expect(mockSetScopePreferenceKind).toHaveBeenCalledTimes(1));
-        expect(mockApplyPersonaAction).not.toHaveBeenCalled();
-        expect(mockSetScopePreferenceKind).toHaveBeenCalledWith(
-            { scopeKind: 'country', scopeValue: 'IND' },
-            'boost',
-            'India',
+        await waitFor(() => expect(mockApplyPersonaAction).toHaveBeenCalledTimes(1));
+        expect(mockApplyPersonaAction).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action_type: 'set_source_scope_pref',
+                scopeKind: 'country',
+                scopeValue: 'IND',
+                scopeLabel: 'India',
+                publicationPref: 'boost',
+            }),
             'user',
         );
-        expect(mockAppend).toHaveBeenCalledWith(
-            expect.objectContaining({ actionType: 'set_source_scope_pref' }),
-        );
-        // Scopes are never hard filters — no sweep, just a dirty-flag.
+        // The executor owns the write, the change-log row and the sweep now.
+        expect(mockSetScopePreferenceKind).not.toHaveBeenCalled();
+        expect(mockAppend).not.toHaveBeenCalled();
         expect(mockRunSweepFor).not.toHaveBeenCalled();
-        expect(mockMarkFeedNeedsRefresh).toHaveBeenCalledTimes(1);
     });
 
     it('named-publication clear hand-appends the change-log row AND runs the un-exclude sweep (the P4 asymmetry fix)', async () => {

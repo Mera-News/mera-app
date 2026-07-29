@@ -745,6 +745,11 @@
     "actionShowMoreTopic": "Show more of a topic",
     "actionDownRank": "Down-rank a topic",
     "actionPublicationPref": "Adjust a publication",
+    "actionPublicationBoost": "Show more from a publication",
+    "actionPublicationDeprioritize": "Show less from a publication",
+    "actionPublicationMute": "Mute a publication",
+    "actionSourceScopeBoost": "Show more from sources in a country",
+    "actionSourceScopeDeprioritize": "Show less from sources in a country",
     "actionSuppress": "Filter out a phrase",
     "actionPinTopic": "Pin a topic",
     "actionUnpinTopic": "Unpin a topic",
@@ -908,7 +913,8 @@
       "hygieneDeleteFact": "Removed fact",
       "addLocation": "Added location",
       "deleteLocation": "Removed location",
-      "retireSuppression": "Removed a filter"
+      "retireSuppression": "Removed a filter",
+      "setSourceScopePref": "Adjusted a source scope"
     }
   },
   "calibration": {
@@ -1171,13 +1177,14 @@
   },
   "publicationPrefs": {
     "title": "Source preferences",
-    "subtitle": "Boost, downrank or mute publications",
+    "subtitle": "Boost, downrank or mute publications and countries",
     "kindBoost": "Boost",
     "kindDeprioritize": "Downrank",
     "kindMute": "Mute",
     "clear": "Clear",
     "clearA11y": "Clear preference",
-    "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here."
+    "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article, or ask Mera for more from a country, to see it here.",
+    "scopeKindCountry": "Country"
   },
   "optimisationPlan": {
     "notificationTitle": "Your daily feed tune-up is ready",

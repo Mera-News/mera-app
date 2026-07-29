@@ -263,6 +263,76 @@ take effect for everyone — see the wave report.
 
 ---
 
+## Wave: prefer specific news sources (2026-07-29, `feature/not-interested-filters`)
+
+### PU-19 · "Prefer" changes WHICH outlet fronts a story, never how high it ranks
+**Simplified:** a source preference elects the representative of a multi-source story and lifts
+preferred rows to the top of the detail page's related list. It does **not** move the story up the
+feed, and there is deliberately no positive mirror of the hard-exclusion path — no "always show me
+this source".
+**Why:** the score term that would express it (`W_PUB = 0.076`) contributes ≈ +0.040 against a topic
+match's +0.365, and is inert in prod anyway because every article takes the legacy LLM path and the
+math score is discarded — so ranking-by-preference would have been a promise the pipeline cannot
+keep. More fundamentally, you cannot force an irrelevant article into a relevance-ranked feed
+without breaking the ranking that makes the feed worth reading. What the user actually asked for —
+"those articles should be the ones used" — is the representative choice, and that is exact.
+**Power user loses:** "show me more Times of India stories overall", as opposed to "when a story has
+a ToI article, show me that one".
+**Cheapest way back:** the honest version is a per-source multiplier applied where relevance is
+already decided, not a thumb on `W_PUB`. That means the cloud judge would have to see the
+preference, which costs prompt budget and, more importantly, is the first thing in this feature that
+would leave the device.
+
+### PU-20 · A group preference can only be a COUNTRY
+**Simplified:** "more from Indian sources" is stored as one live scope row (`scope_kind='country'`,
+`scope_value='IND'`) evaluated against each article's `country_code` at render time. There is no
+`category` scope, no language scope, no "sources like this one".
+**Why:** `country_code` is populated on 3464/3464 active publication sources, so the scope is sound.
+`category` is not the article's category but the **publication's**, and 63% of sources share two
+generic values — a "prefer tech sources" scope would quietly mean "prefer most of the feed", the
+same trap PU-17 documents on the negative side. The rejected alternative — expanding "Indian
+sources" into the ~308 publication rows that match today — goes stale the moment a feed is added,
+floods the Source-preferences screen, and makes un-preferring a 308-row delete.
+**Power user loses:** preferring a language, a region smaller than a country, or a subject specialism.
+**Cheapest way back:** the storage is already a `scope_kind`/`scope_value` discriminator, so a second
+kind is one enum value plus one branch in `sourcePriorityTier` and one in the context loader. A
+LANGUAGE scope is the cheap next one — `language_code` is as well-populated as `country_code`.
+Category has to wait for real article-level categories, exactly like PU-17.
+
+### PU-21 · An uncorroborated publication name is DROPPED, not staged
+**Simplified:** if the user asks to prefer a publication whose name does not appear in their own data
+(`getTopVisitedPublications()` ∪ the distinct `publication_name`s in their cached suggestions), the
+proposal is dropped and nothing is staged. Country scopes need no corroboration — they resolve
+through a closed vocabulary (`i18n-iso-countries`), and an unresolvable country name is dropped too.
+**Why:** this is the positive-case twin of the invariant PU-9/PU-14 establish. Preference matching is
+exact normalized-name equality, so a model-invented "Times of India Group" would mint a row that
+appears on the Source-preferences screen, reads as active, and can **never** fire. Unlike a filter,
+there is no keyword fallback to degrade to — a preference either names a real publication or it does
+nothing — so dropping is the only honest option.
+**Power user loses:** preferring a publication they read elsewhere and have never seen in Mera. They
+will be told nothing was staged rather than being shown a dead row.
+**Cheapest way back:** corroborate against the server's publication list instead of the user's own
+data. That is a new query and a new thing the server learns about the request, so it was not taken;
+a cheaper half-step is to corroborate against the sources already visible in the current feed.
+
+### PU-22 · The Dashboard fixes the fronting outlet but not the card's position
+**Simplified:** on the Feed, D4 makes a story group carry its BEST member's score, so electing a
+preferred source can never demote the story. On the Dashboard there is no mirror: card order is the
+representative's `createdAt` descending, so a preferred source with an older `createdAt` still sinks
+its own card.
+**Why:** the two selectors share a byte-identical representative comparator, but the Dashboard has no
+score to group-max — fixing the same latent demotion there means group-maxing `createdAtMs`, which
+changes what "newest" means for every card, preference or not. That is a different semantic change
+from the one this wave was authorized to make, and it would move card order for users who have
+expressed no preference at all.
+**Power user loses:** on the Dashboard only, a preferred source can pull its story down the section.
+The story never disappears and the fronting outlet is still correct.
+**Cheapest way back:** `groups.sort(cardCompare)` reading `Math.max(...group members' createdAtMs)`
+instead of the representative's — one line, but it needs its own before/after on a real Dashboard
+because it reorders cards for everyone.
+
+---
+
 ## Deferred defects (not trades — logged here for lack of a better home)
 
 Unlike everything above, these are not "the Mom won" decisions. They are known-wrong behaviours
