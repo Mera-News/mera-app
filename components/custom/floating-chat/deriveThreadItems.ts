@@ -17,6 +17,7 @@ import {
   type SuppressionKindName,
 } from '@/lib/news-harness/core/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
+import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
 // ---------------------------------------------------------------------------
@@ -219,6 +220,31 @@ export function parseProposalAction(value: unknown): ProposalAction | null {
       const pref = typeof rec.publicationPref === 'string' ? rec.publicationPref.trim() : '';
       return publicationId && (pref === 'boost' || pref === 'deprioritize' || pref === 'mute')
         ? { type: 'set_publication_pref', publicationId, publicationPref: pref }
+        : null;
+    }
+    case 'set_source_scope_pref': {
+      // source-pref v47 (D2/D6). The PERSISTED args carry what the model said
+      // (`scopeCountry`, an English country NAME) — not the resolved token —
+      // so the resume path has to redo the resolution the sanitizer did.
+      // `resolveCountryScope` is the sanitizer's own helper, shared rather than
+      // reimplemented: two copies of a closed-vocabulary mapping is exactly the
+      // drift that makes a resumed card mean something different from the one
+      // the user first saw. Unresolvable ⇒ null ⇒ the action is dropped, same
+      // as at staging time.
+      const resolved = resolveCountryScope(
+        typeof rec.scopeCountry === 'string' ? rec.scopeCountry : '',
+      );
+      const pref = typeof rec.publicationPref === 'string' ? rec.publicationPref.trim() : '';
+      // No `mute`: nothing implements a scope exclusion, so a mute is rejected
+      // here exactly as the sanitizer and the executor reject it.
+      return resolved && (pref === 'boost' || pref === 'deprioritize')
+        ? {
+            type: 'set_source_scope_pref',
+            scopeKind: 'country',
+            scopeValue: resolved.scopeValue,
+            label: resolved.label,
+            publicationPref: pref,
+          }
         : null;
     }
     case 'add_suppression': {

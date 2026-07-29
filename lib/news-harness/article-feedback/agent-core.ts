@@ -657,6 +657,12 @@ function describeAction(a: ProposalAction): string {
       return `down-rank "${trunc(a.topicText, 60)}"`;
     case 'set_publication_pref':
       return `${a.publicationPref} publication "${trunc(a.publicationId, 60)}"`;
+    // source-pref v47. Staged only by the PERSONA surface's sanitizer, but this
+    // switch is the shared renderer for a pending proposal in <context> (the
+    // persona chat re-injects it every turn so the one-shot LOCAL path can
+    // resolve a confirm), so the case has to live here.
+    case 'set_source_scope_pref':
+      return `${a.publicationPref} sources from "${trunc(a.label, 60)}"`;
     case 'add_suppression':
       return a.suppressionKind && a.suppressionValue
         ? `suppress ${a.suppressionKind} "${trunc(a.suppressionValue, 60)}"`

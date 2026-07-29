@@ -134,6 +134,14 @@ const SAMPLES: Record<string, Record<string, unknown>> = {
     suppressionStrength: 0.5,
   },
   retire_suppression: { type: 'retire_suppression', suppressionId: 'sup-1', pattern: 'football' },
+  // source-pref v47: the PERSISTED args carry the model's English country NAME
+  // (`scopeCountry`), not the resolved alpha-3 — parseProposalAction redoes the
+  // resolution the sanitizer did, so this sample is deliberately in raw form.
+  set_source_scope_pref: {
+    type: 'set_source_scope_pref',
+    scopeCountry: 'India',
+    publicationPref: 'boost',
+  },
   set_high_priority: { type: 'set_high_priority', topicText: 'cricket', highPriority: true },
   retire_topic: { type: 'retire_topic', topicText: 'cricket' },
 };
@@ -142,9 +150,26 @@ describe('proposal action-type coverage', () => {
   it('has a sample for every type in both agents’ tool enums', () => {
     expect(ALL_ACTION_TYPES.every((t) => SAMPLES[t] !== undefined)).toBe(true);
     // Both enums are non-trivial and the filters actions are in both.
-    expect(ARTICLE_FEEDBACK_ENUM).toEqual(expect.arrayContaining(PERSONA_ENUM));
+    //
+    // source-pref P3 UPDATE: this used to assert the persona enum was a SUBSET
+    // of the article one. That stopped being true by design —
+    // `set_source_scope_pref` ("prefer Indian sources") is a PERSONA-only
+    // action: the article surface always has one concrete outlet in front of
+    // it, so its source lever is `set_publication_pref`, and a country scope
+    // has nothing there to be about. The subset relation is asserted for
+    // everything else, which is what the check was actually protecting.
+    const PERSONA_ONLY = ['set_source_scope_pref'];
+    expect(ARTICLE_FEEDBACK_ENUM).toEqual(
+      expect.arrayContaining(PERSONA_ENUM.filter((t) => !PERSONA_ONLY.includes(t))),
+    );
+    expect(ARTICLE_FEEDBACK_ENUM).not.toEqual(expect.arrayContaining(PERSONA_ONLY));
     expect(PERSONA_ENUM).toEqual(
-      expect.arrayContaining(['add_suppression', 'retire_suppression']),
+      expect.arrayContaining([
+        'add_suppression',
+        'retire_suppression',
+        'set_publication_pref',
+        'set_source_scope_pref',
+      ]),
     );
   });
 

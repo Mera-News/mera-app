@@ -213,6 +213,32 @@ export type ProposalAction =
   | { type: 'add_negative_topic'; topicText: string; weight?: number }
   /** Boost / deprioritize / mute a named publication. */
   | { type: 'set_publication_pref'; publicationId: string; publicationPref: 'boost' | 'deprioritize' | 'mute' }
+  /** source-pref v47 (D2/D6). Boost / deprioritize a whole SOURCE SCOPE
+   *  ("prefer Indian sources") — stored as ONE preference row carrying a live
+   *  predicate, never expanded into a row per matching outlet.
+   *
+   *  `scopeKind` is inlined as the `'country'` literal rather than imported
+   *  from lib/database/models/PublicationPreference (`SourceScopeKind`) because
+   *  the harness is RN/DB-free; the two are kept structurally identical by the
+   *  RN executor, which assigns this straight into `SourceScopeRef`.
+   *
+   *  `scopeValue` is ALREADY RESOLVED to the render-time token (ISO alpha-3) by
+   *  the sanitizer — the model only ever emits an English country name, and an
+   *  unresolvable one drops the action rather than minting a row that can never
+   *  fire. `label` is the human display name stored in `publication_name`.
+   *
+   *  No `'mute'`: a scope mute is not synthesized into a hard filter anywhere
+   *  (Phase 1 deliberately excludes scope rows from the muted-publication
+   *  hard-filter derivation in lib/mera-protocol/stage-scoring.ts), so offering
+   *  it would promise an exclusion nothing implements. Rejected in both the
+   *  sanitizer and the executor. */
+  | {
+      type: 'set_source_scope_pref';
+      scopeKind: 'country';
+      scopeValue: string;
+      label: string;
+      publicationPref: 'boost' | 'deprioritize';
+    }
   /** Add a soft/hard suppression rule (a "not interested" filter).
    *  `suppressionKind` + `suppressionValue` make it STRUCTURED (exact match on
    *  one article field); absent ⇒ a keyword filter over `suppressionPattern` /

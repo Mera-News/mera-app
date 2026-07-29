@@ -139,7 +139,9 @@ export function buildToolDefinitions(
         function: {
           name: 'proposeChanges',
           description:
-            'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
+            filterTools === 'full'
+              ? 'Stage a "not interested" filter change or a SOURCE preference for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression), "show me X again" / "remove that filter" (retire_suppression), "more/less from <outlet>" (set_publication_pref) and "prefer <country> sources" (set_source_scope_pref).'
+              : 'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
           parameters: {
             type: 'object',
             properties: {
@@ -153,7 +155,21 @@ export function buildToolDefinitions(
                   properties: {
                     type: {
                       type: 'string',
-                      enum: ['add_suppression', 'retire_suppression'],
+                      // source-pref v47: the two SOURCE actions ride the `full`
+                      // rung ONLY. The degradation ladder's `compact` rung keeps
+                      // exactly the pre-source-pref filter feature, so both the
+                      // prose (FILTERS_PROMPT_SECTION_COMPACT) and the schema
+                      // below stay byte-identical there — the ~104-token
+                      // headroom does not stretch to carrying them twice.
+                      enum:
+                        filterTools === 'full'
+                          ? [
+                              'add_suppression',
+                              'retire_suppression',
+                              'set_publication_pref',
+                              'set_source_scope_pref',
+                            ]
+                          : ['add_suppression', 'retire_suppression'],
                       description: 'Action kind.',
                     },
                     suppressionPattern: {
@@ -169,6 +185,32 @@ export function buildToolDefinitions(
                       type: 'string',
                       description: 'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
                     },
+                    // source-pref v47 (D5). NOTE: `schemaTypeToString` never
+                    // emits `enum` or `description` into the local-LLM XML
+                    // prompt — only `"name"?: type`. So every allowed value
+                    // here is ALSO spelled out in FILTERS_PROMPT_SECTION_FULL,
+                    // which is the only channel the local path reads. These
+                    // descriptions are therefore free (cloud-only) budget.
+                    ...(filterTools === 'full'
+                      ? {
+                          publicationId: {
+                            type: 'string',
+                            description:
+                              'set_publication_pref: the outlet name EXACTLY as the user said it (e.g. "The Times of India"). Never invent or expand a name — an unrecognised one is discarded.',
+                          },
+                          scopeCountry: {
+                            type: 'string',
+                            description:
+                              'set_source_scope_pref: the country whose outlets to prefer, as its English NAME (e.g. "India", "Germany"). Not a code, not a nationality, not a region.',
+                          },
+                          publicationPref: {
+                            type: 'string',
+                            enum: ['boost', 'deprioritize', 'mute'],
+                            description:
+                              'set_publication_pref: boost | deprioritize | mute. set_source_scope_pref: boost | deprioritize ONLY — a country can never be muted.',
+                          },
+                        }
+                      : {}),
                   },
                   required: ['type'],
                 },
@@ -317,10 +359,21 @@ ${examples}`;
  */
 const FILTERS_PROMPT_SECTION_FULL = `
 - FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in ENGLISH, the user's OWN words, never an invented category name; suppressionStrength 0.9 = never show it, 0.5 = less of it}. "Show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS in <context>} — never invent an id.
+- SOURCES: "more/less from X" → set_publication_pref {publicationId: X as the user named it}; "prefer X sources" → set_source_scope_pref {scopeCountry: country name in English}. Both need publicationPref: boost|deprioritize (mute: outlets only).
 - NEVER apply a filter directly: stage ONE proposeChanges, then applyProposal when the user confirms (yes / ok, any language) or cancelProposal when they decline. While a PENDING PROPOSAL is in <context> and they say anything else, leave it pending and reply normally.`;
 
-/** The degraded rung: the same two actions and the same never-apply-directly
- *  rule, minus the worked detail. ~a third of the full section's tokens. */
+/** The degraded rung: the same two FILTER actions and the same
+ *  never-apply-directly rule, minus the worked detail. ~a third of the full
+ *  section's tokens.
+ *
+ *  source-pref v47 — DELIBERATELY UNCHANGED. The two SOURCE actions do NOT
+ *  survive here (and `buildToolDefinitions` drops their schema properties at
+ *  this rung to match). A turn that has already yielded its filters block is
+ *  one where the user's own facts are crowding the budget; spending ~70 more
+ *  tokens to keep a *second* feature alive there would push the `compact` rung
+ *  toward `off` and cost the user the filter tools entirely. Source
+ *  preferences are also reachable from the Source-preferences screen, which
+ *  filters are not — so this is the cheaper thing to drop. */
 const FILTERS_PROMPT_SECTION_COMPACT = `
 - FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in English}; "show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS}. Never applied directly — applyProposal on confirm, cancelProposal on decline.`;
 

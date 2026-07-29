@@ -195,6 +195,23 @@ export async function executeProposalActions(
           );
           break;
         }
+        case 'set_source_scope_pref': {
+          // source-pref v47 (D2/D6). The sanitizer already resolved the model's
+          // English country name to the ISO alpha-3 stored in `scopeValue` and
+          // rejected `mute`, so there is nothing to re-resolve here — same
+          // "the sanitizer owns resolution" split as retire_suppression.
+          await runRails(
+            {
+              action_type: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+              scopeKind: action.scopeKind,
+              scopeValue: action.scopeValue,
+              scopeLabel: action.label,
+              publicationPref: action.publicationPref,
+            },
+            'set_source_scope_pref',
+          );
+          break;
+        }
         case 'add_suppression': {
           await runRails(
             {

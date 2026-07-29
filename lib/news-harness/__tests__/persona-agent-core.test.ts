@@ -21,7 +21,7 @@ import {
 } from '../persona-management/persona-agent-core';
 import { estimateTokens } from '@/lib/llm/tokens';
 import type { ActiveSuppressionView, StagedProposal } from '../core/types';
-import type { FilterToolsVariant } from '../prompts/prompts';
+import { buildToolDefinitions, type FilterToolsVariant } from '../prompts/prompts';
 
 // --- not-interested P4a fixtures -------------------------------------------
 
@@ -341,7 +341,10 @@ describe('getPersonaToolDefinitions', () => {
   // copy a field value from and nothing to validate one against, so its
   // add_suppression is keyword-only. A structured value minted here could never
   // be corroborated and would silently never fire.
-  it('restricts the persona proposeChanges schema to the two filter actions, keyword-only', () => {
+  //
+  // source-pref P3 UPDATE: the enum now also carries the two SOURCE actions —
+  // at the `full` rung ONLY. The keyword-only clause above is unchanged.
+  it('restricts the persona proposeChanges schema to the filter + source actions, keyword-only', () => {
     const propose = getPersonaToolDefinitions('CONFIG', false)
       .find((d) => d.function.name === 'proposeChanges')!;
     expect(propose.function.parameters.required).toEqual(['explanation', 'expected_effects', 'actions']);
@@ -351,12 +354,38 @@ describe('getPersonaToolDefinitions', () => {
     expect((items.properties.type as { enum: string[] }).enum).toEqual([
       'add_suppression',
       'retire_suppression',
+      'set_publication_pref',
+      'set_source_scope_pref',
     ]);
     expect(items.properties.suppressionPattern).toBeDefined();
     expect(items.properties.suppressionStrength).toBeDefined();
     expect(items.properties.suppressionId).toBeDefined();
     expect(items.properties.suppressionKind).toBeUndefined();
     expect(items.properties.suppressionValue).toBeUndefined();
+    // source-pref P3.
+    expect(items.properties.publicationId).toBeDefined();
+    expect(items.properties.scopeCountry).toBeDefined();
+    expect(items.properties.publicationPref).toBeDefined();
+  });
+
+  // source-pref P3 — the `compact` rung stays EXACTLY the pre-source-pref
+  // filter feature: the ~104-token persona headroom does not stretch to
+  // carrying the source actions twice, so they ride `full` only. This is the
+  // schema half of that decision (the prose half is
+  // FILTERS_PROMPT_SECTION_COMPACT, deliberately unchanged).
+  it('drops the source actions from the schema at the `compact` rung', () => {
+    const propose = buildToolDefinitions('CONFIG', false, 'compact')
+      .find((d) => d.function.name === 'proposeChanges')!;
+    const items = (propose.function.parameters.properties.actions as {
+      items: { properties: Record<string, unknown> };
+    }).items;
+    expect((items.properties.type as { enum: string[] }).enum).toEqual([
+      'add_suppression',
+      'retire_suppression',
+    ]);
+    expect(items.properties.publicationId).toBeUndefined();
+    expect(items.properties.scopeCountry).toBeUndefined();
+    expect(items.properties.publicationPref).toBeUndefined();
   });
 });
 
@@ -674,5 +703,133 @@ describe('decidePersonaProposeChanges', () => {
     expect(stage([{ type: 'delete_fact', fact_id: 'f1' }]).result.error).toContain('invalid action type');
     expect(stage([{ type: 'add_suppression' }]).result.error).toContain('suppressionPattern');
     expect(stage(['not an object']).result.error).toContain('action must be an object');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// source-pref v47 (D5) — the two SOURCE actions.
+//
+// Two tiers of trust, and the tests exist to pin the difference:
+//   - a COUNTRY scope is a closed vocabulary, so resolution alone is the gate;
+//   - a NAMED publication is an open one whose matching is exact normalized
+//     equality, so it must be corroborated against the user's own data or it
+//     mints a row that shows on the Source-preferences screen and never fires.
+// ---------------------------------------------------------------------------
+
+describe('decidePersonaProposeChanges — source preferences (D5)', () => {
+  /** Names that provably exist in the user's own data (visit history ∪ the
+   *  local suggestion cache), normalized the way pubPref matching normalizes. */
+  const known = new Set(['the times of india', 'le monde']);
+
+  function stageSource(actions: unknown[], corroboration: ReadonlySet<string> = known) {
+    return decidePersonaProposeChanges(
+      { explanation: 'You asked for this.', expected_effects: 'Different sources.', actions },
+      [],
+      corroboration,
+    );
+  }
+
+  // --- named publication: corroboration ------------------------------------
+
+  it('stages a named publication that EXISTS in the user’s own data', () => {
+    const r = stageSource([
+      // Cased and spaced differently from the stored key on purpose — matching
+      // is normalized, so this must still corroborate.
+      { type: 'set_publication_pref', publicationId: '  The   Times of India ', publicationPref: 'boost' },
+    ]);
+    expect(r.result.staged).toBe(true);
+    expect(r.sideEffects!.proposal!.actions[0]).toEqual({
+      type: 'set_publication_pref',
+      // The user's own spelling is preserved (trimmed) — only the MATCH is
+      // normalized.
+      publicationId: 'The   Times of India',
+      publicationPref: 'boost',
+    });
+  });
+
+  it('DROPS an invented publication — the exact case a preference could never fire on', () => {
+    const r = stageSource([
+      { type: 'set_publication_pref', publicationId: 'Times of India Group', publicationPref: 'boost' },
+    ]);
+    // Nothing staged at all: it was the only action.
+    expect(r.sideEffects).toBeUndefined();
+    expect(r.result.error).toContain('nothing was staged');
+  });
+
+  it('drops ONLY the uncorroborated action when the proposal has others', () => {
+    const r = stageSource([
+      { type: 'set_publication_pref', publicationId: 'Times of India Group', publicationPref: 'boost' },
+      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'deprioritize' },
+    ]);
+    expect(r.sideEffects!.proposal!.actions).toEqual([
+      { type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'deprioritize' },
+    ]);
+  });
+
+  it('corroborates NOTHING when the set is absent — every named proposal drops (safe direction)', () => {
+    const r = decidePersonaProposeChanges(
+      {
+        explanation: 'e',
+        expected_effects: 'x',
+        actions: [{ type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'boost' }],
+      },
+      [],
+    );
+    expect(r.sideEffects).toBeUndefined();
+    expect(r.result.error).toContain('nothing was staged');
+  });
+
+  it('rejects a malformed publicationPref (a correctable formatting error, not a hallucination)', () => {
+    expect(
+      stageSource([{ type: 'set_publication_pref', publicationId: 'Le Monde', publicationPref: 'louder' }])
+        .result.error,
+    ).toContain('publicationPref');
+    expect(stageSource([{ type: 'set_publication_pref', publicationPref: 'boost' }]).result.error)
+      .toContain('publicationId');
+  });
+
+  // --- country scope: closed vocabulary ------------------------------------
+
+  it('resolves a country NAME to its ISO alpha-3 scope token and canonical label', () => {
+    const r = stageSource([
+      { type: 'set_source_scope_pref', scopeCountry: 'india', publicationPref: 'boost' },
+    ]);
+    expect(r.sideEffects!.proposal!.actions[0]).toEqual({
+      type: 'set_source_scope_pref',
+      scopeKind: 'country',
+      scopeValue: 'IND',
+      label: 'India',
+      publicationPref: 'boost',
+    });
+  });
+
+  it('needs NO corroboration — a country is a closed vocabulary', () => {
+    const r = stageSource(
+      [{ type: 'set_source_scope_pref', scopeCountry: 'Germany', publicationPref: 'deprioritize' }],
+      new Set<string>(),
+    );
+    expect(r.sideEffects!.proposal!.actions[0]).toMatchObject({ scopeValue: 'DEU', label: 'Germany' });
+  });
+
+  it('DROPS a name that is not a country — no dead scope_value is ever minted', () => {
+    // A nationality, a region and an outright invention: none resolve.
+    for (const scopeCountry of ['Indian', 'Scandinavia', 'Wakanda']) {
+      const r = stageSource([{ type: 'set_source_scope_pref', scopeCountry, publicationPref: 'boost' }]);
+      expect(r.sideEffects).toBeUndefined();
+      expect(r.result.error).toContain('nothing was staged');
+    }
+  });
+
+  it('rejects mute for a scope — nothing implements a scope exclusion', () => {
+    const r = stageSource([
+      { type: 'set_source_scope_pref', scopeCountry: 'India', publicationPref: 'mute' },
+    ]);
+    expect(r.sideEffects).toBeUndefined();
+    expect(r.result.error).toContain('cannot be muted');
+  });
+
+  it('requires a non-empty scopeCountry', () => {
+    expect(stageSource([{ type: 'set_source_scope_pref', publicationPref: 'boost' }]).result.error)
+      .toContain('scopeCountry');
   });
 });

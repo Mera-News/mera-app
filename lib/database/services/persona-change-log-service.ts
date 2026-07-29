@@ -279,6 +279,46 @@ export async function revertChange(changeLogId: string): Promise<void> {
       );
       break;
     }
+    // source-pref v47 (D2/D6). MANDATORY, not optional: `isRevertible` in
+    // components/custom/persona-audit/action-display.ts is a DENY-list, so this
+    // action type is already offered an Undo button on the Activity screen —
+    // without a case here that button can only produce an error toast.
+    //
+    // `targetId` is the composite `'{scopeKind}:{scopeValue}'` ('country:IND').
+    // A scope has no row id to point at, so the log has to carry enough to
+    // rebuild the whole SourceScopeRef; the executor and the Source-preferences
+    // screen both write exactly this encoding.
+    case ACTION_NAMES.SET_SOURCE_SCOPE_PREF: {
+      const targetId = requireTargetId(action, row.id);
+      const sep = targetId.indexOf(':');
+      const scopeKind = sep > 0 ? targetId.slice(0, sep) : '';
+      const scopeValue = sep > 0 ? targetId.slice(sep + 1) : '';
+      if (scopeKind !== 'country' || !scopeValue) {
+        throw new Error(
+          `persona_change_log ${row.id}: targetId must be '{scopeKind}:{scopeValue}' for set_source_scope_pref`,
+        );
+      }
+      const before = action.before;
+      if (before !== 'none' && before !== 'boost' && before !== 'deprioritize' && before !== 'mute') {
+        throw new Error(
+          `persona_change_log ${row.id}: 'before' must be a publication pref kind for set_source_scope_pref`,
+        );
+      }
+      // Same mute-boundary wiring as set_publication_pref — inert for scopes
+      // today (both gates reject a scope mute) but kept symmetric so the two
+      // paths cannot drift. See persona-mutation-sweeps.
+      sweepInput.prefBefore = before;
+      sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
+      // `label` is only consulted when `before` is a concrete kind (restoring
+      // 'none' retires the row and keeps its stored label for the audit trail).
+      const label = typeof action.label === 'string' && action.label.trim() ? action.label.trim() : scopeValue;
+      await publicationPreferenceService.setScopePreferenceKind(
+        { scopeKind, scopeValue },
+        before as PublicationPrefKind | 'none',
+        label,
+      );
+      break;
+    }
     default:
       throw new Error(
         `persona_change_log ${row.id}: no inverse implemented for action_type '${row.actionType}'`,

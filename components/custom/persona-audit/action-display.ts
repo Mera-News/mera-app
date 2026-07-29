@@ -36,6 +36,11 @@ const ACTION_DISPLAY: Record<string, ActionDisplay> = {
     [ACTION_NAMES.RETIRE_SUPPRESSION]: { icon: 'remove-circle-outline', labelKey: 'retireSuppression' },
     [ACTION_NAMES.SET_HIGH_PRIORITY]: { icon: 'flag', labelKey: 'setHighPriority' },
     [ACTION_NAMES.SET_PUBLICATION_PREF]: { icon: 'article', labelKey: 'setPublicationPref' },
+    // source-pref v47. Same DENY-list note as above: this type is revertible by
+    // default, so it MUST have an inverse case in persona-change-log-service
+    // (it does — ACTION_NAMES.SET_SOURCE_SCOPE_PREF). Never suppress the button
+    // here instead of implementing the inverse.
+    [ACTION_NAMES.SET_SOURCE_SCOPE_PREF]: { icon: 'public', labelKey: 'setSourceScopePref' },
     [ACTION_NAMES.NUDGE_SUBSCRIBE_PUBLICATION]: { icon: 'notifications-active', labelKey: 'nudgeSubscribePublication' },
     [ACTION_NAMES.NUDGE_BROWSE_RELATED]: { icon: 'explore', labelKey: 'nudgeBrowseRelated' },
     [ACTION_NAMES.REASSIGN_TOPIC]: { icon: 'swap-horiz', labelKey: 'reassignTopic' },

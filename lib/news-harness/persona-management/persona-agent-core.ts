@@ -19,6 +19,12 @@
 // lib/news-harness/persona-management/topic-generation.ts's `systemPrompts`
 // injection and lib/mera-protocol/scoring-service.ts's mockable-seam notes.
 
+// Pure JS, no RN/DB coupling — article-pipeline/scoring.ts already carries this
+// dependency (and its `en` locale) in the shipped bundle for the inverse
+// direction (code → name); here it is used for name → ISO alpha-3.
+import countries from 'i18n-iso-countries';
+import en from 'i18n-iso-countries/langs/en.json';
+
 import type {
   ActiveSuppressionView,
   Fact,
@@ -38,6 +44,8 @@ import {
   getAttributeKeysForLevel,
   TOTAL_LEVELS,
 } from '../prompts/questionnaire-data';
+
+countries.registerLocale(en);
 
 export type PersonaSurface = 'ONBOARDING' | 'CONFIG';
 export type PersonaMode = 'CLOUD' | 'LOCAL';
@@ -308,23 +316,86 @@ export function formatPendingProposal(
   return `${proposal.explanation}\nActions: ${proposal.actions.map(describeFilterAction).join('; ')}`;
 }
 
+/** The one normalization every publication-name comparison in this feature
+ *  uses — identical to `publication-preference-service.normalizePublicationName`
+ *  and to `getDistinctSuggestionPublicationNames`, because a preference row
+ *  only ever fires on exact normalized-name equality. */
+export function normalizePublicationNameForMatch(s: string): string {
+  return s.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Resolves an English COUNTRY NAME to the render-time scope token (ISO
+ * alpha-3) plus its canonical display label. `null` when the name is not a
+ * country — the caller must then DROP the action rather than mint a
+ * `scope_value` nothing will ever match (D5: the country vocabulary is closed,
+ * so an unresolvable name is always a hallucination).
+ *
+ * Exported because the resume path (`deriveThreadItems`) has to reconstruct
+ * the SAME action from the persisted raw tool args, and re-deriving the
+ * mapping there would be the classic two-copies-one-rule drift.
+ */
+export function resolveCountryScope(
+  countryName: string,
+): { scopeValue: string; label: string } | null {
+  const name = (countryName ?? '').trim();
+  if (!name) return null;
+  const alpha3 = countries.getAlpha3Code(name, 'en');
+  if (!alpha3) return null;
+  return {
+    scopeValue: alpha3,
+    // Canonical English name for the resolved code, so the row reads "India"
+    // on the Source-preferences screen however the user typed it.
+    label: countries.getName(alpha3, 'en', { select: 'alias' }) || name,
+  };
+}
+
+/** The pref kinds a NAMED publication accepts. */
+const PUBLICATION_PREFS = ['boost', 'deprioritize', 'mute'] as const;
+/** The pref kinds a SOURCE SCOPE accepts — no `mute`, see the ProposalAction
+ *  doc comment in core/types.ts (nothing implements a scope exclusion). */
+const SCOPE_PREFS = ['boost', 'deprioritize'] as const;
+
 /**
  * Pure propose/confirm decision for the PERSONA chat's `proposeChanges` tool.
  *
- * Deliberately NARROWER than the article agent's: only the two filter actions,
- * and `add_suppression` is KEYWORD-ONLY. This surface has no article in front
- * of it, so there is no field to copy a structured value from and nothing to
- * validate one against — a structured filter minted here could silently never
- * fire (D9). Structured filters are the article-feedback agent's job.
+ * Deliberately NARROWER than the article agent's: the two filter actions plus
+ * the two source-preference actions, and `add_suppression` is KEYWORD-ONLY.
+ * This surface has no article in front of it, so there is no field to copy a
+ * structured value from and nothing to validate one against — a structured
+ * filter minted here could silently never fire (D9). Structured filters are
+ * the article-feedback agent's job.
  *
  * `retire_suppression` resolves its id against the filters the agent was
  * actually shown, and stages the pattern from THAT row rather than from the
  * model, so a confirm card can't be made to misdescribe what it removes. No
  * filters in context ⇒ rejected outright.
+ *
+ * source-pref v47 (D5) — the two source actions get the same treatment for the
+ * same reason, one tier apart:
+ *
+ * - `set_source_scope_pref` is a CLOSED vocabulary. The model emits an English
+ *   country name; it is resolved here to an ISO alpha-3 token via
+ *   `getAlpha3Code`. Unresolvable ⇒ the action is DROPPED. No corroboration is
+ *   needed: every alpha-3 is a real render-time predicate.
+ * - `set_publication_pref` is an OPEN vocabulary and `pubPref` matching is
+ *   exact normalized-name equality, so an invented "Times of India Group"
+ *   would mint a row that appears on the Source-preferences screen and can
+ *   NEVER fire. It is therefore corroborated against names in the user's own
+ *   data (`knownPublicationNames`) and DROPPED when absent. There is no
+ *   keyword fallback for a preference the way there is for a filter, so a
+ *   downgrade is not an option — dropping is.
+ *
+ * `knownPublicationNames` is INJECTED rather than read: this module is
+ * contractually RN/DB-free and this function is pure (same seam as
+ * `activeSuppressions`). It is optional so pre-source-pref call sites keep
+ * compiling; an absent/empty set corroborates nothing, so every named
+ * proposal drops — the safe direction.
  */
 export function decidePersonaProposeChanges(
   args: Record<string, unknown>,
   activeSuppressions: ActiveSuppressionView[] | undefined,
+  knownPublicationNames: ReadonlySet<string> = new Set<string>(),
 ): ToolExecutionResult {
   const explanation = typeof args.explanation === 'string' ? args.explanation.trim() : '';
   const expectedEffects = typeof args.expected_effects === 'string' ? args.expected_effects.trim() : '';
@@ -378,7 +449,65 @@ export function decidePersonaProposeChanges(
       continue;
     }
 
+    if (type === 'set_publication_pref') {
+      const name = typeof o.publicationId === 'string' ? o.publicationId.trim() : '';
+      if (name.length === 0) {
+        return { result: { error: 'set_publication_pref requires a non-empty publicationId' } };
+      }
+      const pref = typeof o.publicationPref === 'string' ? o.publicationPref.trim() : '';
+      if (!(PUBLICATION_PREFS as readonly string[]).includes(pref)) {
+        return {
+          result: { error: `set_publication_pref requires publicationPref ∈ ${PUBLICATION_PREFS.join('|')}` },
+        };
+      }
+      // D5 corroboration. Silent DROP, not an error: an invented outlet is a
+      // hallucination the model cannot fix by retrying, and erroring would
+      // stall a turn whose other actions are fine.
+      if (!knownPublicationNames.has(normalizePublicationNameForMatch(name))) continue;
+      actions.push({
+        type: 'set_publication_pref',
+        publicationId: name,
+        publicationPref: pref as 'boost' | 'deprioritize' | 'mute',
+      });
+      continue;
+    }
+
+    if (type === 'set_source_scope_pref') {
+      const countryName = typeof o.scopeCountry === 'string' ? o.scopeCountry.trim() : '';
+      if (countryName.length === 0) {
+        return { result: { error: 'set_source_scope_pref requires a non-empty scopeCountry' } };
+      }
+      const pref = typeof o.publicationPref === 'string' ? o.publicationPref.trim() : '';
+      if (!(SCOPE_PREFS as readonly string[]).includes(pref)) {
+        // `mute` lands here deliberately — an ERROR rather than a silent drop,
+        // because unlike a hallucinated outlet this IS correctable: the model
+        // can restage the same intent as `deprioritize`.
+        return {
+          result: { error: `set_source_scope_pref requires publicationPref ∈ ${SCOPE_PREFS.join('|')} (a country cannot be muted)` },
+        };
+      }
+      // Closed vocabulary: the ONLY thing that makes a scope row live is a
+      // resolvable alpha-3. Unresolvable ⇒ drop, never mint a dead row.
+      const resolved = resolveCountryScope(countryName);
+      if (!resolved) continue;
+      actions.push({
+        type: 'set_source_scope_pref',
+        scopeKind: 'country',
+        scopeValue: resolved.scopeValue,
+        label: resolved.label,
+        publicationPref: pref as 'boost' | 'deprioritize',
+      });
+      continue;
+    }
+
     return { result: { error: `invalid action type: ${type || String(o.type)}` } };
+  }
+
+  // Every action was dropped (D5). Staging here would render an EMPTY confirm
+  // card — the same malformed-proposal case deriveThreadItems guards on the
+  // resume path.
+  if (actions.length === 0) {
+    return { result: { error: 'no applicable actions — nothing was staged' } };
   }
 
   const proposal: StagedProposal = {

@@ -748,6 +748,13 @@ async function toValidPersonaAction(
     if (!op.publicationId || !op.publicationPref) return null;
     return { action_type: type, publicationId: op.publicationId, publicationPref: op.publicationPref };
   }
+  // source-pref v47 — SET_SOURCE_SCOPE_PREF is deliberately ABSENT.
+  // This whitelist translates DIGEST ops, and the only producer of those is
+  // persona-management/feedback-digest.ts, which reads `article_feedback` rows
+  // (topics, publications, categories, event types). It has no notion of a
+  // country, and `DigestPersonaAction` carries no scope fields, so a scope op
+  // is not representable — let alone mintable — upstream. Falling through to
+  // `null` here would be the right answer even if one appeared.
   return null;
 }
 

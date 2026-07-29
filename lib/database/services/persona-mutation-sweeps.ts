@@ -62,7 +62,18 @@ export function sweepForMutation(input: SweepDecisionInput): SweepKind | null {
 
     // A mute is a synthesized hard `kind:'publication'` filter. Landing on mute
     // purges; leaving mute releases. Mute→mute and non-mute→non-mute are no-ops.
-    case 'set_publication_pref': {
+    //
+    // source-pref v47: a SOURCE SCOPE row shares this table and therefore this
+    // rule. It is INERT today by construction — the sanitizer and the executor
+    // both reject `mute` for a scope, because Phase 1 deliberately excludes
+    // scope rows from the muted-publication hard-filter derivation in
+    // stage-scoring.ts, so a scope mute would promise an exclusion nothing
+    // implements. The case is wired anyway: this module exists precisely so an
+    // action type can never be live in the forward path and missing in the
+    // revert one, and `sweepForRevert` inverts it for free the day a scope
+    // exclusion ships.
+    case 'set_publication_pref':
+    case 'set_source_scope_pref': {
       const toMute = input.prefAfter === MUTE;
       const fromMute = input.prefBefore === MUTE;
       if (toMute && !fromMute) return 'purge';

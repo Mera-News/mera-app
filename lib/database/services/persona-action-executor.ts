@@ -22,7 +22,7 @@ import logger from '../../logger';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import type { ActionName } from '../../news-harness/persona-management/action-names';
 import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
-import type { PublicationPreferenceProvenance } from '../models/PublicationPreference';
+import type { PublicationPreferenceProvenance, SourceScopeKind } from '../models/PublicationPreference';
 import { SUPPRESSION_KINDS } from '../models/PersonaSuppression';
 import type { PersonaSuppressionKind } from '../models/PersonaSuppression';
 import {
@@ -46,6 +46,15 @@ export interface PersonaAction {
   locationId?: string;
   publicationId?: string;
   publicationPref?: 'boost' | 'deprioritize' | 'mute'; // set_publication_pref
+  // -- source-pref v47 (D2/D6): set_source_scope_pref ----------------------
+  /** Only `'country'` exists. */
+  scopeKind?: SourceScopeKind;
+  /** The render-time token — ISO alpha-3 for `country`, already resolved by
+   *  the sanitizer (the model never emits a code). */
+  scopeValue?: string;
+  /** Human display label ("India"), stored in `publication_name` so the
+   *  Source-preferences screen renders the row unchanged. */
+  scopeLabel?: string;
   weight?: number; // absolute weight where the type sets one
   delta?: number; // nudge delta where the type nudges
   highPriority?: boolean; // set_high_priority
@@ -426,6 +435,70 @@ async function dispatch(
         summary: `Set publication preference: ${action.publicationId} → ${action.publicationPref}`,
         purged,
       };
+    }
+
+    // -- Source SCOPE preference (source-pref v47, D2/D6) -------------------
+    //
+    // Same 5 steps as SET_PUBLICATION_PREF above (guard → read `before` → apply
+    // → append change-log row → sweep), against the scope half of the SAME
+    // table. Two deliberate differences:
+    //
+    //  1. `mute` is REJECTED. A scope mute is not synthesized into a hard
+    //     `kind:'publication'` filter anywhere — Phase 1 excludes scope rows
+    //     from the muted-publication hard-filter derivation in
+    //     lib/mera-protocol/stage-scoring.ts — so accepting one would promise
+    //     an exclusion nothing implements. The sanitizer rejects it first; this
+    //     is the second gate, for callers that don't go through chat.
+    //  2. `targetId` is the COMPOSITE `'{scopeKind}:{scopeValue}'`
+    //     (e.g. 'country:IND'), because a scope has no row id the log can point
+    //     at and the inverse must be able to rebuild the whole SourceScopeRef
+    //     from the log alone. The Source-preferences screen writes the same
+    //     encoding, so both producers and `revertChange` agree on one shape.
+    case ACTION_NAMES.SET_SOURCE_SCOPE_PREF: {
+      if (!action.scopeKind) return skipped(action, 'missing scopeKind');
+      if (!action.scopeValue) return skipped(action, 'missing scopeValue');
+      if (!action.publicationPref) return skipped(action, 'missing publicationPref');
+      if (action.publicationPref === 'mute') {
+        return skipped(action, 'a source scope cannot be muted');
+      }
+      const scope = { scopeKind: action.scopeKind, scopeValue: action.scopeValue };
+      const label = action.scopeLabel?.trim() || action.scopeValue;
+      const before = await publicationPreferenceService.getScopePreferenceKind(scope);
+      await publicationPreferenceService.setScopePreferenceKind(
+        scope,
+        action.publicationPref,
+        label,
+        pubProvenanceFor(source),
+      );
+      const summary = `Set source preference: ${label} → ${action.publicationPref}`;
+      const row = await changeLogService.append({
+        actionType: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+        action: {
+          targetId: `${action.scopeKind}:${action.scopeValue}`,
+          before,
+          after: action.publicationPref,
+          // Carried so the inverse can restore a boost/deprioritize row with
+          // the label the user actually saw — `setScopePreferenceKind` needs
+          // one whenever `before` is not 'none'.
+          label,
+        },
+        source,
+        summary,
+      });
+      // Mute is unreachable above, so this is a no-op today by construction.
+      // It is wired anyway because persona-mutation-sweeps' whole thesis is
+      // that a new action type can never be live in one path and missing in
+      // the other; if a scope exclusion is ever implemented, the boundary rule
+      // and its mirror are already here.
+      const purged = await runSweepFor(
+        sweepForMutation({
+          actionType: action.action_type,
+          prefBefore: before,
+          prefAfter: action.publicationPref,
+        }),
+        action.action_type,
+      );
+      return { applied: true, changeLogId: row.id, summary, purged };
     }
 
     // -- Nudges are SUGGESTIONS, not mutations — no change-log row ----------

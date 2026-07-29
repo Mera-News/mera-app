@@ -32,6 +32,7 @@ import {
   formatActiveFiltersList,
   formatKnownFactsList,
   getPersonaToolDefinitions,
+  normalizePublicationNameForMatch,
   planPersonaPrompt,
   recomputeQuestionnaireLevel,
   type PersonaMode,
@@ -205,6 +206,50 @@ export class PersonaUpdateAgent implements IAgent {
     }
   }
 
+  /** source-pref v47 (D5) — the CORROBORATION set for a named-publication
+   *  preference: every outlet name that provably exists in the USER'S OWN data
+   *  (visit history ∪ the local suggestion cache), normalized exactly the way
+   *  `pubPref` matching normalizes. A name the model invented is absent here and
+   *  its proposal is dropped, so the Source-preferences screen can never show a
+   *  row that looks live and does nothing.
+   *
+   *  Lazily `require`d, mirroring `persona-mutation-sweeps.runSweep`: a static
+   *  import would drag two more WatermelonDB collection singletons into every
+   *  consumer of this agent for a set that is only read on a `proposeChanges`
+   *  turn. CONFIG only and best-effort, exactly like `loadActiveSuppressions` —
+   *  a read failure yields an empty set, which drops every named proposal (the
+   *  safe direction). Swallowed rather than logged for the same reason that one
+   *  swallows: this is a prompt-input read, not a mutation. */
+  private async loadKnownPublicationNames(): Promise<ReadonlySet<string>> {
+    const names = new Set<string>();
+    if (this.surface !== 'CONFIG') return names;
+    try {
+      /* eslint-disable @typescript-eslint/no-require-imports */
+      const visits =
+        require('../../database/services/publication-visit-service') as typeof import('../../database/services/publication-visit-service');
+      const suggestions =
+        require('../../database/services/article-suggestion-service') as typeof import('../../database/services/article-suggestion-service');
+      /* eslint-enable @typescript-eslint/no-require-imports */
+      const [visited, suggested] = await Promise.all([
+        visits.getTopVisitedPublications(),
+        suggestions.getDistinctSuggestionPublicationNames(),
+      ]);
+      for (const v of visited) {
+        const norm = normalizePublicationNameForMatch(v.publicationName ?? '');
+        if (norm) names.add(norm);
+      }
+      // Already normalized by the service, but re-normalizing is idempotent and
+      // keeps the two sources provably on one rule.
+      for (const s of suggested) {
+        const norm = normalizePublicationNameForMatch(s);
+        if (norm) names.add(norm);
+      }
+    } catch {
+      // Empty set ⇒ every named proposal drops. Safe direction.
+    }
+    return names;
+  }
+
   async buildContext(): Promise<string> {
     const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
 
@@ -350,8 +395,11 @@ export class PersonaUpdateAgent implements IAgent {
       // ArticleFeedbackAgent has, so "Mera, stop showing me celebrity gossip"
       // works in plain chat. Nothing is written until the user confirms.
       case 'proposeChanges': {
-        const activeSuppressions = await this.loadActiveSuppressions();
-        return decidePersonaProposeChanges(args, activeSuppressions);
+        const [activeSuppressions, knownPublicationNames] = await Promise.all([
+          this.loadActiveSuppressions(),
+          this.loadKnownPublicationNames(),
+        ]);
+        return decidePersonaProposeChanges(args, activeSuppressions, knownPublicationNames);
       }
 
       case 'applyProposal': {

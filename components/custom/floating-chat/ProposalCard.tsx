@@ -153,12 +153,48 @@ export function actionToRow(action: ProposalAction): ActionRow {
         labelDefault: 'Down-rank a topic',
         detail: action.topicText,
       };
+    // FIX (source-pref v47): this row used to read "Adjust a publication" for
+    // all three prefs, so boost and deprioritize differed only by having the
+    // SAME icon — the card could not tell the user what Confirm was about to
+    // do. Boosting and muting the same outlet are opposite outcomes; the label
+    // now names the direction.
     case 'set_publication_pref':
       return {
-        icon: action.publicationPref === 'mute' ? 'volume-off' : 'tune',
-        labelKey: 'articleFeedback.actionPublicationPref',
-        labelDefault: 'Adjust a publication',
+        icon:
+          action.publicationPref === 'mute'
+            ? 'volume-off'
+            : action.publicationPref === 'boost'
+              ? 'trending-up'
+              : 'trending-down',
+        labelKey:
+          action.publicationPref === 'mute'
+            ? 'articleFeedback.actionPublicationMute'
+            : action.publicationPref === 'boost'
+              ? 'articleFeedback.actionPublicationBoost'
+              : 'articleFeedback.actionPublicationDeprioritize',
+        labelDefault:
+          action.publicationPref === 'mute'
+            ? 'Mute a publication'
+            : action.publicationPref === 'boost'
+              ? 'Show more from a publication'
+              : 'Show less from a publication',
         detail: action.publicationId,
+      };
+    // source-pref v47 (D2/D6). The scope LABEL is the load-bearing thing the
+    // user is agreeing to ("India"), so it is the detail line; the label names
+    // the direction for the same reason as above.
+    case 'set_source_scope_pref':
+      return {
+        icon: action.publicationPref === 'boost' ? 'public' : 'public-off',
+        labelKey:
+          action.publicationPref === 'boost'
+            ? 'articleFeedback.actionSourceScopeBoost'
+            : 'articleFeedback.actionSourceScopeDeprioritize',
+        labelDefault:
+          action.publicationPref === 'boost'
+            ? 'Show more from a country’s sources'
+            : 'Show less from a country’s sources',
+        detail: action.label,
       };
     case 'add_suppression':
       return {
