@@ -12,6 +12,7 @@
 import logger from '@/lib/logger';
 import {
   evaluateCondition,
+  resolveLeafActions,
   type FeedbackTree,
   type FeedbackTreeNode,
   type LocalFeedbackContext,
@@ -20,6 +21,27 @@ import { getFeedbackTree, refreshFeedbackTree } from '@/lib/services/feedback-tr
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export type FeedbackTreeRoot = 'like' | 'dislike';
+
+/** A leaf that DECLARES persona actions but whose actions all resolve to nothing
+ *  under this article's context is inert: tapping it applies nothing and shows
+ *  no toast, so the user learns that giving feedback does nothing. Hide it.
+ *
+ *  This is the tree-source-independent guard. A `visibleIf` gate in the bundled
+ *  snapshot only protects devices still on the bundle — anything that has been
+ *  online is running the SERVER tree (`app-config.feedback_tree_v1`), where the
+ *  gate may not exist yet. Resolving the actions instead asks the only question
+ *  that actually matters: would this tap do anything?
+ *
+ *  Deliberately narrow — it fires ONLY for action-declaring leaves. `openChat`,
+ *  `nudge` and `seenOnly` leaves legitimately mutate nothing and must survive.
+ *  Known cases it catches today: `this_kind_of_event` (event_type is null on
+ *  every article in prod) and `this_category` on a category-less article. */
+function isInertActionLeaf(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  const leaf = node.leaf;
+  if (!leaf?.actions?.length) return false;
+  if (leaf.openChat || leaf.nudge || leaf.seenOnly) return false;
+  return resolveLeafActions(leaf, context).length === 0;
+}
 
 export interface FeedbackTreeEngine {
   /** The loaded tree (null until the first load resolves). */
@@ -95,7 +117,9 @@ export function useFeedbackTreeEngine(params: {
 
   const currentChildren = useMemo(() => {
     const level = path.length > 0 ? (path[path.length - 1].children ?? []) : rootNodes;
-    return level.filter((n) => evaluateCondition(n.visibleIf, context));
+    return level.filter(
+      (n) => evaluateCondition(n.visibleIf, context) && !isInertActionLeaf(n, context),
+    );
   }, [path, rootNodes, context]);
 
   const findNode = useCallback(
@@ -115,9 +139,14 @@ export function useFeedbackTreeEngine(params: {
     [rootNodes],
   );
 
+  // Must apply the SAME two predicates as `currentChildren`, or a branch whose
+  // only survivors are inert action leaves would still render a chevron and
+  // then descend into an empty level — a worse dead end than the leaf itself.
   const hasVisibleChildren = useCallback(
     (node: FeedbackTreeNode) =>
-      (node.children ?? []).some((n) => evaluateCondition(n.visibleIf, context)),
+      (node.children ?? []).some(
+        (n) => evaluateCondition(n.visibleIf, context) && !isInertActionLeaf(n, context),
+      ),
     [context],
   );
 
