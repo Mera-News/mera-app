@@ -10,6 +10,8 @@ import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   CLOUD_JUDGE_SYSTEM_PROMPT,
   buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
@@ -86,6 +88,109 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
       'over-inclusion is the failure mode you exist to fix.',
     );
     expect(a.judgeSystemPrompt).not.toContain('EXCEPTION');
+  });
+
+  it('pins the headline variant config (P4a — authored, not yet routed)', () => {
+    // 3 = 5 × (4386 / 6600), the measured inverse-rubric-length scaling — see
+    // the arithmetic comment in config.ts. Changing it is a product change.
+    expect(a.headlineArticlesPerScorePrompt).toBe(3);
+    expect(a.headlineRelevanceSystemPrompt).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
+    expect(a.headlineReasonSystemPrompt).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
+    // The headline variants must stay VARIANTS: same base prompt, so tiers,
+    // FEED gates, anchors and the {"k","s"} contract cannot drift from live.
+    // (The base is module-private; these are load-bearing excerpts of it.)
+    for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
+      expect(p).toContain('## Product tiers (hard boundaries');
+      expect(p).toContain('**FEED — 0.40 to 1.10.**');
+      expect(p).toContain('## FEED gates (within 0.40–1.10; each band needs its named evidence)');
+      expect(p).toContain('## Anchors (example user: software engineer in Amsterdam');
+    }
+    // Output contract: no new `k` value. A passed impact chain is tagged
+    // "home", which STAKE_SCORE_BANDS (article-pipeline/scoring.ts) already
+    // clamps to [0.40, 1.10]; an invented tag would skip clampToStakeBand and
+    // silently lose the band discipline the magnitude test depends on.
+    expect(a.headlineRelevanceSystemPrompt).toContain(
+      'a passed impact chain is `"home"`, since the chain ends at their household',
+    );
+    expect(a.headlineRelevanceSystemPrompt).not.toContain('"k":"impact"');
+  });
+
+  it('pins the headline impact rubric (the four gates + the escape hatch)', () => {
+    // Every assertion below is a rule the feature is INERT without. The base
+    // prompt forbids exactly this reasoning ("global implications … forbidden",
+    // "No holdings ⇒ no market relevance"), so the carve-out must name both
+    // rules explicitly — later-instruction-wins ordering is not enough.
+    for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
+      expect(p).toContain('## Headline override — indirect impact (this batch only)');
+      expect(p).toContain(
+        'It SUSPENDS exactly two of the Hard rules above — "Do NOT bridge via … \'global implications\' … these produce phantom relevance and are forbidden" and "No holdings ⇒ no market relevance"',
+      );
+      expect(p).toContain('If any one of the four fails, both suspended rules apply again in full and unchanged.');
+      // Closed vocabulary — nothing is stored server-side, so the list IS the
+      // schema. Losing it turns the feature into free-form hedging.
+      expect(p).toContain('### Impact channels (CLOSED LIST)');
+      expect(p).toContain(
+        'fuel_prices · food_prices · power_tariffs · electricity_supply · currency · interest_rates · job_market · export_demand · supply_chain · shipping_costs · travel_disruption · visa_immigration · insurance_costs · medicine_supply · internet_connectivity · housing_costs · taxes_and_subsidies · equity_markets · gold',
+      );
+      // Exposure gate — this is what keeps "no holdings ⇒ no market relevance"
+      // CARVED rather than repealed.
+      expect(p).toContain(
+        '**equity_markets, gold** — require investments listed in [User facts]. With no investments they are UNAVAILABLE',
+      );
+      // Magnitude / shock-absorption + the hop-count evidence rule.
+      expect(p).toContain('### Magnitude test (shock size RELATIVE to the absorbing economy)');
+      expect(p).toContain(
+        'A SMALL shock landing on a LARGE, diversified, buffered economy does NOT propagate.',
+      );
+      expect(p).toContain('**Hop count is evidence.**');
+      // Grounding: mechanism from the article's own text, never from memory.
+      expect(p).toContain('### Grounding (the mechanism comes from the article, not from memory)');
+      // The escape hatch, stated as a rule, plus the anti-hedging line that
+      // makes it the DEFAULT rather than a permitted option.
+      expect(p).toContain('### The escape hatch — this is the NORMAL answer');
+      // An indirect chain must never outrank a direct stake: 0.80+ stays
+      // reserved for a change to their own work/home/family, 0.95+ for danger
+      // where they are. Without this cap a fuel-price chain could outscore a
+      // flood in the family's city.
+      expect(p).toContain('**An indirect chain never exceeds 0.79.**');
+      expect(p).toContain(
+        'A hedged "may indirectly influence" is a WRONG answer, not a safe one — hedging IS the failure mode here.',
+      );
+      // BOTH worked examples. The negative one is load-bearing: without a
+      // worked EXCLUDE the rubric reads as an invitation to find a chain.
+      expect(p).toContain('**POSITIVE — chain holds.**');
+      expect(p).toContain('`{"k":"home","s":0.72}`');
+      expect(p).toContain('**NEGATIVE — chain does NOT hold, and this is the more common verdict.**');
+      expect(p).toContain('`{"k":"none","s":0.13}`');
+      expect(p).toContain('it does not affect your costs in Amsterdam.');
+    }
+  });
+
+  it('pins the headline reason contract (word cap, channels, no hedging, shared voice)', () => {
+    const r = a.headlineReasonSystemPrompt;
+    expect(r).toContain('write ONE plain sentence (≤35 words)');
+    expect(r).toContain('name at most 2–3 channels from the closed list');
+    expect(r).toContain(
+      'Do NOT hedge. "May", "could", "might", "potentially", "possibly" are banned unless the article itself states the event is conditional or threatened rather than happening',
+    );
+    expect(r).toContain('never "global implications" or "economic impact"');
+    // Three reason bands, not two. The headline SCORE prompt can still emit
+    // "interest" (0.25–0.39) for a genuine interest-category match that was
+    // never judged on the chain — explaining that with magnitude/absorption
+    // language would report a rejection that never happened.
+    expect(r).toContain(
+      'When the score is 0.25–0.39 the article is a TANGENTIAL interest match, NOT a failed chain — it was never judged on impact.',
+    );
+    expect(r).toContain(
+      'Do NOT use chain language here: no channels, no "absorbed", no magnitude talk, no mechanism — there was no chain to reject.',
+    );
+    expect(r).toContain('When the score is below 0.25, say plainly that the story does not affect them');
+    // Second-person voice: the SAME const the live reason prompt uses, not a
+    // retyped copy (nothing else pins this paragraph's content).
+    const VOICE =
+      'Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included.';
+    expect(r).toContain(VOICE);
+    expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(VOICE);
   });
 
   it('pins the second-person voice rule on the judge reason ("r")', () => {

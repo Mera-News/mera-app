@@ -10,6 +10,8 @@ import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
@@ -105,6 +107,21 @@ export interface ArticlePipelineConfig {
   judgeReasonFloor: number;
   /** System prompt for the combined judge+reason pass. */
   judgeSystemPrompt: string;
+  // --- HEADLINE variants (P4a — authored, not yet routed to) ----------------
+  /** Top-headline articles bundled into one batched relevance prompt. Smaller
+   *  than articlesPerScorePrompt because the headline rubric is longer and adds
+   *  a second per-article procedure — see the literal's comment for the
+   *  measured arithmetic. */
+  headlineArticlesPerScorePrompt: number;
+  /** System prompt for the cloud relevance pass over TOP-HEADLINE articles.
+   *  Same base, same tiers, same `{"k","s"}` contract as
+   *  relevanceSystemPrompt, plus the indirect-impact (event → channel →
+   *  household) route. */
+  headlineRelevanceSystemPrompt: string;
+  /** System prompt for the cloud reason pass over TOP-HEADLINE articles. Same
+   *  base + the same impact rubric as headlineRelevanceSystemPrompt, so a
+   *  reason can only name a chain the scorer would have accepted. */
+  headlineReasonSystemPrompt: string;
 }
 
 export interface TopicGenConfig {
@@ -283,6 +300,34 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     judgeMaxTokens: 560, // 12*(34+8) + ~56 headroom
     judgeReasonFloor: JUDGE_REASON_FLOOR,
     judgeSystemPrompt: buildJudgeSystemPrompt(JUDGE_REASON_FLOOR),
+    // HEADLINE batch size — measured, not guessed (estimateTokens, lib/llm/tokens.ts):
+    //   live relevance prompt      4386 est tokens, batched 5/call
+    //   headline relevance prompt  6600 est tokens  (+50.5%)
+    //   per-article payload        ~335 est tokens worst case (title 500 chars
+    //                              + description 500 + country 60 + "why" 200 + framing)
+    // Live call today:   4386 + 5×335 = 6061 in, 1212 per article.
+    // Headline at N=3:   6600 + 3×335 = 7605 in, 2535 per article.
+    // (N=4 → 7940 / 1985; N=5 → 8275 / 1655.)
+    //
+    // 3 = 5 × (4386 / 6600) = 3.32 → 3: hold per-article ATTENTION on the
+    // rubric, not per-article cost. The binding constraint here is not tokens —
+    // it is that the headline rubric adds a SECOND per-article procedure (the
+    // four impact gates + the magnitude test) on top of the base's Steps 1–4,
+    // and its failure mode is hedged over-inclusion, which is exactly what a
+    // long batch produces when the article payloads crowd the rubric. The live
+    // 5 was tuned against a rubric with one procedure; scaling inversely with
+    // rubric length keeps the same rubric-per-article budget.
+    // Cost is affordable at 2.07× per article because headlines are a bounded
+    // slice (per-scope headline depth, order tens per sync) rather than the
+    // whole retrieved pool.
+    // NOT a hard gate: lib/llm/cloudComplete.ts only LOGS estimated input
+    // tokens (no ceiling check, no truncation), so this is a cost/reliability
+    // judgement, revisable from measured output quality. Output side is
+    // unchanged — {"k","s"} objects — so scoreBatchMaxTokens (320) stays ample
+    // at N=3.
+    headlineArticlesPerScorePrompt: 3,
+    headlineRelevanceSystemPrompt: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+    headlineReasonSystemPrompt: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   },
   topicGen: {
     // 2026-07-16: reduced 16→10 (cloud) / 14→10 (local). Golden-labeled

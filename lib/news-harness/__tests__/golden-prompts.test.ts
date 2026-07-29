@@ -55,7 +55,13 @@ import {
   buildReasonCallsForSubset as harnessBuildReasonCallsForSubset,
   buildScoreCallForChunk,
 } from '../article-pipeline/scoring';
-import { CLOUD_RELEVANCE_SYSTEM_PROMPT } from '../prompts/prompts';
+import {
+  CLOUD_RELEVANCE_SYSTEM_PROMPT,
+  CLOUD_REASON_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
+} from '../prompts/prompts';
+import { estimateTokens } from '@/lib/llm/tokens';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { ScoringCandidate } from '../core/types';
 
@@ -121,5 +127,38 @@ describe('harness buildScoreCallForChunk', () => {
   it('defaults the system prompt to CLOUD_RELEVANCE_SYSTEM_PROMPT', () => {
     const { system } = buildScoreCallForChunk([candidate('a')], FACT_STATEMENTS);
     expect(system).toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
+  });
+});
+
+describe('golden — measured prompt sizes', () => {
+  // These four numbers are the INPUTS to the batch-size arithmetic in
+  // core/config.ts (headlineArticlesPerScorePrompt = 5 × 4386/6600 → 3). They
+  // are pinned here so editing a prompt fails loudly instead of silently
+  // invalidating that derivation — re-measure, redo the arithmetic, then update
+  // both the comment and these pins together.
+  //
+  // The first two ALSO guard the CLOUD_REASON_VOICE_RULE extraction (P4a): the
+  // voice paragraph was lifted out of CLOUD_REASON_SYSTEM_PROMPT into a shared
+  // const so the headline reason prompt cannot carry a retyped copy. Nothing
+  // else pins that prompt's content — config.test.ts and the shim comparisons
+  // above are all identity checks against the same const, so a whitespace slip
+  // during the extraction would have passed every existing test.
+  it('pins the estimated token size of each cloud scoring prompt', () => {
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4386);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(4770);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(6600);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6996);
+  });
+
+  it('keeps the headline variants strictly additive over the live prompts', () => {
+    // Same base + the same shared voice rule ⇒ the headline prompt is always
+    // longer than its live counterpart. If this ever inverts, something was
+    // REPLACED rather than added and the tier/voice guarantees are gone.
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBeGreaterThan(
+      estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT),
+    );
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBeGreaterThan(
+      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT),
+    );
   });
 });
