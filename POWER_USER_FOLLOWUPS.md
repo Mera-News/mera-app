@@ -331,6 +331,29 @@ The story never disappears and the fronting outlet is still correct.
 instead of the representative's — one line, but it needs its own before/after on a real Dashboard
 because it reorders cards for everyone.
 
+### PU-23 · Teaching Mera about source preferences cost the filter list one rung of headroom
+**Simplified:** the persona prompt's `FILTERS` prose now also documents `set_publication_pref` and
+`set_source_scope_pref`, which costs **81 tokens** at the `full` rung (system prompt 1705 → 1786).
+Worst-case measured prompt goes 2968 → **3049 of 3072**, so the headroom PU-11 relied on drops from
+**104 tokens to 23**.
+**Why it matters:** the ladder still fits at every rung and the ordering invariant holds, but the
+threshold moved. A user at the saturation point PU-11 describes — 22 maximum-length facts *and* 10
+active filters — now degrades one rung earlier than before this wave: they keep the filter *tools*
+but lose the `YOUR FILTERS` context block, so Mera can still hide something for them but can no
+longer read their filter list back. Nobody loses a turn; the `off` rung is still byte-identical to
+the pre-P4a prompt.
+**Mitigation already taken:** both new actions ride the `full` rung **only** — prose *and* JSON
+schema. `compact` is byte-identical to before, so the rung that exists to rescue a budget-pressured
+turn was not made more expensive. That was the deliberate trade: source preferences are also
+reachable from the Source-preferences screen and from any article's feedback tree, whereas filters
+are reachable from chat alone, so filters get the cheaper rung to themselves.
+**Power user loses:** nothing they could not already lose at saturation — the boundary just sits 81
+tokens earlier.
+**Cheapest way back:** the `FILTERS` prose is the only channel that teaches the LOCAL path anything
+(`schemaTypeToString` emits neither `enum` nor `description`), so the tokens cannot simply move into
+the schema. The real fix is to stop paying for the CLOUD path's documentation on the LOCAL prompt —
+they share one string today. Splitting them would return most of the 81 tokens, and more besides.
+
 ---
 
 ## Deferred defects (not trades — logged here for lack of a better home)
