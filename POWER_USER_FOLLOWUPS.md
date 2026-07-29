@@ -68,3 +68,39 @@ spammable.
 **Cheapest way back:** the Advanced-hub refresh button already forces it manually. A local
 math-only re-rank (no LLM, milliseconds) would give instant reordering if this ever feels sluggish —
 it was designed and deliberately not taken this wave.
+
+### PU-6 · The inline Feed surface applies leaves silently; only the modal tree acknowledges nudges
+**Simplified:** on the Feed's inline feedback surface, a leaf that carries persona actions applies
+them with an Undo toast, but the two leaves that carry *no* action — "Subscribe to this
+publication" and "Browse related coverage" — just close the surface, where the modal tree shows an
+informational toast for them.
+**Why:** wiring a toast host into the inline tree would have pulled the gluestack toast module into
+the feed's hot import path for two advisory strings; the surface already gives a check + close as
+acknowledgment.
+**Power user loses:** the subscribe / browse-related hints on the Feed tab (they still appear from
+the compact "…" sheet and the standalone-article actions row).
+**Cheapest way back:** route those two through the same `toastManager` the apply path now uses —
+about ten lines, no new host.
+
+### PU-7 · Only the thumbs-UP carries state on the actions row and compact sheet
+**Simplified:** on `ArticleActionsRow` / `CompactActionsSheet`, a like shows none →
+tinted → filled; a dislike is recorded and opens the tree but the button itself never looks
+selected.
+**Why:** those two surfaces record like and dislike independently (they are not mutually exclusive
+there, unlike the Feed's verdict model), so a selected dislike needs its own restore-and-untoggle
+story. Out of budget for a wave about making feedback mean something rather than look different.
+**Power user loses:** at-a-glance "I already told Mera no about this" on non-Feed surfaces.
+**Cheapest way back:** the state is already persisted and readable — `getArticleVerdict` returns
+the dislike and its path; it is a rendering change plus an un-vote path.
+
+### PU-8 · `wrong_place` stays hidden — no geo-mismatch derivation
+**Simplified:** the feedback tree's "Wrong place" leaf is still gated out everywhere, because
+nothing computes `hasGeoMismatch`. The *positive* side is now live: "More news from this place"
+resolves against the article's real geo tags.
+**Why:** the authoritative derivation (`scoring-engine/geo.resolveGeoMatch`) needs the full persona
+location snapshot, the scoring config, and the anchored-location ids of the matched topic — none of
+which the feedback surface has. Re-deriving it locally would be a second, quietly different answer
+to "is this the wrong place", which is worse than not asking.
+**Power user loses:** a one-tap "this is about the wrong city" on the dislike tree.
+**Cheapest way back:** thread the scoring engine's already-computed `wrongLocationFlag` onto the
+suggestion row at score time; the tree then reads it like any other gate.
