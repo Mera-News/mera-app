@@ -105,11 +105,46 @@ describe('updateFeedbackContextPath — the committed flag', () => {
     expect(JSON.parse(row.contextJson)).toEqual({ relevance: 0.5, treePath: ['n1'] });
   });
 
-  it('leaves the processed_at re-open rule alone (a part-way path stays digestible)', async () => {
+  it('keeps an abandoned branch descent REAPED — the digest never sees it', async () => {
     const row = makeFeedbackRecord({ contextJson: null, processedAt: NOW });
     db._setRows('article_feedback', [row]);
 
     await updateFeedbackContextPath('a1', 'dislike', ['not_important_to_me']);
+
+    // Was `null` before P4i: any non-empty path re-opened the row, and
+    // `pathCandidates` finds no case for a branch id, so the signal fell through
+    // to `aggregateCandidates` — bare-verdict aggregation by the back door.
+    expect(row.processedAt).toBe(NOW);
+  });
+
+  it('a seenOnly leaf stays reaped too — its toast says nothing changed, and nothing does', async () => {
+    const row = makeFeedbackRecord({ contextJson: null, processedAt: NOW });
+    db._setRows('article_feedback', [row]);
+
+    // The tree records the path for a seenOnly leaf but never commits it.
+    await updateFeedbackContextPath('a1', 'dislike', ['suggestion', 'seen_already']);
+
+    expect(row.processedAt).toBe(NOW);
+    expect(JSON.parse(row.contextJson).committed).toBeUndefined();
+  });
+
+  it('a committed verdict IS handed to the digest', async () => {
+    const row = makeFeedbackRecord({ contextJson: null, processedAt: NOW });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', ['suggestion', 'wrong_topic'], true);
+
+    expect(row.processedAt).toBeNull();
+  });
+
+  it('stays digestible when a committed row is walked back up (stickiness reaches processed_at)', async () => {
+    const row = makeFeedbackRecord({
+      contextJson: '{"treePath":["x","y"],"committed":true}',
+      processedAt: null,
+    });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', ['publication_content']);
 
     expect(row.processedAt).toBeNull();
   });

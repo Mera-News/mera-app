@@ -49,13 +49,19 @@ interface FeedbackTreeOverlayProps {
   chatMessage: string;
   /** Which tree to show. Defaults to 'dislike' (the historical behavior). */
   root?: 'like' | 'dislike';
-  /** A TERMINAL leaf was picked — the tapped node-id path plus how many persona
-   *  actions it actually applied. The host persists the path onto the stored
-   *  verdict row, which is what turns a provisional thumb into a committed one
-   *  (D15), and stamps the row processed when `appliedCount > 0` so the digest
-   *  can't apply a second helping (D16). Fires for every terminal flavor —
-   *  nudge / seenOnly leaves report 0. */
-  onLeafPicked?: (pathIds: string[], appliedCount: number) => void;
+  /** A TERMINAL leaf was picked — the tapped node-id path, how many persona
+   *  actions it actually applied, and whether the verdict should be treated as
+   *  COMMITTED. The host persists the path onto the stored verdict row and
+   *  stamps it processed when `appliedCount > 0`, so the digest can't apply a
+   *  second helping (D16).
+   *
+   *  `committed` is passed EXPLICITLY rather than inferred from
+   *  `appliedCount === 0`, which cannot tell a leaf that changes nothing BY
+   *  DESIGN (seenOnly) from one whose placeholders the local context simply
+   *  couldn't fill. Only the first should leave the thumb unfilled; treating
+   *  both alike is how "I've seen this already" came to fill the thumb on this
+   *  surface while the inline tree left it hollow for the same leaf. */
+  onLeafPicked?: (pathIds: string[], appliedCount: number, committed: boolean) => void;
 }
 
 /** i18n chrome helper — always supplies an English default so it renders pre-merge. */
@@ -146,7 +152,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
 
       // Nudge — a SUGGESTION, not a persona mutation.
       if (leaf.nudge) {
-        onLeafPicked?.(leafPath, 0);
+        onLeafPicked?.(leafPath, 0, true);
         onClose();
         if (leaf.nudge === 'subscribe') {
           showInfoToast(
@@ -160,9 +166,12 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
         return;
       }
 
-      // "I've seen this" — acknowledge only.
+      // "I've seen this" — acknowledge only, and DO NOT commit: a filled thumb
+      // promises "this changed your persona" and this leaf changes nothing by
+      // declaration. Matches InlineFeedbackTree, so the same leaf can't mean two
+      // different things depending on which surface the user tapped it from.
       if (leaf.seenOnly) {
-        onLeafPicked?.(leafPath, 0);
+        onLeafPicked?.(leafPath, 0, false);
         onClose();
         showInfoToast(c('seenAck', "Got it — we'll show fewer you've seen"));
         return;
@@ -172,12 +181,14 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       const actions = resolveLeafActions(leaf, context);
       onClose();
       if (actions.length === 0) {
-        onLeafPicked?.(leafPath, 0);
+        // Placeholders the context couldn't fill — the user DID pick a reason,
+        // so it commits; only the mutation is missing.
+        onLeafPicked?.(leafPath, 0, true);
         showInfoToast(c('thanks', 'Thanks for the feedback'));
         return;
       }
       void applyLeafActions(actions, label(node)).then((applied) => {
-        onLeafPicked?.(leafPath, applied);
+        onLeafPicked?.(leafPath, applied, true);
       });
     },
     [onClose, chatContext, chatMessage, context, c, showInfoToast, label, onLeafPicked, pathIds],

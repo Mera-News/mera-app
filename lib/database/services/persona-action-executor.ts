@@ -183,6 +183,13 @@ async function dispatch(
         const r = await mutationRailsService.nudgeTopic(action.topicId, action.delta, source);
         return {
           applied: r.applied,
+          // MUST be threaded back: the feedback layer stores the ids a leaf
+          // minted onto the verdict row and un-voting reverts exactly those.
+          // Dropping it made every topic-weight leaf (not_important,
+          // wrong_topic, a_lot_more, a_bit_more) un-undoable — the thumb went
+          // hollow while the weight stayed nudged, which is precisely the
+          // ambiguity the fill-state contract exists to remove.
+          changeLogId: r.changeLogId,
           summary: r.applied
             ? `Nudged topic weight to ${fmt(r.after)}`
             : 'Nudge budget exhausted; topic weight unchanged',
@@ -209,9 +216,17 @@ async function dispatch(
     case ACTION_NAMES.SET_HIGH_PRIORITY: {
       if (!action.topicId) return skipped(action, 'missing topicId');
       if (typeof action.highPriority !== 'boolean') return skipped(action, 'missing highPriority');
-      await mutationRailsService.setTopicHighPriority(action.topicId, action.highPriority, source);
+      // Same id-threading contract as the nudge above. `?.` because the helper
+      // returned void until this fix and test doubles may still resolve
+      // undefined — a missing id must not throw, just mean "nothing to revert".
+      const r = await mutationRailsService.setTopicHighPriority(
+        action.topicId,
+        action.highPriority,
+        source,
+      );
       return {
         applied: true,
+        changeLogId: r?.changeLogId,
         summary: action.highPriority ? 'Pinned topic as high priority' : 'Unpinned topic',
       };
     }
@@ -220,8 +235,9 @@ async function dispatch(
     case ACTION_NAMES.SET_FACT_WEIGHT: {
       if (!action.factId) return skipped(action, 'missing factId');
       if (typeof action.delta !== 'number') return skipped(action, 'missing delta');
-      await mutationRailsService.nudgeFactWeight(action.factId, action.delta, source);
-      return { applied: true, summary: 'Adjusted fact weight' };
+      // Same id-threading contract (and same `?.` rationale) as above.
+      const r = await mutationRailsService.nudgeFactWeight(action.factId, action.delta, source);
+      return { applied: true, changeLogId: r?.changeLogId, summary: 'Adjusted fact weight' };
     }
 
     // -- Mint a NEGATIVE topic ---------------------------------------------

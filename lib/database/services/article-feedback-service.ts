@@ -328,18 +328,23 @@ export async function recordVerdictFeedback(
  * (under `treePath`). No-op if no matching (articleId, sentiment) row exists.
  * The path is the array of node ids/labels the user tapped in the inline tree.
  *
- * A NON-EMPTY path clears `processed_at` (the row becomes digestible via the
- * contextful `pathCandidates`); an empty path (the user backed all the way out)
- * puts it back to provisional. That rule is UNCHANGED and deliberately so — a
- * part-way path being digestible is the documented intent of D15 and is asserted
- * by a pre-existing test.
- *
- * `committed` is a SEPARATE, narrower marker and the only thing the UI's filled
- * state may read (F2/F3). Pass it from a terminal leaf or a chat escalation;
- * a branch descent must not. It is sticky — once true it stays true for the life
- * of the row, since the leaf's persona change is still in force until un-vote
- * reverts it. It is written only when true, so an uncommitted row's snapshot is
+ * `committed` — pass it from a terminal leaf or a chat escalation; a branch
+ * descent must not. It is sticky: once true it stays true for the life of the
+ * row, since the leaf's persona change is still in force until un-vote reverts
+ * it. It is written only when true, so an uncommitted row's snapshot is
  * byte-for-byte what it was before this field existed.
+ *
+ * It is ALSO the reap discriminator. This used to be `treePath.length > 0`, so
+ * merely opening a branch cleared `processed_at` and handed a context-less
+ * verdict to the digest — where `pathCandidates` matches on the LAST id, finds
+ * no case for a branch id, returns nothing, and the signal falls through to
+ * `aggregateCandidates`: the bare-verdict aggregation D15 exists to retire. Four
+ * such rows were found armed on a real device, two of them on the same topic.
+ * Navigation is not context, so it no longer re-opens the row.
+ *
+ * The mirror-image rule at the WRITE site (`recordArticleFeedback` /
+ * `hasTreeContext`) is left as it was: no caller can reach it, because
+ * `buildContextJson` never emits a `treePath`.
  */
 export async function updateFeedbackContextPath(
   articleId: string,
@@ -369,7 +374,8 @@ export async function updateFeedbackContextPath(
         snapshot.treePath = treePath;
         // Sticky, and written ONLY when true — never `committed: false`.
         if (committed || snapshot.committed === true) snapshot.committed = true;
-        const contextful = treePath.length > 0;
+        // The digest may only ever see a verdict the user actually explained.
+        const contextful = snapshot.committed === true;
         await row.update((r) => {
           r.contextJson = JSON.stringify(snapshot);
           r.processedAt = contextful ? null : Date.now();

@@ -260,3 +260,28 @@ writing the field — no app release needed.
 **Cheapest way back:** it returns automatically. Note the gate only reaches devices on the BUNDLED
 tree; the server-hosted tree (`app-config.feedback_tree_v1`) needs the same `visibleIf` published to
 take effect for everyone — see the wave report.
+
+---
+
+## Deferred defects (not trades — logged here for lack of a better home)
+
+Unlike everything above, these are not "the Mom won" decisions. They are known-wrong behaviours
+left alone deliberately because the honest fix is bigger than the symptom.
+
+### DD-1 · A committed DISLIKE shows nothing on the standalone-card surfaces
+**Where:** `components/custom/cards/ArticleActionsRow.tsx`, `components/custom/cards/CompactActionsSheet.tsx`.
+**What's wrong:** both track only `likeState`; the dislike button is hardcoded `selected={false}`, so
+a dislike that the user fully explained through the feedback tree renders identically to one they
+never cast. The inverse of the F2/F3 defect the P4i wave fixed everywhere else — those surfaces were
+immune to the branch-descent over-fill only because they show no dislike state at all.
+**Why it wasn't fixed with the rest:** the missing state is not the whole gap. On these two surfaces
+a dislike also has no un-vote — `handleDislike` unconditionally re-records and reopens the tree,
+where `handleLike` toggles. Adding the filled treatment alone would produce a filled thumb the user
+cannot clear by re-tapping, which is a worse dead end than the current silence. Doing it properly
+means giving dislike the same record/flip/un-vote lifecycle as like, on a surface neither QA nor this
+wave exercised.
+**User loses:** no confirmation that a dislike given from a standalone card or a compact row was
+recorded. The signal IS persisted correctly — this is display only.
+**Cheapest way back:** hoist both surfaces onto the same `verdict + committed` pair the feed and
+detail screens now use (`getArticleVerdict` already returns both), and give dislike the like path's
+re-tap-to-un-vote. Roughly one focused pass over the two files plus a device check of the un-vote.

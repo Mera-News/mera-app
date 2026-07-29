@@ -155,15 +155,18 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     recordAndOpenTree('dislike');
   }, [recordAndOpenTree]);
 
-  // See ArticleActionsRow.handleLeafPicked — the path is what promotes the
-  // thumb from provisional to committed; a leaf that applied something also
-  // stamps the row so the digest can't double-apply it.
+  // A terminal leaf settled. `committed` comes from the overlay rather than
+  // being inferred from `appliedCount`: a seenOnly leaf changes nothing by
+  // design and must leave the thumb unfilled, while a leaf whose placeholders
+  // couldn't be resolved still counts as a reason the user gave. Stamps the row
+  // processed when something actually applied, so the 3-hourly digest can't
+  // apply a second helping of the same signal.
   const handleLeafPicked = useCallback(
-    (pathIds: string[], appliedCount: number) => {
+    (pathIds: string[], appliedCount: number, committed: boolean) => {
       const sentiment = overlayRoot;
-      if (sentiment === 'like') setLikeState('committed');
+      if (sentiment === 'like' && committed) setLikeState('committed');
       void (async () => {
-        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, true);
+        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, committed);
         if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
       })();
     },

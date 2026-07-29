@@ -495,7 +495,15 @@ describe('provisional (context-less) verdicts', () => {
     expect(corrupt.processedAt).toBe(NOW);
   });
 
-  it('RE-OPENS the row for the digest once a non-empty tree path arrives', async () => {
+  // REVERSED by the not-interested wave (P4i). This used to assert that ANY
+  // non-empty tree path re-opened the row for the digest. It doesn't any more:
+  // the tree writes a path on every tap INCLUDING a branch descent, and
+  // `pathCandidates` matches on the LAST id — so a branch-only path resolved to
+  // no candidate and fell through to `aggregateCandidates`, the bare-verdict
+  // aggregation D15 was built to retire. Four such rows were found armed on a
+  // real device (two on one topic). Navigation is not context: only a COMMITTED
+  // verdict (terminal leaf / chat escalation) re-opens the row now.
+  it('does NOT re-open the row for a branch descent — navigating is not context', async () => {
     const row = makeFeedbackRecord({
       articleId: 'a1',
       sentiment: 'dislike',
@@ -505,6 +513,21 @@ describe('provisional (context-less) verdicts', () => {
     db._setRows('article_feedback', [row]);
 
     await updateFeedbackContextPath('a1', 'dislike', ['suggestion', 'not_related']);
+
+    expect(row.processedAt).toBe(NOW);
+    expect(JSON.parse(row.contextJson).treePath).toEqual(['suggestion', 'not_related']);
+  });
+
+  it('RE-OPENS the row for the digest once the verdict is COMMITTED', async () => {
+    const row = makeFeedbackRecord({
+      articleId: 'a1',
+      sentiment: 'dislike',
+      contextJson: '{"publication":"The Hindu"}',
+      processedAt: NOW,
+    });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', ['suggestion', 'not_related'], true);
 
     expect(row.processedAt).toBeNull();
     expect(JSON.parse(row.contextJson).treePath).toEqual(['suggestion', 'not_related']);
