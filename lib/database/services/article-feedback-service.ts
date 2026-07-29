@@ -5,6 +5,29 @@
 // repeated taps of the same sentiment on the same article do not create
 // duplicate rows. `removeArticleFeedback` lets a sentiment be retracted
 // (e.g. re-tapping "like" to un-like), deleting the matching row(s).
+//
+// ── D15: a BARE verdict is PROVISIONAL and is discarded ─────────────────────
+// A thumb tap on its own is not evidence — it says "something about this",
+// never what. The app used to speculate from it anyway: two context-less
+// dislikes were enough for the 3-hourly digest (feedback-digest's
+// `aggregateCandidates`) to lower a topic weight, with nothing shown to the
+// user. That aggregation is deliberately retired here.
+//
+// The row is still written (it drives the inline feedback surface, the
+// un-vote, and the impression bookkeeping), but a row whose `context_json`
+// carries no non-empty `treePath` is REAPED AT WRITE: `processed_at` is
+// stamped immediately, so the existing `processed_at IS NULL` predicate in
+// `getUnprocessedFeedback` / `countUnprocessedFeedback` excludes it by
+// construction and it can never reach the digest.
+//
+// `processed_at` therefore means "not pending for the digest" rather than
+// "the digest folded this in". The two ways a row leaves that state:
+//   • context ARRIVES  → `updateFeedbackContextPath` with a non-empty path
+//     clears `processed_at`, so a part-way tree path IS digestible (that is
+//     what feeds the digest's contextful `pathCandidates`);
+//   • context COMMITS  → a terminal leaf applies its persona actions on the
+//     spot (D16, InlineFeedbackTree / FeedbackTreeOverlay) and then calls
+//     `markFeedbackProcessedFor`, so the digest can never double-apply it.
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
@@ -13,7 +36,33 @@ import type ArticleFeedbackModel from '../models/ArticleFeedback';
 
 const articleFeedbackCol = database.get<ArticleFeedbackModel>('article_feedback');
 
+/** DEPRECATED: `'improve'` has no writer anywhere in the app and is filtered
+ *  out of `getUnprocessedFeedback`/`countUnprocessedFeedback`, so a row of this
+ *  sentiment would be invisible to every consumer. Kept in the union only
+ *  because a pre-existing test asserts it round-trips (see
+ *  `__tests__/article-feedback-service.test.ts`); delete both together. */
 export type ArticleFeedbackSentiment = 'like' | 'improve' | 'dislike';
+
+/**
+ * True when a stored `context_json` snapshot carries a non-empty `treePath` —
+ * the D15 commit discriminator. A verdict WITH one has a reason attached (the
+ * user picked at least one tree node, or escalated to Mera along a path); a
+ * verdict without one is a bare tap and stays provisional.
+ */
+function hasTreeContext(contextJson: string | null | undefined): boolean {
+  if (!contextJson) return false;
+  try {
+    const parsed = JSON.parse(contextJson);
+    return (
+      !!parsed &&
+      typeof parsed === 'object' &&
+      Array.isArray(parsed.treePath) &&
+      parsed.treePath.length > 0
+    );
+  } catch {
+    return false;
+  }
+}
 
 export interface RecordArticleFeedbackInput {
   articleId: string;
@@ -49,6 +98,11 @@ export async function recordArticleFeedback(
       .fetch();
     if (existing.length > 0) return;
 
+    // D15 — reap-at-write: a verdict with no tree path is provisional, so it is
+    // born already-processed and never reaches the digest. Context arriving
+    // later (updateFeedbackContextPath) re-opens it.
+    const provisional = !hasTreeContext(input.contextJson);
+
     await database.write(async () => {
       await articleFeedbackCol.create((r) => {
         r.articleId = articleId;
@@ -59,6 +113,7 @@ export async function recordArticleFeedback(
         r.surface = input.surface ?? null;
         r.contextJson = input.contextJson ?? null;
         r.createdAt = new Date();
+        if (provisional) r.processedAt = Date.now();
       });
     });
   } catch (error) {
@@ -122,6 +177,11 @@ export async function recordVerdictFeedback(
  * Merges a feedback-tree path into an existing verdict row's `context_json`
  * (under `treePath`). No-op if no matching (articleId, sentiment) row exists.
  * The path is the array of node ids/labels the user tapped in the inline tree.
+ *
+ * This is also the D15 commit gate: a NON-EMPTY path is the context that turns
+ * a provisional tap into a real signal, so it clears `processed_at` (the row
+ * becomes digestible via the contextful `pathCandidates`). An empty path (the
+ * user backed all the way out) puts it back to provisional.
  */
 export async function updateFeedbackContextPath(
   articleId: string,
@@ -148,8 +208,10 @@ export async function updateFeedbackContextPath(
           }
         }
         snapshot.treePath = treePath;
+        const committed = treePath.length > 0;
         await row.update((r) => {
           r.contextJson = JSON.stringify(snapshot);
+          r.processedAt = committed ? null : Date.now();
         });
       }
     });
@@ -164,6 +226,11 @@ export async function updateFeedbackContextPath(
  * Returns all UNPROCESSED verdict rows (processed_at null, sentiment
  * like|dislike) — the deferred daily-plan wave claims these to fold into the
  * persona. Newest-first.
+ *
+ * Under D15 the `processed_at IS NULL` predicate is ALSO the contextful filter:
+ * a bare verdict is stamped processed at write, so only rows carrying a
+ * `context_json.treePath` ever appear here. The query is unchanged — the
+ * discrimination happens at the writer (see the file header).
  */
 export async function getUnprocessedFeedback(): Promise<ArticleFeedbackModel[]> {
   try {

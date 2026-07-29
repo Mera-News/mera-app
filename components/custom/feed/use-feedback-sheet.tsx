@@ -6,7 +6,12 @@
 // action row) rather than a floating modal — see `CardFeedbackSurface` +
 // `InlineFeedbackTree`. This hook owns only the (stable) card-action handlers:
 //   • a thumb tap records the verdict (fresh / flipped) — the card then reveals
-//     its inline surface (visibility derived from the stored verdict, per row);
+//     its inline surface (visibility derived from the stored verdict, per row).
+//     That verdict is PROVISIONAL until the user gives it a reason: the thumb
+//     stays hollow and the row is discarded rather than speculated on (D15).
+//     The stored tree path is the commit discriminator, which is why the card
+//     derives its filled state from `feedbackInitialPath` and needs no extra
+//     state here;
 //   • re-tapping the SAME thumb REMOVES the verdict and all its feedback;
 //   • the inline tree's path edits persist as the user taps;
 //   • the surface's × closes it (keeps the verdict) via the session-level

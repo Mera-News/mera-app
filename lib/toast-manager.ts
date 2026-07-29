@@ -223,6 +223,83 @@ class ToastManager {
     }
 
     /**
+     * Success toast carrying an UNDO affordance — the acknowledgment shown when
+     * a feedback-tree leaf applies persona mutations on the spot (see
+     * components/custom/feedback-tree/use-apply-leaf-actions). Lives here rather
+     * than behind `useToast()` so the caller does not have to be a React
+     * component and, more importantly, so the gluestack toast module is
+     * `require`d only when a toast is actually shown (the same lazy-require
+     * shape every other method here uses).
+     *
+     * Not debounced — each applied change is a distinct, user-initiated event.
+     */
+    showUndoToast(opts: {
+        title: string;
+        body?: string;
+        undoLabel: string;
+        undoneTitle: string;
+        onUndo: () => void | Promise<void>;
+    }) {
+        if (!this.toastInstance) {
+            logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
+            return;
+        }
+
+        const React = require('react');
+        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
+        const { HStack } = require('@/components/ui/hstack');
+        const { VStack } = require('@/components/ui/vstack');
+        const { Pressable } = require('@/components/ui/pressable');
+        const { Text } = require('@/components/ui/text');
+
+        this.toastInstance.show({
+            placement: 'bottom',
+            duration: 6000,
+            render: ({ id }: { id: string }) =>
+                React.createElement(
+                    Toast,
+                    { action: 'success', variant: 'solid' },
+                    React.createElement(
+                        HStack,
+                        { className: 'flex-1 items-center justify-between', space: 'md' },
+                        React.createElement(
+                            VStack,
+                            { className: 'flex-1' },
+                            React.createElement(ToastTitle, null, opts.title),
+                            opts.body ? React.createElement(ToastDescription, null, opts.body) : null,
+                        ),
+                        React.createElement(
+                            Pressable,
+                            {
+                                testID: 'feedback-undo',
+                                accessibilityRole: 'button',
+                                accessibilityLabel: opts.undoLabel,
+                                onPress: () => {
+                                    void (async () => {
+                                        try {
+                                            await opts.onUndo();
+                                        } catch (err) {
+                                            logger.captureException(err, {
+                                                tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
+                                            });
+                                        }
+                                        this.toastInstance?.close(id);
+                                        this.showInfo(opts.undoneTitle);
+                                    })();
+                                },
+                            },
+                            React.createElement(
+                                Text,
+                                { style: { color: '#1a1a1a', fontWeight: '700' } },
+                                opts.undoLabel,
+                            ),
+                        ),
+                    ),
+                ),
+        });
+    }
+
+    /**
      * Notification-center-backed toast. First writes a persistent notification
      * row (so the bell badge increments via the reactive observeUnreadCount),
      * then shows a transient toast that flies toward the bell.

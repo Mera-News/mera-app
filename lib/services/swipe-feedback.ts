@@ -1,12 +1,17 @@
 // swipe-feedback — the Feed-tab signal-persistence layer (Round-4 P4).
 //
-// Turns a verdict tap/swipe on the Feed deck into a persisted `article_feedback`
+// Turns a verdict tap/swipe on the Feed into a persisted `article_feedback`
 // row (surface 'swipe'), enriches that row's stored `treePath` as the user taps
 // the inline feedback tree, and converts a verdict + tapped path into a Mera
-// chat handoff. NO persona mutation happens here — every like/dislike is left
-// UNPROCESSED (processed_at null) for the deferred daily-plan wave; the only
-// persona changes come from the chat, when the user confirms the agent's
-// proposals (which then stamps the row processed).
+// chat handoff.
+//
+// No persona mutation happens in THIS module, but a verdict is no longer inert:
+//   • a BARE verdict is provisional — written, shown hollow, and reaped at
+//     write so it never reaches the digest (D15, see article-feedback-service);
+//   • a tapped tree path re-opens the row for the digest, and a terminal leaf
+//     applies its persona actions immediately (D16, InlineFeedbackTree);
+//   • a chat escalation still applies via the agent's confirmed proposals,
+//     which stamps the row processed.
 //
 // This is the wiring module for `swipe-callbacks.ts` — `wireSwipeCallbacks()`
 // (called once by SwipeFeedScreen) replaces the no-op contract members with the

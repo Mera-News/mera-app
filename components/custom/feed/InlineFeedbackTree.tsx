@@ -1,9 +1,19 @@
 // InlineFeedbackTree — the Feed-tab feedback tree, rendered inside the card's
-// inline feedback surface (CardFeedbackSurface) once a verdict exists. Unlike the
-// dislike overlay it applies NO persona mutations: every tap simply enriches the stored
-// verdict row's path (onTreePathChanged), and an `openChat` leaf escalates to
-// the Mera chat (onInvokeMera). The tree content + gating come from the shared
-// engine (like OR dislike root depending on the verdict).
+// inline feedback surface (CardFeedbackSurface) once a verdict exists. Every tap
+// enriches the stored verdict row's path (onTreePathChanged); an `openChat` leaf
+// escalates to the Mera chat (onInvokeMera). The tree content + gating come from
+// the shared engine (like OR dislike root depending on the verdict).
+//
+// D16 — a TERMINAL leaf is no longer inert. It resolves the leaf's actions
+// against the local context and applies them immediately through the same
+// `useApplyLeafActions` (applyPersonaActions + Undo toast) the modal
+// FeedbackTreeOverlay uses, then stamps the verdict row processed so the
+// digest can never double-apply the same signal. Until then a verdict is
+// provisional: it is written, shown unfilled, and discarded (see
+// article-feedback-service's D15 header).
+//
+// Nudge / seenOnly leaves stay informational here (path recorded, surface
+// closes) — they carry no persona actions on any surface.
 
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -11,11 +21,12 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useFeedbackTreeEngine } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
+import { applyLeafActions } from '@/components/custom/feedback-tree/apply-leaf-actions';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import { getSuggestionFeedbackContext } from '@/lib/database/services/article-suggestion-service';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import logger from '@/lib/logger';
-import { resolveTopicLabel } from '@/lib/news-harness/feedback-tree';
+import { resolveLeafActions, resolveTopicLabel } from '@/lib/news-harness/feedback-tree';
 import type {
   FeedbackTreeNode,
   LocalFeedbackContext,
@@ -61,12 +72,18 @@ export interface InlineFeedbackTreeProps {
 async function buildLocalContext(suggestion: ForYouSuggestion): Promise<LocalFeedbackContext> {
   const matchedTopics = suggestion.matchedTopics ?? [];
   let category: string | null = null;
+  let clusterSize: number | null = null;
+  let geoText: string | null = null;
   try {
     const fb = await getSuggestionFeedbackContext({
       suggestionId: suggestion._id,
       articleId: suggestion.articleId,
     });
-    if (fb) category = fb.category;
+    if (fb) {
+      category = fb.category;
+      clusterSize = fb.clusterSize ?? null;
+      geoText = fb.geoText ?? null;
+    }
   } catch (err) {
     logger.captureException(err, {
       tags: { component: 'InlineFeedbackTree', method: 'feedbackContext' },
@@ -93,6 +110,11 @@ async function buildLocalContext(suggestion: ForYouSuggestion): Promise<LocalFee
     eventType: suggestion.eventType ?? undefined,
     matchedTopics,
     publicationVisits,
+    // Both were already on the suggestion row and simply never read here, which
+    // gated out `nudge_browse_related` and no-op'd every `from_context_geo`
+    // leaf ("More news from this place") on the feed too — not just on detail.
+    ...(clusterSize != null ? { clusterSize } : {}),
+    ...(geoText ? { geoText } : {}),
   };
 }
 
@@ -151,6 +173,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   // Selected-leaf styling (an actions/nudge/seenOnly leaf the user tapped).
   const [selectedLeafId, setSelectedLeafId] = useState<string | null>(null);
 
+
   // Resume a revisited card's stored path once the tree is loaded.
   useEffect(() => {
     if (!tree || !initialPathIds || initialPathIds.length === 0) return;
@@ -165,8 +188,8 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   // Names the matched topic into the "More about this topic" branch's label
   // (chip AND breadcrumb crumb, since both render via this same callback) so
   // its "A lot more" / "A bit more" leaves aren't asking the user to weight an
-  // unnamed thing. Purely descriptive — this surface applies no persona
-  // mutations (see file header); falls back to the generic tree-supplied
+  // unnamed thing — which matters more now that those leaves really do move
+  // the weight (D16). Falls back to the generic tree-supplied
   // label when there's nothing real to name (defensive: the node is normally
   // gated out via `has_matched_topics` in that case — see evaluateCondition).
   const label = useCallback(
@@ -226,8 +249,21 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       hapticLight();
       setSelectedLeafId(node.id);
       onTreePathChanged(suggestion, verdict, nextIds);
-      // Terminal (non-openChat) leaf — let the overlay settle + auto-advance.
+      // Terminal (non-openChat) leaf — let the host settle + auto-advance.
       onLeafCommitted?.(suggestion, verdict, nextIds);
+
+      // D16 — and APPLY it. `resolveLeafActions` returns [] for nudge /
+      // seenOnly leaves and for any leaf whose placeholders the local context
+      // can't fill, which is also the guard that keeps the DB/persona modules
+      // out of the import graph until there is genuinely something to write.
+      const actions = resolveLeafActions(node.leaf, context);
+      if (actions.length === 0) return;
+      // `applyLeafActions` also stamps the verdict row spent when something
+      // lands, so "applied" and "processed" can't drift apart.
+      void applyLeafActions(actions, label(node), {
+        articleId: suggestion.articleId,
+        sentiment: verdict,
+      });
     },
     [
       pathIds,
@@ -238,6 +274,8 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       onLeafCommitted,
       suggestion,
       verdict,
+      context,
+      label,
     ],
   );
 
@@ -260,6 +298,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     return (
       <Pressable
         key={node.id}
+        testID={`feedback-tree-leaf-${node.id}`}
         accessibilityRole="button"
         accessibilityState={{ selected }}
         accessibilityLabel={label(node)}

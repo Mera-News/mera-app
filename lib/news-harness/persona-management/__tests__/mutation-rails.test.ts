@@ -1,7 +1,6 @@
 import {
   clampWeight,
   nudgeTopicWeight,
-  signalDelta,
   buildWrongLocationActions,
   type WrongLocationInput,
 } from '../mutation-rails';
@@ -61,13 +60,6 @@ describe('nudgeTopicWeight', () => {
     expect(r.appliedDelta).toBeCloseTo(-0.05, 6);
     expect(r.after).toBeCloseTo(0.45, 6);
     expect(r.budgetExceeded).toBe(true);
-  });
-});
-
-describe('signalDelta', () => {
-  it('reads the config signal deltas', () => {
-    expect(signalDelta('show_less')).toBe(R.SHOW_LESS);
-    expect(signalDelta('thumbs_down')).toBe(R.THUMBS_DOWN);
   });
 });
 

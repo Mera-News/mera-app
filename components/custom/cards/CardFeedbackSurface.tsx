@@ -44,6 +44,10 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
 }) => {
   const { t } = useTranslation();
   const heading = verdict === 'like' ? t('swipeFeed.moreLikeThis') : t('swipeFeed.lessLikeThis');
+  // D15 — say plainly what a bare thumb is worth, and stop saying it the
+  // moment the user has answered. The app used to quietly speculate from
+  // context-less taps; it now discards them, and the user is told so.
+  const uncommitted = (initialPathIds?.length ?? 0) === 0;
 
   return (
     <Box
@@ -64,6 +68,14 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
           <MaterialIcons name="close" size={18} color="#B4B4B4" />
         </Pressable>
       </HStack>
+      {uncommitted ? (
+        <Text
+          testID="feedback-caption"
+          style={{ color: '#9A9A9A', fontSize: 11, lineHeight: 15, paddingTop: 2 }}
+        >
+          {t('swipeFeed.feedbackCaption')}
+        </Text>
+      ) : null}
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

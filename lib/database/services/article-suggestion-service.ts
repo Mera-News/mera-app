@@ -861,6 +861,12 @@ export async function getSuggestionFeedbackContext(opts: {
   linkedFacts: { id: string; statement: string }[];
   entities: string[];
   category: string | null;
+  /** Story-cluster size (`max_cluster_size`) — the feedback tree's
+   *  `cluster_size_gte` gate (e.g. "Browse related coverage"). */
+  clusterSize: number | null;
+  /** Most specific place the article is tagged with — the feedback tree's
+   *  `from_context_geo` placeholder ("More news from this place"). */
+  geoText: string | null;
 } | null> {
   let row: ArticleSuggestionModel | null = null;
 
@@ -899,7 +905,45 @@ export async function getSuggestionFeedbackContext(opts: {
     .slice(0, 8);
   const category = row.category ?? null;
 
-  return { suggestion, matchedTopicTexts, linkedFacts, entities, category };
+  // Two more context fields the feedback tree gates/resolves on. Both were
+  // already on the row and simply never read, which left
+  // `nudge_browse_related` (cluster_size_gte) and every `from_context_geo`
+  // leaf dead on EVERY surface, feed included.
+  const clusterSize =
+    typeof row.maxClusterSize === 'number' && Number.isFinite(row.maxClusterSize)
+      ? row.maxClusterSize
+      : null;
+  const geoText = geoTextFromTags(
+    parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(row.geoTagsJson),
+  );
+
+  return {
+    suggestion,
+    matchedTopicTexts,
+    linkedFacts,
+    entities,
+    category,
+    clusterSize,
+    geoText,
+  };
+}
+
+/**
+ * The most specific human place name across an article's geo tags
+ * (city → region → country code), or null when nothing is nameable. One
+ * definition shared by the local-suggestion path and the standalone-article
+ * path (ArticleFeedbackPrompt) so the two can't name the same article's place
+ * differently.
+ */
+export function geoTextFromTags(
+  tags: { city?: string | null; region?: string | null; countryCode?: string | null }[],
+): string | null {
+  for (const tag of tags ?? []) {
+    if (!tag) continue;
+    const name = tag.city?.trim() || tag.region?.trim() || tag.countryCode?.trim();
+    if (name) return name;
+  }
+  return null;
 }
 
 // --- Clear / TTL ---

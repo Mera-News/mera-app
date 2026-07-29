@@ -4,9 +4,12 @@ import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeO
 import { Pressable } from '@/components/ui/pressable';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import {
-  hasLiked,
+  getArticleVerdict,
+  markFeedbackProcessedFor,
   recordArticleFeedback,
   removeArticleFeedback,
+  updateFeedbackContextPath,
+  type VerdictSentiment,
 } from '@/lib/database/services/article-feedback-service';
 import {
   saveSuggestion,
@@ -14,13 +17,12 @@ import {
   deleteSavedSuggestion,
   isSuggestionSaved,
 } from '@/lib/database/services/saved-article-suggestion-service';
-import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
+import { buildOverlayContext } from '@/components/custom/cards/overlay-context';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
-import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -33,8 +35,16 @@ import { Platform } from 'react-native';
 // the row is pixel-identical wherever the two coexist.
 const PRIMARY = '#EDA77E';
 const SELECTED_ICON = '#1a1a1a';
+// D15 — the PROVISIONAL treatment: a verdict is recorded but carries no reason
+// yet, so the button is tinted, not filled. Filled is a promise ("this changed
+// your persona") and a bare tap has not earned it. Same translucent accent the
+// feedback tree uses for a picked chip — no new token.
+const PROVISIONAL_BG = 'rgba(237,167,126,0.18)';
 const ICON_SIZE = 22;
 const BUTTON_SIZE = 48;
+
+/** A thumb's three states: untouched → tapped-but-context-less → committed. */
+type VerdictState = 'none' | 'provisional' | 'committed';
 
 interface ArticleActionsRowProps {
   /** Origin-aware descriptor of what's being acted on + where. */
@@ -54,7 +64,10 @@ interface ArticleActionsRowProps {
  * action is driven by a {@link FeedbackSubject} so it works for both
  * personalized suggestions and standalone articles:
  *   - Like/Dislike → `recordArticleFeedback` carrying origin + surface + a JSON
- *     context snapshot. Dislike also opens the server-owned feedback tree.
+ *     context snapshot, then opens the server-owned feedback tree for THAT
+ *     verdict (D17 — a thumbs-up used to open nothing, so the like tree's
+ *     boost/weight leaves had never run). The thumb stays tinted-not-filled
+ *     until a leaf is picked: filled means "this changed your persona" (D15).
  *   - Save → suggestions persist via `saveSuggestion`; standalone articles via
  *     `saveStandaloneArticle`. State restored on mount via `isSuggestionSaved`.
  *   - Share → native share sheet (unchanged).
@@ -66,9 +79,12 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
   share,
 }) => {
   const { t } = useTranslation();
-  const [liked, setLiked] = useState(false);
+  const [likeState, setLikeState] = useState<VerdictState>('none');
+  const liked = likeState !== 'none';
   const [savedFromDb, setSavedFromDb] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
+  // Which tree the overlay is showing — D17 gave the thumbs-UP one too.
+  const [overlayRoot, setOverlayRoot] = useState<VerdictSentiment>('dislike');
   const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({
     articleTitle: subject.title,
   });
@@ -82,16 +98,20 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
   const savedOverride = useSavedOverride(savedId);
   const saved = savedOverride ?? savedFromDb;
 
-  // Restore "liked" across remounts.
+  // Restore "liked" AND whether that like ever got a reason attached, so the
+  // fill state survives a remount instead of silently downgrading.
   useEffect(() => {
     let cancelled = false;
-    hasLiked(subject.articleId)
-      .then((v) => {
-        if (!cancelled && v) setLiked(true);
-      })
-      .catch(() => {
-        /* non-fatal */
-      });
+    // Wrapped in an async IIFE (not `.then().catch()`) so the whole restore —
+    // lookup included — is non-fatal: this is decoration, never a reason to
+    // take the actions row down.
+    void (async () => {
+      const { verdict, path } = await getArticleVerdict(subject.articleId);
+      if (cancelled || verdict !== 'like') return;
+      setLikeState(path.length > 0 ? 'committed' : 'provisional');
+    })().catch(() => {
+      /* non-fatal */
+    });
     return () => {
       cancelled = true;
     };
@@ -112,67 +132,63 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     };
   }, [savedId]);
 
+  // Records the verdict row and opens the matching tree. Shared by both thumbs:
+  // a thumbs-UP used to open nothing at all, so the like tree's boost/weight
+  // leaves could never run (D17). Presentation is the same overlay; only the
+  // root differs.
+  const recordAndOpenTree = useCallback(
+    (sentiment: VerdictSentiment) => {
+      void recordArticleFeedback({
+        articleId: subject.articleId,
+        suggestionId: subject.suggestionId,
+        sentiment,
+        title: subject.title,
+        origin: subject.origin,
+        surface: subject.surface,
+        contextJson: buildContextJson(subject),
+      });
+      void (async () => {
+        const ctx = await buildOverlayContext(subject);
+        setOverlayCtx(ctx);
+        setOverlayRoot(sentiment);
+        setOverlayOpen(true);
+      })();
+    },
+    [subject],
+  );
+
   const handleLike = useCallback(() => {
     if (liked) {
       hapticLight();
-      setLiked(false);
+      setLikeState('none');
       void removeArticleFeedback(subject.articleId, 'like');
       return;
     }
     hapticSuccess();
-    setLiked(true);
-    void recordArticleFeedback({
-      articleId: subject.articleId,
-      suggestionId: subject.suggestionId,
-      sentiment: 'like',
-      title: subject.title,
-      origin: subject.origin,
-      surface: subject.surface,
-      contextJson: buildContextJson(subject),
-    });
-  }, [liked, subject]);
+    setLikeState('provisional');
+    recordAndOpenTree('like');
+  }, [liked, subject.articleId, recordAndOpenTree]);
 
-  // Dislike records a 'dislike' feedback row (origin/surface) AND opens the
-  // branching feedback-tree overlay (snapshotting the local context with the
-  // live publication-visit count folded in).
   const handleDislike = useCallback(() => {
     hapticMedium();
-    void recordArticleFeedback({
-      articleId: subject.articleId,
-      suggestionId: subject.suggestionId,
-      sentiment: 'dislike',
-      title: subject.title,
-      origin: subject.origin,
-      surface: subject.surface,
-      contextJson: buildContextJson(subject),
-    });
-    void (async () => {
-      let publicationVisits = 0;
-      const pub = subject.publicationName?.trim();
-      if (pub) {
-        try {
-          publicationVisits = await getVisitCountForPublication(
-            pub,
-            subject.countryCode ?? null,
-          );
-        } catch (err) {
-          logger.captureException(err, {
-            tags: { component: 'ArticleActionsRow', method: 'visitCount' },
-          });
-        }
-      }
-      setOverlayCtx({
-        publicationName: subject.publicationName,
-        countryCode: subject.countryCode,
-        // Empty for standalone articles — the overlay simply gates out the
-        // topic-dependent nodes (evaluateCondition / resolveLeafActions tolerate it).
-        matchedTopics: subject.matchedTopics ?? [],
-        articleTitle: subject.title,
-        publicationVisits,
-      });
-      setOverlayOpen(true);
-    })();
-  }, [subject]);
+    recordAndOpenTree('dislike');
+  }, [recordAndOpenTree]);
+
+  // A terminal leaf settled — persist the tapped path onto the verdict row
+  // (that is what promotes the thumb from provisional to committed), and stamp
+  // the row processed when the leaf actually applied something, so the 3-hourly
+  // digest can't apply a second helping of the same signal.
+  const handleLeafPicked = useCallback(
+    (pathIds: string[], appliedCount: number) => {
+      const sentiment = overlayRoot;
+      if (sentiment === 'like') setLikeState('committed');
+      void (async () => {
+        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds);
+        if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
+      })();
+    },
+    [overlayRoot, subject.articleId],
+  );
 
   const closeOverlay = useCallback(() => setOverlayOpen(false), []);
 
@@ -211,17 +227,19 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     onPress: () => void,
     selected: boolean,
     testID: string,
+    provisional = false,
   ) => (
     <Pressable
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityState={{ selected }}
       accessibilityLabel={label}
       className="items-center justify-center rounded-full"
       style={{
         width: BUTTON_SIZE,
         height: BUTTON_SIZE,
-        backgroundColor: selected ? PRIMARY : 'transparent',
+        backgroundColor: selected ? PRIMARY : provisional ? PROVISIONAL_BG : 'transparent',
         borderWidth: 1.75,
         borderColor: PRIMARY,
       }}
@@ -258,12 +276,13 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           <MaterialIcons
             name="thumb-up"
             size={ICON_SIZE}
-            color={liked ? SELECTED_ICON : PRIMARY}
+            color={likeState === 'committed' ? SELECTED_ICON : PRIMARY}
           />,
           t('articleFeedback.likeLabel'),
           handleLike,
-          liked,
+          likeState === 'committed',
           'card-action-like',
+          likeState === 'provisional',
         )}
         {renderButton(
           <MaterialIcons name="thumb-down" size={ICON_SIZE} color={PRIMARY} />,
@@ -310,6 +329,8 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
       <FeedbackTreeOverlay
         visible={overlayOpen}
         onClose={closeOverlay}
+        root={overlayRoot}
+        onLeafPicked={handleLeafPicked}
         context={overlayCtx}
         chatContext={{
           kind: 'article-suggestion',
@@ -317,7 +338,12 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           suggestionId: subject.suggestionId,
           articleTitle: subject.title,
         }}
-        chatMessage={t('articleFeedback.thumbsDownMessage', { title: subject.title })}
+        chatMessage={t(
+          overlayRoot === 'like'
+            ? 'articleFeedback.thumbsUpMessage'
+            : 'articleFeedback.thumbsDownMessage',
+          { title: subject.title },
+        )}
       />
     </>
   );

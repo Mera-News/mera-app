@@ -253,6 +253,15 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const actionBar = onVerdict ? (
     <CardActionBar
       verdict={verdict}
+      // D15 — a verdict with no tapped tree path has no reason attached, so it
+      // is provisional: shown hollow, and discarded rather than speculated on.
+      // The stored path IS the commit discriminator (see
+      // article-feedback-service), so no extra state is needed here.
+      //
+      // Gated on `feedbackHandlers`: a host that doesn't wire the feedback
+      // surface can never SHOW the tree, so its user has no way to commit —
+      // a permanently hollow thumb there would be a dead end, not a prompt.
+      provisional={!!feedbackHandlers && (feedbackInitialPath?.length ?? 0) === 0}
       saved={saved}
       onLike={() => onVerdict(suggestion, 'like')}
       onDislike={() => onVerdict(suggestion, 'dislike')}
