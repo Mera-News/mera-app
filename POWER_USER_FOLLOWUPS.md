@@ -198,3 +198,31 @@ a future server-authored tree ship dead filters that nothing in the app could de
 keeps working. (Note the asymmetry with PU-10: the tree and the digest CAN mint `event_type`
 because they read the article's own snapshotted field, while the article chat still cannot, because
 its `SuggestionFeedbackContext` has no `eventType` to corroborate the model against.)
+
+### PU-15 · The Not-interested screen shows "Shown less", never a number
+**Simplified:** on the Not-interested screen a filter reads *Blocked* or *Shown less*, and a
+negative topic reads *Shown less* or *Blocked* — nothing renders the underlying `strength` (0.5 /
+0.8) or the topic `weight` (-0.6, -1.0). The plan called for a weight badge on the topic rows; it
+became the same two-state badge the filter rows use.
+**Why:** the north star is a reader who glances at this screen to undo something she told Mera in
+chat. "-0.6" is internal vocabulary — it is only meaningful next to the scoring config, and putting
+it on the row invites the question "what would -0.7 do?", which the screen cannot answer. The
+two-state badge carries the only distinction that changes what she sees: excluded outright, or just
+demoted.
+**Power user loses:** the ability to see *how* negative a topic is, and therefore to notice that two
+rows reading the same are actually a mild and a severe demotion.
+**Cheapest way back:** the badge is one component; render the rounded percentage beside it behind a
+single "show details" affordance, or add it to the tap-to-reveal detail block, which already exists
+on both row types and is where every other piece of machinery went.
+
+### PU-16 · One row open at a time, and one blended count on the hub
+**Simplified:** expanding a filter row collapses whatever was open, and the Advanced-hub row reads
+"N things you've hidden" — one number summing filters, negative topics and muted sources.
+**Why:** a single open row keeps `not-interested-row-detail` unambiguous for the harness and keeps
+the page short enough to take in at a glance; a single total is what someone asking "have I hidden
+too much?" actually wants, and the three per-section counts are one tap away.
+**Power user loses:** comparing two filters' provenance side by side, and seeing at the hub which
+*kind* of thing has been accumulating.
+**Cheapest way back:** hold a `Set` of open row ids instead of a single id (the state is already
+per-id), and make the hub subtitle a "2 filters · 3 sources" join. Both are contained; neither was
+needed to ship.
