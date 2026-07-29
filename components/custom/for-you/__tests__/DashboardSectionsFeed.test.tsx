@@ -83,11 +83,23 @@ jest.mock('@/components/custom/for-you/FactSectionHeader', () => {
     const { Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ title, total, onPress }: any) => (
+        default: ({ title, total, onPress, prefix, translateTitle }: any) => (
             <Pressable accessibilityLabel={`header:${title}`} onPress={onPress}>
                 <Text>{`total:${total}`}</Text>
+                <Text>
+                    {`prefix:${prefix === null ? 'none' : 'default'}/translate:${translateTitle !== false}`}
+                </Text>
             </Pressable>
         ),
+    };
+});
+// Headline sections' one-line denominator (P5). Mocked like every other section
+// piece — it pulls in the gluestack Text, whose ESM deps jest does not transform.
+jest.mock('@/components/custom/for-you/SectionDenominatorLine', () => {
+    const { Text } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ read, shown }: any) => <Text>{`denom:${read}/${shown}`}</Text>,
     };
 });
 jest.mock('@/components/custom/for-you/SectionViewAllText', () => {
@@ -260,5 +272,89 @@ describe('DashboardSectionsFeed', () => {
             'card:unviewed-low',
             'card:viewed-high',
         ]);
+    });
+});
+
+// ── Headline sections (P5) ──────────────────────────────────────────────────
+// Top-headline rows already reached the device and already rendered on the Feed
+// tab; the Dashboard dropped them. They now get a section per scope, whose ONE
+// line of text states how many headlines Mera read versus how many were worth
+// the reader's time — and which, uniquely, still renders when that second
+// number is zero.
+
+function makeHeadlineRow(
+    factId: string,
+    kind: 'headline-country' | 'headline-global',
+    read: number,
+    groups: FactRowGroup[],
+    countryCode: string | null = null,
+): FactRow {
+    return {
+        factId,
+        kind,
+        countryCode,
+        headlineReadCount: read,
+        statement: '',
+        factStatement: null,
+        latestAddedMs: 0,
+        unreadCount: 0,
+        groups,
+    };
+}
+
+describe('DashboardSectionsFeed — headline sections', () => {
+    beforeEach(() => {
+        mockRouterPush.mockClear();
+    });
+
+    it('renders the denominator line with read vs shown', () => {
+        const { getByText } = renderFeed([
+            makeHeadlineRow('headline-country-in', 'headline-country', 20, [
+                makeGroup('g1', 3000, 3000),
+                makeGroup('g2', 2000, 2000),
+                makeGroup('g3', 1000, 1000),
+            ], 'IN'),
+        ]);
+        expect(getByText('denom:20/3')).toBeTruthy();
+    });
+
+    it('still renders title + line, and NO cards or view-all, when nothing cleared the bar', () => {
+        const { getByText, queryAllByText, queryByLabelText, getByLabelText } = renderFeed([
+            makeHeadlineRow('headline-global', 'headline-global', 20, []),
+        ]);
+        expect(getByLabelText('header:forYou.headlineSectionGlobal')).toBeTruthy();
+        expect(getByText('denom:20/0')).toBeTruthy();
+        expect(queryAllByText(/^card:/)).toHaveLength(0);
+        // No "View all" pointing at an empty list — the line IS the content.
+        expect(queryByLabelText('viewall')).toBeNull();
+    });
+
+    it('drops the "News about:" prefix and does not re-translate the title', () => {
+        const { getByText } = renderFeed([
+            makeHeadlineRow('headline-global', 'headline-global', 5, [makeGroup('g1', 1, 1)]),
+        ]);
+        expect(getByText('prefix:none/translate:false')).toBeTruthy();
+    });
+
+    it('keeps the fact-section chrome untouched', () => {
+        const { getByText, queryByText } = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
+        expect(getByText('prefix:default/translate:true')).toBeTruthy();
+        expect(queryByText(/^denom:/)).toBeNull();
+    });
+
+    it('opens the section feed with the LOCALIZED title, not the empty statement', () => {
+        const { getByLabelText } = renderFeed([
+            makeHeadlineRow('headline-country-in', 'headline-country', 8, [
+                makeGroup('g1', 1, 1),
+            ], 'IN'),
+        ]);
+        fireEvent.press(getByLabelText('viewall'));
+        expect(mockRouterPush).toHaveBeenCalledWith({
+            pathname: '/logged-in/fact-feed',
+            params: {
+                factId: 'headline-country-in',
+                statement: 'forYou.headlineSectionCountry',
+            },
+        });
     });
 });

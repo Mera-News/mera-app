@@ -2,6 +2,8 @@ import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
+import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominatorLine';
+import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -9,6 +11,7 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
+  isHeadlineRow,
   isSuggestionOpened,
   type BreakingCardData,
   type FactRow,
@@ -17,6 +20,7 @@ import {
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, {
   runOnJS,
@@ -48,6 +52,13 @@ interface SectionItem {
   preview: FactRowGroup[];
   /** TOTAL articles in the section (header pill + closing row). */
   total: number;
+  /** Resolved display title — the fact statement, or the localized headline
+   *  scope title. Computed once here so the header, the "View all" route param
+   *  and the destination screen all show the same string. */
+  title: string;
+  /** True for the two headline section kinds: adds the denominator line and
+   *  drops the "News about:" prefix / dynamic translation of the title. */
+  headline: boolean;
 }
 
 interface DashboardSectionsFeedProps {
@@ -95,6 +106,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   onRefresh,
 }) => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   // Section content order: the SAME rule the Feed tab uses
   // (lib/feed-ordering/priority-order) — unviewed high→med→low, then viewed
   // high→med→low — so a story cannot be ranked differently on the two screens.
@@ -124,17 +136,19 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         row,
         preview: ordered.slice(0, SECTION_PREVIEW_COUNT),
         total: row.groups.length,
+        title: sectionTitle(t, row),
+        headline: isHeadlineRow(row),
       });
     }
     return data;
-  }, [rows, sortSnapshot]);
+  }, [rows, sortSnapshot, t]);
 
-  const openFactFeed = useCallback((row: FactRow) => {
+  const openFactFeed = useCallback((row: FactRow, title: string) => {
     router.push({
       pathname: '/logged-in/fact-feed',
       params: {
         factId: row.factId,
-        statement: row.statement,
+        statement: title,
       },
     });
   }, []);
@@ -150,8 +164,12 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 
   const renderItem = useCallback(
     ({ item }: { item: SectionItem }) => {
-      const { row, preview, total } = item;
-      const open = () => openFactFeed(row);
+      const { row, preview, total, title, headline } = item;
+      const open = () => openFactFeed(row, title);
+      // The ONLY zero-card section is a headline section where nothing cleared
+      // the bar; its denominator line is the content, so it gets no header
+      // affordance and no "View all" row pointing at an empty list.
+      const canOpen = total > 0;
       return (
         // ONE gradient panel per section, wrapping header + cards + closing
         // pill, so the pastel ink groups the whole section and the next section
@@ -160,11 +178,18 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // already expected it.
         <SectionGradientPanel factId={row.factId} style={{ marginTop: 16, marginBottom: 8 }}>
           <FactSectionHeader
-            title={row.statement}
+            title={title}
             eventType={row.groups[0]?.data.eventType ?? null}
             total={total}
-            onPress={open}
+            onPress={canOpen ? open : undefined}
+            // A headline section is not "News about:" anything, and its title is
+            // app copy that is already in the reader's language.
+            prefix={headline ? null : undefined}
+            translateTitle={!headline}
           />
+          {headline && (
+            <SectionDenominatorLine read={row.headlineReadCount ?? 0} shown={total} />
+          )}
           <Box className="px-2">
             {preview.map((group) => (
               <ArticleSuggestionCompactCard
@@ -178,7 +203,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
           </Box>
           {/* Closing row: plain "View all N articles" + chevron in the section
               title's type style — NOT a second pill. */}
-          <SectionViewAllText total={total} onPress={open} />
+          {canOpen && <SectionViewAllText total={total} onPress={open} />}
         </SectionGradientPanel>
       );
     },

@@ -82,6 +82,13 @@ export type ForYouSuggestion = {
     eventType: string | null;
     /** null = topic-retrieved; else the top-headline injection scope. */
     headlineScope: 'CITY' | 'COUNTRY' | 'GLOBAL' | null;
+    /** ISO alpha-2 country of the scope that injected this row — only ever set
+     *  alongside `headlineScope === 'COUNTRY'` (a country on a GLOBAL row would
+     *  be incoherent). Persisted as `article_suggestions.headline_country_code`
+     *  (schema v48). Optional: rows persisted before v48, and every non-headline
+     *  row, carry none. The Dashboard's per-country headline sections key on it;
+     *  a COUNTRY row with no country belongs to NO country section. */
+    headlineCountryCode?: string | null;
     /** Inverted per-topic matchMeta — resolves the owning fact/section. */
     matchedTopics: MatchedTopicRef[];
     // ── Round-3 (schema v41) fact-rows fields ──────────────────────────────

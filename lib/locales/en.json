@@ -275,6 +275,12 @@
     "showMore": "Show {{count}} more",
     "viewAllArticles_one": "View all {{count}} article",
     "viewAllArticles_other": "View all {{count}} articles",
+    "headlineSectionGlobal": "Around the world",
+    "headlineSectionCountry": "Top headlines from {{country}}",
+    "headlineDenominator_one": "Mera read {{count}} headline · {{shown}} worth your time.",
+    "headlineDenominator_other": "Mera read {{count}} headlines · {{shown}} worth your time.",
+    "headlineDenominatorNone_one": "Mera read {{count}} headline · none looked relevant today.",
+    "headlineDenominatorNone_other": "Mera read {{count}} headlines · none looked relevant today.",
     "subTabFeed": "Overview",
     "subTabStories": "Stories",
     "subTabSaved": "Saved"

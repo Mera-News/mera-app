@@ -15,6 +15,17 @@
 // is no "Also for you" catch-all) → order cards newest-first within a row and
 // rows by their newest "added" time.
 //
+// HEADLINE SECTIONS (P5): top-headline rows carry a persisted `headline_scope`
+// and SYNTHETIC matched topics (`topicId: null`), so ownership can never resolve
+// an owner for them and a single `if (!factId) continue` silently dropped every
+// one of them from the Dashboard — while the Feed tab rendered them all along.
+// They now fall through to a section per scope (one per COUNTRY code, one
+// GLOBAL) that sits ALONGSIDE the fact sections and clears the SAME relevance
+// bar. Each carries a `headlineReadCount` denominator so the section can state,
+// in one line, how many headlines Mera read for the scope versus how many it
+// judged worth the reader's time — including the case where that is zero, which
+// is the one section that renders with no cards.
+//
 // Section membership additionally requires the fact link to be RELEVANCE-BACKED
 // (`isSectionMemberEligible` + `isFactSectionViable`, feed-select/ownership).
 // Ownership alone answers "which fact did this story MATCH?" from topic weights
@@ -36,6 +47,10 @@ import {
   isSectionMemberEligible,
   isFactSectionViable,
   resolveOwningFactLenient,
+  countryHeadlineSectionId,
+  headlineSectionWeight,
+  isHeadlineSectionId,
+  GLOBAL_HEADLINE_SECTION_ID,
   type FeedBucket,
   type ScoredSuggestionProjection,
   type TopicSnapshot,
@@ -112,11 +127,60 @@ export interface FactRowGroup {
   highPriority: boolean;
 }
 
+/**
+ * What a Dashboard section IS.
+ *  - `fact`             — a persona fact's own section ("News about: X").
+ *  - `headline-country` — top headlines for one country scope.
+ *  - `headline-global`  — top headlines for the GLOBAL scope.
+ *
+ * `FactRow.kind` is OPTIONAL and absent ⇒ `'fact'`: every section was a fact
+ * section before headline sections existed, so callers (and fixtures) that build
+ * `FactRow` literals without it keep compiling and keep meaning what they meant.
+ * Read it through {@link sectionKindOf}, never directly.
+ */
+export type SectionKind = 'fact' | 'headline-country' | 'headline-global';
+
+/** The section's kind, defaulting an absent `kind` to `'fact'`. */
+export function sectionKindOf(row: Pick<FactRow, 'kind'>): SectionKind {
+  return row.kind ?? 'fact';
+}
+
+/** True for the two headline section kinds. */
+export function isHeadlineRow(row: Pick<FactRow, 'kind'>): boolean {
+  return sectionKindOf(row) !== 'fact';
+}
+
+export { isHeadlineSectionId };
+
 /** One fact row: a fact's stories laid out as a horizontal strip. */
 export interface FactRow {
-  /** The owning fact's id. */
+  /** The section id. For a fact section this is the owning fact's id; for a
+   *  headline section it is the synthetic scope id minted by
+   *  `countryHeadlineSectionId` / `GLOBAL_HEADLINE_SECTION_ID`. Named `factId`
+   *  (not `sectionId`) because it IS the fact id in the overwhelmingly common
+   *  case and renaming it would churn every consumer for no behaviour. */
   factId: string;
-  /** Display title (the fact's section title). */
+  /** See {@link SectionKind}. Absent ⇒ `'fact'`. */
+  kind?: SectionKind;
+  /** ISO alpha-2 country of a `headline-country` section; null/absent on every
+   *  other kind. The UI turns it into the display country name. */
+  countryCode?: string | null;
+  /** HEADLINE SECTIONS ONLY — how many headline suggestions for this scope are
+   *  in the local publication window, whether or not they cleared the relevance
+   *  bar. The denominator of the section's one-line
+   *  "Mera read N · M worth your time". Counted over RAW suggestions (what the
+   *  server actually sent for the scope), while `groups.length` is the numerator
+   *  (what actually renders) — deliberately different units, because the
+   *  sentence's claim is "of everything Mera read, this much was worth it". */
+  headlineReadCount?: number;
+  /** Section-ordering pseudo-weight, one axis shared by both kinds: a fact
+   *  section uses the fact's own `weight` (null ⇒ 1.0), a headline section uses
+   *  {@link headlineSectionWeight}. Absent ⇒ 1.0. */
+  weight?: number;
+  /** Display title (the fact's section title). EMPTY for headline sections: a
+   *  headline section's title is a LOCALIZED string, not user data, so it is
+   *  derived in the UI layer from `kind` + `countryCode` instead of being baked
+   *  into this RN-free selector. */
   statement: string;
   /** The underlying real fact statement (header reveal). */
   factStatement: string | null;
@@ -195,7 +259,10 @@ export function isBreaking(s: ForYouSuggestion): boolean {
   return raw >= 0.8 && s.eventType != null && BREAKING_EVENT_TYPES.has(s.eventType);
 }
 
-/** Minimal ownership projection from a store row (only matchedTopics is read). */
+/** Minimal ownership projection from a store row. `matchedTopics` is what
+ *  `resolveOwningFactLenient` reads; the headline scope/country ride along so the
+ *  headline-section routing below reads ONE projection rather than reaching back
+ *  into the store row shape. */
 function ownershipProjection(s: ForYouSuggestion): ScoredSuggestionProjection {
   return {
     id: s._id,
@@ -203,8 +270,50 @@ function ownershipProjection(s: ForYouSuggestion): ScoredSuggestionProjection {
     relevance: s.relevance,
     pubDateMs: parseMs(s.firstPubDate),
     clusterMemberships: [],
+    headlineScope: s.headlineScope ?? null,
+    headlineCountryCode: normalizeCountryCode(s.headlineCountryCode),
     matchedTopics: (s.matchedTopics ?? []).map((m) => ({ topicId: m.topicId, text: m.text })),
   };
+}
+
+/** Uppercase, trimmed ISO alpha-2, or null for absent/blank. Both sides of the
+ *  country key (`locations.country_code` via `buildRetrievalProfile`, and the
+ *  persisted `headline_country_code`) are already normalized this way; doing it
+ *  again here means a legacy or hand-built row can never split one country into
+ *  two sections. */
+function normalizeCountryCode(code: string | null | undefined): string | null {
+  const c = (code ?? '').trim().toUpperCase();
+  return c.length > 0 ? c : null;
+}
+
+/**
+ * The headline section a row belongs to, or null when it has none:
+ *  - not a headline row at all, or
+ *  - `CITY` scope (never requested as its own retrieval scope — see
+ *    `HeadlineSectionScope`), or
+ *  - `COUNTRY` scope with no country code. Dropping these is deliberate: the
+ *    brief's rule is that a null-country COUNTRY row belongs to no country
+ *    section rather than to an invented "unknown country" bucket.
+ */
+function headlineSectionIdOf(rep: ScoredSuggestionProjection): string | null {
+  if (rep.headlineScope === 'GLOBAL') return GLOBAL_HEADLINE_SECTION_ID;
+  if (rep.headlineScope !== 'COUNTRY') return null;
+  const cc = normalizeCountryCode(rep.headlineCountryCode);
+  return cc ? countryHeadlineSectionId(cc) : null;
+}
+
+/** Strongest weight among the user's locations in `countryCode`, or null when
+ *  the persona has none there (the scope can outlive a deleted location). */
+function countryLocationWeight(
+  locations: Map<string, LocationSnapshot>,
+  countryCode: string,
+): number | null {
+  let best: number | null = null;
+  for (const loc of locations.values()) {
+    if (normalizeCountryCode(loc.countryCode) !== countryCode) continue;
+    if (best == null || loc.weight > best) best = loc.weight;
+  }
+  return best;
 }
 
 interface GroupItem extends GroupableItem {
@@ -300,6 +409,26 @@ export function buildFactRows(
   const hpMult = config.scoringEngine.HP_MULT;
   const repCompareForGroups = makeRepCompare(userCtx);
 
+  // 0. Headline DENOMINATORS — "how many headlines did Mera read for this
+  //    scope". Counted over the RAW pool inside the publication window, with no
+  //    visibility/relevance gate: the sentence's whole point is to account for
+  //    the headlines that did NOT make the cut, so gating it on the same bar it
+  //    reports against would make it always read "N read · N worth your time".
+  //    Presence of a scope here is also what makes its section EXIST — a scope
+  //    with zero headlines in the window gets no section at all (there is
+  //    nothing to account for), while a scope with headlines gets its section
+  //    even if none of them clear the bar.
+  const headlineReadCounts = new Map<string, number>();
+  const headlineCountries = new Map<string, string>(); // sectionId → alpha-2
+  for (const s of suggestions) {
+    if (!isWithinWindow(s, cutoffMs)) continue;
+    const sectionId = headlineSectionIdOf(ownershipProjection(s));
+    if (!sectionId) continue;
+    headlineReadCounts.set(sectionId, (headlineReadCounts.get(sectionId) ?? 0) + 1);
+    const cc = normalizeCountryCode(s.headlineCountryCode);
+    if (cc) headlineCountries.set(sectionId, cc);
+  }
+
   // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS).
   const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
   if (visible.length === 0) return { breaking: [], rows: [] };
@@ -372,26 +501,72 @@ export function buildFactRows(
   //    separate "Also for you" catch-all. A group with no fact to belong to —
   //    a negative (suppressed) match, or a factless one (tracked/exploration/
   //    deleted-fact topics) — resolves to null and is dropped from the Dashboard.
+  //    A TOP-HEADLINE row has synthetic matched topics (`topicId: null`), so it
+  //    can never resolve an owning fact and used to be dropped here — it reached
+  //    the device, was scored, and rendered on the Feed tab, but the Dashboard
+  //    threw it away. It now falls through to its SCOPE section instead. Fact
+  //    ownership still wins when both apply: a headline that also matched a real
+  //    persona topic is about that fact, and showing it in both places would
+  //    duplicate the card.
   const factRows = new Map<string, FactRow>();
+
+  // Headline section SHELLS, created up-front from the denominators (step 0) so
+  // a scope with headlines but no qualifying member still renders its title +
+  // its "none looked relevant today" line.
+  const headlineRows = new Map<string, FactRow>();
+  for (const [sectionId, readCount] of headlineReadCounts) {
+    const countryCode = headlineCountries.get(sectionId) ?? null;
+    const isGlobal = sectionId === GLOBAL_HEADLINE_SECTION_ID;
+    headlineRows.set(sectionId, {
+      factId: sectionId,
+      kind: isGlobal ? 'headline-global' : 'headline-country',
+      countryCode,
+      headlineReadCount: readCount,
+      weight: isGlobal
+        ? headlineSectionWeight('GLOBAL', null, config)
+        : headlineSectionWeight(
+            'COUNTRY',
+            countryCode ? countryLocationWeight(snapshots.locations, countryCode) : null,
+            config,
+          ),
+      // Localized in the UI layer from `kind` + `countryCode` — see FactRow.
+      statement: '',
+      factStatement: null,
+      latestAddedMs: 0,
+      unreadCount: 0,
+      groups: [],
+    });
+  }
 
   for (const { rep, group } of assignable) {
     // RULE 1 (see feed-select/ownership): the pipeline already discarded this
     // row — its relevance never cleared `discardFloor` — so its fact match is
     // not relevance-backed and it must not claim a section. `RENDER_GATE` (0.3)
     // is looser than `discardFloor` (0.4), which is how these rows got here.
+    // Applied to headline sections IDENTICALLY, per the brief: the bar is the
+    // existing one, not a new one.
     if (!isSectionMemberEligible(group.bucket)) continue;
+    const projection = ownershipProjection(rep);
     const factId = resolveOwningFactLenient(
-      ownershipProjection(rep),
+      projection,
       snapshots.topics,
       snapshots.facts,
       hpMult,
     );
-    if (!factId) continue; // negative or factless → not shown on the Dashboard
+    if (!factId) {
+      // No fact owns it. A top-headline row still has a home — its scope's
+      // section. Anything else (negative/suppressed or factless) stays dropped.
+      const sectionId = headlineSectionIdOf(projection);
+      if (sectionId) headlineRows.get(sectionId)?.groups.push(group);
+      continue;
+    }
     let row = factRows.get(factId);
     if (!row) {
       const fact = snapshots.facts.get(factId);
       row = {
         factId,
+        kind: 'fact',
+        weight: fact?.weight ?? 1,
         statement: fact?.statement?.trim() || factId,
         factStatement: snapshots.factStatements.get(factId) ?? null,
         latestAddedMs: 0,
@@ -420,10 +595,33 @@ export function buildFactRows(
     rows.push(row);
   }
 
-  // Section order (Dashboard live resort): unread count desc (a fully-read
-  // section sinks below any section with at least one unread story), then by
-  // group count desc, ties broken by factId asc for determinism.
+  // 5b. Finalize the headline sections. RULE 2 is applied with the SAME test,
+  //     but its consequence is deliberately asymmetric: a non-viable fact
+  //     section disappears (there is nothing to say about a fact with no
+  //     coverage), whereas a non-viable headline section keeps its SHELL and
+  //     empties its cards. That zero-card section is not a bug to fix later —
+  //     it is the feature: its one-line denominator ("Mera read 20 · none looked
+  //     relevant today") is the only place the reader learns that Mera read the
+  //     scope at all and judged none of it worth their time. Deleting the
+  //     section would silently withhold exactly that.
+  for (const row of headlineRows.values()) {
+    if (!isFactSectionViable(row.groups.map((g) => g.bucket))) row.groups = [];
+    row.groups.sort(cardCompare);
+    row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
+    row.unreadCount = row.groups.filter(isGroupUnread).length;
+    rows.push(row);
+  }
+
+  // Section order (Dashboard live resort): section WEIGHT desc first — the one
+  // axis on which synthetic headline sections are comparable with real fact
+  // sections (a default-weight fact is 1.0, a full-weight home country 0.55,
+  // GLOBAL 0.35; see `headlineSectionWeight`) — then unread count desc (a
+  // fully-read section sinks below any section with at least one unread story),
+  // then by group count desc, ties broken by factId asc for determinism.
   rows.sort((a, b) => {
+    const wa = a.weight ?? 1;
+    const wb = b.weight ?? 1;
+    if (wa !== wb) return wb - wa;
     if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
     if (a.groups.length !== b.groups.length) return b.groups.length - a.groups.length;
     return a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0;

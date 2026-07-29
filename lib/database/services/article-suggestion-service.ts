@@ -1095,6 +1095,12 @@ function toForYouSuggestion(
       row.headlineScope === 'GLOBAL'
         ? row.headlineScope
         : null,
+    // Same guard as buildStageCandidateInput above: only carried when the label
+    // agrees, since a stale country on a GLOBAL row is worse than none. Without
+    // this line every COUNTRY row reaches the Dashboard with a null country, so
+    // the per-country headline sections silently never render.
+    headlineCountryCode:
+      row.headlineScope === 'COUNTRY' ? row.headlineCountryCode ?? null : null,
     matchedTopics: parseMatchedTopicRefs(row.matchedTopicsJson),
     // Round-3 fact-rows fields.
     factIds,

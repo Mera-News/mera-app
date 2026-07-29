@@ -13,6 +13,7 @@ import logger from '@/lib/logger';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
   buildFactRows,
+  isHeadlineSectionId,
   isSuggestionOpened,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
@@ -35,9 +36,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const SCROLL_THRESHOLD = 300;
 
 interface FactFeedScreenProps {
+  /** The SECTION id — a fact id, or a synthetic headline-scope id (see
+   *  `isHeadlineSectionId`). Both address a row in `buildFactRows`. */
   factId: string;
-  /** Fact display title, passed through from the row header (avoids a reload
-   *  flash before the snapshots hydrate). */
+  /** Section display title, passed through from the row header (avoids a reload
+   *  flash before the snapshots hydrate). For a fact section this is the fact
+   *  statement (user data); for a headline section it is already-localized app
+   *  copy. */
   statement: string;
 }
 
@@ -54,6 +59,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
   const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
+  const isHeadline = isHeadlineSectionId(factId);
 
   // Last-visit timestamp captured on entry (before we mark this visit) — drives
   // the per-card NEW badge. `null` until hydrated; `0` on a first-ever visit
@@ -200,15 +206,26 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
             <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
           </Pressable>
           <Box className="flex-1 min-w-0">
-            <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
-            <TranslatableDynamic
-              text={statement}
-              as="heading"
-              size="lg"
-              bold
-              numberOfLines={1}
-              className="text-white"
-            />
+            {/* A headline section is not "News about:" anything, and its title
+                is app copy already in the reader's language — running it through
+                TranslatableDynamic would machine-translate a localized string. */}
+            {!isHeadline && (
+              <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
+            )}
+            {isHeadline ? (
+              <Text size="lg" bold numberOfLines={1} className="text-white">
+                {statement}
+              </Text>
+            ) : (
+              <TranslatableDynamic
+                text={statement}
+                as="heading"
+                size="lg"
+                bold
+                numberOfLines={1}
+                className="text-white"
+              />
+            )}
           </Box>
         </HStack>
       </SectionGradientPanel>
