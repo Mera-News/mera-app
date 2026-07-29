@@ -166,6 +166,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 {/* 3 — Advanced */}
                 <Box className="px-4">
                     <HubRow
+                        testID="profile-row-advanced"
                         icon="tune"
                         label={t('profile.advanced', { defaultValue: 'Advanced' })}
                         subtitle={t('profile.advancedSubtitle', { defaultValue: 'Facts, sources, saved, activity and more' })}

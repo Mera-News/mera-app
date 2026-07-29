@@ -86,7 +86,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
             const iconColor = reverted ? MUTED : ACCENT;
 
             return (
-                <View className="flex-row px-4 py-3 border-b border-gray-800">
+                <View testID={`persona-audit-row-${item.id}`} className="flex-row px-4 py-3 border-b border-gray-800">
                     <MaterialIcons
                         name={display.icon}
                         size={22}
@@ -106,6 +106,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                                     <Spinner size="small" style={{ marginLeft: 8 }} />
                                 ) : (
                                     <Pressable
+                                        testID={`persona-audit-revert-${item.id}`}
                                         onPress={() => setConfirmRow(item)}
                                         hitSlop={8}
                                         accessibilityRole="button"
@@ -199,10 +200,11 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     </ModalBody>
                     <ModalFooter className="border-t border-gray-700 pt-4">
                         <VStack className="w-full" space="md">
-                            <Button onPress={handleRevertConfirm} className="w-full">
+                            <Button testID="persona-audit-revert-confirm" onPress={handleRevertConfirm} className="w-full">
                                 <ButtonText>{t('personaAudit.revertConfirmCta')}</ButtonText>
                             </Button>
                             <Button
+                                testID="persona-audit-revert-cancel"
                                 variant="outline"
                                 action="secondary"
                                 onPress={() => setConfirmRow(null)}

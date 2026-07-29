@@ -1,5 +1,6 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import { useNotInterestedData } from '@/components/custom/not-interested/use-not-interested-data';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -26,6 +27,22 @@ interface AdvancedHubScreenProps {
     readonly onBack: () => void;
 }
 
+/** Group heading for the hub list. Purely a label — the rows below it keep the
+ *  styling, icons and routes they already had. */
+const SectionLabel: React.FC<{ readonly slug: string; readonly text: string; readonly first?: boolean }> = ({
+    slug,
+    text,
+    first = false,
+}) => (
+    <Text
+        testID={`advanced-section-${slug}`}
+        size="xs"
+        className={`${first ? 'mt-1' : 'mt-6'} mb-1 px-1 text-gray-500 uppercase tracking-wide`}
+    >
+        {text}
+    </Text>
+);
+
 /**
  * Advanced persona hub (mirror-first redesign). This is the former Profile-tab
  * ProfileHubScreen — the blocked banner, the refresh-suggestions button, and
@@ -44,6 +61,8 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
     const [prefCount, setPrefCount] = useState(0);
     const [hygieneCount, setHygieneCount] = useState(0);
     const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
+
+    const { total: notInterestedTotal } = useNotInterestedData();
 
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const factMutationVersion = useFloatingChatFactMutationVersion();
@@ -150,12 +169,17 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
     const prefsSubtitle = prefCount > 0
         ? t('profileHub.prefsCount', { count: prefCount, defaultValue: '{{count}} sources adjusted' })
         : t('profileHub.prefsEmpty', { defaultValue: 'Boost, downrank or mute sources' });
+    // Live, not throttled: "remove a filter → go back" is the single most likely
+    // trip through this row, and a stale count there reads as a broken screen.
+    const notInterestedSubtitle = notInterestedTotal > 0
+        ? t('profileHub.notInterestedSubtitle', { count: notInterestedTotal, defaultValue: "{{count}} things you've hidden" })
+        : t('profileHub.notInterestedEmpty', { defaultValue: 'Nothing hidden yet' });
     const hygieneSubtitle = hygieneCount > 0
         ? t('profileHub.healthPending', { count: hygieneCount, defaultValue: '{{count}} cleanup suggestions' })
         : t('profileHub.healthAllHealthy', { defaultValue: 'All healthy' });
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box testID="advanced-hub-screen" className="flex-1 bg-black">
             <DrillDownHeader
                 title={t('profile.advanced', { defaultValue: 'Advanced' })}
                 onBack={onBack}
@@ -191,6 +215,7 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             />
                         )}
                         <Button
+                            testID="advanced-hub-refresh-suggestions"
                             variant="outline"
                             action="primary"
                             size="sm"
@@ -211,7 +236,7 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                         </Button>
                     </View>
                     {feedNeedsRefresh && !isRefreshingSuggestions && (
-                        <Box className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
+                        <Box testID="advanced-hub-refresh-hint" className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
                             <HStack space="xs" className="items-start">
                                 <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
                                 <Text size="xs" className="text-blue-300 flex-1">
@@ -221,51 +246,74 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                         </Box>
                     )}
 
-                    {/* Hub rows */}
+                    {/* Hub rows — the same eight destinations, now under four
+                        labels so the list reads as groups rather than a wall. */}
                     <Box className="px-4">
+                        <SectionLabel slug="knows" text={t('profileHub.groupKnows', { defaultValue: 'Mera knows you' })} first />
                         <HubRow
+                            testID="advanced-row-facts"
                             icon="psychology"
                             label={t('profileHub.facts', { defaultValue: 'Facts' })}
                             subtitle={factsSubtitle}
                             onPress={() => router.push('/logged-in/facts')}
                         />
                         <HubRow
+                            testID="advanced-row-locations"
                             icon="place"
                             label={t('profileHub.locations', { defaultValue: 'Locations' })}
                             subtitle={t('profileHub.locationsSubtitle', { defaultValue: 'Places that shape your feed' })}
                             onPress={() => router.push('/logged-in/locations')}
                         />
+
+                        <SectionLabel slug="feed" text={t('profileHub.groupFeed', { defaultValue: 'Your feed' })} />
                         <HubRow
+                            testID="advanced-row-not-interested"
+                            icon="visibility-off"
+                            label={t('profileHub.notInterested', { defaultValue: 'Not interested' })}
+                            subtitle={notInterestedSubtitle}
+                            onPress={() => router.push('/logged-in/not-interested')}
+                        />
+                        <HubRow
+                            testID="advanced-row-preferences"
+                            icon="tune"
+                            label={t('profileHub.preferences', { defaultValue: 'Source preferences' })}
+                            subtitle={prefsSubtitle}
+                            onPress={() => router.push('/logged-in/publication-preferences')}
+                        />
+
+                        <SectionLabel slug="library" text={t('profileHub.groupLibrary', { defaultValue: 'Sources & library' })} />
+                        <HubRow
+                            testID="advanced-row-sources"
                             icon="rss-feed"
                             label={t('profileHub.sources', { defaultValue: 'Sources' })}
                             subtitle={t('profileHub.sourcesSubtitle', { defaultValue: 'Browse and follow news sources' })}
                             onPress={() => router.push('/logged-in/sources')}
                         />
                         <HubRow
-                            icon="bookmark"
-                            label={t('profileHub.saved', { defaultValue: 'Saved' })}
-                            subtitle={t('profileHub.savedSubtitle', { defaultValue: 'Articles you saved for later' })}
-                            onPress={() => router.push('/logged-in/saved-suggestions')}
-                        />
-                        <HubRow
-                            icon="tune"
-                            label={t('profileHub.preferences', { defaultValue: 'Source preferences' })}
-                            subtitle={prefsSubtitle}
-                            onPress={() => router.push('/logged-in/publication-preferences')}
-                        />
-                        <HubRow
+                            testID="advanced-row-visited"
                             icon="history"
                             label={t('publicationVisits.visitedListTitle')}
                             subtitle={t('profileHub.visitedSubtitle', { defaultValue: 'Publications you opened recently' })}
                             onPress={() => router.push('/logged-in/visited-publications')}
                         />
                         <HubRow
+                            testID="advanced-row-saved"
+                            icon="bookmark"
+                            label={t('profileHub.saved', { defaultValue: 'Saved' })}
+                            subtitle={t('profileHub.savedSubtitle', { defaultValue: 'Articles you saved for later' })}
+                            onPress={() => router.push('/logged-in/saved-suggestions')}
+                        />
+
+                        <SectionLabel slug="internals" text={t('profileHub.groupInternals', { defaultValue: 'Under the hood' })} />
+                        <HubRow
+                            testID="advanced-row-activity"
                             icon="history"
                             label={t('profileHub.activity', { defaultValue: 'Activity' })}
                             subtitle={t('profileHub.activitySubtitle', { defaultValue: 'Your persona change history' })}
                             onPress={() => router.push('/logged-in/persona-audit')}
                         />
                         <HubRow
+                            testID="advanced-row-health"
                             icon="cleaning-services"
                             label={t('profileHub.personaHealth', { defaultValue: 'Persona health' })}
                             subtitle={hygieneSubtitle}

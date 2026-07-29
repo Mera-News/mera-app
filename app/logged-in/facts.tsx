@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function Facts() {
     return (
         <GluestackUIProvider mode="dark">
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+            <SafeAreaView testID="facts-screen" style={{ flex: 1, backgroundColor: '#000000' }}>
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <FactsScreen onBack={() => router.back()} />
                 </ErrorBoundary>

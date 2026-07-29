@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function PersonaAudit() {
     return (
         <GluestackUIProvider mode="dark">
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+            <SafeAreaView testID="persona-audit-screen" style={{ flex: 1, backgroundColor: '#000000' }}>
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <PersonaAuditScreen onBack={() => router.back()} />
                 </ErrorBoundary>

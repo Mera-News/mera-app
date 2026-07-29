@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function Sources() {
     return (
         <GluestackUIProvider mode="dark">
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+            <SafeAreaView testID="sources-screen" style={{ flex: 1, backgroundColor: '#000000' }}>
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <SourcesScreen onBack={() => router.back()} />
                 </ErrorBoundary>

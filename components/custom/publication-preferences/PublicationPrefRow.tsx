@@ -26,6 +26,11 @@ export const PREF_KIND_META: Record<PublicationPrefKind, KindMeta> = {
 
 const KIND_ORDER: PublicationPrefKind[] = ['boost', 'deprioritize', 'mute'];
 
+/** Stable, kebab-cased testID segment for a publication name (harness/QA). */
+function normalizeForTestId(name: string): string {
+    return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 interface PublicationPrefRowProps {
     readonly pref: PublicationPreferenceModel;
     readonly busy: boolean;
@@ -42,14 +47,16 @@ interface PublicationPrefRowProps {
 const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, onSetKind, onClear }) => {
     const { t } = useTranslation();
     const currentKind = weightToPrefKind(pref.weight);
+    const idBase = `pub-pref-${normalizeForTestId(pref.publicationName)}`;
 
     return (
-        <VStack className="px-4 py-3 border-b border-gray-800" space="sm">
+        <VStack testID={idBase} className="px-4 py-3 border-b border-gray-800" space="sm">
             <HStack className="items-center justify-between">
                 <Text size="md" className="text-white flex-1 mr-2 capitalize" numberOfLines={2}>
                     {pref.publicationName}
                 </Text>
                 <Pressable
+                    testID={`${idBase}-clear`}
                     onPress={() => onClear(pref.publicationName)}
                     disabled={busy}
                     hitSlop={8}
@@ -70,6 +77,7 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, onS
                     return (
                         <Pressable
                             key={kind}
+                            testID={`${idBase}-${kind}`}
                             onPress={() => onSetKind(pref.publicationName, kind)}
                             disabled={busy}
                             accessibilityRole="button"

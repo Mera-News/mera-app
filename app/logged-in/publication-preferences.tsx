@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function PublicationPreferences() {
     return (
         <GluestackUIProvider mode="dark">
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+            <SafeAreaView testID="publication-preferences-screen" style={{ flex: 1, backgroundColor: '#000000' }}>
                 <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
                     <PublicationPreferencesScreen onBack={() => router.back()} />
                 </ErrorBoundary>

@@ -4,6 +4,7 @@ import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedS
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router } from 'expo-router';
 import React from 'react';
+import { View } from 'react-native';
 
 export default function SavedSuggestions() {
     const handleBack = () => {
@@ -12,9 +13,15 @@ export default function SavedSuggestions() {
 
     return (
         <GluestackUIProvider mode="dark">
-            <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <SavedSuggestionsScreen onBack={handleBack} />
-            </ErrorBoundary>
+            {/* The root testID lives here rather than on SavedSuggestionsScreen:
+                that component is ALSO mounted embedded inside ForYouScreen, and
+                two elements answering to `saved-suggestions-screen` would make
+                the harness's arrival assertion meaningless. */}
+            <View testID="saved-suggestions-screen" style={{ flex: 1 }}>
+                <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+                    <SavedSuggestionsScreen onBack={handleBack} />
+                </ErrorBoundary>
+            </View>
         </GluestackUIProvider>
     );
 }
