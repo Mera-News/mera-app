@@ -515,6 +515,14 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
+                                    // REQUIRED: this screen also serves articles
+                                    // with NO local article_suggestions row
+                                    // (Explore, a tracked story, a shared link).
+                                    // Without it those verdicts persist an empty
+                                    // context and the feedback tree has no
+                                    // publication / category / event / place to
+                                    // act on — the gap this wave closed.
+                                    article={article}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'article',

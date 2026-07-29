@@ -66,10 +66,18 @@ export interface InlineFeedbackTreeProps {
    *  this" / "Less like this"), so the trail matches what the user just saw.
    *  Defaults to the verdict-derived panel title when omitted. */
   rootLabel?: string;
+  /** Context for fields this component cannot derive because there is no local
+   *  `article_suggestions` row — a standalone article on the detail screen,
+   *  whose category / place come off the fetched article instead. Applied only
+   *  where the derived value is absent; the local row always wins. */
+  contextFallback?: Partial<LocalFeedbackContext>;
 }
 
 /** Builds the on-device gating/resolution context for a suggestion (async). */
-async function buildLocalContext(suggestion: ForYouSuggestion): Promise<LocalFeedbackContext> {
+async function buildLocalContext(
+  suggestion: ForYouSuggestion,
+  fallback?: Partial<LocalFeedbackContext>,
+): Promise<LocalFeedbackContext> {
   const matchedTopics = suggestion.matchedTopics ?? [];
   let category: string | null = null;
   let clusterSize: number | null = null;
@@ -102,19 +110,24 @@ async function buildLocalContext(suggestion: ForYouSuggestion): Promise<LocalFee
     }
   }
 
+  // The local row always wins; `fallback` only fills what it could not supply
+  // (a standalone article has no row at all — see detail-feedback-context).
+  const resolvedClusterSize = clusterSize ?? fallback?.clusterSize ?? null;
+  const resolvedGeoText = geoText ?? fallback?.geoText ?? null;
+
   return {
     publicationName: suggestion.publication_name,
     countryCode: suggestion.country_code,
     articleTitle: suggestion.title_en,
-    category,
+    category: category ?? fallback?.category ?? null,
     eventType: suggestion.eventType ?? undefined,
     matchedTopics,
     publicationVisits,
     // Both were already on the suggestion row and simply never read here, which
     // gated out `nudge_browse_related` and no-op'd every `from_context_geo`
     // leaf ("More news from this place") on the feed too — not just on detail.
-    ...(clusterSize != null ? { clusterSize } : {}),
-    ...(geoText ? { geoText } : {}),
+    ...(resolvedClusterSize != null ? { clusterSize: resolvedClusterSize } : {}),
+    ...(resolvedGeoText ? { geoText: resolvedGeoText } : {}),
   };
 }
 
@@ -126,6 +139,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   onLeafCommitted,
   initialPathIds,
   rootLabel,
+  contextFallback,
 }) => {
   const { t } = useTranslation();
 
@@ -137,13 +151,13 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   });
   useEffect(() => {
     let cancelled = false;
-    void buildLocalContext(suggestion).then((ctx) => {
+    void buildLocalContext(suggestion, contextFallback).then((ctx) => {
       if (!cancelled) setContext(ctx);
     });
     return () => {
       cancelled = true;
     };
-  }, [suggestion]);
+  }, [suggestion, contextFallback]);
 
   const engine = useFeedbackTreeEngine({
     active: true,

@@ -4,6 +4,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,6 +14,9 @@ import { useTranslation } from 'react-i18next';
 export interface CardFeedbackSurfaceProps {
   suggestion: ForYouSuggestion;
   verdict: Verdict;
+  /** Context the tree cannot derive from a local `article_suggestions` row
+   *  because there isn't one — a standalone article on the detail screen. */
+  contextFallback?: Partial<LocalFeedbackContext>;
   initialPathIds?: string[];
   /** The × was tapped — hide the surface (keeps the verdict). */
   onClose: () => void;
@@ -35,6 +39,7 @@ export interface CardFeedbackSurfaceProps {
 export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
   suggestion,
   verdict,
+  contextFallback,
   initialPathIds,
   onClose,
   onTreePathChanged,
@@ -84,6 +89,7 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
         <InlineFeedbackTree
           suggestion={suggestion}
           verdict={verdict}
+          contextFallback={contextFallback}
           initialPathIds={initialPathIds}
           rootLabel={heading}
           onTreePathChanged={onTreePathChanged}

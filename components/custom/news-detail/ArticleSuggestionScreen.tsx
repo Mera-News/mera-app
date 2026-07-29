@@ -558,11 +558,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}
-                                    feedbackContext={{
-                                        publicationName: suggestion.publication_name,
-                                        countryCode: suggestion.country_code,
-                                        matchedTopics: suggestion.matchedTopics,
-                                    }}
+                                    // No feedback context is passed any more:
+                                    // the prompt resolves the LOCAL
+                                    // article_suggestions row itself (by
+                                    // articleId), which carries strictly more
+                                    // than this screen could hand it — category,
+                                    // event type, cluster size and place.
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'suggestion',
