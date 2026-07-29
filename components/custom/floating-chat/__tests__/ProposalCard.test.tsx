@@ -125,3 +125,36 @@ describe('ProposalCard applied state', () => {
     expect(getByTestId('proposal-action-row-0').props.accessibilityState.disabled).toBe(true);
   });
 });
+
+// A structured filter is a different promise from a keyword one (exact match on
+// ONE article field vs "anywhere in the story"), so the card has to SAY which.
+describe('ProposalCard filter rows', () => {
+  const filterProposal: StagedProposal = {
+    id: 'p1',
+    explanation: '',
+    expectedEffects: '',
+    actions: [
+      {
+        type: 'add_suppression',
+        suppressionPattern: 'Entertainment',
+        suppressionKind: 'category',
+        suppressionValue: 'Entertainment',
+      },
+      { type: 'add_suppression', suppressionPattern: 'celebrity gossip' },
+      { type: 'retire_suppression', suppressionId: 'sup-1', pattern: 'football' },
+    ],
+  };
+
+  it('shows a kind chip for a structured filter, none for a keyword one', () => {
+    const { queryByText } = render(<ProposalCard proposal={filterProposal} isLast />);
+    // The chip reuses the Not-interested screen's kind strings.
+    expect(queryByText('notInterested.kinds.category')).not.toBeNull();
+    expect(queryByText('notInterested.kinds.keyword')).toBeNull();
+  });
+
+  it('renders retire_suppression as its own labelled row, not the generic guard row', () => {
+    const { queryByText } = render(<ProposalCard proposal={filterProposal} isLast />);
+    expect(queryByText('articleFeedback.actionRetireSuppression')).not.toBeNull();
+    expect(queryByText('football')).not.toBeNull();
+  });
+});
