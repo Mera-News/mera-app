@@ -102,12 +102,21 @@ export function normalizeLocation(
   };
 }
 
-/** Build a normalized pub-pref map from raw {name, weight} rows. */
+/**
+ * Build a normalized pub-pref map from raw {name, weight} rows.
+ *
+ * source-pref v47 (D2/D6): a row carrying a `scopeKind` is a live SOURCE SCOPE
+ * ("Indian sources"), whose `publicationName` is a human label rather than a
+ * publication, and whose effect is a render-time representative/ordering
+ * preference — never a `W_PUB` score term. Such rows are SKIPPED here as well
+ * as at the caller, so neither layer alone is load-bearing.
+ */
 export function buildPubPrefs(
-  rows: { publicationName: string; weight: number }[],
+  rows: { publicationName: string; weight: number; scopeKind?: string | null }[],
 ): Map<string, number> {
   const m = new Map<string, number>();
   for (const r of rows) {
+    if (r.scopeKind != null) continue;
     const key = normText(r.publicationName);
     if (key) m.set(key, r.weight);
   }

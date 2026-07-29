@@ -1499,3 +1499,35 @@ export async function getTotalArticleSuggestionCount(): Promise<number> {
   return articleSuggestionsCol.query().fetchCount();
 }
 
+
+/**
+ * Distinct `publication_name` values present in the local suggestion cache,
+ * normalized (lower-cased, whitespace-collapsed) and deduped.
+ *
+ * source-pref v47 (D5) — the CORROBORATION set for a named-publication
+ * preference. `pubPref` matching is exact normalized-name equality, so a model
+ * that invents "Times of India Group" would mint a row that shows up on the
+ * Source-preferences screen and can never fire: a preference that looks live
+ * and does nothing. Pairing this with `getTopVisitedPublications()` gives the
+ * sanitizer names that provably exist in the USER'S OWN data, so an
+ * uncorroborated proposal can be dropped outright (there is no keyword fallback
+ * for a preference the way there is for a filter).
+ *
+ * Never throws: a read failure yields an empty set, which drops every named
+ * proposal — the safe direction.
+ */
+export async function getDistinctSuggestionPublicationNames(): Promise<Set<string>> {
+  const names = new Set<string>();
+  try {
+    const rows = await articleSuggestionsCol.query().fetch();
+    for (const row of rows) {
+      const norm = (row.publicationName ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+      if (norm) names.add(norm);
+    }
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-suggestion', method: 'getDistinctSuggestionPublicationNames' },
+    });
+  }
+  return names;
+}

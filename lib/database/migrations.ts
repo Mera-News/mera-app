@@ -1231,5 +1231,33 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Source SCOPE preferences (schema v47) ────────────────────────────
+      // `publication_preferences` is a USER-OWNED table (long-lived explicit
+      // source preferences) — additive `addColumns` ONLY, never DROP+recreate.
+      //
+      // "More news from Indian sources" is stored as ONE row carrying
+      // `scope_kind='country'` + `scope_value='IND'` and evaluated against a
+      // suggestion's `country_code` at render time (D2), rather than expanded
+      // into the 300+ publication rows that would match today and go stale the
+      // moment a feed is added. `publication_name` still carries the human
+      // label ("India") so the existing Source-preferences screen renders a
+      // scope row with no new plumbing (D6).
+      //
+      // Both columns are nullable and there is NO backfill: a NULL
+      // `scope_kind` reads as "this is a named-publication preference", which
+      // is what every pre-v47 row is, so their name-matching behaviour is
+      // byte-identical.
+      toVersion: 47,
+      steps: [
+        addColumns({
+          table: 'publication_preferences',
+          columns: [
+            { name: 'scope_kind', type: 'string', isOptional: true },
+            { name: 'scope_value', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

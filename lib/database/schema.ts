@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 46,
+  version: 47,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -320,6 +320,13 @@ export default appSchema({
       columns: [
         { name: 'publication_name', type: 'string', isIndexed: true },
         { name: 'source_country_code', type: 'string', isOptional: true },
+        // source-pref v47 — a GROUP preference is a LIVE SCOPE, not an
+        // expansion into one row per publication (D2). `scope_kind` is the
+        // discriminator ('country' today) and `scope_value` the token it
+        // evaluates against at render time (ISO alpha-3). Both NULL ⇒ the row
+        // is a named-publication preference and behaves exactly as before.
+        { name: 'scope_kind', type: 'string', isOptional: true },
+        { name: 'scope_value', type: 'string', isOptional: true },
         { name: 'weight', type: 'number' },
         { name: 'status', type: 'string' },
         { name: 'provenance', type: 'string' },

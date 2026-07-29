@@ -47,7 +47,13 @@ import {
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
-import { getActive as getActivePubPrefs } from '@/lib/database/services/publication-preference-service';
+// source-pref v47 (D2/D6): NAMED-PUBLICATION rows only. `publication_preferences`
+// also holds live SCOPE rows (`scope_kind='country'`), whose `publication_name`
+// is a human label ("India"), not a publication. Those are a render-time
+// preference and must never reach `pubPrefs` (a W_PUB score term keyed by
+// publication name) or the muted-publication hard-filter derivation below —
+// either would silently match a real publication that happens to share the label.
+import { getActiveNamedPublications as getActivePubPrefs } from '@/lib/database/services/publication-preference-service';
 import {
   getActive as getActiveSuppressions,
   kindOf,
@@ -163,7 +169,11 @@ export async function loadPersonaScoringContext(
     );
 
   const pubPrefs = buildPubPrefs(
-    pubPrefRows.map((p) => ({ publicationName: p.publicationName, weight: p.weight })),
+    pubPrefRows.map((p) => ({
+      publicationName: p.publicationName,
+      weight: p.weight,
+      scopeKind: p.scopeKind,
+    })),
   );
 
   // Hard / soft partition — made HERE, exactly once, using the DB service's
@@ -201,6 +211,10 @@ export async function loadPersonaScoringContext(
   // The Sources preferences screen stays the single manager — un-muting lifts
   // the filter on the next load with nothing to clean up.
   for (const p of pubPrefRows) {
+    // Defence in depth — the loader above already excludes scope rows. A scope
+    // is never a hard filter: there is no "mute every Indian source" promise
+    // here, and its label would match a real publication by name if it were.
+    if (p.scopeKind != null) continue;
     if (p.weight > MUTED_PUBLICATION_WEIGHT) continue;
     const value = normText(p.publicationName);
     if (!value) continue;
