@@ -751,6 +751,27 @@ export async function getStageRowsForScreening(
 }
 
 /**
+ * Stage rows for a SCOPED hard-filter screen: exactly these ids, minus the ones
+ * already terminal `excluded` (re-screening them would be a no-op). This is the
+ * cheap counterpart to `getStageRowsForScreening` — used by the propagation
+ * reconcile, which knows precisely which rows just inherited a score and must
+ * not pay for a full-table scan on every sync chunk.
+ */
+export async function getStageRowsByIds(ids: string[]): Promise<StageCandidateRow[]> {
+  if (ids.length === 0) return [];
+  const idSet = new Set(ids);
+  const rows = await articleSuggestionsCol
+    .query(Q.where('id', Q.oneOf(ids)))
+    .fetch();
+  // The unit-test fake DB layer doesn't evaluate Q.where predicates (see
+  // mockDatabase.ts), so re-assert the id filter in memory too — same defensive
+  // shape as getGroupingRowsByIds.
+  return rows
+    .filter((r) => idSet.has(r.id) && r.status !== ArticleSuggestionStatus.Excluded)
+    .map(toStageRow);
+}
+
+/**
  * Mark already-scored rows as reason-skipped (no eligible facts/title) in one
  * batched write. Keeps existing relevance; reason stays '' and status becomes
  * terminal `complete`.

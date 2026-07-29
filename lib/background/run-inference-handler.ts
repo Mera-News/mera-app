@@ -27,6 +27,20 @@ import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { contextForCycleReason } from '@/lib/llm/execution-context';
 
+/**
+ * P9 hard-filter reconcile for the gate's propagation half — see the HARD
+ * FILTERS note in score-propagation.ts. The gate reports a count and not the
+ * ids it wrote, so this is the full sweep; it early-outs after one persona read
+ * when the user has no hard filters. Lazy `require` for module-graph weight,
+ * mirroring persona-mutation-sweeps::runSweep and the SuggestionSyncService
+ * require below.
+ */
+const reconcileHardFilters = async (): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+  await sweep.purgeHardFilteredSuggestions();
+};
+
 export type CycleReason =
   // Inference gateway completion pushes. The gateway now emits a single
   // `inference-done` per completed job (mapped to `silent-push`); the legacy
@@ -100,6 +114,17 @@ export async function runBackgroundCycle(
       const gate = await gateUnscoredForScoring(inFlight, userCtx);
       // Propagated rows are now terminal `Complete` — surface them immediately.
       if (gate.propagatedCount > 0) {
+        // P9: they were written WITHOUT ever meeting the scoring stage's hard
+        // screen (see score-propagation's HARD FILTERS note) — reconcile
+        // against the live hard filters before the refresh. Never fails the
+        // cycle: the propagation is already committed.
+        try {
+          await reconcileHardFilters();
+        } catch (err) {
+          logger.captureException(err, {
+            tags: { service: 'run-background-cycle', step: 'reconcile-hard-filters' },
+          });
+        }
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const svc = require('@/lib/services/SuggestionSyncService') as typeof import('@/lib/services/SuggestionSyncService');
         await svc.requestSuggestionsRefresh();

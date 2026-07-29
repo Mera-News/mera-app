@@ -9,27 +9,48 @@
 //     currently-active hard filters, mark the matches terminal `excluded`, and
 //     drop exactly those ids from the Feed tab's persisted order.
 //
+//   purgeHardFilteredByIds(ids)      — the same screen scoped to a known id set,
+//     for the one path that writes a renderable score WITHOUT ever passing
+//     through the scoring stage's hard screen: score propagation. See P9 note
+//     below.
+//
 //   unexcludeRetiredHardFilters()    — the mirror. Re-screen the already-
 //     excluded rows against every STILL-ACTIVE hard filter; the ones nothing
 //     matches any more go back to `unscored` so the next pass scores them
 //     fresh. A row blocked by two filters stays excluded until both are gone.
 //
-// Both read the persona snapshot LIVE, so the caller's only obligation is to
-// have committed its suppression/publication-preference change first. Neither
+// All three read the persona snapshot LIVE, so the caller's only obligation is
+// to have committed its suppression/publication-preference change first. None
 // takes a filter as an argument — that is what makes the two-filter case
 // correct for free.
 //
-// WIRING: the persona-action executor (ADD_SUPPRESSION / RETIRE_SUPPRESSION /
-// SET_PUBLICATION_PREF) calls these. That wiring is a later phase; this module
-// is the callable seam.
+// P9 — WHY THE SCOPED VARIANT EXISTS. `batchPropagateScores` copies a scored
+// donor's relevance/reason onto its unscored siblings and marks them terminal
+// `complete`. Those rows never enter computeMathStage/computeAndJudge, which is
+// where `screenHardSuppressions` runs — so a hard-blocked article could inherit
+// a passing score and render, defeating the "Blocked / never show me these at
+// all" promise. Reconciling at the propagation callers closes that hole with
+// the SAME matcher (one matcher is a load-bearing invariant of this wave)
+// instead of adding a second screening path. It is scoped rather than a full
+// `purgeHardFilteredSuggestions()` because feed-sync runs the gate once per
+// hydrate CHUNK, so a full-table screen there would be O(chunks × all rows).
+//
+// WIRING: `persona-mutation-sweeps.ts` runs the two full sweeps for the
+// persona-action executor (ADD_SUPPRESSION / RETIRE_SUPPRESSION /
+// SET_PUBLICATION_PREF); the scoped variant is wired into the four propagation
+// call sites (feed-sync-steps, run-inference-handler, scoring-pipeline ×2).
 
 import logger from '@/lib/logger';
 import {
   batchMarkExcluded,
   batchResetToUnscored,
   buildStageCandidateInput,
+  getStageRowsByIds,
   getStageRowsForScreening,
+  type TopicWeightInfo,
 } from '@/lib/database/services/article-suggestion-service';
+import type { StageCandidateRow } from '@/lib/news-harness/core/types';
+import type { SoftSuppression } from '@/lib/news-harness/scoring-engine';
 import { loadPersonaScoringContext } from '@/lib/mera-protocol/stage-scoring';
 import { screenHardSuppressions } from '@/lib/news-harness/scoring-engine';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
@@ -72,23 +93,71 @@ async function refreshUi(): Promise<void> {
 export async function purgeHardFilteredSuggestions(
   nowMs: number = Date.now(),
 ): Promise<HardFilterPurgeResult> {
-  const empty: HardFilterPurgeResult = {
-    excludedIds: [],
-    valueById: new Map(),
-    evictedFromFeed: 0,
-  };
-
   const { persona, topicWeights } = await loadPersonaScoringContext(nowMs);
-  if (!persona.hardSuppressions?.length) return empty;
+  if (!persona.hardSuppressions?.length) return EMPTY_PURGE();
 
   const rows = await getStageRowsForScreening();
-  if (rows.length === 0) return empty;
+  return screenExcludeAndEvict(
+    rows,
+    persona.hardSuppressions,
+    topicWeights,
+    nowMs,
+    'purged hard-filtered suggestions',
+  );
+}
+
+/**
+ * P9. The SCOPED screen: same matcher, same exclusion, same eviction — but over
+ * exactly `ids` instead of the whole table. Written for the score-propagation
+ * reconcile (rows that were handed a donor's score without ever meeting the
+ * scoring stage's hard screen).
+ *
+ * Ordered cheapest-check-first: an empty id list costs nothing, and no hard
+ * filters costs one persona read and zero row reads — which is the overwhelming
+ * majority of syncs.
+ */
+export async function purgeHardFilteredByIds(
+  ids: string[],
+  nowMs: number = Date.now(),
+): Promise<HardFilterPurgeResult> {
+  if (ids.length === 0) return EMPTY_PURGE();
+
+  const { persona, topicWeights } = await loadPersonaScoringContext(nowMs);
+  if (!persona.hardSuppressions?.length) return EMPTY_PURGE();
+
+  const rows = await getStageRowsByIds(ids);
+  return screenExcludeAndEvict(
+    rows,
+    persona.hardSuppressions,
+    topicWeights,
+    nowMs,
+    'purged hard-filtered propagated rows',
+  );
+}
+
+function EMPTY_PURGE(): HardFilterPurgeResult {
+  return { excludedIds: [], valueById: new Map(), evictedFromFeed: 0 };
+}
+
+/**
+ * The one screen-and-exclude body both purge entry points share, so there is
+ * exactly ONE matcher call, ONE `batchMarkExcluded`, and ONE feed eviction rule
+ * in this module. Callers differ only in which rows they hand it.
+ */
+async function screenExcludeAndEvict(
+  rows: StageCandidateRow[],
+  hard: SoftSuppression[],
+  topicWeights: Map<string, TopicWeightInfo>,
+  nowMs: number,
+  logLabel: string,
+): Promise<HardFilterPurgeResult> {
+  if (rows.length === 0) return EMPTY_PURGE();
 
   const valueById = screenHardSuppressions(
     rows.map((r) => buildStageCandidateInput(r, topicWeights)),
-    persona.hardSuppressions,
+    hard,
   );
-  if (valueById.size === 0) return empty;
+  if (valueById.size === 0) return EMPTY_PURGE();
 
   const excludedIds = [...valueById.keys()];
   await batchMarkExcluded(excludedIds, nowMs);
@@ -98,7 +167,7 @@ export async function purgeHardFilteredSuggestions(
   useFeedOrderStore.getState().removeIds(excludedIds);
   const evictedFromFeed = orderBefore - useFeedOrderStore.getState().order.length;
 
-  logger.info('[suppression-sweep] purged hard-filtered suggestions', {
+  logger.info(`[suppression-sweep] ${logLabel}`, {
     scanned: rows.length,
     excluded: excludedIds.length,
     evictedFromFeed,

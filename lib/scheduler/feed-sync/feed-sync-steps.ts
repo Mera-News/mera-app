@@ -37,6 +37,30 @@ export const HYDRATE_CHUNK_SIZE = 25;
  *  the gate+enqueue step is separately serialized behind a promise chain. */
 export const HYDRATE_CONCURRENCY = 3;
 
+/**
+ * P9 hard-filter reconcile for the gate's propagation half. Propagated rows are
+ * written terminal `complete` with a donor's relevance and never enter
+ * computeMathStage/computeAndJudge — which is where `screenHardSuppressions`
+ * runs — so without this a "Blocked" article can inherit a passing score and
+ * render, defeating the badge's "never show me these at all" promise.
+ *
+ * This is the FULL sweep, not the scoped `purgeHardFilteredByIds`, because
+ * `GateResult` reports a count and not the ids it wrote (see the HARD FILTERS
+ * note in score-propagation.ts, which also explains why the chunk's own ids are
+ * not a valid substitute). Cost is bounded the right way: the sweep returns
+ * after a single persona read for any user with no hard filters — the common
+ * case — and only pays for the row scan when filters actually exist.
+ *
+ * Lazy `require`, mirroring persona-mutation-sweeps::runSweep for the same
+ * documented reason: module-graph weight. A static import drags stage-scoring →
+ * llm/completeLocal → the native DB singleton into this module.
+ */
+const reconcileHardFilters = async (): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+  await sweep.purgeHardFilteredSuggestions();
+};
+
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
   serverArticleIds: string[];
@@ -372,6 +396,18 @@ export async function stepHydratePersistEnqueue(
     const inFlight = await getNonTerminalCandidateIds();
     const gate = await gateUnscoredForScoring(inFlight, userCtx);
     if (gate.propagatedCount > 0) {
+      // P9: propagated rows were written terminal `complete` WITHOUT passing
+      // the scoring stage's hard screen. Reconcile against the live hard
+      // filters BEFORE the store refresh, so a "Blocked" article never reaches
+      // the feed even for one frame. Never fails the sync — the propagation is
+      // already committed and the next filter mutation sweeps the table anyway.
+      try {
+        await reconcileHardFilters();
+      } catch (err) {
+        logger.captureException(err, {
+          tags: { service: 'feed-sync-steps', step: 'reconcile-hard-filters' },
+        });
+      }
       // Propagated rows are now terminal `Complete` — surface them immediately.
       await opts.refreshStore();
     }

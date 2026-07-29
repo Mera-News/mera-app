@@ -15,7 +15,39 @@
  * IMPORT-CYCLE CONSTRAINT (do not violate): this module imports ONLY the DB
  * service, the pure story-grouping utility, and the logger — NEVER
  * scoring-pipeline. The set of in-flight candidate ids is passed IN by callers
- * so we never have to reach back into the pipeline.
+ * so we never have to reach back into the pipeline. The `onPropagated` hook
+ * below follows the same rule for the same reason (see HARD FILTERS).
+ *
+ * HARD FILTERS (P9): propagation is DELIBERATELY DUMB about "not interested"
+ * filters, and that is a hole unless callers close it. A propagated row is
+ * written straight to terminal `complete` with the donor's relevance — it never
+ * enters computeMathStage/computeAndJudge, which is where the hard screen
+ * (`screenHardSuppressions`) runs. So a newly-synced article that a hard filter
+ * blocks can inherit a passing score from a sibling and render.
+ *
+ * We do NOT screen here: the rows this module handles are
+ * `SuggestionGroupingRow`s, which carry no description, entities, category,
+ * publicationName, geoTags or matchedTopics — the kind-aware matcher needs all
+ * of those. Widening the row type would drag the scoring stack across the
+ * import-cycle line above and, worse, invite a SECOND matcher. Instead the
+ * CALLERS reconcile, always through `lib/services/suppression-sweep` — the same
+ * matcher, the same exclusion, the same feed eviction the retroactive sweep
+ * already uses. EVERY call site that can write a propagated score must do it.
+ *
+ * The two entry points hand callers different handles, which is deliberate:
+ *   - `propagateToUnscoredSiblings` takes an optional `onPropagated(ids)` hook
+ *     and invokes it with EXACTLY the ids it wrote, so its callers reconcile the
+ *     cheap scoped way (`purgeHardFilteredByIds`).
+ *   - `gateUnscoredForScoring` reports only a COUNT. Its result shape and its
+ *     two-argument call signature are both pinned by existing contract, so it
+ *     cannot grow an id list or a hook without breaking callers' tests. Its
+ *     callers therefore run the FULL `purgeHardFilteredSuggestions()` sweep when
+ *     `propagatedCount > 0`. Do not "optimise" that into the chunk's hydrated
+ *     ids: the gate propagates over ALL unscored rows, including ones hydrated
+ *     by an earlier chunk or left unscored by an earlier sync, so a chunk's ids
+ *     are NOT a superset of what it wrote.
+ * Neither entry point reaches into the sweep itself — that would breach the
+ * import-cycle rule above.
  *
  * STATELESS + SELF-HEALING: nothing about "held back" is persisted anywhere.
  * Candidates are recomputed each call as ALL unscored rows minus the in-flight
@@ -56,6 +88,33 @@ export interface GateResult {
     /** How many same-sync duplicate siblings were held back (not enqueued, no
      *  state written — picked up next sync or by the post-results hook). */
     heldBackCount: number;
+}
+
+/**
+ * Reconcile hook, invoked with exactly the ids that just inherited a score.
+ * Supplied by callers (never imported here — see the IMPORT-CYCLE + HARD FILTERS
+ * notes at the top). Its own failure must not fail the propagation, which has
+ * already been committed, so it is invoked inside its own try/catch.
+ */
+export type OnPropagated = (ids: string[]) => Promise<unknown>;
+
+/** Run the caller's reconcile hook over freshly-propagated ids. Isolated from
+ *  the propagation's own fail-open handler so the two failures stay
+ *  distinguishable in Sentry: a reconcile failure means a hard-filtered row may
+ *  be renderable until the next filter mutation sweep, which is worth its own
+ *  tag. */
+async function runOnPropagated(
+    ids: string[],
+    onPropagated: OnPropagated | undefined,
+): Promise<void> {
+    if (!onPropagated || ids.length === 0) return;
+    try {
+        await onPropagated(ids);
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { module: 'score-propagation', step: 'reconcile-hard-filters' },
+        });
+    }
 }
 
 // Propagation deliberately omits the IDF-weighted title edge (no
@@ -211,8 +270,14 @@ export async function gateUnscoredForScoring(
  * scores onto any remaining unscored siblings. Same grouping as the gate but ONLY
  * the propagation step (no election, no enqueue). Returns the number of rows that
  * inherited a score. Fails open to 0.
+ *
+ * `onPropagated` is the hard-filter reconcile hook (see HARD FILTERS at the top)
+ * — pass it from every call site.
  */
-export async function propagateToUnscoredSiblings(inFlightIds: Set<string>): Promise<number> {
+export async function propagateToUnscoredSiblings(
+    inFlightIds: Set<string>,
+    onPropagated?: OnPropagated,
+): Promise<number> {
     try {
         const candidates = (await getUnscoredGroupingRows()).filter((r) => !inFlightIds.has(r.id));
         if (candidates.length === 0) return 0;
@@ -244,6 +309,10 @@ export async function propagateToUnscoredSiblings(inFlightIds: Set<string>): Pro
 
         if (propagateEntries.length > 0) {
             await batchPropagateScores(propagateEntries);
+            await runOnPropagated(
+                propagateEntries.map((e) => e.id),
+                onPropagated,
+            );
             console.log(`[score-propagation] sibling propagation: ${propagateEntries.length}`);
         }
         return propagateEntries.length;

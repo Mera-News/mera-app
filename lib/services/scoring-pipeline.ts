@@ -304,6 +304,24 @@ export async function getNonTerminalCandidateIds(): Promise<Set<string>> {
   return snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
 }
 
+/**
+ * P9 hard-filter reconcile for score propagation. A propagated row is written
+ * terminal `complete` with the donor's relevance and NEVER passes through
+ * computeMathStage/computeAndJudge, which is where `screenHardSuppressions`
+ * runs — so a hard-"Blocked" article could inherit a passing score and render.
+ * Scoped to the ids just propagated; the shared matcher lives in suppression-
+ * sweep, so there is still exactly one hard screen.
+ *
+ * Lazy `require` for module-graph weight, same rationale as refreshUi below and
+ * persona-mutation-sweeps::runSweep.
+ */
+const reconcileHardFilters = async (ids: string[]): Promise<void> => {
+  if (ids.length === 0) return; // guard before the require — keep the empty case free
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+  await sweep.purgeHardFilteredByIds(ids);
+};
+
 async function refreshUi(): Promise<void> {
   // Lazy require (not a static import) breaks the load-time cycle
   // scoring-pipeline → SuggestionSyncService → run-inference-handler →
@@ -982,7 +1000,7 @@ async function doSubmitRelevance(
   // legacy relevance path, moved to submit since the score is final here).
   try {
     const inFlight = await getNonTerminalCandidateIds();
-    const propagated = await propagateToUnscoredSiblings(inFlight);
+    const propagated = await propagateToUnscoredSiblings(inFlight, reconcileHardFilters);
     if (propagated > 0) await refreshUi();
   } catch (err) {
     logger.captureException(err, {
@@ -1583,7 +1601,7 @@ async function handleRelevanceResults(
   // propagation error never blocks the pipeline; refresh again only if it wrote.
   try {
     const inFlight = await getNonTerminalCandidateIds();
-    const propagated = await propagateToUnscoredSiblings(inFlight);
+    const propagated = await propagateToUnscoredSiblings(inFlight, reconcileHardFilters);
     if (propagated > 0) await refreshUi();
   } catch (err) {
     logger.captureException(err, {

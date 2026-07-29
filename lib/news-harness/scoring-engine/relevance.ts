@@ -211,8 +211,14 @@ function pubPref(
 
 /** suppressPenalty: Σ P_SUP·strength over soft suppressions that MATCH the
  *  candidate; capped at P_SUP_CAP. Matching (per kind) is the shared matcher in
- *  suppression.ts — keyword / NULL-kind rows keep byte-identical semantics. */
-function suppressionPenalty(
+ *  suppression.ts — keyword / NULL-kind rows keep byte-identical semantics.
+ *
+ *  EXPORTED so any future scoring source applies the capped soft penalty by
+ *  CALLING this, never by re-deriving it — a second implementation of the cap
+ *  is exactly the drift this wave exists to prevent (the hard screen has the
+ *  same one-matcher rule via `screenHardSuppressions`). Export only; the maths
+ *  are untouched. */
+export function suppressionPenalty(
   candidate: ScoredCandidateInput,
   ctx: PersonaScoringContext,
   cfg: ScoringEngineConfig,
