@@ -1652,7 +1652,7 @@ describe('headline provenance survives the real row -> suggestion -> section pat
         factStatements: new Map(),
       },
       new Set(),
-      NOW,
+      NOW.getTime(),
     ).rows.map((r) => r.factId);
 
   /** A persisted headline row as feed-sync writes one: synthetic matched topic
