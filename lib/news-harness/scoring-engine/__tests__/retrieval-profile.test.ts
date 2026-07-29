@@ -251,3 +251,53 @@ describe('buildRetrievalProfile — headlineLimitPerScope', () => {
     expect(headlineLimitPerScope).toBe(5);
   });
 });
+
+describe('buildRetrievalProfile — per-scope headlineDepthByScope', () => {
+  const locations = [
+    { countryCode: 'IN', role: 'home', weight: 1 },
+    { countryCode: 'NL', role: 'family', weight: 0.5 },
+  ];
+
+  it('omits `limit` entirely when no override is given', () => {
+    const { headlineScopes } = buildRetrievalProfile({ topics: [], locations });
+    // Byte-identical to the pre-per-scope-depth payload.
+    expect(headlineScopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'IN' },
+      { scope: 'COUNTRY', countryCode: 'NL' },
+      { scope: 'GLOBAL' },
+    ]);
+  });
+
+  it('emits `limit` only for scopes that differ from the request default', () => {
+    const { headlineScopes } = buildRetrievalProfile({
+      topics: [],
+      locations,
+      headlineLimitPerScope: 20,
+      headlineDepthByScope: { IN: 25, NL: 20, GLOBAL: 5 },
+    });
+    expect(headlineScopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'IN', limit: 25 },
+      { scope: 'COUNTRY', countryCode: 'NL' }, // equals the default → omitted
+      { scope: 'GLOBAL', limit: 5 },
+    ]);
+  });
+
+  it('clamps an out-of-range override to the server maximum', () => {
+    const { headlineScopes } = buildRetrievalProfile({
+      topics: [],
+      locations,
+      headlineDepthByScope: { IN: 999, NL: -4 },
+    });
+    expect(headlineScopes[0]).toEqual({ scope: 'COUNTRY', countryCode: 'IN', limit: 25 });
+    expect(headlineScopes[1]).toEqual({ scope: 'COUNTRY', countryCode: 'NL', limit: 0 });
+  });
+
+  it('ignores a non-finite override rather than emitting garbage', () => {
+    const { headlineScopes } = buildRetrievalProfile({
+      topics: [],
+      locations,
+      headlineDepthByScope: { IN: Number.NaN },
+    });
+    expect(headlineScopes[0]).toEqual({ scope: 'COUNTRY', countryCode: 'IN' });
+  });
+});
