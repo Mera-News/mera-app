@@ -288,4 +288,40 @@ describe('structured suppression kinds (D9/D10)', () => {
   });
 });
 
+// ~74% of the prod source catalogue sits on the generic "news" family, where an
+// exact category match is most of the feed rather than "this category". Both
+// category producers degrade those to a keyword filter.
+describe('generic categories stay keyword (D9 blast-radius gate)', () => {
+  it.each(['News', 'general_news', 'News (French)'])(
+    'this_category on the generic category %p mints a KEYWORD filter',
+    (category) => {
+      const c = run({
+        signals: [signal('r1', 'dislike', { category, treePath: ['not_important_to_me', 'this_category'] })],
+      });
+      const op = c[0].ops[0] as { suppressionKind?: string; suppressionValue?: string };
+      expect(op.suppressionKind).toBeUndefined();
+      expect(op.suppressionValue).toBeUndefined();
+    },
+  );
+
+  it('the cat: aggregate degrades a generic category too, but not a specific one', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', { category: 'News' }),
+        signal('r2', 'dislike', { category: 'News' }),
+        signal('r3', 'dislike', { category: 'Sports' }),
+        signal('r4', 'dislike', { category: 'Sports' }),
+      ],
+    });
+    const generic = c.find((x) => x.fingerprint === 'suppress:cat:news')!.ops[0] as {
+      suppressionKind?: string;
+    };
+    expect(generic.suppressionKind).toBeUndefined();
+    expect(c.find((x) => x.fingerprint === 'suppress:cat:sports')!.ops[0]).toMatchObject({
+      suppressionKind: 'category',
+      suppressionValue: 'Sports',
+    });
+  });
+});
+
 export {};

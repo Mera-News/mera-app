@@ -226,3 +226,32 @@ too much?" actually wants, and the three per-section counts are one tap away.
 **Cheapest way back:** hold a `Set` of open row ids instead of a single id (the state is already
 per-id), and make the hub subtitle a "2 filters · 3 sources" join. Both are contained; neither was
 needed to ship.
+
+### PU-17 · "This category" is precise only on specialist sources
+**Simplified:** "not important → this category" mints an exact category filter only when the
+category is discriminating. On the generic "news" family — `News`, `general_news`, and every
+`News (French)` / `News (English, Pidgin)` variant — it silently falls back to the keyword filter
+it was before D10. The user sees no difference either way.
+**Why:** the app's `category` is the PUBLICATION SOURCE's category, not the article's own, and
+2567 of 3475 prod sources (73.9%, measured 2026-07-29) sit on that generic family. An exact match
+there would soft-penalise most of the feed from a gesture the user believes is about one story —
+and 30 days later they cannot connect a flat feed to that tap. Matching fewer things is fine;
+matching most of the feed invisibly is not.
+**Power user loses:** category-precision when the story came from a general-news source — which is
+most of them. "Never show me this category" from a Reuters story is still only a text match.
+**Cheapest way back:** a real article-level category from the tagging pipeline (the same enrichment
+that owes us `event_type`). The moment articles carry their own category, the gate in
+`lib/news-harness/feedback-tree/category-specificity.ts` can be deleted and every category becomes
+structurable — the re-check query is in that file's header.
+
+### PU-18 · "This kind of event" is hidden rather than shown-and-dead
+**Simplified:** the `this_kind_of_event` leaf is gated behind a new `has_event_type` visibleIf, so
+it does not appear at all while the article carries no event type — which is every article today.
+**Why:** the server populates `event_type` on 0 of ~303k articles, so the leaf rendered, resolved
+to no actions, applied nothing and showed no toast. A dead option teaches the user that the
+feedback doesn't work; a missing one costs nothing. The gate lifts itself the moment tagging starts
+writing the field — no app release needed.
+**Power user loses:** nothing they had — the option never did anything.
+**Cheapest way back:** it returns automatically. Note the gate only reaches devices on the BUNDLED
+tree; the server-hosted tree (`app-config.feedback_tree_v1`) needs the same `visibleIf` published to
+take effect for everyone — see the wave report.

@@ -20,6 +20,12 @@ export interface FeedbackTreeCondition {
   cluster_size_gte?: number;
   has_matched_topics?: boolean;
   has_geo_mismatch?: boolean;
+  /** True ⇒ the node is hidden unless the article carries an `eventType`. Its
+   *  reason for existing: as of 2026-07-29 the server populates `event_type` on
+   *  ZERO of ~303k articles, so an event-type leaf resolves to no actions,
+   *  applies nothing and shows no toast — a dead option is worse than a missing
+   *  one. The gate disappears by itself once tagging starts writing the field. */
+  has_event_type?: boolean;
   // Forward-compat: server may add gate keys this app doesn't know.
   [key: string]: unknown;
 }

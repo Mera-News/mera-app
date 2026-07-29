@@ -11,8 +11,14 @@
 
 import type { FeedbackTree } from '../news-harness/feedback-tree/types';
 
-/** Structural schema version this app understands (gates minAppSchema). */
-export const APP_FEEDBACK_SCHEMA = 2;
+/** Structural schema version this app understands (gates minAppSchema).
+ *
+ *  v3 adds the `has_event_type` visibleIf gate. Bumped so the SERVER can
+ *  publish a tree that uses the key with `minAppSchema: 3` and have it dropped
+ *  by older apps rather than silently ignored. (Publishing it unguarded is also
+ *  safe — `evaluateCondition` ignores gate keys it doesn't know — so the bump
+ *  is about intent, not safety.) */
+export const APP_FEEDBACK_SCHEMA = 3;
 
 export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
   version: 2,
@@ -169,6 +175,11 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           id: 'this_kind_of_event',
           labelKey: 'feedback.this_kind_of_event',
           labelDefault: 'This kind of event',
+          // Hidden while the article has no event type — which is currently
+          // EVERY article (the server populates `event_type` on none of ~303k
+          // rows), so this leaf would otherwise apply nothing and show no
+          // toast. Reappears on its own once tagging writes the field.
+          visibleIf: { has_event_type: true },
           leaf: {
             actions: [
               { type: 'add_suppression', pattern: 'from_context_eventType', kind: 'event_type', strength: 0.5 },

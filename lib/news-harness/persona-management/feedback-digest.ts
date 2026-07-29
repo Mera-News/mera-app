@@ -23,6 +23,11 @@
 
 import { ACTION_NAMES, type ActionName } from './action-names';
 import type { SuppressionKindName } from '../core/types';
+// The digest's `pathCandidates` already interprets feedback-tree node ids, so
+// it is coupled to that module by design; the category gate is shared with
+// resolve-leaf-actions so the tree and the digest can never disagree about
+// which categories are safe to structure.
+import { isDiscriminatingCategory } from '../feedback-tree/category-specificity';
 
 // ── Constants (conservative by design) ───────────────────────────────────────
 
@@ -440,7 +445,10 @@ function pathCandidates(
             signal.id,
             c,
             { category: cat },
-            { kind: 'category', value: cat },
+            // Generic source categories ("News", "general_news", ~74% of the
+            // catalogue) stay KEYWORD — an exact match there is most of the
+            // feed, not a category. See category-specificity.
+            isDiscriminatingCategory(cat) ? { kind: 'category', value: cat } : undefined,
           ),
         );
       }
@@ -577,7 +585,7 @@ function aggregateCandidates(
       b.rows[0],
       c,
       { category: b.label },
-      { kind: 'category', value: b.label },
+      isDiscriminatingCategory(b.label) ? { kind: 'category', value: b.label } : undefined,
     );
     for (const id of b.rows) cand.sourceRowIds.add(id);
     out.push(cand);

@@ -8,6 +8,7 @@
 
 import { ACTION_NAMES } from '../persona-management/action-names';
 import type { SuppressionKindName } from '../core/types';
+import { isDiscriminatingCategory } from './category-specificity';
 import type {
   FeedbackTreeAbstractAction,
   FeedbackTreeLeaf,
@@ -117,7 +118,15 @@ function resolveOne(
       // placeholder's field backs. A literal pattern, a mismatched kind or an
       // unknown one degrades to a keyword filter: matching fewer things is
       // fine, matching nothing while looking active is not.
-      const structuredKind = source?.kind && a.kind === source.kind ? source.kind : undefined;
+      //
+      // `category` carries one extra gate: ~74% of the source catalogue sits on
+      // the generic "news" family, where an exact match means "most of the
+      // feed" rather than "this category" (see category-specificity). A generic
+      // value degrades to a keyword filter — silently, and behaving exactly as
+      // it did before D10.
+      const asked = source?.kind && a.kind === source.kind ? source.kind : undefined;
+      const structuredKind =
+        asked === 'category' && !isDiscriminatingCategory(pattern) ? undefined : asked;
       return [
         {
           action_type: ACTION_NAMES.ADD_SUPPRESSION,

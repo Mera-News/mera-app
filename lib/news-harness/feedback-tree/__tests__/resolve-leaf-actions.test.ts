@@ -186,3 +186,43 @@ describe('resolveLeafActions — structured suppression kinds', () => {
     ]);
   });
 });
+
+// The category kind carries one extra gate: ~74% of the prod source catalogue
+// sits on the generic "news" family, where an exact match is most of the feed
+// rather than "this category". Those degrade to a keyword filter — silently,
+// and identically to the pre-D10 behaviour.
+describe('resolveLeafActions — generic categories stay keyword', () => {
+  const leaf: FeedbackTreeLeaf = {
+    actions: [
+      { type: 'add_suppression', pattern: 'from_context_category', kind: 'category', strength: 0.5 },
+    ],
+  };
+
+  it.each(['News', 'general_news', 'News (French)'])(
+    'mints a KEYWORD filter for the generic category %p',
+    (category) => {
+      expect(resolveLeafActions(leaf, ctx({ category }))).toEqual([
+        {
+          action_type: ACTION_NAMES.ADD_SUPPRESSION,
+          suppressionPattern: category,
+          suppressionStrength: 0.5,
+        },
+      ]);
+    },
+  );
+
+  it.each(['Sports', 'Tech', 'Business'])(
+    'still mints a STRUCTURED filter for the specific category %p',
+    (category) => {
+      expect(resolveLeafActions(leaf, ctx({ category }))).toEqual([
+        {
+          action_type: ACTION_NAMES.ADD_SUPPRESSION,
+          suppressionPattern: category,
+          suppressionStrength: 0.5,
+          suppressionKind: 'category',
+          suppressionValue: category,
+        },
+      ]);
+    },
+  );
+});
