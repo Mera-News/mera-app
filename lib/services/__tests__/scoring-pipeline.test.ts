@@ -996,6 +996,47 @@ describe('soft suppression on the legacy path', () => {
     expect(mockDiscardLowRelevance).toHaveBeenCalled();
   });
 
+  it('penalises the MATH-mode rows of a MIXED batch too (they ride the legacy prompt)', async () => {
+    // One backstop row forces the whole batch down the legacy path, which
+    // submits `active` — every survivor, math-mode ones included. Keying the
+    // penalty map over `math.stage` (not just the backstop rows) is what stops
+    // those math rows from silently losing their penalty. This is the
+    // regression contract for that decision.
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map(candidates.map((c) => [c.id, 0.7])),
+      componentsMap: new Map(
+        candidates.map((c) => [c.id, { geoAlignment: 'NONE', suppressPenalty: 0.3 }]),
+      ),
+      modeMap: new Map(candidates.map((c) => [c.id, c.id === 'a1' ? 'backstop' : 'math'])),
+    }));
+    await enqueueCandidates(['a0', 'a1']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.judgeMode).toBeFalsy(); // legacy path (a1 is backstop)
+    expect(batch.suppressPenaltyMap).toEqual({ a0: 0.3, a1: 0.3 });
+
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.8], ['a1', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([]);
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    const saved = Object.fromEntries(
+      mockSaveScoringResult.mock.calls.map((c: any[]) => [c[0], c[1].relevance]),
+    );
+    expect(saved.a0).toBeCloseTo(0.5, 10);
+    expect(saved.a1).toBeCloseTo(0.5, 10);
+  });
+
   it('never carries a penalty map on a judge-mode batch (the math score already has it)', async () => {
     mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
       persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
