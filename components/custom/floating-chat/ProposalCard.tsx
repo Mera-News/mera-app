@@ -192,8 +192,8 @@ export function actionToRow(action: ProposalAction): ActionRow {
             : 'articleFeedback.actionSourceScopeDeprioritize',
         labelDefault:
           action.publicationPref === 'boost'
-            ? 'Show more from a country’s sources'
-            : 'Show less from a country’s sources',
+            ? 'Show more from sources in a country'
+            : 'Show less from sources in a country',
         detail: action.label,
       };
     case 'add_suppression':

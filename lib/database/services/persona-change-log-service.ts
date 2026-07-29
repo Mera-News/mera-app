@@ -311,7 +311,21 @@ export async function revertChange(changeLogId: string): Promise<void> {
       sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
       // `label` is only consulted when `before` is a concrete kind (restoring
       // 'none' retires the row and keeps its stored label for the audit trail).
-      const label = typeof action.label === 'string' && action.label.trim() ? action.label.trim() : scopeValue;
+      //
+      // Three tiers, because there are two producers. The executor logs the
+      // label; the Source-preferences screen hand-appends its rows WITHOUT one,
+      // and undoing one of its "clear" rows has to re-activate the row with the
+      // name the user actually saw — so fall back to the label still stored on
+      // the retired row before falling back to the raw alpha-3 token.
+      const logged = typeof action.label === 'string' ? action.label.trim() : '';
+      const stored = (await publicationPreferenceService.getAll())
+        .find(
+          (p) =>
+            p.scopeKind === scopeKind
+            && (p.scopeValue ?? '').trim().toUpperCase() === scopeValue.trim().toUpperCase(),
+        )
+        ?.publicationName?.trim();
+      const label = logged || stored || scopeValue;
       await publicationPreferenceService.setScopePreferenceKind(
         { scopeKind, scopeValue },
         before as PublicationPrefKind | 'none',

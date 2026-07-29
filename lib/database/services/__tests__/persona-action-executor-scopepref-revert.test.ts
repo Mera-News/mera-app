@@ -239,6 +239,38 @@ describe('set_source_scope_pref — revert', () => {
     expect(findScope('IND').weight).toBe(0.5);
   });
 
+  it("recovers the display label from the row when the log has none (screen-written 'clear')", async () => {
+    // The Source-preferences screen hand-appends its clear rows without a
+    // `label`. Undoing one must bring the row back reading "India", not "IND".
+    db._setRows('publication_preferences', [
+      makeRecord({
+        id: 'pref-seed',
+        publicationName: 'India',
+        scopeKind: 'country',
+        scopeValue: 'IND',
+        weight: 0.5,
+        status: 'retired', // the clear already ran
+        provenance: 'user',
+        createdAt: NOW,
+        updatedAt: NOW,
+      }),
+    ]);
+    withIds('publication_preferences', 'pref');
+
+    const row = await appendChange({
+      actionType: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+      action: { targetId: 'country:IND', before: 'boost', after: 'none' },
+      source: 'user',
+      summary: 'Cleared source-scope preference: India',
+    });
+
+    await revertChange(row.id);
+    const restored = findScope('IND');
+    expect(restored.status).toBe('active');
+    expect(restored.weight).toBe(0.5);
+    expect(restored.publicationName).toBe('India');
+  });
+
   it('refuses a malformed targetId rather than silently mutating the wrong row', async () => {
     const bad = await appendChange({
       actionType: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
