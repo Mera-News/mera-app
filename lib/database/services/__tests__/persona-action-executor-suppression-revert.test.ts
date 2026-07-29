@@ -25,8 +25,9 @@ jest.mock('@/lib/services/suppression-sweep', () => ({
   unexcludeRetiredHardFilters: jest.fn(async () => ({ resetIds: [], stillExcluded: 0 })),
 }));
 
+const mockSetFeedNeedsRefresh = jest.fn();
 jest.mock('@/lib/stores/for-you-store', () => ({
-  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
+  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: mockSetFeedNeedsRefresh }) },
 }));
 
 import database from '@/lib/database/index';
@@ -107,11 +108,92 @@ describe('add_suppression → retire_suppression → revert (hard, structured)',
       kind: 'publication',
     });
 
-    // 3. Undo the removal — the filter comes back active.
+    // 3. Undo the removal — the filter comes back active, AND re-purges.
     await revertChange(retired.changeLogId!);
     expect(stored.status).toBe('active');
     expect(logRow.reverted).toBe(true);
     // …and a revert_change audit row was appended.
+    expect(logRows().some((r: any) => r.actionType === 'revert_change')).toBe(true);
+    // D12: the reinstated hard filter must screen the stored feed again —
+    // the mirror of the un-exclude the removal performed.
+    expect(sweep.purgeHardFilteredSuggestions).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The D12c hole this phase closed: revert is a mutation path too.
+// ---------------------------------------------------------------------------
+
+describe('revert runs the MIRROR sweep (D12c)', () => {
+  it('reverting a HARD add releases the rows the add had purged', async () => {
+    const added = await applyPersonaAction(
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'cricket',
+        suppressionStrength: 0.9,
+      },
+      'user',
+    );
+    expect(sweep.purgeHardFilteredSuggestions).toHaveBeenCalledTimes(1);
+    expect(sweep.unexcludeRetiredHardFilters).not.toHaveBeenCalled();
+
+    // Undo from the Activity screen. Before this phase NOTHING ran here, so
+    // the purged articles stayed excluded for the rest of the 48h window.
+    await revertChange(added.changeLogId!);
+
+    expect(supRows()[0].status).toBe('retired');
+    expect(sweep.unexcludeRetiredHardFilters).toHaveBeenCalledTimes(1);
+    // The un-exclude is what resets the previously-excluded rows to `unscored`.
+    expect(sweep.purgeHardFilteredSuggestions).toHaveBeenCalledTimes(1);
+  });
+
+  it('reverting a SOFT add runs no sweep (it never excluded anything)', async () => {
+    const added = await applyPersonaAction(
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'gossip',
+        suppressionStrength: 0.5,
+      },
+      'user',
+    );
+    await revertChange(added.changeLogId!);
+
+    expect(supRows()[0].status).toBe('retired');
+    expect(sweep.purgeHardFilteredSuggestions).not.toHaveBeenCalled();
+    expect(sweep.unexcludeRetiredHardFilters).not.toHaveBeenCalled();
+  });
+
+  it('reverting a topic mutation runs no sweep but still marks the feed dirty', async () => {
+    db._setRows('topics', [makeRecord({ id: 't1', status: 'active', weight: 0.5 })]);
+    const retiredTopic = await applyPersonaAction(
+      { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: 't1' },
+      'user',
+    );
+    mockSetFeedNeedsRefresh.mockClear();
+
+    await revertChange(retiredTopic.changeLogId!);
+    expect(db._collections['topics']._rows[0].status).toBe('active');
+
+    expect(sweep.purgeHardFilteredSuggestions).not.toHaveBeenCalled();
+    expect(sweep.unexcludeRetiredHardFilters).not.toHaveBeenCalled();
+    // D18: reverting a weight is exactly as score-affecting as setting one.
+    expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(true);
+  });
+
+  it('a sweep failure never fails the revert (it is already committed)', async () => {
+    const added = await applyPersonaAction(
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'cricket',
+        suppressionStrength: 0.9,
+      },
+      'user',
+    );
+    (sweep.unexcludeRetiredHardFilters as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+
+    await expect(revertChange(added.changeLogId!)).resolves.toBeUndefined();
+    expect(supRows()[0].status).toBe('retired');
+    // The undo still landed and was audited.
     expect(logRows().some((r: any) => r.actionType === 'revert_change')).toBe(true);
   });
 });

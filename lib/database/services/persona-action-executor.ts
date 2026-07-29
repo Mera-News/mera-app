@@ -25,6 +25,11 @@ import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
 import type { PublicationPreferenceProvenance } from '../models/PublicationPreference';
 import { SUPPRESSION_KINDS } from '../models/PersonaSuppression';
 import type { PersonaSuppressionKind } from '../models/PersonaSuppression';
+import {
+  markFeedNeedsRefresh,
+  runSweepFor,
+  sweepForMutation,
+} from './persona-mutation-sweeps';
 
 /** Default weight for a minted NEGATIVE topic when the action omits one. */
 const DEFAULT_NEGATIVE_TOPIC_WEIGHT = -0.6;
@@ -112,61 +117,16 @@ function normalizeSuppressionKind(
   return kind;
 }
 
-type SweepKind = 'purge' | 'unexclude';
-
-/**
- * D12. Hard "not interested" filters are RETROACTIVE — the stored feed is
- * re-screened AFTER the row is committed (never before: the sweeps read the
- * persona live, so an uncommitted change is invisible to them).
- *
- * A sweep failure must NOT fail the action. By the time we get here the
- * mutation is already written and already audited; reporting `applied: false`
- * would be a lie and would strand a change-log row the caller thinks never
- * happened. So: catch, log, continue — the next scoring pass applies the filter
- * anyway, and a failed purge falls through to the D18 dirty flag below.
- *
- * Lazy `require`, mirroring the scoring pipeline's own refreshUi. There is no
- * load-time cycle (verified) — the reason is module-graph weight: this executor
- * is imported by chat tools, the feedback overlay and several screens, and a
- * static import would drag stage-scoring → llm/cloudComplete → the native DB
- * singleton into every one of those graphs.
- */
-async function runSweep(kind: SweepKind, actionType: ActionName): Promise<boolean> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
-    if (kind === 'purge') await sweep.purgeHardFilteredSuggestions();
-    else await sweep.unexcludeRetiredHardFilters();
-    return true;
-  } catch (error) {
-    logger.captureException(error, {
-      tags: { service: 'persona-action-executor', sweep: kind, action_type: actionType },
-    });
-    return false;
-  }
-}
-
 /**
  * D18. A persona change means the feed is stale. This executor is the single
- * choke point every mutation flows through (feedback leaves, chat proposals,
- * plan accepts, the filter actions) — before this, only the persona-EDITING
- * screens set the flag, so a persona changed via feedback or chat produced no
- * refresh hint at all.
+ * choke point every FORWARD mutation flows through (feedback leaves, chat
+ * proposals, plan accepts, the filter actions) — before this, only the
+ * persona-EDITING screens set the flag, so a persona changed via feedback or
+ * chat produced no refresh hint at all.
  *
- * Same lazy-require rationale as runSweep. Never throws: a missing store must
- * not turn a committed mutation into a failure.
+ * `revertChange` is the OTHER mutation path; it applies the same rule via the
+ * same shared module, which is why the sweep policy lives there and not here.
  */
-function markFeedNeedsRefresh(): void {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const store = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
-    store.useForYouStore.getState().setFeedNeedsRefresh(true);
-  } catch (error) {
-    logger.captureException(error, {
-      tags: { service: 'persona-action-executor', step: 'mark-feed-dirty' },
-    });
-  }
-}
 
 /**
  * Single dispatch point for ALL deterministic persona mutations (feedback tree
@@ -346,10 +306,13 @@ async function dispatch(
       // Compare the strength WE clamped/defaulted, not the persisted row's:
       // the decision is about the action, and it must not depend on the shape
       // the service happens to return.
-      const purged =
-        strength >= suppressionService.HARD_SUPPRESSION_STRENGTH
-          ? await runSweep('purge', action.action_type)
-          : false;
+      const purged = await runSweepFor(
+        sweepForMutation({
+          actionType: action.action_type,
+          hardFilter: strength >= suppressionService.HARD_SUPPRESSION_STRENGTH,
+        }),
+        action.action_type,
+      );
       return { applied: true, changeLogId: row.id, summary: `Suppressed: ${pattern}`, purged };
     }
 
@@ -379,10 +342,18 @@ async function dispatch(
       // D12c. Retiring a HARD filter gives its casualties a second chance. Rows
       // a still-active filter also matches stay excluded (the sweep re-screens
       // against the live persona, so the two-filters-on-one-row case is free).
-      // NOT flagged `purged` — the released rows come back `unscored` and need
-      // the next scoring pass, so the feed is genuinely dirty (D18).
-      if (wasHard) await runSweep('unexclude', action.action_type);
-      return { applied: true, changeLogId: row.id, summary: `Removed filter: ${pattern}` };
+      // runSweepFor returns false for an un-exclude — the released rows come
+      // back `unscored` and need the next scoring pass, so the feed IS dirty.
+      const purged = await runSweepFor(
+        sweepForMutation({ actionType: action.action_type, hardFilter: wasHard }),
+        action.action_type,
+      );
+      return {
+        applied: true,
+        changeLogId: row.id,
+        summary: `Removed filter: ${pattern}`,
+        purged,
+      };
     }
 
     // -- Location weight ----------------------------------------------------
@@ -425,12 +396,14 @@ async function dispatch(
       // see it live with no extra plumbing here. Muting purges retroactively;
       // raising the weight back above -0.9 (unmute, incl. switching to
       // boost/deprioritize/none) releases what the mute had excluded.
-      let purged = false;
-      if (action.publicationPref === 'mute') {
-        purged = await runSweep('purge', action.action_type);
-      } else if (before === 'mute') {
-        await runSweep('unexclude', action.action_type);
-      }
+      const purged = await runSweepFor(
+        sweepForMutation({
+          actionType: action.action_type,
+          prefBefore: before,
+          prefAfter: action.publicationPref,
+        }),
+        action.action_type,
+      );
       return {
         applied: true,
         changeLogId: row.id,

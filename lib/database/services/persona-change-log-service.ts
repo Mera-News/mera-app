@@ -20,6 +20,12 @@ import * as suppressionService from './suppression-service';
 import * as publicationPreferenceService from './publication-preference-service';
 import type { PublicationPrefKind } from './publication-preference-service';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
+import {
+  markFeedNeedsRefresh,
+  runSweepFor,
+  sweepForRevert,
+  type SweepDecisionInput,
+} from './persona-mutation-sweeps';
 
 const changeLogCollection = database.get<PersonaChangeLogModel>('persona_change_log');
 const factsCollection = database.get<FactModel>('facts');
@@ -121,8 +127,29 @@ function requireBooleanBefore(action: ChangeLogAction, rowId: string): boolean {
 }
 
 /**
+ * Was this suppression row a HARD filter? Reads the row rather than the log,
+ * because `add_suppression`/`retire_suppression` entries record kind/value but
+ * not strength. A row that no longer exists can't have excluded anything, so
+ * a miss is `false` — never a throw, since this only informs the sweep.
+ */
+async function suppressionWasHard(suppressionId: string): Promise<boolean> {
+  try {
+    const all = await suppressionService.getAll();
+    const found = all.find((s) => s.id === suppressionId);
+    return !!found && found.strength >= suppressionService.HARD_SUPPRESSION_STRENGTH;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Reverts a logged persona mutation by applying its inverse, marks the row
- * `reverted`, and appends a `revert_change` entry (source 'user').
+ * `reverted`, appends a `revert_change` entry (source 'user'), and then runs
+ * whatever retroactive feed sweep the undo requires (D12) plus the feed-dirty
+ * flag (D18) — the same reconciliation the persona-action-executor seam does,
+ * via the same shared policy module. A revert is a persona mutation like any
+ * other; skipping this is what let an undone hard filter leave its purged
+ * articles gone for the rest of the 48h window.
  *
  * Implemented inversions:
  *   set_topic_weight / set_fact_weight / set_location_weight → restore `before`
@@ -142,6 +169,12 @@ export async function revertChange(changeLogId: string): Promise<void> {
   const row = await changeLogCollection.find(changeLogId);
   if (row.reverted) return;
   const action = parseAction(row);
+
+  // D12 + D18. A revert is a persona mutation like any other, so it owes the
+  // feed the same reconciliation the forward path does. Described in FORWARD
+  // terms — `sweepForRevert` mirrors it — so a new action type can never be
+  // wired into one path and forgotten in the other.
+  const sweepInput: SweepDecisionInput = { actionType: row.actionType };
 
   switch (row.actionType) {
     case 'set_topic_weight': {
@@ -202,6 +235,9 @@ export async function revertChange(changeLogId: string): Promise<void> {
     }
     case ACTION_NAMES.ADD_SUPPRESSION: {
       const targetId = requireTargetId(action, row.id);
+      // Undoing a HARD add retires the filter, so its casualties must come
+      // back — the mirror of the purge the add performed (D12c).
+      sweepInput.hardFilter = await suppressionWasHard(targetId);
       await suppressionService.retireSuppression(targetId);
       break;
     }
@@ -210,6 +246,9 @@ export async function revertChange(changeLogId: string): Promise<void> {
       // ORIGINAL expires_at, so undoing the removal of a long-expired SOFT
       // filter is deliberately inert rather than a silent 30-day extension.
       const targetId = requireTargetId(action, row.id);
+      // Undoing a removal puts the filter back, so a HARD one must re-purge
+      // what it had been blocking.
+      sweepInput.hardFilter = await suppressionWasHard(targetId);
       await suppressionService.reactivateSuppression(targetId);
       break;
     }
@@ -229,6 +268,11 @@ export async function revertChange(changeLogId: string): Promise<void> {
           `persona_change_log ${row.id}: 'before' must be a publication pref kind for set_publication_pref`,
         );
       }
+      // Crossing the mute boundary is a hard-filter change in either
+      // direction; sweepForRevert mirrors it (restoring 'mute' purges,
+      // leaving 'mute' releases).
+      sweepInput.prefBefore = before;
+      sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
       await publicationPreferenceService.setPreferenceKind(
         targetId,
         before as PublicationPrefKind | 'none',
@@ -252,4 +296,13 @@ export async function revertChange(changeLogId: string): Promise<void> {
     source: 'user',
     summary: `Reverted: ${row.summary}`,
   });
+
+  // D12 + D18, AFTER the inverse is committed and audited (both sweeps read the
+  // persona live, so running earlier would screen against the pre-revert
+  // state). Identical policy and identical failure handling to the executor
+  // seam: a sweep failure is caught and logged inside runSweepFor, never
+  // propagated — the revert already happened, so throwing here would report a
+  // completed undo as failed. A failed purge falls through to the dirty flag.
+  const purged = await runSweepFor(sweepForRevert(sweepInput), row.actionType);
+  if (!purged) markFeedNeedsRefresh();
 }
