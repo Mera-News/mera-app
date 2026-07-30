@@ -9,7 +9,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
-import { fetchUserBilling } from '@/lib/billing-service';
+import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
@@ -23,7 +23,7 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 interface ProfileScreenProps {
     readonly userId: string;
@@ -66,18 +66,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
 
     // Billing + on-device article count drive the daily-usage card. Both are
     // best-effort — the widget falls back to the local count when offline.
-    useEffect(() => {
+    const refreshBilling = useCallback(() => {
         fetchUserBilling().then(setBilling).catch(() => { /* offline fallback */ });
-        getTotalArticleSuggestionCount().then(setTotalArticleCount).catch(() => { /* keep last */ });
     }, []);
 
-    // Refresh the fact count on focus (tabs stay mounted → focus fires on every
-    // switch back) — drives the empty-persona CTA. FactsList (rendered below)
-    // owns its own real-time refresh for the list itself.
+    useEffect(() => {
+        refreshBilling();
+        getTotalArticleSuggestionCount().then(setTotalArticleCount).catch(() => { /* keep last */ });
+    }, [refreshBilling]);
+
+    // Refresh the fact count and the usage card on focus (tabs stay mounted →
+    // focus fires on every switch back) — the fact count drives the
+    // empty-persona CTA, and billing would otherwise stay frozen at whatever it
+    // was when the tab first mounted, including after a purchase made
+    // elsewhere. FactsList (rendered below) owns its own real-time refresh for
+    // the list itself.
     useFocusEffect(
         useCallback(() => {
             refreshFactCount();
-        }, [refreshFactCount]),
+            refreshBilling();
+        }, [refreshFactCount, refreshBilling]),
     );
 
     // A chat (or sheet) that mutated facts bumps this — refresh the count so the
@@ -91,16 +99,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const handleUpgrade = useCallback(async () => {
         try {
             const offering = await getOfferingSafe();
-            await RevenueCatUI.presentPaywall({
+            const result = await RevenueCatUI.presentPaywall({
                 ...(offering ? { offering } : {}),
                 displayCloseButton: true,
             });
+            // A purchase is a discrete event — refresh the usage card on it
+            // rather than leaving the old plan on screen until the next focus.
+            // The webhook is async, so this retries briefly (bounded).
+            if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+                const fresh = await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
+                if (fresh) setBilling(fresh);
+            }
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'ProfileScreen', method: 'upgrade' },
             });
         }
-    }, []);
+    }, [billing?.subscriptionTier]);
 
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;

@@ -431,3 +431,40 @@ recorded. The signal IS persisted correctly — this is display only.
 **Cheapest way back:** hoist both surfaces onto the same `verdict + committed` pair the feed and
 detail screens now use (`getArticleVerdict` already returns both), and give dislike the like path's
 re-tap-to-un-vote. Roughly one focused pass over the two files plus a device check of the un-vote.
+
+### DD-2 · A pending plan change is invisible — the app keeps saying the old plan
+**Where:** `components/custom/config-mera/ManageSubscriptionScreen.tsx`, the usage widget on
+`components/custom/profile/ProfileScreen.tsx`, `lib/revenuecat.ts`.
+**What's wrong:** when the App Store records a subscription change as **deferred** (the new plan
+starts at the next renewal instead of immediately), every surface keeps showing the *old* plan with
+no explanation, for up to a full billing period. The user has paid for Professional, StoreKit shows
+Professional as the renewing subscription, and the app says "Individual". Nothing is wrong with the
+data — RevenueCat's active entitlement really is Individual until the period ends, and our DB agrees
+— but the app never says why.
+**Why it wasn't fixed:** the notice cannot be derived honestly from what the client can see.
+`CustomerInfo`, `PurchasesEntitlementInfo` and `PurchasesSubscriptionInfo` (react-native-purchases
+10.4.0 — the full type surface was read) carry **no field naming a future product**. RevenueCat only
+knows the incoming plan server-side, as `PRODUCT_CHANGE.new_product_id` on the webhook. Any
+client-side rule would have to *infer* the pending product from
+`subscriptionsByProductIdentifier`, and on a deferred App Store change there may be no row for the
+new product at all (no transaction exists yet) — so the inference would either never fire in the
+case that motivated it, or fire on an unrelated lapsed subscription. A wrong "Professional starts on
+30 July" is worse than silence, so the app shows nothing.
+**User loses:** the explanation. They see the plan they used to have and no indication that the one
+they bought is queued.
+**Cheapest way back, in order:**
+1. `describeSubscriptions()` in `lib/revenuecat.ts` is the probe. It is logged by
+   `logRevenueCatDiagnostics()`, which `ManageSubscriptionScreen` now fires on mount in `__DEV__`.
+   Opening that screen on a device that is *currently* in the deferred state prints every
+   subscription row (`isActive` / `willRenew` / `purchaseDate` / `expiresDate` /
+   `unsubscribeDetectedAt`). If a not-yet-active row for the incoming product turns up, a reliable
+   client-only rule exists and the notice is a one-line addition to the hero card.
+2. If it does not, the correct home is the server: `mera-server-auth` already processes
+   `PRODUCT_CHANGE`, so persisting `pendingTier` + `pendingTierStartsAt` and adding them to the
+   `userBilling` GraphQL type makes the notice trivially derivable and always correct. That is a
+   server change and was out of scope for this app-only wave.
+
+Separately, the *reason* the change was deferred rather than immediate is store configuration, not
+code: an immediate upgrade requires the new product to be ranked above the old one within the App
+Store subscription group. `storekit/Mera.storekit` encodes the intended ranking (Professional 1,
+Individual 2, Starter 3) so the corrected behaviour can be exercised locally.
