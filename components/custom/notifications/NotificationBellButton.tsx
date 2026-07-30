@@ -59,6 +59,7 @@ const NotificationBellButton: React.FC = () => {
 
     return (
         <Pressable
+            testID="feed-notification-bell"
             ref={btnRef as never}
             onLayout={measureBell}
             onPress={onPress}

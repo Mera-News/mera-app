@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "cancel": "İptal",
     "delete": "Sil",
     "save": "Kaydet",
@@ -72,7 +73,7 @@
     "stuckTitle": "Haber akışın yüklenemedi",
     "stuckDescription": "Bizim tarafımızda bir şeyler ters gitti.",
     "stuckHint": "Birkaç dakika sonra uygulamayı yeniden aç.",
-    "offlineCached": "Çevrimdışı — önbelleğe alınmış içerik gösteriliyor",
+    "offlineCached": "Çevrimdışı: önbelleğe alınmış içerik gösteriliyor",
     "newBadge": "YENİ",
     "newsCluster": "Haber Kümesi",
     "justNow": "Az önce",
@@ -102,13 +103,13 @@
     "articleSingular": "makale",
     "articlePlural": "makale",
     "processing": {
-      "doneFlash": "Her şey hazır — işte haberlerin",
+      "doneFlash": "Her şey hazır, işte haberlerin",
       "errorFlash": "En son içerik yüklenemedi. Lütfen tekrar dene.",
       "stages": {
         "fetching": {
           "headlines": [
             "Bugünün makaleleri telefonuna aktarılıyor…",
-            "Mera haberleri cihazına getirir — ilgi alanların hiçbir zaman buradan çıkmaz."
+            "Mera haberleri cihazına getirir. İlgi alanların hiçbir zaman buradan çıkmaz."
           ],
           "amberSubline": "Lütfen bu ekranı açık tut."
         },
@@ -117,16 +118,16 @@
           "tooltip": "Mera telefonunda şifreli isteği hazırlıyor. Bu adım için uygulamayı açık tutman gerekiyor.",
           "headlines": [
             "Bugünün haberleri senin için isteniyor…",
-            "Mera farklı bir uygulama — isteğin çıkmadan önce telefonunda şifreleniyor."
+            "Mera farklı bir uygulama: isteğin çıkmadan önce telefonunda şifreleniyor."
           ],
-          "amberSubline": "Birkaç saniyeliğine bu ekranda kal — bu adımı arka planda yapamıyoruz."
+          "amberSubline": "Birkaç saniyeliğine bu ekranda kal: bu adımı arka planda yapamıyoruz."
         },
         "hydrating": {
           "shortName": "Telefona çekiliyor",
           "tooltip": "Bugünün makaleleri telefonuna kopyalanıyor, böylece sonraki adımlar gizli biçimde çalışabilsin.",
           "headlines": [
             "Bugünün makaleleri telefonuna aktarılıyor…",
-            "Mera haberleri cihazına getirir — ilgi alanların hiçbir zaman buradan çıkmaz."
+            "Mera haberleri cihazına getirir. İlgi alanların hiçbir zaman buradan çıkmaz."
           ],
           "amberSubline": "Lütfen bu ekranı açık tut."
         },
@@ -135,24 +136,24 @@
           "tooltip": "Gürültü konularına karşı çekilen sahte hikayeler filtreleniyor. Yalnızca gürültü enjeksiyonu açıkken çalışır.",
           "headlines": [
             "Akışından sahte hikayeler filtreleniyor…",
-            "Gürültü enjeksiyonu gerçek konularınla birlikte sahte konular gönderdi — şimdi yalnızca bu sahtelerle eşleşen hikayeleri kaldırıyoruz."
+            "Gürültü enjeksiyonu gerçek konularınla birlikte sahte konular gönderdi. Şimdi yalnızca bu sahtelerle eşleşen hikayeleri kaldırıyoruz."
           ]
         },
         "cloudRelevance": {
           "shortName": "Alaka düzeyi hesaplanıyor",
-          "tooltip": "Buluttaki bir AI her makaleyi okuyarak sana neyin önemli olabileceğini seçiyor. İsteğin şifreli — anahtarı yalnızca telefonun tutuyor.",
+          "tooltip": "Buluttaki bir AI her makaleyi okuyarak sana neyin önemli olabileceğini seçiyor. İsteğin şifreli: anahtarı yalnızca telefonun tutuyor.",
           "headlines": [
             "Bir AI her makaleyi okuyarak hangilerinin sana önemli olduğunu belirliyor.",
-            "İsteğin şifreli — anahtarı yalnızca telefonun tutuyor."
+            "İsteğin şifreli: anahtarı yalnızca telefonun tutuyor."
           ]
         },
         "cloudReasons": {
           "shortName": "Notlar yazılıyor",
-          "tooltip": "AI her hikaye için kısa bir not yazıyor — bu haberin sana neden önemli olduğunu açıklıyor. İstek şifreli kalmaya devam ediyor.",
+          "tooltip": "AI her hikaye için kısa bir not yazıyor: bu haberin sana neden önemli olduğunu açıklıyor. İstek şifreli kalmaya devam ediyor.",
           "headlines": [
             "Her uygun hikaye için kısa bir not yazılıyor.",
-            "Uzaklaşabilirsin — hazır olduğunda sana bildirim göndeririz.",
-            "Her şey uçtan uca şifreli kalır — yalnızca telefonun bunu okuyabilir."
+            "Uzaklaşabilirsin. Hazır olduğunda sana bildirim göndeririz.",
+            "Her şey uçtan uca şifreli kalır: yalnızca telefonun bunu okuyabilir."
           ]
         },
         "onDevice": {
@@ -160,7 +161,7 @@
           "tooltip": "Telefonun bu hikayeleri yerel olarak puanlıyor. Bu adım için hiçbir şey cihazdan çıkmıyor.",
           "headlines": [
             "Telefonun bu hikayeleri senin için puanlıyor.",
-            "Bu adım tamamen cihazında gerçekleşiyor — hiçbir şey dışarı çıkmıyor."
+            "Bu adım tamamen cihazında gerçekleşiyor: hiçbir şey dışarı çıkmıyor."
           ]
         }
       }
@@ -183,8 +184,8 @@
       "completedMessage": "Haber akışın hazır"
     },
     "dailyLimit": {
-      "body": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler yarın açılır.",
-      "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın — yeni makaleler {{time}} saatinde açılır.",
+      "body": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler yarın açılır.",
+      "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler {{time}} saatinde açılır.",
       "title": "Günlük makale sınırına ulaşıldı"
     },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
@@ -234,9 +235,9 @@
     "addedToLocations": "Yerlerine eklendi"
   },
   "clusterDetail": {
-    "translatable": "Bu makale {{language}} dilinde — okurken cihazın çevirebilir. Çeviri çalışmazsa aşağıdaki Google Çeviri'de siteyi açabilirsin — sadece Google üzerinden gezindiğini unutma.",
-    "notTranslatable": "Bu makale {{language}} dilinde. Cihazın bunu çeviremiyor — kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
-    "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor — sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle veya kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
+    "translatable": "Bu makale {{language}} dilinde: okurken cihazın çevirebilir. Çeviri çalışmazsa aşağıdaki Google Çeviri'de siteyi açabilirsin, sadece Google üzerinden gezindiğini unutma.",
+    "notTranslatable": "Bu makale {{language}} dilinde. Cihazın bunu çeviremiyor. Kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
+    "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor, sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle veya kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
     "unknownLanguage": "başka bir dil",
     "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
     "viewInGoogleTranslate": "Google Çeviri'de görüntüle",
@@ -296,9 +297,9 @@
     "timeDescriptionOnboarding": "Haberlerine ne zaman göz atmak istediğini seç",
     "timeNudges": [
       "Haberler, günde bir ya da iki odaklanmış anda en iyi şekilde işler.",
-      "Sürekli kontrol etmene gerek yok — sen hazır olduğunda biz de hazır olacağız.",
+      "Sürekli kontrol etmene gerek yok: sen hazır olduğunda biz de hazır olacağız.",
       "Daha az ve sakin kontroller, gün boyu süren bilgi akışından daha iyidir.",
-      "Gününe uyan saatleri seç — toplama işini Mera halleder."
+      "Gününe uyan saatleri seç: toplama işini Mera halleder."
     ]
   },
   "language": {
@@ -306,7 +307,7 @@
     "appLanguage": "Uygulama Dili",
     "appLanguageDescription": "Uygulama arayüzü ve haber içeriğinin çevrilmesi için kullanılır",
     "languagePacks": "Dil Paketleri",
-    "languagePacksIos": "Çeviri modelleri cihazın tarafından yönetilir. Yalnızca seçtiğin dil için modeli indirmen yeterli — gerisini iOS halleder.",
+    "languagePacksIos": "Çeviri modelleri cihazın tarafından yönetilir. Yalnızca seçtiğin dil için modeli indirmen yeterli: gerisini iOS halleder.",
     "languagePacksIosPath": "Ayarlar → Genel → Dil ve Bölge → Çeviri Dilleri",
     "languagePacksAndroid": "Çeviri modelleri (~30MB her biri) yeni bir dile ilk çeviriyi yaptığında otomatik olarak indirilir.",
     "openDeviceSettings": "Cihaz Ayarlarını Aç",
@@ -315,11 +316,11 @@
     "restartDescription": "Dil değişikliğini uygulamak için uygulamanın yeniden başlatılması gerekiyor.",
     "restart": "Şimdi Yeniden Başlat",
     "later": "Daha Sonra",
-    "packMissingBanner": "Bu dil için cihaz üzerinde bir çeviri paketi gerekiyor — çevirinin kendisi telefonunda yerel olarak çalışır. Dilleri telefonunun ayarlarından yönetebilirsin.",
+    "packMissingBanner": "Bu dil için cihaz üzerinde bir çeviri paketi gerekiyor: çevirinin kendisi telefonunda yerel olarak çalışır. Dilleri telefonunun ayarlarından yönetebilirsin.",
     "packMissingIosPath": "Ayarlar → Genel → Dil ve Bölge",
     "retry": "Tekrar Dene",
     "watchGuide": "Cihazınıza dil eklemeyi izleyin",
-    "iosLanguageHint": "Yalnızca bu dili seçmek yeterli değildir — bu dili iOS dil ayarlarında da seçmeniz gerekir."
+    "iosLanguageHint": "Yalnızca bu dili seçmek yeterli değildir: bu dili iOS dil ayarlarında da seçmeniz gerekir."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -348,9 +349,9 @@
     "updateTo": "{{modelName}} sürümüne güncelle",
     "injectNoiseTitle": "Gürültü Enjeksiyonu",
     "injectNoiseDescription": "Gerçek ilgi alanlarınla birlikte sahte konular göndererek arka ucun konu listenizden kim olduğunu tahmin etmesini önler. Yalnızca sahte konularla eşleşen makaleler sana ulaşmadan filtrelenir.",
-    "injectNoiseBeta": "Beta — konu oluşturmayı yavaşlatabilir ve akış alaka düzeyini düşürebilir.",
+    "injectNoiseBeta": "Beta: konu oluşturmayı yavaşlatabilir ve akış alaka düzeyini düşürebilir.",
     "privacyTitle": "Verileriniz gizli kalır",
-    "privacyDescription": "Mera Protocol her zaman etkindir. Cihaz üzerinde modu, çıkarımı tamamen çevrimdışı olarak telefonunda çalıştırır. Bulut modu, uçtan uca şifreli çıkarım kullanır — verilerin cihazında şifrelenir ve yalnızca güvenli bir enklav içinde şifresi çözülür. Mera verilerini asla görmez.",
+    "privacyDescription": "Mera Protokolü her zaman açıktır. Cihaz modunda çıkarım telefonunuzda tamamen çevrimdışı çalışır. Bulut modunda uçtan uca şifreli çıkarım kullanılır: verileriniz cihazınızda şifrelenir ve yalnızca içine bakamadığımız güvenli bir kapsül içinde çözülür. Kişisel bilgileriniz, profiliniz ve okuma geçmişiniz bu cihazdan hiç ayrılmaz. Haber getirmek için yalnızca genel konu ifadeleri gönderiyoruz; hiçbir kullanıcı kimliği olmadan.",
     "deviceSupported": "Cihaz Destekleniyor",
     "deviceNotSupported": "Cihaz Desteklenmiyor",
     "deviceSupportedDescription": "Cihazın, cihaz üzerinde AI işleme için tüm gereksinimleri karşılıyor.",
@@ -407,8 +408,8 @@
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
     "errorDescription": "Veriler silinemedi. Lütfen tekrar dene.",
-    "factsDescription": "Bilgileriniz ve bunların ürettiği konular — bu cihazda",
-    "factsModalDescription": "Eklediğiniz bilgileri ve bunlardan üretilen konuları temizler. Konular yalnızca bu cihazda bulunur — sunucularımızda asla saklanmaz. Makale akışınız da bu konulardan oluşturulduğu için temizlenir ve siz yeni bilgi ekleyene kadar boş olarak yeniden oluşturulur.",
+    "factsDescription": "Bilgileriniz ve bunların ürettiği konular (bu cihazda)",
+    "factsModalDescription": "Eklediğiniz bilgileri ve onlardan üretilen konuları siler. Bilgileriniz bu cihazdan hiç ayrılmaz. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır; dolayısıyla orada bunların size ait olduğunu gösteren hiçbir kayıt yoktur. Haber akışınız da temizlenir, çünkü bu konular üzerine kuruludur, ve yeni bilgi ekleyene kadar boş kalır.",
     "locationDevice": "Cihazda",
     "locationServer": "Sunucu"
   },
@@ -454,8 +455,8 @@
     "tabPersona": "Profil",
     "tabSources": "Kaynaklar",
     "tabPreferences": "Tercihler",
-    "privacyOnDevice": "Gerçeklerin ve konuların yalnızca cihazında saklanır — yapay zeka çıkarımı Mera Protocol aracılığıyla tamamen cihazda çalışır. Haber ihtiyacın olduğunda konuların ilgili makaleleri bulmak için sunucularımıza gönderilir; sunucu sonuçları verilerini saklamadan döner. Sohbet geçmişi asla kaydedilmez; her oturum sıfırdan başlar. Cihaz değiştirmek veya çıkış yapmak profilini yeniden oluşturmak anlamına gelir.",
-    "privacyCloud": "Gerçeklerin ve konuların yalnızca cihazında saklanır. Bulut çıkarımı şifrelenmiş Güvenilir Yürütme Ortamlarını (TEE) kullanır — verilerin cihazda şifrelenir, izole bir bölgede işlenir ve yalnızca cihazında çözülür. Haber ihtiyacın olduğunda konuların ilgili makaleleri bulmak için sunucularımıza gönderilir; sunucu sonuçları verilerini saklamadan döner. Sohbet geçmişi asla saklanmaz; her oturum sıfırdan başlar. Cihaz değiştirmek veya çıkış yapmak profilini yeniden oluşturmak anlamına gelir.",
+    "privacyOnDevice": "Bilgileriniz ve konularınız yalnızca cihazınızda saklanır: yapay zekâ çıkarımı Mera Protokolü ile tümüyle cihaz üzerinde çalışır. Her haber getirişinizde yalnızca konu ifadeleriniz gönderilir, kullanıcı kimliği taşımadan (yukarıdaki Gürültü Enjeksiyonu seçeneğini açarak yem konuları onlarla birlikte gönderebilirsiniz). Bu ifadeler sunucularımızda yalnızca metne göre önbelleğe alınır ve 14 gün istenmezse silinir; isteyenin siz olduğunu hiçbir yer kaydetmez. Sizin hakkınızda sakladığımız veriler giriş e-postanız, abonelik durumunuz ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısıdır. Sohbet oturumları sıfırdan başlar ve hiçbir zaman kaydedilmez: tek istisna, bir kilit açma talebi gönderdiğinizde, eklediğiniz sohbet transkripsiyonunun inceleme için depolanmasıdır. Cihaz değiştirmek veya çıkış yapmak, kişiliğinizin yeniden oluşturulması demektir. Arka ucumuz henüz yayınlanmadı; verilerinize dokunan her servisi açık kaynak deposuna taşıyoruz ve Eylül 2026'dan önce herkese açık hale getirmeyi bekliyoruz. O zamana kadar güvene kalan tek şey, sizi konularınızla ilişkilendiren hiçbir kayıt tutmadığımızdır. Mera, GDPR kapsamında Hollanda'da geliştirilir ve verilerinizi tutmamak bu tasarımın bütün amacıdır.",
+    "privacyCloud": "Bilgileriniz ve konularınız yalnızca cihazınızda saklanır. Bulut çıkarımı şifreli Trusted Execution Environments (TEE) kullanır: verileriniz cihazda kapsülün yayınladığı anahtarla şifrelenir, yalıtılmış bir kapsülde işlenir ve yalnızca cihazınızda çözülür. Kesin olmak gerekirse: uygulama henüz bu atestasyonu donanım satıcısına karşı denetlemez, bu nedenle şu an siz ve kapsül işletmecisi yerine bize güvenmektesiniz; uygulamayı bunu denetlemesini sağlamak ve devam etmeyi reddetmesini sağlamak yol haritamızda vardır. Her haber getirişinizde yalnızca konu ifadeleriniz gönderilir, kullanıcı kimliği taşımadan (yukarıdaki Gürültü Enjeksiyonu seçeneğini açarak yem konuları onlarla birlikte gönderebilirsiniz). Bu ifadeler sunucularımızda yalnızca metne göre önbelleğe alınır ve 14 gün istenmezse silinir; isteyenin siz olduğunu hiçbir yer kaydetmez. Sizin hakkınızda sakladığımız veriler giriş e-postanız, abonelik durumunuz ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısıdır. Sohbet oturumları sıfırdan başlar ve hiçbir zaman kaydedilmez: tek istisna, bir kilit açma talebi gönderdiğinizde, eklediğiniz sohbet transkripsiyonunun inceleme için depolanmasıdır. Cihaz değiştirmek veya çıkış yapmak, kişiliğinizin yeniden oluşturulması demektir. Arka ucumuz henüz yayınlanmadı; verilerinize dokunan her servisi açık kaynak deposuna taşıyoruz ve Eylül 2026'dan önce herkese açık hale getirmeyi bekliyoruz. Mera, GDPR kapsamında Hollanda'da geliştirilir ve verilerinizi tutmamak bu tasarımın bütün amacıdır.",
     "privacyPolicy": "Gizlilik Politikası",
     "privacyNoticeTitle": "Gizliliğiniz",
     "updatingTopics": "Konular güncelleniyor... {{completed}}/{{total}}",
@@ -524,15 +525,15 @@
     "accountRestrictedDescription": "Hesabın kısıtlanmıştır. Lütfen destek ekibiyle iletişime geç.",
     "scoring": {
       "generic": {
-        "message": "Sizin için haber seçilirken bir sorun oluştu. Denemeye devam edeceğiz — sorun sürerse yenilemek için aşağı çekin.",
+        "message": "Sizin için haber seçilirken bir sorun oluştu. Denemeye devam edeceğiz, sorun sürerse yenilemek için aşağı çekin.",
         "title": "Akışınız güncellenemedi"
       },
       "offline": {
-        "message": "Sizin için haber seçmek üzere sunucuya ulaşamıyoruz. Bağlantınızı kontrol edin — çevrimiçi olduğunuzda akışınız kendiliğinden güncellenecek.",
+        "message": "Sizin için haber seçmek üzere sunucuya ulaşamıyoruz. Bağlantınızı kontrol edin: çevrimiçi olduğunuzda akışınız kendiliğinden güncellenecek.",
         "title": "Çevrimdışısınız"
       },
       "server": {
-        "message": "Haber servisine ulaşamadık. Bu genellikle kısa sürer — denemeye devam edeceğiz ve akışınız kendiliğinden güncellenecek.",
+        "message": "Haber servisine ulaşamadık. Bu genellikle kısa sürer: denemeye devam edeceğiz ve akışınız kendiliğinden güncellenecek.",
         "title": "Servis kullanılamıyor"
       }
     }
@@ -551,7 +552,7 @@
     "inferenceError": "Şu anda Mera çıkarım hizmetine ulaşmakta sorun yaşıyoruz. Lütfen bir süre sonra tekrar dene."
   },
   "personaChat": {
-    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın. İstersen kendin hakkında ne olursa paylaş — nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. Ya da sadece 'kurulumda yardım et' de, sana adım adım rehberlik edeyim."
+    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın. İstersen kendin hakkında ne olursa paylaş: nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. Ya da sadece 'kurulumda yardım et' de, sana adım adım rehberlik edeyim."
   },
   "floatingChat": {
     "bubbleHint": "Mera ile sohbet et",
@@ -601,8 +602,8 @@
     "improveMessage": "Bu öneri daha iyi olabilir: \"{{title}}\". Önerilerimi ayarlamama yardım et.",
     "intro": "Senin için ne yapabilirim? Bu öneriyi neden aldığını açıklayabilir veya daha iyi öneriler almana yardımcı olabilirim.",
     "introArticle": "Senin için ne yapabilirim? Bu makaleye dayanarak haber önerilerini ayarlamana yardımcı olabilirim.",
-    "introLikeTuning": "Bu haberi beğendin — biraz daha anlat, akışını ayarlayayım.",
-    "introDislikeTuning": "Bu haberi beğenmedin — nedenini anlat, akışını ayarlayayım.",
+    "introLikeTuning": "Bu haberi beğendin: biraz daha anlat, akışını ayarlayayım.",
+    "introDislikeTuning": "Bu haberi beğenmedin: nedenini anlat, akışını ayarlayayım.",
     "chipWhy": "Bu öneriyi neden aldım?",
     "chipWhyMessage": "Bu öneriyi neden aldım?",
     "chipDontWant": "Bu öneriyi istemiyorum",
@@ -639,9 +640,9 @@
     "countShort_one": "{{count}} ziyaret",
     "countShort_other": "{{count}} ziyaret",
     "tooltipA11y": "Okuma geçmişi hakkında",
-    "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder — ve bu bilgi yalnızca cihazında saklanır.",
+    "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder ve bu bilgi yalnızca cihazında saklanır.",
     "tooltipLink": "Tüm okuma geçmişini buradan gör.",
-    "screenIntro": "Mera okuma alışkanlıklarını takip eder — yalnızca cihazında, 30 gün boyunca. Bu sayede hangi yayınların sana en çok katkı sağladığını net görebilir ve sana doğrudan fayda sağlayanları desteklemeyi düşünebilirsin.",
+    "screenIntro": "Mera okuma alışkanlıklarını takip eder: yalnızca cihazında, 30 gün boyunca. Bu sayede hangi yayınların sana en çok katkı sağladığını net görebilir ve sana doğrudan fayda sağlayanları desteklemeyi düşünebilirsin.",
     "visitedListTitle": "Ziyaret ettiğin yayınlar",
     "last30Days": "Son 30 gün",
     "lastRead": "Son okunma {{time}}",
@@ -722,8 +723,8 @@
     "analyzingRelevance": "Alaka düzeyi analiz ediliyor…",
     "upToDate": "Haber akışın güncel",
     "waitingForConnection": "Bağlantı bekleniyor…",
-    "serverUnavailable": "Sunucu kullanılamıyor — kısa süre içinde yeniden deneniyor",
-    "sessionExpired": "Oturum süresi doldu — lütfen tekrar giriş yap",
+    "serverUnavailable": "Sunucu kullanılamıyor, kısa süre içinde yeniden deneniyor",
+    "sessionExpired": "Oturum süresi doldu, lütfen tekrar giriş yap",
     "noTopics": "Haberlerini görmek için konu ekle",
     "storageFull": "Cihaz depolama alanını boşalt ve tekrar dene",
     "syncFailed": "En son içerik yüklenemedi. Yenilemek için aşağı çek.",
@@ -734,15 +735,18 @@
     "deleteConfirmMessage": "Bu, makaleyi bu cihazdaki kayıtlı listenizden kaldırır.",
     "deleteConfirmTitle": "Kayıtlı makale kaldırılsın mı?",
     "empty": "Henüz hiç makale kaydetmediniz. Bir makaleyi daha sonrası için kaydetmek üzere yer imine dokunun.",
-    "note": "Bu makaleler yalnızca cihazınızda kaydedilir. İstediğiniz zaman ekleyin veya kaldırın — siz silene kadar burada kalırlar.",
+    "note": "Bu makaleler yalnızca cihazınızda kaydedilir. İstediğiniz zaman ekleyin veya kaldırın: siz silene kadar burada kalırlar.",
     "removedToastMessage": "Kayıtlılardan kaldırıldı",
+    "removedToastTitle": "Kaldırıldı",
+    "saveAction": "Kaydet",
+    "removeAction": "Kaydedilenlerden kaldır",
     "savedToastMessage": "Makale daha sonrası için kaydedildi",
     "savedToastTitle": "Kaydedildi",
     "title": "Kaydedilenler"
   },
   "subscription": {
     "activating": "Aboneliğiniz etkinleştiriliyor…",
-    "activationDelayed": "Satın alımınız onaylanıyor. Bu biraz zaman alabilir — devam etmezse yenile'ye dokunun.",
+    "activationDelayed": "Satın alımınız onaylanıyor. Bu biraz zaman alabilir, devam etmezse yenile'ye dokunun.",
     "autoRenew": "Otomatik yenileme",
     "customerCenter": "Aboneliği yönet / iptal et",
     "dailyArticleLimit": "Günlük makale sınırı",
@@ -780,7 +784,7 @@
     "upgrade": "Yükselt"
   },
   "tabs": {
-    "deck": "Deste",
+    "deck": "Akış",
     "dashboard": "Panel",
     "around": "Keşfet",
     "profile": "Profil",
@@ -788,45 +792,32 @@
     "gotIt": "Anladım"
   },
   "swipeFeed": {
-    "yourDeck": "Senin için",
+    "yourDeck": "Akış",
     "moreLikeThis": "Bunun gibi daha fazlası",
     "lessLikeThis": "Bunun gibi daha azı",
     "askMera": "Mera'ya Sor",
     "closeTree": "Kapat",
-    "treeRoot": "Tümü",
-    "treeThanks": "Teşekkürler — not edildi.",
-    "chatHandoffLike": "Bu haberi beğendim — bunun gibi daha fazlası: {{path}}.",
-    "chatHandoffLikeNoPath": "Bu haberi beğendim — bunun gibi daha fazlasını istiyorum.",
-    "chatHandoffDislike": "Bu haberi beğenmedim — {{path}}.",
+    "treeThanks": "Teşekkürler, not edildi.",
+    "chatHandoffLike": "Bu haberi beğendim, bunun gibi daha fazlası: {{path}}.",
+    "chatHandoffLikeNoPath": "Bu haberi beğendim, bunun gibi daha fazlasını istiyorum.",
+    "chatHandoffDislike": "Bu haberi beğenmedim, {{path}}.",
     "chatHandoffDislikeNoPath": "Bu haberi beğenmedim. Bunun gibi daha azını görmeme yardım et."
   },
   "explore": {
     "title": "Keşfet",
-    "sources": "Kaynaklar",
     "scopeWorld": "Dünya",
-    "scopeTopStories": "Öne çıkan haberler",
     "noArticles": "Makale bulunamadı",
-    "thinContentTitle": "{{place}} hakkında daha fazla haber ister misin?",
-    "thinContentBody": "Buradan daha fazla haber almak için {{place}}'i konum olarak ekle.",
-    "addLocation": "Konum ekle",
-    "noLocationsTitle": "Yerlerinden haberleri gör",
-    "noLocationsBody": "Önemsediğin yerleri ekleyerek buradan yerel haberleri keşfet.",
-    "sheetTitle": "Kaynakları yönet",
-    "close": "Kapat",
-    "topStoriesIntro": "İnsanların şu anda konuştuğu şeyler — sizin için önemli olanlar için sıralanmış.",
     "addPlaces": "Yerleri ekle"
   },
   "forYou": {
     "sectionPrefix": "Haberler:",
     "breaking": "Son dakika",
     "showMore": "{{count}} tane daha göster",
-    "subTabFeed": "Akış",
+    "viewAllArticles_one": "Tüm {{count}} makaleyi görüntüle",
+    "viewAllArticles_other": "Tüm {{count}} makaleyi görüntüle",
+    "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
-    "subTabSaved": "Kaydedilenler",
-    "openFactFeed": "Bu konuyla ilgili tüm haberleri gör",
-    "viewAllStories": "Tüm {{count}} haberi gör",
-    "newInSection_one": "Son ziyaretinden bu yana {{count}} yeni haber",
-    "newInSection_other": "Son ziyaretinden bu yana {{count}} yeni haber"
+    "subTabSaved": "Kaydedilenler"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -834,7 +825,7 @@
     "stage": "Aşama",
     "cloudProgress": "Bulut puanlama",
     "deviceProgress": "Cihaz üzerinde puanlama",
-    "processed": "Çekilen makaleler",
+    "published": "Yayınlandı",
     "analysed": "Analiz edildi",
     "relevant": "Senin için alakalı",
     "noiseRemoved": "Kaldırılan gürültü",
@@ -856,11 +847,22 @@
     "updatesBadge_other": "{{count}} yeni",
     "endedLabel": "Sona erdi",
     "timelineQuietNote": "Henüz yeni bir gelişme yok. Bu haber ilerledikçe gelişmeleri buraya ekleyeceğiz.",
-    "railTitle": "Takip edilenler",
     "untrackConfirmTitle": "Takibi bırakılsın mı?",
     "untrackConfirmBody": "Bu haberle ilgili yeni gelişmeleri artık görmeyeceksin.",
+    "untrackConfirmCta": "İzlemeyi Durdur",
+    "emptyHint": "Akıştan bir makaleyi tam görünüme açın, ardından makalenin altındaki düğme satırındaki takip simgesine dokunun.",
+    "emptyCta": "Akışa Git",
     "trackChatSeed": "Bu haberi takip etmek istiyorum.",
-    "trackProposalTitle": "Bu haberi takip et?"
+    "trackProposalTitle": "Bu haberi takip et?",
+    "articleCount_one": "{{count}} makale",
+    "articleCount_other": "{{count}} makale",
+    "articleCountCapped": "{{count}}+ makale",
+    "alreadyTrackingTitle": "Bunu zaten takip ediyorsun",
+    "alreadyTrackingBody": "Bu haberi iki kez takip edemezsin. Takibi bırakmak, bunun için kaydedilmiş her şeyi silecektir.",
+    "goToStoryAction": "Haberi aç",
+    "deleteStoryAction": "Haberi sil",
+    "deleteStoryConfirmTitle": "Bu haberi silinsin mi?",
+    "deleteStoryConfirmBody": "Silme, bu haber için kaydedilmiş her şeyi kaldırır."
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -872,7 +874,7 @@
     "tabsTitle": "Profil ve Ayarlar sekmeleri",
     "tabsBody": "Profilin ve ayarların artık altta kendi sekmelerinde.",
     "resyncTitle": "Akışın yeniden senkronize ediliyor",
-    "resyncBody": "Akışını yeni motorla yeniden oluşturuyoruz — kısa süre içinde dolacak."
+    "resyncBody": "Akışını yeni motorla yeniden oluşturuyoruz: kısa süre içinde dolacak."
   },
   "notificationCenter": {
     "title": "Bildirimler",
@@ -913,6 +915,7 @@
       "slider": "Manuel",
       "migration": "Kurulum",
       "user": "Sen",
+      "llm": "Otomatik olarak algılandı",
       "unknown": "Sistem"
     },
     "actionLabels": {
@@ -941,15 +944,17 @@
     "notificationTitle": "Mera'yı zevkine göre ayarla",
     "notificationBody": "Mera'nın cihaz üzerindeki sıralaması son zamanlarda kendi değerlendirmesiyle {{count}} kez uyuşmadı. Farkı kapatmak için yeniden kalibre et.",
     "recalibrateChip": "Şimdi yeniden kalibre et",
-    "chatIntro": "Son zamanlarda haberlerini nasıl sıraladığım konusunda kendimden şüphe ediyorum. Puanlamamın zevkine daha çok uymasını sağlamak için yeniden kalibre etmemi ister misin? \"Şimdi yeniden kalibre et\"e dokun, ben de ayarlayayım — istediğin zaman geri alabilirsin.",
+    "chatIntro": "Son zamanlarda haberlerini nasıl sıraladığım konusunda kendimden şüphe ediyorum. Puanlamamın zevkine daha çok uymasını sağlamak için yeniden kalibre etmemi ister misin? \"Şimdi yeniden kalibre et\"e dokun, ben de ayarlayayım, istediğin zaman geri alabilirsin.",
     "confirmChip": "Şimdi yeniden kalibre et",
     "runningBody": "Sıralaman yeniden kalibre ediliyor…",
     "successTitle": "Yeniden kalibre edildi",
     "successBody": "Sıralamamı zevkine daha çok uyacak şekilde ayarladım.",
-    "noChangeBody": "Sıralaman zaten iyi ayarlanmış görünüyor — değişiklik gerekmiyor.",
+    "noChangeBody": "Sıralaman zaten iyi ayarlanmış görünüyor, değişiklik gerekmiyor.",
     "failedBody": "Şu anda kalibrasyonu tamamlayamadım. Daha sonra tekrar deneyeceğim."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Daha fazlası: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Daha fazlası: {{topic}} ve {{extra}} daha fazla",
     "title": "Bize daha fazlasını anlat",
     "contextFor": "Hakkında: {{title}}",
     "back": "Geri",
@@ -960,11 +965,11 @@
     "confirm": "Onayla",
     "confirmMuteTitle": "Bu yayın bir daha gösterilmesin mi?",
     "confirmMuteBody": "{{publication}} kaynağından bir daha makale görmeyeceksin. Bunu istediğin zaman geri alabilirsin.",
-    "appliedTitle": "Tamam — akış güncellendi",
+    "appliedTitle": "Tamam, akış güncellendi",
     "undo": "Geri al",
     "undoneTitle": "Değişiklik geri alındı",
     "thanks": "Geri bildirim için teşekkürler",
-    "seenAck": "Tamam — gördüklerinden daha azını göstereceğiz",
+    "seenAck": "Tamam, gördüklerinden daha azını göstereceğiz",
     "nudgeSubscribe": "{{publication}}'a abone olmak makalelerin tamamının kilidini açar",
     "nudgeBrowse": "Diğer kaynaklardan ilgili haberlere göz at"
   },
@@ -975,6 +980,7 @@
     "generateMore": "Daha fazla oluştur",
     "generatingMore": "Oluşturuluyor…",
     "acceptAll": "İyi görünüyor",
+    "saveAll": "Tümünü kaydet ({{count}})",
     "delete": "Konuyu kaldır",
     "undo": "Geri al",
     "highPriority": "Konuyu önceliklendir",
@@ -1017,7 +1023,7 @@
     "effectDuplicate": "Kopyayı kaldırır ve daha güçlü olanı tutar.",
     "effectTooBroad": "Bu ilgi alanının ağırlığını azaltarak daha az alakasız haber çekmesini sağlar.",
     "effectStaleTopic": "Bu sessiz konuyu emekliye ayırır. Değişiklik günlüğünden geri yükleyebilirsin.",
-    "effectStaleFact": "Bu bilgiyi kaldırır — konularından hiçbiri artık aktif değil.",
+    "effectStaleFact": "Bu bilgiyi kaldırır: konularından hiçbiri artık aktif değil.",
     "appliedTitle": "Temizlik uygulandı",
     "appliedBody": "Profilin düzenlendi. İncelemek için değişiklik günlüğüne bak.",
     "applyFailedTitle": "Temizlik uygulanamadı",
@@ -1028,6 +1034,7 @@
   "locations": {
     "title": "Yerlerin",
     "subtitle": "Akışını şekillendiren konumlar",
+    "autoDetectDisclaimer": "Mera, profilinden yerlerini otomatik olarak algılar. Burada daha fazla ekleyebilirsin, ama Mera'ya doğrudan söylemek daha iyi sonuç verir, çünkü her yerin seninle nasıl ilişkili olduğunu öğrenir ve tavsiyelerini buna göre ayarlar.",
     "empty": "Önemsediğin yerleri ekle",
     "add": "Yer ekle",
     "addFirst": "Yer ekle",
@@ -1036,7 +1043,7 @@
     "searchPlaceholder": "Bir şehir ara",
     "searchCountries": "Ülkeleri ara",
     "noMatches": "Eşleşen yer bulunamadı",
-    "searchUnavailable": "Arama şu anda kullanılamıyor — birazdan tekrar deneyin.",
+    "searchUnavailable": "Arama şu anda kullanılamıyor, birazdan tekrar deneyin.",
     "addManuallyCta": "Bulamadın mı? Manuel ekle",
     "cityLabel": "Şehir",
     "cityPlaceholder": "Bir şehir adı gir",
@@ -1062,7 +1069,7 @@
       "high": "Yüksek"
     },
     "toastUpdatedTitle": "Mevcut yer güncellendi",
-    "toastUpdatedBody": "Bu yer zaten kayıtlıydı — güncelledik.",
+    "toastUpdatedBody": "Bu yer zaten kayıtlıydı, güncelledik.",
     "saveFailedTitle": "Yer kaydedilemedi",
     "saveFailedBody": "Lütfen tekrar dene.",
     "deleteConfirmTitle": "Bu yer kaldırılsın mı?",
@@ -1101,7 +1108,7 @@
     "startTalking": "Konuşmaya başla",
     "meraInvite": "Selam! Neyle ilgilendiğini anlat, haber akışını senin için ayarlayayım.",
     "aboutYou": "Senin hakkında",
-    "gettingToKnowYou": "Seni hâlâ tanıyorum — birazdan tekrar bak.",
+    "gettingToKnowYou": "Seni hâlâ tanıyorum, birazdan tekrar bak.",
     "updating": "Güncelleniyor…",
     "advanced": "Gelişmiş",
     "advancedSubtitle": "Bilgiler, kaynaklar, kaydedilenler, etkinlik ve daha fazlası",
@@ -1110,10 +1117,10 @@
       "moreImportant": "Daha önemli",
       "lessImportant": "Daha az önemli",
       "refine": "Mera ile netleştir",
-      "refineSeed": "Bunun hakkında konuşalım — \"{{text}}\"",
+      "refineSeed": "Bunun hakkında konuşalım: \"{{text}}\"",
       "remove": "Bunu kaldır",
       "removeConfirm": "Kaldırmak için tekrar dokun",
-      "limitReached": "Günlük ayarlama sınırına ulaşıldı — değişiklikler yarın devam edecek."
+      "limitReached": "Günlük ayarlama sınırına ulaşıldı, değişiklikler yarın devam edecek."
     }
   },
   "facts": {

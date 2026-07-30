@@ -34,6 +34,14 @@ export interface FeedbackTreeEngine {
   pathIds: string[];
   /** Find a node by id anywhere under the selected root. */
   findNode: (id: string) => FeedbackTreeNode | null;
+  /** Whether descending into `node` would reveal at least one GATED-visible
+   *  child (i.e. `evaluateCondition` survivors, not just a raw non-empty
+   *  `children` array). This is the single source of truth for "does this row
+   *  open a submenu" — a node whose only children are all gated out (e.g. by
+   *  `publication_visits_gte`/`cluster_size_gte` the local context doesn't
+   *  satisfy) is effectively terminal, and callers should render/treat it that
+   *  way instead of showing a disclosure affordance that dead-ends. */
+  hasVisibleChildren: (node: FeedbackTreeNode) => boolean;
   /** Push a branch node (no-op for a childless node). */
   descend: (node: FeedbackTreeNode) => void;
   /** Pop the last branch node. */
@@ -107,6 +115,12 @@ export function useFeedbackTreeEngine(params: {
     [rootNodes],
   );
 
+  const hasVisibleChildren = useCallback(
+    (node: FeedbackTreeNode) =>
+      (node.children ?? []).some((n) => evaluateCondition(n.visibleIf, context)),
+    [context],
+  );
+
   const descend = useCallback((node: FeedbackTreeNode) => {
     if (node.children && node.children.length > 0) {
       setPath((p) => [...p, node]);
@@ -141,6 +155,7 @@ export function useFeedbackTreeEngine(params: {
     currentChildren,
     pathIds,
     findNode,
+    hasVisibleChildren,
     descend,
     backtrack,
     goToDepth,

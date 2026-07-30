@@ -6,6 +6,7 @@ import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateA
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
+import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -25,6 +26,7 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { useSavedOverride } from '@/lib/saved-state';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
@@ -49,7 +51,7 @@ interface ArticleDetailScreenProps {
 
 const SCROLL_THRESHOLD = 300;
 
-// Map a sibling ArticleSummary to the NewsArticle shape CompactPublisherNewsCard
+// Map a sibling ArticleSummary to the NewsArticle shape ArticleStandaloneCompactCard
 // expects (same mapping the suggestion-detail screen uses).
 const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
     _id: a._id,
@@ -104,7 +106,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const toast = useToast();
     const [article, setArticle] = useState<NewsArticle | null>(null);
     const [related, setRelated] = useState<ArticleSummary[]>([]);
-    const [isSaved, setIsSaved] = useState(false);
+    const [savedFromDb, setSavedFromDb] = useState(false);
+    // See lib/saved-state — a save/delete on any other surface (notably the
+    // Dashboard's Saved list) corrects this screen's bookmark without a remount.
+    const savedOverride = useSavedOverride(article?._id ?? articleId);
+    const isSaved = savedOverride ?? savedFromDb;
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -299,7 +305,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         let cancelled = false;
         isSuggestionSaved(id)
             .then((saved) => {
-                if (!cancelled) setIsSaved(saved);
+                if (!cancelled) setSavedFromDb(saved);
             })
             .catch(() => {
                 /* non-fatal — default to unsaved */
@@ -309,14 +315,22 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         };
     }, [article?._id]);
 
+    // Title tracks the DIRECTION of the toggle. It was hardcoded to "Saved", so
+    // un-saving produced the self-contradicting toast "Saved / Removed from
+    // saved". Success styling is unchanged either way — removing a saved article
+    // is a successful action, not an error.
     const showSavedToast = useCallback(
-        (message: string) => {
+        (message: string, removed: boolean = false) => {
             toast.show({
                 placement: 'top',
                 duration: 3000,
                 render: ({ id }: { id: string }) => (
                     <Toast nativeID={id} action="success" variant="solid">
-                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastTitle>
+                            {t(removed
+                                ? 'savedSuggestions.removedToastTitle'
+                                : 'savedSuggestions.savedToastTitle')}
+                        </ToastTitle>
                         <ToastDescription>{message}</ToastDescription>
                     </Toast>
                 ),
@@ -329,12 +343,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         if (!article) return;
         try {
             if (isSaved) {
-                await deleteSavedSuggestion(article._id);
-                setIsSaved(false);
-                showSavedToast(t('savedSuggestions.removedToastMessage'));
+                // The boolean matters: if the row was already gone (deleted
+                // from the Saved list while this screen sat mounted) nothing was
+                // removed, so a "Removed" toast would be a lie. The saved-state
+                // publish still corrects the bookmark either way.
+                const removed = await deleteSavedSuggestion(article._id);
+                if (removed) {
+                    showSavedToast(t('savedSuggestions.removedToastMessage'), true);
+                }
             } else {
                 await saveStandaloneArticle(article, { surface: 'detail' });
-                setIsSaved(true);
                 showSavedToast(t('savedSuggestions.savedToastMessage'));
             }
         } catch (err) {
@@ -400,7 +418,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         // connectivity returns (see the retryNonce effect above).
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
-                <MaterialIcons name="wifi-off" size={48} color="#9CA3AF" />
+                <MaterialIcons
+                    name="wifi-off"
+                    size={48}
+                    color="#9CA3AF"
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {t('articleDetail.offlineUnavailable')}
                 </Text>
@@ -414,7 +438,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     if (error || !article) {
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
-                <MaterialIcons name="error-outline" size={48} color="#EF4444" />
+                <MaterialIcons
+                    name="error-outline"
+                    size={48}
+                    color="#EF4444"
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
@@ -431,9 +461,20 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     return (
         <Box className="flex-1 bg-background-50">
+            {/* Status bar scrim — this screen's hero image is a full-bleed
+                parallax header (ArticleSuggestionContainer's SmoothScrollView),
+                so without this a light photo makes the system clock/battery
+                glyphs illegible. StatusBarScrim's own zIndex (5) sits above the
+                container's default (0) but below the floating back button
+                below (zIndex 20), so the scrim darkens the image behind the
+                status bar without ever covering the tappable back button. */}
+            <StatusBarScrim />
+
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
                     className="bg-gray-900 rounded-full p-3 shadow-hard-2"
                 >
                     <MaterialIcons
@@ -480,6 +521,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         surface: 'detail',
                                         articleId: article._id ?? articleId,
                                         title: article.title_en_internal_only ?? article.title ?? '',
+                                        // See ArticleSuggestionScreen — omitting
+                                        // this makes the timeline's seed row show
+                                        // the track moment instead of the
+                                        // article's publication age.
+                                        pubDate: article.pubDate ?? null,
                                         publicationName: article.publicationSource?.publication_name,
                                         countryCode: article.publicationSource?.country_code,
                                         stableClusterId,

@@ -23,6 +23,8 @@ import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSavedOverride } from '@/lib/saved-state';
 
 interface ArticleCardProps {
   suggestion: ForYouSuggestion;
@@ -44,7 +46,8 @@ interface ArticleCardProps {
   verdict?: Verdict | null;
   /** A thumb was tapped — the host records the verdict + floats the sheet. */
   onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
-  /** The Mera icon was tapped — open the default article chat. */
+  /** The Mera glyph on the rationale block was tapped — open the default article
+   *  chat. Absent ⇒ no Ask-Mera affordance renders (e.g. the Saved list). */
   onAskMera?: (suggestion: ForYouSuggestion) => void;
   // ── Inline feedback surface (floats over the card content once a verdict is
   // set) ──────────────────────────────────────────────────────────────────
@@ -56,7 +59,10 @@ interface ArticleCardProps {
   feedbackHandlers?: CardFeedbackHandlers;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
-  /** Marks the card as read — green tick chip instead of dimming (Dashboard). */
+  /** Marks the card as already-read. Draws NO indicator of its own — there is
+   *  no green tick chip and no eye glyph; both were deliberately removed. It
+   *  only suppresses the NEW badge. (`ArticleCardBase`'s doc is the source of
+   *  truth.) The Dashboard surfaces use this. */
   read?: boolean;
   /** Pass-through to `ArticleCardBase` — renders as the floating neumorphic
    *  card (Dashboard's list treatment) instead of the default Card chrome.
@@ -66,6 +72,9 @@ interface ArticleCardProps {
    *  passes it, so every other surface is unaffected. NOT fired by the mount-time
    *  `isSuggestionSaved` restore, which is not a user interaction. */
   onSaveToggled?: (suggestion: ForYouSuggestion, saved: boolean) => void;
+  /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
+   *  host-owned control floating over the card's top-right (Saved list). */
+  metaRowRightReserve?: number;
 }
 
 export type { ArticleCardProps };
@@ -93,20 +102,27 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   read = false,
   flat = false,
   onSaveToggled,
+  metaRowRightReserve,
 }) => {
+  const { t } = useTranslation();
   const [facts, setFacts] = useState<Fact[]>([]);
 
   // Card-local saved state — restored across remounts (ported verbatim from
   // FeedArticleCard, which mirrored ArticleActionsRow). Only wired when the
   // action row is present (onVerdict provided).
   const savedId = suggestion._id;
-  const [saved, setSaved] = useState(false);
+  const [savedFromDb, setSavedFromDb] = useState(false);
+  // An override wins over the mount-time read: it means the row was saved or
+  // deleted somewhere else this session (e.g. the Dashboard's Saved list), which
+  // used to leave this bookmark filled against a row that no longer existed.
+  const savedOverride = useSavedOverride(savedId);
+  const saved = savedOverride ?? savedFromDb;
   useEffect(() => {
     if (!onVerdict) return;
     let cancelled = false;
     isSuggestionSaved(savedId)
       .then((v) => {
-        if (!cancelled && v) setSaved(true);
+        if (!cancelled) setSavedFromDb(v);
       })
       .catch(() => {
         /* non-fatal */
@@ -117,13 +133,14 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   }, [savedId, onVerdict]);
 
   const handleToggleSave = () => {
+    // The service publishes the new state, which flows back through
+    // `useSavedOverride` — so local state is only the pre-override seed and does
+    // not need to be nudged here.
     if (saved) {
       hapticLight();
-      setSaved(false);
       void deleteSavedSuggestion(savedId);
     } else {
       hapticSuccess();
-      setSaved(true);
       void saveSuggestion(suggestion);
     }
     onSaveToggled?.(suggestion, !saved);
@@ -201,12 +218,15 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       className="rounded-lg p-3 flex-row items-center"
       style={{ backgroundColor: reasonBoxColors.backgroundColor }}
     >
+      {/* Left: the priority chip alone. The Mera glyph that briefly lived here
+          moved back to the action row (CardActionBar owns `card-action-mera`),
+          which is now the sole Ask-Mera affordance. Text stays right-aligned and
+          non-italic. */}
       <RelevanceChip relevance={relevance} />
       {reason ? (
         <TranslatableDynamic
           text={reason}
           size="sm"
-          italic
           bold
           className="ml-3 flex-1 text-right"
           style={{ color: reasonBoxColors.textColor }}
@@ -258,6 +278,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
 
   return (
     <ArticleCardBase
+      testID={`card-${suggestion._id}`}
       imageUrl={suggestion.image_url}
       titleEnglish={suggestion.title_en}
       titleOriginal={suggestion.title_original ?? undefined}
@@ -273,6 +294,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       flat={flat}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}
+      metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
       overlay={overlay}
     >

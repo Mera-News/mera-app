@@ -10,6 +10,9 @@ interface ArticleStandaloneCardProps {
   isNew?: boolean;
   /** Origin-aware overrides (surface, scopeKey, …) merged into the subject. */
   subjectExtras?: Partial<FeedbackSubject>;
+  /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
+   *  host-owned control floating over the card's top-right (Saved list). */
+  metaRowRightReserve?: number;
 }
 
 /**
@@ -23,6 +26,7 @@ const ArticleStandaloneCardImpl: React.FC<ArticleStandaloneCardProps> = ({
   onPress,
   isNew = false,
   subjectExtras,
+  metaRowRightReserve,
 }) => {
   const titleEnglish =
     article.title_en_internal_only ?? article.title_en ?? article.title ?? null;
@@ -52,6 +56,7 @@ const ArticleStandaloneCardImpl: React.FC<ArticleStandaloneCardProps> = ({
       isNew={isNew}
       recyclingKey={article._id}
       onPress={onPress}
+      metaRowRightReserve={metaRowRightReserve}
     >
       <ArticleActionsRow
         subject={subject}

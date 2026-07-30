@@ -15,8 +15,10 @@ export type { TrackedStoryMemberSnapshot } from '../models/TrackedStory';
 
 const collection = database.get<TrackedStoryModel>('tracked_stories');
 
-/** Newest-first cap on a story's remembered member article ids. */
-const MAX_MEMBER_IDS = 30;
+/** Newest-first cap on a story's remembered member article ids. EXPORTED because
+ *  the story card shows a member COUNT: at the cap the real total is unknowable
+ *  from the row, so the UI must render "30+" rather than a wrong exact "30". */
+export const MAX_MEMBER_IDS = 30;
 
 /** Newest-first (by pubDate) cap on a story's remembered member snapshots. */
 const MAX_MEMBER_SNAPSHOTS = 50;
@@ -132,6 +134,26 @@ export async function trackStory(input: TrackStoryInput): Promise<TrackedStoryMo
       m.originSurface = originSurface;
       m.lastUpdateAt = null;
       m.unseenCount = 0;
+      // Seed the seen-pubDate watermark at CREATION (Q15). Without it a fresh
+      // story had `seen_pub_watermark_ms === null`, which sends `applyUpdates`
+      // down its LEGACY `unseenCount += newIds.length` branch — so the very
+      // first reconcile counted every pre-existing article it discovered about
+      // this story as "new", and a story you just started following immediately
+      // showed a double-digit new badge.
+      //
+      // The watermark is the newest pubDate the user has seen, and at creation
+      // that is exactly the article they tapped: anything older is pre-existing
+      // coverage (not new), anything newer genuinely postdates what they saw.
+      //
+      // The `> 0` guard matters, and 0 is NOT a usable watermark: the gate is
+      // `watermark != null`, so storing 0 would switch the story onto the gated
+      // branch with an all-permissive threshold — gating in name only, which is
+      // worse than either extreme. A seed with no pubDate falls back to "now",
+      // which correctly treats all existing coverage as already-seen.
+      m.seenPubWatermarkMs =
+        initialSnapshot[0]?.pubDateMs && initialSnapshot[0].pubDateMs > 0
+          ? initialSnapshot[0].pubDateMs
+          : Date.now();
       m.lastCheckedAt = null;
       m.missCount = 0;
       m.status = 'active';
@@ -160,21 +182,80 @@ export async function untrackStory(id: string): Promise<void> {
  * or membership of the given article id. At least one key must be supplied.
  * Only ACTIVE stories count (an ended story is not "tracked").
  */
-export async function isTracked(query: {
+/** Identity keys that decide whether a story is "the one" being asked about. */
+export interface TrackedMatchQuery {
   stableClusterId?: string | null;
   articleId?: string | null;
-}): Promise<boolean> {
+}
+
+/** Trimmed, non-empty form of a {@link TrackedMatchQuery}; null when neither key
+ *  carries a usable value (nothing can match). */
+function normalizeTrackedQuery(
+  query: TrackedMatchQuery,
+): { stableClusterId: string | null; articleId: string | null } | null {
   const stableClusterId = query.stableClusterId?.trim() || null;
   const articleId = query.articleId?.trim() || null;
-  if (!stableClusterId && !articleId) return false;
+  if (!stableClusterId && !articleId) return null;
+  return { stableClusterId, articleId };
+}
 
+/**
+ * THE tracked-match predicate. Extracted because three call sites — `isTracked`,
+ * `observeTracked`, and `findActiveTrackedId` — must agree exactly: the reactive
+ * observer answering differently from the one-shot read is precisely the drift
+ * that would put the track button back out of sync with reality.
+ */
+function matchesTrackedQuery(
+  row: TrackedStoryModel,
+  norm: { stableClusterId: string | null; articleId: string | null },
+): boolean {
+  if (row.status !== 'active') return false; // JS guard (test mock ignores predicate)
+  if (norm.stableClusterId && row.stableClusterId === norm.stableClusterId) return true;
+  if (norm.articleId && (row.memberArticleIds ?? []).includes(norm.articleId)) return true;
+  return false;
+}
+export async function isTracked(query: TrackedMatchQuery): Promise<boolean> {
+  const norm = normalizeTrackedQuery(query);
+  if (!norm) return false;
   const rows = await collection.query(Q.where('status', 'active')).fetch();
-  return rows.some((r) => {
-    if (r.status !== 'active') return false; // JS guard (test mock ignores predicate)
-    if (stableClusterId && r.stableClusterId === stableClusterId) return true;
-    if (articleId && (r.memberArticleIds ?? []).includes(articleId)) return true;
-    return false;
-  });
+  return rows.some((r) => matchesTrackedQuery(r, norm));
+}
+
+/**
+ * Reactive form of {@link isTracked} — emits the current tracked flag and
+ * re-emits whenever it could change.
+ *
+ * Exists because the one-shot read left the track button permanently stale: the
+ * story is minted only after the user confirms a proposal inside the FLOATING
+ * chat, which outlives the screen that owns the button, so a screen that stayed
+ * mounted never learned it was now tracking — and the next tap started a second
+ * proposal for a story already being followed.
+ *
+ * `member_article_ids` is in the observed column list on purpose: a story the
+ * user follows can absorb THIS article later via the topic reconcile, and the
+ * button must flip then too, not just when a row is added or removed.
+ */
+export function observeTracked(query: TrackedMatchQuery) {
+  return observeTrackedId(query).pipe(map((id) => id !== null));
+}
+
+/**
+ * Reactive form of {@link findActiveTrackedId} — the matching active story's id,
+ * or null. The track button needs the ID (not just a flag) so its
+ * "already following" dialog can offer "Go to story", and deriving the flag from
+ * the id keeps one subscription and one predicate behind both.
+ */
+export function observeTrackedId(query: TrackedMatchQuery) {
+  const norm = normalizeTrackedQuery(query);
+  return collection
+    .query(Q.where('status', 'active'))
+    .observeWithColumns(['member_article_ids', 'status'])
+    .pipe(
+      map((rows) => {
+        if (!norm) return null;
+        return rows.find((r) => matchesTrackedQuery(r, norm))?.id ?? null;
+      }),
+    );
 }
 
 /**
@@ -353,21 +434,12 @@ export async function advanceSeenWatermark(id: string, watermarkMs: number): Pro
  * subject. Returns null when nothing matches. Mirrors {@link isTracked}'s match
  * rules. Never throws.
  */
-export async function findActiveTrackedId(query: {
-  stableClusterId?: string | null;
-  articleId?: string | null;
-}): Promise<string | null> {
-  const stableClusterId = query.stableClusterId?.trim() || null;
-  const articleId = query.articleId?.trim() || null;
-  if (!stableClusterId && !articleId) return null;
+export async function findActiveTrackedId(query: TrackedMatchQuery): Promise<string | null> {
+  const norm = normalizeTrackedQuery(query);
+  if (!norm) return null;
   try {
     const rows = await collection.query(Q.where('status', 'active')).fetch();
-    const match = rows.find((r) => {
-      if (r.status !== 'active') return false; // JS guard (test mock ignores predicate)
-      if (stableClusterId && r.stableClusterId === stableClusterId) return true;
-      if (articleId && (r.memberArticleIds ?? []).includes(articleId)) return true;
-      return false;
-    });
+    const match = rows.find((r) => matchesTrackedQuery(r, norm));
     return match?.id ?? null;
   } catch (err) {
     logger.warn('[tracked-story] findActiveTrackedId failed', { error: String(err) });

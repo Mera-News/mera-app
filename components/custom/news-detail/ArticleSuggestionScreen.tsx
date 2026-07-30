@@ -6,6 +6,7 @@ import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateA
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
+import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
@@ -27,6 +28,7 @@ import {
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { useSavedOverride } from '@/lib/saved-state';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { isSuggestionOpened } from '@/lib/stores/fact-rows-selector';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -40,6 +42,7 @@ import {
     orderRelatedArticles,
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
+import { useIsConnected } from '@/lib/stores/network-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -222,7 +225,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             .filter((m) => m.id !== suggestion._id)
             .map((m) => m.s);
     }, [afterInteractions, suggestions, suggestion]);
-    const [isSaved, setIsSaved] = useState(false);
+    const [savedFromDb, setSavedFromDb] = useState(false);
+    // See lib/saved-state — a save/delete on any other surface (notably the
+    // Dashboard's Saved list) corrects this screen's bookmark without a remount.
+    const savedOverride = useSavedOverride(articleSuggestionId);
+    const isSaved = savedOverride ?? savedFromDb;
     const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [isLoading, setIsLoading] = useState(!storeSuggestion);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
@@ -230,6 +237,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
     const userCtx = useUserGeoLanguageContext();
+    const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
 
     // Merged, flat "Related Articles" list: local cluster siblings + the server
@@ -338,7 +346,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // Lazy-load related articles once we know the article id.
     useEffect(() => {
         const articleId = suggestion?.articleId;
-        if (!articleId) return;
+        // Parity with ArticleDetailScreen: no point round-tripping a live query
+        // with no network — leave the section to its LOCAL siblings rather than
+        // logging a guaranteed failure on every offline view. (The local-sibling
+        // half of this screen's two-source merge still works offline, which is
+        // why this screen degrades better than the article one.)
+        if (!articleId || !isConnected) return;
         let cancelled = false;
         setIsLoadingRelated(true);
         ArticleService.getRelatedArticles(articleId)
@@ -358,7 +371,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [suggestion?.articleId]);
+        // `isConnected` is a dep so the fetch RE-runs when connectivity returns —
+        // without it, a screen opened offline would never populate the server
+        // half of the related list even after the network came back.
+    }, [suggestion?.articleId, isConnected]);
 
     // Same-story siblings are surfaced two ways: `localSiblings` (above) groups
     // the user's own store rows that the feed collapsed, and
@@ -371,7 +387,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         let cancelled = false;
         isSuggestionSaved(articleSuggestionId)
             .then((saved) => {
-                if (!cancelled) setIsSaved(saved);
+                if (!cancelled) setSavedFromDb(saved);
             })
             .catch(() => {
                 /* non-fatal — default to unsaved */
@@ -381,14 +397,22 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         };
     }, [articleSuggestionId]);
 
+    // Title tracks the DIRECTION of the toggle. It was hardcoded to "Saved", so
+    // un-saving produced the self-contradicting toast "Saved / Removed from
+    // saved". Success styling is unchanged either way — removing a saved article
+    // is a successful action, not an error.
     const showSavedToast = useCallback(
-        (message: string) => {
+        (message: string, removed: boolean = false) => {
             toast.show({
                 placement: 'top',
                 duration: 3000,
                 render: ({ id }: { id: string }) => (
                     <Toast nativeID={id} action="success" variant="solid">
-                        <ToastTitle>{t('savedSuggestions.savedToastTitle')}</ToastTitle>
+                        <ToastTitle>
+                            {t(removed
+                                ? 'savedSuggestions.removedToastTitle'
+                                : 'savedSuggestions.savedToastTitle')}
+                        </ToastTitle>
                         <ToastDescription>{message}</ToastDescription>
                     </Toast>
                 ),
@@ -401,12 +425,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         if (!suggestion) return;
         try {
             if (isSaved) {
-                await deleteSavedSuggestion(suggestion._id);
-                setIsSaved(false);
-                showSavedToast(t('savedSuggestions.removedToastMessage'));
+                // The boolean matters: if the row was already gone (deleted
+                // from the Saved list while this screen sat mounted) nothing was
+                // removed, so a "Removed" toast would be a lie. The saved-state
+                // publish still corrects the bookmark either way.
+                const removed = await deleteSavedSuggestion(suggestion._id);
+                if (removed) {
+                    showSavedToast(t('savedSuggestions.removedToastMessage'), true);
+                }
             } else {
                 await saveSuggestion(suggestion);
-                setIsSaved(true);
                 showSavedToast(t('savedSuggestions.savedToastMessage'));
             }
         } catch (err) {
@@ -457,7 +485,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         }
         return (
             <Box className="flex-1 bg-background-50 items-center justify-center p-5">
-                <MaterialIcons name="error-outline" size={48} color="#EF4444" />
+                <MaterialIcons
+                    name="error-outline"
+                    size={48}
+                    color="#EF4444"
+                    accessibilityElementsHidden={true}
+                    importantForAccessibility="no-hide-descendants"
+                />
                 <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
@@ -473,10 +507,21 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     return (
         <Box className="flex-1 bg-background-50">
+            {/* Status bar scrim — this screen's hero image is a full-bleed
+                parallax header (ArticleSuggestionContainer's SmoothScrollView),
+                so without this a light photo makes the system clock/battery
+                glyphs illegible. StatusBarScrim's own zIndex (5) sits above the
+                container's default (0) but below the floating back button
+                below (zIndex 20), so the scrim darkens the image behind the
+                status bar without ever covering the tappable back button. */}
+            <StatusBarScrim />
+
             {/* Floating Back Button */}
             <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                 <Pressable
                     onPress={onBack}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
                     className="bg-gray-900 rounded-full p-3 shadow-hard-2"
                 >
                     <MaterialIcons
@@ -525,6 +570,14 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         articleId: suggestion.articleId,
                                         suggestionId: suggestion._id,
                                         title: suggestion.title_en ?? '',
+                                        // REQUIRED: without it the tracked-story
+                                        // seed snapshot falls back to "now", so
+                                        // the timeline's first row showed the
+                                        // TRACK moment ("4m ago") under the same
+                                        // clock chip every other row uses for
+                                        // publication age — and pinned a 13h-old
+                                        // article above a 1h-old one.
+                                        pubDate: suggestion.firstPubDate ?? suggestion.createdAt,
                                         publicationName: suggestion.publication_name,
                                         countryCode: suggestion.country_code,
                                         stableClusterId: suggestion.clusters?.find(

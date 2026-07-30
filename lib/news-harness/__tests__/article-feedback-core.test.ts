@@ -16,6 +16,10 @@ import type {
   TrackFeedbackSubject,
 } from '../core/types';
 
+/** Fixed injected clock — 2026-03-04T05:06:07Z. Pinned so every assertion over
+ *  the rendered context stays deterministic (the builder never reads Date.now). */
+const NOW_MS = Date.UTC(2026, 2, 4, 5, 6, 7);
+
 function fact(id: string, statement: string, topics?: string[]): Fact {
   return {
     id,
@@ -81,6 +85,16 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     expect(prompt.length).toBeLessThan(8000);
   });
 
+  it('forbids dated track scopes and points at the <context> dates', () => {
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    expect(prompt).toContain('NEVER name an already-ended year, season or edition');
+    expect(prompt).toContain('Today / Published dates in <context>');
+    expect(prompt).toContain('UNDATED');
+    // The rule is imperative only — no clock value here, so the per-session
+    // system-prompt cache in ArticleFeedbackAgent stays correct.
+    expect(prompt).not.toMatch(/\b20\d{2}-\d{2}-\d{2}\b/);
+  });
+
   it('pins the language name when provided', () => {
     const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'French' });
     expect(prompt).toContain('**French**');
@@ -95,6 +109,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
 describe('buildFeedbackContext', () => {
   it('renders ARTICLE, relevance status, topics, and producing facts', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [fact('f1', 'Senior ML engineer at DeepMind', ['AI', 'ML', 'startups', 'extra'])],
       context: scoredContext(),
       fallbackTitle: undefined,
@@ -115,6 +130,7 @@ describe('buildFeedbackContext', () => {
 
   it('falls back to the store title and the "not a suggestion" status when context is null', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: null,
       fallbackTitle: 'A cluster article',
@@ -129,6 +145,7 @@ describe('buildFeedbackContext', () => {
 
   it('marks an unscored suggestion (not yet scored)', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext({ isScored: false, relevance: 0, reason: '' }),
       fallbackTitle: undefined,
@@ -139,6 +156,7 @@ describe('buildFeedbackContext', () => {
 
   it('omits the reason clause when a scored suggestion has no reason', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext({ reason: '' }),
       fallbackTitle: undefined,
@@ -150,6 +168,7 @@ describe('buildFeedbackContext', () => {
 
   it('injects the USER VERDICT block (with tapped options) on a Feed handoff', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext(),
       fallbackTitle: undefined,
@@ -164,6 +183,7 @@ describe('buildFeedbackContext', () => {
 
   it('omits the USER VERDICT block when no verdict is present', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext(),
       fallbackTitle: undefined,
@@ -180,6 +200,7 @@ describe('buildFeedbackContext', () => {
       actions: [{ type: 'remove_topics', fact_id: 'f1', topics: ['AI'] }],
     };
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext(),
       fallbackTitle: undefined,
@@ -211,7 +232,7 @@ describe('buildFeedbackContext', () => {
         { type: 'retire_topic', topicText: 'cricket' },
       ],
     };
-    const ctx = buildFeedbackContext({ facts: [], context: null, fallbackTitle: 'T', proposal });
+    const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, fallbackTitle: 'T', proposal });
     expect(ctx).toContain('retire topic "cricket"');
     expect(ctx).toContain('add fact "Likes AI"');
     expect(ctx).toContain('update [f1] → "Staff engineer"');
@@ -232,6 +253,7 @@ describe('buildFeedbackContext', () => {
       fact(`f${i}`, bigStatement, ['a'.repeat(300), 'b'.repeat(300), 'c'.repeat(300)]),
     );
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts,
       context: scoredContext({ isScored: true }),
       fallbackTitle: undefined,
@@ -245,6 +267,7 @@ describe('buildFeedbackContext', () => {
 
   it('renders the ARTICLE category + entities lines when present', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: {
         suggestion: scoredContext().suggestion,
@@ -264,6 +287,7 @@ describe('buildFeedbackContext', () => {
 
   it('renders a RELATED COVERAGE block (≤5 titles) when provided', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext(),
       fallbackTitle: undefined,
@@ -278,6 +302,7 @@ describe('buildFeedbackContext', () => {
 
   it('omits the RELATED COVERAGE block when empty', () => {
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: scoredContext(),
       fallbackTitle: undefined,
@@ -287,10 +312,107 @@ describe('buildFeedbackContext', () => {
     expect(ctx).not.toContain('## RELATED COVERAGE');
   });
 
+  // --- Injected date anchor (stops proposeTrack proposing a finished season) ---
+
+  it('renders the injected nowMs as a Today line (UTC, no clock read)', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).toContain('Today: 2026-03-04');
+  });
+
+  it('is deterministic for a fixed nowMs and varies only with it', () => {
+    const build = (nowMs: number) =>
+      buildFeedbackContext({
+        nowMs,
+        facts: [fact('f1', 'Senior ML engineer at DeepMind', ['AI'])],
+        context: scoredContext(),
+        fallbackTitle: undefined,
+        proposal: null,
+        relatedCoverage: ['Hungarian GP practice report'],
+      });
+    // Same injected date → byte-identical prompt, twice.
+    expect(build(NOW_MS)).toBe(build(NOW_MS));
+    const later = build(Date.UTC(2027, 6, 15));
+    expect(later).not.toBe(build(NOW_MS));
+    expect(later).toContain('Today: 2027-07-15');
+  });
+
+  it('renders the article publication date when the caller supplies one', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      articlePubDate: '2026-02-27T11:30:00.000Z',
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).toContain('## ARTICLE');
+    expect(ctx).toContain('Published: 2026-02-27');
+  });
+
+  it('renders the publication date on the no-suggestion fallback ARTICLE block too', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      articlePubDate: '2026-02-27T11:30:00.000Z',
+      facts: [],
+      context: null,
+      fallbackTitle: 'A cluster article',
+      proposal: null,
+    });
+    expect(ctx).toContain('Published: 2026-02-27');
+  });
+
+  it('omits the Published line when the pub date is absent or unparseable', () => {
+    const base = {
+      nowMs: NOW_MS,
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+    };
+    expect(buildFeedbackContext(base)).not.toContain('Published:');
+    expect(buildFeedbackContext({ ...base, articlePubDate: null })).not.toContain('Published:');
+    expect(buildFeedbackContext({ ...base, articlePubDate: '   ' })).not.toContain('Published:');
+    expect(buildFeedbackContext({ ...base, articlePubDate: 'not a date' })).not.toContain('Published:');
+  });
+
+  it('degrades to "unknown" rather than throwing on a non-finite nowMs', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: Number.NaN,
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).toContain('Today: unknown');
+  });
+
+  it('keeps the Today line when the ALL-FACTS block is dropped for budget', () => {
+    const bigStatement = 'x'.repeat(115);
+    const facts = Array.from({ length: 12 }, (_, i) =>
+      fact(`f${i}`, bigStatement, ['a'.repeat(300), 'b'.repeat(300), 'c'.repeat(300)]),
+    );
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts,
+      context: scoredContext({ isScored: true }),
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+    expect(ctx).not.toContain('## ALL YOUR FACTS');
+    expect(ctx).toContain('Today: 2026-03-04');
+  });
+
   it('caps matched topics and producing facts to their limits', () => {
     const manyTopics = Array.from({ length: 15 }, (_, i) => `topic-${i}`);
     const manyFacts = Array.from({ length: 8 }, (_, i) => ({ id: `lf${i}`, statement: `producing ${i}` }));
     const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
       facts: [],
       context: {
         suggestion: scoredContext().suggestion,

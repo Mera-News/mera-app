@@ -14,6 +14,7 @@ import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
+import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -41,6 +42,14 @@ import {
     useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
+import { EDGE_SWIPE_HITBOX_WIDTH } from '@/lib/navigation/edge-swipe';
+import {
+    DASHBOARD_RESORT_INTERVAL_MS,
+    msUntilResortDue,
+    shouldResort,
+    type ResortTrigger,
+} from '@/lib/feed-ordering/dashboard-resort';
+import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
@@ -52,9 +61,9 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
@@ -74,8 +83,10 @@ const MeraNewsScreen: React.FC = () => {
     // Collapsing Dashboard header (hides on scroll-down, reveals on scroll-up).
     const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
         useCollapsibleHeader();
-    // Live opened set — subscribed so the section resort + green ticks update as
-    // stories are opened.
+    // Live opened set — subscribed so the per-card read treatment updates as
+    // stories are opened. (There is no green tick; `read` only suppresses the
+    // NEW badge. Section ORDER comes from the throttled `sortSnapshot`, not from
+    // this live set.)
     const openedIds = useOpenedStoriesStore((s) => s.ids);
     const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>();
     const [showOnboardingWait, setShowOnboardingWait] = useState(false);
@@ -84,6 +95,66 @@ const MeraNewsScreen: React.FC = () => {
     // Real navigator focus — used to pause the 30s timers (nowTick + empty-feed
     // watchdog) while this tab is blurred.
     const isFocused = useIsFocused();
+    // ── Section-order snapshot (THROTTLED) ──
+    // The Dashboard uses the Feed's priority order, but it is a browsing surface
+    // the user scans repeatedly — re-sorting on every focus or store tick would
+    // reshuffle sections under their eyes. So ORDER reads a frozen snapshot of
+    // the viewed-state, replaced at most once per DASHBOARD_RESORT_INTERVAL_MS.
+    //
+    // NEW ARRIVALS ARE NOT THROTTLED, and the separation is clean rather than
+    // approximate: the sort key is (viewed, relevance band, incoming index).
+    // Freezing only the VIEWED lookup leaves relevance and arrival order live,
+    // so a newly-synced story still slots into its band immediately while every
+    // already-present story keeps its relative position. The throttle governs
+    // re-RANKING, not arrival.
+    const [sortSnapshot, setSortSnapshot] = useState<{
+        cardStates: Record<string, unknown>;
+        openedArticleIds: Set<string>;
+    }>(() => ({ cardStates: {}, openedArticleIds: new Set() }));
+    const lastResortAtRef = useRef<number | null>(null);
+
+    const applyResort = useCallback((trigger: ResortTrigger) => {
+        const nowMs = Date.now();
+        if (!shouldResort({ lastAppliedMs: lastResortAtRef.current, nowMs, trigger })) return;
+        lastResortAtRef.current = nowMs;
+        setSortSnapshot({
+            cardStates: useFeedOrderStore.getState().cardStates,
+            openedArticleIds: useOpenedStoriesStore.getState().articleIds,
+        });
+    }, []);
+
+    // Seed once both stores have hydrated (an empty snapshot would rank every
+    // already-read story as unviewed for the whole first session).
+    const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
+    useEffect(() => {
+        if (!openedHydrated || lastResortAtRef.current !== null) return;
+        applyResort('unwatched');
+    }, [openedHydrated, applyResort]);
+
+    // PREFERRED moment: the user stopped looking (tab blur or app background).
+    useEffect(() => {
+        if (isFocused) return;
+        applyResort('unwatched');
+    }, [isFocused, applyResort]);
+
+    useEffect(() => {
+        const sub = AppState.addEventListener('change', (next) => {
+            if (next !== 'background') return;
+            applyResort('unwatched');
+        });
+        return () => sub.remove();
+    }, [applyResort]);
+
+    // FALLBACK: a user who never looks away still gets a converging order. One
+    // timer armed at the exact mark — not a poll — re-armed whenever the
+    // snapshot changes.
+    useEffect(() => {
+        if (!isFocused) return;
+        const delay = msUntilResortDue(lastResortAtRef.current, Date.now());
+        const timer = setTimeout(() => applyResort('elapsed'), delay || DASHBOARD_RESORT_INTERVAL_MS);
+        return () => clearTimeout(timer);
+    }, [isFocused, sortSnapshot, applyResort]);
+
     const edgeSwipeGesture = useMemo(() => Gesture.Pan()
         .activeOffsetX(-20)
         .failOffsetX(20)
@@ -299,14 +370,14 @@ const MeraNewsScreen: React.FC = () => {
         }
         if (isLoading && !stuckOnEmpty) {
             return (
-                <Box className="items-center justify-center py-20">
+                <Box className="items-center justify-center py-20" testID="dashboard-loading">
                     <Spinner size="large" />
                 </Box>
             );
         }
         if (stuckOnEmpty) {
             return (
-                <Box className="items-center justify-center py-20 px-6">
+                <Box className="items-center justify-center py-20 px-6" testID="dashboard-stuck-empty">
                     <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
                     <Text size="md" className="text-error-400 text-center font-semibold mb-1">
                         {t('feed.stuckTitle')}
@@ -322,7 +393,7 @@ const MeraNewsScreen: React.FC = () => {
         }
         if (errorMessage) {
             return (
-                <Box className="items-center justify-center py-20 px-6">
+                <Box className="items-center justify-center py-20 px-6" testID="dashboard-error">
                     <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
                     <Text size="md" className="text-error-400 text-center font-semibold mb-1">
                         {t('errors.failedToLoad')}
@@ -346,17 +417,18 @@ const MeraNewsScreen: React.FC = () => {
     }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1 bg-black" testID="dashboard-screen">
             {/* Keep-mounted sub-tab content — rendered FIRST so the absolute
                 collapsing header paints on top of it. */}
             <View style={{ flex: 1 }}>
                 {/* Feed — the list handles its own top padding (contentContainer)
                     so it can scroll under the collapsing header. */}
-                <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }}>
+                <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }} testID="dashboard-feed-content">
                     <DashboardSectionsFeed
                         breaking={feed.breaking}
                         rows={feed.rows}
                         openedIds={openedIds}
+                        sortSnapshot={sortSnapshot}
                         onPressSuggestion={handleSuggestionPress}
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
@@ -369,22 +441,31 @@ const MeraNewsScreen: React.FC = () => {
                 {/* Stories (lazy-mounted on first visit) — header stays revealed,
                     so pad the content below its measured height. */}
                 {storiesVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'stories' ? 'flex' : 'none' }}>
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'stories' ? 'flex' : 'none' }} testID="dashboard-stories-content">
                         <StoriesSlotPlaceholder />
                     </View>
                 )}
 
                 {/* Saved (lazy-mounted on first visit) */}
                 {savedVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }}>
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }} testID="dashboard-saved-content">
                         <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} />
                     </View>
                 )}
             </View>
 
+            {/* Status-bar scrim — covers the Dynamic Island/clock/battery region
+                so content is never visible behind it once the collapsing
+                header below translates away on scroll-down. Sits above the
+                sub-tab content, below the header (zIndex 10). Shared across
+                all three sub-tabs (Feed/Stories/Saved) since the header above
+                it is too. */}
+            <StatusBarScrim />
+
             {/* Collapsing Dashboard header — absolute overlay, translates up on
                 scroll-down and back on scroll-up / reveal(). */}
             <Animated.View
+                testID="dashboard-header"
                 onLayout={onHeaderLayout}
                 // box-none: the absolute header must not swallow the top-of-list
                 // pull-to-refresh gesture — touches pass through its empty area
@@ -398,46 +479,85 @@ const MeraNewsScreen: React.FC = () => {
                     headerStyle,
                 ]}
             >
-                <VStack className="px-5 pb-2" style={{ paddingTop: insets.top + 16 }}>
-                    <HStack className="items-start justify-between mb-2">
-                        <VStack className="flex-1 min-w-0 mr-3">
-                            <Heading size="3xl" className="text-white" numberOfLines={1}>{t('feed.dashboardTitle')}</Heading>
+                {/* PULL-TO-REFRESH PASSTHROUGH — read this before adding a row.
+                    `box-none` makes a view itself untouchable but leaves its
+                    CHILDREN touchable. Putting it only on this VStack (and on the
+                    Animated.View above) was NOT enough: every direct child here
+                    is a full-width plain View, so the title row, the stats
+                    sentence, the sub-tab row and the sync indicator each formed an
+                    opaque full-width band. A downward pan starting anywhere in the
+                    header was consumed by whichever band it landed on and never
+                    reached the FlatList underneath — which is exactly why the
+                    gesture produced ZERO list displacement while a programmatic
+                    scroll worked fine.
+                    The Feed tab's header has two such bands and is much shorter,
+                    so its pull usually starts below the header and works; this
+                    header is tall enough that it almost never does.
+                    RULE: every non-interactive row in this header must be
+                    `pointerEvents="none"`, and every row that merely CONTAINS an
+                    interactive child must be `box-none`. Only genuine controls
+                    (bell, status line, sub-tab pills) may be `auto`. */}
+                <VStack
+                    className="px-5 pb-2"
+                    pointerEvents="box-none"
+                    style={{ paddingTop: insets.top + 16 }}
+                >
+                    <HStack className="items-start justify-between mb-2" pointerEvents="box-none">
+                        <VStack className="flex-1 min-w-0 mr-3" pointerEvents="box-none">
+                            <Heading
+                                size="3xl"
+                                className="text-white"
+                                numberOfLines={1}
+                                pointerEvents="none"
+                            >
+                                {t('feed.dashboardTitle')}
+                            </Heading>
                             {lastProcessedLabel && (
                                 <Pressable
                                     onPress={openStatusSheet}
                                     hitSlop={8}
                                     accessibilityRole="button"
                                     accessibilityLabel={t('feedStatus.openA11y')}
+                                    testID="dashboard-open-status-sheet"
                                 >
                                     <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
                                 </Pressable>
                             )}
                         </VStack>
-                        <HStack className="items-center flex-shrink-0" space="sm">
+                        <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
                             <NotificationBellButton />
                         </HStack>
                     </HStack>
 
-                    {/* Stats sentence — always visible in the Dashboard header. */}
-                    <FeedStatsSentence className="text-typography-400 leading-6 mb-2" />
+                    {/* Stats sentence — decorative text, never tapped: fully
+                        transparent to touches so a pull can start on it. */}
+                    <View pointerEvents="none">
+                        <FeedStatsSentence className="text-typography-400 leading-6 mb-2" />
+                    </View>
 
-                    {/* Sub-tab pills — Feed / Stories / Saved. */}
-                    <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+                    {/* Sub-tab pills. box-none: the ROW is a full-width band and
+                        must not swallow a pull — only the pills themselves take
+                        touches (ForYouSubTabs' own HStack is box-none too). */}
+                    <View pointerEvents="box-none">
+                        <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+                    </View>
 
                     {/* Shared sync surface — indeterminate bar + expand accordion,
                         plus the offline notice and the re-auth prompt. Identical
                         to the Feed tab's, and it goes up on the same frame as a
                         pull on EITHER screen (see FeedSyncIndicator). */}
-                    <FeedSyncIndicator
-                        lastProcessedLabel={lastProcessedLabel}
-                        showConnectivityNotices={activeSubTab === 'feed'}
-                    />
+                    <View pointerEvents="box-none">
+                        <FeedSyncIndicator
+                            lastProcessedLabel={lastProcessedLabel}
+                            showConnectivityNotices={activeSubTab === 'feed'}
+                        />
+                    </View>
                 </VStack>
             </Animated.View>
 
             {/* Right edge swipe hitbox */}
             <GestureDetector gesture={edgeSwipeGesture}>
-                <View style={styles.edgeSwipeHitbox} />
+                <View style={styles.edgeSwipeHitbox} testID="dashboard-edge-swipe-hitbox" />
             </GestureDetector>
 
             {/* Feed-status detail sheet. */}
@@ -461,7 +581,13 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 40,
+        // Rendered ON TOP of the sub-tab content, so every tap inside this band
+        // is swallowed (the pan never activates and RN's responder system does
+        // not fall through to the covered sibling). Width is shared via
+        // lib/navigation/edge-swipe.ts so controls pinned near the right edge —
+        // e.g. the Saved sub-tab's delete button, which this strip used to
+        // render completely unpressable — can derive their clearance from it.
+        width: EDGE_SWIPE_HITBOX_WIDTH,
     },
 });
 

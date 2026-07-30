@@ -24,6 +24,7 @@ const AllCaughtUpCard: React.FC = () => {
             variant="elevated"
             size="md"
             className="mb-4 overflow-hidden bg-black border-black"
+            testID="all-caught-up-card"
         >
             <Box className="w-full py-20 px-6 items-center justify-center">
                 {/* Mera logo — animated: this card is a rest stop the user

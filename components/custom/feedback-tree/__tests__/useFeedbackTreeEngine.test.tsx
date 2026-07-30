@@ -31,6 +31,24 @@ const TREE = {
       labelDefault: 'Not important',
       children: [{ id: 'this_cat', labelKey: 'k.tc', labelDefault: 'This category', leaf: {} }],
     },
+    {
+      // A branch whose ONLY child is itself gated — a raw non-empty
+      // `children` array that resolves to zero visible children unless the
+      // context satisfies the child's `visibleIf`. This is the "chevron
+      // dead-ends" case hasVisibleChildren exists to catch.
+      id: 'gated_branch',
+      labelKey: 'k.gb',
+      labelDefault: 'Gated branch',
+      children: [
+        {
+          id: 'gated_leaf',
+          labelKey: 'k.gl',
+          labelDefault: 'Gated leaf',
+          visibleIf: { has_matched_topics: true },
+          leaf: {},
+        },
+      ],
+    },
   ],
   likeRoot: [
     { id: 'more_topic', labelKey: 'k.mt', labelDefault: 'More about this topic', leaf: {} },
@@ -51,11 +69,33 @@ describe('useFeedbackTreeEngine', () => {
     await waitFor(() => expect(result.current.tree).not.toBeNull());
 
     // has_matched_topics satisfied → both nodes visible.
-    expect(result.current.currentChildren.map((n) => n.id)).toEqual(['wrong_topic', 'not_important']);
+    expect(result.current.currentChildren.map((n) => n.id)).toEqual([
+      'wrong_topic',
+      'not_important',
+      'gated_branch',
+    ]);
 
     // Remove the matched topic → the gated node drops out.
     rerender({ context: NO_TOPIC });
-    expect(result.current.currentChildren.map((n) => n.id)).toEqual(['not_important']);
+    expect(result.current.currentChildren.map((n) => n.id)).toEqual(['not_important', 'gated_branch']);
+  });
+
+  it('hasVisibleChildren is false when a branch\'s only child is gated out, true once satisfied', async () => {
+    const { result, rerender } = renderHook<
+      FeedbackTreeEngine,
+      { context: LocalFeedbackContext }
+    >(({ context }) => useFeedbackTreeEngine({ active: true, root: 'dislike', context }), {
+      initialProps: { context: NO_TOPIC },
+    });
+    await waitFor(() => expect(result.current.tree).not.toBeNull());
+
+    const gatedBranch = result.current.currentChildren.find((n) => n.id === 'gated_branch')!;
+    // Raw `children` is non-empty, but the only child is gated out — terminal.
+    expect(gatedBranch.children?.length).toBe(1);
+    expect(result.current.hasVisibleChildren(gatedBranch)).toBe(false);
+
+    rerender({ context: WITH_TOPIC });
+    expect(result.current.hasVisibleChildren(gatedBranch)).toBe(true);
   });
 
   it('selects the like root when root is "like"', async () => {

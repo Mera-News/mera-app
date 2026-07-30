@@ -14,6 +14,7 @@ import {
   trackStory,
   untrackStory,
   isTracked,
+  observeTrackedId,
   findActiveTrackedId,
   getTrackedStoryById,
   getLegacyTrackedForMigration,
@@ -44,13 +45,21 @@ export interface AcceptedTrackScope {
 }
 
 /** Build the lean member snapshot for the originating (tapped) article. We stamp
- *  the subject's REAL pubDate when known (Part E timeline fix) so the timeline
- *  orders by publication time, not the track moment; `now` is only a fallback
- *  for subjects that carry no pubDate. The topic reconcile supplies richer
- *  snapshots for later members from local suggestion data. */
+ *  the subject's REAL pubDate when known so the timeline orders by publication
+ *  time, not the track moment. The topic reconcile supplies richer snapshots for
+ *  later members from local suggestion data.
+ *
+ *  UNKNOWN pubDate falls back to 0, NOT `Date.now()`. `Date.now()` was actively
+ *  harmful: every timeline row renders publication age under the same clock
+ *  chip, so a seed with no date claimed to be seconds old and sorted itself to
+ *  the top — a 13h-old article displayed as "4m ago" above genuinely fresher
+ *  coverage. 0 is the sentinel the rest of the service already reads as "old /
+ *  unknown" (see the unseen-count watermark): it sorts last and the card simply
+ *  renders no timestamp rather than a false one. Callers should still pass a
+ *  real `pubDate` — every current one does. */
 function snapshotFromSubject(subject: FeedbackSubject): TrackedStoryMemberSnapshot {
   const parsed = subject.pubDate ? Date.parse(subject.pubDate) : NaN;
-  const pubDateMs = Number.isFinite(parsed) ? parsed : Date.now();
+  const pubDateMs = Number.isFinite(parsed) ? parsed : 0;
   return {
     articleId: subject.articleId,
     title: subject.title ?? '',
@@ -80,6 +89,23 @@ export async function trackStoryWithProposal(
   // The search text is what actually retrieves articles — without it there is
   // nothing to follow.
   if (!searchText) return;
+
+  // IDEMPOTENCE. This ran unconditionally, so every confirmed proposal minted a
+  // fresh topic AND a fresh tracked_stories row — the duplicate followed stories
+  // users hit. A stale button was one route in; it is not the only one, because
+  // the floating chat outlives the screen and a second proposal can be confirmed
+  // from anywhere. Guarding the WRITE is what actually makes duplicates
+  // impossible, so the check belongs here rather than only in the button.
+  const existing = await findActiveTrackedId({
+    stableClusterId: subject.stableClusterId ?? null,
+    articleId: subject.articleId,
+  });
+  if (existing) {
+    logger.info('[track-actions] story already tracked — skipping duplicate mint', {
+      id: existing,
+    });
+    return;
+  }
 
   // 1. Mint the topic keyed on the SEARCH text. Continue even if this fails; the
   //    story still tracks locally against its origin article.
@@ -113,14 +139,19 @@ export async function trackStoryWithProposal(
   });
 }
 
-/** Unfollow the active story matching `subject` (no-op when none matches).
- *  Also retires the minted topic so it stops linking server-side (dedup/history
- *  only — mirrors how chat retires a topic; never a hard delete). */
-export async function untrackStoryFromSubject(subject: FeedbackSubject): Promise<void> {
-  const id = await findActiveTrackedId({
-    stableClusterId: subject.stableClusterId ?? null,
-    articleId: subject.articleId,
-  });
+/**
+ * DELETE a followed story by id — the destructive path behind every "delete this
+ * story" confirm (the story timeline's Delete button, the Stories list's trash).
+ *
+ * Retiring the minted TOPIC is the half that is easy to forget and expensive to
+ * miss: the topic is what keeps pulling this story's articles every fetch cycle,
+ * so deleting only the `tracked_stories` row leaves an invisible topic
+ * retrieving coverage for a story the user believes they removed. Retire, not
+ * hard-delete, mirrors how chat retires a topic (dedup/history preserved).
+ *
+ * Never throws — a failed topic retire must not block the row delete.
+ */
+export async function deleteTrackedStoryById(id: string): Promise<void> {
   if (!id) return;
   try {
     const row = await getTrackedStoryById(id);
@@ -132,9 +163,32 @@ export async function untrackStoryFromSubject(subject: FeedbackSubject): Promise
   await untrackStory(id);
 }
 
+/** Unfollow the active story matching `subject` (no-op when none matches).
+ *  Thin subject→id resolver over {@link deleteTrackedStoryById}. */
+export async function untrackStoryFromSubject(subject: FeedbackSubject): Promise<void> {
+  const id = await findActiveTrackedId({
+    stableClusterId: subject.stableClusterId ?? null,
+    articleId: subject.articleId,
+  });
+  if (!id) return;
+  await deleteTrackedStoryById(id);
+}
+
 /** Is the story described by `subject` already followed (active only)? */
 export async function isSubjectTracked(subject: FeedbackSubject): Promise<boolean> {
   return isTracked({
+    stableClusterId: subject.stableClusterId ?? null,
+    articleId: subject.articleId,
+  });
+}
+
+/** Reactive id of the active story matching `subject` (null when untracked) —
+ *  what the track BUTTON subscribes to. Reactive so it reflects a follow
+ *  confirmed later inside the floating chat (which outlives the host screen)
+ *  instead of staying stale until a remount; the ID rather than a flag so the
+ *  "already following" dialog can navigate straight to that story. */
+export function observeSubjectTrackedId(subject: FeedbackSubject) {
+  return observeTrackedId({
     stableClusterId: subject.stableClusterId ?? null,
     articleId: subject.articleId,
   });

@@ -54,14 +54,6 @@ export default function LoggedInLayout() {
           }}
         />
         <Stack.Screen
-          name="news-cluster"
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-            animation: 'slide_from_bottom'
-          }}
-        />
-        <Stack.Screen
           name="sources-publishers"
           options={{
             headerShown: false,
@@ -133,13 +125,6 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="saved-suggestions"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
-        />
-        <Stack.Screen
-          name="tracked-stories"
           options={{
             headerShown: false,
             animation: 'slide_from_right'

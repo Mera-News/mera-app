@@ -235,7 +235,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     }
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingBottom: insets.bottom }}>
+        <Box testID="onboarding-screen" className="flex-1 bg-black" style={{ paddingBottom: insets.bottom }}>
             {/* Progress Indicator */}
             <Box className="pb-5 px-5" style={{ paddingTop: insets.top + 16 }}>
                 <Progress value={((currentStep + 1) / TOTAL_STEPS) * 100} size="sm">

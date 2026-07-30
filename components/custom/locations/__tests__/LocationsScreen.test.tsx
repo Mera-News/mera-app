@@ -157,6 +157,12 @@ describe('LocationsScreen', () => {
         expect(getByText('Amsterdam, NL')).toBeTruthy();
     });
 
+    it('always shows the auto-detect disclaimer above the list', () => {
+        mockObservedRows = [makeLocation()];
+        const { getByText } = render(<LocationsScreen onBack={jest.fn()} />);
+        expect(getByText('locations.autoDetectDisclaimer')).toBeTruthy();
+    });
+
     it('the + header action opens the inline search panel in place of a full-screen swap', () => {
         mockObservedRows = [makeLocation()];
         const { getByLabelText, getByTestId } = render(<LocationsScreen onBack={jest.fn()} />);

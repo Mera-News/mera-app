@@ -134,6 +134,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                         <Box className="flex-1">
                             <Input size="lg">
                                 <InputField
+                                    testID="auth-email-input"
                                     placeholder={t('auth.emailPlaceholder')}
                                     value={email}
                                     onChangeText={setEmail}
@@ -144,6 +145,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                             </Input>
                         </Box>
                         <Pressable
+                            testID="auth-send-otp"
                             onPress={handleSendOTP}
                             disabled={loading || !email || !validator.isEmail(email)}
                             className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-gray-700'

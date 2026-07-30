@@ -76,6 +76,7 @@ export function sourceLabelKey(source: PersonaChangeLogSource | string): string 
         case 'slider':
         case 'migration':
         case 'user':
+        case 'llm':
             return source;
         default:
             return 'unknown';

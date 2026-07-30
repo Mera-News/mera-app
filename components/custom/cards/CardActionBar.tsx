@@ -1,13 +1,25 @@
-// CardActionBar — the Instagram-style action row under a story card. Deliberately
-// SMALL, borderless icons (the old pill buttons read as "too big and weirdly
-// aligned"): thumb-up · thumb-down · Mera on the left, then bookmark (+ optional
-// share) pushed to the right by a flex spacer. No pills, no borders, no
-// backgrounds. Shared by the For You feed (FeedScreen) and the fact feed
-// (FactFeedScreen) via the one suggestion card (ArticleSuggestionCard).
+// CardActionBar — the Instagram-style action row under a story card. Borderless
+// icons, no pills, no backgrounds: Mera · thumb-up · thumb-down · bookmark ·
+// (optional) share, distributed EVENLY across the row. Shared by the For You
+// feed (FeedScreen) and the fact feed (FactFeedScreen) via the one suggestion
+// card (ArticleSuggestionCard).
+//
+// The Mera glyph is DELIBERATELY here as well as on the rationale block
+// ("Mera's voice" — see ArticleSuggestionCard). It was briefly removed from this
+// row, which left suggestion cards inconsistent with standalone cards
+// (ArticleActionsRow always kept its Mera button). View consistency across card
+// types won: both entry points call the SAME handler, and this one is the
+// canonical affordance carrying `card-action-mera` — the rationale glyph is
+// `rationale-mera`.
+//
+// Icons are larger than the original (ICON_SIZE) and the old "left cluster +
+// flex spacer + right cluster" layout is `space-evenly`, so nothing is jammed
+// against the card's right edge — where the Feed's scroll-to-top FAB overlaps
+// it. `space-evenly` recomputes itself for 4 or 5 buttons, so restoring Mera
+// needed no spacing constant to change.
 
 import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
-import { Box } from '@/components/ui/box';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ThumbsUp, ThumbsDown, Bookmark, Share2 } from 'lucide-react-native';
@@ -18,7 +30,7 @@ const WHITE = '#FFFFFF';
 const LIKE = '#22C55E';
 const DISLIKE = '#EF4444';
 const SAVE_ACCENT = 'rgb(231,138,83)';
-const ICON_SIZE = 24;
+const ICON_SIZE = 27;
 const STROKE = 1.8;
 
 interface CardActionBarProps {
@@ -26,6 +38,7 @@ interface CardActionBarProps {
   saved: boolean;
   onLike: () => void;
   onDislike: () => void;
+  /** Ask Mera. The SAME handler the rationale block's glyph calls. */
   onAskMera: () => void;
   onToggleSave: () => void;
   /** Optional share action — renders a Share2 icon right of the bookmark. Hidden
@@ -54,9 +67,24 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   return (
     <HStack
       className="items-center"
-      style={{ paddingHorizontal: horizontalPadding, paddingVertical: 12, gap: 16 }}
+      style={{
+        paddingHorizontal: horizontalPadding,
+        paddingVertical: 12,
+        justifyContent: 'space-evenly',
+      }}
     >
       <Pressable
+        testID="card-action-mera"
+        onPress={onAskMera}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel={t('swipeFeed.askMera')}
+      >
+        <MeraLogo size={ICON_SIZE} animated={false} />
+      </Pressable>
+
+      <Pressable
+        testID="card-action-like"
         onPress={onLike}
         hitSlop={10}
         accessibilityRole="button"
@@ -72,6 +100,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       </Pressable>
 
       <Pressable
+        testID="card-action-dislike"
         onPress={onDislike}
         hitSlop={10}
         accessibilityRole="button"
@@ -87,23 +116,12 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       </Pressable>
 
       <Pressable
-        onPress={onAskMera}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel={t('swipeFeed.askMera')}
-      >
-        <MeraLogo size={ICON_SIZE} />
-      </Pressable>
-
-      {/* Spacer pushes the bookmark (+ share) to the right edge. */}
-      <Box className="flex-1" />
-
-      <Pressable
+        testID="card-action-save"
         onPress={onToggleSave}
         hitSlop={10}
         accessibilityRole="button"
         accessibilityState={{ selected: saved }}
-        accessibilityLabel={t('savedSuggestions.savedToastTitle')}
+        accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
       >
         <Bookmark
           size={ICON_SIZE}
@@ -115,6 +133,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
 
       {onShare ? (
         <Pressable
+          testID="card-action-share"
           onPress={onShare}
           hitSlop={10}
           accessibilityRole="button"

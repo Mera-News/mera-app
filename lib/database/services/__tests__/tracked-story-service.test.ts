@@ -79,6 +79,48 @@ describe('trackStory', () => {
     expect(created.llmHeadline).toBeNull();
   });
 
+  // Q15: the "N new" badge. `applyUpdates` only gates on pubDate when the story
+  // HAS a watermark (`watermark != null`); a fresh story used to have none, so
+  // the first reconcile took the legacy `+= newIds.length` branch and counted
+  // every pre-existing article it discovered as "new". A story you just started
+  // following showed a double-digit badge immediately.
+  it('seeds the seen-pubDate watermark from the tapped article, so a fresh track shows 0 new', async () => {
+    const created = await trackStory({
+      stableClusterId: null,
+      articleId: 'art-1',
+      title: 'Big story',
+      originSurface: 'detail',
+      initialSnapshot: { articleId: 'art-1', title: 'Big story', pubDateMs: 5_000 },
+    });
+    expect(created.seenPubWatermarkMs).toBe(5_000);
+    expect(created.unseenCount).toBe(0);
+  });
+
+  it('falls back to now when the seed carries no pubDate (0 would gate in name only)', async () => {
+    const before = Date.now();
+    const created = await trackStory({
+      stableClusterId: null,
+      articleId: 'art-1',
+      title: 'Undated',
+      originSurface: 'detail',
+      initialSnapshot: { articleId: 'art-1', title: 'Undated', pubDateMs: 0 },
+    });
+    // NOT 0: `0 != null` is true, so a 0 watermark would switch the story onto
+    // the gated branch with an all-permissive threshold.
+    expect(created.seenPubWatermarkMs).toBeGreaterThanOrEqual(before);
+  });
+
+  it('still seeds a watermark when there is no initial snapshot at all', async () => {
+    const before = Date.now();
+    const created = await trackStory({
+      stableClusterId: null,
+      articleId: 'art-1',
+      title: 'No snapshot',
+      originSurface: 'detail',
+    });
+    expect(created.seenPubWatermarkMs).toBeGreaterThanOrEqual(before);
+  });
+
   it('normalizes a blank stable cluster id to null', async () => {
     const created = await trackStory({
       stableClusterId: '   ',

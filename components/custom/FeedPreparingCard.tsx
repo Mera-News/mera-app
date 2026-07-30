@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 const FeedPreparingCard: React.FC = () => {
     const { t } = useTranslation();
     return (
-        <Card variant="elevated" size="md" className="mb-4 overflow-hidden bg-black border-black">
+        <Card variant="elevated" size="md" className="mb-4 overflow-hidden bg-black border-black" testID="feed-preparing-card">
             <Box className="w-full py-12 px-6 items-center justify-center">
                 <StreamingIndicator />
                 <Text size="md" className="text-gray-400 text-center mt-4">

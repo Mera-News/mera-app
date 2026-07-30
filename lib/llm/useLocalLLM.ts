@@ -3,6 +3,7 @@
 // One-shot only: no tool-call loop, no retry, ephemeral conversations.
 
 import { useCallback, useRef, useState } from 'react';
+import { CHAT_MAX_OUTPUT_TOKENS } from './constants';
 import { getModelState, inferStream, initBaseModel } from '../mera-protocol-toolkit';
 import { inferenceQueue } from '../inference/InferenceQueue';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -23,7 +24,9 @@ const MAX_HISTORY_MESSAGES = 1;
 const TOOL_CALL_OPEN = '<tool_call>';
 const TOOL_CALL_CLOSE = '</tool_call>';
 const TOTAL_TOKEN_LIMIT = 4096;
-const MAX_OUTPUT_TOKENS = 1024;
+// Shared with the CLOUD chat path (lib/llm/constants) so a conversation can't be
+// cut at two different lengths depending on which engine served the turn.
+const MAX_OUTPUT_TOKENS = CHAT_MAX_OUTPUT_TOKENS;
 const INPUT_TOKEN_BUDGET = TOTAL_TOKEN_LIMIT - MAX_OUTPUT_TOKENS; // 3072
 
 const TAG = '[LocalLLM]';

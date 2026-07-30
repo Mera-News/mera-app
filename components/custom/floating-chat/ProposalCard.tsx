@@ -223,6 +223,10 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   };
 
   const dimmed = !isPending && resolved === null; // expired
+  // Applied / cancelled is TERMINAL: the rows stop being choices, so they lose
+  // their press affordance (already true) AND their full contrast (was not) —
+  // otherwise the card keeps reading as interactive after the user confirmed.
+  const isResolved = resolved !== null;
   const confirmDisabled = isGenerating || isApplying;
 
   return (
@@ -255,7 +259,10 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         </Text>
       )}
 
-      <View style={styles.actions}>
+      <View
+        testID="proposal-actions"
+        style={[styles.actions, isResolved && styles.actionsResolved]}
+      >
         {proposal.actions.map((action, idx) => {
           const row = actionToRow(action);
           const selected = chooseOne && idx === selectedIndex;
@@ -290,6 +297,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             return (
               <Pressable
                 key={idx}
+                testID={`proposal-action-row-${idx}`}
                 onPress={() => setSelectedIndex(idx)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
@@ -299,8 +307,24 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
               </Pressable>
             );
           }
+          // Terminal state: no Pressable, no selection box (the radio icon above
+          // already shows WHICH option was applied) — just a dimmed, explicitly
+          // disabled row, so nothing on the card still reads as tappable.
+          if (chooseOne && isResolved) {
+            return (
+              <View
+                key={idx}
+                testID={`proposal-action-row-${idx}`}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, disabled: true }}
+                style={styles.actionRow}
+              >
+                {body}
+              </View>
+            );
+          }
           return (
-            <View key={idx} style={styles.actionRow}>
+            <View key={idx} testID={`proposal-action-row-${idx}`} style={styles.actionRow}>
               {body}
             </View>
           );
@@ -394,6 +418,11 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: 8,
+  },
+  // Same 0.5 dim the card uses for its expired state — the codebase's
+  // "this control is no longer live" convention.
+  actionsResolved: {
+    opacity: 0.5,
   },
   actionRow: {
     flexDirection: 'row',

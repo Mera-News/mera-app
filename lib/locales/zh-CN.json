@@ -19,7 +19,8 @@
     "never": "从未",
     "yes": "是",
     "no": "否",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "home": "主页"
   },
   "auth": {
     "emailPlaceholder": "请输入您的电子邮箱地址",
@@ -66,7 +67,7 @@
     "preparingFeedExploreHint": "与此同时，可前往「探索」标签页查看热门报道。",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
-    "dashboardTitle": "仪表盘",
+    "dashboardTitle": "概览",
     "pullDownToRetry": "下拉重试",
     "readArticleToast": "您已阅读过这篇文章",
     "stuckTitle": "无法加载您的资讯",
@@ -349,7 +350,7 @@
     "injectNoiseDescription": "在您的真实兴趣旁提交诱饵话题，使后端无法通过您的话题列表推断您的身份。仅匹配诱饵话题的文章在到达您之前会被过滤掉。",
     "injectNoiseBeta": "测试版——可能会减慢话题生成速度并降低资讯相关性。",
     "privacyTitle": "您的数据保持私密",
-    "privacyDescription": "Mera Protocol 始终开启。设备端模式在您的手机上完全离线运行推理。云端模式使用端到端加密推理——您的数据在设备上加密，仅在安全飞地内解密。Mera 永远不会看到您的数据。",
+    "privacyDescription": "Mera 协议始终开启。设备模式下，推理完全离线运行在你的手机上。云端模式使用端到端加密推理——你的数据在设备上加密，只在我们无法窥视的安全隔离区内解密。你的个人事实、画像和阅读历史从不离开这台设备。获取新闻时，我们只发送宽泛的主题短语，且不携带任何用户 ID。",
     "deviceSupported": "设备支持",
     "deviceNotSupported": "设备不支持",
     "deviceSupportedDescription": "您的设备满足设备端 AI 处理的所有要求。",
@@ -407,7 +408,7 @@
     "errorTitle": "错误",
     "errorDescription": "数据删除失败，请重试。",
     "factsDescription": "你的事实及其生成的主题——存储在此设备上",
-    "factsModalDescription": "清除你添加的事实及其生成的主题。主题仅存在于此设备上——绝不会存储在我们的服务器上。你的文章信息流也会被一并清除，因为它由这些主题构建；在你添加新的事实之前，它将保持为空。",
+    "factsModalDescription": "清除你添加的事实以及由此生成的主题。你的事实从不离开这台设备。主题短语在你获取新闻时发送，并在我们的服务器上缓存，不附带用户 ID，因此那里没有任何记录表明它们属于你。你的文章列表也会一并清空，因为它由这些主题构建，在你添加新事实之前将保持为空。",
     "locationDevice": "设备上",
     "locationServer": "服务器"
   },
@@ -453,8 +454,8 @@
     "tabPersona": "用户画像",
     "tabSources": "来源",
     "tabPreferences": "偏好设置",
-    "privacyOnDevice": "您的事实和话题仅存储在您的设备上——AI 推理通过 Mera Protocol 完全在设备端运行。每次您需要新闻时，您的话题会发送到我们的服务器以获取相关文章；服务器返回结果但不存储您的任何数据。聊天记录从不保存；每次会话都从头开始。更换设备或退出登录意味着需要重新构建您的个人资料。",
-    "privacyCloud": "您的事实和话题仅存储在您的设备上。云端推理使用加密的可信执行环境（TEE）——您的数据在设备上加密，在隔离的飞地中处理，仅在您的设备上解密。每次您需要新闻时，您的话题会发送到我们的服务器以获取相关文章；服务器返回结果但不存储您的任何数据。聊天记录从不存储；每次会话都从头开始。更换设备或退出登录意味着需要重新构建您的个人资料。",
+    "privacyOnDevice": "你的事实和主题仅存储在你的设备上——AI 推理通过 Mera 协议完全在设备上运行。每次获取新闻时，只发送你的主题短语，不携带用户 ID（在上方开启「注入噪声」可同时发送诱饵主题）。这些短语在我们的服务器上仅以文本本身为键进行缓存，14 天无人请求即被删除；没有任何记录表明请求者是你。我们关于你保存的数据是登录邮箱、订阅状态，以及用于执行套餐限额的每日已分析文章数。聊天会话每次都从头开始且不会保存——唯一的例外是：如果你提交解封申请，你附上的对话记录会被保存以供人工审核。更换设备或退出登录意味着需要重新构建你的画像。我们的后端尚未公开；我们正在把所有接触你数据的服务迁移到一个源代码可查阅的仓库，预计在 2026 年 9 月之前公开。在那之前，需要你信任的只有一件事：我们没有保留任何把你和你的主题关联起来的记录。Mera 在荷兰依据 GDPR 开发，不保存你的数据正是这套设计的目的。",
+    "privacyCloud": "你的事实和主题仅存储在你的设备上。云端推理使用加密的可信执行环境（TEE）——数据在设备上加密到隔离区公布的密钥，在隔离区内处理，并且只在你的设备上解密。需要说明清楚：应用目前尚未针对硬件厂商校验该认证报告，因此现阶段你信任的是我们和隔离区运营方，而不是芯片本身；让应用校验认证并在失败时拒绝继续，已列入我们的路线图。每次获取新闻时，只发送你的主题短语，不携带用户 ID（在上方开启「注入噪声」可同时发送诱饵主题）。这些短语在我们的服务器上仅以文本本身为键进行缓存，14 天无人请求即被删除；没有任何记录表明请求者是你。我们关于你保存的数据是登录邮箱、订阅状态，以及用于执行套餐限额的每日已分析文章数。聊天会话每次都从头开始且不会保存——唯一的例外是：如果你提交解封申请，你附上的对话记录会被保存以供人工审核。更换设备或退出登录意味着需要重新构建你的画像。我们的后端尚未公开；我们正在把所有接触你数据的服务迁移到一个源代码可查阅的仓库，预计在 2026 年 9 月之前公开。Mera 在荷兰依据 GDPR 开发，不保存你的数据正是这套设计的目的。",
     "privacyPolicy": "隐私政策",
     "privacyNoticeTitle": "您的隐私",
     "updatingTopics": "正在更新话题... {{completed}}/{{total}}",
@@ -737,7 +738,10 @@
     "removedToastMessage": "已从收藏中移除",
     "savedToastMessage": "文章已保存以便稍后阅读",
     "savedToastTitle": "已保存",
-    "title": "已保存"
+    "title": "已保存",
+    "removedToastTitle": "已移除",
+    "saveAction": "保存",
+    "removeAction": "从已保存中移除"
   },
   "subscription": {
     "activating": "正在激活你的订阅…",
@@ -779,7 +783,7 @@
     "upgrade": "升级"
   },
   "tabs": {
-    "deck": "卡组",
+    "deck": "信息流",
     "dashboard": "仪表盘",
     "around": "探索",
     "profile": "我的",
@@ -787,12 +791,11 @@
     "gotIt": "知道了"
   },
   "swipeFeed": {
-    "yourDeck": "为你推荐",
+    "yourDeck": "信息流",
     "moreLikeThis": "多看这类",
     "lessLikeThis": "少看这类",
     "askMera": "问 Mera",
     "closeTree": "关闭",
-    "treeRoot": "全部",
     "treeThanks": "谢谢——已记录。",
     "chatHandoffLike": "我喜欢这篇报道——多看这类：{{path}}。",
     "chatHandoffLikeNoPath": "我喜欢这篇报道——我想多看这类内容。",
@@ -801,30 +804,18 @@
   },
   "explore": {
     "title": "探索",
-    "sources": "来源",
     "scopeWorld": "全球",
-    "scopeTopStories": "头条新闻",
     "noArticles": "未找到文章",
-    "thinContentTitle": "想看更多{{place}}的新闻？",
-    "thinContentBody": "将{{place}}添加为地点，即可获取更多相关报道。",
-    "addLocation": "添加地点",
-    "topStoriesIntro": "人们现在正在谈论的话题 — 按对你重要的内容排序。",
-    "addPlaces": "添加地点",
-    "noLocationsTitle": "查看你所在地的新闻",
-    "noLocationsBody": "添加你关心的地点，即可在这里探索来自当地的新闻。",
-    "sheetTitle": "管理来源",
-    "close": "关闭"
+    "addPlaces": "添加地点"
   },
   "forYou": {
     "sectionPrefix": "关于：",
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
-    "openFactFeed": "查看关于此主题的所有报道",
-    "viewAllStories": "查看全部 {{count}} 条报道",
-    "newInSection_other": "自您上次访问以来有 {{count}} 条新报道",
-    "subTabFeed": "资讯",
+    "subTabFeed": "一览",
     "subTabStories": "报道",
-    "subTabSaved": "已保存"
+    "subTabSaved": "已保存",
+    "viewAllArticles_other": "查看全部 {{count}} 篇文章"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -832,7 +823,6 @@
     "stage": "阶段",
     "cloudProgress": "云端评分",
     "deviceProgress": "设备端评分",
-    "processed": "已获取文章",
     "analysed": "已分析",
     "relevant": "与你相关",
     "noiseRemoved": "已过滤干扰",
@@ -841,7 +831,8 @@
     "openA11y": "打开资讯状态",
     "expandA11y": "显示资讯状态详情",
     "collapseA11y": "隐藏资讯状态详情",
-    "close": "关闭"
+    "close": "关闭",
+    "published": "已发布"
   },
   "trackedStories": {
     "emptyTitle": "还没有关注任何报道",
@@ -853,11 +844,21 @@
     "updatesBadge": "{{count}} 条更新",
     "endedLabel": "已结束",
     "timelineQuietNote": "目前还没有新的报道。随着事态发展，我们会持续在这里更新。",
-    "railTitle": "关注中",
     "untrackConfirmTitle": "确定要取消关注吗？",
     "untrackConfirmBody": "你将不再看到这则报道的最新进展。",
+    "untrackConfirmCta": "停止关注",
+    "emptyHint": "从信息流中打开报道至完整视图，然后点击其下方按钮行中的关注图标。",
+    "emptyCta": "前往信息流",
     "trackChatSeed": "我想关注这则报道。",
-    "trackProposalTitle": "关注这则报道？"
+    "trackProposalTitle": "关注这则报道？",
+    "articleCount_other": "{{count}} 篇文章",
+    "articleCountCapped": "{{count}}+ 篇文章",
+    "alreadyTrackingTitle": "你已在关注此报道",
+    "alreadyTrackingBody": "你不能关注同一则报道两次。取消关注会删除为此报道保存的所有内容。",
+    "goToStoryAction": "前往报道",
+    "deleteStoryAction": "删除报道",
+    "deleteStoryConfirmTitle": "删除此报道？",
+    "deleteStoryConfirmBody": "删除会移除为此报道保存的所有内容。"
   },
   "whatsNew": {
     "title": "更新内容",
@@ -910,6 +911,7 @@
       "slider": "手动",
       "migration": "初始设置",
       "user": "你",
+      "llm": "自动检测",
       "unknown": "系统"
     },
     "actionLabels": {
@@ -947,6 +949,8 @@
     "failedBody": "我暂时无法完成重新校准，稍后会再试一次。"
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "更多内容：{{topic}}",
+    "moreAboutTopicNamedWithCount": "更多内容：{{topic}} 及其他 {{extra}} 个主题",
     "title": "告诉我们更多",
     "contextFor": "关于：{{title}}",
     "back": "返回",
@@ -972,6 +976,7 @@
     "generateMore": "生成更多",
     "generatingMore": "生成中…",
     "acceptAll": "看起来不错",
+    "saveAll": "保存全部 ({{count}})",
     "delete": "移除话题",
     "undo": "撤销",
     "highPriority": "优先此话题",
@@ -1023,6 +1028,7 @@
   "locations": {
     "title": "你的地点",
     "subtitle": "影响你资讯的地点",
+    "autoDetectDisclaimer": "Mera 会从您的个人资料自动检测您的地点。您也可以在这里添加更多地点——但直接告诉 Mera 更有效，因为它会学习每个地点与您的关系，并相应调整您的推荐。",
     "empty": "添加你关心的地点",
     "add": "添加地点",
     "addFirst": "添加地点",

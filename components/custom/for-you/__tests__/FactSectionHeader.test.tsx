@@ -50,36 +50,41 @@ jest.mock('@/components/custom/for-you/event-type-icons', () => ({
 import FactSectionHeader from '../FactSectionHeader';
 
 describe('FactSectionHeader', () => {
-    it('renders a "+N" pill when newCount > 0', () => {
-        const { getByText, getByLabelText } = render(
-            <FactSectionHeader title="Elections" eventType={null} newCount={3} onPress={jest.fn()} />,
+    // The header's open affordance is now an ICON-ONLY round arrow — the count
+    // moved to the section's closing "View all N articles" row so it isn't shown
+    // twice. Icon-only means the label is the only thing VoiceOver can announce,
+    // so it must still name the destination AND the count.
+    it('renders a round open button labelled with the destination and count', () => {
+        const { getByTestId } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(getByText('+3')).toBeTruthy();
-        // a11y label uses the pluralized i18n key.
-        expect(getByLabelText('forYou.newInSection')).toBeTruthy();
+        const btn = getByTestId('dashboard-section-open');
+        expect(btn.props.accessibilityLabel).toBe('forYou.viewAllArticles');
+        expect(btn.props.accessibilityRole).toBe('button');
     });
 
-    it('caps the pill display at "+99"', () => {
-        const { getByText } = render(
-            <FactSectionHeader title="Elections" eventType={null} newCount={250} onPress={jest.fn()} />,
+    it('no longer draws the article count in the header', () => {
+        const { queryByText } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(getByText('+99')).toBeTruthy();
+        expect(queryByText('forYou.articlesCount')).toBeNull();
+        expect(queryByText('12')).toBeNull();
     });
 
-    it('hides the pill when newCount is 0', () => {
-        const { queryByLabelText } = render(
-            <FactSectionHeader title="Elections" eventType={null} newCount={0} onPress={jest.fn()} />,
+    it('no longer renders a "+N new" badge', () => {
+        const { queryByText } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={12} onPress={jest.fn()} />,
         );
-        expect(queryByLabelText('forYou.newInSection')).toBeNull();
+        expect(queryByText('+3')).toBeNull();
+        expect(queryByText('+12')).toBeNull();
     });
 
-    it('is pressable — opens the fact feed on tap', () => {
+    it('the round button opens the fact feed on tap', () => {
         const onPress = jest.fn();
-        const { getByLabelText } = render(
-            <FactSectionHeader title="Elections" eventType={null} onPress={onPress} />,
+        const { getByTestId } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={5} onPress={onPress} />,
         );
-        const pressable = getByLabelText('forYou.openFactFeed');
-        fireEvent.press(pressable);
+        fireEvent.press(getByTestId('dashboard-section-open'));
         expect(onPress).toHaveBeenCalled();
     });
 });

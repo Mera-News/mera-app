@@ -2,3 +2,4 @@
 export * from './types';
 export { evaluateCondition } from './evaluate-condition';
 export { resolveLeafActions } from './resolve-leaf-actions';
+export { resolveTopicLabel, type TopicLabelChoice } from './resolve-topic-label';

@@ -137,6 +137,23 @@ function trunc(text: string, max: number): string {
 }
 
 /**
+ * Epoch-ms → `YYYY-MM-DD` (UTC). UTC (not locale) on purpose: the rendered
+ * prompt must be a pure function of the injected clock, so goldens stay pinnable
+ * regardless of the runner's timezone. Returns null for a non-finite input.
+ */
+function isoDay(ms: number): string | null {
+  if (!Number.isFinite(ms)) return null;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** ISO-ish date string → `YYYY-MM-DD` (UTC), or null when unparseable. */
+function isoDayFromString(value: string | null | undefined): string | null {
+  const raw = (value ?? '').trim();
+  if (!raw) return null;
+  return isoDay(Date.parse(raw));
+}
+
+/**
  * Token estimator — mirrors lib/llm/tokens.ts::estimateTokens byte-for-byte.
  * Kept inline so the harness stays free of the lib/llm import graph (the budget
  * heuristic is stable; if lib/llm/tokens.ts changes, mirror it here).
@@ -202,6 +219,7 @@ Each option has TWO fields:
 Rules:
 - Order options narrow → broad. Make the labels GENERIC enough that future developments keep matching (track the CONTINUING story, not this single article).
 - Do not invent entities absent from the ARTICLE / RELATED COVERAGE. Plain, neutral language; no clickbait, no ALL CAPS.
+- Scopes must stay matchable indefinitely. Check the Today / Published dates in <context>: NEVER name an already-ended year, season or edition, and prefer an UNDATED scope ("Hungarian Grand Prix updates") over a dated one.
 - If the user redirects ("track the protest itself, not this article"), call proposeTrack AGAIN with re-scoped options.
 - If TRACK STATE says already following, do NOT propose — just tell them it's already being followed.
 Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}
@@ -248,7 +266,12 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate } = input;
+
+  // Injected clock (never read here) — anchors the agent to the present so
+  // proposeTrack scopes can't name a season/year that is already over.
+  const todayLine = `Today: ${isoDay(nowMs) ?? 'unknown'}`;
+  const publishedDay = isoDayFromString(articlePubDate);
 
   // --- ARTICLE ---
   let articleBlock: string;
@@ -256,6 +279,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     const s = ctx.suggestion;
     const title = s.title_en ?? s.title_original ?? fallbackTitle ?? '(untitled)';
     const lines = [`Title: ${trunc(title, 160)}`];
+    if (publishedDay) lines.push(`Published: ${publishedDay}`);
     if (s.publication_name) lines.push(`Publication: ${trunc(s.publication_name, 80)}`);
     if (s.description_en) lines.push(`Description: ${trunc(s.description_en, ARTICLE_DESC_TRUNC)}`);
     // Category + entities feed the "less of this" choose-one alternatives (one
@@ -265,7 +289,8 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     if (entities.length > 0) lines.push(`Entities: ${entities.join(', ')}`);
     articleBlock = `## ARTICLE\n${lines.join('\n')}`;
   } else {
-    articleBlock = `## ARTICLE\nTitle: ${trunc(fallbackTitle ?? '(untitled)', 160)}`;
+    articleBlock = `## ARTICLE\nTitle: ${trunc(fallbackTitle ?? '(untitled)', 160)}`
+      + (publishedDay ? `\nPublished: ${publishedDay}` : '');
   }
 
   // --- SUGGESTION STATUS ---
@@ -349,7 +374,9 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     verdictBlock = lines.join('\n');
   }
 
-  const alwaysBlocks = [articleBlock, statusBlock, matchedTopicsBlock, producingBlock];
+  // `todayLine` leads the ALWAYS list so it also survives the over-budget trim
+  // below — a fact-heavy persona must not silently lose the date anchor.
+  const alwaysBlocks = [todayLine, articleBlock, statusBlock, matchedTopicsBlock, producingBlock];
   if (verdictBlock) alwaysBlocks.push(verdictBlock);
   if (relatedCoverageBlock) alwaysBlocks.push(relatedCoverageBlock);
   if (trackStateBlock) alwaysBlocks.push(trackStateBlock);

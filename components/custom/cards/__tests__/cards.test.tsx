@@ -115,7 +115,24 @@ jest.mock('@/components/custom/chat/StreamingIndicator', () => {
 });
 jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
-  return { __esModule: true, default: () => <View testID="mera-logo" /> };
+  return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
+});
+// ArticleImagePlaceholder draws its warm off-white gradient with react-native-svg (same
+// house pattern as SectionGradientPanel) — mocked to plain views, same as
+// every other react-native-svg consumer's test (SectionGradientPanel.test.tsx,
+// MeraLogo.test.tsx).
+jest.mock('react-native-svg', () => {
+  const { View } = require('react-native');
+  const Passthrough = (props: any) => <View {...props} />;
+  return {
+    __esModule: true,
+    default: (props: any) => <View testID="placeholder-svg" {...props} />,
+    Svg: (props: any) => <View testID="placeholder-svg" {...props} />,
+    Defs: Passthrough,
+    LinearGradient: Passthrough,
+    Stop: Passthrough,
+    Rect: Passthrough,
+  };
 });
 jest.mock('@/components/custom/feedback-tree/FeedbackTreeOverlay', () => ({
   __esModule: true,
@@ -148,8 +165,11 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
 // The universal actions row now hosts a "Track story" button backed by the
 // tracking layer (which reaches Apollo + WatermelonDB). Stub the hook so these
 // pure-render tests don't drag the native DB/network stack into the graph.
-jest.mock('@/lib/tracking/use-tracked-subject', () => ({
-  useTrackedSubject: () => ({ tracked: false, toggle: jest.fn() }),
+// The track button's press behaviour + its "already following" dialog. Mocked
+// because the real module renders a Gluestack Modal (which pulls @legendapp/motion,
+// untransformed ESM under jest) and is not what these card tests exercise.
+jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
+  useTrackButton: () => ({ tracked: false, onPress: jest.fn(), dialog: null }),
 }));
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFactsForTopicTexts: jest.fn(() => Promise.resolve([])),
@@ -274,6 +294,41 @@ describe('ArticleSuggestionCard', () => {
     expect(queryByTestId('relevance-chip')).toBeNull();
   });
 
+  // The Saved list floats a delete button over the card's top-right corner. The
+  // meta row (time · language · country FLAG) is right-aligned, so it runs under
+  // that button wherever the button is moved to — on an imageless card the flag
+  // was almost entirely covered. The row must reserve the space instead.
+  it('reserves meta-row space for a host control when the card has NO image', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion()} // image_url: null
+        onPress={jest.fn()}
+        metaRowRightReserve={72}
+      />,
+    );
+    // 72 quoted from the card's outer edge, minus the content VStack's own px-4.
+    expect(getByTestId('card-meta-row').props.style).toEqual({ paddingRight: 56 });
+  });
+
+  it('does NOT reserve when the card HAS a hero image (no layout regression)', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+        metaRowRightReserve={72}
+      />,
+    );
+    // The 192px hero already pushes the meta row clear of the control.
+    expect(getByTestId('card-meta-row').props.style).toBeUndefined();
+  });
+
+  it('does not reserve when no host control is declared', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('card-meta-row').props.style).toBeUndefined();
+  });
+
   it('does not render the action row without onVerdict (pixel-identical default)', () => {
     const { queryByLabelText } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
@@ -312,7 +367,7 @@ describe('ArticleSuggestionCard', () => {
     const { getByLabelText } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} />,
     );
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveSuggestion).toHaveBeenCalled());
   });
 
@@ -410,6 +465,66 @@ describe('ArticleStandaloneCompactCard', () => {
   });
 });
 
+describe('ArticleImagePlaceholder (via the card bases)', () => {
+  // The placeholder wraps itself in accessible={false} +
+  // importantForAccessibility="no-hide-descendants" — RNTL v13 EXCLUDES that
+  // whole subtree from default queries (mirroring how aria-hidden works in
+  // DOM Testing Library), so every lookup into it needs
+  // `includeHiddenElements: true`. That exclusion is itself proof the
+  // decorative-hiding works: a sighted a11y query genuinely can't "see" it.
+  it('shows the dark-gradient watermark placeholder on a full-size card with no image', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('placeholder-svg', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it('hides the placeholder from the accessibility tree (decorative, not an article photo)', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
+    );
+    // Excluded from a default (non-hidden) query — this is the behavior we want.
+    expect(queryByTestId('placeholder-svg')).toBeNull();
+    // Walk up from the mocked Svg to the wrapping View that carries the
+    // accessibility-hiding props.
+    let n: any = getByTestId('placeholder-svg', { includeHiddenElements: true }).parent;
+    while (n && n.props?.accessible === undefined) n = n.parent;
+    expect(n?.props?.accessible).toBe(false);
+    expect(n?.props?.importantForAccessibility).toBe('no-hide-descendants');
+  });
+
+  it('renders the real image instead of the placeholder when the full-size card has an image', () => {
+    const { queryByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(queryByTestId('placeholder-svg', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('shows the placeholder on a compact card with no image', () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle({ image_url: null })} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('placeholder-svg', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it('renders the real image instead of the placeholder when the compact card has an image', () => {
+    const { queryByTestId } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(queryByTestId('placeholder-svg', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+});
+
 describe('ArticleActionsRow', () => {
   const subject: FeedbackSubject = {
     origin: 'article',
@@ -454,7 +569,7 @@ describe('ArticleActionsRow', () => {
     const { getByLabelText } = render(
       <ArticleActionsRow subject={subject} article={article} />,
     );
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveStandaloneArticle).toHaveBeenCalled());
     expect(mockSaveSuggestion).not.toHaveBeenCalled();
   });
@@ -471,7 +586,7 @@ describe('ArticleActionsRow', () => {
     const { getByLabelText } = render(
       <ArticleActionsRow subject={suggestionSubject} suggestion={s} />,
     );
-    fireEvent.press(getByLabelText('savedSuggestions.savedToastTitle'));
+    fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveSuggestion).toHaveBeenCalledWith(s));
     expect(mockSaveStandaloneArticle).not.toHaveBeenCalled();
   });
@@ -498,7 +613,7 @@ describe('CompactActionsSheet', () => {
     expect(getByText('Mera')).toBeTruthy();
     expect(getByText('articleFeedback.likeLabel')).toBeTruthy();
     expect(getByText('articleFeedback.dislikeLabel')).toBeTruthy();
-    expect(getByText('savedSuggestions.savedToastTitle')).toBeTruthy();
+    expect(getByText('savedSuggestions.saveAction')).toBeTruthy();
     expect(getByText('articleDetail.share')).toBeTruthy();
   });
 

@@ -21,12 +21,12 @@ const ReauthBanner: React.FC = () => {
   if (!needsReauth || !isConnected || dismissed) return null;
 
   return (
-    <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
+    <HStack testID="reauth-banner" className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2" space="sm">
       <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-      <Pressable className="flex-1" onPress={() => router.push('/login?reauth=1')}>
+      <Pressable testID="reauth-banner-action" className="flex-1" onPress={() => router.push('/login?reauth=1')}>
         <Text size="sm" className="text-warning-400">{t('auth.reauthBanner')}</Text>
       </Pressable>
-      <Pressable hitSlop={8} onPress={() => setDismissed(true)}>
+      <Pressable testID="reauth-banner-dismiss" hitSlop={8} onPress={() => setDismissed(true)}>
         <Icon as={CloseIcon} size="sm" className="text-warning-400" />
       </Pressable>
     </HStack>

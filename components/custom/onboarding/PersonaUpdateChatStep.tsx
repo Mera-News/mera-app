@@ -33,6 +33,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useTranslation } from 'react-i18next';
 import CloudPersonaChat from '../persona-chat/CloudPersonaChat';
 
@@ -164,7 +165,10 @@ export default function PersonaUpdateChatStep({
   }
 
   return (
-    <View style={styles.container}>
+    // Full-screen surface with the input pinned to the window bottom — unlike the
+    // floating popover (which translates itself with the keyboard), this step must
+    // lift the input above the keyboard or it gets covered entirely.
+    <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <CloudPersonaChat
         key={conversationId}
         userId={userId ?? ''}
@@ -175,7 +179,7 @@ export default function PersonaUpdateChatStep({
         isLoading={false}
         loadingMessage={t('chat.startingChat')}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

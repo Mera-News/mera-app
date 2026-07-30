@@ -8,6 +8,10 @@ import {
   MAX_SCOPE_TITLES,
 } from '../index';
 
+/** Fixed injected clock — 2026-03-04. The builder never reads Date.now(), so
+ *  every prompt assertion below is deterministic. */
+const NOW_MS = Date.UTC(2026, 2, 4, 5, 6, 7);
+
 describe('parseStoryScopeOutput', () => {
   it('parses a clean two-field JSON object', () => {
     expect(
@@ -68,7 +72,7 @@ describe('parseStoryScopeOutput', () => {
 
 describe('buildStoryScopePrompt', () => {
   it('numbers each title line and returns the shared system prompt', () => {
-    const { system, user } = buildStoryScopePrompt(['First story', 'Second story']);
+    const { system, user } = buildStoryScopePrompt(['First story', 'Second story'], NOW_MS);
     expect(system).toContain('label');
     expect(system).toContain('search');
     expect(user).toContain('1. First story');
@@ -77,20 +81,41 @@ describe('buildStoryScopePrompt', () => {
 
   it('caps the titles at MAX_SCOPE_TITLES', () => {
     const many = Array.from({ length: MAX_SCOPE_TITLES + 5 }, (_, i) => `Title ${i + 1}`);
-    const { user } = buildStoryScopePrompt(many);
+    const { user } = buildStoryScopePrompt(many, NOW_MS);
     expect(user).toContain(`${MAX_SCOPE_TITLES}. Title ${MAX_SCOPE_TITLES}`);
     // The (MAX+1)th title must not appear as a numbered line.
     expect(user).not.toContain(`${MAX_SCOPE_TITLES + 1}. Title ${MAX_SCOPE_TITLES + 1}`);
   });
 
   it('drops blank / whitespace-only titles before numbering', () => {
-    const { user } = buildStoryScopePrompt(['   ', 'Real title', '', 'Another']);
+    const { user } = buildStoryScopePrompt(['   ', 'Real title', '', 'Another'], NOW_MS);
     expect(user).toContain('1. Real title');
     expect(user).toContain('2. Another');
     expect(user).not.toContain('3.');
   });
 
   it('handles a null/undefined title list without throwing', () => {
-    expect(() => buildStoryScopePrompt(undefined as unknown as string[])).not.toThrow();
+    expect(() => buildStoryScopePrompt(undefined as unknown as string[], NOW_MS)).not.toThrow();
+  });
+
+  it('renders the injected date as a Today line (UTC) and forbids finished periods', () => {
+    const { system, user } = buildStoryScopePrompt(['Hungarian Grand Prix qualifying'], NOW_MS);
+    expect(user).toContain('Today: 2026-03-04');
+    expect(system).toContain('NEVER name an already-ended year, season or edition');
+    expect(system).toContain('UNDATED');
+  });
+
+  it('is deterministic for a fixed date and varies only with it', () => {
+    const titles = ['Hungarian Grand Prix qualifying', 'Verstappen takes pole'];
+    expect(buildStoryScopePrompt(titles, NOW_MS).user).toBe(
+      buildStoryScopePrompt(titles, NOW_MS).user,
+    );
+    const later = buildStoryScopePrompt(titles, Date.UTC(2027, 6, 15)).user;
+    expect(later).not.toBe(buildStoryScopePrompt(titles, NOW_MS).user);
+    expect(later).toContain('Today: 2027-07-15');
+  });
+
+  it('degrades to "unknown" rather than throwing on a non-finite date', () => {
+    expect(buildStoryScopePrompt(['A title'], Number.NaN).user).toContain('Today: unknown');
   });
 });

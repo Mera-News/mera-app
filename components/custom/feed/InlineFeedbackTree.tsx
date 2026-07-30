@@ -15,6 +15,7 @@ import { getVisitCountForPublication } from '@/lib/database/services/publication
 import { getSuggestionFeedbackContext } from '@/lib/database/services/article-suggestion-service';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import logger from '@/lib/logger';
+import { resolveTopicLabel } from '@/lib/news-harness/feedback-tree';
 import type {
   FeedbackTreeNode,
   LocalFeedbackContext,
@@ -29,6 +30,14 @@ const ACCENT = '#EDA77E';
 const CHIP_BG = '#1e1e1e';
 const CHIP_BORDER = '#333333';
 const SELECTED_BG = 'rgba(237,167,126,0.18)';
+/** Node whose leaves ask the user to weight a topic without ever naming it
+ *  (the like-tree's "More about this topic" → "A lot more" / "A bit more").
+ *  This is a well-known content id (mirrors the `findNode('not_important')`
+ *  fast-path convention in FeedbackTreeOverlay) rather than a structural
+ *  guess — the id is content the server/bundled-fallback own (see
+ *  `feedback-tree-v1.ts` server-side, `feedback-tree-snapshot.ts` bundled),
+ *  so a future re-shape of this submenu needs a matching update here anyway. */
+const TOPIC_NAMED_NODE_ID = 'more_about_topic';
 
 export interface InlineFeedbackTreeProps {
   suggestion: ForYouSuggestion;
@@ -42,6 +51,10 @@ export interface InlineFeedbackTreeProps {
   onLeafCommitted?: (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => void;
   /** Stored node-id path to resume when revisiting a card (Back). */
   initialPathIds?: string[];
+  /** Breadcrumb ROOT label — the parent panel's own title (e.g. "More like
+   *  this" / "Less like this"), so the trail matches what the user just saw.
+   *  Defaults to the verdict-derived panel title when omitted. */
+  rootLabel?: string;
 }
 
 /** Builds the on-device gating/resolution context for a suggestion (async). */
@@ -90,6 +103,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   onInvokeMera,
   onLeafCommitted,
   initialPathIds,
+  rootLabel,
 }) => {
   const { t } = useTranslation();
 
@@ -114,7 +128,25 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     root: verdict === 'like' ? 'like' : 'dislike',
     context,
   });
-  const { tree, path, currentChildren, pathIds, descend, goToDepth, restorePath, findNode } = engine;
+  const {
+    tree,
+    path,
+    currentChildren,
+    pathIds,
+    descend,
+    goToDepth,
+    restorePath,
+    findNode,
+    hasVisibleChildren,
+  } = engine;
+
+  // The breadcrumb root: the parent panel's own title, so the trail matches
+  // what the user just saw there — reuses the existing panel-title keys
+  // (no new i18n key) rather than the unexplained generic "All".
+  const defaultRootLabel = t(verdict === 'like' ? 'swipeFeed.moreLikeThis' : 'swipeFeed.lessLikeThis', {
+    defaultValue: verdict === 'like' ? 'More like this' : 'Less like this',
+  }) as string;
+  const resolvedRootLabel = rootLabel ?? defaultRootLabel;
 
   // Selected-leaf styling (an actions/nudge/seenOnly leaf the user tapped).
   const [selectedLeafId, setSelectedLeafId] = useState<string | null>(null);
@@ -125,20 +157,54 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
     restorePath(initialPathIds);
     const lastId = initialPathIds[initialPathIds.length - 1];
     const node = findNode(lastId);
-    if (node && !(node.children && node.children.length > 0)) setSelectedLeafId(lastId);
+    if (node && !hasVisibleChildren(node)) setSelectedLeafId(lastId);
     // Restore once per tree load; navigation thereafter is user-driven.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tree]);
 
+  // Names the matched topic into the "More about this topic" branch's label
+  // (chip AND breadcrumb crumb, since both render via this same callback) so
+  // its "A lot more" / "A bit more" leaves aren't asking the user to weight an
+  // unnamed thing. Purely descriptive — this surface applies no persona
+  // mutations (see file header); falls back to the generic tree-supplied
+  // label when there's nothing real to name (defensive: the node is normally
+  // gated out via `has_matched_topics` in that case — see evaluateCondition).
   const label = useCallback(
-    (node: FeedbackTreeNode) => t(node.labelKey, { defaultValue: node.labelDefault }) as string,
-    [t],
+    (node: FeedbackTreeNode) => {
+      if (node.id === TOPIC_NAMED_NODE_ID) {
+        const choice = resolveTopicLabel(context);
+        if (choice) {
+          return (
+            choice.extraCount > 0
+              ? t('feedbackTree.moreAboutTopicNamedWithCount', {
+                  defaultValue: 'More about: {{topic}} and {{extra}} more',
+                  topic: choice.text,
+                  // NOT named `count` — i18next reserves that var name to
+                  // select `_one`/`_other` PLURAL SUFFIXES on the key itself
+                  // (looked up before the base key), which would silently
+                  // 404 to defaultValue on locales that only ship the base
+                  // key. `extra` carries the same value without engaging it.
+                  extra: choice.extraCount,
+                })
+              : t('feedbackTree.moreAboutTopicNamed', {
+                  defaultValue: 'More about: {{topic}}',
+                  topic: choice.text,
+                })
+          ) as string;
+        }
+      }
+      return t(node.labelKey, { defaultValue: node.labelDefault }) as string;
+    },
+    [t, context],
   );
 
   const handleSelect = useCallback(
     (node: FeedbackTreeNode) => {
       const nextIds = [...pathIds, node.id];
-      const isBranch = !!node.children && node.children.length > 0;
+      // A node only counts as a submenu if descending reveals at least one
+      // GATED-visible child — a node whose children are all filtered out by
+      // `evaluateCondition` is effectively terminal (see hasVisibleChildren).
+      const isBranch = hasVisibleChildren(node);
 
       if (isBranch) {
         hapticMedium();
@@ -163,7 +229,16 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       // Terminal (non-openChat) leaf — let the overlay settle + auto-advance.
       onLeafCommitted?.(suggestion, verdict, nextIds);
     },
-    [pathIds, descend, onTreePathChanged, onInvokeMera, onLeafCommitted, suggestion, verdict],
+    [
+      pathIds,
+      hasVisibleChildren,
+      descend,
+      onTreePathChanged,
+      onInvokeMera,
+      onLeafCommitted,
+      suggestion,
+      verdict,
+    ],
   );
 
   const handleCrumb = useCallback(
@@ -180,7 +255,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   if (!tree) return null;
 
   const renderChip = (node: FeedbackTreeNode) => {
-    const isBranch = !!node.children && node.children.length > 0;
+    const isBranch = hasVisibleChildren(node);
     const selected = selectedLeafId === node.id;
     return (
       <Pressable
@@ -224,11 +299,11 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
         <HStack className="flex-wrap items-center" space="xs">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('swipeFeed.treeRoot')}
+            accessibilityLabel={resolvedRootLabel}
             onPress={() => handleCrumb(0)}
           >
             <Text style={{ color: ACCENT, fontSize: 12, fontWeight: '700' }}>
-              {t('swipeFeed.treeRoot')}
+              {resolvedRootLabel}
             </Text>
           </Pressable>
           {breadcrumb.map((crumb, i) => (

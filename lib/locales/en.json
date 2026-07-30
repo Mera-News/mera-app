@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Home",
     "yes": "Yes",
     "no": "No",
     "cancel": "Cancel",
@@ -68,7 +69,7 @@
     "managePlan": "Manage subscription",
     "restore": "Restore purchases",
     "activating": "Activating your subscription…",
-    "activationDelayed": "Your purchase is being confirmed. This can take a moment — tap refresh if it doesn't continue.",
+    "activationDelayed": "Your purchase is being confirmed. This can take a moment. Tap refresh if it doesn't continue.",
     "planSection": "Your plan",
     "planLabel": "Plan",
     "priceLabel": "Price",
@@ -112,11 +113,11 @@
     "stuckTitle": "Couldn't load your feed",
     "stuckDescription": "Something went wrong on our end.",
     "stuckHint": "Reopen the app in a few minutes.",
-    "offlineCached": "Offline — showing cached content",
+    "offlineCached": "Offline: showing cached content",
     "dailyLimit": {
       "title": "Daily article limit reached",
-      "bodyWithTime": "No new articles can be fetched for now. Browse the articles already on your device — new articles unlock at {{time}}.",
-      "body": "No new articles can be fetched for now. Browse the articles already on your device — new articles unlock tomorrow."
+      "bodyWithTime": "No new articles can be fetched for now. Browse the articles already on your device. New articles unlock at {{time}}.",
+      "body": "No new articles can be fetched for now. Browse the articles already on your device. New articles unlock tomorrow."
     },
     "newBadge": "NEW",
     "newsCluster": "News Cluster",
@@ -147,7 +148,7 @@
     "articleSingular": "article",
     "articlePlural": "articles",
     "processing": {
-      "doneFlash": "All set — here’s your news",
+      "doneFlash": "All set: here’s your news",
       "errorFlash": "We couldn’t load the latest content. Please try again.",
       "stages": {
         "fetching": {
@@ -160,20 +161,20 @@
         "cloudRelevance": {
           "headlines": [
             "An AI is reading each article to see which ones matter to you.",
-            "Your request is encrypted — only your phone holds the key."
+            "Your request is encrypted: only your phone holds the key."
           ]
         },
         "cloudReasons": {
           "headlines": [
             "Writing a short note for each relevant story.",
-            "You can step away — we’ll notify you when it’s ready.",
-            "Everything stays end-to-end encrypted — only your phone can read it."
+            "You can step away; we’ll notify you when it’s ready.",
+            "Everything stays end-to-end encrypted: only your phone can read it."
           ]
         },
         "onDevice": {
           "headlines": [
             "Your phone is scoring these stories for you.",
-            "This happens entirely on your device — nothing leaves it."
+            "This happens entirely on your device: nothing leaves it."
           ]
         }
       }
@@ -240,7 +241,7 @@
     "addedToLocations": "Added to your places"
   },
   "tabs": {
-    "deck": "Deck",
+    "deck": "Feed",
     "dashboard": "Dashboard",
     "around": "Explore",
     "profile": "Profile",
@@ -248,44 +249,31 @@
     "gotIt": "Got it"
   },
   "swipeFeed": {
-    "yourDeck": "For you",
+    "yourDeck": "Feed",
     "moreLikeThis": "More like this",
     "lessLikeThis": "Less like this",
     "askMera": "Ask Mera",
     "closeTree": "Close",
-    "treeRoot": "All",
-    "treeThanks": "Thanks — noted.",
-    "chatHandoffLike": "I liked this story — more like this: {{path}}.",
-    "chatHandoffLikeNoPath": "I liked this story — I'd like more like this.",
-    "chatHandoffDislike": "I didn't like this story — {{path}}.",
+    "treeThanks": "Thanks, noted.",
+    "chatHandoffLike": "I liked this story. More like this: {{path}}.",
+    "chatHandoffLikeNoPath": "I liked this story. I'd like more like this.",
+    "chatHandoffDislike": "I didn't like this story: {{path}}.",
     "chatHandoffDislikeNoPath": "I didn't like this story. Help me get fewer like it."
   },
   "explore": {
     "title": "Explore",
-    "sources": "Sources",
     "scopeWorld": "World",
-    "scopeTopStories": "Top stories",
     "noArticles": "No articles found",
-    "thinContentTitle": "Want more {{place}} news?",
-    "thinContentBody": "Add {{place}} as a location to get more stories from here.",
-    "addLocation": "Add a location",
-    "noLocationsTitle": "See news from your places",
-    "noLocationsBody": "Add the places you care about to explore local news from them here.",
-    "sheetTitle": "Manage sources",
-    "close": "Close",
-    "topStoriesIntro": "What people are talking about right now — sorted for what matters to you.",
     "addPlaces": "Add places",
-    "offlineUnavailable": "You're offline — Explore needs an internet connection"
+    "offlineUnavailable": "You're offline: Explore needs an internet connection"
   },
   "forYou": {
     "sectionPrefix": "News about:",
     "breaking": "Breaking",
     "showMore": "Show {{count}} more",
-    "openFactFeed": "See all stories for this topic",
-    "viewAllStories": "View all {{count}} stories",
-    "newInSection_one": "{{count}} new story since your last visit",
-    "newInSection_other": "{{count}} new stories since your last visit",
-    "subTabFeed": "Feed",
+    "viewAllArticles_one": "View all {{count}} article",
+    "viewAllArticles_other": "View all {{count}} articles",
+    "subTabFeed": "Overview",
     "subTabStories": "Stories",
     "subTabSaved": "Saved"
   },
@@ -295,7 +283,7 @@
     "stage": "Stage",
     "cloudProgress": "Cloud scoring",
     "deviceProgress": "On-device scoring",
-    "processed": "Articles pulled",
+    "published": "Published",
     "analysed": "Analysed",
     "relevant": "Relevant to you",
     "noiseRemoved": "Noise removed",
@@ -316,11 +304,22 @@
     "updatesBadge": "{{count}} new",
     "endedLabel": "Ended",
     "timelineQuietNote": "No new coverage gathered yet. We'll add developments here as this story unfolds.",
-    "railTitle": "Following",
     "untrackConfirmTitle": "Stop following?",
     "untrackConfirmBody": "You'll no longer see new developments for this story.",
+    "untrackConfirmCta": "Stop following",
+    "emptyHint": "Open an article from the Feed to its full view, then tap the track icon in the row of buttons under the article.",
+    "emptyCta": "Go to Feed",
     "trackChatSeed": "I want to follow this story.",
-    "trackProposalTitle": "Follow this story?"
+    "trackProposalTitle": "Follow this story?",
+    "articleCount_one": "{{count}} article",
+    "articleCount_other": "{{count}} articles",
+    "articleCountCapped": "{{count}}+ articles",
+    "alreadyTrackingTitle": "You're already following this",
+    "alreadyTrackingBody": "You can't follow this story twice. Untracking it would delete everything saved for it.",
+    "goToStoryAction": "Go to story",
+    "deleteStoryAction": "Delete story",
+    "deleteStoryConfirmTitle": "Delete this story?",
+    "deleteStoryConfirmBody": "Deleting removes everything saved for this story."
   },
   "whatsNew": {
     "title": "What's new",
@@ -332,7 +331,7 @@
     "tabsTitle": "Profile & Settings tabs",
     "tabsBody": "Your profile and settings now live in their own tabs at the bottom.",
     "resyncTitle": "Your feed is re-syncing",
-    "resyncBody": "We're rebuilding your feed with the new engine — it'll fill in shortly."
+    "resyncBody": "We're rebuilding your feed with the new engine; it'll fill in shortly."
   },
   "notificationCenter": {
     "title": "Notifications",
@@ -349,9 +348,9 @@
     "dailyLimitBody": "You've reached today's article limit. It resets soon."
   },
   "clusterDetail": {
-    "translatable": "This article is in {{language}} — your device can translate it while you read. If translation doesn't work, you can open the site in Google Translate below — just note you'll be browsing it through Google.",
-    "notTranslatable": "This article is in {{language}}. Your device can't translate it — use Google Translate below to read it in your language.",
-    "notTranslatableOsOutdated": "This article is in {{language}}. On-device translation needs iOS {{requiredVersion}} — you're on iOS {{currentVersion}}. Update iOS, or use Google Translate below to read it in your language.",
+    "translatable": "This article is in {{language}}: your device can translate it while you read. If translation doesn't work, you can open the site in Google Translate below; just note you'll be browsing it through Google.",
+    "notTranslatable": "This article is in {{language}}. Your device can't translate it: use Google Translate below to read it in your language.",
+    "notTranslatableOsOutdated": "This article is in {{language}}. On-device translation needs iOS {{requiredVersion}}: you're on iOS {{currentVersion}}. Update iOS, or use Google Translate below to read it in your language.",
     "unknownLanguage": "another language",
     "translationGuideLink": "Show me how to translate the article",
     "viewInGoogleTranslate": "View in Google Translate",
@@ -392,9 +391,9 @@
     "timeDescriptionOnboarding": "Choose when you'd like to catch up on your news",
     "timeNudges": [
       "News works best in one or two focused moments a day.",
-      "You don't need to check constantly — we'll have it ready when you are.",
+      "You don't need to check constantly; we'll have it ready when you are.",
       "Fewer, calmer check-ins beat an all-day drip.",
-      "Pick times that fit your day — Mera does the gathering."
+      "Pick times that fit your day; Mera does the gathering."
     ],
     "savePreferences": "Save Preferences",
     "loadFailedTitle": "Load Failed",
@@ -421,7 +420,7 @@
     "appLanguage": "App Language",
     "appLanguageDescription": "Used for the app interface and translating news content",
     "languagePacks": "Language Packs",
-    "languagePacksIos": "Translation models are managed by your device. You only need to download the model for your selected language — iOS handles the rest.",
+    "languagePacksIos": "Translation models are managed by your device. You only need to download the model for your selected language; iOS handles the rest.",
     "languagePacksIosPath": "Settings → General → Language & Region → Translation Languages",
     "languagePacksAndroid": "Translation models (~30MB each) are downloaded automatically when you first translate to a new language.",
     "openDeviceSettings": "Open Device Settings",
@@ -430,11 +429,11 @@
     "restartDescription": "The app needs to restart to apply the language change.",
     "restart": "Restart Now",
     "later": "Later",
-    "packMissingBanner": "This language needs an on-device translation pack — translation itself runs locally on your phone. You can manage languages from your phone's settings.",
+    "packMissingBanner": "This language needs an on-device translation pack: translation itself runs locally on your phone. You can manage languages from your phone's settings.",
     "packMissingIosPath": "Settings → General → Language & Region",
     "retry": "Retry",
     "watchGuide": "Watch how to add language to your device",
-    "iosLanguageHint": "Only selecting this language is not enough — you'll need to also select this language in the iOS language settings."
+    "iosLanguageHint": "Only selecting this language is not enough: you'll need to also select this language in the iOS language settings."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -463,9 +462,9 @@
     "updateTo": "Update to {{modelName}}",
     "injectNoiseTitle": "Inject Noise",
     "injectNoiseDescription": "Submits decoy topics alongside your real interests so the backend can't triangulate who you are from your topic list. Articles matching only decoy topics are dropped before they reach you.",
-    "injectNoiseBeta": "Beta — may slow down topic generation and reduce feed relevance.",
+    "injectNoiseBeta": "Beta: may slow down topic generation and reduce feed relevance.",
     "privacyTitle": "Your data stays private",
-    "privacyDescription": "Mera Protocol is always on. On-device mode runs inference fully offline on your phone. Cloud mode uses end-to-end encrypted inference — your data is encrypted on your device and only decrypted inside a secure enclave. Mera never sees your data.",
+    "privacyDescription": "Mera Protocol is always on. On-device mode runs inference fully offline on your phone. Cloud mode uses end-to-end encrypted inference: your data is encrypted on your device and only decrypted inside a secure enclave we can't read into. Your facts, your profile and your reading history never leave this device. To fetch news we send only broad topic phrases, carrying no user ID.",
     "deviceSupported": "Device Supported",
     "deviceNotSupported": "Device Not Supported",
     "deviceSupportedDescription": "Your device meets all requirements for on-device AI processing.",
@@ -514,14 +513,14 @@
     "feedCacheDescription": "Cached articles & scoring jobs on this device",
     "feedCacheModalDescription": "Clears the cached article feed on this device: suggestions, their fact links, and pending scoring jobs. The feed rebuilds from the server on the next refresh. Nothing else is affected, and no server data is touched.",
     "factsTitle": "Clear facts & topics",
-    "factsDescription": "Your facts and the topics they generate — on this device",
-    "factsModalDescription": "Clears the facts you've added and the topics generated from them. Topics live only on this device — they're never stored on our servers. Your article feed is cleared too, since it's built from these topics, and rebuilds empty until you add new facts.",
+    "factsDescription": "Your facts and the topics they generate (on this device)",
+    "factsModalDescription": "Clears the facts you've added and the topics generated from them. Your facts never leave this device. Topic phrases are sent when you fetch news and cached on our servers with no user ID attached, so nothing there records that they were yours. Your article feed is cleared too, since it's built from these topics, and rebuilds empty until you add new facts.",
     "viewingHistoryTitle": "Clear viewing history",
-    "viewingHistoryDescription": "Articles you've opened — on this device",
+    "viewingHistoryDescription": "Articles you've opened (on this device)",
     "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Nothing else is affected, and no server data is touched (this data never left your device).",
     "wipeAllTitle": "Wipe all on-device data",
     "wipeAllDescription": "Reset everything on this device except your account",
-    "wipeAllModalDescription": "Clears every piece of data stored on this device: feed cache, facts, topics, app settings, and reading history. You stay signed in and your account is kept — nothing is deleted from our servers.",
+    "wipeAllModalDescription": "Clears every piece of data stored on this device: feed cache, facts, topics, app settings, and reading history. You stay signed in and your account is kept; nothing is deleted from our servers.",
     "deletedTitle": "Data Deleted",
     "deletedDescription": "Selected data has been cleared successfully.",
     "errorTitle": "Error",
@@ -572,8 +571,8 @@
     "tabPersona": "Persona",
     "tabSources": "Sources",
     "tabPreferences": "Preferences",
-    "privacyOnDevice": "Your facts and topics are stored exclusively on your device — AI inference runs entirely on-device via the Mera Protocol. Each time you need news, your topics are sent to our servers to fetch relevant articles; the server returns results without storing any of your data. Chat history is never saved; each session starts fresh. Switching devices or logging out means rebuilding your persona.",
-    "privacyCloud": "Your facts and topics are stored exclusively on your device. Cloud inference uses encrypted Trusted Execution Environments (TEE) — your data is encrypted on-device, processed in an isolated enclave, and decrypted only on your device. Each time you need news, your topics are sent to our servers to fetch relevant articles; the server returns results without storing any of your data. Chat history is never stored; each session starts fresh. Switching devices or logging out means rebuilding your persona.",
+    "privacyOnDevice": "Your facts and topics are stored exclusively on your device: AI inference runs entirely on-device via the Mera Protocol. Each time you need news, only your topic phrases are sent to fetch articles, carrying no user ID (turn on Inject noise above to send decoys alongside them). Those phrases are cached on our servers keyed by the text alone and dropped after 14 days unused; nothing records that you were the one who asked. What we keep about you is your login email, your subscription status, and a per-day count of analysed articles used to enforce your plan. Chat sessions start fresh and aren't saved: the one exception is that if you submit an unblock request, the transcript you attach is stored for review. Switching devices or logging out means rebuilding your persona. Our backend isn't published yet; we're moving every service that touches your data into a source-available repository and expect it public before September 2026. Until then the one thing you take on trust is that we keep no record linking you to your topics. Mera is built in the Netherlands under the EU's GDPR, and not holding your data is the point of the design.",
+    "privacyCloud": "Your facts and topics are stored exclusively on your device. Cloud inference uses encrypted Trusted Execution Environments (TEE): your data is encrypted on-device to the key the enclave publishes, processed in an isolated enclave, and decrypted only on your device. Being precise: the app doesn't yet check that attestation against the hardware vendor, so for now you're trusting us and the enclave operator rather than the chip; making the app verify it and refuse to continue is on our roadmap. Each time you need news, only your topic phrases are sent to fetch articles, carrying no user ID (turn on Inject noise above to send decoys alongside them). Those phrases are cached on our servers keyed by the text alone and dropped after 14 days unused; nothing records that you were the one who asked. What we keep about you is your login email, your subscription status, and a per-day count of analysed articles used to enforce your plan. Chat sessions start fresh and aren't saved: the one exception is that if you submit an unblock request, the transcript you attach is stored for review. Switching devices or logging out means rebuilding your persona. Our backend isn't published yet; we're moving every service that touches your data into a source-available repository and expect it public before September 2026. Mera is built in the Netherlands under the EU's GDPR, and not holding your data is the point of the design.",
     "privacyPolicy": "Privacy Policy",
     "privacyNoticeTitle": "Your privacy",
     "updatingTopics": "Updating topics... {{completed}}/{{total}}",
@@ -643,15 +642,15 @@
     "scoring": {
       "offline": {
         "title": "You're offline",
-        "message": "We can't reach the server to pick news for you. Check your connection — your feed will catch up on its own once you're back online."
+        "message": "We can't reach the server to pick news for you. Check your connection: your feed will catch up on its own once you're back online."
       },
       "server": {
         "title": "Service unavailable",
-        "message": "We couldn't reach the news service. This is usually brief — we'll keep trying and your feed will update on its own."
+        "message": "We couldn't reach the news service. This is usually brief: we'll keep trying and your feed will update on its own."
       },
       "generic": {
         "title": "Couldn't update your feed",
-        "message": "Something went wrong while picking news for you. We'll keep trying — pull down to refresh if it continues."
+        "message": "Something went wrong while picking news for you. We'll keep trying: pull down to refresh if it continues."
       }
     }
   },
@@ -669,7 +668,7 @@
     "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment."
   },
   "personaChat": {
-    "introMessage": "Hi! I'm Mera, your personal news assistant. If you'd like, share anything about yourself — where you live, what you do for work, hobbies you follow, stocks you track, places your family lives. Or just say 'help me set up' and I'll walk you through it."
+    "introMessage": "Hi! I'm Mera, your personal news assistant. If you'd like, share anything about yourself: where you live, what you do for work, hobbies you follow, stocks you track, places your family lives. Or just say 'help me set up' and I'll walk you through it."
   },
   "floatingChat": {
     "bubbleHint": "Chat with Mera",
@@ -719,8 +718,8 @@
     "improveMessage": "This suggestion could be better: \"{{title}}\". Help me tune my suggestions.",
     "intro": "What can I do for you? I can explain why you received this suggestion, or help you get better ones.",
     "introArticle": "What can I do for you? I can help you tune your news suggestions based on this article.",
-    "introLikeTuning": "You liked this story — tell me more and I'll tune your feed.",
-    "introDislikeTuning": "You didn't like this story — tell me why and I'll tune your feed.",
+    "introLikeTuning": "You liked this story. Tell me more and I'll tune your feed.",
+    "introDislikeTuning": "You didn't like this story. Tell me why and I'll tune your feed.",
     "chipWhy": "Why did I receive this suggestion?",
     "chipWhyMessage": "Why did I receive this suggestion?",
     "chipDontWant": "I don't want this suggestion",
@@ -757,7 +756,7 @@
     "countShort_one": "{{count}} visit",
     "countShort_other": "{{count}} visits",
     "tooltipA11y": "About reading history",
-    "tooltipIntro": "Mera keeps track of your reading patterns for you — and it lives only on your device.",
+    "tooltipIntro": "Mera keeps track of your reading patterns for you; it lives only on your device.",
     "tooltipLink": "See all your reading history here.",
     "screenIntro": "Mera tracks your reading patterns - only on your device for 30 days. This gives you a clearer picture of which publications matter most to you, so you can consider supporting the ones that directly benefit you.",
     "visitedListTitle": "Publications you've visited",
@@ -769,8 +768,11 @@
   },
   "savedSuggestions": {
     "title": "Saved",
-    "note": "These articles are saved only on your device. Add or remove them anytime — they stay here until you delete them.",
+    "note": "These articles are saved only on your device. Add or remove them anytime; they stay here until you delete them.",
     "savedToastTitle": "Saved",
+    "removedToastTitle": "Removed",
+    "saveAction": "Save",
+    "removeAction": "Remove from saved",
     "savedToastMessage": "Article saved for later",
     "removedToastMessage": "Removed from saved",
     "deleteConfirmTitle": "Remove saved article?",
@@ -851,8 +853,8 @@
     "analyzingRelevance": "Analysing relevance…",
     "upToDate": "Your feed is up to date",
     "waitingForConnection": "Waiting for connection…",
-    "serverUnavailable": "Server unavailable — retrying shortly",
-    "sessionExpired": "Session expired — please sign in again",
+    "serverUnavailable": "Server unavailable: retrying shortly",
+    "sessionExpired": "Session expired: please sign in again",
     "noTopics": "Add topics to see your news",
     "dailyLimitReached": "You've reached today's article limit. More news tomorrow.",
     "storageFull": "Free up device storage and try again",
@@ -880,6 +882,7 @@
       "slider": "Manual",
       "migration": "Setup",
       "user": "You",
+      "llm": "Auto-detected",
       "unknown": "System"
     },
     "actionLabels": {
@@ -908,15 +911,17 @@
     "notificationTitle": "Tune Mera to your taste",
     "notificationBody": "Mera's on-device ranking disagreed with its own judgement {{count}} times lately. Recalibrate to close the gap.",
     "recalibrateChip": "Recalibrate now",
-    "chatIntro": "I've been second-guessing how I rank your news lately. Want me to recalibrate so my scoring better matches your taste? Tap \"Recalibrate now\" and I'll tune it — you can always undo it.",
+    "chatIntro": "I've been second-guessing how I rank your news lately. Want me to recalibrate so my scoring better matches your taste? Tap \"Recalibrate now\" and I'll tune it; you can always undo it.",
     "confirmChip": "Recalibrate now",
     "runningBody": "Recalibrating your ranking…",
     "successTitle": "Recalibrated",
     "successBody": "I tuned my ranking to better match your taste.",
-    "noChangeBody": "Your ranking already looks well-tuned — no changes needed.",
+    "noChangeBody": "Your ranking already looks well-tuned: no changes needed.",
     "failedBody": "I couldn't finish recalibrating just now. I'll try again later."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "More about: {{topic}}",
+    "moreAboutTopicNamedWithCount": "More about: {{topic}} and {{extra}} more",
     "title": "Tell us more",
     "contextFor": "About: {{title}}",
     "back": "Back",
@@ -927,11 +932,11 @@
     "confirm": "Confirm",
     "confirmMuteTitle": "Never show this publication?",
     "confirmMuteBody": "You won't see articles from {{publication}} again. You can undo this anytime.",
-    "appliedTitle": "Got it — feed updated",
+    "appliedTitle": "Got it: feed updated",
     "undo": "Undo",
     "undoneTitle": "Change undone",
     "thanks": "Thanks for the feedback",
-    "seenAck": "Got it — we'll show fewer you've seen",
+    "seenAck": "Got it: we'll show fewer you've seen",
     "nudgeSubscribe": "Subscribing to {{publication}} unlocks full articles",
     "nudgeBrowse": "Look for related coverage from other sources"
   },
@@ -942,6 +947,7 @@
     "generateMore": "Generate more",
     "generatingMore": "Generating…",
     "acceptAll": "Looks good",
+    "saveAll": "Save all ({{count}})",
     "delete": "Remove topic",
     "undo": "Undo",
     "highPriority": "Prioritize topic",
@@ -984,7 +990,7 @@
     "effectDuplicate": "Removes the duplicate and keeps the stronger one.",
     "effectTooBroad": "Lowers this interest's weight so it pulls in fewer off-topic stories.",
     "effectStaleTopic": "Retires this quiet topic. You can restore it from the change log.",
-    "effectStaleFact": "Removes this fact — none of its topics are active anymore.",
+    "effectStaleFact": "Removes this fact; none of its topics are active anymore.",
     "appliedTitle": "Cleanup applied",
     "appliedBody": "Your profile was tidied up. See the change log to review.",
     "applyFailedTitle": "Couldn't apply cleanup",
@@ -995,6 +1001,7 @@
   "locations": {
     "title": "Your places",
     "subtitle": "Locations that shape your feed",
+    "autoDetectDisclaimer": "Mera detects your places automatically from your profile. You can add more here. But telling Mera directly works better, because it learns how each place relates to you and tunes your recommendations accordingly.",
     "empty": "Add the places you care about",
     "add": "Add a place",
     "addFirst": "Add a place",
@@ -1003,7 +1010,7 @@
     "searchPlaceholder": "Search for a city",
     "searchCountries": "Search countries",
     "noMatches": "No matching places found",
-    "searchUnavailable": "Search is unavailable right now — try again in a moment.",
+    "searchUnavailable": "Search is unavailable right now: try again in a moment.",
     "addManuallyCta": "Can't find it? Add manually",
     "cityLabel": "City",
     "cityPlaceholder": "Enter a city name",
@@ -1029,7 +1036,7 @@
       "high": "High"
     },
     "toastUpdatedTitle": "Updated existing place",
-    "toastUpdatedBody": "That place was already saved — we updated it.",
+    "toastUpdatedBody": "That place was already saved: we updated it.",
     "saveFailedTitle": "Couldn't save place",
     "saveFailedBody": "Please try again.",
     "deleteConfirmTitle": "Remove this place?",
@@ -1068,7 +1075,7 @@
     "startTalking": "Start talking",
     "meraInvite": "Hey! Tell me what you're into and I'll tune your feed for you.",
     "aboutYou": "About you",
-    "gettingToKnowYou": "I'm still getting to know you — check back in a moment.",
+    "gettingToKnowYou": "I'm still getting to know you: check back in a moment.",
     "updating": "Updating…",
     "advanced": "Advanced",
     "advancedSubtitle": "Facts, sources, saved, activity and more",
@@ -1077,10 +1084,10 @@
       "moreImportant": "More important",
       "lessImportant": "Less important",
       "refine": "Refine with Mera",
-      "refineSeed": "Let's talk about this — \"{{text}}\"",
+      "refineSeed": "Let's talk about this: \"{{text}}\"",
       "remove": "Remove this",
       "removeConfirm": "Tap again to remove",
-      "limitReached": "Daily adjustment limit reached — changes continue tomorrow."
+      "limitReached": "Daily adjustment limit reached: changes continue tomorrow."
     }
   },
   "facts": {

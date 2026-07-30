@@ -5,6 +5,7 @@ import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { useTimeTick } from '@/lib/time-tick';
 import { getArticleTranslatableStatus } from '@/lib/translation-service';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { toTitleCase } from '@/lib/utils/title-case';
@@ -42,13 +43,26 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
+    // The shared 60s clock (lib/time-tick.ts). THIS is what keeps the age
+    // honest: `formatTimeAgo` is pure, so the label is only ever as fresh as
+    // the render that produced it — and every card above this row is
+    // `React.memo`'d over a view-model that never changes, so without a source
+    // of its own this row would render once and freeze ("37m ago" still
+    // reading "37m ago" half an hour later).
+    //
+    // Subscribing HERE, in the leaf, is deliberate on two counts: a
+    // component's own store subscription re-renders it whatever its parents'
+    // memo says, and the re-render stays inside this row — it cannot reach the
+    // Dashboard's throttled section-order snapshot or any parent's row
+    // derivation, which must NOT move on a clock tick.
+    const now = useTimeTick();
 
     const isCard = variant === 'card';
     const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
     const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
     const iconColor = isCard ? '#6B7280' : '#9CA3AF';
 
-    const age = formatTimeAgo(t, pubDate, { emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
+    const age = formatTimeAgo(t, pubDate, { now, emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
     // Named in the reader's own language, not its endonym — "简体中文" tells a
     // reader who doesn't know the script nothing about what they're looking at.
     const language = getLocalizedLanguageName(languageCode, appLanguage) ?? '';

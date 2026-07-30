@@ -580,8 +580,10 @@ Score → tone. Match your confidence to the score — a confident reason on a l
 - **0.75–0.9** — confident, not urgent. "Dutch startup tax vote directly affects your Amsterdam startup work."
 - **0.55–0.75** — one hedge word, name the live bridge. "EU AI Act vote may apply to your AI work in Amsterdam." / "OpenAI's new framework directly relates to your AI engineering work."
 - **0.4–0.55** — light hedge, name what's relevant. "Netherlands economy report covers your country." / "New Amsterdam architecture project is in your city."
-- **0.25–0.4** — state the topic-only link plainly. "South Africa's draft AI policy matches your AI-industry interest." / "Sweden's tech-sector headwinds are industry-adjacent."
-- **≤0.25** — minimal, honest. State the surface topic match and the disconnect in one short clause each. Do NOT use "may influence", "could shape", "via EU-wide trends", "through broader industry trends", or any phrasing that bridges a foreign/unrelated story to the user. Examples: "Bulgaria's digital-ID policy is foreign-domestic; no Dutch tie." "Manchester building fire is a UK-local emergency; you're in Amsterdam."
+- **0.25–0.4** — state the topic-only link plainly. "South Africa's draft AI policy matches your AI-industry interest." / "Sweden's tech-sector headwinds are adjacent to your industry."
+- **≤0.25** — minimal, honest. State the surface topic match and the disconnect in one short clause each. Do NOT use "may influence", "could shape", "via EU-wide trends", "through broader industry trends", or any phrasing that bridges a foreign/unrelated story to the user. Examples: "Bulgaria's digital-ID policy is foreign-domestic; no tie to your country." "Manchester building fire is a UK-local emergency; you're in Amsterdam."
+
+Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."
 
 Never fabricate a connection. The reason must match the article — if the article is about holiday homes, the reason is about holiday homes, not the AI Act. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
 
@@ -721,7 +723,9 @@ Tone by score:
 - **0.55–0.75** — one hedge word, name the live bridge. "EU AI bill may apply to your AI work in Amsterdam."
 - **0.4–0.55** — light hedge, name what's relevant. "Netherlands economy covers your country."
 - **0.25–0.4** — topic-only link. "South Africa AI policy matches your industry interest."
-- **≤0.25** — minimal, honest. Surface topic match + disconnect, one short clause each. NEVER use "may influence", "could shape", "EU-wide trends", "broader industry trends". "Bulgaria digital-ID is foreign-domestic; no Dutch tie."
+- **≤0.25** — minimal, honest. Surface topic match + disconnect, one short clause each. NEVER use "may influence", "could shape", "EU-wide trends", "broader industry trends". "Bulgaria digital-ID is foreign-domestic; no tie to your country."
+
+Voice: write TO the user — "you"/"your", never "the user", "User …", or third person, in every band. Wrong: "User follows F1; the race matches this interest." Right: "The race matches your F1 interest."
 
 Never fabricate a connection. The sentence must match the article — if it's about holiday homes, the reason is about holiday homes. Never echo "[User facts]", "Relevance Score:", "Why this matters", or markdown.
 
@@ -895,8 +899,9 @@ OVERRIDE UP (set "s" ≥ 0.40 on a sub-0.40 score) ONLY when the article is plai
 Task: you receive N articles as \`===== Article 0 =====\`, … For EACH output one object, in input order:
 - \`{"j":"ok"}\` to accept the computed score, or \`{"j":"adj","s":0.NN}\` to correct it.
 - When the computed score shown is ≥ ${floor}, ALSO include \`"r"\`: one plain sentence (≤22 words) naming a specific article detail and the concrete user bridge, tone matched to the final score. Below ${floor}, omit \`"r"\`.
+- \`"r"\` is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, demotes included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."
 Output a JSON array of exactly N objects. No prose, no extra fields.
-Example (3): [{"j":"ok","r":"Bhopal heatwave alert affects your family's city."},{"j":"adj","s":0.14},{"j":"adj","s":0.3,"r":"Amsterdam restaurant roundup is local lifestyle filler, no real stake."}]`;
+Example (3): [{"j":"ok","r":"Bhopal heatwave alert affects your family's city."},{"j":"adj","s":0.14},{"j":"adj","s":0.3,"r":"Amsterdam restaurant roundup is lifestyle filler in your city, no real stake."}]`;
 }
 
 /** Default judge system prompt, built at the default judgeReasonFloor (0.15).

@@ -13,6 +13,10 @@ export type PersonaChangeLogSource =
   | 'digest'
   | 'slider'
   | 'migration'
+  // Automatic, non-user-initiated derivation (the geo-derivation sweep). The
+  // audit screen has no label for it yet, so it renders via the 'unknown'
+  // fallback ("System") — see components/custom/persona-audit/action-display.
+  | 'llm'
   | 'user';
 
 export default class PersonaChangeLog extends Model {

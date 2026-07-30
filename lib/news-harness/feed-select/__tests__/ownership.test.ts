@@ -7,6 +7,9 @@ import {
   resolveOwningFactLenient,
   resolveOwnership,
   bucketOf,
+  isSectionMemberEligible,
+  isFactSectionViable,
+  SECTION_MIN_VIABLE_BUCKET,
   type ScoredSuggestionProjection,
   type TopicSnapshot,
   type FactSnapshot,
@@ -257,5 +260,58 @@ describe('resolveOwningFactLenient (Dashboard: zero-signal folds in)', () => {
     const facts = new Map([['fn', fact()]]);
     const s = sugg({ matchedTopics: [{ topicId: 'tn', text: 'x' }] });
     expect(resolveOwningFactLenient(s, topics, facts, HP)).toBeNull();
+  });
+});
+
+// --- relevance-backed section membership ----------------------------------
+//
+// The two rules that stop a coarse vector-search hit from claiming a fact
+// section it was then scored out of (the "News about: Learning Dutch" bug).
+
+describe('isSectionMemberEligible', () => {
+  it('rejects UNSCORED — the pipeline already discarded that row', () => {
+    expect(isSectionMemberEligible('UNSCORED')).toBe(false);
+  });
+
+  it('accepts every real bucket, LOW included', () => {
+    // LOW stays eligible: a low-priority story about a fact that HAS coverage
+    // still belongs in its section. Thinning those is the section-viability
+    // rule's job, and only when the whole section is LOW.
+    for (const b of ['LOW', 'MEDIUM', 'HIGH', 'EMERGENCY'] as const) {
+      expect(isSectionMemberEligible(b)).toBe(true);
+    }
+  });
+
+  it('agrees with bucketOf across the discardFloor boundary', () => {
+    // 0.35 clears the feed's RENDER_GATE (0.3) but not discardFloor (0.4) —
+    // exactly the gap the off-topic section members lived in.
+    expect(isSectionMemberEligible(bucketOf(0.35))).toBe(false);
+    expect(isSectionMemberEligible(bucketOf(0.4))).toBe(true);
+    expect(isSectionMemberEligible(bucketOf(null))).toBe(false);
+  });
+});
+
+describe('isFactSectionViable', () => {
+  it('is false for an all-LOW section (nothing genuinely about the fact)', () => {
+    expect(isFactSectionViable(['LOW', 'LOW', 'LOW', 'LOW', 'LOW'])).toBe(false);
+  });
+
+  it('is false for an empty section', () => {
+    expect(isFactSectionViable([])).toBe(false);
+  });
+
+  it('is true as soon as one member reaches the viability floor', () => {
+    expect(isFactSectionViable(['LOW', 'MEDIUM'])).toBe(true);
+    expect(isFactSectionViable(['LOW', 'HIGH'])).toBe(true);
+    expect(isFactSectionViable(['EMERGENCY'])).toBe(true);
+  });
+
+  it('does not count UNSCORED members as backing', () => {
+    expect(isFactSectionViable(['UNSCORED', 'LOW'])).toBe(false);
+  });
+
+  it('the viability floor is the MEDIUM display tier', () => {
+    expect(SECTION_MIN_VIABLE_BUCKET).toBe('MEDIUM');
+    expect(isFactSectionViable([SECTION_MIN_VIABLE_BUCKET])).toBe(true);
   });
 });

@@ -5,22 +5,26 @@
 // tab. Each scope drives a DIRECT server-paginated article query — there is no
 // scoring, no LLM, and nothing persisted (see components/custom/explore).
 //
-// Chips are TOP STORIES + COUNTRY + World (app-rethink wave, 2026-07-20 +
-// top-stories-blend wave): city/region derivation was removed because
-// geo-tags are dormant in prod (all null), so those chips showed ~nothing.
-// Each location still contributes its country. The `'city'|'region'`
-// scope-kind members and their builder functions are kept — see the
-// DEPRECATED markers below — purely for type compatibility with any
-// already-persisted `explore_last_scope` id; ExploreScreen already falls back
-// to World when a persisted id no longer resolves, so no data migration is
-// needed here.
+// Chips are COUNTRY… + World (geo-derivation wave, 2026-07-27). The Top
+// stories chip and its blended GLOBAL+home feed were deleted outright —
+// trending headlines mostly don't concern the user, so the tab no longer
+// leads with them.
 //
-// The 'top' scope (id 'top-stories') is a blended GLOBAL+home feed (see
-// lib/explore/top-stories.ts) — it carries no country code of its own.
-// "Home" is the device-locale country when mappable, else the highest-weight
-// location country; it's promoted to the 2nd chip (right after Top stories,
-// ahead of World) and de-duped out of the location-derived tail so it never
-// appears twice.
+// Order is `[World, primary country?, ...remaining countries weight-desc]`:
+// World is ALWAYS present and ALWAYS FIRST, so the cap is applied to the
+// country list only. The primary country is elected by
+// {@link electPrimaryCountry} (highest-weight `role: 'home'` row, else
+// highest-weight row overall, else the device country) and de-duped out of
+// the tail so it never appears twice. Cold-mount lands on the first chip,
+// which is now World.
+//
+// City/region derivation was removed in the app-rethink wave because geo-tags
+// are dormant in prod (all null), so those chips showed ~nothing. Each
+// location still contributes its country. The `'city'|'region'` scope-kind
+// members and their builder functions are kept — see the DEPRECATED markers
+// below — purely for type compatibility with any already-persisted
+// `explore_last_scope` id; ExploreScreen already falls back to the first scope
+// when a persisted id no longer resolves, so no data migration is needed here.
 //
 // Country-code formats (subtle — three different conventions collide here):
 //   • WatermelonDB `locations.countryCode` and `NewsArticle.geo_tags.countryCode`
@@ -33,19 +37,19 @@
 import countries from 'i18n-iso-countries';
 import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
 
-export type ExploreScopeKind = 'top' | 'world' | 'country' | 'city' | 'region';
+export type ExploreScopeKind = 'world' | 'country' | 'city' | 'region';
 
 export interface ExploreScope {
     /** Stable identity (also the FlatList key + persisted selection). */
     readonly id: string;
     readonly kind: ExploreScopeKind;
     /**
-     * Display label for country/city/region scopes. Empty for `world`/`top` —
-     * those chips render translated labels instead (this module is i18n-free
-     * so it stays a pure, testable function).
+     * Display label for country/city/region scopes. Empty for `world` — that
+     * chip renders a translated label instead (this module is i18n-free so it
+     * stays a pure, testable function).
      */
     readonly label: string;
-    readonly icon: 'public' | 'location-city' | 'map' | 'flag' | 'trending-up';
+    readonly icon: 'public' | 'location-city' | 'map' | 'flag';
     /** Flag emoji for country chips (empty for other kinds). */
     readonly flagEmoji?: string;
     /**
@@ -61,16 +65,26 @@ export interface ExploreScope {
     readonly region?: string;
 }
 
+/**
+ * Role tags a `locations` row can carry. Deliberately a LOCAL string union
+ * rather than an import of `LocationRole` from lib/database/models/Location.ts
+ * — that file imports `@nozbe/watermelondb`, and this module is decoupled from
+ * the model (see {@link ScopeLocationInput}) so it stays pure and testable.
+ * Structurally identical to `LocationRole`, so model rows assign directly.
+ */
+export type ScopeLocationRole = 'home' | 'travel' | 'family' | 'partner_family' | 'interest';
+
 /** Minimal shape the derivation needs (decoupled from the WatermelonDB model). */
 export interface ScopeLocationInput {
     readonly city: string | null;
     readonly region: string | null;
     /** ISO alpha-2, as stored on the `locations` row. */
     readonly countryCode: string;
+    readonly role: ScopeLocationRole;
     readonly weight: number;
 }
 
-/** Hard cap on visible scope chips (Top stories + World + up to 4 more). */
+/** Hard cap on visible scope chips (up to 5 countries + World, which is exempt). */
 export const MAX_SCOPES = 6;
 
 /** ISO alpha-2 → alpha-3, or null when unmappable. */
@@ -91,10 +105,6 @@ function titleCase(s: string): string {
 
 function worldScope(): ExploreScope {
     return { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null };
-}
-
-function topScope(): ExploreScope {
-    return { id: 'top-stories', kind: 'top', label: '', icon: 'trending-up', countryCodeAlpha3: null };
 }
 
 function countryScope(alpha2: string, alpha3: string): ExploreScope {
@@ -137,47 +147,86 @@ function regionScope(alpha2: string, alpha3: string, region: string): ExploreSco
 }
 
 /**
+ * Elect the user's primary country — the first COUNTRY chip (World now leads
+ * the row, so this is the second chip overall).
+ *
+ * Rule, in order:
+ *   1. The highest-weight `role: 'home'` location with a mappable country.
+ *   2. Failing that, the highest-weight location with a mappable country.
+ *   3. Failing that, the device-locale country.
+ *   4. Failing that, null.
+ *
+ * `locations` arrives pre-sorted weight-desc (the `location-service` query
+ * sorts on `weight`), so "highest-weight" is just "first match".
+ *
+ * This is the same precedence `loadUserGeoLanguageContext` applies, so the
+ * Explore landing chip and the retrieval profile agree on which country is
+ * "the user's". Note step 3 is effectively the last stop in the app:
+ * `getDeviceCountryAlpha2()` hard-falls-back to 'US' and never returns null,
+ * so only a caller passing an explicit null/unmappable code reaches step 4.
+ */
+export function electPrimaryCountry(
+    locations: readonly ScopeLocationInput[],
+    deviceCountryAlpha2: string | null | undefined,
+): ExploreScope | null {
+    const toScope = (loc: ScopeLocationInput): ExploreScope | null => {
+        const alpha3 = alpha2ToAlpha3(loc.countryCode);
+        if (!alpha3) return null;
+        return countryScope(loc.countryCode.trim().toUpperCase(), alpha3);
+    };
+
+    for (const loc of locations) {
+        if (loc.role !== 'home') continue;
+        const scope = toScope(loc);
+        if (scope) return scope;
+    }
+
+    for (const loc of locations) {
+        const scope = toScope(loc);
+        if (scope) return scope;
+    }
+
+    const deviceAlpha3 = alpha2ToAlpha3(deviceCountryAlpha2);
+    if (deviceAlpha3) {
+        return countryScope((deviceCountryAlpha2 ?? '').trim().toUpperCase(), deviceAlpha3);
+    }
+
+    return null;
+}
+
+/**
  * Build the Explore scope chips.
  *
- * Order (also the cap priority — Top stories, home, and World always survive;
- * the lowest-priority tail is dropped past {@link MAX_SCOPES}):
- *   1. Top stories (always first — the blended GLOBAL+home feed).
- *   2. Home — the device-locale country when mappable, else the
- *      highest-weight location country (locations arrive pre-sorted
- *      weight-desc). Omitted when neither resolves.
- *   3. World.
- *   4. The remaining location-derived country scopes (weight-desc, home
- *      excluded so it never appears twice). City/region scopes are no longer
- *      derived — see the module header.
+ * Order:
+ *   1. World — always present, always FIRST.
+ *   2. The primary country (see {@link electPrimaryCountry}). Omitted only
+ *      when neither the locations nor the device country resolve.
+ *   3. The remaining location-derived country scopes (weight-desc, the
+ *      primary excluded so it never appears twice). City/region scopes are no
+ *      longer derived — see the module header.
  *
- * De-duped by scope id; capped at {@link MAX_SCOPES}.
+ * De-duped by scope id. The cap applies to the COUNTRY list only
+ * ({@link MAX_SCOPES} - 1 countries); World is prepended afterwards so it
+ * always survives.
  */
 export function deriveExploreScopes(
     locations: readonly ScopeLocationInput[],
     deviceCountryAlpha2: string | null | undefined,
 ): ExploreScope[] {
-    const locationScopes: ExploreScope[] = [];
+    const primary = electPrimaryCountry(locations, deviceCountryAlpha2);
+
+    const countryScopes: ExploreScope[] = [];
     const seenAlpha3 = new Set<string>();
+    if (primary) {
+        seenAlpha3.add(primary.countryCodeAlpha3!);
+        countryScopes.push(primary);
+    }
     for (const loc of locations) {
         const alpha3 = alpha2ToAlpha3(loc.countryCode);
         if (!alpha3 || seenAlpha3.has(alpha3)) continue;
         seenAlpha3.add(alpha3);
-        const alpha2 = loc.countryCode.trim().toUpperCase();
-        locationScopes.push(countryScope(alpha2, alpha3));
+        countryScopes.push(countryScope(loc.countryCode.trim().toUpperCase(), alpha3));
     }
 
-    const deviceAlpha3 = alpha2ToAlpha3(deviceCountryAlpha2);
-    const home: ExploreScope | null = deviceAlpha3
-        ? countryScope((deviceCountryAlpha2 ?? '').trim().toUpperCase(), deviceAlpha3)
-        : (locationScopes[0] ?? null);
-
-    const ordered: ExploreScope[] = [topScope()];
-    if (home) ordered.push(home);
-    ordered.push(worldScope());
-    for (const scope of locationScopes) {
-        if (home && scope.id === home.id) continue;
-        ordered.push(scope);
-    }
-
-    return ordered.slice(0, MAX_SCOPES);
+    return [worldScope(), ...countryScopes.slice(0, MAX_SCOPES - 1)];
 }

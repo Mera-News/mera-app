@@ -15,9 +15,10 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
+    MAX_MEMBER_IDS,
     observeActive,
-    untrackStory,
 } from '@/lib/database/services/tracked-story-service';
+import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
@@ -69,7 +70,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
         if (!confirmTarget) return;
         const id = confirmTarget.id;
         setConfirmTarget(null);
-        await untrackStory(id);
+        // deleteTrackedStoryById, not untrackStory: the latter drops the row but
+        // leaves the linked TOPIC active, so the story's coverage kept being
+        // fetched after the user deleted it.
+        await deleteTrackedStoryById(id);
         // The observeActive subscription drops the row automatically.
     }, [confirmTarget]);
 
@@ -79,6 +83,15 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
             const latest = item.latestTitle;
             const showLatest = !!latest && latest.trim().length > 0 && latest !== headline;
             const unseen = item.unseenCount ?? 0;
+            // Total coverage gathered under this story. `memberArticleIds` is
+            // capped at MAX_MEMBER_IDS, so at the cap the true total is
+            // unknowable from the row — render "30+" rather than a confidently
+            // wrong exact number.
+            const total = (item.memberArticleIds ?? []).length;
+            const totalLabel =
+                total >= MAX_MEMBER_IDS
+                    ? t('trackedStories.articleCountCapped', { count: MAX_MEMBER_IDS })
+                    : t('trackedStories.articleCount', { count: total });
             const relative = formatTimeAgo(t, item.lastUpdateAt ?? item.createdAt);
             return (
                 <Pressable
@@ -88,7 +101,17 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                         setConfirmTarget(item);
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={headline}
+                    // The card renders four things; a label of just the headline
+                    // dropped the rest for a screen-reader user. Order mirrors
+                    // the visual order: title, unseen badge, total, age.
+                    accessibilityLabel={[
+                        headline,
+                        unseen > 0 ? t('trackedStories.updatesBadge', { count: unseen }) : null,
+                        total > 0 ? totalLabel : null,
+                        relative || null,
+                    ]
+                        .filter(Boolean)
+                        .join(', ')}
                     className="mx-4 mb-3 rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3"
                 >
                     <HStack className="items-start" space="sm">
@@ -124,11 +147,25 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                                     className="text-typography-400"
                                 />
                             )}
-                            {!!relative && (
-                                <Text size="2xs" className="text-typography-500 mt-0.5">
-                                    {relative}
-                                </Text>
-                            )}
+                            {/* Meta line: total coverage + last-activity age,
+                                in the card's existing 2xs muted style. */}
+                            <HStack className="items-center mt-0.5" space="xs">
+                                {total > 0 && (
+                                    <Text size="2xs" className="text-typography-500">
+                                        {totalLabel}
+                                    </Text>
+                                )}
+                                {total > 0 && !!relative && (
+                                    <Text size="2xs" className="text-typography-600">
+                                        ·
+                                    </Text>
+                                )}
+                                {!!relative && (
+                                    <Text size="2xs" className="text-typography-500">
+                                        {relative}
+                                    </Text>
+                                )}
+                            </HStack>
                         </VStack>
                         <Pressable
                             onPress={() => setConfirmTarget(item)}
@@ -148,6 +185,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
 
     const keyExtractor = useCallback((item: TrackedStoryModel) => item.id, []);
 
+    const goToFeed = useCallback(() => {
+        router.push('/logged-in/app_container/feed');
+    }, []);
+
     const ListEmpty = (
         <Box className="flex-1 items-center justify-center px-8 py-20">
             <MaterialIcons name="auto-awesome" size={48} color="#6B7280" />
@@ -157,6 +198,29 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
             <Text size="sm" className="text-typography-400 text-center mt-2">
                 {t('trackedStories.emptyBody')}
             </Text>
+            {/* The empty body used to stop at "how" without saying "where". QA's
+                filed wording ("feed card → 👍 → the 'More like this' panel")
+                doesn't match the current wiring: Feed cards (CardActionBar) have
+                no track affordance at all — the track ("track-changes" /
+                crosshair) icon only exists in ArticleFeedbackPrompt's action row
+                on the article DETAIL screen (opened by tapping a Feed card), and
+                it sits in that row independent of the like/dislike panel, not
+                inside it. Hint text reflects that traced path rather than the
+                filed description. CTA styling matches the other
+                icon+text+outline-button empty state (locations.tsx's "Add a
+                place" pattern) — the two components named in the task have no
+                CTA to match. */}
+            <Text size="xs" className="text-typography-500 text-center mt-4">
+                {t('trackedStories.emptyHint')}
+            </Text>
+            <Button
+                variant="outline"
+                className="rounded-full border-primary-500 mt-4"
+                onPress={goToFeed}
+                testID="tracked-stories-empty-cta"
+            >
+                <ButtonText className="text-primary-400">{t('trackedStories.emptyCta')}</ButtonText>
+            </Button>
         </Box>
     );
 
@@ -216,8 +280,19 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                         >
                             <ButtonText>{t('common.cancel')}</ButtonText>
                         </Button>
-                        <Button action="negative" onPress={handleConfirmUntrack}>
-                            <ButtonText>{t('trackedStories.untrackAction')}</ButtonText>
+                        {/* Distinct copy from the trash icon that opens this
+                            dialog. Both used to read "Untrack story", so a
+                            screen-reader user heard two identically-named
+                            buttons and could not tell the trigger from the
+                            confirmation. The icon stays "Untrack story"; this
+                            one names the ACTION it commits. */}
+                        <Button
+                            action="negative"
+                            onPress={handleConfirmUntrack}
+                            testID="untrack-confirm"
+                            accessibilityLabel={t('trackedStories.untrackConfirmCta')}
+                        >
+                            <ButtonText>{t('trackedStories.untrackConfirmCta')}</ButtonText>
                         </Button>
                     </ModalFooter>
                 </ModalContent>

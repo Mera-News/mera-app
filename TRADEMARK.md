@@ -1,4 +1,4 @@
-# Trademark Notice — Mera Labs B.V.
+# Trademark Notice: Mera Labs B.V.
 
 ## Protected Marks
 
@@ -47,7 +47,7 @@ If you fork or redistribute this codebase, you MUST:
 ## Reporting Violations
 
 If you become aware of any unauthorized use of Mera trademarks,
-please contact: legal@meranews.app
+please contact: contact@mera.news
 
 ## Governing Law
 

@@ -241,6 +241,17 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
         }
       />
 
+      {/* Auto-detect disclaimer — Mera derives locations from the user's profile
+          on-device; this screen is a manual override, not the primary path. Muted/
+          neutral treatment (not the warning colours) since this is guidance, not
+          a problem. */}
+      <HStack className="items-start bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
+        <MaterialIcons name="info-outline" size={16} color="#999999" style={{ marginTop: 2 }} />
+        <Text size="sm" className="text-gray-400 flex-1">
+          {t('locations.autoDetectDisclaimer')}
+        </Text>
+      </HStack>
+
       {searchOpen ? (
         <AddLocationView
           onClose={() => setSearchOpen(false)}

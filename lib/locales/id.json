@@ -1,5 +1,6 @@
 {
   "common": {
+    "home": "Beranda",
     "cancel": "Batal",
     "delete": "Hapus",
     "save": "Simpan",
@@ -72,7 +73,7 @@
     "stuckTitle": "Tidak dapat memuat feed Anda",
     "stuckDescription": "Terjadi kesalahan di pihak kami.",
     "stuckHint": "Buka kembali aplikasi dalam beberapa menit.",
-    "offlineCached": "Offline — menampilkan konten tersimpan",
+    "offlineCached": "Offline: menampilkan konten tersimpan",
     "newBadge": "BARU",
     "newsCluster": "Klaster Berita",
     "justNow": "Baru saja",
@@ -102,13 +103,13 @@
     "articleSingular": "artikel",
     "articlePlural": "artikel",
     "processing": {
-      "doneFlash": "Siap — ini berita Anda",
+      "doneFlash": "Siap. Ini berita Anda",
       "errorFlash": "Kami tidak dapat memuat konten terbaru. Silakan coba lagi.",
       "stages": {
         "fetching": {
           "headlines": [
             "Mengambil artikel hari ini ke ponsel Anda…",
-            "Mera membawa berita ke perangkat Anda — minat Anda tidak pernah meninggalkannya."
+            "Mera membawa berita ke perangkat Anda. Minat Anda tidak pernah meninggalkannya."
           ],
           "amberSubline": "Harap tetap buka layar ini."
         },
@@ -117,16 +118,16 @@
           "tooltip": "Mera sedang menyiapkan permintaan terenkripsi Anda di ponsel. Harap tetap buka aplikasi untuk bagian ini.",
           "headlines": [
             "Meminta berita hari ini untuk Anda…",
-            "Mera adalah aplikasi yang berbeda — permintaan Anda dienkripsi di ponsel sebelum dikirim."
+            "Mera adalah aplikasi yang berbeda: permintaan Anda dienkripsi di ponsel sebelum dikirim."
           ],
-          "amberSubline": "Harap tetap buka layar ini beberapa detik — kami tidak bisa melakukan bagian ini di latar belakang."
+          "amberSubline": "Harap tetap buka layar ini beberapa detik: kami tidak bisa melakukan bagian ini di latar belakang."
         },
         "hydrating": {
           "shortName": "Mengunduh ke ponsel Anda",
           "tooltip": "Artikel hari ini sedang disalin ke ponsel Anda agar langkah berikutnya dapat berjalan secara pribadi.",
           "headlines": [
             "Mengambil artikel hari ini ke ponsel Anda…",
-            "Mera membawa berita ke perangkat Anda — minat Anda tidak pernah meninggalkannya."
+            "Mera membawa berita ke perangkat Anda. Minat Anda tidak pernah meninggalkannya."
           ],
           "amberSubline": "Harap tetap di layar ini."
         },
@@ -135,15 +136,15 @@
           "tooltip": "Menyaring cerita palsu yang diambil berdasarkan topik kebisingan. Hanya terjadi ketika injeksi kebisingan aktif.",
           "headlines": [
             "Menyaring cerita palsu dari feed Anda…",
-            "Injeksi kebisingan mengirimkan topik palsu bersama topik asli Anda — kami sekarang menghapus cerita yang hanya cocok dengan topik palsu tersebut."
+            "Injeksi kebisingan mengirimkan topik palsu bersama topik asli Anda. Kami sekarang menghapus cerita yang hanya cocok dengan topik palsu tersebut."
           ]
         },
         "cloudRelevance": {
           "shortName": "Menghitung relevansi",
-          "tooltip": "AI di cloud sedang membaca setiap artikel dan memilih yang mungkin penting bagi Anda. Permintaan Anda dienkripsi — hanya ponsel Anda yang menyimpan kuncinya.",
+          "tooltip": "AI di cloud sedang membaca setiap artikel dan memilih yang mungkin penting bagi Anda. Permintaan Anda dienkripsi: hanya ponsel Anda yang menyimpan kuncinya.",
           "headlines": [
             "AI sedang membaca setiap artikel untuk melihat mana yang penting bagi Anda.",
-            "Permintaan Anda dienkripsi — hanya ponsel Anda yang menyimpan kuncinya."
+            "Permintaan Anda dienkripsi: hanya ponsel Anda yang menyimpan kuncinya."
           ]
         },
         "cloudReasons": {
@@ -151,8 +152,8 @@
           "tooltip": "AI sedang menulis catatan singkat untuk setiap cerita yang menjelaskan mengapa itu mungkin penting bagi Anda. Permintaan tetap terenkripsi.",
           "headlines": [
             "Menulis catatan singkat untuk setiap cerita yang relevan.",
-            "Anda bisa pergi sejenak — kami akan memberi tahu Anda saat sudah siap.",
-            "Semua tetap terenkripsi end-to-end — hanya ponsel Anda yang bisa membacanya."
+            "Anda bisa pergi sejenak. Kami akan memberi tahu Anda saat sudah siap.",
+            "Semua tetap terenkripsi end-to-end: hanya ponsel Anda yang bisa membacanya."
           ]
         },
         "onDevice": {
@@ -160,7 +161,7 @@
           "tooltip": "Ponsel Anda memberi skor pada cerita-cerita ini secara lokal. Tidak ada yang meninggalkan perangkat untuk langkah ini.",
           "headlines": [
             "Ponsel Anda sedang memberi skor pada cerita-cerita ini untuk Anda.",
-            "Ini terjadi sepenuhnya di perangkat Anda — tidak ada yang keluar darinya."
+            "Ini terjadi sepenuhnya di perangkat Anda. Tidak ada yang keluar darinya."
           ]
         }
       }
@@ -183,8 +184,8 @@
       "completedMessage": "Feed Anda sudah siap"
     },
     "dailyLimit": {
-      "body": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka besok.",
-      "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda — artikel baru terbuka pada {{time}}.",
+      "body": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka besok.",
+      "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka pada {{time}}.",
       "title": "Batas artikel harian tercapai"
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
@@ -233,9 +234,9 @@
     "addedToLocations": "Ditambahkan ke tempat Anda"
   },
   "clusterDetail": {
-    "translatable": "Artikel ini dalam bahasa {{language}} — perangkat Anda dapat menerjemahkannya saat Anda membaca. Jika terjemahan tidak berfungsi, Anda dapat membuka situs ini di Google Terjemahan di bawah — perlu diketahui bahwa Anda akan menjelajahinya melalui Google.",
-    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Perangkat Anda tidak dapat menerjemahkannya — gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
-    "notTranslatableOsOutdated": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat memerlukan iOS {{requiredVersion}} — Anda menggunakan iOS {{currentVersion}}. Perbarui iOS, atau gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
+    "translatable": "Artikel ini dalam bahasa {{language}}: perangkat Anda dapat menerjemahkannya saat Anda membaca. Jika terjemahan tidak berfungsi, Anda dapat membuka situs ini di Google Terjemahan di bawah. Perlu diketahui bahwa Anda akan menjelajahinya melalui Google.",
+    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Perangkat Anda tidak dapat menerjemahkannya. Gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
+    "notTranslatableOsOutdated": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat memerlukan iOS {{requiredVersion}}. Anda menggunakan iOS {{currentVersion}}. Perbarui iOS, atau gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
     "unknownLanguage": "bahasa lain",
     "translationGuideLink": "Tunjukkan cara menerjemahkan artikel",
     "viewInGoogleTranslate": "Lihat di Google Terjemahan",
@@ -295,9 +296,9 @@
     "timeDescriptionOnboarding": "Pilih kapan Anda ingin mengejar ketinggalan berita Anda",
     "timeNudges": [
       "Berita bekerja paling baik dalam satu atau dua momen fokus sehari.",
-      "Anda tidak perlu memeriksa terus-menerus — kami akan menyiapkannya saat Anda siap.",
+      "Anda tidak perlu memeriksa terus-menerus. Kami akan menyiapkannya saat Anda siap.",
       "Pengecekan yang lebih sedikit dan tenang lebih baik daripada notifikasi sepanjang hari.",
-      "Pilih waktu yang sesuai dengan hari Anda — Mera yang akan mengumpulkannya."
+      "Pilih waktu yang sesuai dengan hari Anda: Mera yang akan mengumpulkannya."
     ]
   },
   "language": {
@@ -305,7 +306,7 @@
     "appLanguage": "Bahasa Aplikasi",
     "appLanguageDescription": "Digunakan untuk antarmuka aplikasi dan menerjemahkan konten berita",
     "languagePacks": "Paket Bahasa",
-    "languagePacksIos": "Model terjemahan dikelola oleh perangkat Anda. Anda hanya perlu mengunduh model untuk bahasa yang dipilih — iOS mengurus sisanya.",
+    "languagePacksIos": "Model terjemahan dikelola oleh perangkat Anda. Anda hanya perlu mengunduh model untuk bahasa yang dipilih. iOS mengurus sisanya.",
     "languagePacksIosPath": "Pengaturan → Umum → Bahasa & Wilayah → Bahasa Terjemahan",
     "languagePacksAndroid": "Model terjemahan (~30MB masing-masing) diunduh secara otomatis saat Anda pertama kali menerjemahkan ke bahasa baru.",
     "openDeviceSettings": "Buka Pengaturan Perangkat",
@@ -314,11 +315,11 @@
     "restartDescription": "Aplikasi perlu dimulai ulang untuk menerapkan perubahan bahasa.",
     "restart": "Mulai Ulang Sekarang",
     "later": "Nanti",
-    "packMissingBanner": "Bahasa ini membutuhkan paket terjemahan di perangkat — proses terjemahannya berjalan secara lokal di ponsel Anda. Anda dapat mengelola bahasa dari pengaturan ponsel Anda.",
+    "packMissingBanner": "Bahasa ini membutuhkan paket terjemahan di perangkat: proses terjemahannya berjalan secara lokal di ponsel Anda. Anda dapat mengelola bahasa dari pengaturan ponsel Anda.",
     "packMissingIosPath": "Pengaturan → Umum → Bahasa & Wilayah",
     "retry": "Coba Lagi",
     "watchGuide": "Lihat cara menambahkan bahasa ke perangkat Anda",
-    "iosLanguageHint": "Hanya memilih bahasa ini saja tidak cukup — Anda juga perlu memilih bahasa ini di pengaturan bahasa iOS."
+    "iosLanguageHint": "Hanya memilih bahasa ini saja tidak cukup. Anda juga perlu memilih bahasa ini di pengaturan bahasa iOS."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -347,9 +348,9 @@
     "updateTo": "Perbarui ke {{modelName}}",
     "injectNoiseTitle": "Injeksi Kebisingan",
     "injectNoiseDescription": "Mengirimkan topik palsu bersama minat asli Anda agar backend tidak dapat mengidentifikasi siapa Anda dari daftar topik. Artikel yang hanya cocok dengan topik palsu dibuang sebelum sampai ke Anda.",
-    "injectNoiseBeta": "Beta — dapat memperlambat pembuatan topik dan mengurangi relevansi feed.",
+    "injectNoiseBeta": "Beta: dapat memperlambat pembuatan topik dan mengurangi relevansi feed.",
     "privacyTitle": "Data Anda tetap pribadi",
-    "privacyDescription": "Mera Protocol selalu aktif. Mode di perangkat menjalankan inferensi sepenuhnya offline di ponsel Anda. Mode cloud menggunakan inferensi terenkripsi ujung ke ujung — data Anda dienkripsi di perangkat dan hanya didekripsi di dalam enclave aman. Mera tidak pernah melihat data Anda.",
+    "privacyDescription": "Mera Protocol selalu aktif. Mode di perangkat menjalankan inferensi sepenuhnya offline di ponsel Anda. Mode cloud menggunakan inferensi terenkripsi ujung ke ujung: data Anda dienkripsi di perangkat dan hanya didekripsi di dalam enklave aman yang tidak bisa kami intip. Fakta Anda, profil, dan riwayat bacaan Anda tidak pernah meninggalkan perangkat ini. Untuk mengambil berita, kami hanya mengirim frasa topik yang luas, tanpa membawa ID pengguna apa pun.",
     "deviceSupported": "Perangkat Didukung",
     "deviceNotSupported": "Perangkat Tidak Didukung",
     "deviceSupportedDescription": "Perangkat Anda memenuhi semua persyaratan untuk pemrosesan AI di perangkat.",
@@ -406,8 +407,8 @@
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
     "errorDescription": "Gagal menghapus data. Silakan coba lagi.",
-    "factsDescription": "Fakta Anda dan topik yang dihasilkannya — di perangkat ini",
-    "factsModalDescription": "Menghapus fakta yang telah Anda tambahkan dan topik yang dihasilkan darinya. Topik hanya tersimpan di perangkat ini — tidak pernah disimpan di server kami. Feed artikel Anda juga dihapus, karena dibangun dari topik-topik ini, dan akan dibangun ulang dalam keadaan kosong sampai Anda menambahkan fakta baru.",
+    "factsDescription": "Fakta Anda dan topik yang dihasilkannya, di perangkat ini",
+    "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Fakta Anda tidak pernah meninggalkan perangkat ini. Frasa topik dikirim saat Anda mengambil berita dan disimpan sementara di server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini, dan tetap kosong sampai Anda menambahkan fakta baru.",
     "locationDevice": "Di perangkat",
     "locationServer": "Server"
   },
@@ -453,8 +454,8 @@
     "tabPersona": "Persona",
     "tabSources": "Sumber",
     "tabPreferences": "Preferensi",
-    "privacyOnDevice": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda — inferensi AI berjalan sepenuhnya di perangkat melalui Mera Protocol. Setiap kali Anda membutuhkan berita, topik Anda dikirim ke server kami untuk mengambil artikel yang relevan; server mengembalikan hasil tanpa menyimpan data Anda. Riwayat obrolan tidak pernah disimpan; setiap sesi dimulai dari awal. Mengganti perangkat atau keluar berarti membangun ulang persona Anda.",
-    "privacyCloud": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda. Inferensi cloud menggunakan Trusted Execution Environments (TEE) terenkripsi — data Anda dienkripsi di perangkat, diproses di enclave terisolasi, dan didekripsi hanya di perangkat Anda. Setiap kali Anda membutuhkan berita, topik Anda dikirim ke server kami untuk mengambil artikel yang relevan; server mengembalikan hasil tanpa menyimpan data Anda. Riwayat obrolan tidak pernah disimpan; setiap sesi dimulai dari awal. Mengganti perangkat atau keluar berarti membangun ulang persona Anda.",
+    "privacyOnDevice": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda: inferensi AI berjalan sepenuhnya di perangkat melalui Mera Protocol. Setiap kali Anda mengambil berita, hanya frasa topik Anda yang dikirim, tanpa ID pengguna (aktifkan Injeksi Kebisingan di atas untuk mengirim topik palsu bersama topik Anda). Frasa tersebut disimpan sementara di server kami dengan kunci berupa teksnya saja dan dihapus setelah 14 hari tanpa permintaan; tidak ada yang mencatat bahwa Andalah yang memintanya. Satu-satunya data yang kami simpan tentang Anda adalah email login, status langganan, dan per-hari jumlah artikel yang dianalisis yang digunakan untuk memberlakukan paket Anda. Sesi obrolan dimulai dari awal dan tidak disimpan. Satu-satunya pengecualian adalah jika Anda mengirimkan permintaan buka blokir, transkripsi yang Anda lampirkan akan disimpan untuk ditinjau. Berganti perangkat atau keluar akun berarti persona Anda harus dibangun ulang. Backend kami belum dipublikasikan; kami memindahkan setiap layanan yang menyentuh data Anda ke repositori source-available dan mengharapkannya publik sebelum September 2026. Sampai saat itu, satu-satunya hal yang bertumpu pada kepercayaan adalah bahwa kami tidak menyimpan catatan yang menghubungkan Anda dengan topik Anda. Mera dibangun di Belanda di bawah GDPR, dan tidak menyimpan data Anda memang tujuan rancangan ini.",
+    "privacyCloud": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda. Inferensi cloud menggunakan Trusted Execution Environments (TEE) yang terenkripsi: data Anda dienkripsi di perangkat ke kunci yang enklave publikasikan, diproses dalam enklave terisolasi, dan hanya didekripsi di perangkat Anda. Lebih tepatnya: aplikasi belum memeriksa atestasi terhadap vendor perangkat keras, jadi untuk saat ini Anda mempercayai kami dan operator enklave daripada chip; membuat aplikasi memverifikasinya dan menolak untuk melanjutkan ada di peta jalan kami. Setiap kali Anda mengambil berita, hanya frasa topik Anda yang dikirim, tanpa ID pengguna (aktifkan Injeksi Kebisingan di atas untuk mengirim topik palsu bersama topik Anda). Frasa tersebut disimpan sementara di server kami dengan kunci berupa teksnya saja dan dihapus setelah 14 hari tanpa permintaan; tidak ada yang mencatat bahwa Andalah yang memintanya. Satu-satunya data yang kami simpan tentang Anda adalah email login, status langganan, dan per-hari jumlah artikel yang dianalisis yang digunakan untuk memberlakukan paket Anda. Sesi obrolan dimulai dari awal dan tidak disimpan. Satu-satunya pengecualian adalah jika Anda mengirimkan permintaan buka blokir, transkripsi yang Anda lampirkan akan disimpan untuk ditinjau. Berganti perangkat atau keluar akun berarti persona Anda harus dibangun ulang. Backend kami belum dipublikasikan; kami memindahkan setiap layanan yang menyentuh data Anda ke repositori source-available dan mengharapkannya publik sebelum September 2026. Mera dibangun di Belanda di bawah GDPR, dan tidak menyimpan data Anda memang tujuan rancangan ini.",
     "privacyPolicy": "Kebijakan Privasi",
     "privacyNoticeTitle": "Privasi Anda",
     "updatingTopics": "Memperbarui topik... {{completed}}/{{total}}",
@@ -523,15 +524,15 @@
     "accountRestrictedDescription": "Akun Anda telah dibatasi. Silakan hubungi dukungan.",
     "scoring": {
       "generic": {
-        "message": "Terjadi kesalahan saat memilih berita untuk Anda. Kami akan terus mencoba — tarik ke bawah untuk menyegarkan jika masih berlanjut.",
+        "message": "Terjadi kesalahan saat memilih berita untuk Anda. Kami akan terus mencoba. Tarik ke bawah untuk menyegarkan jika masih berlanjut.",
         "title": "Tidak dapat memperbarui feed Anda"
       },
       "offline": {
-        "message": "Kami tidak dapat menjangkau server untuk memilih berita bagi Anda. Periksa koneksi Anda — feed Anda akan menyusul dengan sendirinya setelah Anda kembali online.",
+        "message": "Kami tidak dapat menjangkau server untuk memilih berita bagi Anda. Periksa koneksi Anda: feed Anda akan menyusul dengan sendirinya setelah Anda kembali online.",
         "title": "Anda sedang offline"
       },
       "server": {
-        "message": "Kami tidak dapat menjangkau layanan berita. Ini biasanya sebentar — kami akan terus mencoba dan feed Anda akan diperbarui dengan sendirinya.",
+        "message": "Kami tidak dapat menjangkau layanan berita. Ini biasanya sebentar. Kami akan terus mencoba dan feed Anda akan diperbarui dengan sendirinya.",
         "title": "Layanan tidak tersedia"
       }
     }
@@ -550,7 +551,7 @@
     "inferenceError": "Kami mengalami masalah dalam menjangkau layanan inferensi Mera saat ini. Silakan coba lagi sesaat lagi."
   },
   "personaChat": {
-    "introMessage": "Hai! Aku Mera, asisten berita pribadimu. Jika mau, ceritakan apa saja tentang dirimu — tinggal di mana, kerja apa, hobi yang diikuti, saham yang dipantau, tempat tinggal keluarga. Atau cukup bilang 'bantu aku menyiapkannya' dan aku akan membimbingmu langkah demi langkah."
+    "introMessage": "Hai! Aku Mera, asisten berita pribadimu. Jika mau, ceritakan apa saja tentang dirimu: tinggal di mana, kerja apa, hobi yang diikuti, saham yang dipantau, tempat tinggal keluarga. Atau cukup bilang 'bantu aku menyiapkannya' dan aku akan membimbingmu langkah demi langkah."
   },
   "floatingChat": {
     "bubbleHint": "Ngobrol dengan Mera",
@@ -600,8 +601,8 @@
     "improveMessage": "Saran ini bisa lebih baik: \"{{title}}\". Bantu saya menyesuaikan saran saya.",
     "intro": "Apa yang bisa saya bantu? Saya bisa menjelaskan mengapa kamu menerima saran ini, atau membantu kamu mendapatkan saran yang lebih baik.",
     "introArticle": "Apa yang bisa saya bantu? Saya bisa membantu menyesuaikan saran berita kamu berdasarkan artikel ini.",
-    "introLikeTuning": "Anda menyukai cerita ini — beri tahu saya lebih lanjut dan saya akan menyesuaikan feed Anda.",
-    "introDislikeTuning": "Anda tidak menyukai cerita ini — beri tahu saya alasannya dan saya akan menyesuaikan feed Anda.",
+    "introLikeTuning": "Anda menyukai cerita ini. Beri tahu saya lebih lanjut dan saya akan menyesuaikan feed Anda.",
+    "introDislikeTuning": "Anda tidak menyukai cerita ini: beri tahu saya alasannya dan saya akan menyesuaikan feed Anda.",
     "chipWhy": "Mengapa saya menerima saran ini?",
     "chipWhyMessage": "Mengapa saya menerima saran ini?",
     "chipDontWant": "Saya tidak ingin saran ini",
@@ -638,9 +639,9 @@
     "countShort_one": "{{count}} kunjungan",
     "countShort_other": "{{count}} kunjungan",
     "tooltipA11y": "Tentang riwayat bacaan",
-    "tooltipIntro": "Mera melacak pola bacaan Anda — dan data ini hanya ada di perangkat Anda.",
+    "tooltipIntro": "Mera melacak pola bacaan Anda, dan data ini hanya ada di perangkat Anda.",
     "tooltipLink": "Lihat semua riwayat bacaan Anda di sini.",
-    "screenIntro": "Mera melacak pola bacaan Anda — hanya di perangkat Anda selama 30 hari. Ini memberi Anda gambaran lebih jelas tentang publikasi mana yang paling berarti bagi Anda, sehingga Anda bisa mempertimbangkan untuk mendukung yang langsung memberi manfaat bagi Anda.",
+    "screenIntro": "Mera melacak pola bacaan Anda, hanya di perangkat Anda selama 30 hari. Ini memberi Anda gambaran lebih jelas tentang publikasi mana yang paling berarti bagi Anda, sehingga Anda bisa mempertimbangkan untuk mendukung yang langsung memberi manfaat bagi Anda.",
     "visitedListTitle": "Publikasi yang Anda kunjungi",
     "last30Days": "30 hari terakhir",
     "lastRead": "Terakhir dibaca {{time}}",
@@ -721,8 +722,8 @@
     "analyzingRelevance": "Menganalisis relevansi…",
     "upToDate": "Feed Anda sudah terkini",
     "waitingForConnection": "Menunggu koneksi…",
-    "serverUnavailable": "Server tidak tersedia — mencoba ulang sebentar lagi",
-    "sessionExpired": "Sesi berakhir — silakan masuk kembali",
+    "serverUnavailable": "Server tidak tersedia: mencoba ulang sebentar lagi",
+    "sessionExpired": "Sesi berakhir. Silakan masuk kembali",
     "noTopics": "Tambah topik untuk melihat berita Anda",
     "storageFull": "Bebaskan penyimpanan perangkat dan coba lagi",
     "syncFailed": "Kami tidak dapat memuat konten terbaru. Tarik untuk memuat ulang.",
@@ -733,15 +734,18 @@
     "deleteConfirmMessage": "Ini akan menghapus artikel dari daftar tersimpan Anda di perangkat ini.",
     "deleteConfirmTitle": "Hapus artikel tersimpan?",
     "empty": "Anda belum menyimpan artikel apa pun. Ketuk ikon penanda pada artikel untuk menyimpannya nanti.",
-    "note": "Artikel ini hanya disimpan di perangkat Anda. Tambah atau hapus kapan saja — artikel tetap di sini sampai Anda menghapusnya.",
+    "note": "Artikel ini hanya disimpan di perangkat Anda. Tambah atau hapus kapan saja. Artikel tetap di sini sampai Anda menghapusnya.",
+    "removedToastTitle": "Dihapus",
     "removedToastMessage": "Dihapus dari tersimpan",
+    "saveAction": "Simpan",
+    "removeAction": "Hapus dari tersimpan",
     "savedToastMessage": "Artikel disimpan untuk nanti",
     "savedToastTitle": "Tersimpan",
     "title": "Tersimpan"
   },
   "subscription": {
     "activating": "Mengaktifkan langganan Anda…",
-    "activationDelayed": "Pembelian Anda sedang dikonfirmasi. Ini bisa memakan waktu sebentar — ketuk segarkan jika tidak berlanjut.",
+    "activationDelayed": "Pembelian Anda sedang dikonfirmasi. Ini bisa memakan waktu sebentar: ketuk segarkan jika tidak berlanjut.",
     "autoRenew": "Perpanjang otomatis",
     "customerCenter": "Kelola / batalkan langganan",
     "dailyArticleLimit": "Batas artikel harian",
@@ -779,7 +783,7 @@
     "upgrade": "Tingkatkan"
   },
   "tabs": {
-    "deck": "Tumpukan",
+    "deck": "Umpan",
     "dashboard": "Dasbor",
     "around": "Eksplor",
     "profile": "Profil",
@@ -787,44 +791,31 @@
     "gotIt": "Mengerti"
   },
   "swipeFeed": {
-    "yourDeck": "Untuk Anda",
+    "yourDeck": "Umpan",
     "moreLikeThis": "Lebih banyak seperti ini",
     "lessLikeThis": "Lebih sedikit seperti ini",
     "askMera": "Tanya Mera",
     "closeTree": "Tutup",
-    "treeRoot": "Semua",
-    "treeThanks": "Terima kasih — dicatat.",
-    "chatHandoffLike": "Saya suka cerita ini — lebih banyak seperti ini: {{path}}.",
-    "chatHandoffLikeNoPath": "Saya suka cerita ini — saya ingin lebih banyak seperti ini.",
-    "chatHandoffDislike": "Saya tidak suka cerita ini — {{path}}.",
+    "treeThanks": "Terima kasih, dicatat.",
+    "chatHandoffLike": "Saya suka cerita ini, lebih banyak seperti ini: {{path}}.",
+    "chatHandoffLikeNoPath": "Saya suka cerita ini. Saya ingin lebih banyak seperti ini.",
+    "chatHandoffDislike": "Saya tidak suka cerita ini, {{path}}.",
     "chatHandoffDislikeNoPath": "Saya tidak suka cerita ini. Bantu saya agar mendapat lebih sedikit yang seperti ini."
   },
   "explore": {
     "title": "Eksplor",
-    "sources": "Sumber",
     "scopeWorld": "Dunia",
-    "scopeTopStories": "Berita utama",
     "noArticles": "Tidak ada artikel yang ditemukan",
-    "thinContentTitle": "Ingin lebih banyak berita {{place}}?",
-    "thinContentBody": "Tambahkan {{place}} sebagai lokasi untuk mendapatkan lebih banyak cerita dari sini.",
-    "addLocation": "Tambah lokasi",
-    "noLocationsTitle": "Lihat berita dari tempat Anda",
-    "noLocationsBody": "Tambahkan tempat yang Anda pedulikan untuk menjelajahi berita lokal dari sana di sini.",
-    "sheetTitle": "Kelola sumber",
-    "close": "Tutup",
-    "topStoriesIntro": "Apa yang sedang dibicarakan orang — diurutkan sesuai dengan apa yang penting bagi Anda.",
     "addPlaces": "Tambah tempat"
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
-    "subTabFeed": "Feed",
+    "viewAllArticles_other": "Lihat semua {{count}} artikel",
+    "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
-    "subTabSaved": "Tersimpan",
-    "openFactFeed": "Lihat semua cerita untuk topik ini",
-    "viewAllStories": "Lihat semua {{count}} cerita",
-    "newInSection_other": "{{count}} cerita baru sejak kunjungan terakhir Anda"
+    "subTabSaved": "Tersimpan"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -832,7 +823,7 @@
     "stage": "Tahap",
     "cloudProgress": "Penilaian cloud",
     "deviceProgress": "Penilaian di perangkat",
-    "processed": "Artikel diambil",
+    "published": "Dipublikasikan",
     "analysed": "Dianalisis",
     "relevant": "Relevan untuk Anda",
     "noiseRemoved": "Noise dihapus",
@@ -853,11 +844,21 @@
     "updatesBadge": "{{count}} baru",
     "endedLabel": "Berakhir",
     "timelineQuietNote": "Belum ada liputan baru yang terkumpul. Kami akan menambahkan perkembangan di sini seiring cerita ini berlangsung.",
-    "railTitle": "Diikuti",
     "untrackConfirmTitle": "Berhenti mengikuti?",
     "untrackConfirmBody": "Anda tidak akan lagi melihat perkembangan baru untuk cerita ini.",
+    "untrackConfirmCta": "Berhenti mengikuti",
+    "emptyHint": "Buka artikel dari Umpan ke tampilan lengkapnya, lalu ketuk ikon ikuti di baris tombol di bawah artikel.",
+    "emptyCta": "Ke Umpan",
     "trackChatSeed": "Saya ingin mengikuti cerita ini.",
-    "trackProposalTitle": "Ikuti cerita ini?"
+    "trackProposalTitle": "Ikuti cerita ini?",
+    "articleCount_other": "{{count}} artikel",
+    "articleCountCapped": "{{count}}+ artikel",
+    "alreadyTrackingTitle": "Anda sudah mengikuti ini",
+    "alreadyTrackingBody": "Anda tidak dapat mengikuti cerita ini dua kali. Berhenti mengikutinya akan menghapus semua yang tersimpan untuknya.",
+    "goToStoryAction": "Buka cerita",
+    "deleteStoryAction": "Hapus cerita",
+    "deleteStoryConfirmTitle": "Hapus cerita ini?",
+    "deleteStoryConfirmBody": "Menghapus menghapus semua yang tersimpan untuk cerita ini."
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -869,7 +870,7 @@
     "tabsTitle": "Tab Profil & Pengaturan",
     "tabsBody": "Profil dan pengaturan Anda kini berada di tab masing-masing di bagian bawah.",
     "resyncTitle": "Feed Anda sedang disinkronkan ulang",
-    "resyncBody": "Kami sedang membangun ulang feed Anda dengan mesin baru — akan terisi sebentar lagi."
+    "resyncBody": "Kami sedang membangun ulang feed Anda dengan mesin baru. Akan terisi sebentar lagi."
   },
   "notificationCenter": {
     "title": "Notifikasi",
@@ -910,6 +911,7 @@
       "slider": "Manual",
       "migration": "Penyiapan",
       "user": "Anda",
+      "llm": "Terdeteksi otomatis",
       "unknown": "Sistem"
     },
     "actionLabels": {
@@ -938,15 +940,17 @@
     "notificationTitle": "Sesuaikan Mera dengan selera Anda",
     "notificationBody": "Peringkat di perangkat Mera tidak sesuai dengan penilaiannya sendiri sebanyak {{count}} kali belakangan ini. Kalibrasi ulang untuk menutup celah ini.",
     "recalibrateChip": "Kalibrasi ulang sekarang",
-    "chatIntro": "Belakangan ini saya mempertanyakan cara saya memberi peringkat pada berita Anda. Ingin saya mengkalibrasi ulang agar penilaian saya lebih sesuai dengan selera Anda? Ketuk \"Kalibrasi ulang sekarang\" dan saya akan menyesuaikannya — Anda selalu bisa membatalkannya.",
+    "chatIntro": "Belakangan ini saya mempertanyakan cara saya memberi peringkat pada berita Anda. Ingin saya mengkalibrasi ulang agar penilaian saya lebih sesuai dengan selera Anda? Ketuk \"Kalibrasi ulang sekarang\" dan saya akan menyesuaikannya. Anda selalu bisa membatalkannya.",
     "confirmChip": "Kalibrasi ulang sekarang",
     "runningBody": "Mengkalibrasi ulang peringkat Anda…",
     "successTitle": "Dikalibrasi ulang",
     "successBody": "Saya menyesuaikan peringkat saya agar lebih sesuai dengan selera Anda.",
-    "noChangeBody": "Peringkat Anda sudah terlihat tersetel dengan baik — tidak perlu perubahan.",
+    "noChangeBody": "Peringkat Anda sudah terlihat tersetel dengan baik, tidak perlu perubahan.",
     "failedBody": "Saya tidak dapat menyelesaikan kalibrasi ulang saat ini. Saya akan mencoba lagi nanti."
   },
   "feedbackTree": {
+    "moreAboutTopicNamed": "Lebih lanjut tentang: {{topic}}",
+    "moreAboutTopicNamedWithCount": "Lebih lanjut tentang: {{topic}} dan {{extra}} lainnya",
     "title": "Beri tahu kami lebih lanjut",
     "contextFor": "Tentang: {{title}}",
     "back": "Kembali",
@@ -957,11 +961,11 @@
     "confirm": "Konfirmasi",
     "confirmMuteTitle": "Jangan pernah tampilkan publikasi ini?",
     "confirmMuteBody": "Anda tidak akan melihat artikel dari {{publication}} lagi. Anda dapat membatalkan ini kapan saja.",
-    "appliedTitle": "Dimengerti — feed diperbarui",
+    "appliedTitle": "Dimengerti, feed diperbarui",
     "undo": "Urungkan",
     "undoneTitle": "Perubahan dibatalkan",
     "thanks": "Terima kasih atas masukannya",
-    "seenAck": "Dimengerti — kami akan menampilkan lebih sedikit yang sudah Anda lihat",
+    "seenAck": "Dimengerti, kami akan menampilkan lebih sedikit yang sudah Anda lihat",
     "nudgeSubscribe": "Berlangganan {{publication}} membuka artikel lengkap",
     "nudgeBrowse": "Cari liputan terkait dari sumber lain"
   },
@@ -972,6 +976,7 @@
     "generateMore": "Buat lebih banyak",
     "generatingMore": "Membuat…",
     "acceptAll": "Sudah bagus",
+    "saveAll": "Simpan semua ({{count}})",
     "delete": "Hapus topik",
     "undo": "Urungkan",
     "highPriority": "Prioritaskan topik",
@@ -1013,7 +1018,7 @@
     "effectDuplicate": "Menghapus duplikat dan menyimpan yang lebih kuat.",
     "effectTooBroad": "Menurunkan bobot minat ini agar menarik lebih sedikit cerita yang tidak relevan.",
     "effectStaleTopic": "Menghentikan topik yang sepi ini. Anda dapat memulihkannya dari log perubahan.",
-    "effectStaleFact": "Menghapus fakta ini — tidak ada lagi topiknya yang aktif.",
+    "effectStaleFact": "Menghapus fakta ini: tidak ada lagi topiknya yang aktif.",
     "appliedTitle": "Perapian diterapkan",
     "appliedBody": "Profil Anda telah dirapikan. Lihat log perubahan untuk meninjau.",
     "applyFailedTitle": "Tidak dapat menerapkan perapian",
@@ -1023,6 +1028,7 @@
   "locations": {
     "title": "Tempat Anda",
     "subtitle": "Lokasi yang membentuk feed Anda",
+    "autoDetectDisclaimer": "Mera mendeteksi tempat Anda secara otomatis dari profil Anda. Anda dapat menambahkan lebih banyak di sini, tetapi memberitahu Mera secara langsung bekerja lebih baik, karena ia belajar bagaimana setiap tempat berhubungan dengan Anda dan menyesuaikan rekomendasi Anda.",
     "empty": "Tambahkan tempat yang Anda pedulikan",
     "add": "Tambah tempat",
     "addFirst": "Tambah tempat",
@@ -1031,7 +1037,7 @@
     "searchPlaceholder": "Cari kota",
     "searchCountries": "Cari negara",
     "noMatches": "Tidak ada tempat yang cocok ditemukan",
-    "searchUnavailable": "Pencarian sedang tidak tersedia — coba lagi sesaat lagi.",
+    "searchUnavailable": "Pencarian sedang tidak tersedia. Coba lagi sesaat lagi.",
     "addManuallyCta": "Tidak menemukannya? Tambah secara manual",
     "cityLabel": "Kota",
     "cityPlaceholder": "Masukkan nama kota",
@@ -1057,7 +1063,7 @@
       "high": "Tinggi"
     },
     "toastUpdatedTitle": "Tempat yang sudah ada diperbarui",
-    "toastUpdatedBody": "Tempat itu sudah tersimpan — kami memperbaruinya.",
+    "toastUpdatedBody": "Tempat itu sudah tersimpan. Kami memperbaruinya.",
     "saveFailedTitle": "Tidak dapat menyimpan tempat",
     "saveFailedBody": "Silakan coba lagi.",
     "deleteConfirmTitle": "Hapus tempat ini?",
@@ -1093,7 +1099,7 @@
     "startTalking": "Mulai bicara",
     "meraInvite": "Hai! Ceritakan apa yang Anda sukai, dan saya akan menyesuaikan feed Anda.",
     "aboutYou": "Tentang Anda",
-    "gettingToKnowYou": "Saya masih dalam proses mengenal Anda — coba lagi sebentar lagi.",
+    "gettingToKnowYou": "Saya masih dalam proses mengenal Anda. Coba lagi sebentar lagi.",
     "updating": "Memperbarui…",
     "advanced": "Lanjutan",
     "advancedSubtitle": "Fakta, sumber, tersimpan, aktivitas, dan lainnya",
@@ -1102,10 +1108,10 @@
       "moreImportant": "Lebih penting",
       "lessImportant": "Kurang penting",
       "refine": "Sempurnakan bersama Mera",
-      "refineSeed": "Mari kita bahas ini — \"{{text}}\"",
+      "refineSeed": "Mari kita bahas ini: \"{{text}}\"",
       "remove": "Hapus ini",
       "removeConfirm": "Ketuk lagi untuk menghapus",
-      "limitReached": "Batas penyesuaian harian tercapai — perubahan akan berlanjut besok."
+      "limitReached": "Batas penyesuaian harian tercapai: perubahan akan berlanjut besok."
     }
   },
   "facts": {

@@ -15,7 +15,7 @@
 // per-field parse + debounced round-trip, with legacy `tombs` back-compat)
 // and the markSkipped/markViewed transitions. There is no eviction sweep any
 // more — a card's lifecycle state is a pure display input (which side of the
-// "All caught up" divider it renders on); it never removes a row from `order`.
+// display block it sorts into); it never removes a row from `order`.
 //
 // The whole file runs on FAKE timers with a pinned system clock: the store
 // coalesces card-state writes behind a 1s trailing timer and `hydrate` reads
@@ -253,8 +253,8 @@ describe('ingest — narrowed opened gate (exact articleId only)', () => {
   // The gate used to match against the cluster-wide opened set (article ids
   // ∪ stableClusterIds with a 30-day TTL), so reading one article suppressed
   // every FUTURE article in that ongoing story for a month. It is now an
-  // EXACT articleId match only — a seen card sinks below the "All caught up"
-  // divider at render time instead of being withheld from ingest at all.
+  // EXACT articleId match only — a viewed card sinks into the viewed block at
+  // render time instead of being withheld from ingest at all.
   it('excludes a candidate whose own articleId is in openedArticleIds', () => {
     useFeedOrderStore.setState({ hydrated: true });
     store().ingest([item('a', { articleId: 'art-a' })], new Set(['art-a']));

@@ -1,9 +1,15 @@
 // NOTE(app-rethink wave): the `card` variant is SUPERSEDED by
 // components/custom/cards/ (ArticleCardBase + ArticleSuggestionCard). Nothing
 // renders this component with variant="card" anymore. The `screen` variant is
-// STILL LIVE — the article/suggestion detail screens use it — so this file stays
-// as-is; do not change its behavior. New card work goes in components/custom/cards/.
+// STILL LIVE — the article/suggestion detail screens use it — so leave the CARD
+// path alone; new card work goes in components/custom/cards/.
+//
+// The screen path's rationale block is: priority chip on the LEFT, rationale
+// text right-aligned and non-italic. A Mera glyph briefly lived in this block as
+// the Ask-Mera affordance; it was removed again — the action row's Mera button
+// (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
@@ -47,7 +53,8 @@ interface BaseProps {
     // article-detail path).
     aboveReason?: React.ReactNode;
     /** Marks the article/suggestion as already-read — shows the meta row's
-     *  small eye icon next to the time group. Screen-variant only (detail
+     *  NEW badge in the meta row. It draws no indicator of its own — the eye glyph
+   *  it used to show was deliberately removed. Screen-variant only (detail
      *  screens); the card variant has no live consumers. Default false. */
     read?: boolean;
     /** Forwarded to the TITLE's TranslatableDynamic (the toggle-enabled screen
@@ -266,12 +273,14 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             className="rounded-lg p-3 flex-row items-center"
             style={{ backgroundColor: reasonBoxColors.backgroundColor }}
         >
+            {/* Left: the priority chip alone. The Mera glyph briefly lived here;
+                it moved back to the action row, which is the sole Ask-Mera
+                affordance. Text stays right-aligned and non-italic. */}
             <RelevanceChip relevance={relevance} />
             {reason ? (
                 <TranslatableDynamic
                     text={reason}
                     size="sm"
-                    italic
                     bold
                     className="ml-3 flex-1 text-right"
                     style={{ color: reasonBoxColors.textColor }}
@@ -335,9 +344,24 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         >
             <VStack className="p-5" space="lg">
                 {/* With an image, `mt-10` spaces the meta row below the hero;
-                    with no image, clear the floating back button instead. */}
+                    with no image, clear the floating back button instead.
+                    SmoothScrollView's parallax header uses Reanimated's default
+                    EXTEND extrapolation on translateY, so as the user scrolls
+                    down the header's *visual* bottom edge lags behind its
+                    layout box while opacity is still fading out (opacity only
+                    reaches 0 at scrollY = headerHeight*0.8) — there's a window
+                    where the header is a semi-transparent image sitting right
+                    behind this row. Rather than reworking the parallax math
+                    (SmoothScrollView is shared with other screens/behaviors we
+                    don't want to touch here), give the row its own opaque
+                    backdrop that exactly matches the screen's own root
+                    background (`bg-background-50` — see ArticleDetailScreen /
+                    ArticleSuggestionScreen root Box) so it's indistinguishable
+                    from empty space at every OTHER scroll position, and simply
+                    occludes whatever is behind it during the overlap window.
+                    No-image case is untouched (separate branch below). */}
                 <Box
-                    className={showImage ? 'mt-10' : undefined}
+                    className={showImage ? 'mt-10 py-1.5 bg-background-50' : undefined}
                     style={showImage ? undefined : { marginTop: NO_IMAGE_META_CLEARANCE }}
                 >
                     {metaRow}

@@ -613,6 +613,8 @@ Current toolkit version: **2.0.0**
 
 ## License
 
-The Mera Protocol specification and the compliance toolkit are open source.
+The Mera Protocol specification and the compliance toolkit are source-available, not open
+source: the source is published so anyone can read and verify it, but it is not released
+under an open-source license.
 
-See `LICENSE` for details.
+See the repository root `LICENSE.md` for details.

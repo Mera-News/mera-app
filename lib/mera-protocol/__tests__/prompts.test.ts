@@ -474,6 +474,36 @@ describe('CLOUD_REASON_SYSTEM_PROMPT', () => {
   it('mentions "plain sentence"', () => {
     expect(CLOUD_REASON_SYSTEM_PROMPT.toLowerCase()).toContain('plain sentence');
   });
+
+  it('pins the second-person voice rule (QA 2026-07-28 third-person leak)', () => {
+    expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(
+      'Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person.',
+    );
+    expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(
+      'Wrong: "User follows Formula 1; the race matches this interest, no personal stake."',
+    );
+    expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(
+      'Right: "The race matches your Formula 1 interest, but carries no personal stake."',
+    );
+  });
+
+  it('gives every tone-tier exemplar a second-person pronoun', () => {
+    // The leak came from the low bands, whose exemplars used to be pronoun-free
+    // ("Sweden's tech-sector headwinds are industry-adjacent."). Each quoted
+    // exemplar reason must now address the reader.
+    for (const exemplar of [
+      'Evacuation ordered in Jordaan, where you live.',
+      'Dutch startup tax vote directly affects your Amsterdam startup work.',
+      'Netherlands economy report covers your country.',
+      "South Africa's draft AI policy matches your AI-industry interest.",
+      "Sweden's tech-sector headwinds are adjacent to your industry.",
+      "Bulgaria's digital-ID policy is foreign-domestic; no tie to your country.",
+      "Manchester building fire is a UK-local emergency; you're in Amsterdam.",
+    ]) {
+      expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(exemplar);
+      expect(exemplar).toMatch(/\byou(r|'re)?\b/i);
+    }
+  });
 });
 
 describe('LOCAL_RELEVANCE_SYSTEM_PROMPT', () => {
@@ -490,6 +520,20 @@ describe('LOCAL_REASON_SYSTEM_PROMPT', () => {
   it('is a non-empty string', () => {
     expect(typeof LOCAL_REASON_SYSTEM_PROMPT).toBe('string');
     expect(LOCAL_REASON_SYSTEM_PROMPT.length).toBeGreaterThan(50);
+  });
+
+  it('pins the second-person voice rule (QA 2026-07-28 third-person leak)', () => {
+    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
+      'Voice: write TO the user — "you"/"your", never "the user", "User …", or third person, in every band.',
+    );
+    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
+      'Wrong: "User follows F1; the race matches this interest." Right: "The race matches your F1 interest."',
+    );
+    // The ≤0.25 exemplar was pronoun-free ("no Dutch tie") — the band the leak
+    // came from now anchors the voice too.
+    expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
+      'Bulgaria digital-ID is foreign-domestic; no tie to your country.',
+    );
   });
 });
 

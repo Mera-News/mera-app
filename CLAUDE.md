@@ -69,6 +69,40 @@ eas update --branch production|preview|development --message "description"
 
 OTA updates work for JS/TS/styling/GraphQL changes. Native builds required for native deps, SDK version, `app.json` native config, or native modules. Runtime version policy is `appVersion`. Update `owner` and `projectId` in `app.json` / `eas.json` to your own EAS account before running EAS commands.
 
+### Simulator Harness (verify UI changes yourself)
+
+**Full runbook: [harness/README.md](harness/README.md) — read it before first use.** The `iPhone 17 Pro`
+simulator runs the dev client with a permanent resident account (real prod data, fully onboarded).
+Drive it from Bash with `agent-device` instead of asking the user for screenshots — a JS edit is
+on-screen via Fast Refresh in ~6s, so verify every UI change this way before declaring it done.
+
+```bash
+cd mera-app                                    # sessions are workspace-cwd-scoped — always run from here
+agent-device open com.mera.news --device "iPhone 17 Pro"
+agent-device snapshot -i                       # accessibility tree with @refs
+agent-device press @e12 --settle               # tap (use --settle on every mutation)
+agent-device press 'id=<testID>' --settle      # tap by testID
+agent-device screenshot out.png                # then Read the PNG
+agent-device close
+```
+
+Rules that save time (details + more traps in the README):
+- testIDs surface only in `snapshot --raw --json` (`identifier` field), not in `snapshot -i`.
+  Convention: `{surface}-{element}` kebab-case; card roots `card-${suggestion._id}`; actions
+  `card-action-{name}` (repeat per card — scope by card root). When adding UI, add testIDs.
+- testID works on `Pressable`/`View`/`Box`; gluestack `InputField` swallows it — tag the wrapper.
+  `NativeTabs.Trigger` accepts none — drive tabs by their SF Symbol id:
+  `id=list.bullet.rectangle.fill` (Feed), `id=square.grid.2x2.fill` (Dashboard),
+  `id=safari.fill` (Explore), `id=person.fill` (Profile), `id=gearshape.fill` (Settings).
+- Metro must be running (`npx expo run:ios --device "iPhone 17 Pro"` serves it); a `simctl launch`
+  can boot a stale bundle — force reload via
+  `xcrun simctl openurl booted "com.mera.news://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081"`.
+- A "black screen" is usually a LogBox toast, not a crash — `agent-device react-native
+  dismiss-overlay` and check `agent-device logs` before assuming a wedge.
+- Never run file-editing subagents while the user is typing in the simulator — every save fires a
+  Fast Refresh that stomps their input. The resident account is the user's to log in; never log it
+  out.
+
 ## Architecture
 
 ### Core Patterns

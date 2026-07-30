@@ -23,7 +23,7 @@ const SPOTLIGHT_D = 'M512 760 L450 485 L574 485 Z';
  * keeping the static path completely free of reanimated. Infinite left/right
  * sweep about the cone apex (512, 760).
  */
-const AnimatedSpotlight: React.FC = () => {
+const AnimatedSpotlight: React.FC<{ color: string }> = ({ color }) => {
     // Use shared value for rotation angle (Reanimated)
     const rotation = useSharedValue(-15);
 
@@ -55,7 +55,7 @@ const AnimatedSpotlight: React.FC = () => {
 
     return (
         <AnimatedG animatedProps={animatedProps}>
-            <Path d={SPOTLIGHT_D} fill="#fff" opacity="0.300" />
+            <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
         </AnimatedG>
     );
 };
@@ -69,23 +69,30 @@ interface MeraLogoProps {
      * the floating bubble and loading states pass `animated`).
      */
     animated?: boolean;
+    /**
+     * Ink colour for every stroke/fill in the glyph. Defaults to white, which is
+     * what every chrome call site wants against the dark theme. Overridden only
+     * where the glyph sits on a LIGHT ground — currently the article image
+     * placeholder, which is a near-white panel.
+     */
+    color?: string;
 }
 
 // Mera Logo Component. Static by default; opt into the animated spotlight.
 // The viewBox is tightened to the glyph bounds (hexagon x 279–745 / y 170–854
 // plus the 24-unit stroke outset) so a given `size` renders at a visual height
 // consistent with neighboring lucide icons instead of leaving ~33% padding.
-const MeraLogo: React.FC<MeraLogoProps> = ({ size = 80, animated = false }) => {
+const MeraLogo: React.FC<MeraLogoProps> = ({ size = 80, animated = false, color = '#fff' }) => {
     return (
         <Svg width={size} height={size} viewBox="255 146 514 732">
             {/* Hexagon outline */}
-            <Path d="M512 170 L745 304 L745 720 L512 854 L279 720 L279 304 Z" fill="none" stroke="#fff" strokeWidth="24" strokeLinejoin="round" />
+            <Path d="M512 170 L745 304 L745 720 L512 854 L279 720 L279 304 Z" fill="none" stroke={color} strokeWidth="24" strokeLinejoin="round" />
             <ClipPath id="hexB">
                 <Path d="M512 170 L745 304 L745 720 L512 854 L279 720 L279 304 Z" />
             </ClipPath>
             <G clipPath="url(#hexB)">
                 {/* Grid cards */}
-                <G fill="none" stroke="#fff" strokeOpacity="0.18" strokeWidth="10">
+                <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
                     <Rect x="320" y="330" width="150" height="110" rx="14" />
                     <Rect x="490" y="330" width="150" height="110" rx="14" />
                     <Rect x="660" y="330" width="150" height="110" rx="14" />
@@ -98,16 +105,16 @@ const MeraLogo: React.FC<MeraLogoProps> = ({ size = 80, animated = false }) => {
                 </G>
                 {/* Spotlight cone — animated sweep or a frozen −15° frame. */}
                 {animated ? (
-                    <AnimatedSpotlight />
+                    <AnimatedSpotlight color={color} />
                 ) : (
                     <G transform="rotate(-15 512 760)">
-                        <Path d={SPOTLIGHT_D} fill="#fff" opacity="0.300" />
+                        <Path d={SPOTLIGHT_D} fill={color} opacity="0.300" />
                     </G>
                 )}
                 {/* Highlighted card */}
-                <Rect x="490" y="465" width="150" height="110" rx="14" fill="none" stroke="#fff" strokeWidth="16" />
+                <Rect x="490" y="465" width="150" height="110" rx="14" fill="none" stroke={color} strokeWidth="16" />
                 {/* Focus dot */}
-                <Circle cx="512" cy="748" r="16" fill="#fff" />
+                <Circle cx="512" cy="748" r="16" fill={color} />
             </G>
         </Svg>
     );

@@ -1,4 +1,5 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -15,9 +16,13 @@ import { useTranslation } from 'react-i18next';
  * decoupled from any data model: callers pass a flat view-model plus two slots.
  *
  * Layout (unchanged, pixel-identical to the old container card):
- *   Pressable → elevated Card → optional 192px (h-48) hero image (with an
- *   `imageFailed` fallback) → VStack{ meta row (+ metaAccessory), title,
- *   children }.
+ *   Pressable → elevated Card → hero (192px with a real image, a shorter 112px
+ *   band for the `ArticleImagePlaceholder` when there is none or it fails) →
+ *   VStack{ meta row (+ metaAccessory), title, children }.
+ *
+ * `metaRowRightReserve` keys off `showImage` (a REAL image, not the
+ * placeholder) — unaffected by the placeholder always occupying the hero
+ * region now.
  *
  * • `children`      — variant chrome rendered under the title (reason box, fact
  *                     chips, actions row, …).
@@ -63,7 +68,31 @@ export interface ArticleCardBaseProps {
    *  + children) but NOT the `footer`. Clipped to the card's rounded corners by
    *  its `overflow-hidden`. Used for the inline feedback surface. */
   overlay?: React.ReactNode;
+  /** Optional testID passthrough for the card's root Pressable — used by
+   *  concrete card components to expose a stable, driver-targetable id
+   *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
+  testID?: string;
+  /**
+   * Horizontal space, measured from the card's OUTER right edge, to keep clear
+   * at the meta row — for a host that floats a control over the card's
+   * top-right corner (the Saved list's delete button).
+   *
+   * Applied ONLY when there is no hero image. With an image the 192px hero
+   * pushes the meta row far below any such control, so reserving there would
+   * indent the flag for no reason and change a layout that is already correct.
+   *
+   * Reserving space is the fix, not nudging the button: the meta row is
+   * right-aligned, so it runs UNDER an overlaid button no matter where the
+   * button sits, and on an imageless card that button lands squarely on the
+   * country flag.
+   */
+  metaRowRightReserve?: number;
 }
+
+/** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
+ *  is quoted from the card's outer edge, so this is subtracted to get the extra
+ *  padding the meta row actually needs. */
+const CARD_CONTENT_PADDING = 16;
 
 const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   imageUrl,
@@ -84,6 +113,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   metaAccessory,
   footer,
   overlay,
+  testID,
+  metaRowRightReserve = 0,
 }) => {
   const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
@@ -96,12 +127,21 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
       {/* Content region — the `overlay` (when present) floats over exactly this,
           clipped to the card's rounded corners by the outer overflow-hidden. */}
       <Box className="relative">
-        {showImage && (
-          <Box
-            className={
-              flat ? 'w-full h-48 overflow-hidden rounded-t-2xl' : 'w-full h-48 overflow-hidden rounded-t-lg'
-            }
-          >
+        <Box
+          className={
+            flat
+              // A REAL image keeps the full 192px (h-48) hero. The imageless
+              // placeholder gets a shorter 112px (h-28) band: at full height it
+              // spent 192pt saying "there is no picture", which dominated cards
+              // whose actual content is the headline and rationale. Short enough
+              // to read as a deliberate marker, tall enough for the Mera
+              // watermark to be legible. Compact cards are untouched — their
+              // image column is width-driven, not height-driven.
+              ? `relative w-full ${showImage ? 'h-48' : 'h-28'} overflow-hidden rounded-t-2xl`
+              : `relative w-full ${showImage ? 'h-48' : 'h-28'} overflow-hidden rounded-t-lg`
+          }
+        >
+          {showImage ? (
             <Image
               source={{ uri: imageUrl! }}
               alt={displayTitle}
@@ -110,12 +150,21 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               recyclingKey={recyclingKey}
               onError={() => setImageFailed(true)}
             />
-          </Box>
-        )}
+          ) : (
+            <ArticleImagePlaceholder />
+          )}
+        </Box>
         {/* When a footer is present it owns the bottom padding, so the content
             VStack drops its own (pb-0) to avoid a doubled gap. */}
         <VStack className={footer ? 'px-4 pt-4' : 'p-4'} space="sm">
-          <Box>
+          <Box
+            testID="card-meta-row"
+            style={
+              metaRowRightReserve > 0 && !showImage
+                ? { paddingRight: Math.max(0, metaRowRightReserve - CARD_CONTENT_PADDING) }
+                : undefined
+            }
+          >
             <ArticleMetaRow
               pubDate={pubDate}
               languageCode={languageCode}
@@ -153,7 +202,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   );
 
   return (
-    <Pressable onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
+    <Pressable testID={testID} onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
       {flat ? (
         // Shadow lives on this outer, non-clipping Box — RN drops a view's
         // shadow the moment that same view also sets `overflow: hidden`, so

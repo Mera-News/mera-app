@@ -87,6 +87,29 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     );
     expect(a.judgeSystemPrompt).not.toContain('EXCEPTION');
   });
+
+  it('pins the second-person voice rule on the judge reason ("r")', () => {
+    // QA 2026-07-28: the judge leaked third-person framing into a user-facing
+    // reason ("User follows Formula 1; …"). The low-band exemplars carried no
+    // pronoun at all, so nothing anchored the voice on demotes. The rule + the
+    // wrong/right pair below is the ONLY fix (no output post-processing) —
+    // removing either re-opens the leak.
+    expect(a.judgeSystemPrompt).toContain(
+      '"r"` is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person.',
+    );
+    expect(a.judgeSystemPrompt).toContain('This holds in EVERY band, demotes included.');
+    expect(a.judgeSystemPrompt).toContain(
+      'Wrong: "User follows Formula 1; the race matches this interest, no personal stake."',
+    );
+    expect(a.judgeSystemPrompt).toContain(
+      'Right: "The race matches your Formula 1 interest, but carries no personal stake."',
+    );
+    // Every exemplar reason in the prompt addresses the reader — including the
+    // demote-band one, which previously had no pronoun.
+    expect(a.judgeSystemPrompt).toContain(
+      '"r":"Amsterdam restaurant roundup is lifestyle filler in your city, no real stake."',
+    );
+  });
 });
 
 describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {

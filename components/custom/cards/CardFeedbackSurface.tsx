@@ -73,6 +73,7 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
           suggestion={suggestion}
           verdict={verdict}
           initialPathIds={initialPathIds}
+          rootLabel={heading}
           onTreePathChanged={onTreePathChanged}
           onInvokeMera={onInvokeMera}
           onLeafCommitted={onLeafCommitted}

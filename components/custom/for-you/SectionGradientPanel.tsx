@@ -37,7 +37,7 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
   const x2 = I18nManager.isRTL ? '0' : '1';
 
   return (
-    <View style={[{ borderRadius, overflow: 'hidden' }, style]}>
+    <View testID={`dashboard-section-${factId}`} style={[{ borderRadius, overflow: 'hidden' }, style]}>
       <Svg
         width="100%"
         height="100%"

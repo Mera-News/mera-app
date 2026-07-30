@@ -19,21 +19,22 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
-import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
+import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSavedOverride } from '@/lib/saved-state';
 import { Platform } from 'react-native';
 
 // Primary-orange accent — dark-locked, matches ArticleFeedbackPrompt exactly so
 // the row is pixel-identical wherever the two coexist.
 const PRIMARY = '#EDA77E';
 const SELECTED_ICON = '#1a1a1a';
-const ICON_SIZE = 19;
-const BUTTON_SIZE = 45;
+const ICON_SIZE = 22;
+const BUTTON_SIZE = 48;
 
 interface ArticleActionsRowProps {
   /** Origin-aware descriptor of what's being acted on + where. */
@@ -66,16 +67,20 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
 }) => {
   const { t } = useTranslation();
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [savedFromDb, setSavedFromDb] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({
     articleTitle: subject.title,
   });
   const handleShare = useShareArticle(share);
-  const { tracked, toggle: toggleTrack } = useTrackedSubject(subject);
+  const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject);
 
   // The save/like restore keys off the same id used to persist them.
   const savedId = subject.suggestionId ?? subject.articleId;
+  // See lib/saved-state — a save/delete performed on ANY other surface corrects
+  // this row, instead of it holding a stale flag until remount.
+  const savedOverride = useSavedOverride(savedId);
+  const saved = savedOverride ?? savedFromDb;
 
   // Restore "liked" across remounts.
   useEffect(() => {
@@ -97,7 +102,7 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     let cancelled = false;
     isSuggestionSaved(savedId)
       .then((v) => {
-        if (!cancelled && v) setSaved(true);
+        if (!cancelled) setSavedFromDb(v);
       })
       .catch(() => {
         /* non-fatal */
@@ -174,12 +179,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
   const handleSave = useCallback(() => {
     if (saved) {
       hapticLight();
-      setSaved(false);
       void deleteSavedSuggestion(savedId);
       return;
     }
     hapticSuccess();
-    setSaved(true);
     if (subject.origin === 'article' && article) {
       void saveStandaloneArticle(article, { surface: subject.surface });
     } else if (suggestion) {
@@ -207,8 +210,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     label: string,
     onPress: () => void,
     selected: boolean,
+    testID: string,
   ) => (
     <Pressable
+      testID={testID}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -228,7 +233,13 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
   return (
     <>
       <HStack className="items-center justify-evenly px-1 py-3">
+        {/* Mera stays in THIS row. Its only consumer is ArticleStandaloneCard —
+            a standalone article has no relevance rationale, so there is no
+            "Mera's voice" block for the glyph to move onto (unlike the
+            suggestion card / suggestion detail screen, where it did move).
+            Removing it here would delete the affordance outright. */}
         <Pressable
+          testID="card-action-mera"
           onPress={handleChatPress}
           accessibilityRole="button"
           accessibilityLabel="Mera"
@@ -252,12 +263,14 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t('articleFeedback.likeLabel'),
           handleLike,
           liked,
+          'card-action-like',
         )}
         {renderButton(
           <MaterialIcons name="thumb-down" size={ICON_SIZE} color={PRIMARY} />,
           t('articleFeedback.dislikeLabel'),
           handleDislike,
           false,
+          'card-action-dislike',
         )}
         {renderButton(
           <MaterialIcons
@@ -265,9 +278,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
             size={ICON_SIZE}
             color={saved ? SELECTED_ICON : PRIMARY}
           />,
-          t('savedSuggestions.savedToastTitle'),
+          t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction'),
           handleSave,
           saved,
+          'card-action-save',
         )}
         {renderButton(
           <MaterialIcons
@@ -276,8 +290,9 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
             color={tracked ? SELECTED_ICON : PRIMARY}
           />,
           t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
-          toggleTrack,
+          onTrackPress,
           tracked,
+          'card-action-track',
         )}
         {share?.url ? renderButton(
           <MaterialIcons
@@ -288,8 +303,10 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
           t('articleDetail.share'),
           handleSharePress,
           false,
+          'card-action-share',
         ) : null}
       </HStack>
+      {trackDialog}
       <FeedbackTreeOverlay
         visible={overlayOpen}
         onClose={closeOverlay}
