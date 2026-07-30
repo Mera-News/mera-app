@@ -1120,6 +1120,17 @@
     "emptyTopics": "No topics turned down yet.",
     "emptySources": "You haven't muted or turned down any sources yet."
   },
+  "headlineDepth": {
+    "title": "Top headlines",
+    "subtitle": "How many Mera reads for you",
+    "intro": "Mera reads the biggest stories in each section, then picks the ones that matter to you. Raise a section to see more; lower it to keep things tight.",
+    "worldwide": "Worldwide",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "Using the standard {{n}}.",
+    "customised": "Changed from the standard {{n}}. Pick {{n}} again to go back.",
+    "saveFailedTitle": "Couldn't save that",
+    "saveFailedBody": "Your change wasn't stored. Try again."
+  },
   "profileHub": {
     "facts": "Facts",
     "factsCount_one": "{{count}} fact shaping your feed",
@@ -1149,7 +1160,9 @@
     "notInterested": "Not interested",
     "notInterestedSubtitle_one": "{{count}} thing you've hidden",
     "notInterestedSubtitle_other": "{{count}} things you've hidden",
-    "notInterestedEmpty": "Nothing hidden yet"
+    "notInterestedEmpty": "Nothing hidden yet",
+    "headlineDepth": "Top headlines",
+    "headlineDepthSubtitle": "How many Mera reads per section"
   },
   "profile": {
     "talkToMera": "Talk to Mera",

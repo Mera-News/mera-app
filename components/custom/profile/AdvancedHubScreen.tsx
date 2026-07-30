@@ -8,6 +8,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { HEADLINE_DEPTH_UI_ENABLED } from '@/lib/config/feature-gates';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive } from '@/lib/database/services/publication-preference-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
@@ -280,6 +281,19 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             subtitle={prefsSubtitle}
                             onPress={() => router.push('/logged-in/publication-preferences')}
                         />
+                        {/* Gated OFF until mera-server 40d7824 reaches prod — see
+                            lib/config/feature-gates.ts. The ENTRY POINT is what's
+                            gated, not just the screen: a visible row leading to a
+                            control that changes nothing is worse than no row. */}
+                        {HEADLINE_DEPTH_UI_ENABLED ? (
+                            <HubRow
+                                testID="advanced-row-headline-depth"
+                                icon="format-list-numbered"
+                                label={t('profileHub.headlineDepth', { defaultValue: 'Top headlines' })}
+                                subtitle={t('profileHub.headlineDepthSubtitle', { defaultValue: 'How many Mera reads per section' })}
+                                onPress={() => router.push('/logged-in/headline-depth')}
+                            />
+                        ) : null}
 
                         <SectionLabel slug="library" text={t('profileHub.groupLibrary', { defaultValue: 'Sources & library' })} />
                         <HubRow

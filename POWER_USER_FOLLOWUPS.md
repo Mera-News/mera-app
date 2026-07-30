@@ -354,6 +354,59 @@ tokens earlier.
 the schema. The real fix is to stop paying for the CLOUD path's documentation on the LOCAL prompt —
 they share one string today. Splitting them would return most of the 81 tokens, and more besides.
 
+### PU-24 · Headline depth is a four-rung ladder, and 0 is not one of the rungs
+**Simplified:** `setHeadlineDepth` accepts any integer in `[0, MAX_HEADLINE_DEPTH]` (25), but the
+Top-headlines screen offers a short derived ladder — `[⌈D/2⌉, D, min(25, 2D), 25]`, deduped and
+sorted, which at today's `DEFAULT_HEADLINE_LIMIT_PER_SCOPE = 10` is **5 / 10 / 20 / 25**. No free
+number entry, no stepper, no continuous slider, and **no reachable 0**.
+**Why:** two separate reasons, and only the second is about taste.
+ - *0 specifically:* a section set to 0 goes silently empty. There is nothing on the feed that says
+   "you asked for none here" — the reader sees a section that used to have news and now does not,
+   which is indistinguishable from the app being broken. Offering a tap that manufactures a support
+   ticket is not control, it is a trap. The service still clamps to 0 because a non-UI caller may
+   legitimately want it; the UI simply never proposes it.
+ - *The ladder vs. a slider:* per-scope depth is already the deepest power-user affordance in
+   Advanced, and a reader with 5 countries plus Worldwide would face 6 continuous controls whose
+   effect they cannot see until the next sync. Four labelled taps make the whole decision legible at
+   a glance and make "put it back" a single tap on the marked default.
+**Power user loses:** the 20 values between the rungs — 7, 13, 18 — and 0. Someone who wants exactly
+14 headlines for India cannot express that from the UI.
+**Cheapest way back:** the ladder is one pure function, `headlineDepthOptions()` in
+`components/custom/headline-depth/headline-depth-model.ts`, and the chip row already renders whatever
+it returns. Widening it is a one-line change to that function and needs no new copy — the option
+label is `"Top {{n}}"`. A long-press-to-type escape hatch on a chip would be the next cheapest step
+and would leave the four-tap path untouched for everyone else.
+
+### PU-25 · Choosing the default is a delete, so "I deliberately want 10" cannot be expressed
+**Simplified:** picking the marked default on any section REMOVES that section's stored row instead of
+writing the default value. Absence is the default everywhere downstream, so the section behaves
+identically — until the shipped default moves.
+**Why:** this is the pre-existing contract of `headline-depth-service` (its file comment spells it
+out) and it is the right default-behaviour: a reader who never touched a section should follow the
+product as it improves, not be frozen at whatever the number was the day they installed. Adding a
+distinct "pinned to 10" state means a third value per scope — unset / pinned / overridden — and a UI
+that can show the difference. That is a real concept to teach for a benefit nobody has asked for.
+**Power user loses:** if `DEFAULT_HEADLINE_LIMIT_PER_SCOPE` ever moves from 10 to 20, a reader who
+consciously chose 10 moves to 20 with everyone else, silently.
+**Cheapest way back:** make the default rung write the value rather than delete it — a two-line
+change in `chooseHeadlineDepth` — but only alongside a way to *clear* a scope, or the reader can
+never get back to "follow the product". That second half is the real cost.
+
+### PU-26 · The chat path was not built, so "adjust it via Mera" is UI-only for now
+**Simplified:** the user asked for depth to be adjustable "via mera or via ui as well". This wave
+shipped the UI only. There is no persona action, no tool schema and no prompt prose teaching Mera to
+change headline depth, so asking in chat does nothing.
+**Why:** the persona prompt files (`lib/news-harness/prompts/prompts.ts`) were held by another agent
+during this wave, and PU-23 had just measured the prompt budget down to **23 tokens of headroom** at
+the `full` rung. A new action's prose plus JSON schema does not fit in 23 tokens — adding it would
+push the worst-case prompt past `n_ctx` and degrade a rung for every saturated user, to reach a
+setting that is also two taps away in Advanced. That is the same trade PU-23 already made explicitly
+in the other direction.
+**Power user loses:** the conversational route to a setting that is reachable from Advanced.
+**Cheapest way back:** it depends on PU-23's fix, not on this feature. Splitting the shared LOCAL /
+CLOUD prompt string returns ~81 tokens and more; a `set_headline_depth` action riding the `full` rung
+only would then fit. Until that split lands, the honest answer is the UI.
+
 ---
 
 ## Deferred defects (not trades — logged here for lack of a better home)

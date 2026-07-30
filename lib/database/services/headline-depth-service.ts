@@ -22,6 +22,7 @@ import {
   MAX_HEADLINE_DEPTH,
   GLOBAL_SCOPE_KEY,
 } from '@/lib/news-harness/scoring-engine/retrieval-profile';
+import { HEADLINE_DEPTH_UI_ENABLED } from '@/lib/config/feature-gates';
 
 const KEY_PREFIX = 'headline_depth:';
 
@@ -37,8 +38,16 @@ export function headlineDepthKey(scopeKey: string): string {
  * Only scopes the user actually set appear. Unparseable or out-of-range rows
  * are skipped rather than surfaced — a corrupt row must degrade that ONE scope
  * to the default, never fail the feed sync that reads this.
+ *
+ * SHIP GATE: returns `{}` — no overrides, default behaviour everywhere — while
+ * `HEADLINE_DEPTH_UI_ENABLED` is false, WITHOUT deleting anything. This is the
+ * single funnel from storage into `buildRetrievalProfile`, so gating it here is
+ * what makes already-stored rows inert on a ROLLBACK, rather than only stopping
+ * new ones from being written. See `lib/config/feature-gates.ts` for why that
+ * matters (an unknown `limit` field empties the feed on today's prod schema).
  */
 export async function getHeadlineDepths(): Promise<Record<string, number>> {
+  if (!HEADLINE_DEPTH_UI_ENABLED) return {};
   const rows = await getSettingsByPrefix(KEY_PREFIX);
   const out: Record<string, number> = {};
   for (const [key, value] of Object.entries(rows)) {
