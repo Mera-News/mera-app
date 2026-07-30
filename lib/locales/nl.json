@@ -73,7 +73,7 @@
     "stuckTitle": "Feed kon niet worden geladen",
     "stuckDescription": "Er is iets misgegaan aan onze kant.",
     "stuckHint": "Open de app opnieuw over een paar minuten.",
-    "offlineCached": "Offline — gecachte inhoud wordt weergegeven",
+    "offlineCached": "Offline: gecachte inhoud wordt weergegeven",
     "newBadge": "NIEUW",
     "newsCluster": "Nieuwscluster",
     "justNow": "Zojuist",
@@ -103,13 +103,13 @@
     "articleSingular": "artikel",
     "articlePlural": "artikelen",
     "processing": {
-      "doneFlash": "Alles klaar — hier is je nieuws",
+      "doneFlash": "Alles klaar: hier is je nieuws",
       "errorFlash": "We konden de nieuwste inhoud niet laden. Probeer het opnieuw.",
       "stages": {
         "fetching": {
           "headlines": [
             "Artikelen van vandaag naar je telefoon ophalen…",
-            "Mera brengt het nieuws naar jouw apparaat — je interesses verlaten het nooit."
+            "Mera brengt het nieuws naar jouw apparaat. Je interesses verlaten het nooit."
           ],
           "amberSubline": "Houd dit scherm alsjeblieft open."
         },
@@ -118,16 +118,16 @@
           "tooltip": "Mera bereidt je versleutelde verzoek op je telefoon voor. Houd de app open voor dit gedeelte.",
           "headlines": [
             "Nieuws van vandaag voor jou opvragen…",
-            "Mera is een ander soort app — je verzoek is versleuteld op je telefoon voordat het vertrekt."
+            "Mera is een ander soort app: je verzoek is versleuteld op je telefoon voordat het vertrekt."
           ],
-          "amberSubline": "Houd dit scherm alsjeblieft een paar seconden open — we kunnen dit gedeelte niet op de achtergrond doen."
+          "amberSubline": "Houd dit scherm alsjeblieft een paar seconden open. We kunnen dit gedeelte niet op de achtergrond doen."
         },
         "hydrating": {
           "shortName": "Ophalen naar je telefoon",
           "tooltip": "De artikelen van vandaag worden naar je telefoon gekopieerd zodat de volgende stappen privé kunnen verlopen.",
           "headlines": [
             "Artikelen van vandaag naar je telefoon ophalen…",
-            "Mera brengt het nieuws naar jouw apparaat — je interesses verlaten het nooit."
+            "Mera brengt het nieuws naar jouw apparaat. Je interesses verlaten het nooit."
           ],
           "amberSubline": "Houd dit scherm alsjeblieft open."
         },
@@ -136,15 +136,15 @@
           "tooltip": "Nepverhalen die zijn opgehaald als tegengewicht worden gefilterd. Dit gebeurt alleen wanneer ruisinjectie is ingeschakeld.",
           "headlines": [
             "Lokverhalen worden uit je feed gefilterd…",
-            "Ruisinjectie stuurde lokvogel-onderwerpen mee naast je echte interesses — we verwijderen nu de verhalen die alleen bij die lokvogels pasten."
+            "Ruisinjectie stuurde lokvogel-onderwerpen mee naast je echte interesses. We verwijderen nu de verhalen die alleen bij die lokvogels pasten."
           ]
         },
         "cloudRelevance": {
           "shortName": "Relevantie berekenen",
-          "tooltip": "Een AI in de cloud leest elk artikel en kiest wat voor jou van belang kan zijn. Je verzoek is versleuteld — alleen je telefoon heeft de sleutel.",
+          "tooltip": "Een AI in de cloud leest elk artikel en kiest wat voor jou van belang kan zijn. Je verzoek is versleuteld. Alleen je telefoon heeft de sleutel.",
           "headlines": [
             "Een AI leest elk artikel om te zien welke voor jou van belang zijn.",
-            "Je verzoek is versleuteld — alleen je telefoon heeft de sleutel."
+            "Je verzoek is versleuteld. Alleen je telefoon heeft de sleutel."
           ]
         },
         "cloudReasons": {
@@ -152,8 +152,8 @@
           "tooltip": "De AI schrijft voor elk artikel een korte notitie uit waarom het voor jou van belang kan zijn. Het verzoek blijft versleuteld.",
           "headlines": [
             "Een korte notitie schrijven voor elk relevant artikel.",
-            "Je kunt wegstappen — we sturen je een melding wanneer het klaar is.",
-            "Alles blijft end-to-end versleuteld — alleen jouw telefoon kan het lezen."
+            "Je kunt wegstappen. We sturen je een melding wanneer het klaar is.",
+            "Alles blijft end-to-end versleuteld. Alleen jouw telefoon kan het lezen."
           ]
         },
         "onDevice": {
@@ -161,7 +161,7 @@
           "tooltip": "Je telefoon scoort deze artikelen lokaal. Niets verlaat het apparaat voor deze stap.",
           "headlines": [
             "Je telefoon scoort deze artikelen voor jou.",
-            "Dit gebeurt volledig op je apparaat — niets verlaat het."
+            "Dit gebeurt volledig op je apparaat: niets verlaat het."
           ]
         }
       }
@@ -187,8 +187,8 @@
     "waitingForNextBatch_one": "{{count}} nieuw artikel wacht op de volgende analysebatch",
     "waitingForNextBatch_other": "{{count}} nieuwe artikelen wachten op de volgende analysebatch",
     "dailyLimit": {
-      "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden morgen ontgrendeld.",
-      "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan — nieuwe artikelen worden om {{time}} ontgrendeld.",
+      "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden morgen ontgrendeld.",
+      "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden om {{time}} ontgrendeld.",
       "title": "Daglimiet voor artikelen bereikt"
     }
   },
@@ -235,9 +235,9 @@
     "addedToLocations": "Toegevoegd aan jouw plaatsen"
   },
   "clusterDetail": {
-    "translatable": "Dit artikel is in {{language}} — je apparaat kan het vertalen terwijl je leest. Als vertalen niet werkt, kun je de site hieronder openen in Google Translate — let er wel op dat je deze dan via Google bekijkt.",
-    "notTranslatable": "Dit artikel is in {{language}}. Je apparaat kan het niet vertalen — gebruik Google Translate hieronder om het in jouw taal te lezen.",
-    "notTranslatableOsOutdated": "Dit artikel is in {{language}}. Vertaling op het apparaat vereist iOS {{requiredVersion}} — je gebruikt iOS {{currentVersion}}. Werk iOS bij, of gebruik Google Translate hieronder om het in jouw taal te lezen.",
+    "translatable": "Dit artikel is in {{language}}. Je apparaat kan het vertalen terwijl je leest. Als vertalen niet werkt, kun je de site hieronder openen in Google Translate, let er wel op dat je deze dan via Google bekijkt.",
+    "notTranslatable": "Dit artikel is in {{language}}. Je apparaat kan het niet vertalen. Gebruik Google Translate hieronder om het in jouw taal te lezen.",
+    "notTranslatableOsOutdated": "Dit artikel is in {{language}}. Vertaling op het apparaat vereist iOS {{requiredVersion}}. Je gebruikt iOS {{currentVersion}}. Werk iOS bij, of gebruik Google Translate hieronder om het in jouw taal te lezen.",
     "unknownLanguage": "een andere taal",
     "translationGuideLink": "Laat me zien hoe ik het artikel kan vertalen",
     "viewInGoogleTranslate": "Bekijken in Google Translate",
@@ -297,9 +297,9 @@
     "timeDescriptionOnboarding": "Kies wanneer je wilt bijlezen over het nieuws",
     "timeNudges": [
       "Nieuws werkt het best op een of twee vaste momenten per dag.",
-      "Je hoeft niet constant te checken — we zorgen dat het klaarstaat wanneer jij dat bent.",
+      "Je hoeft niet constant te checken. We zorgen dat het klaarstaat wanneer jij dat bent.",
       "Minder, rustigere check-ins zijn beter dan de hele dag door een beetje.",
-      "Kies tijden die bij je dag passen — Mera doet het verzamelen."
+      "Kies tijden die bij je dag passen. Mera doet het verzamelen."
     ]
   },
   "language": {
@@ -307,7 +307,7 @@
     "appLanguage": "App-taal",
     "appLanguageDescription": "Wordt gebruikt voor de app-interface en het vertalen van nieuwsinhoud",
     "languagePacks": "Taalpakketten",
-    "languagePacksIos": "Vertaalmodellen worden beheerd door je apparaat. Je hoeft alleen het model voor je geselecteerde taal te downloaden — iOS doet de rest.",
+    "languagePacksIos": "Vertaalmodellen worden beheerd door je apparaat. Je hoeft alleen het model voor je geselecteerde taal te downloaden. iOS doet de rest.",
     "languagePacksIosPath": "Instellingen → Algemeen → Taal en regio → Vertaaltalen",
     "languagePacksAndroid": "Vertaalmodellen (~30MB elk) worden automatisch gedownload wanneer je voor het eerst naar een nieuwe taal vertaalt.",
     "openDeviceSettings": "Apparaatinstellingen openen",
@@ -316,11 +316,11 @@
     "restartDescription": "De app moet opnieuw worden gestart om de taalwijziging toe te passen.",
     "restart": "Nu herstarten",
     "later": "Later",
-    "packMissingBanner": "Voor deze taal is een on-device vertaalpakket nodig — de vertaling zelf gebeurt lokaal op je telefoon. Je kunt talen beheren via de instellingen van je telefoon.",
+    "packMissingBanner": "Voor deze taal is een on-device vertaalpakket nodig: de vertaling zelf gebeurt lokaal op je telefoon. Je kunt talen beheren via de instellingen van je telefoon.",
     "packMissingIosPath": "Instellingen → Algemeen → Taal en regio",
     "retry": "Opnieuw proberen",
     "watchGuide": "Bekijk hoe je een taal aan je apparaat toevoegt",
-    "iosLanguageHint": "Alleen deze taal selecteren is niet genoeg — je moet deze taal ook selecteren in de iOS-taalinstellingen."
+    "iosLanguageHint": "Alleen deze taal selecteren is niet genoeg. Je moet deze taal ook selecteren in de iOS-taalinstellingen."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -349,9 +349,9 @@
     "updateTo": "Bijwerken naar {{modelName}}",
     "injectNoiseTitle": "Ruis injecteren",
     "injectNoiseDescription": "Stuurt lokvogel-onderwerpen mee naast je echte interesses zodat de backend niet kan achterhalen wie je bent op basis van je onderwerpenlijst. Artikelen die alleen bij lokvogel-onderwerpen passen, worden verwijderd voordat ze bij je aankomen.",
-    "injectNoiseBeta": "Beta — kan het genereren van onderwerpen vertragen en de feedrelevantie verminderen.",
+    "injectNoiseBeta": "Beta: kan het genereren van onderwerpen vertragen en de feedrelevantie verminderen.",
     "privacyTitle": "Je gegevens blijven privé",
-    "privacyDescription": "Het Mera Protocol staat altijd aan. In apparaatmodus draait de inferentie volledig offline op uw telefoon. In cloudmodus wordt end-to-end versleutelde inferentie gebruikt — uw gegevens worden op uw apparaat versleuteld en pas ontsleuteld binnen een beveiligde enclave waar wij niet in kunnen kijken. Uw feiten, uw profiel en uw leesgeschiedenis verlaten dit apparaat nooit. Om nieuws op te halen sturen we alleen brede onderwerpsfrasen, zonder gebruikers-ID.",
+    "privacyDescription": "Het Mera Protocol staat altijd aan. In apparaatmodus draait de inferentie volledig offline op uw telefoon. In cloudmodus wordt end-to-end versleutelde inferentie gebruikt: uw gegevens worden op uw apparaat versleuteld en pas ontsleuteld binnen een beveiligde enclave waar wij niet in kunnen kijken. Uw feiten, uw profiel en uw leesgeschiedenis verlaten dit apparaat nooit. Om nieuws op te halen sturen we alleen brede onderwerpsfrasen, zonder gebruikers-ID.",
     "deviceSupported": "Apparaat ondersteund",
     "deviceNotSupported": "Apparaat niet ondersteund",
     "deviceSupportedDescription": "Je apparaat voldoet aan alle vereisten voor AI-verwerking op het apparaat.",
@@ -408,7 +408,7 @@
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
     "errorDescription": "Gegevens verwijderen mislukt. Probeer het opnieuw.",
-    "factsDescription": "Je feiten en de onderwerpen die ze genereren — op dit apparaat",
+    "factsDescription": "Je feiten en de onderwerpen die ze genereren, op dit apparaat",
     "factsModalDescription": "Wist de feiten die u hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Uw feiten verlaten dit apparaat nooit. Onderwerpsfrasen worden verstuurd wanneer u nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van u kwamen. Uw artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd, en blijft leeg totdat u nieuwe feiten toevoegt.",
     "locationDevice": "Op apparaat",
     "locationServer": "Server"
@@ -455,8 +455,8 @@
     "tabPersona": "Persona",
     "tabSources": "Bronnen",
     "tabPreferences": "Voorkeuren",
-    "privacyOnDevice": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen — de AI-inferentie draait volledig op het apparaat via het Mera Protocol. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID (zet Ruis injecteren hierboven in om nep-onderwerpen mee te sturen). Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen — de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar — we verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Tot die tijd is het enige wat u op vertrouwen aanneemt dat wij geen registratie bijhouden die u aan uw onderwerpen koppelt. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
-    "privacyCloud": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen. Cloudinferentie gebruikt versleutelde Trusted Execution Environments (TEE) — uw gegevens worden op het apparaat versleuteld met de sleutel die de enclave publiceert, verwerkt in een geïsoleerde enclave en pas op uw apparaat weer ontsleuteld. Om precies te zijn: de app controleert die attestatie nog niet tegen de hardwareleverancier, dus vertrouwt u nu op ons en de enclave-operator in plaats van op de chip; het doen van die controle in de app zodat het weigert door te gaan staat op ons roadmap. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID (zet Ruis injecteren hierboven in om nep-onderwerpen mee te sturen). Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen — de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar — we verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
+    "privacyOnDevice": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen: de AI-inferentie draait volledig op het apparaat via het Mera Protocol. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID (zet Ruis injecteren hierboven in om nep-onderwerpen mee te sturen). Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen: de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar. We verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Tot die tijd is het enige wat u op vertrouwen aanneemt dat wij geen registratie bijhouden die u aan uw onderwerpen koppelt. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
+    "privacyCloud": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen. Cloudinferentie gebruikt versleutelde Trusted Execution Environments (TEE): uw gegevens worden op het apparaat versleuteld met de sleutel die de enclave publiceert, verwerkt in een geïsoleerde enclave en pas op uw apparaat weer ontsleuteld. Om precies te zijn: de app controleert die attestatie nog niet tegen de hardwareleverancier, dus vertrouwt u nu op ons en de enclave-operator in plaats van op de chip; het doen van die controle in de app zodat het weigert door te gaan staat op ons roadmap. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID (zet Ruis injecteren hierboven in om nep-onderwerpen mee te sturen). Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen: de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar. We verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
     "privacyPolicy": "Privacybeleid",
     "privacyNoticeTitle": "Jouw privacy",
     "updatingTopics": "Onderwerpen bijwerken... {{completed}}/{{total}}",
@@ -525,15 +525,15 @@
     "accountRestrictedDescription": "Je account is beperkt. Neem contact op met de ondersteuning.",
     "scoring": {
       "generic": {
-        "message": "Er ging iets mis bij het selecteren van nieuws voor jou. We blijven het proberen — trek naar beneden om te vernieuwen als dit aanhoudt.",
+        "message": "Er ging iets mis bij het selecteren van nieuws voor jou. We blijven het proberen. Trek naar beneden om te vernieuwen als dit aanhoudt.",
         "title": "Kon je feed niet bijwerken"
       },
       "offline": {
-        "message": "We kunnen de server niet bereiken om nieuws voor je te selecteren. Controleer je verbinding — je feed wordt vanzelf bijgewerkt zodra je weer online bent.",
+        "message": "We kunnen de server niet bereiken om nieuws voor je te selecteren. Controleer je verbinding. Je feed wordt vanzelf bijgewerkt zodra je weer online bent.",
         "title": "Je bent offline"
       },
       "server": {
-        "message": "We konden de nieuwsdienst niet bereiken. Dit is meestal van korte duur — we blijven het proberen en je feed wordt vanzelf bijgewerkt.",
+        "message": "We konden de nieuwsdienst niet bereiken. Dit is meestal van korte duur. We blijven het proberen en je feed wordt vanzelf bijgewerkt.",
         "title": "Dienst niet beschikbaar"
       }
     }
@@ -552,7 +552,7 @@
     "inferenceError": "We hebben momenteel problemen om de Mera-inferentieservice te bereiken. Probeer het over een moment opnieuw."
   },
   "personaChat": {
-    "introMessage": "Hoi! Ik ben Mera, je persoonlijke nieuwsassistent. Vertel me gerust wat dan ook over jezelf — waar je woont, wat je voor werk doet, hobby's die je volgt, aandelen die je bijhoudt, plaatsen waar je familie woont. Of zeg gewoon 'help me met instellen' en ik begeleid je door het proces."
+    "introMessage": "Hoi! Ik ben Mera, je persoonlijke nieuwsassistent. Vertel me gerust wat dan ook over jezelf: waar je woont, wat je voor werk doet, hobby's die je volgt, aandelen die je bijhoudt, plaatsen waar je familie woont. Of zeg gewoon 'help me met instellen' en ik begeleid je door het proces."
   },
   "floatingChat": {
     "bubbleHint": "Chat met Mera",
@@ -602,8 +602,8 @@
     "improveMessage": "Deze suggestie kan beter: \"{{title}}\". Help me mijn suggesties te verbeteren.",
     "intro": "Wat kan ik voor je doen? Ik kan uitleggen waarom je deze suggestie hebt gekregen, of je helpen betere suggesties te krijgen.",
     "introArticle": "Wat kan ik voor je doen? Ik kan je helpen je nieuwssuggesties aan te passen op basis van dit artikel.",
-    "introLikeTuning": "Je vond dit verhaal leuk — vertel me meer en ik pas je feed aan.",
-    "introDislikeTuning": "Je vond dit verhaal niet leuk — vertel me waarom en ik pas je feed aan.",
+    "introLikeTuning": "Je vond dit verhaal leuk. Vertel me meer en ik pas je feed aan.",
+    "introDislikeTuning": "Je vond dit verhaal niet leuk. Vertel me waarom en ik pas je feed aan.",
     "chipWhy": "Waarom heb ik deze suggestie gekregen?",
     "chipWhyMessage": "Waarom heb ik deze suggestie gekregen?",
     "chipDontWant": "Ik wil deze suggestie niet",
@@ -640,9 +640,9 @@
     "countShort_one": "{{count}} bezoek",
     "countShort_other": "{{count}} bezoeken",
     "tooltipA11y": "Over leesgeschiedenis",
-    "tooltipIntro": "Mera houdt je leesgedrag bij — en dit blijft alleen op je apparaat.",
+    "tooltipIntro": "Mera houdt je leesgedrag bij, en dit blijft alleen op je apparaat.",
     "tooltipLink": "Bekijk hier al je leesgeschiedenis.",
-    "screenIntro": "Mera volgt je leesgedrag — alleen op je apparaat gedurende 30 dagen. Dit geeft je een duidelijker beeld van welke publicaties het meest voor je betekenen, zodat je kunt overwegen de publicaties te steunen die je het meest direct ten goede komen.",
+    "screenIntro": "Mera volgt je leesgedrag, alleen op je apparaat gedurende 30 dagen. Dit geeft je een duidelijker beeld van welke publicaties het meest voor je betekenen, zodat je kunt overwegen de publicaties te steunen die je het meest direct ten goede komen.",
     "visitedListTitle": "Publicaties die je hebt bezocht",
     "last30Days": "Afgelopen 30 dagen",
     "lastRead": "Laatst gelezen {{time}}",
@@ -723,8 +723,8 @@
     "analyzingRelevance": "Relevantie analyseren…",
     "upToDate": "Je feed is actueel",
     "waitingForConnection": "Wachten op verbinding…",
-    "serverUnavailable": "Server niet beschikbaar — binnenkort opnieuw proberen",
-    "sessionExpired": "Sessie verlopen — log opnieuw in",
+    "serverUnavailable": "Server niet beschikbaar: binnenkort opnieuw proberen",
+    "sessionExpired": "Sessie verlopen: log opnieuw in",
     "noTopics": "Voeg onderwerpen toe om je nieuws te zien",
     "storageFull": "Maak opslagruimte vrij op je apparaat en probeer het opnieuw",
     "syncFailed": "We konden de nieuwste inhoud niet laden. Trek omlaag om te vernieuwen.",
@@ -735,7 +735,7 @@
     "deleteConfirmMessage": "Hiermee verwijder je het artikel van je opgeslagen lijst op dit apparaat.",
     "deleteConfirmTitle": "Opgeslagen artikel verwijderen?",
     "empty": "Je hebt nog geen artikelen opgeslagen. Tik op de bladwijzer bij een artikel om het voor later op te slaan.",
-    "note": "Deze artikelen worden alleen op je apparaat opgeslagen. Voeg ze op elk moment toe of verwijder ze — ze blijven hier tot je ze verwijdert.",
+    "note": "Deze artikelen worden alleen op je apparaat opgeslagen. Voeg ze op elk moment toe of verwijder ze. Ze blijven hier tot je ze verwijdert.",
     "removedToastMessage": "Verwijderd uit opgeslagen",
     "removedToastTitle": "Verwijderd",
     "saveAction": "Opslaan",
@@ -746,7 +746,7 @@
   },
   "subscription": {
     "activating": "Je abonnement wordt geactiveerd…",
-    "activationDelayed": "Je aankoop wordt bevestigd. Dit kan even duren — tik op vernieuwen als het niet doorgaat.",
+    "activationDelayed": "Je aankoop wordt bevestigd. Dit kan even duren. Tik op vernieuwen als het niet doorgaat.",
     "autoRenew": "Automatisch verlengen",
     "customerCenter": "Abonnement beheren / opzeggen",
     "dailyArticleLimit": "Daglimiet voor artikelen",
@@ -797,10 +797,10 @@
     "lessLikeThis": "Minder zoals dit",
     "askMera": "Vraag het Mera",
     "closeTree": "Sluiten",
-    "treeThanks": "Bedankt — genoteerd.",
-    "chatHandoffLike": "Ik vond dit verhaal leuk — meer zoals dit: {{path}}.",
-    "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk — ik wil graag meer zoals dit.",
-    "chatHandoffDislike": "Ik vond dit verhaal niet leuk — {{path}}.",
+    "treeThanks": "Bedankt, genoteerd.",
+    "chatHandoffLike": "Ik vond dit verhaal leuk, meer zoals dit: {{path}}.",
+    "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk. Ik wil graag meer zoals dit.",
+    "chatHandoffDislike": "Ik vond dit verhaal niet leuk, {{path}}.",
     "chatHandoffDislikeNoPath": "Ik vond dit verhaal niet leuk. Help me minder van dit soort verhalen te krijgen."
   },
   "explore": {
@@ -873,7 +873,7 @@
     "tabsTitle": "Tabbladen Profiel & Instellingen",
     "tabsBody": "Je profiel en instellingen staan nu in hun eigen tabbladen onderaan.",
     "resyncTitle": "Je feed wordt opnieuw gesynchroniseerd",
-    "resyncBody": "We bouwen je feed opnieuw op met de nieuwe engine — het wordt binnenkort aangevuld."
+    "resyncBody": "We bouwen je feed opnieuw op met de nieuwe engine. Het wordt binnenkort aangevuld."
   },
   "notificationCenter": {
     "title": "Meldingen",
@@ -943,12 +943,12 @@
     "notificationTitle": "Stem Mera af op jouw smaak",
     "notificationBody": "Mera's rangschikking op het apparaat was de laatste tijd {{count}} keer het oneens met haar eigen oordeel. Kalibreer opnieuw om het verschil te verkleinen.",
     "recalibrateChip": "Nu herkalibreren",
-    "chatIntro": "Ik twijfel de laatste tijd aan hoe ik je nieuws rangschik. Wil je dat ik herkalibreer zodat mijn score beter bij jouw smaak past? Tik op \"Nu herkalibreren\" en ik pas het aan — je kunt dit altijd ongedaan maken.",
+    "chatIntro": "Ik twijfel de laatste tijd aan hoe ik je nieuws rangschik. Wil je dat ik herkalibreer zodat mijn score beter bij jouw smaak past? Tik op \"Nu herkalibreren\" en ik pas het aan. Je kunt dit altijd ongedaan maken.",
     "confirmChip": "Nu herkalibreren",
     "runningBody": "Je rangschikking wordt herkalibreerd…",
     "successTitle": "Herkalibreerd",
     "successBody": "Ik heb mijn rangschikking afgestemd op jouw smaak.",
-    "noChangeBody": "Je rangschikking is al goed afgestemd — geen wijzigingen nodig.",
+    "noChangeBody": "Je rangschikking is al goed afgestemd: geen wijzigingen nodig.",
     "failedBody": "Ik kon het herkalibreren nu niet voltooien. Ik probeer het later opnieuw."
   },
   "feedbackTree": {
@@ -964,11 +964,11 @@
     "confirm": "Bevestigen",
     "confirmMuteTitle": "Deze publicatie nooit meer tonen?",
     "confirmMuteBody": "Je ziet geen artikelen meer van {{publication}}. Je kunt dit altijd ongedaan maken.",
-    "appliedTitle": "Gelukt — feed bijgewerkt",
+    "appliedTitle": "Gelukt: feed bijgewerkt",
     "undo": "Ongedaan maken",
     "undoneTitle": "Wijziging ongedaan gemaakt",
     "thanks": "Bedankt voor je feedback",
-    "seenAck": "Begrepen — we tonen minder artikelen die je al hebt gezien",
+    "seenAck": "Begrepen: we tonen minder artikelen die je al hebt gezien",
     "nudgeSubscribe": "Abonneren op {{publication}} ontgrendelt volledige artikelen",
     "nudgeBrowse": "Zoek naar gerelateerde berichtgeving van andere bronnen"
   },
@@ -1022,7 +1022,7 @@
     "effectDuplicate": "Verwijdert het duplicaat en behoudt de sterkste.",
     "effectTooBroad": "Verlaagt het gewicht van deze interesse zodat er minder off-topic verhalen binnenkomen.",
     "effectStaleTopic": "Zet dit stille onderwerp op inactief. Je kunt het herstellen vanuit het wijzigingslog.",
-    "effectStaleFact": "Verwijdert dit feit — geen van de onderwerpen ervan is nog actief.",
+    "effectStaleFact": "Verwijdert dit feit: geen van de onderwerpen ervan is nog actief.",
     "appliedTitle": "Opschoning toegepast",
     "appliedBody": "Je profiel is opgeschoond. Bekijk het wijzigingslog om te controleren.",
     "applyFailedTitle": "Kon opschoning niet toepassen",
@@ -1033,7 +1033,7 @@
   "locations": {
     "title": "Jouw plaatsen",
     "subtitle": "Locaties die je feed bepalen",
-    "autoDetectDisclaimer": "Mera detecteert je plaatsen automatisch uit je profiel. Je kunt hier meer toevoegen — maar het werkt beter als je het Mera direct vertelt, omdat het leert hoe elke plaats voor jou relevant is en je aanbevelingen dienovereenkomstig aanpast.",
+    "autoDetectDisclaimer": "Mera detecteert je plaatsen automatisch uit je profiel. Je kunt hier meer toevoegen, maar het werkt beter als je het Mera direct vertelt, omdat het leert hoe elke plaats voor jou relevant is en je aanbevelingen dienovereenkomstig aanpast.",
     "empty": "Voeg de plaatsen toe die je belangrijk vindt",
     "add": "Plaats toevoegen",
     "addFirst": "Plaats toevoegen",
@@ -1042,7 +1042,7 @@
     "searchPlaceholder": "Zoek een stad",
     "searchCountries": "Landen zoeken",
     "noMatches": "Geen overeenkomende plaatsen gevonden",
-    "searchUnavailable": "Zoeken is momenteel niet beschikbaar — probeer het over een moment opnieuw.",
+    "searchUnavailable": "Zoeken is momenteel niet beschikbaar. Probeer het over een moment opnieuw.",
     "addManuallyCta": "Kun je het niet vinden? Handmatig toevoegen",
     "cityLabel": "Stad",
     "cityPlaceholder": "Voer een stadsnaam in",
@@ -1068,7 +1068,7 @@
       "high": "Hoog"
     },
     "toastUpdatedTitle": "Bestaande plaats bijgewerkt",
-    "toastUpdatedBody": "Die plaats was al opgeslagen — we hebben hem bijgewerkt.",
+    "toastUpdatedBody": "Die plaats was al opgeslagen. We hebben hem bijgewerkt.",
     "saveFailedTitle": "Kon plaats niet opslaan",
     "saveFailedBody": "Probeer het opnieuw.",
     "deleteConfirmTitle": "Deze plaats verwijderen?",
@@ -1107,7 +1107,7 @@
     "startTalking": "Begin een gesprek",
     "meraInvite": "Hé! Vertel me waar je in geïnteresseerd bent, dan stem ik je feed op jou af.",
     "aboutYou": "Over jou",
-    "gettingToKnowYou": "Ik ben je nog aan het leren kennen — kom zo weer terug.",
+    "gettingToKnowYou": "Ik ben je nog aan het leren kennen, kom zo weer terug.",
     "updating": "Bijwerken…",
     "advanced": "Geavanceerd",
     "advancedSubtitle": "Feiten, bronnen, opgeslagen items, activiteit en meer",
@@ -1116,10 +1116,10 @@
       "moreImportant": "Belangrijker",
       "lessImportant": "Minder belangrijk",
       "refine": "Verfijnen met Mera",
-      "refineSeed": "Laten we het hierover hebben — \"{{text}}\"",
+      "refineSeed": "Laten we het hierover hebben: \"{{text}}\"",
       "remove": "Verwijderen",
       "removeConfirm": "Tik nogmaals om te verwijderen",
-      "limitReached": "Dagelijkse aanpassingslimiet bereikt — wijzigingen gaan morgen door."
+      "limitReached": "Dagelijkse aanpassingslimiet bereikt: wijzigingen gaan morgen door."
     }
   },
   "facts": {

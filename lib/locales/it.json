@@ -73,7 +73,7 @@
     "stuckTitle": "Impossibile caricare il tuo feed",
     "stuckDescription": "Qualcosa è andato storto da parte nostra.",
     "stuckHint": "Riapri l'app tra qualche minuto.",
-    "offlineCached": "Offline — contenuti dalla cache",
+    "offlineCached": "Offline: contenuti dalla cache",
     "newBadge": "NUOVO",
     "newsCluster": "Gruppo di notizie",
     "justNow": "Adesso",
@@ -103,13 +103,13 @@
     "articleSingular": "articolo",
     "articlePlural": "articoli",
     "processing": {
-      "doneFlash": "Tutto pronto — ecco le tue notizie",
+      "doneFlash": "Tutto pronto. Ecco le tue notizie",
       "errorFlash": "Non è stato possibile caricare i contenuti più recenti. Per favore riprova.",
       "stages": {
         "fetching": {
           "headlines": [
             "Porto gli articoli di oggi sul tuo telefono…",
-            "Mera porta le notizie sul tuo dispositivo — i tuoi interessi non lo abbandonano mai."
+            "Mera porta le notizie sul tuo dispositivo. I tuoi interessi non lo abbandonano mai."
           ],
           "amberSubline": "Mantieni questa schermata aperta."
         },
@@ -118,33 +118,33 @@
           "tooltip": "Mera sta preparando la tua richiesta cifrata sul telefono. Tieni l'app aperta per questa fase.",
           "headlines": [
             "Sto richiedendo le notizie di oggi per te…",
-            "Mera è un'app diversa — la tua richiesta viene cifrata sul telefono prima di essere inviata."
+            "Mera è un'app diversa: la tua richiesta viene cifrata sul telefono prima di essere inviata."
           ],
-          "amberSubline": "Tieni questa schermata aperta qualche secondo — non possiamo farlo in background."
+          "amberSubline": "Tieni questa schermata aperta qualche secondo: non possiamo farlo in background."
         },
         "hydrating": {
           "shortName": "Scarico sul tuo telefono",
           "tooltip": "Gli articoli di oggi vengono copiati sul tuo telefono in modo che i passaggi successivi possano avvenire in privato.",
           "headlines": [
             "Porto gli articoli di oggi sul tuo telefono…",
-            "Mera porta le notizie sul tuo dispositivo — i tuoi interessi non lo abbandonano mai."
+            "Mera porta le notizie sul tuo dispositivo. I tuoi interessi non lo abbandonano mai."
           ],
-          "amberSubline": "Quasi fatto — rimani su questa schermata."
+          "amberSubline": "Quasi fatto, rimani su questa schermata."
         },
         "noiseRemoval": {
           "shortName": "Rimuovo gli articoli esca",
           "tooltip": "Filtraggio delle storie esca recuperate in base ai topic rumore. Avviene solo quando l'iniezione di rumore è attiva.",
           "headlines": [
             "Sto filtrando le storie esca dal tuo feed…",
-            "L'iniezione di rumore ha inviato topic fittizi insieme ai tuoi veri — ora eliminiamo le storie che corrispondevano solo a quei topic fittizi."
+            "L'iniezione di rumore ha inviato topic fittizi insieme ai tuoi veri. Ora eliminiamo le storie che corrispondevano solo a quei topic fittizi."
           ]
         },
         "cloudRelevance": {
           "shortName": "Calcolo la rilevanza",
-          "tooltip": "Un'AI nel cloud sta leggendo ogni articolo e scegliendo ciò che potrebbe interessarti. La tua richiesta è cifrata — solo il tuo telefono ha la chiave.",
+          "tooltip": "Un'AI nel cloud sta leggendo ogni articolo e scegliendo ciò che potrebbe interessarti. La tua richiesta è cifrata: solo il tuo telefono ha la chiave.",
           "headlines": [
             "Un'intelligenza artificiale sta leggendo ogni articolo per vedere quali ti riguardano.",
-            "La tua richiesta è cifrata — solo il tuo telefono ha la chiave."
+            "La tua richiesta è cifrata: solo il tuo telefono ha la chiave."
           ]
         },
         "cloudReasons": {
@@ -152,8 +152,8 @@
           "tooltip": "L'AI sta scrivendo una breve nota per ogni storia spiegando perché potrebbe interessarti. La richiesta rimane cifrata.",
           "headlines": [
             "Scrittura di una breve nota per ogni storia rilevante.",
-            "Puoi allontanarti — ti avvisiamo non appena è pronto.",
-            "Tutto rimane crittografato end-to-end — solo il tuo telefono può leggerlo."
+            "Puoi allontanarti. Ti avvisiamo non appena è pronto.",
+            "Tutto rimane crittografato end-to-end: solo il tuo telefono può leggerlo."
           ]
         },
         "onDevice": {
@@ -161,7 +161,7 @@
           "tooltip": "Il tuo telefono sta eseguendo il punteggio in locale. Nulla lascia il dispositivo per questo passaggio.",
           "headlines": [
             "Il tuo telefono sta assegnando un punteggio a queste storie per te.",
-            "Questo avviene interamente sul tuo dispositivo — nulla lo abbandona."
+            "Questo avviene interamente sul tuo dispositivo. Nulla lo abbandona."
           ]
         }
       }
@@ -184,8 +184,8 @@
       "completedMessage": "Il tuo feed è pronto"
     },
     "dailyLimit": {
-      "body": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano domani.",
-      "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo — nuovi articoli si sbloccano alle {{time}}.",
+      "body": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo: nuovi articoli si sbloccano domani.",
+      "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo: nuovi articoli si sbloccano alle {{time}}.",
       "title": "Limite giornaliero di articoli raggiunto"
     },
     "analysingProgress": "Analisi di {{done}} di {{total}} articoli",
@@ -235,9 +235,9 @@
     "addedToLocations": "Aggiunto ai tuoi luoghi"
   },
   "clusterDetail": {
-    "translatable": "Questo articolo è in {{language}} — il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Traduttore qui sotto — tieni presente che lo visualizzerai tramite Google.",
-    "notTranslatable": "Questo articolo è in {{language}}. Il tuo dispositivo non può tradurlo — usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
-    "notTranslatableOsOutdated": "Questo articolo è in {{language}}. La traduzione sul dispositivo richiede iOS {{requiredVersion}} — il tuo dispositivo utilizza iOS {{currentVersion}}. Aggiorna iOS, oppure usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
+    "translatable": "Questo articolo è in {{language}}: il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Traduttore qui sotto. Tieni presente che lo visualizzerai tramite Google.",
+    "notTranslatable": "Questo articolo è in {{language}}. Il tuo dispositivo non può tradurlo. Usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
+    "notTranslatableOsOutdated": "Questo articolo è in {{language}}. La traduzione sul dispositivo richiede iOS {{requiredVersion}}. Il tuo dispositivo utilizza iOS {{currentVersion}}. Aggiorna iOS, oppure usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
     "unknownLanguage": "un'altra lingua",
     "translationGuideLink": "Mostrami come tradurre l'articolo",
     "viewInGoogleTranslate": "Visualizza in Google Traduttore",
@@ -278,9 +278,9 @@
     "timeDescriptionOnboarding": "Scegli quando vuoi metterti al passo con le tue notizie",
     "timeNudges": [
       "Le notizie funzionano meglio se dedicate a uno o due momenti mirati al giorno.",
-      "Non serve controllare di continuo — sarà tutto pronto quando lo sarai anche tu.",
+      "Non serve controllare di continuo. Sarà tutto pronto quando lo sarai anche tu.",
       "Meno controlli, più tranquilli, battono un flusso continuo per tutto il giorno.",
-      "Scegli gli orari più adatti alla tua giornata — al resto pensa Mera."
+      "Scegli gli orari più adatti alla tua giornata: al resto pensa Mera."
     ],
     "savePreferences": "Salva preferenze",
     "loadFailedTitle": "Caricamento non riuscito",
@@ -307,7 +307,7 @@
     "appLanguage": "Lingua dell'app",
     "appLanguageDescription": "Usata per l'interfaccia dell'app e per tradurre i contenuti delle notizie",
     "languagePacks": "Pacchetti lingua",
-    "languagePacksIos": "I modelli di traduzione sono gestiti dal tuo dispositivo. Devi solo scaricare il modello per la lingua selezionata — iOS gestisce il resto.",
+    "languagePacksIos": "I modelli di traduzione sono gestiti dal tuo dispositivo. Devi solo scaricare il modello per la lingua selezionata. iOS gestisce il resto.",
     "languagePacksIosPath": "Impostazioni → Generali → Lingua e Regione → Lingue di traduzione",
     "languagePacksAndroid": "I modelli di traduzione (~30MB ciascuno) vengono scaricati automaticamente quando traduci per la prima volta in una nuova lingua.",
     "openDeviceSettings": "Apri Impostazioni dispositivo",
@@ -316,7 +316,7 @@
     "restartDescription": "L'app deve essere riavviata per applicare la modifica della lingua.",
     "restart": "Riavvia ora",
     "later": "Più tardi",
-    "packMissingBanner": "Questa lingua richiede un pacchetto di traduzione sul dispositivo — la traduzione stessa viene eseguita in locale sul tuo telefono. Puoi gestire le lingue dalle impostazioni del telefono.",
+    "packMissingBanner": "Questa lingua richiede un pacchetto di traduzione sul dispositivo: la traduzione stessa viene eseguita in locale sul tuo telefono. Puoi gestire le lingue dalle impostazioni del telefono.",
     "packMissingIosPath": "Impostazioni → Generali → Lingua e Regione",
     "retry": "Riprova",
     "watchGuide": "Guarda come aggiungere una lingua al tuo dispositivo",
@@ -349,7 +349,7 @@
     "updateTo": "Aggiorna a {{modelName}}",
     "injectNoiseTitle": "Iniezione di rumore",
     "injectNoiseDescription": "Invia topic fittizi insieme ai tuoi interessi reali in modo che il backend non possa identificarti dalla tua lista di topic. Gli articoli che corrispondono solo ai topic fittizi vengono scartati prima di raggiungerti.",
-    "injectNoiseBeta": "Beta — potrebbe rallentare la generazione dei topic e ridurre la rilevanza del feed.",
+    "injectNoiseBeta": "Beta: potrebbe rallentare la generazione dei topic e ridurre la rilevanza del feed.",
     "privacyTitle": "I tuoi dati restano privati",
     "privacyDescription": "Mera Protocol è sempre attivo. La modalità dispositivo esegue l'inferenza completamente offline sul tuo telefono. La modalità cloud usa inferenza cifrata end-to-end: i tuoi dati vengono cifrati sul dispositivo e decifrati solo dentro un enclave sicuro in cui non possiamo guardare. I tuoi dati personali, il tuo profilo e la tua cronologia di lettura non lasciano mai questo dispositivo. Per recuperare le notizie inviamo solo frasi tematiche generiche, senza alcun identificativo utente.",
     "deviceSupported": "Dispositivo supportato",
@@ -408,7 +408,7 @@
     "deletedDescription": "I dati selezionati sono stati cancellati con successo.",
     "errorTitle": "Errore",
     "errorDescription": "Impossibile eliminare i dati. Per favore riprova.",
-    "factsDescription": "I tuoi dati e gli argomenti che generano — su questo dispositivo",
+    "factsDescription": "I tuoi dati e gli argomenti che generano, su questo dispositivo",
     "factsModalDescription": "Cancella i dati che hai aggiunto e i temi generati da essi. I tuoi dati personali non lasciano mai questo dispositivo. I temi vengono inviati quando richiedi notizie e messi in cache sui nostri server senza identificativo utente, quindi lì nulla registra che fossero tuoi. Anche il tuo feed di articoli viene svuotato, dato che si basa su questi temi, e resta vuoto finché non aggiungi nuovi dati.",
     "locationDevice": "Sul dispositivo",
     "locationServer": "Server"
@@ -455,8 +455,8 @@
     "tabPersona": "Profilo",
     "tabSources": "Fonti",
     "tabPreferences": "Preferenze",
-    "privacyOnDevice": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo — l'inferenza IA gira interamente sul dispositivo tramite Mera Protocol. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente (attiva l'Iniezione di rumore sopra per inviare esche insieme a loro). Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata — l'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Fino ad allora, l'unica cosa su cui fai affidamento è che non conserviamo alcun record che ti colleghi ai tuoi temi. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
-    "privacyCloud": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo. L'inferenza cloud usa Trusted Execution Environments (TEE) cifrati — i tuoi dati vengono cifrati sul dispositivo con la chiave che l'enclave pubblica, elaborati in un enclave isolato e decifrati solo sul tuo dispositivo. Essendo precisi: l'app non verifica ancora tale attestazione rispetto al fornitore dell'hardware, quindi per ora ti fidi di noi e dell'operatore dell'enclave piuttosto che del chip; far verificare all'app e rifiutare di continuare è nella nostra roadmap. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente (attiva l'Iniezione di rumore sopra per inviare esche insieme a loro). Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata — l'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
+    "privacyOnDevice": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo: l'inferenza IA gira interamente sul dispositivo tramite Mera Protocol. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente (attiva l'Iniezione di rumore sopra per inviare esche insieme a loro). Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata. L'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Fino ad allora, l'unica cosa su cui fai affidamento è che non conserviamo alcun record che ti colleghi ai tuoi temi. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
+    "privacyCloud": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo. L'inferenza cloud usa Trusted Execution Environments (TEE) cifrati: i tuoi dati vengono cifrati sul dispositivo con la chiave che l'enclave pubblica, elaborati in un enclave isolato e decifrati solo sul tuo dispositivo. Essendo precisi: l'app non verifica ancora tale attestazione rispetto al fornitore dell'hardware, quindi per ora ti fidi di noi e dell'operatore dell'enclave piuttosto che del chip; far verificare all'app e rifiutare di continuare è nella nostra roadmap. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente (attiva l'Iniezione di rumore sopra per inviare esche insieme a loro). Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata. L'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
     "privacyPolicy": "Informativa sulla privacy",
     "privacyNoticeTitle": "La tua privacy",
     "updatingTopics": "Aggiornamento argomenti... {{completed}}/{{total}}",
@@ -525,15 +525,15 @@
     "accountRestrictedDescription": "Il tuo account è stato limitato. Per favore contatta il supporto.",
     "scoring": {
       "generic": {
-        "message": "Qualcosa è andato storto durante la selezione delle notizie per te. Continueremo a provare — trascina verso il basso per aggiornare se il problema persiste.",
+        "message": "Qualcosa è andato storto durante la selezione delle notizie per te. Continueremo a provare. Trascina verso il basso per aggiornare se il problema persiste.",
         "title": "Impossibile aggiornare il tuo feed"
       },
       "offline": {
-        "message": "Non riusciamo a raggiungere il server per selezionare le notizie per te. Controlla la connessione — il tuo feed si aggiornerà da solo quando torni online.",
+        "message": "Non riusciamo a raggiungere il server per selezionare le notizie per te. Controlla la connessione: il tuo feed si aggiornerà da solo quando torni online.",
         "title": "Sei offline"
       },
       "server": {
-        "message": "Non siamo riusciti a raggiungere il servizio notizie. Di solito è temporaneo — continueremo a provare e il tuo feed si aggiornerà da solo.",
+        "message": "Non siamo riusciti a raggiungere il servizio notizie. Di solito è temporaneo. Continueremo a provare e il tuo feed si aggiornerà da solo.",
         "title": "Servizio non disponibile"
       }
     }
@@ -552,7 +552,7 @@
     "inferenceError": "Al momento stiamo riscontrando problemi nel raggiungere il servizio di inferenza Mera. Per favore riprova tra un momento."
   },
   "personaChat": {
-    "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie. Se vuoi, raccontami qualcosa di te — dove vivi, di cosa ti occupi, gli hobby che segui, le azioni che monitori, dove vive la tua famiglia. Oppure di' semplicemente 'aiutami a configurarlo' e ti guido io."
+    "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie. Se vuoi, raccontami qualcosa di te: dove vivi, di cosa ti occupi, gli hobby che segui, le azioni che monitori, dove vive la tua famiglia. Oppure di' semplicemente 'aiutami a configurarlo' e ti guido io."
   },
   "floatingChat": {
     "bubbleHint": "Chatta con Mera",
@@ -602,8 +602,8 @@
     "improveMessage": "Questo suggerimento potrebbe essere migliore: \"{{title}}\". Aiutami a modificare i miei suggerimenti.",
     "intro": "Cosa posso fare per te? Posso spiegarti perché hai ricevuto questo suggerimento, oppure aiutarti a ottenerne di migliori.",
     "introArticle": "Cosa posso fare per te? Posso aiutarti a modificare i tuoi suggerimenti di notizie in base a questo articolo.",
-    "introLikeTuning": "Ti è piaciuta questa storia — dimmi di più e regolerò il tuo feed.",
-    "introDislikeTuning": "Non ti è piaciuta questa storia — dimmi perché e regolerò il tuo feed.",
+    "introLikeTuning": "Ti è piaciuta questa storia. Dimmi di più e regolerò il tuo feed.",
+    "introDislikeTuning": "Non ti è piaciuta questa storia: dimmi perché e regolerò il tuo feed.",
     "chipWhy": "Perché ho ricevuto questo suggerimento?",
     "chipWhyMessage": "Perché ho ricevuto questo suggerimento?",
     "chipDontWant": "Non voglio questo suggerimento",
@@ -640,9 +640,9 @@
     "countShort_one": "{{count}} visita",
     "countShort_other": "{{count}} visite",
     "tooltipA11y": "Informazioni sulla cronologia di lettura",
-    "tooltipIntro": "Mera tiene traccia dei tuoi schemi di lettura — e i dati restano solo sul tuo dispositivo.",
+    "tooltipIntro": "Mera tiene traccia dei tuoi schemi di lettura, e i dati restano solo sul tuo dispositivo.",
     "tooltipLink": "Vedi tutta la tua cronologia di lettura qui.",
-    "screenIntro": "Mera tiene traccia dei tuoi schemi di lettura — solo sul tuo dispositivo per 30 giorni. Questo ti dà un quadro più chiaro di quali pubblicazioni contano di più per te, così puoi valutare di supportare quelle che ti beneficiano direttamente.",
+    "screenIntro": "Mera tiene traccia dei tuoi schemi di lettura, solo sul tuo dispositivo per 30 giorni. Questo ti dà un quadro più chiaro di quali pubblicazioni contano di più per te, così puoi valutare di supportare quelle che ti beneficiano direttamente.",
     "visitedListTitle": "Pubblicazioni visitate",
     "last30Days": "Ultimi 30 giorni",
     "lastRead": "Ultima lettura {{time}}",
@@ -723,8 +723,8 @@
     "analyzingRelevance": "Analisi della rilevanza…",
     "upToDate": "Il tuo feed è aggiornato",
     "waitingForConnection": "In attesa di connessione…",
-    "serverUnavailable": "Server non disponibile — nuovo tentativo a breve",
-    "sessionExpired": "Sessione scaduta — effettua di nuovo l'accesso",
+    "serverUnavailable": "Server non disponibile: nuovo tentativo a breve",
+    "sessionExpired": "Sessione scaduta. Effettua di nuovo l'accesso",
     "noTopics": "Aggiungi argomenti per vedere le tue notizie",
     "storageFull": "Libera spazio sul dispositivo e riprova",
     "syncFailed": "Impossibile caricare i contenuti più recenti. Trascina per aggiornare.",
@@ -735,7 +735,7 @@
     "deleteConfirmMessage": "Questo rimuoverà l'articolo dalla tua lista dei salvati su questo dispositivo.",
     "deleteConfirmTitle": "Rimuovere l'articolo salvato?",
     "empty": "Non hai ancora salvato nessun articolo. Tocca il segnalibro su un articolo per salvarlo per dopo.",
-    "note": "Questi articoli sono salvati solo sul tuo dispositivo. Aggiungili o rimuovili in qualsiasi momento — restano qui finché non li elimini.",
+    "note": "Questi articoli sono salvati solo sul tuo dispositivo. Aggiungili o rimuovili in qualsiasi momento. Restano qui finché non li elimini.",
     "removedToastMessage": "Rimosso dai salvati",
     "removedToastTitle": "Rimosso",
     "saveAction": "Salva",
@@ -746,7 +746,7 @@
   },
   "subscription": {
     "activating": "Attivazione dell'abbonamento in corso…",
-    "activationDelayed": "Il tuo acquisto è in fase di conferma. Potrebbe richiedere un momento — tocca aggiorna se non procede.",
+    "activationDelayed": "Il tuo acquisto è in fase di conferma. Potrebbe richiedere un momento: tocca aggiorna se non procede.",
     "autoRenew": "Rinnovo automatico",
     "customerCenter": "Gestisci / annulla abbonamento",
     "dailyArticleLimit": "Limite giornaliero di articoli",
@@ -797,10 +797,10 @@
     "lessLikeThis": "Meno come questo",
     "askMera": "Chiedi a Mera",
     "closeTree": "Chiudi",
-    "treeThanks": "Grazie — annotato.",
-    "chatHandoffLike": "Mi è piaciuta questa storia — altre come questa: {{path}}.",
-    "chatHandoffLikeNoPath": "Mi è piaciuta questa storia — vorrei vederne altre simili.",
-    "chatHandoffDislike": "Non mi è piaciuta questa storia — {{path}}.",
+    "treeThanks": "Grazie, annotato.",
+    "chatHandoffLike": "Mi è piaciuta questa storia, altre come questa: {{path}}.",
+    "chatHandoffLikeNoPath": "Mi è piaciuta questa storia. Vorrei vederne altre simili.",
+    "chatHandoffDislike": "Non mi è piaciuta questa storia, {{path}}.",
     "chatHandoffDislikeNoPath": "Non mi è piaciuta questa storia. Aiutami a vederne di meno simili."
   },
   "explore": {
@@ -873,7 +873,7 @@
     "tabsTitle": "Schede Profilo e Impostazioni",
     "tabsBody": "Il tuo profilo e le impostazioni ora vivono nelle proprie schede in basso.",
     "resyncTitle": "Il tuo feed si sta risincronizzando",
-    "resyncBody": "Stiamo ricostruendo il tuo feed con il nuovo motore — si riempirà a breve."
+    "resyncBody": "Stiamo ricostruendo il tuo feed con il nuovo motore. Si riempirà a breve."
   },
   "notificationCenter": {
     "title": "Notifiche",
@@ -943,12 +943,12 @@
     "notificationTitle": "Sintonizza Mera sui tuoi gusti",
     "notificationBody": "La classifica sul dispositivo di Mera non ha coinciso con il suo stesso giudizio {{count}} volte di recente. Ricalibra per colmare il divario.",
     "recalibrateChip": "Ricalibra ora",
-    "chatIntro": "Ultimamente ho avuto dei dubbi su come classifico le tue notizie. Vuoi che ricalibri il mio punteggio per farlo combaciare meglio con i tuoi gusti? Tocca \"Ricalibra ora\" e lo sintonizzerò — puoi sempre annullarlo.",
+    "chatIntro": "Ultimamente ho avuto dei dubbi su come classifico le tue notizie. Vuoi che ricalibri il mio punteggio per farlo combaciare meglio con i tuoi gusti? Tocca \"Ricalibra ora\" e lo sintonizzerò. Puoi sempre annullarlo.",
     "confirmChip": "Ricalibra ora",
     "runningBody": "Ricalibrazione della tua classifica in corso…",
     "successTitle": "Ricalibrato",
     "successBody": "Ho sintonizzato la mia classifica per combaciare meglio con i tuoi gusti.",
-    "noChangeBody": "La tua classifica sembra già ben sintonizzata — nessuna modifica necessaria.",
+    "noChangeBody": "La tua classifica sembra già ben sintonizzata, nessuna modifica necessaria.",
     "failedBody": "Non sono riuscito a completare la ricalibrazione ora. Riproverò più tardi."
   },
   "feedbackTree": {
@@ -962,11 +962,11 @@
     "confirm": "Conferma",
     "confirmMuteTitle": "Non mostrare mai più questa pubblicazione?",
     "confirmMuteBody": "Non vedrai più articoli da {{publication}}. Puoi annullare questa scelta in qualsiasi momento.",
-    "appliedTitle": "Fatto — feed aggiornato",
+    "appliedTitle": "Fatto, feed aggiornato",
     "undo": "Annulla",
     "undoneTitle": "Modifica annullata",
     "thanks": "Grazie per il feedback",
-    "seenAck": "Fatto — ne mostreremo meno di quelli che hai già visto",
+    "seenAck": "Fatto, ne mostreremo meno di quelli che hai già visto",
     "nudgeSubscribe": "Abbonarti a {{publication}} sblocca gli articoli completi",
     "nudgeBrowse": "Cerca copertura correlata da altre fonti",
     "moreAboutTopicNamed": "Più su: {{topic}}",
@@ -1022,7 +1022,7 @@
     "effectDuplicate": "Rimuove il duplicato e mantiene quello più forte.",
     "effectTooBroad": "Riduce il peso di questo interesse così da attirare meno storie fuori tema.",
     "effectStaleTopic": "Ritira questo argomento inattivo. Puoi ripristinarlo dal registro delle modifiche.",
-    "effectStaleFact": "Rimuove questo fatto — nessuno dei suoi argomenti è più attivo.",
+    "effectStaleFact": "Rimuove questo fatto: nessuno dei suoi argomenti è più attivo.",
     "appliedTitle": "Pulizia applicata",
     "appliedBody": "Il tuo profilo è stato riordinato. Consulta il registro delle modifiche per la revisione.",
     "applyFailedTitle": "Impossibile applicare la pulizia",
@@ -1033,7 +1033,7 @@
   "locations": {
     "title": "I tuoi luoghi",
     "subtitle": "Le posizioni che modellano il tuo feed",
-    "autoDetectDisclaimer": "Mera rileva i tuoi luoghi automaticamente dal tuo profilo. Puoi aggiungerne altri qui — ma dire a Mera direttamente funziona meglio, perché impara come ogni luogo si relaziona a te e sintonizza le tue raccomandazioni di conseguenza.",
+    "autoDetectDisclaimer": "Mera rileva i tuoi luoghi automaticamente dal tuo profilo. Puoi aggiungerne altri qui, ma dire a Mera direttamente funziona meglio, perché impara come ogni luogo si relaziona a te e sintonizza le tue raccomandazioni di conseguenza.",
     "empty": "Aggiungi i luoghi che ti interessano",
     "add": "Aggiungi un luogo",
     "addFirst": "Aggiungi un luogo",
@@ -1042,7 +1042,7 @@
     "searchPlaceholder": "Cerca una città",
     "searchCountries": "Cerca paesi",
     "noMatches": "Nessun luogo corrispondente trovato",
-    "searchUnavailable": "La ricerca non è al momento disponibile — riprova tra poco.",
+    "searchUnavailable": "La ricerca non è al momento disponibile. Riprova tra poco.",
     "addManuallyCta": "Non lo trovi? Aggiungi manualmente",
     "cityLabel": "Città",
     "cityPlaceholder": "Inserisci il nome di una città",
@@ -1068,7 +1068,7 @@
       "high": "Alta"
     },
     "toastUpdatedTitle": "Luogo esistente aggiornato",
-    "toastUpdatedBody": "Quel luogo era già salvato — lo abbiamo aggiornato.",
+    "toastUpdatedBody": "Quel luogo era già salvato. Lo abbiamo aggiornato.",
     "saveFailedTitle": "Impossibile salvare il luogo",
     "saveFailedBody": "Per favore riprova.",
     "deleteConfirmTitle": "Rimuovere questo luogo?",
@@ -1107,7 +1107,7 @@
     "startTalking": "Inizia a parlare",
     "meraInvite": "Ehi! Dimmi cosa ti interessa e personalizzerò il tuo feed apposta per te.",
     "aboutYou": "Su di te",
-    "gettingToKnowYou": "Ti sto ancora conoscendo — ricontrolla tra un momento.",
+    "gettingToKnowYou": "Ti sto ancora conoscendo. Ricontrolla tra un momento.",
     "updating": "Aggiornamento…",
     "advanced": "Avanzate",
     "advancedSubtitle": "Fatti, fonti, salvati, attività e altro",
@@ -1116,10 +1116,10 @@
       "moreImportant": "Più importante",
       "lessImportant": "Meno importante",
       "refine": "Affina con Mera",
-      "refineSeed": "Parliamone — \"{{text}}\"",
+      "refineSeed": "Parliamone: \"{{text}}\"",
       "remove": "Rimuovi questo",
       "removeConfirm": "Tocca di nuovo per rimuovere",
-      "limitReached": "Limite di regolazione giornaliero raggiunto — le modifiche continueranno domani."
+      "limitReached": "Limite di regolazione giornaliero raggiunto: le modifiche continueranno domani."
     }
   },
   "facts": {
