@@ -39,6 +39,7 @@ import {
   resolveCountryName,
   buildUserContext,
   isEligible,
+  isScorableCandidate,
   chunk,
   bucketScores,
   parseReasonResponse,
@@ -430,7 +431,12 @@ function buildReasonCallsForSurvivors(
 export async function buildRelevanceCalls(
   candidates: ScoringCandidate[],
 ): Promise<CloudCallBundle> {
-  const eligible = candidates.filter(isEligible);
+  // isScorableCandidate, not isEligible — a pure TOP-HEADLINE row is factless by
+  // design. Dropping it here would leave the batch's rows Unscored with NO score
+  // write (the empty-bundle branch in scoring-pipeline markBatchDone's and
+  // returns), so every later gate pass would re-elect them: an unbounded churn
+  // loop rather than a visible headline.
+  const eligible = candidates.filter(isScorableCandidate);
   const variant = resolveScoringVariant(eligible);
   const scoreChunkSize = scoreChunkSizeFor(ARTICLE_CFG, variant);
   const systemPrompt = relevanceSystemPromptFor(ARTICLE_CFG, variant);
@@ -478,7 +484,11 @@ export async function buildReasonCallsForSubset(
   subsetThreshold: number,
 ): Promise<CloudCallBundle> {
   const subset = candidates.filter((c) => {
-    if (!isEligible(c)) return false;
+    // This is the LIVE reason path (scoring-pipeline :1231 and :1846). Fixing
+    // only the harness twin would fix the offline harness and leave prod
+    // broken: a factless headline scoring 0.6 would get no reason, stay
+    // `reason_pending`, and isVisible would keep it invisible.
+    if (!isScorableCandidate(c)) return false;
     const rel = relevanceMap[c.id];
     return typeof rel === 'number' && rel > subsetThreshold;
   });
@@ -726,8 +736,11 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     if (useOnDevice) {
       // Local path — sequential.
       for (const candidate of batch) {
-        if (!candidate.titleEn || !candidate.descriptionEn) continue;
-        if (candidate.relatedFacts.length === 0) continue;
+        // isScorableCandidate covers both the text and the fact test. A pure
+        // TOP-HEADLINE row is factless by design, so the old fact `continue`
+        // stranded it in `reason_pending` forever once its first reason attempt
+        // failed — this is the recovery path for exactly that row.
+        if (!isScorableCandidate(candidate)) continue;
         const relevance = candidate.relevance ?? 0.7;
         try {
           const reason = await generateReasonForCandidate(
@@ -748,8 +761,8 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
       const calls: BatchCall[] = [];
       const promptsById = new Map<string, string>();
       for (const candidate of batch) {
-        if (!candidate.titleEn || !candidate.descriptionEn) continue;
-        if (candidate.relatedFacts.length === 0) continue;
+        // Same leak on the cloud half — see the local branch above.
+        if (!isScorableCandidate(candidate)) continue;
         const reasonPrompt = buildReasonUserMessage({
           userContext: fullUserContext,
           articleTitle: candidate.titleEn,

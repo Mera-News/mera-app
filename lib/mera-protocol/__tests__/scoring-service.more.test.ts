@@ -1055,3 +1055,59 @@ describe('parseReasonResponse (via decodeCloudBatchResults)', () => {
     expect(result).toBe('An article about tech.');
   });
 });
+
+// ============================================================
+// P8 — factless TOP-HEADLINE admission on the LIVE (shim) bundle path
+// ============================================================
+//
+// These are the builders scoring-pipeline actually calls: :1012 for relevance,
+// :1231 and :1846 for reasons. Fixing only the harness twins would fix the
+// offline harness and leave production broken, so both sides are pinned.
+//
+// A pure headline is factless BY DESIGN (synthetic matched topic, topicId null
+// ⇒ no article_suggestion_facts row). Before P8, `isEligible` dropped it from
+// the relevance bundle, and the empty-bundle branch in scoring-pipeline then
+// markBatchDone'd with NO score write — leaving the rows Unscored and re-elected
+// by every later gate pass, an unbounded churn loop.
+
+const headlineMeta = (scope: string | null) =>
+  ({ headlineScope: scope }) as ScoringCandidate['meta'];
+
+describe('P8 — factless headline admission (shim builders)', () => {
+  it('buildRelevanceCalls admits a factless headline row', async () => {
+    const h = makeCandidate('h1', { relatedFacts: [], meta: headlineMeta('GLOBAL') });
+
+    const result = await buildRelevanceCalls([h]);
+
+    expect(result.eligibleCandidates.map((c) => c.id)).toEqual(['h1']);
+    expect(result.calls.length).toBeGreaterThan(0);
+  });
+
+  it('buildReasonCallsForSubset admits a factless headline row that scored', async () => {
+    const h = makeCandidate('h1', { relatedFacts: [], meta: headlineMeta('COUNTRY') });
+
+    const result = await buildReasonCallsForSubset([h], { h1: 0.65 }, 0.3);
+
+    expect(result.calls.map((c) => c.id)).toEqual(['reason:h1']);
+  });
+
+  it('still drops a factless row that is NOT headline-sourced', async () => {
+    const orphan = makeCandidate('o', { relatedFacts: [], meta: headlineMeta(null) });
+
+    expect((await buildRelevanceCalls([orphan])).eligibleCandidates).toHaveLength(0);
+    expect((await buildReasonCallsForSubset([orphan], { o: 0.9 }, 0.3)).calls).toHaveLength(0);
+  });
+
+  it('still drops a headline row with no English text', async () => {
+    const noText = makeCandidate('h-empty', {
+      relatedFacts: [],
+      descriptionEn: null,
+      meta: headlineMeta('GLOBAL'),
+    });
+
+    expect((await buildRelevanceCalls([noText])).eligibleCandidates).toHaveLength(0);
+    expect(
+      (await buildReasonCallsForSubset([noText], { 'h-empty': 0.9 }, 0.3)).calls,
+    ).toHaveLength(0);
+  });
+});

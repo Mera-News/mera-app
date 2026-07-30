@@ -311,3 +311,72 @@ describe('buildReasonCallsForSubset — headline routing', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// P8 — a PURE headline (factless by design) must reach both bundles
+// ---------------------------------------------------------------------------
+//
+// The headline injection writes a SYNTHETIC matched topic with topicId null, so
+// persistAndLinkV2Suggestions links no fact to a headline that matched no real
+// persona topic. `isEligible` demands relatedFacts.length > 0, so before P8
+// these rows were filtered straight out of both bundles: silently absent from
+// the relevance bundle (leaving them Unscored and re-elected forever), and
+// absent from the reason bundle (leaving them `reason_pending` and invisible).
+
+/** A headline that matched NO real topic — the production shape, factless. */
+function pureHeadlineCandidate(
+  id: string,
+  scope: 'CITY' | 'COUNTRY' | 'GLOBAL' = 'GLOBAL',
+): ScoringCandidate {
+  return { ...standardCandidate(id), relatedFacts: [], meta: meta(id, scope) };
+}
+
+describe('P8 — factless top-headline admission to the bundles', () => {
+  it('buildRelevanceCalls includes a factless headline (site 2)', () => {
+    const bundle = buildRelevanceCalls([pureHeadlineCandidate('h1')], FACTS);
+
+    expect(bundle.eligibleCandidates.map((c) => c.id)).toEqual(['h1']);
+    expect(bundle.calls.length).toBe(1);
+  });
+
+  it('a factless headline bundle still routes to the HEADLINE prompt + chunk size', () => {
+    const bundle = buildRelevanceCalls(
+      [pureHeadlineCandidate('h1'), pureHeadlineCandidate('h2')],
+      FACTS,
+    );
+
+    expect(bundle.scoreChunkSize).toBe(CLOUD_HEADLINE_SCORE_CHUNK_SIZE);
+    expect(bundle.calls[0].system).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
+  });
+
+  it('buildReasonCallsForSubset includes a factless headline that scored (site 3)', () => {
+    const bundle = buildReasonCallsForSubset(
+      [pureHeadlineCandidate('h1')],
+      { h1: 0.65 },
+      0.3,
+      FACTS,
+    );
+
+    expect(bundle.calls.map((c) => c.id)).toEqual(['reason:h1']);
+    expect(bundle.calls[0].system).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
+  });
+
+  it('a factless row that is NOT headline-sourced is still excluded from both bundles', () => {
+    const orphan: ScoringCandidate = { ...standardCandidate('o'), relatedFacts: [] };
+
+    expect(buildRelevanceCalls([orphan], FACTS).eligibleCandidates).toEqual([]);
+    expect(buildReasonCallsForSubset([orphan], { o: 0.9 }, 0.3, FACTS).calls).toEqual([]);
+  });
+
+  it('a headline row with no English text is still excluded from both bundles', () => {
+    const noText: ScoringCandidate = {
+      ...pureHeadlineCandidate('h-empty'),
+      descriptionEn: null,
+    };
+
+    expect(buildRelevanceCalls([noText], FACTS).eligibleCandidates).toEqual([]);
+    expect(
+      buildReasonCallsForSubset([noText], { 'h-empty': 0.9 }, 0.3, FACTS).calls,
+    ).toEqual([]);
+  });
+});

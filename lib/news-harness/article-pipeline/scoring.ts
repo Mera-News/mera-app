@@ -251,7 +251,10 @@ export function buildRelevanceCalls(
   logger: HarnessLogger = NOOP_LOGGER,
   variant?: ScoringVariant,
 ): CloudCallBundle {
-  const eligible = candidates.filter(isEligible);
+  // isScorableCandidate, not isEligible: a pure TOP-HEADLINE row is factless by
+  // design and would otherwise be silently dropped from the bundle here even
+  // after surviving the feed-sync tombstone.
+  const eligible = candidates.filter(isScorableCandidate);
   const resolved = variant ?? resolveScoringVariant(eligible);
   const scoreChunkSize = scoreChunkSizeFor(config, resolved);
   const systemPrompt = relevanceSystemPromptFor(config, resolved);
@@ -306,7 +309,10 @@ export function buildReasonCallsForSubset(
   logger: HarnessLogger = NOOP_LOGGER,
 ): CloudCallBundle {
   const subset = candidates.filter((c) => {
-    if (!isEligible(c)) return false;
+    // isScorableCandidate: without it a factless headline that SCORED well gets
+    // no reason call, stays `reason_pending`, and isVisible keeps it invisible
+    // anyway — the fix upstream would buy nothing.
+    if (!isScorableCandidate(c)) return false;
     const rel = relevanceMap[c.id];
     return typeof rel === 'number' && rel > subsetThreshold;
   });
