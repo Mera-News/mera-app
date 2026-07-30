@@ -11,7 +11,7 @@
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Email: contact@mera.news
+Email: security@mera.news
 
 Please include:
 - A description of the vulnerability

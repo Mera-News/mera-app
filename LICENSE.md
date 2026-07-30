@@ -121,4 +121,4 @@ connection with them, without prejudice to any mandatory protections that apply
 to you.
 
 Licensing inquiries: contact@mera.news
-Required Notice: Copyright © 2025-2026 Mera Labs B.V. (https://meranews.app)
+Required Notice: Copyright © 2025-2026 Mera Labs B.V. (https://mera.news)
