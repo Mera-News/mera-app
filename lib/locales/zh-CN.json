@@ -201,6 +201,10 @@
     "irrelevant": "无关",
     "unprocessed": "未处理"
   },
+  "aiDisclosure": {
+    "caption": "AI 生成的说明 · 检查其他来源以确认并全面了解情况。",
+    "short": "AI 生成"
+  },
   "articleDetail": {
     "readArticle": "阅读原文",
     "relatedArticles": "相关文章",
@@ -578,6 +582,7 @@
     "newChat": "新对话",
     "inputPlaceholder": "输入消息...",
     "viewPreviousMessages": "查看之前的消息",
+    "aiInteractionNotice": "您正在与 Mera（一位 AI 助手）交谈——而不是真人。",
     "aiUsageNotice": "该助手帮助你设置新闻偏好。试图操纵或滥用它可能导致你的账户被封禁待审核。",
     "requestUnblock": {
       "button": "申请解封",

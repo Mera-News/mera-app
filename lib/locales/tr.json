@@ -201,6 +201,10 @@
     "irrelevant": "İlgisiz",
     "unprocessed": "İşlenmemiş"
   },
+  "aiDisclosure": {
+    "caption": "AI tarafından oluşturulan not · Onaylamak ve tam resmi görmek için diğer kaynakları kontrol edin.",
+    "short": "AI tarafından oluşturuldu"
+  },
   "articleDetail": {
     "readArticle": "Makaleyi Oku",
     "relatedArticles": "İlgili Makaleler",
@@ -578,6 +582,7 @@
     "newChat": "Yeni sohbet",
     "inputPlaceholder": "Bir mesaj yaz...",
     "viewPreviousMessages": "Önceki mesajları görüntüle",
+    "aiInteractionNotice": "Mera adında bir yapay zeka asistanı ile konuşuyorsunuz — bir insan değil.",
     "aiUsageNotice": "Bu asistan haber tercihlerini ayarlamana yardımcı olur. Onu manipüle etmeye veya kötüye kullanmaya çalışmak hesabının inceleme bekleyene kadar engellenmesine yol açabilir.",
     "requestUnblock": {
       "button": "Engelin kaldırılmasını iste",

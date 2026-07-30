@@ -201,6 +201,10 @@
     "irrelevant": "Niet relevant",
     "unprocessed": "Onverwerkt"
   },
+  "aiDisclosure": {
+    "caption": "Door AI gegenereerde notitie · Controleer andere bronnen om te bevestigen en het volledige plaatje te zien.",
+    "short": "Door AI gegenereerd"
+  },
   "articleDetail": {
     "readArticle": "Artikel lezen",
     "relatedArticles": "Gerelateerde artikelen",
@@ -578,6 +582,7 @@
     "newChat": "Nieuwe chat",
     "inputPlaceholder": "Typ een bericht...",
     "viewPreviousMessages": "Eerdere berichten bekijken",
+    "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent — niet met een persoon.",
     "aiUsageNotice": "Deze assistent helpt bij het instellen van je nieuwsvoorkeuren. Als je probeert deze te manipuleren of te misbruiken, kan je account worden geblokkeerd in afwachting van beoordeling.",
     "requestUnblock": {
       "button": "Deblokkering aanvragen",

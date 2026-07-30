@@ -201,6 +201,10 @@
     "irrelevant": "Tidak relevan",
     "unprocessed": "Belum diproses"
   },
+  "aiDisclosure": {
+    "caption": "Catatan yang dibuat oleh AI · Periksa sumber lain untuk mengkonfirmasi dan melihat gambaran lengkapnya.",
+    "short": "Dibuat oleh AI"
+  },
   "articleDetail": {
     "readArticle": "Baca Artikel",
     "relatedArticles": "Artikel Terkait",
@@ -578,6 +582,7 @@
     "newChat": "Obrolan baru",
     "inputPlaceholder": "Ketik pesan...",
     "viewPreviousMessages": "Lihat pesan sebelumnya",
+    "aiInteractionNotice": "Anda berbicara dengan Mera, asisten AI — bukan dengan seseorang.",
     "aiUsageNotice": "Asisten ini membantu menyiapkan preferensi berita Anda. Upaya memanipulasi atau menyalahgunakannya dapat menyebabkan akun Anda diblokir menunggu peninjauan.",
     "requestUnblock": {
       "button": "Ajukan permintaan buka blokir",

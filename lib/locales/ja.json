@@ -201,6 +201,10 @@
     "irrelevant": "無関係",
     "unprocessed": "未処理"
   },
+  "aiDisclosure": {
+    "caption": "AIが生成したメモ · 他の情報源も確認して、全体像を把握してください。",
+    "short": "AI生成"
+  },
   "articleDetail": {
     "readArticle": "記事を読む",
     "relatedArticles": "関連記事",
@@ -578,6 +582,7 @@
     "newChat": "新しいチャット",
     "inputPlaceholder": "メッセージを入力...",
     "viewPreviousMessages": "以前のメッセージを表示",
+    "aiInteractionNotice": "話している相手はAIアシスタントのMeraです。人間ではありません。",
     "aiUsageNotice": "このアシスタントはニュース設定のセットアップをサポートします。悪用や不正操作を試みると、審査のためアカウントがブロックされる場合があります。",
     "requestUnblock": {
       "button": "ブロック解除をリクエスト",

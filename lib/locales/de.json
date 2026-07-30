@@ -201,6 +201,10 @@
     "irrelevant": "Nicht relevant",
     "unprocessed": "Nicht verarbeitet"
   },
+  "aiDisclosure": {
+    "caption": "KI-generierter Hinweis · Prüfen Sie andere Quellen zur Bestätigung und für das Gesamtbild.",
+    "short": "KI-generiert"
+  },
   "articleDetail": {
     "readArticle": "Artikel lesen",
     "relatedArticles": "Verwandte Artikel",
@@ -578,6 +582,7 @@
     "newChat": "Neuer Chat",
     "inputPlaceholder": "Nachricht eingeben...",
     "viewPreviousMessages": "Vorherige Nachrichten anzeigen",
+    "aiInteractionNotice": "Sie sprechen mit Mera, einem KI-Assistenten – nicht mit einer Person.",
     "aiUsageNotice": "Dieser Assistent hilft Ihnen, Ihre Nachrichteneinstellungen einzurichten. Der Versuch, ihn zu manipulieren oder zu missbrauchen, kann dazu führen, dass Ihr Konto bis zur Überprüfung gesperrt wird.",
     "requestUnblock": {
       "button": "Entsperrung beantragen",

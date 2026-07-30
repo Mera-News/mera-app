@@ -201,6 +201,10 @@
     "irrelevant": "Irrelevante",
     "unprocessed": "Sin procesar"
   },
+  "aiDisclosure": {
+    "caption": "Nota generada por IA · Consulta otras fuentes para confirmar y ver el panorama completo.",
+    "short": "Generada por IA"
+  },
   "articleDetail": {
     "readArticle": "Leer artículo",
     "relatedArticles": "Artículos relacionados",
@@ -578,6 +582,7 @@
     "newChat": "Nuevo chat",
     "inputPlaceholder": "Escribe un mensaje...",
     "viewPreviousMessages": "Ver mensajes anteriores",
+    "aiInteractionNotice": "Estás hablando con Mera, un asistente de IA — no con una persona.",
     "aiUsageNotice": "Este asistente te ayuda a configurar tus preferencias de noticias. Intentar manipularlo o usarlo indebidamente puede hacer que tu cuenta sea bloqueada mientras se revisa.",
     "requestUnblock": {
       "button": "Solicitar desbloqueo",

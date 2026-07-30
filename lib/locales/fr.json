@@ -201,6 +201,10 @@
     "irrelevant": "Non pertinent",
     "unprocessed": "Non traité"
   },
+  "aiDisclosure": {
+    "caption": "Note générée par l'IA · Consultez d'autres sources pour confirmer et voir le contexte complet.",
+    "short": "Générée par l'IA"
+  },
   "articleDetail": {
     "readArticle": "Lire l'article",
     "relatedArticles": "Articles connexes",
@@ -578,6 +582,7 @@
     "newChat": "Nouvelle discussion",
     "inputPlaceholder": "Tapez un message...",
     "viewPreviousMessages": "Voir les messages précédents",
+    "aiInteractionNotice": "Vous parlez avec Mera, un assistant IA — pas avec une personne.",
     "aiUsageNotice": "Cet assistant vous aide à configurer vos préférences d'actualités. Toute tentative de le manipuler ou d'en abuser peut entraîner le blocage de votre compte en attendant une révision.",
     "requestUnblock": {
       "button": "Demander le déblocage",

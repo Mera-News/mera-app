@@ -201,6 +201,10 @@
     "irrelevant": "無關",
     "unprocessed": "未處理"
   },
+  "aiDisclosure": {
+    "caption": "由 AI 產生的說明 · 檢查其他來源以確認並全面了解情況。",
+    "short": "由 AI 產生"
+  },
   "articleDetail": {
     "readArticle": "閱讀文章",
     "relatedArticles": "相關文章",
@@ -578,6 +582,7 @@
     "newChat": "新對話",
     "inputPlaceholder": "輸入訊息...",
     "viewPreviousMessages": "查看先前的訊息",
+    "aiInteractionNotice": "您正在與 Mera（一位 AI 助手）交談——而不是真人。",
     "aiUsageNotice": "此助理協助你設定新聞偏好。試圖操縱或濫用可能導致你的帳號被封鎖並等待審核。",
     "requestUnblock": {
       "button": "申請解鎖",

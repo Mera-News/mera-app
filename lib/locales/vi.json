@@ -201,6 +201,10 @@
     "irrelevant": "Không liên quan",
     "unprocessed": "Chưa xử lý"
   },
+  "aiDisclosure": {
+    "caption": "Ghi chú do AI tạo · Kiểm tra các nguồn khác để xác nhận và xem toàn bộ bức tranh.",
+    "short": "Do AI tạo"
+  },
   "articleDetail": {
     "readArticle": "Đọc bài viết",
     "relatedArticles": "Bài viết liên quan",
@@ -578,6 +582,7 @@
     "newChat": "Trò chuyện mới",
     "inputPlaceholder": "Nhập tin nhắn...",
     "viewPreviousMessages": "Xem tin nhắn trước đó",
+    "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI — không phải một người.",
     "aiUsageNotice": "Trợ lý này giúp bạn thiết lập tùy chọn tin tức. Cố tình thao túng hoặc lạm dụng có thể khiến tài khoản của bạn bị khóa chờ xem xét.",
     "requestUnblock": {
       "button": "Yêu cầu mở khóa",

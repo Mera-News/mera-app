@@ -203,6 +203,10 @@
     "irrelevant": "Nieistotne",
     "unprocessed": "Nieprzetworzone"
   },
+  "aiDisclosure": {
+    "caption": "Notatka wygenerowana przez AI · Sprawdź inne źródła, aby potwierdzić i uzyskać pełny obraz.",
+    "short": "Wygenerowane przez AI"
+  },
   "articleDetail": {
     "readArticle": "Czytaj artykuł",
     "relatedArticles": "Powiązane artykuły",
@@ -580,6 +584,7 @@
     "newChat": "Nowy czat",
     "inputPlaceholder": "Wpisz wiadomość...",
     "viewPreviousMessages": "Zobacz poprzednie wiadomości",
+    "aiInteractionNotice": "Rozmawiasz z Mera, asystentem AI — nie z osobą.",
     "aiUsageNotice": "Ten asystent pomaga skonfigurować Twoje preferencje dotyczące wiadomości. Próba manipulowania nim lub nadużywania go może spowodować zablokowanie konta do czasu przeglądu.",
     "requestUnblock": {
       "button": "Poproś o odblokowanie",
