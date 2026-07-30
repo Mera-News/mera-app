@@ -27,11 +27,12 @@ import {
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
@@ -262,16 +263,13 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         }, [trackedStoryId, load]),
     );
 
+    // Opens the reason view when Mera scored this article (see use-open-article).
+    const openArticle = useOpenArticle();
     const handleArticlePress = useCallback(
         (articleId: string, stableClusterId: string | null) => {
-            router.push({
-                pathname: '/logged-in/article-detail',
-                params: stableClusterId
-                    ? { articleId, stableClusterId }
-                    : { articleId },
-            });
+            openArticle({ articleId, stableClusterId });
         },
-        [],
+        [openArticle],
     );
 
     const renderItem: ListRenderItem<TimelineCard> = useCallback(

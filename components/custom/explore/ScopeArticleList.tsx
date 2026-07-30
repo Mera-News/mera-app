@@ -6,12 +6,12 @@ import { VStack } from '@/components/ui/vstack';
 import ArticleService from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -148,16 +148,17 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         }
     }, [hasNextPage, isLoadingMore, endCursor, loadFrom, scope.kind]);
 
-    const handlePress = useCallback((article: NewsArticle, stableClusterId?: string | null) => {
-        router.push({
-            pathname: '/logged-in/article-detail',
-            // Forward the stable story id so the detail screen resolves related
-            // articles from the same cluster this card was ranked by.
-            params: stableClusterId
-                ? { articleId: article._id, stableClusterId }
-                : { articleId: article._id },
-        });
-    }, []);
+    // Routes to suggestion-detail when Mera scored this article and wrote a
+    // reason for it, so the reader can see WHY it was picked; otherwise to
+    // article-detail, forwarding the stable story id so that screen resolves
+    // related articles from the same cluster this card was ranked by.
+    const openArticle = useOpenArticle();
+    const handlePress = useCallback(
+        (article: NewsArticle, stableClusterId?: string | null) => {
+            openArticle({ articleId: article._id, stableClusterId });
+        },
+        [openArticle],
+    );
 
     const renderItem: ListRenderItem<TopHeadline> = useCallback(
         ({ item }) => (

@@ -907,6 +907,63 @@ export async function saveReason(
 }
 
 /**
+ * Does this row carry a reason a reader could actually READ?
+ *
+ * `suggestion-detail`'s screen variant renders exactly one explanatory element
+ * — `ArticleSuggestionContainer`'s `reasonBoxEl` (metaRow / title / aboveReason
+ * / reasonBox / footer; note `factChipsEl` is CARD-only). So:
+ *   - `excluded`        → relevance 0, no reason, never scored ⇒ nothing to show.
+ *   - `unscored`        → `relevanceReady` false ⇒ the box doesn't render at all.
+ *   - `reason_pending`  → the box renders a perpetual StreamingIndicator, not text.
+ *   - `complete` + ''   → the box doesn't render (screen variant has no chips).
+ * Only reason TEXT makes the reason screen worth landing on, so that — plus an
+ * explicit `excluded` guard — is the whole gate. Deliberately NOT gated on
+ * relevance: a relevance-0 row that still has reason text has the exact thing
+ * the reader came for.
+ */
+function hasReadableReason(row: ArticleSuggestionModel): boolean {
+  return (
+    row.status !== ArticleSuggestionStatus.Excluded &&
+    typeof row.reason === 'string' &&
+    row.reason.trim().length > 0
+  );
+}
+
+/**
+ * Tap-time lookup: articleId → the server id of the newest suggestion for that
+ * article that has a readable reason, or null.
+ *
+ * Deliberately the NARROWEST query that answers the question — one indexed
+ * `article_id` hit, no fact joins, no topic parsing, no `toForYouSuggestion`
+ * mapping (contrast `getSuggestionFeedbackContext`, which does all four). This
+ * runs on every article tap on four surfaces, so it must stay a single index
+ * probe over ~1 row.
+ *
+ * The Q predicates are mirrored by the JS filter below: the SQL narrows for
+ * real, the JS makes the result independent of the query engine (and keeps the
+ * predicate-ignoring test double honest).
+ */
+export async function getReasonedSuggestionIdForArticle(
+  articleId: string,
+): Promise<string | null> {
+  if (!articleId) return null;
+  const rows = await articleSuggestionsCol
+    .query(
+      Q.where('article_id', articleId),
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.Excluded)),
+      Q.sortBy('created_at', Q.desc),
+    )
+    .fetch();
+  // Newest-first; take the newest row that actually has a reason rather than
+  // the newest row outright — a re-synced duplicate can land reason-less
+  // alongside an older, fully-reasoned sibling.
+  const hit = rows.find((r) => r.articleId === articleId && hasReadableReason(r));
+  // The WatermelonDB `id` IS the server ArticleSuggestion `_id` (see the model
+  // docstring) — that, NOT `articleId`, is what suggestion-detail resolves.
+  return hit?.id ?? null;
+}
+
+/**
  * Find a suggestion by server id (returns null if not present).
  */
 export async function getSuggestionByServerId(serverId: string): Promise<ForYouSuggestion | null> {

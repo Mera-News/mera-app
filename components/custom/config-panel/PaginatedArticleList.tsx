@@ -4,10 +4,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type { ArticlesForPublicationSourceResponse, NewsArticle } from '@/lib/generated/graphql-types';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
@@ -88,12 +88,14 @@ const PaginatedArticleList: React.FC<PaginatedArticleListProps> = ({
         }
     }, [hasNextPage, isLoadingMore, endCursor, logScope]);
 
-    const handleArticlePress = useCallback((article: NewsArticle) => {
-        router.push({
-            pathname: '/logged-in/article-detail',
-            params: { articleId: article._id },
-        });
-    }, []);
+    // Opens the reason view when Mera scored this article (see use-open-article).
+    const openArticle = useOpenArticle();
+    const handleArticlePress = useCallback(
+        (article: NewsArticle) => {
+            openArticle({ articleId: article._id });
+        },
+        [openArticle],
+    );
 
     const renderItem: ListRenderItem<NewsArticle> = useCallback(
         ({ item }) => (
