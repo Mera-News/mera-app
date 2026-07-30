@@ -184,10 +184,22 @@ describe('headline sections — country / GLOBAL split', () => {
     const fact = rows.find((r) => r.factId === 'f1');
     const country = rows.find((r) => r.factId === COUNTRY_IN_SECTION);
     expect(fact!.groups).toHaveLength(1);
-    // The country section still EXISTS (Mera did read that headline) but shows
-    // no card, because the card lives in the fact section.
-    expect(country!.groups).toHaveLength(0);
-    expect(country!.headlineReadCount).toBe(1);
+    // CONSCIOUSLY UPDATED IN P8 — this assertion was inverted on purpose; it is
+    // not a silenced regression.
+    //
+    // It used to read: the country section still EXISTS with
+    // headlineReadCount === 1 and zero cards. P8's product decision changed
+    // exactly that. A co-matched headline is DELIBERATELY shown under the topic
+    // it matched (more personal, and the pre-existing placement), which means it
+    // can never appear in a headline section — so it must not inflate a
+    // denominator for a population that section has no way to show. The whole
+    // pool here is that one co-matched row, so the scope's denominator is 0 and
+    // its section is not created at all: a section reading "Mera read 0
+    // headlines" is a promise of content plus an admission there is none.
+    //
+    // Placement is UNCHANGED — the card still lives in the fact section above,
+    // and is still never rendered twice.
+    expect(country).toBeUndefined();
   });
 });
 
