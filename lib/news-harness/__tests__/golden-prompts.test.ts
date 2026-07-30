@@ -162,3 +162,83 @@ describe('golden — measured prompt sizes', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// P4b — the SHIM is the live path (lib/services/scoring-pipeline imports its
+// builders from lib/mera-protocol/scoring-service, not from the harness). The
+// blocks above only ever build standard candidates, so they would stay green
+// with the headline routing wired in the harness and missing from the shim —
+// exactly how this feature would ship inert. These pin shim/harness identity on
+// the HEADLINE path too.
+// ---------------------------------------------------------------------------
+
+function headlineCandidate(id: string): ScoringCandidate {
+  return {
+    ...candidate(id),
+    meta: {
+      id,
+      titleEn: `Title ${id}`,
+      descriptionEn: `Description for ${id}`,
+      publicationName: null,
+      countryCode: null,
+      firstPubDateMs: null,
+      maxClusterSize: null,
+      eventType: null,
+      category: null,
+      geoTagsJson: null,
+      entitiesJson: null,
+      matchedTopicsJson: null,
+      headlineScope: 'GLOBAL',
+      stableClusterId: null,
+    },
+  };
+}
+
+describe('golden — headline variant (P4b routing)', () => {
+  it('shim and harness produce byte-identical HEADLINE score calls (incl. chunking at 3)', async () => {
+    const candidates = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(headlineCandidate);
+    const shim = await shimBuildRelevanceCalls(candidates);
+    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+
+    // 7 headline candidates at 3 per call = 3 calls (not 2, as 5-chunking gives).
+    expect(shim.calls).toHaveLength(3);
+    expect(shim.scoreChunkSize).toBe(3);
+    expect(harness.scoreChunkSize).toBe(3);
+    expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
+    expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
+    expect(shim.calls.map((c) => c.prompt)).toEqual(harness.calls.map((c) => c.prompt));
+    expect(shim.calls.every((c) => c.system === CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(
+      true,
+    );
+  });
+
+  it('the SHIM routes headline candidates to the headline relevance prompt', async () => {
+    const shim = await shimBuildRelevanceCalls([headlineCandidate('a')]);
+    expect(shim.calls[0].system).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
+  });
+
+  it('the SHIM keeps standard candidates on the standard prompt at chunk 5', async () => {
+    const shim = await shimBuildRelevanceCalls(['a', 'b', 'c', 'd', 'e', 'f'].map(candidate));
+    expect(shim.scoreChunkSize).toBe(5);
+    expect(shim.calls).toHaveLength(2);
+    expect(shim.calls[0].system).toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
+  });
+
+  it('shim and harness select the headline REASON prompt per candidate, identically', async () => {
+    const candidates = [headlineCandidate('h'), candidate('s')];
+    const relevanceMap = { h: 0.72, s: 0.65 };
+    const shim = await shimBuildReasonCallsForSubset(candidates, relevanceMap, 0.3);
+    const harness = harnessBuildReasonCallsForSubset(
+      candidates,
+      relevanceMap,
+      0.3,
+      FACT_STATEMENTS,
+    );
+
+    expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
+    expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
+    const systemById = new Map(shim.calls.map((c) => [c.id, c.system] as const));
+    expect(systemById.get('reason:h')).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
+    expect(systemById.get('reason:s')).toBe(CLOUD_REASON_SYSTEM_PROMPT);
+  });
+});

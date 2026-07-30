@@ -45,7 +45,13 @@ import {
   decodeCloudBatchResults as harnessDecodeCloudBatchResults,
   buildFeedVerifierCalls,
   applyFeedVerifierDecisions,
+  isHeadlineCandidate,
+  resolveScoringVariant,
+  relevanceSystemPromptFor,
+  reasonSystemPromptFor,
+  scoreChunkSizeFor,
   CLOUD_SCORE_CHUNK_SIZE,
+  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import type {
@@ -68,6 +74,7 @@ const isOnDeviceMode = () =>
 export {
   bucketScores,
   CLOUD_SCORE_CHUNK_SIZE,
+  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 };
 export type { CloudCallBundle, DecodedResults, ScoringResult };
@@ -387,7 +394,14 @@ function buildReasonCallsForSurvivors(
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
-      system: CLOUD_REASON_SYSTEM_PROMPT,
+      // P4b: a TOP-HEADLINE row gets the headline reason prompt (same impact
+      // rubric its score pass ran), so the note can name the causal mechanism
+      // the scorer accepted. One call per candidate ⇒ no chunking constraint,
+      // so this is a straight per-candidate selection.
+      system: reasonSystemPromptFor(
+        ARTICLE_CFG,
+        isHeadlineCandidate(c) ? 'headline' : 'standard',
+      ),
       prompt: reasonPrompt,
       temperature: ARTICLE_CFG.reasonTemperature,
       maxTokens: ARTICLE_CFG.reasonMaxTokens,
@@ -405,12 +419,22 @@ function buildReasonCallsForSurvivors(
 /**
  * Phase-1 of the two-phase async flow: score-only calls, no reason prompts.
  * Loads the user's fact bank internally so callers keep the original signature.
+ *
+ * P4b: the system prompt and the chunk size are chosen by the variant the
+ * candidates resolve to — TOP-HEADLINE sets take the indirect-impact prompt at
+ * CLOUD_HEADLINE_SCORE_CHUNK_SIZE, everything else the standard pair at
+ * ARTICLES_PER_SCORE_PROMPT. The selection helpers are imported from the
+ * harness (never re-derived here) so the two paths cannot drift; the size
+ * actually used comes back on the bundle for the async decoder to persist.
  */
 export async function buildRelevanceCalls(
   candidates: ScoringCandidate[],
 ): Promise<CloudCallBundle> {
   const eligible = candidates.filter(isEligible);
-  const chunks = chunk(eligible, ARTICLES_PER_SCORE_PROMPT);
+  const variant = resolveScoringVariant(eligible);
+  const scoreChunkSize = scoreChunkSizeFor(ARTICLE_CFG, variant);
+  const systemPrompt = relevanceSystemPromptFor(ARTICLE_CFG, variant);
+  const chunks = chunk(eligible, scoreChunkSize);
   const allFactStatements = await loadAllFactStatements();
 
   const calls: BatchCall[] = [];
@@ -418,7 +442,11 @@ export async function buildRelevanceCalls(
   const chunkIdToCandidates = new Map<string, ScoringCandidate[]>();
 
   chunks.forEach((chunkCandidates, idx) => {
-    const { prompt, system } = buildScoreCallForChunk(chunkCandidates, allFactStatements);
+    const { prompt, system } = buildScoreCallForChunk(
+      chunkCandidates,
+      allFactStatements,
+      systemPrompt,
+    );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
     chunkIdToCandidates.set(scoreId, chunkCandidates);
@@ -436,6 +464,7 @@ export async function buildRelevanceCalls(
     promptsById,
     chunkIdToCandidates,
     eligibleCandidates: eligible,
+    scoreChunkSize,
   };
 }
 
@@ -472,7 +501,14 @@ export async function buildReasonCallsForSubset(
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
-      system: CLOUD_REASON_SYSTEM_PROMPT,
+      // P4b: a TOP-HEADLINE row gets the headline reason prompt (same impact
+      // rubric its score pass ran), so the note can name the causal mechanism
+      // the scorer accepted. One call per candidate ⇒ no chunking constraint,
+      // so this is a straight per-candidate selection.
+      system: reasonSystemPromptFor(
+        ARTICLE_CFG,
+        isHeadlineCandidate(c) ? 'headline' : 'standard',
+      ),
       prompt: reasonPrompt,
       temperature: ARTICLE_CFG.reasonTemperature,
       maxTokens: ARTICLE_CFG.reasonMaxTokens,
@@ -726,7 +762,10 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
         promptsById.set(reasonId, reasonPrompt);
         calls.push({
           id: reasonId,
-          system: CLOUD_REASON_SYSTEM_PROMPT,
+          system: reasonSystemPromptFor(
+            ARTICLE_CFG,
+            isHeadlineCandidate(candidate) ? 'headline' : 'standard',
+          ),
           prompt: reasonPrompt,
           temperature: ARTICLE_CFG.reasonTemperature,
           maxTokens: ARTICLE_CFG.reasonMaxTokens,

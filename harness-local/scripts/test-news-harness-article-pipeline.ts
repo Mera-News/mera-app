@@ -3,7 +3,16 @@
 //
 //   npx tsx harness-local/scripts/test-news-harness-article-pipeline.ts \
 //     --label my-run [--facts <path>] [--limit-per-topic 20] \
-//     [--articles-from <runDir>] [--config overrides.json]
+//     [--articles-from <runDir>] [--config overrides.json] [--headline-all]
+//
+// --headline-all is a LOCAL-ONLY experiment switch (P4b). The pipeline has no
+// top-headline retrieval, so a replayed candidate never carries
+// meta.headlineScope and the headline prompts are unreachable from here. This
+// flag stamps every candidate as a GLOBAL top headline just before scoring, so
+// the SAME article set can be run once through the standard prompts and once
+// through the headline pair — an honest A/B of the PROMPT (not of the routing,
+// which is unit-tested). It never ships: harness-local is excluded from
+// tsconfig, jest and EAS bundling.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -32,10 +41,11 @@ interface Args {
   limitPerTopic?: number;
   articlesFrom?: string;
   configPath?: string;
+  headlineAll: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { label: 'run', facts: defaultPersonaPath() };
+  const args: Args = { label: 'run', facts: defaultPersonaPath(), headlineAll: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--label') args.label = argv[++i] ?? args.label;
@@ -43,6 +53,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--limit-per-topic') args.limitPerTopic = Number(argv[++i]);
     else if (a === '--articles-from') args.articlesFrom = argv[++i];
     else if (a === '--config') args.configPath = argv[++i];
+    else if (a === '--headline-all') args.headlineAll = true;
   }
   return args;
 }
@@ -142,6 +153,7 @@ async function main(): Promise<number> {
     gitSha: captureGitSha(),
     factsPath: args.facts,
     replayFrom: args.articlesFrom ?? null,
+    headlineAll: args.headlineAll,
   });
 
   const ports: PipelinePorts = { llm, newsApi, personaStore, sink, logger: consoleLogger };
@@ -155,6 +167,14 @@ async function main(): Promise<number> {
   };
   const report = await runArticlePipeline(ports, config, {
     onStage: (stage, data) => {
+      // --headline-all: the pipeline emits the candidate array it is about to
+      // score, so stamping the scope here is what makes the headline prompts
+      // reachable in a replay. Local-only (see the header note).
+      if (stage === 'candidates' && args.headlineAll && Array.isArray(data)) {
+        for (const c of data as { id: string; meta?: Record<string, unknown> }[]) {
+          c.meta = { ...(c.meta ?? {}), id: c.id, headlineScope: 'GLOBAL' };
+        }
+      }
       const file = streamStages[stage];
       if (file) writer.writeJson(file, data);
     },

@@ -23,6 +23,8 @@ const mockSaveReason = jest.fn();
 const mockBatchMarkReasonSkipped = jest.fn();
 const mockBatchSaveMathScores = jest.fn();
 const mockGetComputedComponentsByIds = jest.fn((..._args: any[]) => Promise.resolve(new Map()));
+// P4b: stage-row lookup behind the headline/standard enqueue partition.
+const mockGetStageRowsByIds = jest.fn((..._args: any[]) => Promise.resolve([] as any[]));
 // Round-3: per-fact enqueue grouping + advisory-judge calibration deps.
 const mockLoadSectionSnapshots = jest.fn((..._args: any[]) =>
   Promise.resolve({
@@ -145,6 +147,7 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   batchMarkReasonSkipped: (...args: any[]) => mockBatchMarkReasonSkipped(...args),
   batchSaveMathScores: (...args: any[]) => mockBatchSaveMathScores(...args),
   getComputedComponentsByIds: (...args: any[]) => mockGetComputedComponentsByIds(...args),
+  getStageRowsByIds: (...args: any[]) => mockGetStageRowsByIds(...args),
 }));
 
 // Round-3: fact-grouping snapshot loader (lazy-required in planFactBatches).
@@ -262,6 +265,8 @@ import {
   MAX_UNSCORED_WAIT_MS,
   MIN_DISPATCH,
   MAX_BATCH_ARTICLES,
+  MIN_DISPATCH_HEADLINE,
+  MAX_BATCH_ARTICLES_HEADLINE,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
@@ -371,6 +376,9 @@ beforeEach(() => {
   mockRefresh.mockResolvedValue(undefined);
   mockBatchSaveMathScores.mockResolvedValue(undefined);
   mockGetComputedComponentsByIds.mockResolvedValue(new Map());
+  // P4b default: no headline rows ⇒ one standard partition ⇒ the pre-P4b batch
+  // layout every other test in this file asserts.
+  mockGetStageRowsByIds.mockResolvedValue([]);
   mockLoadSectionSnapshots.mockResolvedValue({
     topics: new Map(),
     facts: new Map(),
@@ -1793,5 +1801,207 @@ describe('apply-step throw → attempt cap (MERA-APP-53/55)', () => {
     expect(applyCaptures.length).toBeLessThanOrEqual(2);
     // The run is terminal now → no further polling of this batch.
     expect(currentRun()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P4b — headline/standard batch homogeneity + the persisted chunk size.
+//
+// A batch becomes ONE inference request whose `score:N` calls the decoder
+// rebuilds by re-chunking `candidateIds`. Headline candidates chunk at 3 and
+// standard ones at 5, so a MIXED batch would need two sizes and the decoder,
+// applying one, would attribute scores to the WRONG articles — silently. These
+// tests pin (a) a mixed enqueue never produces a mixed batch, and (b) the size
+// the submit actually used is persisted and is what decode re-chunks with.
+// ---------------------------------------------------------------------------
+
+describe('P4b — headline batch partitioning + chunk-size round trip', () => {
+  const HEADLINE_CHUNK = 3;
+
+  /** Stage rows as getStageRowsByIds returns them (only the field we read). */
+  function stageRows(headlineIds: string[], standardIds: string[] = []) {
+    return [
+      ...headlineIds.map((id) => ({ id, headlineScope: 'GLOBAL' })),
+      ...standardIds.map((id) => ({ id, headlineScope: null })),
+    ];
+  }
+
+  /** Mirror of the real builder: variant (and therefore chunk size) derived
+   *  from the candidates, reported back on the bundle. */
+  function realisticRelevanceBuilder() {
+    return jest.fn(async (subset: any[]) => {
+      const allHeadline =
+        subset.length > 0 &&
+        subset.every((c) => c.meta?.headlineScope === 'GLOBAL');
+      const size = allHeadline ? HEADLINE_CHUNK : 5;
+      return {
+        calls: Array.from(
+          { length: Math.max(1, Math.ceil(subset.length / size)) },
+          (_, i) => ({ id: `score:${i}`, system: 's', prompt: 'p' }),
+        ),
+        eligibleCandidates: subset,
+        promptsById: new Map(),
+        chunkIdToCandidates: new Map(),
+        scoreChunkSize: size,
+      };
+    });
+  }
+
+  /** getUnscored, with meta attached for the ids the stage lookup called out. */
+  function unscoredWithMeta(headlineIds: Set<string>) {
+    return async () => {
+      const all = new Set<string>();
+      if (mockRun) {
+        for (const b of mockRun.batches) for (const id of b.candidateIds) all.add(id);
+      }
+      return Array.from(all).map((id) => ({
+        ...candidate(id),
+        meta: { id, headlineScope: headlineIds.has(id) ? 'GLOBAL' : null },
+      }));
+    };
+  }
+
+  it('never puts a headline and a standard candidate in the same batch', async () => {
+    const headlineIds = ['h0', 'h1', 'h2', 'h3'];
+    const standardIds = ['s0', 's1', 's2', 's3', 's4', 's5'];
+    // Interleaved arrival order — the partition must survive it.
+    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4', 's5'];
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds, standardIds));
+
+    await enqueueCandidates(arrival);
+
+    const run = currentRun();
+    expect(run.batches.length).toBeGreaterThanOrEqual(2);
+    const hs = new Set(headlineIds);
+    for (const b of run.batches) {
+      const flags = new Set(b.candidateIds.map((id: string) => hs.has(id)));
+      expect(flags.size).toBe(1); // all-headline OR all-standard, never both
+    }
+    // Nothing lost, nothing duplicated.
+    expect(run.batches.flatMap((b: any) => b.candidateIds).sort()).toEqual(
+      [...arrival].sort(),
+    );
+  });
+
+  it('keeps delivery order within each partition', async () => {
+    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4'];
+    mockGetStageRowsByIds.mockResolvedValue(
+      stageRows(['h0', 'h1', 'h2', 'h3'], ['s0', 's1', 's2', 's3', 's4']),
+    );
+
+    await enqueueCandidates(arrival);
+
+    const run = currentRun();
+    const flat = run.batches.flatMap((b: any) => b.candidateIds);
+    expect(flat.filter((id: string) => id.startsWith('s'))).toEqual([
+      's0', 's1', 's2', 's3', 's4',
+    ]);
+    expect(flat.filter((id: string) => id.startsWith('h'))).toEqual([
+      'h0', 'h1', 'h2', 'h3',
+    ]);
+  });
+
+  it('dispatches a headline partition at its own (smaller) floor — one LLM call', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(['h0', 'h1', 'h2']));
+
+    // 3 < MIN_DISPATCH (5) but == MIN_DISPATCH_HEADLINE, so it goes out now.
+    const res = await enqueueCandidates(['h0', 'h1', 'h2']);
+
+    expect(res.deferred).toEqual([]);
+    expect(currentRun().batches[0].candidateIds).toEqual(['h0', 'h1', 'h2']);
+  });
+
+  it('caps a headline batch at MAX_BATCH_ARTICLES_HEADLINE (10 calls, not 17)', async () => {
+    const headlineIds = ids(MAX_BATCH_ARTICLES_HEADLINE + MIN_DISPATCH_HEADLINE, 'h');
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds));
+
+    await enqueueCandidates(headlineIds);
+
+    const run = currentRun();
+    expect(run.batches[0].candidateIds).toHaveLength(MAX_BATCH_ARTICLES_HEADLINE);
+    expect(run.batches[1].candidateIds).toHaveLength(MIN_DISPATCH_HEADLINE);
+  });
+
+  it('persists the chunk size the submit ACTUALLY used, per variant', async () => {
+    const headlineIds = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5'];
+    const standardIds = ['s0', 's1', 's2', 's3', 's4'];
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds, standardIds));
+    mockGetUnscored.mockImplementation(unscoredWithMeta(new Set(headlineIds)));
+    mockBuildRelevanceCalls.mockImplementation(realisticRelevanceBuilder());
+
+    await enqueueCandidates([...standardIds, ...headlineIds]);
+
+    const run = currentRun();
+    const byKind = new Map<boolean, any>();
+    for (const b of run.batches) {
+      byKind.set(b.candidateIds[0].startsWith('h'), b);
+    }
+    expect(byKind.get(false).scoreChunkSize).toBe(5);
+    expect(byKind.get(true).scoreChunkSize).toBe(HEADLINE_CHUNK);
+  });
+
+  it('decodes a headline batch with the PERSISTED size, not the standard one', async () => {
+    const headlineIds = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5'];
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds));
+    mockGetUnscored.mockImplementation(unscoredWithMeta(new Set(headlineIds)));
+    mockBuildRelevanceCalls.mockImplementation(realisticRelevanceBuilder());
+
+    await enqueueCandidates(headlineIds);
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    expect(batch.scoreChunkSize).toBe(HEADLINE_CHUNK);
+
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [
+        { id: 'score:0', ok: true },
+        { id: 'score:1', ok: true },
+      ],
+    });
+    mockReconstructLookups.mockClear();
+
+    await handlePush(batch.requestId, 'foreground');
+
+    // 6 ids / 3 = 2 chunks (a 5-chunking would have produced 2 chunks too, but
+    // with the WRONG boundaries) — assert the size that was actually passed.
+    expect(mockReconstructLookups).toHaveBeenCalledWith(
+      ['score:0', 'score:1'],
+      headlineIds,
+      HEADLINE_CHUNK,
+    );
+  });
+
+  it('decodes a pre-P4b batch (no persisted size) with the standard size', async () => {
+    await enqueueCandidates(['a0', 'a1', 'a2', 'a3', 'a4', 'a5']);
+    // Strip the field from the persisted record — exactly the shape a batch
+    // submitted by a PRE-P4b build rehydrates with while still in flight.
+    delete mockRun.batches[0].scoreChunkSize;
+    const batch = currentRun().batches[0];
+    expect(batch.scoreChunkSize).toBeUndefined();
+
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }, { id: 'score:1', ok: true }],
+    });
+    mockReconstructLookups.mockClear();
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockReconstructLookups).toHaveBeenCalledWith(
+      expect.any(Array),
+      ['a0', 'a1', 'a2', 'a3', 'a4', 'a5'],
+      5,
+    );
+  });
+
+  it('falls back to one standard partition when the stage lookup throws', async () => {
+    mockGetStageRowsByIds.mockRejectedValue(new Error('db gone'));
+
+    await enqueueCandidates(ids(MIN_DISPATCH, 'x'));
+
+    const run = currentRun();
+    expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
   });
 });

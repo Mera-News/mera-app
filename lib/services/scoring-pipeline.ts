@@ -40,8 +40,13 @@ import {
   batchMarkExcluded,
   getComputedComponentsByIds,
   batchMarkReasonSkipped,
+  getStageRowsByIds,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
+// Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
+// the one definition of "headline-sourced", shared with the prompt/chunk-size
+// selection the shim's builders run.
+import { isHeadlineScope } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   bucketScores,
   buildReasonCallsForSubset,
@@ -117,6 +122,20 @@ export const MIN_DISPATCH = CLOUD_SCORE_CHUNK_SIZE;
  *  job that risks the gateway's 120s upstream timeout. Overflow spills into
  *  further batches, which drain MAX_IN_FLIGHT at a time. */
 export const MAX_BATCH_ARTICLES = 10 * CLOUD_SCORE_CHUNK_SIZE;
+/** P4b — TOP-HEADLINE relevance chunk size (3). Read off the harness config
+ *  rather than the mera-protocol shim so it can't come back undefined and turn
+ *  the two constants below into NaN. */
+const HEADLINE_SCORE_CHUNK_SIZE =
+  DEFAULT_HARNESS_CONFIG.articlePipeline.headlineArticlesPerScorePrompt;
+/** Dispatch floor for an all-headline batch. Same rule as MIN_DISPATCH — one
+ *  LLM call's worth — at the headline chunk size, so a handful of headlines
+ *  isn't held back below a floor sized for the longer standard chunk. */
+export const MIN_DISPATCH_HEADLINE = HEADLINE_SCORE_CHUNK_SIZE;
+/** Ceiling for an all-headline batch. Same rule as MAX_BATCH_ARTICLES — at most
+ *  10 LLM calls in one request — at the headline chunk size. Reusing the
+ *  standard 50 here would put 17 calls in one job and break the invariant that
+ *  constant exists to hold. */
+export const MAX_BATCH_ARTICLES_HEADLINE = 10 * HEADLINE_SCORE_CHUNK_SIZE;
 /** Legacy alias, kept exported for back-compat with older persisted-run readers
  *  and tests. Points at the dispatch floor, which is what now gates a run. */
 export const BATCH_SIZE = MIN_DISPATCH;
@@ -266,6 +285,76 @@ export async function isFeedCold(): Promise<boolean> {
 function chunkIds(ids: string[], size: number): string[][] {
   const out: string[][] = [];
   for (let i = 0; i < ids.length; i += size) out.push(ids.slice(i, i + size));
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// P4b — headline/standard batch partitioning
+//
+// TOP-HEADLINE candidates are scored with a different system prompt AND a
+// different chunk size (3 vs 5). A batch becomes ONE inference request whose
+// `score:N` calls the decoder re-derives by re-chunking `candidateIds`, so a
+// batch that mixed the two would have to mix chunk sizes — and the decoder,
+// which can only apply one size, would attribute scores to the WRONG articles
+// with no error anywhere. Batches are therefore homogeneous BY CONSTRUCTION:
+// fresh ids are split here, before any batch exists, and each partition is
+// chunked with its own ceiling and dispatch floor.
+//
+// (The submit path independently derives the variant from the candidates it
+// actually sends and persists the chunk size it actually used, so even a
+// mixed batch could only ever be under-routed to the standard prompt — never
+// mis-decoded. This partition is what makes the headline route reachable.)
+// ---------------------------------------------------------------------------
+
+/** One homogeneous group of fresh ids, in delivery order. */
+export interface EnqueuePartition {
+  ids: string[];
+  headline: boolean;
+}
+
+/** Split fresh ids into the standard group then the headline group, preserving
+ *  delivery order within each. Empty groups are omitted, so a feed with no
+ *  headlines yields exactly one partition and the pre-P4b batch layout. */
+export function partitionFreshIds(
+  fresh: string[],
+  headlineIds: ReadonlySet<string>,
+): EnqueuePartition[] {
+  const headline: string[] = [];
+  const standard: string[] = [];
+  for (const id of fresh) {
+    if (headlineIds.has(id)) headline.push(id);
+    else standard.push(id);
+  }
+  const out: EnqueuePartition[] = [];
+  if (standard.length > 0) out.push({ ids: standard, headline: false });
+  if (headline.length > 0) out.push({ ids: headline, headline: true });
+  return out;
+}
+
+/**
+ * Which of `ids` are headline-sourced, read off the persisted stage metadata.
+ *
+ * Ids the query doesn't return — deleted rows, and rows already terminal
+ * `excluded` (getStageRowsByIds filters those) — are STANDARD by omission,
+ * which is the safe default: the worst case is a headline scored with the
+ * standard prompt, never a mis-decoded batch.
+ *
+ * Fail-open on a read error for the same reason: enqueueing must not die
+ * because a metadata read did. An empty set reproduces the pre-P4b layout
+ * exactly.
+ */
+async function lookupHeadlineIds(ids: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  try {
+    for (const row of await getStageRowsByIds(ids)) {
+      if (isHeadlineScope(row.headlineScope)) out.add(row.id);
+    }
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'headline-partition' },
+    });
+    return new Set<string>();
+  }
   return out;
 }
 
@@ -514,52 +603,73 @@ export async function enqueueCandidates(
     return { deferred: [] };
   }
 
-  // FIFO batches capped at MAX_BATCH_ARTICLES. chunkIds yields at most one
-  // trailing short chunk (the last one); dispatch anything that reaches
-  // MIN_DISPATCH, defer only a sub-MIN_DISPATCH remainder.
-  const chunks = chunkIds(fresh, MAX_BATCH_ARTICLES);
+  // P4b: split first, so no batch can ever hold both a headline and a standard
+  // candidate. Each partition is then chunked with its OWN ceiling and floor —
+  // a headline batch is 10 calls of 3, a standard batch 10 calls of 5.
+  const partitions = partitionFreshIds(fresh, await lookupHeadlineIds(fresh));
+
   const dispatch: string[][] = [];
   let deferred = 0;
-  // The trailing partial's ids when it's held back — returned to the caller so
-  // feed-sync can flush it once the whole lot is hydrated (flushPartial pass).
-  let deferredIds: string[] = [];
-  for (const chunk of chunks) {
-    if (chunk.length >= MIN_DISPATCH) {
-      dispatch.push(chunk);
-      continue;
+  // The trailing partials' ids when they're held back — returned to the caller
+  // so feed-sync can flush them once the whole lot is hydrated (flushPartial).
+  const deferredIds: string[] = [];
+  // The staleness escape reads the oldest unscored row's age; memoised so two
+  // partitions with a remainder each still cost at most ONE DB read.
+  let oldestAgeMs: number | null = null;
+  const readOldestAgeMs = async (): Promise<number | null> => {
+    if (oldestAgeMs === null) {
+      const oldestCreatedAt = await getOldestUnscoredCreatedAt();
+      oldestAgeMs = oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : -1;
     }
-    // Sub-MIN_DISPATCH remainder — not yet worth its own LLM call. chunkIds only
-    // ever yields one such chunk, as the last, so the DB read below runs at most
-    // once per enqueue.
-    //
-    // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
-    // everything now. We don't refetch until the whole lot is scored, so a
-    // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
-    // next fetch coming to top it up — dispatch it immediately.
-    if (flushPartial) {
-      logger.info(
-        `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
-      );
-      dispatch.push(chunk);
-      continue;
-    }
-    // (The P7d cold-start knob that dispatched a >=10-row partial on a cold feed
-    // is gone: MIN_DISPATCH is 5, so every chunk it would have caught now
-    // dispatches on the fast path above regardless of feed warmth.)
-    const oldestCreatedAt = await getOldestUnscoredCreatedAt();
-    const oldestAgeMs =
-      oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : 0;
-    if (oldestCreatedAt !== null && oldestAgeMs >= MAX_UNSCORED_WAIT_MS) {
-      logger.info(
-        `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(oldestAgeMs / 60_000)}min)`,
-      );
-      dispatch.push(chunk);
-    } else {
-      deferred = chunk.length;
-      deferredIds = chunk;
-      logger.info(
-        `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${MIN_DISPATCH} dispatch floor, oldest ${Math.round(oldestAgeMs / 60_000)}min)`,
-      );
+    return oldestAgeMs < 0 ? null : oldestAgeMs;
+  };
+
+  for (const partition of partitions) {
+    const maxArticles = partition.headline
+      ? MAX_BATCH_ARTICLES_HEADLINE
+      : MAX_BATCH_ARTICLES;
+    const minDispatch = partition.headline
+      ? MIN_DISPATCH_HEADLINE
+      : MIN_DISPATCH;
+    // FIFO batches capped at the partition's ceiling. chunkIds yields at most
+    // one trailing short chunk (the last one); dispatch anything that reaches
+    // the floor, defer only a sub-floor remainder.
+    for (const chunk of chunkIds(partition.ids, maxArticles)) {
+      if (chunk.length >= minDispatch) {
+        dispatch.push(chunk);
+        continue;
+      }
+      // Sub-floor remainder — not yet worth its own LLM call. chunkIds only
+      // ever yields one such chunk per partition, as the last, so the DB read
+      // below runs at most once per enqueue (memoised above).
+      //
+      // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
+      // everything now. We don't refetch until the whole lot is scored, so a
+      // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
+      // next fetch coming to top it up — dispatch it immediately.
+      if (flushPartial) {
+        logger.info(
+          `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
+        );
+        dispatch.push(chunk);
+        continue;
+      }
+      // (The P7d cold-start knob that dispatched a >=10-row partial on a cold
+      // feed is gone: MIN_DISPATCH is 5, so every chunk it would have caught now
+      // dispatches on the fast path above regardless of feed warmth.)
+      const age = await readOldestAgeMs();
+      if (age !== null && age >= MAX_UNSCORED_WAIT_MS) {
+        logger.info(
+          `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(age / 60_000)}min)`,
+        );
+        dispatch.push(chunk);
+      } else {
+        deferred += chunk.length;
+        deferredIds.push(...chunk);
+        logger.info(
+          `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${minDispatch} dispatch floor, oldest ${Math.round((age ?? 0) / 60_000)}min)`,
+        );
+      }
     }
   }
 
@@ -935,9 +1045,16 @@ async function doSubmitRelevance(
       );
     }
 
+    // P4b: the builder picked the prompt variant from the candidates and reports
+    // the chunk size it ACTUALLY used. Persist that value (below) rather than
+    // re-deriving it at decode — submit and decode then cannot disagree, which
+    // is the only thing standing between a headline batch and scores attributed
+    // to the wrong articles. Absent (older builder) ⇒ the standard size.
+    const scoreChunkSize = bundle.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
+
     const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
     logger.info(
-      `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
+      `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls, chunk=${scoreChunkSize} (token=${token ? 'yes' : 'no'})`,
     );
     const outcome = await sendInferenceRequest({
       bundle,
@@ -955,6 +1072,7 @@ async function doSubmitRelevance(
         eligibleIds,
         undefined,
         penalisedCount > 0 ? suppressPenaltyMap : undefined,
+        scoreChunkSize,
       );
       logger.info(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
@@ -1170,6 +1288,9 @@ async function transitionToWaitingRelevance(
    *  subtract from the LLM scores at decode. Never passed with `judge` (there
    *  the applied score is the math score, penalty already included). */
   suppressPenaltyMap?: Record<string, number>,
+  /** BACKSTOP/legacy batches only — the chunk size the `score:N` calls were
+   *  built with, so decode re-chunks candidateIds identically. */
+  scoreChunkSize?: number,
 ): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -1179,6 +1300,11 @@ async function transitionToWaitingRelevance(
     b.capabilityToken = outcome.capabilityToken || undefined;
     b.candidateIds = eligibleIds; // eligible/submit order = decode join key
     b.submittedAt = Date.now();
+    // Assigned unconditionally (same rationale as suppressPenaltyMap below): a
+    // retry that re-enters submit must never inherit the previous attempt's
+    // chunk size, and judge-mode batches — which have no `score:N` calls —
+    // always clear it.
+    b.scoreChunkSize = judge ? undefined : scoreChunkSize;
     // Assigned unconditionally (not only when present) so a retry that re-enters
     // submit can never inherit a stale map from the previous attempt; judge-mode
     // always clears it — there the applied score already carries the penalty.
@@ -1522,14 +1648,21 @@ async function handleRelevanceResults(
 
   const { batchResults } = await decodeBatch(batch, server);
 
+  // P4b: re-chunk with the size the SUBMIT actually used, persisted on the
+  // batch. A headline batch was chunked at 3, a standard one at 5 — applying
+  // the wrong size here silently shifts every score onto a neighbouring
+  // article. `??` covers batches submitted by a pre-P4b build (all of which
+  // used CLOUD_SCORE_CHUNK_SIZE) and any that stored no size.
+  const scoreChunkSize = batch.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
   const nChunks = Math.max(
     1,
-    Math.ceil(batch.candidateIds.length / CLOUD_SCORE_CHUNK_SIZE),
+    Math.ceil(batch.candidateIds.length / scoreChunkSize),
   );
   const callIds = Array.from({ length: nChunks }, (_, i) => `score:${i}`);
   const { chunkIdToCandidates } = reconstructLookups(
     callIds,
     batch.candidateIds,
+    scoreChunkSize,
   );
 
   const { scoreMap, failedIds } = decodeResults({

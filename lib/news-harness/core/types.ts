@@ -109,6 +109,13 @@ export interface CloudCallBundle {
   /** Candidates that passed eligibility — the source of truth for candidateIds
    *  when persisting a pending async job. */
   eligibleCandidates: ScoringCandidate[];
+  /** Relevance bundles only: the chunk size `score:N` was actually built with
+   *  (standard vs TOP-HEADLINE variant). The async decoder rebuilds the
+   *  `score:N` → candidates join from a flat id list, so it MUST chunk with the
+   *  same size the submit used — persisting this value (rather than
+   *  re-deriving it) is what makes the two incapable of disagreeing. Absent on
+   *  reason/judge bundles, which have no score chunks. */
+  scoreChunkSize?: number;
 }
 
 /** Per-candidate maps decoded from a BatchCompletionResult[]. */

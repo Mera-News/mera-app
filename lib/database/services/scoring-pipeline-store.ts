@@ -74,6 +74,15 @@ export interface PipelineBatch {
    *  `BatchWithJudge` cast). False/absent ⇒ the legacy backstop relevance→reasons
    *  path. */
   judgeMode?: boolean;
+  /** P4b: the chunk size the `score:N` relevance calls were ACTUALLY built with
+   *  at submit — 5 for a standard batch, `headlineArticlesPerScorePrompt` (3)
+   *  for an all-TOP-HEADLINE one. The decoder rebuilds the `score:N` →
+   *  candidate join by re-chunking `candidateIds`, so it must use this size and
+   *  not a global constant; a wrong size silently attributes scores to the
+   *  WRONG articles. Absent ⇒ CLOUD_SCORE_CHUNK_SIZE, which is what every batch
+   *  in flight when this shipped was built with, and what judge-mode/reasonsOnly
+   *  batches (no `score:N` calls at all) leave it as. */
+  scoreChunkSize?: number;
   /** Round-3 B1: judge-mode only — the above-threshold subset the judge job was
    *  built over, in the EXACT order buildJudgeCalls chunked (the `judge:N` decode
    *  join key). Distinct from candidateIds (which covers every row, incl. the
