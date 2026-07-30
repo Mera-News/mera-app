@@ -75,7 +75,21 @@ export interface RetrievalProfile {
   headlineLimitPerScope: number;
 }
 
-export const DEFAULT_HEADLINE_LIMIT_PER_SCOPE = 10;
+/** How many top headlines Mera reads per scope before deciding which matter.
+ *
+ *  20 is the product requirement, not a tuning choice: "By default always make
+ *  sure that the top 20 articles from the top headlines in each country the
+ *  user is interested in is also used to create suggestion." Shipped as 10
+ *  during headlines P1-P6 and corrected here in P7.
+ *
+ *  Bounded above by the server, which 400s over 25
+ *  (articles-for-topics.resolver.ts) — so 20 leaves headroom for a per-scope
+ *  override without a stored setting being able to fail a sync.
+ *
+ *  Cost note: this doubles the headline articles entering scoring per sync
+ *  (up to 6 scopes x 20). The ladder in the depth UI is derived from this
+ *  constant, so lowering it later needs no copy or re-translation. */
+export const DEFAULT_HEADLINE_LIMIT_PER_SCOPE = 20;
 
 /** Hard ceiling on any per-scope depth. Mirrors the server's own maximum
  *  (articles-for-topics.resolver.ts), which returns a 400 above it — a feed

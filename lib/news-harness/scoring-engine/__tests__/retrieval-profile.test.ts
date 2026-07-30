@@ -241,9 +241,13 @@ describe('buildRetrievalProfile — headline scopes from locations', () => {
 });
 
 describe('buildRetrievalProfile — headlineLimitPerScope', () => {
-  it('defaults to 10', () => {
+  // headlines P7 — conscious change, not a silenced regression: this pinned 10,
+  // but the stated requirement was always "the top 20 articles from the top
+  // headlines in each country the user is interested in". Corrected at the
+  // constant; the depth ladder derives from it, so nothing else moved.
+  it('defaults to 20', () => {
     const { headlineLimitPerScope } = buildRetrievalProfile({ topics: [], locations: [] });
-    expect(headlineLimitPerScope).toBe(10);
+    expect(headlineLimitPerScope).toBe(20);
   });
 
   it('respects an explicit override', () => {
