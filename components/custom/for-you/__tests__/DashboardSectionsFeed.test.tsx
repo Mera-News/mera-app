@@ -64,9 +64,16 @@ jest.mock('react-native-reanimated', () => {
         default: { FlatList: FlatListMock },
         useAnimatedScrollHandler: () => ({}),
         useComposedEventHandler: () => ({}),
+        useSharedValue: (initial: any) => ({ value: initial }),
         runOnJS: (fn: any) => fn,
     };
 });
+
+// The tab-press hook needs a real navigator (useNavigation/useRoute); its own
+// behaviour is covered in lib/hooks/__tests__/use-tab-press-scroll-refresh.test.ts.
+jest.mock('@/lib/hooks/use-tab-press-scroll-refresh', () => ({
+    useTabPressScrollRefresh: jest.fn(),
+}));
 
 jest.mock('@/components/ui/box', () => {
     const { View } = require('react-native');

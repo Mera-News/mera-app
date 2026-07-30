@@ -73,6 +73,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
+import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
@@ -430,6 +431,18 @@ const FeedScreen: React.FC = () => {
     refreshPartitionSnapshot();
     onRefreshSync();
   }, [flushSkips, refreshPartitionSnapshot, onRefreshSync]);
+
+  // Re-tap the Feed tab icon → scroll to top; tap again at the top → refresh.
+  // Deliberately the SAME `onRefresh` the RefreshControl below calls, not
+  // `onRefreshSync` and not the scheduler: routing around it would skip
+  // flushSkips + the partition-snapshot refresh, and a scheduler-level call can
+  // be swallowed by conditions that only gate the SCHEDULED path.
+  useTabPressScrollRefresh({
+    listRef,
+    getOffset: () => lastOffsetShared.value,
+    onRefresh,
+    isRefreshing: refreshing,
+  });
 
   // Reset to the top AFTER the re-sorted list has committed. Scrolling inside
   // `onRefresh` would run before the snapshot state lands, letting

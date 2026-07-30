@@ -6,6 +6,7 @@ import { VStack } from '@/components/ui/vstack';
 import ArticleService from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
+import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -13,13 +14,28 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, type ListRenderItem } from 'react-native';
+import {
+    FlatList,
+    type ListRenderItem,
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PAGE_SIZE = 10;
 
 interface ScopeArticleListProps {
     readonly scope: ExploreScope;
+    /**
+     * Gate on the QUERY, not on the mount. The list itself must exist from the
+     * very first render (see the FlatList note below), so the "don't fetch
+     * against the device-country fallback" rule is enforced here instead of by
+     * withholding the component.
+     */
+    readonly enabled?: boolean;
+    /** Measured height of ExploreScreen's pinned header overlay — the list
+     *  scrolls UNDER it, so its content starts below it. */
+    readonly headerHeight?: number;
 }
 
 /**
@@ -33,8 +49,27 @@ interface ScopeArticleListProps {
  *
  * Mounted with a `key={scope.id}` by the parent, so switching scope resets all
  * state via remount.
+ *
+ * ── WHY THE FlatList IS ALWAYS RENDERED ──
+ * react-native-screens locates a tab's scroll view by walking `subviews[0]`
+ * from the tab screen ONCE, when the screen's index-0 child mounts
+ * (RNSBottomTabsScreenComponentView.mountChildComponentView → RNSScrollViewHelper
+ * → RNSScrollViewFinder). If this list is not on screen in that first commit —
+ * or is not the FIRST child of the tab root — the chain dead-ends and the scroll
+ * view is never found. This screen used to fail both ways (the title row was the
+ * first child, and the list was withheld until locations loaded). So: no early
+ * returns. The loading spinner and the empty state are `ListEmptyComponent`,
+ * never a replacement for the list.
+ *
+ * NOTE, measured: restoring that chain did NOT make iOS 26 tab-bar minimize
+ * work on this tab — it does not work on the Feed or Dashboard tabs either,
+ * whose chains were always intact. Whatever blocks it is not this.
  */
-const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
+const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
+    scope,
+    enabled = true,
+    headerHeight = 0,
+}) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
@@ -43,6 +78,17 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
+
+    // Re-tap the Explore icon → scroll this list to top. Explore is
+    // scroll-to-top ONLY: it is a direct server-paginated surface with no
+    // pull-to-refresh, so no `onRefresh` is passed and a second tap at the top
+    // is deliberately inert.
+    const listRef = useRef<FlatList<TopHeadline>>(null);
+    const lastOffset = useRef(0);
+    useTabPressScrollRefresh({
+        listRef,
+        getOffset: () => lastOffset.current,
+    });
 
     // Fetch one page for this scope's country (or GLOBAL for World).
     const loadFrom = useCallback(
@@ -62,6 +108,10 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
     );
 
     useEffect(() => {
+        // ORDER MATTERS: bail out BEFORE latching `hasFetched`, otherwise the
+        // gate would permanently consume the one allowed fetch and the real
+        // load (once locations land) would never run.
+        if (!enabled) return;
         if (hasFetched.current) return;
         hasFetched.current = true;
         (async () => {
@@ -79,7 +129,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
                 setIsLoading(false);
             }
         })();
-    }, [loadFrom, scope.kind]);
+    }, [enabled, loadFrom, scope.kind]);
 
     const loadMore = useCallback(async () => {
         if (!hasNextPage || isLoadingMore || !endCursor) return;
@@ -141,36 +191,65 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         return null;
     }, [isLoadingMore]);
 
-    if (isLoading) {
+    // Spinner-or-empty-state, decided INSIDE the list. Previously these were two
+    // early returns that replaced the list entirely — see the component note.
+    const ListEmptyComponent = useCallback(() => {
+        if (isLoading || !enabled) {
+            return (
+                <Box className="items-center justify-center py-20" testID="explore-loading">
+                    <Spinner size="large" />
+                </Box>
+            );
+        }
         return (
-            <Box className="flex-1 items-center justify-center">
-                <Spinner size="large" />
-            </Box>
-        );
-    }
-
-    if (headlines.length === 0) {
-        return (
-            <VStack className="flex-1 items-center justify-center p-6" space="md">
+            <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
                 <MaterialIcons name="article" size={48} color="#666666" />
                 <Text size="md" className="text-gray-400 text-center">
                     {t('explore.noArticles')}
                 </Text>
             </VStack>
         );
-    }
+    }, [isLoading, enabled, t]);
+
+    const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        lastOffset.current = e.nativeEvent.contentOffset.y;
+        notifyScrollTick();
+    }, []);
 
     return (
         <FlatList
+            ref={listRef}
+            testID="explore-list"
             data={headlines}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}
+            // Pinned to `never` (RN's default) so this list lays out exactly
+            // like the Feed and Dashboard lists: content top starts at
+            // `paddingTop`, and `scrollToOffset({offset: 0})` lands on the real
+            // top. `automatic` — react-native-screens' one-shot `never →
+            // automatic` flip, which it applies while hunting for the tab's
+            // scroll view — was TRIED here and MEASURED: it adds a ~59pt top
+            // content inset (a visible gap under the pinned header on a fresh
+            // mount, and a scroll-to-top that stops 59pt short) and it did NOT
+            // make iOS 26's `tabBarMinimizeBehavior` engage on this tab. Setting
+            // it explicitly also makes the value deterministic across the
+            // scope-switch remount, instead of depending on whether that
+            // one-shot native flip happened to run.
+            contentInsetAdjustmentBehavior="never"
+            contentContainerStyle={{
+                padding: 16,
+                // Clear the pinned header overlay (measured by ExploreScreen) —
+                // the list scrolls underneath it.
+                paddingTop: headerHeight + 8,
+                paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20,
+                flexGrow: 1,
+            }}
             showsVerticalScrollIndicator={false}
-            onScroll={notifyScrollTick}
+            onScroll={onScroll}
             scrollEventThrottle={16}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
+            ListEmptyComponent={ListEmptyComponent}
             ListFooterComponent={ListFooterComponent}
         />
     );

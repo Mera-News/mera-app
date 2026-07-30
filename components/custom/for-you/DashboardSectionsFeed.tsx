@@ -19,13 +19,15 @@ import {
 } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
+import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
+  useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -107,6 +109,20 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+
+  // Re-tap the Dashboard tab icon → scroll to top; tap again at the top →
+  // refresh. Wired HERE rather than in ForYouScreen because this is where the
+  // list ref lives — mirrors how `scrollHandler` is already threaded down.
+  // `onRefresh` is the prop ForYouScreen already passes to the RefreshControl
+  // (useFeedSyncRefresh), so the two paths are literally the same function.
+  const listRef = useRef<Animated.FlatList<SectionItem>>(null);
+  const lastOffsetShared = useSharedValue(0);
+  useTabPressScrollRefresh({
+    listRef,
+    getOffset: () => lastOffsetShared.value,
+    onRefresh,
+    isRefreshing: !!refreshing,
+  });
   // Section content order: the SAME rule the Feed tab uses
   // (lib/feed-ordering/priority-order) — unviewed high→med→low, then viewed
   // high→med→low — so a story cannot be ranked differently on the two screens.
@@ -155,9 +171,16 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
   // deferred TranslatableDynamic translation as items enter the viewport).
+  //
+  // The raw offset is mirrored into a shared value in the SAME worklet rather
+  // than via a second, plain-JS `onScroll` — the list already routes onScroll
+  // through `useComposedEventHandler`, and adding a JS handler alongside it
+  // would have the two fight over the prop. UI thread only: no bridge crossing,
+  // no re-render.
   const tickHandler = useAnimatedScrollHandler({
-    onScroll: () => {
+    onScroll: (e) => {
       runOnJS(notifyScrollTick)();
+      lastOffsetShared.value = e.contentOffset.y;
     },
   });
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
@@ -221,6 +244,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   return (
     <Box className="flex-1" testID="dashboard-sections-feed-root">
       <Animated.FlatList
+        ref={listRef}
         testID="dashboard-feed-list"
         data={sectionData}
         keyExtractor={(it) => it.key}
