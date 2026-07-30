@@ -10,8 +10,16 @@ never once executed.
 
 ## Summary
 
-**14 unreachable items** across categories A–E, plus **3 findings that are worse
+**10 unreachable items** across categories A–E (12 if the three producerless
+suppression kinds in B2 are counted separately), plus **3 findings that are worse
 than dead — actively wrong**, listed at the end.
+
+That is fewer than the wave's size would suggest, and I am reporting it as found
+rather than padding it. 51 commits and ~21k lines produced only ten genuinely
+unreachable things, and several of those are one-line convenience wrappers. The
+reason the list is short is that the *causes* are concentrated: two root causes
+(D1 and A3/D2) account for most of the user-visible damage, and D1 alone is worth
+more than the other nine items combined.
 
 **The most consequential item for users is D1: article tagging has never run, in
 either environment.** There is no `tag-articles-fanout` (nor its renamed
@@ -174,6 +182,16 @@ With the flag off, `applyArticleTagPolicy`
 (`lib/news-harness/scoring-engine/tag-policy.ts:73-76`) returns
 `{ ...input, geoTags: [], entities: [], eventType: null }` for every candidate,
 applied at the composition seam `lib/mera-protocol/stage-scoring.ts:295`.
+
+This is the **only** seam, and it covers both orchestrators — verified, not
+inferred. `buildStageCandidates` (`stage-scoring.ts:289-299`, labelled in-source
+"THE ARTICLE-TAG SEAM") is called by *both* `computeAndJudgeForCandidates`
+(`:428`, the sync inline path) and `computeMathStage` (`:369`, the E2EE async
+path). There is no third path: `grep computeAndJudge` shows exactly one real
+caller, `stage-scoring.ts:429`. (The comment at `run-stage.ts:3` saying
+"scoring-pipeline.ts … call computeAndJudge" is imprecise — the E2EE pipeline
+uses `computeMathStage` instead, as `stage-scoring.ts:372` states — but it routes
+through the same seam, so the conclusion is unaffected.)
 
 `isBackstop()` (`lib/news-harness/scoring-engine/relevance.ts:266-272`) tests
 emptiness of exactly those three fields. (Per the brief: this predicate is
@@ -357,6 +375,34 @@ Recorded so the dead items above are credible by contrast.
   `persona-action-executor.ts:457`; revert at
   `persona-change-log-service.ts:291`. Full loop verified.
 - **Hard-filter headline exemption** — see W3; implemented as specified.
+- **The wave's new Dashboard headline sections** (`974deaa headlines P5`) —
+  reachable. Their data precondition is `headlineResults` on
+  `articleIdsForPersona`, which **is** in production `main`'s schema (only the
+  per-scope `limit` field is missing — D2), and the section shells are built
+  up-front from the denominators so a scope with headlines but no qualifying
+  member still renders its title and its "none looked relevant today" line
+  (`fact-rows-selector.ts:~508-540`). Headline rows also no longer fall through
+  the fact-ownership filter — they resolve to their scope section instead of
+  being dropped. Checked specifically because the task named it; no defect found.
+- **All 119 new exported symbols** were checked for non-test callers. Beyond A1–A3
+  every one has a real call site — including the low-reference-count set that
+  looked suspicious (`MAX_BATCH_ARTICLES_HEADLINE`/`MIN_DISPATCH_HEADLINE` at
+  `scoring-pipeline.ts:629,632`, `suppressionDisplayValue` at `suppression.ts:177`,
+  `formatPendingProposal`, `actionToRow`, `parseProposalAction`, and the rest).
+
+### Out of wave scope, but found while sweeping
+
+Three `ACTION_NAMES` entries have no emitter and no executor case — they are
+referenced only by the display map at
+`components/custom/persona-audit/action-display.ts`:
+`SUPPRESS_TOPIC` (:29), `REASSIGN_TOPIC` (:46), `MERGE_FACTS` (:47).
+`SUPPRESS_TOPIC` additionally has a change-log case
+(`persona-change-log-service.ts:255`) but nothing that ever appends one.
+
+**These predate this wave** — `git diff b0b8605..HEAD -- action-names.ts` shows
+the wave added only `RETIRE_SUPPRESSION` and `SET_SOURCE_SCOPE_PREF`, both of
+which are fully wired (emitter, executor, change-log, revert, display). Recorded
+here so the next reader does not have to rediscover them; not counted in the ten.
 
 ---
 
@@ -445,7 +491,11 @@ Four mechanical sweeps rather than suspect-grepping, so the list is complete
 rather than anecdotal:
 
 - **A** — `git diff b0b8605..HEAD` over non-test paths → `grep '^+export'` → 119
-  new exported symbols → each grepped for non-test, non-declaration references.
+  new exported symbols → **each** grepped for non-test references, and every
+  symbol with a low reference count opened and read at its call site rather than
+  trusted to the counter (the counter under-reports: a multi-line signature
+  defeats the declaration-exclusion regex, so "1 reference" was never treated as
+  proof of death *or* of life). Yield: A1–A3, and nothing else.
 - **B** — every new string/field a consumer keys off, enumerated from its
   consumer and traced back to a write site: the `SUPPRESSION_KINDS` union, every
   `ACTION_NAMES` entry, every `visibleIf` key in `evaluate-condition.ts`, every
