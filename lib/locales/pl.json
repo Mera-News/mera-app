@@ -23,6 +23,7 @@
     "saving": "Zapisywanie..."
   },
   "auth": {
+    "reauthBanner": "Zaloguj się ponownie, aby zsynchronizować",
     "emailPlaceholder": "Wpisz swój adres e-mail",
     "otpPlaceholder": "Wpisz 6-cyfrowy kod",
     "codeSentTitle": "Kod wysłany!",
@@ -209,6 +210,7 @@
     "storyUnavailable": "Ta historia nie jest już dostępna",
     "failedToLoad": "Nie udało się załadować artykułu",
     "articleNotFound": "Nie znaleziono artykułu",
+    "offlineUnavailable": "Jesteś offline, a ten artykuł nie został zapisany do czytania offline",
     "viewAndTranslateOnDevice": "Zobacz artykuł i przetłumacz na urządzeniu",
     "viewOriginal": "Pokaż oryginalny artykuł",
     "viewOriginalIn": "Pokaż oryginalny artykuł w języku {{language}}",
@@ -629,10 +631,16 @@
     "actionShowMoreTopic": "Pokazuj więcej danego tematu",
     "actionDownRank": "Obniż rangę tematu",
     "actionPublicationPref": "Dostosuj publikację",
+    "actionPublicationBoost": "Pokażę więcej z tej publikacji",
+    "actionPublicationDeprioritize": "Pokażę mniej z tej publikacji",
+    "actionPublicationMute": "Wyciszę publikację",
+    "actionSourceScopeBoost": "Pokażę więcej źródeł z kraju",
+    "actionSourceScopeDeprioritize": "Pokażę mniej źródeł z kraju",
     "actionSuppress": "Odfiltruj frazę",
     "actionPinTopic": "Przypnij temat",
     "actionUnpinTopic": "Odepnij temat",
     "actionRetireTopic": "Wycofaj temat",
+    "actionRetireSuppression": "Usunę filtr",
     "chooseOneHint": "Wybierz jedną opcję"
   },
   "publicationVisits": {
@@ -800,6 +808,8 @@
     "askMera": "Zapytaj Mera",
     "closeTree": "Zamknij",
     "treeThanks": "Dzięki — zanotowane.",
+    "feedbackCaption": "Same naciśnięcie nie wystarczy Merze — dlatego je odrzucamy, aby Twój kanał był zdrowy. Wybierz powód, a kanał zmieni się od razu.",
+    "tapAgainToConfirm": "Dotknij ponownie, aby potwierdzić",
     "chatHandoffLike": "Podobała mi się ta historia — więcej takich: {{path}}.",
     "chatHandoffLikeNoPath": "Podobała mi się ta historia — chciałbym więcej takich.",
     "chatHandoffDislike": "Nie podobała mi się ta historia — {{path}}.",
@@ -809,7 +819,8 @@
     "title": "Odkrywaj",
     "scopeWorld": "Świat",
     "noArticles": "Nie znaleziono artykułów",
-    "addPlaces": "Dodaj miejsca"
+    "addPlaces": "Dodaj miejsca",
+    "offlineUnavailable": "Jesteś offline — Odkrywaj wymaga połączenia internetowego"
   },
   "forYou": {
     "sectionPrefix": "Wiadomości o:",
@@ -819,6 +830,12 @@
     "viewAllArticles_few": "Wyświetl wszystkie {{count}} artykuły",
     "viewAllArticles_many": "Wyświetl wszystkie {{count}} artykułów",
     "viewAllArticles_other": "Wyświetl wszystkie {{count}} artykułów",
+    "headlineSectionGlobal": "Na całym świecie",
+    "headlineSectionCountry": "Najnowsze wiadomości z {{country}}",
+    "headlineDenominator_one": "Mera przeczytała {{count}} nagłówek · {{shown}} warte Twojego czasu.",
+    "headlineDenominator_other": "Mera przeczytała {{count}} nagłówki · {{shown}} warte Twojego czasu.",
+    "headlineDenominatorNone_one": "Mera przeczytała {{count}} nagłówek · dzisiaj żaden nie wyglądał na istotny.",
+    "headlineDenominatorNone_other": "Mera przeczytała {{count}} nagłówki · dzisiaj żaden nie wyglądał na istotny.",
     "subTabFeed": "Przegląd",
     "subTabStories": "historie",
     "subTabSaved": "Zapisane"
@@ -942,7 +959,9 @@
       "unknown": "Zmiana persony",
       "hygieneDeleteFact": "Usunięto fakt",
       "addLocation": "Dodano lokalizację",
-      "deleteLocation": "Usunięto lokalizację"
+      "deleteLocation": "Usunięto lokalizację",
+      "retireSuppression": "Filtr został usunięty",
+      "setSourceScopePref": "Dostosowano kraj źródła"
     }
   },
   "calibration": {
@@ -1086,6 +1105,77 @@
     "deleteFailedTitle": "Nie udało się usunąć miejsca",
     "deleteFailedBody": "Spróbuj ponownie."
   },
+  "notInterested": {
+    "title": "Nie interesuje mnie",
+    "subtitle": "Co poprosiłeś Merę, aby trzymała poza Twoim kanałem",
+    "sectionFilters": "Słowa i rzeczy, które ukryłeś",
+    "sectionTopics": "Tematy, które widzisz rzadziej",
+    "sectionSources": "Źródła, które wyciszyłeś lub obniżyłeś",
+    "managePublications": "Zarządzaj preferencjami źródeł",
+    "chatHint": "Nie musisz tu przychodzić. Powiedz Merze, czego nie chcesz widzieć — „mniej o plotkach z gwiazd” — a reszta się sama rozwiąże.",
+    "kinds": {
+      "keyword": "Słowa",
+      "category": "Kategoria",
+      "event_type": "Rodzaj historii",
+      "entity": "Osoba lub rzecz",
+      "place": "Miejsce",
+      "publication": "Źródło",
+      "topic": "Temat"
+    },
+    "sources": {
+      "user": "Ty to dodałeś",
+      "chat": "Z czatu z Merą",
+      "feedback": "Z Twojej opinii",
+      "digest": "Z Twojego codziennego przeglądu",
+      "qa": "Z pytania, które zadała Mera",
+      "unknown": "Dodane automatycznie"
+    },
+    "badgeBlocked": "Ukryto",
+    "badgeShownLess": "Mniej",
+    "badgeMutedTopic": "Mniej",
+    "badgeDownranked": "Obniżono",
+    "badgeMutedPub": "Wyciszono",
+    "mutedPubHint": "Ukryto, oprócz ważnych wiadomości",
+    "cardExemptLabel": "Filtruj \"{{filter}}\" — pokazuję, bo to ważne wiadomości",
+    "expiresOn": "Do {{date}}",
+    "expiresNever": "Aż go usuniesz",
+    "remove": "Usuń",
+    "removeConfirmTitle": "Usunąć?",
+    "removeConfirmBody": "Artykuły takie jak ten mogą pojawić się w Twoim kanale ponownie.",
+    "removeConfirmCta": "Usuń",
+    "removeSuccessTitle": "Usunięto",
+    "removeSuccessBody": "To nie jest już ukrywane w Twoim kanale.",
+    "removeFailedTitle": "Nie można usunąć",
+    "removeFailedBody": "Spróbuj ponownie.",
+    "addPhrase": "Ukryj coś",
+    "addPhraseTitle": "Ukryj coś ze swojego kanału",
+    "addPhraseBody": "Wpisz słowo lub krótką frazę. Mera będzie szukać tego w nagłówku i artykule, i trzymać to z dala od Ciebie. Jeśli chodzi o coś bardziej konkretnego — całą kategorię, źródło, osobę — powiedz to Merze w czacie lub użyj kciuków na artykule: Mera wychwyci to z artykułu, więc zawsze będzie pasować.",
+    "addPhrasePlaceholder": "np. plotki z gwiazd",
+    "addPhraseHardLabel": "Trzymaj to poza moim kanałem",
+    "addPhraseHardHint": "Mera to trzyma z dala. Jeśli stanie się to ważną wiadomością, i tak się pojawi, ale będę Ci pokazywać, dlaczego. Jeśli to wyłączysz, Mera po prostu pokaże to mniej, i o tym zapomni za miesiąc.",
+    "addPhraseSubmit": "Ukryj to",
+    "addPhraseSuccessTitle": "Gotowe",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" jest teraz ukryte w Twoim kanale. Tylko ważne wiadomości przejdą, i Mera Ci o tym powie.",
+    "addPhraseSuccessBodySoft": "Będziesz widzieć dużo mniej o \"{{phrase}}\".",
+    "addPhraseFailedTitle": "Nie można zapisać",
+    "addPhraseFailedBody": "Spróbuj ponownie.",
+    "emptyTitle": "Nic jeszcze nie ukryte",
+    "emptyBody": "Gdy powiesz Merze, że coś Cię nie interesuje, pojawia się tu, abyś mógł to cofnąć.",
+    "emptyFilters": "Jeszcze nie ukryłeś żadnych słów.",
+    "emptyTopics": "Nie ma jeszcze obniżonych tematów.",
+    "emptySources": "Jeszcze nie wyciszyłeś ani nie obniżyłeś żadnych źródeł."
+  },
+  "headlineDepth": {
+    "title": "Najnowsze wiadomości",
+    "subtitle": "Ile Mera czyta dla Ciebie",
+    "intro": "Mera czyta największe historie w każdej sekcji, potem wybiera te, które dla Ciebie są ważne. Zwiększ sekcję, aby zobaczyć więcej; zmniejsz, aby było zwięźle.",
+    "worldwide": "Cały świat",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "Używam standardowego {{n}}.",
+    "customised": "Zmieniono z {{n}}. Wybierz {{n}} ponownie, aby wrócić.",
+    "saveFailedTitle": "Nie można zapisać",
+    "saveFailedBody": "Zmiana nie została zapisana. Spróbuj ponownie."
+  },
   "profileHub": {
     "facts": "Fakty",
     "factsCount_one": "{{count}} fakt kształtujący Twój kanał",
@@ -1105,6 +1195,7 @@
     "prefsCount_many": "{{count}} źródeł dostosowanych",
     "prefsCount_other": "{{count}} źródła dostosowanego",
     "prefsEmpty": "Podbij, obniż lub wycisz źródła",
+    "visitedSubtitle": "Publikacje, które ostatnio otworzyłeś",
     "activity": "Aktywność",
     "activitySubtitle": "Historia zmian Twojej persony",
     "personaHealth": "Stan persony",
@@ -1112,7 +1203,17 @@
     "healthPending_few": "{{count}} sugestie porządkowania",
     "healthPending_many": "{{count}} sugestii porządkowania",
     "healthPending_other": "{{count}} sugestii porządkowania",
-    "healthAllHealthy": "Wszystko w porządku"
+    "healthAllHealthy": "Wszystko w porządku",
+    "groupKnows": "Mera Cię zna",
+    "groupFeed": "Twój kanał",
+    "groupLibrary": "Źródła i biblioteka",
+    "groupInternals": "Za kulisami",
+    "notInterested": "Nie interesuje mnie",
+    "notInterestedSubtitle_one": "{{count}} rzecz, którą ukryłeś",
+    "notInterestedSubtitle_other": "{{count}} rzeczy, które ukryłeś",
+    "notInterestedEmpty": "Nic jeszcze nie ukryte",
+    "headlineDepth": "Najnowsze wiadomości",
+    "headlineDepthSubtitle": "Ile Mera czyta na sekcję"
   },
   "profile": {
     "talkToMera": "Porozmawiaj z Mera",
@@ -1147,13 +1248,14 @@
   },
   "publicationPrefs": {
     "title": "Preferencje źródeł",
-    "subtitle": "Podbijaj, obniżaj lub wyciszaj publikacje",
+    "subtitle": "Podbij, obniż lub wycisz publikacje i kraje",
     "kindBoost": "Podbij",
     "kindDeprioritize": "Obniż",
     "kindMute": "Wycisz",
     "clear": "Wyczyść",
     "clearA11y": "Wyczyść preferencję",
-    "empty": "Nie dostosowałeś jeszcze żadnych źródeł. Podbij, obniż lub wycisz publikację z dowolnego artykułu, aby zobaczyć ją tutaj."
+    "empty": "Nie dostosowałeś jeszcze żadnych źródeł. Podbij, obniż lub wycisz publikację z dowolnego artykułu, albo poproś Merę o więcej z kraju, aby zobaczyć to tutaj.",
+    "scopeKindCountry": "Kraj"
   },
   "optimisationPlan": {
     "notificationTitle": "Twoje codzienne dostrojenie kanału jest gotowe",
@@ -1173,5 +1275,40 @@
     "appliedToast": "Zastosowano {{count}} zmian",
     "appliedTitle": "Kanał dostrojony",
     "empty": "Obecnie nie ma nic do dostrojenia."
+  },
+  "pin": {
+    "lockTitle": "Wpisz PIN",
+    "lockSubtitle": "Wpisz swój 4-cyfrowy PIN, aby odblokować Merę",
+    "incorrect": "Nieprawidłowy PIN. Spróbuj ponownie.",
+    "lockedTryAgain": "Zbyt wiele prób. Spróbuj za {{time}}",
+    "forgot": "Zapomniałeś PIN?",
+    "forgotTitle": "Zresetuj PIN",
+    "forgotBody": "Aby zresetować PIN, zaloguj się ponownie za pomocą jednorazowego kodu e-mail. Twoje zapisane dane pozostają na tym urządzeniu.",
+    "forgotOffline": "Resetowanie PINu wymaga połączenia internetowego do wysłania kodu logowania. Połącz się z internetem i spróbuj ponownie.",
+    "forgotConfirm": "Zaloguj się, aby zresetować",
+    "setupTitle": "Ustaw PIN",
+    "setupSubtitle": "Wybierz 4-cyfrowy PIN, aby chronić aplikację na tym urządzeniu",
+    "confirmTitle": "Potwierdź PIN",
+    "confirmSubtitle": "Ponownie wpisz swój 4-cyfrowy PIN",
+    "mismatch": "PINy się nie zgadzały. Zacznij od nowa."
+  },
+  "security": {
+    "title": "Bezpieczeństwo",
+    "subtitle": "Wybierz, czy Mera będzie prosić o PIN na tym urządzeniu",
+    "requirePinTitle": "Wymagaj PIN do odblokowania",
+    "requirePinDescription": "Poproś o 4-cyfrowy PIN, gdy otworzysz Merę",
+    "setPinTitle": "Ustaw PIN",
+    "setPinSubtitle": "Wybierz 4-cyfrowy PIN, aby odblokować Merę na tym urządzeniu",
+    "lockEnabledTitle": "Odblokowywanie PIN włączone",
+    "lockEnabledDescription": "Wpisuj PIN, gdy otworzysz Merę.",
+    "lockDisabledTitle": "Odblokowywanie PIN wyłączone",
+    "lockDisabledDescription": "Mera otworzy się bez PIN. Twój PIN został usunięty.",
+    "changePin": "Zmień PIN",
+    "verifyCurrentTitle": "Wpisz obecny PIN",
+    "verifyCurrentSubtitle": "Potwierdź swój obecny PIN, aby kontynuować",
+    "newPinTitle": "Ustaw nowy PIN",
+    "newPinSubtitle": "Wybierz nowy 4-cyfrowy PIN",
+    "pinChangedTitle": "PIN zaktualizowany",
+    "pinChangedDescription": "Twój PIN został zmieniony."
   }
 }

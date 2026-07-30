@@ -23,6 +23,7 @@
     "home": "Домівка"
   },
   "auth": {
+    "reauthBanner": "Увійдіть ще раз для синхронізації",
     "emailPlaceholder": "Введіть вашу електронну адресу",
     "otpPlaceholder": "Введіть 6-значний код",
     "codeSentTitle": "Код надіслано!",
@@ -209,6 +210,7 @@
     "storyUnavailable": "Ця новина більше недоступна",
     "failedToLoad": "Не вдалося завантажити статтю",
     "articleNotFound": "Статтю не знайдено",
+    "offlineUnavailable": "Ви офлайн, і ця стаття не збережена для офлайн-читання",
     "viewOriginal": "Переглянути оригінальну статтю",
     "viewOriginalIn": "Переглянути оригінальну статтю мовою {{language}}",
     "viewAndTranslateOnDevice": "Переглянути статтю та перекласти на пристрої",
@@ -629,10 +631,16 @@
     "actionShowMoreTopic": "Показувати тему частіше",
     "actionDownRank": "Знизити тему",
     "actionPublicationPref": "Налаштувати видання",
+    "actionPublicationBoost": "Показувати більше від видання",
+    "actionPublicationDeprioritize": "Показувати менше від видання",
+    "actionPublicationMute": "Приглушити видання",
+    "actionSourceScopeBoost": "Показувати більше з цієї країни",
+    "actionSourceScopeDeprioritize": "Показувати менше з цієї країни",
     "actionSuppress": "Відфільтрувати фразу",
     "actionPinTopic": "Закріпити тему",
     "actionUnpinTopic": "Відкріпити тему",
     "actionRetireTopic": "Деактивувати тему",
+    "actionRetireSuppression": "Вилучити фільтр",
     "chooseOneHint": "Оберіть один варіант"
   },
   "publicationVisits": {
@@ -800,6 +808,8 @@
     "askMera": "Запитати Mera",
     "closeTree": "Закрити",
     "treeThanks": "Дякую — враховано.",
+    "feedbackCaption": "Сам по собі дотик недостатньо розповідає Mera — тому він відхилюється, щоб ваша стрічка залишалась якісною. Виберіть причину, і стрічка змінюється одразу.",
+    "tapAgainToConfirm": "Торкніться ще раз для підтвердження",
     "chatHandoffLike": "Мені сподобалась ця новина — більше такого: {{path}}.",
     "chatHandoffLikeNoPath": "Мені сподобалась ця новина — хочу більше такого.",
     "chatHandoffDislike": "Мені не сподобалась ця новина — {{path}}.",
@@ -809,7 +819,8 @@
     "title": "Огляд",
     "scopeWorld": "Світ",
     "noArticles": "Статей не знайдено",
-    "addPlaces": "Додати місця"
+    "addPlaces": "Додати місця",
+    "offlineUnavailable": "Ви офлайн — Огляду потрібне інтернет-з'єднання"
   },
   "forYou": {
     "sectionPrefix": "Новини про:",
@@ -819,6 +830,12 @@
     "viewAllArticles_few": "Переглянути усі {{count}} статті",
     "viewAllArticles_many": "Переглянути усі {{count}} статей",
     "viewAllArticles_other": "Переглянути усі {{count}} статей",
+    "headlineSectionGlobal": "По світу",
+    "headlineSectionCountry": "Головні новини з {{country}}",
+    "headlineDenominator_one": "Mera прочитала {{count}} заголовок · {{shown}} вартих вашої уваги.",
+    "headlineDenominator_other": "Mera прочитала {{count}} заголовків · {{shown}} вартих вашої уваги.",
+    "headlineDenominatorNone_one": "Mera прочитала {{count}} заголовок · сьогодні нічого не виглядало релевантним.",
+    "headlineDenominatorNone_other": "Mera прочитала {{count}} заголовків · сьогодні нічого не виглядало релевантним.",
     "subTabFeed": "Огляд",
     "subTabStories": "Історії",
     "subTabSaved": "Збережене"
@@ -847,6 +864,7 @@
     "trackAction": "Відстежувати історію",
     "untrackAction": "Не відстежувати історію",
     "trackedToast": "Тепер ви відстежуєте цю історію",
+    "updatesBadge": "{{count}} нових",
     "updatesBadge_one": "{{count}} оновлення",
     "updatesBadge_few": "{{count}} оновлення",
     "updatesBadge_many": "{{count}} оновлень",
@@ -945,7 +963,9 @@
       "unknown": "Зміна профілю",
       "hygieneDeleteFact": "Факт видалено",
       "addLocation": "Місце додано",
-      "deleteLocation": "Місце видалено"
+      "deleteLocation": "Місце видалено",
+      "retireSuppression": "Фільтр вилучено",
+      "setSourceScopePref": "Область джерел коригована"
     }
   },
   "calibration": {
@@ -1089,6 +1109,77 @@
     "deleteFailedTitle": "Не вдалося видалити місце",
     "deleteFailedBody": "Будь ласка, спробуйте ще раз."
   },
+  "notInterested": {
+    "title": "Не цікаво",
+    "subtitle": "Що ви просили Mera прибрати зі стрічки",
+    "sectionFilters": "Слова й речі, які ви приховали",
+    "sectionTopics": "Теми, що показуються рідше",
+    "sectionSources": "Видання, які ви приглушили або понизили",
+    "managePublications": "Керування видавцями",
+    "chatHint": "Не потрібно сюди приходити. Просто скажіть Mera, що не хочете видіти — «менше про знаменитостей» — і вона все розмістить.",
+    "kinds": {
+      "keyword": "Слова",
+      "category": "Категорія",
+      "event_type": "Вид новини",
+      "entity": "Персона чи річ",
+      "place": "Місце",
+      "publication": "Видання",
+      "topic": "Тема"
+    },
+    "sources": {
+      "user": "Ви додали це",
+      "chat": "З чату з Mera",
+      "feedback": "З вашого відгуку",
+      "digest": "З денного огляду",
+      "qa": "З питання Mera",
+      "unknown": "Додано автоматично"
+    },
+    "badgeBlocked": "Приховано цілком",
+    "badgeShownLess": "Показувати менше",
+    "badgeMutedTopic": "Показувати менше",
+    "badgeDownranked": "Понижено",
+    "badgeMutedPub": "Приглушено",
+    "mutedPubHint": "Приховано, окрім важливих новин",
+    "cardExemptLabel": "Ви приховали «{{filter}}» — показуємо, тому що це важливо",
+    "expiresOn": "До {{date}}",
+    "expiresNever": "Доки не видалите",
+    "remove": "Вилучити",
+    "removeConfirmTitle": "Вилучити?",
+    "removeConfirmBody": "Подібні історії можуть знову з'явитися у стрічці.",
+    "removeConfirmCta": "Вилучити",
+    "removeSuccessTitle": "Вилучено",
+    "removeSuccessBody": "Це більше не приховано у вашій стрічці.",
+    "removeFailedTitle": "Не вдалося вилучити",
+    "removeFailedBody": "Будь ласка, спробуйте ще раз.",
+    "addPhrase": "Приховати щось",
+    "addPhraseTitle": "Приховати зі стрічки",
+    "addPhraseBody": "Введіть слово чи коротку фразу. Mera знайде її в заголовку й тексті й приховає оттам. Для чогось більшого — категорія, видання, персона — просто скажіть у чаті або використайте кнопку на статті: Mera знайде прямо зі статті, так збіг завжди вірний.",
+    "addPhrasePlaceholder": "наприклад, знаменитості",
+    "addPhraseHardLabel": "Приховати зі стрічки",
+    "addPhraseHardHint": "Mera це приховає цілком. Якщо це стане важливою новиною, все одно покаже й скаже чому. Якщо не вибрати, просто покаже рідше й забуде через місяць.",
+    "addPhraseSubmit": "Приховати",
+    "addPhraseSuccessTitle": "Готово",
+    "addPhraseSuccessBodyBlocked": "«{{phrase}}» приховано. Проходить лише важливе, і Mera скаже чому.",
+    "addPhraseSuccessBodySoft": "«{{phrase}}» буде з'являтися набагато рідше.",
+    "addPhraseFailedTitle": "Не вдалося зберегти",
+    "addPhraseFailedBody": "Будь ласка, спробуйте ще раз.",
+    "emptyTitle": "Поки ніч не приховано",
+    "emptyBody": "Коли ви скажете Mera, що щось вам не цікаво, це з'явиться тут, щоб ви могли скасувати.",
+    "emptyFilters": "Слів ще не приховували.",
+    "emptyTopics": "Тем ще не понизили.",
+    "emptySources": "Видань ще не приглушували й не понизили."
+  },
+  "headlineDepth": {
+    "title": "Головні новини",
+    "subtitle": "Скільки новин читає Mera для вас",
+    "intro": "Mera читає найголовніше в кожній рубриці, потім обирає важливе саме для вас. Піднімайте рубрику, щоб бачити більше; опускайте, щоб лишити основне.",
+    "worldwide": "Весь світ",
+    "optionLabel": "Топ {{n}}",
+    "usingDefault": "Використовується стандартне {{n}}.",
+    "customised": "Змінено з {{n}}. Виберіть {{n}} знову, щоб повернутись.",
+    "saveFailedTitle": "Не вдалося зберегти",
+    "saveFailedBody": "Зміна не збереглась. Спробуйте ще раз."
+  },
   "profileHub": {
     "facts": "Факти",
     "factsCount_one": "{{count}} факт формує вашу стрічку",
@@ -1108,6 +1199,7 @@
     "prefsCount_many": "{{count}} джерел налаштовано",
     "prefsCount_other": "{{count}} джерела налаштовано",
     "prefsEmpty": "Підвищуйте, знижуйте або заглушуйте джерела",
+    "visitedSubtitle": "Видання, які ви відкривали нещодавно",
     "activity": "Активність",
     "activitySubtitle": "Історія змін вашого профілю",
     "personaHealth": "Здоров'я профілю",
@@ -1115,7 +1207,17 @@
     "healthPending_few": "{{count}} пропозиції щодо впорядкування",
     "healthPending_many": "{{count}} пропозицій щодо впорядкування",
     "healthPending_other": "{{count}} пропозиції щодо впорядкування",
-    "healthAllHealthy": "Усе гаразд"
+    "healthAllHealthy": "Усе гаразд",
+    "groupKnows": "Mera вас знає",
+    "groupFeed": "Ваша стрічка",
+    "groupLibrary": "Видання й бібліотека",
+    "groupInternals": "За лаштунками",
+    "notInterested": "Не цікаво",
+    "notInterestedSubtitle_one": "{{count}} прихована річ",
+    "notInterestedSubtitle_other": "{{count}} прихованих речей",
+    "notInterestedEmpty": "Поки ніч не приховано",
+    "headlineDepth": "Головні новини",
+    "headlineDepthSubtitle": "Скільки новин на рубрику"
   },
   "profile": {
     "talkToMera": "Поговоріть з Mera",
@@ -1150,13 +1252,14 @@
   },
   "publicationPrefs": {
     "title": "Налаштування джерел",
-    "subtitle": "Підвищуйте, знижуйте або заглушуйте видання",
+    "subtitle": "Піднімайте, опускайте чи приглушуйте видання й країни",
     "kindBoost": "Підвищити",
     "kindDeprioritize": "Знизити",
     "kindMute": "Заглушити",
     "clear": "Очистити",
     "clearA11y": "Очистити налаштування",
-    "empty": "Ви ще не налаштовували джерела. Підвищте, знизьте або заглушіть видання з будь-якої статті, щоб побачити його тут."
+    "empty": "Видань ще не коригували. Піднімайте, опускайте чи приглушуйте видання зі статті, або попросіть Mera більше з цієї країни, щоб це з'явилось тут.",
+    "scopeKindCountry": "Країна"
   },
   "optimisationPlan": {
     "notificationTitle": "Ваше щоденне налаштування стрічки готове",
@@ -1176,5 +1279,40 @@
     "appliedToast": "{{count}} змін застосовано",
     "appliedTitle": "Стрічку налаштовано",
     "empty": "Наразі немає чого налаштовувати."
+  },
+  "pin": {
+    "lockTitle": "Введіть PIN",
+    "lockSubtitle": "Введіть 4-значний PIN для розблокування Mera",
+    "incorrect": "Неправильний PIN. Спробуйте ще раз.",
+    "lockedTryAgain": "Занадто багато спроб. Спробуйте через {{time}}",
+    "forgot": "Забули PIN?",
+    "forgotTitle": "Скинути PIN",
+    "forgotBody": "Щоб скинути PIN, увійдіть із разовим кодом. Ваші дані залишатимуться на пристрої.",
+    "forgotOffline": "Скидання PIN потребує інтернету для отримання коду. Підключіться й спробуйте ще раз.",
+    "forgotConfirm": "Увійти й скинути",
+    "setupTitle": "Встановити PIN",
+    "setupSubtitle": "Виберіть 4-значний PIN для захисту застосунку на цьому пристрої",
+    "confirmTitle": "Підтвердьте PIN",
+    "confirmSubtitle": "Введіть 4-значний PIN ще раз",
+    "mismatch": "PIN не збігаються. Почніть спочатку."
+  },
+  "security": {
+    "title": "Безпека",
+    "subtitle": "Виберіть, потребує Mera PIN на цьому пристрої",
+    "requirePinTitle": "Потребувати PIN для розблокування",
+    "requirePinDescription": "Просити 4-значний PIN при відкритті Mera",
+    "setPinTitle": "Встановити PIN",
+    "setPinSubtitle": "Виберіть 4-значний PIN для розблокування Mera на цьому пристрої",
+    "lockEnabledTitle": "Блокування PIN увімкнено",
+    "lockEnabledDescription": "PIN потребуватиметься при відкритті Mera.",
+    "lockDisabledTitle": "Блокування PIN вимкнено",
+    "lockDisabledDescription": "Mera розблокуватиметься без PIN. Ваш PIN видалено.",
+    "changePin": "Змінити PIN",
+    "verifyCurrentTitle": "Введіть поточний PIN",
+    "verifyCurrentSubtitle": "Підтвердьте поточний PIN для продовження",
+    "newPinTitle": "Встановити новий PIN",
+    "newPinSubtitle": "Виберіть новий 4-значний PIN",
+    "pinChangedTitle": "PIN змінено",
+    "pinChangedDescription": "Ваш PIN успішно змінено."
   }
 }

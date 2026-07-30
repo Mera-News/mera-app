@@ -23,6 +23,7 @@
     "saving": "Guardando..."
   },
   "auth": {
+    "reauthBanner": "Inicia sesión de nuevo para sincronizar",
     "emailPlaceholder": "Ingresa tu dirección de correo electrónico",
     "otpPlaceholder": "Ingresa el código de 6 dígitos",
     "codeSentTitle": "¡Código enviado!",
@@ -207,6 +208,7 @@
     "storyUnavailable": "Esta historia ya no está disponible",
     "failedToLoad": "Error al cargar el artículo",
     "articleNotFound": "Artículo no encontrado",
+    "offlineUnavailable": "Estás sin conexión y este artículo no se guardó para lectura sin conexión",
     "viewOriginal": "Ver artículo original",
     "viewOriginalIn": "Ver artículo original en {{language}}",
     "viewAndTranslateOnDevice": "Ver artículo y traducirlo en el dispositivo",
@@ -627,10 +629,16 @@
     "actionShowMoreTopic": "Mostrar más de un tema",
     "actionDownRank": "Bajar la prioridad de un tema",
     "actionPublicationPref": "Ajustar una publicación",
+    "actionPublicationBoost": "Mostrar más de una publicación",
+    "actionPublicationDeprioritize": "Mostrar menos de una publicación",
+    "actionPublicationMute": "Silenciar una publicación",
+    "actionSourceScopeBoost": "Mostrar más fuentes de un país",
+    "actionSourceScopeDeprioritize": "Mostrar menos fuentes de un país",
     "actionSuppress": "Filtrar una frase",
     "actionPinTopic": "Fijar un tema",
     "actionUnpinTopic": "Dejar de fijar un tema",
     "actionRetireTopic": "Retirar un tema",
+    "actionRetireSuppression": "Quitar un filtro",
     "chooseOneHint": "Elige una opción"
   },
   "publicationVisits": {
@@ -798,6 +806,8 @@
     "askMera": "Pregúntale a Mera",
     "closeTree": "Cerrar",
     "treeThanks": "Gracias — anotado.",
+    "feedbackCaption": "Por sí solo, un toque no le dice suficiente a Mera — así que se descarta, para mantener tu feed saludable. Elige una razón y tu feed cambia de inmediato.",
+    "tapAgainToConfirm": "Toca de nuevo para confirmar",
     "chatHandoffLike": "Me gustó esta historia — más como esta: {{path}}.",
     "chatHandoffLikeNoPath": "Me gustó esta historia — quiero ver más como esta.",
     "chatHandoffDislike": "No me gustó esta historia — {{path}}.",
@@ -807,7 +817,8 @@
     "title": "Explorar",
     "scopeWorld": "Mundo",
     "noArticles": "No se encontraron artículos",
-    "addPlaces": "Añadir lugares"
+    "addPlaces": "Añadir lugares",
+    "offlineUnavailable": "Estás sin conexión — Explorar necesita conexión a internet"
   },
   "forYou": {
     "sectionPrefix": "Noticias sobre:",
@@ -815,6 +826,12 @@
     "showMore": "Mostrar {{count}} más",
     "viewAllArticles_one": "Ver todo {{count}} artículo",
     "viewAllArticles_other": "Ver todos {{count}} artículos",
+    "headlineSectionGlobal": "Alrededor del mundo",
+    "headlineSectionCountry": "Titulares principales de {{country}}",
+    "headlineDenominator_one": "Mera leyó {{count}} titular · {{shown}} vale tu tiempo.",
+    "headlineDenominator_other": "Mera leyó {{count}} titulares · {{shown}} valen tu tiempo.",
+    "headlineDenominatorNone_one": "Mera leyó {{count}} titular · ninguno parecía relevante hoy.",
+    "headlineDenominatorNone_other": "Mera leyó {{count}} titulares · ninguno parecía relevante hoy.",
     "subTabFeed": "Panorama",
     "subTabStories": "Historias",
     "subTabSaved": "Guardados"
@@ -936,7 +953,9 @@
       "unknown": "Cambio de perfil",
       "hygieneDeleteFact": "Hecho eliminado",
       "addLocation": "Lugar añadido",
-      "deleteLocation": "Lugar eliminado"
+      "deleteLocation": "Lugar eliminado",
+      "retireSuppression": "Se quitó un filtro",
+      "setSourceScopePref": "Se ajustó el alcance de la fuente"
     }
   },
   "calibration": {
@@ -1076,6 +1095,77 @@
     "deleteFailedTitle": "No se pudo eliminar el lugar",
     "deleteFailedBody": "Por favor, inténtalo de nuevo."
   },
+  "notInterested": {
+    "title": "No me interesa",
+    "subtitle": "Lo que le pediste a Mera que mantenga fuera de tu feed",
+    "sectionFilters": "Palabras y cosas que has ocultado",
+    "sectionTopics": "Temas que ves menos",
+    "sectionSources": "Fuentes que silenciaste o bajaste de prioridad",
+    "managePublications": "Gestionar preferencias de fuentes",
+    "chatHint": "No tienes que venir aquí. Solo dile a Mera qué prefieres no ver — \"menos sobre chismes de celebridades\" — y se encargará del resto.",
+    "kinds": {
+      "keyword": "Palabras",
+      "category": "Categoría",
+      "event_type": "Tipo de historia",
+      "entity": "Persona o cosa",
+      "place": "Lugar",
+      "publication": "Fuente",
+      "topic": "Tema"
+    },
+    "sources": {
+      "user": "Lo agregaste",
+      "chat": "De un chat con Mera",
+      "feedback": "De tus comentarios",
+      "digest": "De tu revisión diaria",
+      "qa": "De una pregunta que Mera hizo",
+      "unknown": "Agregado automáticamente"
+    },
+    "badgeBlocked": "Bloqueado",
+    "badgeShownLess": "Mostrado menos",
+    "badgeMutedTopic": "Mostrado menos",
+    "badgeDownranked": "Bajado de prioridad",
+    "badgeMutedPub": "Silenciado",
+    "mutedPubHint": "Bloqueado, excepto para noticias importantes",
+    "cardExemptLabel": "Filtraste \"{{filter}}\" — mostrándolo porque es noticia importante",
+    "expiresOn": "Hasta {{date}}",
+    "expiresNever": "Hasta que lo quites",
+    "remove": "Quitar",
+    "removeConfirmTitle": "¿Quitar esto?",
+    "removeConfirmBody": "Las historias como esta pueden reaparecer en tu feed.",
+    "removeConfirmCta": "Quitar",
+    "removeSuccessTitle": "Quitado",
+    "removeSuccessBody": "Ya no se mantiene fuera de tu feed.",
+    "removeFailedTitle": "No se pudo quitar",
+    "removeFailedBody": "Por favor, inténtalo de nuevo.",
+    "addPhrase": "Ocultar algo",
+    "addPhraseTitle": "Ocultar algo de tu feed",
+    "addPhraseBody": "Escribe una palabra o una frase corta. Mera la buscará en el titular e historia, y las mantendrá fuera de tu vista. Para algo más específico — una categoría completa, una fuente, una persona — simplemente dilo en el chat, o usa los pulgares en una historia: Mera lo toma de la historia en sí, así que siempre coincide.",
+    "addPhrasePlaceholder": "p. ej. chismes de celebridades",
+    "addPhraseHardLabel": "Mantenerlo fuera de mi feed",
+    "addPhraseHardHint": "Mera los mantiene fuera. Si uno se convierte en noticia importante, igualmente aparece, marcado para que sepas por qué. Sin marcar, Mera simplemente las muestra menos, y lo olvida en un mes.",
+    "addPhraseSubmit": "Ocultarlo",
+    "addPhraseSuccessTitle": "Listo",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" está fuera de tu feed ahora. Solo las noticias importantes atraviesan, y Mera lo dirá.",
+    "addPhraseSuccessBodySoft": "Verás mucho menos sobre \"{{phrase}}\".",
+    "addPhraseFailedTitle": "No se pudo guardar",
+    "addPhraseFailedBody": "Por favor, inténtalo de nuevo.",
+    "emptyTitle": "Nada oculto aún",
+    "emptyBody": "Cuando le dices a Mera que no te interesa algo, aparece aquí para que puedas deshacerlo.",
+    "emptyFilters": "Aún no has ocultado palabras.",
+    "emptyTopics": "Ningún tema bajado de prioridad aún.",
+    "emptySources": "Aún no has silenciado ni bajado de prioridad ninguna fuente."
+  },
+  "headlineDepth": {
+    "title": "Titulares principales",
+    "subtitle": "Cuántos lee Mera para ti",
+    "intro": "Mera lee las historias más importantes de cada sección, luego elige las que te importan. Sube una sección para ver más; bájala para mantener las cosas compactas.",
+    "worldwide": "Mundial",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "Usando el {{n}} estándar.",
+    "customised": "Cambiado del {{n}} estándar. Elige {{n}} de nuevo para volver.",
+    "saveFailedTitle": "No se pudo guardar",
+    "saveFailedBody": "Tu cambio no fue guardado. Inténtalo de nuevo."
+  },
   "profileHub": {
     "facts": "Hechos",
     "factsCount_one": "{{count}} hecho da forma a tu feed",
@@ -1091,12 +1181,23 @@
     "prefsCount_one": "{{count}} fuente ajustada",
     "prefsCount_other": "{{count}} fuentes ajustadas",
     "prefsEmpty": "Impulsa, degrada o silencia fuentes",
+    "visitedSubtitle": "Publicaciones que abriste recientemente",
     "activity": "Actividad",
     "activitySubtitle": "Historial de cambios de tu perfil",
     "personaHealth": "Salud del perfil",
     "healthPending_one": "{{count}} sugerencia de limpieza",
     "healthPending_other": "{{count}} sugerencias de limpieza",
-    "healthAllHealthy": "Todo saludable"
+    "healthAllHealthy": "Todo saludable",
+    "groupKnows": "Mera te conoce",
+    "groupFeed": "Tu feed",
+    "groupLibrary": "Fuentes y biblioteca",
+    "groupInternals": "Entre bastidores",
+    "notInterested": "No me interesa",
+    "notInterestedSubtitle_one": "{{count}} cosa que has ocultado",
+    "notInterestedSubtitle_other": "{{count}} cosas que has ocultado",
+    "notInterestedEmpty": "Nada oculto aún",
+    "headlineDepth": "Titulares principales",
+    "headlineDepthSubtitle": "Cuántos lee Mera por sección"
   },
   "profile": {
     "talkToMera": "Habla con Mera",
@@ -1131,13 +1232,14 @@
   },
   "publicationPrefs": {
     "title": "Preferencias de fuentes",
-    "subtitle": "Impulsa, degrada o silencia publicaciones",
+    "subtitle": "Potencia, baja la prioridad o silencia publicaciones y países",
     "kindBoost": "Impulsar",
     "kindDeprioritize": "Degradar",
     "kindMute": "Silenciar",
     "clear": "Borrar",
     "clearA11y": "Borrar preferencia",
-    "empty": "Aún no has ajustado ninguna fuente. Impulsa, degrada o silencia una publicación desde cualquier artículo para verla aquí."
+    "empty": "Aún no has ajustado fuentes. Potencia, baja la prioridad o silencia una publicación de cualquier artículo, o pídele a Mera más de un país, para verlo aquí.",
+    "scopeKindCountry": "País"
   },
   "optimisationPlan": {
     "notificationTitle": "Tu optimización diaria del feed está lista",
@@ -1157,5 +1259,40 @@
     "appliedToast": "{{count}} cambios aplicados",
     "appliedTitle": "Feed optimizado",
     "empty": "No hay nada que optimizar por ahora."
+  },
+  "pin": {
+    "lockTitle": "Ingresa tu PIN",
+    "lockSubtitle": "Ingresa tu PIN de 4 dígitos para desbloquear Mera",
+    "incorrect": "PIN incorrecto. Inténtalo de nuevo.",
+    "lockedTryAgain": "Demasiados intentos. Inténtalo de nuevo en {{time}}",
+    "forgot": "¿Olvidaste el PIN?",
+    "forgotTitle": "Restablecer tu PIN",
+    "forgotBody": "Para restablecer tu PIN, inicia sesión de nuevo con un código de correo única. Tus datos guardados permanecen en este dispositivo.",
+    "forgotOffline": "Restablecer tu PIN necesita conexión a internet para enviar un código de inicio de sesión. Conéctate a internet e inténtalo de nuevo.",
+    "forgotConfirm": "Iniciar sesión para restablecer",
+    "setupTitle": "Establecer un PIN",
+    "setupSubtitle": "Elige un PIN de 4 dígitos para proteger la app en este dispositivo",
+    "confirmTitle": "Confirma tu PIN",
+    "confirmSubtitle": "Reingresa tu PIN de 4 dígitos",
+    "mismatch": "Los PINs no coinciden. Comienza de nuevo."
+  },
+  "security": {
+    "title": "Seguridad",
+    "subtitle": "Elige si Mera te pide un PIN en este dispositivo",
+    "requirePinTitle": "Requerir PIN para desbloquear",
+    "requirePinDescription": "Pedir un PIN de 4 dígitos cuando abras Mera",
+    "setPinTitle": "Establecer un PIN",
+    "setPinSubtitle": "Elige un PIN de 4 dígitos para desbloquear Mera en este dispositivo",
+    "lockEnabledTitle": "Desbloqueo por PIN activado",
+    "lockEnabledDescription": "Ingresarás tu PIN cuando abras Mera.",
+    "lockDisabledTitle": "Desbloqueo por PIN desactivado",
+    "lockDisabledDescription": "Mera se abrirá sin PIN. Tu PIN ha sido eliminado.",
+    "changePin": "Cambiar PIN",
+    "verifyCurrentTitle": "Ingresa el PIN actual",
+    "verifyCurrentSubtitle": "Confirma tu PIN actual para continuar",
+    "newPinTitle": "Establecer un nuevo PIN",
+    "newPinSubtitle": "Elige un nuevo PIN de 4 dígitos",
+    "pinChangedTitle": "PIN actualizado",
+    "pinChangedDescription": "Tu PIN ha sido cambiado."
   }
 }

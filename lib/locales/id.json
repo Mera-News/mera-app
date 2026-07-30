@@ -23,6 +23,7 @@
     "saving": "Menyimpan..."
   },
   "auth": {
+    "reauthBanner": "Masuk lagi untuk sinkronisasi",
     "emailPlaceholder": "Masukkan alamat email Anda",
     "otpPlaceholder": "Masukkan kode 6 digit",
     "codeSentTitle": "Kode Terkirim!",
@@ -189,6 +190,7 @@
       "title": "Batas artikel harian tercapai"
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
+    "waitingForNextBatch_one": "{{count}} artikel baru menunggu batch analisis berikutnya",
     "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya"
   },
   "relevance": {
@@ -206,6 +208,7 @@
     "storyUnavailable": "Berita ini sudah tidak tersedia",
     "failedToLoad": "Gagal memuat artikel",
     "articleNotFound": "Artikel tidak ditemukan",
+    "offlineUnavailable": "Anda sedang offline dan artikel ini tidak tersimpan untuk dibaca offline",
     "viewOriginal": "Lihat artikel asli",
     "viewOriginalIn": "Lihat artikel asli dalam bahasa {{language}}",
     "viewAndTranslateOnDevice": "Lihat artikel & terjemahkan di perangkat",
@@ -626,10 +629,16 @@
     "actionShowMoreTopic": "Tampilkan lebih banyak dari suatu topik",
     "actionDownRank": "Turunkan peringkat suatu topik",
     "actionPublicationPref": "Sesuaikan suatu publikasi",
+    "actionPublicationBoost": "Tampilkan lebih banyak dari penerbit",
+    "actionPublicationDeprioritize": "Tampilkan lebih sedikit dari penerbit",
+    "actionPublicationMute": "Senyapkan penerbit",
+    "actionSourceScopeBoost": "Tampilkan lebih banyak dari sumber di negara",
+    "actionSourceScopeDeprioritize": "Tampilkan lebih sedikit dari sumber di negara",
     "actionSuppress": "Saring suatu frasa",
     "actionPinTopic": "Sematkan suatu topik",
     "actionUnpinTopic": "Lepas sematan suatu topik",
     "actionRetireTopic": "Hentikan suatu topik",
+    "actionRetireSuppression": "Hapus filter",
     "chooseOneHint": "Pilih salah satu opsi"
   },
   "publicationVisits": {
@@ -797,6 +806,8 @@
     "askMera": "Tanya Mera",
     "closeTree": "Tutup",
     "treeThanks": "Terima kasih — dicatat.",
+    "feedbackCaption": "Dengan sendirinya, thumb tidak memberitahu Mera cukup banyak — jadi itu dibuang, untuk menjaga feed Anda tetap sehat. Pilih alasan dan feed Anda berubah seketika.",
+    "tapAgainToConfirm": "Ketuk lagi untuk mengonfirmasi",
     "chatHandoffLike": "Saya suka cerita ini — lebih banyak seperti ini: {{path}}.",
     "chatHandoffLikeNoPath": "Saya suka cerita ini — saya ingin lebih banyak seperti ini.",
     "chatHandoffDislike": "Saya tidak suka cerita ini — {{path}}.",
@@ -806,13 +817,21 @@
     "title": "Eksplor",
     "scopeWorld": "Dunia",
     "noArticles": "Tidak ada artikel yang ditemukan",
-    "addPlaces": "Tambah tempat"
+    "addPlaces": "Tambah tempat",
+    "offlineUnavailable": "Anda sedang offline — Jelajahi memerlukan koneksi internet"
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
     "breaking": "Berita terbaru",
     "showMore": "Tampilkan {{count}} lagi",
+    "viewAllArticles_one": "Lihat semua {{count}} artikel",
     "viewAllArticles_other": "Lihat semua {{count}} artikel",
+    "headlineSectionGlobal": "Di seluruh dunia",
+    "headlineSectionCountry": "Berita utama dari {{country}}",
+    "headlineDenominator_one": "Mera membaca {{count}} berita utama · {{shown}} layak waktu Anda.",
+    "headlineDenominator_other": "Mera membaca {{count}} berita utama · {{shown}} layak waktu Anda.",
+    "headlineDenominatorNone_one": "Mera membaca {{count}} berita utama · tidak ada yang terlihat relevan hari ini.",
+    "headlineDenominatorNone_other": "Mera membaca {{count}} berita utama · tidak ada yang terlihat relevan hari ini.",
     "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan"
@@ -851,6 +870,7 @@
     "emptyCta": "Ke Umpan",
     "trackChatSeed": "Saya ingin mengikuti cerita ini.",
     "trackProposalTitle": "Ikuti cerita ini?",
+    "articleCount_one": "{{count}} artikel",
     "articleCount_other": "{{count}} artikel",
     "articleCountCapped": "{{count}}+ artikel",
     "alreadyTrackingTitle": "Anda sudah mengikuti ini",
@@ -933,7 +953,9 @@
       "unknown": "Perubahan profil",
       "hygieneDeleteFact": "Fakta dihapus",
       "addLocation": "Lokasi ditambahkan",
-      "deleteLocation": "Lokasi dihapus"
+      "deleteLocation": "Lokasi dihapus",
+      "retireSuppression": "Filter dihapus",
+      "setSourceScopePref": "Cakupan sumber disesuaikan"
     }
   },
   "calibration": {
@@ -1006,6 +1028,7 @@
   },
   "hygiene": {
     "notificationTitle": "Rapikan minat Anda?",
+    "notificationBody_one": "Mera menemukan {{count}} pembersihan untuk profil Anda.",
     "notificationBody_other": "Mera menemukan {{count}} hal untuk dirapikan di profil Anda.",
     "reviewChip": "Tinjau",
     "title": "Kesehatan profil",
@@ -1023,6 +1046,7 @@
     "appliedBody": "Profil Anda telah dirapikan. Lihat log perubahan untuk meninjau.",
     "applyFailedTitle": "Tidak dapat menerapkan perapian",
     "applyFailedBody": "Silakan coba lagi nanti.",
+    "profileRow_one": "Kesehatan persona · {{count}} saran",
     "profileRow_other": "Kesehatan profil · {{count}} saran"
   },
   "locations": {
@@ -1071,8 +1095,80 @@
     "deleteFailedTitle": "Tidak dapat menghapus tempat",
     "deleteFailedBody": "Silakan coba lagi."
   },
+  "notInterested": {
+    "title": "Tidak tertarik",
+    "subtitle": "Apa yang telah Anda minta Mera untuk dijauhkan dari feed Anda",
+    "sectionFilters": "Kata dan hal yang telah Anda sembunyikan",
+    "sectionTopics": "Topik yang Anda lihat lebih sedikit",
+    "sectionSources": "Sumber yang telah Anda senyapkan atau kurangi",
+    "managePublications": "Kelola preferensi sumber",
+    "chatHint": "Anda tidak perlu datang ke sini. Cukup katakan kepada Mera apa yang tidak ingin Anda lihat — \"lebih sedikit tentang gosip selebriti\" — dan Mera akan mengurusnya.",
+    "kinds": {
+      "keyword": "Kata",
+      "category": "Kategori",
+      "event_type": "Jenis cerita",
+      "entity": "Orang atau hal",
+      "place": "Tempat",
+      "publication": "Sumber",
+      "topic": "Topik"
+    },
+    "sources": {
+      "user": "Anda menambahkan ini",
+      "chat": "Dari percakapan dengan Mera",
+      "feedback": "Dari umpan balik Anda",
+      "digest": "Dari tinjauan harian Anda",
+      "qa": "Dari pertanyaan Mera",
+      "unknown": "Ditambahkan secara otomatis"
+    },
+    "badgeBlocked": "Dijauhkan",
+    "badgeShownLess": "Ditampilkan lebih sedikit",
+    "badgeMutedTopic": "Ditampilkan lebih sedikit",
+    "badgeDownranked": "Diturunkan",
+    "badgeMutedPub": "Senyap",
+    "mutedPubHint": "Dijauhkan, kecuali berita penting",
+    "cardExemptLabel": "Anda menyaring \"{{filter}}\" — menampilkannya karena berita penting",
+    "expiresOn": "Hingga {{date}}",
+    "expiresNever": "Hingga Anda menghapusnya",
+    "remove": "Hapus",
+    "removeConfirmTitle": "Hapus ini?",
+    "removeConfirmBody": "Cerita seperti ini bisa muncul di feed Anda lagi.",
+    "removeConfirmCta": "Hapus",
+    "removeSuccessTitle": "Dihapus",
+    "removeSuccessBody": "Ini tidak lagi dijauhkan dari feed Anda.",
+    "removeFailedTitle": "Tidak bisa menghapus itu",
+    "removeFailedBody": "Silakan coba lagi.",
+    "addPhrase": "Sembunyikan sesuatu",
+    "addPhraseTitle": "Sembunyikan sesuatu dari feed Anda",
+    "addPhraseBody": "Ketik kata atau frasa pendek. Mera akan mencarinya di headline dan cerita, dan menjaga agar tidak mengganggu Anda. Untuk yang lebih spesifik — kategori utuh, sumber, orang — cukup katakan di chat, atau gunakan thumb pada cerita: Mera mengambilnya dari cerita itu sendiri, jadi selalu cocok.",
+    "addPhrasePlaceholder": "mis. gosip selebriti",
+    "addPhraseHardLabel": "Jauhkan dari feed saya",
+    "addPhraseHardHint": "Mera menjaga ini tetap jauh. Jika menjadi berita penting tetap muncul, ditandai agar Anda tahu alasannya. Jika dimatikan, Mera cukup menampilkannya lebih sedikit, dan melupakan dalam sebulan.",
+    "addPhraseSubmit": "Sembunyikan",
+    "addPhraseSuccessTitle": "Selesai",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" sekarang dijauhkan dari feed Anda. Hanya berita penting yang lolos, dan Mera akan memberitahu.",
+    "addPhraseSuccessBodySoft": "Anda akan melihat jauh lebih sedikit tentang \"{{phrase}}\".",
+    "addPhraseFailedTitle": "Tidak bisa menyimpan itu",
+    "addPhraseFailedBody": "Silakan coba lagi.",
+    "emptyTitle": "Belum ada yang disembunyikan",
+    "emptyBody": "Ketika Anda memberi tahu Mera Anda tidak tertarik pada sesuatu, itu muncul di sini sehingga Anda bisa membatalkannya.",
+    "emptyFilters": "Anda belum menyembunyikan kata apa pun.",
+    "emptyTopics": "Belum ada topik yang diturunkan.",
+    "emptySources": "Anda belum menyenyapkan atau menurunkan sumber apa pun."
+  },
+  "headlineDepth": {
+    "title": "Berita utama",
+    "subtitle": "Berapa banyak Mera membaca untuk Anda",
+    "intro": "Mera membaca cerita terbesar di setiap bagian, kemudian memilih yang penting bagi Anda. Naikkan bagian untuk melihat lebih banyak; turunkan untuk menjaga tetap rapat.",
+    "worldwide": "Seluruh dunia",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "Menggunakan standar {{n}}.",
+    "customised": "Berubah dari standar {{n}}. Pilih {{n}} lagi untuk kembali.",
+    "saveFailedTitle": "Tidak bisa menyimpan itu",
+    "saveFailedBody": "Perubahan Anda tidak disimpan. Coba lagi."
+  },
   "profileHub": {
     "facts": "Fakta",
+    "factsCount_one": "{{count}} fakta membentuk feed Anda",
     "factsCount_other": "{{count}} fakta membentuk feed Anda",
     "factsEmpty": "Ketuk untuk menambahkan apa yang harus diketahui Mera",
     "locations": "Lokasi",
@@ -1082,13 +1178,26 @@
     "saved": "Tersimpan",
     "savedSubtitle": "Artikel yang Anda simpan untuk nanti",
     "preferences": "Preferensi sumber",
+    "prefsCount_one": "{{count}} sumber disesuaikan",
     "prefsCount_other": "{{count}} sumber disesuaikan",
     "prefsEmpty": "Naikkan, turunkan, atau bisukan sumber",
+    "visitedSubtitle": "Publikasi yang baru-baru ini Anda buka",
     "activity": "Aktivitas",
     "activitySubtitle": "Riwayat perubahan profil Anda",
     "personaHealth": "Kesehatan profil",
+    "healthPending_one": "{{count}} saran pembersihan",
     "healthPending_other": "{{count}} saran perapian",
-    "healthAllHealthy": "Semua sehat"
+    "healthAllHealthy": "Semua sehat",
+    "groupKnows": "Mera tahu Anda",
+    "groupFeed": "Feed Anda",
+    "groupLibrary": "Sumber & perpustakaan",
+    "groupInternals": "Di balik layar",
+    "notInterested": "Tidak tertarik",
+    "notInterestedSubtitle_one": "{{count}} hal yang telah Anda sembunyikan",
+    "notInterestedSubtitle_other": "{{count}} hal yang telah Anda sembunyikan",
+    "notInterestedEmpty": "Belum ada yang disembunyikan",
+    "headlineDepth": "Berita utama",
+    "headlineDepthSubtitle": "Berapa banyak Mera membaca per bagian"
   },
   "profile": {
     "talkToMera": "Bicara dengan Mera",
@@ -1123,13 +1232,14 @@
   },
   "publicationPrefs": {
     "title": "Preferensi sumber",
-    "subtitle": "Naikkan, turunkan, atau bisukan publikasi",
+    "subtitle": "Tingkatkan, turunkan, atau senyapkan publikasi dan negara",
     "kindBoost": "Naikkan",
     "kindDeprioritize": "Turunkan",
     "kindMute": "Bisukan",
     "clear": "Hapus",
     "clearA11y": "Hapus preferensi",
-    "empty": "Anda belum menyesuaikan sumber apa pun. Naikkan, turunkan, atau bisukan publikasi dari artikel mana pun untuk melihatnya di sini."
+    "empty": "Anda belum menyesuaikan sumber apa pun. Tingkatkan, turunkan, atau senyapkan publikasi dari artikel apa pun, atau minta lebih banyak Mera dari negara, untuk melihatnya di sini.",
+    "scopeKindCountry": "Negara"
   },
   "optimisationPlan": {
     "notificationTitle": "Penyesuaian feed harian Anda sudah siap",
@@ -1149,5 +1259,40 @@
     "appliedToast": "{{count}} perubahan diterapkan",
     "appliedTitle": "Feed disesuaikan",
     "empty": "Tidak ada yang perlu disesuaikan saat ini."
+  },
+  "pin": {
+    "lockTitle": "Masukkan PIN Anda",
+    "lockSubtitle": "Masukkan PIN 4 digit untuk membuka Mera",
+    "incorrect": "PIN salah. Coba lagi.",
+    "lockedTryAgain": "Terlalu banyak percobaan. Coba lagi dalam {{time}}",
+    "forgot": "Lupa PIN?",
+    "forgotTitle": "Reset PIN Anda",
+    "forgotBody": "Untuk reset PIN, masuk lagi dengan kode email sekali pakai. Data tersimpan Anda tetap berada di perangkat ini.",
+    "forgotOffline": "Mereset PIN memerlukan koneksi internet untuk mengirim kode masuk. Hubungkan ke internet dan coba lagi.",
+    "forgotConfirm": "Masuk untuk reset",
+    "setupTitle": "Atur PIN",
+    "setupSubtitle": "Pilih PIN 4 digit untuk melindungi aplikasi di perangkat ini",
+    "confirmTitle": "Konfirmasi PIN Anda",
+    "confirmSubtitle": "Masukkan kembali PIN 4 digit Anda",
+    "mismatch": "PIN tidak cocok. Mulai lagi."
+  },
+  "security": {
+    "title": "Keamanan",
+    "subtitle": "Pilih apakah Mera meminta PIN di perangkat ini",
+    "requirePinTitle": "Perlukan PIN untuk membuka",
+    "requirePinDescription": "Minta PIN 4 digit saat membuka Mera",
+    "setPinTitle": "Atur PIN",
+    "setPinSubtitle": "Pilih PIN 4 digit untuk membuka Mera di perangkat ini",
+    "lockEnabledTitle": "Pembukaan PIN aktif",
+    "lockEnabledDescription": "Anda akan memasukkan PIN saat membuka Mera.",
+    "lockDisabledTitle": "Pembukaan PIN mati",
+    "lockDisabledDescription": "Mera akan membuka tanpa PIN. PIN Anda telah dihapus.",
+    "changePin": "Ubah PIN",
+    "verifyCurrentTitle": "Masukkan PIN saat ini",
+    "verifyCurrentSubtitle": "Konfirmasi PIN saat ini Anda untuk melanjutkan",
+    "newPinTitle": "Atur PIN baru",
+    "newPinSubtitle": "Pilih PIN 4 digit baru",
+    "pinChangedTitle": "PIN diperbarui",
+    "pinChangedDescription": "PIN Anda telah diubah."
   }
 }

@@ -23,6 +23,7 @@
     "home": "主页"
   },
   "auth": {
+    "reauthBanner": "重新登录以同步",
     "emailPlaceholder": "请输入您的电子邮箱地址",
     "otpPlaceholder": "请输入6位验证码",
     "codeSentTitle": "验证码已发送！",
@@ -189,6 +190,7 @@
       "title": "已达每日文章上限"
     },
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
+    "waitingForNextBatch_one": "{{count}} 篇新文章等待下一批分析",
     "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析"
   },
   "relevance": {
@@ -206,6 +208,7 @@
     "storyUnavailable": "该新闻已不再可用",
     "failedToLoad": "文章加载失败",
     "articleNotFound": "文章未找到",
+    "offlineUnavailable": "您离线了，此文章未保存供离线阅读",
     "viewOriginal": "查看原文",
     "viewOriginalIn": "查看{{language}}原文",
     "viewAndTranslateOnDevice": "查看文章并在设备上翻译",
@@ -626,10 +629,16 @@
     "actionShowMoreTopic": "增加显示某个主题",
     "actionDownRank": "降低某个主题的优先级",
     "actionPublicationPref": "调整某个媒体源",
+    "actionPublicationBoost": "显示某个媒体的更多内容",
+    "actionPublicationDeprioritize": "显示某个媒体的更少内容",
+    "actionPublicationMute": "屏蔽某个媒体",
+    "actionSourceScopeBoost": "显示某个国家来源的更多内容",
+    "actionSourceScopeDeprioritize": "显示某个国家来源的更少内容",
     "actionSuppress": "过滤掉某个短语",
     "actionPinTopic": "置顶某个主题",
     "actionUnpinTopic": "取消置顶某个主题",
     "actionRetireTopic": "停用某个主题",
+    "actionRetireSuppression": "移除一个过滤",
     "chooseOneHint": "请选择一项"
   },
   "publicationVisits": {
@@ -797,6 +806,8 @@
     "askMera": "问 Mera",
     "closeTree": "关闭",
     "treeThanks": "谢谢——已记录。",
+    "feedbackCaption": "仅凭一个拇指手势，Mera 无法获得足够信息——所以我们会丢弃它，以保持您的信息流质量。选择一个原因，您的信息流会立即调整。",
+    "tapAgainToConfirm": "再次点击确认",
     "chatHandoffLike": "我喜欢这篇报道——多看这类：{{path}}。",
     "chatHandoffLikeNoPath": "我喜欢这篇报道——我想多看这类内容。",
     "chatHandoffDislike": "我不喜欢这篇报道——{{path}}。",
@@ -806,16 +817,24 @@
     "title": "探索",
     "scopeWorld": "全球",
     "noArticles": "未找到文章",
-    "addPlaces": "添加地点"
+    "addPlaces": "添加地点",
+    "offlineUnavailable": "您离线了——「探索」需要网络连接"
   },
   "forYou": {
     "sectionPrefix": "关于：",
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
+    "viewAllArticles_one": "查看全部 {{count}} 篇文章",
     "subTabFeed": "一览",
     "subTabStories": "报道",
     "subTabSaved": "已保存",
-    "viewAllArticles_other": "查看全部 {{count}} 篇文章"
+    "viewAllArticles_other": "查看全部 {{count}} 篇文章",
+    "headlineSectionGlobal": "世界各地",
+    "headlineSectionCountry": "来自 {{country}} 的头条",
+    "headlineDenominator_one": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
+    "headlineDenominator_other": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
+    "headlineDenominatorNone_one": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
+    "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -851,6 +870,7 @@
     "emptyCta": "前往信息流",
     "trackChatSeed": "我想关注这则报道。",
     "trackProposalTitle": "关注这则报道？",
+    "articleCount_one": "{{count}} 篇文章",
     "articleCount_other": "{{count}} 篇文章",
     "articleCountCapped": "{{count}}+ 篇文章",
     "alreadyTrackingTitle": "你已在关注此报道",
@@ -933,11 +953,14 @@
       "unknown": "画像变更",
       "hygieneDeleteFact": "移除了事实",
       "addLocation": "添加了地点",
-      "deleteLocation": "移除了地点"
+      "deleteLocation": "移除了地点",
+      "retireSuppression": "移除了一个过滤",
+      "setSourceScopePref": "调整了来源范围"
     }
   },
   "calibration": {
     "notificationTitle": "让 Mera 更懂你的口味",
+    "notificationBody": "Mera 最近在设备端排序中与自身判断出现了 {{count}} 次不一致。重新校准可以缩小这一差距。",
     "notificationBody_other": "Mera 最近在设备端排序中与自身判断出现了 {{count}} 次不一致。重新校准可以缩小这一差距。",
     "recalibrateChip": "立即重新校准",
     "chatIntro": "最近我一直在重新审视自己给你新闻排序的方式。要不要我重新校准一下，让评分更符合你的口味？点击「立即重新校准」，我会调整——你随时都可以撤销。",
@@ -1006,6 +1029,7 @@
   },
   "hygiene": {
     "notificationTitle": "整理一下你的兴趣？",
+    "notificationBody_one": "Mera 为您的资料发现了 {{count}} 项整理内容。",
     "notificationBody_other": "Mera 为你的资料发现了 {{count}} 项可整理内容。",
     "reviewChip": "查看",
     "title": "画像健康度",
@@ -1023,6 +1047,7 @@
     "appliedBody": "你的资料已完成整理。查看变更记录了解详情。",
     "applyFailedTitle": "无法应用整理",
     "applyFailedBody": "请稍后再试。",
+    "profileRow_one": "资料健康度 · {{count}} 项建议",
     "profileRow_other": "画像健康度 · {{count}} 项建议"
   },
   "locations": {
@@ -1071,8 +1096,80 @@
     "deleteFailedTitle": "无法移除地点",
     "deleteFailedBody": "请重试。"
   },
+  "notInterested": {
+    "title": "不感兴趣",
+    "subtitle": "您要求 Mera 从信息流中排除的内容",
+    "sectionFilters": "您隐藏的词和内容",
+    "sectionTopics": "您看得较少的话题",
+    "sectionSources": "您屏蔽或降权的来源",
+    "managePublications": "管理来源偏好",
+    "chatHint": "您不一定要来这里。只需告诉 Mera 您不想看什么——「少看娱乐八卦」——它会为您处理。",
+    "kinds": {
+      "keyword": "词语",
+      "category": "类别",
+      "event_type": "故事类型",
+      "entity": "人物或事物",
+      "place": "地点",
+      "publication": "来源",
+      "topic": "话题"
+    },
+    "sources": {
+      "user": "您添加的",
+      "chat": "来自与 Mera 的对话",
+      "feedback": "来自您的反馈",
+      "digest": "来自您的每日回顾",
+      "qa": "来自 Mera 的问题",
+      "unknown": "自动添加"
+    },
+    "badgeBlocked": "已排除",
+    "badgeShownLess": "显示较少",
+    "badgeMutedTopic": "显示较少",
+    "badgeDownranked": "已降权",
+    "badgeMutedPub": "已屏蔽",
+    "mutedPubHint": "已排除，重大新闻除外",
+    "cardExemptLabel": "您过滤了\"{{filter}}\"——因为这是重大新闻所以显示",
+    "expiresOn": "至 {{date}}",
+    "expiresNever": "直到您移除它",
+    "remove": "移除",
+    "removeConfirmTitle": "移除此项？",
+    "removeConfirmBody": "类似的故事可能会重新出现在您的信息流中。",
+    "removeConfirmCta": "移除",
+    "removeSuccessTitle": "已移除",
+    "removeSuccessBody": "此项不再从您的信息流中排除。",
+    "removeFailedTitle": "无法移除",
+    "removeFailedBody": "请重试。",
+    "addPhrase": "隐藏内容",
+    "addPhraseTitle": "从信息流中隐藏内容",
+    "addPhraseBody": "输入一个词或短语。Mera 会在标题和故事中查找，并将其排除在外。如果您需要更具体的内容——整个类别、一个来源、某个人——只需在对话中告诉我，或使用故事上的点赞按钮：Mera 会从故事本身提取，总是准确匹配。",
+    "addPhrasePlaceholder": "例如：娱乐八卦",
+    "addPhraseHardLabel": "将其从信息流中排除",
+    "addPhraseHardHint": "Mera 会排除这些内容。如果成为重大新闻，仍会显示但会标注原因。如果不选中，Mera 只会显示较少，一个月后忘记。",
+    "addPhraseSubmit": "隐藏它",
+    "addPhraseSuccessTitle": "完成",
+    "addPhraseSuccessBodyBlocked": "{{phrase}} 现在已从信息流中排除。只有重大新闻会显示，Mera 会说明原因。",
+    "addPhraseSuccessBodySoft": "您将大大减少看到关于 {{phrase}} 的内容。",
+    "addPhraseFailedTitle": "无法保存",
+    "addPhraseFailedBody": "请重试。",
+    "emptyTitle": "还未隐藏任何内容",
+    "emptyBody": "当您告诉 Mera 不感兴趣的内容时，它会显示在这里，方便您撤销。",
+    "emptyFilters": "您还未隐藏任何词语。",
+    "emptyTopics": "还未降权任何话题。",
+    "emptySources": "您还未屏蔽或降权任何来源。"
+  },
+  "headlineDepth": {
+    "title": "头条新闻",
+    "subtitle": "Mera 为您阅读多少条新闻",
+    "intro": "Mera 阅读每个板块的最大故事，然后挑选与您相关的。提高一个板块来看更多；降低它来精简内容。",
+    "worldwide": "全球",
+    "optionLabel": "前 {{n}} 条",
+    "usingDefault": "使用标准的 {{n}} 条。",
+    "customised": "从标准的 {{n}} 条调整过。再次选择 {{n}} 返回默认。",
+    "saveFailedTitle": "无法保存",
+    "saveFailedBody": "您的更改未保存。请重试。"
+  },
   "profileHub": {
     "facts": "事实",
+    "factsCount_one": "{{count}} 个事实影响您的信息流",
     "factsCount_other": "{{count}} 条事实正在影响你的资讯",
     "factsEmpty": "点按添加 Mera 应该了解的信息",
     "locations": "地点",
@@ -1082,13 +1179,26 @@
     "saved": "已保存",
     "savedSubtitle": "你保存以便稍后阅读的文章",
     "preferences": "来源偏好",
+    "prefsCount_one": "{{count}} 个来源已调整",
     "prefsCount_other": "已调整 {{count}} 个来源",
     "prefsEmpty": "提升、降权或屏蔽来源",
+    "visitedSubtitle": "您最近打开过的媒体",
     "activity": "活动",
     "activitySubtitle": "你的画像变更历史",
     "personaHealth": "画像健康度",
+    "healthPending_one": "{{count}} 项整理建议",
     "healthPending_other": "{{count}} 项整理建议",
-    "healthAllHealthy": "一切正常"
+    "healthAllHealthy": "一切正常",
+    "groupKnows": "Mera 了解您",
+    "groupFeed": "您的信息流",
+    "groupLibrary": "来源和库",
+    "groupInternals": "高级选项",
+    "notInterested": "不感兴趣",
+    "notInterestedSubtitle_one": "{{count}} 个您隐藏的内容",
+    "notInterestedSubtitle_other": "{{count}} 个您隐藏的内容",
+    "notInterestedEmpty": "还未隐藏任何内容",
+    "headlineDepth": "头条新闻",
+    "headlineDepthSubtitle": "Mera 每个板块阅读的新闻数量"
   },
   "profile": {
     "talkToMera": "和 Mera 聊聊",
@@ -1123,13 +1233,14 @@
   },
   "publicationPrefs": {
     "title": "来源偏好",
-    "subtitle": "提升、降权或屏蔽媒体",
+    "subtitle": "提升、降权或屏蔽媒体和国家",
     "kindBoost": "提升",
     "kindDeprioritize": "降权",
     "kindMute": "屏蔽",
     "clear": "清除",
     "clearA11y": "清除偏好",
-    "empty": "你还没有调整过任何来源。在任意文章中提升、降权或屏蔽一个媒体，即可在此看到。"
+    "empty": "您还未调整任何来源。从任何文章中提升、降权或屏蔽媒体，或要求 Mera 显示某个国家的更多内容，就能在这里看到。",
+    "scopeKindCountry": "国家"
   },
   "optimisationPlan": {
     "notificationTitle": "你的每日信息流调整已就绪",
@@ -1149,5 +1260,40 @@
     "appliedToast": "已应用 {{count}} 项更改",
     "appliedTitle": "信息流已调整",
     "empty": "目前没有需要调整的内容。"
+  },
+  "pin": {
+    "lockTitle": "输入您的 PIN",
+    "lockSubtitle": "输入您的 4 位 PIN 来解锁 Mera",
+    "incorrect": "PIN 不正确。请重试。",
+    "lockedTryAgain": "尝试次数过多。请在 {{time}} 后重试",
+    "forgot": "忘记 PIN？",
+    "forgotTitle": "重置您的 PIN",
+    "forgotBody": "要重置 PIN，请使用一次性电子邮件代码重新登录。您的已保存数据将保留在此设备上。",
+    "forgotOffline": "重置 PIN 需要网络连接来发送登录代码。连接到网络后重试。",
+    "forgotConfirm": "登录来重置",
+    "setupTitle": "设置 PIN",
+    "setupSubtitle": "选择一个 4 位 PIN 来保护此设备上的应用",
+    "confirmTitle": "确认您的 PIN",
+    "confirmSubtitle": "重新输入您的 4 位 PIN",
+    "mismatch": "PIN 不匹配。请重新开始。"
+  },
+  "security": {
+    "title": "安全",
+    "subtitle": "选择 Mera 是否在此设备上要求 PIN",
+    "requirePinTitle": "需要 PIN 来解锁",
+    "requirePinDescription": "打开 Mera 时询问 4 位 PIN",
+    "setPinTitle": "设置 PIN",
+    "setPinSubtitle": "选择一个 4 位 PIN 来在此设备上解锁 Mera",
+    "lockEnabledTitle": "PIN 解锁已启用",
+    "lockEnabledDescription": "打开 Mera 时您会输入 PIN。",
+    "lockDisabledTitle": "PIN 解锁已禁用",
+    "lockDisabledDescription": "Mera 将在无需 PIN 的情况下打开。您的 PIN 已被移除。",
+    "changePin": "更改 PIN",
+    "verifyCurrentTitle": "输入当前 PIN",
+    "verifyCurrentSubtitle": "确认您的当前 PIN 来继续",
+    "newPinTitle": "设置新 PIN",
+    "newPinSubtitle": "选择一个新的 4 位 PIN",
+    "pinChangedTitle": "PIN 已更新",
+    "pinChangedDescription": "您的 PIN 已被更改。"
   }
 }
