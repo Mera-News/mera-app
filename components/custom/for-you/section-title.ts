@@ -18,19 +18,24 @@ export type Translate = TFunction<'translation'>;
 /**
  * The display title for a Dashboard section.
  *
- * GLOBAL deliberately promises the COMPLEMENT ("Around the world"), never a
- * superlative. The server dedups a story to the FIRST scope that carries it and
- * country scopes are requested before GLOBAL, so a big domestic story appears in
- * the reader's country section and NOT in the global one. "Top global headlines"
- * would invite the reader to expect the world's biggest stories and then quietly
- * withhold the ones already shown above; "Around the world" promises only what
- * the section actually contains.
+ * Titles are "Headlines from the world" / "Headlines from {{country}}".
  *
- * COUNTRY titles name the country and promise NO count — 52 of 235 prod editions
- * cannot fill a top-20 and 9 are empty, so "Top 20 headlines from X" would be a
- * claim the data cannot keep. The country NAME (rather than a demonym) is used
- * because there is no demonym helper in the app and inventing one would break
- * for most of the 235 editions; the raw code is the last-resort fallback.
+ * The load-bearing property is that NEITHER is a superlative. The server dedups
+ * a story to the FIRST scope that carries it and country scopes are requested
+ * before GLOBAL, so a big domestic story appears in the reader's country section
+ * and NOT in the global one. "Top global headlines" would invite the reader to
+ * expect the world's biggest stories and then quietly withhold the ones already
+ * shown above; "Headlines from the world" promises only what the section
+ * actually contains. Any future rename must keep that — the moment a title
+ * claims "top" or "biggest", the dedup makes it a lie.
+ *
+ * COUNTRY titles likewise promise NO count — 52 of 235 prod editions cannot fill
+ * a top-20 and 9 are empty, so "Top 20 headlines from X" would be a claim the
+ * data cannot keep. (This is also why the earlier "Top headlines from X" was
+ * dropped: "top" implied a ranking the thin editions cannot supply.) The country
+ * NAME rather than a demonym is used because there is no demonym helper in the
+ * app and inventing one would break for most of the 235 editions; the raw code
+ * is the last-resort fallback.
  */
 export function sectionTitle(t: Translate, row: FactRow): string {
   switch (sectionKindOf(row)) {
