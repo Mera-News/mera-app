@@ -17,6 +17,10 @@ import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-se
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
 import { getHeadlineDepths } from '@/lib/database/services/headline-depth-service';
 import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
+// The ONE admission predicate ("may this row enter scoring"), shared with the
+// enqueue path and the bundle builders so a headline cannot be admitted by one
+// and dropped by another.
+import { isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
 import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -640,23 +644,31 @@ async function getLocalTopicTextsForPersona(): Promise<string[]> {
 
 /**
  * Partition the currently-unscored suggestions: mark the ineligible ones
- * (missing English title/description or with no linked facts) as scored so they
- * never enter scoring, and return the eligible ids that belong to THIS chunk so
- * they can be enqueued. Global scan (like the pre-merge `markIneligible…`), but
- * the returned eligible set is scoped to the chunk just persisted.
+ * (missing English title/description, or factless AND not headline-sourced) as
+ * scored so they never enter scoring, and return the eligible ids that belong to
+ * THIS chunk so they can be enqueued. Global scan (like the pre-merge
+ * `markIneligible…`), but the returned eligible set is scoped to the chunk just
+ * persisted.
+ *
+ * The admission test is `isScorableCandidate`, NOT `isEligible`: a TOP-HEADLINE
+ * row is factless by design (its matched topic is synthetic, `topicId: null`,
+ * so `persistAndLinkV2Suggestions` links no fact to it). This ran at every
+ * chunk, over ALL unscored rows, immediately after persist and BEFORE
+ * gate+enqueue — so the old `relatedFacts.length === 0` test wrote every pure
+ * headline terminal (`relevance 0`, `reason ''`, `status complete`) before any
+ * scoring existed, with no timing window to escape through. Rows missing
+ * title/description are still tombstoned: no prompt can score empty text.
  */
 async function markIneligibleAndCollectEligible(
   chunkIds: Set<string>,
 ): Promise<{ ineligibleCount: number; eligibleIds: string[] }> {
   const candidates = await getUnscoredSuggestionsWithFacts();
-  const ineligible = candidates.filter(
-    (c) => !c.titleEn || !c.descriptionEn || c.relatedFacts.length === 0,
-  );
+  const ineligible = candidates.filter((c) => !isScorableCandidate(c));
   if (ineligible.length > 0) {
     await batchMarkAsScoredByIds(ineligible.map((c) => c.id));
   }
   const eligibleIds = candidates
-    .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
+    .filter(isScorableCandidate)
     .filter((c) => chunkIds.has(c.id))
     .map((c) => c.id);
   return { ineligibleCount: ineligible.length, eligibleIds };

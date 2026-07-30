@@ -855,6 +855,82 @@ describe('stepHydratePersistEnqueue', () => {
     expect(result.enqueuedCount).toBe(1);
   });
 
+  // P8 site 1 — the defect that kept top headlines from EVER reaching a card.
+  // A pure TOP-HEADLINE row is factless by design (synthetic matched topic,
+  // `topicId: null`, so no `article_suggestion_facts` row is written). The old
+  // `relatedFacts.length === 0` test tombstoned it here — relevance 0, status
+  // `complete` — before any scoring existed, and this runs on EVERY chunk over
+  // ALL unscored rows, so there was no timing window to escape through.
+  it('does NOT tombstone a factless TOP-HEADLINE row, and enqueues it', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'headline' }, { _id: 'orphan' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 2, linkedCount: 0 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      // Factless BUT headline-scoped → must survive and be enqueued.
+      {
+        id: 'headline',
+        titleEn: 't',
+        descriptionEn: 'd',
+        relatedFacts: [],
+        meta: { headlineScope: 'GLOBAL' },
+      },
+      // Factless and NOT headline-scoped → genuinely orphaned, still tombstoned.
+      { id: 'orphan', titleEn: 't', descriptionEn: 'd', relatedFacts: [], meta: { headlineScope: null } },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['headline'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['headline', 'orphan'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['headline', 'orphan'],
+    };
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // The headline is NOT in the tombstone batch; the true orphan still is.
+    expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['orphan']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['headline']);
+    expect(result.enqueuedCount).toBe(1);
+  });
+
+  // A headline row with no text is NOT exempt — no prompt can score empty
+  // strings, so the title/description half of the tombstone must still fire.
+  it('still tombstones a headline row missing titleEn/descriptionEn', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'headline-no-text' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 0 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      {
+        id: 'headline-no-text',
+        titleEn: 't',
+        descriptionEn: null,
+        relatedFacts: [],
+        meta: { headlineScope: 'COUNTRY' },
+      },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: [],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['headline-no-text'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['headline-no-text'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['headline-no-text']);
+  });
+
   it('does NOT enqueue an already-scored id that is not in the current chunk', async () => {
     // getUnscoredSuggestionsWithFacts returns a stale eligible row from a prior
     // chunk; only ids belonging to THIS chunk should be enqueued.

@@ -46,7 +46,7 @@ import {
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
 // selection the shim's builders run.
-import { isHeadlineScope } from '@/lib/news-harness/article-pipeline/scoring';
+import { isHeadlineScope, isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   bucketScores,
   buildReasonCallsForSubset,
@@ -2150,9 +2150,13 @@ export async function enqueueUnscoredEligible(
   opts: { flushRemainder?: boolean } = {},
 ): Promise<{ enqueued: number }> {
   const candidates = await getUnscoredSuggestionsWithFacts();
-  const eligibleIds = candidates
-    .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
-    .map((c) => c.id);
+  // `isScorableCandidate`, not `isEligible` — a TOP-HEADLINE row is factless by
+  // design. This is the enqueue that fires when feed-sync hydrated NOTHING
+  // (`runPostFinalizeKick`, and feed-sync's suppressed cycle), so leaving the
+  // fact requirement here would have enqueued headlines only on syncs that
+  // happened to hydrate new articles — an intermittent bug that reads as
+  // "sometimes works" and is unfalsifiable in QA.
+  const eligibleIds = candidates.filter(isScorableCandidate).map((c) => c.id);
   if (eligibleIds.length === 0) return { enqueued: 0 };
   await enqueueCandidates(eligibleIds, opts.flushRemainder === true);
   return { enqueued: eligibleIds.length };

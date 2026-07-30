@@ -145,6 +145,41 @@ export function isEligible(c: ScoringCandidate): boolean {
   return Boolean(c.titleEn && c.descriptionEn && c.relatedFacts.length > 0);
 }
 
+/**
+ * ADMISSION predicate — "may this row enter scoring at all?" — as opposed to
+ * {@link isEligible}, which additionally demands a linked fact.
+ *
+ * The two differ on exactly one population: TOP-HEADLINE rows. A headline is
+ * injected with a SYNTHETIC matched topic carrying `topicId: null`
+ * (feed-sync-steps `pushMatched`), and the fact-link step skips those
+ * (`if (!m.topicId) continue`), so a PURE headline — one that matched no real
+ * persona topic — has zero rows in `article_suggestion_facts` BY DESIGN. That
+ * is not the same condition as a genuinely orphaned row, and it must not be
+ * treated as one: `relatedFacts.length === 0` was tombstoning every pure
+ * headline (relevance 0, status `complete`) before any scoring existed, which
+ * is why the feature never delivered a single headline card.
+ *
+ * Title + description are still REQUIRED here — a row with no text cannot be
+ * scored by any prompt, headline or not. Only the fact requirement is lifted.
+ *
+ * WHERE THIS IS USED (deliberately narrow — see the blast radius below):
+ *   - the feed-sync ineligibility tombstone + its eligible-id collection,
+ *   - `enqueueUnscoredEligible` (the post-finalize / quiet-feed enqueue),
+ *   - the four relevance/reason BUNDLE BUILDERS (this module and the
+ *     mera-protocol shim).
+ *
+ * WHERE IT IS NOT: `batchScoreAndReason` and `buildFeedVerifierCalls` keep
+ * `isEligible`. Relaxing the shared predicate there would flip factless rows
+ * off `INELIGIBLE_RELEVANCE` on the sync/on-device path as a side effect. The
+ * consequence is that the inline path still scores a pure headline 0.2 — below
+ * every gate, so it fails CLOSED — while the E2EE path (what production runs)
+ * scores it for real.
+ */
+export function isScorableCandidate(c: ScoringCandidate): boolean {
+  if (isEligible(c)) return true;
+  return isHeadlineCandidate(c) && Boolean(c.titleEn && c.descriptionEn);
+}
+
 export function chunk<T>(arr: T[], size: number): T[][] {
   if (size <= 0) return [arr];
   const out: T[][] = [];

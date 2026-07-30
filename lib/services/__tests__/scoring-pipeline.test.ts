@@ -250,6 +250,7 @@ jest.mock('@/lib/database/services/scoring-pipeline-store', () => ({
 
 import {
   enqueueCandidates,
+  enqueueUnscoredEligible,
   enqueueOrphanedReasons,
   handlePush,
   pollTick,
@@ -400,6 +401,50 @@ afterEach(() => {
 });
 
 // ---------------------------------------------------------------------------
+
+// P8 site 1b — `enqueueUnscoredEligible` is the enqueue that fires when
+// feed-sync hydrated NOTHING (runPostFinalizeKick on a quiet feed, and the
+// suppressed cycle). Its predicate is separate from the feed-sync tombstone's,
+// so leaving the fact requirement here would have enqueued headlines ONLY on
+// syncs that happened to hydrate new articles — intermittent, and unfalsifiable
+// in QA.
+describe('enqueueUnscoredEligible — headline admission (P8 site 1b)', () => {
+  const headlineRow = (id: string) => ({
+    id,
+    titleEn: 'title',
+    descriptionEn: 'desc',
+    countryCode: null,
+    userTopicIds: [],
+    relatedFacts: [], // factless BY DESIGN — synthetic matched topic, topicId null
+    meta: { headlineScope: 'GLOBAL' },
+  });
+
+  it('enqueues a factless TOP-HEADLINE row', async () => {
+    mockGetUnscored.mockResolvedValue([headlineRow('h1')]);
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(1);
+  });
+
+  it('still skips a factless row that is NOT headline-sourced', async () => {
+    mockGetUnscored.mockResolvedValue([
+      { ...headlineRow('orphan'), meta: { headlineScope: null } },
+    ]);
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(0);
+  });
+
+  it('still skips a headline row with no English text', async () => {
+    mockGetUnscored.mockResolvedValue([{ ...headlineRow('h-empty'), descriptionEn: null }]);
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(0);
+  });
+});
 
 describe('model-key validation fail-fast (MERA-APP-39)', () => {
   it('fails a relevance batch terminally when the E2EE rebuild rejects with ModelKeyValidationError — no submit, no loop', async () => {
