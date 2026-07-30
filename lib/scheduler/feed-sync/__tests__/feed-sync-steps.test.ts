@@ -114,6 +114,7 @@ import type {
   DiffResult,
   HydratePersistEnqueueOptions,
 } from '../feed-sync-steps';
+import { DEFAULT_HEADLINE_LIMIT_PER_SCOPE } from '@/lib/news-harness/scoring-engine/retrieval-profile';
 
 function makeCtx(aborted = false) {
   const controller = new AbortController();
@@ -436,7 +437,8 @@ describe('stepFetchTopicIds', () => {
       { countryCode: 'IN', role: 'home', weight: 1, validUntil: null },
       { countryCode: 'NL', role: 'family', weight: 0.5, validUntil: null },
     ] as any);
-    // NL is left at the default (10) → still no `limit` on the wire.
+    // NL is left at the default → still no `limit` on the wire. That is the
+    // property under test and it is independent of what the default IS.
     mockGetHeadlineDepths.mockResolvedValue({ IN: 25, GLOBAL: 3 });
     mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
 
@@ -448,7 +450,11 @@ describe('stepFetchTopicIds', () => {
       { scope: 'COUNTRY', countryCode: 'NL' },
       { scope: 'GLOBAL', countryCode: null, limit: 3 },
     ]);
-    expect(query.topHeadlines.limitPerScope).toBe(10);
+    // headlines P7b — conscious change: this pinned 10, but the requirement was
+    // always "the top 20 articles from the top headlines in each country the
+    // user is interested in". Asserted against the constant rather than a
+    // literal, so the next default change moves one place, not two.
+    expect(query.topHeadlines.limitPerScope).toBe(DEFAULT_HEADLINE_LIMIT_PER_SCOPE);
   });
 
   it('falls back to default depths (and still syncs) when the depth read throws', async () => {
