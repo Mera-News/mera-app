@@ -148,19 +148,25 @@ service.
 
 ### The invariant this buys
 
-The closed news service receives topic phrases with **no identifier of any kind** — no user ID, no
-session, no device ID, no client IP. This is structural, not a promise:
+> ⚠️ **Everything in this subsection is the design being built, not the system running today.** It is
+> written in the future tense deliberately. Do not cite it as a description of current behaviour.
 
-- Outbound headers are a **fixed allowlist built once at adapter construction**. There is no per-request
-  header parameter to smuggle anything through.
-- A **test asserts set equality** against that allowlist. Adding a header fails the build.
+The closed news service will receive topic phrases with **no identifier of any kind** — no user ID, no
+session, no device ID, no client IP. The intent is that this is structural rather than a promise:
+
+- Outbound headers will be a **fixed allowlist built once at adapter construction**, with no per-request
+  header parameter through which anything could be smuggled.
+- A **test asserting set equality** against that allowlist, so adding a header fails the build.
 - Typed DTOs only — no `context` / `headers` / `extra` escape hatch. No cookie jar, no
   `x-forwarded-for` propagation, no per-user connection pinning.
-- The two systems run on **separate databases with separate credentials and no cross-system database
-  access**, so the closed side cannot read a user record even by mistake.
+- The two systems will run on **separate databases with separate credentials and no cross-system
+  database access**, so the closed side cannot read a user record even by mistake.
 
-No collection in any database links a user to a topic. Topics live in a shared cache keyed by the topic
-text itself, with no owner field, swept 14 days after anyone last requested them.
+One thing here *is* already true and can be checked today: **no collection in any database links a user
+to a topic.** Topics live in a shared cache keyed by the topic text itself, with no owner field, swept
+14 days after anyone last requested them. What the migration adds is that identity stops travelling
+alongside the topic text in the same request, and that the separation becomes externally checkable
+rather than something you take on trust.
 
 ### Running it yourself
 
