@@ -61,10 +61,17 @@ function alreadyUntagged(input: ScoredCandidateInput): boolean {
  * row is already untagged), so today's production path — where no article
  * carries any of these — allocates nothing and is byte-identical.
  *
- * `category` is deliberately NOT stripped: it is not part of the untagged
- * predicate, it is populated today (so clearing it would be a live behaviour
- * change, not a preserved one), and the `category` suppression kind depends on
- * it.
+ * `category` is deliberately NOT stripped, but NOT for the reason this comment
+ * used to give. It claimed the field "is populated today" — it is not. The
+ * `news-article` document carries no `category` at all, so no candidate ever
+ * has one, and the `category` suppression kind is unmatchable on real data
+ * regardless of this policy. (Do not confuse it with
+ * `publicationSource.category`, which is the PUBLICATION's category and is a
+ * different field — see the note at lib/article-service.ts:66.)
+ *
+ * The real reasons to leave it alone: it is not part of the untagged predicate,
+ * and it is not produced by the tagging pipeline, so stripping it would be a
+ * no-op that implies a relationship to tagging that does not exist.
  */
 export function applyArticleTagPolicy(
   input: ScoredCandidateInput,

@@ -230,8 +230,16 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
       labelDefault: 'More news from this place',
       icon: 'location-on',
       // No visibleIf: has_geo_mismatch is dislike-specific ("wrong place");
-      // there's no clean inverse. Shown unconditionally — the leaf no-ops
-      // client-side when there's no geoText.
+      // there's no clean inverse.
+      //
+      // This used to say the leaf is "shown unconditionally" and "no-ops
+      // client-side" — that is no longer true. `isInertActionLeaf` (added in
+      // the not-interested wave) HIDES any leaf whose actions all resolve to
+      // nothing, precisely so a tap can never do nothing. `from_context_geo`
+      // resolves off geoText, so this row now disappears whenever geoText is
+      // absent — which, until article enrichment runs, is every article.
+      // Intended behaviour, but it is a hide, not a no-op: the row is simply
+      // not there rather than present-and-inert.
       leaf: { actions: [{ type: 'add_negative_topic', text: 'from_context_geo', weight: 0.6 }] },
     },
     {
