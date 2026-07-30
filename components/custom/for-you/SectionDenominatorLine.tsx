@@ -14,12 +14,13 @@ interface SectionDenominatorLineProps {
  * The one line of plain text under a headline section's title:
  * "Mera read 20 headlines · 3 worth your time."
  *
- * It is also the section's EMPTY STATE. When nothing clears the bar the section
- * still renders its title and this line, now reading "Mera read 20 headlines ·
- * none looked relevant today." — the only case where a section shows zero cards.
- * An empty section that explains itself is the point: the alternative (drop the
- * section, as fact sections do) tells the reader nothing about work Mera
- * actually did on their behalf.
+ * It is NO LONGER an empty state. A headline section with zero cards is now
+ * dropped entirely (fact-rows-selector step 5b), matching fact sections — so
+ * `shown` should always be > 0 here and the `…None` branch below is an
+ * unreachable guard, kept only so a future change that reintroduces empty
+ * sections degrades to a sentence rather than a blank line. The `…None` strings
+ * are retained in all 20 locales for the same reason; do not treat their
+ * presence as evidence the state is reachable.
  *
  * Deliberately TEXT, not a control — no badge, no pill, no stepper. Simplifying
  * an existing surface is free; adding visual complexity to it has to be earned,

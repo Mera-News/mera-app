@@ -620,17 +620,24 @@ export function buildFactRows(
     rows.push(row);
   }
 
-  // 5b. Finalize the headline sections. RULE 2 is applied with the SAME test,
-  //     but its consequence is deliberately asymmetric: a non-viable fact
-  //     section disappears (there is nothing to say about a fact with no
-  //     coverage), whereas a non-viable headline section keeps its SHELL and
-  //     empties its cards. That zero-card section is not a bug to fix later —
-  //     it is the feature: its one-line denominator ("Mera read 20 · none looked
-  //     relevant today") is the only place the reader learns that Mera read the
-  //     scope at all and judged none of it worth their time. Deleting the
-  //     section would silently withhold exactly that.
+  // 5b. Finalize the headline sections. RULE 2 is applied with the SAME test and
+  //     now the SAME consequence as a fact section: a non-viable headline
+  //     section disappears.
+  //
+  //     This used to keep the shell and empty its cards, on the argument that
+  //     the one-line denominator ("Mera read 20 · none looked relevant today")
+  //     was the only place a reader learns Mera did work on their behalf. The
+  //     user overruled that after living with it: an empty section reads as a
+  //     promise of content followed by an admission there is none, and it cost a
+  //     screenful every time. Their standing rule for this feature — "if not
+  //     relevant we're saving users time by not showing it" — decides it.
+  //
+  //     Note the shell was ALSO masking a real defect: until headlines P8, every
+  //     pure headline row was written off before scoring, so the shell was the
+  //     permanent state of the feature rather than an occasional honest empty.
+  //     Anyone tempted to restore it should first confirm the sections can fill.
   for (const row of headlineRows.values()) {
-    if (!isFactSectionViable(row.groups.map((g) => g.bucket))) row.groups = [];
+    if (!isFactSectionViable(row.groups.map((g) => g.bucket))) continue;
     row.groups.sort(cardCompare);
     row.latestAddedMs = row.groups.reduce((mx, g) => Math.max(mx, g.addedMs), 0);
     row.unreadCount = row.groups.filter(isGroupUnread).length;

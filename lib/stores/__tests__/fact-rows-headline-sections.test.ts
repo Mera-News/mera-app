@@ -215,16 +215,19 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
     expect(rows[0].headlineReadCount).toBe(2);
   });
 
-  it('RULE 2: an all-LOW section keeps its shell but shows no cards', () => {
+  // headlines P9 — conscious reversal. This asserted that an all-LOW section
+  // KEPT its shell and showed no cards, on the argument that the denominator
+  // ("Mera read 2 · none looked relevant today") was the only place the reader
+  // learns Mera did the work. The user overruled it: an empty section promises
+  // content and then admits it has none, costing a screenful each time. Their
+  // standing rule — "if not relevant we're saving users time by not showing it"
+  // — now applies to headline sections exactly as it always did to fact ones.
+  it('RULE 2: an all-LOW section is dropped entirely, like a fact section', () => {
     const { rows } = build([
       headline('COUNTRY', 'IN', { relevance: REL_LOW }),
       headline('COUNTRY', 'IN', { relevance: REL_LOW }),
     ]);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].factId).toBe(COUNTRY_IN_SECTION);
-    expect(rows[0].groups).toHaveLength(0);
-    expect(rows[0].headlineReadCount).toBe(2);
-    expect(rows[0].unreadCount).toBe(0);
+    expect(rows).toHaveLength(0);
   });
 
   it('RULE 2: one MEDIUM member keeps the whole section, LOW members included', () => {
@@ -235,9 +238,12 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
     expect(rows[0].groups).toHaveLength(2);
   });
 
-  it('a FACT section with the same all-LOW membership still DISAPPEARS entirely', () => {
-    // The asymmetry is deliberate: the headline section's empty state is the
-    // feature; a fact with no coverage has nothing to say.
+  // headlines P9 — conscious reversal. This existed to pin the ASYMMETRY (fact
+  // section vanishes, headline section keeps a shell). There is no asymmetry
+  // any more, so it now pins the opposite: both kinds vanish together on the
+  // same all-LOW membership. Kept rather than deleted because a future change
+  // that reintroduces an empty-shell state for either kind should fail here.
+  it('a FACT and a HEADLINE section with all-LOW membership BOTH disappear', () => {
     const { rows } = build(
       [
         sugg({ relevance: REL_LOW, matchedTopics: [{ topicId: 't1', text: 'dutch tax' }] }),
@@ -245,8 +251,7 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
       ],
       snapshots({ topics: [['t1', { factId: 'f1' }]], facts: [['f1', {}]] }),
     );
-    expect(rows.map((r) => r.factId)).toEqual([GLOBAL_HEADLINE_SECTION_ID]);
-    expect(rows[0].groups).toHaveLength(0);
+    expect(rows).toHaveLength(0);
   });
 });
 
@@ -300,23 +305,25 @@ describe('headline sections — the denominator counts', () => {
     expect(rows[0].groups).toHaveLength(1);
   });
 
-  it('reads zero worth-your-time when nothing clears the bar', () => {
+  // headlines P9 — both of these previously asserted a surviving zero-card
+  // shell. Empty sections are now dropped, and these two are the cases where
+  // that is most clearly RIGHT: the only member that cleared the bar was
+  // promoted to the breaking strip, so the story is still on screen, directly
+  // above. Keeping the section would render an empty "Headlines from X" under a
+  // strip already showing its one story.
+  it('drops the section when its only qualifying member was promoted to breaking', () => {
     const { rows } = build([
       headline('COUNTRY', 'IN', { relevance: REL_UNSCORED }),
       headline('COUNTRY', 'IN', { relevance: REL_UNSCORED }),
       headline('COUNTRY', 'IN', { relevance: REL_MEDIUM, rawScore: 2 }), // → breaking
     ]);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].headlineReadCount).toBe(3);
-    expect(rows[0].groups).toHaveLength(0);
+    expect(rows).toHaveLength(0);
   });
 
-  it('a breaking headline is pulled to the strip but still counted as read', () => {
+  it('a breaking headline is shown in the strip and leaves no empty section behind', () => {
     const { breaking, rows } = build([headline('GLOBAL', null, { rawScore: 2 })]);
     expect(breaking).toHaveLength(1);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].headlineReadCount).toBe(1);
-    expect(rows[0].groups).toHaveLength(0);
+    expect(rows).toHaveLength(0);
   });
 
   it('fact sections carry no denominator', () => {
@@ -484,21 +491,20 @@ describe('headline section — end-to-end to a rendered card', () => {
     expect(global!.groups).toHaveLength(1); // a real card, not an empty shell
   });
 
-  it('a pure headline BELOW discardFloor renders the shell with zero cards', () => {
-    // The designed behaviour, not a bug: the denominator line is the only place
-    // the reader learns Mera read the scope and judged none of it worth showing.
+  // headlines P9 — both previously asserted a surviving zero-card shell. The
+  // user's decision is that a section with no cards is hidden, so the whole
+  // section is now absent in both cases. These two are the end-to-end proof
+  // that the ONLY thing which puts a headline section on screen is a member
+  // that actually cleared both bars.
+  it('a pure headline BELOW discardFloor produces no section at all', () => {
     const { rows } = build([headline('GLOBAL', null, { relevance: REL_UNSCORED })]);
 
-    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
-    expect(global!.headlineReadCount).toBe(1);
-    expect(global!.groups).toHaveLength(0);
+    expect(rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID)).toBeUndefined();
   });
 
-  it('a pure headline at LOW only (0.4–0.6) is section-eligible but not viable', () => {
+  it('a pure headline at LOW only (0.4–0.6) is section-eligible but not viable, so no section', () => {
     const { rows } = build([headline('GLOBAL', null, { relevance: REL_LOW })]);
 
-    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
-    expect(global!.headlineReadCount).toBe(1);
-    expect(global!.groups).toHaveLength(0); // RULE 2 empties an all-LOW section
+    expect(rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID)).toBeUndefined();
   });
 });
