@@ -459,6 +459,11 @@ they bought is queued.
    subscription row (`isActive` / `willRenew` / `purchaseDate` / `expiresDate` /
    `unsubscribeDetectedAt`). If a not-yet-active row for the incoming product turns up, a reliable
    client-only rule exists and the notice is a one-line addition to the hero card.
+   **Precondition, and it is a real one:** the probe is `__DEV__`-gated, so it only runs in a
+   dev/debug build, signed into the App Store account *and* the Mera account that own the pending
+   change. A production/OTA build will not print it, and the simulator harness's resident test
+   account has no pending change to observe. If that build cannot be produced, skip to 2 — this
+   route is not the near-certain one it looks like.
 2. If it does not, the correct home is the server: `mera-server-auth` already processes
    `PRODUCT_CHANGE`, so persisting `pendingTier` + `pendingTierStartsAt` and adding them to the
    `userBilling` GraphQL type makes the notice trivially derivable and always correct. That is a
