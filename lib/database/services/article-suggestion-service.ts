@@ -590,6 +590,55 @@ export async function getComputedComponentsByIds(
   return out;
 }
 
+/** Which scoring path actually produced each stored row's score. Counted from
+ *  the `mode` recorded in the `score_components_json` audit — no parallel
+ *  record, no extra column. */
+export interface ScoringModeBreakdown {
+  /** Scored by the deterministic math engine (the article carried tags). */
+  math: number;
+  /** Scored by the legacy two-pass LLM (`backstop` — the article was untagged,
+   *  which is every article while `USE_ARTICLE_TAGS` is off). */
+  backstop: number;
+  /** Scored, but the audit blob is missing, unparseable, or predates the `mode`
+   *  field. Reported rather than folded into either bucket — attributing these
+   *  to a path we cannot actually observe is exactly the kind of quiet lie this
+   *  diagnostic exists to avoid. */
+  unknown: number;
+}
+
+/**
+ * Count the stored suggestions by the scoring path that produced them.
+ *
+ * ON-DEMAND ONLY (the Observability screen's refresh). It reads every scored
+ * row's audit JSON, so it is deliberately absent from the render, ingest and
+ * scroll paths. Read-only.
+ *
+ * This is the readout that makes the `USE_ARTICLE_TAGS` comparison observable:
+ * with the flag off it should be 100% `backstop`, and turning it on moves rows
+ * into `math` as the server's tags arrive.
+ */
+export async function getScoringModeBreakdown(): Promise<ScoringModeBreakdown> {
+  const out: ScoringModeBreakdown = { math: 0, backstop: 0, unknown: 0 };
+  const rows = await articleSuggestionsCol
+    .query(Q.where('scored_at', Q.notEq(null)))
+    .fetch();
+  for (const row of rows) {
+    if (!row.scoreComponentsJson) {
+      out.unknown++;
+      continue;
+    }
+    try {
+      const { mode } = JSON.parse(row.scoreComponentsJson) as RelevanceComponents;
+      if (mode === 'math') out.math++;
+      else if (mode === 'backstop') out.backstop++;
+      else out.unknown++;
+    } catch {
+      out.unknown++;
+    }
+  }
+  return out;
+}
+
 /**
  * Persist the persona-v3 math audit columns for a batch of rows WITHOUT
  * touching relevance/reason/status. Used by the E2EE pipeline at submit time

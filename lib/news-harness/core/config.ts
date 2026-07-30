@@ -155,6 +155,30 @@ export interface TopicGenConfig {
  * raw score into the same 0.05–1.10 band the existing buckets/eval consume.
  */
 export interface ScoringEngineConfig {
+  // --- article-tagging policy (NOT a tunable; a routing switch) ------------
+  /** Honour the server's article-tagging metadata (`geo_tags` / `entities` /
+   *  `event_type`).
+   *
+   *  `false` (the default) ⇒ every candidate is presented to the engine as
+   *  UNTAGGED regardless of what the server sent, so `isBackstop` is true for
+   *  all of them and every batch takes the legacy two-pass LLM path. That is
+   *  exactly today's production behaviour: the server-side enrichment stage has
+   *  never run, so no article carries any of those three fields.
+   *
+   *  `true` ⇒ the tags are passed through, so a tagged article routes to the
+   *  deterministic math path (and its geo/entity/event components and the
+   *  structured suppression kinds become live).
+   *
+   *  The switch exists so enabling enrichment in staging is a change we CHOOSE
+   *  and can compare against the LLM-only path side by side, rather than one
+   *  that happens to us the moment the server starts emitting tags. Bound from
+   *  `EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
+   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`); the harness
+   *  itself never reads `process.env`. Enforced by
+   *  `scoring-engine/tag-policy::applyArticleTagPolicy`, which is applied where
+   *  a persisted row becomes a `ScoredCandidateInput` — so "off" means the
+   *  engine never SEES a tag, not that one code path ignores them. */
+  USE_ARTICLE_TAGS: boolean;
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
   /** Explicit topic interest (magnitude of the strongest matched topic). */
   W_TOPIC: number;
@@ -345,6 +369,10 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },
   scoringEngine: {
+    // Article tagging is OFF by default — the explicit literal, not an absent
+    // key read as falsy. This preserves today's behaviour (every article
+    // untagged ⇒ legacy LLM path) even after the server starts sending tags.
+    USE_ARTICLE_TAGS: false,
     // affinity component weights (positives sum to ≈ 1.0 at full saturation).
     // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH.
     // Round-3 A2: freshness decay removed (W_FRESH 0.08 deleted). The remaining

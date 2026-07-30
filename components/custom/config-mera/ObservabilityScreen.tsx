@@ -21,6 +21,8 @@ import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { computeFeedFunnel, type FeedFunnelReport } from '@/lib/stores/feed-diagnostics';
 import { getOpenedSeenBreakdown } from '@/lib/database/services/story-impression-service';
+import { getScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
+import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { Box } from '@/components/ui/box';
@@ -175,6 +177,39 @@ function feedFunnelRows(r: FeedFunnelReport, t: TFunction): KVRow[] {
         [L.droppedOutsideWindow, String(r.dropped.outsideWindow)],
     );
     if (r.dropped.unknownGate > 0) rows.push([L.droppedUnknownGate, String(r.dropped.unknownGate)]);
+
+    // WHICH SCORER RAN — the article-tag A/B readout. Literal labels (like the
+    // two "not interested" rows above) so they stay next to the report fields
+    // they read. Placed right after the gate rows: it explains HOW the scores
+    // those gates compare against were produced.
+    //
+    // Rendered even when every count is zero — "0 by math" is the expected,
+    // meaningful reading while the flag is off, so hiding the rows would hide
+    // the answer. `available: false` is called out instead, because THAT is the
+    // case where the zeroes are not measurements.
+    rows.push([
+        'Using article tags',
+        humanizeValue(String(r.scoring.useArticleTags)),
+        'funnel-row-article-tags',
+    ]);
+    if (r.scoring.available) {
+        rows.push(
+            ['Scored by math (tagged)', String(r.scoring.math), 'funnel-row-scored-math'],
+            ['Scored by AI (untagged)', String(r.scoring.legacy), 'funnel-row-scored-llm'],
+        );
+        if (r.scoring.unknown > 0) {
+            rows.push([
+                'Scored — path not recorded',
+                String(r.scoring.unknown),
+                'funnel-row-scored-unknown',
+            ]);
+        }
+    } else {
+        rows.push(
+            ['Scored by math (tagged)', '—', 'funnel-row-scored-math'],
+            ['Scored by AI (untagged)', '—', 'funnel-row-scored-llm'],
+        );
+    }
 
     rows.push(
         [L.groups, String(r.groups.count)],
@@ -362,9 +397,13 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         // never hydrates, ingests, or marks anything. Its own try/catch so a
         // diagnostic failure can never take the rest of the screen down.
         try {
-            const [breakdown, userCtx] = await Promise.all([
+            const [breakdown, userCtx, scoringModes] = await Promise.all([
                 getOpenedSeenBreakdown().catch(() => null),
                 loadUserGeoLanguageContext(),
+                // Its own catch: this walks every scored row's audit JSON, and a
+                // parse/read failure must degrade to "—" on two rows, not take
+                // the whole funnel down.
+                getScoringModeBreakdown().catch(() => null),
             ]);
             const fo = useFeedOrderStore.getState();
             const os = useOpenedStoriesStore.getState();
@@ -384,6 +423,8 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     headerAnalysedCount: counts.analysedCount,
                     headerRelevantCount: counts.relevantCount,
                     openedStats: breakdown?.stats ?? null,
+                    scoringModes,
+                    useArticleTags: HARNESS_CONFIG_BASE.scoringEngine.USE_ARTICLE_TAGS,
                     userCtx,
                     nowMs: Date.now(),
                 }),

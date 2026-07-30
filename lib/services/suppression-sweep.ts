@@ -81,6 +81,19 @@ export interface HardFilterUnexcludeResult {
   stillExcluded: number;
 }
 
+// SCOPE NOTE — `EXPO_PUBLIC_USE_ARTICLE_TAGS` does NOT gate this module.
+//
+// That flag governs which path SCORES an article (deterministic math vs the
+// legacy LLM), and it is enforced where scoring candidates are built
+// (`mera-protocol/stage-scoring::buildStageCandidates`). The screens below are a
+// different job: applying a filter the user explicitly asked for to rows that
+// are already stored. Those structured kinds (`entity` / `place` /
+// `event_type`) are specified to match on the tag columns and are covered by
+// tests that say so, so they keep reading the row as persisted regardless of the
+// scoring policy. Today the distinction is unobservable — no article carries
+// tags — but if that changes, "which scorer ran" and "does my filter still
+// work" are deliberately independent questions.
+
 /** Lazy require, mirroring scoring-pipeline's own refreshUi: a static import of
  *  SuggestionSyncService from here would close a load-time cycle. */
 async function refreshUi(): Promise<void> {

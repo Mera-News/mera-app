@@ -34,6 +34,7 @@ import {
   stableClusterIdOf,
   type FeedListItem,
 } from './feed-list-selector';
+import type { ScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
 import type { CardStateRecord } from './feed-order-store';
 import type { ForYouSuggestion } from './for-you-store';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
@@ -134,6 +135,17 @@ export interface FeedFunnelInput {
 
   /** DB-side opened breakdown; null when that read failed. */
   openedStats: OpenedSeenStats | null;
+
+  /** DB-side count of which scoring path produced each stored score, read from
+   *  the `score_components_json` audit. Null when that read failed OR was not
+   *  requested. Optional so the Feed tab's dev-only funnel log (which does not
+   *  touch the database) keeps calling this with no change. */
+  scoringModes?: ScoringModeBreakdown | null;
+  /** Whether the app is currently honouring server article tags
+   *  (`EXPO_PUBLIC_USE_ARTICLE_TAGS` → `ScoringEngineConfig.USE_ARTICLE_TAGS`).
+   *  Passed in rather than imported: this module is pure and RN-free, and the
+   *  flag lives in the composition root. */
+  useArticleTags?: boolean;
 
   userCtx: UserGeoLanguageContext | null;
   /** Captured ONCE by the caller and used for every window/age computation. */
@@ -248,6 +260,34 @@ export interface FeedFunnelReport {
     stats: OpenedSeenStats | null;
   };
 
+  /** WHICH SCORER RAN — the `EXPO_PUBLIC_USE_ARTICLE_TAGS` A/B readout.
+   *
+   *  A SEPARATE AXIS from `totals.status` / `dropped.*`, deliberately. Those two
+   *  partition the pool by VISIBILITY and are tied together by
+   *  `sumsCheck.visibilityAttributionSums`; scoring path is an orthogonal
+   *  property of an already-scored row, so adding it as a bucket there would
+   *  break that identity for no reason. It has its own self-check instead. */
+  scoring: {
+    /** Is the app honouring server article tags right now? */
+    useArticleTags: boolean;
+    /** Scored by the deterministic math engine (article carried tags). */
+    math: number;
+    /** Scored by the legacy two-pass LLM (untagged → `backstop`). */
+    legacy: number;
+    /** Scored, but the audit blob can't say which path — see
+     *  `ScoringModeBreakdown.unknown`. */
+    unknown: number;
+    /** math + legacy + unknown. Compare against `totals.status.complete +
+     *  reasonPending`: a large shortfall means rows were scored by a build that
+     *  predates the audit field, not that scoring is broken. */
+    scoredRows: number;
+    /** False ⇒ the breakdown read failed or was not requested, and the four
+     *  numbers above are zeroes by construction rather than measurements.
+     *  Rendered explicitly so an all-zero row is never read as "nothing was
+     *  scored by either path". */
+    available: boolean;
+  };
+
   hydrateProvenance: HydrateProvenance | null;
   /** The persisted READING ORDER was thrown away at launch. `ingest` refills the
    *  list so everything else reads healthy — this is the only visible symptom. */
@@ -308,6 +348,7 @@ function bySuggestionRecency(a: FeedFunnelSample, b: FeedFunnelSample): number {
 
 export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
   const { nowMs } = input;
+  const modes = input.scoringModes ?? null;
   const cutoffMs = nowMs - FEED_WINDOW_MS;
 
   // ── Stage 1: visibility, with exclusive reason attribution ────────────────
@@ -566,6 +607,14 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
         input.openedStats === null ? null : input.openedUnionIds.size - input.openedStats.unionSize,
       stats: input.openedStats,
     },
+    scoring: {
+      useArticleTags: input.useArticleTags ?? false,
+      math: modes?.math ?? 0,
+      legacy: modes?.backstop ?? 0,
+      unknown: modes?.unknown ?? 0,
+      scoredRows: modes ? modes.math + modes.backstop + modes.unknown : 0,
+      available: modes != null,
+    },
     hydrateProvenance: input.hydrateStats,
     launchWipeSuspected: !!input.hydrateStats?.emptyPoolGuardTripped,
     sumsCheck: {
@@ -624,6 +673,12 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     openedUnionIds: r.opened.unionSetSize,
     openedRows: r.opened.stats?.rowCount ?? -1,
     openedOlderThan7d: r.opened.stats?.ageBuckets.d7to30 ?? -1,
+    // Which scorer ran. `-1` (not 0) when the breakdown was unavailable, the
+    // same "this is not a measurement" convention the opened fields use above.
+    useArticleTags: r.scoring.useArticleTags,
+    scoredByMath: r.scoring.available ? r.scoring.math : -1,
+    scoredByLlm: r.scoring.available ? r.scoring.legacy : -1,
+    scoredByUnknown: r.scoring.available ? r.scoring.unknown : -1,
     orderHydrated: r.hydrated.order,
     openedHydrated: r.hydrated.opened,
     launchWipeSuspected: r.launchWipeSuspected,

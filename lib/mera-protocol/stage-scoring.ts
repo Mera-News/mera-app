@@ -20,7 +20,12 @@ import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import type { LlmPort } from '@/lib/news-harness/core/ports';
 import type { ScoringCandidate, StageCandidateRow } from '@/lib/news-harness/core/types';
-import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
+import {
+  DEFAULT_HARNESS_CONFIG,
+  type HarnessConfig,
+  type ScoringEngineConfig,
+} from '@/lib/news-harness/core/config';
+import { HARNESS_CONFIG_BASE } from './harness-config-base';
 import { getScoringOverrides } from '@/lib/database/services/calibration-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
@@ -31,6 +36,7 @@ import {
   normalizeLocation,
   normText,
   screenHardSuppressionsDetailed,
+  applyArticleTagPolicy,
   type StageCandidate,
   type StageResult,
   type PersonaScoringContext,
@@ -271,13 +277,25 @@ function minimalStageRow(c: ScoringCandidate): StageCandidateRow {
 }
 
 /** Map ScoringCandidate[] → StageCandidate[]: the rich metadata drives the math
- *  input, the ScoringCandidate itself is the `legacy` backstop payload. */
+ *  input, the ScoringCandidate itself is the `legacy` backstop payload.
+ *
+ *  THE ARTICLE-TAG SEAM. Both scoring orchestrators build their engine inputs
+ *  here, so this is where `USE_ARTICLE_TAGS` is enforced: with the flag off,
+ *  `applyArticleTagPolicy` hands the engine a candidate with no geoTags, no
+ *  entities and no eventType, whatever the server sent — so routing, the
+ *  geo/entity/event score components AND the structured suppression kinds all
+ *  see exactly what they see today. `cfg` defaults to the harness default
+ *  (tags off) so a caller can never accidentally opt in by omission. */
 export function buildStageCandidates(
   candidates: ScoringCandidate[],
   topicWeights: Map<string, TopicWeightInfo>,
+  cfg: ScoringEngineConfig = DEFAULT_HARNESS_CONFIG.scoringEngine,
 ): StageCandidate[] {
   return candidates.map((c) => ({
-    input: buildStageCandidateInput(c.meta ?? minimalStageRow(c), topicWeights),
+    input: applyArticleTagPolicy(
+      buildStageCandidateInput(c.meta ?? minimalStageRow(c), topicWeights),
+      cfg,
+    ),
     legacy: c,
   }));
 }
@@ -293,23 +311,27 @@ async function loadAllFactStatements(): Promise<string[]> {
  * M-P5c: layer the persisted `scoringEngineOverrides` (the self-tuning deltas the
  * calibration loop produced) over the base ScoringEngineConfig. Loaded once per
  * scoring batch. When there are no overrides, applyScoringOverrides returns the
- * SAME base reference, so we hand back DEFAULT_HARNESS_CONFIG untouched (no
+ * SAME base reference, so we hand back HARNESS_CONFIG_BASE untouched (no
  * allocation). Any read failure fail-opens to the base config.
  *
  * Exported (Wave 14) so the E2EE scoring pipeline builds/decodes its judge
  * calls against the SAME effective config computeMathStage scored with —
  * previously it hardcoded DEFAULT_HARNESS_CONFIG there, which was safe only
  * because no judge-touched field is currently tunable.
+ *
+ * The base is HARNESS_CONFIG_BASE, not DEFAULT_HARNESS_CONFIG, so the
+ * env-bound article-tag policy applies on EVERY branch — including the `catch`.
+ * A calibration read failure must not quietly flip the tagging policy back.
  */
 export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
     const overrides = await getScoringOverrides();
-    const eng = applyScoringOverrides(DEFAULT_HARNESS_CONFIG.scoringEngine, overrides);
-    return eng === DEFAULT_HARNESS_CONFIG.scoringEngine
-      ? DEFAULT_HARNESS_CONFIG
-      : { ...DEFAULT_HARNESS_CONFIG, scoringEngine: eng };
+    const eng = applyScoringOverrides(HARNESS_CONFIG_BASE.scoringEngine, overrides);
+    return eng === HARNESS_CONFIG_BASE.scoringEngine
+      ? HARNESS_CONFIG_BASE
+      : { ...HARNESS_CONFIG_BASE, scoringEngine: eng };
   } catch {
-    return DEFAULT_HARNESS_CONFIG;
+    return HARNESS_CONFIG_BASE;
   }
 }
 
@@ -345,7 +367,7 @@ export async function computeMathStage(
     loadPersonaScoringContext(nowMs),
     effectiveHarnessConfig(),
   ]);
-  const allStage = buildStageCandidates(candidates, topicWeights);
+  const allStage = buildStageCandidates(candidates, topicWeights, config.scoringEngine);
 
   // HARD "not interested" screen — the E2EE path never enters computeAndJudge,
   // so this is its own convergence point for the same shared matcher. P6: a
@@ -403,7 +425,7 @@ export async function computeAndJudgeForCandidates(
     loadAllFactStatements(),
     effectiveHarnessConfig(),
   ]);
-  const stage = buildStageCandidates(candidates, topicWeights);
+  const stage = buildStageCandidates(candidates, topicWeights, config.scoringEngine);
   return computeAndJudge(stage, persona, getScoringLlmPort(), config, {
     nowMs: opts?.nowMs,
     factStatements,

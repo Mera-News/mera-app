@@ -114,6 +114,15 @@ export interface RelevanceComponents {
    *  compiling; absent reads as false. The UI labels such a card so a filtered
    *  subject on screen is never a surprise. */
   hardFilterExempt?: boolean;
+  /** WHICH PATH SCORED THIS ROW — the same value as `RelevanceResult.mode`,
+   *  carried inside the components so it survives into the persisted
+   *  `score_components_json` audit (both persist sites JSON-stringify this
+   *  object wholesale). That is what makes the math-vs-LLM split readable after
+   *  the fact, on the Observability screen, without a parallel record or a new
+   *  column. Optional so the existing component literals in tests/fixtures keep
+   *  compiling; absent on rows persisted before this field existed, which the
+   *  readout reports as `unknown` rather than guessing. */
+  mode?: ScoringMode;
 }
 
 export interface RelevanceResult {
@@ -412,6 +421,7 @@ export function computeRelevance(
       wrongLocationFlag: geo.wrongLocationFlag,
       matchedLocationId: geo.matchedLocationId,
       hardFilterExempt,
+      mode,
     },
   };
 }

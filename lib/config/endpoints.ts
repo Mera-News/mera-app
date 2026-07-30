@@ -74,6 +74,27 @@ export const GRAPHQL_SERVER_ENDPOINT = requireEnv(
 export const DUMP_QUERIES_ENABLED =
   __DEV__ && process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING === 'true';
 
+// Honour the server's article-tagging metadata (geo_tags / entities /
+// event_type) when scoring.
+//
+// Explicitly DEFAULT OFF — the comparison `=== 'true'` means an unset, blank or
+// misspelled value resolves to `false` rather than leaning on `undefined` being
+// falsy. Off reproduces today's behaviour exactly: every article is presented to
+// the scoring engine as untagged, so every batch takes the legacy two-pass LLM
+// path, whatever the server sends. On lets tagged articles take the
+// deterministic math path, so the two can be compared side by side (the split is
+// reported on the Observability screen's feed funnel).
+//
+// NOT `__DEV__`-interlocked: unlike the debug flags above, this is meant to be
+// switchable in a real build (a staging binary/OTA) so the comparison can be run
+// against live data.
+//
+// The scoring engine never reads this. It reaches the engine as
+// `ScoringEngineConfig.USE_ARTICLE_TAGS`, bound in
+// `lib/mera-protocol/stage-scoring.ts::effectiveHarnessConfig()`.
+export const USE_ARTICLE_TAGS =
+  process.env.EXPO_PUBLIC_USE_ARTICLE_TAGS === 'true';
+
 // RevenueCat public SDK keys. Optional (not requireEnv): subscriptions degrade
 // gracefully — when unset, configureRevenueCat() no-ops and the paywall isn't
 // shown. The generic Test Store key (`test_…`) works on both platforms in

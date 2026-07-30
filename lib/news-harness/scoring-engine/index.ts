@@ -8,6 +8,7 @@ export * from './persona-context';
 export * from './geo';
 export * from './suppression';
 export * from './relevance';
+export * from './tag-policy';
 export * from './judge';
 export * from './judge-calls';
 export * from './calibration';

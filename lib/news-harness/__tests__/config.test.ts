@@ -241,6 +241,16 @@ describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {
 describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
   const e = DEFAULT_HARNESS_CONFIG.scoringEngine;
 
+  it('pins the article-tagging policy to OFF', () => {
+    // Added with the EXPO_PUBLIC_USE_ARTICLE_TAGS switch. NOT a tunable weight —
+    // a routing switch: false means every article is presented to the engine as
+    // untagged, so it takes the legacy two-pass LLM path, which is exactly what
+    // production does today (the server-side enrichment stage has never run).
+    // Flipping this literal changes how EVERY article is scored the moment the
+    // server starts emitting tags, so it is pinned here deliberately.
+    expect(e.USE_ARTICLE_TAGS).toBe(false);
+  });
+
   it('pins the affinity component weights (positives sum ≈ 1.0)', () => {
     // Round-3 A2: freshness (W_FRESH 0.08) removed; the seven remaining positive
     // weights renormalized ÷0.92 so full-saturation affinity stays ≈1.0.
