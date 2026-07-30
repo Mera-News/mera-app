@@ -765,8 +765,12 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
         if (!isScorableCandidate(candidate)) continue;
         const reasonPrompt = buildReasonUserMessage({
           userContext: fullUserContext,
-          articleTitle: candidate.titleEn,
-          articleDescription: candidate.descriptionEn,
+          // `?? ''` is for the TYPE only: isScorableCandidate already guarantees
+          // both are non-empty (it requires title+description on every branch).
+          // The old code narrowed via an explicit `!titleEn || !descriptionEn`
+          // continue, which the predicate now subsumes.
+          articleTitle: candidate.titleEn ?? '',
+          articleDescription: candidate.descriptionEn ?? '',
           articleCountry: resolveCountryName(candidate.countryCode),
           relevance: candidate.relevance ?? 0.7,
           relatedFacts: candidate.relatedFacts.map((f) => f.statement),

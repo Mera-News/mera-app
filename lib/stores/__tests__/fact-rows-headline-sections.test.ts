@@ -376,3 +376,117 @@ describe('headline sections — ordering on the shared weight axis', () => {
     expect(rows[0].weight).toBeCloseTo(0.55);
   });
 });
+
+// ---------------------------------------------------------------------------
+// P8 site 4 — the denominator counts only rows that could land in the section
+// ---------------------------------------------------------------------------
+//
+// A CO-MATCHED headline (one that also matched a real persona topic) carries a
+// real topicId, resolves an owning fact, and is routed to that FACT's section
+// at step 4 — it can never appear in a headline section. It was nevertheless
+// counted in "Mera read N headlines", so the sentence described a population
+// the section had no way to show. Placement is deliberately unchanged; only the
+// denominator moved.
+
+/** A headline that ALSO matched a real persona topic — the co-matched shape. */
+function coMatchedHeadline(
+  scope: 'COUNTRY' | 'GLOBAL',
+  countryCode: string | null,
+  topicId: string,
+  o: Partial<ForYouSuggestion> = {},
+): ForYouSuggestion {
+  return sugg({
+    headlineScope: scope,
+    headlineCountryCode: countryCode,
+    matchedTopics: [
+      { topicId: null, text: `top headline · ${scope.toLowerCase()}` },
+      { topicId, text: 'a real persona topic' },
+    ],
+    ...o,
+  });
+}
+
+const OWNED = snapshots({
+  topics: [['t1', { factId: 'f1' }]],
+  facts: [['f1', { statement: 'Follows Dutch tax policy' }]],
+});
+
+describe('headline denominator — co-matched rows excluded (P8 site 4)', () => {
+  it('does not count a co-matched headline that a fact owns', () => {
+    const { rows } = build(
+      [headline('GLOBAL', null), coMatchedHeadline('GLOBAL', null, 't1')],
+      OWNED,
+    );
+
+    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
+    // Two GLOBAL headline rows in the pool, but only the PURE one can land here.
+    expect(global!.headlineReadCount).toBe(1);
+  });
+
+  it('the co-matched row is still shown — under its fact, exactly as before', () => {
+    const { rows } = build(
+      [headline('GLOBAL', null), coMatchedHeadline('GLOBAL', null, 't1')],
+      OWNED,
+    );
+
+    const fact = rows.find((r) => r.factId === 'f1');
+    expect(fact!.kind).toBe('fact');
+    expect(fact!.groups).toHaveLength(1);
+    // …and it is NOT duplicated into the headline section.
+    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
+    expect(global!.groups).toHaveLength(1);
+    expect(global!.groups[0].data._id).not.toBe(fact!.groups[0].data._id);
+  });
+
+  it('a headline whose only matched topic is SUPPRESSED is still counted', () => {
+    // Suppressed ⇒ resolver returns null ⇒ step 4 falls through to the headline
+    // section, so the row genuinely belongs to this scope's accounting.
+    const suppressed = snapshots({
+      topics: [['t1', { factId: 'f1', weight: -0.9, status: 'active' }]],
+      facts: [['f1', {}]],
+    });
+    const { rows } = build([coMatchedHeadline('GLOBAL', null, 't1')], suppressed);
+
+    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
+    expect(global!.headlineReadCount).toBe(1);
+  });
+
+  it('a scope whose every headline is co-matched gets no section at all', () => {
+    const { rows } = build([coMatchedHeadline('COUNTRY', 'IN', 't1')], OWNED);
+
+    expect(rows.find((r) => r.factId === COUNTRY_IN_SECTION)).toBeUndefined();
+  });
+});
+
+// The verification that matters: a pure headline must survive all the way to a
+// RENDERED CARD, not merely into rows[]. The operative bars are 0.4
+// (isSectionMemberEligible, step 4) and 0.6 (isFactSectionViable, step 5b) —
+// NOT the 0.3 render gate. A test asserting only "the row reached rows[]"
+// passes on the empty-shell case and proves nothing.
+describe('headline section — end-to-end to a rendered card', () => {
+  it('a pure headline at MEDIUM clears BOTH bars and produces a card', () => {
+    const { rows } = build([headline('GLOBAL', null, { relevance: REL_MEDIUM })]);
+
+    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
+    expect(global!.headlineReadCount).toBe(1);
+    expect(global!.groups).toHaveLength(1); // a real card, not an empty shell
+  });
+
+  it('a pure headline BELOW discardFloor renders the shell with zero cards', () => {
+    // The designed behaviour, not a bug: the denominator line is the only place
+    // the reader learns Mera read the scope and judged none of it worth showing.
+    const { rows } = build([headline('GLOBAL', null, { relevance: REL_UNSCORED })]);
+
+    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
+    expect(global!.headlineReadCount).toBe(1);
+    expect(global!.groups).toHaveLength(0);
+  });
+
+  it('a pure headline at LOW only (0.4–0.6) is section-eligible but not viable', () => {
+    const { rows } = build([headline('GLOBAL', null, { relevance: REL_LOW })]);
+
+    const global = rows.find((r) => r.factId === GLOBAL_HEADLINE_SECTION_ID);
+    expect(global!.headlineReadCount).toBe(1);
+    expect(global!.groups).toHaveLength(0); // RULE 2 empties an all-LOW section
+  });
+});

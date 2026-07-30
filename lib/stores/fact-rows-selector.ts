@@ -418,12 +418,37 @@ export function buildFactRows(
   //    with zero headlines in the window gets no section at all (there is
   //    nothing to account for), while a scope with headlines gets its section
   //    even if none of them clear the bar.
+  //
+  //    CO-MATCHED headlines are excluded. A headline that ALSO matched a real
+  //    persona topic carries a real topicId, resolves an owning fact at step 4,
+  //    and is routed to that FACT's section — never to a headline section. It
+  //    was still being counted here, so the sentence described a population the
+  //    section could not show. The denominator now counts only rows that could
+  //    actually land in this section, using the SAME ownership resolver step 4
+  //    routes with, so the two cannot disagree. Placement is deliberately
+  //    unchanged: a headline about something you care about stays under that
+  //    topic, which is the more personal result and the existing behaviour.
+  //
+  //    Known approximation: this is a per-ROW test, whereas step 4 routes per
+  //    story-GROUP representative. A headline that ends up a non-rep member of a
+  //    mixed group can therefore still be counted. Counting per row is inherent
+  //    to a denominator computed over the raw (partly unscored, ungrouped) pool.
   const headlineReadCounts = new Map<string, number>();
   const headlineCountries = new Map<string, string>(); // sectionId → alpha-2
   for (const s of suggestions) {
     if (!isWithinWindow(s, cutoffMs)) continue;
-    const sectionId = headlineSectionIdOf(ownershipProjection(s));
+    const projection = ownershipProjection(s);
+    const sectionId = headlineSectionIdOf(projection);
     if (!sectionId) continue;
+    // Owned by a fact ⇒ routed to that fact's section, not here. The resolver
+    // returns null exactly when step 4 would fall through to the headline
+    // section — every matched fact NEGATIVE (suppressed), or no active
+    // fact-linked topic at all (the pure-headline case, synthetic topicId
+    // null). Those stay counted, which is right: they are the rows this
+    // section is accounting for.
+    if (resolveOwningFactLenient(projection, snapshots.topics, snapshots.facts, hpMult)) {
+      continue;
+    }
     headlineReadCounts.set(sectionId, (headlineReadCounts.get(sectionId) ?? 0) + 1);
     const cc = normalizeCountryCode(s.headlineCountryCode);
     if (cc) headlineCountries.set(sectionId, cc);
