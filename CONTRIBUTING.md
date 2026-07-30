@@ -2,11 +2,17 @@
 
 Thank you for your interest in contributing to Mera.
 
-## Proprietary — Not Open Source
+## Source-Available — Not Open Source
 
-This project is proprietary and confidential. All rights are reserved by Mera Labs B.V. (KVK 42077437); see [LICENSE.md](LICENSE.md). No license to use, copy, modify, or distribute the source code is granted. Contributions are accepted only from people authorized in writing by Mera Labs B.V., and any contribution is assigned to Mera Labs B.V. (see "License of Contributions" below).
+This project is source-available under the [Mera Source-Available License](LICENSE.md), which grants
+the right to access, read, download, compile, and run the software for personal study, security
+review, auditing, and evaluation. It does **not** grant production, commercial, or competing use, and
+it is not an OSI-approved open-source licence. All rights not expressly granted are reserved by Mera
+Labs B.V. (KVK 42077437). Contributions are accepted only from people authorized in writing by Mera
+Labs B.V., and any contribution is assigned to Mera Labs B.V. (see "License of Contributions" below).
 
-`"private": true` in `package.json` is intentional — it prevents accidental `npm publish`. The proprietary terms in `LICENSE.md` govern what you may do with the source code.
+`"private": true` in `package.json` is intentional — it prevents accidental `npm publish`. The terms
+in `LICENSE.md` govern what you may do with the source code.
 
 ## What We Accept
 
@@ -16,7 +22,7 @@ This project is proprietary and confidential. All rights are reserved by Mera La
 - Accessibility improvements
 - Documentation fixes
 
-For larger feature PRs, **open an issue for discussion before building**. This avoids wasted effort if the feature does not fit the project roadmap or would require changes to the auth/GraphQL backend (the reference `mera-server`) or the inference gateway (`mera-inference-gateway`) — both proprietary and not published.
+For larger feature PRs, **open an issue for discussion before building**. This avoids wasted effort if the feature does not fit the project roadmap or would require changes to the auth/GraphQL backend (the reference `mera-server`), which is not yet published, or the inference gateway (`mera-inference-gateway`), which is. See [Backend source-availability](README.md#backend-source-availability-in-progress) for what is moving and when.
 
 ## What We Do Not Accept
 
@@ -34,7 +40,7 @@ For larger feature PRs, **open an issue for discussion before building**. This a
 
 ## Development Setup
 
-See the [README Quick Start](README.md#quick-start) for setup instructions. This app requires the Mera backend services — the auth/GraphQL server (`mera-server`) and the inference gateway (`mera-inference-gateway`) — which are proprietary and not published.
+See the [README Quick Start](README.md#quick-start) for setup instructions. This app requires backend services. The inference gateway (`mera-inference-gateway`) is published and can be self-hosted; the auth/GraphQL server (`mera-server`) is not yet published, so you must either point at a Mera Labs deployment or implement the contracts documented in the README. Making the user-facing services source-available is in progress — see [Backend source-availability](README.md#backend-source-availability-in-progress).
 
 Day-to-day commands (npm scripts, Expo, EAS build/submit, OTA) live in [COMMANDS.md](COMMANDS.md).
 
