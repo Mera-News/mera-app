@@ -202,7 +202,7 @@
     "unprocessed": "未処理"
   },
   "aiDisclosure": {
-    "caption": "AIが生成したメモ · 他の情報源も確認して、全体像を把握してください。",
+    "caption": "AIが生成したメモ",
     "short": "AI生成"
   },
   "articleDetail": {

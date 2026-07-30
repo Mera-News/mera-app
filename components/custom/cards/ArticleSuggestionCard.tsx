@@ -20,7 +20,7 @@ import {
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
+import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
@@ -255,28 +255,26 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
           non-italic. */}
       <RelevanceChip relevance={relevance} />
       {reason ? (
-        <TranslatableDynamic
-          text={reason}
-          size="sm"
-          bold
-          className="ml-3 flex-1 text-right"
-          style={{ color: reasonBoxColors.textColor }}
-        />
+        <Box className="ml-3 flex-1 items-end">
+          <TranslatableDynamic
+            text={reason}
+            size="sm"
+            bold
+            className="text-right"
+            style={{ color: reasonBoxColors.textColor }}
+          />
+          {/* Art. 50 label lives INSIDE the box, under the note it describes —
+              a disclosure floating outside the box read as unrelated chrome.
+              Lighter grey than the note so it stays subordinate while still
+              clearing contrast against the box's hardcoded #374151. */}
+          <AiDisclosureCaption color={aiDisclosureColor} className="mt-1" />
+        </Box>
       ) : (
         <Box className="ml-3 flex-1 items-end">
           <StreamingIndicator compact color={reasonBoxColors.textColor} />
         </Box>
       )}
     </Box>
-  ) : null;
-
-  // EU AI Act Art. 50 transparency caption (Group C1) — unconditional whenever
-  // the reason box shows actual Mera-generated text (not the loading
-  // placeholder). Deliberately NOT shown for the fact-chips path: those
-  // statements are persona facts (personal profile data), the same carve-out
-  // that keeps FactAccordion/FactsList unlabelled elsewhere.
-  const aiDisclosureEl = relevanceReady && reason ? (
-    <AiDisclosureCaption className="px-1" />
   ) : null;
 
   const metaAccessory = __DEV__ && relevanceReady ? (
@@ -354,7 +352,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       {hardFilterLabelEl}
       {factChipsEl}
       {reasonBoxEl}
-      {aiDisclosureEl}
     </ArticleCardBase>
   );
 };

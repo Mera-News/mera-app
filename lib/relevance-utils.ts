@@ -11,6 +11,14 @@ export const reasonBoxColors = {
     textColor: '#FFFFFF'
 };
 
+/**
+ * Colour for the AI-disclosure label rendered inside the reason box. Dimmer
+ * than `reasonBoxColors.textColor` so the label stays subordinate to the note,
+ * but still 7.0:1 against the box's `#374151` — the muted typography token the
+ * label uses elsewhere does not clear 4.5:1 on that background.
+ */
+export const aiDisclosureColor = '#D1D5DB';
+
 export const getRelevanceLabel = (relevance: number): string => {
     if (relevance > 1.0) return 'Emergency Priority Articles';
     if (relevance >= 0.77) return 'High Priority Articles';

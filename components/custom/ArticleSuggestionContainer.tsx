@@ -24,7 +24,7 @@ import { VStack } from '@/components/ui/vstack';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
+import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -279,28 +279,26 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 affordance. Text stays right-aligned and non-italic. */}
             <RelevanceChip relevance={relevance} />
             {reason ? (
-                <TranslatableDynamic
-                    text={reason}
-                    size="sm"
-                    bold
-                    className="ml-3 flex-1 text-right"
-                    style={{ color: reasonBoxColors.textColor }}
-                />
+                <Box className="ml-3 flex-1 items-end">
+                    <TranslatableDynamic
+                        text={reason}
+                        size="sm"
+                        bold
+                        className="text-right"
+                        style={{ color: reasonBoxColors.textColor }}
+                    />
+                    {/* Art. 50 label INSIDE the box, under the note it
+                        describes — outside, it read as unrelated chrome.
+                        Lighter grey keeps it subordinate to the note while
+                        still clearing contrast on the box's #374151. */}
+                    <AiDisclosureCaption color={aiDisclosureColor} className="mt-1" />
+                </Box>
             ) : (
                 <Box className="ml-3 flex-1 items-end">
                     <StreamingIndicator compact color={reasonBoxColors.textColor} />
                 </Box>
             )}
         </Box>
-    ) : null;
-
-    // EU AI Act Art. 50 transparency caption (Group C1) — unconditional
-    // whenever the reason box shows actual Mera-generated text (not the
-    // loading placeholder). Deliberately NOT shown for the fact-chips path:
-    // those statements are persona facts (personal profile data), the same
-    // carve-out that keeps FactAccordion/FactsList unlabelled elsewhere.
-    const aiDisclosureEl = isSuggestion && relevanceReady && reason ? (
-        <AiDisclosureCaption className="px-1" />
     ) : null;
 
     if (isCard) {
@@ -324,7 +322,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                         {titleEl}
                         {factChipsEl}
                         {reasonBoxEl}
-                        {aiDisclosureEl}
                     </VStack>
                 </Card>
             </Pressable>
@@ -380,7 +377,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 {titleEl}
                 {aboveReason}
                 {reasonBoxEl}
-                {aiDisclosureEl}
                 {footer}
                 <Box style={{ height: contentBottomInset }} />
             </VStack>
