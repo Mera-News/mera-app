@@ -225,5 +225,5 @@ Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437). Rights not expressly grant
 
 See [TRADEMARK.md](TRADEMARK.md) for trademark restrictions.
 
-For licensing inquiries: legal@meranews.app
+For licensing inquiries: contact@mera.news
 For security vulnerabilities: see [SECURITY.md](SECURITY.md)

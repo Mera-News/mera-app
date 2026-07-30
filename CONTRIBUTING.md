@@ -95,5 +95,5 @@ The admin may ask you to sign a Contributor License Agreement (CLA) form confirm
 
 ## Contact
 
-- **Security vulnerabilities**: see [SECURITY.md](SECURITY.md) — email security@meranews.app. Do not open public issues for vulnerabilities.
-- **Licensing questions**: legal@meranews.app
+- **Security vulnerabilities**: see [SECURITY.md](SECURITY.md) — email contact@mera.news. Do not open public issues for vulnerabilities.
+- **Licensing questions**: contact@mera.news

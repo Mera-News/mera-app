@@ -120,5 +120,5 @@ Netherlands have exclusive jurisdiction over any dispute arising from or in
 connection with them, without prejudice to any mandatory protections that apply
 to you.
 
-Licensing inquiries: legal@meranews.app
+Licensing inquiries: contact@mera.news
 Required Notice: Copyright © 2025-2026 Mera Labs B.V. (https://meranews.app)
