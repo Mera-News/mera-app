@@ -194,6 +194,28 @@ describe('refreshHardFilterLabels — the card label', () => {
     const labels = await refreshHardFilterLabels();
     expect(labels.get('head')).toBe('technology');
   });
+
+  it('does NOT label via a TAG-derived kind while article tags are off', async () => {
+    // The label path routes through the same `toScreeningInputs` policy as the
+    // purge, so EXPO_PUBLIC_USE_ARTICLE_TAGS gates it identically — no label
+    // here, and no half-state where a card is labelled for a filter the scorer
+    // never applied. The ON arm is in suppression-sweep-tags-on.test.ts.
+    mockLoadPersona.mockResolvedValue({
+      persona: {
+        locations: [],
+        pubPrefs: new Map(),
+        softSuppressions: [],
+        hardSuppressions: [{ keywords: [], strength: 1, kind: 'entity', value: 'nvidia' }],
+      },
+      topicWeights: new Map(),
+    });
+    mockGetStageRows.mockResolvedValue([
+      row('head', { entitiesJson: JSON.stringify(['Nvidia']), headlineScope: 'COUNTRY' }),
+    ]);
+
+    const labels = await refreshHardFilterLabels();
+    expect(labels.size).toBe(0);
+  });
 });
 
 describe('unexcludeRetiredHardFilters — headline rows are released', () => {

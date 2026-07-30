@@ -128,11 +128,12 @@ async function refreshUi(): Promise<void> {
  * against the live hard filters, mark the matches terminal, evict exactly those
  * ids from the Feed tab, and refresh the UI.
  *
- * Rehydration note: this reuses `buildStageCandidateInput` — the same pure
- * mapper `buildStageCandidates` uses — over the stored scorer columns. It
- * deliberately does NOT load `article_suggestion_facts`: the hard screen reads
- * only ScoredCandidateInput fields, and the fact links exist for the legacy
- * backstop LLM payload alone.
+ * Rehydration note: this goes through `toScreeningInputs`, i.e. the same pure
+ * mapper (`buildStageCandidateInput`) AND the same article-tag policy that
+ * `buildStageCandidates` applies — so a filter can never match on a field the
+ * scorer was not allowed to see. It deliberately does NOT load
+ * `article_suggestion_facts`: the hard screen reads only ScoredCandidateInput
+ * fields, and the fact links exist for the legacy backstop LLM payload alone.
  */
 export async function purgeHardFilteredSuggestions(
   nowMs: number = Date.now(),
