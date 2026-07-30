@@ -30,6 +30,7 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+import { Q } from '@nozbe/watermelondb';
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -55,6 +56,21 @@ beforeEach(() => {
 });
 
 describe('getReasonedSuggestionIdForArticle', () => {
+  // The test double IGNORES Q predicates, so every behavioural test below is
+  // really exercising the JS mirror. Without this assertion a typo'd column
+  // ('articleId' for 'article_id') or a dropped sortBy would keep the whole
+  // suite green while throwing on device — where the caller's degrade-to-
+  // article catch would swallow it and the feature would just never fire.
+  it('issues an indexed, non-excluded, newest-first query', async () => {
+    db._setRows('article_suggestions', [row()]);
+    await getReasonedSuggestionIdForArticle('art-1');
+    expect(db._collections.article_suggestions.query).toHaveBeenCalledWith(
+      Q.where('article_id', 'art-1'),
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.Excluded)),
+      Q.sortBy('created_at', Q.desc),
+    );
+  });
+
   it('returns the suggestion SERVER id (row.id), not the article id', async () => {
     db._setRows('article_suggestions', [row()]);
     await expect(getReasonedSuggestionIdForArticle('art-1')).resolves.toBe('sugg-1');
