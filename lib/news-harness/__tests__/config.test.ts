@@ -91,7 +91,7 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
   });
 
   it('pins the headline variant config (P4a — authored, not yet routed)', () => {
-    // 3 = 5 × (4386 / 6600), the measured inverse-rubric-length scaling — see
+    // 3 = 5 × (4386 / 7036), the measured inverse-rubric-length scaling — see
     // the arithmetic comment in config.ts. Changing it is a product change.
     expect(a.headlineArticlesPerScorePrompt).toBe(3);
     expect(a.headlineRelevanceSystemPrompt).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);

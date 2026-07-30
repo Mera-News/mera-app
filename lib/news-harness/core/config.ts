@@ -326,14 +326,14 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     judgeSystemPrompt: buildJudgeSystemPrompt(JUDGE_REASON_FLOOR),
     // HEADLINE batch size — measured, not guessed (estimateTokens, lib/llm/tokens.ts):
     //   live relevance prompt      4386 est tokens, batched 5/call
-    //   headline relevance prompt  6600 est tokens  (+50.5%)
+    //   headline relevance prompt  7036 est tokens  (+60.4%)
     //   per-article payload        ~335 est tokens worst case (title 500 chars
     //                              + description 500 + country 60 + "why" 200 + framing)
     // Live call today:   4386 + 5×335 = 6061 in, 1212 per article.
-    // Headline at N=3:   6600 + 3×335 = 7605 in, 2535 per article.
+    // Headline at N=3:   7036 + 3×335 = 8041 in, 2680 per article.
     // (N=4 → 7940 / 1985; N=5 → 8275 / 1655.)
     //
-    // 3 = 5 × (4386 / 6600) = 3.32 → 3: hold per-article ATTENTION on the
+    // 3 = 5 × (4386 / 7036) = 3.12 → 3: hold per-article ATTENTION on the
     // rubric, not per-article cost. The binding constraint here is not tokens —
     // it is that the headline rubric adds a SECOND per-article procedure (the
     // four impact gates + the magnitude test) on top of the base's Steps 1–4,

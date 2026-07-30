@@ -132,7 +132,7 @@ describe('harness buildScoreCallForChunk', () => {
 
 describe('golden — measured prompt sizes', () => {
   // These four numbers are the INPUTS to the batch-size arithmetic in
-  // core/config.ts (headlineArticlesPerScorePrompt = 5 × 4386/6600 → 3). They
+  // core/config.ts (headlineArticlesPerScorePrompt = 5 × 4386/7036 → 3). They
   // are pinned here so editing a prompt fails loudly instead of silently
   // invalidating that derivation — re-measure, redo the arithmetic, then update
   // both the comment and these pins together.
@@ -146,8 +146,8 @@ describe('golden — measured prompt sizes', () => {
   it('pins the estimated token size of each cloud scoring prompt', () => {
     expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4386);
     expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(4770);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(6600);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6996);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7036);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7625);
   });
 
   it('keeps the headline variants strictly additive over the live prompts', () => {
