@@ -43,7 +43,7 @@ function tagged(over: Partial<ScoredCandidateInput> = {}): ScoredCandidateInput 
     countryCode: 'IN',
     eventType: 'business',
     category: 'technology',
-    geoTags: [{ city: 'bhopal', region: null, countryCode: 'IN' }],
+    geoTags: [{ city: 'bhopal', countryCode: 'IN' }],
     entities: ['Nvidia'],
     matchedTopics: [{ topicId: 't-1', text: 'chips', effectiveWeight: 0.5 }],
     ...over,
@@ -104,8 +104,8 @@ describe('applyArticleTagPolicy — the tags are not merely ignored for routing'
 
   it('flag OFF makes an entity-kind suppression inert; ON makes it bite', () => {
     const p = persona({
-      softSuppressions: [{ id: 's1', kind: 'entity', value: 'nvidia', strength: 1 }],
-    } as Partial<PersonaScoringContext>);
+      softSuppressions: [{ keywords: [], kind: 'entity', value: 'nvidia', strength: 1 }],
+    });
     const off = computeRelevance(applyArticleTagPolicy(tagged(), OFF), p, OFF, NOW);
     const on = computeRelevance(applyArticleTagPolicy(tagged(), ON), p, ON, NOW);
     expect(off.components.suppressPenalty).toBe(0);

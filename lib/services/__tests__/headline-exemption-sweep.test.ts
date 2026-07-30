@@ -167,23 +167,32 @@ describe('refreshHardFilterLabels — the card label', () => {
   });
 
   it('labels a headline matched via a STRUCTURED kind the trimmed store row could not see', async () => {
-    // `entities` never reaches ForYouSuggestion — deriving the label at render
+    // `category` never reaches ForYouSuggestion — deriving the label at render
     // time would silently miss this row, which is the surprise P6 exists to end.
+    //
+    // CONSCIOUSLY UPDATED for EXPO_PUBLIC_USE_ARTICLE_TAGS: structured filters
+    // now follow the tag policy, so this case uses `category` rather than
+    // `entity`. It is the same guarantee — a structured kind reading a column
+    // the trimmed store row does not carry — over a field the tag policy does
+    // not strip (`category` is populated today and is not part of the untagged
+    // predicate), so the P6 regression guard survives the flag in either
+    // position. The `entity` version is covered with tags ON in
+    // suppression-sweep-tags-on.test.ts.
     mockLoadPersona.mockResolvedValue({
       persona: {
         locations: [],
         pubPrefs: new Map(),
         softSuppressions: [],
-        hardSuppressions: [{ keywords: [], strength: 1, kind: 'entity', value: 'nvidia' }],
+        hardSuppressions: [{ keywords: [], strength: 1, kind: 'category', value: 'technology' }],
       },
       topicWeights: new Map(),
     });
     mockGetStageRows.mockResolvedValue([
-      row('head', { entitiesJson: JSON.stringify(['Nvidia']), headlineScope: 'COUNTRY' }),
+      row('head', { category: 'technology', headlineScope: 'COUNTRY' }),
     ]);
 
     const labels = await refreshHardFilterLabels();
-    expect(labels.get('head')).toBe('nvidia');
+    expect(labels.get('head')).toBe('technology');
   });
 });
 

@@ -58,9 +58,12 @@ import {
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 import type { SoftSuppression } from '@/lib/news-harness/scoring-engine';
 import { loadPersonaScoringContext } from '@/lib/mera-protocol/stage-scoring';
+import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
 import {
+  applyArticleTagPolicyAll,
   screenHardSuppressions,
   screenHardSuppressionsDetailed,
+  type ScoredCandidateInput,
 } from '@/lib/news-harness/scoring-engine';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useHardFilterLabelStore } from '@/lib/stores/hard-filter-label-store';
@@ -81,18 +84,36 @@ export interface HardFilterUnexcludeResult {
   stillExcluded: number;
 }
 
-// SCOPE NOTE — `EXPO_PUBLIC_USE_ARTICLE_TAGS` does NOT gate this module.
-//
-// That flag governs which path SCORES an article (deterministic math vs the
-// legacy LLM), and it is enforced where scoring candidates are built
-// (`mera-protocol/stage-scoring::buildStageCandidates`). The screens below are a
-// different job: applying a filter the user explicitly asked for to rows that
-// are already stored. Those structured kinds (`entity` / `place` /
-// `event_type`) are specified to match on the tag columns and are covered by
-// tests that say so, so they keep reading the row as persisted regardless of the
-// scoring policy. Today the distinction is unobservable — no article carries
-// tags — but if that changes, "which scorer ran" and "does my filter still
-// work" are deliberately independent questions.
+/**
+ * Rehydrate stored rows into engine inputs UNDER THE SAME article-tag policy the
+ * scoring stage uses (`stage-scoring::buildStageCandidates`). Every screen in
+ * this module goes through here, so there is one answer to "does the app use
+ * tagging data" rather than one per subsystem.
+ *
+ * WHY THE SWEEP IS GATED TOO. `EXPO_PUBLIC_USE_ARTICLE_TAGS` exists to run a
+ * clean A/B of tag-based scoring against the LLM-only path, and that only means
+ * anything if the OFF arm is a faithful replica of production today — where no
+ * article carries tags, so the `entity` / `place` / `event_type` kinds match
+ * nothing, anywhere. Leaving this module ungated would give OFF two different
+ * answers to the same question once the backfill lands: scoring would treat an
+ * entity filter as inert while this screen still excluded rows by it. Any
+ * difference we then measured could be the tagging or could be that artifact.
+ * So: OFF means the app does not use tagging data anywhere, full stop.
+ *
+ * Reads the env-bound BASE config rather than `effectiveHarnessConfig()`: the
+ * overrides that function layers on are numeric scoring weights, none of which
+ * a suppression screen consults, and staying synchronous keeps the sweep free
+ * of an extra database read per call.
+ */
+function toScreeningInputs(
+  rows: StageCandidateRow[],
+  topicWeights: Map<string, TopicWeightInfo>,
+): ScoredCandidateInput[] {
+  return applyArticleTagPolicyAll(
+    rows.map((r) => buildStageCandidateInput(r, topicWeights)),
+    HARNESS_CONFIG_BASE.scoringEngine,
+  );
+}
 
 /** Lazy require, mirroring scoring-pipeline's own refreshUi: a static import of
  *  SuggestionSyncService from here would close a load-time cycle. */
@@ -182,7 +203,7 @@ async function screenExcludeAndEvict(
   // both read the one predicate through the one matcher, so a headline row is
   // never marked `excluded` here only to be re-scored back in on the next pass.
   const valueById = screenHardSuppressions(
-    rows.map((r) => buildStageCandidateInput(r, topicWeights)),
+    toScreeningInputs(rows, topicWeights),
     hard,
   );
   if (valueById.size === 0) return EMPTY_PURGE();
@@ -237,7 +258,7 @@ export async function refreshHardFilterLabels(
   if (rows.length === 0) return publish(new Map());
 
   const { exempted } = screenHardSuppressionsDetailed(
-    rows.map((r) => buildStageCandidateInput(r, topicWeights)),
+    toScreeningInputs(rows, topicWeights),
     persona.hardSuppressions,
   );
   if (exempted.size > 0) {
@@ -268,7 +289,7 @@ export async function unexcludeRetiredHardFilters(
   // No active hard filters left ⇒ nothing can still be blocked ⇒ release all.
   const stillBlocked = persona.hardSuppressions?.length
     ? screenHardSuppressions(
-        rows.map((r) => buildStageCandidateInput(r, topicWeights)),
+        toScreeningInputs(rows, topicWeights),
         persona.hardSuppressions,
       )
     : new Map<string, string>();

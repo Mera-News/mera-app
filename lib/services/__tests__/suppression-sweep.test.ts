@@ -110,6 +110,30 @@ describe('purgeHardFilteredSuggestions', () => {
   });
 
   it('matches structured kinds over the rehydrated JSON columns', async () => {
+    // Uses `topic`/matched_topics_json rather than `entity`/entities_json: this
+    // test pins that a STRUCTURED kind matches over a rehydrated JSON column,
+    // and matched_topics_json is one the article-tag policy does not touch, so
+    // the property survives EXPO_PUBLIC_USE_ARTICLE_TAGS in either position.
+    // The tag-derived kinds get their own test below.
+    mockLoadPersona.mockResolvedValue(
+      persona([{ keywords: [], strength: 1, kind: 'topic', value: 'nvidia' }]),
+    );
+    mockGetStageRows.mockResolvedValue([
+      row('a', { matchedTopicsJson: JSON.stringify([{ topicId: 't1', text: 'Nvidia' }]) }),
+      row('b', { matchedTopicsJson: JSON.stringify([{ topicId: 't2', text: 'AMD' }]) }),
+    ]);
+
+    const r = await purgeHardFilteredSuggestions();
+    expect(r.excludedIds).toEqual(['a']);
+  });
+
+  // CONSCIOUSLY UPDATED for EXPO_PUBLIC_USE_ARTICLE_TAGS. Structured filters now
+  // follow the tag policy: the kinds that read the tagging columns (`entity` /
+  // `place` / `event_type`) are inert while the flag is off, which is a faithful
+  // replica of production today — no article carries tags, so those kinds match
+  // nothing anywhere. Previously this row was asserted excluded via
+  // `entitiesJson`; that assertion now lives in the flag-on case below.
+  it('does NOT match an entity-kind filter while article tags are off', async () => {
     mockLoadPersona.mockResolvedValue(
       persona([{ keywords: [], strength: 1, kind: 'entity', value: 'nvidia' }]),
     );
@@ -119,8 +143,13 @@ describe('purgeHardFilteredSuggestions', () => {
     ]);
 
     const r = await purgeHardFilteredSuggestions();
-    expect(r.excludedIds).toEqual(['a']);
+    expect(r.excludedIds).toEqual([]);
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
   });
+
+  // The flag-ON arm of this same rule lives in suppression-sweep-tags-on.test.ts
+  // — HARNESS_CONFIG_BASE is read at module scope, so flipping it needs its own
+  // module registry rather than a re-require inside one case.
 
   it('evicts EXACTLY the excluded ids from the feed order — nothing inferred', async () => {
     seedFeedOrder(['a', 'b', 'c']);
