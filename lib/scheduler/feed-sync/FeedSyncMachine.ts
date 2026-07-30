@@ -55,6 +55,14 @@ function nextUtcMidnightMs(): number {
   );
 }
 
+/** Today's date as `YYYY-MM-DD` (UTC) — gates the daily-limit notice (toast +
+ *  notification-center row) to once per UTC day via the persisted
+ *  `dailyLimitNoticeDay` marker on for-you-store. A new UTC day naturally
+ *  re-arms it since the stored value no longer matches. */
+function todayUtcDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 const VALID_TRANSITIONS: Partial<Record<FeedSyncState, FeedSyncState[]>> = {
   idle:                 ['fetching-topic-ids'],
   'fetching-topic-ids': ['diffing', 'paused-offline', 'failed'],
@@ -394,20 +402,38 @@ class FeedSyncMachine {
       // return WITHOUT throwing — no retry, no Sentry error.
       if (errorCode === 'daily-limit') {
         const resetAt = (err as { resetAt?: number }).resetAt;
+        const store = useForYouStore.getState();
         // Sticky banner state: persists across the transient fetch/diff
         // statuses each polling cycle publishes, so the "limit reached" notice
         // stays visible until a sync delivers articles again or the reset
         // passes. Fall back to the next UTC midnight if the server omitted it.
-        useForYouStore.getState().setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
+        store.setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
         publishSyncError('daily-limit', resetAt, this._state);
-        void toastManager.showNotifiedToast({
-          type: 'feed_info',
-          source: 'feed-sync',
-          title: 'notificationCenter.dailyLimitTitle',
-          body: 'notificationCenter.dailyLimitBody',
-          action: 'info',
-          icon: 'hourglass-empty',
-        });
+
+        // Gate the repeating toast/notification-center row to once per UTC
+        // day. Without this, the 60s task-gate re-arm and the 5s
+        // foreground-gap check (AppScheduler) both hit this branch again on
+        // every subsequent cycle, firing a fresh notice every time until
+        // 00:00 UTC — the reported "daily limit keeps popping" bug.
+        // `dailyLimitNoticeDay` is persisted (unlike `dailyLimitResetAt`), so
+        // this also survives an app restart within the same UTC day.
+        const today = todayUtcDateString();
+        if (store.dailyLimitNoticeDay !== today) {
+          void toastManager.showNotifiedToast({
+            type: 'feed_info',
+            source: 'feed-sync',
+            title: 'notificationCenter.dailyLimitTitle',
+            body: 'notificationCenter.dailyLimitBody',
+            action: 'info',
+            icon: 'hourglass-empty',
+            // Belt-and-braces: the dailyLimitNoticeDay check above already
+            // gates this whole call to once/UTC-day, but this call site is
+            // genuinely repeat-prone (60s scheduler re-arm), so opt the
+            // persisted row into notify()'s same-day dedupe too.
+            dedupeDaily: true,
+          });
+          store.setDailyLimitNoticeDay(today);
+        }
         this._state = 'idle';
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -434,6 +460,12 @@ class FeedSyncMachine {
           body: 'notificationCenter.syncFailedBody',
           action: 'error',
           icon: 'sync-problem',
+          // Unlike daily-limit, this branch has no persisted once-per-day
+          // marker of its own — a repeated sync failure on the 60s
+          // scheduler re-arm hits this every cycle. Opt the persisted row
+          // into notify()'s same-day dedupe so the notification centre
+          // doesn't fill with duplicate rows (the toast itself is unaffected).
+          dedupeDaily: true,
         });
         await feedPersistence.saveMachineSnapshot({
           state: 'failed',

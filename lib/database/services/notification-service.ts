@@ -21,10 +21,73 @@ export interface NotifyInput {
   /** Option chips, e.g. [{ id: 'recalibrate', labelKey: '…' }]. */
   actions?: { id: string; labelKey?: string; label?: string }[] | null;
   source: string;
+  /**
+   * Opt-in: suppress this call when a notification with the same
+   * `(type, source)` was already created today (UTC) — see
+   * `hasNotifiedToday`. Default `false` (every caller notifies
+   * unconditionally, the pre-existing behaviour) because most callers
+   * (calibration, hygiene, optimisation-plan, persona-migration) can
+   * legitimately fire more than once a day with genuinely distinct content
+   * (e.g. two separate hygiene reviews), and capping those globally would
+   * silently drop real notifications. Set `true` only for callers whose
+   * repeat firing on the same day is known to be the SAME event repeating,
+   * not a new one — currently FeedSyncMachine's daily-limit and sync-failed
+   * toasts (both retrigger on the 60s scheduler re-arm).
+   */
+  dedupeDaily?: boolean;
 }
 
-/** Creates an unread notification row. Returns the record. */
-export async function notify(input: NotifyInput): Promise<NotificationModel> {
+/** Epoch-ms Date -> `YYYY-MM-DD` (UTC). */
+function utcDayString(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/** Epoch ms of 00:00:00.000 UTC today — lower bound for `hasNotifiedToday`'s
+ *  query so it only ever scans today's rows instead of the whole (growing)
+ *  notifications table. */
+function startOfTodayUtcMs(): number {
+  const now = new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+}
+
+/**
+ * True when a notification with the same `(type, source)` was already
+ * created today (UTC). Used only when a caller opts in via
+ * `NotifyInput.dedupeDaily`. Keyed on the full tuple, not `type` alone, so
+ * distinct event types from the same source (e.g. feed-sync's daily-limit vs
+ * sync-failed) still notify independently.
+ */
+async function hasNotifiedToday(type: string, source: string): Promise<boolean> {
+  const today = utcDayString(new Date());
+  const existing = await notificationsCollection
+    .query(
+      Q.where('type', type),
+      Q.where('source', source),
+      // Bounds the scan to today's rows — without this the query (and the JS
+      // filter below) would re-fetch every matching row ever created as the
+      // table grows, on every deduped `notify()` call.
+      Q.where('created_at', Q.gte(startOfTodayUtcMs())),
+    )
+    .fetch();
+  // Re-check type/source in JS too (not just via the query predicate) — a
+  // cheap belt-and-braces match so this stays correct regardless of how
+  // precisely the underlying query narrows rows.
+  return existing.some(
+    (n) => n.type === type && n.source === source && utcDayString(n.createdAt) === today,
+  );
+}
+
+/**
+ * Creates an unread notification row. When `input.dedupeDaily` is true,
+ * suppressed (returns `null`) if a notification with the same
+ * `(type, source)` was already created today (UTC) — see
+ * `hasNotifiedToday`. Every other caller notifies unconditionally, exactly as
+ * before.
+ */
+export async function notify(input: NotifyInput): Promise<NotificationModel | null> {
+  if (input.dedupeDaily && (await hasNotifiedToday(input.type, input.source))) {
+    return null;
+  }
   return database.write(async () => {
     return notificationsCollection.create((n) => {
       n.type = input.type;

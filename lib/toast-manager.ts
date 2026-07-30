@@ -21,6 +21,14 @@ export interface NotifiedToastOptions {
     icon?: string;
     context?: Record<string, unknown>;
     actions?: { id: string; labelKey?: string; label?: string }[];
+    /**
+     * Opt-in — plumbed straight through to `notify()`'s `dedupeDaily`.
+     * Suppresses the persisted notification-center row (not this transient
+     * toast) when one with the same `(type, source)` was already created
+     * today (UTC). Leave unset for callers where a same-day repeat is a
+     * genuinely distinct event (default `false`, unchanged behaviour).
+     */
+    dedupeDaily?: boolean;
 }
 
 /**
@@ -320,7 +328,15 @@ class ToastManager {
      * The RAW i18n key strings are stored in the notification row so the panel
      * re-resolves them with the current locale; the toast itself resolves them
      * now (via i18next.t) for immediate display. NOT debounced — each call is a
-     * distinct event.
+     * distinct event, and this transient toast always renders regardless of
+     * `opts.dedupeDaily`.
+     *
+     * `opts.dedupeDaily` (opt-in, default off) only gates step 1 — the
+     * persisted notification-center row — via `notify()`'s same-day
+     * `(type, source)` dedupe. It exists for callers whose upstream trigger
+     * can retrigger the SAME event repeatedly in one day (e.g. a 60s
+     * scheduler re-arm), not for callers where a same-day repeat is a
+     * genuinely distinct event.
      */
     async showNotifiedToast(opts: NotifiedToastOptions) {
         // 1. Persist the row (raw keys). Dynamic import avoids a load-time cycle
@@ -335,6 +351,7 @@ class ToastManager {
                 context: opts.context ?? null,
                 actions: opts.actions ?? null,
                 source: opts.source,
+                dedupeDaily: opts.dedupeDaily,
             });
         } catch (err) {
             logger.captureException(err, {

@@ -106,6 +106,7 @@ const initialState = {
     syncStatusMessage: null,
     lastSyncAt: null as number | null,
     scoringError: null,
+    dailyLimitNoticeDay: null as string | null,
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
@@ -441,6 +442,56 @@ describe('useForYouStore', () => {
         expect(useForYouStore.getState().scoringError).toBeNull();
     });
 
+    // ── setDailyLimitNoticeDay ───────────────────────────────────────────────
+
+    it('setDailyLimitNoticeDay updates state and persists the marker', async () => {
+        useForYouStore.getState().setDailyLimitNoticeDay('2026-07-30');
+
+        expect(useForYouStore.getState().dailyLimitNoticeDay).toBe('2026-07-30');
+        await Promise.resolve();
+        expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
+            expect.objectContaining({ dailyLimitNoticeDay: '2026-07-30' }),
+        );
+    });
+
+    it('setDailyLimitNoticeDay accepts null to clear the marker', async () => {
+        useForYouStore.setState({ dailyLimitNoticeDay: '2026-07-30' });
+        useForYouStore.getState().setDailyLimitNoticeDay(null);
+
+        expect(useForYouStore.getState().dailyLimitNoticeDay).toBeNull();
+        await Promise.resolve();
+        expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
+            expect.objectContaining({ dailyLimitNoticeDay: null }),
+        );
+    });
+
+    it('setDailyLimitNoticeDay logs on persist failure', async () => {
+        mockPersistFeedMetadata.mockRejectedValueOnce(new Error('fail'));
+        useForYouStore.getState().setDailyLimitNoticeDay('2026-07-30');
+        await new Promise((r) => setImmediate(r));
+        expect(logger.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                tags: expect.objectContaining({ method: 'setDailyLimitNoticeDay' }),
+            }),
+        );
+    });
+
+    it('other metadata writes (setCounts) preserve a previously set dailyLimitNoticeDay', async () => {
+        useForYouStore.getState().setDailyLimitNoticeDay('2026-07-30');
+        await Promise.resolve();
+        mockPersistFeedMetadata.mockClear();
+
+        useForYouStore.getState().setCounts(10, 5);
+        await Promise.resolve();
+
+        expect(useForYouStore.getState().dailyLimitNoticeDay).toBe('2026-07-30');
+        expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
+            expect.objectContaining({ dailyLimitNoticeDay: '2026-07-30' }),
+        );
+    });
+
+
     // ── setHydrationProgress / resetHydrationProgress ────────────────────────
 
     it('setHydrationProgress sets both fields', () => {
@@ -526,6 +577,15 @@ describe('useForYouStore', () => {
         expect(useForYouStore.getState().hasGeneratedTopics).toBe(true);
     });
 
+    it('clearData preserves dailyLimitNoticeDay (unrelated to feed-cache clearing)', async () => {
+        useForYouStore.setState({ dailyLimitNoticeDay: '2026-07-30' });
+        await useForYouStore.getState().clearData();
+        expect(useForYouStore.getState().dailyLimitNoticeDay).toBe('2026-07-30');
+        expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
+            expect.objectContaining({ dailyLimitNoticeDay: '2026-07-30' }),
+        );
+    });
+
     // ── pruneOrphanedData ────────────────────────────────────────────────────
 
     it('pruneOrphanedData with deletedCount=-1 clears all state', async () => {
@@ -544,6 +604,18 @@ describe('useForYouStore', () => {
         expect(state.hasGeneratedTopics).toBe(false); // preserved
         expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
             expect.objectContaining({ articleCount: 0, hasGeneratedTopics: false }),
+        );
+    });
+
+    it('pruneOrphanedData with deletedCount=-1 preserves dailyLimitNoticeDay', async () => {
+        mockPruneOrphanedSuggestions.mockResolvedValueOnce(-1);
+        useForYouStore.setState({ dailyLimitNoticeDay: '2026-07-30' });
+
+        await useForYouStore.getState().pruneOrphanedData();
+
+        expect(useForYouStore.getState().dailyLimitNoticeDay).toBe('2026-07-30');
+        expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
+            expect.objectContaining({ dailyLimitNoticeDay: '2026-07-30' }),
         );
     });
 
