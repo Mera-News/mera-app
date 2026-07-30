@@ -1,4 +1,4 @@
-# Trademark Notice — Mera Labs B.V.
+# Trademark Notice: Mera Labs B.V.
 
 ## Protected Marks
 

@@ -1,4 +1,4 @@
-# Mera — Privacy-First Personalized News
+# Mera: Privacy-First Personalized News
 
 [![App Store](https://img.shields.io/badge/App%20Store-Download-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/nl/app/mera-news/id6754119677)
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-414141?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.mera.news)
@@ -10,9 +10,9 @@
 
 Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE**, with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: no personal data leaves the device in readable form, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against the Mera backend.
 
-This repository is **source-available, not open source** — published under the [Mera Source-Available License](LICENSE.md), which grants the right to read, compile, and run the software for study, security review, and evaluation, and does not grant production or commercial use. Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437).
+This repository is **source-available, not open source**, published under the [Mera Source-Available License](LICENSE.md), which grants the right to read, compile, and run the software for study, security review, and evaluation, and does not grant production or commercial use. Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437).
 
-> **The backend is being made source-available too — target: before September 2026.** Today you can verify what the app *sends*; you cannot yet read what happens next. That gap is being closed. See [Backend source-availability](#backend-source-availability-in-progress) for the architecture, what opens, and what stays closed.
+> **The backend is being made source-available too (target: before September 2026).** Today you can verify what the app *sends*; you cannot yet read what happens next. That gap is being closed. See [Backend source-availability](#backend-source-availability-in-progress) for the architecture, what opens, and what stays closed.
 
 ## Architecture Overview
 
@@ -20,14 +20,14 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 
 - **Apollo Client** (GraphQL, no-cache policy) fetches article suggestion IDs and content from a NestJS backend.
 - **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
-- **Inference (on-device or confidential cloud)** — Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
-- **Mera Protocol** — the privacy ruleset enforced across both paths: no personal data leaves the device in readable form, and inference is performed only locally or inside an encrypted environment. An optional noise-injection mode (`injectNoise`, **off by default** — see `lib/stores/mera-protocol-store.ts`) adds one decoy topic per real topic to obfuscate intent.
-- **E2EE cloud inference (TEE)** — when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 gateway, so inference runs inside a trusted execution environment the operator cannot inspect. The client fetches the enclave's attestation report from `/api/attestation/report` and encrypts to the signing key it publishes.
+- **Inference (on-device or confidential cloud)**: Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
+- **Mera Protocol**: the privacy ruleset enforced across both paths: no personal data leaves the device in readable form, and inference is performed only locally or inside an encrypted environment. An optional noise-injection mode (`injectNoise`, **off by default**: see `lib/stores/mera-protocol-store.ts`) adds one decoy topic per real topic to obfuscate intent.
+- **E2EE cloud inference (TEE)**: when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 gateway, so inference runs inside a trusted execution environment the operator cannot inspect. The client fetches the enclave's attestation report from `/api/attestation/report` and encrypts to the signing key it publishes.
 
-  ⚠️ **Known gap, stated plainly:** `lib/e2ee/e2ee-service.ts` validates the attested key's *length* and curve membership only. It does **not** verify the attestation quote's signature against the hardware vendor, compare measurements, or pin expected values — so the current trust anchor is Mera plus the enclave operator, not the silicon. Fail-closed quote verification is planned. Until it ships, do not describe this path as "attestation-verified".
+  ⚠️ **Known gap, stated plainly:** `lib/e2ee/e2ee-service.ts` validates the attested key's *length* and curve membership only. It does **not** verify the attestation quote's signature against the hardware vendor, compare measurements, or pin expected values, so the current trust anchor is Mera plus the enclave operator, not the silicon. Fail-closed quote verification is planned. Until it ships, do not describe this path as "attestation-verified".
 - **Better Auth** with email OTP handles authentication; tokens are stored in expo-secure-store.
-- **Configurable backend** — all three service endpoints are set via environment variables, so the app can be pointed at any backend satisfying the contracts below. Note the caveat in [Backend Requirements](#backend-requirements-byo-backend): the inference endpoint currently still requires a Mera Labs deployment. Removing that dependency is part of the backend source-availability work.
-- **`mera-inference-gateway`** — the E2EE inference relay, already published at [github.com/Mera-News](https://github.com/Mera-News) under the same source-available terms.
+- **Configurable backend**: all three service endpoints are set via environment variables, so the app can be pointed at any backend satisfying the contracts below. Note the caveat in [Backend Requirements](#backend-requirements-byo-backend): the inference endpoint currently still requires a Mera Labs deployment. Removing that dependency is part of the backend source-availability work.
+- **`mera-inference-gateway`**: the E2EE inference relay, already published at [github.com/Mera-News](https://github.com/Mera-News) under the same source-available terms.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 2. **Copy the env template and fill in your endpoints:**
    ```bash
    cp .env.example .env
-   # Edit .env — the three EXPO_PUBLIC_* endpoint vars are required;
+   # Edit .env: the three EXPO_PUBLIC_* endpoint vars are required;
    # the app hard-crashes at launch if any are missing.
    ```
 
@@ -68,24 +68,24 @@ You must supply your own backend. The app reads three required endpoint variable
 
 | Variable | Description | Required |
 |---|---|---|
-| `EXPO_PUBLIC_AUTH_ENDPOINT` | Base URL of the Better Auth service. Must expose `/api/auth/` routes including OTP and JWKS (`/api/auth/jwks`). | Yes — hard crash if absent |
-| `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` | Base URL of the NestJS GraphQL API. Apollo appends `/graphql`. | Yes — hard crash if absent |
-| `EXPO_PUBLIC_INFERENCE_ENDPOINT` | Base URL of the inference gateway. Must expose: `/v1/inference/jobs`, `/v1/chat/completions`, `/v1/chat/completions/batch`, `/api/attestation/report` (NEAR AI Cloud v2 attestation contract for E2EE cloud inference). | Yes — hard crash if absent |
+| `EXPO_PUBLIC_AUTH_ENDPOINT` | Base URL of the Better Auth service. Must expose `/api/auth/` routes including OTP and JWKS (`/api/auth/jwks`). | Yes: hard crash if absent |
+| `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` | Base URL of the NestJS GraphQL API. Apollo appends `/graphql`. | Yes: hard crash if absent |
+| `EXPO_PUBLIC_INFERENCE_ENDPOINT` | Base URL of the inference gateway. Must expose: `/v1/inference/jobs`, `/v1/chat/completions`, `/v1/chat/completions/batch`, `/api/attestation/report` (NEAR AI Cloud v2 attestation contract for E2EE cloud inference). | Yes: hard crash if absent |
 
 > **Backend availability, as of today.** `mera-inference-gateway` **is published** at
 > [github.com/Mera-News](https://github.com/Mera-News), so you can read, build, and deploy the inference
-> relay yourself. The auth service and the GraphQL API (`mera-server`) are **not yet published** —
+> relay yourself. The auth service and the GraphQL API (`mera-server`) are **not yet published**:
 > `EXPO_PUBLIC_AUTH_ENDPOINT` and `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` currently require either a Mera
 > Labs deployment or your own implementation of the contracts above. Both are being made source-available;
 > see [Backend source-availability](#backend-source-availability-in-progress).
 
 Additionally, the following external service dependencies must be configured before the app is fully functional:
 
-- **Expo / EAS project** — run `eas init` to bind to your own EAS project, or set `EXPO_OWNER`/`EAS_PROJECT_ID` in `.env`.
-- **Firebase (Android push notifications)** — supply your own `google-services.json` matching your app package name.
-- **iOS push notifications** — register your own bundle ID for push and regenerate `/ios` via `expo prebuild --clean`.
-- **Google Play submit** — upload your own GCP service-account key to EAS (project credentials → Android → "Google service account key for EAS Submit"). Alternatively, keep a local key file and point `submit.production.android.serviceAccountKeyPath` at it in `eas.json`.
-- **Sentry (optional)** — set `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in `.env`. The app runs without these; error reporting is a no-op.
+- **Expo / EAS project**: run `eas init` to bind to your own EAS project, or set `EXPO_OWNER`/`EAS_PROJECT_ID` in `.env`.
+- **Firebase (Android push notifications)**: supply your own `google-services.json` matching your app package name.
+- **iOS push notifications**: register your own bundle ID for push and regenerate `/ios` via `expo prebuild --clean`.
+- **Google Play submit**: upload your own GCP service-account key to EAS (project credentials → Android → "Google service account key for EAS Submit"). Alternatively, keep a local key file and point `submit.production.android.serviceAccountKeyPath` at it in `eas.json`.
+- **Sentry (optional)**: set `EXPO_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in `.env`. The app runs without these; error reporting is a no-op.
 
 **GraphQL schema:** `schema.gql` in this repo is a snapshot of the reference backend's schema and doubles as the contract your backend must satisfy. If your backend's schema diverges, export your server's `schema.gql` into the repo root, then run `npm run codegen` to regenerate `lib/generated/graphql-types.ts`.
 
@@ -93,11 +93,11 @@ Additionally, the following external service dependencies must be configured bef
 
 Before distributing a fork publicly you must rebrand the app. `TRADEMARK.md` prohibits using the "Mera" name in any fork. The minimum required changes are:
 
-- **App name, slug, and scheme** — set `APP_NAME`, `APP_SLUG`, `APP_SCHEME` in `.env` (via `app.config.js`) or edit `app.json` directly. The name must not contain "Mera".
-- **Bundle ID / application ID** — set `APP_BUNDLE_ID` and `APP_PACKAGE` in `.env`, then run `npx expo prebuild --clean` to regenerate the native `/ios` and `/android` directories with your identifiers.
-- **Privacy Policy and Terms of Service URLs** — set `EXPO_PUBLIC_PRIVACY_URL` and `EXPO_PUBLIC_TERMS_URL` in `.env`; these are centralized in `lib/config/branding.ts`.
-- **Contact/support email** — set `EXPO_PUBLIC_SUPPORT_EMAIL` in `.env`; this replaces `contact@mera.news` in all 20 locale files and source components.
-- **Firebase project** — supply your own `google-services.json` for your Android app package.
+- **App name, slug, and scheme**: set `APP_NAME`, `APP_SLUG`, `APP_SCHEME` in `.env` (via `app.config.js`) or edit `app.json` directly. The name must not contain "Mera".
+- **Bundle ID / application ID**: set `APP_BUNDLE_ID` and `APP_PACKAGE` in `.env`, then run `npx expo prebuild --clean` to regenerate the native `/ios` and `/android` directories with your identifiers.
+- **Privacy Policy and Terms of Service URLs**: set `EXPO_PUBLIC_PRIVACY_URL` and `EXPO_PUBLIC_TERMS_URL` in `.env`; these are centralized in `lib/config/branding.ts`.
+- **Contact/support email**: set `EXPO_PUBLIC_SUPPORT_EMAIL` in `.env`; this replaces `contact@mera.news` in all 20 locale files and source components.
+- **Firebase project**: supply your own `google-services.json` for your Android app package.
 
 See [TRADEMARK.md](TRADEMARK.md) for the full trademark policy, and `.env.example` for the complete list of configurable identity and endpoint variables.
 
@@ -105,23 +105,23 @@ After changing native identity variables, run:
 ```bash
 npx expo prebuild --clean
 ```
-This regenerates `/ios` and `/android` from your updated `app.json`/`app.config.js` — the single correct way to retarget all native copies of the bundle ID, name, scheme, and Sentry properties at once.
+This regenerates `/ios` and `/android` from your updated `app.json`/`app.config.js`: the single correct way to retarget all native copies of the bundle ID, name, scheme, and Sentry properties at once.
 
 ## Development
 
-All day-to-day commands — npm scripts, Expo, EAS build/submit, device install, and OTA updates — live in [COMMANDS.md](COMMANDS.md).
+All day-to-day commands (npm scripts, Expo, EAS build/submit, device install, and OTA updates) live in [COMMANDS.md](COMMANDS.md).
 
 Before contributing, read [CONTRIBUTING.md](CONTRIBUTING.md) for the versioning, dependency, and testing rules.
 
 OTA updates apply to JS/TS/styling/GraphQL changes only. Native builds are required for native dependency changes, SDK version bumps, `app.json` native config, or new native modules.
 
-The AI logic that builds the personalized feed — topic generation, relevance scoring, and the chat agents — lives in `lib/news-harness/`, a React Native-free, ports-and-adapters module that the app runs in production and that can also be exercised standalone from the command line via `harness-local/`. To understand or iterate on feed quality (prompts, scoring, topic generation), see [NEWS_HARNESS.md](NEWS_HARNESS.md).
+The AI logic that builds the personalized feed (topic generation, relevance scoring, and the chat agents) lives in `lib/news-harness/`, a React Native-free, ports-and-adapters module that the app runs in production and that can also be exercised standalone from the command line via `harness-local/`. To understand or iterate on feed quality (prompts, scoring, topic generation), see [NEWS_HARNESS.md](NEWS_HARNESS.md).
 
 ## Backend source-availability (in progress)
 
 **Target: before September 2026.**
 
-Publishing the client proves what the app *sends*. It proves nothing about what happens next — and every
+Publishing the client proves what the app *sends*. It proves nothing about what happens next. And every
 byte the app sends about *you* (your topics, your persona record, your push token, your session, your
 subscription) currently lands in a closed service. That is the gap this work closes.
 
@@ -139,9 +139,9 @@ thing the app talks to:
 | Service | Responsibility |
 |---|---|
 | `api` | The GraphQL API the app queries. User persona records, quota enforcement, config |
-| `auth` | Better Auth — email OTP, sessions, account records, JWKS signing keys |
+| `auth` | Better Auth: email OTP, sessions, account records, JWKS signing keys |
 | `inference` | The E2EE inference relay (today's `mera-inference-gateway`) |
-| `worker` | Background jobs — notification scheduling and delivery |
+| `worker` | Background jobs: notification scheduling and delivery |
 
 Everything that knows who you are moves here. The news backend stays closed and becomes a pure article
 service.
@@ -151,13 +151,13 @@ service.
 > ⚠️ **Everything in this subsection is the design being built, not the system running today.** It is
 > written in the future tense deliberately. Do not cite it as a description of current behaviour.
 
-The closed news service will receive topic phrases with **no identifier of any kind** — no user ID, no
+The closed news service will receive topic phrases with **no identifier of any kind**: no user ID, no
 session, no device ID, no client IP. The intent is that this is structural rather than a promise:
 
 - Outbound headers will be a **fixed allowlist built once at adapter construction**, with no per-request
   header parameter through which anything could be smuggled.
 - A **test asserting set equality** against that allowlist, so adding a header fails the build.
-- Typed DTOs only — no `context` / `headers` / `extra` escape hatch. No cookie jar, no
+- Typed DTOs only: no `context` / `headers` / `extra` escape hatch. No cookie jar, no
   `x-forwarded-for` propagation, no per-user connection pinning.
 - The two systems will run on **separate databases with separate credentials and no cross-system
   database access**, so the closed side cannot read a user record even by mistake.
@@ -189,7 +189,7 @@ instead of meaning-based matching.
 
 Ingestion, clustering, ranking, and billing internals. The idea is copyable; the infrastructure and the
 cost engineering behind it are what the subscription pays for. The line we think is honest: **you should
-be able to verify what happens to your data — not necessarily rebuild the product from our source.**
+be able to verify what happens to your data, not necessarily rebuild the product from our source.**
 
 ### Known gaps this does *not* close
 
@@ -202,11 +202,11 @@ Stated here rather than omitted:
   the binary on your phone was built from it. Reproducible builds and `cosign`-signed image digests are
   planned.
 - **Source code cannot prove which code a server runs.** This is true of every service that publishes a
-  backend — Signal's server is published and unverified too; its guarantee comes from the protocol, not
+  backend: Signal's server is published and unverified too; its guarantee comes from the protocol, not
   from the server source. A transparency report is planned so conduct under legal requests is at least on
   the record.
 - **Account deletion does not yet cascade every collection** in a single pass.
-- **Some retention windows are unbounded** — submitted unblock-request transcripts and per-day usage
+- **Some retention windows are unbounded**: submitted unblock-request transcripts and per-day usage
   counts in particular.
 - **Prompt-injection hardening** in AI-processed content is ongoing.
 
@@ -216,12 +216,12 @@ Stated here rather than omitted:
 [Mera Source-Available License](LICENSE.md), which grants a worldwide, royalty-free, revocable licence to
 access, read, download, compile, and run the software **for personal study, security review, auditing,
 and evaluation**. It does **not** grant production, commercial, or competing use. "Open source" has a
-specific meaning — an OSI-approved licence with the freedom to use and redistribute — and this licence
+specific meaning (an OSI-approved licence with the freedom to use and redistribute) and this licence
 does not meet it; see `LICENSE.md` for the exact grant and restrictions.
 
 Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437). Rights not expressly granted are reserved.
 
-`"private": true` in `package.json` is intentional — it prevents accidental `npm publish`.
+`"private": true` in `package.json` is intentional: it prevents accidental `npm publish`.
 
 See [TRADEMARK.md](TRADEMARK.md) for trademark restrictions.
 
