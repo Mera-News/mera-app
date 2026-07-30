@@ -8,6 +8,7 @@
 // text right-aligned and non-italic. A Mera glyph briefly lived in this block as
 // the Ask-Mera affordance; it was removed again — the action row's Mera button
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
@@ -293,6 +294,15 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         </Box>
     ) : null;
 
+    // EU AI Act Art. 50 transparency caption (Group C1) — unconditional
+    // whenever the reason box shows actual Mera-generated text (not the
+    // loading placeholder). Deliberately NOT shown for the fact-chips path:
+    // those statements are persona facts (personal profile data), the same
+    // carve-out that keeps FactAccordion/FactsList unlabelled elsewhere.
+    const aiDisclosureEl = isSuggestion && relevanceReady && reason ? (
+        <AiDisclosureCaption className="px-1" />
+    ) : null;
+
     if (isCard) {
         return (
             <Pressable onPress={onPress}>
@@ -314,6 +324,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                         {titleEl}
                         {factChipsEl}
                         {reasonBoxEl}
+                        {aiDisclosureEl}
                     </VStack>
                 </Card>
             </Pressable>
@@ -369,6 +380,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 {titleEl}
                 {aboveReason}
                 {reasonBoxEl}
+                {aiDisclosureEl}
                 {footer}
                 <Box style={{ height: contentBottomInset }} />
             </VStack>

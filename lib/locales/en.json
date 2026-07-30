@@ -205,6 +205,10 @@
     "irrelevant": "Irrelevant",
     "unprocessed": "Unprocessed"
   },
+  "aiDisclosure": {
+    "caption": "AI-generated note · Check other sources to confirm and see the full picture.",
+    "short": "AI-generated"
+  },
   "articleDetail": {
     "readArticle": "Read Article",
     "viewAndTranslateOnDevice": "View article & translate on device",
@@ -700,6 +704,7 @@
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
     "viewPreviousMessages": "View previous messages",
+    "aiInteractionNotice": "You're talking with Mera, an AI assistant — not a person.",
     "aiUsageNotice": "This assistant helps set up your news preferences. Attempting to manipulate or misuse it may get your account blocked pending review.",
     "requestUnblock": {
       "button": "Request unblock",

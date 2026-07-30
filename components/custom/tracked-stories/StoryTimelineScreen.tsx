@@ -1,3 +1,4 @@
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -142,6 +143,11 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const [headline, setHeadline] = useState<string>('');
+    // EU AI Act Art. 50 transparency label (Group C1) — tracked separately from
+    // `headline` because that state merges `llmHeadline ?? fallbackTitle` into
+    // one string; the disclosure must only show when the displayed text is
+    // actually the LLM-generated one.
+    const [isLlmHeadline, setIsLlmHeadline] = useState(false);
     const [stableClusterId, setStableClusterId] = useState<string | null>(null);
     const [cards, setCards] = useState<TimelineCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -175,6 +181,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 if (!alive()) return;
                 if (!story) return;
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
+                setIsLlmHeadline(!!story.llmHeadline);
 
                 const localSnapshots = story.memberSnapshots ?? [];
                 setStableClusterId(story.stableClusterId ?? null);
@@ -324,6 +331,12 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                 numberOfLines={2}
                                 className="text-white"
                             />
+                        )}
+                        {/* Short copy — see TrackedStoriesScreen: this is a followed-
+                            story heading, and the header box is a narrow flex-1 slot
+                            between the back and delete buttons. */}
+                        {isLlmHeadline && (
+                            <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} />
                         )}
                     </Box>
                     {/* Delete is the ONLY way to stop following a story (Q13):

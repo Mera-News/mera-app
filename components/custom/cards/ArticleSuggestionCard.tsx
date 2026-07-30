@@ -1,3 +1,4 @@
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
@@ -269,6 +270,15 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : null;
 
+  // EU AI Act Art. 50 transparency caption (Group C1) — unconditional whenever
+  // the reason box shows actual Mera-generated text (not the loading
+  // placeholder). Deliberately NOT shown for the fact-chips path: those
+  // statements are persona facts (personal profile data), the same carve-out
+  // that keeps FactAccordion/FactsList unlabelled elsewhere.
+  const aiDisclosureEl = relevanceReady && reason ? (
+    <AiDisclosureCaption className="px-1" />
+  ) : null;
+
   const metaAccessory = __DEV__ && relevanceReady ? (
     <Box className="px-2 py-0.5 rounded bg-background-50">
       <Text size="xs" className="text-typography-400 font-mono">
@@ -344,6 +354,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       {hardFilterLabelEl}
       {factChipsEl}
       {reasonBoxEl}
+      {aiDisclosureEl}
     </ArticleCardBase>
   );
 };
