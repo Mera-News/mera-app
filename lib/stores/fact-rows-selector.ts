@@ -23,8 +23,14 @@
 // GLOBAL) that sits ALONGSIDE the fact sections and clears the SAME relevance
 // bar. Each carries a `headlineReadCount` denominator so the section can state,
 // in one line, how many headlines Mera read for the scope versus how many it
-// judged worth the reader's time — including the case where that is zero, which
-// is the one section that renders with no cards.
+// judged worth the reader's time.
+//
+// A section with ZERO surviving cards is DROPPED (P9), exactly like a fact
+// section — see step 5b. This reverses P5, which kept the empty shell so its
+// denominator could say "Mera read 20 · none looked relevant today"; the user
+// overruled that, since an empty section promises content and then admits it has
+// none. The `…DenominatorNone` strings still exist in all 20 locales as an
+// unreachable guard — do not read their presence as evidence the state occurs.
 //
 // Section membership additionally requires the fact link to be RELEVANCE-BACKED
 // (`isSectionMemberEligible` + `isFactSectionViable`, feed-select/ownership).
