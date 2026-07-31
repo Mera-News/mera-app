@@ -5,6 +5,10 @@ import {
     TITLE_JACCARD_PROPAGATION_THRESHOLD,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    ENTITY_ANCHOR_DF_FLOOR,
+    entityAnchorDfMax,
+    normalizeEntities,
     normalizeTitleTokens,
     titleJaccard,
     weightedTitleJaccard,
@@ -12,7 +16,11 @@ import {
     pickRepresentative,
 } from '../story-grouping';
 
-type ClusterMembership = { clusterId: string; confidence: number };
+type ClusterMembership = {
+    clusterId: string;
+    confidence: number;
+    stableClusterId?: string | null;
+};
 
 interface TestItem extends GroupableItem {
     id: string;
@@ -26,6 +34,17 @@ function item(
     clusters: ClusterMembership[] = [],
 ): TestItem {
     return { id, title, clusters };
+}
+
+/** Item carrying the server's article tags (the entity-edge inputs). */
+function tagged(
+    id: string,
+    title: string | null,
+    entities: string[],
+    eventType: string | null,
+    clusters: ClusterMembership[] = [],
+): TestItem {
+    return { id, title, clusters, entities, eventType };
 }
 
 const DISPLAY_OPTS: StoryGroupingOptions = {
@@ -42,6 +61,15 @@ const DISPLAY_WEIGHTED_OPTS: StoryGroupingOptions = {
     titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+};
+
+/** Display options WITH the entity-overlap edge — the exact set the two feed
+ *  selectors and the article-detail screen pass. */
+const DISPLAY_ENTITY_OPTS: StoryGroupingOptions = {
+    titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
+    clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+    weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
 };
 
 /** True iff `x` and `y` land in the same group. */
@@ -376,6 +404,233 @@ describe('buildStoryGroups — edge cases', () => {
         const groups = buildStoryGroups(items, DISPLAY_OPTS);
         expect(groups).toHaveLength(1);
         expect(groups[0].map((it) => it.id)).toEqual(['z', 'm', 'a']);
+    });
+});
+
+// --- normalizeEntities / entityAnchorDfMax ---------------------------------
+
+describe('normalizeEntities', () => {
+    it('trims, lowercases and deduplicates', () => {
+        expect(normalizeEntities([' Anthropic ', 'ANTHROPIC', 'OpenAI'])).toEqual(
+            new Set(['anthropic', 'openai']),
+        );
+    });
+
+    it('drops empties, whitespace-only values and non-strings', () => {
+        const messy = ['', '   ', null, undefined, 7, 'Anthropic'] as unknown as string[];
+        expect(normalizeEntities(messy)).toEqual(new Set(['anthropic']));
+    });
+
+    it('returns an empty set for null/undefined/empty', () => {
+        expect(normalizeEntities(null).size).toBe(0);
+        expect(normalizeEntities(undefined).size).toBe(0);
+        expect(normalizeEntities([]).size).toBe(0);
+    });
+});
+
+describe('entityAnchorDfMax', () => {
+    it('is the absolute floor for small pools', () => {
+        expect(entityAnchorDfMax(10)).toBe(ENTITY_ANCHOR_DF_FLOOR);
+        expect(entityAnchorDfMax(0)).toBe(ENTITY_ANCHOR_DF_FLOOR);
+    });
+
+    it('scales with the pool once the ratio overtakes the floor', () => {
+        // The detail screen groups the whole local pool (10³+), the feed
+        // selectors only the visible window — a FIXED cap would make the same
+        // pair merge on one surface and not the other.
+        expect(entityAnchorDfMax(1000)).toBe(50);
+        expect(entityAnchorDfMax(400)).toBe(20);
+    });
+});
+
+// --- entity-overlap edge (4) ----------------------------------------------
+
+describe('buildStoryGroups — entity-overlap edges', () => {
+    // The three cards the 2026-07-31 prod feed rendered SEPARATELY for one
+    // story (Honolulu Star-Advertiser / Der Bund, translated / The Straits
+    // Times). Three different server clusters, pairwise title Jaccard ≈ 0.2.
+    const HACK_1 = tagged(
+        'h1',
+        "Anthropic's AI models hacked 3 organizations during tests",
+        ['Anthropic', 'OpenAI'],
+        'science_tech',
+    );
+    const HACK_2 = tagged(
+        'h2',
+        "Further incident: OpenAI rival Anthropic's AI also attacked real companies",
+        ['Anthropic', 'OpenAI'],
+        'science_tech',
+    );
+    const HACK_3 = tagged(
+        'h3',
+        "Anthropic's models gained unauthorised 'real-world' access during testing",
+        ['Anthropic', 'OpenAI'],
+        'science_tech',
+    );
+    // Same day, same `Anthropic` entity, unmistakably different stories.
+    const FUNDING = tagged(
+        'n1',
+        'Nexus Data Centers in advanced talks to secure $15B for Google-backed Anthropic data center',
+        ['Nexus Data Centers', 'Google', 'Anthropic'],
+        'business',
+    );
+    const PENTAGON = tagged(
+        'n2',
+        "The Pentagon's Case Against Anthropic Isn't Going Well",
+        ['Pentagon', 'Anthropic'],
+        'politics',
+    );
+
+    it('MUST MERGE: the three real hack cards form one group', () => {
+        const groups = buildStoryGroups([HACK_1, HACK_2, HACK_3], DISPLAY_ENTITY_OPTS);
+        expect(groupIdSets(groups)).toEqual([['h1', 'h2', 'h3']]);
+    });
+
+    it('MUST MERGE the h1/h2 pair on its own — the edge does its OWN candidate enumeration', () => {
+        // h1 and h2 share exactly ONE title token ("anthropic"), so the
+        // title-edge blocking loop (≥ 2 shared tokens for titles > 3 tokens)
+        // never visits this pair. In the 3-item test above it is rescued
+        // transitively via h3, which would hide an entity edge riding on the
+        // title loop's candidates. Pairwise, it cannot be.
+        const shared = [...normalizeTitleTokens(HACK_1.title)].filter((t) =>
+            normalizeTitleTokens(HACK_2.title).has(t),
+        );
+        expect(shared).toEqual(['anthropic']);
+        expect(buildStoryGroups([HACK_1, HACK_2], DISPLAY_ENTITY_OPTS)).toHaveLength(1);
+    });
+
+    it('is OPT-IN: without `entityJaccardThreshold` the three cards stay split', () => {
+        // i.e. exactly the prod defect, and proof score-propagation (which omits
+        // the option) is untouched by this edge.
+        expect(buildStoryGroups([HACK_1, HACK_2, HACK_3], DISPLAY_WEIGHTED_OPTS)).toHaveLength(3);
+    });
+
+    it('MUST NOT MERGE: funding + Pentagon stories sharing only `Anthropic` stay separate', () => {
+        const groups = buildStoryGroups(
+            [HACK_1, HACK_2, HACK_3, FUNDING, PENTAGON],
+            DISPLAY_ENTITY_OPTS,
+        );
+        expect(groupIdSets(groups)).toEqual([['h1', 'h2', 'h3'], ['n1'], ['n2']]);
+    });
+
+    it('MUST NOT MERGE on common entities alone — the rare-entity anchor', () => {
+        // Two unrelated AI stories whose entity sets are IDENTICAL ({OpenAI,
+        // Google}) and whose event types match. Everything except the anchor
+        // passes; only the fact that both entities are common in this pool keeps
+        // them apart.
+        const c1 = tagged(
+            'c1',
+            'OpenAI unveils a compact reasoning model for enterprise customers',
+            ['OpenAI', 'Google'],
+            'science_tech',
+        );
+        const c2 = tagged(
+            'c2',
+            'Google quietly ships an OpenAI competitor built on speech tooling',
+            ['OpenAI', 'Google'],
+            'science_tech',
+        );
+        // DF ballast: 10 more cards on the AI beat mentioning both. Titles are
+        // null so they can form no edges of their own (the entity edge needs a
+        // shared title token) — they exist ONLY to push df(OpenAI)/df(Google)
+        // past `entityAnchorDfMax`.
+        const ballast = Array.from({ length: 10 }, (_, k) =>
+            tagged(`b${k}`, null, ['OpenAI', 'Google', `Other ${k}`], 'science_tech'),
+        );
+        const pool = [c1, c2, ...ballast];
+        expect(entityAnchorDfMax(pool.length)).toBeLessThan(12); // df of both = 12
+        expect(together(buildStoryGroups(pool, DISPLAY_ENTITY_OPTS), 'c1', 'c2')).toBe(false);
+
+        // Control: the SAME pair in a pool where those entities are rare DOES
+        // merge — so the anchor, and nothing else, is what separated them.
+        expect(together(buildStoryGroups([c1, c2], DISPLAY_ENTITY_OPTS), 'c1', 'c2')).toBe(true);
+    });
+
+    it('MUST NOT MERGE across different event types', () => {
+        const a = tagged('a', 'Anthropic and OpenAI models breached test systems', ['Anthropic', 'OpenAI'], 'science_tech');
+        const b = tagged('b', 'Anthropic and OpenAI models face a Senate probe', ['Anthropic', 'OpenAI'], 'politics');
+        expect(together(buildStoryGroups([a, b], DISPLAY_ENTITY_OPTS), 'a', 'b')).toBe(false);
+    });
+
+    it('MUST NOT MERGE when both event types are null (two nulls are not agreement)', () => {
+        const a = tagged('a', 'Anthropic and OpenAI models breached test systems', ['Anthropic', 'OpenAI'], null);
+        const b = tagged('b', 'Anthropic and OpenAI face fresh regulatory scrutiny in Brussels', ['Anthropic', 'OpenAI'], null);
+        expect(together(buildStoryGroups([a, b], DISPLAY_ENTITY_OPTS), 'a', 'b')).toBe(false);
+    });
+
+    it('MUST NOT MERGE without a shared title token', () => {
+        const a = tagged('a', 'Anthropic and OpenAI models breached test systems', ['Anthropic', 'OpenAI'], 'science_tech');
+        const b = tagged('b', 'Chatbot rivals face fresh regulatory scrutiny', ['Anthropic', 'OpenAI'], 'science_tech');
+        expect(together(buildStoryGroups([a, b], DISPLAY_ENTITY_OPTS), 'a', 'b')).toBe(false);
+    });
+
+    it('MUST NOT MERGE when only ONE entity is shared, however rare', () => {
+        const a = tagged('a', 'Anthropic models breached test systems', ['Anthropic'], 'science_tech');
+        const b = tagged('b', 'Anthropic models get a new pricing tier', ['Anthropic'], 'science_tech');
+        expect(together(buildStoryGroups([a, b], DISPLAY_ENTITY_OPTS), 'a', 'b')).toBe(false);
+    });
+
+    it('MUST NOT MERGE when the entity Jaccard is below the bar', () => {
+        // {Anthropic,OpenAI} vs {Anthropic,OpenAI,Meta,Mistral} → 2/4 = 0.5.
+        const a = tagged('a', 'Anthropic and OpenAI models breached test systems', ['Anthropic', 'OpenAI'], 'science_tech');
+        const b = tagged(
+            'b',
+            'Anthropic and OpenAI models compared in a new safety index',
+            ['Anthropic', 'OpenAI', 'Meta', 'Mistral'],
+            'science_tech',
+        );
+        expect(together(buildStoryGroups([a, b], DISPLAY_ENTITY_OPTS), 'a', 'b')).toBe(false);
+    });
+
+    it('matches entities case- and whitespace-insensitively', () => {
+        const a = tagged('a', 'Anthropic and OpenAI models breached test systems', ['Anthropic', 'OpenAI'], 'science_tech');
+        // Realistic German-market rewrite: shares only "anthropic" + "openai"
+        // with (a), so no title edge can reach it — the merge is the entity
+        // edge's, against differently-cased/padded tags.
+        const b = tagged('b', 'Firmen von OpenAI-Rivale angegriffen: Anthropic-Modelle', [' anthropic ', 'OPENAI'], 'Science_Tech');
+        expect(together(buildStoryGroups([a, b], DISPLAY_ENTITY_OPTS), 'a', 'b')).toBe(true);
+    });
+
+    it('items without entity tags are unaffected', () => {
+        const untagged = [item('a', 'Wholly unrelated alpha story'), item('b', 'Wholly different beta report')];
+        expect(buildStoryGroups(untagged, DISPLAY_ENTITY_OPTS)).toHaveLength(2);
+    });
+});
+
+// --- stable-cluster edge (0) ----------------------------------------------
+
+describe('buildStoryGroups — stable-cluster edges are UNGATED by confidence', () => {
+    const A = 'Wholly unrelated alpha story about shipping';
+    const B = 'A completely different beta report on rainfall';
+
+    it('merges two articles sharing a stableClusterId at confidence 1e-38', () => {
+        // The prod case: a real 5-member cluster whose member carried HDBSCAN
+        // probability 1.27e-38 and therefore rendered as a duplicate card. The
+        // stable id is only minted after cross-generation membership-overlap
+        // matching, so it outranks the per-point density probability.
+        const items = [
+            item('a', A, [{ clusterId: 'c1', confidence: 1e-38, stableClusterId: 's1' }]),
+            item('b', B, [{ clusterId: 'c2', confidence: 1e-38, stableClusterId: 's1' }]),
+        ];
+        expect(buildStoryGroups(items, DISPLAY_OPTS)).toHaveLength(1);
+        // Propagation options too — the stable edge is never opt-in.
+        expect(buildStoryGroups(items, PROPAGATION_OPTS)).toHaveLength(1);
+    });
+
+    it('leaves the raw clusterId edge STILL gated at the same confidence', () => {
+        const items = [
+            item('a', A, [{ clusterId: 'c1', confidence: 1e-38 }]),
+            item('b', B, [{ clusterId: 'c1', confidence: 1e-38 }]),
+        ];
+        expect(buildStoryGroups(items, DISPLAY_OPTS)).toHaveLength(2);
+    });
+
+    it('still forms no edge from a null/absent stableClusterId', () => {
+        const items = [
+            item('a', A, [{ clusterId: 'c1', confidence: 1e-38, stableClusterId: null }]),
+            item('b', B, [{ clusterId: 'c2', confidence: 1e-38 }]),
+        ];
+        expect(buildStoryGroups(items, DISPLAY_OPTS)).toHaveLength(2);
     });
 });
 

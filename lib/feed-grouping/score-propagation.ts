@@ -117,17 +117,25 @@ async function runOnPropagated(
     }
 }
 
-// Propagation deliberately omits the IDF-weighted title edge (no
-// `weightedJaccardThreshold`) — a wrong score copy mis-ranks/hides an article,
-// so it keeps the stricter cluster + raw-title signals only. The stable-cluster
-// edge (same non-null `stableClusterId`) is NOT an option — it is always on
-// inside `buildStoryGroups`, so propagation gets it for free, including its
-// membership-confidence gate (the stable edge only counts memberships whose
-// confidence ≥ `clusterConfidenceThreshold`, i.e. the same 0.3 bar passed
-// below — the < 0.3 fringe stays excluded from propagation too). That is correct
-// and intended: a shared stable id means the same cross-run story, exactly the
-// same-story guarantee the existing same-cluster propagation already relies on,
-// so copying a donor's relevance/reason across it is sound (not merely cosmetic).
+// Propagation deliberately omits BOTH opt-in DISPLAY edges — the IDF-weighted
+// title edge (no `weightedJaccardThreshold`) and the entity-overlap edge (no
+// `entityJaccardThreshold`) — keeping the stricter cluster + raw-title signals
+// only. The asymmetry is the point: a wrong DISPLAY merge only hides a card
+// behind a "+N sources" badge, whereas a wrong PROPAGATION merge copies an LLM
+// relevance verdict (and its reason string) onto an unrelated article, which
+// mis-ranks or silently hides it. Two articles about the same two organisations
+// on the same day are a plausible enough display collapse and a bad enough score
+// donor that the two layers must not share a bar. Do not "unify" these options.
+//
+// The stable-cluster edge (same non-null `stableClusterId`) is NOT an option —
+// it is always on inside `buildStoryGroups`, so propagation gets it for free.
+// Since 2026-07-31 it is also UNGATED by membership confidence (the < 0.3
+// HDBSCAN-probability fringe now propagates too); that is intended — a stable id
+// is only minted for clusters that survived cross-generation membership-overlap
+// matching on the server, which is a stronger same-story guarantee than the
+// per-point density probability it used to be gated on, and stronger than the
+// same-cluster edge propagation already relies on. So copying a donor's
+// relevance/reason across it is sound, not merely cosmetic.
 const PROPAGATION_OPTIONS = {
     titleJaccardThreshold: TITLE_JACCARD_PROPAGATION_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,

@@ -69,6 +69,10 @@ function suggestionFromArticle(
     firstPubDate: pubDate,
     rawScore: null,
     eventType: article?.event_type ?? null,
+    // Carried for the same reason as `event_type`: both are story-grouping's
+    // entity-edge inputs, and this row is a REAL suggestion that can end up in
+    // a grouping pool.
+    entities: article?.entities ?? [],
     headlineScope: null,
     // A standalone article matched no topic — the tree gates out the
     // topic-dependent nodes rather than inventing a target for them.

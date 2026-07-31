@@ -1200,6 +1200,11 @@ function toForYouSuggestion(
     // Persona v3 fields for the fact-sectioned feed selector (nullable).
     rawScore: row.rawScore,
     eventType: row.eventType,
+    // Same parse shape as `buildStageCandidateInput` above, so story-grouping's
+    // entity edge and the scorer see byte-identical entity lists.
+    entities: parseJsonArray<string>(row.entitiesJson).filter(
+      (e): e is string => typeof e === 'string' && e.length > 0,
+    ),
     headlineScope:
       row.headlineScope === 'CITY' ||
       row.headlineScope === 'COUNTRY' ||

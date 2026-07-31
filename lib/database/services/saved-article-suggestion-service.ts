@@ -268,6 +268,9 @@ function toForYouSuggestion(row: SavedArticleSuggestionModel): ForYouSuggestion 
     firstPubDate: row.firstPubDate.toISOString(),
     // The saved table predates persona-v3 sectioning fields and doesn't persist
     // them — saved cards render via the priority chip, not the sectioned feed.
+    // `entities` is likewise absent (no column), so story-grouping's entity edge
+    // can never fire for a saved row; `eventType: null` already guarantees that
+    // independently, since the edge requires two EQUAL non-null event types.
     rawScore: null,
     eventType: null,
     headlineScope: null,

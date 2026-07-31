@@ -37,6 +37,7 @@ import {
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     TITLE_JACCARD_DISPLAY_THRESHOLD,
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    ENTITY_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
 import {
     orderRelatedArticles,
@@ -212,12 +213,19 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 id: s._id,
                 title: s.title_en ?? s.title_original,
                 clusters: s.clusters,
+                entities: s.entities,
+                eventType: s.eventType,
                 s,
             })),
+            // Must stay in lock-step with the two feed selectors' DISPLAY option
+            // set — including `entityJaccardThreshold`. If the feed collapses
+            // A+B+C behind "+2 sources" via an edge this screen does not have,
+            // B and C are reachable from nowhere in the app.
             {
                 titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
                 clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
                 weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+                entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
             },
         );
         const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));

@@ -25,6 +25,7 @@ import {
   TITLE_JACCARD_DISPLAY_THRESHOLD,
   CLUSTER_CORE_CONFIDENCE_THRESHOLD,
   WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+  ENTITY_JACCARD_DISPLAY_THRESHOLD,
   type GroupableItem,
 } from '@/lib/feed-grouping/story-grouping';
 import {
@@ -255,12 +256,17 @@ export function buildFeedList(
     id: s._id,
     title: s.title_en ?? s.title_original ?? null,
     clusters: s.clusters,
+    entities: s.entities,
+    eventType: s.eventType,
     s,
   }));
+  // `entityJaccardThreshold` enables the entity-overlap edge — DISPLAY-only by
+  // design (score-propagation deliberately omits it; see PROPAGATION_OPTIONS).
   const groups = buildStoryGroups(items, {
     titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
   });
 
   // 3. One representative per group; drop reps already excluded (opened ∪

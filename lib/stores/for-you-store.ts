@@ -78,8 +78,16 @@ export type ForYouSuggestion = {
     // priority-bucket layout. All nullable so old rows hydrate cleanly.
     /** Final post-judge raw score (article_suggestions.raw_score); null unscored. */
     rawScore: number | null;
-    /** Controlled event-type value (breaking extraction + section/card icons). */
+    /** Controlled event-type value (breaking extraction + section/card icons).
+     *  Also the equality guard on story-grouping's entity-overlap edge. */
     eventType: string | null;
+    /** Server-tagged named entities (≤8, persisted as `entities_json`). Feeds
+     *  story-grouping's entity-overlap DISPLAY edge, which is the only signal
+     *  that collapses translated/rewritten coverage of one story whose titles
+     *  share no tokens and whose server clusters disagree. Optional so the many
+     *  existing suggestion fixtures keep compiling; `loadSuggestions` always
+     *  populates it (`?? []` at the read sites). */
+    entities?: string[];
     /** null = topic-retrieved; else the top-headline injection scope. */
     headlineScope: 'CITY' | 'COUNTRY' | 'GLOBAL' | null;
     /** ISO alpha-2 country of the scope that injected this row — only ever set

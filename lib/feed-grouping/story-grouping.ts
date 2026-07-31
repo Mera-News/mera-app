@@ -19,10 +19,8 @@
  * existed, so the weak signals remain the fallback. We therefore group by the
  * UNION of:
  *   0. Same non-null `stableClusterId` — the strongest edge (cross-run story
- *      identity), gated on the SAME membership-confidence bar as signal (1)
- *      (within one run a shared stable id implies a shared cluster, so an
- *      ungated edge would re-admit the < 0.3-confidence fringe that (1)
- *      deliberately rejects). A rare id RESET (crashed clustering generation)
+ *      identity), UNGATED (see `CLUSTER_CORE_CONFIDENCE_THRESHOLD` and the
+ *      inline note on the edge). A rare id RESET (crashed clustering generation)
  *      just yields new ids that group among themselves: a new story, never a
  *      crash.
  *   1. Same clusterId at high membership confidence (catches paraphrases that
@@ -36,6 +34,14 @@
  *      tokens but too little raw title text to clear signal (2) — see
  *      `WEIGHTED_JACCARD_*`. Absent from score-propagation, which keeps signals
  *      (1)+(2) only.
+ *   4. (DISPLAY-only, opt-in) an ENTITY-overlap edge over the server's
+ *      `entities` tags, gated on a rare-ENTITY anchor + same `eventType` +
+ *      a shared title token — see `ENTITY_*`. This is the only signal that
+ *      reaches translated/rewritten coverage of the same story from different
+ *      markets, whose titles share almost no tokens (the 2026-07 Anthropic
+ *      hacking story appeared as three cards — Honolulu Star-Advertiser, Der
+ *      Bund in German, The Straits Times — in three different server clusters
+ *      at title Jaccard ≈ 0.2). Also absent from score-propagation.
  * Union-find over signals (1)+(2) collapsed the dump into 163 multi-article
  * groups → 256 fewer cards (18.2%); adding (3) at the display layer collapses a
  * further 13 same-story pairs the raw title bar missed.
@@ -47,6 +53,21 @@ export interface GroupableItem {
     id: string;
     title: string | null;
     clusters: ClusterMembership[];
+    /**
+     * Server-tagged named entities (≤8, e.g. `["Anthropic","OpenAI"]`). Feeds
+     * the OPTIONAL entity-overlap edge (4) only. Optional so every existing
+     * caller/fixture — notably score-propagation's `SuggestionGroupingRow`,
+     * which has no entity column — keeps compiling and keeps its exact prior
+     * behavior. Absent/empty ⇒ the item forms no entity edges.
+     */
+    entities?: string[];
+    /**
+     * Controlled event-type value (`"science_tech"`, `"politics"`, …). Used ONLY
+     * as an equality guard on the entity edge (4). Optional/nullable for the
+     * same reason as `entities`; two nulls are NEVER "the same event type" (see
+     * `sameEventType`).
+     */
+    eventType?: string | null;
 }
 
 export interface StoryGroupingOptions {
@@ -61,6 +82,15 @@ export interface StoryGroupingOptions {
      * `WEIGHTED_JACCARD_*` constants). See `weightedTitleJaccard` for the metric.
      */
     weightedJaccardThreshold?: number;
+    /**
+     * Optional entity-set Jaccard bar for an additional DISPLAY edge (4). When
+     * absent/undefined the entity edge is DISABLED — score-propagation and any
+     * caller that does not pass it keep their exact prior behavior. When set, a
+     * pair also merges if it satisfies EVERY condition in `ENTITY_*` (rare-entity
+     * anchor, ≥ 2 shared entities, this Jaccard bar, identical non-null
+     * `eventType`, ≥ 1 shared title token).
+     */
+    entityJaccardThreshold?: number;
 }
 
 /**
@@ -77,6 +107,11 @@ export interface StoryGroupingOptions {
  * This constant is SHARED with score-propagation. The pairs newly bridged at 0.3
  * are same-story, so copying a donor's relevance/reason across them is
  * acceptable (not just cosmetic) — the propagation stays correct.
+ *
+ * APPLIES TO THE `clusterId` EDGE (1) ONLY. It deliberately no longer gates the
+ * `stableClusterId` edge (0) — see the note on that edge for why the stored
+ * `confidence` (an HDBSCAN core-membership PROBABILITY) is the wrong quantity to
+ * gate a stable id with.
  */
 export const CLUSTER_CORE_CONFIDENCE_THRESHOLD = 0.3;
 
@@ -133,6 +168,75 @@ export const WEIGHTED_JACCARD_DISPLAY_THRESHOLD = 0.28;
 export const WEIGHTED_JACCARD_ANCHOR_DF_MAX = 8;
 export const WEIGHTED_JACCARD_MIN_ANCHORS = 2;
 
+// --- Entity-overlap edge (4) — DISPLAY only -------------------------------
+//
+// WHY IT EXISTS. Translated / independently-rewritten coverage of one story
+// shares almost no title tokens, and the server's per-run HDBSCAN frequently
+// splits it across clusters. Measured against prod (2026-07-31): the Anthropic
+// AI-hacking story rendered as THREE feed cards — Honolulu Star-Advertiser, Der
+// Bund (German), The Straits Times — in three different clusters, with pairwise
+// title Jaccard ≈ 0.2, far under the 0.4 display bar. Every title-based signal
+// had nothing to work with. All three carried exactly `["Anthropic","OpenAI"]`
+// + `event_type: "science_tech"`, while the neighbouring non-duplicate card ("LG
+// unveils Korea's largest AI model") carried `["LG","Hugging Face"]` — so the
+// entity tags separate them cleanly where the titles cannot.
+//
+// PRECISION IS THE WHOLE PROBLEM. `{OpenAI, Google}` co-occur in hundreds of
+// daily AI stories; a naive entity-overlap edge would fuse the entire AI beat
+// into one card. Hence the conjunction of FIVE conditions below, of which the
+// rare-ENTITY anchor is load-bearing. DISPLAY-only, deliberately: a wrong
+// display merge hides a card behind a "+N sources" badge; a wrong PROPAGATION
+// merge copies an LLM relevance verdict onto an unrelated article.
+
+/** Entity-set Jaccard bar. 0.6 means the two entity sets must be close to
+ *  identical (e.g. {Anthropic,OpenAI} vs {Anthropic,OpenAI} = 1.0; a 2-entity
+ *  set against a 3-entity superset = 0.67; against a 4-entity one = 0.5 ⇒ no
+ *  merge). Deliberately high: the user's standing instruction on this feature is
+ *  to FAVOUR SPLITTING — leave a story slightly split rather than merge two. */
+export const ENTITY_JACCARD_DISPLAY_THRESHOLD = 0.6;
+
+/** A single shared entity is a topic, not a story ("… about Anthropic"). Two
+ *  independently-tagged shared entities is the floor at which the pair is
+ *  plausibly the same event. This is what keeps the three Anthropic-hack cards
+ *  apart from "Nexus … Google-backed Anthropic data center" and "The Pentagon's
+ *  Case Against Anthropic", which share only `Anthropic`. */
+export const ENTITY_MIN_SHARED = 2;
+
+/**
+ * Rare-ENTITY anchor: the pair must share at least one entity whose document
+ * frequency over the grouping input is ≤ `entityAnchorDfMax(n)`. Same RULE SHAPE
+ * as the weighted title edge's rare-token anchor, but a SEPARATE constant on
+ * purpose — `WEIGHTED_JACCARD_ANCHOR_DF_MAX = 8` was calibrated on title-token
+ * DF over a 747-doc corpus, and entity DF has a completely different
+ * distribution (a hot entity like "OpenAI" appears in far more documents than
+ * any single title token of a given story). Reusing the literal 8 across the two
+ * corpora would be a coincidence, not a calibration.
+ *
+ * The cap is RELATIVE to the pool size with an absolute floor, because the three
+ * display call sites hand this function pools of wildly different size: the two
+ * feed selectors group only the ~10²-visible window, while the article-detail
+ * screen groups the ENTIRE local suggestion pool (10³+) to find "More coverage"
+ * siblings. A fixed cap would make the same two articles merge in the feed and
+ * NOT merge on the detail screen — i.e. cards collapsed behind "+N sources" in
+ * the feed would be reachable from nowhere. The floor keeps the edge alive on
+ * small pools, where `ceil(n × ratio)` degenerates to 1 and a SHARED entity
+ * (df ≥ 2 by definition) could never qualify.
+ */
+export const ENTITY_ANCHOR_DF_FLOOR = 8;
+export const ENTITY_ANCHOR_DF_RATIO_MAX = 0.05;
+
+/** Rare-entity DF cap for a pool of `n` items. See `ENTITY_ANCHOR_DF_FLOOR`. */
+export function entityAnchorDfMax(n: number): number {
+    return Math.max(ENTITY_ANCHOR_DF_FLOOR, Math.ceil(n * ENTITY_ANCHOR_DF_RATIO_MAX));
+}
+
+/** The entity edge additionally requires ≥ this many shared TITLE tokens — a
+ *  last cheap sanity check that the two headlines are at least about the same
+ *  subject matter, catching entity-tag collisions between unrelated events that
+ *  happen to involve the same two organisations. 1, not 2: cross-language
+ *  coverage frequently shares only the organisation name. */
+export const ENTITY_MIN_SHARED_TITLE_TOKENS = 1;
+
 /**
  * Title-token Jaccard bar for a DISPLAY merge (collapsing cards in the feed).
  * Calibrated 2026-07 against the dump: at ≥ 0.4, title edges bridged the server's
@@ -149,7 +253,8 @@ export const TITLE_JACCARD_DISPLAY_THRESHOLD = 0.4;
  * a wrong display merge is cosmetic, but a wrong score copy mis-ranks or hides
  * an article. Calibrated 2026-07: within-group relevance agreed within 0.2 in
  * 80/92 groups, so the extra precision at 0.55 protects ranking without losing
- * the real merges. Cluster edges stay at 0.5 for both display and propagation.
+ * the real merges. Cluster edges stay at `CLUSTER_CORE_CONFIDENCE_THRESHOLD`
+ * (0.3) for both display and propagation.
  */
 export const TITLE_JACCARD_PROPAGATION_THRESHOLD = 0.55;
 
@@ -265,6 +370,50 @@ export function weightedTitleJaccard(
     return unionWeight === 0 ? 0 : sharedWeight / unionWeight;
 }
 
+/**
+ * Normalize an item's server `entities` tags into a comparable set: trimmed +
+ * lowercased, empties and non-strings dropped, deduplicated. Publishers'
+ * pipelines are not guaranteed to agree on casing/whitespace, and an entity that
+ * fails to match costs a merge. Null/absent/empty → empty set. Never throws.
+ */
+export function normalizeEntities(entities: string[] | null | undefined): Set<string> {
+    const out = new Set<string>();
+    if (!entities) {
+        return out;
+    }
+    for (const e of entities) {
+        if (typeof e !== 'string') continue;
+        const norm = e.trim().toLowerCase();
+        if (norm.length > 0) {
+            out.add(norm);
+        }
+    }
+    return out;
+}
+
+/**
+ * Event-type equality guard for the entity edge. TWO NULLS ARE NOT EQUAL: an
+ * untagged pair carries no evidence, and treating "both untagged" as agreement
+ * would let two untagged articles merge on entities alone — the opposite of the
+ * favour-splitting bias this edge is built with. Compared case/whitespace-
+ * insensitively for the same reason `normalizeEntities` exists.
+ */
+function sameEventType(a: string | null | undefined, b: string | null | undefined): boolean {
+    if (typeof a !== 'string' || typeof b !== 'string') return false;
+    const na = a.trim().toLowerCase();
+    const nb = b.trim().toLowerCase();
+    return na.length > 0 && na === nb;
+}
+
+/** Number of members of `small` also present in `large`. */
+function sharedCount(small: Set<string>, large: Set<string>): number {
+    let shared = 0;
+    for (const v of small) {
+        if (large.has(v)) shared += 1;
+    }
+    return shared;
+}
+
 // --- Union-find (array parent + path compression) -------------------------
 
 function find(parent: number[], i: number): number {
@@ -297,18 +446,15 @@ function union(parent: number[], a: number, b: number): void {
 }
 
 /**
- * Group items into stories via union-find over up to four edge types:
+ * Group items into stories via union-find over up to five edge types:
  *
  *   0. Stable-cluster edges — items sharing the same non-null `stableClusterId`
- *      via memberships whose confidence is ≥ `opts.clusterConfidenceThreshold`
- *      are unioned. STRONGEST edge: this server-assigned id is stable ACROSS
- *      clustering runs, so it is the authoritative same-story key and supersedes
- *      the heuristics below. The confidence gate reuses the edge-(1) bar because
- *      within one run a shared stable id implies a shared cluster — ungated, it
- *      would re-merge the low-confidence fringe edge (1) deliberately excludes.
- *      Always on (not gated by an option), so both display and score-propagation
- *      use it. Null/absent ids contribute no edge, leaving the fallback edges to
- *      do their work for items without a stable id.
+ *      are unioned, UNGATED by confidence. STRONGEST edge: this server-assigned
+ *      id is stable ACROSS clustering runs, so it is the authoritative
+ *      same-story key and supersedes the heuristics below. Always on (not gated
+ *      by an option), so both display and score-propagation use it. Null/absent
+ *      ids contribute no edge, leaving the fallback edges to do their work for
+ *      items without a stable id.
  *   1. Cluster edges — items sharing a clusterId whose membership confidence is
  *      ≥ `opts.clusterConfidenceThreshold` are unioned. Built from a
  *      clusterId → indices map in O(total memberships).
@@ -327,6 +473,13 @@ function union(parent: number[], a: number, b: number): void {
  *      score, so distinctive same-story paraphrases merge while pieces sharing
  *      only high-frequency topic words do not. Absent → behavior identical to the
  *      two-edge version.
+ *   4. Entity-overlap edges (OPTIONAL — only when `opts.entityJaccardThreshold`
+ *      is set) — a pair merges when it shares a RARE entity (the candidate
+ *      enumeration itself, see below) AND shares ≥ `ENTITY_MIN_SHARED` entities
+ *      AND its entity-set Jaccard ≥ `opts.entityJaccardThreshold` AND both carry
+ *      the SAME non-null `eventType` AND they share ≥
+ *      `ENTITY_MIN_SHARED_TITLE_TOKENS` title tokens. Absent → behavior identical
+ *      to the version without it.
  *
  * Returns groups (singletons included), preserving input order both across
  * groups (by each group's earliest member index) and within each group.
@@ -360,19 +513,24 @@ export function buildStoryGroups<T extends GroupableItem>(
     // an option) so score-propagation gets it too: same stable story = same
     // story, matching the existing same-cluster propagation semantics.
     //
-    // CONFIDENCE GATE: a membership contributes its stableClusterId only when its
-    // own `confidence >= opts.clusterConfidenceThreshold` — the EXACT same bar
-    // the clusterId-core edge (1) uses (CLUSTER_CORE_CONFIDENCE_THRESHOLD = 0.3;
-    // deliberately no second threshold). The gate exists because of same-run
-    // equivalence with the core edge: within a single clustering run, two items
-    // sharing a stableClusterId are by definition in the same cluster, so an
-    // UNGATED stable edge would re-merge the low-confidence fringe members
-    // (confidence < 0.3, incl. HDBSCAN near-zero noise artifacts) that the tuned
-    // core edge deliberately rejects — 0.3 was calibrated in the feed-quality
-    // wave with dump-verified zero false merges, and the fringe was excluded on
-    // purpose. Cross-run grouping is unaffected: confident members of the same
-    // story in different runs still share the stable id and merge; the fringe
-    // stays excluded exactly as before this edge existed.
+    // NO CONFIDENCE GATE (changed 2026-07-31). This edge used to reuse edge (1)'s
+    // `clusterConfidenceThreshold`, on the reasoning that within one run a shared
+    // stable id implies a shared cluster, so the gate merely kept the tuned
+    // core-edge fringe out. That conflated two different quantities. The stored
+    // `confidence` is HDBSCAN's membership PROBABILITY — how CORE a point is to
+    // its own density cluster — NOT a same-story likelihood; a perfectly good
+    // member sitting on a dense cluster's rim scores near zero. Meanwhile
+    // `stableClusterId` is minted ONLY for multi-member clusters that survived
+    // generation-to-generation membership-overlap matching on the server (>= 2
+    // shared members AND >= 50% overlap), so it is high-precision BY CONSTRUCTION
+    // and a far stronger same-story signal than a per-point density probability.
+    // Gating it on that probability threw the stronger signal away: measured
+    // against prod, 7,689 of 208,758 multi-member links in the 48h window (3.7%)
+    // were discarded, including a 5-member cluster whose member scored
+    // `confidence = 1.27e-38` and rendered as its own duplicate feed card.
+    // Edge (1)'s gate is deliberately UNCHANGED at 0.3 — a raw per-run
+    // `clusterId` carries no such cross-run corroboration, so there the density
+    // probability is still the best proxy available.
     const stableToIndices = new Map<string, number[]>();
     for (let i = 0; i < n; i += 1) {
         const clusters = items[i].clusters;
@@ -380,11 +538,7 @@ export function buildStoryGroups<T extends GroupableItem>(
             continue;
         }
         for (const membership of clusters) {
-            if (
-                membership &&
-                membership.confidence >= opts.clusterConfidenceThreshold &&
-                membership.stableClusterId
-            ) {
+            if (membership && membership.stableClusterId) {
                 let bucket = stableToIndices.get(membership.stableClusterId);
                 if (!bucket) {
                     bucket = [];
@@ -516,6 +670,86 @@ export function buildStoryGroups<T extends GroupableItem>(
                     weightedTitleJaccard(setI, setJ, dfByToken, n) >=
                         (opts.weightedJaccardThreshold as number)
                 ) {
+                    union(parent, i, j);
+                }
+            }
+        }
+    }
+
+    // --- 4. Entity-overlap edges (OPTIONAL, DISPLAY-only) -------------------
+    // The ONLY signal that reaches translated / independently-rewritten coverage
+    // of one story: such cards share almost no title tokens (so edges 2/3 are
+    // blind) and the server's per-run HDBSCAN routinely splits them across
+    // clusters (so edges 0/1 are blind too). See the `ENTITY_*` constants for the
+    // prod measurement that motivated it.
+    //
+    // Runs LAST purely for readability — the resulting partition is the
+    // transitive closure of all edges, so edge order cannot change it; the
+    // `find()` short-circuits below only skip redundant work.
+    //
+    // CANDIDATE ENUMERATION IS THE RARE-ENTITY ANCHOR. Rather than piggy-backing
+    // on the title-edge blocking loop (which only ever VISITS pairs sharing ≥ 2
+    // non-hot title tokens, and would therefore silently impose a much stricter
+    // title rule than the ≥ 1 this edge intends — the real Anthropic pair #1/#2
+    // shares exactly ONE title token, "anthropic", and would never be enumerated),
+    // this edge enumerates its own pairs from an entity → indices index,
+    // considering ONLY postings whose length is within `entityAnchorDfMax(n)`.
+    // That is not merely an optimisation: since the predicate REQUIRES a shared
+    // entity with df ≤ that cap, every pair that could pass is guaranteed to be
+    // enumerated by that entity's posting list, and the enumeration doubles as
+    // the anchor test. Cost is bounded by cap² per rare entity.
+    if (opts.entityJaccardThreshold !== undefined) {
+        const entitySets: Set<string>[] = new Array(n);
+        const entityPostings = new Map<string, number[]>();
+        for (let i = 0; i < n; i += 1) {
+            const set = normalizeEntities(items[i].entities);
+            entitySets[i] = set;
+            for (const entity of set) {
+                let list = entityPostings.get(entity);
+                if (!list) {
+                    list = [];
+                    entityPostings.set(entity, list);
+                }
+                list.push(i);
+            }
+        }
+
+        const rareDfMax = entityAnchorDfMax(n);
+        for (const list of entityPostings.values()) {
+            // df < 2 → nobody shares it; df > cap → too common to anchor a merge
+            // ({OpenAI, Google} co-occur across the whole daily AI beat).
+            if (list.length < 2 || list.length > rareDfMax) {
+                continue;
+            }
+            for (let a = 0; a < list.length; a += 1) {
+                for (let b = a + 1; b < list.length; b += 1) {
+                    const i = list[a];
+                    const j = list[b];
+                    if (find(parent, i) === find(parent, j)) {
+                        continue; // Already merged via another edge/entity.
+                    }
+                    if (!sameEventType(items[i].eventType, items[j].eventType)) {
+                        continue;
+                    }
+                    const entI = entitySets[i];
+                    const entJ = entitySets[j];
+                    const [entSmall, entLarge] =
+                        entI.size <= entJ.size ? [entI, entJ] : [entJ, entI];
+                    if (sharedCount(entSmall, entLarge) < ENTITY_MIN_SHARED) {
+                        continue;
+                    }
+                    // Set Jaccard — `titleJaccard` is the generic |∩|/|∪| over two
+                    // string sets, reused here rather than duplicated.
+                    if (titleJaccard(entI, entJ) < opts.entityJaccardThreshold) {
+                        continue;
+                    }
+                    const tokI = tokenSets[i];
+                    const tokJ = tokenSets[j];
+                    const [tokSmall, tokLarge] =
+                        tokI.size <= tokJ.size ? [tokI, tokJ] : [tokJ, tokI];
+                    if (sharedCount(tokSmall, tokLarge) < ENTITY_MIN_SHARED_TITLE_TOKENS) {
+                        continue;
+                    }
                     union(parent, i, j);
                 }
             }
