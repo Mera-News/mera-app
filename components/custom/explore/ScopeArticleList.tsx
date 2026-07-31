@@ -16,6 +16,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     FlatList,
+    RefreshControl,
     type ListRenderItem,
     type NativeScrollEvent,
     type NativeSyntheticEvent,
@@ -23,6 +24,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PAGE_SIZE = 10;
+
+// Matches FeedScreen / DashboardSectionsFeed / StoryTimelineScreen, which each
+// declare it locally. A fourth copy beats a shared constant for one hex value.
+const REFRESH_TINT = '#EDA77E';
 
 interface ScopeArticleListProps {
     readonly scope: ExploreScope;
@@ -46,6 +51,8 @@ interface ScopeArticleListProps {
  * lib/explore/geo-scope-filter.ts, deprecated). Each row keeps its headline's
  * `stableClusterId`/`clusterSize` metadata so downstream feedback actions can
  * carry the story's cross-run identity (see `subjectExtras` in renderItem).
+ * Pull-to-refresh — and the Explore tab-icon re-tap — refetch page 1 for the
+ * active scope; see `onRefresh`.
  *
  * Mounted with a `key={scope.id}` by the parent, so switching scope resets all
  * state via remount.
@@ -75,20 +82,10 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
-
-    // Re-tap the Explore icon → scroll this list to top. Explore is
-    // scroll-to-top ONLY: it is a direct server-paginated surface with no
-    // pull-to-refresh, so no `onRefresh` is passed and a second tap at the top
-    // is deliberately inert.
-    const listRef = useRef<FlatList<TopHeadline>>(null);
-    const lastOffset = useRef(0);
-    useTabPressScrollRefresh({
-        listRef,
-        getOffset: () => lastOffset.current,
-    });
 
     // Fetch one page for this scope's country (or GLOBAL for World).
     const loadFrom = useCallback(
@@ -131,8 +128,52 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         })();
     }, [enabled, loadFrom, scope.kind]);
 
+    /**
+     * Pull-to-refresh: refetch the FIRST page for this scope and replace the
+     * list wholesale. Deliberately drops the accumulated pages and the cursor —
+     * `topHeadlinesForCountry` is a ranked server feed, so a refreshed page 1 is
+     * the latest ranking, and stitching it onto stale later pages would show
+     * duplicates and a ranking from two different runs.
+     *
+     * Guarded on `isLoading` as well as `isRefreshing`: the initial load and a
+     * refresh both write `headlines`/`endCursor`, and letting them race could
+     * commit page 1 from one and the cursor from the other.
+     */
+    const onRefresh = useCallback(async () => {
+        if (!enabled || isRefreshing || isLoading) return;
+        try {
+            setIsRefreshing(true);
+            const { rows, cursor, more } = await loadFrom();
+            setHeadlines(rows);
+            setEndCursor(cursor);
+            setHasNextPage(more);
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { screen: 'ScopeArticleList', method: 'refresh', scope: scope.kind },
+            });
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, [enabled, isRefreshing, isLoading, loadFrom, scope.kind]);
+
+    // Re-tap the Explore icon → scroll to top; tap again at the top → refresh,
+    // same as Feed and Dashboard. Passes the SAME `onRefresh` the RefreshControl
+    // calls, so both entry points share one guard and one spinner.
+    const listRef = useRef<FlatList<TopHeadline>>(null);
+    const lastOffset = useRef(0);
+    useTabPressScrollRefresh({
+        listRef,
+        getOffset: () => lastOffset.current,
+        onRefresh,
+        isRefreshing,
+    });
+
     const loadMore = useCallback(async () => {
-        if (!hasNextPage || isLoadingMore || !endCursor) return;
+        // `isRefreshing` matters here: a refresh replaces the list and the
+        // cursor, so a paginate that starts mid-refresh would append using the
+        // pre-refresh cursor and then have its rows thrown away (or overwrite
+        // the refreshed cursor, depending on which settles last).
+        if (!hasNextPage || isLoadingMore || isRefreshing || !endCursor) return;
         try {
             setIsLoadingMore(true);
             const { rows, cursor, more } = await loadFrom(endCursor);
@@ -146,7 +187,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         } finally {
             setIsLoadingMore(false);
         }
-    }, [hasNextPage, isLoadingMore, endCursor, loadFrom, scope.kind]);
+    }, [hasNextPage, isLoadingMore, isRefreshing, endCursor, loadFrom, scope.kind]);
 
     // Routes to suggestion-detail when Mera scored this article and wrote a
     // reason for it, so the reader can see WHY it was picked; otherwise to
@@ -245,6 +286,19 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20,
                 flexGrow: 1,
             }}
+            refreshControl={
+                <RefreshControl
+                    testID="explore-refresh"
+                    refreshing={isRefreshing}
+                    onRefresh={onRefresh}
+                    tintColor={REFRESH_TINT}
+                    colors={[REFRESH_TINT]}
+                    // The header/chips are a PINNED OVERLAY on this screen, not
+                    // stacked chrome — without this the spinner spins behind
+                    // them and reads as nothing happening.
+                    progressViewOffset={headerHeight}
+                />
+            }
             showsVerticalScrollIndicator={false}
             onScroll={onScroll}
             scrollEventThrottle={16}

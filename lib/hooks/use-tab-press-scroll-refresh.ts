@@ -36,7 +36,7 @@ export interface TabPressDecisionInput {
   readonly isFocused: boolean;
   /** Current vertical scroll offset. */
   readonly offset: number;
-  /** Whether a refresh handler was supplied at all (Explore passes none). */
+  /** Whether a refresh handler was supplied at all. */
   readonly canRefresh: boolean;
   /** Whether a refresh is already in flight. */
   readonly isRefreshing: boolean;
@@ -76,8 +76,8 @@ export interface UseTabPressScrollRefreshOptions {
   /** Reads the list's current offset. Cheap — a shared-value or plain ref read. */
   readonly getOffset: () => number;
   /** The screen's pull-to-refresh handler. MUST be the same function the
-   *  RefreshControl calls, not the scheduler underneath it. Omit for
-   *  scroll-to-top-only screens (Explore). */
+   *  RefreshControl calls, not the scheduler underneath it. Omit to make the
+   *  screen scroll-to-top-only (no screen does today). */
   readonly onRefresh?: () => void;
   /** Live refresh-in-flight flag, so consecutive taps don't stack refreshes. */
   readonly isRefreshing?: boolean;
