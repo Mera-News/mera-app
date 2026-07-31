@@ -50,6 +50,7 @@ function tagged(
 const DISPLAY_OPTS: StoryGroupingOptions = {
     titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
+    ungateStableClusterEdge: true,
 };
 
 const PROPAGATION_OPTS: StoryGroupingOptions = {
@@ -70,6 +71,7 @@ const DISPLAY_ENTITY_OPTS: StoryGroupingOptions = {
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
     entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    ungateStableClusterEdge: true,
 };
 
 /** True iff `x` and `y` land in the same group. */
@@ -599,7 +601,7 @@ describe('buildStoryGroups — entity-overlap edges', () => {
 
 // --- stable-cluster edge (0) ----------------------------------------------
 
-describe('buildStoryGroups — stable-cluster edges are UNGATED by confidence', () => {
+describe('buildStoryGroups — stable-cluster edge: ungated for DISPLAY, gated for PROPAGATION', () => {
     const A = 'Wholly unrelated alpha story about shipping';
     const B = 'A completely different beta report on rainfall';
 
@@ -613,7 +615,25 @@ describe('buildStoryGroups — stable-cluster edges are UNGATED by confidence', 
             item('b', B, [{ clusterId: 'c2', confidence: 1e-38, stableClusterId: 's1' }]),
         ];
         expect(buildStoryGroups(items, DISPLAY_OPTS)).toHaveLength(1);
-        // Propagation options too — the stable edge is never opt-in.
+    });
+
+    it('does NOT merge that pair under PROPAGATION options — the gate still applies', () => {
+        // A stable id says which story a CLUSTER is; it adds nothing about
+        // whether a 1e-38 fringe article really belongs to it. Display can
+        // absorb a wrong merge (a "+N sources" badge); propagation would hand
+        // the article someone else's relevance verdict. Favour splitting.
+        const items = [
+            item('a', A, [{ clusterId: 'c1', confidence: 1e-38, stableClusterId: 's1' }]),
+            item('b', B, [{ clusterId: 'c2', confidence: 1e-38, stableClusterId: 's1' }]),
+        ];
+        expect(buildStoryGroups(items, PROPAGATION_OPTS)).toHaveLength(2);
+    });
+
+    it('still merges under PROPAGATION when the membership clears the gate', () => {
+        const items = [
+            item('a', A, [{ clusterId: 'c1', confidence: 0.9, stableClusterId: 's1' }]),
+            item('b', B, [{ clusterId: 'c2', confidence: 0.9, stableClusterId: 's1' }]),
+        ];
         expect(buildStoryGroups(items, PROPAGATION_OPTS)).toHaveLength(1);
     });
 

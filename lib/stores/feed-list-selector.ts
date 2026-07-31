@@ -267,6 +267,7 @@ export function buildFeedList(
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
     entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    ungateStableClusterEdge: true,
   });
 
   // 3. One representative per group; drop reps already excluded (opened ∪

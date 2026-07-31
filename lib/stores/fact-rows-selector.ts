@@ -481,6 +481,7 @@ export function buildFactRows(
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
     entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    ungateStableClusterEdge: true,
   });
 
   // 3. Per group: pick a representative (newest member) + collapse members.

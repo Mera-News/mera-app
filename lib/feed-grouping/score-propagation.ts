@@ -127,15 +127,15 @@ async function runOnPropagated(
 // on the same day are a plausible enough display collapse and a bad enough score
 // donor that the two layers must not share a bar. Do not "unify" these options.
 //
-// The stable-cluster edge (same non-null `stableClusterId`) is NOT an option —
-// it is always on inside `buildStoryGroups`, so propagation gets it for free.
-// Since 2026-07-31 it is also UNGATED by membership confidence (the < 0.3
-// HDBSCAN-probability fringe now propagates too); that is intended — a stable id
-// is only minted for clusters that survived cross-generation membership-overlap
-// matching on the server, which is a stronger same-story guarantee than the
-// per-point density probability it used to be gated on, and stronger than the
-// same-cluster edge propagation already relies on. So copying a donor's
-// relevance/reason across it is sound, not merely cosmetic.
+// The stable-cluster edge (same non-null `stableClusterId`) is always on inside
+// `buildStoryGroups`, so propagation gets it for free — but propagation keeps its
+// membership-confidence GATE, by NOT passing `ungateStableClusterEdge`. Display
+// dropped that gate on 2026-07-31 (see the edge-0 note in `story-grouping.ts`);
+// propagation deliberately did not. A stable id is high-precision about which
+// story a cluster is, but adds nothing about whether a `confidence = 1e-38`
+// fringe article really belongs to it — and that is precisely the article you
+// must not hand someone else's relevance verdict to. Same asymmetry as the two
+// display edges above. Do not "unify" these options.
 const PROPAGATION_OPTIONS = {
     titleJaccardThreshold: TITLE_JACCARD_PROPAGATION_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,

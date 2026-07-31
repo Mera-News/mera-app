@@ -91,6 +91,14 @@ export interface StoryGroupingOptions {
      * `eventType`, ≥ 1 shared title token).
      */
     entityJaccardThreshold?: number;
+    /**
+     * Opt out of the membership-confidence gate on the stable-cluster edge (0).
+     * When absent/undefined the gate APPLIES — score-propagation and any caller
+     * that does not pass it keep their exact prior behavior. DISPLAY callers set
+     * it to `true`; see the long note on edge (0) for why the two layers
+     * deliberately differ.
+     */
+    ungateStableClusterEdge?: boolean;
 }
 
 /**
@@ -513,7 +521,10 @@ export function buildStoryGroups<T extends GroupableItem>(
     // an option) so score-propagation gets it too: same stable story = same
     // story, matching the existing same-cluster propagation semantics.
     //
-    // NO CONFIDENCE GATE (changed 2026-07-31). This edge used to reuse edge (1)'s
+    // CONFIDENCE GATE IS OPT-OUT, DISPLAY-ONLY (changed 2026-07-31). Callers that
+    // pass `ungateStableClusterEdge: true` — the three DISPLAY call sites — skip
+    // the gate; everyone else, score-propagation included, keeps it. This edge
+    // used to unconditionally reuse edge (1)'s
     // `clusterConfidenceThreshold`, on the reasoning that within one run a shared
     // stable id implies a shared cluster, so the gate merely kept the tuned
     // core-edge fringe out. That conflated two different quantities. The stored
@@ -531,6 +542,16 @@ export function buildStoryGroups<T extends GroupableItem>(
     // Edge (1)'s gate is deliberately UNCHANGED at 0.3 — a raw per-run
     // `clusterId` carries no such cross-run corroboration, so there the density
     // probability is still the best proxy available.
+    //
+    // Why PROPAGATION does NOT opt out: a stable id is high-precision about WHICH
+    // STORY A CLUSTER IS, but it says nothing extra about whether one fringe
+    // article belongs to that cluster — for a `confidence = 1e-38` member the
+    // article↔cluster link is exactly as weak as it ever was. Display can absorb
+    // that: a wrong merge only hides a card behind a "+N sources" badge, and the
+    // measured case (the Honolulu card) was a genuine member. Propagation cannot:
+    // it copies an LLM relevance verdict onto the article and silently mis-ranks
+    // it. Under the project's favour-splitting rule the two layers get different
+    // bars, exactly like the weighted-title and entity edges above.
     const stableToIndices = new Map<string, number[]>();
     for (let i = 0; i < n; i += 1) {
         const clusters = items[i].clusters;
@@ -538,7 +559,12 @@ export function buildStoryGroups<T extends GroupableItem>(
             continue;
         }
         for (const membership of clusters) {
-            if (membership && membership.stableClusterId) {
+            if (
+                membership &&
+                membership.stableClusterId &&
+                (opts.ungateStableClusterEdge === true ||
+                    membership.confidence >= opts.clusterConfidenceThreshold)
+            ) {
                 let bucket = stableToIndices.get(membership.stableClusterId);
                 if (!bucket) {
                     bucket = [];

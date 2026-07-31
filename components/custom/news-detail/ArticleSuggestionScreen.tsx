@@ -226,6 +226,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
                 weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
                 entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+                ungateStableClusterEdge: true,
             },
         );
         const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));
