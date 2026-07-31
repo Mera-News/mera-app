@@ -2,7 +2,12 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
-import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import {
+  GLASS_HEADER_SCRIM,
+  GLASS_HEADER_TINT,
+  GlassPlate,
+} from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { Box } from '@/components/ui/box';
@@ -190,8 +195,31 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   );
 
   return (
-    <Box className="flex-1 bg-black">
-      <SectionGradientPanel factId={factId} borderRadius={0}>
+    // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+    <Box className="flex-1">
+      {/* Page background. Must be the FIRST child so it paints behind
+          everything else on the page, exactly as the tab screens mount it.
+          Seeded with the SECTION id, so every fact list draws its own stable
+          palette walk instead of all of them sharing one look. */}
+      <AbstractGradientBackdrop seed={factId} />
+
+      {/* Header material. This wrapper is deliberately UNPADDED (all padding
+          lives on the HStack below) because `GlassPlate` is an absolute fill
+          resolved against the CONTENT box — see GlassSurface.
+
+          The scrim is painted in BOTH branches, not just under glass: unlike
+          the tab screens' headers this one sits in normal flow with nothing
+          scrolling underneath it, so it has no reason to be opaque, and a flat
+          black band here would punch a hole in the very gradient this screen
+          is supposed to show. Translucent dark keeps the small
+          `text-typography-500` prefix readable over a bright blob while the
+          field still reads as continuous top-to-bottom.
+
+          No border here: the HStack below already owns the divider, and a
+          second hairline on this wrapper would both double the line and add a
+          pixel of height. */}
+      <Box testID="fact-feed-header" style={{ backgroundColor: GLASS_HEADER_SCRIM }}>
+        <GlassPlate tint={GLASS_HEADER_TINT} />
         <HStack
           className="items-center px-4 pb-3 border-b border-gray-900"
           style={{ paddingTop: insets.top + 12 }}
@@ -228,7 +256,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
             )}
           </Box>
         </HStack>
-      </SectionGradientPanel>
+      </Box>
       <FlatList
         ref={listRef}
         data={groups}

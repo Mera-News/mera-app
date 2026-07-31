@@ -229,7 +229,9 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
     );
 
     return (
-        <Box testID="not-interested-screen" className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box testID="not-interested-screen" className="flex-1">
             <DrillDownHeader
                 title={t('notInterested.title')}
                 subtitle={t('notInterested.subtitle')}

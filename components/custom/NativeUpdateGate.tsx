@@ -104,8 +104,14 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
     }
 
     if (status === 'checking') {
-        // Neutral black splash (matches the app background) while we decide,
-        // so the paywall/approval flow never flashes ahead of an update.
+        // Neutral black splash while we decide, so the paywall/approval flow
+        // never flashes ahead of an update.
+        //
+        // DELIBERATELY has no AbstractGradientBackdrop, unlike ForceUpdateScreen
+        // below it: this is the cold-start path — the same exemption as
+        // app/index.tsx and app/logged-in/index.tsx — and mounting a reanimated
+        // + svg animation for the few hundred ms of a version check would pull
+        // that graph in ahead of the app itself. Not an oversight; don't "fix" it.
         return (
             <View className="flex-1 bg-black items-center justify-center">
                 <ActivityIndicator size="small" color="#FFFFFF" />

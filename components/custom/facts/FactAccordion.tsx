@@ -1,3 +1,4 @@
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -107,7 +108,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     );
 
     return (
-        <Box className="mx-4 mb-3">
+        <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
                 <Pressable onPress={() => onDeletePress(fact)} hitSlop={8} className="mr-3">
@@ -243,7 +244,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                     )}
                 </Box>
             )}
-        </Box>
+        </GlassPanel>
     );
 };
 

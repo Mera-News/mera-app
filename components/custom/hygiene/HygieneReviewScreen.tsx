@@ -224,7 +224,9 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader
                 title={t('hygiene.title', { defaultValue: 'Persona health' })}
                 subtitle={t('hygiene.subtitle', { defaultValue: 'Suggested cleanups' })}

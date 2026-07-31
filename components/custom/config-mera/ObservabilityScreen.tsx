@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Share } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
@@ -259,10 +260,24 @@ function feedFunnelRows(r: FeedFunnelReport, t: TFunction): KVRow[] {
 
 // ─── Shared table styles ──────────────────────────────────────────────────────
 
-const TH_CLS = 'bg-gray-950 px-3 py-2 border-b border-gray-800';
+// Translucent, not opaque. These tables sit on the page's
+// AbstractGradientBackdrop; the old `bg-black` / `bg-gray-950` fills punched
+// solid rectangles through it. Zebra striping is a legibility device, not a
+// page background, so the fix is a tint rather than glass: the even row is
+// transparent and the odd row carries a faint white lift, which keeps the
+// stripes readable while the backdrop still shows through.
+//
+// ROW_EVEN must say `bg-transparent` EXPLICITLY, not '' — `TableRow`'s own base
+// style is `bg-background-0` (components/ui/table/styles.tsx), so an empty
+// className leaves the opaque default in place rather than clearing it. Same
+// reason the header rows below are tagged `bg-transparent` by hand.
+const TH_CLS = 'bg-white/10 px-3 py-2 border-b border-gray-800';
 const TD_CLS = 'px-3 py-2 border-b border-gray-800';
-const ROW_EVEN = 'bg-black';
-const ROW_ODD = 'bg-gray-950';
+const ROW_EVEN = 'bg-transparent';
+const ROW_ODD = 'bg-white/5';
+/** Header rows carry no zebra class of their own, so they need the same
+ *  explicit clear of `TableRow`'s opaque base. The tone comes from `TH_CLS`. */
+const HEADER_ROW_CLS = 'bg-transparent';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -560,7 +575,18 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     }
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
+        // below, so it spans the FULL screen including the safe areas — an
+        // absolute fill resolves against its parent's CONTENT box, so mounting it
+        // inside the padded box left a black strip in the inset.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* No opaque fill: the backdrop above is the page background. */}
+            <Box className="flex-1" style={{ paddingTop: insets.top }}>
+
             <HStack className="px-4 py-3 items-center justify-between">
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
@@ -622,7 +648,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     <Box className="rounded-xl overflow-hidden border border-gray-800">
                         <Table className="w-full">
                             <TableHeader>
-                                <TableRow>
+                                <TableRow className={HEADER_ROW_CLS}>
                                     <TableHead useRNView className={TH_CLS} style={{ flex: 1 }}>
                                         <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.table')}</Text>
                                     </TableHead>
@@ -671,7 +697,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         <Box className="rounded-xl overflow-hidden border border-gray-800">
                             <Table>
                                 <TableHeader>
-                                    <TableRow>
+                                    <TableRow className={HEADER_ROW_CLS}>
                                         <TableHead useRNView className={TH_CLS} style={{ width: 200 }}>
                                             <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.task')}</Text>
                                         </TableHead>
@@ -794,6 +820,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     </Text>
                 )}
             </ScrollView>
+        </Box>
         </Box>
     );
 };

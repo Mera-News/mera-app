@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import NotSubscribedScreen from "@/components/custom/auth/NotSubscribedScreen";
 import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
@@ -10,7 +11,11 @@ export default function NotSubscribed() {
     // Show loading screen while checking auth state
     if (isPending) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );

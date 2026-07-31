@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
@@ -227,7 +228,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     // Show loading spinner while initializing userId
     if (isInitializing) {
         return (
-            <Box className="flex-1 bg-black justify-center items-center">
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box className="flex-1 justify-center items-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
                 <Text className="text-white mt-4">{t('common.loading')}</Text>
             </Box>
@@ -235,7 +241,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     }
 
     return (
-        <Box testID="onboarding-screen" className="flex-1 bg-black" style={{ paddingBottom: insets.bottom }}>
+        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
+        // below, so it spans the FULL screen including the safe areas — an
+        // absolute fill resolves against its parent's CONTENT box, so mounting it
+        // inside the padded box left a black strip in the inset.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* No opaque fill: the backdrop above is the page background. */}
+            <Box testID="onboarding-screen" className="flex-1" style={{ paddingBottom: insets.bottom }}>
+
             {/* Progress Indicator */}
             <Box className="pb-5 px-5" style={{ paddingTop: insets.top + 16 }}>
                 <Progress value={((currentStep + 1) / TOTAL_STEPS) * 100} size="sm">
@@ -293,6 +310,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+        </Box>
         </Box>
     );
 };

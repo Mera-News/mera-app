@@ -1,3 +1,11 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import {
+    GlassPlate,
+    GLASS_AVAILABLE,
+    GLASS_EDGE,
+    GLASS_HEADER_SCRIM,
+    GLASS_HEADER_TINT,
+} from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -130,7 +138,12 @@ const ExploreScreen: React.FC = () => {
         // that this whole layout exists to enable. Safe-area handling lives on
         // the header overlay (which is outside the scroll view, so `insets.top`
         // is unconditionally correct there) and on the list's content inset.
-        <Box className="flex-1 bg-black">
+        // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1">
+            {/* App-wide tab background. Must be the FIRST child so it paints
+                behind everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             {/* ── THE LIST MUST STAY THE FIRST CHILD ──
                 react-native-screens finds a tab's scroll view by walking
                 `subviews[0]` from the tab screen, once, at mount. Anything
@@ -152,55 +165,71 @@ const ExploreScreen: React.FC = () => {
             />
 
             {/* Pinned header overlay — title + Sources button, offline banner,
-                scope chips. `bg-black` is load-bearing: this sits ON TOP of the
-                list, and the chip row's own wrapper has no background, so
-                without it article rows scroll visibly through the chips. */}
+                scope chips. This sits ON TOP of the list, and the chip row's
+                own wrapper has no background, so the overlay needs an opaque
+                or glass backing or article rows scroll visibly through the
+                chips. On iOS 26+ that backing is real Liquid Glass (GlassPlate);
+                everywhere else it falls back to opaque `bg-black`, since
+                GlassView paints nothing pre-26/off-iOS. The outer box is
+                UNPADDED — GlassPlate is an absolute fill and needs an unpadded
+                parent so its insets resolve against the full header, not just
+                the content box inside the padding (see GlassSurface.tsx) — the
+                safe-area/16pt padding lives on the inner box instead. */}
             <Box
                 testID="explore-header"
                 onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
-                className="bg-black"
+                className={GLASS_AVAILABLE ? GLASS_EDGE : 'bg-black'}
                 style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
                     zIndex: 10,
-                    paddingTop: insets.top + 16,
+                    overflow: 'hidden',
+                    // Only in the glass branch. The non-glass fallback is the
+                    // `bg-black` CLASS above, and an inline backgroundColor
+                    // would beat it — so gating this keeps the fallback fully
+                    // opaque. The scrim paints behind the plate, which is what
+                    // the glass samples: that is what cuts the see-through.
+                    ...(GLASS_AVAILABLE ? { backgroundColor: GLASS_HEADER_SCRIM } : null),
                 }}
             >
-                {/* Header — title + a right-slot Sources button (mirrors the
-                    Dashboard's circular outline icon-button pattern). */}
-                <HStack className="items-center justify-between px-5 mb-2">
-                    <Heading size="3xl" className="text-white flex-shrink mr-3" numberOfLines={1}>
-                        {t('explore.title')}
-                    </Heading>
-                    <Pressable
-                        onPress={() => router.push('/logged-in/sources')}
-                        hitSlop={12}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('settings.sources')}
-                        className="p-3 rounded-full border border-primary-500 bg-transparent flex-shrink-0"
-                    >
-                        <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
-                    </Pressable>
-                </HStack>
-
-                {/* Offline banner — Explore is direct server-paginated (no local
-                    cache), so an offline visit here would otherwise just look
-                    like a jarring generic "no articles found" empty state from
-                    ScopeArticleList. This makes the reason explicit and
-                    non-blocking; that list already falls back to its friendly
-                    empty state, not a hard error, on fetch failure. */}
-                {!isConnected && (
-                    <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
-                        <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                        <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
+                <GlassPlate tint={GLASS_HEADER_TINT} />
+                <Box style={{ paddingTop: insets.top + 16 }}>
+                    {/* Header — title + a right-slot Sources button (mirrors the
+                        Dashboard's circular outline icon-button pattern). */}
+                    <HStack className="items-center justify-between px-5 mb-2">
+                        <Heading size="3xl" className="text-white flex-shrink mr-3" numberOfLines={1}>
+                            {t('explore.title')}
+                        </Heading>
+                        <Pressable
+                            onPress={() => router.push('/logged-in/sources')}
+                            hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('settings.sources')}
+                            className="p-3 rounded-full border border-primary-500 bg-transparent flex-shrink-0"
+                        >
+                            <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
+                        </Pressable>
                     </HStack>
-                )}
 
-                {/* Scope chips */}
-                <Box className="mb-2">
-                    <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
+                    {/* Offline banner — Explore is direct server-paginated (no local
+                        cache), so an offline visit here would otherwise just look
+                        like a jarring generic "no articles found" empty state from
+                        ScopeArticleList. This makes the reason explicit and
+                        non-blocking; that list already falls back to its friendly
+                        empty state, not a hard error, on fetch failure. */}
+                    {!isConnected && (
+                        <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
+                            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                            <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
+                        </HStack>
+                    )}
+
+                    {/* Scope chips */}
+                    <Box className="mb-2">
+                        <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
+                    </Box>
                 </Box>
             </Box>
         </Box>

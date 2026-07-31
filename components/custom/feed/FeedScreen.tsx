@@ -36,6 +36,13 @@
 // — marks it `viewed`.
 // The header is the "Feed" heading + notification bell + 24h stats sentence.
 
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import {
+  GLASS_AVAILABLE,
+  GLASS_HEADER_SCRIM,
+  GLASS_HEADER_TINT,
+  GlassPlate,
+} from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import FeedSyncIndicator, {
@@ -96,7 +103,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, RefreshControl, View } from 'react-native';
+import { AppState, RefreshControl, StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   runOnJS,
@@ -593,7 +600,12 @@ const FeedScreen: React.FC = () => {
   };
 
   return (
-    <Box className="flex-1 bg-black" testID="feed-screen">
+    // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+    <Box className="flex-1" testID="feed-screen">
+            {/* App-wide tab background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
       <Animated.FlatList
         ref={listRef}
         testID="feed-list"
@@ -663,10 +675,33 @@ const FeedScreen: React.FC = () => {
         // and pull-to-refresh appeared "gone".
         pointerEvents="box-none"
         style={[
-          { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
+          { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+          // Liquid Glass on iOS 26+, flat black everywhere else. The opaque
+          // background is REMOVED (not layered under the plate) where glass
+          // paints — a solid fill over glass cancels it entirely. Where glass
+          // does not paint, `GlassPlate` renders nothing, so dropping the
+          // background too would leave an invisible header over the scrolling
+          // list; hence the explicit fallback.
+          GLASS_AVAILABLE
+            ? {
+                // The scrim paints BEHIND the plate, so it is what the glass
+                // samples — that is what actually cuts the see-through. A
+                // translucent dark layer, NOT an opaque fill: an opaque fill
+                // here would cancel the glass entirely (see GlassSurface).
+                backgroundColor: GLASS_HEADER_SCRIM,
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: 'rgba(255,255,255,0.10)',
+              }
+            : { backgroundColor: '#000000' },
           headerStyle,
         ]}
       >
+        {/* Absolute-fill glass. This Animated.View is unpadded (all padding
+            lives on the VStack below), which is exactly what GlassPlate's
+            parent must be — see GlassSurface. No corner radius here, so no
+            `overflow: 'hidden'`: the header is full-bleed and clipping would
+            only risk cutting off the bell's badge. */}
+        <GlassPlate tint={GLASS_HEADER_TINT} />
         {/* PULL-TO-REFRESH PASSTHROUGH — see the matching note in ForYouScreen.
             `box-none` on the header wrapper leaves its CHILDREN touchable, and
             each row here is a full-width plain View, so every row is an opaque
@@ -693,7 +728,12 @@ const FeedScreen: React.FC = () => {
             </HStack>
           </HStack>
           <View pointerEvents="none">
-            <FeedStatsSentence />
+            {/* Brighter + a little heavier than the muted body step: this line
+                sits on glass with content moving under it, where
+                typography-400 was barely legible. `leading-6` is repeated
+                because the prop REPLACES FeedStatsSentence's default class
+                string rather than merging with it. */}
+            <FeedStatsSentence className="text-typography-700 font-medium leading-6" />
           </View>
 
           {/* Shared sync surface — the same indeterminate bar the Dashboard

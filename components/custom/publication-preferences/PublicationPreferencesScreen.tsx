@@ -195,7 +195,9 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader
                 title={t('publicationPrefs.title', { defaultValue: 'Source preferences' })}
                 subtitle={t('publicationPrefs.subtitle', { defaultValue: 'Boost, downrank or mute publications' })}

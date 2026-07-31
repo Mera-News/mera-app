@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
@@ -308,7 +309,12 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             <VStack style={{ paddingTop: insets.top + 8 }}>
                 <HStack className="items-center px-2 pb-2" space="sm">
                     <Pressable

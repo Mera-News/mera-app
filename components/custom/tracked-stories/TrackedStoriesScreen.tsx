@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -239,7 +240,14 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No `bg-black`: embedded, this sits inside ForYouScreen and a flat fill
+        // here would punch a hole in that page's backdrop; standalone, the
+        // backdrop below is the page background.
+        <Box className="flex-1">
+            {/* Page background — only when standalone. Embedded, the host page
+                already mounts one and a second would stack two animated fields. */}
+            {!embedded && <AbstractGradientBackdrop />}
+
             {!embedded && (
                 <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                     <Pressable

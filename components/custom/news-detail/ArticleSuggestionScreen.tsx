@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
@@ -480,7 +481,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center">
+            <Box className="flex-1 items-center justify-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );
@@ -493,7 +498,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             useForYouStore.getState().removeSuggestion(articleSuggestionId);
         }
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
+            <Box className="flex-1 items-center justify-center p-5">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <MaterialIcons
                     name="error-outline"
                     size={48}
@@ -515,7 +524,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const read = isSuggestionOpened(suggestion, openedIds);
 
     return (
-        <Box className="flex-1 bg-background-50">
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             {/* Status bar scrim — this screen's hero image is a full-bleed
                 parallax header (ArticleSuggestionContainer's SmoothScrollView),
                 so without this a light photo makes the system clock/battery

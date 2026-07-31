@@ -220,7 +220,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        <Box className="flex-1">
             {/* Floating Back Button — hidden when embedded (host owns navigation). */}
             {!embedded && (
                 <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>

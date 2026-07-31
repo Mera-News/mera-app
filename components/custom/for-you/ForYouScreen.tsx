@@ -1,9 +1,16 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedSyncIndicator, {
     useFeedSyncRefresh,
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
+import {
+    GLASS_AVAILABLE,
+    GLASS_HEADER_SCRIM,
+    GLASS_HEADER_TINT,
+    GlassPlate,
+} from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
@@ -417,7 +424,12 @@ const MeraNewsScreen: React.FC = () => {
     }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
-        <Box className="flex-1 bg-black" testID="dashboard-screen">
+        // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1" testID="dashboard-screen">
+            {/* App-wide tab background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             {/* Keep-mounted sub-tab content — rendered FIRST so the absolute
                 collapsing header paints on top of it. */}
             <View style={{ flex: 1 }}>
@@ -475,10 +487,35 @@ const MeraNewsScreen: React.FC = () => {
                 // tab hit exactly this and carries the same note).
                 pointerEvents="box-none"
                 style={[
-                    { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
+                    { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+                    // Liquid Glass on iOS 26+, flat black everywhere else. The
+                    // opaque background is REMOVED (not layered under the plate)
+                    // where glass paints — a solid fill over glass cancels it
+                    // entirely. Where glass does not paint, `GlassPlate` renders
+                    // nothing, so dropping the background too would leave an
+                    // invisible header over the scrolling list; hence the
+                    // explicit fallback.
+                    GLASS_AVAILABLE
+                        ? {
+                              // Paints BEHIND the plate, so it is what the glass
+                              // samples — that is what actually cuts the
+                              // see-through. Translucent, NOT opaque: an opaque
+                              // fill here would cancel the glass (GlassSurface).
+                              backgroundColor: GLASS_HEADER_SCRIM,
+                              borderBottomWidth: StyleSheet.hairlineWidth,
+                              borderBottomColor: 'rgba(255,255,255,0.10)',
+                          }
+                        : { backgroundColor: '#000000' },
                     headerStyle,
                 ]}
             >
+                {/* Absolute-fill glass. This Animated.View is unpadded (all
+                    padding lives on the VStack below), which is exactly what
+                    GlassPlate's parent must be — see GlassSurface. No corner
+                    radius here, so no `overflow: 'hidden'`: the header is
+                    full-bleed and clipping would only risk cutting off the
+                    bell's badge. */}
+                <GlassPlate tint={GLASS_HEADER_TINT} />
                 {/* PULL-TO-REFRESH PASSTHROUGH — read this before adding a row.
                     `box-none` makes a view itself untouchable but leaves its
                     CHILDREN touchable. Putting it only on this VStack (and on the
@@ -532,7 +569,11 @@ const MeraNewsScreen: React.FC = () => {
                     {/* Stats sentence — decorative text, never tapped: fully
                         transparent to touches so a pull can start on it. */}
                     <View pointerEvents="none">
-                        <FeedStatsSentence className="text-typography-400 leading-6 mb-2" />
+                        {/* Brighter + a little heavier than the muted body step:
+                            this line sits on glass with content moving under it,
+                            where typography-400 was barely legible. Only colour
+                            and weight change — `leading-6 mb-2` is preserved. */}
+                        <FeedStatsSentence className="text-typography-700 font-medium leading-6 mb-2" />
                     </View>
 
                     {/* Sub-tab pills. box-none: the ROW is a full-width band and

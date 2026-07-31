@@ -9,8 +9,11 @@ interface FeedSyncLastUpdateTextProps {
 export default function FeedSyncLastUpdateText({ lastProcessedLabel }: FeedSyncLastUpdateTextProps) {
     const { t } = useTranslation();
     if (!lastProcessedLabel) return null;
+    // Brighter than the usual muted grey: this sits inside the Dashboard's
+    // glass header, over a moving gradient with content scrolling behind it,
+    // where gray-400 was hard to read.
     return (
-        <Text size="sm" className="text-gray-400" numberOfLines={1}>
+        <Text size="sm" className="text-gray-200 font-medium" numberOfLines={1}>
             {t('feed.updatedAt', { time: lastProcessedLabel })}
         </Text>
     );

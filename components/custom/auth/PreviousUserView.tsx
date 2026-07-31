@@ -97,7 +97,7 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
 
     return (
         <Box
-            className="flex-1 px-5 bg-background-0"
+            className="flex-1 px-5"
             style={{ paddingBottom: insets.bottom + 32 }}
         >
             <Box className="flex-1 justify-center">

@@ -1,3 +1,4 @@
+import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -51,13 +52,28 @@ const MeraChatInvite: React.FC = () => {
     return (
         <Pressable onPress={openChat} className="mx-4 mb-5">
             <HStack className="items-center" space="md">
-                {/* Speech bubble (left) — comic dialogue coming out of the logo. */}
-                <View className="flex-1" style={styles.bubble}>
-                    <Text className="text-white" style={styles.bubbleText}>
-                        {t('profile.meraInvite')}
-                    </Text>
+                {/* Speech bubble (left) — comic dialogue coming out of the logo. Glass
+                    bubble body; the tail sits OUTSIDE the panel (a sibling, not a
+                    child) because GlassPlate's clipping parent would cut off the
+                    tail's -6px overflow otherwise. */}
+                <View className="flex-1" style={styles.bubbleWrap}>
+                    <GlassPanel
+                        className="flex-1"
+                        radius={16}
+                        contentClassName="px-3.5 py-3"
+                        fallbackClassName="bg-black"
+                        edge={false}
+                        style={styles.bubbleBorder}
+                    >
+                        <Text className="text-white" style={styles.bubbleText}>
+                            {t('profile.meraInvite')}
+                        </Text>
+                    </GlassPanel>
                     {/* Right-edge tail pointing at the logo (rotated square whose
-                        top+right bordered edges form the arrow). */}
+                        top+right bordered edges form the arrow). Not glass itself —
+                        a rotated 12px diamond is too small to host a clean GlassPlate
+                        — tinted to read as part of the glass bubble instead of a
+                        pure-black cutout when glass is active. */}
                     <View style={styles.tail} />
                 </View>
 
@@ -70,15 +86,19 @@ const MeraChatInvite: React.FC = () => {
     );
 };
 
+// Tail fallback matches the bubble's opaque `bg-black` fallback; when glass is
+// active there's no literal color to sample (GlassPlate is a native blur
+// view, not a color), so the tail is tinted with the same faint white lift
+// the app's glass surfaces use, instead of staying a pure-black cutout.
+const TAIL_COLOR = GLASS_AVAILABLE ? 'rgba(255,255,255,0.14)' : '#000000';
+
 const styles = StyleSheet.create({
-    bubble: {
+    bubbleWrap: {
         position: 'relative',
-        backgroundColor: '#000000',
+    },
+    bubbleBorder: {
         borderWidth: 1,
         borderColor: PRIMARY,
-        borderRadius: 16,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
     },
     bubbleText: {
         fontSize: 14,
@@ -92,7 +112,7 @@ const styles = StyleSheet.create({
         marginTop: -6,
         width: 12,
         height: 12,
-        backgroundColor: '#000000',
+        backgroundColor: TAIL_COLOR,
         borderTopWidth: 1,
         borderRightWidth: 1,
         borderColor: PRIMARY,

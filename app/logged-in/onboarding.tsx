@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import ErrorBoundary from "@/components/custom/ErrorBoundary";
 import { FullScreenErrorFallback } from "@/components/custom/ErrorFallback";
 import OnboardingScreen from "@/components/custom/onboarding/OnboardingScreen";
@@ -23,7 +24,11 @@ export default function Onboarding() {
     // Show loading screen while checking auth state
     if (isPending) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            <Box className="flex-1 justify-center items-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );

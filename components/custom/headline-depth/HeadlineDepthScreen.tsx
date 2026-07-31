@@ -145,7 +145,9 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
         scope.isGlobal ? '🌍' : flagForAlpha2(scope.countryCode);
 
     return (
-        <Box testID="headline-depth-screen" className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box testID="headline-depth-screen" className="flex-1">
             <DrillDownHeader
                 title={t('headlineDepth.title')}
                 subtitle={t('headlineDepth.subtitle')}

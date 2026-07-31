@@ -121,7 +121,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const isEmptyPersona = factCount === 0;
 
     return (
-        <Box className="flex-1 bg-black">
+        // No `bg-black`: ProfileTabScreen mounts AbstractGradientBackdrop
+        // behind this screen — an opaque fill here would fully block it,
+        // leaving the fact rows/accordions below with nothing to show through.
+        <Box className="flex-1">
             {/* Screen heading — mirrors the ForYou/Explore top-left title idiom. */}
             <HStack className="items-start justify-between px-5 pt-4 mb-2">
                 <Heading size="3xl" className="text-white" numberOfLines={1}>

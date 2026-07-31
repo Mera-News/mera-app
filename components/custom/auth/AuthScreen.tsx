@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
@@ -121,7 +122,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
     };
 
     return (
-        <Box className="flex-1 px-5 bg-background-0">
+        <Box className="flex-1 px-5">
             {/* Main content centered */}
             <Box className="flex-1 justify-center">
                 {/* Logo */}
@@ -278,7 +279,12 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     if (currentView === 'loading') {
         return (
-            <Box className="flex-1 bg-background-0 justify-center items-center">
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box className="flex-1 justify-center items-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );
@@ -286,7 +292,12 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     if (currentView === 'previous' && cachedEmail && cachedUserId) {
         return (
-            <Box className="flex-1 bg-background-0">
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <PreviousUserView
                     email={cachedEmail}
                     userId={cachedUserId}
@@ -299,7 +310,12 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     if (currentView === 'otp' && pendingEmail) {
         return (
-            <Box className="flex-1 bg-background-0">
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <OTPVerificationView
                     email={pendingEmail}
                     onVerificationSuccess={handleVerificationSuccess}
@@ -310,7 +326,12 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     }
 
     return (
-        <Box className="flex-1 bg-background-0">
+        // No opaque fill: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             <EmailInputView onOTPSent={handleOTPSent} initialEmail={pendingEmail} />
         </Box>
     );

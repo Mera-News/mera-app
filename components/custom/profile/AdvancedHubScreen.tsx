@@ -180,13 +180,15 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
         : t('profileHub.healthAllHealthy', { defaultValue: 'All healthy' });
 
     return (
-        <Box testID="advanced-hub-screen" className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box testID="advanced-hub-screen" className="flex-1">
             <DrillDownHeader
                 title={t('profile.advanced', { defaultValue: 'Advanced' })}
                 onBack={onBack}
             />
             {isLoading ? (
-                <Box className="flex-1 items-center justify-center bg-black">
+                <Box className="flex-1 items-center justify-center">
                     <Spinner size="large" />
                 </Box>
             ) : (
