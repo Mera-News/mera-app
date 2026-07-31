@@ -346,6 +346,38 @@ describe('article_suggestions additive migrations (v37 / v41)', () => {
     expect(colNames).toEqual(['scored_at']);
     expect(!!addStep.columns[0].isOptional).toBe(true);
   });
+
+  // ── v48: headline COUNTRY provenance — additive, same rules as v37/v41 ──
+  it('v48 has no sql step mentioning article_suggestions', () => {
+    const m = byVersion.get(48)!;
+    const offending = m.steps.filter((s: any) => /article_suggestion/.test(sqlOf(s)));
+    expect(offending).toHaveLength(0);
+  });
+
+  it('v48 does not create_table article_suggestions or article_suggestion_facts', () => {
+    const m = byVersion.get(48)!;
+    const creates = m.steps.filter(
+      (s: any) =>
+        s &&
+        s.type === 'create_table' &&
+        (s.schema?.name === 'article_suggestions' ||
+          s.schema?.name === 'article_suggestion_facts'),
+    );
+    expect(creates).toHaveLength(0);
+  });
+
+  it('v48 additively adds only headline_country_code to article_suggestions', () => {
+    const m = byVersion.get(48)!;
+    const addStep = m.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'article_suggestions',
+    );
+    expect(addStep).toBeDefined();
+    const colNames = addStep.columns.map((c: any) => c.name);
+    expect(colNames).toEqual(['headline_country_code']);
+    expect(!!addStep.columns[0].isOptional).toBe(true);
+    // v48's ONLY step — it must not drag any other table along.
+    expect(m.steps).toHaveLength(1);
+  });
 });
 
 // ── P7b: CONVERGENCE — the migration chain reproduces schema.ts exactly ──────
@@ -410,6 +442,24 @@ describe('migration → schema convergence', () => {
     const fromChain = new Set(cols.map(sigKey));
     const fromSchema = new Set(schemaColsOf('article_suggestions').map(sigKey));
     expect(fromChain).toEqual(fromSchema);
+  });
+
+  // Explicit sentinel for the v48 column: the set-equality above would already
+  // fail if schema.ts and the chain disagreed, but only with a diff of two large
+  // sets. This names the column so a future v49 that adds it to ONE of the two
+  // places fails with a message that says which column went missing.
+  it('article_suggestions: headline_country_code reaches BOTH the chain and schema.ts', () => {
+    const { cols } = reconstruct('article_suggestions');
+    const fromChain = cols.find((c) => c.name === 'headline_country_code');
+    const fromSchema = schemaColsOf('article_suggestions').find(
+      (c) => c.name === 'headline_country_code',
+    );
+    expect(fromChain).toEqual({
+      name: 'headline_country_code',
+      isOptional: true,
+      isIndexed: false,
+    });
+    expect(fromSchema).toEqual(fromChain);
   });
 
   it('article_suggestion_facts: chain reconstruction set-equals schema.ts', () => {

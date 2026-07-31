@@ -15,6 +15,23 @@ jest.mock('@/lib/logger', () => ({
   default: { captureException: jest.fn(() => 'evt') },
 }));
 
+// Additive (P3): a `mute` now triggers the retroactive purge and an unmute the
+// release; both are lazily required by the executor. Stubbed so this stays a
+// pref-round-trip test.
+jest.mock('@/lib/services/suppression-sweep', () => ({
+  purgeHardFilteredSuggestions: jest.fn(async () => ({
+    excludedIds: [],
+    valueById: new Map(),
+    evictedFromFeed: 0,
+  })),
+  unexcludeRetiredHardFilters: jest.fn(async () => ({ resetIds: [], stillExcluded: 0 })),
+}));
+
+// Additive (P3): every applied mutation now marks the feed dirty (D18).
+jest.mock('@/lib/stores/for-you-store', () => ({
+  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
+}));
+
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import { applyPersonaAction } from '../persona-action-executor';

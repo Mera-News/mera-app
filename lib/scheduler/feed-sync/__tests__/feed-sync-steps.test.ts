@@ -18,6 +18,7 @@ const mockLoadUserGeoLanguageContext = jest.fn();
 const mockLogInfo = jest.fn();
 const mockGetActive = jest.fn();
 const mockGetAllLocations = jest.fn();
+const mockGetHeadlineDepths = jest.fn();
 const mockReconcileTrackedStories = jest.fn();
 const mockMigrateLegacyTrackedStories = jest.fn();
 const mockCaptureException = jest.fn();
@@ -37,6 +38,13 @@ jest.mock('@/lib/services/persona-migration-service', () => ({
 
 jest.mock('@/lib/database/services/location-service', () => ({
   getAll: (...args: any[]) => mockGetAllLocations(...args),
+}));
+
+// Mocked so the real module (settings → database/index → SQLiteAdapter) never
+// enters the graph here. Default is `{}` — no overrides — which is exactly the
+// path every pre-existing test in this file exercises.
+jest.mock('@/lib/database/services/headline-depth-service', () => ({
+  getHeadlineDepths: (...args: any[]) => mockGetHeadlineDepths(...args),
 }));
 
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
@@ -106,6 +114,7 @@ import type {
   DiffResult,
   HydratePersistEnqueueOptions,
 } from '../feed-sync-steps';
+import { DEFAULT_HEADLINE_LIMIT_PER_SCOPE } from '@/lib/news-harness/scoring-engine/retrieval-profile';
 
 function makeCtx(aborted = false) {
   const controller = new AbortController();
@@ -140,6 +149,7 @@ beforeEach(() => {
   mockGetFacts.mockResolvedValue([]);
   mockGetActive.mockResolvedValue([]);
   mockGetAllLocations.mockResolvedValue([]);
+  mockGetHeadlineDepths.mockResolvedValue({});
   mockGetFactWeightById.mockResolvedValue(new Map());
   mockGetLocalSuggestionServerIds.mockResolvedValue([]);
   mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
@@ -337,6 +347,128 @@ describe('stepFetchTopicIds', () => {
     expect(result.personaMeta?.stableClusterId?.get('art-1')).toBe('sc1');
     expect(mockGetArticleIdsForPersona).toHaveBeenCalled();
     expect(mockGetArticleIdsForTopics).not.toHaveBeenCalled();
+  });
+
+  // ── P3: the headline scope's COUNTRY survives to the persist metadata ────
+  it('records the headline scope COUNTRY (uppercased) alongside the scope label', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [],
+      headlineResults: [
+        {
+          scope: 'COUNTRY',
+          countryCode: 'in',
+          articleIds: ['art-in'],
+          clusterSizes: [3],
+          stableClusterIds: [],
+        },
+        {
+          scope: 'GLOBAL',
+          countryCode: null,
+          articleIds: ['art-global'],
+          clusterSizes: [9],
+          stableClusterIds: [],
+        },
+      ],
+    });
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.personaMeta?.headlineScope?.get('art-in')).toBe('COUNTRY');
+    expect(result.personaMeta?.headlineCountryCode?.get('art-in')).toBe('IN');
+    // A GLOBAL headline belongs to no single country — no code, not an empty one.
+    expect(result.personaMeta?.headlineScope?.get('art-global')).toBe('GLOBAL');
+    expect(result.personaMeta?.headlineCountryCode?.has('art-global')).toBe(false);
+  });
+
+  it('keeps scope label and scope country coherent when an article appears in two scopes', async () => {
+    // 'art-both' is carried by GLOBAL first, then by the COUNTRY scope. The
+    // first writer wins for BOTH fields together — never GLOBAL + a country.
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [],
+      headlineResults: [
+        { scope: 'GLOBAL', countryCode: null, articleIds: ['art-both'], clusterSizes: [], stableClusterIds: [] },
+        { scope: 'COUNTRY', countryCode: 'NL', articleIds: ['art-both'], clusterSizes: [], stableClusterIds: [] },
+      ],
+    });
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.personaMeta?.headlineScope?.get('art-both')).toBe('GLOBAL');
+    expect(result.personaMeta?.headlineCountryCode?.has('art-both')).toBe(false);
+  });
+
+  // ── P2b: per-scope headline depth reaches the GraphQL variables ──────────
+  it('sends NO per-scope limit when there are no depth overrides', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'IN', role: 'home', weight: 1, validUntil: null },
+    ] as any);
+    mockGetHeadlineDepths.mockResolvedValue({});
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    const query = mockGetArticleIdsForPersona.mock.calls[0][0];
+    expect(query.topHeadlines.scopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'IN' },
+      { scope: 'GLOBAL', countryCode: null },
+    ]);
+    // Absent, not null — an explicit null would change every untouched payload.
+    for (const s of query.topHeadlines.scopes) {
+      expect('limit' in s).toBe(false);
+    }
+  });
+
+  it('threads each overridden scope depth into topHeadlines.scopes[].limit', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'IN', role: 'home', weight: 1, validUntil: null },
+      { countryCode: 'NL', role: 'family', weight: 0.5, validUntil: null },
+    ] as any);
+    // NL is left at the default → still no `limit` on the wire. That is the
+    // property under test and it is independent of what the default IS.
+    mockGetHeadlineDepths.mockResolvedValue({ IN: 25, GLOBAL: 3 });
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    const query = mockGetArticleIdsForPersona.mock.calls[0][0];
+    expect(query.topHeadlines.scopes).toEqual([
+      { scope: 'COUNTRY', countryCode: 'IN', limit: 25 },
+      { scope: 'COUNTRY', countryCode: 'NL' },
+      { scope: 'GLOBAL', countryCode: null, limit: 3 },
+    ]);
+    // headlines P7b — conscious change: this pinned 10, but the requirement was
+    // always "the top 20 articles from the top headlines in each country the
+    // user is interested in". Asserted against the constant rather than a
+    // literal, so the next default change moves one place, not two.
+    expect(query.topHeadlines.limitPerScope).toBe(DEFAULT_HEADLINE_LIMIT_PER_SCOPE);
+  });
+
+  it('falls back to default depths (and still syncs) when the depth read throws', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: null, locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetHeadlineDepths.mockRejectedValue(new Error('settings unreadable'));
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+
+    await expect(stepFetchTopicIds('p-1', makeCtx())).resolves.toBeDefined();
+
+    const query = mockGetArticleIdsForPersona.mock.calls[0][0];
+    expect(query.topHeadlines.scopes).toEqual([{ scope: 'GLOBAL', countryCode: null }]);
   });
 
   // ── P7e: sync-vs-persona-migration race ──────────────────────────────────
@@ -727,6 +859,82 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['bad']);
     expect(mockEnqueueCandidates).toHaveBeenCalledWith(['good']);
     expect(result.enqueuedCount).toBe(1);
+  });
+
+  // P8 site 1 — the defect that kept top headlines from EVER reaching a card.
+  // A pure TOP-HEADLINE row is factless by design (synthetic matched topic,
+  // `topicId: null`, so no `article_suggestion_facts` row is written). The old
+  // `relatedFacts.length === 0` test tombstoned it here — relevance 0, status
+  // `complete` — before any scoring existed, and this runs on EVERY chunk over
+  // ALL unscored rows, so there was no timing window to escape through.
+  it('does NOT tombstone a factless TOP-HEADLINE row, and enqueues it', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'headline' }, { _id: 'orphan' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 2, linkedCount: 0 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      // Factless BUT headline-scoped → must survive and be enqueued.
+      {
+        id: 'headline',
+        titleEn: 't',
+        descriptionEn: 'd',
+        relatedFacts: [],
+        meta: { headlineScope: 'GLOBAL' },
+      },
+      // Factless and NOT headline-scoped → genuinely orphaned, still tombstoned.
+      { id: 'orphan', titleEn: 't', descriptionEn: 'd', relatedFacts: [], meta: { headlineScope: null } },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['headline'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['headline', 'orphan'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['headline', 'orphan'],
+    };
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // The headline is NOT in the tombstone batch; the true orphan still is.
+    expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['orphan']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['headline']);
+    expect(result.enqueuedCount).toBe(1);
+  });
+
+  // A headline row with no text is NOT exempt — no prompt can score empty
+  // strings, so the title/description half of the tombstone must still fire.
+  it('still tombstones a headline row missing titleEn/descriptionEn', async () => {
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'headline-no-text' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 0 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      {
+        id: 'headline-no-text',
+        titleEn: 't',
+        descriptionEn: null,
+        relatedFacts: [],
+        meta: { headlineScope: 'COUNTRY' },
+      },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: [],
+      propagatedCount: 0,
+      heldBackCount: 0,
+    });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['headline-no-text'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['headline-no-text'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['headline-no-text']);
   });
 
   it('does NOT enqueue an already-scored id that is not in the current chunk', async () => {

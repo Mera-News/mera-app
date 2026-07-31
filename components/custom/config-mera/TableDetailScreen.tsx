@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
@@ -102,7 +103,18 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
             : t('tableDetail.rowsAndCols', { rows: rows.length, cols: columns.length });
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
+        // below, so it spans the FULL screen including the safe areas — an
+        // absolute fill resolves against its parent's CONTENT box, so mounting it
+        // inside the padded box left a black strip in the inset.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* No opaque fill: the backdrop above is the page background. */}
+            <Box className="flex-1" style={{ paddingTop: insets.top }}>
+
             <HStack className="px-4 py-3 items-center justify-between">
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
@@ -193,6 +205,7 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                     </Box>
                 </ScrollView>
             )}
+        </Box>
         </Box>
     );
 };

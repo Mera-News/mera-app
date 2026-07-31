@@ -125,6 +125,73 @@ surrounding `Box`/`View` instead. Text entry into gluestack inputs: tap the fiel
 - Don't run file-editing subagents while a human is typing in the simulator — every save triggers a
   Fast Refresh that stomps their input. (For agent-driving sessions, Fast Refresh can be disabled in
   the dev menu — saves then apply only on explicit reload via the dev-client URL.)
+- **`press 'id=…'` fails SILENTLY on an off-screen element.** It reads as MISSING, which is
+  indistinguishable from "that testID doesn't exist" — so a perfectly good testID looks like a bug
+  in the code under test. `agent-device scroll bottom` first, then press. Bit us on the Advanced
+  hub's last two rows.
+- **`agent-device back` does not pop an expo-router stack screen.** Tap the header back arrow
+  (≈ `(25, 88)` on an iPhone 17 Pro) instead.
+- **Text entry into a gluestack `InputField` cannot be done with `type` / `fill`.** XCTest sees no
+  text-input element and raises `XCTEST_RECORDED_FAILURE`, which restarts the runner — so it costs a
+  session, not just a command. The working route is
+  `agent-device clipboard write "<text>"` → tap the field → press the **Paste** menu-item ref.
+  (This is separate from the testID-swallowing note above: the wrapper `Box` carries the testID, but
+  even once you can *find* the field you still can't type into it.)
+- **`agent-device` rejects a UDID** (`DEVICE_NOT_FOUND`); `--device "iPhone 17 Pro"` is the only
+  selector that works. That matters because **two simulators share that name** — only
+  `0B26B8EF-B252-4E87-8F81-8CAA8597091D` has the app and the resident account; the other is empty.
+  Since you can't disambiguate by UDID, boot exactly one and confirm with
+  `xcrun simctl list devices booted` before trusting anything you see.
+- **The Profile screen's list resists programmatic scrolling** — `scroll` / `fling` / `gesture swipe`
+  all failed to move it, and two attempts landed on the tab bar and switched tabs instead. If you
+  need something below the fold there, reach it by route rather than by scrolling.
+- The resident account is a **test account** (`test-user@mera.news`), not a real one: mutate persona
+  state freely and don't bother reverting. Still never log it out, and never `simctl erase` /
+  uninstall — the keychain session and the local WatermelonDB are what make the sim usable.
+- **`agent-device close` + `open` does NOT restart the app process** — it only cycles the automation
+  session, so the JS process (and anything that runs once per process, e.g. a WatermelonDB migration
+  or the Feed tab's one-shot hydration) is untouched. A real relaunch is
+  `agent-device close` → `xcrun simctl terminate booted com.mera.news` → `agent-device open`.
+  Terminating while a session is open can leave the next command failing with `SESSION_NOT_FOUND`;
+  `agent-device daemon stop` then `open` recovers it.
+- **A migration only logs on the process that runs it.** If the app is already on the new bundle when
+  you attach, the migration lines are gone for good — assert the migration structurally (row counts,
+  anchor ids) and record the log check as INCONCLUSIVE rather than PASS.
+- **The Settings "App Version: v… · \<sha\>" label is frozen at Metro start.** It reads
+  `Constants.expoConfig.extra.gitCommit`, evaluated once when `app.config.js` is loaded, so it can
+  name an older commit than the JS Metro is actually serving. Never use it to confirm which code is
+  running — check for a screen/string that only the newer commit introduces.
+- **The Observability screen scrolls only one way**: `agent-device scroll down` jumps straight to the
+  content end, and `scroll top`, `scroll up`, `--pixels <n>` and `--duration-ms` are all no-ops on it.
+  You cannot park the viewport mid-page for a screenshot. Read the feed-funnel numbers out of
+  `snapshot --raw --json` instead — every row is a `StaticText` pair, so sorting nodes by `rect.y` and
+  pairing label/value reconstructs the whole table (including rows currently off-screen).
+- **`agent-device gesture swipe --from x,y --to x,y` is not valid syntax** — it is rejected with a
+  generic "check command arguments" hint that reads like a device problem. Use `scroll`/`fling`.
+- **Tab-bar presses are swallowed while a pushed stack screen is on top.** `press 'id=person.fill'`
+  from e.g. the Persona-change-log screen silently does nothing (the tab bar isn't in that stack).
+  Pop back to the tab root first — one header-arrow tap at ≈(25,88) per stack level — then switch tabs.
+- **The Profile list DOES scroll with `agent-device scroll bottom`** (updating the older note above).
+  On a fresh launch `profile-row-advanced` sits below the fold, so `scroll bottom` before pressing it —
+  otherwise the press fails silently and you'll blame the testID.
+- **Whether a feed card exposes its children varies per card.** Some cards surface
+  `card-action-*` (and, once a feedback panel is open, `feedback-tree-leaf-*`) as real ids in
+  `snapshot --raw --json`; others merge the entire card — overlay panel included — into one
+  accessibility element and expose nothing but `card-<id>`. Always snapshot first: if the child ids
+  are there, filter by `rect.y` inside the viewport (they repeat once per card, unscoped, and
+  off-screen instances report large ± y where `press 'id=…'` silently no-ops). If they're not,
+  fall back to screenshot-plus-coordinate-taps for that card.
+- **Feed scrolling is coarse and non-monotonic.** One `agent-device scroll down` can move the list by
+  several screens, and `maintainVisibleContentPosition` plus a background sync can move a card's
+  content-y *up* while you scroll down. Parking a specific card in the viewport by scrolling is
+  unreliable — enumerate ids by scanning, but reach a specific card by re-anchoring (`scroll top`,
+  then a few steps) and accept it may take several tries.
+- **`@eNN` refs re-index on every navigation.** A ref captured before a push/pop can point at a
+  different element afterwards (a stale `@e15` opened the wrong Settings row mid-run). Re-snapshot
+  immediately before every press, or press by `id=`/`label=`.
+- **Cropping a screenshot is the only reliable way to read icon fill state.** Filled vs hollow thumbs
+  are ~20px on a 402pt-wide capture and are indistinguishable at full size;
+  `PIL Image.crop(...).resize(...)` on the saved PNG makes the difference obvious.
 
 ## Editing files with mixed user WIP
 

@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import OnboardingWizard from "@/components/custom/onboarding/OnboardingWizard";
 import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
@@ -43,7 +44,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onComplete 
 
     if (isCheckingOnboarding) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box className="flex-1 justify-center items-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );

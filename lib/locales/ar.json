@@ -23,6 +23,7 @@
     "home": "الصفحة الرئيسية"
   },
   "auth": {
+    "reauthBanner": "سجّل الدخول مجددًا لمزامنة البيانات",
     "emailPlaceholder": "أدخل عنوان بريدك الإلكتروني",
     "otpPlaceholder": "أدخل الرمز المكوّن من 6 أرقام",
     "codeSentTitle": "تم إرسال الرمز!",
@@ -204,6 +205,10 @@
     "irrelevant": "غير ذي صلة",
     "unprocessed": "لم تتم معالجته"
   },
+  "aiDisclosure": {
+    "caption": "ملاحظة مولّدة بالذكاء الاصطناعي",
+    "short": "مولّد بالذكاء الاصطناعي"
+  },
   "articleDetail": {
     "readArticle": "قراءة المقال",
     "relatedArticles": "مقالات ذات صلة",
@@ -211,6 +216,7 @@
     "storyUnavailable": "هذه القصة لم تعد متاحة",
     "failedToLoad": "فشل تحميل المقال",
     "articleNotFound": "المقال غير موجود",
+    "offlineUnavailable": "أنت غير متصل بالإنترنت والمقالة لم تُحفظ لقراءتها دون اتصال",
     "viewOriginal": "عرض المقال الأصلي",
     "viewOriginalIn": "عرض المقال الأصلي بلغة {{language}}",
     "viewAndTranslateOnDevice": "عرض المقال وترجمته على الجهاز",
@@ -354,6 +360,10 @@
     "injectNoiseTitle": "حقن الضوضاء",
     "injectNoiseDescription": "يُرسل موضوعات وهمية إلى جانب اهتماماتك الحقيقية حتى لا يتمكن الخادم من تحديد هويتك من قائمة موضوعاتك. المقالات التي تتطابق فقط مع الموضوعات الوهمية تُحذف قبل أن تصلك.",
     "injectNoiseBeta": "تجريبي: قد يُبطئ إنشاء الموضوعات ويُقلل من دقة الموجز.",
+    "relevanceV2Title": "استخدام جلب الملاءمة v2",
+    "relevanceV2On": "التصنيف على الجهاز، حيث حدثت القصة مهم",
+    "relevanceV2Off": "التصنيف في السحابة، باستخدام الطريقة الأصلية",
+    "relevanceV2Description": "بيتا — تصنيف المقالات على جهازك باستخدام موقع وقوع القصة ونوع الحدث، بدلاً من الاعتماد على نموذج السحابة وحده. يتطلب مقالات تحمل علامات الموقع، لذا قد لا تلاحظ تغييراً في البداية. يمكنك إيقاف تشغيله في أي وقت للعودة.",
     "privacyTitle": "بياناتك تبقى خاصة",
     "privacyDescription": "بروتوكول Mera يعمل دائمًا. في وضع الجهاز، يعمل الاستدلال بالكامل دون اتصال على هاتفك. وفي وضع السحابة، يستخدم استدلالًا مشفّرًا من الطرف إلى الطرف: تُشفّر بياناتك على جهازك ولا تُفك إلا داخل جيب آمن لا نستطيع النظر فيه. معلوماتك الشخصية وملفك الشخصي وسجل قراءتك لا تغادر أبدًا هذا الجهاز. لجلب الأخبار نرسل فقط عبارات موضوعية عريضة، دون أي معرّف مستخدم.",
     "deviceSupported": "الجهاز مدعوم",
@@ -580,6 +590,7 @@
     "newChat": "محادثة جديدة",
     "inputPlaceholder": "اكتب رسالة...",
     "viewPreviousMessages": "عرض الرسائل السابقة",
+    "aiInteractionNotice": "أنت تتحدث مع Mera، وهو مساعد ذكي اصطناعي — وليس شخصًا.",
     "aiUsageNotice": "يساعدك هذا المساعد على إعداد تفضيلات أخبارك. قد تؤدي محاولة التلاعب به أو إساءة استخدامه إلى حظر حسابك ريثما تتم المراجعة.",
     "requestUnblock": {
       "button": "طلب إلغاء الحظر",
@@ -631,10 +642,16 @@
     "actionShowMoreTopic": "عرض المزيد من موضوع",
     "actionDownRank": "خفض ترتيب موضوع",
     "actionPublicationPref": "ضبط منشور",
+    "actionPublicationBoost": "عرض المزيد من منشور",
+    "actionPublicationDeprioritize": "عرض أقل من منشور",
+    "actionPublicationMute": "كتم منشور",
+    "actionSourceScopeBoost": "عرض المزيد من مصادر دولة",
+    "actionSourceScopeDeprioritize": "عرض أقل من مصادر دولة",
     "actionSuppress": "تصفية عبارة",
     "actionPinTopic": "تثبيت موضوع",
     "actionUnpinTopic": "إلغاء تثبيت موضوع",
     "actionRetireTopic": "إنهاء موضوع",
+    "actionRetireSuppression": "إزالة مرشح",
     "chooseOneHint": "اختر خيارًا واحدًا"
   },
   "publicationVisits": {
@@ -802,6 +819,8 @@
     "askMera": "اسأل Mera",
     "closeTree": "إغلاق",
     "treeThanks": "شكرًا، تم تدوين ذلك.",
+    "feedbackCaption": "الإشارة وحدها لا توصل لـ Mera ما يكفي — لذا تُحذف لتبقى خلاصتك صحية. اختر سببًا وستتغير خلاصتك على الفور.",
+    "tapAgainToConfirm": "اضغط مرة أخرى للتأكيد",
     "chatHandoffLike": "أعجبتني هذه القصة، المزيد مثل هذا: {{path}}.",
     "chatHandoffLikeNoPath": "أعجبتني هذه القصة. أود المزيد مثل هذا.",
     "chatHandoffDislike": "لم تعجبني هذه القصة، {{path}}.",
@@ -811,7 +830,8 @@
     "title": "استكشاف",
     "scopeWorld": "العالم",
     "noArticles": "لم يتم العثور على مقالات",
-    "addPlaces": "إضافة أماكن"
+    "addPlaces": "إضافة أماكن",
+    "offlineUnavailable": "أنت غير متصل — الاستكشاف يتطلب اتصال إنترنت"
   },
   "forYou": {
     "sectionPrefix": "أخبار عن:",
@@ -823,6 +843,12 @@
     "viewAllArticles_few": "عرض جميع {{count}} المقالات",
     "viewAllArticles_many": "عرض جميع {{count}} المقالات",
     "viewAllArticles_other": "عرض جميع {{count}} المقالات",
+    "headlineSectionGlobal": "عناوين من العالم",
+    "headlineSectionCountry": "عناوين من {{country}}",
+    "headlineDenominator_one": "قرأ Mera {{count}} عنوان · {{shown}} يستحق وقتك.",
+    "headlineDenominator_other": "قرأ Mera {{count}} عناوين · {{shown}} تستحق وقتك.",
+    "headlineDenominatorNone_one": "قرأ Mera {{count}} عنوان · لا شيء بدا ذا صلة اليوم.",
+    "headlineDenominatorNone_other": "قرأ Mera {{count}} عناوين · لا شيء بدا ذا صلة اليوم.",
     "subTabFeed": "النظرة",
     "subTabStories": "القصص",
     "subTabSaved": "المحفوظات"
@@ -851,6 +877,7 @@
     "trackAction": "متابعة القصة",
     "untrackAction": "إلغاء متابعة القصة",
     "trackedToast": "أنت الآن تتابع هذه القصة",
+    "updatesBadge": "{{count}} جديد",
     "updatesBadge_zero": "{{count}} تطور جديد",
     "updatesBadge_one": "{{count}} تطور جديد",
     "updatesBadge_two": "{{count}} تطوران جديدان",
@@ -953,7 +980,9 @@
       "unknown": "تغيير في الشخصية",
       "hygieneDeleteFact": "تمت إزالة حقيقة",
       "addLocation": "تمت إضافة مكان",
-      "deleteLocation": "تمت إزالة مكان"
+      "deleteLocation": "تمت إزالة مكان",
+      "retireSuppression": "أزال مرشحًا",
+      "setSourceScopePref": "عدّل نطاق المصدر"
     }
   },
   "calibration": {
@@ -1101,6 +1130,77 @@
     "deleteFailedTitle": "تعذّر إزالة المكان",
     "deleteFailedBody": "يرجى المحاولة مرة أخرى."
   },
+  "notInterested": {
+    "title": "غير مهتم",
+    "subtitle": "ما طلبت من Mera إبقاءه بعيدًا عن خلاصتك",
+    "sectionFilters": "كلمات وأشياء أخفيتها",
+    "sectionTopics": "مواضيع ترى أقل منها",
+    "sectionSources": "مصادر كتمتها أو خفضت ترتيبها",
+    "managePublications": "إدارة تفضيلات المصدر",
+    "chatHint": "لا تحتاج للمجيء هنا. فقط أخبر Mera بما لا تريد رؤيته — \"أقل عن أخبار المشاهير\" — وسيتولى الباقي.",
+    "kinds": {
+      "keyword": "كلمات",
+      "category": "فئة",
+      "event_type": "نوع القصة",
+      "entity": "شخص أو شيء",
+      "place": "مكان",
+      "publication": "مصدر",
+      "topic": "موضوع"
+    },
+    "sources": {
+      "user": "أضفت هذا",
+      "chat": "من محادثة مع Mera",
+      "feedback": "من ملاحظاتك",
+      "digest": "من مراجعتك اليومية",
+      "qa": "من سؤال سألهُ Mera",
+      "unknown": "أُضيف تلقائيًا"
+    },
+    "badgeBlocked": "مستبعد",
+    "badgeShownLess": "عرض أقل",
+    "badgeMutedTopic": "عرض أقل",
+    "badgeDownranked": "مخفّض",
+    "badgeMutedPub": "مكتوم",
+    "mutedPubHint": "مستبعد، باستثناء الأخبار الرئيسية",
+    "cardExemptLabel": "صفّيت \"{{filter}}\" — عرضه لأنه خبر رئيسي",
+    "expiresOn": "حتى {{date}}",
+    "expiresNever": "حتى تزيله",
+    "remove": "إزالة",
+    "removeConfirmTitle": "إزالة هذا؟",
+    "removeConfirmBody": "يمكن أن تظهر قصص مثل هذه في خلاصتك مجددًا.",
+    "removeConfirmCta": "إزالة",
+    "removeSuccessTitle": "تمت الإزالة",
+    "removeSuccessBody": "لم تعد مستبعدة من خلاصتك.",
+    "removeFailedTitle": "لم نتمكن من إزالة ذلك",
+    "removeFailedBody": "حاول مرة أخرى.",
+    "addPhrase": "إخفاء شيء",
+    "addPhraseTitle": "أخفِ شيئًا عن خلاصتك",
+    "addPhraseBody": "اكتب كلمة أو عبارة قصيرة. سيبحث Mera عنها في العناوين والقصص، ويبقيها بعيدة عن طريقك. لأي شيء أكثر تحديدًا — فئة كاملة أو مصدر أو شخص — فقط قل ذلك في المحادثة، أو استخدم الإشارات في القصة: Mera يلتقطها من القصة ذاتها، لذا تطابق دائمًا.",
+    "addPhrasePlaceholder": "مثال: أخبار المشاهير",
+    "addPhraseHardLabel": "أبقِها بعيدة عن خلاصتي",
+    "addPhraseHardHint": "Mera يبقيها بعيدة. إذا أصبحت خبرًا رئيسيًا تظهر رغم ذلك، مشار إليها لتعرف السبب. إن لم تُحدّد، Mera يعرضها أقل، وينساها بعد شهر.",
+    "addPhraseSubmit": "أخفِها",
+    "addPhraseSuccessTitle": "تمّ",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" مستبعدة من خلاصتك الآن. فقط الأخبار الرئيسية تمر، وسيقول Mera.",
+    "addPhraseSuccessBodySoft": "ستري أقل بكثير حول \"{{phrase}}\".",
+    "addPhraseFailedTitle": "لم نتمكن من حفظ ذلك",
+    "addPhraseFailedBody": "حاول مرة أخرى.",
+    "emptyTitle": "لم تُخفِ شيئًا بعد",
+    "emptyBody": "عندما تخبر Mera بعدم اهتمامك بشيء، يظهر هنا حتى تتمكن من التراجع عنه.",
+    "emptyFilters": "لم تُخفِ كلمات بعد.",
+    "emptyTopics": "لم تخفّض موضوعات بعد.",
+    "emptySources": "لم تكتم أو تخفّض مصادر بعد."
+  },
+  "headlineDepth": {
+    "title": "أبرز العناوين",
+    "subtitle": "كم عنوانًا يقرأ Mera لك",
+    "intro": "Mera يقرأ أكبر القصص في كل قسم، ثم يختار التي تهمك. ارفع قسمًا لتري المزيد؛ اخفضه ليبقى مضبوطًا.",
+    "worldwide": "عالميًا",
+    "optionLabel": "أفضل {{n}}",
+    "usingDefault": "تستخدم المعيار {{n}}.",
+    "customised": "تغيّر من المعيار {{n}}. اختر {{n}} مرة أخرى للعودة.",
+    "saveFailedTitle": "لم نتمكن من حفظ ذلك",
+    "saveFailedBody": "لم يُحفظ تغييرك. حاول مرة أخرى."
+  },
   "profileHub": {
     "facts": "الحقائق",
     "factsCount_zero": "{{count}} حقيقة تُشكّل موجزك",
@@ -1124,6 +1224,7 @@
     "prefsCount_many": "{{count}} مصدرًا مُعدَّلًا",
     "prefsCount_other": "{{count}} مصدر مُعدَّل",
     "prefsEmpty": "عزّز المصادر أو خفّض أولويتها أو اكتمها",
+    "visitedSubtitle": "المنشورات التي فتحتها مؤخرًا",
     "activity": "النشاط",
     "activitySubtitle": "سجل تغييرات شخصيتك",
     "personaHealth": "صحة الشخصية",
@@ -1133,7 +1234,17 @@
     "healthPending_few": "{{count}} اقتراحات تنظيف",
     "healthPending_many": "{{count}} اقتراح تنظيف",
     "healthPending_other": "{{count}} اقتراح تنظيف",
-    "healthAllHealthy": "كل شيء بحالة جيدة"
+    "healthAllHealthy": "كل شيء بحالة جيدة",
+    "groupKnows": "Mera يعرفك",
+    "groupFeed": "خلاصتك",
+    "groupLibrary": "المصادر والمكتبة",
+    "groupInternals": "تحت الغطاء",
+    "notInterested": "غير مهتم",
+    "notInterestedSubtitle_one": "{{count}} شيء أخفيته",
+    "notInterestedSubtitle_other": "{{count}} أشياء أخفيتها",
+    "notInterestedEmpty": "لم تُخفِ شيئًا بعد",
+    "headlineDepth": "أبرز العناوين",
+    "headlineDepthSubtitle": "كم عنوانًا يقرأ Mera في كل قسم"
   },
   "profile": {
     "talkToMera": "تحدّث مع Mera",
@@ -1174,7 +1285,8 @@
     "kindMute": "كتم",
     "clear": "مسح",
     "clearA11y": "مسح التفضيل",
-    "empty": "لم تُعدّل أي مصادر بعد. عزّز منشورًا أو خفّض أولويته أو اكتمه من أي مقالة لتراه هنا."
+    "empty": "لم تُعدّل أي مصادر بعد. عزّز منشورًا أو خفّض أولويته أو اكتمه من أي مقالة لتراه هنا.",
+    "scopeKindCountry": "دولة"
   },
   "optimisationPlan": {
     "notificationTitle": "ضبط موجزك اليومي جاهز",
@@ -1194,5 +1306,40 @@
     "appliedToast": "تم تطبيق {{count}} تغيير",
     "appliedTitle": "تم ضبط الموجز",
     "empty": "لا يوجد ما يجب ضبطه الآن."
+  },
+  "pin": {
+    "lockTitle": "أدخل رقم PIN الخاص بك",
+    "lockSubtitle": "أدخل رقم PIN المكون من 4 أرقام لفتح Mera",
+    "incorrect": "رقم PIN غير صحيح. حاول مجددًا.",
+    "lockedTryAgain": "محاولات كثيرة. حاول في {{time}}",
+    "forgot": "هل نسيت رقم PIN؟",
+    "forgotTitle": "أعد تعيين رقم PIN الخاص بك",
+    "forgotBody": "لإعادة تعيين رقم PIN، سجّل الدخول مرة أخرى برمز بريد إلكتروني لمرة واحدة. البيانات المحفوظة تبقى على هذا الجهاز.",
+    "forgotOffline": "إعادة تعيين رقم PIN تحتاج لاتصال إنترنت لإرسال رمز تسجيل الدخول. تّصل بالإنترنت وحاول مرة أخرى.",
+    "forgotConfirm": "سجّل الدخول لإعادة التعيين",
+    "setupTitle": "عيّن رقم PIN",
+    "setupSubtitle": "اختر رقم PIN مكون من 4 أرقام لحماية التطبيق على هذا الجهاز",
+    "confirmTitle": "أكّد رقم PIN الخاص بك",
+    "confirmSubtitle": "أعد إدخال رقم PIN المكون من 4 أرقام",
+    "mismatch": "أرقام PIN لا تتطابق. ابدأ من جديد."
+  },
+  "security": {
+    "title": "الأمان",
+    "subtitle": "اختر ما إذا كان Mera يطلب رقم PIN على هذا الجهاز",
+    "requirePinTitle": "طلب رقم PIN لفتح التطبيق",
+    "requirePinDescription": "طلب رقم PIN مكون من 4 أرقام عند فتح Mera",
+    "setPinTitle": "عيّن رقم PIN",
+    "setPinSubtitle": "اختر رقم PIN مكون من 4 أرقام لفتح Mera على هذا الجهاز",
+    "lockEnabledTitle": "فتح PIN مفعّل",
+    "lockEnabledDescription": "ستدخل رقم PIN الخاص بك عند فتح Mera.",
+    "lockDisabledTitle": "فتح PIN معطّل",
+    "lockDisabledDescription": "سيفتح Mera بدون رقم PIN. تم حذف رقم PIN الخاص بك.",
+    "changePin": "غيّر رقم PIN",
+    "verifyCurrentTitle": "أدخل رقم PIN الحالي",
+    "verifyCurrentSubtitle": "أكّد رقم PIN الحالي للمتابعة",
+    "newPinTitle": "عيّن رقم PIN جديد",
+    "newPinSubtitle": "اختر رقم PIN جديد مكون من 4 أرقام",
+    "pinChangedTitle": "تم تحديث رقم PIN",
+    "pinChangedDescription": "تم تغيير رقم PIN الخاص بك."
   }
 }

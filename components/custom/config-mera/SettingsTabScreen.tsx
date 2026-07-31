@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -27,7 +28,18 @@ const SettingsTabScreen: React.FC = () => {
     const { t } = useTranslation();
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
+        // below, so it spans the FULL screen including the safe areas — an
+        // absolute fill resolves against its parent's CONTENT box, so mounting it
+        // inside the padded box left a black strip in the inset.
+        <Box className="flex-1">
+            {/* App-wide tab background. Must be the FIRST child so it paints
+                behind everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* No opaque fill: the backdrop above is the page background. */}
+            <Box className="flex-1" style={{ paddingTop: insets.top }}>
+
             <HStack className="items-start justify-between px-5 pt-4 mb-2">
                 <Heading size="3xl" className="text-white" numberOfLines={1}>
                     {t('tabs.settings')}
@@ -41,6 +53,7 @@ const SettingsTabScreen: React.FC = () => {
             >
                 <AppPreferencesTab />
             </ScrollView>
+        </Box>
         </Box>
     );
 };

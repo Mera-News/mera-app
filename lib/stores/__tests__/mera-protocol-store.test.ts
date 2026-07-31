@@ -29,7 +29,7 @@ import {
     useProcessingMode,
     useIsOnDeviceProcessing,
     useInjectNoise,
-    useUseLegacyPersonaUpdate,
+    useRelevanceV2,
     useSelectedModelId,
     useModelState,
     useDownloadProgress,
@@ -47,7 +47,7 @@ import logger from '@/lib/logger';
 const initialState = {
     processingMode: ProcessingMode.Cloud,
     injectNoise: false,
-    useLegacyPersonaUpdate: false,
+    relevanceV2: false,
     selectedModelId: 'mera-qwen3.5-4b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
@@ -71,7 +71,7 @@ describe('useMeraProtocolStore', () => {
         const state = useMeraProtocolStore.getState();
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
-        expect(state.useLegacyPersonaUpdate).toBe(false);
+        expect(state.relevanceV2).toBe(false);
         expect(state.selectedModelId).toBe('mera-qwen3.5-4b');
         expect(state.modelState).toBe('not_downloaded');
         expect(state.isProcessing).toBe(false);
@@ -120,22 +120,29 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().injectNoise).toBe(true);
     });
 
-    // ── setUseLegacyPersonaUpdate ─────────────────────────────────────────────
+    // ── setRelevanceV2 ───────────────────────────────────────────────────────
 
-    it('setUseLegacyPersonaUpdate true persists "true" string', async () => {
-        useMeraProtocolStore.getState().setUseLegacyPersonaUpdate(true);
+    it('setRelevanceV2 true persists "true" string', async () => {
+        useMeraProtocolStore.getState().setRelevanceV2(true);
 
-        expect(useMeraProtocolStore.getState().useLegacyPersonaUpdate).toBe(true);
+        expect(useMeraProtocolStore.getState().relevanceV2).toBe(true);
         await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_legacy_persona_update', 'true');
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v2', 'true');
     });
 
-    it('setUseLegacyPersonaUpdate false persists "false" string', async () => {
-        useMeraProtocolStore.getState().setUseLegacyPersonaUpdate(false);
+    it('setRelevanceV2 false persists "false" string', async () => {
+        useMeraProtocolStore.getState().setRelevanceV2(false);
 
-        expect(useMeraProtocolStore.getState().useLegacyPersonaUpdate).toBe(false);
+        expect(useMeraProtocolStore.getState().relevanceV2).toBe(false);
         await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_legacy_persona_update', 'false');
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v2', 'false');
+    });
+
+    it('setRelevanceV2 silently swallows DB errors', async () => {
+        mockSetSetting.mockRejectedValueOnce(new Error('db'));
+        useMeraProtocolStore.getState().setRelevanceV2(true);
+        await new Promise((r) => setImmediate(r));
+        expect(useMeraProtocolStore.getState().relevanceV2).toBe(true);
     });
 
     // ── setSelectedModelId ───────────────────────────────────────────────────
@@ -234,6 +241,7 @@ describe('useMeraProtocolStore', () => {
         useMeraProtocolStore.setState({
             processingMode: ProcessingMode.OnDevice,
             injectNoise: true,
+            relevanceV2: true,
             selectedModelId: 'custom',
             isProcessing: true,
         });
@@ -243,6 +251,7 @@ describe('useMeraProtocolStore', () => {
         const state = useMeraProtocolStore.getState();
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
+        expect(state.relevanceV2).toBe(false);
         expect(state.selectedModelId).toBe('mera-qwen3.5-4b');
         expect(state.isProcessing).toBe(false);
 
@@ -251,6 +260,9 @@ describe('useMeraProtocolStore', () => {
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_protocol_enabled');
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_selected_model_id');
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_inject_noise');
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_relevance_v2');
+        // The retired legacy-persona key is still swept so devices that
+        // persisted it don't keep an orphaned row.
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_legacy_persona_update');
         expect(mockDeleteSetting).toHaveBeenCalledWith('e2ee_enabled');
     });
@@ -362,30 +374,33 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().injectNoise).toBe(false);
     });
 
-    it('hydrateFromDb sets useLegacyPersonaUpdate=true from DB', async () => {
+    it('hydrateFromDb sets relevanceV2=true from DB', async () => {
         mockGetSetting
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce('true'); // mera_legacy_persona_update
+            .mockResolvedValueOnce('true'); // mera_relevance_v2
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
-        expect(useMeraProtocolStore.getState().useLegacyPersonaUpdate).toBe(true);
+        expect(useMeraProtocolStore.getState().relevanceV2).toBe(true);
     });
 
-    it('hydrateFromDb does not set useLegacyPersonaUpdate when stored value is not "true"', async () => {
+    // The two-branch form matters: a one-branch `=== 'true'` hydrate would
+    // silently ignore a persisted 'false' if the default ever flipped to true.
+    it('hydrateFromDb sets relevanceV2=false from DB', async () => {
+        useMeraProtocolStore.setState({ relevanceV2: true });
         mockGetSetting
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce('false'); // not "true" — should remain false
+            .mockResolvedValueOnce('false'); // mera_relevance_v2
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
-        expect(useMeraProtocolStore.getState().useLegacyPersonaUpdate).toBe(false);
+        expect(useMeraProtocolStore.getState().relevanceV2).toBe(false);
     });
 
     it('hydrateFromDb does not call set() when all values are null', async () => {
@@ -449,9 +464,9 @@ describe('useMeraProtocolStore', () => {
         expect(result.current).toBe(true);
     });
 
-    it('useUseLegacyPersonaUpdate returns current useLegacyPersonaUpdate value', () => {
-        useMeraProtocolStore.setState({ useLegacyPersonaUpdate: true });
-        const { result } = renderHook(() => useUseLegacyPersonaUpdate());
+    it('useRelevanceV2 returns current relevanceV2 value', () => {
+        useMeraProtocolStore.setState({ relevanceV2: true });
+        const { result } = renderHook(() => useRelevanceV2());
         expect(result.current).toBe(true);
     });
 

@@ -23,6 +23,7 @@
     "home": "홈"
   },
   "auth": {
+    "reauthBanner": "동기화하려면 다시 로그인해 주세요",
     "emailPlaceholder": "이메일 주소를 입력하세요",
     "otpPlaceholder": "6자리 코드를 입력하세요",
     "codeSentTitle": "코드가 발송되었습니다!",
@@ -184,6 +185,7 @@
       "completedMessage": "피드가 준비되었습니다"
     },
     "analysingProgress": "{{total}}개 중 {{done}}개 기사 분석 중",
+    "waitingForNextBatch_one": "{{count}}개의 새 기사가 다음 분석 배치를 기다리고 있습니다",
     "waitingForNextBatch_other": "새 기사 {{count}}건이 다음 분석 배치를 기다리고 있습니다",
     "dailyLimit": {
       "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
@@ -199,6 +201,10 @@
     "irrelevant": "무관",
     "unprocessed": "미처리"
   },
+  "aiDisclosure": {
+    "caption": "AI 생성 메모",
+    "short": "AI 생성"
+  },
   "articleDetail": {
     "readArticle": "기사 읽기",
     "relatedArticles": "관련 기사",
@@ -206,6 +212,7 @@
     "storyUnavailable": "이 스토리는 더 이상 이용할 수 없습니다",
     "failedToLoad": "기사를 불러오지 못했습니다",
     "articleNotFound": "기사를 찾을 수 없습니다",
+    "offlineUnavailable": "오프라인 상태입니다. 이 기사는 오프라인 읽기를 위해 저장되지 않았습니다",
     "viewOriginal": "원본 기사 보기",
     "viewOriginalIn": "{{language}}로 원본 기사 보기",
     "viewAndTranslateOnDevice": "기사를 보고 기기에서 번역하기",
@@ -349,6 +356,10 @@
     "injectNoiseTitle": "노이즈 주입",
     "injectNoiseDescription": "실제 관심사와 함께 디코이 토픽을 제출하여 백엔드가 토픽 목록으로 신원을 추적하지 못하도록 합니다. 디코이 토픽에만 일치하는 기사는 사용자에게 도달하기 전에 제거됩니다.",
     "injectNoiseBeta": "베타: 토픽 생성 속도가 느려지고 피드 관련성이 낮아질 수 있습니다.",
+    "relevanceV2Title": "관련성 가져오기 v2 사용",
+    "relevanceV2On": "기기에서 채점, 뉴스가 발생한 위치가 중요함",
+    "relevanceV2Off": "클라우드에서 채점, 원래 방법 사용",
+    "relevanceV2Description": "베타 — 클라우드 모델만 사용하는 대신 뉴스가 발생한 위치와 이벤트 종류를 사용하여 기기에서 기사를 채점합니다. 위치 태그가 있는 기사가 필요하므로 처음에는 변화가 거의 없을 수 있습니다. 언제든 끌 수 있으며 이전 방식으로 돌아갈 수 있습니다.",
     "privacyTitle": "데이터는 비공개로 유지됩니다",
     "privacyDescription": "Mera Protocol은 항상 켜져 있습니다. 기기 내 모드에서는 추론이 휴대폰에서 완전히 오프라인으로 실행됩니다. 클라우드 모드에서는 종단 간 암호화된 추론을 사용합니다. 데이터는 기기에서 암호화되어, 저희가 들여다볼 수 없는 보안 엔클레이브 안에서만 복호화됩니다. 회원님의 개인적 사실, 프로필, 읽은 기록은 이 기기를 절대 떠나지 않습니다. 뉴스를 가져올 때는 넓은 주제 문구만 보내며, 사용자 ID는 전혀 포함되지 않습니다.",
     "deviceSupported": "기기 지원됨",
@@ -575,6 +586,7 @@
     "newChat": "새 채팅",
     "inputPlaceholder": "메시지를 입력하세요...",
     "viewPreviousMessages": "이전 메시지 보기",
+    "aiInteractionNotice": "대화 상대는 사람이 아니라 AI 어시스턴트인 Mera입니다.",
     "aiUsageNotice": "이 어시스턴트는 뉴스 환경설정을 설정하는 데 도움을 줍니다. 이를 조작하거나 악용하려고 하면 검토가 완료될 때까지 계정이 차단될 수 있습니다.",
     "requestUnblock": {
       "button": "차단 해제 요청",
@@ -626,10 +638,16 @@
     "actionShowMoreTopic": "주제 더 보기",
     "actionDownRank": "주제 순위 낮추기",
     "actionPublicationPref": "발행사 조정",
+    "actionPublicationBoost": "출판사에서 더 보기",
+    "actionPublicationDeprioritize": "출판사에서 덜 보기",
+    "actionPublicationMute": "출판사 음소거",
+    "actionSourceScopeBoost": "국가의 소스에서 더 보기",
+    "actionSourceScopeDeprioritize": "국가의 소스에서 덜 보기",
     "actionSuppress": "문구 필터링",
     "actionPinTopic": "주제 고정",
     "actionUnpinTopic": "주제 고정 해제",
     "actionRetireTopic": "주제 제거",
+    "actionRetireSuppression": "필터 제거",
     "chooseOneHint": "옵션 하나 선택"
   },
   "publicationVisits": {
@@ -797,6 +815,8 @@
     "askMera": "Mera에게 묻기",
     "closeTree": "닫기",
     "treeThanks": "감사합니다. 반영했어요.",
+    "feedbackCaption": "엄지손가락만으로는 Mera에게 충분한 정보를 전달하지 못합니다. 따라서 피드를 건강하게 유지하기 위해 버려집니다. 이유를 하나 선택하면 피드가 즉시 변합니다.",
+    "tapAgainToConfirm": "다시 한 번 탭하여 확인하세요",
     "chatHandoffLike": "이 소식이 마음에 들었어요. 이런 소식 더 보고 싶어요: {{path}}.",
     "chatHandoffLikeNoPath": "이 소식이 마음에 들었어요. 이런 소식을 더 보고 싶어요.",
     "chatHandoffDislike": "이 소식이 마음에 들지 않았어요: {{path}}.",
@@ -806,16 +826,24 @@
     "title": "탐색",
     "scopeWorld": "전 세계",
     "noArticles": "기사를 찾을 수 없습니다",
-    "addPlaces": "위치 추가"
+    "addPlaces": "위치 추가",
+    "offlineUnavailable": "오프라인 상태입니다. 탐색 탭에는 인터넷 연결이 필요합니다"
   },
   "forYou": {
     "sectionPrefix": "관련 뉴스:",
     "breaking": "속보",
     "showMore": "{{count}}개 더 보기",
+    "viewAllArticles_one": "{{count}}개 기사 모두 보기",
     "subTabFeed": "종합",
     "subTabStories": "스토리",
     "subTabSaved": "저장됨",
-    "viewAllArticles_other": "{{count}}개 기사 모두 보기"
+    "viewAllArticles_other": "{{count}}개 기사 모두 보기",
+    "headlineSectionGlobal": "전 세계 뉴스",
+    "headlineSectionCountry": "{{country}} 뉴스",
+    "headlineDenominator_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
+    "headlineDenominator_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
+    "headlineDenominatorNone_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
+    "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다."
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -851,6 +879,7 @@
     "emptyCta": "피드로 이동",
     "trackChatSeed": "이 스토리를 팔로우하고 싶어요.",
     "trackProposalTitle": "이 스토리를 팔로우할까요?",
+    "articleCount_one": "{{count}}개 기사",
     "articleCount_other": "{{count}}개 기사",
     "articleCountCapped": "{{count}}개 이상 기사",
     "alreadyTrackingTitle": "이미 팔로우 중입니다",
@@ -933,7 +962,9 @@
       "unknown": "페르소나 변경",
       "hygieneDeleteFact": "정보 삭제",
       "addLocation": "위치 추가",
-      "deleteLocation": "위치 삭제"
+      "deleteLocation": "위치 삭제",
+      "retireSuppression": "필터를 제거했습니다",
+      "setSourceScopePref": "소스 범위를 조정했습니다"
     }
   },
   "calibration": {
@@ -1006,6 +1037,7 @@
   },
   "hygiene": {
     "notificationTitle": "관심사를 정리할까요?",
+    "notificationBody_one": "Mera가 프로필을 위한 {{count}}개의 정리를 찾았습니다.",
     "notificationBody_other": "Mera가 회원님의 프로필에서 {{count}}개의 정리 항목을 찾았습니다.",
     "reviewChip": "검토",
     "title": "페르소나 상태",
@@ -1023,6 +1055,7 @@
     "appliedBody": "프로필이 정리되었습니다. 변경 기록에서 확인해 보세요.",
     "applyFailedTitle": "정리를 적용하지 못했습니다",
     "applyFailedBody": "나중에 다시 시도해 주세요.",
+    "profileRow_one": "페르소나 상태 · {{count}}개 제안",
     "profileRow_other": "페르소나 상태 · 제안 {{count}}개"
   },
   "locations": {
@@ -1071,8 +1104,80 @@
     "deleteFailedTitle": "장소를 제거하지 못했습니다",
     "deleteFailedBody": "다시 시도해 주세요."
   },
+  "notInterested": {
+    "title": "관심 없음",
+    "subtitle": "Mera에서 피드를 벗어나도록 요청한 내용",
+    "sectionFilters": "숨긴 단어와 사항",
+    "sectionTopics": "덜 보고 싶은 주제",
+    "sectionSources": "음소거했거나 순위를 낮춘 소스",
+    "managePublications": "소스 환경설정 관리",
+    "chatHint": "여기 올 필요가 없습니다. Mera에 보고 싶지 않은 것을 말하기만 하면 됩니다 — \"연예인 가십은 덜\"이라고 하면 나머지는 알아서 처리합니다.",
+    "kinds": {
+      "keyword": "단어",
+      "category": "카테고리",
+      "event_type": "스토리 종류",
+      "entity": "사람 또는 사물",
+      "place": "장소",
+      "publication": "소스",
+      "topic": "주제"
+    },
+    "sources": {
+      "user": "직접 추가함",
+      "chat": "Mera와의 채팅에서",
+      "feedback": "사용자 피드백에서",
+      "digest": "일일 리뷰에서",
+      "qa": "Mera의 질문에서",
+      "unknown": "자동으로 추가됨"
+    },
+    "badgeBlocked": "제외됨",
+    "badgeShownLess": "덜 표시됨",
+    "badgeMutedTopic": "덜 표시됨",
+    "badgeDownranked": "순위 낮춤",
+    "badgeMutedPub": "음소거됨",
+    "mutedPubHint": "제외됨(주요 뉴스 제외)",
+    "cardExemptLabel": "\"{{filter}}\"를 필터링했습니다 — 주요 뉴스이므로 표시합니다",
+    "expiresOn": "{{date}}까지",
+    "expiresNever": "제거할 때까지",
+    "remove": "제거",
+    "removeConfirmTitle": "제거할까요?",
+    "removeConfirmBody": "이와 같은 스토리가 피드에 다시 나타날 수 있습니다.",
+    "removeConfirmCta": "제거",
+    "removeSuccessTitle": "제거됨",
+    "removeSuccessBody": "더 이상 피드에서 제외되지 않습니다.",
+    "removeFailedTitle": "제거할 수 없습니다",
+    "removeFailedBody": "다시 시도해 주세요.",
+    "addPhrase": "무언가 숨기기",
+    "addPhraseTitle": "피드에서 무언가 숨기기",
+    "addPhraseBody": "단어나 짧은 문구를 입력하세요. Mera가 제목과 스토리에서 검색하여 피드에서 제외합니다. 더 구체적인 경우 — 전체 카테고리, 소스, 사람 등 — 채팅에서 말하거나 스토리에서 엄지손가락을 사용하세요. Mera가 스토리 자체에서 선택하므로 항상 일치합니다.",
+    "addPhrasePlaceholder": "예: 연예인 가십",
+    "addPhraseHardLabel": "피드에서 제외",
+    "addPhraseHardHint": "Mera가 이를 제외합니다. 주요 뉴스가 되면 여전히 표시되며, 이유를 알 수 있도록 표시됩니다. 비활성화하면 Mera는 덜 보여주고 한 달 후 잊습니다.",
+    "addPhraseSubmit": "숨기기",
+    "addPhraseSuccessTitle": "완료",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\"가 피드에서 제외되었습니다. 주요 뉴스만 통과하며 Mera가 알려줍니다.",
+    "addPhraseSuccessBodySoft": "\"{{phrase}}\"에 대해 훨씬 덜 보게 됩니다.",
+    "addPhraseFailedTitle": "저장할 수 없습니다",
+    "addPhraseFailedBody": "다시 시도해 주세요.",
+    "emptyTitle": "아직 숨긴 것이 없습니다",
+    "emptyBody": "Mera에 관심 없는 것을 알려주면 여기 표시되어 실행 취소할 수 있습니다.",
+    "emptyFilters": "아직 단어를 숨기지 않았습니다.",
+    "emptyTopics": "아직 순위를 낮춘 주제가 없습니다.",
+    "emptySources": "아직 음소거했거나 순위를 낮춘 소스가 없습니다."
+  },
+  "headlineDepth": {
+    "title": "주요 뉴스",
+    "subtitle": "Mera가 당신을 위해 읽는 수",
+    "intro": "Mera는 각 섹션의 가장 큰 스토리를 읽은 다음 당신에게 중요한 것을 선택합니다. 섹션을 높여 더 보기; 낮춰서 간결하게 유지하세요.",
+    "worldwide": "전 세계",
+    "optionLabel": "상위 {{n}}",
+    "usingDefault": "표준 {{n}}을 사용 중입니다.",
+    "customised": "표준 {{n}}에서 변경됨. {{n}}을 다시 선택하여 돌아가세요.",
+    "saveFailedTitle": "저장할 수 없습니다",
+    "saveFailedBody": "변경사항이 저장되지 않았습니다. 다시 시도해 주세요."
+  },
   "profileHub": {
     "facts": "정보",
+    "factsCount_one": "{{count}}개의 사실이 피드를 형성합니다",
     "factsCount_other": "피드에 영향을 주는 정보 {{count}}개",
     "factsEmpty": "Mera가 알아야 할 내용을 탭하여 추가하세요",
     "locations": "위치",
@@ -1082,13 +1187,26 @@
     "saved": "저장됨",
     "savedSubtitle": "나중에 볼 기사",
     "preferences": "소스 선호도",
+    "prefsCount_one": "{{count}}개 소스 조정됨",
     "prefsCount_other": "조정된 소스 {{count}}개",
     "prefsEmpty": "소스를 부스트, 낮추기 또는 음소거하세요",
+    "visitedSubtitle": "최근에 열어본 출판사",
     "activity": "활동",
     "activitySubtitle": "페르소나 변경 기록",
     "personaHealth": "페르소나 상태",
+    "healthPending_one": "{{count}}개 정리 제안",
     "healthPending_other": "정리 제안 {{count}}개",
-    "healthAllHealthy": "모두 양호"
+    "healthAllHealthy": "모두 양호",
+    "groupKnows": "Mera가 당신을 알고 있습니다",
+    "groupFeed": "당신의 피드",
+    "groupLibrary": "소스 & 라이브러리",
+    "groupInternals": "내부 기능",
+    "notInterested": "관심 없음",
+    "notInterestedSubtitle_one": "{{count}}개 숨긴 사항",
+    "notInterestedSubtitle_other": "{{count}}개 숨긴 사항",
+    "notInterestedEmpty": "아직 숨긴 것이 없습니다",
+    "headlineDepth": "주요 뉴스",
+    "headlineDepthSubtitle": "Mera가 섹션당 읽는 수"
   },
   "profile": {
     "talkToMera": "Mera와 대화하기",
@@ -1129,7 +1247,8 @@
     "kindMute": "음소거",
     "clear": "지우기",
     "clearA11y": "선호도 지우기",
-    "empty": "아직 조정한 소스가 없습니다. 기사에서 발행사를 부스트, 낮추기 또는 음소거하면 여기에 표시됩니다."
+    "empty": "아직 조정한 소스가 없습니다. 기사에서 발행사를 부스트, 낮추기 또는 음소거하면 여기에 표시됩니다.",
+    "scopeKindCountry": "국가"
   },
   "optimisationPlan": {
     "notificationTitle": "오늘의 피드 조정이 준비되었습니다",
@@ -1149,5 +1268,40 @@
     "appliedToast": "{{count}}건의 변경 사항이 적용되었습니다",
     "appliedTitle": "피드가 조정되었습니다",
     "empty": "지금은 조정할 사항이 없습니다."
+  },
+  "pin": {
+    "lockTitle": "PIN 입력",
+    "lockSubtitle": "Mera의 잠금을 해제하려면 4자리 PIN을 입력하세요",
+    "incorrect": "PIN이 올바르지 않습니다. 다시 시도해 주세요.",
+    "lockedTryAgain": "시도 횟수가 많습니다. {{time}} 후에 다시 시도해 주세요",
+    "forgot": "PIN을 잊으셨나요?",
+    "forgotTitle": "PIN 재설정",
+    "forgotBody": "PIN을 재설정하려면 일회용 이메일 코드로 다시 로그인하세요. 저장된 데이터는 이 기기에 유지됩니다.",
+    "forgotOffline": "PIN을 재설정하려면 로그인 코드를 보내기 위해 인터넷 연결이 필요합니다. 인터넷에 연결하고 다시 시도해 주세요.",
+    "forgotConfirm": "로그인하여 재설정",
+    "setupTitle": "PIN 설정",
+    "setupSubtitle": "이 기기에서 앱을 보호할 4자리 PIN을 선택하세요",
+    "confirmTitle": "PIN 확인",
+    "confirmSubtitle": "4자리 PIN을 다시 입력하세요",
+    "mismatch": "PIN이 일치하지 않습니다. 다시 시작하세요."
+  },
+  "security": {
+    "title": "보안",
+    "subtitle": "Mera가 이 기기에서 PIN을 요청할지 선택하세요",
+    "requirePinTitle": "잠금 해제에 PIN 필요",
+    "requirePinDescription": "Mera를 열 때 4자리 PIN을 요청합니다",
+    "setPinTitle": "PIN 설정",
+    "setPinSubtitle": "이 기기에서 Mera의 잠금을 해제할 4자리 PIN을 선택하세요",
+    "lockEnabledTitle": "PIN 잠금 활성화",
+    "lockEnabledDescription": "Mera를 열 때 PIN을 입력합니다.",
+    "lockDisabledTitle": "PIN 잠금 비활성화",
+    "lockDisabledDescription": "Mera가 PIN 없이 열립니다. PIN이 제거되었습니다.",
+    "changePin": "PIN 변경",
+    "verifyCurrentTitle": "현재 PIN 입력",
+    "verifyCurrentSubtitle": "계속하려면 현재 PIN을 확인하세요",
+    "newPinTitle": "새 PIN 설정",
+    "newPinSubtitle": "새 4자리 PIN을 선택하세요",
+    "pinChangedTitle": "PIN 업데이트됨",
+    "pinChangedDescription": "PIN이 변경되었습니다."
   }
 }

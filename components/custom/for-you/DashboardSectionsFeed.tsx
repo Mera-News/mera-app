@@ -2,6 +2,8 @@ import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
+import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominatorLine';
+import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -9,6 +11,7 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
+  isHeadlineRow,
   isSuggestionOpened,
   type BreakingCardData,
   type FactRow,
@@ -16,12 +19,15 @@ import {
 } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
+import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
+  useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -48,6 +54,13 @@ interface SectionItem {
   preview: FactRowGroup[];
   /** TOTAL articles in the section (header pill + closing row). */
   total: number;
+  /** Resolved display title — the fact statement, or the localized headline
+   *  scope title. Computed once here so the header, the "View all" route param
+   *  and the destination screen all show the same string. */
+  title: string;
+  /** True for the two headline section kinds: adds the denominator line and
+   *  drops the "News about:" prefix / dynamic translation of the title. */
+  headline: boolean;
 }
 
 interface DashboardSectionsFeedProps {
@@ -95,6 +108,21 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   onRefresh,
 }) => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+
+  // Re-tap the Dashboard tab icon → scroll to top; tap again at the top →
+  // refresh. Wired HERE rather than in ForYouScreen because this is where the
+  // list ref lives — mirrors how `scrollHandler` is already threaded down.
+  // `onRefresh` is the prop ForYouScreen already passes to the RefreshControl
+  // (useFeedSyncRefresh), so the two paths are literally the same function.
+  const listRef = useRef<Animated.FlatList<SectionItem>>(null);
+  const lastOffsetShared = useSharedValue(0);
+  useTabPressScrollRefresh({
+    listRef,
+    getOffset: () => lastOffsetShared.value,
+    onRefresh,
+    isRefreshing: !!refreshing,
+  });
   // Section content order: the SAME rule the Feed tab uses
   // (lib/feed-ordering/priority-order) — unviewed high→med→low, then viewed
   // high→med→low — so a story cannot be ranked differently on the two screens.
@@ -124,34 +152,47 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         row,
         preview: ordered.slice(0, SECTION_PREVIEW_COUNT),
         total: row.groups.length,
+        title: sectionTitle(t, row),
+        headline: isHeadlineRow(row),
       });
     }
     return data;
-  }, [rows, sortSnapshot]);
+  }, [rows, sortSnapshot, t]);
 
-  const openFactFeed = useCallback((row: FactRow) => {
+  const openFactFeed = useCallback((row: FactRow, title: string) => {
     router.push({
       pathname: '/logged-in/fact-feed',
       params: {
         factId: row.factId,
-        statement: row.statement,
+        statement: title,
       },
     });
   }, []);
 
   // Compose the collapsible-header handler with a scroll-tick notifier (drives
   // deferred TranslatableDynamic translation as items enter the viewport).
+  //
+  // The raw offset is mirrored into a shared value in the SAME worklet rather
+  // than via a second, plain-JS `onScroll` — the list already routes onScroll
+  // through `useComposedEventHandler`, and adding a JS handler alongside it
+  // would have the two fight over the prop. UI thread only: no bridge crossing,
+  // no re-render.
   const tickHandler = useAnimatedScrollHandler({
-    onScroll: () => {
+    onScroll: (e) => {
       runOnJS(notifyScrollTick)();
+      lastOffsetShared.value = e.contentOffset.y;
     },
   });
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
     ({ item }: { item: SectionItem }) => {
-      const { row, preview, total } = item;
-      const open = () => openFactFeed(row);
+      const { row, preview, total, title, headline } = item;
+      const open = () => openFactFeed(row, title);
+      // The ONLY zero-card section is a headline section where nothing cleared
+      // the bar; its denominator line is the content, so it gets no header
+      // affordance and no "View all" row pointing at an empty list.
+      const canOpen = total > 0;
       return (
         // ONE gradient panel per section, wrapping header + cards + closing
         // pill, so the pastel ink groups the whole section and the next section
@@ -160,11 +201,18 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // already expected it.
         <SectionGradientPanel factId={row.factId} style={{ marginTop: 16, marginBottom: 8 }}>
           <FactSectionHeader
-            title={row.statement}
+            title={title}
             eventType={row.groups[0]?.data.eventType ?? null}
             total={total}
-            onPress={open}
+            onPress={canOpen ? open : undefined}
+            // A headline section is not "News about:" anything, and its title is
+            // app copy that is already in the reader's language.
+            prefix={headline ? null : undefined}
+            translateTitle={!headline}
           />
+          {headline && (
+            <SectionDenominatorLine read={row.headlineReadCount ?? 0} shown={total} />
+          )}
           <Box className="px-2">
             {preview.map((group) => (
               <ArticleSuggestionCompactCard
@@ -178,7 +226,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
           </Box>
           {/* Closing row: plain "View all N articles" + chevron in the section
               title's type style — NOT a second pill. */}
-          <SectionViewAllText total={total} onPress={open} />
+          {canOpen && <SectionViewAllText total={total} onPress={open} />}
         </SectionGradientPanel>
       );
     },
@@ -196,6 +244,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   return (
     <Box className="flex-1" testID="dashboard-sections-feed-root">
       <Animated.FlatList
+        ref={listRef}
         testID="dashboard-feed-list"
         data={sectionData}
         keyExtractor={(it) => it.key}

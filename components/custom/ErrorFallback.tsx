@@ -17,7 +17,10 @@ export const FullScreenErrorFallback: React.FC<ErrorFallbackProps> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <View className="flex-1 bg-black items-center justify-center px-6">
+    // No opaque fill. This renders INSIDE the route that failed, so it inherits
+    // whatever page background that route mounts (the AbstractGradientBackdrop
+    // on every screen that has one). `bg-black` here punched a hole through it.
+    <View className="flex-1 items-center justify-center px-6">
       <MaterialIcons name="error-outline" size={64} color="#EF4444" />
       <Text className="text-white text-xl font-semibold mt-6 text-center">
         {t('errors.somethingWentWrong')}

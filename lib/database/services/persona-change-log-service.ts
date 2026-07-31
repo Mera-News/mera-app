@@ -20,6 +20,12 @@ import * as suppressionService from './suppression-service';
 import * as publicationPreferenceService from './publication-preference-service';
 import type { PublicationPrefKind } from './publication-preference-service';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
+import {
+  markFeedNeedsRefresh,
+  runSweepFor,
+  sweepForRevert,
+  type SweepDecisionInput,
+} from './persona-mutation-sweeps';
 
 const changeLogCollection = database.get<PersonaChangeLogModel>('persona_change_log');
 const factsCollection = database.get<FactModel>('facts');
@@ -121,8 +127,29 @@ function requireBooleanBefore(action: ChangeLogAction, rowId: string): boolean {
 }
 
 /**
+ * Was this suppression row a HARD filter? Reads the row rather than the log,
+ * because `add_suppression`/`retire_suppression` entries record kind/value but
+ * not strength. A row that no longer exists can't have excluded anything, so
+ * a miss is `false` — never a throw, since this only informs the sweep.
+ */
+async function suppressionWasHard(suppressionId: string): Promise<boolean> {
+  try {
+    const all = await suppressionService.getAll();
+    const found = all.find((s) => s.id === suppressionId);
+    return !!found && found.strength >= suppressionService.HARD_SUPPRESSION_STRENGTH;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Reverts a logged persona mutation by applying its inverse, marks the row
- * `reverted`, and appends a `revert_change` entry (source 'user').
+ * `reverted`, appends a `revert_change` entry (source 'user'), and then runs
+ * whatever retroactive feed sweep the undo requires (D12) plus the feed-dirty
+ * flag (D18) — the same reconciliation the persona-action-executor seam does,
+ * via the same shared policy module. A revert is a persona mutation like any
+ * other; skipping this is what let an undone hard filter leave its purged
+ * articles gone for the rest of the 48h window.
  *
  * Implemented inversions:
  *   set_topic_weight / set_fact_weight / set_location_weight → restore `before`
@@ -131,6 +158,8 @@ function requireBooleanBefore(action: ChangeLogAction, rowId: string): boolean {
  *   set_high_priority  → restore the prior boolean flag
  *   add_negative_topic → retire the created (negative) topic
  *   add_suppression    → retire the created suppression
+ *   retire_suppression → reactivate the suppression (D5: removing a filter is
+ *                        an audited, undoable mutation, not a silent delete)
  *   suppress_topic     → reactivate the topic (forward-compat)
  *   set_publication_pref → restore the prior pref kind (or clear if it was none)
  * Anything else throws — later waves extend this switch as new action types
@@ -140,6 +169,12 @@ export async function revertChange(changeLogId: string): Promise<void> {
   const row = await changeLogCollection.find(changeLogId);
   if (row.reverted) return;
   const action = parseAction(row);
+
+  // D12 + D18. A revert is a persona mutation like any other, so it owes the
+  // feed the same reconciliation the forward path does. Described in FORWARD
+  // terms — `sweepForRevert` mirrors it — so a new action type can never be
+  // wired into one path and forgotten in the other.
+  const sweepInput: SweepDecisionInput = { actionType: row.actionType };
 
   switch (row.actionType) {
     case 'set_topic_weight': {
@@ -175,6 +210,14 @@ export async function revertChange(changeLogId: string): Promise<void> {
       break;
     }
     case 'retire_topic': {
+      // ACCEPTED DRIFT: `reactivate` restores status 'active', not whatever the
+      // row held before. Removing a NEGATIVE topic routes through retire_topic
+      // (there is no retire_negative_topic), so reverting the removal of a
+      // topic that had been 'suppressed' brings it back 'active' instead. The
+      // weight — which is what actually makes a negative topic negative — is
+      // untouched, so the topic is still disliked; it just loses hard-suppressed
+      // status. Not worth a second action type; revisit if suppressed topics
+      // ever become user-visible as a distinct state.
       const targetId = requireTargetId(action, row.id);
       await topicService.reactivate(targetId);
       break;
@@ -192,7 +235,21 @@ export async function revertChange(changeLogId: string): Promise<void> {
     }
     case ACTION_NAMES.ADD_SUPPRESSION: {
       const targetId = requireTargetId(action, row.id);
+      // Undoing a HARD add retires the filter, so its casualties must come
+      // back — the mirror of the purge the add performed (D12c).
+      sweepInput.hardFilter = await suppressionWasHard(targetId);
       await suppressionService.retireSuppression(targetId);
+      break;
+    }
+    case ACTION_NAMES.RETIRE_SUPPRESSION: {
+      // Mirror of add_suppression's inverse. reactivateSuppression keeps the
+      // ORIGINAL expires_at, so undoing the removal of a long-expired SOFT
+      // filter is deliberately inert rather than a silent 30-day extension.
+      const targetId = requireTargetId(action, row.id);
+      // Undoing a removal puts the filter back, so a HARD one must re-purge
+      // what it had been blocking.
+      sweepInput.hardFilter = await suppressionWasHard(targetId);
+      await suppressionService.reactivateSuppression(targetId);
       break;
     }
     case ACTION_NAMES.SUPPRESS_TOPIC: {
@@ -211,9 +268,68 @@ export async function revertChange(changeLogId: string): Promise<void> {
           `persona_change_log ${row.id}: 'before' must be a publication pref kind for set_publication_pref`,
         );
       }
+      // Crossing the mute boundary is a hard-filter change in either
+      // direction; sweepForRevert mirrors it (restoring 'mute' purges,
+      // leaving 'mute' releases).
+      sweepInput.prefBefore = before;
+      sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
       await publicationPreferenceService.setPreferenceKind(
         targetId,
         before as PublicationPrefKind | 'none',
+      );
+      break;
+    }
+    // source-pref v47 (D2/D6). MANDATORY, not optional: `isRevertible` in
+    // components/custom/persona-audit/action-display.ts is a DENY-list, so this
+    // action type is already offered an Undo button on the Activity screen —
+    // without a case here that button can only produce an error toast.
+    //
+    // `targetId` is the composite `'{scopeKind}:{scopeValue}'` ('country:IND').
+    // A scope has no row id to point at, so the log has to carry enough to
+    // rebuild the whole SourceScopeRef; the executor and the Source-preferences
+    // screen both write exactly this encoding.
+    case ACTION_NAMES.SET_SOURCE_SCOPE_PREF: {
+      const targetId = requireTargetId(action, row.id);
+      const sep = targetId.indexOf(':');
+      const scopeKind = sep > 0 ? targetId.slice(0, sep) : '';
+      const scopeValue = sep > 0 ? targetId.slice(sep + 1) : '';
+      if (scopeKind !== 'country' || !scopeValue) {
+        throw new Error(
+          `persona_change_log ${row.id}: targetId must be '{scopeKind}:{scopeValue}' for set_source_scope_pref`,
+        );
+      }
+      const before = action.before;
+      if (before !== 'none' && before !== 'boost' && before !== 'deprioritize' && before !== 'mute') {
+        throw new Error(
+          `persona_change_log ${row.id}: 'before' must be a publication pref kind for set_source_scope_pref`,
+        );
+      }
+      // Same mute-boundary wiring as set_publication_pref — inert for scopes
+      // today (both gates reject a scope mute) but kept symmetric so the two
+      // paths cannot drift. See persona-mutation-sweeps.
+      sweepInput.prefBefore = before;
+      sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
+      // `label` is only consulted when `before` is a concrete kind (restoring
+      // 'none' retires the row and keeps its stored label for the audit trail).
+      //
+      // Three tiers, because there are two producers. The executor logs the
+      // label; the Source-preferences screen hand-appends its rows WITHOUT one,
+      // and undoing one of its "clear" rows has to re-activate the row with the
+      // name the user actually saw — so fall back to the label still stored on
+      // the retired row before falling back to the raw alpha-3 token.
+      const logged = typeof action.label === 'string' ? action.label.trim() : '';
+      const stored = (await publicationPreferenceService.getAll())
+        .find(
+          (p) =>
+            p.scopeKind === scopeKind
+            && (p.scopeValue ?? '').trim().toUpperCase() === scopeValue.trim().toUpperCase(),
+        )
+        ?.publicationName?.trim();
+      const label = logged || stored || scopeValue;
+      await publicationPreferenceService.setScopePreferenceKind(
+        { scopeKind, scopeValue },
+        before as PublicationPrefKind | 'none',
+        label,
       );
       break;
     }
@@ -234,4 +350,13 @@ export async function revertChange(changeLogId: string): Promise<void> {
     source: 'user',
     summary: `Reverted: ${row.summary}`,
   });
+
+  // D12 + D18, AFTER the inverse is committed and audited (both sweeps read the
+  // persona live, so running earlier would screen against the pre-revert
+  // state). Identical policy and identical failure handling to the executor
+  // seam: a sweep failure is caught and logged inside runSweepFor, never
+  // propagated — the revert already happened, so throwing here would report a
+  // completed undo as failed. A failed purge falls through to the dirty flag.
+  const purged = await runSweepFor(sweepForRevert(sweepInput), row.actionType);
+  if (!purged) markFeedNeedsRefresh();
 }

@@ -7,39 +7,37 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
+
 import {
     getArticleVerdict,
     recordVerdictFeedback,
     removeArticleFeedback,
     updateFeedbackContextPath,
 } from '@/lib/database/services/article-feedback-service';
+import { resolveDetailFeedbackSubject, type DetailFeedbackContext } from '@/components/custom/news-detail/detail-feedback-context';
 import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
-
-/** Local-context fields a caller can supply so the feedback tree can gate nodes
- *  and resolve leaf placeholders (publication mute, topic downweight, geo, etc).
- *  All optional — missing fields simply hide the nodes that need them. */
-export type ArticleFeedbackContext = Pick<
-    LocalFeedbackContext,
-    'publicationName' | 'countryCode' | 'matchedTopics' | 'clusterSize' | 'hasGeoMismatch' | 'geoText'
->;
 
 interface ArticleFeedbackPromptProps {
     articleId: string;
     suggestionId?: string;
     title: string;
-    /** Optional on-device context that seeds the feedback surface's tree gating. */
-    feedbackContext?: ArticleFeedbackContext;
+    /** The standalone article, when the screen has one (ArticleDetailScreen).
+     *  Used ONLY as the fallback source of feedback context for an article with
+     *  no local `article_suggestions` row — Explore, a tracked story, a shared
+     *  link. A suggestion-backed screen passes nothing: the row is richer and is
+     *  resolved here by articleId. */
+    article?: NewsArticle | null;
     save?: {
         saved: boolean;
         onToggle: () => void;
@@ -59,6 +57,9 @@ const PRIMARY = '#EDA77E';
 // Icon color when a button is in its filled/selected state — dark for contrast
 // against the orange fill.
 const SELECTED_ICON = '#1a1a1a';
+// D15 — the PROVISIONAL treatment (see CardActionBar): recorded, but with no
+// reason attached, so it is tinted rather than filled.
+const PROVISIONAL_BG = 'rgba(237,167,126,0.18)';
 
 // Slightly larger than the original 19/45 — the row lost the Mera button on the
 // suggestion detail screen, so the survivors get more room and `justify-evenly`
@@ -74,10 +75,16 @@ const BUTTON_SIZE = 48;
  *     open, no auto-sent message).
  *   - Like / Dislike → records the verdict (latest-wins, mutually exclusive) and
  *     FLOATS the inline feedback surface over the content above the row so the
- *     user can optionally pick a reason. Re-tapping the same thumb removes the
- *     verdict + its feedback; the surface's × just hides it (keeps the verdict).
- *     No persona mutation happens here — feedback stays deferred, matching the
- *     For You feed.
+ *     user can pick a reason. Re-tapping the same thumb removes the verdict +
+ *     its feedback; the surface's × just hides it (keeps the verdict). The
+ *     thumb stays tinted-not-filled until a reason is given: a bare verdict is
+ *     provisional and gets discarded (D15), and a terminal tree leaf applies
+ *     its persona actions on the spot (D16) — matching the For You feed.
+ *
+ * The feedback CONTEXT is resolved here, not passed in. See
+ * news-detail/detail-feedback-context: the old `feedbackContext` prop was a
+ * shim only one of the two detail screens ever filled in, and the cast that
+ * carried it hid the omission.
  *   - Save (optional) → toggles the saved-for-later state (caller-owned).
  *   - Track (optional) → toggles story tracking.
  *   - Share (optional, only when the `share` prop has a URL).
@@ -86,7 +93,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     articleId,
     suggestionId,
     title,
-    feedbackContext,
+    article,
     save,
     track,
     share,
@@ -94,6 +101,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     const { t } = useTranslation();
     const [verdict, setVerdict] = useState<Verdict | null>(null);
     const [initialPath, setInitialPath] = useState<string[]>([]);
+    // F3 — the fill discriminator, restored from the row rather than inferred
+    // from `initialPath`: a path is written by a mere branch descent, so this
+    // surface used to show an ABANDONED verdict (even one abandoned on the feed)
+    // as a committed one, pixel-identical, across a process restart.
+    const [committed, setCommitted] = useState(false);
     const [surfaceClosed, setSurfaceClosed] = useState(false);
     // Self-managing track state. `track` carries the stable id when known; the
     // fallback subject keeps the hook happy when the button is absent.
@@ -110,10 +122,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     useEffect(() => {
         let cancelled = false;
         getArticleVerdict(articleId)
-            .then(({ verdict: v, path }) => {
+            .then(({ verdict: v, path, committed: c }) => {
                 if (cancelled) return;
                 setVerdict(v);
                 setInitialPath(path);
+                setCommitted(!!c);
             })
             .catch(() => {
                 /* non-fatal — default to no verdict */
@@ -123,36 +136,37 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         };
     }, [articleId]);
 
-    // The origin-aware subject used to snapshot context onto the verdict row.
-    const subject: FeedbackSubject = useMemo(
-        () => ({
-            origin: suggestionId ? 'suggestion' : 'article',
-            surface: 'detail',
-            articleId,
-            suggestionId,
-            title,
-            publicationName: feedbackContext?.publicationName,
-            countryCode: feedbackContext?.countryCode,
-            matchedTopics: feedbackContext?.matchedTopics,
-        }),
-        [articleId, suggestionId, title, feedbackContext],
-    );
-
-    // A minimal ForYouSuggestion projection so the shared feedback surface (typed
-    // to a suggestion) works on the detail page too. InlineFeedbackTree only reads
-    // these fields — the rest are unused here.
-    const surfaceSuggestion = useMemo(
-        () =>
-            ({
-                _id: suggestionId ?? articleId,
+    // The real feedback context for this article, resolved from the local
+    // suggestion row (preferred) or the article. Held as a PROMISE in a ref as
+    // well as in state: a thumb tapped before the lookup lands must still
+    // persist a full context_json — awaiting the same in-flight resolution is
+    // what stops this regressing to the null snapshot it used to write.
+    const [resolved, setResolved] = useState<DetailFeedbackContext | null>(null);
+    const resolvingRef = useRef<Promise<DetailFeedbackContext> | null>(null);
+    const ensureResolved = useCallback((): Promise<DetailFeedbackContext> => {
+        if (!resolvingRef.current) {
+            resolvingRef.current = resolveDetailFeedbackSubject({
                 articleId,
-                title_en: title,
-                publication_name: feedbackContext?.publicationName ?? null,
-                country_code: feedbackContext?.countryCode ?? null,
-                matchedTopics: feedbackContext?.matchedTopics ?? [],
-            }) as unknown as ForYouSuggestion,
-        [suggestionId, articleId, title, feedbackContext],
-    );
+                suggestionId,
+                title,
+                article,
+            });
+        }
+        return resolvingRef.current;
+    }, [articleId, suggestionId, title, article]);
+
+    useEffect(() => {
+        let cancelled = false;
+        resolvingRef.current = null;
+        void ensureResolved().then((ctx) => {
+            if (!cancelled) setResolved(ctx);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [ensureResolved]);
+
+    const surfaceSuggestion: ForYouSuggestion | null = resolved?.suggestion ?? null;
 
     // Record / flip / un-vote — mirrors the feed's onVerdict.
     const onVerdict = useCallback(
@@ -161,6 +175,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 hapticLight();
                 setVerdict(null);
                 setInitialPath([]);
+                setCommitted(false);
                 setSurfaceClosed(false);
                 void removeArticleFeedback(articleId, next);
                 return;
@@ -168,18 +183,22 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             hapticSuccess();
             setVerdict(next);
             setInitialPath([]);
+            setCommitted(false);
             setSurfaceClosed(false);
-            void recordVerdictFeedback({
-                articleId,
-                suggestionId,
-                sentiment: next,
-                title,
-                origin: subject.origin,
-                surface: subject.surface,
-                contextJson: buildContextJson(subject),
-            });
+            void (async () => {
+                const ctx = await ensureResolved();
+                await recordVerdictFeedback({
+                    articleId,
+                    suggestionId: ctx.subject.suggestionId,
+                    sentiment: next,
+                    title,
+                    origin: ctx.subject.origin,
+                    surface: ctx.subject.surface,
+                    contextJson: buildContextJson(ctx.subject),
+                });
+            })();
         },
-        [verdict, articleId, suggestionId, title, subject],
+        [verdict, articleId, suggestionId, title, ensureResolved],
     );
 
     const handleLike = useCallback(() => onVerdict('like'), [onVerdict]);
@@ -192,22 +211,29 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         },
         [articleId],
     );
-    // A terminal leaf (the last input in the tree) — persist, then close.
+    // A terminal leaf (the last input in the tree) — COMMIT, then close. This is
+    // the only call that may fill the thumb, and it persists that fact so the
+    // fill survives a remount and a process restart.
     const handleLeafCommitted = useCallback(
         (_s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
             setInitialPath(pathIds);
-            void updateFeedbackContextPath(articleId, v, pathIds);
+            setCommitted(true);
+            void updateFeedbackContextPath(articleId, v, pathIds, true);
             setSurfaceClosed(true);
         },
         [articleId],
     );
     const handleInvokeMera = useCallback(
         (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => {
+            // Escalating counts as context supplied, so it commits — a forward
+            // promise: the chat stamps the row once its proposals are confirmed.
+            setCommitted(true);
+            void updateFeedbackContextPath(articleId, v, pathIds, true);
             void openFeedbackChatWithPath(s, v, pathIds);
             // Escalating to the chat is terminal — close the surface.
             setSurfaceClosed(true);
         },
-        [],
+        [articleId],
     );
     const handleCloseSurface = useCallback(() => setSurfaceClosed(true), []);
 
@@ -226,24 +252,39 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         void handleShare();
     }, [handleShare]);
 
-    const surfaceVisible = verdict != null && !surfaceClosed;
+    // The surface can only render once the real context has resolved — there is
+    // no half-built stand-in to fall back on any more, by design.
+    const surfaceVisible = verdict != null && !surfaceClosed && surfaceSuggestion != null;
+    // D15 — a verdict with no reason attached carries no promise: coloured
+    // outline + tint, never the filled treatment. F3 — keyed off the COMMITTED
+    // flag, not `initialPath`, which a branch descent also fills. See CardActionBar.
+    const provisional = !committed;
 
-    // A single action button. `selected` fills it (filled/orange treatment).
+    // A single action button. `selected` fills it (filled/orange treatment);
+    // `provisionalFill` is the softer "recorded, not yet explained" tint.
     const renderButton = (
         icon: React.ReactNode,
         label: string,
         onPress: () => void,
         selected: boolean,
+        testID?: string,
+        provisionalFill = false,
     ) => (
         <Pressable
+            testID={testID}
             onPress={onPress}
             accessibilityRole="button"
+            accessibilityState={{ selected }}
             accessibilityLabel={label}
             className="items-center justify-center rounded-full"
             style={{
                 width: BUTTON_SIZE,
                 height: BUTTON_SIZE,
-                backgroundColor: selected ? PRIMARY : 'transparent',
+                backgroundColor: selected
+                    ? PRIMARY
+                    : provisionalFill
+                      ? PROVISIONAL_BG
+                      : 'transparent',
                 borderWidth: 1.75,
                 borderColor: PRIMARY,
             }}
@@ -257,13 +298,15 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             {trackDialog}
             {/* Floating feedback surface — anchored just above the action row
                 (bottom: 100%), so it floats over the content above it. */}
-            {surfaceVisible && verdict ? (
+            {surfaceVisible && verdict && surfaceSuggestion ? (
                 <Box className="absolute left-0 right-0" style={{ bottom: '100%', marginBottom: 8 }}>
                     <CardFeedbackSurface
                         fill={false}
                         suggestion={surfaceSuggestion}
+                        contextFallback={resolved?.contextFallback}
                         verdict={verdict}
                         initialPathIds={initialPath}
+                        committed={committed}
                         onClose={handleCloseSurface}
                         onTreePathChanged={handleTreePathChanged}
                         onInvokeMera={handleInvokeMera}
@@ -297,21 +340,25 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                     <MaterialIcons
                         name="thumb-up"
                         size={ICON_SIZE}
-                        color={verdict === 'like' ? SELECTED_ICON : PRIMARY}
+                        color={verdict === 'like' && !provisional ? SELECTED_ICON : PRIMARY}
                     />,
                     t('articleFeedback.likeLabel'),
                     handleLike,
-                    verdict === 'like',
+                    verdict === 'like' && !provisional,
+                    'card-action-like',
+                    verdict === 'like' && provisional,
                 )}
                 {renderButton(
                     <MaterialIcons
                         name="thumb-down"
                         size={ICON_SIZE}
-                        color={verdict === 'dislike' ? SELECTED_ICON : PRIMARY}
+                        color={verdict === 'dislike' && !provisional ? SELECTED_ICON : PRIMARY}
                     />,
                     t('articleFeedback.dislikeLabel'),
                     handleDislike,
-                    verdict === 'dislike',
+                    verdict === 'dislike' && !provisional,
+                    'card-action-dislike',
+                    verdict === 'dislike' && provisional,
                 )}
                 {save ? renderButton(
                     <MaterialIcons

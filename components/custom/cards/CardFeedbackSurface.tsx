@@ -4,6 +4,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
+import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,7 +14,13 @@ import { useTranslation } from 'react-i18next';
 export interface CardFeedbackSurfaceProps {
   suggestion: ForYouSuggestion;
   verdict: Verdict;
+  /** Context the tree cannot derive from a local `article_suggestions` row
+   *  because there isn't one — a standalone article on the detail screen. */
+  contextFallback?: Partial<LocalFeedbackContext>;
   initialPathIds?: string[];
+  /** True once a TERMINAL leaf settled (or the user escalated to Mera). Drives
+   *  whether the "a bare thumb is discarded" caption is still true. */
+  committed?: boolean;
   /** The × was tapped — hide the surface (keeps the verdict). */
   onClose: () => void;
   onTreePathChanged: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
@@ -35,7 +42,9 @@ export interface CardFeedbackSurfaceProps {
 export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
   suggestion,
   verdict,
+  contextFallback,
   initialPathIds,
+  committed = false,
   onClose,
   onTreePathChanged,
   onInvokeMera,
@@ -44,6 +53,15 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
 }) => {
   const { t } = useTranslation();
   const heading = verdict === 'like' ? t('swipeFeed.moreLikeThis') : t('swipeFeed.lessLikeThis');
+  // D15 — say plainly what a bare thumb is worth, and stop saying it the
+  // moment the user has answered. The app used to quietly speculate from
+  // context-less taps; it now discards them, and the user is told so.
+  //
+  // F2 — "has answered" means COMMITTED, not "has navigated". Descending a
+  // branch used to retract the caption while the promise it made was still in
+  // force, so the panel stopped explaining itself exactly where it mattered
+  // most: mid-navigation, with the tap still discardable.
+  const uncommitted = !committed;
 
   return (
     <Box
@@ -64,6 +82,14 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
           <MaterialIcons name="close" size={18} color="#B4B4B4" />
         </Pressable>
       </HStack>
+      {uncommitted ? (
+        <Text
+          testID="feedback-caption"
+          style={{ color: '#9A9A9A', fontSize: 11, lineHeight: 15, paddingTop: 2 }}
+        >
+          {t('swipeFeed.feedbackCaption')}
+        </Text>
+      ) : null}
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -72,6 +98,7 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
         <InlineFeedbackTree
           suggestion={suggestion}
           verdict={verdict}
+          contextFallback={contextFallback}
           initialPathIds={initialPathIds}
           rootLabel={heading}
           onTreePathChanged={onTreePathChanged}

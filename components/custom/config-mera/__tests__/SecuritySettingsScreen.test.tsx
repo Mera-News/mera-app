@@ -6,6 +6,16 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
+// The animated gradient backdrop is pure decoration and asserts nothing here,
+// but it imports react-native-reanimated, whose worklets runtime cannot
+// initialise under Jest. Stubbing the component keeps reanimated out of this
+// suite's module graph entirely — cheaper and less fragile than mocking the
+// whole animation library for a view that renders no testable content.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+
 // css-interop JSX shim (reads Platform.OS at module load) — same as other tests.
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const ReactJSXRuntime = require('react/jsx-runtime');

@@ -15,7 +15,12 @@ import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
 import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
+import { getHeadlineDepths } from '@/lib/database/services/headline-depth-service';
 import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
+// The ONE admission predicate ("may this row enter scoring"), shared with the
+// enqueue path and the bundle builders so a headline cannot be admitted by one
+// and dropped by another.
+import { isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
 import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -36,6 +41,30 @@ export const HYDRATE_CHUNK_SIZE = 25;
  *  serializes writes internally, so per-chunk persists are safe to interleave;
  *  the gate+enqueue step is separately serialized behind a promise chain. */
 export const HYDRATE_CONCURRENCY = 3;
+
+/**
+ * P9 hard-filter reconcile for the gate's propagation half. Propagated rows are
+ * written terminal `complete` with a donor's relevance and never enter
+ * computeMathStage/computeAndJudge — which is where `screenHardSuppressions`
+ * runs — so without this a "Blocked" article can inherit a passing score and
+ * render, defeating the badge's "never show me these at all" promise.
+ *
+ * This is the FULL sweep, not the scoped `purgeHardFilteredByIds`, because
+ * `GateResult` reports a count and not the ids it wrote (see the HARD FILTERS
+ * note in score-propagation.ts, which also explains why the chunk's own ids are
+ * not a valid substitute). Cost is bounded the right way: the sweep returns
+ * after a single persona read for any user with no hard filters — the common
+ * case — and only pays for the row scan when filters actually exist.
+ *
+ * Lazy `require`, mirroring persona-mutation-sweeps::runSweep for the same
+ * documented reason: module-graph weight. A static import drags stage-scoring →
+ * llm/completeLocal → the native DB singleton into this module.
+ */
+const reconcileHardFilters = async (): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+  await sweep.purgeHardFilteredSuggestions();
+};
 
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
@@ -126,9 +155,16 @@ async function fetchTopicIdsPersona(
   activeTopics: Awaited<ReturnType<typeof getActiveTopics>>,
   ctx: TaskContext,
 ): Promise<FetchTopicIdsResult> {
-  const [factWeights, locations] = await Promise.all([
+  const [factWeights, locations, headlineDepths] = await Promise.all([
     getFactWeightById(),
     getAllLocations(),
+    // Per-scope depth is a personalization nicety; a read failure must degrade
+    // to the shipped default rather than wedge the whole feed sync (absence
+    // already means "use the default" everywhere downstream).
+    getHeadlineDepths().catch((err) => {
+      logger.warn('[feed-sync-steps] headline depths unreadable — using defaults', err);
+      return {} as Record<string, number>;
+    }),
   ]);
 
   const profile = buildRetrievalProfile({
@@ -145,6 +181,11 @@ async function fetchTopicIdsPersona(
       weight: l.weight,
       validUntilMs: l.validUntil ?? undefined,
     })),
+    // Absence-means-default: only scopes the reader actually overrode appear
+    // here, and buildRetrievalProfile emits a `limit` only where the override
+    // differs from the request-level default — so an untouched profile still
+    // sends the byte-identical payload it sent before per-scope depth existed.
+    headlineDepthByScope: headlineDepths,
   });
 
   if (profile.topics.length === 0) {
@@ -169,6 +210,11 @@ async function fetchTopicIdsPersona(
       scopes: profile.headlineScopes.map((s) => ({
         scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
         countryCode: s.countryCode ?? null,
+        // OMITTED, not null, when this scope uses the request-level default.
+        // buildRetrievalProfile only sets `limit` where an override actually
+        // differs, and sending an explicit null on every scope would change
+        // every user's payload for no behavioural gain.
+        ...(s.limit === undefined ? {} : { limit: s.limit }),
       })),
       limitPerScope: profile.headlineLimitPerScope,
     },
@@ -184,6 +230,7 @@ async function fetchTopicIdsPersona(
   const articleToTopicTexts = new Map<string, string[]>();
   const matchedTopics = new Map<string, MatchedTopicMeta[]>();
   const headlineScope = new Map<string, string>();
+  const headlineCountryCode = new Map<string, string>();
   const stableClusterId = new Map<string, string>();
 
   const pushMatched = (articleId: string, entry: MatchedTopicMeta) => {
@@ -219,12 +266,24 @@ async function fetchTopicIdsPersona(
   for (const hr of res.headlineResults ?? []) {
     const scopeLabel = hr.scope === HeadlineScope.Country ? 'COUNTRY' : 'GLOBAL';
     const label = `top headline · ${scopeLabel.toLowerCase()}`;
+    // The scope's own country, normalized. GLOBAL results carry none by
+    // construction; a COUNTRY result missing one is treated as unknown rather
+    // than persisting an empty string.
+    const scopeCountry =
+      scopeLabel === 'COUNTRY' ? (hr.countryCode ?? '').trim().toUpperCase() : '';
     const ids = hr.articleIds ?? [];
     const stableIds = hr.stableClusterIds ?? [];
     ids.forEach((articleId, i) => {
       pushMatched(articleId, { topicId: null, text: label, vectorScore: null, stableClusterId: stableIds[i] ?? null });
       // Topic-retrieved match wins over a headline scope when both apply.
-      if (!headlineScope.has(articleId)) headlineScope.set(articleId, scopeLabel);
+      // Scope LABEL and scope COUNTRY are written under the SAME first-writer
+      // guard: setting them independently would let an article that appeared
+      // in GLOBAL first and a COUNTRY scope second end up labelled GLOBAL
+      // while carrying a country code — an incoherent row.
+      if (!headlineScope.has(articleId)) {
+        headlineScope.set(articleId, scopeLabel);
+        if (scopeCountry) headlineCountryCode.set(articleId, scopeCountry);
+      }
       const sid = stableIds[i];
       if (sid && !stableClusterId.has(articleId)) stableClusterId.set(articleId, sid);
     });
@@ -237,7 +296,7 @@ async function fetchTopicIdsPersona(
   return {
     articleToTopicTexts,
     serverArticleIds,
-    personaMeta: { matchedTopics, headlineScope, stableClusterId },
+    personaMeta: { matchedTopics, headlineScope, headlineCountryCode, stableClusterId },
   };
 }
 
@@ -372,6 +431,18 @@ export async function stepHydratePersistEnqueue(
     const inFlight = await getNonTerminalCandidateIds();
     const gate = await gateUnscoredForScoring(inFlight, userCtx);
     if (gate.propagatedCount > 0) {
+      // P9: propagated rows were written terminal `complete` WITHOUT passing
+      // the scoring stage's hard screen. Reconcile against the live hard
+      // filters BEFORE the store refresh, so a "Blocked" article never reaches
+      // the feed even for one frame. Never fails the sync — the propagation is
+      // already committed and the next filter mutation sweeps the table anyway.
+      try {
+        await reconcileHardFilters();
+      } catch (err) {
+        logger.captureException(err, {
+          tags: { service: 'feed-sync-steps', step: 'reconcile-hard-filters' },
+        });
+      }
       // Propagated rows are now terminal `Complete` — surface them immediately.
       await opts.refreshStore();
     }
@@ -573,23 +644,31 @@ async function getLocalTopicTextsForPersona(): Promise<string[]> {
 
 /**
  * Partition the currently-unscored suggestions: mark the ineligible ones
- * (missing English title/description or with no linked facts) as scored so they
- * never enter scoring, and return the eligible ids that belong to THIS chunk so
- * they can be enqueued. Global scan (like the pre-merge `markIneligible…`), but
- * the returned eligible set is scoped to the chunk just persisted.
+ * (missing English title/description, or factless AND not headline-sourced) as
+ * scored so they never enter scoring, and return the eligible ids that belong to
+ * THIS chunk so they can be enqueued. Global scan (like the pre-merge
+ * `markIneligible…`), but the returned eligible set is scoped to the chunk just
+ * persisted.
+ *
+ * The admission test is `isScorableCandidate`, NOT `isEligible`: a TOP-HEADLINE
+ * row is factless by design (its matched topic is synthetic, `topicId: null`,
+ * so `persistAndLinkV2Suggestions` links no fact to it). This ran at every
+ * chunk, over ALL unscored rows, immediately after persist and BEFORE
+ * gate+enqueue — so the old `relatedFacts.length === 0` test wrote every pure
+ * headline terminal (`relevance 0`, `reason ''`, `status complete`) before any
+ * scoring existed, with no timing window to escape through. Rows missing
+ * title/description are still tombstoned: no prompt can score empty text.
  */
 async function markIneligibleAndCollectEligible(
   chunkIds: Set<string>,
 ): Promise<{ ineligibleCount: number; eligibleIds: string[] }> {
   const candidates = await getUnscoredSuggestionsWithFacts();
-  const ineligible = candidates.filter(
-    (c) => !c.titleEn || !c.descriptionEn || c.relatedFacts.length === 0,
-  );
+  const ineligible = candidates.filter((c) => !isScorableCandidate(c));
   if (ineligible.length > 0) {
     await batchMarkAsScoredByIds(ineligible.map((c) => c.id));
   }
   const eligibleIds = candidates
-    .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
+    .filter(isScorableCandidate)
     .filter((c) => chunkIds.has(c.id))
     .map((c) => c.id);
   return { ineligibleCount: ineligible.length, eligibleIds };

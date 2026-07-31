@@ -397,3 +397,106 @@ describe('orderRelatedArticles — null context (fail-open)', () => {
         expect(ids(out)).toEqual(['en', 'fr']);
     });
 });
+
+// ===========================================================================
+// source-pref — tier P (preferred sources lift to the head of the list)
+// ===========================================================================
+
+describe('orderRelatedArticles — preferred sources (source-pref, D1/D3)', () => {
+    const PREF_CTX: UserGeoLanguageContext = {
+        ...CTX,
+        preferredPublications: new Set(['times of india']),
+        preferredCountriesAlpha3: new Set(['IND']),
+    };
+
+    it('a preferred PUBLICATION lifts to the top, ahead of the current article\'s own country block', () => {
+        const items = [
+            ...block('USA', 3), // current-article country = tier A, normally first
+            entry({ id: 'toi', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+        ];
+        const out = orderRelatedArticles(items, 'USA', PREF_CTX);
+        expect(out[0].id).toBe('toi');
+    });
+
+    it('a preferred COUNTRY SCOPE lifts its rows to the top too', () => {
+        const items = [
+            ...block('USA', 3),
+            entry({ id: 'hindu', countryCodeAlpha3: 'IND', publicationName: 'The Hindu' }),
+        ];
+        const out = orderRelatedArticles(items, 'USA', PREF_CTX);
+        expect(out[0].id).toBe('hindu');
+    });
+
+    it('within tier P a named publication comes before a country-scope match', () => {
+        const items = [
+            entry({ id: 'hindu', countryCodeAlpha3: 'IND', publicationName: 'The Hindu' }),
+            entry({ id: 'toi', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+            ...block('USA', 2),
+        ];
+        const out = orderRelatedArticles(items, 'USA', PREF_CTX);
+        expect(ids(out).slice(0, 2)).toEqual(['toi', 'hindu']);
+    });
+
+    it('tier P is a CROSS-COUNTRY head block — the remaining rows still form contiguous country blocks', () => {
+        const items = [
+            entry({ id: 'toi', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+            entry({ id: 'guardian', countryCodeAlpha3: 'GBR', publicationName: 'The Guardian' }),
+            ...block('USA', 2),
+            ...block('FRA', 3),
+        ];
+        // Prefer one GBR paper by name too, so tier P spans two countries.
+        const ctx: UserGeoLanguageContext = {
+            ...CTX,
+            preferredPublications: new Set(['times of india', 'the guardian']),
+            preferredCountriesAlpha3: new Set(),
+        };
+        const out = orderRelatedArticles(items, 'USA', ctx);
+        expect(ids(out).slice(0, 2)).toEqual(['guardian', 'toi']); // alphabetical within the block
+        // Everything after the head block is still contiguous by country.
+        const tail = countries(out.slice(2));
+        expect(tail).toEqual([...new Set(tail)].flatMap((c) => tail.filter((x) => x === c)));
+    });
+
+    it('block sizes EXCLUDE lifted rows, so a preference cannot reshuffle the other blocks', () => {
+        // FRA has 3 rows; IND has 4, of which 3 lift into tier P. If lifted rows
+        // still counted, IND (4) would out-rank FRA (3) and its single remaining
+        // row would render before the French block.
+        const items = [
+            ...block('FRA', 3),
+            entry({ id: 'ind-plain', countryCodeAlpha3: 'IND', publicationName: 'Plain Indian Paper' }),
+            entry({ id: 'toi-1', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+            entry({ id: 'toi-2', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+            entry({ id: 'toi-3', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+        ];
+        const ctx: UserGeoLanguageContext = {
+            ...CTX,
+            preferredPublications: new Set(['times of india']),
+            preferredCountriesAlpha3: new Set(),
+        };
+        const out = orderRelatedArticles(items, null, ctx);
+        expect(ids(out).slice(0, 3)).toEqual(['toi-1', 'toi-2', 'toi-3']);
+        // FRA (3 remaining) beats IND (1 remaining).
+        expect(countries(out).slice(3)).toEqual(['FRA', 'FRA', 'FRA', 'IND']);
+    });
+
+    // --- Regression contract --------------------------------------------------
+
+    it('REGRESSION CONTRACT: with no source preferences the order is identical to today', () => {
+        const items = [
+            ...block('USA', 2),
+            ...block('FRA', 3),
+            entry({ id: 'toi', countryCodeAlpha3: 'IND', publicationName: 'Times of India' }),
+            entry({ id: 'nowhere', countryCodeAlpha3: null, publicationName: 'Nowhere Post' }),
+        ];
+        const baseline = orderRelatedArticles(items, 'USA', CTX);
+        const emptySets: UserGeoLanguageContext = {
+            ...CTX,
+            preferredPublications: new Set(),
+            preferredCountriesAlpha3: new Set(),
+        };
+        expect(orderRelatedArticles(items, 'USA', emptySets)).toEqual(baseline);
+        expect(orderRelatedArticles(items, 'USA', null)).toEqual(
+            orderRelatedArticles(items, 'USA', null),
+        );
+    });
+});

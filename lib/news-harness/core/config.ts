@@ -10,6 +10,8 @@ import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
@@ -105,6 +107,21 @@ export interface ArticlePipelineConfig {
   judgeReasonFloor: number;
   /** System prompt for the combined judge+reason pass. */
   judgeSystemPrompt: string;
+  // --- HEADLINE variants (P4a — authored, not yet routed to) ----------------
+  /** Top-headline articles bundled into one batched relevance prompt. Smaller
+   *  than articlesPerScorePrompt because the headline rubric is longer and adds
+   *  a second per-article procedure — see the literal's comment for the
+   *  measured arithmetic. */
+  headlineArticlesPerScorePrompt: number;
+  /** System prompt for the cloud relevance pass over TOP-HEADLINE articles.
+   *  Same base, same tiers, same `{"k","s"}` contract as
+   *  relevanceSystemPrompt, plus the indirect-impact (event → channel →
+   *  household) route. */
+  headlineRelevanceSystemPrompt: string;
+  /** System prompt for the cloud reason pass over TOP-HEADLINE articles. Same
+   *  base + the same impact rubric as headlineRelevanceSystemPrompt, so a
+   *  reason can only name a chain the scorer would have accepted. */
+  headlineReasonSystemPrompt: string;
 }
 
 export interface TopicGenConfig {
@@ -138,6 +155,51 @@ export interface TopicGenConfig {
  * raw score into the same 0.05–1.10 band the existing buckets/eval consume.
  */
 export interface ScoringEngineConfig {
+  // --- article-tagging policy (NOT a tunable; a routing switch) ------------
+  /** Honour the server's article-tagging metadata (`geo_tags` / `entities` /
+   *  `event_type`).
+   *
+   *  `false` (the default) ⇒ every candidate is presented to the engine as
+   *  UNTAGGED regardless of what the server sent, so `isBackstop` is true for
+   *  all of them and every batch takes the legacy two-pass LLM path. That is
+   *  exactly today's production behaviour: the server-side enrichment stage has
+   *  never run, so no article carries any of those three fields.
+   *
+   *  `true` ⇒ the tags are passed through, so a tagged article routes to the
+   *  deterministic math path (and its geo/entity/event components and the
+   *  structured suppression kinds become live).
+   *
+   *  The switch exists so enabling enrichment in staging is a change we CHOOSE
+   *  and can compare against the LLM-only path side by side, rather than one
+   *  that happens to us the moment the server starts emitting tags. Bound from
+   *  `EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
+   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`); the harness
+   *  itself never reads `process.env`. Enforced by
+   *  `scoring-engine/tag-policy::applyArticleTagPolicy`, which is applied where
+   *  a persisted row becomes a `ScoredCandidateInput` — so "off" means the
+   *  engine never SEES a tag, not that one code path ignores them. */
+  USE_ARTICLE_TAGS: boolean;
+  /** Relevance v2 — the RUNTIME (user-toggleable) half of the same switch.
+   *  Like `USE_ARTICLE_TAGS` this is NOT a tunable; it is a routing switch, and
+   *  it is deliberately absent from `calibration::TUNABLE_CONSTANTS` (that layer
+   *  applies `base × (1 + delta)` to NUMBERS only — a boolean cannot ride it).
+   *
+   *  `false` (the default) ⇒ exactly today's behaviour on every path.
+   *
+   *  `true` ⇒ (a) it SUBSUMES `USE_ARTICLE_TAGS`: the composition root
+   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`) ORs the two, so the
+   *  server's tags stop being blanked and a tagged candidate routes to the
+   *  deterministic math path — `tag-policy` needs no second gate and keeps
+   *  reading `USE_ARTICLE_TAGS` alone; and (b) the math/judge path persists the
+   *  UNBUCKETED computed score as `relevance` instead of the coarse
+   *  articlePipeline bucket, so ranking keeps its resolution. Both effects are
+   *  inert until the server actually emits `geo_tags`/`entities`/`event_type` —
+   *  with no tags every candidate is still `isBackstop`, so the legacy two-pass
+   *  LLM path runs and bucketing there is untouched.
+   *
+   *  Bound from the Zustand store field `relevanceV2` in that composition root;
+   *  the harness itself never reads the store or `process.env`. */
+  RELEVANCE_V2: boolean;
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
   /** Explicit topic interest (magnitude of the strongest matched topic). */
   W_TOPIC: number;
@@ -283,6 +345,34 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     judgeMaxTokens: 560, // 12*(34+8) + ~56 headroom
     judgeReasonFloor: JUDGE_REASON_FLOOR,
     judgeSystemPrompt: buildJudgeSystemPrompt(JUDGE_REASON_FLOOR),
+    // HEADLINE batch size — measured, not guessed (estimateTokens, lib/llm/tokens.ts):
+    //   live relevance prompt      4386 est tokens, batched 5/call
+    //   headline relevance prompt  7036 est tokens  (+60.4%)
+    //   per-article payload        ~335 est tokens worst case (title 500 chars
+    //                              + description 500 + country 60 + "why" 200 + framing)
+    // Live call today:   4386 + 5×335 = 6061 in, 1212 per article.
+    // Headline at N=3:   7036 + 3×335 = 8041 in, 2680 per article.
+    // (N=4 → 7940 / 1985; N=5 → 8275 / 1655.)
+    //
+    // 3 = 5 × (4386 / 7036) = 3.12 → 3: hold per-article ATTENTION on the
+    // rubric, not per-article cost. The binding constraint here is not tokens —
+    // it is that the headline rubric adds a SECOND per-article procedure (the
+    // four impact gates + the magnitude test) on top of the base's Steps 1–4,
+    // and its failure mode is hedged over-inclusion, which is exactly what a
+    // long batch produces when the article payloads crowd the rubric. The live
+    // 5 was tuned against a rubric with one procedure; scaling inversely with
+    // rubric length keeps the same rubric-per-article budget.
+    // Cost is affordable at 2.07× per article because headlines are a bounded
+    // slice (per-scope headline depth, order tens per sync) rather than the
+    // whole retrieved pool.
+    // NOT a hard gate: lib/llm/cloudComplete.ts only LOGS estimated input
+    // tokens (no ceiling check, no truncation), so this is a cost/reliability
+    // judgement, revisable from measured output quality. Output side is
+    // unchanged — {"k","s"} objects — so scoreBatchMaxTokens (320) stays ample
+    // at N=3.
+    headlineArticlesPerScorePrompt: 3,
+    headlineRelevanceSystemPrompt: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+    headlineReasonSystemPrompt: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   },
   topicGen: {
     // 2026-07-16: reduced 16→10 (cloud) / 14→10 (local). Golden-labeled
@@ -300,6 +390,15 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },
   scoringEngine: {
+    // Article tagging is OFF by default — the explicit literal, not an absent
+    // key read as falsy. This preserves today's behaviour (every article
+    // untagged ⇒ legacy LLM path) even after the server starts sending tags.
+    USE_ARTICLE_TAGS: false,
+    // Relevance v2 is OFF by default for the same reason and in the same style:
+    // an explicit literal, not an absent key read as falsy. It is layered in at
+    // runtime from the store in `effectiveHarnessConfig`; the harness default
+    // must always describe today's shipped behaviour.
+    RELEVANCE_V2: false,
     // affinity component weights (positives sum to ≈ 1.0 at full saturation).
     // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH.
     // Round-3 A2: freshness decay removed (W_FRESH 0.08 deleted). The remaining

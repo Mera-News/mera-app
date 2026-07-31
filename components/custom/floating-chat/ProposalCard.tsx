@@ -61,7 +61,7 @@ export interface ProposalCardProps {
   isLast: boolean;
 }
 
-interface ActionRow {
+export interface ActionRow {
   icon: keyof typeof MaterialIcons.glyphMap;
   labelKey: string;
   labelDefault?: string;
@@ -69,10 +69,29 @@ interface ActionRow {
   detail?: string;
   /** Optional bold heading above the detail (feature-request title). */
   heading?: string;
+  /** Optional small pill rendered before the detail — currently the structured
+   *  suppression KIND ("Category", "Publication", …). Absent for a plain
+   *  keyword filter, whose label already says "phrase". */
+  chip?: { key: string; default: string };
 }
 
-/** Maps a ProposalAction to its display row. */
-function actionToRow(action: ProposalAction): ActionRow {
+/** Display label for a structured suppression kind — deliberately the SAME keys
+ *  the Not-interested screen uses, so a filter reads identically where it is
+ *  confirmed and where it is later managed. `keyword` is absent on purpose: it
+ *  is the default, and the row label already reads "a phrase". */
+const SUPPRESSION_KIND_CHIPS: Record<string, { key: string; default: string }> = {
+  category: { key: 'notInterested.kinds.category', default: 'Category' },
+  event_type: { key: 'notInterested.kinds.event_type', default: 'Kind of story' },
+  entity: { key: 'notInterested.kinds.entity', default: 'Person or thing' },
+  publication: { key: 'notInterested.kinds.publication', default: 'Source' },
+  place: { key: 'notInterested.kinds.place', default: 'Place' },
+  topic: { key: 'notInterested.kinds.topic', default: 'Topic' },
+};
+
+/** Maps a ProposalAction to its display row. Exported for the action-type
+ *  coverage test — a type that falls through to the guard renders a detail-less
+ *  "tune" row, which is a silent presentation bug, not a compile error. */
+export function actionToRow(action: ProposalAction): ActionRow {
   switch (action.type) {
     case 'add_fact':
       return { icon: 'add-circle', labelKey: 'articleFeedback.actionAddFact', detail: action.statement };
@@ -134,12 +153,48 @@ function actionToRow(action: ProposalAction): ActionRow {
         labelDefault: 'Down-rank a topic',
         detail: action.topicText,
       };
+    // FIX (source-pref v47): this row used to read "Adjust a publication" for
+    // all three prefs, so boost and deprioritize differed only by having the
+    // SAME icon — the card could not tell the user what Confirm was about to
+    // do. Boosting and muting the same outlet are opposite outcomes; the label
+    // now names the direction.
     case 'set_publication_pref':
       return {
-        icon: action.publicationPref === 'mute' ? 'volume-off' : 'tune',
-        labelKey: 'articleFeedback.actionPublicationPref',
-        labelDefault: 'Adjust a publication',
+        icon:
+          action.publicationPref === 'mute'
+            ? 'volume-off'
+            : action.publicationPref === 'boost'
+              ? 'trending-up'
+              : 'trending-down',
+        labelKey:
+          action.publicationPref === 'mute'
+            ? 'articleFeedback.actionPublicationMute'
+            : action.publicationPref === 'boost'
+              ? 'articleFeedback.actionPublicationBoost'
+              : 'articleFeedback.actionPublicationDeprioritize',
+        labelDefault:
+          action.publicationPref === 'mute'
+            ? 'Mute a publication'
+            : action.publicationPref === 'boost'
+              ? 'Show more from a publication'
+              : 'Show less from a publication',
         detail: action.publicationId,
+      };
+    // source-pref v47 (D2/D6). The scope LABEL is the load-bearing thing the
+    // user is agreeing to ("India"), so it is the detail line; the label names
+    // the direction for the same reason as above.
+    case 'set_source_scope_pref':
+      return {
+        icon: action.publicationPref === 'boost' ? 'public' : 'public-off',
+        labelKey:
+          action.publicationPref === 'boost'
+            ? 'articleFeedback.actionSourceScopeBoost'
+            : 'articleFeedback.actionSourceScopeDeprioritize',
+        labelDefault:
+          action.publicationPref === 'boost'
+            ? 'Show more from sources in a country'
+            : 'Show less from sources in a country',
+        detail: action.label,
       };
     case 'add_suppression':
       return {
@@ -147,6 +202,20 @@ function actionToRow(action: ProposalAction): ActionRow {
         labelKey: 'articleFeedback.actionSuppress',
         labelDefault: 'Filter out a phrase',
         detail: action.suppressionPattern,
+        // A structured filter is a different promise from a keyword one (exact
+        // field match vs "anywhere in the story"), so the card has to say which.
+        ...(action.suppressionKind && SUPPRESSION_KIND_CHIPS[action.suppressionKind]
+          ? { chip: SUPPRESSION_KIND_CHIPS[action.suppressionKind] }
+          : {}),
+      };
+    case 'retire_suppression':
+      return {
+        icon: 'filter-alt-off',
+        labelKey: 'articleFeedback.actionRetireSuppression',
+        labelDefault: 'Remove a filter',
+        // Empty on a resumed card — the sanitizer resolves `pattern` from our
+        // own filter list and it is not echoed into the persisted tool result.
+        detail: action.pattern,
       };
     case 'set_high_priority':
       return {
@@ -284,6 +353,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                   <Text size="sm" bold style={styles.actionHeading}>
                     {row.heading}
                   </Text>
+                )}
+                {row.chip && (
+                  <View style={styles.chip}>
+                    <Text size="xs" style={styles.chipText}>
+                      {t(row.chip.key as TKey, { defaultValue: row.chip.default })}
+                    </Text>
+                  </View>
                 )}
                 {row.detail && (
                   <Text size="sm" style={styles.actionDetail}>
@@ -457,6 +533,18 @@ const styles = StyleSheet.create({
   },
   actionDetail: {
     color: 'rgb(193, 193, 193)',
+  },
+  chip: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(231, 138, 83, 0.5)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  chipText: {
+    color: ACCENT,
+    letterSpacing: 0.3,
   },
   effects: {
     color: 'rgb(180, 180, 180)',

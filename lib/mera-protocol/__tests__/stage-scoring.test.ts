@@ -12,8 +12,15 @@ jest.mock('@/lib/database/services/calibration-service', () => ({
   getScoringOverrides: jest.fn().mockResolvedValue({}),
   recordOverrides: jest.fn().mockResolvedValue({ count: 0, notified: false }),
 }));
+// Mutable so the RELEVANCE_V2 cases below can flip the runtime flag between
+// awaits — `effectiveHarnessConfig` reads the store at CALL time, so no
+// resetModules/dynamic-require dance is needed (unlike the env-bound half).
+const mockStoreState: { processingMode: string; relevanceV2: boolean } = {
+  processingMode: 'CLOUD',
+  relevanceV2: false,
+};
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
-  useMeraProtocolStore: { getState: () => ({ processingMode: 'CLOUD' }) },
+  useMeraProtocolStore: { getState: () => mockStoreState },
 }));
 jest.mock('@/lib/news-harness-app/logger-adapter', () => ({
   appHarnessLogger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -45,8 +52,10 @@ jest.mock('@/lib/database/services/story-impression-service', () => ({
   getOpenedSeenSet: jest.fn().mockResolvedValue(new Set(['opened-article', 'stable-story-1'])),
 }));
 
-import { loadPersonaScoringContext } from '../stage-scoring';
+import { effectiveHarnessConfig, loadPersonaScoringContext } from '../stage-scoring';
 import { getOpenedSeenSet } from '@/lib/database/services/story-impression-service';
+import { HARNESS_CONFIG_BASE } from '../harness-config-base';
+import { getScoringOverrides } from '@/lib/database/services/calibration-service';
 
 describe('loadPersonaScoringContext — persona snapshot seam', () => {
   it('populates seenStoryIds from the OPENS-ONLY reader and leaves entityInterest unset', async () => {
@@ -68,5 +77,63 @@ describe('loadPersonaScoringContext — persona snapshot seam', () => {
     expect(persona.locations[0]).toMatchObject({ city: 'bhopal', countryCode: 'IN' }); // normalized
     expect(persona.pubPrefs.get('fav times')).toBe(0.5);
     expect(persona.softSuppressions).toEqual([{ keywords: ['celebrity gossip'], strength: 0.5 }]);
+  });
+});
+
+// effectiveHarnessConfig is the composition root for BOTH env-bound and runtime
+// config. `lib/news-harness/**` is RN-free and must never read the store, and
+// the calibration-overrides layer is a closed NUMERIC allowlist, so this is the
+// only place a boolean routing switch can enter the config.
+describe('effectiveHarnessConfig — the relevanceV2 runtime switch', () => {
+  beforeEach(() => {
+    mockStoreState.relevanceV2 = false;
+    (getScoringOverrides as jest.Mock).mockResolvedValue({});
+  });
+
+  it('flag OFF: hands back the HARNESS_CONFIG_BASE REFERENCE (no allocation)', async () => {
+    // Reference equality, not deep equality — the whole point of the fast path.
+    // A copy here would be behaviourally identical but silently allocate on
+    // every scoring batch, and it is what harness-config-base.test.ts pins.
+    const cfg = await effectiveHarnessConfig();
+    expect(cfg).toBe(HARNESS_CONFIG_BASE);
+    expect(cfg.scoringEngine.RELEVANCE_V2).toBe(false);
+    expect(cfg.scoringEngine.USE_ARTICLE_TAGS).toBe(false);
+  });
+
+  it('flag ON: RELEVANCE_V2 true AND USE_ARTICLE_TAGS subsumed to true', async () => {
+    mockStoreState.relevanceV2 = true;
+    const cfg = await effectiveHarnessConfig();
+    expect(cfg.scoringEngine.RELEVANCE_V2).toBe(true);
+    // Subsumption: one switch. tag-policy keeps its single USE_ARTICLE_TAGS gate.
+    expect(cfg.scoringEngine.USE_ARTICLE_TAGS).toBe(true);
+    // ...and nothing else moved: no weight, offset or penalty is touched.
+    expect({
+      ...cfg.scoringEngine,
+      RELEVANCE_V2: false,
+      USE_ARTICLE_TAGS: false,
+    }).toEqual(HARNESS_CONFIG_BASE.scoringEngine);
+    // Sibling sub-configs pass through by reference — this is a scoring-engine
+    // concern only.
+    expect(cfg.articlePipeline).toBe(HARNESS_CONFIG_BASE.articlePipeline);
+    expect(cfg.topicGen).toBe(HARNESS_CONFIG_BASE.topicGen);
+  });
+
+  it('flag ON still layers the calibration overrides on top', async () => {
+    mockStoreState.relevanceV2 = true;
+    (getScoringOverrides as jest.Mock).mockResolvedValue({ W_TOPIC: 0.1 });
+    const cfg = await effectiveHarnessConfig();
+    expect(cfg.scoringEngine.RELEVANCE_V2).toBe(true);
+    expect(cfg.scoringEngine.W_TOPIC).toBeCloseTo(
+      HARNESS_CONFIG_BASE.scoringEngine.W_TOPIC * 1.1,
+      6,
+    );
+  });
+
+  it('FAILS OPEN to HARNESS_CONFIG_BASE (v2 off) when the overrides read throws', async () => {
+    mockStoreState.relevanceV2 = true;
+    (getScoringOverrides as jest.Mock).mockRejectedValue(new Error('db down'));
+    const cfg = await effectiveHarnessConfig();
+    expect(cfg).toBe(HARNESS_CONFIG_BASE);
+    expect(cfg.scoringEngine.RELEVANCE_V2).toBe(false);
   });
 });

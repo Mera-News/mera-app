@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from "@/components/custom/MeraLogo";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -19,7 +20,7 @@ import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, TouchableOpacity } from "react-native";
+import { Linking, TouchableOpacity, View } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -114,70 +115,85 @@ export default function NotSubscribedScreen() {
 
     if (isSessionPending) {
         return (
-            <Box className="flex-1 justify-center items-center bg-black">
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box className="flex-1 justify-center items-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );
     }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
-            <Box className="flex-1 justify-center items-center bg-black px-6">
-                <VStack space="xl" className="items-center max-w-md">
-                    <Box className="items-center mb-8">
-                        <MeraLogo size={150} />
-                    </Box>
-                    <Heading size="2xl" className="text-white text-center">
-                        {t('subscription.title')}
-                    </Heading>
+        // Unpadded wrapper. The backdrop is mounted OUTSIDE the SafeAreaView so
+        // it spans the FULL screen including the safe areas — inside it, the
+        // insets left black strips top and bottom. The content keeps its insets.
+        <View style={{ flex: 1 }}>
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
 
-                    <Text size="lg" className="text-gray-300 text-center leading-relaxed">
-                        {t('subscription.description')}
-                    </Text>
+            <SafeAreaView style={{ flex: 1 }}>
+              {/* No opaque fill: the backdrop above is the page background. */}
+              <Box className="flex-1 justify-center items-center px-6">
+                  <VStack space="xl" className="items-center max-w-md">
+                      <Box className="items-center mb-8">
+                          <MeraLogo size={150} />
+                      </Box>
+                      <Heading size="2xl" className="text-white text-center">
+                          {t('subscription.title')}
+                      </Heading>
 
-                    {message ? (
-                        <Text size="md" className="text-primary-400 text-center">
-                            {message}
-                        </Text>
-                    ) : null}
+                      <Text size="lg" className="text-gray-300 text-center leading-relaxed">
+                          {t('subscription.description')}
+                      </Text>
 
-                    <Box className="items-center w-full mt-6">
-                        <VStack space="md" className="w-full">
-                            <Button
-                                onPress={presentPaywall}
-                                disabled={busy}
-                                className="bg-primary-500 w-full"
-                                size="lg"
-                            >
-                                {busy ? <Spinner size="small" className="mr-2" /> : null}
-                                <ButtonText className="text-white">
-                                    {t('subscription.viewPlans')}
-                                </ButtonText>
-                            </Button>
-                            <Button
-                                onPress={handleRefresh}
-                                disabled={busy}
-                                variant="outline"
-                                className="border-primary-500 w-full"
-                                size="lg"
-                            >
-                                <ButtonText className="text-white">
-                                    {busy ? t('common.checking') : t('account.refresh')}
-                                </ButtonText>
-                            </Button>
-                        </VStack>
-                    </Box>
+                      {message ? (
+                          <Text size="md" className="text-primary-400 text-center">
+                              {message}
+                          </Text>
+                      ) : null}
 
-                    <Text size="md" className="text-gray-400 text-center mt-4">
-                        {t('account.enquiries')}{" "}
-                        <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
-                            <Text size="md" className="text-primary-400">
-                                {t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
-                            </Text>
-                        </TouchableOpacity>
-                    </Text>
-                </VStack>
-            </Box>
-        </SafeAreaView>
+                      <Box className="items-center w-full mt-6">
+                          <VStack space="md" className="w-full">
+                              <Button
+                                  onPress={presentPaywall}
+                                  disabled={busy}
+                                  className="bg-primary-500 w-full"
+                                  size="lg"
+                              >
+                                  {busy ? <Spinner size="small" className="mr-2" /> : null}
+                                  <ButtonText className="text-white">
+                                      {t('subscription.viewPlans')}
+                                  </ButtonText>
+                              </Button>
+                              <Button
+                                  onPress={handleRefresh}
+                                  disabled={busy}
+                                  variant="outline"
+                                  className="border-primary-500 w-full"
+                                  size="lg"
+                              >
+                                  <ButtonText className="text-white">
+                                      {busy ? t('common.checking') : t('account.refresh')}
+                                  </ButtonText>
+                              </Button>
+                          </VStack>
+                      </Box>
+
+                      <Text size="md" className="text-gray-400 text-center mt-4">
+                          {t('account.enquiries')}{" "}
+                          <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
+                              <Text size="md" className="text-primary-400">
+                                  {t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
+                              </Text>
+                          </TouchableOpacity>
+                      </Text>
+                  </VStack>
+              </Box>
+            </SafeAreaView>
+        </View>
     );
 }

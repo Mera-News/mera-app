@@ -6,20 +6,41 @@ import { VStack } from '@/components/ui/vstack';
 import ArticleService from '@/lib/article-service';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
+import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, type ListRenderItem } from 'react-native';
+import {
+    FlatList,
+    RefreshControl,
+    type ListRenderItem,
+    type NativeScrollEvent,
+    type NativeSyntheticEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PAGE_SIZE = 10;
 
+// Matches FeedScreen / DashboardSectionsFeed / StoryTimelineScreen, which each
+// declare it locally. A fourth copy beats a shared constant for one hex value.
+const REFRESH_TINT = '#EDA77E';
+
 interface ScopeArticleListProps {
     readonly scope: ExploreScope;
+    /**
+     * Gate on the QUERY, not on the mount. The list itself must exist from the
+     * very first render (see the FlatList note below), so the "don't fetch
+     * against the device-country fallback" rule is enforced here instead of by
+     * withholding the component.
+     */
+    readonly enabled?: boolean;
+    /** Measured height of ExploreScreen's pinned header overlay — the list
+     *  scrolls UNDER it, so its content starts below it. */
+    readonly headerHeight?: number;
 }
 
 /**
@@ -30,16 +51,38 @@ interface ScopeArticleListProps {
  * lib/explore/geo-scope-filter.ts, deprecated). Each row keeps its headline's
  * `stableClusterId`/`clusterSize` metadata so downstream feedback actions can
  * carry the story's cross-run identity (see `subjectExtras` in renderItem).
+ * Pull-to-refresh — and the Explore tab-icon re-tap — refetch page 1 for the
+ * active scope; see `onRefresh`.
  *
  * Mounted with a `key={scope.id}` by the parent, so switching scope resets all
  * state via remount.
+ *
+ * ── WHY THE FlatList IS ALWAYS RENDERED ──
+ * react-native-screens locates a tab's scroll view by walking `subviews[0]`
+ * from the tab screen ONCE, when the screen's index-0 child mounts
+ * (RNSBottomTabsScreenComponentView.mountChildComponentView → RNSScrollViewHelper
+ * → RNSScrollViewFinder). If this list is not on screen in that first commit —
+ * or is not the FIRST child of the tab root — the chain dead-ends and the scroll
+ * view is never found. This screen used to fail both ways (the title row was the
+ * first child, and the list was withheld until locations loaded). So: no early
+ * returns. The loading spinner and the empty state are `ListEmptyComponent`,
+ * never a replacement for the list.
+ *
+ * NOTE, measured: restoring that chain did NOT make iOS 26 tab-bar minimize
+ * work on this tab — it does not work on the Feed or Dashboard tabs either,
+ * whose chains were always intact. Whatever blocks it is not this.
  */
-const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
+const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
+    scope,
+    enabled = true,
+    headerHeight = 0,
+}) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
@@ -62,6 +105,10 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
     );
 
     useEffect(() => {
+        // ORDER MATTERS: bail out BEFORE latching `hasFetched`, otherwise the
+        // gate would permanently consume the one allowed fetch and the real
+        // load (once locations land) would never run.
+        if (!enabled) return;
         if (hasFetched.current) return;
         hasFetched.current = true;
         (async () => {
@@ -79,10 +126,54 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
                 setIsLoading(false);
             }
         })();
-    }, [loadFrom, scope.kind]);
+    }, [enabled, loadFrom, scope.kind]);
+
+    /**
+     * Pull-to-refresh: refetch the FIRST page for this scope and replace the
+     * list wholesale. Deliberately drops the accumulated pages and the cursor —
+     * `topHeadlinesForCountry` is a ranked server feed, so a refreshed page 1 is
+     * the latest ranking, and stitching it onto stale later pages would show
+     * duplicates and a ranking from two different runs.
+     *
+     * Guarded on `isLoading` as well as `isRefreshing`: the initial load and a
+     * refresh both write `headlines`/`endCursor`, and letting them race could
+     * commit page 1 from one and the cursor from the other.
+     */
+    const onRefresh = useCallback(async () => {
+        if (!enabled || isRefreshing || isLoading) return;
+        try {
+            setIsRefreshing(true);
+            const { rows, cursor, more } = await loadFrom();
+            setHeadlines(rows);
+            setEndCursor(cursor);
+            setHasNextPage(more);
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { screen: 'ScopeArticleList', method: 'refresh', scope: scope.kind },
+            });
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, [enabled, isRefreshing, isLoading, loadFrom, scope.kind]);
+
+    // Re-tap the Explore icon → scroll to top; tap again at the top → refresh,
+    // same as Feed and Dashboard. Passes the SAME `onRefresh` the RefreshControl
+    // calls, so both entry points share one guard and one spinner.
+    const listRef = useRef<FlatList<TopHeadline>>(null);
+    const lastOffset = useRef(0);
+    useTabPressScrollRefresh({
+        listRef,
+        getOffset: () => lastOffset.current,
+        onRefresh,
+        isRefreshing,
+    });
 
     const loadMore = useCallback(async () => {
-        if (!hasNextPage || isLoadingMore || !endCursor) return;
+        // `isRefreshing` matters here: a refresh replaces the list and the
+        // cursor, so a paginate that starts mid-refresh would append using the
+        // pre-refresh cursor and then have its rows thrown away (or overwrite
+        // the refreshed cursor, depending on which settles last).
+        if (!hasNextPage || isLoadingMore || isRefreshing || !endCursor) return;
         try {
             setIsLoadingMore(true);
             const { rows, cursor, more } = await loadFrom(endCursor);
@@ -96,18 +187,19 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         } finally {
             setIsLoadingMore(false);
         }
-    }, [hasNextPage, isLoadingMore, endCursor, loadFrom, scope.kind]);
+    }, [hasNextPage, isLoadingMore, isRefreshing, endCursor, loadFrom, scope.kind]);
 
-    const handlePress = useCallback((article: NewsArticle, stableClusterId?: string | null) => {
-        router.push({
-            pathname: '/logged-in/article-detail',
-            // Forward the stable story id so the detail screen resolves related
-            // articles from the same cluster this card was ranked by.
-            params: stableClusterId
-                ? { articleId: article._id, stableClusterId }
-                : { articleId: article._id },
-        });
-    }, []);
+    // Routes to suggestion-detail when Mera scored this article and wrote a
+    // reason for it, so the reader can see WHY it was picked; otherwise to
+    // article-detail, forwarding the stable story id so that screen resolves
+    // related articles from the same cluster this card was ranked by.
+    const openArticle = useOpenArticle();
+    const handlePress = useCallback(
+        (article: NewsArticle, stableClusterId?: string | null) => {
+            openArticle({ articleId: article._id, stableClusterId });
+        },
+        [openArticle],
+    );
 
     const renderItem: ListRenderItem<TopHeadline> = useCallback(
         ({ item }) => (
@@ -141,36 +233,78 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({ scope }) => {
         return null;
     }, [isLoadingMore]);
 
-    if (isLoading) {
+    // Spinner-or-empty-state, decided INSIDE the list. Previously these were two
+    // early returns that replaced the list entirely — see the component note.
+    const ListEmptyComponent = useCallback(() => {
+        if (isLoading || !enabled) {
+            return (
+                <Box className="items-center justify-center py-20" testID="explore-loading">
+                    <Spinner size="large" />
+                </Box>
+            );
+        }
         return (
-            <Box className="flex-1 items-center justify-center">
-                <Spinner size="large" />
-            </Box>
-        );
-    }
-
-    if (headlines.length === 0) {
-        return (
-            <VStack className="flex-1 items-center justify-center p-6" space="md">
+            <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
                 <MaterialIcons name="article" size={48} color="#666666" />
                 <Text size="md" className="text-gray-400 text-center">
                     {t('explore.noArticles')}
                 </Text>
             </VStack>
         );
-    }
+    }, [isLoading, enabled, t]);
+
+    const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        lastOffset.current = e.nativeEvent.contentOffset.y;
+        notifyScrollTick();
+    }, []);
 
     return (
         <FlatList
+            ref={listRef}
+            testID="explore-list"
             data={headlines}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }}
+            // Pinned to `never` (RN's default) so this list lays out exactly
+            // like the Feed and Dashboard lists: content top starts at
+            // `paddingTop`, and `scrollToOffset({offset: 0})` lands on the real
+            // top. `automatic` — react-native-screens' one-shot `never →
+            // automatic` flip, which it applies while hunting for the tab's
+            // scroll view — was TRIED here and MEASURED: it adds a ~59pt top
+            // content inset (a visible gap under the pinned header on a fresh
+            // mount, and a scroll-to-top that stops 59pt short) and it did NOT
+            // make iOS 26's `tabBarMinimizeBehavior` engage on this tab. Setting
+            // it explicitly also makes the value deterministic across the
+            // scope-switch remount, instead of depending on whether that
+            // one-shot native flip happened to run.
+            contentInsetAdjustmentBehavior="never"
+            contentContainerStyle={{
+                padding: 16,
+                // Clear the pinned header overlay (measured by ExploreScreen) —
+                // the list scrolls underneath it.
+                paddingTop: headerHeight + 8,
+                paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20,
+                flexGrow: 1,
+            }}
+            refreshControl={
+                <RefreshControl
+                    testID="explore-refresh"
+                    refreshing={isRefreshing}
+                    onRefresh={onRefresh}
+                    tintColor={REFRESH_TINT}
+                    colors={[REFRESH_TINT]}
+                    // The header/chips are a PINNED OVERLAY on this screen, not
+                    // stacked chrome — without this the spinner spins behind
+                    // them and reads as nothing happening.
+                    progressViewOffset={headerHeight}
+                />
+            }
             showsVerticalScrollIndicator={false}
-            onScroll={notifyScrollTick}
+            onScroll={onScroll}
             scrollEventThrottle={16}
             onEndReached={loadMore}
             onEndReachedThreshold={0.5}
+            ListEmptyComponent={ListEmptyComponent}
             ListFooterComponent={ListFooterComponent}
         />
     );

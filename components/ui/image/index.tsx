@@ -71,7 +71,19 @@ const ExpoImageRoot = React.forwardRef<
       ref={ref}
       contentFit={resolvedContentFit}
       contentPosition={resolvedContentPosition}
-      cachePolicy={cachePolicy ?? 'memory-disk'}
+      // `disk`, NOT `memory-disk`. This default applies to EVERY image in the
+      // app, and the app's dominant surface is an effectively endless feed of
+      // article heroes. Under `memory-disk` expo-image retains every decoded
+      // bitmap it has shown, and a decoded image costs width x height x 4 bytes
+      // regardless of how small the source file was — measured at 498 MB of
+      // `CG image` in a single session, by far the largest slice of the app's
+      // footprint.
+      //
+      // `disk` keeps the bytes cached locally, so scrolling back still avoids
+      // the network and re-decodes from local storage — fast, and bounded. Pass
+      // `cachePolicy="memory-disk"` explicitly for the rare image that is small,
+      // long-lived and re-shown constantly (an avatar, a logo).
+      cachePolicy={cachePolicy ?? 'disk'}
       transition={transition ?? 150}
       {...props}
     />

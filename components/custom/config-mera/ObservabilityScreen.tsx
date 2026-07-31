@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Share } from 'react-native';
 import { Q } from '@nozbe/watermelondb';
@@ -21,6 +22,9 @@ import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { computeFeedFunnel, type FeedFunnelReport } from '@/lib/stores/feed-diagnostics';
 import { getOpenedSeenBreakdown } from '@/lib/database/services/story-impression-service';
+import { getScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
+import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
+import { effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { Box } from '@/components/ui/box';
@@ -137,9 +141,9 @@ async function loadDbStats(): Promise<DbStats> {
 // Feed-funnel rows, ordered by the stage an article passes through: stored →
 // gated → grouped → laid out → read. Every nullable field is rendered as '—'
 // rather than the literal "null".
-function feedFunnelRows(r: FeedFunnelReport, t: TFunction): [string, string][] {
+function feedFunnelRows(r: FeedFunnelReport, t: TFunction): KVRow[] {
     const L = FEED_FUNNEL_LABELS;
-    const rows: [string, string][] = [];
+    const rows: KVRow[] = [];
 
     // A false self-check (or an unattributed drop) means the DIAGNOSTIC is stale
     // — a gate was added without a matching sub-predicate — not that the feed is
@@ -156,13 +160,58 @@ function feedFunnelRows(r: FeedFunnelReport, t: TFunction): [string, string][] {
         [L.statusUnscored, String(r.totals.status.unscored)],
         [L.statusReasonPending, String(r.totals.status.reasonPending)],
         [L.statusComplete, String(r.totals.status.complete)],
+        // Labels are literal here rather than in observability-labels.ts so the
+        // two "not interested" rows stay next to the report fields they read.
+        [
+            'Filtered out — you said not interested',
+            String(r.totals.status.excluded),
+            'funnel-row-status-excluded',
+        ],
         [L.headerRelevant, String(r.header.relevantCount)],
         [L.visible, String(r.visibleCount)],
+        [
+            'Held back — a “not interested” filter',
+            String(r.dropped.excluded),
+            'funnel-row-dropped-excluded',
+        ],
         [L.droppedNotComplete, String(r.dropped.notComplete)],
         [L.droppedBelowGate, String(r.dropped.belowRelevanceGate)],
         [L.droppedOutsideWindow, String(r.dropped.outsideWindow)],
     );
     if (r.dropped.unknownGate > 0) rows.push([L.droppedUnknownGate, String(r.dropped.unknownGate)]);
+
+    // WHICH SCORER RAN — the article-tag A/B readout. Literal labels (like the
+    // two "not interested" rows above) so they stay next to the report fields
+    // they read. Placed right after the gate rows: it explains HOW the scores
+    // those gates compare against were produced.
+    //
+    // Rendered even when every count is zero — "0 by math" is the expected,
+    // meaningful reading while the flag is off, so hiding the rows would hide
+    // the answer. `available: false` is called out instead, because THAT is the
+    // case where the zeroes are not measurements.
+    rows.push([
+        'Using article tags',
+        humanizeValue(String(r.scoring.useArticleTags)),
+        'funnel-row-article-tags',
+    ]);
+    if (r.scoring.available) {
+        rows.push(
+            ['Scored by math (tagged)', String(r.scoring.math), 'funnel-row-scored-math'],
+            ['Scored by AI (untagged)', String(r.scoring.legacy), 'funnel-row-scored-llm'],
+        );
+        if (r.scoring.unknown > 0) {
+            rows.push([
+                'Scored — path not recorded',
+                String(r.scoring.unknown),
+                'funnel-row-scored-unknown',
+            ]);
+        }
+    } else {
+        rows.push(
+            ['Scored by math (tagged)', '—', 'funnel-row-scored-math'],
+            ['Scored by AI (untagged)', '—', 'funnel-row-scored-llm'],
+        );
+    }
 
     rows.push(
         [L.groups, String(r.groups.count)],
@@ -211,10 +260,24 @@ function feedFunnelRows(r: FeedFunnelReport, t: TFunction): [string, string][] {
 
 // ─── Shared table styles ──────────────────────────────────────────────────────
 
-const TH_CLS = 'bg-gray-950 px-3 py-2 border-b border-gray-800';
+// Translucent, not opaque. These tables sit on the page's
+// AbstractGradientBackdrop; the old `bg-black` / `bg-gray-950` fills punched
+// solid rectangles through it. Zebra striping is a legibility device, not a
+// page background, so the fix is a tint rather than glass: the even row is
+// transparent and the odd row carries a faint white lift, which keeps the
+// stripes readable while the backdrop still shows through.
+//
+// ROW_EVEN must say `bg-transparent` EXPLICITLY, not '' — `TableRow`'s own base
+// style is `bg-background-0` (components/ui/table/styles.tsx), so an empty
+// className leaves the opaque default in place rather than clearing it. Same
+// reason the header rows below are tagged `bg-transparent` by hand.
+const TH_CLS = 'bg-white/10 px-3 py-2 border-b border-gray-800';
 const TD_CLS = 'px-3 py-2 border-b border-gray-800';
-const ROW_EVEN = 'bg-black';
-const ROW_ODD = 'bg-gray-950';
+const ROW_EVEN = 'bg-transparent';
+const ROW_ODD = 'bg-white/5';
+/** Header rows carry no zebra class of their own, so they need the same
+ *  explicit clear of `TableRow`'s opaque base. The tone comes from `TH_CLS`. */
+const HEADER_ROW_CLS = 'bg-transparent';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -235,16 +298,20 @@ const MetricCard = ({ title, value, subtitle }: { title: string; value: string; 
 );
 
 // 2-column key/value table used by Feed, Protocol, System, Settings
-const KVTable = ({ rows }: { rows: [string, string][] }) => (
+/** [label, value] — plus an OPTIONAL testID so a harness run can assert on a
+ *  specific row without matching its (freely reworded) label. */
+type KVRow = [label: string, value: string, testID?: string];
+
+const KVTable = ({ rows }: { rows: KVRow[] }) => (
     <Box className="rounded-xl overflow-hidden border border-gray-800">
         <Table className="w-full">
             <TableBody>
-                {rows.map(([k, v], i) => (
+                {rows.map(([k, v, testID], i) => (
                     <TableRow key={k} className={i % 2 === 0 ? ROW_EVEN : ROW_ODD}>
                         <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
                             <Text size="xs" className="text-gray-400">{k}</Text>
                         </TableData>
-                        <TableData useRNView className={TD_CLS} style={{ flex: 1 }}>
+                        <TableData useRNView testID={testID} className={TD_CLS} style={{ flex: 1 }}>
                             <Text size="xs" className="text-white text-right" numberOfLines={1}>{v}</Text>
                         </TableData>
                     </TableRow>
@@ -346,9 +413,19 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         // never hydrates, ingests, or marks anything. Its own try/catch so a
         // diagnostic failure can never take the rest of the screen down.
         try {
-            const [breakdown, userCtx] = await Promise.all([
+            const [breakdown, userCtx, scoringModes, effectiveCfg] = await Promise.all([
                 getOpenedSeenBreakdown().catch(() => null),
                 loadUserGeoLanguageContext(),
+                // Its own catch: this walks every scored row's audit JSON, and a
+                // parse/read failure must degrade to "—" on two rows, not take
+                // the whole funnel down.
+                getScoringModeBreakdown().catch(() => null),
+                // The EFFECTIVE config, not HARNESS_CONFIG_BASE: the relevance-v2
+                // switch layers USE_ARTICLE_TAGS on at this seam, so reading the
+                // base would report `false` while scoring actually runs with tags
+                // on. Fail-open to the base so a diagnostic read can't break the
+                // funnel.
+                effectiveHarnessConfig().catch(() => HARNESS_CONFIG_BASE),
             ]);
             const fo = useFeedOrderStore.getState();
             const os = useOpenedStoriesStore.getState();
@@ -368,6 +445,8 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     headerAnalysedCount: counts.analysedCount,
                     headerRelevantCount: counts.relevantCount,
                     openedStats: breakdown?.stats ?? null,
+                    scoringModes,
+                    useArticleTags: effectiveCfg.scoringEngine.USE_ARTICLE_TAGS,
                     userCtx,
                     nowMs: Date.now(),
                 }),
@@ -496,7 +575,18 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     }
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
+        // below, so it spans the FULL screen including the safe areas — an
+        // absolute fill resolves against its parent's CONTENT box, so mounting it
+        // inside the padded box left a black strip in the inset.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* No opaque fill: the backdrop above is the page background. */}
+            <Box className="flex-1" style={{ paddingTop: insets.top }}>
+
             <HStack className="px-4 py-3 items-center justify-between">
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
@@ -558,7 +648,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     <Box className="rounded-xl overflow-hidden border border-gray-800">
                         <Table className="w-full">
                             <TableHeader>
-                                <TableRow>
+                                <TableRow className={HEADER_ROW_CLS}>
                                     <TableHead useRNView className={TH_CLS} style={{ flex: 1 }}>
                                         <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.table')}</Text>
                                     </TableHead>
@@ -607,7 +697,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         <Box className="rounded-xl overflow-hidden border border-gray-800">
                             <Table>
                                 <TableHeader>
-                                    <TableRow>
+                                    <TableRow className={HEADER_ROW_CLS}>
                                         <TableHead useRNView className={TH_CLS} style={{ width: 200 }}>
                                             <Text size="xs" className="text-gray-500 font-semibold uppercase">{t('observability.task')}</Text>
                                         </TableHead>
@@ -730,6 +820,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     </Text>
                 )}
             </ScrollView>
+        </Box>
         </Box>
     );
 };

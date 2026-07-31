@@ -20,9 +20,14 @@ interface MeraProtocolState {
   // discards clusters that only matched noisy topics at sync time.
   injectNoise: boolean;
 
-  // When true, uses the old level-based questionnaire chat logic instead of
-  // the LLM-driven example-questions approach. Disabled by default.
-  useLegacyPersonaUpdate: boolean;
+  // Relevance fetching v2 — when true, candidates carrying server tags route
+  // through the deterministic math scoring engine (geo / event / entity
+  // components + the judge pass) and keep an unbucketed score. Off is the
+  // legacy two-pass LLM tier path, byte-identical to before this flag existed.
+  // Inert until the server's article-tagging stage populates geo_tags /
+  // entities / event_type — untagged candidates stay on the legacy path either
+  // way (see `isBackstop` in scoring-engine/relevance.ts).
+  relevanceV2: boolean;
 
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
@@ -39,7 +44,7 @@ interface MeraProtocolState {
   // Actions — protocol
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
-  setUseLegacyPersonaUpdate: (enabled: boolean) => void;
+  setRelevanceV2: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -61,13 +66,16 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
-const SETTING_LEGACY_PERSONA_UPDATE = 'mera_legacy_persona_update';
+const SETTING_RELEVANCE_V2 = 'mera_relevance_v2';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
+/** Retired with the legacy questionnaire-level persona flow. Never read — kept
+ *  only so `reset()` clears the orphaned row from devices that persisted it. */
+const RETIRED_SETTING_LEGACY_PERSONA_UPDATE = 'mera_legacy_persona_update';
 
 const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
-  useLegacyPersonaUpdate: false,
+  relevanceV2: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -91,9 +99,9 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     setSetting(SETTING_INJECT_NOISE, injectNoise ? 'true' : 'false').catch(() => { });
   },
 
-  setUseLegacyPersonaUpdate: (useLegacyPersonaUpdate) => {
-    set({ useLegacyPersonaUpdate });
-    setSetting(SETTING_LEGACY_PERSONA_UPDATE, useLegacyPersonaUpdate ? 'true' : 'false').catch(() => { });
+  setRelevanceV2: (relevanceV2) => {
+    set({ relevanceV2 });
+    setSetting(SETTING_RELEVANCE_V2, relevanceV2 ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -136,19 +144,20 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(LEGACY_SETTING_PROTOCOL_ENABLED).catch(() => { });
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
-    deleteSetting(SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
+    deleteSetting(SETTING_RELEVANCE_V2).catch(() => { });
+    deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
   },
 
   hydrateFromDb: async () => {
     try {
-      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue, legacyPersonaValue] =
+      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue, relevanceV2Value] =
         await Promise.all([
           getSetting(SETTING_PROCESSING_MODE),
           getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
           getSetting('mera_selected_model_id'),
           getSetting(SETTING_INJECT_NOISE),
-          getSetting(SETTING_LEGACY_PERSONA_UPDATE),
+          getSetting(SETTING_RELEVANCE_V2),
         ]);
       const updates: Partial<MeraProtocolState> = {};
       if (modeValue === ProcessingMode.OnDevice || modeValue === ProcessingMode.Cloud) {
@@ -171,8 +180,10 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (injectNoiseValue === 'false') {
         updates.injectNoise = false;
       }
-      if (legacyPersonaValue === 'true') {
-        updates.useLegacyPersonaUpdate = true;
+      if (relevanceV2Value === 'true') {
+        updates.relevanceV2 = true;
+      } else if (relevanceV2Value === 'false') {
+        updates.relevanceV2 = false;
       }
       if (Object.keys(updates).length > 0) {
         set(updates);
@@ -193,8 +204,8 @@ export const useIsOnDeviceProcessing = () =>
 export const useInjectNoise = () =>
   useMeraProtocolStore((state) => state.injectNoise);
 
-export const useUseLegacyPersonaUpdate = () =>
-  useMeraProtocolStore((state) => state.useLegacyPersonaUpdate);
+export const useRelevanceV2 = () =>
+  useMeraProtocolStore((state) => state.relevanceV2);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

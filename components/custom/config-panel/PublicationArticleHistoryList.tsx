@@ -112,7 +112,9 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader
                 title={publicationName}
                 subtitle={t('publicationVisits.articlesRead')}

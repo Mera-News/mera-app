@@ -1,5 +1,10 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
+import {
+  CARDS_USE_GLASS,
+  CardGlassPlate,
+  GLASS_CARD_EDGE,
+} from '@/components/custom/cards/CardGlassPlate';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -209,9 +214,30 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
         // the rounded/clipped surface (border + bg + hero image) has to be a
         // separate inner Box for the floating look to actually show a shadow.
         <Box className="mb-3 rounded-2xl shadow-hard-2">
-          <Box className="rounded-2xl overflow-hidden bg-background-0 border border-white/10">
+          <Box
+            className={
+              CARDS_USE_GLASS
+                // The opaque `bg-background-0` has to go, not just sit under the
+                // glass: a solid background painted over the plate cancels the
+                // effect entirely.
+                ? 'rounded-2xl overflow-hidden border border-white/10'
+                : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
+            }
+          >
+            <CardGlassPlate />
             {innerContent}
           </Box>
+        </Box>
+      ) : CARDS_USE_GLASS ? (
+        // The plate must hang off an UNPADDED box, so the margin + radius +
+        // clipping move out to this wrapper and the `Card` keeps its own
+        // padding untouched — layout stays pixel-identical, only the surface
+        // material changes.
+        <Box className={`mb-4 rounded-md overflow-hidden ${GLASS_CARD_EDGE}`}>
+          <CardGlassPlate />
+          <Card variant="elevated" size="md" className="bg-transparent">
+            {innerContent}
+          </Card>
         </Box>
       ) : (
         <Card variant="elevated" size="md" className="mb-4 overflow-hidden">

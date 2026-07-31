@@ -79,12 +79,17 @@ async function todayTopicBudgetUsedAbs(topicId: string): Promise<number> {
  * actually moved the weight — writes it and appends a `set_topic_weight` row.
  * When the budget is exhausted (appliedDelta 0) NOTHING is written: the signal
  * is recorded elsewhere, the weight is unchanged, and the digest decides.
+ *
+ * Returns the change-log id whenever a row was appended. This is NOT optional
+ * bookkeeping: the feedback layer stores the ids a leaf minted onto the verdict
+ * row and un-voting reverts exactly those, so a helper that appends without
+ * handing the id back produces a leaf that can be cast but never un-cast.
  */
 export async function nudgeTopic(
   topicId: string,
   delta: number,
   source: PersonaChangeLogSource,
-): Promise<{ applied: boolean; after: number }> {
+): Promise<{ applied: boolean; after: number; changeLogId?: string }> {
   const topic = await topicsCollection.find(topicId);
   const usedAbs = await todayTopicBudgetUsedAbs(topicId);
   const result = nudgeTopicWeight(topic.weight, delta, usedAbs);
@@ -94,7 +99,7 @@ export async function nudgeTopic(
   }
 
   await topicService.setWeight(topicId, result.after);
-  await changeLogService.append({
+  const row = await changeLogService.append({
     actionType: ACTION_NAMES.SET_TOPIC_WEIGHT,
     action: {
       targetId: topicId,
@@ -105,7 +110,7 @@ export async function nudgeTopic(
     source,
     summary: `Adjusted topic weight ${fmt(result.before)} → ${fmt(result.after)}`,
   });
-  return { applied: true, after: result.after };
+  return { applied: true, after: result.after, changeLogId: row.id };
 }
 
 /**
@@ -138,23 +143,26 @@ export async function setTopicWeightAbsolute(
 
 /**
  * Set a topic's high-priority flag (score-only boost; no weight delta). Records
- * the prior boolean so `revertChange` can restore it.
+ * the prior boolean so `revertChange` can restore it, and returns the
+ * change-log id so the caller can make the change un-votable (see nudgeTopic).
+ * A no-op returns `applied: false` and no id — there is nothing to revert.
  */
 export async function setTopicHighPriority(
   topicId: string,
   highPriority: boolean,
   source: PersonaChangeLogSource,
-): Promise<void> {
+): Promise<{ applied: boolean; changeLogId?: string }> {
   const topic = await topicsCollection.find(topicId);
   const before = topic.highPriority;
-  if (before === highPriority) return; // no-op — nothing to log
+  if (before === highPriority) return { applied: false }; // no-op — nothing to log
   await topicService.setHighPriority(topicId, highPriority);
-  await changeLogService.append({
+  const row = await changeLogService.append({
     actionType: ACTION_NAMES.SET_HIGH_PRIORITY,
     action: { targetId: topicId, before, after: highPriority },
     source,
     summary: highPriority ? 'Pinned topic as high priority' : 'Unpinned topic',
   });
+  return { applied: true, changeLogId: row.id };
 }
 
 /**
@@ -167,7 +175,7 @@ export async function nudgeFactWeight(
   factId: string,
   delta: number,
   source: PersonaChangeLogSource,
-): Promise<void> {
+): Promise<{ applied: boolean; changeLogId?: string }> {
   const fact = await factsCollection.find(factId);
   const before: number | null = fact.weight ?? null;
   const after = clampWeight((before ?? 1) + delta);
@@ -177,12 +185,13 @@ export async function nudgeFactWeight(
       f.updatedAt = new Date();
     });
   });
-  await changeLogService.append({
+  const row = await changeLogService.append({
     actionType: ACTION_NAMES.SET_FACT_WEIGHT,
     action: { targetId: factId, before, after },
     source,
     summary: `Adjusted fact weight ${fmt(before ?? 1)} → ${fmt(after)}`,
   });
+  return { applied: true, changeLogId: row.id };
 }
 
 /** Wrong-location input MINUS the user's locations — those are loaded here. */

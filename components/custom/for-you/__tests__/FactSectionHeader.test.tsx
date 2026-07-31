@@ -79,6 +79,38 @@ describe('FactSectionHeader', () => {
         expect(queryByText('+12')).toBeNull();
     });
 
+    // Headline sections (P5) reuse this header with two opt-outs: they are not
+    // "News about:" anything, and their title is app copy already in the
+    // reader's language.
+    it('renders the "News about:" prefix by default', () => {
+        const { getByText } = render(
+            <FactSectionHeader title="Elections" eventType={null} total={5} onPress={jest.fn()} />,
+        );
+        expect(getByText('forYou.sectionPrefix')).toBeTruthy();
+    });
+
+    it('omits the prefix row entirely when prefix is null', () => {
+        const { queryByText, getByText } = render(
+            <FactSectionHeader
+                title="Around the world"
+                eventType={null}
+                total={5}
+                onPress={jest.fn()}
+                prefix={null}
+                translateTitle={false}
+            />,
+        );
+        expect(queryByText('forYou.sectionPrefix')).toBeNull();
+        expect(getByText('Around the world')).toBeTruthy();
+    });
+
+    it('renders no open affordance for a section with no destination', () => {
+        const { queryByTestId } = render(
+            <FactSectionHeader title="Around the world" eventType={null} total={0} prefix={null} />,
+        );
+        expect(queryByTestId('dashboard-section-open')).toBeNull();
+    });
+
     it('the round button opens the fact feed on tap', () => {
         const onPress = jest.fn();
         const { getByTestId } = render(

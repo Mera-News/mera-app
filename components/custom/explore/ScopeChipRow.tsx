@@ -1,3 +1,4 @@
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { ExploreScope } from '@/lib/explore/scopes';
@@ -12,6 +13,12 @@ const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 /** Trailing ghost "+" chip id — a sentinel appended after the real scopes,
  *  never selectable/selected, navigates to the locations screen. */
 const ADD_PLACES_ID = 'add-places';
+
+/** Fallback chrome for glass chips (add-places + unselected scopes) wherever
+ *  GlassPanel can't paint real glass — matches the pre-glass flat look. The
+ *  active/selected chip stays a solid accent fill (its own selection signal,
+ *  not chrome) and is never wrapped in glass. */
+const CHIP_FALLBACK_CLASS = 'border border-gray-700 bg-transparent';
 
 type ChipItem = ExploreScope | { readonly id: typeof ADD_PLACES_ID };
 
@@ -38,31 +45,27 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
     const renderItem: ListRenderItem<ChipItem> = useCallback(
         ({ item }) => {
             if (item.id === ADD_PLACES_ID) {
+                // Ghost "+" chip is never "selected" — always glass (or its
+                // flat fallback), never the solid accent fill.
                 return (
-                    <Pressable
-                        onPress={() => router.push('/logged-in/locations')}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('explore.addPlaces')}
-                        className="flex-row items-center justify-center rounded-full border px-4 py-2 mr-2 border-gray-700 bg-transparent"
-                    >
-                        <MaterialIcons name="add" size={16} color={ACCENT} />
-                    </Pressable>
+                    <GlassPanel radius={999} className="mr-2" fallbackClassName={CHIP_FALLBACK_CLASS}>
+                        <Pressable
+                            onPress={() => router.push('/logged-in/locations')}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('explore.addPlaces')}
+                            className="flex-row items-center justify-center px-4 py-2"
+                        >
+                            <MaterialIcons name="add" size={16} color={ACCENT} />
+                        </Pressable>
+                    </GlassPanel>
                 );
             }
 
             const scope = item as ExploreScope;
             const active = scope.id === selectedId;
             const label = scope.kind === 'world' ? t('explore.scopeWorld') : scope.label;
-            return (
-                <Pressable
-                    onPress={() => onSelect(scope)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={label}
-                    className={`flex-row items-center rounded-full border px-4 py-2 mr-2 ${
-                        active ? 'bg-primary-400 border-primary-400' : 'border-gray-700 bg-transparent'
-                    }`}
-                >
+            const chipInner = (
+                <>
                     {scope.kind === 'country' && scope.flagEmoji ? (
                         <Text className="text-base mr-1.5">{scope.flagEmoji}</Text>
                     ) : (
@@ -80,7 +83,39 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
                     >
                         {label}
                     </Text>
-                </Pressable>
+                </>
+            );
+
+            // Active chip keeps its solid accent fill — that fill IS the
+            // selection signal, so it is never glassed. Inactive chips get
+            // the Liquid Glass treatment (with the pre-glass bordered/
+            // transparent look as their non-iOS-26 fallback).
+            if (active) {
+                return (
+                    <Pressable
+                        onPress={() => onSelect(scope)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={label}
+                        className="flex-row items-center rounded-full border px-4 py-2 mr-2 bg-primary-400 border-primary-400"
+                    >
+                        {chipInner}
+                    </Pressable>
+                );
+            }
+
+            return (
+                <GlassPanel radius={999} className="mr-2" fallbackClassName={CHIP_FALLBACK_CLASS}>
+                    <Pressable
+                        onPress={() => onSelect(scope)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={label}
+                        className="flex-row items-center px-4 py-2"
+                    >
+                        {chipInner}
+                    </Pressable>
+                </GlassPanel>
             );
         },
         [selectedId, onSelect, t],

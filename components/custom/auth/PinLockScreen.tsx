@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -121,82 +122,93 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
   const locked = cooldownMs > 0;
 
   return (
-    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }}>
-      <VStack className="flex-1 px-6 items-center justify-center" space="lg">
-        <MeraLogo size={88} />
+    // Unpadded wrapper. The backdrop hangs off THIS box rather than the padded
+    // one below so it spans the FULL screen including the safe areas — an
+    // absolute fill resolves against its parent's CONTENT box, so mounting it
+    // inside the padded box left black strips top and bottom.
+    <Box className="flex-1">
+      {/* Page background. Must be the FIRST child so it paints behind
+          everything else on the page. */}
+      <AbstractGradientBackdrop />
 
-        <VStack className="items-center" space="xs">
-          <Text className="text-white text-xl font-semibold">
-            {title ?? t('pin.lockTitle')}
-          </Text>
-          <Text className="text-typography-500 text-sm text-center">
-            {subtitle ?? t('pin.lockSubtitle')}
-          </Text>
+      {/* No opaque fill: the backdrop above is the page background. */}
+      <Box className="flex-1" style={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }}>
+        <VStack className="flex-1 px-6 items-center justify-center" space="lg">
+          <MeraLogo size={88} />
+
+          <VStack className="items-center" space="xs">
+            <Text className="text-white text-xl font-semibold">
+              {title ?? t('pin.lockTitle')}
+            </Text>
+            <Text className="text-typography-500 text-sm text-center">
+              {subtitle ?? t('pin.lockSubtitle')}
+            </Text>
+          </VStack>
+
+          <Box className="mt-6">
+            <PinKeypad
+              value={pin}
+              onChange={handleChange}
+              length={PIN_LENGTH}
+              disabled={locked || verifying}
+              error={error}
+            />
+          </Box>
+
+          <Box className="h-6 items-center justify-center">
+            {locked ? (
+              <Text className="text-error-400 text-sm">
+                {t('pin.lockedTryAgain', { time: fmtCountdown(cooldownMs) })}
+              </Text>
+            ) : error ? (
+              <Text className="text-error-400 text-sm">{t('pin.incorrect')}</Text>
+            ) : null}
+          </Box>
+
+          {showForgot && (
+            <Pressable onPress={() => setShowForgotModal(true)} hitSlop={8}>
+              <Text className="text-primary-400 text-sm">{t('pin.forgot')}</Text>
+            </Pressable>
+          )}
         </VStack>
 
-        <Box className="mt-6">
-          <PinKeypad
-            value={pin}
-            onChange={handleChange}
-            length={PIN_LENGTH}
-            disabled={locked || verifying}
-            error={error}
-          />
-        </Box>
-
-        <Box className="h-6 items-center justify-center">
-          {locked ? (
-            <Text className="text-error-400 text-sm">
-              {t('pin.lockedTryAgain', { time: fmtCountdown(cooldownMs) })}
-            </Text>
-          ) : error ? (
-            <Text className="text-error-400 text-sm">{t('pin.incorrect')}</Text>
-          ) : null}
-        </Box>
-
-        {showForgot && (
-          <Pressable onPress={() => setShowForgotModal(true)} hitSlop={8}>
-            <Text className="text-primary-400 text-sm">{t('pin.forgot')}</Text>
-          </Pressable>
-        )}
-      </VStack>
-
-      <Modal isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} size="sm">
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader className="border-gray-700 pb-4">
-            <Text className="text-xl font-semibold text-white">{t('pin.forgotTitle')}</Text>
-          </ModalHeader>
-          <ModalBody className="py-6">
-            <Text className="text-gray-300 text-base leading-relaxed">
-              {isConnected ? t('pin.forgotBody') : t('pin.forgotOffline')}
-            </Text>
-          </ModalBody>
-          <ModalFooter className="border-t border-gray-700 pt-4">
-            <VStack className="w-full" space="md">
-              <Button
-                action="primary"
-                onPress={() => {
-                  setShowForgotModal(false);
-                  onForgot?.();
-                }}
-                isDisabled={!isConnected}
-                className="w-full"
-              >
-                <ButtonText>{t('pin.forgotConfirm')}</ButtonText>
-              </Button>
-              <Button
-                variant="outline"
-                action="secondary"
-                onPress={() => setShowForgotModal(false)}
-                className="w-full"
-              >
-                <ButtonText>{t('common.cancel')}</ButtonText>
-              </Button>
-            </VStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        <Modal isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} size="sm">
+          <ModalBackdrop />
+          <ModalContent>
+            <ModalHeader className="border-gray-700 pb-4">
+              <Text className="text-xl font-semibold text-white">{t('pin.forgotTitle')}</Text>
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <Text className="text-gray-300 text-base leading-relaxed">
+                {isConnected ? t('pin.forgotBody') : t('pin.forgotOffline')}
+              </Text>
+            </ModalBody>
+            <ModalFooter className="border-t border-gray-700 pt-4">
+              <VStack className="w-full" space="md">
+                <Button
+                  action="primary"
+                  onPress={() => {
+                    setShowForgotModal(false);
+                    onForgot?.();
+                  }}
+                  isDisabled={!isConnected}
+                  className="w-full"
+                >
+                  <ButtonText>{t('pin.forgotConfirm')}</ButtonText>
+                </Button>
+                <Button
+                  variant="outline"
+                  action="secondary"
+                  onPress={() => setShowForgotModal(false)}
+                  className="w-full"
+                >
+                  <ButtonText>{t('common.cancel')}</ButtonText>
+                </Button>
+              </VStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Box>
     </Box>
   );
 };

@@ -266,6 +266,26 @@ async function refreshSuggestionsInStore(): Promise<void> {
   // is no server count yet (e.g. a standalone scoring pass after a fresh wipe).
   const { articleCount } = useForYouStore.getState();
   useForYouStore.getState().setCounts(articleCount || merged.length, relevantArticleCount);
+
+  // P6 — republish the "you filtered this, showing it because it's major news"
+  // labels for the rows we just put on screen. Hooked HERE, at the one place
+  // every surface's rows land, so scoring, feed-sync, the add/retire-filter
+  // sweeps (which all end in a refresh) and a cold launch are covered by one
+  // wiring point instead of four. Derived and non-fatal: a failure costs a label
+  // this pass, never a row, so it must not reject the refresh.
+  //
+  // Lazy require, mirroring refreshUi() in suppression-sweep: a static import
+  // the other way round would close a load-time cycle (suppression-sweep already
+  // requires this module).
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sweep = require('./suppression-sweep') as typeof import('./suppression-sweep');
+    await sweep.refreshHardFilterLabels();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'SuggestionSyncService', method: 'refreshHardFilterLabels' },
+    });
+  }
 }
 
 /**
@@ -328,6 +348,10 @@ function suggestionsDisplayEqual(a: ForYouSuggestion, b: ForYouSuggestion): bool
     a.rawScore === b.rawScore &&
     a.eventType === b.eventType &&
     a.headlineScope === b.headlineScope &&
+    // Load-bearing: the Dashboard's per-country headline sections key on this,
+    // so a country code arriving on a later sync must mark the row CHANGED —
+    // otherwise the section only appears once some unrelated field shifts.
+    (a.headlineCountryCode ?? null) === (b.headlineCountryCode ?? null) &&
     clustersSig(a.clusters) === clustersSig(b.clusters) &&
     topicIdsSig(a.userTopicIds) === topicIdsSig(b.userTopicIds) &&
     matchedTopicsSig(a.matchedTopics) === matchedTopicsSig(b.matchedTopics)

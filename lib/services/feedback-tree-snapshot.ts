@@ -11,8 +11,14 @@
 
 import type { FeedbackTree } from '../news-harness/feedback-tree/types';
 
-/** Structural schema version this app understands (gates minAppSchema). */
-export const APP_FEEDBACK_SCHEMA = 2;
+/** Structural schema version this app understands (gates minAppSchema).
+ *
+ *  v3 adds the `has_event_type` visibleIf gate. Bumped so the SERVER can
+ *  publish a tree that uses the key with `minAppSchema: 3` and have it dropped
+ *  by older apps rather than silently ignored. (Publishing it unguarded is also
+ *  safe — `evaluateCondition` ignores gate keys it doesn't know — so the bump
+ *  is about intent, not safety.) */
+export const APP_FEEDBACK_SCHEMA = 3;
 
 export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
   version: 2,
@@ -156,13 +162,29 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           id: 'this_category',
           labelKey: 'feedback.this_category',
           labelDefault: 'This category',
-          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_category', strength: 0.5 }] },
+          // D10: "this category" means the category, not any story that happens
+          // to mention its name — so it mints a STRUCTURED filter (exact match
+          // on the article's category field) rather than a substring scan.
+          leaf: {
+            actions: [
+              { type: 'add_suppression', pattern: 'from_context_category', kind: 'category', strength: 0.5 },
+            ],
+          },
         },
         {
           id: 'this_kind_of_event',
           labelKey: 'feedback.this_kind_of_event',
           labelDefault: 'This kind of event',
-          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_eventType', strength: 0.5 }] },
+          // Hidden while the article has no event type — which is currently
+          // EVERY article (the server populates `event_type` on none of ~303k
+          // rows), so this leaf would otherwise apply nothing and show no
+          // toast. Reappears on its own once tagging writes the field.
+          visibleIf: { has_event_type: true },
+          leaf: {
+            actions: [
+              { type: 'add_suppression', pattern: 'from_context_eventType', kind: 'event_type', strength: 0.5 },
+            ],
+          },
         },
         {
           id: 'tell_mera_why',
@@ -208,8 +230,16 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
       labelDefault: 'More news from this place',
       icon: 'location-on',
       // No visibleIf: has_geo_mismatch is dislike-specific ("wrong place");
-      // there's no clean inverse. Shown unconditionally — the leaf no-ops
-      // client-side when there's no geoText.
+      // there's no clean inverse.
+      //
+      // This used to say the leaf is "shown unconditionally" and "no-ops
+      // client-side" — that is no longer true. `isInertActionLeaf` (added in
+      // the not-interested wave) HIDES any leaf whose actions all resolve to
+      // nothing, precisely so a tap can never do nothing. `from_context_geo`
+      // resolves off geoText, so this row now disappears whenever geoText is
+      // absent — which, until article enrichment runs, is every article.
+      // Intended behaviour, but it is a hide, not a no-op: the row is simply
+      // not there rather than present-and-inert.
       leaf: { actions: [{ type: 'add_negative_topic', text: 'from_context_geo', weight: 0.6 }] },
     },
     {

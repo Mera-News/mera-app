@@ -328,6 +328,37 @@ describe('reconstructLookups', () => {
     expect(chunkIdToCandidates.get('score:1')!.map((c) => c.id)).toEqual(['f', 'g']);
   });
 
+  // P4b: an all-TOP-HEADLINE batch was chunked at 3, not 5. Decode passes the
+  // size persisted on the batch; slicing with the standard 5 here would shift
+  // every score onto a neighbouring article with no error raised anywhere.
+  it('honours an explicit chunk size (headline batches chunk at 3)', () => {
+    const candidateIds = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+    const { chunkIdToCandidates } = reconstructLookups(
+      ['score:0', 'score:1', 'score:2'],
+      candidateIds,
+      3,
+    );
+
+    expect(chunkIdToCandidates.get('score:0')!.map((c) => c.id)).toEqual([
+      'a', 'b', 'c',
+    ]);
+    expect(chunkIdToCandidates.get('score:1')!.map((c) => c.id)).toEqual([
+      'd', 'e', 'f',
+    ]);
+    expect(chunkIdToCandidates.get('score:2')!.map((c) => c.id)).toEqual(['g']);
+  });
+
+  it('falls back to the standard size for a non-positive chunk size', () => {
+    const { chunkIdToCandidates } = reconstructLookups(
+      ['score:0'],
+      ['a', 'b', 'c', 'd', 'e', 'f'],
+      0,
+    );
+    expect(chunkIdToCandidates.get('score:0')!.map((c) => c.id)).toEqual([
+      'a', 'b', 'c', 'd', 'e',
+    ]);
+  });
+
   it('ignores non-score call ids', () => {
     const { chunkIdToCandidates } = reconstructLookups(
       ['reason:x', 'reason:y'],

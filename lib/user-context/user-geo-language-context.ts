@@ -16,10 +16,19 @@
 
 import { useEffect, useState } from 'react';
 import { getAll } from '@/lib/database/services/location-service';
+import {
+    getActive as getActivePublicationPreferences,
+    observeActive as observeActivePublicationPreferences,
+} from '@/lib/database/services/publication-preference-service';
 import { alpha2ToAlpha3 } from '@/lib/explore/scopes';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { useAppLanguage, useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { baseLang, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import {
+    baseLang,
+    normAlpha3,
+    normPublicationName,
+    type UserGeoLanguageContext,
+} from '@/lib/feed-grouping/geo-language-priority';
 
 /**
  * Resolve the user's geo/language context from on-device state:
@@ -45,6 +54,7 @@ import { baseLang, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-l
 export async function loadUserGeoLanguageContext(): Promise<UserGeoLanguageContext | null> {
     try {
         const locations = await getAll(); // weight-desc (canonical ordering)
+        const pubPrefs = await getActivePublicationPreferences();
 
         const homeLoc = locations.find((l) => l.role === 'home');
         let homeCountryAlpha3: string | null = homeLoc
@@ -70,20 +80,82 @@ export async function loadUserGeoLanguageContext(): Promise<UserGeoLanguageConte
 
         const appLanguageBase = baseLang(useAppLanguageStore.getState().appLanguage);
 
-        return { homeCountryAlpha3, otherCountriesAlpha3, appLanguageBase };
+        // source-pref (D3). Only POSITIVE preferences (`weight > 0`) — a
+        // downrank or a mute is a scoring/exclusion concern that already has its
+        // own machinery; feeding one in here would make "shown less" also mean
+        // "and it fronts the card", which is the opposite of what it promises.
+        //
+        // The two row kinds are told apart by `scopeKind` alone (source-pref
+        // v47 / D6): a scope row's `publicationName` is a human LABEL ("India"),
+        // never a publication, so it must not land in `preferredPublications`.
+        const preferredPublications = new Set<string>();
+        const preferredCountriesAlpha3 = new Set<string>();
+        for (const p of pubPrefs) {
+            if (p.weight <= 0) continue;
+            if (p.scopeKind === 'country') {
+                const a3 = normAlpha3(p.scopeValue);
+                if (a3 !== null) preferredCountriesAlpha3.add(a3);
+                continue;
+            }
+            if (p.scopeKind != null) continue; // unknown future scope kind — ignore, don't guess
+            const name = normPublicationName(p.publicationName);
+            if (name !== null) preferredPublications.add(name);
+        }
+
+        // Spread CONDITIONALLY — same idiom as `buildPersonaContext`'s
+        // filters/proposal blocks. A user who has expressed NO source preference
+        // gets a context object byte-identical to the pre-source-pref one, which
+        // is the strongest available form of this wave's regression contract:
+        // the legacy path is not "equivalent", it is the same object shape, and
+        // the exact-match seam tests keep asserting it unchanged.
+        return {
+            homeCountryAlpha3,
+            otherCountriesAlpha3,
+            appLanguageBase,
+            ...(preferredPublications.size > 0 ? { preferredPublications } : {}),
+            ...(preferredCountriesAlpha3.size > 0 ? { preferredCountriesAlpha3 } : {}),
+        };
     } catch {
         return null; // fail open — legacy geo/language-blind behavior downstream
     }
 }
 
 /**
- * React hook: loads the user's geo/language context and re-loads it whenever the
- * app language changes. Returns `null` while loading (and on failure), which the
+ * React hook: loads the user's geo/language + source-preference context and
+ * re-loads it whenever the app language changes OR the user's active source
+ * preferences change. Returns `null` while loading (and on failure), which the
  * pure comparators handle gracefully as legacy behavior.
+ *
+ * source-pref: the preference subscription is LOAD-BEARING, not a nicety. The
+ * whole feature is applied at render time, so "prefer Indian sources" is
+ * supposed to take effect on the very next render — but a hook memoized on
+ * `[appLanguage]` alone would not re-read the preferences until the language
+ * changed or the screen remounted, and confirming a proposal in chat would
+ * appear to do nothing. `observeActive()` emits on every insert/update/retire of
+ * `publication_preferences`, including the executor's and the Activity undo's.
+ *
+ * The subscription only bumps a revision counter rather than holding the rows,
+ * so the single source of truth for BUILDING a context stays
+ * `loadUserGeoLanguageContext` (which background tasks call directly).
  */
 export function useUserGeoLanguageContext(): UserGeoLanguageContext | null {
     const appLanguage = useAppLanguage();
     const [ctx, setCtx] = useState<UserGeoLanguageContext | null>(null);
+    const [prefsRevision, setPrefsRevision] = useState(0);
+
+    useEffect(() => {
+        // Fail open, exactly like the loader: if the observable cannot be built
+        // (no DB in a test/background context), the context simply stops
+        // auto-refreshing — it never throws into the render tree.
+        try {
+            const sub = observeActivePublicationPreferences().subscribe(() => {
+                setPrefsRevision((r) => r + 1);
+            });
+            return () => sub.unsubscribe();
+        } catch {
+            return undefined;
+        }
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -95,7 +167,7 @@ export function useUserGeoLanguageContext(): UserGeoLanguageContext | null {
         return () => {
             cancelled = true;
         };
-    }, [appLanguage]);
+    }, [appLanguage, prefsRevision]);
 
     return ctx;
 }

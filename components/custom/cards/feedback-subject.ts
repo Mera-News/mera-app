@@ -87,10 +87,18 @@ export function buildContextJson(subject: FeedbackSubject): string | null {
 export function feedbackSubjectFromSuggestion(
   suggestion: ForYouSuggestion,
   surface: FeedbackSurface,
+  /** Fields the caller resolved that a `ForYouSuggestion` does not carry.
+   *  `category` lives on the `article_suggestions` ROW, not on the projected
+   *  suggestion, so only a caller that read the row (via
+   *  `getSuggestionFeedbackContext`) can supply it — and without it
+   *  `buildContextJson` drops the category the digest's category-suppression
+   *  candidates key on. */
+  extras?: { category?: string | null },
 ): FeedbackSubject {
   return {
     origin: 'suggestion',
     surface,
+    category: extras?.category ?? null,
     articleId: suggestion.articleId,
     suggestionId: suggestion._id,
     title: suggestion.title_en ?? '',

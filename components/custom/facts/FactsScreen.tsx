@@ -68,7 +68,9 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
     const isEmpty = screenFacts !== null && screenFacts.length === 0;
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader
                 title={t('facts.screenTitle', { defaultValue: 'Your facts' })}
                 subtitle={t('facts.screenSubtitle', { defaultValue: 'What Mera knows about you' })}

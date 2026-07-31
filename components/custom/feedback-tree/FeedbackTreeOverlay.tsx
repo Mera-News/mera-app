@@ -1,9 +1,14 @@
-// FeedbackTreeOverlay — the SERVER-OWNED dislike/feedback tree, rendered as a
-// dimming overlay over the article card. Opening it dims the underlying content
-// and floats high-contrast option chips; picking a leaf resolves it to concrete
-// persona mutations (via the Wave-9 `applyPersonaActions` dispatcher), applies
-// them optimistically, and shows an Undo toast. Destructive leaves (`confirm`,
-// e.g. mute-publication) get an in-overlay confirm step first.
+// FeedbackTreeOverlay — the SERVER-OWNED feedback tree, rendered as a dimming
+// overlay over the article card. Opening it dims the underlying content and
+// floats high-contrast option chips; picking a leaf resolves it to concrete
+// persona mutations, applies them optimistically (shared `applyLeafActions`),
+// and shows an Undo toast. Destructive leaves (`confirm`, e.g. mute-publication)
+// get an in-overlay confirm step first.
+//
+// D17 — it serves BOTH verdicts now. `root` selects the tree; a thumbs-UP on
+// the actions surfaces used to open nothing at all, so the like tree (which
+// carries real boost/weight actions) never ran. Presentation differs from the
+// Feed's inline surface; the SEMANTICS are the same shared path.
 //
 // Content (branch labels, icons, gating, actions) is 100% owned by the fetched
 // tree (feedback-tree-service, bundled fallback). Only the CHROME here is local.
@@ -14,15 +19,12 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import { applyPersonaActions } from '@/lib/database/services/persona-action-executor';
-import { revertChange } from '@/lib/database/services/persona-change-log-service';
-import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
-import logger from '@/lib/logger';
+import { applyLeafActions } from '@/components/custom/feedback-tree/apply-leaf-actions';
+import { hapticLight, hapticMedium } from '@/lib/haptics';
 import {
   resolveLeafActions,
   type FeedbackTreeNode,
   type LocalFeedbackContext,
-  type ResolvedPersonaAction,
 } from '@/lib/news-harness/feedback-tree';
 import { useFeedbackTreeEngine } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
@@ -45,6 +47,21 @@ interface FeedbackTreeOverlayProps {
   chatContext: ChatContext;
   /** Initial message auto-sent when a leaf escalates INTO chat. */
   chatMessage: string;
+  /** Which tree to show. Defaults to 'dislike' (the historical behavior). */
+  root?: 'like' | 'dislike';
+  /** A TERMINAL leaf was picked — the tapped node-id path, how many persona
+   *  actions it actually applied, and whether the verdict should be treated as
+   *  COMMITTED. The host persists the path onto the stored verdict row and
+   *  stamps it processed when `appliedCount > 0`, so the digest can't apply a
+   *  second helping (D16).
+   *
+   *  `committed` is passed EXPLICITLY rather than inferred from
+   *  `appliedCount === 0`, which cannot tell a leaf that changes nothing BY
+   *  DESIGN (seenOnly) from one whose placeholders the local context simply
+   *  couldn't fill. Only the first should leave the thumb unfilled; treating
+   *  both alike is how "I've seen this already" came to fill the thumb on this
+   *  surface while the inline tree left it hollow for the same leaf. */
+  onLeafPicked?: (pathIds: string[], appliedCount: number, committed: boolean) => void;
 }
 
 /** i18n chrome helper — always supplies an English default so it renders pre-merge. */
@@ -63,26 +80,30 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
   context,
   chatContext,
   chatMessage,
+  root = 'dislike',
+  onLeafPicked,
 }) => {
   const { t } = useTranslation();
   const c = useChrome();
   const toast = useToast();
 
   // Tree navigation (fetch + root selection + gated descent) lives in the shared
-  // engine; the overlay keeps ONLY its dislike-specific chrome state below.
-  const { path, currentChildren, findNode, hasVisibleChildren, descend, backtrack } =
-    useFeedbackTreeEngine({ active: visible, root: 'dislike', context });
+  // engine; the overlay keeps ONLY its chrome state below.
+  const { path, pathIds, currentChildren, findNode, hasVisibleChildren, descend, backtrack } =
+    useFeedbackTreeEngine({ active: visible, root, context });
 
-  const [browsing, setBrowsing] = useState(false);
+  // The one-tap fast path ("Not that important") is a DISLIKE affordance — the
+  // like tree has no equivalent, so it opens straight onto its options.
+  const [browsing, setBrowsing] = useState(root === 'like');
   // Pending destructive confirm.
   const [confirming, setConfirming] = useState<FeedbackTreeNode | null>(null);
 
   // Reset the overlay-local chrome whenever it opens (the engine resets the path).
   useEffect(() => {
     if (!visible) return;
-    setBrowsing(false);
+    setBrowsing(root === 'like');
     setConfirming(null);
-  }, [visible]);
+  }, [visible, root]);
 
   const label = useCallback(
     (node: FeedbackTreeNode) => t(node.labelKey, { defaultValue: node.labelDefault }) as string,
@@ -92,58 +113,6 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
   const fastPathNode = useMemo(() => findNode('not_important'), [findNode]);
 
   // ---- Toasts --------------------------------------------------------------
-
-  const showUndoToast = useCallback(
-    (summary: string, changeLogIds: string[]) => {
-      toast.show({
-        placement: 'bottom',
-        duration: 6000,
-        render: ({ id }: { id: string }) => (
-          <Toast nativeID={`fbt-${id}`} action="success" variant="solid">
-            <HStack className="flex-1 items-center justify-between" space="md">
-              <VStack className="flex-1">
-                <ToastTitle>{c('appliedTitle', 'Got it — feed updated')}</ToastTitle>
-                {summary ? <ToastDescription>{summary}</ToastDescription> : null}
-              </VStack>
-              {changeLogIds.length > 0 ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={c('undo', 'Undo')}
-                  onPress={() => {
-                    void (async () => {
-                      hapticLight();
-                      for (const cid of changeLogIds) {
-                        try {
-                          await revertChange(cid);
-                        } catch (err) {
-                          logger.captureException(err, {
-                            tags: { component: 'FeedbackTreeOverlay', method: 'undo' },
-                          });
-                        }
-                      }
-                      toast.close(id);
-                      toast.show({
-                        placement: 'bottom',
-                        duration: 2000,
-                        render: () => (
-                          <Toast action="info" variant="solid">
-                            <ToastTitle>{c('undoneTitle', 'Change undone')}</ToastTitle>
-                          </Toast>
-                        ),
-                      });
-                    })();
-                  }}
-                >
-                  <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>{c('undo', 'Undo')}</Text>
-                </Pressable>
-              ) : null}
-            </HStack>
-          </Toast>
-        ),
-      });
-    },
-    [toast, c],
-  );
 
   const showInfoToast = useCallback(
     (title: string, body?: string) => {
@@ -165,19 +134,6 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
 
   // ---- Leaf handling -------------------------------------------------------
 
-  const applyAndOfferUndo = useCallback(
-    async (actions: ResolvedPersonaAction[], summary: string) => {
-      hapticSuccess();
-      // ResolvedPersonaAction is structurally a PersonaAction subset.
-      const results = await applyPersonaActions(actions, 'feedback');
-      const changeLogIds = results
-        .filter((r) => r.applied && r.changeLogId)
-        .map((r) => r.changeLogId as string);
-      showUndoToast(summary, changeLogIds);
-    },
-    [showUndoToast],
-  );
-
   const performLeaf = useCallback(
     (node: FeedbackTreeNode) => {
       const leaf = node.leaf;
@@ -190,8 +146,13 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
         return;
       }
 
+      // Every non-openChat leaf is terminal — tell the host so it can persist
+      // the tapped path onto the verdict row (D15's commit discriminator).
+      const leafPath = [...pathIds, node.id];
+
       // Nudge — a SUGGESTION, not a persona mutation.
       if (leaf.nudge) {
+        onLeafPicked?.(leafPath, 0, true);
         onClose();
         if (leaf.nudge === 'subscribe') {
           showInfoToast(
@@ -205,8 +166,12 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
         return;
       }
 
-      // "I've seen this" — acknowledge only.
+      // "I've seen this" — acknowledge only, and DO NOT commit: a filled thumb
+      // promises "this changed your persona" and this leaf changes nothing by
+      // declaration. Matches InlineFeedbackTree, so the same leaf can't mean two
+      // different things depending on which surface the user tapped it from.
       if (leaf.seenOnly) {
+        onLeafPicked?.(leafPath, 0, false);
         onClose();
         showInfoToast(c('seenAck', "Got it — we'll show fewer you've seen"));
         return;
@@ -216,12 +181,17 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       const actions = resolveLeafActions(leaf, context);
       onClose();
       if (actions.length === 0) {
+        // Placeholders the context couldn't fill — the user DID pick a reason,
+        // so it commits; only the mutation is missing.
+        onLeafPicked?.(leafPath, 0, true);
         showInfoToast(c('thanks', 'Thanks for the feedback'));
         return;
       }
-      void applyAndOfferUndo(actions, label(node));
+      void applyLeafActions(actions, label(node)).then((applied) => {
+        onLeafPicked?.(leafPath, applied, true);
+      });
     },
-    [onClose, chatContext, chatMessage, context, c, showInfoToast, applyAndOfferUndo, label],
+    [onClose, chatContext, chatMessage, context, c, showInfoToast, label, onLeafPicked, pathIds],
   );
 
   const onSelect = useCallback(
@@ -339,6 +309,19 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
                 <MaterialIcons name="close" size={22} color="#8a8a8a" />
               </Pressable>
             </HStack>
+
+            {/* D15 — the same sentence the inline surface shows, on the same
+                key, so the rule reads identically wherever a thumb is tinted.
+                Disappears the moment the user has answered. */}
+            {path.length === 0 && !confirming ? (
+              <Text
+                testID="feedback-caption"
+                className="text-typography-400"
+                style={{ fontSize: 11, lineHeight: 15, paddingBottom: 8 }}
+              >
+                {t('swipeFeed.feedbackCaption')}
+              </Text>
+            ) : null}
 
             {confirming ? (
               // Destructive confirm step.

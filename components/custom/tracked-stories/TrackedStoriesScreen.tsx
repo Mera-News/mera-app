@@ -1,3 +1,5 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -80,6 +82,11 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
     const renderItem: ListRenderItem<TrackedStoryModel> = useCallback(
         ({ item }) => {
             const headline = item.llmHeadline ?? item.fallbackTitle;
+            // EU AI Act Art. 50 transparency label (Group C1) — only when the
+            // displayed headline is actually the LLM-generated one; the
+            // `fallbackTitle` path (no `llmHeadline` yet) has no AI text to
+            // disclose.
+            const isLlmHeadline = !!item.llmHeadline;
             const latest = item.latestTitle;
             const showLatest = !!latest && latest.trim().length > 0 && latest !== headline;
             const unseen = item.unseenCount ?? 0;
@@ -139,6 +146,14 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                                 numberOfLines={2}
                                 className="text-white"
                             />
+                            {/* Short copy here, not the article caption: this is a
+                                section heading for a story the user chose to follow,
+                                not a recommendation — "check other sources" would be
+                                a non-sequitur, and the full string wraps to 2-3 lines
+                                under every row. */}
+                            {isLlmHeadline && (
+                                <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} />
+                            )}
                             {showLatest && (
                                 <TranslatableDynamic
                                     text={latest as string}
@@ -225,7 +240,14 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No `bg-black`: embedded, this sits inside ForYouScreen and a flat fill
+        // here would punch a hole in that page's backdrop; standalone, the
+        // backdrop below is the page background.
+        <Box className="flex-1">
+            {/* Page background — only when standalone. Embedded, the host page
+                already mounts one and a second would stack two animated fields. */}
+            {!embedded && <AbstractGradientBackdrop />}
+
             {!embedded && (
                 <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
                     <Pressable

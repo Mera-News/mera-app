@@ -23,6 +23,7 @@
     "home": "होम"
   },
   "auth": {
+    "reauthBanner": "Mera को सिंक करने के लिए फिर से साइन इन करें",
     "emailPlaceholder": "अपना ईमेल पता दर्ज करें",
     "otpPlaceholder": "6 अंकों का कोड दर्ज करें",
     "codeSentTitle": "कोड भेजा गया!",
@@ -200,6 +201,10 @@
     "irrelevant": "अप्रासंगिक",
     "unprocessed": "अप्रोसेस्ड"
   },
+  "aiDisclosure": {
+    "caption": "AI द्वारा तैयार किया गया नोट",
+    "short": "AI द्वारा तैयार"
+  },
   "articleDetail": {
     "readArticle": "लेख पढ़ें",
     "relatedArticles": "संबंधित लेख",
@@ -207,6 +212,7 @@
     "storyUnavailable": "यह स्टोरी अब उपलब्ध नहीं है",
     "failedToLoad": "लेख लोड करने में विफल",
     "articleNotFound": "लेख नहीं मिला",
+    "offlineUnavailable": "आप ऑफ़लाइन हैं और यह लेख ऑफ़लाइन पढ़ने के लिए सहेजा नहीं गया है",
     "viewOriginal": "मूल लेख देखें",
     "viewOriginalIn": "{{language}} में मूल लेख देखें",
     "viewAndTranslateOnDevice": "लेख देखें और डिवाइस पर अनुवाद करें",
@@ -350,6 +356,10 @@
     "injectNoiseTitle": "नॉइज़ इंजेक्ट करें",
     "injectNoiseDescription": "आपकी असली रुचियों के साथ डिकॉय टॉपिक्स भेजता है ताकि बैकएंड आपकी टॉपिक सूची से आपकी पहचान न कर सके। केवल डिकॉय टॉपिक्स से मिलने वाले लेख आप तक पहुँचने से पहले हटा दिए जाते हैं।",
     "injectNoiseBeta": "बीटा: टॉपिक जनरेशन धीमी हो सकती है और फ़ीड की प्रासंगिकता कम हो सकती है।",
+    "relevanceV2Title": "प्रासंगिकता फेचिंग v2 का उपयोग करें",
+    "relevanceV2On": "डिवाइस पर स्कोरिंग, जहां कहानी हुई वह मायने रखता है",
+    "relevanceV2Off": "क्लाउड में स्कोरिंग, मूल विधि का उपयोग करके",
+    "relevanceV2Description": "बीटा — आपके डिवाइस पर लेखों को उस जगह और घटना के प्रकार का उपयोग करके स्कोर करता है, बजाय केवल क्लाउड मॉडल से पूछने के। स्थान टैग वाले लेखों की आवश्यकता है, इसलिए आप शुरुआत में कोई बदलाव नहीं देख सकते। आप किसी भी समय इसे बंद कर सकते हैं।",
     "privacyTitle": "आपका डेटा निजी रहता है",
     "privacyDescription": "Mera प्रोटोकॉल हमेशा चालू रहता है। डिवाइस मोड में अनुमान पूरी तरह आपके फ़ोन पर ऑफ़लाइन चलता है। क्लाउड मोड में एंड-टू-एंड एन्क्रिप्टेड अनुमान का उपयोग किया जाता है: आपका डेटा आपके डिवाइस पर एन्क्रिप्ट होता है और केवल एक सुरक्षित एन्क्लेव के अंदर डिक्रिप्ट होता है जिसके अंदर हम नहीं झाँक सकते। आपके तथ्य, आपकी प्रोफ़ाइल और आपका पठन इतिहास यह डिवाइस कभी नहीं छोड़ते। समाचार लाने के लिए हम केवल व्यापक विषय-वाक्यांश भेजते हैं, कोई उपयोगकर्ता आईडी नहीं।",
     "deviceSupported": "डिवाइस समर्थित",
@@ -576,6 +586,7 @@
     "newChat": "नई चैट",
     "inputPlaceholder": "संदेश टाइप करें...",
     "viewPreviousMessages": "पिछले संदेश देखें",
+    "aiInteractionNotice": "आप Mera के साथ बात कर रहे हैं, एक AI सहायक — किसी व्यक्ति के साथ नहीं।",
     "aiUsageNotice": "यह सहायक आपकी समाचार प्राथमिकताएं सेट करने में मदद करता है। इसे नियंत्रित करने या इसका दुरुपयोग करने का प्रयास करने पर आपका खाता समीक्षा लंबित रहते हुए ब्लॉक किया जा सकता है।",
     "requestUnblock": {
       "button": "अनब्लॉक का अनुरोध करें",
@@ -627,10 +638,16 @@
     "actionShowMoreTopic": "किसी विषय को अधिक दिखाएं",
     "actionDownRank": "किसी विषय को डाउनरैंक करें",
     "actionPublicationPref": "किसी प्रकाशन को समायोजित करें",
+    "actionPublicationBoost": "किसी प्रकाशन से अधिक दिखाएं",
+    "actionPublicationDeprioritize": "किसी प्रकाशन से कम दिखाएं",
+    "actionPublicationMute": "किसी प्रकाशन को म्यूट करें",
+    "actionSourceScopeBoost": "किसी देश के स्रोतों से अधिक दिखाएं",
+    "actionSourceScopeDeprioritize": "किसी देश के स्रोतों से कम दिखाएं",
     "actionSuppress": "किसी वाक्यांश को फ़िल्टर करें",
     "actionPinTopic": "किसी विषय को पिन करें",
     "actionUnpinTopic": "किसी विषय को अनपिन करें",
     "actionRetireTopic": "किसी विषय को रिटायर करें",
+    "actionRetireSuppression": "कोई फ़िल्टर हटाएं",
     "chooseOneHint": "एक विकल्प चुनें"
   },
   "publicationVisits": {
@@ -798,6 +815,8 @@
     "askMera": "Mera से पूछें",
     "closeTree": "बंद करें",
     "treeThanks": "धन्यवाद, नोट कर लिया।",
+    "feedbackCaption": "अकेले अंगूठे से Mera को पता नहीं चलता — इसलिए इसे फेंक दिया जाता है, ताकि आपकी फ़ीड स्वस्थ रहे। एक वजह चुनें और आपकी फ़ीड तुरंत बदल जाएगी।",
+    "tapAgainToConfirm": "पुष्टि के लिए फिर से टैप करें",
     "chatHandoffLike": "मुझे यह स्टोरी पसंद आई, इस जैसी और: {{path}}।",
     "chatHandoffLikeNoPath": "मुझे यह स्टोरी पसंद आई। मुझे इस जैसी और चाहिए।",
     "chatHandoffDislike": "मुझे यह स्टोरी पसंद नहीं आई, {{path}}।",
@@ -807,7 +826,8 @@
     "title": "एक्सप्लोर",
     "scopeWorld": "विश्व",
     "noArticles": "कोई लेख नहीं मिला",
-    "addPlaces": "स्थान जोड़ें"
+    "addPlaces": "स्थान जोड़ें",
+    "offlineUnavailable": "आप ऑफ़लाइन हैं — Explore को इंटरनेट चाहिए"
   },
   "forYou": {
     "sectionPrefix": "इस बारे में समाचार:",
@@ -815,6 +835,12 @@
     "showMore": "{{count}} और दिखाएं",
     "viewAllArticles_one": "सभी {{count}} लेख देखें",
     "viewAllArticles_other": "सभी {{count}} लेख देखें",
+    "headlineSectionGlobal": "विश्व की सुर्खियाँ",
+    "headlineSectionCountry": "{{country}} की सुर्खियाँ",
+    "headlineDenominator_one": "Mera ने {{count}} खबर पढ़ी · {{shown}} आपके समय के लायक।",
+    "headlineDenominator_other": "Mera ने {{count}} खबरें पढ़ीं · {{shown}} आपके समय के लायक।",
+    "headlineDenominatorNone_one": "Mera ने {{count}} खबर पढ़ी · आज कोई भी प्रासंगिक नहीं लगा।",
+    "headlineDenominatorNone_other": "Mera ने {{count}} खबरें पढ़ीं · आज कोई भी प्रासंगिक नहीं लगा।",
     "subTabFeed": "अवलोकन",
     "subTabStories": "स्टोरीज़",
     "subTabSaved": "सहेजे गए"
@@ -843,6 +869,7 @@
     "trackAction": "स्टोरी फ़ॉलो करें",
     "untrackAction": "स्टोरी अनफ़ॉलो करें",
     "trackedToast": "अब आप इस स्टोरी को फ़ॉलो कर रहे हैं",
+    "updatesBadge": "{{count}} नया",
     "updatesBadge_one": "{{count}} नया",
     "updatesBadge_other": "{{count}} नए",
     "endedLabel": "समाप्त",
@@ -937,7 +964,9 @@
       "unknown": "प्रोफ़ाइल बदलाव",
       "hygieneDeleteFact": "तथ्य हटाया गया",
       "addLocation": "स्थान जोड़ा गया",
-      "deleteLocation": "स्थान हटाया गया"
+      "deleteLocation": "स्थान हटाया गया",
+      "retireSuppression": "कोई फ़िल्टर हटाया",
+      "setSourceScopePref": "कोई स्रोत स्कोप समायोजित किया"
     }
   },
   "calibration": {
@@ -1077,6 +1106,77 @@
     "deleteFailedTitle": "जगह हटाई नहीं जा सकी",
     "deleteFailedBody": "कृपया पुनः प्रयास करें।"
   },
+  "notInterested": {
+    "title": "रुचि नहीं है",
+    "subtitle": "आपने Mera को अपनी फ़ीड से क्या रखने को कहा है",
+    "sectionFilters": "शब्द और चीजें जिन्हें आपने छिपाया है",
+    "sectionTopics": "विषय जिन्हें आप कम देखते हैं",
+    "sectionSources": "स्रोत जिन्हें आपने म्यूट या कम किए हैं",
+    "managePublications": "स्रोत प्राथमिकताएं प्रबंधित करें",
+    "chatHint": "आपको यहाँ आने की जरूरत नहीं है। बस Mera को बताएं कि आप क्या नहीं देखना चाहते — \"सेलिब्रिटी गपशप के बारे में कम\" — और वह बाकी संभाल लेगी।",
+    "kinds": {
+      "keyword": "शब्द",
+      "category": "श्रेणी",
+      "event_type": "कहानी का प्रकार",
+      "entity": "व्यक्ति या वस्तु",
+      "place": "जगह",
+      "publication": "स्रोत",
+      "topic": "विषय"
+    },
+    "sources": {
+      "user": "आपने यह जोड़ा",
+      "chat": "Mera के साथ चैट से",
+      "feedback": "आपकी प्रतिक्रिया से",
+      "digest": "आपकी दैनिक समीक्षा से",
+      "qa": "Mera ने जो सवाल पूछा",
+      "unknown": "स्वचालित रूप से जोड़ा गया"
+    },
+    "badgeBlocked": "रखा हुआ",
+    "badgeShownLess": "कम दिखाया",
+    "badgeMutedTopic": "कम दिखाया",
+    "badgeDownranked": "कम किया",
+    "badgeMutedPub": "म्यूट किया",
+    "mutedPubHint": "रखा हुआ, सिवाय प्रमुख खबरों के",
+    "cardExemptLabel": "आपने \"{{filter}}\" फ़िल्टर किया — दिखा रहे हैं क्योंकि यह प्रमुख खबर है",
+    "expiresOn": "{{date}} तक",
+    "expiresNever": "जब तक आप इसे हटा न दें",
+    "remove": "हटाएं",
+    "removeConfirmTitle": "यह हटाएं?",
+    "removeConfirmBody": "ऐसी कहानियाँ फिर से आपकी फ़ीड में दिख सकती हैं।",
+    "removeConfirmCta": "हटाएं",
+    "removeSuccessTitle": "हटाया गया",
+    "removeSuccessBody": "यह अब आपकी फ़ीड से रखा नहीं है।",
+    "removeFailedTitle": "वह हटाया नहीं जा सका",
+    "removeFailedBody": "कृपया पुनः प्रयास करें।",
+    "addPhrase": "कुछ छिपाएं",
+    "addPhraseTitle": "अपनी फ़ीड से कुछ छिपाएं",
+    "addPhraseBody": "एक शब्द या छोटा वाक्यांश टाइप करें। Mera इसे सुर्खियों और कहानी में खोजेगी और उन्हें आपके रास्ते से हटाएगी। अधिक विशिष्ट चीजों के लिए — पूरी श्रेणी, स्रोत, व्यक्ति — बस चैट में बताएं, या कहानी पर अंगूठे का उपयोग करें: Mera इसे कहानी से ही समझता है, इसलिए यह हमेशा मेल खाता है।",
+    "addPhrasePlaceholder": "उदा. सेलिब्रिटी गपशप",
+    "addPhraseHardLabel": "इसे मेरी फ़ीड से बाहर रखें",
+    "addPhraseHardHint": "Mera इन्हें रखता है। अगर कोई प्रमुख खबर बन जाए तो फिर भी दिखता है, चिह्नित होकर ताकि आप जानें क्यों। बंद होने पर, Mera बस उन्हें कम दिखाता है और एक महीने में भूल जाता है।",
+    "addPhraseSubmit": "छिपाएं",
+    "addPhraseSuccessTitle": "हो गया",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" अब आपकी फ़ीड से बाहर है। केवल प्रमुख खबरें आती हैं, और Mera कहेगी।",
+    "addPhraseSuccessBodySoft": "आप \"{{phrase}}\" के बारे में बहुत कम देखेंगे।",
+    "addPhraseFailedTitle": "वह सहेजा नहीं जा सका",
+    "addPhraseFailedBody": "कृपया पुनः प्रयास करें।",
+    "emptyTitle": "अभी तक कुछ भी छिपाया नहीं है",
+    "emptyBody": "जब आप Mera को बताते हैं कि आप कुछ में रुचि नहीं रखते, तो वह यहाँ दिखता है ताकि आप इसे पूर्ववत कर सकें।",
+    "emptyFilters": "आपने अभी तक कोई शब्द छिपाया नहीं है।",
+    "emptyTopics": "अभी तक कोई विषय कम नहीं किया गया।",
+    "emptySources": "आपने अभी तक किसी स्रोत को म्यूट या कम नहीं किया है।"
+  },
+  "headlineDepth": {
+    "title": "मुख्य खबरें",
+    "subtitle": "Mera आपके लिए कितनी खबरें पढ़ता है",
+    "intro": "Mera हर खंड में सबसे बड़ी कहानियाँ पढ़ता है, फिर जो आपके लिए मायने रखती हैं उन्हें चुनता है। किसी खंड को बढ़ाएं ताकि अधिक देखें; इसे कम करें ताकि चीजें तंग रहें।",
+    "worldwide": "दुनियाभर",
+    "optionLabel": "शीर्ष {{n}}",
+    "usingDefault": "मानक {{n}} का उपयोग कर रहे हैं।",
+    "customised": "मानक {{n}} से बदला गया। फिर से {{n}} चुनें ताकि वापस जाएं।",
+    "saveFailedTitle": "वह सहेजा नहीं जा सका",
+    "saveFailedBody": "आपका बदलाव संग्रहीत नहीं हुआ। फिर से कोशिश करें।"
+  },
   "profileHub": {
     "facts": "तथ्य",
     "factsCount_one": "{{count}} तथ्य आपकी फ़ीड को आकार दे रहा है",
@@ -1092,12 +1192,23 @@
     "prefsCount_one": "{{count}} स्रोत समायोजित",
     "prefsCount_other": "{{count}} स्रोत समायोजित",
     "prefsEmpty": "स्रोतों को बूस्ट, डाउनरैंक या म्यूट करें",
+    "visitedSubtitle": "प्रकाशन जिन्हें आपने हाल ही में खोला",
     "activity": "गतिविधि",
     "activitySubtitle": "आपकी प्रोफ़ाइल बदलाव इतिहास",
     "personaHealth": "प्रोफ़ाइल स्वास्थ्य",
     "healthPending_one": "{{count}} सफ़ाई सुझाव",
     "healthPending_other": "{{count}} सफ़ाई सुझाव",
-    "healthAllHealthy": "सब स्वस्थ है"
+    "healthAllHealthy": "सब स्वस्थ है",
+    "groupKnows": "Mera आपको जानता है",
+    "groupFeed": "आपकी फ़ीड",
+    "groupLibrary": "स्रोत और लाइब्रेरी",
+    "groupInternals": "पर्दे के पीछे",
+    "notInterested": "रुचि नहीं है",
+    "notInterestedSubtitle_one": "{{count}} चीज जिसे आपने छिपाया",
+    "notInterestedSubtitle_other": "{{count}} चीजें जिन्हें आपने छिपाया",
+    "notInterestedEmpty": "अभी तक कुछ भी छिपाया नहीं है",
+    "headlineDepth": "मुख्य खबरें",
+    "headlineDepthSubtitle": "Mera हर खंड में कितनी खबरें पढ़ता है"
   },
   "profile": {
     "talkToMera": "Mera से बात करें",
@@ -1138,7 +1249,8 @@
     "kindMute": "म्यूट",
     "clear": "हटाएं",
     "clearA11y": "प्राथमिकता हटाएं",
-    "empty": "आपने अभी तक कोई स्रोत समायोजित नहीं किया है। किसी भी लेख से किसी प्रकाशन को बूस्ट, डाउनरैंक या म्यूट करें ताकि वह यहां दिखे।"
+    "empty": "आपने अभी तक कोई स्रोत समायोजित नहीं किया है। किसी भी लेख से किसी प्रकाशन को बूस्ट, डाउनरैंक या म्यूट करें ताकि वह यहां दिखे।",
+    "scopeKindCountry": "देश"
   },
   "optimisationPlan": {
     "notificationTitle": "आपकी रोज़ाना फ़ीड ट्यून-अप तैयार है",
@@ -1158,5 +1270,40 @@
     "appliedToast": "{{count}} बदलाव लागू किए गए",
     "appliedTitle": "फ़ीड ट्यून हो गई",
     "empty": "अभी ट्यून करने के लिए कुछ नहीं है।"
+  },
+  "pin": {
+    "lockTitle": "अपना PIN दर्ज करें",
+    "lockSubtitle": "Mera को अनलॉक करने के लिए अपना 4-अंकीय PIN दर्ज करें",
+    "incorrect": "गलत PIN। फिर से कोशिश करें।",
+    "lockedTryAgain": "बहुत सारे प्रयास। {{time}} में फिर से कोशिश करें",
+    "forgot": "PIN भूल गए?",
+    "forgotTitle": "अपना PIN रीसेट करें",
+    "forgotBody": "अपना PIN रीसेट करने के लिए, एकबारी ईमेल कोड से फिर से साइन इन करें। आपका सहेजा हुआ डेटा इसी डिवाइस पर रहता है।",
+    "forgotOffline": "अपना PIN रीसेट करने के लिए साइन-इन कोड भेजने के लिए इंटरनेट चाहिए। इंटरनेट से जुड़ें और फिर से कोशिश करें।",
+    "forgotConfirm": "रीसेट करने के लिए साइन इन करें",
+    "setupTitle": "PIN सेट करें",
+    "setupSubtitle": "इस डिवाइस पर ऐप की सुरक्षा के लिए 4-अंकीय PIN चुनें",
+    "confirmTitle": "अपने PIN की पुष्टि करें",
+    "confirmSubtitle": "अपना 4-अंकीय PIN दोबारा दर्ज करें",
+    "mismatch": "PIN मेल नहीं खाए। फिर से शुरू करें।"
+  },
+  "security": {
+    "title": "सुरक्षा",
+    "subtitle": "चुनें कि क्या Mera इस डिवाइस पर PIN के लिए कहे",
+    "requirePinTitle": "अनलॉक करने के लिए PIN की आवश्यकता है",
+    "requirePinDescription": "Mera खोलते समय 4-अंकीय PIN के लिए कहें",
+    "setPinTitle": "PIN सेट करें",
+    "setPinSubtitle": "इस डिवाइस पर Mera को अनलॉक करने के लिए 4-अंकीय PIN चुनें",
+    "lockEnabledTitle": "PIN अनलॉक चालू",
+    "lockEnabledDescription": "Mera खोलते समय आप अपना PIN दर्ज करेंगे।",
+    "lockDisabledTitle": "PIN अनलॉक बंद",
+    "lockDisabledDescription": "Mera PIN के बिना खुलेगा। आपका PIN हटा दिया गया है।",
+    "changePin": "PIN बदलें",
+    "verifyCurrentTitle": "वर्तमान PIN दर्ज करें",
+    "verifyCurrentSubtitle": "जारी रखने के लिए अपना वर्तमान PIN की पुष्टि करें",
+    "newPinTitle": "नया PIN सेट करें",
+    "newPinSubtitle": "नया 4-अंकीय PIN चुनें",
+    "pinChangedTitle": "PIN अपडेट हुआ",
+    "pinChangedDescription": "आपका PIN बदल दिया गया है।"
   }
 }

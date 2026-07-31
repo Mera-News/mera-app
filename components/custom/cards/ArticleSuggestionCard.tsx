@@ -1,3 +1,4 @@
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
@@ -19,9 +20,10 @@ import {
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
+import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSavedOverride } from '@/lib/saved-state';
@@ -53,8 +55,12 @@ interface ArticleCardProps {
   // set) ──────────────────────────────────────────────────────────────────
   /** Whether to show the floating feedback surface (verdict set & not closed). */
   feedbackVisible?: boolean;
-  /** Stored tree path to resume in the surface. */
+  /** Stored tree path to resume in the surface. Records NAVIGATION only — a
+   *  branch descent writes one — so it must NOT be read as a commit signal. */
   feedbackInitialPath?: string[];
+  /** True once a TERMINAL leaf settled (or the user escalated to Mera) for this
+   *  card. The only thing the filled-thumb treatment may be derived from. */
+  feedbackCommitted?: boolean;
   /** Stable per-card feedback handlers from `useFeedbackSheet`. */
   feedbackHandlers?: CardFeedbackHandlers;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
@@ -97,6 +103,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   onAskMera,
   feedbackVisible = false,
   feedbackInitialPath,
+  feedbackCommitted = false,
   feedbackHandlers,
   dimmed = false,
   read = false,
@@ -193,6 +200,30 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canRenderFactChips, topicIdsKey]);
 
+  // P6 — the filtered-but-shown label. A hard "not interested" filter no longer
+  // removes a TOP HEADLINE; the story is demoted instead, so it can legitimately
+  // appear on a subject the user asked to keep out. Seeing that with no
+  // explanation is worse than not having the feature, so the card says so
+  // outright, naming the filter that matched. `null` for every ordinary row —
+  // the store is empty unless the user has hard filters at all.
+  //
+  // Gated on `onVerdict` — the same discriminator the action row uses to tell a
+  // FEED surface from the Saved list. A saved row keeps the suggestion's `_id`
+  // (`saved-article-suggestion-service.saveSuggestion` assigns `r._raw.id =
+  // s._id`), so it would otherwise inherit the label; but a story the user
+  // deliberately saved is not a surprise that needs explaining.
+  const hardFilterLabel = useHardFilterLabel(suggestion._id);
+  const hardFilterLabelEl = onVerdict && hardFilterLabel ? (
+    <Box
+      testID="card-hard-filter-label"
+      className="bg-warning-900 rounded-lg px-3 py-2"
+    >
+      <Text size="xs" className="text-warning-400" numberOfLines={2}>
+        {t('notInterested.cardExemptLabel', { filter: hardFilterLabel })}
+      </Text>
+    </Box>
+  ) : null;
+
   const factChipsEl = reasonReady && !reason && facts.length > 0 ? (
     <HStack className="flex-wrap justify-end" space="xs">
       {facts.map((fact) => (
@@ -224,13 +255,20 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
           non-italic. */}
       <RelevanceChip relevance={relevance} />
       {reason ? (
-        <TranslatableDynamic
-          text={reason}
-          size="sm"
-          bold
-          className="ml-3 flex-1 text-right"
-          style={{ color: reasonBoxColors.textColor }}
-        />
+        <Box className="ml-3 flex-1 items-end">
+          <TranslatableDynamic
+            text={reason}
+            size="sm"
+            bold
+            className="text-right"
+            style={{ color: reasonBoxColors.textColor }}
+          />
+          {/* Art. 50 label lives INSIDE the box, under the note it describes —
+              a disclosure floating outside the box read as unrelated chrome.
+              Lighter grey than the note so it stays subordinate while still
+              clearing contrast against the box's hardcoded #374151. */}
+          <AiDisclosureCaption color={aiDisclosureColor} className="mt-1" />
+        </Box>
       ) : (
         <Box className="ml-3 flex-1 items-end">
           <StreamingIndicator compact color={reasonBoxColors.textColor} />
@@ -253,6 +291,18 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const actionBar = onVerdict ? (
     <CardActionBar
       verdict={verdict}
+      // D15 — a verdict with no reason attached is provisional: shown hollow,
+      // and discarded rather than speculated on.
+      //
+      // F2 — the discriminator is `feedbackCommitted`, NOT the stored path. A
+      // path exists the moment the user opens a branch, which commits nothing;
+      // deriving fill from it promised "this changed your persona" one tap after
+      // the caption promised the opposite.
+      //
+      // Gated on `feedbackHandlers`: a host that doesn't wire the feedback
+      // surface can never SHOW the tree, so its user has no way to commit —
+      // a permanently hollow thumb there would be a dead end, not a prompt.
+      provisional={!!feedbackHandlers && !feedbackCommitted}
       saved={saved}
       onLike={() => onVerdict(suggestion, 'like')}
       onDislike={() => onVerdict(suggestion, 'dislike')}
@@ -269,6 +319,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
         suggestion={suggestion}
         verdict={verdict}
         initialPathIds={feedbackInitialPath}
+        committed={feedbackCommitted}
         onClose={() => feedbackHandlers.onClose(suggestion)}
         onTreePathChanged={feedbackHandlers.onPathChanged}
         onInvokeMera={feedbackHandlers.onInvokeMera}
@@ -298,6 +349,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       footer={actionBar}
       overlay={overlay}
     >
+      {hardFilterLabelEl}
       {factChipsEl}
       {reasonBoxEl}
     </ArticleCardBase>

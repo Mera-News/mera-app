@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -432,7 +433,11 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         }
         return (
             <GluestackUIProvider mode="dark">
-                <Box className="flex-1 bg-black">
+                <Box className="flex-1">
+                    {/* Page background. Must be the FIRST child so it paints behind
+                        everything else on the page. */}
+                    <AbstractGradientBackdrop />
+
                     {onBack && (
                         <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                             <Pressable
@@ -477,7 +482,11 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     // the outer ScrollView is kept so the "Open Device Settings" CTA scrolls.
     return (
         <GluestackUIProvider mode="dark">
-            <Box className="flex-1 bg-black">
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 {/* Floating Back Button */}
                 {onBack && (
                     <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>

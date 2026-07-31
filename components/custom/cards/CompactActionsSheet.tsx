@@ -7,9 +7,12 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import {
-  hasLiked,
+  getArticleVerdict,
+  markFeedbackProcessedFor,
   recordArticleFeedback,
   removeArticleFeedback,
+  updateFeedbackContextPath,
+  type VerdictSentiment,
 } from '@/lib/database/services/article-feedback-service';
 import {
   saveSuggestion,
@@ -17,13 +20,12 @@ import {
   deleteSavedSuggestion,
   isSuggestionSaved,
 } from '@/lib/database/services/saved-article-suggestion-service';
-import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
+import { buildOverlayContext } from '@/components/custom/cards/overlay-context';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
-import logger from '@/lib/logger';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -59,9 +61,13 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
   share,
 }) => {
   const { t } = useTranslation();
-  const [liked, setLiked] = useState(false);
+  // D15 — 'none' | 'provisional' (tapped, no reason yet) | 'committed'.
+  const [likeState, setLikeState] = useState<'none' | 'provisional' | 'committed'>('none');
+  const liked = likeState !== 'none';
   const [savedFromDb, setSavedFromDb] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
+  // Which tree the overlay is showing — D17 gave the thumbs-UP one too.
+  const [overlayRoot, setOverlayRoot] = useState<VerdictSentiment>('dislike');
   const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({
     articleTitle: subject.title,
   });
@@ -79,9 +85,14 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
-    hasLiked(subject.articleId)
-      .then((v) => !cancelled && setLiked(v))
-      .catch(() => {});
+    // Async IIFE — see ArticleActionsRow: the restore is decoration, so a
+    // failure anywhere in it (lookup included) must stay non-fatal.
+    void (async () => {
+      const { verdict, committed } = await getArticleVerdict(subject.articleId);
+      if (cancelled || verdict !== 'like') return;
+      // See ArticleActionsRow — `committed`, never the stored path.
+      setLikeState(committed ? 'committed' : 'provisional');
+    })().catch(() => {});
     isSuggestionSaved(savedId)
       .then((v) => !cancelled && setSavedFromDb(v))
       .catch(() => {});
@@ -101,65 +112,66 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     });
   }, [onClose, subject.articleId, subject.suggestionId, subject.title]);
 
-  const handleLike = useCallback(() => {
-    if (liked) {
-      hapticLight();
-      setLiked(false);
-      void removeArticleFeedback(subject.articleId, 'like');
-    } else {
-      hapticSuccess();
-      setLiked(true);
+  // Records the verdict row and hands off from the sheet to the matching tree.
+  // Both thumbs do this now (D17): a thumbs-up used to close the sheet and open
+  // nothing, so the like tree's boost/weight leaves could never run.
+  const recordAndOpenTree = useCallback(
+    (sentiment: VerdictSentiment) => {
       void recordArticleFeedback({
         articleId: subject.articleId,
         suggestionId: subject.suggestionId,
-        sentiment: 'like',
+        sentiment,
         title: subject.title,
         origin: subject.origin,
         surface: subject.surface,
         contextJson: buildContextJson(subject),
       });
+      void (async () => {
+        const ctx = await buildOverlayContext(subject);
+        setOverlayCtx(ctx);
+        setOverlayRoot(sentiment);
+        onClose();
+        setOverlayOpen(true);
+      })();
+    },
+    [subject, onClose],
+  );
+
+  const handleLike = useCallback(() => {
+    if (liked) {
+      hapticLight();
+      setLikeState('none');
+      void removeArticleFeedback(subject.articleId, 'like');
+      onClose();
+      return;
     }
-    onClose();
-  }, [liked, subject, onClose]);
+    hapticSuccess();
+    setLikeState('provisional');
+    recordAndOpenTree('like');
+  }, [liked, subject.articleId, recordAndOpenTree, onClose]);
 
   const handleDislike = useCallback(() => {
     hapticMedium();
-    void recordArticleFeedback({
-      articleId: subject.articleId,
-      suggestionId: subject.suggestionId,
-      sentiment: 'dislike',
-      title: subject.title,
-      origin: subject.origin,
-      surface: subject.surface,
-      contextJson: buildContextJson(subject),
-    });
-    void (async () => {
-      let publicationVisits = 0;
-      const pub = subject.publicationName?.trim();
-      if (pub) {
-        try {
-          publicationVisits = await getVisitCountForPublication(
-            pub,
-            subject.countryCode ?? null,
-          );
-        } catch (err) {
-          logger.captureException(err, {
-            tags: { component: 'CompactActionsSheet', method: 'visitCount' },
-          });
-        }
-      }
-      setOverlayCtx({
-        publicationName: subject.publicationName,
-        countryCode: subject.countryCode,
-        matchedTopics: subject.matchedTopics ?? [],
-        articleTitle: subject.title,
-        publicationVisits,
-      });
-      // Hand off from the sheet to the feedback-tree overlay.
-      onClose();
-      setOverlayOpen(true);
-    })();
-  }, [subject, onClose]);
+    recordAndOpenTree('dislike');
+  }, [recordAndOpenTree]);
+
+  // A terminal leaf settled. `committed` comes from the overlay rather than
+  // being inferred from `appliedCount`: a seenOnly leaf changes nothing by
+  // design and must leave the thumb unfilled, while a leaf whose placeholders
+  // couldn't be resolved still counts as a reason the user gave. Stamps the row
+  // processed when something actually applied, so the 3-hourly digest can't
+  // apply a second helping of the same signal.
+  const handleLeafPicked = useCallback(
+    (pathIds: string[], appliedCount: number, committed: boolean) => {
+      const sentiment = overlayRoot;
+      if (sentiment === 'like' && committed) setLikeState('committed');
+      void (async () => {
+        await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, committed);
+        if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
+      })();
+    },
+    [overlayRoot, subject.articleId],
+  );
 
   const handleSave = useCallback(() => {
     if (saved) {
@@ -201,12 +213,15 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     icon,
     label,
     onPress,
+    testID,
   }: {
     icon: React.ReactNode;
     label: string;
     onPress: () => void;
+    testID?: string;
   }) => (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
@@ -238,32 +253,46 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
               >
                 <VStack space="xs" className="pt-1">
                   <Row
+                    testID="card-action-mera"
                     icon={<MeraLogo size={22} />}
                     label="Mera"
                     onPress={handleChat}
                   />
                   <Row
-                    icon={<MaterialIcons name={liked ? 'thumb-up' : 'thumb-up-off-alt'} size={22} color={ACCENT} />}
+                    testID="card-action-like"
+                    // Filled glyph ONLY once the like carries a reason — a bare
+                    // tap is provisional and gets the outline glyph (D15).
+                    icon={
+                      <MaterialIcons
+                        name={likeState === 'committed' ? 'thumb-up' : 'thumb-up-off-alt'}
+                        size={22}
+                        color={ACCENT}
+                      />
+                    }
                     label={t('articleFeedback.likeLabel')}
                     onPress={handleLike}
                   />
                   <Row
+                    testID="card-action-dislike"
                     icon={<MaterialIcons name="thumb-down" size={22} color={ACCENT} />}
                     label={t('articleFeedback.dislikeLabel')}
                     onPress={handleDislike}
                   />
                   <Row
+                    testID="card-action-save"
                     icon={<MaterialIcons name={saved ? 'bookmark' : 'bookmark-border'} size={22} color={ACCENT} />}
                     label={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
                     onPress={handleSave}
                   />
                   <Row
+                    testID="card-action-track"
                     icon={<MaterialIcons name="track-changes" size={22} color={tracked ? '#22c55e' : ACCENT} />}
                     label={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
                     onPress={handleTrack}
                   />
                   {share?.url ? (
                     <Row
+                      testID="card-action-share"
                       icon={<MaterialIcons name={Platform.OS === 'ios' ? 'ios-share' : 'share'} size={22} color={ACCENT} />}
                       label={t('articleDetail.share')}
                       onPress={handleSharePress}
@@ -278,6 +307,8 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
       <FeedbackTreeOverlay
         visible={overlayOpen}
         onClose={closeOverlay}
+        root={overlayRoot}
+        onLeafPicked={handleLeafPicked}
         context={overlayCtx}
         chatContext={{
           kind: 'article-suggestion',
@@ -285,7 +316,12 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
           suggestionId: subject.suggestionId,
           articleTitle: subject.title,
         }}
-        chatMessage={t('articleFeedback.thumbsDownMessage', { title: subject.title })}
+        chatMessage={t(
+          overlayRoot === 'like'
+            ? 'articleFeedback.thumbsUpMessage'
+            : 'articleFeedback.thumbsDownMessage',
+          { title: subject.title },
+        )}
       />
     </>
   );

@@ -3,6 +3,7 @@
 // prompt input. Everything comes in via props (ChatThreadProps) — no data
 // fetching, no stores.
 
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { Text } from '@/components/ui/text';
 import {
@@ -173,6 +174,20 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   return (
     <Conversation>
+      {/* EU AI Act Art. 50(1) interaction notice (Group C1) — fixed chrome,
+          NOT list content. `ConversationContent`'s `header` prop is an
+          inverted FlatList's `ListHeaderComponent`, which is list content: it
+          scrolls away once the user scrolls up, and once real messages exist
+          it renders between the newest bubble and the prompt input rather
+          than at the top of the surface. A "persistent" disclosure has to
+          survive scrolling and sit at a fixed spot, so it lives here instead
+          — a sibling rendered once above the list for every chat entry point
+          (floating bubble → ChatSessionView, persona chat → CloudPersonaChat
+          / LocalPersonaChat, onboarding step 1 → PersonaUpdateChatStep →
+          CloudPersonaChat — all of which mount this ChatThread). */}
+      <View style={styles.aiInteractionRow}>
+        <AiDisclosureCaption text={t('floatingChat.aiInteractionNotice')} />
+      </View>
       <View style={styles.listWrap}>
         <ConversationContent
           items={items}
@@ -284,6 +299,10 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 4,
+  },
+  aiInteractionRow: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
   historyButtonRow: {
     alignItems: 'center',

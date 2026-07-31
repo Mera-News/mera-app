@@ -420,6 +420,134 @@ describe('markFeedbackProcessed', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// D15 — a BARE verdict is provisional and is discarded
+// ---------------------------------------------------------------------------
+
+describe('provisional (context-less) verdicts', () => {
+  /** Capture the record a create() call builds. */
+  function captureCreate(): Record<string, unknown> {
+    const captured: Record<string, unknown> = {};
+    db._collections['article_feedback'].create.mockImplementationOnce(
+      async (fn: (r: any) => void) => {
+        const rec = makeRecord();
+        fn(rec);
+        Object.assign(captured, rec);
+        return rec;
+      },
+    );
+    return captured;
+  }
+
+  it('stamps processed_at at WRITE time when the verdict carries no tree path', async () => {
+    db._setRows('article_feedback', []);
+    const captured = captureCreate();
+
+    await recordVerdictFeedback({
+      articleId: 'a1',
+      sentiment: 'dislike',
+      title: 'T',
+      // A real bare tap: provenance, but no reason.
+      contextJson: '{"publication":"The Hindu","category":"Politics"}',
+    });
+
+    // This IS the exclusion: `getUnprocessedFeedback` filters `processed_at
+    // IS NULL`, so a row born stamped can never reach the digest. (Asserted on
+    // the written row rather than through the getter because the test DB mock
+    // ignores Q.where predicates entirely — a getter assertion here would pass
+    // for the wrong reason.)
+    expect(captured.processedAt).toBe(NOW);
+  });
+
+  it('leaves processed_at null when the verdict already carries a tree path', async () => {
+    db._setRows('article_feedback', []);
+    const captured = captureCreate();
+
+    await recordVerdictFeedback({
+      articleId: 'a1',
+      sentiment: 'like',
+      title: 'T',
+      contextJson: '{"treePath":["more_about_topic","a_lot_more"]}',
+    });
+
+    expect(captured.processedAt).toBeUndefined();
+  });
+
+  it('treats an empty treePath and corrupt json as no context', async () => {
+    db._setRows('article_feedback', []);
+    const emptyPath = captureCreate();
+    await recordVerdictFeedback({
+      articleId: 'a1',
+      sentiment: 'like',
+      title: 'T',
+      contextJson: '{"treePath":[]}',
+    });
+    expect(emptyPath.processedAt).toBe(NOW);
+
+    db._setRows('article_feedback', []);
+    const corrupt = captureCreate();
+    await recordVerdictFeedback({
+      articleId: 'a2',
+      sentiment: 'like',
+      title: 'T',
+      contextJson: 'not json',
+    });
+    expect(corrupt.processedAt).toBe(NOW);
+  });
+
+  // REVERSED by the not-interested wave (P4i). This used to assert that ANY
+  // non-empty tree path re-opened the row for the digest. It doesn't any more:
+  // the tree writes a path on every tap INCLUDING a branch descent, and
+  // `pathCandidates` matches on the LAST id — so a branch-only path resolved to
+  // no candidate and fell through to `aggregateCandidates`, the bare-verdict
+  // aggregation D15 was built to retire. Four such rows were found armed on a
+  // real device (two on one topic). Navigation is not context: only a COMMITTED
+  // verdict (terminal leaf / chat escalation) re-opens the row now.
+  it('does NOT re-open the row for a branch descent — navigating is not context', async () => {
+    const row = makeFeedbackRecord({
+      articleId: 'a1',
+      sentiment: 'dislike',
+      contextJson: '{"publication":"The Hindu"}',
+      processedAt: NOW,
+    });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', ['suggestion', 'not_related']);
+
+    expect(row.processedAt).toBe(NOW);
+    expect(JSON.parse(row.contextJson).treePath).toEqual(['suggestion', 'not_related']);
+  });
+
+  it('RE-OPENS the row for the digest once the verdict is COMMITTED', async () => {
+    const row = makeFeedbackRecord({
+      articleId: 'a1',
+      sentiment: 'dislike',
+      contextJson: '{"publication":"The Hindu"}',
+      processedAt: NOW,
+    });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', ['suggestion', 'not_related'], true);
+
+    expect(row.processedAt).toBeNull();
+    expect(JSON.parse(row.contextJson).treePath).toEqual(['suggestion', 'not_related']);
+  });
+
+  it('puts the row BACK to provisional when the path is cleared', async () => {
+    const row = makeFeedbackRecord({
+      articleId: 'a1',
+      sentiment: 'dislike',
+      contextJson: '{"treePath":["suggestion"]}',
+      processedAt: null,
+    });
+    db._setRows('article_feedback', [row]);
+
+    await updateFeedbackContextPath('a1', 'dislike', []);
+
+    expect(row.processedAt).toBe(NOW);
+  });
+});
+
 describe('markFeedbackProcessedFor', () => {
   it('stamps processed_at on the matching (articleId, sentiment) row', async () => {
     const row = makeFeedbackRecord({ articleId: 'a1', sentiment: 'like' });

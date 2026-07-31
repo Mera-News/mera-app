@@ -1,0 +1,82 @@
+{
+  "captured": "W-1, v45 bundle, branch feature/not-interested-filters @ 06b2e79",
+  "device": "iPhone 17 Pro 0B26B8EF-B252-4E87-8F81-8CAA8597091D (resident; the OTHER 'iPhone 17 Pro' A9943ABC is EMPTY - name collision trap)",
+  "account": "test-user@mera.news (test account, free to mutate)",
+  "schema_version_expected": 45,
+  "feed": {
+    "visible_card_ids": [
+      "card-6a68e02fec8a525606aa82d7",
+      "card-6a68fc4aec8a525606ac4559",
+      "card-6a68fc4eec8a525606ac4b07",
+      "card-6a68fc61ec8a525606ac66ae",
+      "card-6a68fc69ec8a525606ac7403",
+      "card-6a690a5bec8a525606ad1e85",
+      "card-6a690a87ec8a525606ad604d",
+      "card-6a697b17ec8a525606b329fe",
+      "card-6a69c125ec8a525606b715c6",
+      "card-6a69cf29ec8a525606b7f169",
+      "card-6a69cf30ec8a525606b7fe8f"
+    ],
+    "count": 11,
+    "anchor_ids_for_S1": [
+      "card-6a68e02fec8a525606aa82d7",
+      "card-6a68fc4aec8a525606ac4559",
+      "card-6a68fc4eec8a525606ac4b07"
+    ]
+  },
+  "dashboard": {
+    "visible_card_ids": [
+      "card-6a68539a6bfec3b4fb64b6c0",
+      "card-6a687dedf88c6188653a18b7",
+      "card-6a6899d7f88c6188653bbb18",
+      "card-6a68aeb3f88c6188653dbaac",
+      "card-6a68aeb4f88c6188653dbc77",
+      "card-6a68aeb4f88c6188653dbc79",
+      "card-6a68af15f88c6188653e2b1c",
+      "card-6a68c422ec8a525606a8aed3",
+      "card-6a68d207ec8a525606a96683",
+      "card-6a68e02fec8a525606aa82d7",
+      "card-6a68e033ec8a525606aa88e7",
+      "card-6a68ee51ec8a525606ab8aa5",
+      "card-6a68ee5fec8a525606aba1e8",
+      "card-6a68fc4aec8a525606ac4559",
+      "card-6a68fc4eec8a525606ac4b07",
+      "card-6a68fc69ec8a525606ac7403",
+      "card-6a696cbaec8a525606b20958",
+      "card-6a697b01ec8a525606b31032",
+      "card-6a69c125ec8a525606b715c6",
+      "card-6a69cf29ec8a525606b7f169",
+      "card-6a69cf30ec8a525606b7fe8f"
+    ],
+    "count": 21,
+    "section_ids": [
+      "dashboard-section-MZm5sqQAVQvfM0P9",
+      "dashboard-section-QUbgBwtDORO9mSrk",
+      "dashboard-section-SbCzdkbu8eyCvXa6",
+      "dashboard-section-V4G0pJzQr2uFzyeb",
+      "dashboard-section-cZXA1gDKgBR79A8Y",
+      "dashboard-section-h6sjfauuikVfvrmF",
+      "dashboard-section-open",
+      "dashboard-section-zkpDkZVm5b652MBb"
+    ]
+  },
+  "observability": {
+    "articles": 152121,
+    "relevant": 358,
+    "unscored": 105,
+    "article_suggestions": 844,
+    "suggestion_reasons": 661,
+    "publications_read": 1,
+    "facts": 8,
+    "personas": 1,
+    "background_tasks": 748,
+    "ai_jobs": 0,
+    "scheduler": "running"
+  },
+  "screenshots": [
+    "qa/s0-launch.png",
+    "qa/s0-dashboard-v45.png",
+    "qa/s0-funnel-v45.png",
+    "qa/s0-funnel-v45-scrolled.png"
+  ]
+}

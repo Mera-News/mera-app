@@ -180,6 +180,7 @@ A single top-headlines scope. COUNTRY requires countryCode; GLOBAL takes none.
 """
 input HeadlineScopeInput {
   countryCode: String
+  limit: Int
   scope: HeadlineScope!
 }
 
@@ -301,7 +302,7 @@ type PersonaMatchMeta {
   articleId: ID!
   stableClusterId: String
   textScore: Float
-  vectorScore: Float!
+  vectorScore: Float
 }
 
 """

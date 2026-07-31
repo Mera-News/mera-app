@@ -223,8 +223,8 @@ describe('InlineFeedbackTree', () => {
     );
   });
 
-  it('shows NO chevron on a branch whose only child is gated out (dead-end affordance)', async () => {
-    const { getByText, UNSAFE_queryAllByProps } = render(
+  it('HIDES a branch whose only child is gated out (no dead-end row at all)', async () => {
+    const { getByText, queryByText, UNSAFE_queryAllByProps } = render(
       <InlineFeedbackTree
         suggestion={makeSuggestion()}
         verdict="dislike"
@@ -235,7 +235,11 @@ describe('InlineFeedbackTree', () => {
     );
 
     await waitFor(() => getByText('Not a good suggestion'));
-    await waitFor(() => getByText('Gated branch'));
+    // not-interested P4i — conscious reversal: 'Gated branch' used to render
+    // chevron-less but still tappable. QA found that shape in the wild as the
+    // 'It's paywalled' row, which closed the panel and applied nothing. A
+    // branch with no visible children is now hidden outright.
+    expect(queryByText('Gated branch')).toBeNull();
 
     // `gated_branch` has a raw `children` array (length 1), but its only
     // child is gated on cluster_size_gte — which this context never

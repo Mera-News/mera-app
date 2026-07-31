@@ -22,7 +22,14 @@ import logger from '../../logger';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import type { ActionName } from '../../news-harness/persona-management/action-names';
 import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
-import type { PublicationPreferenceProvenance } from '../models/PublicationPreference';
+import type { PublicationPreferenceProvenance, SourceScopeKind } from '../models/PublicationPreference';
+import { SUPPRESSION_KINDS } from '../models/PersonaSuppression';
+import type { PersonaSuppressionKind } from '../models/PersonaSuppression';
+import {
+  markFeedNeedsRefresh,
+  runSweepFor,
+  sweepForMutation,
+} from './persona-mutation-sweeps';
 
 /** Default weight for a minted NEGATIVE topic when the action omits one. */
 const DEFAULT_NEGATIVE_TOPIC_WEIGHT = -0.6;
@@ -39,18 +46,43 @@ export interface PersonaAction {
   locationId?: string;
   publicationId?: string;
   publicationPref?: 'boost' | 'deprioritize' | 'mute'; // set_publication_pref
+  // -- source-pref v47 (D2/D6): set_source_scope_pref ----------------------
+  /** Only `'country'` exists. */
+  scopeKind?: SourceScopeKind;
+  /** The render-time token — ISO alpha-3 for `country`, already resolved by
+   *  the sanitizer (the model never emits a code). */
+  scopeValue?: string;
+  /** Human display label ("India"), stored in `publication_name` so the
+   *  Source-preferences screen renders the row unchanged. */
+  scopeLabel?: string;
   weight?: number; // absolute weight where the type sets one
   delta?: number; // nudge delta where the type nudges
   highPriority?: boolean; // set_high_priority
   suppressionPattern?: string; // add_suppression
   suppressionKeywords?: string[];
   suppressionStrength?: number;
+  /** retire_suppression — the `persona_suppressions` row id to retire. */
+  suppressionId?: string;
+  /** add_suppression — what the filter matches (v46 structured kinds). Typed
+   *  `string`, not the union, on purpose: proposals reach here from an LLM, so
+   *  the value is validated against SUPPRESSION_KINDS at dispatch and anything
+   *  unrecognised degrades to `undefined` (⇒ NULL column ⇒ reads as 'keyword'). */
+  suppressionKind?: string;
+  /** add_suppression — the single token the non-keyword kinds compare against. */
+  suppressionValue?: string;
 }
 
 export interface ApplyActionResult {
   applied: boolean;
   changeLogId?: string;
   summary: string;
+}
+
+/** Internal-only dispatch result. `purged` is not part of the public contract —
+ *  it just tells the seam whether an immediate hard-filter purge already
+ *  reconciled the feed, so the D18 dirty-marking can be skipped. */
+interface DispatchResult extends ApplyActionResult {
+  purged?: boolean;
 }
 
 /** Short 2-dp weight label for summaries (English only). */
@@ -71,6 +103,41 @@ function pubProvenanceFor(source: PersonaChangeLogSource): PublicationPreference
 }
 
 /**
+ * Validate an incoming suppression kind against the v46 vocabulary. Unknown /
+ * absent ⇒ `undefined`, which the service stores as a NULL `kind` column and
+ * `kindOf` reads back as 'keyword' — the historical behaviour. A bogus kind must
+ * degrade to a keyword filter, never persist a value nothing will ever match.
+ */
+function normalizeSuppressionKind(
+  raw: string | undefined,
+  value: string | undefined,
+): PersonaSuppressionKind | undefined {
+  if (!raw) return undefined;
+  if (!(SUPPRESSION_KINDS as readonly string[]).includes(raw)) return undefined;
+  const kind = raw as PersonaSuppressionKind;
+  // Same guard, second failure mode: every STRUCTURED kind compares against
+  // `value` by exact normalized equality, and the matcher treats an absent
+  // value as "matches nothing" (deliberately — never "matches everything").
+  // Persisting a valueless structured kind would therefore store a filter that
+  // looks active and does nothing, which is precisely what this validation
+  // exists to prevent. Degrade to keyword so the row still matches on its
+  // keywords / human pattern. Reachable: proposals arrive from an LLM.
+  if (kind !== 'keyword' && !value) return undefined;
+  return kind;
+}
+
+/**
+ * D18. A persona change means the feed is stale. This executor is the single
+ * choke point every FORWARD mutation flows through (feedback leaves, chat
+ * proposals, plan accepts, the filter actions) — before this, only the
+ * persona-EDITING screens set the flag, so a persona changed via feedback or
+ * chat produced no refresh hint at all.
+ *
+ * `revertChange` is the OTHER mutation path; it applies the same rule via the
+ * same shared module, which is why the sweep policy lives there and not here.
+ */
+
+/**
  * Single dispatch point for ALL deterministic persona mutations (feedback tree
  * leaves + feedback agent proposals). Routes each action_type to the right
  * service, and every mutation appends an invertible persona_change_log row.
@@ -80,7 +147,17 @@ export async function applyPersonaAction(
   source: PersonaChangeLogSource,
 ): Promise<ApplyActionResult> {
   try {
-    return await dispatch(action, source);
+    const { purged, ...result } = await dispatch(action, source);
+    // D18. Mark the feed stale for anything that actually landed. Gating on
+    // `applied` excludes nudges/skips/unsupported without a per-case list.
+    //
+    // Asymmetry, deliberate: a PURGE already ran an immediate refreshUi and the
+    // excluded rows are gone from the screen, so there is nothing to re-derive —
+    // dirtying is for changes that need a RESCORE. An UN-exclude is the other
+    // way round: it resets rows to `unscored`, which only the next scoring pass
+    // can resolve, so it does mark the feed dirty (it is not flagged `purged`).
+    if (result.applied && !purged) markFeedNeedsRefresh();
+    return result;
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'persona-action-executor', action_type: action.action_type },
@@ -105,7 +182,7 @@ export async function applyPersonaActions(
 async function dispatch(
   action: PersonaAction,
   source: PersonaChangeLogSource,
-): Promise<ApplyActionResult> {
+): Promise<DispatchResult> {
   switch (action.action_type) {
     // -- Topic weight -------------------------------------------------------
     case ACTION_NAMES.SET_TOPIC_WEIGHT: {
@@ -115,6 +192,13 @@ async function dispatch(
         const r = await mutationRailsService.nudgeTopic(action.topicId, action.delta, source);
         return {
           applied: r.applied,
+          // MUST be threaded back: the feedback layer stores the ids a leaf
+          // minted onto the verdict row and un-voting reverts exactly those.
+          // Dropping it made every topic-weight leaf (not_important,
+          // wrong_topic, a_lot_more, a_bit_more) un-undoable — the thumb went
+          // hollow while the weight stayed nudged, which is precisely the
+          // ambiguity the fill-state contract exists to remove.
+          changeLogId: r.changeLogId,
           summary: r.applied
             ? `Nudged topic weight to ${fmt(r.after)}`
             : 'Nudge budget exhausted; topic weight unchanged',
@@ -141,9 +225,17 @@ async function dispatch(
     case ACTION_NAMES.SET_HIGH_PRIORITY: {
       if (!action.topicId) return skipped(action, 'missing topicId');
       if (typeof action.highPriority !== 'boolean') return skipped(action, 'missing highPriority');
-      await mutationRailsService.setTopicHighPriority(action.topicId, action.highPriority, source);
+      // Same id-threading contract as the nudge above. `?.` because the helper
+      // returned void until this fix and test doubles may still resolve
+      // undefined — a missing id must not throw, just mean "nothing to revert".
+      const r = await mutationRailsService.setTopicHighPriority(
+        action.topicId,
+        action.highPriority,
+        source,
+      );
       return {
         applied: true,
+        changeLogId: r?.changeLogId,
         summary: action.highPriority ? 'Pinned topic as high priority' : 'Unpinned topic',
       };
     }
@@ -152,8 +244,9 @@ async function dispatch(
     case ACTION_NAMES.SET_FACT_WEIGHT: {
       if (!action.factId) return skipped(action, 'missing factId');
       if (typeof action.delta !== 'number') return skipped(action, 'missing delta');
-      await mutationRailsService.nudgeFactWeight(action.factId, action.delta, source);
-      return { applied: true, summary: 'Adjusted fact weight' };
+      // Same id-threading contract (and same `?.` rationale) as above.
+      const r = await mutationRailsService.nudgeFactWeight(action.factId, action.delta, source);
+      return { applied: true, changeLogId: r?.changeLogId, summary: 'Adjusted fact weight' };
     }
 
     // -- Mint a NEGATIVE topic ---------------------------------------------
@@ -213,19 +306,79 @@ async function dispatch(
         typeof action.suppressionStrength === 'number'
           ? action.suppressionStrength
           : DEFAULT_SUPPRESSION_STRENGTH;
+      const value = action.suppressionValue?.trim() || undefined;
+      const kind = normalizeSuppressionKind(action.suppressionKind, value);
       const suppression = await suppressionService.addSuppression({
         pattern,
         keywords: action.suppressionKeywords ?? [],
         strength,
-        source: 'feedback',
+        // Was hardcoded 'feedback', which mislabelled every filter the user
+        // created by hand. The suppression `source` enum has no 'chat'/'digest'
+        // → 'feedback' equivalents worth splitting here, so: user means user,
+        // everything else is feedback.
+        source: source === 'user' ? 'user' : 'feedback',
+        kind,
+        value,
       });
       const row = await changeLogService.append({
         actionType: ACTION_NAMES.ADD_SUPPRESSION,
-        action: { targetId: suppression.id },
+        action: { targetId: suppression.id, kind, value },
         source,
         summary: `Suppressed: ${pattern}`,
       });
-      return { applied: true, changeLogId: row.id, summary: `Suppressed: ${pattern}` };
+      // D12a. Hard filters are retroactive — screen what is ALREADY stored.
+      // Soft suppressions are a score penalty, so they wait for the next pass.
+      // Compare the strength WE clamped/defaulted, not the persisted row's:
+      // the decision is about the action, and it must not depend on the shape
+      // the service happens to return.
+      const purged = await runSweepFor(
+        sweepForMutation({
+          actionType: action.action_type,
+          hardFilter: strength >= suppressionService.HARD_SUPPRESSION_STRENGTH,
+        }),
+        action.action_type,
+      );
+      return { applied: true, changeLogId: row.id, summary: `Suppressed: ${pattern}`, purged };
+    }
+
+    // -- Remove a suppression (audited, invertible) -------------------------
+    case ACTION_NAMES.RETIRE_SUPPRESSION: {
+      const suppressionId = action.suppressionId;
+      if (!suppressionId) return skipped(action, 'missing suppressionId');
+      // Load the row BEFORE retiring it. Two reasons, both load-bearing: the
+      // change-log summary has to name the pattern (a bare id is useless in the
+      // audit list), and the row's strength is what decides whether the
+      // un-exclude sweep runs. The service exposes no getById, so this mirrors
+      // SET_LOCATION_WEIGHT's getAll + find.
+      const all = await suppressionService.getAll();
+      const existing = all.find((s) => s.id === suppressionId);
+      if (!existing) return { applied: false, summary: 'suppression not found' };
+      const wasHard = existing.strength >= suppressionService.HARD_SUPPRESSION_STRENGTH;
+      const kind = suppressionService.kindOf(existing);
+      const pattern = existing.pattern;
+
+      await suppressionService.retireSuppression(suppressionId);
+      const row = await changeLogService.append({
+        actionType: ACTION_NAMES.RETIRE_SUPPRESSION,
+        action: { targetId: suppressionId, pattern, kind },
+        source,
+        summary: `Removed filter: ${pattern}`,
+      });
+      // D12c. Retiring a HARD filter gives its casualties a second chance. Rows
+      // a still-active filter also matches stay excluded (the sweep re-screens
+      // against the live persona, so the two-filters-on-one-row case is free).
+      // runSweepFor returns false for an un-exclude — the released rows come
+      // back `unscored` and need the next scoring pass, so the feed IS dirty.
+      const purged = await runSweepFor(
+        sweepForMutation({ actionType: action.action_type, hardFilter: wasHard }),
+        action.action_type,
+      );
+      return {
+        applied: true,
+        changeLogId: row.id,
+        summary: `Removed filter: ${pattern}`,
+        purged,
+      };
     }
 
     // -- Location weight ----------------------------------------------------
@@ -263,11 +416,89 @@ async function dispatch(
         source,
         summary: `Set publication preference: ${action.publicationId} → ${action.publicationPref}`,
       });
+      // D12b. A mute (weight ≤ -0.9) IS a hard `kind:'publication'` filter — it
+      // is synthesized as one when the scoring context loads, so both sweeps
+      // see it live with no extra plumbing here. Muting purges retroactively;
+      // raising the weight back above -0.9 (unmute, incl. switching to
+      // boost/deprioritize/none) releases what the mute had excluded.
+      const purged = await runSweepFor(
+        sweepForMutation({
+          actionType: action.action_type,
+          prefBefore: before,
+          prefAfter: action.publicationPref,
+        }),
+        action.action_type,
+      );
       return {
         applied: true,
         changeLogId: row.id,
         summary: `Set publication preference: ${action.publicationId} → ${action.publicationPref}`,
+        purged,
       };
+    }
+
+    // -- Source SCOPE preference (source-pref v47, D2/D6) -------------------
+    //
+    // Same 5 steps as SET_PUBLICATION_PREF above (guard → read `before` → apply
+    // → append change-log row → sweep), against the scope half of the SAME
+    // table. Two deliberate differences:
+    //
+    //  1. `mute` is REJECTED. A scope mute is not synthesized into a hard
+    //     `kind:'publication'` filter anywhere — Phase 1 excludes scope rows
+    //     from the muted-publication hard-filter derivation in
+    //     lib/mera-protocol/stage-scoring.ts — so accepting one would promise
+    //     an exclusion nothing implements. The sanitizer rejects it first; this
+    //     is the second gate, for callers that don't go through chat.
+    //  2. `targetId` is the COMPOSITE `'{scopeKind}:{scopeValue}'`
+    //     (e.g. 'country:IND'), because a scope has no row id the log can point
+    //     at and the inverse must be able to rebuild the whole SourceScopeRef
+    //     from the log alone. The Source-preferences screen writes the same
+    //     encoding, so both producers and `revertChange` agree on one shape.
+    case ACTION_NAMES.SET_SOURCE_SCOPE_PREF: {
+      if (!action.scopeKind) return skipped(action, 'missing scopeKind');
+      if (!action.scopeValue) return skipped(action, 'missing scopeValue');
+      if (!action.publicationPref) return skipped(action, 'missing publicationPref');
+      if (action.publicationPref === 'mute') {
+        return skipped(action, 'a source scope cannot be muted');
+      }
+      const scope = { scopeKind: action.scopeKind, scopeValue: action.scopeValue };
+      const label = action.scopeLabel?.trim() || action.scopeValue;
+      const before = await publicationPreferenceService.getScopePreferenceKind(scope);
+      await publicationPreferenceService.setScopePreferenceKind(
+        scope,
+        action.publicationPref,
+        label,
+        pubProvenanceFor(source),
+      );
+      const summary = `Set source preference: ${label} → ${action.publicationPref}`;
+      const row = await changeLogService.append({
+        actionType: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+        action: {
+          targetId: `${action.scopeKind}:${action.scopeValue}`,
+          before,
+          after: action.publicationPref,
+          // Carried so the inverse can restore a boost/deprioritize row with
+          // the label the user actually saw — `setScopePreferenceKind` needs
+          // one whenever `before` is not 'none'.
+          label,
+        },
+        source,
+        summary,
+      });
+      // Mute is unreachable above, so this is a no-op today by construction.
+      // It is wired anyway because persona-mutation-sweeps' whole thesis is
+      // that a new action type can never be live in one path and missing in
+      // the other; if a scope exclusion is ever implemented, the boundary rule
+      // and its mirror are already here.
+      const purged = await runSweepFor(
+        sweepForMutation({
+          actionType: action.action_type,
+          prefBefore: before,
+          prefAfter: action.publicationPref,
+        }),
+        action.action_type,
+      );
+      return { applied: true, changeLogId: row.id, summary, purged };
     }
 
     // -- Nudges are SUGGESTIONS, not mutations — no change-log row ----------

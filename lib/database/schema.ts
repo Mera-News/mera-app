@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 45,
+  version: 48,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -87,6 +87,12 @@ export default appSchema({
         { name: 'max_cluster_size', type: 'number', isOptional: true },
         { name: 'stable_cluster_id', type: 'string', isOptional: true, isIndexed: true },
         { name: 'headline_scope', type: 'string', isOptional: true },
+        // Which COUNTRY a 'COUNTRY'-scope headline came from (uppercase ISO
+        // code). NULL for topic-retrieved rows and for GLOBAL headlines — a
+        // GLOBAL headline belongs to no single country by construction.
+        // Without this the scope LABEL alone cannot tell a reader's Indian
+        // headlines apart from their Dutch ones (schema v48).
+        { name: 'headline_country_code', type: 'string', isOptional: true },
         { name: 'matched_topics_json', type: 'string', isOptional: true },
         // Deterministic engine raw score (pre-judge) — audit.
         { name: 'computed_score', type: 'number', isOptional: true },
@@ -320,6 +326,13 @@ export default appSchema({
       columns: [
         { name: 'publication_name', type: 'string', isIndexed: true },
         { name: 'source_country_code', type: 'string', isOptional: true },
+        // source-pref v47 — a GROUP preference is a LIVE SCOPE, not an
+        // expansion into one row per publication (D2). `scope_kind` is the
+        // discriminator ('country' today) and `scope_value` the token it
+        // evaluates against at render time (ISO alpha-3). Both NULL ⇒ the row
+        // is a named-publication preference and behaves exactly as before.
+        { name: 'scope_kind', type: 'string', isOptional: true },
+        { name: 'scope_value', type: 'string', isOptional: true },
         { name: 'weight', type: 'number' },
         { name: 'status', type: 'string' },
         { name: 'provenance', type: 'string' },
@@ -339,6 +352,10 @@ export default appSchema({
         { name: 'status', type: 'string' },
         { name: 'expires_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
+        // Structured "not interested" filters (v46). NULL `kind` reads as
+        // 'keyword' — pre-v46 rows keep their exact keyword-substring behaviour.
+        { name: 'kind', type: 'string', isOptional: true },
+        { name: 'value', type: 'string', isOptional: true },
       ],
     }),
 

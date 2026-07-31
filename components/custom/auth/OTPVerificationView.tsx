@@ -109,7 +109,7 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
     }, [otp]);
 
     return (
-        <Box className="flex-1 bg-background-0">
+        <Box className="flex-1">
             {/* Back Button */}
             {onBack && (
                 <Box className="absolute top-16 left-5 z-10">

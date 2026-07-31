@@ -3,32 +3,36 @@
 // Conversations are ephemeral (in-memory only, managed by useMeraLLM).
 
 import {
-  handleAdvanceQuestionnaireLevel,
   handleDeleteUserFacts,
   handleIssueWarning,
   handleSaveExtractedFacts,
   handleUpdateUserConfig,
 } from '../../chat-tools/tool-handlers';
-import { getCoveredAttributeKeys, getFacts, getQuestionnaireLevel, setQuestionnaireLevel } from '../../database/services/fact-service';
+import { getFacts } from '../../database/services/fact-service';
 import { runCalibration } from '../../database/services/calibration-service';
+import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
+import { executeProposalActions } from '../../chat-tools/proposal-handlers';
+import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
 import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '../../mera-protocol/prompts';
-import {
-  buildQuestionnaireGuide,
-  getAttributeKeysForLevel,
-  TOTAL_LEVELS,
-} from '../../mera-protocol/questionnaire-data';
 import { useAppLanguageStore } from '../../stores/app-language-store';
-import { useMeraProtocolStore, useUseLegacyPersonaUpdate } from '../../stores/mera-protocol-store';
+import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import {
   buildPersonaContext,
   buildPersonaSystemPrompt,
+  decidePersonaProposeChanges,
+  formatActiveFiltersList,
+  formatKnownFactsList,
   getPersonaToolDefinitions,
-  recomputeQuestionnaireLevel,
+  normalizePublicationNameForMatch,
+  planPersonaPrompt,
   type PersonaMode,
+  type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
+import { estimateTokens } from '../tokens';
+import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
   ConversationMessage,
   IAgent,
@@ -59,7 +63,16 @@ export class PersonaUpdateAgent implements IAgent {
   private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
-  private lastUseLegacy: boolean | null = null;
+  private lastFilterTools: PersonaPromptPlan['filterTools'] | null = null;
+
+  /**
+   * This turn's FILTERS budget decision (not-interested P4a). Recomputed by
+   * MEASUREMENT in buildSystemPrompt — which both chat hooks call immediately
+   * before buildContext (useLocalLLM.ts:267/278, useCloudPersonaChat.ts:372/382)
+   * — and read back in buildContext. Defaults to the full feature so an agent
+   * whose buildSystemPrompt was never called still behaves.
+   */
+  private turnPlan: PersonaPromptPlan = { filterTools: 'full', includeFiltersBlock: true };
 
   async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
@@ -69,80 +82,169 @@ export class PersonaUpdateAgent implements IAgent {
       useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
         ? 'LOCAL'
         : 'CLOUD';
-    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
 
-    // Static prompt depends on surface + needsToolFormat + languageName + mode + useLegacy.
-    // All are fixed per session unless the user changes their app language or
-    // toggles on-device / cloud processing.
+    // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
+    // so persona-agent-core calls THIS function reference rather than its own
+    // default harness import — keeps the frozen unit-test mock seam intact.
+    // Memoized per call so the variant we MEASURE is the string we return —
+    // the common case builds exactly one prompt, as before.
+    const built = new Map<PersonaPromptPlan['filterTools'], string>();
+    const buildAt = (filterTools: PersonaPromptPlan['filterTools']): string => {
+      const hit = built.get(filterTools);
+      if (hit !== undefined) return hit;
+      const prompt = buildPersonaSystemPrompt(
+        {
+          surface: this.surface,
+          includeToolFormat: needsToolFormat,
+          languageName,
+          mode,
+          // ONBOARDING carries no filter tools at all, so leave the pre-P4a
+          // call-args shape untouched there.
+          ...(this.surface === 'CONFIG' ? { filterTools } : {}),
+        },
+        buildPersonaUpdateStaticPrompt,
+      );
+      built.set(filterTools, prompt);
+      return prompt;
+    };
+
+    this.turnPlan = await this.planTurn({ buildAt });
+
+    // Static prompt depends on surface + needsToolFormat + languageName + mode —
+    // all fixed per session — PLUS this turn's filter variant, which is
+    // data-dependent and so must be part of the cache key.
     if (
       this.cachedSystemPrompt
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
       && this.lastMode === mode
-      && this.lastUseLegacy === useLegacy
+      && this.lastFilterTools === this.turnPlan.filterTools
     ) {
       return this.cachedSystemPrompt;
     }
-    // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
-    // so persona-agent-core calls THIS function reference rather than its own
-    // default harness import — keeps the frozen unit-test mock seam intact.
-    this.cachedSystemPrompt = buildPersonaSystemPrompt(
-      {
-        surface: this.surface,
-        includeToolFormat: needsToolFormat,
-        languageName,
-        mode,
-        useLegacy,
-      },
-      buildPersonaUpdateStaticPrompt,
-    );
+    this.cachedSystemPrompt = buildAt(this.turnPlan.filterTools);
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
-    this.lastUseLegacy = useLegacy;
+    this.lastFilterTools = this.turnPlan.filterTools;
     return this.cachedSystemPrompt;
+  }
+
+  /**
+   * Chooses how much of the FILTERS feature this turn can afford, by measuring
+   * the real candidate prompts against this turn's real data — never by
+   * comparing the facts to a hardcoded threshold.
+   *
+   * ONBOARDING short-circuits: it never carries the filter tools, so every
+   * variant renders the same prompt and there is nothing to yield.
+   */
+  private async planTurn(params: {
+    buildAt: (v: PersonaPromptPlan['filterTools']) => string;
+  }): Promise<PersonaPromptPlan> {
+    if (this.surface !== 'CONFIG') {
+      return { filterTools: 'full', includeFiltersBlock: false };
+    }
+
+    const facts = await getFacts();
+    const suppressions = await this.loadActiveSuppressions();
+    const filtersBlock = formatActiveFiltersList(suppressions);
+
+    return planPersonaPrompt({
+      systemTokensFor: (variant) => estimateTokens(params.buildAt(variant)),
+      baseContextTokens: estimateTokens(formatKnownFactsList(facts)),
+      filtersBlockTokens: filtersBlock ? estimateTokens(filtersBlock) : 0,
+    });
   }
 
   // --- IAgent: dynamic context (injected into user messages each turn) ---
 
-  async buildContext(): Promise<string> {
-    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
-
-    const facts = await getFacts();
-
-    if (!useLegacy) {
-      return buildPersonaContext(
-        { facts, useLegacy: false },
-        { buildContext: buildPersonaUpdateContext },
-      );
+  /** The user's ACTIVE "not interested" filters as the harness's plain view
+   *  (not-interested P4a / D6). CONFIG only — onboarding has no feed yet, so it
+   *  neither offers the filter tools nor pays the context tokens. Best-effort:
+   *  a failure means no filters block and a rejected retire_suppression, never a
+   *  broken chat. */
+  private async loadActiveSuppressions(): Promise<ActiveSuppressionView[]> {
+    if (this.surface !== 'CONFIG') return [];
+    try {
+      const rows = await getActiveSuppressions();
+      return rows.map((s) => ({
+        id: s.id,
+        pattern: s.pattern,
+        kind: s.kind,
+        value: s.value,
+        strength: s.strength,
+      }));
+    } catch {
+      return [];
     }
+  }
 
-    // Legacy path: level-based questionnaire with [ASK]/[DONE] annotations.
-    // Level recomputation is pure (delegated); the DB read/write stays here.
-    const coveredAttributes = await getCoveredAttributeKeys();
-    const storedLevel = await getQuestionnaireLevel();
-    const currentLevel = recomputeQuestionnaireLevel(
-      { currentLevel: storedLevel, coveredAttributes },
-      getAttributeKeysForLevel,
-      TOTAL_LEVELS,
-    );
-    await setQuestionnaireLevel(currentLevel);
+  /** source-pref v47 (D5) — the CORROBORATION set for a named-publication
+   *  preference: every outlet name that provably exists in the USER'S OWN data
+   *  (visit history ∪ the local suggestion cache), normalized exactly the way
+   *  `pubPref` matching normalizes. A name the model invented is absent here and
+   *  its proposal is dropped, so the Source-preferences screen can never show a
+   *  row that looks live and does nothing.
+   *
+   *  Lazily `require`d, mirroring `persona-mutation-sweeps.runSweep`: a static
+   *  import would drag two more WatermelonDB collection singletons into every
+   *  consumer of this agent for a set that is only read on a `proposeChanges`
+   *  turn. CONFIG only and best-effort, exactly like `loadActiveSuppressions` —
+   *  a read failure yields an empty set, which drops every named proposal (the
+   *  safe direction). Swallowed rather than logged for the same reason that one
+   *  swallows: this is a prompt-input read, not a mutation. */
+  private async loadKnownPublicationNames(): Promise<ReadonlySet<string>> {
+    const names = new Set<string>();
+    if (this.surface !== 'CONFIG') return names;
+    try {
+      /* eslint-disable @typescript-eslint/no-require-imports */
+      const visits =
+        require('../../database/services/publication-visit-service') as typeof import('../../database/services/publication-visit-service');
+      const suggestions =
+        require('../../database/services/article-suggestion-service') as typeof import('../../database/services/article-suggestion-service');
+      /* eslint-enable @typescript-eslint/no-require-imports */
+      const [visited, suggested] = await Promise.all([
+        visits.getTopVisitedPublications(),
+        suggestions.getDistinctSuggestionPublicationNames(),
+      ]);
+      for (const v of visited) {
+        const norm = normalizePublicationNameForMatch(v.publicationName ?? '');
+        if (norm) names.add(norm);
+      }
+      // Already normalized by the service, but re-normalizing is idempotent and
+      // keeps the two sources provably on one rule.
+      for (const s of suggested) {
+        const norm = normalizePublicationNameForMatch(s);
+        if (norm) names.add(norm);
+      }
+    } catch {
+      // Empty set ⇒ every named proposal drops. Safe direction.
+    }
+    return names;
+  }
+
+  async buildContext(): Promise<string> {
+    const facts = await getFacts();
+    const suppressions = await this.loadActiveSuppressions();
+    // Re-injected every turn so the one-shot LOCAL path can resolve a confirm.
+    const proposal = useFloatingChatStore.getState().proposal;
 
     return buildPersonaContext(
-      { facts, useLegacy: true, currentLevel, coveredAttributes },
       {
-        buildContext: buildPersonaUpdateContext,
-        buildGuide: buildQuestionnaireGuide,
-        totalLevels: TOTAL_LEVELS,
+        facts,
+        suppressions,
+        proposal,
+        includeFiltersBlock: this.turnPlan.includeFiltersBlock,
       },
+      { buildContext: buildPersonaUpdateContext },
     );
   }
 
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---
 
   getToolDefinitions(): ToolDefinition[] {
-    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
-    return getPersonaToolDefinitions(this.surface, useLegacy, buildToolDefinitions);
+    // The turn's plan also decides whether the cloud tool payload carries them.
+    return getPersonaToolDefinitions(this.surface, buildToolDefinitions, this.turnPlan.filterTools);
   }
 
   // --- IAgent: message formatting ---
@@ -208,11 +310,6 @@ export class PersonaUpdateAgent implements IAgent {
         return { result };
       }
 
-      case 'advanceQuestionnaireLevel': {
-        const result = await handleAdvanceQuestionnaireLevel();
-        return { result };
-      }
-
       case 'issueWarning': {
         const result = await handleIssueWarning(args);
         return {
@@ -227,6 +324,32 @@ export class PersonaUpdateAgent implements IAgent {
               : undefined,
         };
       }
+
+      // --- not-interested P4a (D6): the SAME staged-proposal path the
+      // ArticleFeedbackAgent has, so "Mera, stop showing me celebrity gossip"
+      // works in plain chat. Nothing is written until the user confirms.
+      case 'proposeChanges': {
+        const [activeSuppressions, knownPublicationNames] = await Promise.all([
+          this.loadActiveSuppressions(),
+          this.loadKnownPublicationNames(),
+        ]);
+        return decidePersonaProposeChanges(args, activeSuppressions, knownPublicationNames);
+      }
+
+      case 'applyProposal': {
+        const proposal = useFloatingChatStore.getState().proposal;
+        if (!proposal) return { result: { error: 'no pending proposal' } };
+        // Same executor as the article surface — one seam, one audit trail.
+        const { applied, errors, summaries, changeLogIds } =
+          await executeProposalActions(proposal.actions);
+        return {
+          result: { applied, errors, summaries, changeLogIds },
+          sideEffects: { proposalResolved: 'applied' },
+        };
+      }
+
+      case 'cancelProposal':
+        return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
 
       case 'runCalibration': {
         // The user was invited to recalibrate scoring (calibration notification)

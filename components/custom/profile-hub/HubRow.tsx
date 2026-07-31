@@ -17,6 +17,8 @@ interface HubRowProps {
     readonly badgeColor?: string;
     readonly onPress: () => void;
     readonly accessibilityLabel?: string;
+    /** Harness/QA hook — forwarded to the root Pressable. */
+    readonly testID?: string;
 }
 
 /**
@@ -33,9 +35,11 @@ const HubRow: React.FC<HubRowProps> = ({
     badgeColor = '#EDA77E',
     onPress,
     accessibilityLabel,
+    testID,
 }) => {
     return (
         <Pressable
+            testID={testID}
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={accessibilityLabel ?? label}

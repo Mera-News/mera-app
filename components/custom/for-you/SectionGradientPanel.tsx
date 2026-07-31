@@ -1,6 +1,6 @@
 import { sectionGradient } from '@/lib/section-color';
 import React from 'react';
-import { I18nManager, View, type StyleProp, type ViewStyle } from 'react-native';
+import { I18nManager, Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 interface SectionGradientPanelProps {
@@ -23,6 +23,9 @@ interface SectionGradientPanelProps {
  * The gradient direction flips for RTL so the solid ink always sits on the
  * text-leading edge.
  */
+/** See the render branch below for why Android does not get the SVG fade. */
+const ANDROID_FLAT_TINT = Platform.OS === 'android';
+
 const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
   factId,
   borderRadius = 12,
@@ -38,6 +41,31 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
 
   return (
     <View testID={`dashboard-section-${factId}`} style={[{ borderRadius, overflow: 'hidden' }, style]}>
+      {ANDROID_FLAT_TINT ? (
+        // Android gets a flat tint instead of the SVG fade.
+        //
+        // The Svg below sizes itself with `width="100%" height="100%"`, and on
+        // Android RNSVG resolves those percentages against the size at FIRST
+        // layout and does not re-measure. This panel grows after that — cards
+        // mount, images load — so the gradient rect keeps its original height
+        // and leaves a hard horizontal line partway down the section where the
+        // fill simply stops. (Same family of RNSVG-on-Android problems as the
+        // full-screen backdrop, which is disabled there for a crash and for
+        // cost; see AbstractGradientBackdrop.)
+        //
+        // A plain absolutely-filled View has no measuring to get wrong, costs
+        // nothing, and keeps the per-fact colour identity. It loses the
+        // left-to-right fade, which is the acceptable half of the trade.
+        // `opacity` sits on this layer alone, so the children above are
+        // untouched.
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: spec.base, opacity: spec.startOpacity * 0.5 },
+          ]}
+        />
+      ) : (
       <Svg
         width="100%"
         height="100%"
@@ -52,6 +80,7 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${gradId})`} />
       </Svg>
+      )}
       {children}
     </View>
   );

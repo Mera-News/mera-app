@@ -21,8 +21,17 @@ export const ACTION_NAMES = {
   RETIRE_TOPIC: 'retire_topic',
   SUPPRESS_TOPIC: 'suppress_topic',
   ADD_SUPPRESSION: 'add_suppression',
+  // Removing a "not interested" filter is an AUDITED mutation, not a silent
+  // delete (D5): it logs like any other persona change and inverts via
+  // suppression-service.reactivateSuppression. Removal of a NEGATIVE TOPIC is
+  // a different thing and stays RETIRE_TOPIC.
+  RETIRE_SUPPRESSION: 'retire_suppression',
   SET_HIGH_PRIORITY: 'set_high_priority',
   SET_PUBLICATION_PREF: 'set_publication_pref',
+  // source-pref v47 (D2/D6). A GROUP source preference ("prefer Indian
+  // sources") is ONE row carrying a live scope predicate — never an expansion
+  // into one row per matching outlet. Only `scope_kind = 'country'` exists.
+  SET_SOURCE_SCOPE_PREF: 'set_source_scope_pref',
   NUDGE_SUBSCRIBE_PUBLICATION: 'nudge_subscribe_publication',
   NUDGE_BROWSE_RELATED: 'nudge_browse_related',
   REASSIGN_TOPIC: 'reassign_topic',

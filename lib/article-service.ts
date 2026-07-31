@@ -60,6 +60,19 @@ const GET_ARTICLE_BY_ID = gql`
       creator
       source_uri
       original_language_code
+      # The ARTICLE's own classification — needed by the detail screen's
+      # feedback surface, which has no local article_suggestions row to derive
+      # from for a standalone article (Explore / tracked story / shared link).
+      # NOT interchangeable with publicationSource.category below: that one is
+      # the PUBLICATION's category.
+      category
+      entities
+      event_type
+      geo_tags {
+        city
+        region
+        countryCode
+      }
       publicationSource {
         _id
         publication_name

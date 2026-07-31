@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -5,16 +6,17 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { fetchUserBilling } from '@/lib/billing-service';
+import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe } from '@/lib/revenuecat';
+import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
+import type { PurchasesOffering } from 'react-native-purchases';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UsageWidget from '../UsageWidget';
 import { humanizeKey } from './observability-labels';
@@ -49,6 +51,23 @@ interface ManageSubscriptionScreenProps {
     onBack?: () => void;
 }
 
+// Price lives on the offering's packages, not on CustomerInfo — match the
+// active entitlement's product to a package.
+const resolvePriceString = (
+    productId: string | null,
+    offering: PurchasesOffering | null,
+): string | null => {
+    if (!productId || !offering) return null;
+    const pkg = offering.availablePackages.find(
+        (p) =>
+            p.product.identifier === productId ||
+            // Android product ids can carry a ":basePlan" suffix.
+            p.product.identifier.startsWith(`${productId}:`) ||
+            productId.startsWith(`${p.product.identifier}:`),
+    );
+    return pkg?.product.priceString ?? null;
+};
+
 /**
  * Subscription details + actions: plan and daily article limit from our DB
  * (the source of truth), entitlement details and price from RevenueCat, and
@@ -69,44 +88,52 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const rcTier = getActiveTier(customerInfo);
     const activeEntitlement = getActiveEntitlementInfo(customerInfo);
 
-    useEffect(() => {
-        const load = async () => {
-            const [billingInfo, freshCustomerInfo, offering] = await Promise.all([
-                fetchUserBilling(),
-                getCustomerInfoSafe(),
-                getOfferingSafe(),
-            ]);
-            setBilling(billingInfo);
-            if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
+    /**
+     * Load every panel on this screen. Pass `awaitTierChangeFrom` after a
+     * completed purchase/restore: the RevenueCat → server webhook is async, so
+     * a single fetch the moment the paywall closes normally still reads the
+     * pre-purchase tier. It retries briefly, then gives up (see
+     * refreshUserBillingAfterPurchase).
+     */
+    const load = useCallback(async (awaitTierChangeFrom?: string | null) => {
+        const [billingInfo, freshCustomerInfo, offering] = await Promise.all([
+            awaitTierChangeFrom === undefined
+                ? fetchUserBilling()
+                : refreshUserBillingAfterPurchase(awaitTierChangeFrom),
+            getCustomerInfoSafe(),
+            getOfferingSafe(),
+        ]);
+        if (billingInfo || awaitTierChangeFrom === undefined) setBilling(billingInfo);
+        if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
 
-            // Price lives on the offering's packages, not on CustomerInfo —
-            // match the active entitlement's product to a package.
-            const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
-            const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
-            if (productId && offering) {
-                const pkg = offering.availablePackages.find(
-                    (p) =>
-                        p.product.identifier === productId ||
-                        // Android product ids can carry a ":basePlan" suffix.
-                        p.product.identifier.startsWith(`${productId}:`) ||
-                        productId.startsWith(`${p.product.identifier}:`),
-                );
-                setPriceString(pkg?.product.priceString ?? null);
-            }
-            setLoading(false);
-        };
-        void load();
+        const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
+        const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
+        setPriceString(resolvePriceString(productId, offering));
+        setLoading(false);
     }, [setCustomerInfo]);
+
+    useEffect(() => {
+        void load();
+        // Pending-plan-change probe (dev only, zero UI): dumps the RevenueCat
+        // subscription rows so we can settle whether a deferred upgrade is
+        // visible client-side at all. See lib/revenuecat.ts describeSubscriptions().
+        if (__DEV__) void logRevenueCatDiagnostics();
+    }, [load]);
 
     const handleViewPlans = async () => {
         try {
             const offering = await getOfferingSafe();
             // Browsing/upgrading from settings — show a close button so the user
             // can dismiss without purchasing (unlike the hard gate).
-            await RevenueCatUI.presentPaywall({
+            const result = await RevenueCatUI.presentPaywall({
                 ...(offering ? { offering } : {}),
                 displayCloseButton: true,
             });
+            // A purchase is a discrete event — refresh on it rather than making
+            // the user wait for the next time this screen mounts.
+            if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+                await load(billing?.subscriptionTier ?? null);
+            }
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'ManageSubscriptionScreen', method: 'viewPlans' },
@@ -117,6 +144,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const handleCustomerCenter = async () => {
         try {
             await RevenueCatUI.presentCustomerCenter();
+            // The user may have cancelled or changed plan in there — re-read
+            // once on dismissal instead of showing stale rows.
+            await load();
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'ManageSubscriptionScreen', method: 'customerCenter' },
@@ -204,7 +234,18 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         : [];
 
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+        // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
+        // below, so it spans the FULL screen including the safe areas — an
+        // absolute fill resolves against its parent's CONTENT box, so mounting it
+        // inside the padded box left a black strip in the inset.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* No opaque fill: the backdrop above is the page background. */}
+            <Box className="flex-1" style={{ paddingTop: insets.top }}>
+
             <HStack className="px-4 py-3 items-center">
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
@@ -294,6 +335,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     </VStack>
                 </ScrollView>
             )}
+        </Box>
         </Box>
     );
 };

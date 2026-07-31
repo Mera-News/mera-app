@@ -47,3 +47,21 @@ describe('evaluateCondition', () => {
     expect(evaluateCondition({ some_future_gate: 99 } as never, ctx())).toBe(true);
   });
 });
+
+// Added with the `has_event_type` gate: the server populates `event_type` on
+// none of ~303k prod articles, so an ungated event-type leaf renders, applies
+// nothing and shows no toast. The gate hides it until tagging writes the field.
+describe('evaluateCondition — has_event_type', () => {
+  it('requires a non-blank event type', () => {
+    expect(evaluateCondition({ has_event_type: true }, ctx({ eventType: 'Earnings call' }))).toBe(true);
+    expect(evaluateCondition({ has_event_type: true }, ctx({ eventType: '  ' }))).toBe(false);
+    expect(evaluateCondition({ has_event_type: true }, ctx({ eventType: null }))).toBe(false);
+    // Today's reality for every article.
+    expect(evaluateCondition({ has_event_type: true }, ctx())).toBe(false);
+  });
+
+  it('does not gate when the key is absent or false', () => {
+    expect(evaluateCondition({ has_event_type: false }, ctx())).toBe(true);
+    expect(evaluateCondition({}, ctx())).toBe(true);
+  });
+});

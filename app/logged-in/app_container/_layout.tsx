@@ -47,7 +47,19 @@ export default function AppLayout() {
                         `dynamic-feed`, which the Dashboard's "Overview" sub-tab
                         already uses, and not `article`, which reads as a single
                         document rather than a stream. */}
-                    <NativeTabs.Trigger name="feed">
+                    {/* `disableScrollToTop` / `disablePopToTop`: the first three
+                        tabs implement repeated-tab-selection themselves in JS
+                        (lib/hooks/use-tab-press-scroll-refresh) — re-tap scrolls
+                        to top, tapping again at the top pulls to refresh. These
+                        two props are how expo-router exposes
+                        `specialEffects.repeatedTabSelection`
+                        (NativeTabTrigger.convertTabPropsToOptions builds
+                        `{ popToRoot: !disablePopToTop, scrollToTop:
+                        !disableScrollToTop }`); there is no `specialEffects`
+                        prop on Trigger itself. Without them UIKit's own
+                        scroll-to-top special effect races the JS handler and the
+                        second tap can never reach the refresh branch. */}
+                    <NativeTabs.Trigger name="feed" disableScrollToTop disablePopToTop>
                         <Label hidden>{t('tabs.deck')}</Label>
                         <Icon
                             sf="list.bullet.rectangle.fill"
@@ -55,7 +67,7 @@ export default function AppLayout() {
                         />
                     </NativeTabs.Trigger>
                     {/* Dashboard (route `for_you`). */}
-                    <NativeTabs.Trigger name="for_you">
+                    <NativeTabs.Trigger name="for_you" disableScrollToTop disablePopToTop>
                         <Label hidden>{t('tabs.dashboard')}</Label>
                         <Icon
                             sf="square.grid.2x2.fill"
@@ -63,7 +75,7 @@ export default function AppLayout() {
                         />
                     </NativeTabs.Trigger>
                     {/* Explore (route `around`). */}
-                    <NativeTabs.Trigger name="around">
+                    <NativeTabs.Trigger name="around" disableScrollToTop disablePopToTop>
                         <Label hidden>{t('tabs.around')}</Label>
                         <Icon
                             sf="safari.fill"

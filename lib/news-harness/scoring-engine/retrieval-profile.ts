@@ -37,8 +37,19 @@ export interface BuildRetrievalProfileInput {
   topics: RetrievalTopicInput[];
   locations: RetrievalLocationInput[];
   nowMs?: number; // default Date.now()
-  headlineLimitPerScope?: number; // default 10
+  headlineLimitPerScope?: number; // default DEFAULT_HEADLINE_LIMIT_PER_SCOPE
   maxTopics?: number; // default 200
+  /**
+   * Per-scope depth overrides, keyed by scope key: an uppercase country code,
+   * or 'GLOBAL'. A scope ABSENT from this map uses `headlineLimitPerScope` —
+   * absence is the default, so nothing needs writing to get default behaviour
+   * and clearing an override is a delete, not a write of the default value.
+   *
+   * Values are clamped to [0, MAX_HEADLINE_DEPTH]; the server rejects anything
+   * above its own maximum of 25 with a 400, so clamping here is what keeps a
+   * stale or hand-edited setting from failing the whole feed sync.
+   */
+  headlineDepthByScope?: Readonly<Record<string, number>>;
 }
 
 export type HeadlineScopeKind = 'COUNTRY' | 'GLOBAL';
@@ -46,6 +57,9 @@ export type HeadlineScopeKind = 'COUNTRY' | 'GLOBAL';
 export interface RetrievalHeadlineScope {
   scope: HeadlineScopeKind;
   countryCode?: string; // set for COUNTRY, omitted for GLOBAL
+  /** Per-scope depth. Omitted when this scope uses the request-level default,
+   *  so the wire payload stays identical to today for an untouched profile. */
+  limit?: number;
 }
 
 export interface RetrievalProfileTopic {
@@ -61,7 +75,30 @@ export interface RetrievalProfile {
   headlineLimitPerScope: number;
 }
 
-const DEFAULT_HEADLINE_LIMIT_PER_SCOPE = 10;
+/** How many top headlines Mera reads per scope before deciding which matter.
+ *
+ *  20 is the product requirement, not a tuning choice: "By default always make
+ *  sure that the top 20 articles from the top headlines in each country the
+ *  user is interested in is also used to create suggestion." Shipped as 10
+ *  during headlines P1-P6 and corrected here in P7.
+ *
+ *  Bounded above by the server, which 400s over 25
+ *  (articles-for-topics.resolver.ts) — so 20 leaves headroom for a per-scope
+ *  override without a stored setting being able to fail a sync.
+ *
+ *  Cost note: this doubles the headline articles entering scoring per sync
+ *  (up to 6 scopes x 20). The ladder in the depth UI is derived from this
+ *  constant, so lowering it later needs no copy or re-translation. */
+export const DEFAULT_HEADLINE_LIMIT_PER_SCOPE = 20;
+
+/** Hard ceiling on any per-scope depth. Mirrors the server's own maximum
+ *  (articles-for-topics.resolver.ts), which returns a 400 above it — a feed
+ *  sync must never fail because a stored setting drifted out of range. */
+export const MAX_HEADLINE_DEPTH = 25;
+
+/** The scope key used for the GLOBAL scope in `headlineDepthByScope`. Country
+ *  scopes key on their uppercase country code. */
+export const GLOBAL_SCOPE_KEY = 'GLOBAL';
 // Must stay ≤ the server's MAX_TOPICS_PER_REQUEST (default 200,
 // articles-for-topics.service.ts) — another agent is adding client-side
 // batching (mirroring getArticleIdsForTopics' MAX_TOPICS_PER_BATCH) so 200
@@ -97,6 +134,15 @@ const LOCATION_ROLES_ALWAYS = new Set(['home', 'family', 'partner_family']);
  * derived from locations with role home/family/partner_family (always) or
  * a non-expired role 'travel' (role 'interest' is excluded entirely). Capped
  * at 5 COUNTRY scopes, then a GLOBAL scope is always appended last.
+ *
+ * Scope ORDER is load-bearing, not cosmetic: the server dedups a story to the
+ * FIRST scope that carries it, so putting countries before GLOBAL is what keeps
+ * a big domestic story with the reader's own country and leaves GLOBAL carrying
+ * what is genuinely international.
+ *
+ * Depth: a scope carries an explicit `limit` only when `headlineDepthByScope`
+ * gives it one that differs from `headlineLimitPerScope`, so an untouched
+ * profile is byte-identical to the pre-per-scope-depth payload.
  */
 export function buildRetrievalProfile(input: BuildRetrievalProfileInput): RetrievalProfile {
   const nowMs = input.nowMs ?? Date.now();
@@ -156,11 +202,29 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
     .slice(0, MAX_COUNTRY_SCOPES)
     .map(([code]) => code);
 
-  const headlineScopes: RetrievalHeadlineScope[] = countryCodes.map((countryCode) => ({
-    scope: 'COUNTRY' as const,
-    countryCode,
-  }));
-  headlineScopes.push({ scope: 'GLOBAL' });
+  // Per-scope depth: only emitted when it actually differs from the
+  // request-level default, so an untouched profile sends byte-identical input
+  // to what it sent before per-scope depth existed.
+  const depthMap = input.headlineDepthByScope;
+  const depthFor = (scopeKey: string): number | undefined => {
+    const raw = depthMap?.[scopeKey];
+    if (raw == null || !Number.isFinite(raw)) return undefined;
+    const clamped = clamp(Math.round(raw), 0, MAX_HEADLINE_DEPTH);
+    return clamped === headlineLimitPerScope ? undefined : clamped;
+  };
+
+  const headlineScopes: RetrievalHeadlineScope[] = countryCodes.map((countryCode) => {
+    const limit = depthFor(countryCode);
+    return limit === undefined
+      ? { scope: 'COUNTRY' as const, countryCode }
+      : { scope: 'COUNTRY' as const, countryCode, limit };
+  });
+  const globalLimit = depthFor(GLOBAL_SCOPE_KEY);
+  headlineScopes.push(
+    globalLimit === undefined
+      ? { scope: 'GLOBAL' }
+      : { scope: 'GLOBAL', limit: globalLimit },
+  );
 
   return {
     topics,

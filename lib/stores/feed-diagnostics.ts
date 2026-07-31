@@ -34,6 +34,7 @@ import {
   stableClusterIdOf,
   type FeedListItem,
 } from './feed-list-selector';
+import type { ScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
 import type { CardStateRecord } from './feed-order-store';
 import type { ForYouSuggestion } from './for-you-store';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
@@ -47,6 +48,11 @@ export const SAMPLE_TITLE_MAX = 120;
  *  failure in this exact order wins, mirroring `isVisible`'s conjunction, so
  *  `dropped.* + visibleCount === totals.rows`. */
 export type FeedFunnelVisibilityReason =
+  /** A hard "not interested" filter matched — the user asked never to see it.
+   *  Checked FIRST: an excluded row also fails `not-complete` and
+   *  `below-relevance-gate`, and attributing it to either would read as a
+   *  pipeline problem rather than as the user's own decision. */
+  | 'excluded'
   | 'not-complete'
   | 'below-relevance-gate'
   | 'outside-window'
@@ -130,6 +136,17 @@ export interface FeedFunnelInput {
   /** DB-side opened breakdown; null when that read failed. */
   openedStats: OpenedSeenStats | null;
 
+  /** DB-side count of which scoring path produced each stored score, read from
+   *  the `score_components_json` audit. Null when that read failed OR was not
+   *  requested. Optional so the Feed tab's dev-only funnel log (which does not
+   *  touch the database) keeps calling this with no change. */
+  scoringModes?: ScoringModeBreakdown | null;
+  /** Whether the app is currently honouring server article tags
+   *  (`EXPO_PUBLIC_USE_ARTICLE_TAGS` → `ScoringEngineConfig.USE_ARTICLE_TAGS`).
+   *  Passed in rather than imported: this module is pure and RN-free, and the
+   *  flag lives in the composition root. */
+  useArticleTags?: boolean;
+
   userCtx: UserGeoLanguageContext | null;
   /** Captured ONCE by the caller and used for every window/age computation. */
   nowMs: number;
@@ -148,7 +165,14 @@ export interface FeedFunnelReport {
 
   totals: {
     rows: number;
-    status: { unscored: number; reasonPending: number; complete: number; other: number };
+    status: {
+      unscored: number;
+      reasonPending: number;
+      complete: number;
+      /** Terminal, removed by a hard "not interested" filter. */
+      excluded: number;
+      other: number;
+    };
   };
 
   /** INCLUSIVE / overlapping — a row failing two axes counts in both. Does NOT
@@ -157,6 +181,7 @@ export interface FeedFunnelReport {
 
   /** EXCLUSIVE, first-failure-wins. `dropped.* + visibleCount === totals.rows`. */
   dropped: {
+    excluded: number;
     notComplete: number;
     belowRelevanceGate: number;
     outsideWindow: number;
@@ -235,6 +260,34 @@ export interface FeedFunnelReport {
     stats: OpenedSeenStats | null;
   };
 
+  /** WHICH SCORER RAN — the `EXPO_PUBLIC_USE_ARTICLE_TAGS` A/B readout.
+   *
+   *  A SEPARATE AXIS from `totals.status` / `dropped.*`, deliberately. Those two
+   *  partition the pool by VISIBILITY and are tied together by
+   *  `sumsCheck.visibilityAttributionSums`; scoring path is an orthogonal
+   *  property of an already-scored row, so adding it as a bucket there would
+   *  break that identity for no reason. It has its own self-check instead. */
+  scoring: {
+    /** Is the app honouring server article tags right now? */
+    useArticleTags: boolean;
+    /** Scored by the deterministic math engine (article carried tags). */
+    math: number;
+    /** Scored by the legacy two-pass LLM (untagged → `backstop`). */
+    legacy: number;
+    /** Scored, but the audit blob can't say which path — see
+     *  `ScoringModeBreakdown.unknown`. */
+    unknown: number;
+    /** math + legacy + unknown. Compare against `totals.status.complete +
+     *  reasonPending`: a large shortfall means rows were scored by a build that
+     *  predates the audit field, not that scoring is broken. */
+    scoredRows: number;
+    /** False ⇒ the breakdown read failed or was not requested, and the four
+     *  numbers above are zeroes by construction rather than measurements.
+     *  Rendered explicitly so an all-zero row is never read as "nothing was
+     *  scored by either path". */
+    available: boolean;
+  };
+
   hydrateProvenance: HydrateProvenance | null;
   /** The persisted READING ORDER was thrown away at launch. `ingest` refills the
    *  list so everything else reads healthy — this is the only visible symptom. */
@@ -295,12 +348,14 @@ function bySuggestionRecency(a: FeedFunnelSample, b: FeedFunnelSample): number {
 
 export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
   const { nowMs } = input;
+  const modes = input.scoringModes ?? null;
   const cutoffMs = nowMs - FEED_WINDOW_MS;
 
   // ── Stage 1: visibility, with exclusive reason attribution ────────────────
-  const status = { unscored: 0, reasonPending: 0, complete: 0, other: 0 };
+  const status = { unscored: 0, reasonPending: 0, complete: 0, excluded: 0, other: 0 };
   const failing = { notComplete: 0, belowRelevanceGate: 0, outsideWindow: 0 };
   const dropped = {
+    excluded: 0,
     notComplete: 0,
     belowRelevanceGate: 0,
     outsideWindow: 0,
@@ -314,6 +369,7 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     if (st === 'unscored') status.unscored++;
     else if (st === 'reason_pending') status.reasonPending++;
     else if (st === 'complete') status.complete++;
+    else if (st === 'excluded') status.excluded++;
     else status.other++;
 
     if (isVisible(s, cutoffMs)) {
@@ -328,21 +384,26 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     if (!okRelevance) failing.belowRelevanceGate++;
     if (!okWindow) failing.outsideWindow++;
 
-    const reason: FeedFunnelVisibilityReason = !okStatus
-      ? 'not-complete'
-      : !okRelevance
-        ? 'below-relevance-gate'
-        : !okWindow
-          ? 'outside-window'
-          : 'unknown-gate';
+    const reason: FeedFunnelVisibilityReason =
+      st === 'excluded'
+        ? 'excluded'
+        : !okStatus
+          ? 'not-complete'
+          : !okRelevance
+            ? 'below-relevance-gate'
+            : !okWindow
+              ? 'outside-window'
+              : 'unknown-gate';
     dropped[
-      reason === 'not-complete'
-        ? 'notComplete'
-        : reason === 'below-relevance-gate'
-          ? 'belowRelevanceGate'
-          : reason === 'outside-window'
-            ? 'outsideWindow'
-            : 'unknownGate'
+      reason === 'excluded'
+        ? 'excluded'
+        : reason === 'not-complete'
+          ? 'notComplete'
+          : reason === 'below-relevance-gate'
+            ? 'belowRelevanceGate'
+            : reason === 'outside-window'
+              ? 'outsideWindow'
+              : 'unknownGate'
     ]++;
     droppedSamples.push(makeSample(s, reason, nowMs));
   }
@@ -477,7 +538,8 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
 
   const memberSumMatchesVisible = memberSum === visibleCount;
   const visibilityAttributionSums =
-    dropped.notComplete +
+    dropped.excluded +
+      dropped.notComplete +
       dropped.belowRelevanceGate +
       dropped.outsideWindow +
       dropped.unknownGate +
@@ -545,6 +607,14 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
         input.openedStats === null ? null : input.openedUnionIds.size - input.openedStats.unionSize,
       stats: input.openedStats,
     },
+    scoring: {
+      useArticleTags: input.useArticleTags ?? false,
+      math: modes?.math ?? 0,
+      legacy: modes?.backstop ?? 0,
+      unknown: modes?.unknown ?? 0,
+      scoredRows: modes ? modes.math + modes.backstop + modes.unknown : 0,
+      available: modes != null,
+    },
     hydrateProvenance: input.hydrateStats,
     launchWipeSuspected: !!input.hydrateStats?.emptyPoolGuardTripped,
     sumsCheck: {
@@ -573,7 +643,9 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     statusUnscored: r.totals.status.unscored,
     statusReasonPending: r.totals.status.reasonPending,
     statusComplete: r.totals.status.complete,
+    statusExcluded: r.totals.status.excluded,
     visible: r.visibleCount,
+    droppedExcluded: r.dropped.excluded,
     droppedNotComplete: r.dropped.notComplete,
     droppedBelowGate: r.dropped.belowRelevanceGate,
     droppedOutsideWindow: r.dropped.outsideWindow,
@@ -601,6 +673,12 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     openedUnionIds: r.opened.unionSetSize,
     openedRows: r.opened.stats?.rowCount ?? -1,
     openedOlderThan7d: r.opened.stats?.ageBuckets.d7to30 ?? -1,
+    // Which scorer ran. `-1` (not 0) when the breakdown was unavailable, the
+    // same "this is not a measurement" convention the opened fields use above.
+    useArticleTags: r.scoring.useArticleTags,
+    scoredByMath: r.scoring.available ? r.scoring.math : -1,
+    scoredByLlm: r.scoring.available ? r.scoring.legacy : -1,
+    scoredByUnknown: r.scoring.available ? r.scoring.unknown : -1,
     orderHydrated: r.hydrated.order,
     openedHydrated: r.hydrated.opened,
     launchWipeSuspected: r.launchWipeSuspected,

@@ -20,6 +20,7 @@ import {
   buildReasonUserMessage,
 } from './prompts';
 import {
+  batchMarkExcluded,
   countUnscoredSuggestions,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
@@ -38,13 +39,20 @@ import {
   resolveCountryName,
   buildUserContext,
   isEligible,
+  isScorableCandidate,
   chunk,
   bucketScores,
   parseReasonResponse,
   decodeCloudBatchResults as harnessDecodeCloudBatchResults,
   buildFeedVerifierCalls,
   applyFeedVerifierDecisions,
+  isHeadlineCandidate,
+  resolveScoringVariant,
+  relevanceSystemPromptFor,
+  reasonSystemPromptFor,
+  scoreChunkSizeFor,
   CLOUD_SCORE_CHUNK_SIZE,
+  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import type {
@@ -67,6 +75,7 @@ const isOnDeviceMode = () =>
 export {
   bucketScores,
   CLOUD_SCORE_CHUNK_SIZE,
+  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 };
 export type { CloudCallBundle, DecodedResults, ScoringResult };
@@ -164,6 +173,12 @@ export interface BatchScoreResult {
   computedMap: Map<string, number>;
   /** Persona-v3 audit: JSON-encoded RelevanceComponents per id. */
   componentsJsonMap: Map<string, string>;
+  /** Screened out by a hard "not interested" filter. These ids get NO scoreMap
+   *  entry and are NOT in failedIds — they are not a failure, they are a user
+   *  decision. The caller persists them as terminal `excluded`. */
+  excludedIds: Set<string>;
+  /** excluded id → display value of the filter that matched it (logging). */
+  excludedValueById: Map<string, string>;
 }
 
 /**
@@ -188,6 +203,8 @@ export async function batchScoreAndReason(
   const failedIds = new Set<string>();
   const computedMap = new Map<string, number>();
   const componentsJsonMap = new Map<string, string>();
+  let excludedIds = new Set<string>();
+  let excludedValueById = new Map<string, string>();
 
   // Ineligible ones get a fixed low score, never hit the engine/LLM.
   const eligible: ScoringCandidate[] = [];
@@ -196,7 +213,15 @@ export async function batchScoreAndReason(
     else scoreMap.set(c.id, INELIGIBLE_RELEVANCE);
   }
   if (eligible.length === 0) {
-    return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+    return {
+      scoreMap,
+      reasonMap,
+      failedIds,
+      computedMap,
+      componentsJsonMap,
+      excludedIds,
+      excludedValueById,
+    };
   }
 
   // ---- ONE math + judge stage (shared by both orchestrators) ----
@@ -212,7 +237,32 @@ export async function batchScoreAndReason(
       scoreMap.set(c.id, FALLBACK_RELEVANCE);
       failedIds.add(c.id);
     });
-    return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+    return {
+      scoreMap,
+      reasonMap,
+      failedIds,
+      computedMap,
+      componentsJsonMap,
+      excludedIds,
+      excludedValueById,
+    };
+  }
+
+  // ---- HARD "not interested" filters: drop before anything else ----
+  // Excluded rows must never enter the scoring loop below — a missing
+  // rawScoreMap entry there means "the stage failed", which would hand them
+  // FALLBACK_RELEVANCE and add them to failedIds. They are neither scored nor
+  // failed; they are terminal by the user's request.
+  excludedIds = stage.excludedIds ?? new Set<string>();
+  excludedValueById = stage.excludedValueById ?? new Map<string, string>();
+  const active =
+    excludedIds.size > 0 ? eligible.filter((c) => !excludedIds.has(c.id)) : eligible;
+  if (excludedIds.size > 0) {
+    logger.info('[batchScoreAndReason] hard filters excluded rows', {
+      excluded: excludedIds.size,
+      of: eligible.length,
+      values: [...new Set(excludedValueById.values())].slice(0, 10),
+    });
   }
 
   // M-P5c: capture LARGE judge overrides (stage.overrideMap) for the on-device
@@ -227,7 +277,7 @@ export async function batchScoreAndReason(
   // stage.judgeScoreMap. applied = computed in every case.
   const overrideCases: import('@/lib/news-harness/scoring-engine').CalibrationCase[] = [];
 
-  for (const c of eligible) {
+  for (const c of active) {
     const raw = stage.rawScoreMap.get(c.id);
     if (raw === undefined) {
       scoreMap.set(c.id, FALLBACK_RELEVANCE);
@@ -261,7 +311,7 @@ export async function batchScoreAndReason(
 
   // ---- Reason pass: only survivors ≥ reasonRelevanceThreshold that the judge
   //      didn't already caption (backstop rows + un-captioned math rows). ----
-  const survivors = eligible.filter((c) => {
+  const survivors = active.filter((c) => {
     const r = scoreMap.get(c.id);
     return (
       typeof r === 'number' &&
@@ -300,7 +350,15 @@ export async function batchScoreAndReason(
     }
   }
 
-  return { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap };
+  return {
+    scoreMap,
+    reasonMap,
+    failedIds,
+    computedMap,
+    componentsJsonMap,
+    excludedIds,
+    excludedValueById,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +395,14 @@ function buildReasonCallsForSurvivors(
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
-      system: CLOUD_REASON_SYSTEM_PROMPT,
+      // P4b: a TOP-HEADLINE row gets the headline reason prompt (same impact
+      // rubric its score pass ran), so the note can name the causal mechanism
+      // the scorer accepted. One call per candidate ⇒ no chunking constraint,
+      // so this is a straight per-candidate selection.
+      system: reasonSystemPromptFor(
+        ARTICLE_CFG,
+        isHeadlineCandidate(c) ? 'headline' : 'standard',
+      ),
       prompt: reasonPrompt,
       temperature: ARTICLE_CFG.reasonTemperature,
       maxTokens: ARTICLE_CFG.reasonMaxTokens,
@@ -355,12 +420,27 @@ function buildReasonCallsForSurvivors(
 /**
  * Phase-1 of the two-phase async flow: score-only calls, no reason prompts.
  * Loads the user's fact bank internally so callers keep the original signature.
+ *
+ * P4b: the system prompt and the chunk size are chosen by the variant the
+ * candidates resolve to — TOP-HEADLINE sets take the indirect-impact prompt at
+ * CLOUD_HEADLINE_SCORE_CHUNK_SIZE, everything else the standard pair at
+ * ARTICLES_PER_SCORE_PROMPT. The selection helpers are imported from the
+ * harness (never re-derived here) so the two paths cannot drift; the size
+ * actually used comes back on the bundle for the async decoder to persist.
  */
 export async function buildRelevanceCalls(
   candidates: ScoringCandidate[],
 ): Promise<CloudCallBundle> {
-  const eligible = candidates.filter(isEligible);
-  const chunks = chunk(eligible, ARTICLES_PER_SCORE_PROMPT);
+  // isScorableCandidate, not isEligible — a pure TOP-HEADLINE row is factless by
+  // design. Dropping it here would leave the batch's rows Unscored with NO score
+  // write (the empty-bundle branch in scoring-pipeline markBatchDone's and
+  // returns), so every later gate pass would re-elect them: an unbounded churn
+  // loop rather than a visible headline.
+  const eligible = candidates.filter(isScorableCandidate);
+  const variant = resolveScoringVariant(eligible);
+  const scoreChunkSize = scoreChunkSizeFor(ARTICLE_CFG, variant);
+  const systemPrompt = relevanceSystemPromptFor(ARTICLE_CFG, variant);
+  const chunks = chunk(eligible, scoreChunkSize);
   const allFactStatements = await loadAllFactStatements();
 
   const calls: BatchCall[] = [];
@@ -368,7 +448,11 @@ export async function buildRelevanceCalls(
   const chunkIdToCandidates = new Map<string, ScoringCandidate[]>();
 
   chunks.forEach((chunkCandidates, idx) => {
-    const { prompt, system } = buildScoreCallForChunk(chunkCandidates, allFactStatements);
+    const { prompt, system } = buildScoreCallForChunk(
+      chunkCandidates,
+      allFactStatements,
+      systemPrompt,
+    );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
     chunkIdToCandidates.set(scoreId, chunkCandidates);
@@ -386,6 +470,7 @@ export async function buildRelevanceCalls(
     promptsById,
     chunkIdToCandidates,
     eligibleCandidates: eligible,
+    scoreChunkSize,
   };
 }
 
@@ -399,7 +484,11 @@ export async function buildReasonCallsForSubset(
   subsetThreshold: number,
 ): Promise<CloudCallBundle> {
   const subset = candidates.filter((c) => {
-    if (!isEligible(c)) return false;
+    // This is the LIVE reason path (scoring-pipeline :1231 and :1846). Fixing
+    // only the harness twin would fix the offline harness and leave prod
+    // broken: a factless headline scoring 0.6 would get no reason, stay
+    // `reason_pending`, and isVisible would keep it invisible.
+    if (!isScorableCandidate(c)) return false;
     const rel = relevanceMap[c.id];
     return typeof rel === 'number' && rel > subsetThreshold;
   });
@@ -422,7 +511,14 @@ export async function buildReasonCallsForSubset(
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
-      system: CLOUD_REASON_SYSTEM_PROMPT,
+      // P4b: a TOP-HEADLINE row gets the headline reason prompt (same impact
+      // rubric its score pass ran), so the note can name the causal mechanism
+      // the scorer accepted. One call per candidate ⇒ no chunking constraint,
+      // so this is a straight per-candidate selection.
+      system: reasonSystemPromptFor(
+        ARTICLE_CFG,
+        isHeadlineCandidate(c) ? 'headline' : 'standard',
+      ),
       prompt: reasonPrompt,
       temperature: ARTICLE_CFG.reasonTemperature,
       maxTokens: ARTICLE_CFG.reasonMaxTokens,
@@ -526,8 +622,14 @@ export async function processAllUnscored(
     const batch = await getUnscoredSuggestionsWithFacts(batchSize);
     if (batch.length === 0) break;
 
-    const { scoreMap, reasonMap, failedIds, computedMap, componentsJsonMap } =
-      await batchScoreAndReason(batch);
+    const {
+      scoreMap,
+      reasonMap,
+      failedIds,
+      computedMap,
+      componentsJsonMap,
+      excludedIds,
+    } = await batchScoreAndReason(batch);
 
     // Snapshot RAW (post-judge) scores before bucketing — persisted as
     // raw_score for within-section ordering (the bucketed value is `relevance`).
@@ -537,9 +639,26 @@ export async function processAllUnscored(
     bucketScores(scoreMap);
 
     const succeeded: { id: string; relevance: number; reason: string | null }[] = [];
+
+    // Hard-filtered rows: ONE terminal write, no scoring result. They count as
+    // processed (they DID leave `unscored`, so the loop still terminates and
+    // onProgress's denominator stays honest) and are emitted to
+    // onBatchComplete exactly like a discarded row so the store refreshes.
+    if (excludedIds.size > 0) {
+      const ids = [...excludedIds];
+      try {
+        await batchMarkExcluded(ids);
+        for (const id of ids) succeeded.push({ id, relevance: 0, reason: null });
+      } catch (err) {
+        logger.error('[processAllUnscored] batchMarkExcluded failed', err, {
+          count: ids.length,
+        });
+      }
+    }
+
     await Promise.all(
       batch.map(async (candidate) => {
-        if (failedIds.has(candidate.id)) return;
+        if (failedIds.has(candidate.id) || excludedIds.has(candidate.id)) return;
         const relevance = scoreMap.get(candidate.id) ?? 0.3;
         const reason = reasonMap.get(candidate.id) ?? '';
         // REASON_THRESHOLD = 0 → reasons generated for every row, including
@@ -617,8 +736,11 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     if (useOnDevice) {
       // Local path — sequential.
       for (const candidate of batch) {
-        if (!candidate.titleEn || !candidate.descriptionEn) continue;
-        if (candidate.relatedFacts.length === 0) continue;
+        // isScorableCandidate covers both the text and the fact test. A pure
+        // TOP-HEADLINE row is factless by design, so the old fact `continue`
+        // stranded it in `reason_pending` forever once its first reason attempt
+        // failed — this is the recovery path for exactly that row.
+        if (!isScorableCandidate(candidate)) continue;
         const relevance = candidate.relevance ?? 0.7;
         try {
           const reason = await generateReasonForCandidate(
@@ -639,12 +761,16 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
       const calls: BatchCall[] = [];
       const promptsById = new Map<string, string>();
       for (const candidate of batch) {
-        if (!candidate.titleEn || !candidate.descriptionEn) continue;
-        if (candidate.relatedFacts.length === 0) continue;
+        // Same leak on the cloud half — see the local branch above.
+        if (!isScorableCandidate(candidate)) continue;
         const reasonPrompt = buildReasonUserMessage({
           userContext: fullUserContext,
-          articleTitle: candidate.titleEn,
-          articleDescription: candidate.descriptionEn,
+          // `?? ''` is for the TYPE only: isScorableCandidate already guarantees
+          // both are non-empty (it requires title+description on every branch).
+          // The old code narrowed via an explicit `!titleEn || !descriptionEn`
+          // continue, which the predicate now subsumes.
+          articleTitle: candidate.titleEn ?? '',
+          articleDescription: candidate.descriptionEn ?? '',
           articleCountry: resolveCountryName(candidate.countryCode),
           relevance: candidate.relevance ?? 0.7,
           relatedFacts: candidate.relatedFacts.map((f) => f.statement),
@@ -653,7 +779,10 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
         promptsById.set(reasonId, reasonPrompt);
         calls.push({
           id: reasonId,
-          system: CLOUD_REASON_SYSTEM_PROMPT,
+          system: reasonSystemPromptFor(
+            ARTICLE_CFG,
+            isHeadlineCandidate(candidate) ? 'headline' : 'standard',
+          ),
           prompt: reasonPrompt,
           temperature: ARTICLE_CFG.reasonTemperature,
           maxTokens: ARTICLE_CFG.reasonMaxTokens,

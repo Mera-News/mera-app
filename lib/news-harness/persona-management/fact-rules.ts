@@ -13,11 +13,16 @@ export type FactEntry =
   | string
   | {
       statement: string;
-      questionnaire_level?: number;
-      questionnaire_level_category?: string;
       questionnaire_attribute?: string;
     };
 
+/** `level`/`levelCategory` are DEAD: the legacy level-based questionnaire is
+ *  gone, so `normalizeFactEntry` can never populate them again. They stay on
+ *  this type because two consumers still READ them off the object —
+ *  lib/database/services/fact-service.ts::addFact and
+ *  lib/database/models/Fact.ts::createFact — which were deliberately left
+ *  untouched so the `facts` table's (now never-written) `questionnaire_level`
+ *  columns keep compiling. Remove those two reads first if you delete these. */
 export interface NormalizedFactEntry {
   statement: string;
   questionnaire?: {
@@ -33,16 +38,9 @@ export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
   }
   return {
     statement: entry.statement ?? '',
-    questionnaire:
-      entry.questionnaire_level ||
-      entry.questionnaire_level_category ||
-      entry.questionnaire_attribute
-        ? {
-            level: entry.questionnaire_level,
-            levelCategory: entry.questionnaire_level_category,
-            attribute: entry.questionnaire_attribute,
-          }
-        : undefined,
+    questionnaire: entry.questionnaire_attribute
+      ? { attribute: entry.questionnaire_attribute }
+      : undefined,
   };
 }
 

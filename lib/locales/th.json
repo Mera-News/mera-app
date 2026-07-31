@@ -23,6 +23,7 @@
     "saving": "กำลังบันทึก..."
   },
   "auth": {
+    "reauthBanner": "เข้าสู่ระบบใหม่เพื่อซิงค์",
     "emailPlaceholder": "กรอกที่อยู่อีเมลของคุณ",
     "otpPlaceholder": "กรอกรหัส 6 หลัก",
     "codeSentTitle": "ส่งรหัสแล้ว!",
@@ -189,6 +190,7 @@
       "title": "ถึงขีดจำกัดบทความรายวันแล้ว"
     },
     "analysingProgress": "กำลังวิเคราะห์ {{done}} จาก {{total}} บทความ",
+    "waitingForNextBatch_one": "มี{{count}}บทความใหม่รอการวิเคราะห์รอบถัดไป",
     "waitingForNextBatch_other": "มีบทความใหม่ {{count}} รายการรอการวิเคราะห์รอบถัดไป"
   },
   "relevance": {
@@ -199,6 +201,10 @@
     "irrelevant": "ไม่เกี่ยวข้อง",
     "unprocessed": "ยังไม่ประมวลผล"
   },
+  "aiDisclosure": {
+    "caption": "หมายเหตุที่สร้างโดย AI",
+    "short": "สร้างโดย AI"
+  },
   "articleDetail": {
     "readArticle": "อ่านบทความ",
     "relatedArticles": "บทความที่เกี่ยวข้อง",
@@ -206,6 +212,7 @@
     "storyUnavailable": "เรื่องราวนี้ไม่มีให้อ่านแล้ว",
     "failedToLoad": "โหลดบทความไม่สำเร็จ",
     "articleNotFound": "ไม่พบบทความ",
+    "offlineUnavailable": "คุณออฟไลน์และบทความนี้ไม่ได้บันทึกไว้สำหรับการอ่านออฟไลน์",
     "viewOriginal": "ดูบทความต้นฉบับ",
     "viewOriginalIn": "ดูบทความต้นฉบับในภาษา {{language}}",
     "viewAndTranslateOnDevice": "ดูบทความและแปลบนอุปกรณ์",
@@ -349,6 +356,10 @@
     "injectNoiseTitle": "ฉีดสัญญาณรบกวน",
     "injectNoiseDescription": "ส่งหัวข้อหลอกพร้อมกับความสนใจจริงของคุณ เพื่อไม่ให้ระบบหลังบ้านระบุตัวคุณจากรายชื่อหัวข้อได้ บทความที่ตรงกับหัวข้อหลอกเท่านั้นจะถูกกรองออกก่อนถึงมือคุณ",
     "injectNoiseBeta": "เบต้า: อาจทำให้การสร้างหัวข้อช้าลงและลดความเกี่ยวข้องของฟีด",
+    "relevanceV2Title": "ใช้การดึงความเกี่ยวข้อง v2",
+    "relevanceV2On": "การให้คะแนนบนอุปกรณ์ สถานที่ที่เรื่องราวเกิดขึ้นมีความสำคัญ",
+    "relevanceV2Off": "การให้คะแนนในระบบคลาวด์ โดยใช้วิธีการดั้งเดิม",
+    "relevanceV2Description": "เบตา — ให้คะแนนบทความบนอุปกรณ์ของคุณโดยพิจารณาถึงสถานที่ที่เรื่องราวเกิดขึ้นและประเภทของเหตุการณ์ แทนที่จะขึ้นอยู่กับโมเดลคลาวด์เพียงอย่างเดียว ต้องการบทความที่มีแท็กตำแหน่ง ดังนั้นคุณอาจไม่เห็นการเปลี่ยนแปลงมากนักในตอนแรก คุณสามารถปิดได้ตลอดเวลาเพื่อกลับไป",
     "privacyTitle": "ข้อมูลของคุณยังคงเป็นส่วนตัว",
     "privacyDescription": "Mera Protocol เปิดใช้งานอยู่เสมอ ในโหมดบนเครื่อง การประมวลผลทำงานแบบออฟไลน์ทั้งหมดบนโทรศัพท์ของคุณ ส่วนโหมดคลาวด์ใช้การประมวลผลที่เข้ารหัสแบบต้นทางถึงปลายทาง ข้อมูลของคุณถูกเข้ารหัสบนเครื่องและถอดรหัสเฉพาะภายในพื้นที่ปลอดภัยที่เรามองเข้าไปไม่ได้ ข้อมูลส่วนตัว โปรไฟล์ และประวัติการอ่านของคุณไม่เคยออกจากเครื่องนี้ ในการดึงข่าว เราส่งเพียงวลีหัวข้อกว้าง ๆ โดยไม่มีรหัสผู้ใช้ใด ๆ ติดไปด้วย",
     "deviceSupported": "อุปกรณ์รองรับ",
@@ -575,6 +586,7 @@
     "newChat": "แชทใหม่",
     "inputPlaceholder": "พิมพ์ข้อความ...",
     "viewPreviousMessages": "ดูข้อความก่อนหน้า",
+    "aiInteractionNotice": "คุณกำลังสนทนากับ Mera ซึ่งเป็นผู้ช่วยด้าน AI — ไม่ใช่คน",
     "aiUsageNotice": "ผู้ช่วยนี้ช่วยตั้งค่าความชอบข่าวของคุณ การพยายามปั่นหรือใช้งานในทางที่ผิดอาจทำให้บัญชีของคุณถูกระงับเพื่อรอการตรวจสอบ",
     "requestUnblock": {
       "button": "ขอปลดบล็อก",
@@ -626,10 +638,16 @@
     "actionShowMoreTopic": "แสดงหัวข้อนี้มากขึ้น",
     "actionDownRank": "ลดลำดับความสำคัญของหัวข้อ",
     "actionPublicationPref": "ปรับการตั้งค่าสำนักพิมพ์",
+    "actionPublicationBoost": "แสดงเพิ่มจากสำนักพิมพ์",
+    "actionPublicationDeprioritize": "แสดงน้อยจากสำนักพิมพ์",
+    "actionPublicationMute": "ปิดเสียงสำนักพิมพ์",
+    "actionSourceScopeBoost": "แสดงเพิ่มจากแหล่งในประเทศ",
+    "actionSourceScopeDeprioritize": "แสดงน้อยจากแหล่งในประเทศ",
     "actionSuppress": "กรองวลีออก",
     "actionPinTopic": "ปักหมุดหัวข้อ",
     "actionUnpinTopic": "เลิกปักหมุดหัวข้อ",
     "actionRetireTopic": "ปิดใช้งานหัวข้อ",
+    "actionRetireSuppression": "ลบตัวกรอง",
     "chooseOneHint": "เลือกได้หนึ่งตัวเลือก"
   },
   "publicationVisits": {
@@ -797,6 +815,8 @@
     "askMera": "ถาม Mera",
     "closeTree": "ปิด",
     "treeThanks": "ขอบคุณ บันทึกแล้ว",
+    "feedbackCaption": "ปุ่มไปมาคนเดียวไม่ให้ข้อมูลให้ Mera พอ — จึงถูกทิ้ง เพื่อให้ฟีดของคุณสะอาด เลือกเหตุผลแล้วฟีดจะเปลี่ยนในทันที",
+    "tapAgainToConfirm": "แตะอีกครั้งเพื่อยืนยัน",
     "chatHandoffLike": "ฉันชอบเรื่องนี้ อยากได้แบบนี้อีก: {{path}}",
     "chatHandoffLikeNoPath": "ฉันชอบเรื่องนี้ อยากได้แบบนี้อีก",
     "chatHandoffDislike": "ฉันไม่ชอบเรื่องนี้: {{path}}",
@@ -806,13 +826,21 @@
     "title": "สำรวจ",
     "scopeWorld": "โลก",
     "noArticles": "ไม่พบบทความ",
-    "addPlaces": "เพิ่มสถานที่"
+    "addPlaces": "เพิ่มสถานที่",
+    "offlineUnavailable": "คุณออฟไลน์ — Exploreต้องใช้อินเทอร์เน็ต"
   },
   "forYou": {
     "sectionPrefix": "ข่าวเกี่ยวกับ:",
     "breaking": "ข่าวด่วน",
     "showMore": "แสดงอีก {{count}} รายการ",
+    "viewAllArticles_one": "ดูทั้งหมด{{count}}บทความ",
     "viewAllArticles_other": "ดูบทความทั้งหมด {{count}} บทความ",
+    "headlineSectionGlobal": "ข่าวสารจากทั่วโลก",
+    "headlineSectionCountry": "ข่าวสารจาก{{country}}",
+    "headlineDenominator_one": "Mera อ่าน{{count}}ข่าวเด่น · {{shown}}น่าสนใจ",
+    "headlineDenominator_other": "Mera อ่าน{{count}}ข่าวเด่น · {{shown}}น่าสนใจ",
+    "headlineDenominatorNone_one": "Mera อ่าน{{count}}ข่าวเด่น · ไม่มีที่เกี่ยวข้องวันนี้",
+    "headlineDenominatorNone_other": "Mera อ่าน{{count}}ข่าวเด่น · ไม่มีที่เกี่ยวข้องวันนี้",
     "subTabFeed": "ภาพรวม",
     "subTabStories": "เรื่องราว",
     "subTabSaved": "บันทึกไว้"
@@ -851,6 +879,7 @@
     "emptyCta": "ไปยัง ฟีด",
     "trackChatSeed": "ฉันต้องการติดตามเรื่องราวนี้",
     "trackProposalTitle": "ติดตามเรื่องราวนี้?",
+    "articleCount_one": "{{count}}บทความ",
     "articleCount_other": "{{count}} บทความ",
     "articleCountCapped": "{{count}}+ บทความ",
     "alreadyTrackingTitle": "คุณกำลังติดตามนี้อยู่แล้ว",
@@ -933,7 +962,9 @@
       "unknown": "การเปลี่ยนแปลงโปรไฟล์",
       "hygieneDeleteFact": "ลบข้อเท็จจริง",
       "addLocation": "เพิ่มสถานที่",
-      "deleteLocation": "ลบสถานที่"
+      "deleteLocation": "ลบสถานที่",
+      "retireSuppression": "ลบตัวกรองแล้ว",
+      "setSourceScopePref": "ปรับขอบเขตแหล่งแล้ว"
     }
   },
   "calibration": {
@@ -1006,6 +1037,7 @@
   },
   "hygiene": {
     "notificationTitle": "จัดระเบียบความสนใจของคุณไหม?",
+    "notificationBody_one": "Mera พบ{{count}}ข้อแนะนำทำความสะอาดสำหรับโปรไฟล์",
     "notificationBody_other": "Mera พบ {{count}} รายการที่ควรจัดระเบียบในโปรไฟล์ของคุณ",
     "reviewChip": "ตรวจสอบ",
     "title": "สุขภาพโปรไฟล์",
@@ -1023,6 +1055,7 @@
     "appliedBody": "โปรไฟล์ของคุณได้รับการจัดระเบียบแล้ว ดูบันทึกการเปลี่ยนแปลงเพื่อตรวจสอบ",
     "applyFailedTitle": "ไม่สามารถจัดระเบียบได้",
     "applyFailedBody": "กรุณาลองอีกครั้งภายหลัง",
+    "profileRow_one": "สุขภาพโปรไฟล์ · {{count}}ข้อแนะนำ",
     "profileRow_other": "สุขภาพโปรไฟล์ · {{count}} รายการแนะนำ"
   },
   "locations": {
@@ -1071,8 +1104,80 @@
     "deleteFailedTitle": "ไม่สามารถลบสถานที่ได้",
     "deleteFailedBody": "กรุณาลองอีกครั้ง"
   },
+  "notInterested": {
+    "title": "ไม่สนใจ",
+    "subtitle": "สิ่งที่คุณขอให้ Mera ออกจากฟีด",
+    "sectionFilters": "คำและสิ่งที่คุณซ่อน",
+    "sectionTopics": "หัวข้อที่คุณเห็นน้อยลง",
+    "sectionSources": "แหล่งที่คุณปิดเสียงหรือลดเพิ่มเติม",
+    "managePublications": "จัดการการตั้งค่าแหล่ง",
+    "chatHint": "คุณไม่ต้องมาที่นี่ เพียงบอก Mera สิ่งที่คุณไม่อยากเห็น — \"ข่าวเด่นน้อยลง\" — และมันจะจัดการให้",
+    "kinds": {
+      "keyword": "คำศัพท์",
+      "category": "หมวดหมู่",
+      "event_type": "ประเภทข่าว",
+      "entity": "คนหรือสิ่งของ",
+      "place": "สถานที่",
+      "publication": "แหล่ง",
+      "topic": "หัวข้อ"
+    },
+    "sources": {
+      "user": "คุณเพิ่มนี้",
+      "chat": "จากแชทกับ Mera",
+      "feedback": "จากข้อเสนอของคุณ",
+      "digest": "จากบทวิจารณ์ประจำวัน",
+      "qa": "จากคำถาม Mera",
+      "unknown": "เพิ่มอัตโนมัติ"
+    },
+    "badgeBlocked": "ออก",
+    "badgeShownLess": "แสดงน้อยลง",
+    "badgeMutedTopic": "แสดงน้อยลง",
+    "badgeDownranked": "ลดลำดับ",
+    "badgeMutedPub": "ปิดเสียง",
+    "mutedPubHint": "ออก ยกเว้นข่าวสำคัญ",
+    "cardExemptLabel": "คุณกรองเนื้อหา \"{{filter}}\" — แสดงเพราะข่าวสำคัญ",
+    "expiresOn": "ถึง{{date}}",
+    "expiresNever": "จนกว่าคุณจะลบ",
+    "remove": "ลบ",
+    "removeConfirmTitle": "ลบนี้?",
+    "removeConfirmBody": "ข่าวแบบนี้อาจกลับมาในฟีดได้",
+    "removeConfirmCta": "ลบ",
+    "removeSuccessTitle": "ลบแล้ว",
+    "removeSuccessBody": "ไม่ได้ออกจากฟีดอีกต่อไป",
+    "removeFailedTitle": "ไม่สามารถลบได้",
+    "removeFailedBody": "ลองอีกครั้ง",
+    "addPhrase": "ซ่อนอะไรบางอย่าง",
+    "addPhraseTitle": "ซ่อนจากฟีดของคุณ",
+    "addPhraseBody": "พิมพ์คำหรือวลี Mera จะค้นหาในพาดหัวและข่าว และเก็บออกไป สำหรับสิ่งที่เฉพาะเจาะจงมากขึ้น — หมวดหมู่ แหล่ง คน — เพียงบอก ใน แชท หรือใช้ปุ่มไปมาบนข่าว Mera หยิบจากข่าว จึงตรงกันเสมอ",
+    "addPhrasePlaceholder": "เช่น ข่าวเด่น",
+    "addPhraseHardLabel": "เก็บออกจากฟีด",
+    "addPhraseHardHint": "Mera เก็บไว้ หากเป็นข่าวสำคัญ ก็ยังแสดง ทำเครื่องหมายเพื่อให้รู้ปัญหา เพิ่มเติมถูกปิด Mera เพียงแสดงน้อยลง ลืมใน 1 เดือน",
+    "addPhraseSubmit": "ซ่อน",
+    "addPhraseSuccessTitle": "เสร็จ",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" ออกจากฟีดแล้ว ข่าวสำคัญผ่าน Mera บอก",
+    "addPhraseSuccessBodySoft": "จะเห็นน้อยมากเกี่ยวกับ \"{{phrase}}\"",
+    "addPhraseFailedTitle": "ไม่สามารถบันทึกได้",
+    "addPhraseFailedBody": "ลองอีกครั้ง",
+    "emptyTitle": "ยังไม่ซ่อน",
+    "emptyBody": "เมื่อบอก Mera ไม่สนใจ ก็ปรากฏที่นี่เพื่อยกเลิก",
+    "emptyFilters": "ยังไม่ซ่อนคำใดๆ",
+    "emptyTopics": "ยังไม่ลดลำดับหัวข้อ",
+    "emptySources": "ยังไม่ปิดเสียงหรือลดแหล่ง"
+  },
+  "headlineDepth": {
+    "title": "ข่าวเด่น",
+    "subtitle": "Mera อ่านกี่ข่าว",
+    "intro": "Mera อ่านข่าวใหญ่ต่อหมวด เลือกที่สำคัญกับคุณ ยกหมวดดูเพิ่ม ลดเพื่อให้แน่น",
+    "worldwide": "ทั่วโลก",
+    "optionLabel": "Top{{n}}",
+    "usingDefault": "ใช้มาตรฐาน{{n}}",
+    "customised": "เปลี่ยนจากมาตรฐาน{{n}} เลือก{{n}}เพื่อกลับ",
+    "saveFailedTitle": "ไม่สามารถบันทึกได้",
+    "saveFailedBody": "การเปลี่ยนไม่บันทึก ลองอีกครั้ง"
+  },
   "profileHub": {
     "facts": "ข้อเท็จจริง",
+    "factsCount_one": "{{count}}ข้อเท็จจริงกำหนดฟีด",
     "factsCount_other": "{{count}} ข้อเท็จจริงที่กำหนดฟีดของคุณ",
     "factsEmpty": "แตะเพื่อเพิ่มสิ่งที่ Mera ควรรู้",
     "locations": "สถานที่",
@@ -1082,13 +1187,26 @@
     "saved": "บันทึกแล้ว",
     "savedSubtitle": "บทความที่คุณบันทึกไว้อ่านภายหลัง",
     "preferences": "การตั้งค่าแหล่งข่าว",
+    "prefsCount_one": "{{count}}แหล่งปรับ",
     "prefsCount_other": "{{count}} แหล่งข่าวที่ปรับแล้ว",
     "prefsEmpty": "เพิ่ม ลด หรือปิดเสียงแหล่งข่าว",
+    "visitedSubtitle": "สำนักพิมพ์ที่เปิดเมื่อเร็วๆ",
     "activity": "กิจกรรม",
     "activitySubtitle": "ประวัติการเปลี่ยนแปลงโปรไฟล์ของคุณ",
     "personaHealth": "สุขภาพโปรไฟล์",
+    "healthPending_one": "{{count}}ข้อแนะนำทำความสะอาด",
     "healthPending_other": "{{count}} รายการแนะนำในการจัดระเบียบ",
-    "healthAllHealthy": "ทุกอย่างเรียบร้อยดี"
+    "healthAllHealthy": "ทุกอย่างเรียบร้อยดี",
+    "groupKnows": "Mera รู้คุณ",
+    "groupFeed": "ฟีดของคุณ",
+    "groupLibrary": "แหล่ง & ห้องสมุด",
+    "groupInternals": "เบื้องหลัง",
+    "notInterested": "ไม่สนใจ",
+    "notInterestedSubtitle_one": "{{count}}สิ่งที่ซ่อน",
+    "notInterestedSubtitle_other": "{{count}}สิ่งที่ซ่อน",
+    "notInterestedEmpty": "ยังไม่ซ่อน",
+    "headlineDepth": "ข่าวเด่น",
+    "headlineDepthSubtitle": "Mera อ่านต่อหมวด"
   },
   "profile": {
     "talkToMera": "คุยกับ Mera",
@@ -1129,7 +1247,8 @@
     "kindMute": "ปิดเสียง",
     "clear": "ล้าง",
     "clearA11y": "ล้างการตั้งค่า",
-    "empty": "คุณยังไม่ได้ปรับแหล่งข่าวใด ๆ เพิ่ม ลด หรือปิดเสียงสำนักพิมพ์จากบทความใดก็ได้เพื่อดูที่นี่"
+    "empty": "คุณยังไม่ได้ปรับแหล่งข่าวใด ๆ เพิ่ม ลด หรือปิดเสียงสำนักพิมพ์จากบทความใดก็ได้เพื่อดูที่นี่",
+    "scopeKindCountry": "ประเทศ"
   },
   "optimisationPlan": {
     "notificationTitle": "การปรับฟีดประจำวันของคุณพร้อมแล้ว",
@@ -1149,5 +1268,40 @@
     "appliedToast": "ใช้การเปลี่ยนแปลง {{count}} รายการแล้ว",
     "appliedTitle": "ปรับฟีดแล้ว",
     "empty": "ยังไม่มีอะไรให้ปรับตอนนี้"
+  },
+  "pin": {
+    "lockTitle": "กรอก PIN",
+    "lockSubtitle": "กรอก PIN 4 หลักเพื่อปลดล็อก Mera",
+    "incorrect": "PIN ผิด ลองอีกครั้ง",
+    "lockedTryAgain": "พยายามหลายครั้ง ลองใน{{time}}",
+    "forgot": "ลืม PIN?",
+    "forgotTitle": "ตั้ง PIN ใหม่",
+    "forgotBody": "ตั้ง PIN ใหม่ เข้าสู่ระบบอีกครั้งด้วยรหัสอีเมล ข้อมูลบันทึกอยู่อุปกรณ์นี้",
+    "forgotOffline": "ตั้ง PIN ใหม่ต้องอินเทอร์เน็ต เชื่อมต่อแล้วลองอีก",
+    "forgotConfirm": "เข้าสู่ระบบตั้งใหม่",
+    "setupTitle": "ตั้ง PIN",
+    "setupSubtitle": "เลือก PIN 4 หลักปกป้องแอปอุปกรณ์นี้",
+    "confirmTitle": "ยืนยัน PIN",
+    "confirmSubtitle": "กรอก PIN 4 หลักอีกครั้ง",
+    "mismatch": "PIN ไม่ตรง เริ่มใหม่"
+  },
+  "security": {
+    "title": "ความปลอดภัย",
+    "subtitle": "เลือก Mera ขอ PIN อุปกรณ์นี้",
+    "requirePinTitle": "ขอ PIN ปลดล็อก",
+    "requirePinDescription": "ขอ PIN 4 หลักเปิด Mera",
+    "setPinTitle": "ตั้ง PIN",
+    "setPinSubtitle": "เลือก PIN 4 หลักปลดล็อก Mera อุปกรณ์นี้",
+    "lockEnabledTitle": "ปลดล็อก PIN เปิด",
+    "lockEnabledDescription": "กรอก PIN เปิด Mera",
+    "lockDisabledTitle": "ปลดล็อก PIN ปิด",
+    "lockDisabledDescription": "Mera เปิดไม่มี PIN ลบ PIN",
+    "changePin": "เปลี่ยน PIN",
+    "verifyCurrentTitle": "กรอก PIN ปัจจุบัน",
+    "verifyCurrentSubtitle": "ยืนยัน PIN ปัจจุบันต่อไป",
+    "newPinTitle": "ตั้ง PIN ใหม่",
+    "newPinSubtitle": "เลือก PIN 4 หลักใหม่",
+    "pinChangedTitle": "PIN อัปเดต",
+    "pinChangedDescription": "PIN เปลี่ยน"
   }
 }

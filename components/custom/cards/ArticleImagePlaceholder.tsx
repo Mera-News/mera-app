@@ -1,6 +1,6 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import React from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 /**
@@ -61,6 +61,9 @@ const GROUND_DEEP = '#E8E1D5';
 const GLYPH_INK = '#2A2622';
 const GLYPH_OPACITY = 0.58;
 
+/** See the render branch below for why Android does not get the SVG gradient. */
+const ANDROID_FLAT_GROUND = Platform.OS === 'android';
+
 export interface ArticleImagePlaceholderProps {
   /** MeraLogo glyph size in dp. Default 40 — a modest watermark against both
    *  the 192px full-size hero and the narrower compact-card image column. */
@@ -74,15 +77,49 @@ const ArticleImagePlaceholderImpl: React.FC<ArticleImagePlaceholderProps> = ({ s
     accessibilityElementsHidden
     importantForAccessibility="no-hide-descendants"
   >
-    <Svg width="100%" height="100%" style={{ position: 'absolute' }} preserveAspectRatio="none">
-      <Defs>
-        <LinearGradient id={GRADIENT_ID} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={GROUND_LIGHT} stopOpacity="1" />
-          <Stop offset="1" stopColor={GROUND_DEEP} stopOpacity="1" />
-        </LinearGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${GRADIENT_ID})`} />
-    </Svg>
+    {ANDROID_FLAT_GROUND ? (
+      // Android gets a flat ground instead of the SVG gradient.
+      //
+      // The Svg below sizes itself with `width="100%" height="100%"`, and on
+      // Android RNSVG resolves those percentages against the size at FIRST
+      // layout and never re-measures. The compact card's image column is
+      // `w-1/4 self-stretch` inside a card with NO fixed minHeight (see
+      // ArticleCompactCardBase), so the column's height is decided by the text
+      // column beside it and keeps changing after that first pass — the title
+      // wraps differently once fonts/translations settle, the publisher footer
+      // arrives. The rect keeps its original height and leaves a hard
+      // horizontal line partway down the column where the fill simply stops.
+      // (Same RNSVG-on-Android family as SectionGradientPanel, which is flat
+      // there for exactly this reason, and as the full-screen backdrop.)
+      //
+      // A plain absolutely-filled View has no measuring to get wrong. That
+      // sizing bug is the reason for this gate. Secondary, and NOT verified
+      // here: it also removes an `RNSVGSvgView` — a ViewGroup — from a
+      // RECYCLING list row, so it may also help with the
+      // `ViewGroup.dispatchGetDisplayList()` NPE, which was traced to the
+      // full-screen backdrop and never to this component.
+      //
+      // GROUND_DEEP, not a midpoint: it is the stop the GLYPH_OPACITY
+      // computation above certifies as the worst case (3.52:1 at a = 0.58), so
+      // a flat fill of it provably keeps the watermark above the 3.5:1 floor
+      // without redoing that maths. What is lost is the diagonal fade, which is
+      // the acceptable half of the trade — today Android renders it broken.
+      <View
+        pointerEvents="none"
+        className="absolute inset-0 w-full h-full"
+        style={{ backgroundColor: GROUND_DEEP }}
+      />
+    ) : (
+      <Svg width="100%" height="100%" style={{ position: 'absolute' }} preserveAspectRatio="none">
+        <Defs>
+          <LinearGradient id={GRADIENT_ID} x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={GROUND_LIGHT} stopOpacity="1" />
+            <Stop offset="1" stopColor={GROUND_DEEP} stopOpacity="1" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${GRADIENT_ID})`} />
+      </Svg>
+    )}
     <View style={{ opacity: GLYPH_OPACITY }}>
       <MeraLogo size={size} animated={false} color={GLYPH_INK} />
     </View>

@@ -1,3 +1,4 @@
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -253,9 +254,21 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
 
             {expanded && (
                 <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)}>
-                    <Box className="mt-2 rounded-lg border border-gray-800 bg-gray-950 px-3 py-2" testID="dashboard-status-details-panel">
+                    {/* Glass rather than the flat `bg-gray-950` slab it used to
+                        paint, which read as a black block over the page's
+                        gradient backdrop. Padding moves to `contentClassName`
+                        because GlassPanel's outer box must stay unpadded for the
+                        plate to fill it; off iOS 26 the original border + fill
+                        are kept verbatim via `fallbackClassName`. */}
+                    <GlassPanel
+                        radius={8}
+                        className="mt-2"
+                        contentClassName="px-3 py-2"
+                        fallbackClassName="border border-gray-800 bg-gray-950"
+                        testID="dashboard-status-details-panel"
+                    >
                         <FeedStatusDetails {...detailProps} />
-                    </Box>
+                    </GlassPanel>
                 </Animated.View>
             )}
         </Animated.View>

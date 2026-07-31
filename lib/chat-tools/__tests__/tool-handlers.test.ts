@@ -6,9 +6,6 @@ jest.mock('../../database/services/fact-service', () => ({
   deleteFact: jest.fn(),
   getFacts: jest.fn(() => Promise.resolve([])),
   updateFact: jest.fn(() => Promise.resolve()),
-  getCoveredAttributeKeys: jest.fn(() => Promise.resolve(new Set<string>())),
-  getQuestionnaireLevel: jest.fn(() => Promise.resolve(1)),
-  setQuestionnaireLevel: jest.fn(() => Promise.resolve()),
 }));
 jest.mock('../../database/services/setting-service', () => ({
   getSetting: jest.fn(() => Promise.resolve(null)),
@@ -61,8 +58,6 @@ jest.mock('../../database/services/topic-service', () => ({
   syncLlmTopicsForFact: jest.fn(() => Promise.resolve([])),
 }));
 jest.mock('../../mera-protocol/questionnaire-data', () => ({
-  getAttributeKeysForLevel: jest.fn(() => ['location', 'profession', 'topics']),
-  TOTAL_LEVELS: 10,
   buildAttributeTextToIdMap: jest.fn(() => new Map()),
 }));
 jest.mock('../../logger', () => ({
@@ -74,7 +69,6 @@ import {
   handleSaveExtractedFacts,
   handleUpdateUserConfig,
   handleDeleteUserFacts,
-  handleAdvanceQuestionnaireLevel,
   handleIssueWarning,
   MAX_FACT_LENGTH,
 } from '../tool-handlers';
@@ -83,9 +77,6 @@ import {
   deleteFact,
   getFacts,
   updateFact,
-  getCoveredAttributeKeys,
-  getQuestionnaireLevel,
-  setQuestionnaireLevel,
 } from '../../database/services/fact-service';
 import { getSetting, setSetting } from '../../database/services/setting-service';
 import { runGeoDerivationSweep } from '../../database/services/geo-derivation-service';
@@ -105,9 +96,6 @@ const mockAddFact = addFact as jest.MockedFunction<typeof addFact>;
 const mockDeleteFact = deleteFact as jest.MockedFunction<typeof deleteFact>;
 const mockGetFacts = getFacts as jest.MockedFunction<typeof getFacts>;
 const mockUpdateFact = updateFact as jest.MockedFunction<typeof updateFact>;
-const mockGetCoveredAttributeKeys = getCoveredAttributeKeys as jest.MockedFunction<typeof getCoveredAttributeKeys>;
-const mockGetQuestionnaireLevel = getQuestionnaireLevel as jest.MockedFunction<typeof getQuestionnaireLevel>;
-const mockSetQuestionnaireLevel = setQuestionnaireLevel as jest.MockedFunction<typeof setQuestionnaireLevel>;
 const mockGetSetting = getSetting as jest.MockedFunction<typeof getSetting>;
 const mockSetSetting = setSetting as jest.MockedFunction<typeof setSetting>;
 const mockUpdateUserConfig = AccountService.updateUserConfig as jest.MockedFunction<typeof AccountService.updateUserConfig>;
@@ -125,9 +113,6 @@ beforeEach(() => {
   mockAddFact.mockResolvedValue({ id: 'new-fact-id', statement: '' } as never);
   mockDeleteFact.mockResolvedValue(undefined as never);
   mockUpdateFact.mockResolvedValue(undefined as never);
-  mockGetCoveredAttributeKeys.mockResolvedValue(new Set<string>());
-  mockGetQuestionnaireLevel.mockResolvedValue(1);
-  mockSetQuestionnaireLevel.mockResolvedValue(undefined as never);
   mockGetSetting.mockResolvedValue(null);
   mockSetSetting.mockResolvedValue(undefined as never);
   mockUpdateUserConfig.mockResolvedValue(undefined as never);
@@ -212,8 +197,6 @@ describe('handleSaveExtractedFacts', () => {
       extracted_user_information: [
         {
           statement: 'Senior ML engineer',
-          questionnaire_level: 1,
-          questionnaire_level_category: 'Core',
           questionnaire_attribute: 'profession: job role and industry',
         },
       ],
@@ -223,8 +206,6 @@ describe('handleSaveExtractedFacts', () => {
       'Senior ML engineer',
       undefined,
       expect.objectContaining({
-        level: 1,
-        levelCategory: 'Core',
         attribute: 'profession: job role and industry',
       }),
     );
@@ -584,76 +565,6 @@ describe('handleDeleteUserFacts', () => {
     const result = await handleDeleteUserFacts({ fact_ids: ['nonexistent'] });
 
     expect(result).toMatchObject({ deletedCount: 0, deletedStatements: [] });
-  });
-});
-
-// ============================================================
-// handleAdvanceQuestionnaireLevel
-// ============================================================
-
-describe('handleAdvanceQuestionnaireLevel', () => {
-  it('returns message when already at TOTAL_LEVELS (10)', async () => {
-    mockGetQuestionnaireLevel.mockResolvedValueOnce(10);
-
-    const result = await handleAdvanceQuestionnaireLevel();
-
-    expect(result).toMatchObject({
-      success: true,
-      level: 10,
-      message: expect.stringContaining('final level'),
-    });
-    expect(mockSetQuestionnaireLevel).not.toHaveBeenCalled();
-  });
-
-  it('prevents advancing when no facts gathered for current level', async () => {
-    mockGetQuestionnaireLevel.mockResolvedValueOnce(1);
-    mockGetCoveredAttributeKeys.mockResolvedValueOnce(new Set<string>()); // nothing covered
-
-    const result = await handleAdvanceQuestionnaireLevel();
-
-    expect(result).toMatchObject({
-      success: false,
-      level: 1,
-      message: expect.stringContaining('Cannot advance'),
-    });
-    expect(mockSetQuestionnaireLevel).not.toHaveBeenCalled();
-  });
-
-  it('advances to next level when at least one key is covered', async () => {
-    mockGetQuestionnaireLevel.mockResolvedValueOnce(1);
-    mockGetCoveredAttributeKeys.mockResolvedValueOnce(new Set(['location']));
-
-    const result = await handleAdvanceQuestionnaireLevel();
-
-    expect(mockSetQuestionnaireLevel).toHaveBeenCalledWith(2);
-    expect(result).toMatchObject({
-      success: true,
-      previousLevel: 1,
-      level: 2,
-      totalLevels: 10,
-    });
-  });
-
-  it('includes totalLevels in successful response', async () => {
-    mockGetQuestionnaireLevel.mockResolvedValueOnce(5);
-    mockGetCoveredAttributeKeys.mockResolvedValueOnce(new Set(['location']));
-
-    const result = await handleAdvanceQuestionnaireLevel();
-
-    expect(result).toMatchObject({ totalLevels: 10 });
-  });
-
-  it('handles advancing from level 9 to 10 (second-to-last)', async () => {
-    mockGetQuestionnaireLevel.mockResolvedValueOnce(9);
-    // level 9 attributes include 'ventures' — the mock returns ['location', ...] by default
-    // so override it to include a key that matches the covered set
-    const { getAttributeKeysForLevel } = require('../../mera-protocol/questionnaire-data');
-    (getAttributeKeysForLevel as jest.Mock).mockReturnValueOnce(['ventures', 'thought_leaders_following']);
-    mockGetCoveredAttributeKeys.mockResolvedValueOnce(new Set(['ventures']));
-
-    const result = await handleAdvanceQuestionnaireLevel();
-
-    expect(result).toMatchObject({ success: true, level: 10 });
   });
 });
 

@@ -6,10 +6,10 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getArticleSuggestionsByTopicTexts } from '@/lib/database/services/article-suggestion-service';
 import type ArticleSuggestion from '@/lib/database/models/ArticleSuggestion';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem } from 'react-native';
@@ -64,12 +64,21 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
         }
     };
 
-    const handleArticlePress = useCallback((article: ArticleSuggestion) => {
-        router.push({
-            pathname: '/logged-in/article-detail',
-            params: { articleId: article.id },
-        });
-    }, []);
+    // Opens the reason view when Mera scored this article (see use-open-article).
+    //
+    // `article.articleId`, NOT `article.id`: rows here are ArticleSuggestion
+    // MODELS whose WatermelonDB `id` is the server SUGGESTION `_id` (see the
+    // model docstring). This handler previously passed that suggestion id as
+    // article-detail's `articleId`, so its `getArticleById` lookup could only
+    // ever miss — every tap on this list landed on "article unavailable" while
+    // online. Both branches need the real article id, so it is fixed here.
+    const openArticle = useOpenArticle();
+    const handleArticlePress = useCallback(
+        (article: ArticleSuggestion) => {
+            openArticle({ articleId: article.articleId });
+        },
+        [openArticle],
+    );
 
     const renderItem: ListRenderItem<ArticleSuggestion> = useCallback(
         ({ item }) => (

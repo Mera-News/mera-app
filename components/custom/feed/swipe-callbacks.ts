@@ -26,8 +26,19 @@ export interface SwipeCallbacks {
   /** A card's verdict was removed (re-tapping the same thumb un-votes it) —
    *  destroys the stored feedback row (verdict + any tree path). */
   onVerdictRemoved: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
-  /** The inline-feedback-tree path changed for a card's verdict (P4 tree). */
+  /** The inline-feedback-tree path changed for a card's verdict (P4 tree).
+   *  Fires for a BRANCH descent too, which commits nothing — see
+   *  `onLeafCommitted` for the write that may fill a thumb. */
   onTreePathChanged: (
+    suggestion: ForYouSuggestion,
+    verdict: Verdict,
+    path: string[],
+  ) => void;
+  /** A TERMINAL leaf settled (or the user escalated to Mera along the path) —
+   *  the only signal that marks a verdict COMMITTED. Without this the feed had
+   *  no DB write distinguishing "navigated" from "committed", so an abandoned
+   *  branch descent rendered as a real vote (F2). */
+  onLeafCommitted: (
     suggestion: ForYouSuggestion,
     verdict: Verdict,
     path: string[],
@@ -51,6 +62,7 @@ export const swipeCallbacks: SwipeCallbacks = {
   onVerdictChanged: () => {},
   onVerdictRemoved: () => {},
   onTreePathChanged: () => {},
+  onLeafCommitted: () => {},
   onInvokeMera: () => {},
   onOpenArticleChat: () => {},
 };

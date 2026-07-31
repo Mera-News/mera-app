@@ -329,3 +329,195 @@ describe('feedCompare', () => {
     expect([a, b].sort(feedCompare).map((c) => c.id)).toEqual(['art-a', 'art-z']);
   });
 });
+
+// ===========================================================================
+// source-pref — representative election + D4 (group scored on its best member)
+// ===========================================================================
+
+describe('buildFeedList — source preferences (source-pref, D1/D3/D4)', () => {
+  const PREF_CTX: UserGeoLanguageContext = {
+    homeCountryAlpha3: 'USA',
+    otherCountriesAlpha3: [],
+    appLanguageBase: 'en',
+    preferredPublications: new Set(['times of india']),
+    preferredCountriesAlpha3: new Set(['IND']),
+  };
+
+  it('a preferred PUBLICATION fronts the story even when a sibling is newer and higher-scored', () => {
+    const preferred = sugg({
+      _id: 'toi',
+      publication_name: 'Times of India',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      rawScore: 0.3,
+      clusters: [cluster('story-p1')],
+    });
+    const newer = sugg({
+      _id: 'cnn',
+      publication_name: 'CNN',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      rawScore: 0.95,
+      clusters: [cluster('story-p1')],
+    });
+    const list = buildFeedList([preferred, newer], new Set(), NOW, PREF_CTX);
+    expect(list).toHaveLength(1);
+    expect(list[0].suggestion._id).toBe('toi');
+  });
+
+  it('a preferred publication OUTRANKS the home-country geo tier', () => {
+    // The ask is explicit; the geo tier is derived. USA is home (geo tier 0),
+    // but the user named an Indian paper, so that must front the story.
+    const preferred = sugg({
+      _id: 'toi',
+      publication_name: 'Times of India',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      clusters: [cluster('story-p2')],
+    });
+    const home = sugg({
+      _id: 'usa',
+      publication_name: 'CNN',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      clusters: [cluster('story-p2')],
+    });
+    const list = buildFeedList([preferred, home], new Set(), NOW, PREF_CTX);
+    expect(list[0].suggestion._id).toBe('toi');
+  });
+
+  it('a preferred COUNTRY SCOPE fronts the story, and a named publication beats the scope', () => {
+    const scopeOnly = sugg({
+      _id: 'hindu',
+      publication_name: 'The Hindu',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      clusters: [cluster('story-p3')],
+    });
+    const named = sugg({
+      _id: 'toi',
+      publication_name: 'Times of India',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 9 * H).toISOString(),
+      clusters: [cluster('story-p3')],
+    });
+    const foreign = sugg({
+      _id: 'lemonde',
+      publication_name: 'Le Monde',
+      country_code: 'FRA',
+      firstPubDate: new Date(NOW).toISOString(),
+      clusters: [cluster('story-p3')],
+    });
+    const list = buildFeedList([scopeOnly, named, foreign], new Set(), NOW, PREF_CTX);
+    expect(list[0].suggestion._id).toBe('toi');
+  });
+
+  // --- D4: electing a preferred rep must NOT demote the story ---------------
+
+  it('D4: a story is scored on its BEST member, not on the elected representative', () => {
+    // The preferred source is old + weak; the sibling is fresh + strong. Before
+    // D4 the frozen score came from the elected rep, so preferring a source
+    // buried its own coverage. The group must keep the sibling's score.
+    const preferred = sugg({
+      _id: 'toi',
+      publication_name: 'Times of India',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 20 * H).toISOString(),
+      createdAt: new Date(NOW - 20 * H).toISOString(),
+      rawScore: 0.1,
+      clusters: [cluster('story-d4')],
+    });
+    const strong = sugg({
+      _id: 'cnn',
+      publication_name: 'CNN',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW).toISOString(),
+      createdAt: new Date(NOW).toISOString(),
+      rawScore: 1.0,
+      clusters: [cluster('story-d4')],
+    });
+    const list = buildFeedList([preferred, strong], new Set(), NOW, PREF_CTX);
+    expect(list).toHaveLength(1);
+    expect(list[0].suggestion._id).toBe('toi'); // preferred source fronts it
+    expect(list[0].score).toBeCloseTo(feedScore(strong, NOW), 10); // but keeps the best score
+    expect(list[0].score).toBeGreaterThan(feedScore(preferred, NOW));
+  });
+
+  it('D4: preferring a source does not move the story DOWN the list', () => {
+    const other = sugg({
+      _id: 'other',
+      publication_name: 'Reuters',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 2 * H).toISOString(),
+      createdAt: new Date(NOW - 2 * H).toISOString(),
+      rawScore: 0.8,
+      clusters: [cluster('story-other')],
+    });
+    const weakPreferred = sugg({
+      _id: 'toi',
+      publication_name: 'Times of India',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 20 * H).toISOString(),
+      createdAt: new Date(NOW - 20 * H).toISOString(),
+      rawScore: 0.1,
+      clusters: [cluster('story-big')],
+    });
+    const strongSibling = sugg({
+      _id: 'cnn',
+      publication_name: 'CNN',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW).toISOString(),
+      createdAt: new Date(NOW).toISOString(),
+      rawScore: 1.0,
+      clusters: [cluster('story-big')],
+    });
+    const pool = [other, weakPreferred, strongSibling];
+
+    // Without preferences the big story leads (its rep is the strong sibling).
+    const before = buildFeedList(pool, new Set(), NOW, null);
+    expect(before[0].suggestion._id).toBe('cnn');
+    // With the preference it still leads — only the fronting outlet changed.
+    const after = buildFeedList(pool, new Set(), NOW, PREF_CTX);
+    expect(after[0].suggestion._id).toBe('toi');
+    expect(before[0].score).toBeCloseTo(after[0].score, 10);
+    expect(after.map((c) => c.memberIds.length)).toEqual(before.map((c) => c.memberIds.length));
+  });
+
+  // --- Regression contract --------------------------------------------------
+
+  it('REGRESSION CONTRACT: with no source preferences the list is identical to a null context', () => {
+    const pool = [
+      sugg({
+        _id: 'a',
+        publication_name: 'Times of India',
+        country_code: 'IND',
+        firstPubDate: new Date(NOW - 5 * H).toISOString(),
+        clusters: [cluster('story-r')],
+      }),
+      sugg({
+        _id: 'b',
+        publication_name: 'CNN',
+        country_code: 'USA',
+        firstPubDate: new Date(NOW - 1 * H).toISOString(),
+        clusters: [cluster('story-r')],
+      }),
+      sugg({ _id: 'c', publication_name: 'Le Monde', country_code: 'FRA' }),
+    ];
+    const noPrefCtx: UserGeoLanguageContext = {
+      homeCountryAlpha3: null,
+      otherCountriesAlpha3: [],
+      appLanguageBase: null,
+    };
+    expect(buildFeedList(pool, new Set(), NOW, noPrefCtx)).toEqual(
+      buildFeedList(pool, new Set(), NOW, null),
+    );
+    const emptySets: UserGeoLanguageContext = {
+      ...noPrefCtx,
+      preferredPublications: new Set(),
+      preferredCountriesAlpha3: new Set(),
+    };
+    expect(buildFeedList(pool, new Set(), NOW, emptySets)).toEqual(
+      buildFeedList(pool, new Set(), NOW, null),
+    );
+  });
+});

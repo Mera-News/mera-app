@@ -1,4 +1,4 @@
-import { Box } from '@/components/ui/box';
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -79,20 +79,25 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     })();
 
     return (
-        <Box className={`bg-gray-900 rounded-2xl p-5 border border-gray-800 ${className ?? ''}`}>
+        <GlassPanel
+            radius={16}
+            className={className ?? ''}
+            contentClassName="p-5"
+            fallbackClassName="bg-gray-900 border border-gray-800"
+        >
             <HStack className="items-start justify-between mb-3">
                 <VStack className="flex-1">
                     <Text className="text-white font-bold text-3xl leading-9">
                         {used}
                         {hasLimit ? (
-                            <Text className="text-gray-500 font-semibold text-xl"> / {limit}</Text>
+                            <Text className="text-gray-400 font-semibold text-xl"> / {limit}</Text>
                         ) : null}
                     </Text>
                     <HStack className="items-center mt-0.5" space="xs">
-                        <Text size="xs" className="text-gray-500">{usedLabel}</Text>
+                        <Text size="xs" className="text-gray-300 font-medium">{usedLabel}</Text>
                         {onInfoPress ? (
                             <Pressable onPress={onInfoPress} hitSlop={8}>
-                                <MaterialIcons name="info-outline" size={14} color="#6b7280" />
+                                <MaterialIcons name="info-outline" size={14} color="#9ca3af" />
                             </Pressable>
                         ) : null}
                     </HStack>
@@ -120,8 +125,8 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         </HStack>
                         {resetText ? (
                             <>
-                                <Text size="xs" className="text-gray-500 mt-1">{resetLabel}</Text>
-                                <Text size="xs" className="text-gray-300">{resetText}</Text>
+                                <Text size="xs" className="text-gray-300 font-medium mt-1">{resetLabel}</Text>
+                                <Text size="xs" className="text-gray-100 font-semibold">{resetText}</Text>
                             </>
                         ) : null}
                     </VStack>
@@ -139,7 +144,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                     />
                 </View>
             ) : null}
-        </Box>
+        </GlassPanel>
     );
 };
 

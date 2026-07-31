@@ -4,7 +4,6 @@ import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type FactModel from '../models/Fact';
 import type { Fact } from '../../mera-protocol-toolkit/types';
-import { getSetting, setSetting } from './setting-service';
 
 const factsCollection = database.get<FactModel>('facts');
 
@@ -150,38 +149,3 @@ export async function getFactsForTopicTexts(topicTexts: string[]): Promise<Fact[
   );
 }
 
-// --- Questionnaire Coverage ---
-
-/**
- * Returns the set of questionnaire attribute keys that are covered by existing facts.
- * Each fact stores the full attribute string (e.g., "location: neighborhood/area..."),
- * but we extract just the key (text before the colon) for matching.
- */
-export async function getCoveredAttributeKeys(): Promise<Set<string>> {
-  const records = await factsCollection
-    .query(Q.where('questionnaire_attribute', Q.notEq(null)))
-    .fetch();
-  const keys = new Set<string>();
-  for (const record of records) {
-    if (record.questionnaireAttribute) {
-      const colonIdx = record.questionnaireAttribute.indexOf(':');
-      const key = colonIdx >= 0
-        ? record.questionnaireAttribute.substring(0, colonIdx).trim()
-        : record.questionnaireAttribute.trim();
-      keys.add(key);
-    }
-  }
-  return keys;
-}
-
-// --- Key-Value (questionnaire level) ---
-
-export async function getQuestionnaireLevel(): Promise<number> {
-  const value = await getSetting('questionnaire_level');
-  return value ? parseInt(value, 10) : 1;
-}
-
-export async function setQuestionnaireLevel(level: number): Promise<void> {
-  const clamped = Math.max(1, Math.min(10, level));
-  await setSetting('questionnaire_level', String(clamped));
-}
