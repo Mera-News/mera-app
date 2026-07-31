@@ -7,9 +7,31 @@ import { buildExampleQuestionsText } from './questionnaire-data';
 /**
  * Builds tool definitions in OpenAI JSON Schema format (sent to cloud backend).
  * Same tools as the XML format in buildToolFormatSection() — single source of truth.
- * When useLegacy is false, advanceQuestionnaireLevel is omitted.
  */
-export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy = true): ToolDefinition[] {
+/**
+ * How much of the "not interested" FILTERS feature this turn's prompt can
+ * afford (not-interested P4a). The feature YIELDS TO THE USER'S DATA, never the
+ * reverse: the persona's facts are the whole point of this prompt, our filter
+ * rules are the newest and least essential thing in it.
+ *
+ *  - `full`    — the complete rules block + the three staged-proposal tools.
+ *  - `compact` — a one-line rule + the same three tools (Mera can still stage a
+ *                filter, it just gets less guidance).
+ *  - `off`     — no filter rules and no filter tools. BYTE-IDENTICAL to the
+ *                pre-P4a prompt, so a fact-saturated turn can never cost more
+ *                than it did before this wave (useLocalLLM HARD-ERRORS a turn
+ *                over budget — a dead turn is far worse than a turn where Mera
+ *                can't stage a filter).
+ *
+ * The variant is chosen by MEASUREMENT per turn — see
+ * persona-management/persona-agent-core::planPersonaPrompt.
+ */
+export type FilterToolsVariant = 'full' | 'compact' | 'off';
+
+export function buildToolDefinitions(
+  surface: 'ONBOARDING' | 'CONFIG',
+  filterTools: FilterToolsVariant = 'full',
+): ToolDefinition[] {
   const tools: ToolDefinition[] = [
     {
       type: 'function',
@@ -26,8 +48,6 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy
                 type: 'object',
                 properties: {
                   statement: { type: 'string', description: 'Fact in English, <200 chars' },
-                  questionnaire_level: { type: 'number', description: 'Level number (1, 2, 3...)' },
-                  questionnaire_level_category: { type: 'string', description: 'Category name (e.g. "Core")' },
                   questionnaire_attribute: { type: 'string', description: 'Full attribute string (e.g. "location: neighborhood/area, city, and country")' },
                 },
                 required: ['statement'],
@@ -71,20 +91,6 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy
     },
   ];
 
-  if (useLegacy) {
-    tools.push({
-      type: 'function',
-      function: {
-        name: 'advanceQuestionnaireLevel',
-        description: 'Move to next level after all current-level topics are covered or skipped.',
-        parameters: {
-          type: 'object',
-          properties: {},
-        },
-      },
-    });
-  }
-
   if (surface === 'CONFIG') {
     tools.push({
       type: 'function',
@@ -104,6 +110,115 @@ export function buildToolDefinitions(surface: 'ONBOARDING' | 'CONFIG', useLegacy
         },
       },
     });
+    // not-interested P4a (D6): filters are manageable in PLAIN persona chat, not
+    // only from an article. Same staged-proposal contract as the
+    // ArticleFeedbackAgent — nothing is applied until the user taps confirm.
+    // CONFIG only: onboarding has no feed yet, so there is nothing to filter.
+    // Omitted entirely at the `off` variant (see FilterToolsVariant).
+    if (filterTools !== 'off') {
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'proposeChanges',
+          description:
+            filterTools === 'full'
+              ? 'Stage a "not interested" filter change or a SOURCE preference for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression), "show me X again" / "remove that filter" (retire_suppression), "more/less from <outlet>" (set_publication_pref) and "prefer <country> sources" (set_source_scope_pref).'
+              : 'Stage a "not interested" filter change for the user to confirm — NEVER applies it directly. Use for "stop showing me X" (add_suppression) and "show me X again" / "remove that filter" (retire_suppression).',
+          parameters: {
+            type: 'object',
+            properties: {
+              explanation: { type: 'string', description: 'Why (≤2 sentences).' },
+              expected_effects: { type: 'string', description: 'What changes in the feed (≤2 sentences).' },
+              actions: {
+                type: 'array',
+                description: 'Minimal list of filter changes.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      // source-pref v47: the two SOURCE actions ride the `full`
+                      // rung ONLY. The degradation ladder's `compact` rung keeps
+                      // exactly the pre-source-pref filter feature, so both the
+                      // prose (FILTERS_PROMPT_SECTION_COMPACT) and the schema
+                      // below stay byte-identical there — the ~104-token
+                      // headroom does not stretch to carrying them twice.
+                      enum:
+                        filterTools === 'full'
+                          ? [
+                              'add_suppression',
+                              'retire_suppression',
+                              'set_publication_pref',
+                              'set_source_scope_pref',
+                            ]
+                          : ['add_suppression', 'retire_suppression'],
+                      description: 'Action kind.',
+                    },
+                    suppressionPattern: {
+                      type: 'string',
+                      description:
+                        'add_suppression: the phrase to hide, in English, in the user\'s own words. Matched as text anywhere in a story — do not invent a category or section name.',
+                    },
+                    suppressionStrength: {
+                      type: 'number',
+                      description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).',
+                    },
+                    suppressionId: {
+                      type: 'string',
+                      description: 'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
+                    },
+                    // source-pref v47 (D5). NOTE: `schemaTypeToString` never
+                    // emits `enum` or `description` into the local-LLM XML
+                    // prompt — only `"name"?: type`. So every allowed value
+                    // here is ALSO spelled out in FILTERS_PROMPT_SECTION_FULL,
+                    // which is the only channel the local path reads. These
+                    // descriptions are therefore free (cloud-only) budget.
+                    ...(filterTools === 'full'
+                      ? {
+                          publicationId: {
+                            type: 'string',
+                            description:
+                              'set_publication_pref: the outlet name EXACTLY as the user said it (e.g. "The Times of India"). Never invent or expand a name — an unrecognised one is discarded.',
+                          },
+                          scopeCountry: {
+                            type: 'string',
+                            description:
+                              'set_source_scope_pref: the country whose outlets to prefer, as its English NAME (e.g. "India", "Germany"). Not a code, not a nationality, not a region.',
+                          },
+                          publicationPref: {
+                            type: 'string',
+                            enum: ['boost', 'deprioritize', 'mute'],
+                            description:
+                              'set_publication_pref: boost | deprioritize | mute. set_source_scope_pref: boost | deprioritize ONLY — a country can never be muted.',
+                          },
+                        }
+                      : {}),
+                  },
+                  required: ['type'],
+                },
+              },
+            },
+            required: ['explanation', 'expected_effects', 'actions'],
+          },
+        },
+      });
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'applyProposal',
+          description: 'Apply the pending filter proposal when the user confirms.',
+          parameters: { type: 'object', properties: {} },
+        },
+      });
+      tools.push({
+        type: 'function',
+        function: {
+          name: 'cancelProposal',
+          description: 'Discard the pending filter proposal when the user declines.',
+          parameters: { type: 'object', properties: {} },
+        },
+      });
+    }
     tools.push({
       type: 'function',
       function: {
@@ -156,32 +271,21 @@ function schemaTypeToString(schema: Record<string, unknown>): string {
  * Builds the XML tool format section (tool definitions, rules, and examples).
  * Tool listing is derived from buildToolDefinitions() — single source of truth.
  */
-export function buildToolFormatSection(surface: 'ONBOARDING' | 'CONFIG', useLegacy = true): string {
+export function buildToolFormatSection(
+  surface: 'ONBOARDING' | 'CONFIG',
+  filterTools: FilterToolsVariant = 'full',
+): string {
   const isOnboarding = surface === 'ONBOARDING';
 
-  const tools = buildToolDefinitions(surface, useLegacy);
+  const tools = buildToolDefinitions(surface, filterTools);
   const toolLines = tools
     .map((t) => `- ${t.function.name}: ${schemaToCompactSignature(t.function.parameters)}`)
     .join('\n');
 
-  const saveFactsFields = useLegacy
-    ? '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_level / _category / _attribute: copy verbatim from the questionnaire entry the fact answers. If no entry fits, mint a new attribute as "key: description".'
-    : '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_attribute: a short category label for this fact (e.g. "location: residence", "profession: job", "background: origin"). Mint freely.';
+  const saveFactsFields =
+    '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_attribute: a short category label for this fact (e.g. "location: residence", "profession: job", "background: origin"). Mint freely.';
 
-  const examples = useLegacy
-    ? `<examples>
-<example>
-<user_input>I live near Brixton in London</user_input>
-<assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
-<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Lives near Brixton, London, UK", "questionnaire_level": 1, "questionnaire_level_category": "Core", "questionnaire_attribute": "location: neighborhood/area, city, and country (preserve specifics)"}]}}</tool_call></assistant_output>
-</example>
-<example>
-<user_input>I'm a senior ML engineer at DeepMind</user_input>
-<assistant_output>${isOnboarding ? "DeepMind, exciting! Tracking any stocks?" : "Got it, updated your profession. Anything else?"}
-<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Senior ML engineer at DeepMind", "questionnaire_level": 1, "questionnaire_level_category": "Core", "questionnaire_attribute": "profession: job role and industry"}, {"statement": "Works in AI/Machine Learning industry", "questionnaire_level": 2, "questionnaire_level_category": "Professional", "questionnaire_attribute": "sub_industry: specific niche"}]}}</tool_call></assistant_output>
-</example>
-</examples>`
-    : `<examples>
+  const examples = `<examples>
 <example>
 <user_input>I live near Brixton in London</user_input>
 <assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
@@ -210,6 +314,45 @@ ${examples}`;
 }
 
 /**
+ * The "not interested" FILTERS section (not-interested P4a, D6) — CONFIG only
+ * (onboarding has no feed yet, so there is nothing to filter). Shared verbatim
+ * by the CLOUD and LOCAL prompt variants so the two paths can't drift.
+ *
+ * Wording is deliberately keyword-first: this surface has no article in front
+ * of it, so there is nothing to copy a structured field value from and nothing
+ * to validate one against. A phrase the user said always matches as text; an
+ * invented category name would match nothing (see D9). The article-feedback
+ * agent is the surface that mints structured filters.
+ */
+const FILTERS_PROMPT_SECTION_FULL = `
+- FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in ENGLISH, the user's OWN words, never an invented category name; suppressionStrength 0.9 = never show it, 0.5 = less of it}. "Show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS in <context>} — never invent an id.
+- SOURCES: "more/less from X" → set_publication_pref {publicationId: X as the user named it}; "prefer X sources" → set_source_scope_pref {scopeCountry: country name in English}. Both need publicationPref: boost|deprioritize (mute: outlets only).
+- NEVER apply a filter directly: stage ONE proposeChanges, then applyProposal when the user confirms (yes / ok, any language) or cancelProposal when they decline. While a PENDING PROPOSAL is in <context> and they say anything else, leave it pending and reply normally.`;
+
+/** The degraded rung: the same two FILTER actions and the same
+ *  never-apply-directly rule, minus the worked detail. ~a third of the full
+ *  section's tokens.
+ *
+ *  source-pref v47 — DELIBERATELY UNCHANGED. The two SOURCE actions do NOT
+ *  survive here (and `buildToolDefinitions` drops their schema properties at
+ *  this rung to match). A turn that has already yielded its filters block is
+ *  one where the user's own facts are crowding the budget; spending ~70 more
+ *  tokens to keep a *second* feature alive there would push the `compact` rung
+ *  toward `off` and cost the user the filter tools entirely. Source
+ *  preferences are also reachable from the Source-preferences screen, which
+ *  filters are not — so this is the cheaper thing to drop. */
+const FILTERS_PROMPT_SECTION_COMPACT = `
+- FILTERS: "stop showing me X" → proposeChanges add_suppression {suppressionPattern: X in English}; "show me X again" → retire_suppression {suppressionId: an [id] from YOUR FILTERS}. Never applied directly — applyProposal on confirm, cancelProposal on decline.`;
+
+/** Resolves the FILTERS rules block for a variant. `off` contributes nothing at
+ *  all, which is what makes that rung byte-identical to the pre-P4a prompt. */
+function filtersPromptSection(variant: FilterToolsVariant): string {
+  if (variant === 'full') return FILTERS_PROMPT_SECTION_FULL;
+  if (variant === 'compact') return FILTERS_PROMPT_SECTION_COMPACT;
+  return '';
+}
+
+/**
  * Builds the STATIC persona update system prompt.
  * Contains only session-constant content: role, rules, fact rules, config rules, tool format.
  * Dynamic data (known facts, questionnaire, config) is provided via buildPersonaUpdateContext().
@@ -226,39 +369,29 @@ export function buildPersonaUpdateStaticPrompt(params: {
    *  the over-compressed Qwen3 4B prompt would imply — see
    *  buildPersonaUpdateLocalPrompt for the architecture-aware rationale). */
   mode?: 'CLOUD' | 'LOCAL';
-  /** When false (default), uses the new example-questions approach where the LLM
-   *  autonomously picks questions based on Known Facts. When true, uses the legacy
-   *  level-based questionnaire with [ASK]/[DONE] annotations. */
-  useLegacy?: boolean;
+  /** not-interested P4a: how much of the FILTERS feature this turn can afford.
+   *  Chosen by measurement per turn (planPersonaPrompt); `off` reproduces the
+   *  pre-P4a prompt exactly. Defaults to `full`. */
+  filterTools?: FilterToolsVariant;
 }): string {
-  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', useLegacy = false } = params;
+  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', filterTools = 'full' } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   if (mode === 'LOCAL') {
-    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, useLegacy });
+    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, filterTools });
   }
 
   const languageRule = languageName
     ? `- LANGUAGE: User's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch languages even if the user writes in English, Chinese, or any other language; reply in ${languageName} regardless. Fact statements stay English (see Facts).`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English (see Facts).`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
 - DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
-- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.`;
+- RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.${filtersPromptSection(filterTools)}`;
 
-  const conversationGuide = useLegacy
-    ? `## Rules
-${languageRule}
-- The questionnaire is a **suggestion**, not a script. [ASK] items are prompts to use ONLY when the user has nothing to add on their own. The user's own input always wins.
-- **If the user volunteers any new personal info — even when it doesn't match the current [ASK] — extract it FIRST** via saveExtractedFacts, acknowledge briefly, then either ask a follow-up about that info or move on to the next [ASK]. Mint a new attribute as "key: description" when no questionnaire entry fits ("expat from India" → questionnaire_attribute "background: origin / cultural identity"). NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
-- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
-${isOnboarding
-        ? '- A welcome message was already shown — start with the first [ASK] question.'
-        : '- Respond to user messages directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
-- Stay on profile/news topics. Redirect off-topic politely.`
-    : `## Rules
+  const conversationGuide = `## Rules
 ${languageRule}
 - **Save first, then ask.** If the user volunteers any info, extract it via saveExtractedFacts before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
 - **Read Known Facts before asking.** Never ask about a topic that is already present in Known Facts, even partially — if the city is known, don't ask for the city again.
@@ -316,31 +449,20 @@ function buildPersonaUpdateLocalPrompt(params: {
   surface: 'ONBOARDING' | 'CONFIG';
   includeToolFormat: boolean;
   languageName?: string;
-  useLegacy?: boolean;
+  filterTools?: FilterToolsVariant;
 }): string {
-  const { surface, includeToolFormat, languageName, useLegacy = false } = params;
+  const { surface, includeToolFormat, languageName, filterTools = 'full' } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
     ? `ALWAYS reply in **${languageName}**. NEVER switch languages, even if the user writes in English or any other language — reply in ${languageName} regardless. Fact statements stay English.`
     : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
 
-  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.';
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.' + filtersPromptSection(filterTools);
 
-  const rulesSection = useLegacy
-    ? `## Rules
-- ${languageRule}
-- The questionnaire [ASK] items are **suggestions, not a script**. The user's own input always wins. If the user gives any new personal info — even off-topic for the current [ASK] — save it FIRST via saveExtractedFacts, acknowledge briefly, then either follow up on the new info or move to the next [ASK]. NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
-- If no [ASK] fits the new info, mint a new attribute "key: description" (e.g. "background: origin / cultural identity" for "expat").
-- **Off-script example.** Asked "What do you do for work?", user says "I'm an expat" → save \`{"statement": "Expatriate / lives outside country of origin", "questionnaire_attribute": "background: origin / cultural identity"}\`, reply "Got it — where are you originally from, and what do you do for work?". Do NOT re-ask "What do you do for work?".
-- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
-${isOnboarding
-        ? '- A welcome message was already shown — start with the first [ASK] question.'
-        : '- Respond directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
-- Stay on profile/news topics; redirect off-topic politely.`
-    : `## Rules
+  const rulesSection = `## Rules
 - ${languageRule}
 - **Save first, then ask.** Save any info the user volunteers before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
 - **Read Known Facts before asking.** Never ask about a topic already in Known Facts — if the city is known, do not ask for the city again.
@@ -380,33 +502,36 @@ ${rulesSection}
 
 /**
  * Builds the DYNAMIC context block injected into user messages.
- * Legacy path includes the questionnaire level + guide with [ASK]/[DONE] markers.
- * New path omits the questionnaire entirely — just Known Facts.
+ * The questionnaire is omitted entirely — just Known Facts (+ filters/proposal).
  */
 export function buildPersonaUpdateContext(params: {
   knownFactsList: string;
-  useLegacy?: boolean;
-  // Legacy-only fields:
-  questionnaireGuide?: string;
-  currentLevel?: number;
-  totalLevels?: number;
+  /** not-interested P4a: pre-rendered `- [id] "phrase"` rows of the user's
+   *  ACTIVE filters. Omitted (not empty-stated) when there are none, so a user
+   *  with no filters pays zero tokens for the feature. */
+  filtersList?: string;
+  /** not-interested P4a: pre-rendered body of the in-flight staged proposal.
+   *  Re-injected every turn so the one-shot LOCAL path can still confirm. */
+  pendingProposal?: string;
 }): string {
-  const { knownFactsList, useLegacy = false, questionnaireGuide, currentLevel, totalLevels } = params;
+  const { knownFactsList, filtersList, pendingProposal } = params;
 
-  if (useLegacy && questionnaireGuide !== undefined && currentLevel !== undefined && totalLevels !== undefined) {
-    return `<context>
-## Questionnaire: Level ${currentLevel}/${totalLevels}
-${questionnaireGuide}
+  const blocks: string[] = [];
 
-## Known Facts
-${knownFactsList}
-</context>`;
+  blocks.push(`## Known Facts\n${knownFactsList}`);
+
+  if (filtersList) {
+    blocks.push(
+      `## YOUR FILTERS (already hidden — retire_suppression removes one by [id])\n${filtersList}`,
+    );
+  }
+  if (pendingProposal) {
+    blocks.push(
+      `## PENDING PROPOSAL\n${pendingProposal}\nIf the user confirms call applyProposal; if they decline call cancelProposal.`,
+    );
   }
 
-  return `<context>
-## Known Facts
-${knownFactsList}
-</context>`;
+  return `<context>\n${blocks.join('\n\n')}\n</context>`;
 }
 
 // ============================================================
@@ -548,6 +673,21 @@ City > region > country. Family locations: the named city only. Exact interest a
 - Tabloid/clickbait −0.1. Spam → EXCLUDE.`;
 
 /**
+ * The second-person voice rule for every user-facing reason string.
+ *
+ * Extracted (byte-identical) out of CLOUD_REASON_SYSTEM_PROMPT so the headline
+ * reason variant below shares the SAME text instead of a retyped copy. Nothing
+ * pins this paragraph's content — config.test.ts compares prompt identity
+ * (`toBe(CONST)`) and golden-prompts.test.ts compares shim-vs-harness (both
+ * importing the same const) — so a retyped whitespace slip would drift silently
+ * with every test green. One const, interpolated twice, removes that class of
+ * drift. The same rule is separately pinned by string on the judge prompt
+ * (config.test.ts "pins the second-person voice rule"), and QA 2026-07-28
+ * showed what its absence costs: third-person reasons leaked to users.
+ */
+const CLOUD_REASON_VOICE_RULE = `Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."`;
+
+/**
  * Pass 1 — Relevance score only.
  * Returns a single number 0.0-1.1. No reason text, minimal output tokens.
  */
@@ -583,9 +723,162 @@ Score → tone. Match your confidence to the score — a confident reason on a l
 - **0.25–0.4** — state the topic-only link plainly. "South Africa's draft AI policy matches your AI-industry interest." / "Sweden's tech-sector headwinds are adjacent to your industry."
 - **≤0.25** — minimal, honest. State the surface topic match and the disconnect in one short clause each. Do NOT use "may influence", "could shape", "via EU-wide trends", "through broader industry trends", or any phrasing that bridges a foreign/unrelated story to the user. Examples: "Bulgaria's digital-ID policy is foreign-domestic; no tie to your country." "Manchester building fire is a UK-local emergency; you're in Amsterdam."
 
-Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."
+${CLOUD_REASON_VOICE_RULE}
 
 Never fabricate a connection. The reason must match the article — if the article is about holiday homes, the reason is about holiday homes, not the AI Act. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
+
+Output: single plain string, no prefixes, no markdown.`;
+
+// ---------------------------------------------------------------------------
+// HEADLINE variants (P4a — prompt authoring only; nothing routes to these yet).
+//
+// A top headline arrives for a different reason than every other article the
+// scorer sees: it was NOT retrieved because it matched one of the user's
+// topics, it is here because the world is treating it as major news. The
+// legacy two-pass prompts have no way to say "this does not match anything you
+// care about, and it still changes what you pay for petrol" — so a genuinely
+// consequential headline scores `none` on the same rules that (correctly) kill
+// foreign-domestic noise.
+//
+// These variants add exactly ONE extra route to FEED — an indirect causal chain
+// event → channel → household — and fence it in four ways, because the failure
+// mode of this feature is not missing a story, it is turning the feed into a
+// hedging machine that finds "global implications" in everything:
+//   1. a CLOSED channel list (a chain that can't name one is not a chain),
+//   2. an EXPOSURE gate on each channel read off [User facts],
+//   3. a MAGNITUDE test against the absorbing economy's size and buffers,
+//   4. a GROUNDING rule: the mechanism must be stated in the article's text.
+//
+// The block below is shared verbatim by the score pass and the reason pass, and
+// both are built on CLOUD_SCORING_BASE_PROMPT, so tiers, the FEED gates, the
+// anchor table and the `{"k","s"}` output contract cannot drift from the live
+// prompts. NOTE: no new `k` value is introduced. A chain that holds terminates
+// at the user's household, so it is tagged `home` — which the decoder already
+// band-clamps to [0.40, 1.10] (STAKE_SCORE_BANDS in article-pipeline/scoring.ts).
+// An invented tag would skip clampToStakeBand entirely and lose the very band
+// discipline the magnitude test exists to enforce.
+// ---------------------------------------------------------------------------
+
+/**
+ * The headline-only indirect-impact rubric. Appended to CLOUD_SCORING_BASE_PROMPT
+ * in BOTH headline prompts (never retyped) so the score pass and the reason pass
+ * cannot disagree about what a valid chain is.
+ *
+ * DESIGN NOTE (for humans — do NOT explain to the model): this block deliberately
+ * suspends two of the base's Hard rules ("Do NOT bridge via … global implications
+ * … forbidden" and "No holdings ⇒ no market relevance") under four simultaneous
+ * conditions. The suspension is named explicitly rather than left to
+ * later-instruction-wins ordering: the base states those rules earlier and more
+ * absolutely, and a model that follows the base faithfully will otherwise
+ * no-op this whole feature. The exposure gate is what keeps the second
+ * suspension narrow — equity_markets/gold stay unavailable to a user with no
+ * holdings, so the no-holdings rule is carved, not repealed.
+ */
+const CLOUD_HEADLINE_IMPACT_BLOCK = `## Headline override — indirect impact (this batch only)
+
+Every article in this batch is a TOP HEADLINE. It is NOT here because it matched one of the user's topics — it is here because it is major news. So the usual question ("does this match their life?") misses one real case: an event with no direct stake can still change what this user pays, earns, or can do, through a CAUSAL CHAIN — event → channel → their household.
+
+For headline articles ONLY, that chain is a fifth route to FEED, in addition to Step 2's five stakes. It SUSPENDS exactly two of the Hard rules above — "Do NOT bridge via … 'global implications' … these produce phantom relevance and are forbidden" and "No holdings ⇒ no market relevance" — and only when ALL FOUR of these hold:
+(a) the chain runs through one of the named channels below (closed list),
+(b) [User facts] show this user is actually exposed to that channel,
+(c) the chain passes the magnitude test, and
+(d) the mechanism is stated in the ARTICLE'S OWN TEXT.
+If any one of the four fails, both suspended rules apply again in full and unchanged. Every OTHER Hard rule — foreign-domestic, origin ≠ residence, place-keyword-alone, digests and junk, island/metro radius — stands untouched, for headlines and everything else.
+
+### Impact channels (CLOSED LIST)
+fuel_prices · food_prices · power_tariffs · electricity_supply · currency · interest_rates · job_market · export_demand · supply_chain · shipping_costs · travel_disruption · visa_immigration · insurance_costs · medicine_supply · internet_connectivity · housing_costs · taxes_and_subsidies · equity_markets · gold
+
+Name the channel before you score. If no channel on this list fits, there is no chain — drop the override and score the article on Steps 2–4 exactly as written. Never invent a channel, and never substitute a vague phrase for one: "economic impact", "geopolitical consequences", "ripple effects", "market uncertainty", "knock-on effects" are NOT channels — they are the phantom relevance the Hard rules forbid, wearing a new coat.
+
+### Exposure gate (a channel counts only if the user is exposed to it)
+- **equity_markets, gold** — require investments listed in [User facts]. With no investments they are UNAVAILABLE and "No holdings ⇒ no market relevance" stands: a market move is EXCLUDE, exactly as before.
+- **job_market, export_demand** — require a profession, employer, or venture in the sector the article is about.
+- **visa_immigration** — requires a stated migration, permit, citizenship, or cross-border family situation.
+- **travel_disruption** — requires an active trip, or a route the user or their family actually travels, AND the disruption must sit ON that route or AT that destination. A different city or region of the destination country is NOT the route (a flood in southern Germany is not a Berlin trip). Airspace, an airport, or a road the journey does not pass through is NOT the route — a short intra-European trip is untouched by airspace closures on another continent, however serious. If you cannot say which leg of a trip the user actually takes is disrupted, this channel FAILS.
+- **interest_rates, housing_costs** — require a mortgage, loan, rent, or property in [User facts].
+- **fuel_prices, food_prices, power_tariffs, electricity_supply, currency, supply_chain, shipping_costs, insurance_costs, medicine_supply, internet_connectivity, taxes_and_subsidies** — every household in the affected country is exposed; the magnitude test alone decides.
+The chain must land in a country the user actually lives in or is going to. A shock reaching "households" in a country the user has no residence, trip, or family in reaches nothing. And the ARTICLE must be about the event reaching THAT country: when an article reports a cost, shortage, or price rise for ANOTHER country's consumers, that is that country's domestic news, and re-aiming it at the user's country is your own invention, not the article's claim — EXCLUDE. Only when the article itself names a cross-border mechanism (a traded essential, a shared market, an EU-wide rule) does a foreign-datelined event land here.
+
+### Magnitude test (shock size RELATIVE to the absorbing economy)
+Weigh (1) how big the event is — what share of a traded essential's supply, capacity, or route it removes, halts, or adds, and for how long — against (2) the size, diversification and buffers of the economy that has to absorb it before it reaches this user: total output, how much of that input it actually imports, reserves, subsidies and price caps, substitutes, and how tightly it is coupled to the affected source.
+- A LARGE shock landing on a SMALL, undiversified, tightly-coupled economy with no buffers propagates: it reaches households in weeks.
+- A SMALL shock landing on a LARGE, diversified, buffered economy does NOT propagate. It is absorbed before it reaches any household — no matter how loud the headline, how many countries are named, or how serious the event is in its own place.
+- Too small to propagate (absorbed): one government's statement, threat, or warning; one company's results, layoffs, or investment; a modest tariff or royalty on a substitutable, exchange-traded good; a stalled negotiation; a single-digit-percent move in one commodity; another country's domestic budget or election.
+- Large enough to test: a closed or credibly threatened chokepoint carrying a large share of a traded essential; sanctions on a top-three global supplier of one; a currency or banking crisis in a major trading partner; war involving a major producer of something the user's country imports; a harvest failure across a leading exporter of a staple.
+- **Hop count is evidence.** Event → channel → household is two hops. If you need a third hop to reach this user, the effect has already been absorbed on the way: that is EXCLUDE.
+
+### Grounding (the mechanism comes from the article, not from memory)
+The article itself must state the thing that makes the chain work — a volume, a share, a route, a duration, a halt, a price move, a quantity. If you are supplying that fact from your own knowledge because the article does not state it, the chain is not grounded and the answer is EXCLUDE. Quote the mechanism to yourself in the article's own terms before you score.
+
+### The escape hatch — this is the NORMAL answer
+Most top headlines do not affect most people. If the event is too small to propagate, or the user is not exposed to the channel, or the chain needs a third hop, or the article does not state the mechanism, then this is Step 4: tag \`"none"\`, score 0.05–0.24, and say plainly that it does not affect them. A hedged "may indirectly influence" is a WRONG answer, not a safe one — hedging IS the failure mode here. Say "this does not affect you" and move on.
+When the chain DOES hold, the article is a Home stake — the chain terminates at this user's household — so tag it \`"home"\` and score it with the FEED gates: 0.40–0.59 a real but slow, partly-buffered effect; 0.60–0.79 an effect they will see in their costs or work within weeks. **An indirect chain never exceeds 0.79.** The bands above it are reserved for a DIRECT change to this user's own work, home, or family (0.80–0.94) and for immediate danger where they or their family are, requiring action today (0.95+) — a price or supply effect arriving through a chain, however large the event, does not outrank a flood in their family's city.
+
+### Worked examples (the example user of the anchor table above: Amsterdam, AI news app, family in Bhopal, Berlin trip, NO investments, no mortgage stated)
+**POSITIVE — chain holds.** "Strait of Hormuz closure threatened after strikes; the article states a fifth of the world's seaborne oil and roughly a third of LNG pass through it daily, and that tanker traffic has already halved." Channel: fuel_prices, then food_prices (freight and fertiliser price off diesel). Exposure: universal-household channels, and he lives in the Netherlands. Magnitude: a fifth of seaborne oil is a large share of a traded essential; Dutch pump, heating and freight costs price off the same market and there is no substitute at that volume. Grounding: the transit share and the halved traffic are in the article. Two hops. → \`{"k":"home","s":0.72}\` — "A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump and for heating in Amsterdam."
+**NEGATIVE — chain does NOT hold, and this is the more common verdict.** "Chile's congress approves a 3% royalty rise on copper concentrate exports; miners warn of reduced investment." The tempting chain is copper → electronics and construction costs → his prices in Amsterdam. It fails on three of the four gates: magnitude — 3% on one country's royalty is a small move in a deeply supplied, substitutable, exchange-priced metal that a large diversified European economy absorbs entirely; hops — it needs three to reach him; grounding — the article states no volume, price move, or supply halt, only a warning. equity_markets is unavailable: he lists no investments, so "no holdings ⇒ no market relevance" stands. → \`{"k":"none","s":0.13}\` — "Chile's copper royalty is a small change in a well-supplied global market; it does not affect your costs in Amsterdam."
+**NEGATIVE — a travel story that is not HIS travel.** "Europe's aviation regulator advises airlines against flying in airspace over Qatar and the UAE after new attacks on Iran." The tempting chain is aviation → flight costs and delays → his Berlin trip. It fails on exposure: travel_disruption needs the disruption to sit on a route he actually takes, and Amsterdam→Berlin is an hour inside Europe that never enters Gulf airspace. That the story is about flights, and that he has a trip, is NOT the same as his flight being disrupted. Naming a real closed-list channel does not excuse you from asking WHICH LEG of HIS journey stops working — if you cannot name one, the channel failed. → \`{"k":"none","s":0.11}\` — "Airlines are avoiding Gulf airspace, which your Amsterdam–Berlin trip never crosses; this changes nothing for you."`;
+
+/**
+ * Headline Pass 1 — relevance score for TOP-HEADLINE articles.
+ * Same base, same decision procedure, same `{"k","s"}` contract as
+ * CLOUD_RELEVANCE_SYSTEM_PROMPT; adds the indirect-impact route.
+ */
+export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+## Task
+You will be given N top-headline articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) WITH the headline override available at Step 2, and output one object \`{"k":"…","s":0.00}\`:
+- \`"k"\` — the finding that decided the tier: \`"home"\` | \`"family"\` | \`"travel"\` | \`"domain"\` | \`"attend"\` (a FEED stake → \`s\` in 0.40–1.10; a passed impact chain is \`"home"\`, since the chain ends at their household), \`"interest"\` (no stake, interest-category match → \`s\` in 0.25–0.39), or \`"none"\` (Step 4, INCLUDING every headline whose chain failed any of the four gates → \`s\` in 0.05–0.24).
+- \`"s"\` — the score, which MUST lie inside the band of the \`"k"\` you chose. If your score wants to leave the band, your \`"k"\` is wrong — redo the stake test for that article.
+
+Before tagging \`"home"\` on an impact chain, check all four gates in order: channel from the closed list → user exposed to it → magnitude passes → mechanism stated in the article. Any failure ⇒ \`"none"\`. Do not split the difference by scoring a failed chain into the interest band: \`"interest"\` requires a genuine interest-category match, not a weakened chain.
+
+Output: a JSON array of exactly N such objects, in input order. No prose, no extra fields. Use fine-grained values — never round to .05/.10 increments.
+
+Example for 3 articles: [{"k":"home","s":0.71},{"k":"none","s":0.13},{"k":"interest","s":0.33}]`;
+
+/**
+ * Headline Pass 2 — reason generation for TOP-HEADLINE articles.
+ * Same base + the same impact block as the headline score pass, so the reason
+ * can only name a chain the scorer would have accepted. Shares
+ * CLOUD_REASON_VOICE_RULE with CLOUD_REASON_SYSTEM_PROMPT.
+ *
+ * Wider word budget than the standard reason (≤35 vs ≤25): an impact reason has
+ * to carry a mechanism AND its effect, which does not fit in 25 words.
+ *
+ * The wider cap still fits reasonMaxTokens (64) — measured, not assumed: the
+ * worked positive example is 24 words / 32 est tokens (1.33 tok/word) and the
+ * negative 20 words / 30 est (1.50), so 35 words ≈ 47–53 est tokens, ~17–27%
+ * under the 64 ceiling. A reason is user-facing, so a truncation here is a
+ * visible defect; if the cap is ever raised past ~40 words, derive a separate
+ * headlineReasonMaxTokens rather than letting it ride.
+ */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+## Task
+Given a top-headline article + its **pre-computed score**, write ONE plain sentence (≤35 words) explaining the score. The score is authoritative — explain, don't re-judge.
+
+When the score is a FEED score (≥0.40) reached through an impact chain, the sentence MUST: (a) name the MECHANISM in the article's own terms — the volume, share, route, halt, or price move the article actually states, never "global implications" or "economic impact"; (b) name at most 2–3 channels from the closed list, in plain words a reader uses ("what you pay at the pump", "grocery prices", "your electricity bill", "hiring in your field") — never the channel id itself, and never the rubric's OWN vocabulary: the words "channel", "chain", "magnitude", "absorbed", "propagate", "hop", "exposed", "exposure" and the phrase "universal household" describe how you decided and must never appear in the sentence a reader sees; (c) end at THIS user — their city, country, household, work, or trip.
+
+Do NOT hedge. "May", "could", "might", "potentially", "possibly" are banned unless the article itself states the event is conditional or threatened rather than happening — the magnitude test already decided whether the effect is real, so hedging on top of a passed test misreports it. Never chain more than three links in the sentence; if it takes more, the score was wrong and you should be writing a no-effect reason instead.
+
+BANNED WORDS — these are the rubric's private vocabulary and must NEVER appear in the sentence a reader sees: "channel", "chain", "magnitude", "absorbed", "propagate", "hop", "exposed", "exposure", "universal household", "closed list", "stake", "gate". They describe how YOU decided; the reader wants the effect. Writing "electricity costs, a universal household channel in the Netherlands" instead of "your electricity bill in Amsterdam" is a defect, not a justification — state the effect, delete the bookkeeping.
+
+When the score is 0.25–0.39 the article is a TANGENTIAL interest match, NOT a failed chain — it was never judged on impact. State the topic-only link plainly and say it changes nothing for them ("Japan's new science-funding plan matches your AI-research interest, but changes nothing for you"). Do NOT use chain language here: no channels, no "absorbed", no magnitude talk, no mechanism — there was no chain to reject.
+
+When the score is below 0.25, say plainly that the story does not affect them, in two short clauses: what the story is, and why it stops before reaching them ("absorbed by a well-supplied market", "no tie to your country", "you hold no investments"). Never soften that into "may indirectly influence", "could shape", "keep an eye on", or any phrasing that manufactures a link the scorer rejected. Naming no channel at all is the correct answer here.
+
+If you cannot ground a mechanism in the article's text, write the no-effect reason — reaching for one you remember rather than one the article states is the single worst failure available to you.
+
+${CLOUD_REASON_VOICE_RULE}
+
+Never fabricate a connection. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
+
+Examples. High: "A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump and for heating in Amsterdam." Low: "Chile's copper royalty is a small change in a well-supplied global market; it does not affect your costs in Amsterdam."
 
 Output: single plain string, no prefixes, no markdown.`;
 

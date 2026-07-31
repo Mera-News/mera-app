@@ -1,19 +1,10 @@
 // fact-service unit tests
 // WatermelonDB I/O intercepted via makeDatabaseMock().
-// setting-service is mocked so questionnaire level tests stay pure.
 
 jest.mock('@/lib/database/index', () => {
   const { makeDatabaseMock } = require('@/lib/__test-helpers__/mockDatabase');
   return makeDatabaseMock();
 });
-
-const mockGetSetting = jest.fn((_key: string): Promise<string | null> => Promise.resolve(null));
-const mockSetSetting = jest.fn((_key: string, _value: string): Promise<void> => Promise.resolve());
-
-jest.mock('../setting-service', () => ({
-  getSetting: (key: string) => mockGetSetting(key),
-  setSetting: (key: string, value: string) => mockSetSetting(key, value),
-}));
 
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
@@ -23,9 +14,6 @@ import {
   deleteFact,
   getFacts,
   getFactsForTopicTexts,
-  getCoveredAttributeKeys,
-  getQuestionnaireLevel,
-  setQuestionnaireLevel,
   markOrphanedFactsAsFailed,
 } from '../fact-service';
 
@@ -296,105 +284,6 @@ describe('getFactsForTopicTexts', () => {
     ]);
     const result = await getFactsForTopicTexts(['coding']);
     expect(result).toEqual([]);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// getCoveredAttributeKeys
-// ---------------------------------------------------------------------------
-
-describe('getCoveredAttributeKeys', () => {
-  it('returns an empty set when no records have questionnaire_attribute', async () => {
-    db._setRows('facts', []);
-    const keys = await getCoveredAttributeKeys();
-    expect(keys.size).toBe(0);
-  });
-
-  it('extracts the key before the colon', async () => {
-    db._setRows('facts', [
-      makeFactRecord({
-        id: 'f1',
-        questionnaireAttribute: 'location: neighborhood/area, city, and country',
-      }),
-    ]);
-    const keys = await getCoveredAttributeKeys();
-    expect(keys.has('location')).toBe(true);
-  });
-
-  it('uses the full string as key when there is no colon', async () => {
-    db._setRows('facts', [
-      makeFactRecord({ id: 'f1', questionnaireAttribute: 'profession' }),
-    ]);
-    const keys = await getCoveredAttributeKeys();
-    expect(keys.has('profession')).toBe(true);
-  });
-
-  it('deduplicates keys across multiple records', async () => {
-    db._setRows('facts', [
-      makeFactRecord({ id: 'f1', questionnaireAttribute: 'location: city' }),
-      makeFactRecord({ id: 'f2', questionnaireAttribute: 'location: country' }),
-    ]);
-    const keys = await getCoveredAttributeKeys();
-    expect(keys.size).toBe(1);
-    expect(keys.has('location')).toBe(true);
-  });
-
-  it('skips records with null questionnaireAttribute', async () => {
-    db._setRows('facts', [
-      makeFactRecord({ id: 'f1', questionnaireAttribute: null }),
-    ]);
-    const keys = await getCoveredAttributeKeys();
-    expect(keys.size).toBe(0);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// getQuestionnaireLevel
-// ---------------------------------------------------------------------------
-
-describe('getQuestionnaireLevel', () => {
-  it('returns 1 as default when no setting exists', async () => {
-    mockGetSetting.mockResolvedValueOnce(null);
-    const level = await getQuestionnaireLevel();
-    expect(level).toBe(1);
-    expect(mockGetSetting).toHaveBeenCalledWith('questionnaire_level');
-  });
-
-  it('returns the persisted level when it exists', async () => {
-    mockGetSetting.mockResolvedValueOnce('5');
-    const level = await getQuestionnaireLevel();
-    expect(level).toBe(5);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// setQuestionnaireLevel
-// ---------------------------------------------------------------------------
-
-describe('setQuestionnaireLevel', () => {
-  it('persists the level via setSetting', async () => {
-    await setQuestionnaireLevel(3);
-    expect(mockSetSetting).toHaveBeenCalledWith('questionnaire_level', '3');
-  });
-
-  it('clamps the level to minimum 1', async () => {
-    await setQuestionnaireLevel(0);
-    expect(mockSetSetting).toHaveBeenCalledWith('questionnaire_level', '1');
-  });
-
-  it('clamps the level to maximum 10', async () => {
-    await setQuestionnaireLevel(99);
-    expect(mockSetSetting).toHaveBeenCalledWith('questionnaire_level', '10');
-  });
-
-  it('allows the boundary value 1', async () => {
-    await setQuestionnaireLevel(1);
-    expect(mockSetSetting).toHaveBeenCalledWith('questionnaire_level', '1');
-  });
-
-  it('allows the boundary value 10', async () => {
-    await setQuestionnaireLevel(10);
-    expect(mockSetSetting).toHaveBeenCalledWith('questionnaire_level', '10');
   });
 });
 

@@ -110,6 +110,9 @@ export function buildStageCandidateInput(
     entities,
     matchedTopics,
     headlineScope,
+    // Only carried when the label agrees — a stale country on a GLOBAL row
+    // would be worse than none.
+    headlineCountryCode: headlineScope === 'COUNTRY' ? row.headlineCountryCode ?? null : null,
     stableClusterId: row.stableClusterId,
   };
 }
@@ -140,6 +143,7 @@ function toStageRow(row: ArticleSuggestionModel): StageCandidateRow {
     entitiesJson: row.entitiesJson,
     matchedTopicsJson: row.matchedTopicsJson,
     headlineScope: row.headlineScope,
+    headlineCountryCode: row.headlineCountryCode,
     stableClusterId: row.stableClusterId,
   };
 }
@@ -286,6 +290,12 @@ export async function getScoredSuggestionsWithoutReasons(
 ): Promise<ScoringCandidate[]> {
   // Re-attempt rows that are scored but still awaiting a reason. A failed reason
   // attempt leaves the row in reason_pending, so this query re-fetches it.
+  //
+  // The `reason_pending`-ONLY predicate (rather than "any non-unscored status
+  // without a reason") is what keeps terminally `excluded` rows out of
+  // retryMissingReasons / enqueueOrphanedReasons: an excluded row has no reason
+  // and will never get one, so a status-notEq(unscored) predicate here would
+  // re-spend LLM calls on it forever. Do not widen this query.
   const rows = await (limit !== undefined
     ? articleSuggestionsCol
         .query(Q.where('status', ArticleSuggestionStatus.ReasonPending), Q.take(limit))
@@ -580,6 +590,55 @@ export async function getComputedComponentsByIds(
   return out;
 }
 
+/** Which scoring path actually produced each stored row's score. Counted from
+ *  the `mode` recorded in the `score_components_json` audit — no parallel
+ *  record, no extra column. */
+export interface ScoringModeBreakdown {
+  /** Scored by the deterministic math engine (the article carried tags). */
+  math: number;
+  /** Scored by the legacy two-pass LLM (`backstop` — the article was untagged,
+   *  which is every article while `USE_ARTICLE_TAGS` is off). */
+  backstop: number;
+  /** Scored, but the audit blob is missing, unparseable, or predates the `mode`
+   *  field. Reported rather than folded into either bucket — attributing these
+   *  to a path we cannot actually observe is exactly the kind of quiet lie this
+   *  diagnostic exists to avoid. */
+  unknown: number;
+}
+
+/**
+ * Count the stored suggestions by the scoring path that produced them.
+ *
+ * ON-DEMAND ONLY (the Observability screen's refresh). It reads every scored
+ * row's audit JSON, so it is deliberately absent from the render, ingest and
+ * scroll paths. Read-only.
+ *
+ * This is the readout that makes the `USE_ARTICLE_TAGS` comparison observable:
+ * with the flag off it should be 100% `backstop`, and turning it on moves rows
+ * into `math` as the server's tags arrive.
+ */
+export async function getScoringModeBreakdown(): Promise<ScoringModeBreakdown> {
+  const out: ScoringModeBreakdown = { math: 0, backstop: 0, unknown: 0 };
+  const rows = await articleSuggestionsCol
+    .query(Q.where('scored_at', Q.notEq(null)))
+    .fetch();
+  for (const row of rows) {
+    if (!row.scoreComponentsJson) {
+      out.unknown++;
+      continue;
+    }
+    try {
+      const { mode } = JSON.parse(row.scoreComponentsJson) as RelevanceComponents;
+      if (mode === 'math') out.math++;
+      else if (mode === 'backstop') out.backstop++;
+      else out.unknown++;
+    } catch {
+      out.unknown++;
+    }
+  }
+  return out;
+}
+
 /**
  * Persist the persona-v3 math audit columns for a batch of rows WITHOUT
  * touching relevance/reason/status. Used by the E2EE pipeline at submit time
@@ -639,6 +698,130 @@ export async function batchMarkAsScoredByIds(ids: string[]): Promise<void> {
       ),
     );
   });
+}
+
+/**
+ * Mark rows as terminally EXCLUDED by a hard "not interested" filter — one
+ * batched write, no scoring of any kind. Relevance/rawScore/computedScore are
+ * zeroed and the reason cleared so every downstream gate reads them as
+ * invisible: the render gate needs relevance > 0.3, `getScoredDonorRows` needs
+ * relevance > 0, and `getScoredSuggestionsWithoutReasons` only ever selects
+ * `reason_pending`, so an excluded row is never swept for a missing reason.
+ *
+ * `scored_at` is stamped only when still null — the column means "when this row
+ * left `unscored`", and a purge sweep over already-scored rows must not slide
+ * an existing "added" time forward.
+ *
+ * Delete-tolerant, exactly like batchMarkAsScoredByIds: a row can be
+ * hard-deleted underneath an in-flight batch, and a bare find() would reject
+ * the whole write.
+ */
+export async function batchMarkExcluded(
+  ids: string[],
+  nowMs: number = Date.now(),
+): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.relevance = 0;
+          r.reason = '';
+          r.rawScore = 0;
+          r.computedScore = 0;
+          r.status = ArticleSuggestionStatus.Excluded;
+          if (r.scoredAt == null) r.scoredAt = nowMs;
+        }),
+      ),
+    );
+  });
+}
+
+/**
+ * The un-exclude direction (D12c): send rows back to `unscored` so the next
+ * scoring pass treats them as new. Used ONLY by the sweep that runs when a hard
+ * filter is retired, and only for rows the sweep has already re-screened
+ * against every still-active hard filter. Scores are cleared so a stale 0 can
+ * never be mistaken for a real verdict.
+ *
+ * Delete-tolerant (see batchMarkExcluded).
+ */
+export async function batchResetToUnscored(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.relevance = 0;
+          r.reason = '';
+          r.rawScore = null;
+          r.computedScore = null;
+          r.scoreComponentsJson = null;
+          r.scoredAt = null;
+          r.status = ArticleSuggestionStatus.Unscored;
+        }),
+      ),
+    );
+  });
+}
+
+/**
+ * Stage rows for the retroactive hard-filter sweep. `excluded: false` (default)
+ * returns every row a hard filter could still newly kill; `excluded: true`
+ * returns the already-excluded rows the un-exclude sweep re-screens.
+ *
+ * Deliberately does NOT load `article_suggestion_facts`: hard screening reads
+ * only the ScoredCandidateInput fields, and the fact links exist purely for the
+ * legacy backstop payload.
+ */
+export async function getStageRowsForScreening(
+  opts: { excluded?: boolean } = {},
+): Promise<StageCandidateRow[]> {
+  const wantExcluded = opts.excluded === true;
+  const rows = await articleSuggestionsCol
+    .query(
+      wantExcluded
+        ? Q.where('status', ArticleSuggestionStatus.Excluded)
+        : Q.where('status', Q.notEq(ArticleSuggestionStatus.Excluded)),
+    )
+    .fetch();
+  // Defensive re-filter — the unit-test fake DB layer ignores Q.where.
+  return rows
+    .filter((r) => (r.status === ArticleSuggestionStatus.Excluded) === wantExcluded)
+    .map(toStageRow);
+}
+
+/**
+ * Stage rows for a SCOPED hard-filter screen: exactly these ids, minus the ones
+ * already terminal `excluded` (re-screening them would be a no-op). This is the
+ * cheap counterpart to `getStageRowsForScreening` — used by the propagation
+ * reconcile, which knows precisely which rows just inherited a score and must
+ * not pay for a full-table scan on every sync chunk.
+ */
+export async function getStageRowsByIds(ids: string[]): Promise<StageCandidateRow[]> {
+  if (ids.length === 0) return [];
+  const idSet = new Set(ids);
+  const rows = await articleSuggestionsCol
+    .query(Q.where('id', Q.oneOf(ids)))
+    .fetch();
+  // The unit-test fake DB layer doesn't evaluate Q.where predicates (see
+  // mockDatabase.ts), so re-assert the id filter in memory too — same defensive
+  // shape as getGroupingRowsByIds.
+  return rows
+    .filter((r) => idSet.has(r.id) && r.status !== ArticleSuggestionStatus.Excluded)
+    .map(toStageRow);
 }
 
 /**
@@ -724,6 +907,63 @@ export async function saveReason(
 }
 
 /**
+ * Does this row carry a reason a reader could actually READ?
+ *
+ * `suggestion-detail`'s screen variant renders exactly one explanatory element
+ * — `ArticleSuggestionContainer`'s `reasonBoxEl` (metaRow / title / aboveReason
+ * / reasonBox / footer; note `factChipsEl` is CARD-only). So:
+ *   - `excluded`        → relevance 0, no reason, never scored ⇒ nothing to show.
+ *   - `unscored`        → `relevanceReady` false ⇒ the box doesn't render at all.
+ *   - `reason_pending`  → the box renders a perpetual StreamingIndicator, not text.
+ *   - `complete` + ''   → the box doesn't render (screen variant has no chips).
+ * Only reason TEXT makes the reason screen worth landing on, so that — plus an
+ * explicit `excluded` guard — is the whole gate. Deliberately NOT gated on
+ * relevance: a relevance-0 row that still has reason text has the exact thing
+ * the reader came for.
+ */
+function hasReadableReason(row: ArticleSuggestionModel): boolean {
+  return (
+    row.status !== ArticleSuggestionStatus.Excluded &&
+    typeof row.reason === 'string' &&
+    row.reason.trim().length > 0
+  );
+}
+
+/**
+ * Tap-time lookup: articleId → the server id of the newest suggestion for that
+ * article that has a readable reason, or null.
+ *
+ * Deliberately the NARROWEST query that answers the question — one indexed
+ * `article_id` hit, no fact joins, no topic parsing, no `toForYouSuggestion`
+ * mapping (contrast `getSuggestionFeedbackContext`, which does all four). This
+ * runs on every article tap on four surfaces, so it must stay a single index
+ * probe over ~1 row.
+ *
+ * The Q predicates are mirrored by the JS filter below: the SQL narrows for
+ * real, the JS makes the result independent of the query engine (and keeps the
+ * predicate-ignoring test double honest).
+ */
+export async function getReasonedSuggestionIdForArticle(
+  articleId: string,
+): Promise<string | null> {
+  if (!articleId) return null;
+  const rows = await articleSuggestionsCol
+    .query(
+      Q.where('article_id', articleId),
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.Excluded)),
+      Q.sortBy('created_at', Q.desc),
+    )
+    .fetch();
+  // Newest-first; take the newest row that actually has a reason rather than
+  // the newest row outright — a re-synced duplicate can land reason-less
+  // alongside an older, fully-reasoned sibling.
+  const hit = rows.find((r) => r.articleId === articleId && hasReadableReason(r));
+  // The WatermelonDB `id` IS the server ArticleSuggestion `_id` (see the model
+  // docstring) — that, NOT `articleId`, is what suggestion-detail resolves.
+  return hit?.id ?? null;
+}
+
+/**
  * Find a suggestion by server id (returns null if not present).
  */
 export async function getSuggestionByServerId(serverId: string): Promise<ForYouSuggestion | null> {
@@ -752,6 +992,12 @@ export async function getSuggestionFeedbackContext(opts: {
   linkedFacts: { id: string; statement: string }[];
   entities: string[];
   category: string | null;
+  /** Story-cluster size (`max_cluster_size`) — the feedback tree's
+   *  `cluster_size_gte` gate (e.g. "Browse related coverage"). */
+  clusterSize: number | null;
+  /** Most specific place the article is tagged with — the feedback tree's
+   *  `from_context_geo` placeholder ("More news from this place"). */
+  geoText: string | null;
 } | null> {
   let row: ArticleSuggestionModel | null = null;
 
@@ -790,7 +1036,45 @@ export async function getSuggestionFeedbackContext(opts: {
     .slice(0, 8);
   const category = row.category ?? null;
 
-  return { suggestion, matchedTopicTexts, linkedFacts, entities, category };
+  // Two more context fields the feedback tree gates/resolves on. Both were
+  // already on the row and simply never read, which left
+  // `nudge_browse_related` (cluster_size_gte) and every `from_context_geo`
+  // leaf dead on EVERY surface, feed included.
+  const clusterSize =
+    typeof row.maxClusterSize === 'number' && Number.isFinite(row.maxClusterSize)
+      ? row.maxClusterSize
+      : null;
+  const geoText = geoTextFromTags(
+    parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(row.geoTagsJson),
+  );
+
+  return {
+    suggestion,
+    matchedTopicTexts,
+    linkedFacts,
+    entities,
+    category,
+    clusterSize,
+    geoText,
+  };
+}
+
+/**
+ * The most specific human place name across an article's geo tags
+ * (city → region → country code), or null when nothing is nameable. One
+ * definition shared by the local-suggestion path and the standalone-article
+ * path (ArticleFeedbackPrompt) so the two can't name the same article's place
+ * differently.
+ */
+export function geoTextFromTags(
+  tags: { city?: string | null; region?: string | null; countryCode?: string | null }[],
+): string | null {
+  for (const tag of tags ?? []) {
+    if (!tag) continue;
+    const name = tag.city?.trim() || tag.region?.trim() || tag.countryCode?.trim();
+    if (name) return name;
+  }
+  return null;
 }
 
 // --- Clear / TTL ---
@@ -868,6 +1152,11 @@ export interface FeedMetadata {
   relevantArticleCount: number;
   hasGeneratedTopics: boolean;
   lastProcessingRunFinishedAt?: number | null;
+  /** UTC date string (`YYYY-MM-DD`) of the last daily-limit notice shown to
+   *  the user. Persisted (not just in-memory) so the notice re-arms only once
+   *  per UTC day and survives app restarts — see FeedSyncMachine's
+   *  `daily-limit` branch. Absent/null = never shown. */
+  dailyLimitNoticeDay?: string | null;
 }
 
 export async function persistFeedMetadata(meta: FeedMetadata): Promise<void> {
@@ -911,12 +1200,23 @@ function toForYouSuggestion(
     // Persona v3 fields for the fact-sectioned feed selector (nullable).
     rawScore: row.rawScore,
     eventType: row.eventType,
+    // Same parse shape as `buildStageCandidateInput` above, so story-grouping's
+    // entity edge and the scorer see byte-identical entity lists.
+    entities: parseJsonArray<string>(row.entitiesJson).filter(
+      (e): e is string => typeof e === 'string' && e.length > 0,
+    ),
     headlineScope:
       row.headlineScope === 'CITY' ||
       row.headlineScope === 'COUNTRY' ||
       row.headlineScope === 'GLOBAL'
         ? row.headlineScope
         : null,
+    // Same guard as buildStageCandidateInput above: only carried when the label
+    // agrees, since a stale country on a GLOBAL row is worse than none. Without
+    // this line every COUNTRY row reaches the Dashboard with a null country, so
+    // the per-country headline sections silently never render.
+    headlineCountryCode:
+      row.headlineScope === 'COUNTRY' ? row.headlineCountryCode ?? null : null,
     matchedTopics: parseMatchedTopicRefs(row.matchedTopicsJson),
     // Round-3 fact-rows fields.
     factIds,
@@ -1075,6 +1375,11 @@ export interface PersonaPersistMeta {
   matchedTopics: Map<string, MatchedTopicMeta[]>;
   /** articleId → 'CITY' | 'COUNTRY' | 'GLOBAL' (top-headline injection). */
   headlineScope?: Map<string, string>;
+  /** articleId → uppercase ISO country code the COUNTRY-scope headline came
+   *  from. Only populated for the article's WINNING headline scope, and only
+   *  when that scope is COUNTRY — a GLOBAL headline has no owning country, so
+   *  it is absent here rather than carrying a misleading code. */
+  headlineCountryCode?: Map<string, string>;
   /** articleId → stable cluster id (server's largest-cluster rule). */
   stableClusterId?: Map<string, string>;
 }
@@ -1236,6 +1541,13 @@ export async function persistAndLinkV2Suggestions(
         ? Array.from(new Set(matched.map((m) => m.text).filter((t) => t && t.length > 0)))
         : articleToTopicTexts.get(a._id) ?? [];
       const scope = personaMeta?.headlineScope?.get(a._id) ?? null;
+      // Only meaningful alongside a COUNTRY scope; feed-sync already writes the
+      // map under the same first-writer-wins guard as `headlineScope`, so the
+      // two can never describe different scopes for the same article.
+      const scopeCountry =
+        scope === 'COUNTRY'
+          ? personaMeta?.headlineCountryCode?.get(a._id) ?? null
+          : null;
       const stableId = pickStableClusterId(a, personaMeta?.stableClusterId?.get(a._id));
 
       const prepared = articleSuggestionsCol.prepareCreate((r) => {
@@ -1279,6 +1591,7 @@ export async function persistAndLinkV2Suggestions(
         r.maxClusterSize = a.maxClusterSize ?? null;
         r.stableClusterId = stableId;
         r.headlineScope = scope;
+        r.headlineCountryCode = scopeCountry;
         r.matchedTopicsJson = personaMeta ? buildMatchedTopicsJson(matched) : null;
         r.computedScore = null;
         r.rawScore = null;
@@ -1346,3 +1659,35 @@ export async function getTotalArticleSuggestionCount(): Promise<number> {
   return articleSuggestionsCol.query().fetchCount();
 }
 
+
+/**
+ * Distinct `publication_name` values present in the local suggestion cache,
+ * normalized (lower-cased, whitespace-collapsed) and deduped.
+ *
+ * source-pref v47 (D5) — the CORROBORATION set for a named-publication
+ * preference. `pubPref` matching is exact normalized-name equality, so a model
+ * that invents "Times of India Group" would mint a row that shows up on the
+ * Source-preferences screen and can never fire: a preference that looks live
+ * and does nothing. Pairing this with `getTopVisitedPublications()` gives the
+ * sanitizer names that provably exist in the USER'S OWN data, so an
+ * uncorroborated proposal can be dropped outright (there is no keyword fallback
+ * for a preference the way there is for a filter).
+ *
+ * Never throws: a read failure yields an empty set, which drops every named
+ * proposal — the safe direction.
+ */
+export async function getDistinctSuggestionPublicationNames(): Promise<Set<string>> {
+  const names = new Set<string>();
+  try {
+    const rows = await articleSuggestionsCol.query().fetch();
+    for (const row of rows) {
+      const norm = (row.publicationName ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+      if (norm) names.add(norm);
+    }
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-suggestion', method: 'getDistinctSuggestionPublicationNames' },
+    });
+  }
+  return names;
+}

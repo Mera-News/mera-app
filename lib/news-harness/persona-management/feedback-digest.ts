@@ -22,6 +22,12 @@
 // it ever needs runtime tuning (mirrors fact-hygiene's HYGIENE_THRESHOLDS).
 
 import { ACTION_NAMES, type ActionName } from './action-names';
+import type { SuppressionKindName } from '../core/types';
+// The digest's `pathCandidates` already interprets feedback-tree node ids, so
+// it is coupled to that module by design; the category gate is shared with
+// resolve-leaf-actions so the tree and the digest can never disagree about
+// which categories are safe to structure.
+import { isDiscriminatingCategory } from '../feedback-tree/category-specificity';
 
 // ── Constants (conservative by design) ───────────────────────────────────────
 
@@ -138,6 +144,12 @@ export interface DigestPersonaAction {
   suppressionPattern?: string;
   suppressionKeywords?: string[];
   suppressionStrength?: number;
+  /** D9 — a STRUCTURED filter: exact normalized equality on ONE article field
+   *  instead of a substring scan. Only ever set when `suppressionValue` is the
+   *  article's own snapshotted field value, copied verbatim; a value we
+   *  paraphrased would match nothing while looking active. Absent ⇒ keyword. */
+  suppressionKind?: SuppressionKindName;
+  suppressionValue?: string;
 }
 
 /** A liked story a removal/suppression candidate would collaterally hit. */
@@ -286,6 +298,16 @@ function topicWeightCandidate(
   };
 }
 
+/**
+ * Build one suppression candidate.
+ *
+ * `structured` promotes the filter from a keyword substring scan to an exact
+ * match on one article field (D9). It is only safe when the value is the
+ * article's OWN snapshotted field, verbatim — which is why the two callers that
+ * pass it read straight from `signal.context.category` / `.eventType`, and the
+ * title-keyword caller (`too_many`) passes nothing: a headline is not an
+ * indexed field, so it stays a keyword filter.
+ */
 function suppressionCandidate(
   targetKey: string,
   pattern: string,
@@ -294,6 +316,7 @@ function suppressionCandidate(
   rowId: string,
   c: DigestConstants,
   conflict: { eventType?: string; category?: string },
+  structured?: { kind: SuppressionKindName; value: string },
 ): MutableCandidate {
   return {
     fingerprint: `suppress:${targetKey}`,
@@ -304,6 +327,9 @@ function suppressionCandidate(
       suppressionPattern: pattern,
       suppressionKeywords: keywords,
       suppressionStrength: c.suppressionStrength,
+      ...(structured
+        ? { suppressionKind: structured.kind, suppressionValue: structured.value }
+        : {}),
     },
     sourceRowIds: new Set([rowId]),
     conflictEventType: conflict.eventType,
@@ -402,12 +428,17 @@ function pathCandidates(
             signal.id,
             c,
             { eventType: evt },
+            { kind: 'event_type', value: evt },
           ),
         );
       }
       break;
     case 'this_category':
-      if (signal.context.category) {
+      // A generic category mints NOTHING — not a keyword fallback. Same defect
+      // the tree resolver had: `keyword` is a substring scan, so falling back
+      // to it on "News" demotes a large slice of everything, which is worse
+      // than the exact-field filter the genericness gate is refusing.
+      if (signal.context.category && isDiscriminatingCategory(signal.context.category)) {
         const cat = signal.context.category;
         out.push(
           suppressionCandidate(
@@ -418,6 +449,7 @@ function pathCandidates(
             signal.id,
             c,
             { category: cat },
+            { kind: 'category', value: cat },
           ),
         );
       }
@@ -539,12 +571,15 @@ function aggregateCandidates(
       b.rows[0],
       c,
       { eventType: b.label },
+      { kind: 'event_type', value: b.label },
     );
     for (const id of b.rows) cand.sourceRowIds.add(id);
     out.push(cand);
   }
   for (const [k, b] of catDislikes) {
     if (b.rows.length < c.minDislikesForSuppress) continue;
+    // Generic source category → no candidate at all (see pathCandidates).
+    if (!isDiscriminatingCategory(b.label)) continue;
     const cand = suppressionCandidate(
       `cat:${k}`,
       b.label,
@@ -553,6 +588,7 @@ function aggregateCandidates(
       b.rows[0],
       c,
       { category: b.label },
+      { kind: 'category', value: b.label },
     );
     for (const id of b.rows) cand.sourceRowIds.add(id);
     out.push(cand);

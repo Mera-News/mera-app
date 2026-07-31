@@ -8,7 +8,9 @@
 // text right-aligned and non-italic. A Mera glyph briefly lived in this block as
 // the Ask-Mera affordance; it was removed again — the action row's Mera button
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -23,7 +25,7 @@ import { VStack } from '@/components/ui/vstack';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
+import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -80,6 +82,10 @@ const SCREEN_HEADER_HEIGHT = 240;
 const BACK_BUTTON_TOP_OFFSET = 8;
 const BACK_BUTTON_SIZE = 48;
 const NO_IMAGE_BREATHING_ROOM = 16;
+/** Tint for the meta band's glass plate — dark so the band recedes into the
+ *  page instead of reading as a lighter slab. See its call site. */
+const META_BAND_TINT = 'rgba(0,0,0,0.30)';
+
 const NO_IMAGE_META_CLEARANCE =
     BACK_BUTTON_TOP_OFFSET + BACK_BUTTON_SIZE + NO_IMAGE_BREATHING_ROOM; // 72
 
@@ -278,13 +284,20 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 affordance. Text stays right-aligned and non-italic. */}
             <RelevanceChip relevance={relevance} />
             {reason ? (
-                <TranslatableDynamic
-                    text={reason}
-                    size="sm"
-                    bold
-                    className="ml-3 flex-1 text-right"
-                    style={{ color: reasonBoxColors.textColor }}
-                />
+                <Box className="ml-3 flex-1 items-end">
+                    <TranslatableDynamic
+                        text={reason}
+                        size="sm"
+                        bold
+                        className="text-right"
+                        style={{ color: reasonBoxColors.textColor }}
+                    />
+                    {/* Art. 50 label INSIDE the box, under the note it
+                        describes — outside, it read as unrelated chrome.
+                        Lighter grey keeps it subordinate to the note while
+                        still clearing contrast on the box's #374151. */}
+                    <AiDisclosureCaption color={aiDisclosureColor} className="mt-1" />
+                </Box>
             ) : (
                 <Box className="ml-3 flex-1 items-end">
                     <StreamingIndicator compact color={reasonBoxColors.textColor} />
@@ -345,27 +358,26 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             <VStack className="p-5" space="lg">
                 {/* With an image, `mt-10` spaces the meta row below the hero;
                     with no image, clear the floating back button instead.
-                    SmoothScrollView's parallax header uses Reanimated's default
-                    EXTEND extrapolation on translateY, so as the user scrolls
-                    down the header's *visual* bottom edge lags behind its
-                    layout box while opacity is still fading out (opacity only
-                    reaches 0 at scrollY = headerHeight*0.8) — there's a window
-                    where the header is a semi-transparent image sitting right
-                    behind this row. Rather than reworking the parallax math
-                    (SmoothScrollView is shared with other screens/behaviors we
-                    don't want to touch here), give the row its own opaque
-                    backdrop that exactly matches the screen's own root
-                    background (`bg-background-50` — see ArticleDetailScreen /
-                    ArticleSuggestionScreen root Box) so it's indistinguishable
-                    from empty space at every OTHER scroll position, and simply
-                    occludes whatever is behind it during the overlap window.
-                    No-image case is untouched (separate branch below). */}
-                <Box
-                    className={showImage ? 'mt-10 py-1.5 bg-background-50' : undefined}
-                    style={showImage ? undefined : { marginTop: NO_IMAGE_META_CLEARANCE }}
-                >
-                    {metaRow}
-                </Box>
+
+                    NO BACKGROUND, deliberately. This row used to carry its own
+                    `bg-background-50` fill, then a glass plate, to occlude the
+                    parallax hero: SmoothScrollView uses Reanimated's default
+                    EXTEND extrapolation on translateY, so while scrolling there
+                    is a window where the header's semi-transparent image sits
+                    right behind this row. Both treatments read as a band pasted
+                    across the page now that the root is the
+                    AbstractGradientBackdrop rather than a flat fill, so the fill
+                    is gone entirely and the row sits directly on the page like
+                    the no-image branch below. The parallax overlap is accepted:
+                    it is brief, partial, and less objectionable than a permanent
+                    slab. Reworking the parallax math is the real fix if it ever
+                    becomes a problem — SmoothScrollView is shared, so that is
+                    not a change to make casually. */}
+                {showImage ? (
+                    <Box className="mt-10 py-1.5">{metaRow}</Box>
+                ) : (
+                    <Box style={{ marginTop: NO_IMAGE_META_CLEARANCE }}>{metaRow}</Box>
+                )}
                 {titleEl}
                 {aboveReason}
                 {reasonBoxEl}

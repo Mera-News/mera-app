@@ -103,6 +103,24 @@ change** and will fail that test until the test is updated deliberately. For
 local experiments, do **not** edit the defaults: pass a per-run
 `--config overrides.json` that is merged over the defaults for that run only.
 
+`scoringEngine.USE_ARTICLE_TAGS` is the one **non-tunable** entry in that
+section — a routing switch, not a weight. Default **false**: every candidate is
+presented to the engine as untagged (no `geoTags`, no `entities`, no
+`eventType`), so `isBackstop` is true for all of them and scoring takes the
+legacy two-pass LLM path — exactly what production does today, where the
+server-side enrichment stage has never run. `true` passes the tags through, so a
+tagged article routes to the math path and the geo/entity/event components and
+the structured suppression kinds go live. It is bound from
+`EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
+(`lib/mera-protocol/harness-config-base.ts`) — the harness itself never reads
+`process.env` — and enforced by `scoring-engine/tag-policy.ts`, applied where a
+stored row becomes a scoring candidate (`stage-scoring::buildStageCandidates`).
+`eval/` and `harness-local/` drive `DEFAULT_HARNESS_CONFIG` and their own
+fixtures directly and never call that seam, so the eval engine is unaffected by
+the flag in either position. The in-app readout of the resulting split is on the
+Observability screen's feed funnel (`funnel-row-scored-math` /
+`funnel-row-scored-llm`).
+
 `scoringEngine` (the math affinity engine, `relevance.ts`) has **no
 freshness/age-decay component**: `W_FRESH` was removed in Round 3 and the
 remaining seven positive weights (`W_TOPIC`/`W_BREADTH`/`W_GEO`/`W_ENTITY`/

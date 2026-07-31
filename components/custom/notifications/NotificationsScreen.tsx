@@ -240,7 +240,9 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
     const keyExtractor = useCallback((item: NotificationModel) => item.id, []);
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader
                 title={t('notificationCenter.title')}
                 onBack={onBack}

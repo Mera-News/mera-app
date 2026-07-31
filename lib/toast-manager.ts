@@ -21,6 +21,14 @@ export interface NotifiedToastOptions {
     icon?: string;
     context?: Record<string, unknown>;
     actions?: { id: string; labelKey?: string; label?: string }[];
+    /**
+     * Opt-in — plumbed straight through to `notify()`'s `dedupeDaily`.
+     * Suppresses the persisted notification-center row (not this transient
+     * toast) when one with the same `(type, source)` was already created
+     * today (UTC). Leave unset for callers where a same-day repeat is a
+     * genuinely distinct event (default `false`, unchanged behaviour).
+     */
+    dedupeDaily?: boolean;
 }
 
 /**
@@ -223,6 +231,96 @@ class ToastManager {
     }
 
     /**
+     * Success toast carrying an UNDO affordance — the acknowledgment shown when
+     * a feedback-tree leaf applies persona mutations on the spot (see
+     * components/custom/feedback-tree/use-apply-leaf-actions). Lives here rather
+     * than behind `useToast()` so the caller does not have to be a React
+     * component and, more importantly, so the gluestack toast module is
+     * `require`d only when a toast is actually shown (the same lazy-require
+     * shape every other method here uses).
+     *
+     * Not debounced — each applied change is a distinct, user-initiated event.
+     */
+    showUndoToast(opts: {
+        title: string;
+        body?: string;
+        undoLabel: string;
+        undoneTitle: string;
+        onUndo: () => void | Promise<void>;
+    }) {
+        if (!this.toastInstance) {
+            logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
+            return;
+        }
+
+        const React = require('react');
+        const { Toast } = require('@/components/ui/toast');
+        const { Text, Pressable } = require('react-native');
+
+        // VERIFIED ON DEVICE, and the shape matters more than it looks:
+        //   • FLAT children of Toast. Wrapping them in an HStack/VStack row (to
+        //     right-align the Undo) rendered as an EMPTY green pill — gluestack
+        //     styling and NativeWind `className` both resolve through the JSX
+        //     transform, which a hand-written `React.createElement` tree
+        //     bypasses, so the wrapper collapsed and clipped its own text.
+        //   • Plain RN `Text` with explicit styles, NOT ToastTitle /
+        //     ToastDescription. Those are className-styled too, and via
+        //     createElement they render invisibly — the Undo (plain Text) was
+        //     the only line that showed up.
+        // Do not "tidy" this back to the gluestack primitives without checking
+        // it on a device; jest cannot see any of this.
+        this.toastInstance.show({
+            placement: 'bottom',
+            duration: 6000,
+            render: ({ id }: { id: string }) =>
+                React.createElement(
+                    Toast,
+                    { action: 'success', variant: 'solid' },
+                    React.createElement(
+                        Text,
+                        { style: { color: '#1a1a1a', fontWeight: '700', fontSize: 15 } },
+                        opts.title,
+                    ),
+                    opts.body
+                        ? React.createElement(
+                              Text,
+                              { style: { color: '#1a1a1a', fontSize: 13, paddingTop: 2 } },
+                              opts.body,
+                          )
+                        : null,
+                    React.createElement(
+                        Pressable,
+                        {
+                            testID: 'feedback-undo',
+                            accessibilityRole: 'button',
+                            accessibilityLabel: opts.undoLabel,
+                            hitSlop: 10,
+                            style: { paddingTop: 6 },
+                            onPress: () => {
+                                void (async () => {
+                                    try {
+                                        await opts.onUndo();
+                                    } catch (err) {
+                                        logger.captureException(err, {
+                                            tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
+                                        });
+                                    }
+                                    this.toastInstance?.close(id);
+                                    this.showInfo(opts.undoneTitle);
+                                })();
+                            },
+                        },
+                        React.createElement(
+                            Text,
+                            { style: { color: '#1a1a1a', fontWeight: '800', textDecorationLine: 'underline' } },
+                            opts.undoLabel,
+                        ),
+                    ),
+                ),
+        });
+    }
+
+    /**
      * Notification-center-backed toast. First writes a persistent notification
      * row (so the bell badge increments via the reactive observeUnreadCount),
      * then shows a transient toast that flies toward the bell.
@@ -230,7 +328,15 @@ class ToastManager {
      * The RAW i18n key strings are stored in the notification row so the panel
      * re-resolves them with the current locale; the toast itself resolves them
      * now (via i18next.t) for immediate display. NOT debounced — each call is a
-     * distinct event.
+     * distinct event, and this transient toast always renders regardless of
+     * `opts.dedupeDaily`.
+     *
+     * `opts.dedupeDaily` (opt-in, default off) only gates step 1 — the
+     * persisted notification-center row — via `notify()`'s same-day
+     * `(type, source)` dedupe. It exists for callers whose upstream trigger
+     * can retrigger the SAME event repeatedly in one day (e.g. a 60s
+     * scheduler re-arm), not for callers where a same-day repeat is a
+     * genuinely distinct event.
      */
     async showNotifiedToast(opts: NotifiedToastOptions) {
         // 1. Persist the row (raw keys). Dynamic import avoids a load-time cycle
@@ -245,6 +351,7 @@ class ToastManager {
                 context: opts.context ?? null,
                 actions: opts.actions ?? null,
                 source: opts.source,
+                dedupeDaily: opts.dedupeDaily,
             });
         } catch (err) {
             logger.captureException(err, {

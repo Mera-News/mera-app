@@ -205,6 +205,10 @@
     "irrelevant": "Irrelevant",
     "unprocessed": "Unprocessed"
   },
+  "aiDisclosure": {
+    "caption": "AI-generated note",
+    "short": "AI-generated"
+  },
   "articleDetail": {
     "readArticle": "Read Article",
     "viewAndTranslateOnDevice": "View article & translate on device",
@@ -255,6 +259,8 @@
     "askMera": "Ask Mera",
     "closeTree": "Close",
     "treeThanks": "Thanks, noted.",
+    "feedbackCaption": "On its own, a thumb doesn't tell Mera enough — so it's discarded, to keep your feed healthy. Pick a reason and your feed changes right away.",
+    "tapAgainToConfirm": "Tap again to confirm",
     "chatHandoffLike": "I liked this story. More like this: {{path}}.",
     "chatHandoffLikeNoPath": "I liked this story. I'd like more like this.",
     "chatHandoffDislike": "I didn't like this story: {{path}}.",
@@ -273,6 +279,12 @@
     "showMore": "Show {{count}} more",
     "viewAllArticles_one": "View all {{count}} article",
     "viewAllArticles_other": "View all {{count}} articles",
+    "headlineSectionGlobal": "Headlines from the world",
+    "headlineSectionCountry": "Headlines from {{country}}",
+    "headlineDenominator_one": "Mera read {{count}} headline · {{shown}} worth your time.",
+    "headlineDenominator_other": "Mera read {{count}} headlines · {{shown}} worth your time.",
+    "headlineDenominatorNone_one": "Mera read {{count}} headline · none looked relevant today.",
+    "headlineDenominatorNone_other": "Mera read {{count}} headlines · none looked relevant today.",
     "subTabFeed": "Overview",
     "subTabStories": "Stories",
     "subTabSaved": "Saved"
@@ -463,6 +475,10 @@
     "injectNoiseTitle": "Inject Noise",
     "injectNoiseDescription": "Submits decoy topics alongside your real interests so the backend can't triangulate who you are from your topic list. Articles matching only decoy topics are dropped before they reach you.",
     "injectNoiseBeta": "Beta: may slow down topic generation and reduce feed relevance.",
+    "relevanceV2Title": "Use relevance fetching v2",
+    "relevanceV2On": "Scoring on device, where the story happened counts",
+    "relevanceV2Off": "Scoring in the cloud, using the original method",
+    "relevanceV2Description": "Beta — scores articles on your device using where a story happened and what kind of event it is, instead of asking the cloud model alone. Needs articles that carry location tags, so you may see little change at first. Turn it off at any time to go back.",
     "privacyTitle": "Your data stays private",
     "privacyDescription": "Mera Protocol is always on. On-device mode runs inference fully offline on your phone. Cloud mode uses end-to-end encrypted inference: your data is encrypted on your device and only decrypted inside a secure enclave we can't read into. Your facts, your profile and your reading history never leave this device. To fetch news we send only broad topic phrases, carrying no user ID.",
     "deviceSupported": "Device Supported",
@@ -692,6 +708,7 @@
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
     "viewPreviousMessages": "View previous messages",
+    "aiInteractionNotice": "You're talking with Mera, an AI assistant — not a person.",
     "aiUsageNotice": "This assistant helps set up your news preferences. Attempting to manipulate or misuse it may get your account blocked pending review.",
     "requestUnblock": {
       "button": "Request unblock",
@@ -743,10 +760,16 @@
     "actionShowMoreTopic": "Show more of a topic",
     "actionDownRank": "Down-rank a topic",
     "actionPublicationPref": "Adjust a publication",
+    "actionPublicationBoost": "Show more from a publication",
+    "actionPublicationDeprioritize": "Show less from a publication",
+    "actionPublicationMute": "Mute a publication",
+    "actionSourceScopeBoost": "Show more from sources in a country",
+    "actionSourceScopeDeprioritize": "Show less from sources in a country",
     "actionSuppress": "Filter out a phrase",
     "actionPinTopic": "Pin a topic",
     "actionUnpinTopic": "Unpin a topic",
     "actionRetireTopic": "Retire a topic",
+    "actionRetireSuppression": "Remove a filter",
     "chooseOneHint": "Pick one option"
   },
   "publicationVisits": {
@@ -904,7 +927,9 @@
       "unknown": "Persona change",
       "hygieneDeleteFact": "Removed fact",
       "addLocation": "Added location",
-      "deleteLocation": "Removed location"
+      "deleteLocation": "Removed location",
+      "retireSuppression": "Removed a filter",
+      "setSourceScopePref": "Adjusted a source scope"
     }
   },
   "calibration": {
@@ -1044,6 +1069,77 @@
     "deleteFailedTitle": "Couldn't remove place",
     "deleteFailedBody": "Please try again."
   },
+  "notInterested": {
+    "title": "Not interested",
+    "subtitle": "What you've asked Mera to keep out of your feed",
+    "sectionFilters": "Words and things you've hidden",
+    "sectionTopics": "Topics you see less of",
+    "sectionSources": "Sources you've muted or turned down",
+    "managePublications": "Manage source preferences",
+    "chatHint": "You don't have to come here. Just tell Mera what you'd rather not see — \"less about celebrity gossip\" — and it'll take care of the rest.",
+    "kinds": {
+      "keyword": "Words",
+      "category": "Category",
+      "event_type": "Kind of story",
+      "entity": "Person or thing",
+      "place": "Place",
+      "publication": "Source",
+      "topic": "Topic"
+    },
+    "sources": {
+      "user": "You added this",
+      "chat": "From a chat with Mera",
+      "feedback": "From your feedback",
+      "digest": "From your daily review",
+      "qa": "From a question Mera asked",
+      "unknown": "Added automatically"
+    },
+    "badgeBlocked": "Kept out",
+    "badgeShownLess": "Shown less",
+    "badgeMutedTopic": "Shown less",
+    "badgeDownranked": "Turned down",
+    "badgeMutedPub": "Muted",
+    "mutedPubHint": "Kept out, except for major news",
+    "cardExemptLabel": "You filtered \"{{filter}}\" — showing it because it's major news",
+    "expiresOn": "Until {{date}}",
+    "expiresNever": "Until you remove it",
+    "remove": "Remove",
+    "removeConfirmTitle": "Remove this?",
+    "removeConfirmBody": "Stories like this can show up in your feed again.",
+    "removeConfirmCta": "Remove",
+    "removeSuccessTitle": "Removed",
+    "removeSuccessBody": "This is no longer kept out of your feed.",
+    "removeFailedTitle": "Couldn't remove that",
+    "removeFailedBody": "Please try again.",
+    "addPhrase": "Hide something",
+    "addPhraseTitle": "Hide something from your feed",
+    "addPhraseBody": "Type a word or a short phrase. Mera will look for it in the headline and story, and keep those out of your way. For anything more specific — a whole category, a source, a person — just say so in chat, or use the thumbs on a story: Mera picks it up from the story itself, so it always matches.",
+    "addPhrasePlaceholder": "e.g. celebrity gossip",
+    "addPhraseHardLabel": "Keep it out of my feed",
+    "addPhraseHardHint": "Mera keeps these out. If one becomes major news it still shows up, marked so you know why. Left off, Mera simply shows them less, and forgets about it in a month.",
+    "addPhraseSubmit": "Hide it",
+    "addPhraseSuccessTitle": "Done",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" is out of your feed now. Only major news gets through, and Mera will say so.",
+    "addPhraseSuccessBodySoft": "You'll see a lot less about \"{{phrase}}\".",
+    "addPhraseFailedTitle": "Couldn't save that",
+    "addPhraseFailedBody": "Please try again.",
+    "emptyTitle": "Nothing hidden yet",
+    "emptyBody": "When you tell Mera you're not interested in something, it shows up here so you can undo it.",
+    "emptyFilters": "You haven't hidden any words yet.",
+    "emptyTopics": "No topics turned down yet.",
+    "emptySources": "You haven't muted or turned down any sources yet."
+  },
+  "headlineDepth": {
+    "title": "Top headlines",
+    "subtitle": "How many Mera reads for you",
+    "intro": "Mera reads the biggest stories in each section, then picks the ones that matter to you. Raise a section to see more; lower it to keep things tight.",
+    "worldwide": "Worldwide",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "Using the standard {{n}}.",
+    "customised": "Changed from the standard {{n}}. Pick {{n}} again to go back.",
+    "saveFailedTitle": "Couldn't save that",
+    "saveFailedBody": "Your change wasn't stored. Try again."
+  },
   "profileHub": {
     "facts": "Facts",
     "factsCount_one": "{{count}} fact shaping your feed",
@@ -1059,12 +1155,23 @@
     "prefsCount_one": "{{count}} source adjusted",
     "prefsCount_other": "{{count}} sources adjusted",
     "prefsEmpty": "Boost, downrank or mute sources",
+    "visitedSubtitle": "Publications you opened recently",
     "activity": "Activity",
     "activitySubtitle": "Your persona change history",
     "personaHealth": "Persona health",
     "healthPending_one": "{{count}} cleanup suggestion",
     "healthPending_other": "{{count}} cleanup suggestions",
-    "healthAllHealthy": "All healthy"
+    "healthAllHealthy": "All healthy",
+    "groupKnows": "Mera knows you",
+    "groupFeed": "Your feed",
+    "groupLibrary": "Sources & library",
+    "groupInternals": "Under the hood",
+    "notInterested": "Not interested",
+    "notInterestedSubtitle_one": "{{count}} thing you've hidden",
+    "notInterestedSubtitle_other": "{{count}} things you've hidden",
+    "notInterestedEmpty": "Nothing hidden yet",
+    "headlineDepth": "Top headlines",
+    "headlineDepthSubtitle": "How many Mera reads per section"
   },
   "profile": {
     "talkToMera": "Talk to Mera",
@@ -1105,7 +1212,8 @@
     "kindMute": "Mute",
     "clear": "Clear",
     "clearA11y": "Clear preference",
-    "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here."
+    "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here.",
+    "scopeKindCountry": "Country"
   },
   "optimisationPlan": {
     "notificationTitle": "Your daily feed tune-up is ready",

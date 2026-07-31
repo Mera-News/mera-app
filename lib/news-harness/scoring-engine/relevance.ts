@@ -20,6 +20,10 @@
 //                            : mathBase                                   (before penalties)
 //   raw      = clamp(base − negTopicPenalty − suppressPenalty − wrongLocPenalty − seenPenalty,
 //                    BASE_MIN, BASE_MAX)
+//   (P6) a HEADLINE row matching a HARD filter is exempt from exclusion: its
+//        matching hard filters join the soft list for the one capped
+//        suppressPenalty, and `raw` is then floored at HEADLINE_BASE_FLOOR — so
+//        it is demoted to the bottom of what renders, never removed.
 
 import type { ScoringEngineConfig } from '../core/config';
 import {
@@ -32,6 +36,12 @@ import {
   type GeoAlignment,
   type GeoMatchResult,
 } from './geo';
+import {
+  buildSuppressionHaystack,
+  isHardFilterExempt,
+  matchingHardSuppressions,
+  suppressionMatchesCandidate,
+} from './suppression';
 
 export type ScoringMode = 'math' | 'backstop';
 
@@ -69,6 +79,11 @@ export interface ScoredCandidateInput {
   entities?: string[];
   matchedTopics: MatchedTopicInput[];
   headlineScope?: HeadlineScope | null;
+  /** Uppercase ISO code of the country whose headline scope retrieved this
+   *  candidate; only set alongside headlineScope === 'COUNTRY'. Carried so a
+   *  per-country surface can tell one country's headlines from another's —
+   *  the scoring formula itself does NOT read it. */
+  headlineCountryCode?: string | null;
   /** Stable cluster id (for seen-story dedup against seenStoryIds). */
   stableClusterId?: string | null;
 }
@@ -93,6 +108,21 @@ export interface RelevanceComponents {
   seenPenalty: number;
   wrongLocationFlag: 0 | 1;
   matchedLocationId?: string;
+  /** P6 — this row matched a HARD "not interested" filter and was kept anyway
+   *  because it is a top headline: penalised, then floored at
+   *  HEADLINE_BASE_FLOOR. Optional so the many existing component literals keep
+   *  compiling; absent reads as false. The UI labels such a card so a filtered
+   *  subject on screen is never a surprise. */
+  hardFilterExempt?: boolean;
+  /** WHICH PATH SCORED THIS ROW — the same value as `RelevanceResult.mode`,
+   *  carried inside the components so it survives into the persisted
+   *  `score_components_json` audit (both persist sites JSON-stringify this
+   *  object wholesale). That is what makes the math-vs-LLM split readable after
+   *  the fact, on the Observability screen, without a parallel record or a new
+   *  column. Optional so the existing component literals in tests/fixtures keep
+   *  compiling; absent on rows persisted before this field existed, which the
+   *  readout reports as `unknown` rather than guessing. */
+  mode?: ScoringMode;
 }
 
 export interface RelevanceResult {
@@ -205,26 +235,27 @@ function pubPref(
   return prefs.get(normText(publicationName)) ?? 0;
 }
 
-/** suppressPenalty: Σ P_SUP·strength over soft suppressions whose keyword hits
- *  the article's title/description/entities; capped at P_SUP_CAP. */
-function suppressionPenalty(
+/** suppressPenalty: Σ P_SUP·strength over soft suppressions that MATCH the
+ *  candidate; capped at P_SUP_CAP. Matching (per kind) is the shared matcher in
+ *  suppression.ts — keyword / NULL-kind rows keep byte-identical semantics.
+ *
+ *  EXPORTED so any future scoring source applies the capped soft penalty by
+ *  CALLING this, never by re-deriving it — a second implementation of the cap
+ *  is exactly the drift this wave exists to prevent (the hard screen has the
+ *  same one-matcher rule via `screenHardSuppressions`). Export only; the maths
+ *  are untouched. */
+export function suppressionPenalty(
   candidate: ScoredCandidateInput,
   ctx: PersonaScoringContext,
   cfg: ScoringEngineConfig,
 ): number {
   if (!ctx.softSuppressions?.length) return 0;
-  const haystack = [
-    normText(candidate.titleEn ?? ''),
-    normText(candidate.descriptionEn ?? ''),
-    ...(candidate.entities ?? []).map(normText),
-  ].join('  ');
+  const haystack = buildSuppressionHaystack(candidate);
   let sum = 0;
   for (const s of ctx.softSuppressions) {
-    const hit = s.keywords.some((k) => {
-      const kk = normText(k);
-      return kk.length > 0 && haystack.includes(kk);
-    });
-    if (hit) sum += cfg.P_SUP * s.strength;
+    if (suppressionMatchesCandidate(candidate, s, haystack)) {
+      sum += cfg.P_SUP * s.strength;
+    }
   }
   return Math.min(cfg.P_SUP_CAP, sum);
 }
@@ -319,7 +350,26 @@ export function computeRelevance(
 
   // --- penalties ----------------------------------------------------------
   const negTopicPenalty = config.P_NEG * maxNegativeMatchedWeight;
-  const suppressPenalty = suppressionPenalty(candidate, persona, config);
+
+  // P6 — HEADLINE EXEMPTION. A top-headline row is exempt from HARD exclusion
+  // (suppression.ts::isHardFilterExempt), so unlike every other candidate it can
+  // reach the math while matching a hard "not interested" filter. It must not
+  // reach it UNPENALISED: the matching hard rows are folded into the soft list
+  // and run through the SAME `suppressionPenalty` call, so there is still one
+  // matcher and one P_SUP_CAP. Nothing changes for a non-headline row, or for a
+  // headline row matching only SOFT filters (which stays killed by the floor-is-
+  // before-penalties rule below).
+  const exemptHard = isHardFilterExempt(candidate)
+    ? matchingHardSuppressions(candidate, persona.hardSuppressions)
+    : [];
+  const hardFilterExempt = exemptHard.length > 0;
+  const suppressPenalty = suppressionPenalty(
+    candidate,
+    hardFilterExempt
+      ? { ...persona, softSuppressions: [...persona.softSuppressions, ...exemptHard] }
+      : persona,
+    config,
+  );
   const wrongLocPenalty = config.P_WRONG * geo.wrongLocationFlag;
   const seen =
     persona.seenStoryIds &&
@@ -329,11 +379,25 @@ export function computeRelevance(
       : 0;
   const seenPenalty = config.P_SEEN * seen;
 
-  const score = clamp(
+  const penalised = clamp(
     base - negTopicPenalty - suppressPenalty - wrongLocPenalty - seenPenalty,
     config.BASE_MIN,
     config.BASE_MAX,
   );
+
+  // P6 — DEMOTED, NEVER REMOVED. For an exempt row the headline floor moves from
+  // `base` (pre-penalty) to the FINAL score, minus its popularity lift. One hard
+  // filter is P_SUP·1.0 = 0.3 against a 0.35 floor, so leaving the penalty
+  // unclamped would sink every exempt headline under the 0.3 render gate —
+  // i.e. exclusion by another name, which is precisely what this phase removes.
+  // Pinning it to the bare HEADLINE_BASE_FLOOR keeps it visible while sorting it
+  // below every unfiltered headline (which additionally earns
+  // HEADLINE_POP_LIFT·popComp and its own mathBase) and below every topically
+  // relevant article. No new tunable: this reuses the constant that defines
+  // "a headline is worth showing" in the first place.
+  const score = hardFilterExempt
+    ? Math.max(penalised, config.HEADLINE_BASE_FLOOR)
+    : penalised;
 
   return {
     score,
@@ -356,6 +420,8 @@ export function computeRelevance(
       seenPenalty,
       wrongLocationFlag: geo.wrongLocationFlag,
       matchedLocationId: geo.matchedLocationId,
+      hardFilterExempt,
+      mode,
     },
   };
 }

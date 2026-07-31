@@ -29,6 +29,9 @@ export function evaluateCondition(
   if (visibleIf.has_geo_mismatch === true) {
     if (!ctx.hasGeoMismatch) return false;
   }
+  if (visibleIf.has_event_type === true) {
+    if (!ctx.eventType?.trim()) return false;
+  }
 
   return true;
 }

@@ -31,13 +31,11 @@ describe('normalizeFactEntry', () => {
     expect(
       normalizeFactEntry({
         statement: 'Senior ML engineer',
-        questionnaire_level: 1,
-        questionnaire_level_category: 'Core',
         questionnaire_attribute: 'profession: job',
       }),
     ).toEqual({
       statement: 'Senior ML engineer',
-      questionnaire: { level: 1, levelCategory: 'Core', attribute: 'profession: job' },
+      questionnaire: { attribute: 'profession: job' },
     });
   });
 
@@ -107,16 +105,12 @@ describe('filterNewFacts', () => {
       [
         {
           statement: 'Senior ML engineer',
-          questionnaire_level: 1,
-          questionnaire_level_category: 'Core',
           questionnaire_attribute: 'profession: job',
         },
       ],
       [],
     );
     expect(accepted[0].questionnaire).toEqual({
-      level: 1,
-      levelCategory: 'Core',
       attribute: 'profession: job',
     });
   });

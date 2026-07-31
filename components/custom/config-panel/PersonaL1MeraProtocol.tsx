@@ -26,7 +26,7 @@ import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import { buildTopicGenContext } from '@/lib/inference/handlers/topic-gen-handler';
 import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/topic-generation-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
-import { fetchUserBilling } from '@/lib/billing-service';
+import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -43,7 +43,7 @@ import { useTranslation } from 'react-i18next';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, View } from 'react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 interface PersonaL1MeraProtocolProps {
     readonly userId: string;
@@ -414,16 +414,23 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const handleUpgrade = useCallback(async () => {
         try {
             const offering = await getOfferingSafe();
-            await RevenueCatUI.presentPaywall({
+            const result = await RevenueCatUI.presentPaywall({
                 ...(offering ? { offering } : {}),
                 displayCloseButton: true,
             });
+            // A purchase is a discrete event — refresh the usage card on it
+            // rather than leaving the old plan on screen. The RevenueCat →
+            // server webhook is async, so this retries briefly (bounded).
+            if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+                const fresh = await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
+                if (fresh) setBilling(fresh);
+            }
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'PersonaL1MeraProtocol', method: 'upgrade' },
             });
         }
-    }, []);
+    }, [billing?.subscriptionTier]);
 
     const isBlocked = userPersona?.blockedByLlm ?? false;
 

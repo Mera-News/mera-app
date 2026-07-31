@@ -119,6 +119,70 @@ export function isFactSectionViable(buckets: readonly FeedBucket[]): boolean {
   return false;
 }
 
+// --- Headline sections ----------------------------------------------------
+//
+// Top-headline rows carry a persisted `headline_scope` and SYNTHETIC matched
+// topics (`topicId: null`), so `resolveOwningFactLenient` can never resolve an
+// owner for them — every one of them used to be dropped from the Dashboard even
+// though the Feed tab rendered them. They now get their own sections, keyed by
+// scope, sitting alongside the fact sections.
+//
+// The ids below are SYNTHETIC section ids that occupy the same string slot as a
+// fact id (`FactRow.factId`), so the gradient key, the section testID, the
+// section-visit key, and the fact-feed route all keep working unchanged. They
+// are namespaced with a `headline-` prefix that no WatermelonDB-generated fact
+// id can collide with (WMDB ids are alphanumeric — no `-`).
+
+/** The headline scopes that get their own Dashboard section. `CITY` exists in
+ *  the persisted enum but is never requested as its own retrieval scope today
+ *  (`buildRetrievalProfile` emits COUNTRY + GLOBAL only), so CITY rows have no
+ *  section and stay dropped, exactly as before. */
+export type HeadlineSectionScope = 'COUNTRY' | 'GLOBAL';
+
+const HEADLINE_SECTION_PREFIX = 'headline-';
+
+/** The one GLOBAL headline section's id. */
+export const GLOBAL_HEADLINE_SECTION_ID = `${HEADLINE_SECTION_PREFIX}global`;
+
+/** Synthetic section id for a per-country headline section. `countryCode` is an
+ *  ISO alpha-2 code as stored on `locations.country_code` / persisted on
+ *  `article_suggestions.headline_country_code`; lower-cased so the derived
+ *  testID (`dashboard-section-headline-country-in`) obeys the kebab-case rule. */
+export function countryHeadlineSectionId(countryCode: string): string {
+  return `${HEADLINE_SECTION_PREFIX}country-${countryCode.trim().toLowerCase()}`;
+}
+
+/** True when a section id was minted by this module (i.e. the section is a
+ *  headline section, not a fact section). The single authority for that test —
+ *  the Dashboard, the per-section feed screen, and the selector all use it
+ *  rather than re-matching the prefix in three places. */
+export function isHeadlineSectionId(id: string): boolean {
+  return id.startsWith(HEADLINE_SECTION_PREFIX);
+}
+
+/**
+ * A headline section's pseudo-weight, on the SAME axis as a fact's own
+ * `fact.weight` — this is what lets synthetic headline sections be ordered
+ * against real fact sections without a second sort dimension.
+ *
+ * COUNTRY = `HEADLINE_SECTION_BASE` × the strongest weight among the user's
+ * locations in that country (absent ⇒ 1.0); GLOBAL = the fixed
+ * `GLOBAL_SECTION_WEIGHT`. Both constants are pre-existing
+ * (`scoringEngine`, pinned by config.test.ts) and are used here at their
+ * documented meaning: a full-weight home country (0.55) outranks a
+ * down-weighted fact while default-weight (1.0) fact sections stay above every
+ * headline section, and GLOBAL (0.35) sits below every country section.
+ */
+export function headlineSectionWeight(
+  scope: HeadlineSectionScope,
+  locationWeight: number | null | undefined,
+  config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
+): number {
+  const e = config.scoringEngine;
+  if (scope === 'GLOBAL') return e.GLOBAL_SECTION_WEIGHT;
+  return e.HEADLINE_SECTION_BASE * (locationWeight ?? 1);
+}
+
 // --- Input projections (plain; no DB/RN) ----------------------------------
 
 /** A cluster membership as story-grouping consumes it. Structurally identical
@@ -161,6 +225,10 @@ export interface ScoredSuggestionProjection {
   eventType?: string | null;
   /** null = topic-retrieved; else the top-headline injection scope. */
   headlineScope?: 'CITY' | 'COUNTRY' | 'GLOBAL' | null;
+  /** ISO alpha-2 country of the scope that injected this row. Only ever set
+   *  alongside `headlineScope === 'COUNTRY'`; a COUNTRY row that carries none
+   *  belongs to NO country section (see the Dashboard selector). */
+  headlineCountryCode?: string | null;
   /** For CITY/COUNTRY headline rows: the location instance that produced the
    *  scope. */
   headlineLocationId?: string | null;

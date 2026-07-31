@@ -24,6 +24,8 @@ jest.mock('../fact-service', () => ({
 
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
+import { buildFactRows } from '@/lib/stores/fact-rows-selector';
+import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select';
 import {
   getLocalSuggestionServerIds,
   loadSuggestions,
@@ -1620,5 +1622,88 @@ describe('buildStageCandidateInput', () => {
     const input = buildStageCandidateInput(row, weights);
     expect(input.geoTags).toEqual([{ city: undefined, region: undefined, countryCode: 'FR' }]);
     expect(input.entities).toEqual([]);
+  });
+});
+
+// ===========================================================================
+// PRODUCER -> CONSUMER: the real projection feeding the real selector.
+//
+// The headline-section suite in lib/stores/__tests__ builds ForYouSuggestion
+// fixtures BY HAND, so it proves the selector's logic but says nothing about
+// the wiring that fills those fields. That is exactly how this feature broke
+// once already: `toForYouSuggestion` did not carry `headlineCountryCode`, so
+// every COUNTRY row reached the Dashboard with a null country and the
+// per-country sections silently never rendered — with every selector test
+// still green.
+//
+// These tests run the REAL producer (`loadSuggestions`) into the REAL consumer
+// (`buildFactRows`), so producer and consumer are pinned TOGETHER and that gap
+// cannot reopen unnoticed.
+// ===========================================================================
+
+describe('headline provenance survives the real row -> suggestion -> section path', () => {
+  const sectionIds = async (rows: Parameters<typeof buildFactRows>[0]) =>
+    buildFactRows(
+      rows,
+      {
+        topics: new Map(),
+        facts: new Map(),
+        locations: new Map(),
+        factStatements: new Map(),
+      },
+      new Set(),
+      NOW.getTime(),
+    ).rows.map((r) => r.factId);
+
+  /** A persisted headline row as feed-sync writes one: synthetic matched topic
+   *  (null topicId), a scope label, and — for COUNTRY — the scope's country. */
+  const headlineRow = (o: Record<string, any>) =>
+    makeSuggestion({
+      status: 'complete',
+      relevance: 0.7, // MEDIUM: clears discardFloor AND section viability
+      rawScore: 0.7,
+      matchedTopicsJson: JSON.stringify([
+        { topicId: null, text: 'top headline · country' },
+      ]),
+      titleEn: null,
+      titleOriginal: null,
+      ...o,
+    });
+
+  it('carries the country end to end into a per-country section', async () => {
+    db._setRows('article_suggestions', [
+      headlineRow({ id: 'h-in', headlineScope: 'COUNTRY', headlineCountryCode: 'IN' }),
+    ]);
+
+    const suggestions = await loadSuggestions();
+    // The producer half — this is the assertion that would have caught the gap.
+    expect(suggestions[0].headlineCountryCode).toBe('IN');
+
+    // The consumer half, fed by the producer's real output.
+    expect(await sectionIds(suggestions)).toEqual(['headline-country-in']);
+  });
+
+  it('does not carry a stale country on a GLOBAL row', async () => {
+    // A GLOBAL row whose country column was left populated must project null —
+    // a wrong country is worse than none, and it must not mint a country
+    // section that the reader never asked for.
+    db._setRows('article_suggestions', [
+      headlineRow({ id: 'h-g', headlineScope: 'GLOBAL', headlineCountryCode: 'IN' }),
+    ]);
+
+    const suggestions = await loadSuggestions();
+    expect(suggestions[0].headlineCountryCode).toBeNull();
+    expect(await sectionIds(suggestions)).toEqual([GLOBAL_HEADLINE_SECTION_ID]);
+  });
+
+  it('a COUNTRY row with no country belongs to no country section', async () => {
+    // Reachable for rows persisted before v48 backfills nothing.
+    db._setRows('article_suggestions', [
+      headlineRow({ id: 'h-null', headlineScope: 'COUNTRY', headlineCountryCode: null }),
+    ]);
+
+    const suggestions = await loadSuggestions();
+    expect(suggestions[0].headlineCountryCode).toBeNull();
+    expect(await sectionIds(suggestions)).toEqual([]);
   });
 });

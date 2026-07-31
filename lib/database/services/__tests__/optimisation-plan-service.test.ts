@@ -55,6 +55,7 @@ import {
   MIN_UNPROCESSED_FOR_RUN,
   RUN_COOLDOWN_MS,
 } from '../optimisation-plan-service';
+import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import * as feedbackService from '../article-feedback-service';
 import * as executor from '../persona-action-executor';
 import { toastManager } from '@/lib/toast-manager';
@@ -290,6 +291,27 @@ describe('dismissPlan', () => {
     );
     expect(await getPendingPlan()).toBeNull();
     expect(executor.applyPersonaAction).not.toHaveBeenCalled();
+  });
+});
+
+// D9 — the digest mints category/event-type filters as STRUCTURED (exact match
+// on one article field). The Digest→PersonaAction mapping has to carry the pair
+// through: dropping it silently demotes every accepted digest filter to a
+// keyword substring scan, which is a different (and much broader) promise.
+describe('acceptPlan — structured suppression passthrough', () => {
+  it('forwards suppressionKind + suppressionValue to the executor', async () => {
+    seedActionable();
+    await runOptimisationCycle({ now: NOW });
+    await acceptPlan();
+
+    expect(executor.applyPersonaAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionKind: 'event_type',
+        suppressionValue: 'obituary',
+      }),
+      expect.anything(),
+    );
   });
 });
 

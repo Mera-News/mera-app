@@ -23,6 +23,7 @@
     "saving": "Opslaan..."
   },
   "auth": {
+    "reauthBanner": "Log opnieuw in om te synchroniseren",
     "emailPlaceholder": "Voer je e-mailadres in",
     "otpPlaceholder": "Voer 6-cijferige code in",
     "codeSentTitle": "Code verzonden!",
@@ -200,6 +201,10 @@
     "irrelevant": "Niet relevant",
     "unprocessed": "Onverwerkt"
   },
+  "aiDisclosure": {
+    "caption": "Door AI gegenereerde notitie",
+    "short": "Door AI gegenereerd"
+  },
   "articleDetail": {
     "readArticle": "Artikel lezen",
     "relatedArticles": "Gerelateerde artikelen",
@@ -207,6 +212,7 @@
     "storyUnavailable": "Dit verhaal is niet meer beschikbaar",
     "failedToLoad": "Artikel laden mislukt",
     "articleNotFound": "Artikel niet gevonden",
+    "offlineUnavailable": "Je bent offline en dit artikel is niet opgeslagen voor offline lezen",
     "viewAndTranslateOnDevice": "Artikel bekijken en op je apparaat vertalen",
     "viewOriginal": "Origineel artikel bekijken",
     "viewOriginalIn": "Origineel artikel bekijken in het {{language}}",
@@ -350,6 +356,10 @@
     "injectNoiseTitle": "Ruis injecteren",
     "injectNoiseDescription": "Stuurt lokvogel-onderwerpen mee naast je echte interesses zodat de backend niet kan achterhalen wie je bent op basis van je onderwerpenlijst. Artikelen die alleen bij lokvogel-onderwerpen passen, worden verwijderd voordat ze bij je aankomen.",
     "injectNoiseBeta": "Beta: kan het genereren van onderwerpen vertragen en de feedrelevantie verminderen.",
+    "relevanceV2Title": "Gebruik relevantie ophalen v2",
+    "relevanceV2On": "Scoren op apparaat, waar het verhaal gebeurde is belangrijk",
+    "relevanceV2Off": "Scoren in de cloud, met behulp van de originele methode",
+    "relevanceV2Description": "Beta — scoort artikelen op uw apparaat met behulp van waar het verhaal gebeurde en welk soort gebeurtenis het is, in plaats van alleen het cloudmodel te gebruiken. Vereist artikelen met locatielabels, dus u ziet mogelijk weinig verandering in het begin. U kunt het op elk moment uitschakelen om terug te gaan.",
     "privacyTitle": "Je gegevens blijven privé",
     "privacyDescription": "Het Mera Protocol staat altijd aan. In apparaatmodus draait de inferentie volledig offline op uw telefoon. In cloudmodus wordt end-to-end versleutelde inferentie gebruikt: uw gegevens worden op uw apparaat versleuteld en pas ontsleuteld binnen een beveiligde enclave waar wij niet in kunnen kijken. Uw feiten, uw profiel en uw leesgeschiedenis verlaten dit apparaat nooit. Om nieuws op te halen sturen we alleen brede onderwerpsfrasen, zonder gebruikers-ID.",
     "deviceSupported": "Apparaat ondersteund",
@@ -576,6 +586,7 @@
     "newChat": "Nieuwe chat",
     "inputPlaceholder": "Typ een bericht...",
     "viewPreviousMessages": "Eerdere berichten bekijken",
+    "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent — niet met een persoon.",
     "aiUsageNotice": "Deze assistent helpt bij het instellen van je nieuwsvoorkeuren. Als je probeert deze te manipuleren of te misbruiken, kan je account worden geblokkeerd in afwachting van beoordeling.",
     "requestUnblock": {
       "button": "Deblokkering aanvragen",
@@ -627,10 +638,16 @@
     "actionShowMoreTopic": "Meer van een onderwerp tonen",
     "actionDownRank": "Een onderwerp naar beneden plaatsen",
     "actionPublicationPref": "Een publicatie aanpassen",
+    "actionPublicationBoost": "Meer van een publicatie tonen",
+    "actionPublicationDeprioritize": "Minder van een publicatie tonen",
+    "actionPublicationMute": "Een publicatie dempen",
+    "actionSourceScopeBoost": "Meer van bronnen in een land tonen",
+    "actionSourceScopeDeprioritize": "Minder van bronnen in een land tonen",
     "actionSuppress": "Een zin uitfilteren",
     "actionPinTopic": "Een onderwerp vastzetten",
     "actionUnpinTopic": "Een onderwerp losmaken",
     "actionRetireTopic": "Een onderwerp verwijderen",
+    "actionRetireSuppression": "Een filter verwijderen",
     "chooseOneHint": "Kies één optie"
   },
   "publicationVisits": {
@@ -798,6 +815,8 @@
     "askMera": "Vraag het Mera",
     "closeTree": "Sluiten",
     "treeThanks": "Bedankt, genoteerd.",
+    "feedbackCaption": "Op zichzelf vertelt een duim Mera niet genoeg — dus wordt het verworpen om je feed gezond te houden. Kies een reden en je feed verandert meteen.",
+    "tapAgainToConfirm": "Tik opnieuw om te bevestigen",
     "chatHandoffLike": "Ik vond dit verhaal leuk, meer zoals dit: {{path}}.",
     "chatHandoffLikeNoPath": "Ik vond dit verhaal leuk. Ik wil graag meer zoals dit.",
     "chatHandoffDislike": "Ik vond dit verhaal niet leuk, {{path}}.",
@@ -807,7 +826,8 @@
     "title": "Verkennen",
     "scopeWorld": "Wereld",
     "noArticles": "Geen artikelen gevonden",
-    "addPlaces": "Plaatsen toevoegen"
+    "addPlaces": "Plaatsen toevoegen",
+    "offlineUnavailable": "Je bent offline — Verkennen heeft een internetverbinding nodig"
   },
   "forYou": {
     "sectionPrefix": "Nieuws over:",
@@ -815,6 +835,12 @@
     "showMore": "Toon {{count}} meer",
     "viewAllArticles_one": "Bekijk alle {{count}} artikel",
     "viewAllArticles_other": "Bekijk alle {{count}} artikelen",
+    "headlineSectionGlobal": "Nieuws uit de wereld",
+    "headlineSectionCountry": "Nieuws uit {{country}}",
+    "headlineDenominator_one": "Mera heeft {{count}} kop gelezen · {{shown}} waard je tijd.",
+    "headlineDenominator_other": "Mera heeft {{count}} koppen gelezen · {{shown}} waard je tijd.",
+    "headlineDenominatorNone_one": "Mera heeft {{count}} kop gelezen · vandaag leek er geen relevant.",
+    "headlineDenominatorNone_other": "Mera heeft {{count}} koppen gelezen · vandaag leken er geen relevant.",
     "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen"
@@ -936,7 +962,9 @@
       "unknown": "Persona-wijziging",
       "hygieneDeleteFact": "Feit verwijderd",
       "addLocation": "Locatie toegevoegd",
-      "deleteLocation": "Locatie verwijderd"
+      "deleteLocation": "Locatie verwijderd",
+      "retireSuppression": "Een filter verwijderd",
+      "setSourceScopePref": "Een bronbereik aangepast"
     }
   },
   "calibration": {
@@ -1076,6 +1104,77 @@
     "deleteFailedTitle": "Kon plaats niet verwijderen",
     "deleteFailedBody": "Probeer het opnieuw."
   },
+  "notInterested": {
+    "title": "Niet geïnteresseerd",
+    "subtitle": "Wat je Mera hebt gevraagd uit je feed te houden",
+    "sectionFilters": "Woorden en dingen die je verborgen hebt",
+    "sectionTopics": "Onderwerpen die je minder ziet",
+    "sectionSources": "Bronnen die je hebt gedempt of gedownrank",
+    "managePublications": "Bronvoorkeuren beheren",
+    "chatHint": "Je hoeft niet hierheen te gaan. Zeg gewoon tegen Mera wat je liever niet ziet — \"minder over roddels\" — en zij regelt de rest.",
+    "kinds": {
+      "keyword": "Woorden",
+      "category": "Categorie",
+      "event_type": "Soort verhaal",
+      "entity": "Persoon of ding",
+      "place": "Plaats",
+      "publication": "Bron",
+      "topic": "Onderwerp"
+    },
+    "sources": {
+      "user": "Je hebt dit toegevoegd",
+      "chat": "Uit een chat met Mera",
+      "feedback": "Uit je feedback",
+      "digest": "Uit je dagelijkse review",
+      "qa": "Uit een vraag van Mera",
+      "unknown": "Automatisch toegevoegd"
+    },
+    "badgeBlocked": "Verborgen",
+    "badgeShownLess": "Minder getoond",
+    "badgeMutedTopic": "Minder getoond",
+    "badgeDownranked": "Gedownrank",
+    "badgeMutedPub": "Gedempt",
+    "mutedPubHint": "Verborgen, behalve voor belangrijk nieuws",
+    "cardExemptLabel": "Je hebt \"{{filter}}\" gefilterd — toont omdat het belangrijk nieuws is",
+    "expiresOn": "Tot {{date}}",
+    "expiresNever": "Tot je het verwijdert",
+    "remove": "Verwijderen",
+    "removeConfirmTitle": "Verwijderen?",
+    "removeConfirmBody": "Verhalen zoals dit kunnen weer in je feed verschijnen.",
+    "removeConfirmCta": "Verwijderen",
+    "removeSuccessTitle": "Verwijderd",
+    "removeSuccessBody": "Dit is niet langer verborgen in je feed.",
+    "removeFailedTitle": "Kon niet verwijderen",
+    "removeFailedBody": "Probeer het opnieuw.",
+    "addPhrase": "Iets verbergen",
+    "addPhraseTitle": "Iets in je feed verbergen",
+    "addPhraseBody": "Typ een woord of korte zin. Mera zoekt ernaar in de kop en verhaal, en houdt die uit je weg. Voor iets specifieker — een hele categorie, een bron, een persoon — zeg het dan in de chat, of gebruik de duimen op een verhaal: Mera pikt het uit het verhaal zelf op, dus het past altijd.",
+    "addPhrasePlaceholder": "bijv. roddels",
+    "addPhraseHardLabel": "Dit uit mijn feed houden",
+    "addPhraseHardHint": "Mera houdt deze tegen. Wordt het belangrijk nieuws, het verschijnt toch, gemarkeerd zodat je weet waarom. Uitgeschakeld, Mera toont ze gewoon minder en vergeet ze na een maand.",
+    "addPhraseSubmit": "Verbergen",
+    "addPhraseSuccessTitle": "Klaar",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" is nu uit je feed verborgen. Alleen belangrijk nieuws komt door, en Mera zal het zeggen.",
+    "addPhraseSuccessBodySoft": "Je ziet veel minder over \"{{phrase}}\".",
+    "addPhraseFailedTitle": "Kon niet opslaan",
+    "addPhraseFailedBody": "Probeer het opnieuw.",
+    "emptyTitle": "Nog niets verborgen",
+    "emptyBody": "Wanneer je tegen Mera zegt dat je niet geïnteresseerd bent in iets, verschijnt het hier zodat je het ongedaan kunt maken.",
+    "emptyFilters": "Je hebt nog geen woorden verborgen.",
+    "emptyTopics": "Nog geen onderwerpen gedownrank.",
+    "emptySources": "Je hebt nog geen bronnen gedempt of gedownrank."
+  },
+  "headlineDepth": {
+    "title": "Topnieuws",
+    "subtitle": "Hoeveel Mera voor je leest",
+    "intro": "Mera leest de grootste verhalen in elk gedeelte, dan kiest zij diegene die voor jou van belang zijn. Verhoog een gedeelte om meer te zien; verlaag het om het strak te houden.",
+    "worldwide": "Wereldwijd",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "De standaard {{n}} wordt gebruikt.",
+    "customised": "Gewijzigd van standaard {{n}}. Kies {{n}} opnieuw om terug te gaan naar standaard.",
+    "saveFailedTitle": "Kon niet opslaan",
+    "saveFailedBody": "Je wijziging is niet opgeslagen. Probeer het opnieuw."
+  },
   "profileHub": {
     "facts": "Feiten",
     "factsCount_one": "{{count}} feit dat je feed bepaalt",
@@ -1091,12 +1190,23 @@
     "prefsCount_one": "{{count}} bron aangepast",
     "prefsCount_other": "{{count}} bronnen aangepast",
     "prefsEmpty": "Boost, verlaag of demp bronnen",
+    "visitedSubtitle": "Publicaties die je onlangs hebt geopend",
     "activity": "Activiteit",
     "activitySubtitle": "Je persona-wijzigingsgeschiedenis",
     "personaHealth": "Persona-gezondheid",
     "healthPending_one": "{{count}} opschoningssuggestie",
     "healthPending_other": "{{count}} opschoningssuggesties",
-    "healthAllHealthy": "Alles gezond"
+    "healthAllHealthy": "Alles gezond",
+    "groupKnows": "Mera kent je",
+    "groupFeed": "Je feed",
+    "groupLibrary": "Bronnen & bibliotheek",
+    "groupInternals": "Onder de motorkap",
+    "notInterested": "Niet geïnteresseerd",
+    "notInterestedSubtitle_one": "{{count}} ding dat je verborgen hebt",
+    "notInterestedSubtitle_other": "{{count}} dingen die je verborgen hebt",
+    "notInterestedEmpty": "Nog niets verborgen",
+    "headlineDepth": "Topnieuws",
+    "headlineDepthSubtitle": "Hoeveel Mera per gedeelte leest"
   },
   "profile": {
     "talkToMera": "Praat met Mera",
@@ -1137,7 +1247,8 @@
     "kindMute": "Dempen",
     "clear": "Wissen",
     "clearA11y": "Voorkeur wissen",
-    "empty": "Je hebt nog geen bronnen aangepast. Boost, verlaag of demp een publicatie vanaf elk artikel om deze hier te zien."
+    "empty": "Je hebt nog geen bronnen aangepast. Boost, verlaag of demp een publicatie vanaf elk artikel om deze hier te zien.",
+    "scopeKindCountry": "Land"
   },
   "optimisationPlan": {
     "notificationTitle": "Je dagelijkse feed-afstemming staat klaar",
@@ -1157,5 +1268,40 @@
     "appliedToast": "{{count}} wijzigingen toegepast",
     "appliedTitle": "Feed afgestemd",
     "empty": "Nu even niets om af te stemmen."
+  },
+  "pin": {
+    "lockTitle": "Voer je PIN in",
+    "lockSubtitle": "Voer je 4-cijferige PIN in om Mera te ontgrendelen",
+    "incorrect": "Onjuiste PIN. Probeer het opnieuw.",
+    "lockedTryAgain": "Te veel pogingen. Probeer het over {{time}} opnieuw",
+    "forgot": "PIN vergeten?",
+    "forgotTitle": "Je PIN opnieuw instellen",
+    "forgotBody": "Om je PIN opnieuw in te stellen, log je opnieuw in met een eenmalige e-mailcode. Je opgeslagen gegevens blijven op dit apparaat.",
+    "forgotOffline": "Het opnieuw instellen van je PIN heeft een internetverbinding nodig om een inlogcode te sturen. Maak verbinding en probeer het opnieuw.",
+    "forgotConfirm": "Inloggen om opnieuw in te stellen",
+    "setupTitle": "PIN instellen",
+    "setupSubtitle": "Kies een 4-cijferige PIN om de app op dit apparaat te beveiligen",
+    "confirmTitle": "Bevestig je PIN",
+    "confirmSubtitle": "Voer je 4-cijferige PIN opnieuw in",
+    "mismatch": "PIN's kwamen niet overeen. Begin opnieuw."
+  },
+  "security": {
+    "title": "Beveiliging",
+    "subtitle": "Kies of Mera om een PIN vraagt op dit apparaat",
+    "requirePinTitle": "PIN vereist om te ontgrendelen",
+    "requirePinDescription": "Vraag om een 4-cijferige PIN wanneer je Mera opent",
+    "setPinTitle": "PIN instellen",
+    "setPinSubtitle": "Kies een 4-cijferige PIN om Mera op dit apparaat te ontgrendelen",
+    "lockEnabledTitle": "PIN-ontgrendeling aan",
+    "lockEnabledDescription": "Je voert je PIN in wanneer je Mera opent.",
+    "lockDisabledTitle": "PIN-ontgrendeling uit",
+    "lockDisabledDescription": "Mera opent zonder PIN. Je PIN is verwijderd.",
+    "changePin": "PIN wijzigen",
+    "verifyCurrentTitle": "Voer huidige PIN in",
+    "verifyCurrentSubtitle": "Bevestig je huidige PIN om door te gaan",
+    "newPinTitle": "Nieuwe PIN instellen",
+    "newPinSubtitle": "Kies een nieuwe 4-cijferige PIN",
+    "pinChangedTitle": "PIN bijgewerkt",
+    "pinChangedDescription": "Je PIN is gewijzigd."
   }
 }

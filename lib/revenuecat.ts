@@ -180,6 +180,37 @@ export function getActiveEntitlementInfo(
 }
 
 /**
+ * Flatten `customerInfo.subscriptionsByProductIdentifier` to the handful of
+ * fields that would reveal a *pending* plan change (a deferred App Store
+ * upgrade/downgrade that takes effect at the next renewal).
+ *
+ * This is a probe, not a feature. `PurchasesEntitlementInfo` /
+ * `PurchasesSubscriptionInfo` (react-native-purchases 10.4.0) carry no field
+ * naming a future product — RevenueCat only surfaces that server-side, as
+ * `PRODUCT_CHANGE.new_product_id`. So we cannot yet say whether the store
+ * records the deferred product client-side at all. Logging these rows from a
+ * device that is *currently* in the deferred state answers that definitively;
+ * until it does, the app deliberately shows no pending-change notice (a wrong
+ * "Professional starts on X" is worse than silence). See
+ * POWER_USER_FOLLOWUPS #12.
+ */
+export function describeSubscriptions(
+  info: CustomerInfo | null | undefined,
+): Record<string, unknown>[] {
+  const subs = info?.subscriptionsByProductIdentifier ?? {};
+  return Object.entries(subs).map(([productIdentifier, s]) => ({
+    productIdentifier,
+    isActive: s.isActive,
+    willRenew: s.willRenew,
+    periodType: s.periodType,
+    store: s.store,
+    purchaseDate: s.purchaseDate,
+    expiresDate: s.expiresDate,
+    unsubscribeDetectedAt: s.unsubscribeDetectedAt,
+  }));
+}
+
+/**
  * Fetch a specific offering by its dashboard identifier, null-safe. Returns
  * null when the SDK isn't configured, the offering doesn't exist, or on error —
  * callers then fall back to presenting the current offering's paywall.
@@ -311,7 +342,12 @@ export async function logRevenueCatDiagnostics(): Promise<void> {
       originalAppUserId: info.originalAppUserId,
       activeEntitlements: Object.keys(info.entitlements.active),
       activeSubscriptions: info.activeSubscriptions,
+      allPurchasedProductIdentifiers: info.allPurchasedProductIdentifiers,
       tier: getActiveTier(info),
+    });
+    // The pending-plan-change probe — see describeSubscriptions().
+    logger.info('[revenuecat] subscriptions', {
+      subscriptions: describeSubscriptions(info),
     });
   } catch (e) {
     logger.captureException(e, {

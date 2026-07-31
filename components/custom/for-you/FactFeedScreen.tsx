@@ -2,7 +2,12 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
-import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import {
+  GLASS_HEADER_SCRIM,
+  GLASS_HEADER_TINT,
+  GlassPlate,
+} from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { Box } from '@/components/ui/box';
@@ -13,6 +18,7 @@ import logger from '@/lib/logger';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
   buildFactRows,
+  isHeadlineSectionId,
   isSuggestionOpened,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
@@ -35,9 +41,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const SCROLL_THRESHOLD = 300;
 
 interface FactFeedScreenProps {
+  /** The SECTION id — a fact id, or a synthetic headline-scope id (see
+   *  `isHeadlineSectionId`). Both address a row in `buildFactRows`. */
   factId: string;
-  /** Fact display title, passed through from the row header (avoids a reload
-   *  flash before the snapshots hydrate). */
+  /** Section display title, passed through from the row header (avoids a reload
+   *  flash before the snapshots hydrate). For a fact section this is the fact
+   *  statement (user data); for a headline section it is already-localized app
+   *  copy. */
   statement: string;
 }
 
@@ -54,6 +64,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
   const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
+  const isHeadline = isHeadlineSectionId(factId);
 
   // Last-visit timestamp captured on entry (before we mark this visit) — drives
   // the per-card NEW badge. `null` until hydrated; `0` on a first-ever visit
@@ -126,7 +137,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   // keeps verdicts in a component-local store keyed by articleId. The signal
   // persistence (article_feedback rows / Mera handoff) still goes through the
   // shared `swipeCallbacks` inside the hook, identical to the feed.
-  const [verdicts, setVerdicts] = useState<Record<string, { verdict: Verdict; path: string[] }>>({});
+  const [verdicts, setVerdicts] = useState<
+    Record<string, { verdict: Verdict; path: string[]; committed?: boolean }>
+  >({});
   const verdictsRef = useRef(verdicts);
   verdictsRef.current = verdicts;
 
@@ -146,6 +159,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     getPath: (key) => verdictsRef.current[key]?.path,
     setPath: (key, path) =>
       setVerdicts((prev) => (prev[key] ? { ...prev, [key]: { ...prev[key], path } } : prev)),
+    getCommitted: (key) => !!verdictsRef.current[key]?.committed,
+    setCommitted: (key, committed) =>
+      setVerdicts((prev) =>
+        prev[key] ? { ...prev, [key]: { ...prev[key], committed } } : prev,
+      ),
   };
   const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter);
   const dismissedMap = useFeedbackDismissedStore((s) => s.dismissed);
@@ -163,6 +181,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
           onAskMera={onAskMera}
           feedbackVisible={verdict != null && !dismissedMap[item.data.articleId]}
           feedbackInitialPath={rec?.path}
+          feedbackCommitted={!!rec?.committed}
           feedbackHandlers={feedbackHandlers}
           read={isSuggestionOpened(item.data, openedIds)}
           // NEW pill only for stories that became visible since the last visit —
@@ -176,8 +195,31 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   );
 
   return (
-    <Box className="flex-1 bg-black">
-      <SectionGradientPanel factId={factId} borderRadius={0}>
+    // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+    <Box className="flex-1">
+      {/* Page background. Must be the FIRST child so it paints behind
+          everything else on the page, exactly as the tab screens mount it.
+          Seeded with the SECTION id, so every fact list draws its own stable
+          palette walk instead of all of them sharing one look. */}
+      <AbstractGradientBackdrop seed={factId} />
+
+      {/* Header material. This wrapper is deliberately UNPADDED (all padding
+          lives on the HStack below) because `GlassPlate` is an absolute fill
+          resolved against the CONTENT box — see GlassSurface.
+
+          The scrim is painted in BOTH branches, not just under glass: unlike
+          the tab screens' headers this one sits in normal flow with nothing
+          scrolling underneath it, so it has no reason to be opaque, and a flat
+          black band here would punch a hole in the very gradient this screen
+          is supposed to show. Translucent dark keeps the small
+          `text-typography-500` prefix readable over a bright blob while the
+          field still reads as continuous top-to-bottom.
+
+          No border here: the HStack below already owns the divider, and a
+          second hairline on this wrapper would both double the line and add a
+          pixel of height. */}
+      <Box testID="fact-feed-header" style={{ backgroundColor: GLASS_HEADER_SCRIM }}>
+        <GlassPlate tint={GLASS_HEADER_TINT} />
         <HStack
           className="items-center px-4 pb-3 border-b border-gray-900"
           style={{ paddingTop: insets.top + 12 }}
@@ -192,18 +234,29 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
             <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
           </Pressable>
           <Box className="flex-1 min-w-0">
-            <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
-            <TranslatableDynamic
-              text={statement}
-              as="heading"
-              size="lg"
-              bold
-              numberOfLines={1}
-              className="text-white"
-            />
+            {/* A headline section is not "News about:" anything, and its title
+                is app copy already in the reader's language — running it through
+                TranslatableDynamic would machine-translate a localized string. */}
+            {!isHeadline && (
+              <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
+            )}
+            {isHeadline ? (
+              <Text size="lg" bold numberOfLines={1} className="text-white">
+                {statement}
+              </Text>
+            ) : (
+              <TranslatableDynamic
+                text={statement}
+                as="heading"
+                size="lg"
+                bold
+                numberOfLines={1}
+                className="text-white"
+              />
+            )}
           </Box>
         </HStack>
-      </SectionGradientPanel>
+      </Box>
       <FlatList
         ref={listRef}
         data={groups}

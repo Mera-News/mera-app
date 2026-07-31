@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BackHandler, View } from 'react-native';
 
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
@@ -35,7 +36,14 @@ export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | nul
   };
 
   return (
-    <View className="flex-1 bg-black items-center justify-center px-8">
+    // No opaque fill: this replaces the ENTIRE app tree, so there is no page
+    // background above it — it mounts its own. `bg-black` made it the one
+    // full-screen surface in the app with no backdrop at all.
+    <View className="flex-1 items-center justify-center px-8">
+      {/* Page background. Must be the FIRST child so it paints behind
+          everything else on the page. */}
+      <AbstractGradientBackdrop />
+
       <MaterialIcons name="system-update" size={64} color="#FFFFFF" />
       <Text className="text-white text-2xl font-bold mt-6 text-center">
         {t('nativeUpdate.updateRequiredTitle')}

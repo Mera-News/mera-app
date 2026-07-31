@@ -106,7 +106,9 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader
                 title={t('publicationVisits.visitedListTitle')}
                 subtitle={t('publicationVisits.last30Days')}

@@ -48,6 +48,14 @@ interface CardActionBarProps {
    *  that already inset the row (e.g. ArticleCardBase's `p-4`) pass 0 to avoid
    *  doubling the horizontal padding. */
   horizontalPadding?: number;
+  /** D15 — the verdict is recorded but carries NO reason yet, so the thumb is
+   *  coloured but left HOLLOW. A filled thumb is a promise ("this changed your
+   *  persona") and a bare tap has not earned it; it fills once the user picks
+   *  something in the feedback tree or escalates to Mera.
+   *
+   *  Defaults to false so this stays a dumb presentational row: `verdict` alone
+   *  still means "filled" for any host that has no notion of commitment. */
+  provisional?: boolean;
 }
 
 const CardActionBar: React.FC<CardActionBarProps> = ({
@@ -59,10 +67,15 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   onToggleSave,
   onShare,
   horizontalPadding = 16,
+  provisional = false,
 }) => {
   const { t } = useTranslation();
   const liked = verdict === 'like';
   const disliked = verdict === 'dislike';
+  // Colour tracks the verdict (so a tap is always visibly registered); FILL
+  // tracks whether it has been backed by a reason.
+  const likeFill = liked && !provisional ? LIKE : 'none';
+  const dislikeFill = disliked && !provisional ? DISLIKE : 'none';
 
   return (
     <HStack
@@ -95,7 +108,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           size={ICON_SIZE}
           strokeWidth={STROKE}
           color={liked ? LIKE : WHITE}
-          fill={liked ? LIKE : 'none'}
+          fill={likeFill}
         />
       </Pressable>
 
@@ -111,7 +124,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           size={ICON_SIZE}
           strokeWidth={STROKE}
           color={disliked ? DISLIKE : WHITE}
-          fill={disliked ? DISLIKE : 'none'}
+          fill={dislikeFill}
         />
       </Pressable>
 

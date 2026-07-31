@@ -9,10 +9,14 @@
 // expo/react-native module stays in lib/llm/agents/ArticleFeedbackAgent.ts —
 // that thin adapter reads the data and hands plain values to this module.
 
+import { SUPPRESSION_KINDS } from '../core/types';
 import type {
+  ActiveSuppressionView,
   FeedbackContextInput,
   ProposalAction,
   StagedProposal,
+  SuggestionFeedbackContext,
+  SuppressionKindName,
   ToolDefinition,
   ToolExecutionResult,
   TrackFeedbackSubject,
@@ -28,6 +32,12 @@ const TOPICS_PER_FACT_PREVIEW = 3;
 const MAX_ARTICLE_ENTITIES = 8;
 const MAX_RELATED_COVERAGE = 5;
 const RELATED_COVERAGE_TITLE_TRUNC = 120;
+/** Max ACTIVE filters rendered in `## YOUR FILTERS` — the ones matching THIS
+ *  article come first, so the tail this drops is the least relevant. Smaller
+ *  than the persona chat's cap because the article context already carries an
+ *  ARTICLE + FACTS + COVERAGE payload. */
+const MAX_ACTIVE_FILTERS = 8;
+const SUPPRESSION_PATTERN_TRUNC = 60;
 // Drop the (largest) ALL-FACTS block first if the assembled context exceeds
 // this — keeps the local path's ~3072-token input budget comfortable.
 const CONTEXT_TOKEN_BUDGET = 1800;
@@ -45,6 +55,8 @@ const VALID_ACTION_TYPES = new Set([
   'add_negative_topic',
   'set_publication_pref',
   'add_suppression',
+  // not-interested P4a: removing a filter is a first-class chat action (D6).
+  'retire_suppression',
   'set_high_priority',
   'retire_topic',
 ]);
@@ -61,9 +73,32 @@ const PROPOSAL_ACTION_ENUM = [
   'add_negative_topic',
   'set_publication_pref',
   'add_suppression',
+  'retire_suppression',
   'set_high_priority',
   'retire_topic',
 ] as const;
+
+/**
+ * The suppression kinds the ARTICLE context can corroborate a value against
+ * (D9). `event_type` and `place` stay in the tool enum — the schema mirrors
+ * SUPPRESSION_KINDS so a future context expansion just works — but the article
+ * context exposes no eventType/geoTags field, so a value claimed for them can
+ * never be checked and is downgraded to a keyword filter like any other
+ * uncorroborated value.
+ */
+const CORROBORABLE_SUPPRESSION_KINDS: ReadonlySet<string> = new Set([
+  'category',
+  'entity',
+  'publication',
+  'topic',
+]);
+
+/** trim + lowercase — the same normalization the runtime matcher applies
+ *  (scoring-engine/persona-context::normText). Inlined rather than imported so
+ *  this module keeps its narrow import surface. */
+function norm(v: string | null | undefined): string {
+  return (v ?? '').trim().toLowerCase();
+}
 
 /** Publication-preference kinds the agent may set on a named publication. */
 const VALID_PUBLICATION_PREFS = new Set(['boost', 'deprioritize', 'mute']);
@@ -129,6 +164,62 @@ export function parseTrackScopeOptions(raw: unknown): TrackScopeOption[] {
     if (out.length >= MAX_TRACK_OPTIONS) break;
   }
   return out;
+}
+
+/**
+ * Does this ACTIVE filter match the article the chat is about? Mirrors
+ * `scoring-engine/suppression.ts::suppressionMatchesCandidate` for the fields
+ * the feedback context actually exposes; kinds it cannot corroborate
+ * (`event_type`, `place`) simply report false — this only decides DISPLAY ORDER
+ * and the "matches this article" hint, never whether the filter fires.
+ */
+function suppressionMatchesArticle(
+  s: ActiveSuppressionView,
+  ctx: SuggestionFeedbackContext | null,
+): boolean {
+  if (!ctx) return false;
+  const kind = s.kind ?? 'keyword';
+  if (kind === 'keyword') {
+    const haystack = [
+      norm(ctx.suggestion.title_en ?? ctx.suggestion.title_original ?? ''),
+      norm(ctx.suggestion.description_en ?? ''),
+      ...(ctx.entities ?? []).map(norm),
+    ].join('  ');
+    const needle = norm(s.pattern);
+    return needle.length > 0 && haystack.includes(needle);
+  }
+  const value = norm(s.value);
+  if (value.length === 0) return false;
+  switch (kind) {
+    case 'category':
+      return norm(ctx.category) === value;
+    case 'entity':
+      return (ctx.entities ?? []).some((e) => norm(e) === value);
+    case 'publication':
+      return norm(ctx.suggestion.publication_name) === value;
+    case 'topic':
+      return (ctx.matchedTopicTexts ?? []).some((t) => norm(t) === value);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Orders the user's ACTIVE filters for <context>: the ones matching THIS
+ * article first (they are what a "why am I not seeing…" / "unhide this" turn is
+ * about), then the rest in caller order (newest-first), capped at
+ * MAX_ACTIVE_FILTERS. Pure; exported for the token-budget test.
+ */
+export function selectActiveFiltersForContext(
+  suppressions: ActiveSuppressionView[] | undefined,
+  ctx: SuggestionFeedbackContext | null,
+): { row: ActiveSuppressionView; matches: boolean }[] {
+  const rows = (suppressions ?? []).filter((s) => s && typeof s.id === 'string' && s.id.length > 0);
+  const decorated = rows.map((row) => ({ row, matches: suppressionMatchesArticle(row, ctx) }));
+  return [
+    ...decorated.filter((d) => d.matches),
+    ...decorated.filter((d) => !d.matches),
+  ].slice(0, MAX_ACTIVE_FILTERS);
 }
 
 function trunc(text: string, max: number): string {
@@ -206,7 +297,8 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 - set_topic_weight — "show me less/more of <topic>": nudge a MATCHED topic's weight by a small delta (negative to see less, positive to see more; keep |delta| ≤ 0.5).
 - add_negative_topic — this article is the wrong topic/place/angle: mint a down-ranking negative topic (topicText, e.g. "Delhi crime").
 - set_publication_pref — boost / deprioritize / mute a NAMED publication (publicationId = the publication name, publicationPref = boost|deprioritize|mute). Use mute only for a clear "stop showing me <source>".
-- add_suppression — filter out a phrase the user never wants (suppressionPattern; suppressionStrength 0.9 = never show it, 0.5 = just less of it).
+- add_suppression — filter something out (suppressionPattern = the phrase; suppressionStrength 0.9 = never show it, 0.5 = just less of it). For an EXACT filter also send suppressionKind + suppressionValue, and COPY THE VALUE VERBATIM from <context>: category ← Category, entity ← Entities, publication ← Publication, topic ← MATCHED TOPICS. A value you paraphrase or invent matches NOTHING. So: with "Category: Entertainment" → {"suppressionKind":"category","suppressionValue":"Entertainment"}; your own words "celebrity stuff" → {"suppressionPattern":"celebrity"} with NO kind/value.
+- retire_suppression — the user wants an existing filter GONE ("stop hiding X", "show me X again"): suppressionId = an [id] from YOUR FILTERS in <context>. Never invent an id; if it isn't listed, say you can't find that filter.
 - set_high_priority — pin a MATCHED topic the user cares strongly about (highPriority true), or unpin (false).
 - retire_topic — the user is DONE with a MATCHED topic entirely (stronger than a small set_topic_weight nudge): retire it so it stops matching (topicText).
 - submit_feature_request — Mera CANNOT change app settings, hide a single article, or change scoring thresholds; use this ONLY for capabilities none of the above cover. title = short feature name (NO prefix); summary = 2–4 English sentences, NO personal info (no names/emails/locations/facts). Explanation: "I'll send this suggestion to the Mera team."; expected_effects: "The team will consider it — this won't change your feed today."
@@ -245,7 +337,8 @@ function buildArticleFeedbackToolFormat(): string {
 Write conversational text, then emit tool calls when needed.
 Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 
-- proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "highPriority"?: boolean}]}
+- proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "suppressionKind"?: ${SUPPRESSION_KINDS.join('|')}, "suppressionValue"?, "suppressionId"?, "highPriority"?: boolean}]}
+  suppressionValue: copy VERBATIM from <context>, or omit it together with suppressionKind. suppressionId: an [id] from YOUR FILTERS.
 - proposeTrack: {"options": [{"label": string, "search": string}]}
 - applyProposal: {}
 - cancelProposal: {}
@@ -266,7 +359,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions } = input;
 
   // Injected clock (never read here) — anchors the agent to the present so
   // proposeTrack scopes can't name a season/year that is already over.
@@ -353,6 +446,21 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
         + '\nUse ONLY these when proposing track options.'
       : null;
 
+  // --- YOUR FILTERS (active "not interested" rules — enables retire_suppression) ---
+  const filterRows = selectActiveFiltersForContext(activeSuppressions, ctx);
+  const filtersBlock =
+    filterRows.length > 0
+      ? '## YOUR FILTERS (things already hidden — retire_suppression removes one by [id])\n'
+        + filterRows
+          .map(({ row, matches }) => {
+            const kind = row.kind ?? 'keyword';
+            const kindSuffix = kind === 'keyword' ? '' : ` (${kind})`;
+            const matchSuffix = matches ? ' — matches this article' : '';
+            return `- [${row.id}] "${trunc(row.pattern, SUPPRESSION_PATTERN_TRUNC)}"${kindSuffix}${matchSuffix}`;
+          })
+          .join('\n')
+      : null;
+
   // --- PENDING PROPOSAL ---
   const pendingBlock = proposal
     ? '## PENDING PROPOSAL\n'
@@ -380,6 +488,10 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
   if (verdictBlock) alwaysBlocks.push(verdictBlock);
   if (relatedCoverageBlock) alwaysBlocks.push(relatedCoverageBlock);
   if (trackStateBlock) alwaysBlocks.push(trackStateBlock);
+  // ALWAYS (never trimmed): a filter list the user is asking about must not
+  // silently vanish on a fact-heavy persona — and retire_suppression is
+  // rejected outright without it. Capped at MAX_ACTIVE_FILTERS, so it is small.
+  if (filtersBlock) alwaysBlocks.push(filtersBlock);
   const trailing = pendingBlock ? [pendingBlock] : [];
 
   const withAllFacts = [...alwaysBlocks, allFactsBlock, ...trailing];
@@ -441,6 +553,22 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
                   suppressionPattern: { type: 'string', description: 'add_suppression: the phrase to filter out of the feed (e.g. an entity or category).' },
                   suppressionKeywords: { type: 'array', items: { type: 'string' }, description: 'add_suppression: optional extra keywords that also match the phrase.' },
                   suppressionStrength: { type: 'number', description: 'add_suppression: 0.9 = never show it, 0.5 = just less of it (defaults to a strong value).' },
+                  suppressionKind: {
+                    type: 'string',
+                    enum: [...SUPPRESSION_KINDS],
+                    description:
+                      'add_suppression: makes the filter exact instead of a text match. Only send it together with suppressionValue.',
+                  },
+                  suppressionValue: {
+                    type: 'string',
+                    description:
+                      'add_suppression: the exact field value to filter on, COPIED VERBATIM from <context> — category ← the Category line, entity ← one of Entities, publication ← the Publication line, topic ← one of MATCHED TOPICS. A paraphrased or invented value matches NOTHING; when the phrase is your own wording, omit suppressionKind+suppressionValue and send suppressionPattern alone.',
+                  },
+                  suppressionId: {
+                    type: 'string',
+                    description:
+                      'retire_suppression: the [id] of a row in the YOUR FILTERS block of <context>. Never invent one.',
+                  },
                   highPriority: { type: 'boolean', description: 'set_high_priority: true to pin the topic, false to unpin.' },
                 },
                 required: ['type'],
@@ -529,8 +657,18 @@ function describeAction(a: ProposalAction): string {
       return `down-rank "${trunc(a.topicText, 60)}"`;
     case 'set_publication_pref':
       return `${a.publicationPref} publication "${trunc(a.publicationId, 60)}"`;
+    // source-pref v47. Staged only by the PERSONA surface's sanitizer, but this
+    // switch is the shared renderer for a pending proposal in <context> (the
+    // persona chat re-injects it every turn so the one-shot LOCAL path can
+    // resolve a confirm), so the case has to live here.
+    case 'set_source_scope_pref':
+      return `${a.publicationPref} sources from "${trunc(a.label, 60)}"`;
     case 'add_suppression':
-      return `suppress "${trunc(a.suppressionPattern, 60)}"`;
+      return a.suppressionKind && a.suppressionValue
+        ? `suppress ${a.suppressionKind} "${trunc(a.suppressionValue, 60)}"`
+        : `suppress "${trunc(a.suppressionPattern, 60)}"`;
+    case 'retire_suppression':
+      return `remove the filter "${trunc(a.pattern, 60)}"`;
     case 'set_high_priority':
       return `${a.highPriority ? 'pin' : 'unpin'} topic "${trunc(a.topicText, 60)}"`;
     case 'retire_topic':
@@ -542,7 +680,45 @@ function describeAction(a: ProposalAction): string {
 
 type ValidatedAction = { action: ProposalAction } | { error: string };
 
-function validateAction(raw: unknown, factIds: Set<string>): ValidatedAction {
+/**
+ * Everything the sanitizer needs beyond the fact ids, in ONE optional bag so
+ * callers that don't have it (and the pre-P4a tests) keep working:
+ *
+ *  - `article` corroborates a structured suppression value (D9). A value the
+ *    article context does not actually contain is downgraded to a keyword
+ *    filter rather than staged as a filter that could never fire.
+ *  - `activeSuppressions` is the ONLY source of ids `retire_suppression` may
+ *    name, and of the display `pattern` we stage — never the model's own text.
+ *    Absent/empty ⇒ retire_suppression is rejected outright.
+ */
+export interface ProposalSanitizerContext {
+  article?: SuggestionFeedbackContext | null;
+  activeSuppressions?: ActiveSuppressionView[];
+}
+
+/** kind → the set of normalized values the ARTICLE actually exposes for it. */
+function buildCorroborableValues(
+  ctx: SuggestionFeedbackContext | null | undefined,
+): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>();
+  if (!ctx) return out;
+  const put = (kind: string, values: (string | null | undefined)[]) => {
+    const set = new Set(values.map(norm).filter((v) => v.length > 0));
+    if (set.size > 0) out.set(kind, set);
+  };
+  put('category', [ctx.category]);
+  put('entity', ctx.entities ?? []);
+  put('publication', [ctx.suggestion.publication_name]);
+  put('topic', ctx.matchedTopicTexts ?? []);
+  return out;
+}
+
+function validateAction(
+  raw: unknown,
+  factIds: Set<string>,
+  corroborable: Map<string, Set<string>>,
+  filtersById: Map<string, ActiveSuppressionView>,
+): ValidatedAction {
   if (raw == null || typeof raw !== 'object') return { error: 'action must be an object' };
   const o = raw as Record<string, unknown>;
   const type = o.type;
@@ -617,7 +793,11 @@ function validateAction(raw: unknown, factIds: Set<string>): ValidatedAction {
       };
     }
     case 'add_suppression': {
-      const pattern = typeof o.suppressionPattern === 'string' ? o.suppressionPattern.trim() : '';
+      const rawValue = typeof o.suppressionValue === 'string' ? o.suppressionValue.trim() : '';
+      // A structured value doubles as the display phrase when the model sent no
+      // separate pattern (e.g. muting a publication it quoted verbatim).
+      const pattern =
+        (typeof o.suppressionPattern === 'string' ? o.suppressionPattern.trim() : '') || rawValue;
       if (pattern.length === 0) return { error: 'add_suppression requires a non-empty suppressionPattern' };
       const keywords = Array.isArray(o.suppressionKeywords)
         ? o.suppressionKeywords.filter((k): k is string => typeof k === 'string' && k.trim().length > 0).map((k) => k.trim())
@@ -627,7 +807,41 @@ function validateAction(raw: unknown, factIds: Set<string>): ValidatedAction {
       if (typeof o.suppressionStrength === 'number' && Number.isFinite(o.suppressionStrength)) {
         action.suppressionStrength = o.suppressionStrength;
       }
+      // D9 — a structured filter matches by EXACT equality against one article
+      // field, so an invented value ("celebrity stuff" as a category) would be a
+      // filter that silently never fires. Keep the structured pair ONLY when the
+      // article context corroborates it verbatim; otherwise fall back to the
+      // keyword filter, which always works. Prompt wording pushes the model the
+      // same way — this makes it an invariant rather than a hope.
+      const rawKind = typeof o.suppressionKind === 'string' ? o.suppressionKind.trim().toLowerCase() : '';
+      if (
+        rawKind
+        && rawKind !== 'keyword'
+        && rawValue.length > 0
+        && (SUPPRESSION_KINDS as readonly string[]).includes(rawKind)
+        && CORROBORABLE_SUPPRESSION_KINDS.has(rawKind)
+        && corroborable.get(rawKind)?.has(norm(rawValue)) === true
+      ) {
+        action.suppressionKind = rawKind as SuppressionKindName;
+        action.suppressionValue = rawValue;
+      }
       return { action };
+    }
+    case 'retire_suppression': {
+      const suppressionId = typeof o.suppressionId === 'string' ? o.suppressionId.trim() : '';
+      if (suppressionId.length === 0) {
+        return { error: 'retire_suppression requires a non-empty suppressionId' };
+      }
+      // Strict by construction: with no filters in context there is no id to
+      // resolve, so a hallucinated one can never reach the executor.
+      const row = filtersById.get(suppressionId);
+      if (!row) {
+        return { error: `retire_suppression references unknown suppressionId: ${suppressionId}` };
+      }
+      // `pattern` is resolved from OUR list, never from the model — the confirm
+      // card and the PENDING PROPOSAL line can't be made to lie about what is
+      // being removed.
+      return { action: { type: 'retire_suppression', suppressionId: row.id, pattern: row.pattern } };
     }
     case 'set_high_priority': {
       const topicText = typeof o.topicText === 'string' ? o.topicText.trim() : '';
@@ -667,6 +881,7 @@ function validateAction(raw: unknown, factIds: Set<string>): ValidatedAction {
 export function decideProposeChanges(
   args: Record<string, unknown>,
   factIds: Set<string>,
+  sanitizerContext: ProposalSanitizerContext = {},
 ): ToolExecutionResult {
   const explanation = typeof args.explanation === 'string' ? args.explanation.trim() : '';
   const expectedEffects = typeof args.expected_effects === 'string' ? args.expected_effects.trim() : '';
@@ -680,9 +895,16 @@ export function decideProposeChanges(
     return { result: { error: 'actions must be a non-empty array' } };
   }
 
+  const corroborable = buildCorroborableValues(sanitizerContext.article);
+  const filtersById = new Map<string, ActiveSuppressionView>(
+    (sanitizerContext.activeSuppressions ?? [])
+      .filter((s) => s && typeof s.id === 'string' && s.id.length > 0)
+      .map((s) => [s.id, s]),
+  );
+
   const actions: ProposalAction[] = [];
   for (const raw of rawActions) {
-    const validated = validateAction(raw, factIds);
+    const validated = validateAction(raw, factIds, corroborable, filtersById);
     if ('error' in validated) return { result: { error: validated.error } };
     actions.push(validated.action);
   }

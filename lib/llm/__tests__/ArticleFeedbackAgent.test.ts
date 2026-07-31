@@ -18,6 +18,16 @@ jest.mock('../../database/services/article-feedback-service', () => ({
   markFeedbackProcessedFor: (...args: unknown[]) => mockMarkFeedbackProcessedFor(...args),
 }));
 
+// not-interested P4a: the agent now reads the user's ACTIVE filters (to render
+// `## YOUR FILTERS` and to validate a retire_suppression id). Mock scaffold
+// only — lib/database/services/suppression-service constructs a live
+// SQLiteAdapter at import time. No pre-existing assertion changed.
+const mockGetActiveSuppressions = jest.fn();
+
+jest.mock('../../database/services/suppression-service', () => ({
+  getActive: (...args: unknown[]) => mockGetActiveSuppressions(...args),
+}));
+
 const mockExecuteProposalActions = jest.fn();
 
 jest.mock('../../chat-tools/proposal-handlers', () => ({
@@ -106,6 +116,9 @@ describe('ArticleFeedbackAgent', () => {
     });
     mockExecuteProposalActions.mockResolvedValue({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
     mockIsSubjectTracked.mockResolvedValue(false);
+    // not-interested P4a default — no active filters, so every pre-existing
+    // context/proposal expectation sees exactly what it saw before.
+    mockGetActiveSuppressions.mockResolvedValue([]);
   });
 
   describe('constructor', () => {

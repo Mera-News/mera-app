@@ -1,3 +1,4 @@
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
@@ -198,35 +199,50 @@ const AppPreferencesTab: React.FC = () => {
         // Tint the feedback row's border to match its Mera-orange label.
         const borderColor = isFeedback ? 'border-primary-400/50' : 'border-gray-700';
 
+        // Liquid Glass row: GlassPanel owns the rounded/clipped outer surface
+        // (glass fill on iOS 26+, nothing otherwise) — the Pressable inside
+        // keeps its original padding/layout untouched, and the fallback
+        // reproduces the pre-glass bordered/transparent look exactly so
+        // Android/iOS<26 render identically to before.
         return (
-            <Pressable
+            <GlassPanel
                 key={option.id}
-                className={`flex-row items-center justify-between py-3 px-4 mb-3 border ${borderColor} rounded-lg`}
-                onPress={option.onPress}
+                radius={8}
+                className="mb-3"
+                fallbackClassName={`border ${borderColor} bg-transparent`}
             >
-                {option.id === 'language' ? (
-                    <HStack className="items-center flex-1" space="md">
+                <Pressable
+                    className="flex-row items-center justify-between py-3 px-4"
+                    onPress={option.onPress}
+                >
+                    {option.id === 'language' ? (
+                        <HStack className="items-center flex-1" space="md">
+                            <Text className={`text-base ${textColor}`}>
+                                {LANGUAGE_WORD_BY_CODE[appLanguage] ?? 'Language'}
+                            </Text>
+                            <LanguageWordTicker />
+                        </HStack>
+                    ) : (
                         <Text className={`text-base ${textColor}`}>
-                            {LANGUAGE_WORD_BY_CODE[appLanguage] ?? 'Language'}
+                            {option.title}
                         </Text>
-                        <LanguageWordTicker />
-                    </HStack>
-                ) : (
-                    <Text className={`text-base ${textColor}`}>
-                        {option.title}
-                    </Text>
-                )}
-                <MaterialIcons
-                    name="chevron-right"
-                    size={20}
-                    color="#999999"
-                />
-            </Pressable>
+                    )}
+                    <MaterialIcons
+                        name="chevron-right"
+                        size={20}
+                        color="#999999"
+                    />
+                </Pressable>
+            </GlassPanel>
         );
     };
 
     return (
-        <Box className="flex-1 bg-black">
+        // No `bg-black`: SettingsTabScreen mounts AbstractGradientBackdrop
+        // behind this content — an opaque fill here would fully block it,
+        // leaving the glass rows below with nothing to refract (a solid
+        // background over glass cancels it).
+        <Box className="flex-1">
             <VStack className="px-5 pt-2 pb-3">
                 <Text size="sm" className="text-gray-400">
                     {t('preferences.manageSettings')}

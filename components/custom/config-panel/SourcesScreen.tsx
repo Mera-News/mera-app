@@ -19,7 +19,9 @@ const SourcesScreen: React.FC<SourcesScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
+        // its SafeAreaView, so the page background spans the safe areas.
+        <Box className="flex-1">
             <DrillDownHeader title={t('settings.sources')} onBack={onBack} />
             <SourcesTabContent />
         </Box>

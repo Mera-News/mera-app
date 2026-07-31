@@ -1,3 +1,11 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import {
+    GlassPlate,
+    GLASS_AVAILABLE,
+    GLASS_EDGE,
+    GLASS_HEADER_SCRIM,
+    GLASS_HEADER_TINT,
+} from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -49,10 +57,14 @@ const ExploreScreen: React.FC = () => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     // Has `observeAllLocations()` emitted at least once? It emits ASYNCHRONOUSLY
     // on focus, so the first render has `locations === []` and `scopes` is the
-    // device-country fallback. Rendering the list then would flash the wrong
-    // country and burn a server round-trip, because the real locations landing
-    // changes `scopes[0].id` and ScopeArticleList is keyed on it. Never reset:
-    // once loaded, refocusing must not unmount/refetch the list.
+    // device-country fallback. FETCHING then would flash the wrong country and
+    // burn a server round-trip, because the real locations landing changes
+    // `scopes[0].id` and ScopeArticleList is keyed on it. Never reset: once
+    // loaded, refocusing must not refetch the list.
+    //
+    // This gates the QUERY (`enabled` below), not the MOUNT. The list has to be
+    // on screen from the very first commit or react-native-screens' one-shot
+    // first-descendant scroll-view search misses it — see ScopeArticleList.
     const [locationsLoaded, setLocationsLoaded] = useState(false);
 
     // Device country is stable for the session.
@@ -114,53 +126,113 @@ const ExploreScreen: React.FC = () => {
         });
     };
 
+    // Measured height of the pinned header overlay. The list's content top
+    // padding is derived from it rather than hardcoded — the header grows and
+    // shrinks (the offline banner appears/disappears, chip labels wrap), and a
+    // fixed number would hide the first article behind the chips.
+    const [headerHeight, setHeaderHeight] = useState(0);
+
     return (
-        <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
-                {/* Header — title + a right-slot Sources button (mirrors the
-                    Dashboard's circular outline icon-button pattern). */}
-                <HStack className="items-center justify-between px-5 mb-2">
-                    <Heading size="3xl" className="text-white flex-shrink mr-3" numberOfLines={1}>
-                        {t('explore.title')}
-                    </Heading>
-                    <Pressable
-                        onPress={() => router.push('/logged-in/sources')}
-                        hitSlop={12}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('settings.sources')}
-                        className="p-3 rounded-full border border-primary-500 bg-transparent flex-shrink-0"
-                    >
-                        <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
-                    </Pressable>
-                </HStack>
+        // ROOT IS UNPADDED ON PURPOSE. A padding here would inset the scroll
+        // view itself and fight the `contentInsetAdjustmentBehavior: automatic`
+        // that this whole layout exists to enable. Safe-area handling lives on
+        // the header overlay (which is outside the scroll view, so `insets.top`
+        // is unconditionally correct there) and on the list's content inset.
+        // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1">
+            {/* App-wide tab background. Must be the FIRST child so it paints
+                behind everything else on the page. */}
+            <AbstractGradientBackdrop />
 
-                {/* Offline banner — Explore is direct server-paginated (no local
-                    cache), so an offline visit here would otherwise just look
-                    like a jarring generic "no articles found" empty state from
-                    ScopeArticleList. This makes the reason explicit and
-                    non-blocking; that list already falls back to its friendly
-                    empty state, not a hard error, on fetch failure. */}
-                {!isConnected && (
-                    <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
-                        <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                        <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
+            {/* ── THE LIST MUST STAY THE FIRST CHILD ──
+                react-native-screens finds a tab's scroll view by walking
+                `subviews[0]` from the tab screen, once, at mount. Anything
+                rendered before this list wins that walk instead — and the header
+                below contains ScopeChipRow, which is ITSELF a horizontal
+                FlatList, so reordering would not merely break the search, it
+                would silently register the CHIP ROW as the tab's scroll view.
+                Chrome goes after the list, absolutely positioned, exactly the
+                way FeedScreen does it. */}
+            <ScopeArticleList
+                key={selectedScope.id}
+                scope={selectedScope}
+                // Gate the QUERY, not the mount: fetching before the locations
+                // observable has emitted would hit the device-country fallback,
+                // and the real locations landing re-keys this component — a
+                // wasted round-trip plus a flash of the wrong country.
+                enabled={locationsLoaded}
+                headerHeight={headerHeight}
+            />
+
+            {/* Pinned header overlay — title + Sources button, offline banner,
+                scope chips. This sits ON TOP of the list, and the chip row's
+                own wrapper has no background, so the overlay needs an opaque
+                or glass backing or article rows scroll visibly through the
+                chips. On iOS 26+ that backing is real Liquid Glass (GlassPlate);
+                everywhere else it falls back to opaque `bg-black`, since
+                GlassView paints nothing pre-26/off-iOS. The outer box is
+                UNPADDED — GlassPlate is an absolute fill and needs an unpadded
+                parent so its insets resolve against the full header, not just
+                the content box inside the padding (see GlassSurface.tsx) — the
+                safe-area/16pt padding lives on the inner box instead. */}
+            <Box
+                testID="explore-header"
+                onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+                className={GLASS_AVAILABLE ? GLASS_EDGE : 'bg-black'}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 10,
+                    overflow: 'hidden',
+                    // Only in the glass branch. The non-glass fallback is the
+                    // `bg-black` CLASS above, and an inline backgroundColor
+                    // would beat it — so gating this keeps the fallback fully
+                    // opaque. The scrim paints behind the plate, which is what
+                    // the glass samples: that is what cuts the see-through.
+                    ...(GLASS_AVAILABLE ? { backgroundColor: GLASS_HEADER_SCRIM } : null),
+                }}
+            >
+                <GlassPlate tint={GLASS_HEADER_TINT} />
+                <Box style={{ paddingTop: insets.top + 16 }}>
+                    {/* Header — title + a right-slot Sources button (mirrors the
+                        Dashboard's circular outline icon-button pattern). */}
+                    <HStack className="items-center justify-between px-5 mb-2">
+                        <Heading size="3xl" className="text-white flex-shrink mr-3" numberOfLines={1}>
+                            {t('explore.title')}
+                        </Heading>
+                        <Pressable
+                            onPress={() => router.push('/logged-in/sources')}
+                            hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('settings.sources')}
+                            className="p-3 rounded-full border border-primary-500 bg-transparent flex-shrink-0"
+                        >
+                            <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
+                        </Pressable>
                     </HStack>
-                )}
 
-                {/* Scope chips */}
-                <Box className="mb-2">
-                    <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
-                </Box>
+                    {/* Offline banner — Explore is direct server-paginated (no local
+                        cache), so an offline visit here would otherwise just look
+                        like a jarring generic "no articles found" empty state from
+                        ScopeArticleList. This makes the reason explicit and
+                        non-blocking; that list already falls back to its friendly
+                        empty state, not a hard error, on fetch failure. */}
+                    {!isConnected && (
+                        <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
+                            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                            <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
+                        </HStack>
+                    )}
 
-                {/* Article list for the active scope — remounts on scope switch.
-                    Held back until the locations observable has emitted, so the
-                    first mount lands on the real primary country rather than the
-                    device-country fallback (which would remount + refetch). */}
-                <Box className="flex-1">
-                    {locationsLoaded ? (
-                        <ScopeArticleList key={selectedScope.id} scope={selectedScope} />
-                    ) : null}
+                    {/* Scope chips */}
+                    <Box className="mb-2">
+                        <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
+                    </Box>
                 </Box>
             </Box>
+        </Box>
     );
 };
 

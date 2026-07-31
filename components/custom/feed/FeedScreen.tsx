@@ -36,6 +36,13 @@
 // — marks it `viewed`.
 // The header is the "Feed" heading + notification bell + 24h stats sentence.
 
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import {
+  GLASS_AVAILABLE,
+  GLASS_HEADER_SCRIM,
+  GLASS_HEADER_TINT,
+  GlassPlate,
+} from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import FeedSyncIndicator, {
@@ -73,6 +80,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
+import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
@@ -95,7 +103,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, RefreshControl, View } from 'react-native';
+import { AppState, RefreshControl, StyleSheet, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   runOnJS,
@@ -136,6 +144,8 @@ const FeedRow = React.memo(function FeedRow({
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
+  // NOT `path.length > 0` — a branch descent writes a path and commits nothing.
+  const committed = useFeedOrderStore((s) => !!s.verdicts[item.id]?.committed);
   const surfaceClosed = useFeedbackDismissedStore((s) => !!s.dismissed[item.id]);
   // ONE predicate decides both the read indicator and which block of the sort
   // this card lands in — otherwise a card could show the read state while
@@ -158,6 +168,7 @@ const FeedRow = React.memo(function FeedRow({
       onSaveToggled={onSaveToggled}
       feedbackVisible={verdict != null && !surfaceClosed}
       feedbackInitialPath={path}
+      feedbackCommitted={committed}
       feedbackHandlers={feedbackHandlers}
       // Seen stories get ONLY the eye indicator (`read`) — no dimming.
       // Dimming is reserved for a recorded verdict (like/dislike).
@@ -380,6 +391,9 @@ const FeedScreen: React.FC = () => {
     },
     getPath: (key) => useFeedOrderStore.getState().verdicts[key]?.path,
     setPath: (key, path) => useFeedOrderStore.getState().setPath(key, path),
+    getCommitted: (key) => !!useFeedOrderStore.getState().verdicts[key]?.committed,
+    setCommitted: (key, committed) =>
+      useFeedOrderStore.getState().setCommitted(key, committed),
   };
   const {
     onVerdict,
@@ -424,6 +438,18 @@ const FeedScreen: React.FC = () => {
     refreshPartitionSnapshot();
     onRefreshSync();
   }, [flushSkips, refreshPartitionSnapshot, onRefreshSync]);
+
+  // Re-tap the Feed tab icon → scroll to top; tap again at the top → refresh.
+  // Deliberately the SAME `onRefresh` the RefreshControl below calls, not
+  // `onRefreshSync` and not the scheduler: routing around it would skip
+  // flushSkips + the partition-snapshot refresh, and a scheduler-level call can
+  // be swallowed by conditions that only gate the SCHEDULED path.
+  useTabPressScrollRefresh({
+    listRef,
+    getOffset: () => lastOffsetShared.value,
+    onRefresh,
+    isRefreshing: refreshing,
+  });
 
   // Reset to the top AFTER the re-sorted list has committed. Scrolling inside
   // `onRefresh` would run before the snapshot state lands, letting
@@ -574,7 +600,12 @@ const FeedScreen: React.FC = () => {
   };
 
   return (
-    <Box className="flex-1 bg-black" testID="feed-screen">
+    // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+    <Box className="flex-1" testID="feed-screen">
+            {/* App-wide tab background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
       <Animated.FlatList
         ref={listRef}
         testID="feed-list"
@@ -644,10 +675,33 @@ const FeedScreen: React.FC = () => {
         // and pull-to-refresh appeared "gone".
         pointerEvents="box-none"
         style={[
-          { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, backgroundColor: '#000000' },
+          { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+          // Liquid Glass on iOS 26+, flat black everywhere else. The opaque
+          // background is REMOVED (not layered under the plate) where glass
+          // paints — a solid fill over glass cancels it entirely. Where glass
+          // does not paint, `GlassPlate` renders nothing, so dropping the
+          // background too would leave an invisible header over the scrolling
+          // list; hence the explicit fallback.
+          GLASS_AVAILABLE
+            ? {
+                // The scrim paints BEHIND the plate, so it is what the glass
+                // samples — that is what actually cuts the see-through. A
+                // translucent dark layer, NOT an opaque fill: an opaque fill
+                // here would cancel the glass entirely (see GlassSurface).
+                backgroundColor: GLASS_HEADER_SCRIM,
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: 'rgba(255,255,255,0.10)',
+              }
+            : { backgroundColor: '#000000' },
           headerStyle,
         ]}
       >
+        {/* Absolute-fill glass. This Animated.View is unpadded (all padding
+            lives on the VStack below), which is exactly what GlassPlate's
+            parent must be — see GlassSurface. No corner radius here, so no
+            `overflow: 'hidden'`: the header is full-bleed and clipping would
+            only risk cutting off the bell's badge. */}
+        <GlassPlate tint={GLASS_HEADER_TINT} />
         {/* PULL-TO-REFRESH PASSTHROUGH — see the matching note in ForYouScreen.
             `box-none` on the header wrapper leaves its CHILDREN touchable, and
             each row here is a full-width plain View, so every row is an opaque
@@ -674,7 +728,12 @@ const FeedScreen: React.FC = () => {
             </HStack>
           </HStack>
           <View pointerEvents="none">
-            <FeedStatsSentence />
+            {/* Brighter + a little heavier than the muted body step: this line
+                sits on glass with content moving under it, where
+                typography-400 was barely legible. `leading-6` is repeated
+                because the prop REPLACES FeedStatsSentence's default class
+                string rather than merging with it. */}
+            <FeedStatsSentence className="text-typography-700 font-medium leading-6" />
           </View>
 
           {/* Shared sync surface — the same indeterminate bar the Dashboard

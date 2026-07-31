@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
@@ -37,6 +38,7 @@ import {
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     TITLE_JACCARD_DISPLAY_THRESHOLD,
     WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    ENTITY_JACCARD_DISPLAY_THRESHOLD,
 } from '@/lib/feed-grouping/story-grouping';
 import {
     orderRelatedArticles,
@@ -212,12 +214,20 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 id: s._id,
                 title: s.title_en ?? s.title_original,
                 clusters: s.clusters,
+                entities: s.entities,
+                eventType: s.eventType,
                 s,
             })),
+            // Must stay in lock-step with the two feed selectors' DISPLAY option
+            // set — including `entityJaccardThreshold`. If the feed collapses
+            // A+B+C behind "+2 sources" via an edge this screen does not have,
+            // B and C are reachable from nowhere in the app.
             {
                 titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
                 clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
                 weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+                entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+                ungateStableClusterEdge: true,
             },
         );
         const mine = groups.find((g) => g.some((m) => m.id === suggestion._id));
@@ -471,7 +481,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center">
+            <Box className="flex-1 items-center justify-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );
@@ -484,7 +498,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             useForYouStore.getState().removeSuggestion(articleSuggestionId);
         }
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
+            <Box className="flex-1 items-center justify-center p-5">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <MaterialIcons
                     name="error-outline"
                     size={48}
@@ -506,7 +524,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const read = isSuggestionOpened(suggestion, openedIds);
 
     return (
-        <Box className="flex-1 bg-background-50">
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             {/* Status bar scrim — this screen's hero image is a full-bleed
                 parallax header (ArticleSuggestionContainer's SmoothScrollView),
                 so without this a light photo makes the system clock/battery
@@ -558,11 +580,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}
-                                    feedbackContext={{
-                                        publicationName: suggestion.publication_name,
-                                        countryCode: suggestion.country_code,
-                                        matchedTopics: suggestion.matchedTopics,
-                                    }}
+                                    // No feedback context is passed any more:
+                                    // the prompt resolves the LOCAL
+                                    // article_suggestions row itself (by
+                                    // articleId), which carries strictly more
+                                    // than this screen could hand it — category,
+                                    // event type, cluster size and place.
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'suggestion',

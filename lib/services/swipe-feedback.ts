@@ -1,12 +1,17 @@
 // swipe-feedback — the Feed-tab signal-persistence layer (Round-4 P4).
 //
-// Turns a verdict tap/swipe on the Feed deck into a persisted `article_feedback`
+// Turns a verdict tap/swipe on the Feed into a persisted `article_feedback`
 // row (surface 'swipe'), enriches that row's stored `treePath` as the user taps
 // the inline feedback tree, and converts a verdict + tapped path into a Mera
-// chat handoff. NO persona mutation happens here — every like/dislike is left
-// UNPROCESSED (processed_at null) for the deferred daily-plan wave; the only
-// persona changes come from the chat, when the user confirms the agent's
-// proposals (which then stamps the row processed).
+// chat handoff.
+//
+// No persona mutation happens in THIS module, but a verdict is no longer inert:
+//   • a BARE verdict is provisional — written, shown hollow, and reaped at
+//     write so it never reaches the digest (D15, see article-feedback-service);
+//   • a tapped tree path re-opens the row for the digest, and a terminal leaf
+//     applies its persona actions immediately (D16, InlineFeedbackTree);
+//   • a chat escalation still applies via the agent's confirmed proposals,
+//     which stamps the row processed.
 //
 // This is the wiring module for `swipe-callbacks.ts` — `wireSwipeCallbacks()`
 // (called once by SwipeFeedScreen) replaces the no-op contract members with the
@@ -82,13 +87,25 @@ export async function removeSwipeVerdict(
   await removeArticleFeedback(subject.articleId, verdict);
 }
 
-/** Merges the inline-tree node-id path into the stored verdict row. */
+/** Merges the inline-tree node-id path into the stored verdict row. Records
+ *  NAVIGATION only — a branch descent lands here and commits nothing. */
 export async function updateFeedbackTreePath(
   suggestion: ForYouSuggestion,
   verdict: Verdict,
   path: string[],
 ): Promise<void> {
   await updateFeedbackContextPath(suggestion.articleId, verdict, path);
+}
+
+/** Marks the stored verdict row COMMITTED — a terminal leaf settled, or the user
+ *  escalated to Mera along this path. This is the write a filled thumb is allowed
+ *  to read, and it is what makes the fill survive a process restart. */
+export async function commitFeedbackTreePath(
+  suggestion: ForYouSuggestion,
+  verdict: Verdict,
+  path: string[],
+): Promise<void> {
+  await updateFeedbackContextPath(suggestion.articleId, verdict, path, true);
 }
 
 /**
@@ -187,6 +204,9 @@ export function wireSwipeCallbacks(): void {
   };
   swipeCallbacks.onTreePathChanged = (suggestion, verdict, path) => {
     void updateFeedbackTreePath(suggestion, verdict, path);
+  };
+  swipeCallbacks.onLeafCommitted = (suggestion, verdict, path) => {
+    void commitFeedbackTreePath(suggestion, verdict, path);
   };
   swipeCallbacks.onInvokeMera = (suggestion, verdict, path) => {
     void openFeedbackChatWithPath(suggestion, verdict, path);

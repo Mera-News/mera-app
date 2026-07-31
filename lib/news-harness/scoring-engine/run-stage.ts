@@ -3,6 +3,9 @@
 // and scoring-pipeline.ts (E2EE async) both call computeAndJudge, so the math +
 // judge behaviour can never drift between them.
 //
+//   0. HARD "not interested" screen (persona.hardSuppressions) — matching
+//      candidates are dropped here and returned in `excludedIds`; they never
+//      reach the math, the judge, the backstop or the reason pass.
 //   1. computeRelevance() per candidate (on-device math) → computed score +
 //      components + mode ('math' | 'backstop').
 //   2. MATH candidates → ONE combined judge+reason call per chunk
@@ -11,10 +14,12 @@
 //      exposed separately in judgeScoreMap, and its `reason` is applied as the
 //      note. The `override` flag (|judge − computed| > OVERRIDE_DELTA) still
 //      feeds the calibration loop.
-//   3. BACKSTOP candidates (never tagged) → the legacy tiered LLM score call,
-//      unchanged (that path DOES apply the LLM score to rawScoreMap). Reasons
-//      for backstop stay the orchestrator's job (this stage returns only scores
-//      for them).
+//   3. BACKSTOP candidates (never tagged) → the legacy tiered LLM score call
+//      (that path DOES apply the LLM score to rawScoreMap), minus the SOFT
+//      suppression penalty the math already computed for the same candidate —
+//      otherwise a "shown less" filter would be silently inert on every untagged
+//      article. Reasons for backstop stay the orchestrator's job (this stage
+//      returns only scores for them).
 //
 // Pure except for the injected LlmPort. RN-free.
 
@@ -37,6 +42,7 @@ import {
 } from './relevance';
 import type { PersonaScoringContext } from './persona-context';
 import { summarizeComponents, parseJudgeResponse } from './judge';
+import { screenHardSuppressionsDetailed } from './suppression';
 
 /** One candidate for the stage. `input` carries the rich metadata the math +
  *  judge need; `legacy` is the ScoringCandidate shape the backstop path scores
@@ -69,6 +75,19 @@ export interface StageResult {
   overrideMap: Map<string, boolean>;
   /** ids the judge adjusted at all (any magnitude). */
   adjustedIds: Set<string>;
+  /** ids a HARD "not interested" filter screened out (step 0). These get NO
+   *  entry in any of the maps above — no math, no judge, no backstop, no
+   *  reason — and the orchestrator persists them as terminal `excluded`
+   *  (relevance 0) rather than scoring them. */
+  excludedIds: Set<string>;
+  /** excluded id → the display value of the filter that matched it (for the
+   *  per-batch log / the user-facing "why is this gone" surface). */
+  excludedValueById: Map<string, string>;
+  /** P6. Top-headline ids that MATCHED a hard filter and were kept anyway →
+   *  the matching filter's display value. Unlike `excludedIds` these ARE scored
+   *  (demoted, floored at HEADLINE_BASE_FLOOR) and DO appear in every map above;
+   *  the value is what the card's "you filtered this" label names. */
+  exemptedValueById: Map<string, string>;
 }
 
 export interface ComputeAndJudgeOptions {
@@ -108,10 +127,42 @@ export async function computeAndJudge(
   const overrideMap = new Map<string, boolean>();
   const adjustedIds = new Set<string>();
 
+  // --- 0. HARD "not interested" screen ---------------------------------------
+  // Runs BEFORE any math so an excluded row costs no compute, no judge tokens
+  // and no reason call. Absent/empty hardSuppressions ⇒ nothing is screened,
+  // i.e. exactly the pre-wave behaviour.
+  //
+  // P6: top-headline rows that MATCH a hard filter are NOT excluded — they stay
+  // in `active` and computeRelevance demotes them (one shared predicate,
+  // suppression.ts::isHardFilterExempt). Logged separately so the split is
+  // visible in the field.
+  const { excluded: excludedValueById, exempted: exemptedValueById } =
+    screenHardSuppressionsDetailed(
+      candidates.map((c) => c.input),
+      persona.hardSuppressions,
+    );
+  const excludedIds = new Set(excludedValueById.keys());
+  const active =
+    excludedIds.size > 0 ? candidates.filter((c) => !excludedIds.has(c.input.id)) : candidates;
+  if (excludedIds.size > 0) {
+    logger.info('[computeAndJudge] hard filters excluded candidates', {
+      excluded: excludedIds.size,
+      of: candidates.length,
+      values: [...new Set(excludedValueById.values())].slice(0, 10),
+    });
+  }
+  if (exemptedValueById.size > 0) {
+    logger.info('[computeAndJudge] hard filters demoted (not removed) headlines', {
+      exempted: exemptedValueById.size,
+      of: candidates.length,
+      values: [...new Set(exemptedValueById.values())].slice(0, 10),
+    });
+  }
+
   // --- 1. math for all; partition by mode -----------------------------------
   const mathItems: StageCandidate[] = [];
   const backstopItems: StageCandidate[] = [];
-  for (const c of candidates) {
+  for (const c of active) {
     const r = computeRelevance(c.input, persona, eng, nowMs);
     computedScoreMap.set(c.input.id, r.score);
     componentsMap.set(c.input.id, r.components);
@@ -208,6 +259,7 @@ export async function computeAndJudge(
     });
     const results = await llm.batchComplete(calls, { model: pipe.model });
     const resultById = new Map(results.map((r) => [r.id, r]));
+    let penalised = 0;
     chunks.forEach((chunkItems, idx) => {
       const result = resultById.get(`score:${idx}`);
       if (!result || result.error) {
@@ -222,8 +274,49 @@ export async function computeAndJudge(
         pipe,
         logger,
       );
-      chunkItems.forEach((c, i) => rawScoreMap.set(c.input.id, scores[i]));
+      // SOFT suppression on the legacy path. The LLM knows nothing about the
+      // user's "shown less" filters, so its score REPLACES the math score that
+      // carried the penalty — which left soft filters inert for every untagged
+      // article (and, with enrichment unshipped, that is all of them). Re-apply
+      // the SAME penalty the math already computed for this candidate
+      // (components.suppressPenalty = Σ P_SUP·strength capped at P_SUP_CAP, via
+      // the one kind-aware matcher in suppression.ts). No second matcher, no
+      // second cap.
+      //
+      // Applied AT the overwrite site, not in a later sweep: a failed chunk
+      // fail-opens to the math score above, which ALREADY has the penalty
+      // subtracted — penalising that again would double-count.
+      //
+      // A candidate matching nothing takes the untouched `scores[i]` write, so
+      // the no-filter path stays byte-identical to the pre-change behaviour.
+      // Only the lower bound can bite: the parser already clamps to [0, 1.1] and
+      // the penalty is non-negative, so the score can only fall.
+      chunkItems.forEach((c, i) => {
+        const comps = componentsMap.get(c.input.id);
+        const penalty = comps?.suppressPenalty ?? 0;
+        let next = scores[i];
+        if (penalty > 0) {
+          penalised += 1;
+          next = Math.max(0, next - penalty);
+        }
+        // P6 — DEMOTED, NEVER REMOVED, on this path too. An exempt top headline
+        // carries a HARD filter's penalty in `suppressPenalty` (folded in by
+        // computeRelevance), and the LLM score it is subtracted from is not
+        // guaranteed to survive it. The math path floors such a row at
+        // HEADLINE_BASE_FLOOR; without the same floor here an untagged (backstop)
+        // headline would still vanish, which is exclusion under another name.
+        if (comps?.hardFilterExempt) {
+          next = Math.max(next, eng.HEADLINE_BASE_FLOOR);
+        }
+        rawScoreMap.set(c.input.id, next);
+      });
     });
+    if (penalised > 0) {
+      logger.info('[computeAndJudge] soft filters penalised backstop candidates', {
+        penalised,
+        of: scorable.length,
+      });
+    }
   }
 
   return {
@@ -235,5 +328,8 @@ export async function computeAndJudge(
     reasonMap,
     overrideMap,
     adjustedIds,
+    excludedIds,
+    excludedValueById,
+    exemptedValueById,
   };
 }

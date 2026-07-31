@@ -1,5 +1,10 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
+import {
+  CARDS_USE_GLASS,
+  CardGlassPlate,
+  GLASS_CARD_EDGE,
+} from '@/components/custom/cards/CardGlassPlate';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -79,15 +84,22 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
 }) => {
   const displayTitle = titleEnglish || titleOriginal || '';
 
-  return (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      onLongPress={onLongPress}
-      style={dimmed ? { opacity: 0.75 } : undefined}
+  const surface = (
+    <Card
+      variant="elevated"
+      size="sm"
+      className={
+        CARDS_USE_GLASS
+          // Under glass the margin, radius and clipping move out to the
+          // unpadded wrapper below, and the opaque `bg-background-0` the
+          // `elevated` variant paints has to be cleared — left in place it
+          // covers the plate and cancels the effect. The `size` padding stays
+          // on the Card, so the layout is unchanged.
+          ? 'bg-transparent rounded-xl'
+          : 'mb-3 overflow-hidden rounded-xl'
+      }
     >
-      <Card variant="elevated" size="sm" className="mb-3 overflow-hidden rounded-xl">
-        {/* No fixed minHeight: the card wraps its content. It was 128, which
+      {/* No fixed minHeight: the card wraps its content. It was 128, which
             left visible dead space under a short 2-line headline. The image
             column is `self-stretch` with an ABSOLUTELY positioned image, so it
             simply fills whatever height the content column resolves to — image
@@ -163,6 +175,26 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
           </Box>
         </Box>
       </Card>
+  );
+
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={dimmed ? { opacity: 0.75 } : undefined}
+    >
+      {CARDS_USE_GLASS ? (
+        // The plate is an absolute fill, so it has to hang off this UNPADDED
+        // box — the one owning the radius and `overflow-hidden`, which is also
+        // what rounds the glass.
+        <Box className={`mb-3 rounded-xl overflow-hidden ${GLASS_CARD_EDGE}`}>
+          <CardGlassPlate />
+          {surface}
+        </Box>
+      ) : (
+        surface
+      )}
     </Pressable>
   );
 };

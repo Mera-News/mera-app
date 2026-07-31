@@ -37,10 +37,16 @@ import {
   saveReason,
   saveScoringResult,
   batchSaveMathScores,
+  batchMarkExcluded,
   getComputedComponentsByIds,
   batchMarkReasonSkipped,
+  getStageRowsByIds,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
+// Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
+// the one definition of "headline-sourced", shared with the prompt/chunk-size
+// selection the shim's builders run.
+import { isHeadlineScope, isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
 import {
   bucketScores,
   buildReasonCallsForSubset,
@@ -116,6 +122,20 @@ export const MIN_DISPATCH = CLOUD_SCORE_CHUNK_SIZE;
  *  job that risks the gateway's 120s upstream timeout. Overflow spills into
  *  further batches, which drain MAX_IN_FLIGHT at a time. */
 export const MAX_BATCH_ARTICLES = 10 * CLOUD_SCORE_CHUNK_SIZE;
+/** P4b — TOP-HEADLINE relevance chunk size (3). Read off the harness config
+ *  rather than the mera-protocol shim so it can't come back undefined and turn
+ *  the two constants below into NaN. */
+const HEADLINE_SCORE_CHUNK_SIZE =
+  DEFAULT_HARNESS_CONFIG.articlePipeline.headlineArticlesPerScorePrompt;
+/** Dispatch floor for an all-headline batch. Same rule as MIN_DISPATCH — one
+ *  LLM call's worth — at the headline chunk size, so a handful of headlines
+ *  isn't held back below a floor sized for the longer standard chunk. */
+export const MIN_DISPATCH_HEADLINE = HEADLINE_SCORE_CHUNK_SIZE;
+/** Ceiling for an all-headline batch. Same rule as MAX_BATCH_ARTICLES — at most
+ *  10 LLM calls in one request — at the headline chunk size. Reusing the
+ *  standard 50 here would put 17 calls in one job and break the invariant that
+ *  constant exists to hold. */
+export const MAX_BATCH_ARTICLES_HEADLINE = 10 * HEADLINE_SCORE_CHUNK_SIZE;
 /** Legacy alias, kept exported for back-compat with older persisted-run readers
  *  and tests. Points at the dispatch floor, which is what now gates a run. */
 export const BATCH_SIZE = MIN_DISPATCH;
@@ -268,6 +288,76 @@ function chunkIds(ids: string[], size: number): string[][] {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// P4b — headline/standard batch partitioning
+//
+// TOP-HEADLINE candidates are scored with a different system prompt AND a
+// different chunk size (3 vs 5). A batch becomes ONE inference request whose
+// `score:N` calls the decoder re-derives by re-chunking `candidateIds`, so a
+// batch that mixed the two would have to mix chunk sizes — and the decoder,
+// which can only apply one size, would attribute scores to the WRONG articles
+// with no error anywhere. Batches are therefore homogeneous BY CONSTRUCTION:
+// fresh ids are split here, before any batch exists, and each partition is
+// chunked with its own ceiling and dispatch floor.
+//
+// (The submit path independently derives the variant from the candidates it
+// actually sends and persists the chunk size it actually used, so even a
+// mixed batch could only ever be under-routed to the standard prompt — never
+// mis-decoded. This partition is what makes the headline route reachable.)
+// ---------------------------------------------------------------------------
+
+/** One homogeneous group of fresh ids, in delivery order. */
+export interface EnqueuePartition {
+  ids: string[];
+  headline: boolean;
+}
+
+/** Split fresh ids into the standard group then the headline group, preserving
+ *  delivery order within each. Empty groups are omitted, so a feed with no
+ *  headlines yields exactly one partition and the pre-P4b batch layout. */
+export function partitionFreshIds(
+  fresh: string[],
+  headlineIds: ReadonlySet<string>,
+): EnqueuePartition[] {
+  const headline: string[] = [];
+  const standard: string[] = [];
+  for (const id of fresh) {
+    if (headlineIds.has(id)) headline.push(id);
+    else standard.push(id);
+  }
+  const out: EnqueuePartition[] = [];
+  if (standard.length > 0) out.push({ ids: standard, headline: false });
+  if (headline.length > 0) out.push({ ids: headline, headline: true });
+  return out;
+}
+
+/**
+ * Which of `ids` are headline-sourced, read off the persisted stage metadata.
+ *
+ * Ids the query doesn't return — deleted rows, and rows already terminal
+ * `excluded` (getStageRowsByIds filters those) — are STANDARD by omission,
+ * which is the safe default: the worst case is a headline scored with the
+ * standard prompt, never a mis-decoded batch.
+ *
+ * Fail-open on a read error for the same reason: enqueueing must not die
+ * because a metadata read did. An empty set reproduces the pre-P4b layout
+ * exactly.
+ */
+async function lookupHeadlineIds(ids: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  try {
+    for (const row of await getStageRowsByIds(ids)) {
+      if (isHeadlineScope(row.headlineScope)) out.add(row.id);
+    }
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'headline-partition' },
+    });
+    return new Set<string>();
+  }
+  return out;
+}
+
 function makeQueuedBatch(
   batchId: number,
   candidateIds: string[],
@@ -302,6 +392,24 @@ export async function getNonTerminalCandidateIds(): Promise<Set<string>> {
   const snap = await getPipeline();
   return snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
 }
+
+/**
+ * P9 hard-filter reconcile for score propagation. A propagated row is written
+ * terminal `complete` with the donor's relevance and NEVER passes through
+ * computeMathStage/computeAndJudge, which is where `screenHardSuppressions`
+ * runs — so a hard-"Blocked" article could inherit a passing score and render.
+ * Scoped to the ids just propagated; the shared matcher lives in suppression-
+ * sweep, so there is still exactly one hard screen.
+ *
+ * Lazy `require` for module-graph weight, same rationale as refreshUi below and
+ * persona-mutation-sweeps::runSweep.
+ */
+const reconcileHardFilters = async (ids: string[]): Promise<void> => {
+  if (ids.length === 0) return; // guard before the require — keep the empty case free
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+  await sweep.purgeHardFilteredByIds(ids);
+};
 
 async function refreshUi(): Promise<void> {
   // Lazy require (not a static import) breaks the load-time cycle
@@ -495,52 +603,73 @@ export async function enqueueCandidates(
     return { deferred: [] };
   }
 
-  // FIFO batches capped at MAX_BATCH_ARTICLES. chunkIds yields at most one
-  // trailing short chunk (the last one); dispatch anything that reaches
-  // MIN_DISPATCH, defer only a sub-MIN_DISPATCH remainder.
-  const chunks = chunkIds(fresh, MAX_BATCH_ARTICLES);
+  // P4b: split first, so no batch can ever hold both a headline and a standard
+  // candidate. Each partition is then chunked with its OWN ceiling and floor —
+  // a headline batch is 10 calls of 3, a standard batch 10 calls of 5.
+  const partitions = partitionFreshIds(fresh, await lookupHeadlineIds(fresh));
+
   const dispatch: string[][] = [];
   let deferred = 0;
-  // The trailing partial's ids when it's held back — returned to the caller so
-  // feed-sync can flush it once the whole lot is hydrated (flushPartial pass).
-  let deferredIds: string[] = [];
-  for (const chunk of chunks) {
-    if (chunk.length >= MIN_DISPATCH) {
-      dispatch.push(chunk);
-      continue;
+  // The trailing partials' ids when they're held back — returned to the caller
+  // so feed-sync can flush them once the whole lot is hydrated (flushPartial).
+  const deferredIds: string[] = [];
+  // The staleness escape reads the oldest unscored row's age; memoised so two
+  // partitions with a remainder each still cost at most ONE DB read.
+  let oldestAgeMs: number | null = null;
+  const readOldestAgeMs = async (): Promise<number | null> => {
+    if (oldestAgeMs === null) {
+      const oldestCreatedAt = await getOldestUnscoredCreatedAt();
+      oldestAgeMs = oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : -1;
     }
-    // Sub-MIN_DISPATCH remainder — not yet worth its own LLM call. chunkIds only
-    // ever yields one such chunk, as the last, so the DB read below runs at most
-    // once per enqueue.
-    //
-    // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
-    // everything now. We don't refetch until the whole lot is scored, so a
-    // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
-    // next fetch coming to top it up — dispatch it immediately.
-    if (flushPartial) {
-      logger.info(
-        `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
-      );
-      dispatch.push(chunk);
-      continue;
-    }
-    // (The P7d cold-start knob that dispatched a >=10-row partial on a cold feed
-    // is gone: MIN_DISPATCH is 5, so every chunk it would have caught now
-    // dispatches on the fast path above regardless of feed warmth.)
-    const oldestCreatedAt = await getOldestUnscoredCreatedAt();
-    const oldestAgeMs =
-      oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : 0;
-    if (oldestCreatedAt !== null && oldestAgeMs >= MAX_UNSCORED_WAIT_MS) {
-      logger.info(
-        `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(oldestAgeMs / 60_000)}min)`,
-      );
-      dispatch.push(chunk);
-    } else {
-      deferred = chunk.length;
-      deferredIds = chunk;
-      logger.info(
-        `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${MIN_DISPATCH} dispatch floor, oldest ${Math.round(oldestAgeMs / 60_000)}min)`,
-      );
+    return oldestAgeMs < 0 ? null : oldestAgeMs;
+  };
+
+  for (const partition of partitions) {
+    const maxArticles = partition.headline
+      ? MAX_BATCH_ARTICLES_HEADLINE
+      : MAX_BATCH_ARTICLES;
+    const minDispatch = partition.headline
+      ? MIN_DISPATCH_HEADLINE
+      : MIN_DISPATCH;
+    // FIFO batches capped at the partition's ceiling. chunkIds yields at most
+    // one trailing short chunk (the last one); dispatch anything that reaches
+    // the floor, defer only a sub-floor remainder.
+    for (const chunk of chunkIds(partition.ids, maxArticles)) {
+      if (chunk.length >= minDispatch) {
+        dispatch.push(chunk);
+        continue;
+      }
+      // Sub-floor remainder — not yet worth its own LLM call. chunkIds only
+      // ever yields one such chunk per partition, as the last, so the DB read
+      // below runs at most once per enqueue (memoised above).
+      //
+      // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
+      // everything now. We don't refetch until the whole lot is scored, so a
+      // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
+      // next fetch coming to top it up — dispatch it immediately.
+      if (flushPartial) {
+        logger.info(
+          `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
+        );
+        dispatch.push(chunk);
+        continue;
+      }
+      // (The P7d cold-start knob that dispatched a >=10-row partial on a cold
+      // feed is gone: MIN_DISPATCH is 5, so every chunk it would have caught now
+      // dispatches on the fast path above regardless of feed warmth.)
+      const age = await readOldestAgeMs();
+      if (age !== null && age >= MAX_UNSCORED_WAIT_MS) {
+        logger.info(
+          `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(age / 60_000)}min)`,
+        );
+        dispatch.push(chunk);
+      } else {
+        deferred += chunk.length;
+        deferredIds.push(...chunk);
+        logger.info(
+          `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${minDispatch} dispatch floor, oldest ${Math.round((age ?? 0) / 60_000)}min)`,
+        );
+      }
     }
   }
 
@@ -831,6 +960,37 @@ async function doSubmitRelevance(
   // legacy tiered LLM relevance), and — for the judge path — gives us the
   // computed scores we persist so a judge failure fail-opens to the math.
   const math = await computeMathStage(subset);
+
+  // HARD "not interested" filters. `?? new Set()` because the orchestrator
+  // tests mock computeMathStage with the pre-wave shape — a missing field must
+  // mean "nothing excluded", never a crash.
+  const excludedIds = math.excludedIds ?? new Set<string>();
+  let active = subset;
+  if (excludedIds.size > 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} hard filters excluded ${excludedIds.size}/${subset.length}: ${[
+        ...new Set((math.excludedValueById ?? new Map<string, string>()).values()),
+      ]
+        .slice(0, 10)
+        .join(', ')}`,
+    );
+    await batchMarkExcluded([...excludedIds]);
+    await refreshUi();
+    active = subset.filter((c) => !excludedIds.has(c.id));
+  }
+
+  // Every candidate in the batch was filtered out — nothing left to submit.
+  // Terminal transition inside the drain loop (doDrain's maybeFinalize handles
+  // the run finalize); without this the batch would wedge in
+  // `submitting-relevance` or submit an empty inference request.
+  if (math.stage.length === 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} fully hard-filtered — marking done`,
+    );
+    await markBatchDone(batch.batchId);
+    return;
+  }
+
   const backstop = math.stage.filter(
     (c) => math.modeMap.get(c.input.id) === 'backstop',
   );
@@ -849,7 +1009,7 @@ async function doSubmitRelevance(
   // Mixed/untagged batches keep the two-phase tiered LLM scoring exactly as
   // before (the plan's backstop path). No math audit is persisted here.
   if (backstop.length > 0) {
-    const bundle = await buildRelevanceCalls(subset);
+    const bundle = await buildRelevanceCalls(active);
     if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {
       logger.info(
         `${TAG} batch ${batch.batchId} relevance bundle empty — marking done`,
@@ -862,9 +1022,39 @@ async function doSubmitRelevance(
     }
     const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
 
+    // SOFT suppression ("shown less") on the legacy path. The cloud LLM knows
+    // nothing about the user's filters and its score REPLACES the math score
+    // that carried the penalty, so a soft filter would do nothing at all on this
+    // path. Carry the penalty the math already computed for each candidate
+    // (components.suppressPenalty = Σ P_SUP·strength capped at P_SUP_CAP, via
+    // the one kind-aware matcher in suppression.ts) on the batch, and subtract
+    // it at decode. Keyed over the WHOLE stage, not just the backstop rows:
+    // line above sends `active` (every survivor) down the legacy prompt, so a
+    // math-mode row in a mixed batch loses its penalty too. Non-zero entries
+    // only, and the field stays undefined when nothing matched — a user with no
+    // soft filters takes the exact pre-change code path.
+    const suppressPenaltyMap: Record<string, number> = {};
+    for (const c of math.stage) {
+      const penalty = math.componentsMap.get(c.input.id)?.suppressPenalty ?? 0;
+      if (penalty > 0) suppressPenaltyMap[c.input.id] = penalty;
+    }
+    const penalisedCount = Object.keys(suppressPenaltyMap).length;
+    if (penalisedCount > 0) {
+      logger.info(
+        `${TAG} batch ${batch.batchId} soft filters will penalise ${penalisedCount}/${math.stage.length} at decode`,
+      );
+    }
+
+    // P4b: the builder picked the prompt variant from the candidates and reports
+    // the chunk size it ACTUALLY used. Persist that value (below) rather than
+    // re-deriving it at decode — submit and decode then cannot disagree, which
+    // is the only thing standing between a headline batch and scores attributed
+    // to the wrong articles. Absent (older builder) ⇒ the standard size.
+    const scoreChunkSize = bundle.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
+
     const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
     logger.info(
-      `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
+      `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls, chunk=${scoreChunkSize} (token=${token ? 'yes' : 'no'})`,
     );
     const outcome = await sendInferenceRequest({
       bundle,
@@ -876,7 +1066,14 @@ async function doSubmitRelevance(
 
     if (outcome.status === 'ok') {
       // judgeMode stays false (default) — decode routes to the legacy path.
-      await transitionToWaitingRelevance(batch.batchId, outcome, eligibleIds);
+      await transitionToWaitingRelevance(
+        batch.batchId,
+        outcome,
+        eligibleIds,
+        undefined,
+        penalisedCount > 0 ? suppressPenaltyMap : undefined,
+        scoreChunkSize,
+      );
       logger.info(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
       );
@@ -890,25 +1087,43 @@ async function doSubmitRelevance(
   }
 
   // --- JUDGE MODE (all candidates are math-mode) ---------------------------
-  // Round-3 B1: PERSIST THE MATH IMMEDIATELY (bucketed relevance, reason:'',
+  // Round-3 B1: PERSIST THE MATH IMMEDIATELY (relevance, reason:'',
   // reasonSkipped for sub-threshold rows, scored_at, audit columns) so cards are
   // renderable now — the judge no longer decides the score (Part A: advisory),
-  // it only writes the note. Bucket a copy; keep the raw computed as rawScore.
-  const bucketed = new Map(math.computedScoreMap);
-  bucketScores(bucketed);
-  const bucketedRecord: Record<string, number> = {};
+  // it only writes the note. Score a COPY; keep the raw computed as rawScore.
+  //
+  // RELEVANCE_V2 — skip the bucketing. The buckets (0.4/0.6/0.8/1.1) exist for
+  // the legacy LLM path, whose integer-ish scores carry no more resolution than
+  // that; the deterministic math emits a continuous 0.05–1.10 value and
+  // flattening it throws away the ordering the engine just computed. Note the
+  // membership of every threshold test below is UNCHANGED either way:
+  // bucketScores leaves anything under discardFloor (0.4) untouched and maps
+  // everything at/above it to ≥0.4, so no value ever crosses
+  // REASON_RELEVANCE_THRESHOLD (0.3) by being bucketed — only the spacing
+  // between survivors changes. Read once, here (the backstop path returned
+  // above, so it gains no config I/O), and reused for buildJudgeCalls.
+  const judgeCfg = await judgeHarnessConfig();
+  const relevanceV2 = judgeCfg.scoringEngine?.RELEVANCE_V2 === true;
+
+  // ONE map for all three consumers — persisted `relevance`/`reasonSkipped`, the
+  // judged-subset filter, and the `relevanceMap` decode uses for its discard. If
+  // these disagreed, a row could persist as renderable and then be discarded at
+  // decode (or vice versa).
+  const relevanceScores = new Map(math.computedScoreMap);
+  if (!relevanceV2) bucketScores(relevanceScores);
+  const relevanceRecord: Record<string, number> = {};
   for (const c of math.stage) {
     const id = c.input.id;
-    bucketedRecord[id] = bucketed.get(id) ?? 0;
+    relevanceRecord[id] = relevanceScores.get(id) ?? 0;
   }
   await batchSaveMathScores(
     math.stage.map((c) => {
       const id = c.input.id;
-      const bucket = bucketed.get(id) ?? 0;
+      const relevance = relevanceScores.get(id) ?? 0;
       return {
         id,
-        relevance: bucket,
-        reasonSkipped: bucket <= REASON_RELEVANCE_THRESHOLD,
+        relevance,
+        reasonSkipped: relevance <= REASON_RELEVANCE_THRESHOLD,
         computedScore: math.computedScoreMap.get(id)!,
         rawScore: math.computedScoreMap.get(id)!,
         scoreComponentsJson: JSON.stringify(math.componentsMap.get(id)!),
@@ -921,7 +1136,7 @@ async function doSubmitRelevance(
   // legacy relevance path, moved to submit since the score is final here).
   try {
     const inFlight = await getNonTerminalCandidateIds();
-    const propagated = await propagateToUnscoredSiblings(inFlight);
+    const propagated = await propagateToUnscoredSiblings(inFlight, reconcileHardFilters);
     if (propagated > 0) await refreshUi();
   } catch (err) {
     logger.captureException(err, {
@@ -934,7 +1149,7 @@ async function doSubmitRelevance(
   // (reasonSkipped). buildJudgeCalls chunks this subset in order → the `judge:N`
   // decode join key stored as judgedIds.
   const judgedStage = math.stage.filter(
-    (c) => (bucketed.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
+    (c) => (relevanceScores.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
   );
   const judgedIds = judgedStage.map((c) => c.input.id);
 
@@ -942,7 +1157,7 @@ async function doSubmitRelevance(
     logger.info(
       `${TAG} batch ${batch.batchId} judge: no above-threshold rows — marking done`,
     );
-    const discarded = await discardLowRelevance(batch.candidateIds, bucketedRecord);
+    const discarded = await discardLowRelevance(batch.candidateIds, relevanceRecord);
     if (discarded > 0) await refreshUi();
     await markBatchDone(batch.batchId);
     return;
@@ -953,13 +1168,13 @@ async function doSubmitRelevance(
     math.computedScoreMap,
     math.componentsMap,
     math.persona,
-    await judgeHarnessConfig(),
+    judgeCfg,
   );
   if (calls.length === 0) {
     logger.info(
       `${TAG} batch ${batch.batchId} judge bundle empty — marking done`,
     );
-    const discarded = await discardLowRelevance(batch.candidateIds, bucketedRecord);
+    const discarded = await discardLowRelevance(batch.candidateIds, relevanceRecord);
     if (discarded > 0) await refreshUi();
     await markBatchDone(batch.batchId);
     return;
@@ -969,7 +1184,9 @@ async function doSubmitRelevance(
     calls,
     promptsById: new Map(),
     chunkIdToCandidates: new Map(),
-    eligibleCandidates: subset,
+    // Hard-filtered rows are already terminal (`excluded`) — never re-offer
+    // them to the judge/decode path.
+    eligibleCandidates: active,
   };
 
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
@@ -986,8 +1203,9 @@ async function doSubmitRelevance(
 
   if (outcome.status === 'ok') {
     // Carry the computed scores of the JUDGED subset forward via rawRelevanceMap
-    // (decode fail-open + the reason-threshold filter), the bucketed relevance
-    // map (for the decode-time discard), and the judged id order (decode join).
+    // (decode fail-open + the reason-threshold filter), the SAME relevance map
+    // that was just persisted (for the decode-time discard — bucketed, or raw
+    // under RELEVANCE_V2), and the judged id order (decode join).
     const computedRecord: Record<string, number> = {};
     for (const id of judgedIds) {
       computedRecord[id] = math.computedScoreMap.get(id)!;
@@ -1001,7 +1219,7 @@ async function doSubmitRelevance(
       {
         judgeMode: true,
         computedScoreMap: computedRecord,
-        relevanceMap: bucketedRecord,
+        relevanceMap: relevanceRecord,
         judgedIds,
       },
     );
@@ -1085,6 +1303,13 @@ async function transitionToWaitingRelevance(
     relevanceMap: Record<string, number>;
     judgedIds: string[];
   },
+  /** BACKSTOP/legacy batches only — non-zero soft-suppression penalties to
+   *  subtract from the LLM scores at decode. Never passed with `judge` (there
+   *  the applied score is the math score, penalty already included). */
+  suppressPenaltyMap?: Record<string, number>,
+  /** BACKSTOP/legacy batches only — the chunk size the `score:N` calls were
+   *  built with, so decode re-chunks candidateIds identically. */
+  scoreChunkSize?: number,
 ): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -1094,6 +1319,15 @@ async function transitionToWaitingRelevance(
     b.capabilityToken = outcome.capabilityToken || undefined;
     b.candidateIds = eligibleIds; // eligible/submit order = decode join key
     b.submittedAt = Date.now();
+    // Assigned unconditionally (same rationale as suppressPenaltyMap below): a
+    // retry that re-enters submit must never inherit the previous attempt's
+    // chunk size, and judge-mode batches — which have no `score:N` calls —
+    // always clear it.
+    b.scoreChunkSize = judge ? undefined : scoreChunkSize;
+    // Assigned unconditionally (not only when present) so a retry that re-enters
+    // submit can never inherit a stale map from the previous attempt; judge-mode
+    // always clears it — there the applied score already carries the penalty.
+    b.suppressPenaltyMap = judge ? undefined : suppressPenaltyMap;
     if (judge) {
       // Judge-mode batch: flag it so decode routes to handleJudgeResults, stash
       // the computed (math) scores on rawRelevanceMap (decode fail-open + reason
@@ -1433,14 +1667,21 @@ async function handleRelevanceResults(
 
   const { batchResults } = await decodeBatch(batch, server);
 
+  // P4b: re-chunk with the size the SUBMIT actually used, persisted on the
+  // batch. A headline batch was chunked at 3, a standard one at 5 — applying
+  // the wrong size here silently shifts every score onto a neighbouring
+  // article. `??` covers batches submitted by a pre-P4b build (all of which
+  // used CLOUD_SCORE_CHUNK_SIZE) and any that stored no size.
+  const scoreChunkSize = batch.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
   const nChunks = Math.max(
     1,
-    Math.ceil(batch.candidateIds.length / CLOUD_SCORE_CHUNK_SIZE),
+    Math.ceil(batch.candidateIds.length / scoreChunkSize),
   );
   const callIds = Array.from({ length: nChunks }, (_, i) => `score:${i}`);
   const { chunkIdToCandidates } = reconstructLookups(
     callIds,
     batch.candidateIds,
+    scoreChunkSize,
   );
 
   const { scoreMap, failedIds } = decodeResults({
@@ -1450,6 +1691,31 @@ async function handleRelevanceResults(
   });
 
   // (verifier pass removed — absorbed into the judge, Wave 7b M-P5)
+
+  // SOFT suppression ("shown less"): subtract the penalty the on-device math
+  // computed at submit from the LLM score that replaced it. Applied HERE —
+  // before rawRelevanceMap is captured and before bucketScores — so the
+  // demotion reaches every consumer at once: the persisted bucket, the raw
+  // scores fed to the reason prompts, the `impactfulIds` reason gate below and
+  // discardLowRelevance. Rows with no entry are never rewritten (byte-identical
+  // to the pre-change path), and the decoder already clamped to [0, 1.1], so
+  // only the lower bound can bite.
+  const suppressPenaltyMap = batch.suppressPenaltyMap;
+  if (suppressPenaltyMap) {
+    let penalised = 0;
+    for (const [id, penalty] of Object.entries(suppressPenaltyMap)) {
+      if (!(penalty > 0) || failedIds.has(id)) continue;
+      const scored = scoreMap.get(id);
+      if (scored === undefined) continue;
+      scoreMap.set(id, Math.max(0, scored - penalty));
+      penalised += 1;
+    }
+    if (penalised > 0) {
+      logger.info(
+        `${TAG} batch ${batch.batchId} soft filters penalised ${penalised}/${scoreMap.size}`,
+      );
+    }
+  }
 
   // Preserve raw pre-bucket scores for the reason prompts; storage + gating use
   // the bucketed values.
@@ -1487,7 +1753,7 @@ async function handleRelevanceResults(
   // propagation error never blocks the pipeline; refresh again only if it wrote.
   try {
     const inFlight = await getNonTerminalCandidateIds();
-    const propagated = await propagateToUnscoredSiblings(inFlight);
+    const propagated = await propagateToUnscoredSiblings(inFlight, reconcileHardFilters);
     if (propagated > 0) await refreshUi();
   } catch (err) {
     logger.captureException(err, {
@@ -1903,9 +2169,13 @@ export async function enqueueUnscoredEligible(
   opts: { flushRemainder?: boolean } = {},
 ): Promise<{ enqueued: number }> {
   const candidates = await getUnscoredSuggestionsWithFacts();
-  const eligibleIds = candidates
-    .filter((c) => c.titleEn && c.descriptionEn && c.relatedFacts.length > 0)
-    .map((c) => c.id);
+  // `isScorableCandidate`, not `isEligible` — a TOP-HEADLINE row is factless by
+  // design. This is the enqueue that fires when feed-sync hydrated NOTHING
+  // (`runPostFinalizeKick`, and feed-sync's suppressed cycle), so leaving the
+  // fact requirement here would have enqueued headlines only on syncs that
+  // happened to hydrate new articles — an intermittent bug that reads as
+  // "sometimes works" and is unfalsifiable in QA.
+  const eligibleIds = candidates.filter(isScorableCandidate).map((c) => c.id);
   if (eligibleIds.length === 0) return { enqueued: 0 };
   await enqueueCandidates(eligibleIds, opts.flushRemainder === true);
   return { enqueued: eligibleIds.length };

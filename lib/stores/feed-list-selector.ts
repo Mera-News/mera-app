@@ -25,6 +25,7 @@ import {
   TITLE_JACCARD_DISPLAY_THRESHOLD,
   CLUSTER_CORE_CONFIDENCE_THRESHOLD,
   WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+  ENTITY_JACCARD_DISPLAY_THRESHOLD,
   type GroupableItem,
 } from '@/lib/feed-grouping/story-grouping';
 import {
@@ -33,7 +34,11 @@ import {
   isBreaking,
   isSuggestionOpened,
 } from './fact-rows-selector';
-import { repPriorityTier, type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import {
+  repPriorityTier,
+  sourcePriorityTier,
+  type UserGeoLanguageContext,
+} from '@/lib/feed-grouping/geo-language-priority';
 import type { ForYouSuggestion } from './for-you-store';
 
 /** Exponential-decay half-life (hours) for the recency term of `feedScore`. */
@@ -68,9 +73,11 @@ export interface FeedListItem {
   memberIds: string[];
   /** Whether the representative is a breaking story. */
   breaking: boolean;
-  /** Frozen composite score at build time (`feedScore` at the injected
-   *  clock) — captured once so list ordering doesn't drift mid-session as
-   *  real time advances under the list. */
+  /** Frozen composite score at build time — the MAXIMUM `feedScore` over every
+   *  member of the collapsed story at the injected clock (D4), captured once so
+   *  list ordering doesn't drift mid-session as real time advances under the
+   *  list. Deliberately NOT the representative's own score: see the comment at
+   *  the assignment in `buildFeedList`. */
   score: number;
 }
 
@@ -131,15 +138,36 @@ function repCompare(a: GroupItem, b: GroupItem): number {
   return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
 }
 
-/** Tier-aware representative comparator: the user's geo/language priority
- *  tier (`repPriorityTier` — home country → other user country → app
- *  language → rest) is compared FIRST (lower tier wins); only on a tier tie
- *  does the existing `repCompare` (newest → rawScore → id) decide. A `null`
- *  `userCtx` collapses every item to tier 3, so this is byte-identical to
- *  `repCompare` alone — the pre-priority legacy behavior. List ordering
- *  (`feedCompare`) is unaffected — only which article fronts a group. */
+/** Tier-aware representative comparator, in three keys:
+ *
+ *   1. `sourcePriorityTier` — the user's EXPLICIT source preferences
+ *      (preferred publication → preferred country scope → rest). This is the
+ *      literal ask: "when a story has an article from a source I prefer, that
+ *      should be the one used." An explicit request outranks a derived
+ *      geo/language signal, so it is compared FIRST.
+ *   2. `repPriorityTier` — the derived geo/language priority (home country →
+ *      other user country → app language → rest).
+ *   3. `repCompare` — newest → rawScore → id.
+ *
+ *  A `null` `userCtx` collapses every item to source tier 2 and geo tier 3, so
+ *  this stays byte-identical to `repCompare` alone — the pre-priority legacy
+ *  behavior. So does a context with no source preferences, for key 1.
+ *
+ *  This changes only WHICH article fronts a group. Where the story sits in the
+ *  list is decided by `feedCompare` over a score that is now the group's best
+ *  (see `buildFeedList` / D4), so electing a preferred source can never demote
+ *  the story. */
 function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
   return (a: GroupItem, b: GroupItem): number => {
+    const sa = sourcePriorityTier(
+      { publicationName: a.s.publication_name, countryCodeAlpha3: a.s.country_code },
+      userCtx,
+    );
+    const sb = sourcePriorityTier(
+      { publicationName: b.s.publication_name, countryCodeAlpha3: b.s.country_code },
+      userCtx,
+    );
+    if (sa !== sb) return sa - sb;
     const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
     const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
     if (ta !== tb) return ta - tb;
@@ -228,12 +256,18 @@ export function buildFeedList(
     id: s._id,
     title: s.title_en ?? s.title_original ?? null,
     clusters: s.clusters,
+    entities: s.entities,
+    eventType: s.eventType,
     s,
   }));
+  // `entityJaccardThreshold` enables the entity-overlap edge — DISPLAY-only by
+  // design (score-propagation deliberately omits it; see PROPAGATION_OPTIONS).
   const groups = buildStoryGroups(items, {
     titleJaccardThreshold: TITLE_JACCARD_DISPLAY_THRESHOLD,
     clusterConfidenceThreshold: CLUSTER_CORE_CONFIDENCE_THRESHOLD,
     weightedJaccardThreshold: WEIGHTED_JACCARD_DISPLAY_THRESHOLD,
+    entityJaccardThreshold: ENTITY_JACCARD_DISPLAY_THRESHOLD,
+    ungateStableClusterEdge: true,
   });
 
   // 3. One representative per group; drop reps already excluded (opened ∪
@@ -251,7 +285,15 @@ export function buildFeedList(
       // compared against future `FeedListItem.id`s, which are article ids.
       memberIds: g.map((m) => m.s.articleId),
       breaking: isBreaking(rep),
-      score: feedScore(rep, nowMs),
+      // D4 — a story is scored on its BEST member, not on whichever member was
+      // elected to front it. This used to be `feedScore(rep, nowMs)`, which
+      // silently coupled two unrelated decisions: because the list is ordered by
+      // this score, electing a representative with a lower score DEMOTED the
+      // whole story. Preferring a source would therefore have buried that
+      // source's own coverage, and the pre-existing geo tier had the same latent
+      // bug. A story's importance is a property of the story; which outlet we
+      // chose to display is a presentation choice and must not move it.
+      score: Math.max(...g.map((m) => feedScore(m.s, nowMs))),
     });
   }
 

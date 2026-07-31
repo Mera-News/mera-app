@@ -12,6 +12,7 @@
 import logger from '@/lib/logger';
 import {
   evaluateCondition,
+  resolveLeafActions,
   type FeedbackTree,
   type FeedbackTreeNode,
   type LocalFeedbackContext,
@@ -20,6 +21,54 @@ import { getFeedbackTree, refreshFeedbackTree } from '@/lib/services/feedback-tr
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export type FeedbackTreeRoot = 'like' | 'dislike';
+
+/** A leaf that DECLARES persona actions but whose actions all resolve to nothing
+ *  under this article's context is inert: tapping it applies nothing and shows
+ *  no toast, so the user learns that giving feedback does nothing. Hide it.
+ *
+ *  This is the tree-source-independent guard. A `visibleIf` gate in the bundled
+ *  snapshot only protects devices still on the bundle — anything that has been
+ *  online is running the SERVER tree (`app-config.feedback_tree_v1`), where the
+ *  gate may not exist yet. Resolving the actions instead asks the only question
+ *  that actually matters: would this tap do anything?
+ *
+ *  Deliberately narrow — it fires ONLY for action-declaring leaves. `openChat`,
+ *  `nudge` and `seenOnly` leaves legitimately mutate nothing and must survive.
+ *  Known cases it catches today: `this_kind_of_event` (event_type is null on
+ *  every article in prod) and `this_category` on a category-less article. */
+function isInertActionLeaf(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  const leaf = node.leaf;
+  if (!leaf?.actions?.length) return false;
+  if (leaf.openChat || leaf.nudge || leaf.seenOnly) return false;
+  return resolveLeafActions(leaf, context).length === 0;
+}
+
+/** A BRANCH — children, no leaf of its own — whose children all gate out is the
+ *  same dead end one level up: it renders with a chevron, and tapping it either
+ *  does nothing or descends into an empty level.
+ *
+ *  Found by QA as `paywall`, whose only children (`nudge_subscribe`,
+ *  `nudge_browse_related`) are gated on visit count and cluster size and are
+ *  both off for most articles. `isInertActionLeaf` can't catch it — a branch has
+ *  no `leaf`, so it returns at the first guard.
+ *
+ *  Recursive on purpose: a branch whose only child is itself an empty branch is
+ *  equally dead, and the tree is authored deep enough for that to happen. */
+function isDeadBranch(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  if (node.leaf) return false;
+  const children = node.children;
+  if (!children?.length) return false;
+  return !children.some((c) => isVisibleNode(c, context));
+}
+
+/** The single visibility predicate. Every seam MUST use this one — QA found
+ *  `paywall` precisely because the children filter and `hasVisibleChildren` had
+ *  drifted into asking different questions. */
+function isVisibleNode(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  if (!evaluateCondition(node.visibleIf, context)) return false;
+  if (isInertActionLeaf(node, context)) return false;
+  return !isDeadBranch(node, context);
+}
 
 export interface FeedbackTreeEngine {
   /** The loaded tree (null until the first load resolves). */
@@ -95,7 +144,7 @@ export function useFeedbackTreeEngine(params: {
 
   const currentChildren = useMemo(() => {
     const level = path.length > 0 ? (path[path.length - 1].children ?? []) : rootNodes;
-    return level.filter((n) => evaluateCondition(n.visibleIf, context));
+    return level.filter((n) => isVisibleNode(n, context));
   }, [path, rootNodes, context]);
 
   const findNode = useCallback(
@@ -115,9 +164,10 @@ export function useFeedbackTreeEngine(params: {
     [rootNodes],
   );
 
+  // Same predicate as `currentChildren`, deliberately — these two drifting is
+  // what let the dead `paywall` branch through.
   const hasVisibleChildren = useCallback(
-    (node: FeedbackTreeNode) =>
-      (node.children ?? []).some((n) => evaluateCondition(n.visibleIf, context)),
+    (node: FeedbackTreeNode) => (node.children ?? []).some((n) => isVisibleNode(n, context)),
     [context],
   );
 

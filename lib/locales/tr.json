@@ -23,6 +23,7 @@
     "saving": "Kaydediliyor..."
   },
   "auth": {
+    "reauthBanner": "Senkronize etmek için yeniden giriş yap",
     "emailPlaceholder": "E-posta adresinizi girin",
     "otpPlaceholder": "6 haneli kodu girin",
     "codeSentTitle": "Kod Gönderildi!",
@@ -200,6 +201,10 @@
     "irrelevant": "İlgisiz",
     "unprocessed": "İşlenmemiş"
   },
+  "aiDisclosure": {
+    "caption": "AI tarafından oluşturulan not",
+    "short": "AI tarafından oluşturuldu"
+  },
   "articleDetail": {
     "readArticle": "Makaleyi Oku",
     "relatedArticles": "İlgili Makaleler",
@@ -207,6 +212,7 @@
     "storyUnavailable": "Bu haber artık mevcut değil",
     "failedToLoad": "Makale yüklenemedi",
     "articleNotFound": "Makale bulunamadı",
+    "offlineUnavailable": "Çevrimdışısın ve bu makale çevrimdışı okuma için kaydedilmemiş",
     "viewOriginal": "Orijinal makaleyi görüntüle",
     "viewOriginalIn": "Orijinal makaleyi {{language}} dilinde görüntüle",
     "viewAndTranslateOnDevice": "Makaleyi görüntüle ve cihazda çevir",
@@ -350,6 +356,10 @@
     "injectNoiseTitle": "Gürültü Enjeksiyonu",
     "injectNoiseDescription": "Gerçek ilgi alanlarınla birlikte sahte konular göndererek arka ucun konu listenizden kim olduğunu tahmin etmesini önler. Yalnızca sahte konularla eşleşen makaleler sana ulaşmadan filtrelenir.",
     "injectNoiseBeta": "Beta: konu oluşturmayı yavaşlatabilir ve akış alaka düzeyini düşürebilir.",
+    "relevanceV2Title": "v2 ilgi elde getirmesini kullan",
+    "relevanceV2On": "Cihazda puanlama, hikayenin nerede geçtiği önemli",
+    "relevanceV2Off": "Bulutta puanlama, orijinal yöntemi kullanarak",
+    "relevanceV2Description": "Beta — makalelerinizi yalnızca bulut modelini sormak yerine, hikayenin nerede geçtiğini ve ne tür bir olay olduğunu dikkate alarak cihazınızda puanlandırır. Konum etiketleri taşıyan makaleler gerektirir, bu nedenle başlangıçta çok az değişiklik görebilirsiniz. Geri dönmek için istediğiniz zaman kapatabilirsiniz.",
     "privacyTitle": "Verileriniz gizli kalır",
     "privacyDescription": "Mera Protokolü her zaman açıktır. Cihaz modunda çıkarım telefonunuzda tamamen çevrimdışı çalışır. Bulut modunda uçtan uca şifreli çıkarım kullanılır: verileriniz cihazınızda şifrelenir ve yalnızca içine bakamadığımız güvenli bir kapsül içinde çözülür. Kişisel bilgileriniz, profiliniz ve okuma geçmişiniz bu cihazdan hiç ayrılmaz. Haber getirmek için yalnızca genel konu ifadeleri gönderiyoruz; hiçbir kullanıcı kimliği olmadan.",
     "deviceSupported": "Cihaz Destekleniyor",
@@ -576,6 +586,7 @@
     "newChat": "Yeni sohbet",
     "inputPlaceholder": "Bir mesaj yaz...",
     "viewPreviousMessages": "Önceki mesajları görüntüle",
+    "aiInteractionNotice": "Mera adında bir yapay zeka asistanı ile konuşuyorsunuz — bir insan değil.",
     "aiUsageNotice": "Bu asistan haber tercihlerini ayarlamana yardımcı olur. Onu manipüle etmeye veya kötüye kullanmaya çalışmak hesabının inceleme bekleyene kadar engellenmesine yol açabilir.",
     "requestUnblock": {
       "button": "Engelin kaldırılmasını iste",
@@ -627,10 +638,16 @@
     "actionShowMoreTopic": "Konuyu daha çok göster",
     "actionDownRank": "Konunun önceliğini düşür",
     "actionPublicationPref": "Bir yayını ayarla",
+    "actionPublicationBoost": "Bu yayından daha fazla göster",
+    "actionPublicationDeprioritize": "Bu yayından daha az göster",
+    "actionPublicationMute": "Yayını sessize al",
+    "actionSourceScopeBoost": "Ülkedeki kaynaklardan daha fazla göster",
+    "actionSourceScopeDeprioritize": "Ülkedeki kaynaklardan daha az göster",
     "actionSuppress": "Bir ifadeyi filtrele",
     "actionPinTopic": "Konuyu sabitle",
     "actionUnpinTopic": "Konunun sabitini kaldır",
     "actionRetireTopic": "Konuyu emekliye ayır",
+    "actionRetireSuppression": "Filtreyi kaldır",
     "chooseOneHint": "Bir seçenek seç"
   },
   "publicationVisits": {
@@ -798,6 +815,8 @@
     "askMera": "Mera'ya Sor",
     "closeTree": "Kapat",
     "treeThanks": "Teşekkürler, not edildi.",
+    "feedbackCaption": "Tek başına bir dokunuş Mera'ya yeterli bilgi vermez — o yüzden atıyoruz, haber akışını sağlıklı tutmak için. Bir sebep seç, haber akışın hemen değişecek.",
+    "tapAgainToConfirm": "Onaylamak için tekrar dokunun",
     "chatHandoffLike": "Bu haberi beğendim, bunun gibi daha fazlası: {{path}}.",
     "chatHandoffLikeNoPath": "Bu haberi beğendim, bunun gibi daha fazlasını istiyorum.",
     "chatHandoffDislike": "Bu haberi beğenmedim, {{path}}.",
@@ -807,7 +826,8 @@
     "title": "Keşfet",
     "scopeWorld": "Dünya",
     "noArticles": "Makale bulunamadı",
-    "addPlaces": "Yerleri ekle"
+    "addPlaces": "Yerleri ekle",
+    "offlineUnavailable": "Çevrimdışısın — Keşfet için internet bağlantısı gerekli"
   },
   "forYou": {
     "sectionPrefix": "Haberler:",
@@ -815,6 +835,12 @@
     "showMore": "{{count}} tane daha göster",
     "viewAllArticles_one": "Tüm {{count}} makaleyi görüntüle",
     "viewAllArticles_other": "Tüm {{count}} makaleyi görüntüle",
+    "headlineSectionGlobal": "Dünya haberleri",
+    "headlineSectionCountry": "{{country}} haberleri",
+    "headlineDenominator_one": "Mera {{count}} başlığı okudu · {{shown}} senin zamanına değer.",
+    "headlineDenominator_other": "Mera {{count}} başlığı okudu · {{shown}} senin zamanına değer.",
+    "headlineDenominatorNone_one": "Mera {{count}} başlığı okudu · bugün hiçbiri ilgili görünmedi.",
+    "headlineDenominatorNone_other": "Mera {{count}} başlığı okudu · bugün hiçbiri ilgili görünmedi.",
     "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
     "subTabSaved": "Kaydedilenler"
@@ -843,6 +869,7 @@
     "trackAction": "Haberi takip et",
     "untrackAction": "Haberi takipten çık",
     "trackedToast": "Artık bu haberi takip ediyorsun",
+    "updatesBadge": "{{count}} yeni",
     "updatesBadge_one": "{{count}} yeni",
     "updatesBadge_other": "{{count}} yeni",
     "endedLabel": "Sona erdi",
@@ -937,7 +964,9 @@
       "unknown": "Profil değişikliği",
       "hygieneDeleteFact": "Bilgi kaldırıldı",
       "addLocation": "Konum eklendi",
-      "deleteLocation": "Konum kaldırıldı"
+      "deleteLocation": "Konum kaldırıldı",
+      "retireSuppression": "Filtre kaldırıldı",
+      "setSourceScopePref": "Kaynak kapsamı ayarlandı"
     }
   },
   "calibration": {
@@ -1077,6 +1106,77 @@
     "deleteFailedTitle": "Yer kaldırılamadı",
     "deleteFailedBody": "Lütfen tekrar dene."
   },
+  "notInterested": {
+    "title": "İlgilenmiyor",
+    "subtitle": "Mera'dan haber akışında tutmasını istediğin şeyler",
+    "sectionFilters": "Gizlediğin kelimeler ve şeyler",
+    "sectionTopics": "Daha az gördüğün konular",
+    "sectionSources": "Sessize aldığın veya düşük öncelik verdiğin kaynaklar",
+    "managePublications": "Kaynak tercihlerini yönet",
+    "chatHint": "Buraya gelmen zorunlu değil. Mera'ya görmek istemediğin şeyi söyle — \"daha az ünlü haberleri\" — ve o da geri kalanını halleder.",
+    "kinds": {
+      "keyword": "Kelimeler",
+      "category": "Kategori",
+      "event_type": "Haber türü",
+      "entity": "Kişi veya şey",
+      "place": "Yer",
+      "publication": "Kaynak",
+      "topic": "Konu"
+    },
+    "sources": {
+      "user": "Bunu sen ekledin",
+      "chat": "Mera'yla sohbetten",
+      "feedback": "Geri bildiriminden",
+      "digest": "Günlük incelemenizden",
+      "qa": "Mera'nın sorduğu bir sorudan",
+      "unknown": "Otomatik olarak eklendi"
+    },
+    "badgeBlocked": "Gizlendi",
+    "badgeShownLess": "Daha az göster",
+    "badgeMutedTopic": "Daha az göster",
+    "badgeDownranked": "Düşürüldü",
+    "badgeMutedPub": "Sessize alındı",
+    "mutedPubHint": "Gizlendi, önemli haberler hariç",
+    "cardExemptLabel": "\"{{filter}}\" filtrelemişsin — önemli haber olduğu için gösteriyorum",
+    "expiresOn": "{{date}} kadar",
+    "expiresNever": "Kaldırana kadar",
+    "remove": "Kaldır",
+    "removeConfirmTitle": "Kaldır?",
+    "removeConfirmBody": "Buna benzer hikayeler haber akışında tekrar gösterilebilir.",
+    "removeConfirmCta": "Kaldır",
+    "removeSuccessTitle": "Kaldırıldı",
+    "removeSuccessBody": "Bu artık haber akışından gizli değil.",
+    "removeFailedTitle": "Kaldırılamadı",
+    "removeFailedBody": "Lütfen tekrar dene.",
+    "addPhrase": "Birşey gizle",
+    "addPhraseTitle": "Haber akışından bir şey gizle",
+    "addPhraseBody": "Bir kelime veya kısa bir cümle yaz. Mera başlık ve haberde arayacak, ve seni bunlardan uzak tutacak. Daha özel bir şey için — bütün bir kategori, kaynak, kişi — Mera'ya söyle veya haberdeki başparmakları kullan: Mera bunu haberin kendisinden alıyor, yani her zaman eşleşir.",
+    "addPhrasePlaceholder": "ör. ünlü haberleri",
+    "addPhraseHardLabel": "Bunu haber akışından tut",
+    "addPhraseHardHint": "Mera bunu tutar. Önemli haber olursa yine de gösterilir, ama sana söylerim. Kapatırsan, Mera bunu daha az gösterir ve bir ay sonra unutur.",
+    "addPhraseSubmit": "Gizle",
+    "addPhraseSuccessTitle": "Tamam",
+    "addPhraseSuccessBodyBlocked": "\"{{phrase}}\" artık haber akışından gizli. Sadece önemli haberler geçer, ve Mera sana söyleyecek.",
+    "addPhraseSuccessBodySoft": "\"{{phrase}}\" hakkında çok daha az şey göreceksin.",
+    "addPhraseFailedTitle": "Kaydedilemedi",
+    "addPhraseFailedBody": "Lütfen tekrar dene.",
+    "emptyTitle": "Henüz hiçbir şey gizli değil",
+    "emptyBody": "Mera'ya bir şey ilgilenmiyor dediğinde, buraya çıkıyor, böylece geri alabilirsin.",
+    "emptyFilters": "Henüz hiçbir kelime gizlemedin.",
+    "emptyTopics": "Henüz düşürülen konu yok.",
+    "emptySources": "Henüz hiçbir kaynağı sessize almadın veya düşürmedin."
+  },
+  "headlineDepth": {
+    "title": "Öne çıkan başlıklar",
+    "subtitle": "Mera sana kaç tane okuyor",
+    "intro": "Mera her bölümdeki en büyük hikayeleri okur, sonra sana önemli olanları seçer. Daha fazla görmek için bir bölümü yükselt; dar tutmak için düşür.",
+    "worldwide": "Dünya geneli",
+    "optionLabel": "En İyi {{n}}",
+    "usingDefault": "Standart {{n}} kullanıyorum.",
+    "customised": "Standart {{n}} tarafından değiştirildi. Geri dönmek için tekrar {{n}} seç.",
+    "saveFailedTitle": "Kaydedilemedi",
+    "saveFailedBody": "Değişiklik kaydedilmedi. Tekrar dene."
+  },
   "profileHub": {
     "facts": "Bilgiler",
     "factsCount_one": "Akışını şekillendiren {{count}} bilgi",
@@ -1092,12 +1192,23 @@
     "prefsCount_one": "{{count}} kaynak ayarlandı",
     "prefsCount_other": "{{count}} kaynak ayarlandı",
     "prefsEmpty": "Kaynakları öne çıkar, önceliğini düşür veya sustur",
+    "visitedSubtitle": "Yakın zamanda açtığın yayınlar",
     "activity": "Etkinlik",
     "activitySubtitle": "Profil değişiklik geçmişin",
     "personaHealth": "Profil sağlığı",
     "healthPending_one": "{{count}} temizlik önerisi",
     "healthPending_other": "{{count}} temizlik önerisi",
-    "healthAllHealthy": "Her şey sağlıklı"
+    "healthAllHealthy": "Her şey sağlıklı",
+    "groupKnows": "Mera seni tanıyor",
+    "groupFeed": "Haber akışın",
+    "groupLibrary": "Kaynaklar & kütüphane",
+    "groupInternals": "Perde arkası",
+    "notInterested": "İlgilenmiyor",
+    "notInterestedSubtitle_one": "{{count}} gizlediğin şey",
+    "notInterestedSubtitle_other": "{{count}} gizlediğin şey",
+    "notInterestedEmpty": "Henüz hiçbir şey gizli değil",
+    "headlineDepth": "Öne çıkan başlıklar",
+    "headlineDepthSubtitle": "Mera bölüm başına kaç tane okuyor"
   },
   "profile": {
     "talkToMera": "Mera ile konuş",
@@ -1138,7 +1249,8 @@
     "kindMute": "Sustur",
     "clear": "Temizle",
     "clearA11y": "Tercihi temizle",
-    "empty": "Henüz hiçbir kaynağı ayarlamadın. Herhangi bir makaleden bir yayını öne çıkar, önceliğini düşür veya sustur, burada görünsün."
+    "empty": "Henüz hiçbir kaynağı ayarlamadın. Herhangi bir makaleden bir yayını öne çıkar, önceliğini düşür veya sustur, burada görünsün.",
+    "scopeKindCountry": "Ülke"
   },
   "optimisationPlan": {
     "notificationTitle": "Günlük akış ayarın hazır",
@@ -1158,5 +1270,40 @@
     "appliedToast": "{{count}} değişiklik uygulandı",
     "appliedTitle": "Akış ayarlandı",
     "empty": "Şu anda ayarlanacak bir şey yok."
+  },
+  "pin": {
+    "lockTitle": "PIN gir",
+    "lockSubtitle": "Mera'nın kilidini açmak için 4 haneli PIN'ini gir",
+    "incorrect": "Yanlış PIN. Tekrar dene.",
+    "lockedTryAgain": "Çok fazla deneme. {{time}} kadar tekrar dene",
+    "forgot": "PIN'ini unuttun?",
+    "forgotTitle": "PIN'ini sıfırla",
+    "forgotBody": "PIN'ini sıfırlamak için, bir kerelik e-posta kodu ile tekrar giriş yap. Kaydedilen verileriniz bu cihazda kalır.",
+    "forgotOffline": "PIN'i sıfırlamak için oturum açma kodu göndermek açısından internet bağlantısı gerekli. İnternet'e bağlan ve tekrar dene.",
+    "forgotConfirm": "Sıfırlamak için giriş yap",
+    "setupTitle": "PIN ayarla",
+    "setupSubtitle": "Bu cihazda uygulamayı korumak için 4 haneli bir PIN seç",
+    "confirmTitle": "PIN'ini onayla",
+    "confirmSubtitle": "4 haneli PIN'ini yeniden gir",
+    "mismatch": "PIN'ler eşleşmedi. Baştan başla."
+  },
+  "security": {
+    "title": "Güvenlik",
+    "subtitle": "Mera'nın bu cihazda PIN isteyip istemediğini seç",
+    "requirePinTitle": "Kilidi açmak için PIN gerekli",
+    "requirePinDescription": "Mera açarken 4 haneli PIN'i iste",
+    "setPinTitle": "PIN ayarla",
+    "setPinSubtitle": "Bu cihazda Mera'nın kilidini açmak için 4 haneli PIN seç",
+    "lockEnabledTitle": "PIN kilidi açık",
+    "lockEnabledDescription": "Mera'yı açarken PIN'ini girersin.",
+    "lockDisabledTitle": "PIN kilidi kapalı",
+    "lockDisabledDescription": "Mera PIN'i olmadan açılacak. PIN'in kaldırılmıştır.",
+    "changePin": "PIN'i değiştir",
+    "verifyCurrentTitle": "Şu anki PIN'i gir",
+    "verifyCurrentSubtitle": "Devam etmek için şu anki PIN'ini onayla",
+    "newPinTitle": "Yeni PIN ayarla",
+    "newPinSubtitle": "Yeni 4 haneli bir PIN seç",
+    "pinChangedTitle": "PIN güncellendi",
+    "pinChangedDescription": "PIN'in değiştirildi."
   }
 }

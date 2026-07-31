@@ -1,3 +1,5 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -26,11 +28,12 @@ import {
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
@@ -142,6 +145,11 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const [headline, setHeadline] = useState<string>('');
+    // EU AI Act Art. 50 transparency label (Group C1) — tracked separately from
+    // `headline` because that state merges `llmHeadline ?? fallbackTitle` into
+    // one string; the disclosure must only show when the displayed text is
+    // actually the LLM-generated one.
+    const [isLlmHeadline, setIsLlmHeadline] = useState(false);
     const [stableClusterId, setStableClusterId] = useState<string | null>(null);
     const [cards, setCards] = useState<TimelineCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -175,6 +183,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 if (!alive()) return;
                 if (!story) return;
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
+                setIsLlmHeadline(!!story.llmHeadline);
 
                 const localSnapshots = story.memberSnapshots ?? [];
                 setStableClusterId(story.stableClusterId ?? null);
@@ -255,16 +264,13 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         }, [trackedStoryId, load]),
     );
 
+    // Opens the reason view when Mera scored this article (see use-open-article).
+    const openArticle = useOpenArticle();
     const handleArticlePress = useCallback(
         (articleId: string, stableClusterId: string | null) => {
-            router.push({
-                pathname: '/logged-in/article-detail',
-                params: stableClusterId
-                    ? { articleId, stableClusterId }
-                    : { articleId },
-            });
+            openArticle({ articleId, stableClusterId });
         },
-        [],
+        [openArticle],
     );
 
     const renderItem: ListRenderItem<TimelineCard> = useCallback(
@@ -303,7 +309,12 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     );
 
     return (
-        <Box className="flex-1 bg-black">
+        // No opaque fill: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             <VStack style={{ paddingTop: insets.top + 8 }}>
                 <HStack className="items-center px-2 pb-2" space="sm">
                     <Pressable
@@ -324,6 +335,12 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                 numberOfLines={2}
                                 className="text-white"
                             />
+                        )}
+                        {/* Short copy — see TrackedStoriesScreen: this is a followed-
+                            story heading, and the header box is a narrow flex-1 slot
+                            between the back and delete buttons. */}
+                        {isLlmHeadline && (
+                            <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} />
                         )}
                     </Box>
                     {/* Delete is the ONLY way to stop following a story (Q13):

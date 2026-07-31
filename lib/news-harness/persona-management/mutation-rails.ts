@@ -70,25 +70,12 @@ export function nudgeTopicWeight(
   return { before, after, appliedDelta, requestedDelta: delta, budgetExceeded };
 }
 
-// ── Signal → delta ─────────────────────────────────────────────────────────
-
-export type NudgeSignal = 'show_less' | 'thumbs_down';
-
-/** The config-driven weight delta for a feedback signal. */
-export function signalDelta(
-  signal: NudgeSignal,
-  config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
-): number {
-  const r = config.mutationRails;
-  switch (signal) {
-    case 'show_less':
-      return r.SHOW_LESS;
-    case 'thumbs_down':
-      return r.THUMBS_DOWN;
-    default:
-      return 0;
-  }
-}
+// (removed: `NudgeSignal` / `signalDelta` — a signal→delta lookup with no
+// production caller. Feedback deltas come from the server-owned feedback tree's
+// leaf actions, resolved by `resolveLeafActions` and applied through
+// `applyPersonaActions`; nothing ever routed a 'show_less' / 'thumbs_down'
+// signal through this rail. The config constants it read (SHOW_LESS,
+// THUMBS_DOWN) are untouched.)
 
 // ── Wrong-location compiler ────────────────────────────────────────────────
 

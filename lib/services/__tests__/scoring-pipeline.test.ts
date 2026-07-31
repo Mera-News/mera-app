@@ -23,6 +23,8 @@ const mockSaveReason = jest.fn();
 const mockBatchMarkReasonSkipped = jest.fn();
 const mockBatchSaveMathScores = jest.fn();
 const mockGetComputedComponentsByIds = jest.fn((..._args: any[]) => Promise.resolve(new Map()));
+// P4b: stage-row lookup behind the headline/standard enqueue partition.
+const mockGetStageRowsByIds = jest.fn((..._args: any[]) => Promise.resolve([] as any[]));
 // Round-3: per-fact enqueue grouping + advisory-judge calibration deps.
 const mockLoadSectionSnapshots = jest.fn((..._args: any[]) =>
   Promise.resolve({
@@ -54,6 +56,12 @@ const mockComputeMathStage = jest.fn(async (candidates: any[] = []) => ({
   modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
 }));
 const mockBucketScores = jest.fn();
+// The effective (store + calibration aware) harness config. `undefined` is the
+// pre-existing shape these tests exercised — before this export was mocked at
+// all, `judgeHarnessConfig` fail-opened to DEFAULT_HARNESS_CONFIG, and
+// `?? DEFAULT_HARNESS_CONFIG` keeps that identical. The RELEVANCE_V2 cases
+// override it per-test.
+const mockEffectiveHarnessConfig = jest.fn();
 const mockBuildRelevanceCalls = jest.fn();
 const mockBuildReasonCallsForSubset = jest.fn();
 const mockDecodeResults = jest.fn();
@@ -145,6 +153,7 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   batchMarkReasonSkipped: (...args: any[]) => mockBatchMarkReasonSkipped(...args),
   batchSaveMathScores: (...args: any[]) => mockBatchSaveMathScores(...args),
   getComputedComponentsByIds: (...args: any[]) => mockGetComputedComponentsByIds(...args),
+  getStageRowsByIds: (...args: any[]) => mockGetStageRowsByIds(...args),
 }));
 
 // Round-3: fact-grouping snapshot loader (lazy-required in planFactBatches).
@@ -168,6 +177,7 @@ jest.mock('@/lib/database/services/calibration-service', () => ({
 // legacy backstop path (see mockComputeMathStage above).
 jest.mock('@/lib/mera-protocol/stage-scoring', () => ({
   computeMathStage: (...args: any[]) => mockComputeMathStage(...args),
+  effectiveHarnessConfig: (...args: any[]) => mockEffectiveHarnessConfig(...args),
 }));
 
 jest.mock('@/lib/mera-protocol/scoring-service', () => ({
@@ -247,6 +257,7 @@ jest.mock('@/lib/database/services/scoring-pipeline-store', () => ({
 
 import {
   enqueueCandidates,
+  enqueueUnscoredEligible,
   enqueueOrphanedReasons,
   handlePush,
   pollTick,
@@ -262,8 +273,11 @@ import {
   MAX_UNSCORED_WAIT_MS,
   MIN_DISPATCH,
   MAX_BATCH_ARTICLES,
+  MIN_DISPATCH_HEADLINE,
+  MAX_BATCH_ARTICLES_HEADLINE,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
 import logger from '@/lib/logger';
 
@@ -347,6 +361,7 @@ beforeEach(() => {
   mockSaveReason.mockResolvedValue(undefined);
   mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
   mockBucketScores.mockImplementation(() => undefined); // no-op: raw == bucketed
+  mockEffectiveHarnessConfig.mockResolvedValue(undefined); // → DEFAULT (v2 off)
   mockBuildRelevanceCalls.mockImplementation(async (subset: any[]) => ({
     calls: Array.from(
       { length: Math.max(1, Math.ceil(subset.length / 5)) },
@@ -371,6 +386,9 @@ beforeEach(() => {
   mockRefresh.mockResolvedValue(undefined);
   mockBatchSaveMathScores.mockResolvedValue(undefined);
   mockGetComputedComponentsByIds.mockResolvedValue(new Map());
+  // P4b default: no headline rows ⇒ one standard partition ⇒ the pre-P4b batch
+  // layout every other test in this file asserts.
+  mockGetStageRowsByIds.mockResolvedValue([]);
   mockLoadSectionSnapshots.mockResolvedValue({
     topics: new Map(),
     facts: new Map(),
@@ -392,6 +410,50 @@ afterEach(() => {
 });
 
 // ---------------------------------------------------------------------------
+
+// P8 site 1b — `enqueueUnscoredEligible` is the enqueue that fires when
+// feed-sync hydrated NOTHING (runPostFinalizeKick on a quiet feed, and the
+// suppressed cycle). Its predicate is separate from the feed-sync tombstone's,
+// so leaving the fact requirement here would have enqueued headlines ONLY on
+// syncs that happened to hydrate new articles — intermittent, and unfalsifiable
+// in QA.
+describe('enqueueUnscoredEligible — headline admission (P8 site 1b)', () => {
+  const headlineRow = (id: string) => ({
+    id,
+    titleEn: 'title',
+    descriptionEn: 'desc',
+    countryCode: null,
+    userTopicIds: [],
+    relatedFacts: [], // factless BY DESIGN — synthetic matched topic, topicId null
+    meta: { headlineScope: 'GLOBAL' },
+  });
+
+  it('enqueues a factless TOP-HEADLINE row', async () => {
+    mockGetUnscored.mockResolvedValue([headlineRow('h1')]);
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(1);
+  });
+
+  it('still skips a factless row that is NOT headline-sourced', async () => {
+    mockGetUnscored.mockResolvedValue([
+      { ...headlineRow('orphan'), meta: { headlineScope: null } },
+    ]);
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(0);
+  });
+
+  it('still skips a headline row with no English text', async () => {
+    mockGetUnscored.mockResolvedValue([{ ...headlineRow('h-empty'), descriptionEn: null }]);
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(0);
+  });
+});
 
 describe('model-key validation fail-fast (MERA-APP-39)', () => {
   it('fails a relevance batch terminally when the E2EE rebuild rejects with ModelKeyValidationError — no submit, no loop', async () => {
@@ -872,6 +934,190 @@ describe('relevance completion', () => {
     // single failed batch finalizes + clears the run
     expect(finalBatch === undefined || finalBatch.phase === 'failed').toBe(true);
     expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P8 — SOFT suppression ("Shown less") on the BACKSTOP/legacy path.
+//
+// The cloud LLM knows nothing about the user's filters and its score REPLACES
+// the math score that carried the penalty, so a soft filter used to be computed
+// and then discarded on this path — which, with enrichment unshipped, is every
+// article. Submit carries the already-computed penalty on the batch; decode
+// subtracts it before bucketing, the reason gate and discardLowRelevance.
+// ---------------------------------------------------------------------------
+
+/** Backstop batch whose componentsMap carries the given suppression penalties. */
+function mockBackstopWithPenalties(penalties: Record<string, number>) {
+  mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+    persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+    stage: candidates.map((c) => ({ input: { id: c.id } })),
+    computedScoreMap: new Map(),
+    componentsMap: new Map(
+      candidates.map((c) => [c.id, { geoAlignment: 'NONE', suppressPenalty: penalties[c.id] ?? 0 }]),
+    ),
+    modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+  }));
+}
+
+describe('soft suppression on the legacy path', () => {
+  // jest.clearAllMocks() clears CALLS, not implementations — restore the
+  // module-level default so these overrides never leak into later suites.
+  afterEach(() => {
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map(),
+      componentsMap: new Map(),
+      modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+    }));
+    mockBuildJudgeCalls.mockReset();
+  });
+
+  it('carries only the NON-ZERO penalties on the batch at submit', async () => {
+    mockBackstopWithPenalties({ a0: 0.3, a1: 0 });
+    await enqueueCandidates(['a0', 'a1']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    expect(batch.suppressPenaltyMap).toEqual({ a0: 0.3 });
+  });
+
+  it('omits the field entirely when nothing matched (pre-change code path)', async () => {
+    mockBackstopWithPenalties({ a0: 0, a1: 0 });
+    await enqueueCandidates(['a0', 'a1']);
+
+    expect(currentRun().batches[0].suppressPenaltyMap).toBeUndefined();
+  });
+
+  it('subtracts the penalty from the persisted LLM score, leaving unmatched rows byte-identical', async () => {
+    mockBackstopWithPenalties({ a0: 0.3, a1: 0 });
+    await enqueueCandidates(['a0', 'a1']);
+    const batch = currentRun().batches[0];
+
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.8], ['a1', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([]);
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    const saved = Object.fromEntries(
+      mockSaveScoringResult.mock.calls.map((c: any[]) => [c[0], c[1].relevance]),
+    );
+    expect(saved.a0).toBeCloseTo(0.5, 10);
+    expect(saved.a1).toBe(0.8); // strict: matched nothing ⇒ untouched
+  });
+
+  it('never drives the persisted score below 0', async () => {
+    mockBackstopWithPenalties({ a0: 0.6 });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.1]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a0', expect.objectContaining({ relevance: 0 }));
+  });
+
+  it('demotes below the reason gate — a penalised row earns no reasons job', async () => {
+    mockBackstopWithPenalties({ a0: 0.3 });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    // 0.5 clears REASON_RELEVANCE_THRESHOLD (0.3); 0.5 − 0.3 = 0.2 does not.
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.5]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    mockSendInferenceRequest.mockClear();
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    expect(mockDiscardLowRelevance).toHaveBeenCalled();
+  });
+
+  it('penalises the MATH-mode rows of a MIXED batch too (they ride the legacy prompt)', async () => {
+    // One backstop row forces the whole batch down the legacy path, which
+    // submits `active` — every survivor, math-mode ones included. Keying the
+    // penalty map over `math.stage` (not just the backstop rows) is what stops
+    // those math rows from silently losing their penalty. This is the
+    // regression contract for that decision.
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map(candidates.map((c) => [c.id, 0.7])),
+      componentsMap: new Map(
+        candidates.map((c) => [c.id, { geoAlignment: 'NONE', suppressPenalty: 0.3 }]),
+      ),
+      modeMap: new Map(candidates.map((c) => [c.id, c.id === 'a1' ? 'backstop' : 'math'])),
+    }));
+    await enqueueCandidates(['a0', 'a1']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.judgeMode).toBeFalsy(); // legacy path (a1 is backstop)
+    expect(batch.suppressPenaltyMap).toEqual({ a0: 0.3, a1: 0.3 });
+
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.8], ['a1', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([]);
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+
+    await handlePush(batch.requestId, 'foreground');
+
+    const saved = Object.fromEntries(
+      mockSaveScoringResult.mock.calls.map((c: any[]) => [c[0], c[1].relevance]),
+    );
+    expect(saved.a0).toBeCloseTo(0.5, 10);
+    expect(saved.a1).toBeCloseTo(0.5, 10);
+  });
+
+  it('never carries a penalty map on a judge-mode batch (the math score already has it)', async () => {
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map([['a0', 0.8]]),
+      componentsMap: new Map(
+        candidates.map((c) => [c.id, { geoAlignment: 'NONE', suppressPenalty: 0.3 }]),
+      ),
+      modeMap: new Map(candidates.map((c) => [c.id, 'math'])),
+    }));
+    mockBuildJudgeCalls.mockReturnValue({
+      calls: [{ id: 'judge:0', system: 's', prompt: 'p' }],
+      chunkIds: new Map(),
+    });
+    await enqueueCandidates(['a0']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.judgeMode).toBe(true);
+    expect(batch.suppressPenaltyMap).toBeUndefined();
   });
 });
 
@@ -1419,6 +1665,48 @@ describe('judge mode (advisory)', () => {
     expect(batch.phase).toBe('waiting-relevance');
     expect(batch.judgeMode).toBe(true);
     expect(batch.judgedIds).toEqual(['a0']);
+
+    // RELEVANCE_V2 OFF (the default) → the bucketing still runs. This is the
+    // "nothing changed" half of the flag.
+    expect(mockBucketScores).toHaveBeenCalled();
+  });
+
+  // RELEVANCE_V2 changes exactly one thing on this path: the value persisted as
+  // `relevance`. `bucketScores` is a no-op in these orchestrator tests (raw ==
+  // bucketed), so the routing decision is pinned by whether it is CALLED.
+  it('RELEVANCE_V2 ON: persists the UNBUCKETED computed score and never buckets', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue({
+      ...DEFAULT_HARNESS_CONFIG,
+      scoringEngine: {
+        ...DEFAULT_HARNESS_CONFIG.scoringEngine,
+        USE_ARTICLE_TAGS: true,
+        RELEVANCE_V2: true,
+      },
+    });
+    // 0.83 would have bucketed to 0.8; 0.44 to 0.4. 0.2 is under discardFloor,
+    // so bucketing never touched it either way.
+    mockMathMode({ a0: 0.83, a1: 0.44, a2: 0.2 });
+    await enqueueCandidates(['a0', 'a1', 'a2']);
+
+    expect(mockBucketScores).not.toHaveBeenCalled();
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'a0', relevance: 0.83, reasonSkipped: false }),
+        expect.objectContaining({ id: 'a1', relevance: 0.44, reasonSkipped: false }),
+        expect.objectContaining({ id: 'a2', relevance: 0.2, reasonSkipped: true }),
+      ]),
+    );
+    // rawScore / computedScore are the SAME raw value as before — untouched.
+    expect(saved.find((s) => s.id === 'a0')).toMatchObject({
+      rawScore: 0.83,
+      computedScore: 0.83,
+    });
+    // Threshold membership is unchanged by the flag: bucketing never moves a
+    // value across REASON_RELEVANCE_THRESHOLD (0.3), so the judged subset is
+    // exactly the same one the bucketed path would have produced.
+    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
+    expect(judgeStage.map((c) => c.input.id)).toEqual(['a0', 'a1']);
   });
 
   it('marks the batch done at submit without a judge job when nothing is above threshold', async () => {
@@ -1609,5 +1897,207 @@ describe('apply-step throw → attempt cap (MERA-APP-53/55)', () => {
     expect(applyCaptures.length).toBeLessThanOrEqual(2);
     // The run is terminal now → no further polling of this batch.
     expect(currentRun()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P4b — headline/standard batch homogeneity + the persisted chunk size.
+//
+// A batch becomes ONE inference request whose `score:N` calls the decoder
+// rebuilds by re-chunking `candidateIds`. Headline candidates chunk at 3 and
+// standard ones at 5, so a MIXED batch would need two sizes and the decoder,
+// applying one, would attribute scores to the WRONG articles — silently. These
+// tests pin (a) a mixed enqueue never produces a mixed batch, and (b) the size
+// the submit actually used is persisted and is what decode re-chunks with.
+// ---------------------------------------------------------------------------
+
+describe('P4b — headline batch partitioning + chunk-size round trip', () => {
+  const HEADLINE_CHUNK = 3;
+
+  /** Stage rows as getStageRowsByIds returns them (only the field we read). */
+  function stageRows(headlineIds: string[], standardIds: string[] = []) {
+    return [
+      ...headlineIds.map((id) => ({ id, headlineScope: 'GLOBAL' })),
+      ...standardIds.map((id) => ({ id, headlineScope: null })),
+    ];
+  }
+
+  /** Mirror of the real builder: variant (and therefore chunk size) derived
+   *  from the candidates, reported back on the bundle. */
+  function realisticRelevanceBuilder() {
+    return jest.fn(async (subset: any[]) => {
+      const allHeadline =
+        subset.length > 0 &&
+        subset.every((c) => c.meta?.headlineScope === 'GLOBAL');
+      const size = allHeadline ? HEADLINE_CHUNK : 5;
+      return {
+        calls: Array.from(
+          { length: Math.max(1, Math.ceil(subset.length / size)) },
+          (_, i) => ({ id: `score:${i}`, system: 's', prompt: 'p' }),
+        ),
+        eligibleCandidates: subset,
+        promptsById: new Map(),
+        chunkIdToCandidates: new Map(),
+        scoreChunkSize: size,
+      };
+    });
+  }
+
+  /** getUnscored, with meta attached for the ids the stage lookup called out. */
+  function unscoredWithMeta(headlineIds: Set<string>) {
+    return async () => {
+      const all = new Set<string>();
+      if (mockRun) {
+        for (const b of mockRun.batches) for (const id of b.candidateIds) all.add(id);
+      }
+      return Array.from(all).map((id) => ({
+        ...candidate(id),
+        meta: { id, headlineScope: headlineIds.has(id) ? 'GLOBAL' : null },
+      }));
+    };
+  }
+
+  it('never puts a headline and a standard candidate in the same batch', async () => {
+    const headlineIds = ['h0', 'h1', 'h2', 'h3'];
+    const standardIds = ['s0', 's1', 's2', 's3', 's4', 's5'];
+    // Interleaved arrival order — the partition must survive it.
+    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4', 's5'];
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds, standardIds));
+
+    await enqueueCandidates(arrival);
+
+    const run = currentRun();
+    expect(run.batches.length).toBeGreaterThanOrEqual(2);
+    const hs = new Set(headlineIds);
+    for (const b of run.batches) {
+      const flags = new Set(b.candidateIds.map((id: string) => hs.has(id)));
+      expect(flags.size).toBe(1); // all-headline OR all-standard, never both
+    }
+    // Nothing lost, nothing duplicated.
+    expect(run.batches.flatMap((b: any) => b.candidateIds).sort()).toEqual(
+      [...arrival].sort(),
+    );
+  });
+
+  it('keeps delivery order within each partition', async () => {
+    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4'];
+    mockGetStageRowsByIds.mockResolvedValue(
+      stageRows(['h0', 'h1', 'h2', 'h3'], ['s0', 's1', 's2', 's3', 's4']),
+    );
+
+    await enqueueCandidates(arrival);
+
+    const run = currentRun();
+    const flat = run.batches.flatMap((b: any) => b.candidateIds);
+    expect(flat.filter((id: string) => id.startsWith('s'))).toEqual([
+      's0', 's1', 's2', 's3', 's4',
+    ]);
+    expect(flat.filter((id: string) => id.startsWith('h'))).toEqual([
+      'h0', 'h1', 'h2', 'h3',
+    ]);
+  });
+
+  it('dispatches a headline partition at its own (smaller) floor — one LLM call', async () => {
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(['h0', 'h1', 'h2']));
+
+    // 3 < MIN_DISPATCH (5) but == MIN_DISPATCH_HEADLINE, so it goes out now.
+    const res = await enqueueCandidates(['h0', 'h1', 'h2']);
+
+    expect(res.deferred).toEqual([]);
+    expect(currentRun().batches[0].candidateIds).toEqual(['h0', 'h1', 'h2']);
+  });
+
+  it('caps a headline batch at MAX_BATCH_ARTICLES_HEADLINE (10 calls, not 17)', async () => {
+    const headlineIds = ids(MAX_BATCH_ARTICLES_HEADLINE + MIN_DISPATCH_HEADLINE, 'h');
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds));
+
+    await enqueueCandidates(headlineIds);
+
+    const run = currentRun();
+    expect(run.batches[0].candidateIds).toHaveLength(MAX_BATCH_ARTICLES_HEADLINE);
+    expect(run.batches[1].candidateIds).toHaveLength(MIN_DISPATCH_HEADLINE);
+  });
+
+  it('persists the chunk size the submit ACTUALLY used, per variant', async () => {
+    const headlineIds = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5'];
+    const standardIds = ['s0', 's1', 's2', 's3', 's4'];
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds, standardIds));
+    mockGetUnscored.mockImplementation(unscoredWithMeta(new Set(headlineIds)));
+    mockBuildRelevanceCalls.mockImplementation(realisticRelevanceBuilder());
+
+    await enqueueCandidates([...standardIds, ...headlineIds]);
+
+    const run = currentRun();
+    const byKind = new Map<boolean, any>();
+    for (const b of run.batches) {
+      byKind.set(b.candidateIds[0].startsWith('h'), b);
+    }
+    expect(byKind.get(false).scoreChunkSize).toBe(5);
+    expect(byKind.get(true).scoreChunkSize).toBe(HEADLINE_CHUNK);
+  });
+
+  it('decodes a headline batch with the PERSISTED size, not the standard one', async () => {
+    const headlineIds = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5'];
+    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds));
+    mockGetUnscored.mockImplementation(unscoredWithMeta(new Set(headlineIds)));
+    mockBuildRelevanceCalls.mockImplementation(realisticRelevanceBuilder());
+
+    await enqueueCandidates(headlineIds);
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    expect(batch.scoreChunkSize).toBe(HEADLINE_CHUNK);
+
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [
+        { id: 'score:0', ok: true },
+        { id: 'score:1', ok: true },
+      ],
+    });
+    mockReconstructLookups.mockClear();
+
+    await handlePush(batch.requestId, 'foreground');
+
+    // 6 ids / 3 = 2 chunks (a 5-chunking would have produced 2 chunks too, but
+    // with the WRONG boundaries) — assert the size that was actually passed.
+    expect(mockReconstructLookups).toHaveBeenCalledWith(
+      ['score:0', 'score:1'],
+      headlineIds,
+      HEADLINE_CHUNK,
+    );
+  });
+
+  it('decodes a pre-P4b batch (no persisted size) with the standard size', async () => {
+    await enqueueCandidates(['a0', 'a1', 'a2', 'a3', 'a4', 'a5']);
+    // Strip the field from the persisted record — exactly the shape a batch
+    // submitted by a PRE-P4b build rehydrates with while still in flight.
+    delete mockRun.batches[0].scoreChunkSize;
+    const batch = currentRun().batches[0];
+    expect(batch.scoreChunkSize).toBeUndefined();
+
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }, { id: 'score:1', ok: true }],
+    });
+    mockReconstructLookups.mockClear();
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockReconstructLookups).toHaveBeenCalledWith(
+      expect.any(Array),
+      ['a0', 'a1', 'a2', 'a3', 'a4', 'a5'],
+      5,
+    );
+  });
+
+  it('falls back to one standard partition when the stage lookup throws', async () => {
+    mockGetStageRowsByIds.mockRejectedValue(new Error('db gone'));
+
+    await enqueueCandidates(ids(MIN_DISPATCH, 'x'));
+
+    const run = currentRun();
+    expect(run.batches).toHaveLength(1);
+    expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
   });
 });

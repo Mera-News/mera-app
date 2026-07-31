@@ -6,7 +6,10 @@
 //   TANGENTIAL 0.25 <= raw < 0.40  (interest-adjacent -> future Discover surface)
 //   EXCLUDE    raw < 0.25   (unrelated -> never shown)
 //
-// Usage: node eval-golden.js <runDir> [--engine=math|backstop] [--verbose]
+// Usage: node eval-golden.js <runDir> [--engine=math|backstop] [--persona <path>] [--verbose]
+//
+//   --persona <path>   forwarded to build-eval-scores.ts; overrides the default
+//                      eval/persona-v3.json (e.g. eval/persona-v3-suppress.json).
 //
 //   (no --engine)      legacy: score the run's recorded scores.json (unchanged).
 //   --engine=backstop  score the run's scores.json (today's LLM path) AND report
@@ -40,11 +43,17 @@ if (engineArg) {
 // scores: either the run's recorded scores.json (legacy) or the engine-aware
 // eval-scores-<engine>.json produced by build-eval-scores.ts (carries per-row
 // rawScore + wrongLocation + optional component breakdown).
+const personaIdx = process.argv.indexOf('--persona');
+const personaPath = personaIdx > -1 ? process.argv[personaIdx + 1] : null;
+
 let scores;
 if (engine) {
   execFileSync(
     'npx',
-    ['tsx', '--tsconfig', 'harness-local/tsconfig.json', 'eval/lib/build-eval-scores.ts', runDir, engine],
+    [
+      'tsx', '--tsconfig', 'harness-local/tsconfig.json', 'eval/lib/build-eval-scores.ts', runDir, engine,
+      ...(personaPath ? ['--persona', personaPath] : []),
+    ],
     { stdio: ['ignore', 'inherit', 'inherit'], cwd: path.join(__dirname, '..') },
   );
   scores = JSON.parse(fs.readFileSync(path.join(runDir, `eval-scores-${engine}.json`), 'utf8'));

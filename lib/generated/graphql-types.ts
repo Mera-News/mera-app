@@ -177,6 +177,7 @@ export enum HeadlineScope {
 /** A single top-headlines scope. COUNTRY requires countryCode; GLOBAL takes none. */
 export type HeadlineScopeInput = {
   countryCode?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
   scope: HeadlineScope;
 };
 
@@ -350,7 +351,7 @@ export type PersonaMatchMeta = {
   articleId: Scalars['ID']['output'];
   stableClusterId?: Maybe<Scalars['String']['output']>;
   textScore?: Maybe<Scalars['Float']['output']>;
-  vectorScore: Scalars['Float']['output'];
+  vectorScore?: Maybe<Scalars['Float']['output']>;
 };
 
 /** Privacy-lean persona query: topic texts + optional top-headlines scopes. No locations, weights, or exclude-topics are ever accepted here (deliberate). */

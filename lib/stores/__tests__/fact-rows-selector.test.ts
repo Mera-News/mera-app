@@ -605,3 +605,96 @@ describe('isVisible composition (drift guard)', () => {
     expect(isVisible(justOutside, CUTOFF)).toBe(false);
   });
 });
+
+// --- representative election (source preferences, source-pref D3) ----------
+
+describe('buildFactRows representative election (source preferences)', () => {
+  const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+  const PREF_CTX: UserGeoLanguageContext = {
+    homeCountryAlpha3: 'USA',
+    otherCountriesAlpha3: [],
+    appLanguageBase: 'en',
+    preferredPublications: new Set(['times of india']),
+    preferredCountriesAlpha3: new Set(['IND']),
+  };
+
+  function member(o: Parameters<typeof sugg>[0]) {
+    return sugg({
+      clusters: [{ clusterId: 'c1', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'x' }],
+      ...o,
+    });
+  }
+
+  it('a preferred publication fronts the card, outranking the home-country geo tier', () => {
+    const preferred = member({
+      _id: 'toi',
+      publication_name: 'Times of India',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+    });
+    const home = member({
+      _id: 'cnn',
+      publication_name: 'CNN',
+      country_code: 'USA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+    });
+    const { rows } = buildFactRows(
+      [preferred, home], snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, PREF_CTX,
+    );
+    const f1 = rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups[0].data._id).toBe('toi');
+  });
+
+  it('a preferred country scope fronts the card when no publication is named', () => {
+    const scoped = member({
+      _id: 'hindu',
+      publication_name: 'The Hindu',
+      country_code: 'IND',
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+    });
+    const other = member({
+      _id: 'lemonde',
+      publication_name: 'Le Monde',
+      country_code: 'FRA',
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+    });
+    const { rows } = buildFactRows(
+      [scoped, other], snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, PREF_CTX,
+    );
+    const f1 = rows.find((r) => r.factId === 'f1')!;
+    expect(f1.groups[0].data._id).toBe('hindu');
+  });
+
+  it('REGRESSION CONTRACT: with no source preferences the result is identical to a null context', () => {
+    const pool = [
+      member({
+        _id: 'toi',
+        publication_name: 'Times of India',
+        country_code: 'IND',
+        firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      }),
+      member({
+        _id: 'cnn',
+        publication_name: 'CNN',
+        country_code: 'USA',
+        firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      }),
+    ];
+    const noPrefCtx: UserGeoLanguageContext = {
+      homeCountryAlpha3: null,
+      otherCountriesAlpha3: [],
+      appLanguageBase: null,
+    };
+    const baseline = buildFactRows(pool, snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, null);
+    expect(buildFactRows(pool, snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, noPrefCtx))
+      .toEqual(baseline);
+    expect(
+      buildFactRows(pool, snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, {
+        ...noPrefCtx,
+        preferredPublications: new Set(),
+        preferredCountriesAlpha3: new Set(),
+      }),
+    ).toEqual(baseline);
+  });
+});

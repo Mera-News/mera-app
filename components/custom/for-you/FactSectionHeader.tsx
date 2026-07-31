@@ -23,6 +23,15 @@ interface FactSectionHeaderProps {
   total: number;
   /** When set, the whole header is tappable and opens the full fact feed. */
   onPress?: () => void;
+  /** Small line above the title. Defaults to the "News about:" fact prefix;
+   *  pass `null` for a section that is not about a fact (headline sections,
+   *  whose title already says what the section is). */
+  prefix?: string | null;
+  /** False for titles that are already app copy in the reader's language
+   *  (headline sections) — running them through TranslatableDynamic would
+   *  machine-translate an already-localized string. Defaults true (fact
+   *  statements ARE user data and must be translated). */
+  translateTitle?: boolean;
 }
 
 /**
@@ -42,13 +51,17 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
   eventType,
   total,
   onPress,
+  prefix,
+  translateTitle = true,
 }) => {
   const { t } = useTranslation();
 
   const icon = eventTypeIcon(eventType);
   const canPress = !!onPress;
+  // `undefined` ⇒ the default fact prefix; `null` ⇒ no prefix row at all.
+  const prefixText = prefix === undefined ? t('forYou.sectionPrefix') : prefix;
 
-  const titleNode = (
+  const titleNode = translateTitle ? (
     <TranslatableDynamic
       text={title}
       as="heading"
@@ -60,15 +73,21 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       numberOfLines={2}
       className="text-white"
     />
+  ) : (
+    <Text size="lg" bold numberOfLines={2} className="text-white">
+      {title}
+    </Text>
   );
 
   const HeaderInner = (
     // Internal padding (no outer margins) so the header text sits on the
     // gradient ink of the enclosing SectionGradientPanel.
     <VStack className="px-3 py-2.5">
-      <Text size="xs" className="text-typography-500 mb-0.5">
-        {t('forYou.sectionPrefix')}
-      </Text>
+      {!!prefixText && (
+        <Text size="xs" className="text-typography-500 mb-0.5">
+          {prefixText}
+        </Text>
+      )}
       <HStack className="items-start" space="sm">
         {icon && <MaterialIcons name={icon} size={20} color={ACCENT} style={{ marginTop: 2 }} />}
         <Box className="flex-1 min-w-0">{titleNode}</Box>

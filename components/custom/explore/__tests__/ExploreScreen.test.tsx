@@ -2,6 +2,16 @@
 import { act, render } from '@testing-library/react-native';
 import React from 'react';
 
+// The animated gradient backdrop is pure decoration and asserts nothing here,
+// but it imports react-native-reanimated, whose worklets runtime cannot
+// initialise under Jest. Stubbing the component keeps reanimated out of this
+// suite's module graph entirely — cheaper and less fragile than mocking the
+// whole animation library for a view that renders no testable content.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+
 // css-interop JSX shim (reads Platform.OS at module load) — same as other tests.
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const ReactJSXRuntime = require('react/jsx-runtime');
@@ -48,14 +58,22 @@ jest.mock('@expo/vector-icons', () => { const { View } = require('react-native')
 // about mounts (which remount + refetch), and a render-body spy would count
 // every re-render instead.
 const mockListMount = jest.fn();
+const mockListRender = jest.fn();
 jest.mock('../ScopeArticleList', () => {
     const ReactLib = require('react');
     const { View } = require('react-native');
-    const ScopeArticleListStub = ({ scope }: any) => {
+    const ScopeArticleListStub = ({ scope, enabled }: any) => {
+        mockListRender({ scopeId: scope.id, enabled });
         ReactLib.useEffect(() => {
             mockListMount(scope.id);
         }, []);
-        return <View testID="scope-article-list" accessibilityLabel={scope.id} />;
+        return (
+            <View
+                testID="scope-article-list"
+                accessibilityLabel={scope.id}
+                accessibilityState={{ disabled: !enabled }}
+            />
+        );
     };
     return { __esModule: true, default: ScopeArticleListStub };
 });
@@ -118,18 +136,26 @@ beforeEach(() => {
 });
 
 describe('ExploreScreen — cold-open flicker gate', () => {
-    it('holds the article list until locations emit, then mounts it exactly once on World', () => {
-        const { queryByTestId, getByTestId } = render(<ExploreScreen />);
+    it('RENDERS the list from the first commit but leaves its query disabled until locations emit', () => {
+        // The gate moved from the MOUNT to the QUERY. It has to: react-native-
+        // screens walks `subviews[0]` from the tab screen exactly once, when the
+        // screen's first child mounts, to find the tab's scroll view — a list
+        // that is not on screen in that first commit is never registered, and
+        // iOS 26 tab-bar minimize never engages on this tab. So the list is
+        // always present; only its fetch is held back.
+        const { getByTestId } = render(<ExploreScreen />);
 
-        // Before the emission the chip row renders (against the device-country
-        // fallback) but the list must not — mounting here would flash country:USA.
         expect(getByTestId('scope-chip-row')).toBeTruthy();
-        expect(queryByTestId('scope-article-list')).toBeNull();
-        expect(mockListMount).not.toHaveBeenCalled();
+        expect(getByTestId('scope-article-list')).toBeTruthy();
+        expect(mockListRender).toHaveBeenLastCalledWith(
+            expect.objectContaining({ enabled: false }),
+        );
 
         act(() => {
             emitLocations!([row(), row({ id: 'loc2', city: 'paris', countryCode: 'FR', role: 'interest', weight: 0.4 })]);
         });
+
+        expect(mockListRender).toHaveBeenLastCalledWith({ scopeId: 'world', enabled: true });
 
         // Exactly one mount. World now leads the row, so that is the landing
         // chip — the point of the gate is still that the pre-emission render

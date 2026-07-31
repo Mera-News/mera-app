@@ -6,7 +6,13 @@
 // action row) rather than a floating modal — see `CardFeedbackSurface` +
 // `InlineFeedbackTree`. This hook owns only the (stable) card-action handlers:
 //   • a thumb tap records the verdict (fresh / flipped) — the card then reveals
-//     its inline surface (visibility derived from the stored verdict, per row);
+//     its inline surface (visibility derived from the stored verdict, per row).
+//     That verdict is PROVISIONAL until the user gives it a reason: the thumb
+//     stays hollow and the row is discarded rather than speculated on (D15).
+//     The commit discriminator is a COMMITTED flag set only when a terminal leaf
+//     settles (or the user escalates to Mera) — NOT the stored tree path, which
+//     a mere branch descent also writes and which therefore filled the thumb
+//     while the caption was still promising the tap would be discarded (F2);
 //   • re-tapping the SAME thumb REMOVES the verdict and all its feedback;
 //   • the inline tree's path edits persist as the user taps;
 //   • the surface's × closes it (keeps the verdict) via the session-level
@@ -70,6 +76,12 @@ export interface VerdictStoreAdapter {
   setVerdict: (key: string, verdict: Verdict | null) => void;
   getPath: (key: string) => string[] | undefined;
   setPath: (key: string, path: string[]) => void;
+  /** True once a terminal leaf committed for this key — the ONLY thing a filled
+   *  thumb may be derived from. Separate from `getPath` on purpose: a path
+   *  exists the moment a branch is opened. */
+  getCommitted: (key: string) => boolean;
+  /** Mark (or, on un-vote / flip, unmark) the verdict as committed. */
+  setCommitted: (key: string, committed: boolean) => void;
 }
 
 /**
@@ -117,12 +129,16 @@ export function useFeedbackSheet(adapter: VerdictStoreAdapter): UseFeedbackSheet
       // Re-tap of the same thumb — un-vote: drop the verdict + its feedback.
       a.setVerdict(key, null);
       a.setPath(key, []);
+      a.setCommitted(key, false);
       dismiss.undismiss(key);
       swipeCallbacks.onVerdictRemoved(suggestion, next);
     } else if (existing != null) {
-      // Flip like↔dislike — reset the path and reopen the surface fresh.
+      // Flip like↔dislike — reset the path and reopen the surface fresh. The
+      // old sentiment's row (and its commitment) is destroyed by
+      // `changeSwipeVerdict`, so the new one starts uncommitted.
       a.setVerdict(key, next);
       a.setPath(key, []);
+      a.setCommitted(key, false);
       dismiss.undismiss(key);
       swipeCallbacks.onVerdictChanged(suggestion, existing, next);
       markSuggestionRead(suggestion);
@@ -151,16 +167,28 @@ export function useFeedbackSheet(adapter: VerdictStoreAdapter): UseFeedbackSheet
         swipeCallbacks.onTreePathChanged(s, v, pathIds);
       },
       onInvokeMera: (s, v, pathIds) => {
+        // Escalating to the chat is context the user supplied, so it COMMITS
+        // (the design lists it alongside picking a reason). Note this is a
+        // forward promise: the chat stamps the row only once the user confirms
+        // the agent's proposals.
+        swipeCallbacks.onLeafCommitted(s, v, pathIds);
         swipeCallbacks.onInvokeMera(s, v, pathIds);
         // Escalating to the chat is a terminal action — close the surface.
         const key = adapterRef.current.keyFor(s);
-        if (key) useFeedbackDismissedStore.getState().dismiss(key);
+        if (key) {
+          adapterRef.current.setCommitted(key, true);
+          useFeedbackDismissedStore.getState().dismiss(key);
+        }
       },
       onLeafCommitted: (s, v, pathIds) => {
-        // The last input in the tree — persist the path, then close the surface.
+        // The last input in the tree — this, and only this, fills the thumb.
+        // The DB write lives here too: `onTreePathChanged` cannot carry it,
+        // because a branch descent goes through the same callback (F2).
+        swipeCallbacks.onLeafCommitted(s, v, pathIds);
         const key = adapterRef.current.keyFor(s);
         if (key) {
           adapterRef.current.setPath(key, pathIds);
+          adapterRef.current.setCommitted(key, true);
           useFeedbackDismissedStore.getState().dismiss(key);
         }
       },

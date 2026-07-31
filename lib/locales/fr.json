@@ -23,6 +23,7 @@
     "saving": "Enregistrement..."
   },
   "auth": {
+    "reauthBanner": "Connectez-vous à nouveau pour synchroniser",
     "emailPlaceholder": "Entrez votre adresse e-mail",
     "otpPlaceholder": "Entrez le code à 6 chiffres",
     "codeSentTitle": "Code envoyé !",
@@ -200,6 +201,10 @@
     "irrelevant": "Non pertinent",
     "unprocessed": "Non traité"
   },
+  "aiDisclosure": {
+    "caption": "Note générée par l'IA",
+    "short": "Générée par l'IA"
+  },
   "articleDetail": {
     "readArticle": "Lire l'article",
     "relatedArticles": "Articles connexes",
@@ -207,6 +212,7 @@
     "storyUnavailable": "Cette histoire n'est plus disponible",
     "failedToLoad": "Impossible de charger l'article",
     "articleNotFound": "Article introuvable",
+    "offlineUnavailable": "Vous êtes hors ligne et cet article n'est pas enregistré pour la lecture hors ligne",
     "viewOriginal": "Voir l'article original",
     "viewOriginalIn": "Voir l'article original en {{language}}",
     "viewAndTranslateOnDevice": "Voir l'article et le traduire sur l'appareil",
@@ -350,6 +356,10 @@
     "injectNoiseTitle": "Injecter du bruit",
     "injectNoiseDescription": "Soumet des sujets leurres en parallèle de vos vrais centres d'intérêt afin que le serveur ne puisse pas déduire qui vous êtes depuis votre liste de sujets. Les articles ne correspondant qu'aux sujets leurres sont supprimés avant de vous parvenir.",
     "injectNoiseBeta": "Bêta : peut ralentir la génération de sujets et réduire la pertinence du fil.",
+    "relevanceV2Title": "Utiliser la recherche de pertinence v2",
+    "relevanceV2On": "Notation sur l'appareil, le lieu où s'est produite l'histoire compte",
+    "relevanceV2Off": "Notation dans le cloud, en utilisant la méthode d'origine",
+    "relevanceV2Description": "Bêta — note les articles sur votre appareil en utilisant le lieu où s'est produite l'histoire et le type d'événement, au lieu de demander au modèle cloud seul. Nécessite des articles avec des balises de localisation, vous ne remarquerez peut-être pas de changement au début. Vous pouvez le désactiver à tout moment pour revenir en arrière.",
     "privacyTitle": "Vos données restent privées",
     "privacyDescription": "Mera Protocol est toujours actif. En mode sur l'appareil, l'inférence s'exécute entièrement hors ligne sur votre téléphone. En mode cloud, l'inférence est chiffrée de bout en bout : vos données sont chiffrées sur votre appareil et déchiffrées uniquement dans une enclave sécurisée que nous ne pouvons pas lire. Vos faits, votre profil et votre historique de lecture ne quittent jamais cet appareil. Pour récupérer les actualités, nous n'envoyons que des thèmes généraux, sans identifiant d'utilisateur.",
     "deviceSupported": "Appareil compatible",
@@ -576,6 +586,7 @@
     "newChat": "Nouvelle discussion",
     "inputPlaceholder": "Tapez un message...",
     "viewPreviousMessages": "Voir les messages précédents",
+    "aiInteractionNotice": "Vous parlez avec Mera, un assistant IA — pas avec une personne.",
     "aiUsageNotice": "Cet assistant vous aide à configurer vos préférences d'actualités. Toute tentative de le manipuler ou d'en abuser peut entraîner le blocage de votre compte en attendant une révision.",
     "requestUnblock": {
       "button": "Demander le déblocage",
@@ -627,10 +638,16 @@
     "actionShowMoreTopic": "Afficher plus d'un sujet",
     "actionDownRank": "Rétrograder un sujet",
     "actionPublicationPref": "Ajuster une publication",
+    "actionPublicationBoost": "Afficher plus d'une publication",
+    "actionPublicationDeprioritize": "Afficher moins d'une publication",
+    "actionPublicationMute": "Mettre une publication en sourdine",
+    "actionSourceScopeBoost": "Afficher plus de sources d'un pays",
+    "actionSourceScopeDeprioritize": "Afficher moins de sources d'un pays",
     "actionSuppress": "Filtrer une expression",
     "actionPinTopic": "Épingler un sujet",
     "actionUnpinTopic": "Désépingler un sujet",
     "actionRetireTopic": "Retirer un sujet",
+    "actionRetireSuppression": "Supprimer un filtre",
     "chooseOneHint": "Choisissez une option"
   },
   "publicationVisits": {
@@ -798,6 +815,8 @@
     "askMera": "Demander à Mera",
     "closeTree": "Fermer",
     "treeThanks": "Merci, noté.",
+    "feedbackCaption": "À lui seul, un appui ne dit pas assez à Mera — il est donc rejeté, pour garder votre fil sain. Choisissez une raison et votre fil change immédiatement.",
+    "tapAgainToConfirm": "Appuyez à nouveau pour confirmer",
     "chatHandoffLike": "J'ai aimé cette histoire, plus comme ceci : {{path}}.",
     "chatHandoffLikeNoPath": "J'ai aimé cette histoire. J'aimerais en voir plus comme ceci.",
     "chatHandoffDislike": "Je n'ai pas aimé cette histoire, {{path}}.",
@@ -807,7 +826,8 @@
     "title": "Explorer",
     "scopeWorld": "Monde",
     "noArticles": "Aucun article trouvé",
-    "addPlaces": "Ajouter des lieux"
+    "addPlaces": "Ajouter des lieux",
+    "offlineUnavailable": "Vous êtes hors ligne — Explorer a besoin d'une connexion internet"
   },
   "forYou": {
     "sectionPrefix": "Actualités sur :",
@@ -815,6 +835,12 @@
     "showMore": "Afficher {{count}} de plus",
     "viewAllArticles_one": "Afficher l'{{count}} article",
     "viewAllArticles_other": "Afficher les {{count}} articles",
+    "headlineSectionGlobal": "Titres du monde",
+    "headlineSectionCountry": "Titres de {{country}}",
+    "headlineDenominator_one": "Mera a lu {{count}} titre · {{shown}} vaut votre temps.",
+    "headlineDenominator_other": "Mera a lu {{count}} titres · {{shown}} valent votre temps.",
+    "headlineDenominatorNone_one": "Mera a lu {{count}} titre · aucun ne semblait pertinent aujourd'hui.",
+    "headlineDenominatorNone_other": "Mera a lu {{count}} titres · aucun ne semblait pertinent aujourd'hui.",
     "subTabFeed": "Aperçu",
     "subTabStories": "Actualités",
     "subTabSaved": "Enregistrés"
@@ -936,7 +962,9 @@
       "unknown": "Modification du profil",
       "hygieneDeleteFact": "Fait supprimé",
       "addLocation": "Lieu ajouté",
-      "deleteLocation": "Lieu supprimé"
+      "deleteLocation": "Lieu supprimé",
+      "retireSuppression": "Filtre supprimé",
+      "setSourceScopePref": "Étendue de la source ajustée"
     }
   },
   "calibration": {
@@ -1076,6 +1104,77 @@
     "deleteFailedTitle": "Impossible de supprimer le lieu",
     "deleteFailedBody": "Veuillez réessayer."
   },
+  "notInterested": {
+    "title": "Pas intéressé",
+    "subtitle": "Ce que vous avez demandé à Mera de tenir hors de votre fil",
+    "sectionFilters": "Mots et choses que vous avez cachés",
+    "sectionTopics": "Sujets que vous voyez moins",
+    "sectionSources": "Sources que vous avez mises en sourdine ou réduites",
+    "managePublications": "Gérer les préférences de source",
+    "chatHint": "Vous ne devez pas venir ici. Dites simplement à Mera ce que vous préférez ne pas voir — « moins sur les potins des célébrités » — et il s'en chargera.",
+    "kinds": {
+      "keyword": "Mots",
+      "category": "Catégorie",
+      "event_type": "Type d'histoire",
+      "entity": "Personne ou chose",
+      "place": "Lieu",
+      "publication": "Source",
+      "topic": "Sujet"
+    },
+    "sources": {
+      "user": "Vous l'avez ajouté",
+      "chat": "D'une conversation avec Mera",
+      "feedback": "De votre retour",
+      "digest": "De votre révision quotidienne",
+      "qa": "D'une question que Mera a posée",
+      "unknown": "Ajouté automatiquement"
+    },
+    "badgeBlocked": "Tenu dehors",
+    "badgeShownLess": "Affiché moins",
+    "badgeMutedTopic": "Affiché moins",
+    "badgeDownranked": "Rétrogradé",
+    "badgeMutedPub": "Mis en sourdine",
+    "mutedPubHint": "Tenu dehors, sauf pour les grandes actualités",
+    "cardExemptLabel": "Vous avez filtré « {{filter}} » — l'affichage parce que c'est une grande actualité",
+    "expiresOn": "Jusqu'au {{date}}",
+    "expiresNever": "Jusqu'à ce que vous le supprimiez",
+    "remove": "Supprimer",
+    "removeConfirmTitle": "Supprimer ceci ?",
+    "removeConfirmBody": "Les histoires comme celle-ci peuvent réapparaître dans votre fil.",
+    "removeConfirmCta": "Supprimer",
+    "removeSuccessTitle": "Supprimé",
+    "removeSuccessBody": "Ce n'est plus tenu hors de votre fil.",
+    "removeFailedTitle": "Impossible de supprimer cela",
+    "removeFailedBody": "Veuillez réessayer.",
+    "addPhrase": "Cacher quelque chose",
+    "addPhraseTitle": "Cacher quelque chose de votre fil",
+    "addPhraseBody": "Tapez un mot ou une courte phrase. Mera le cherchera dans le titre et l'histoire, et les tiendra hors de votre chemin. Pour quelque chose de plus spécifique — une catégorie entière, une source, une personne — dites-le simplement dans le chat, ou utilisez les pouces sur une histoire : Mera la reprend de l'histoire elle-même, donc elle correspond toujours.",
+    "addPhrasePlaceholder": "p. ex. potins de célébrités",
+    "addPhraseHardLabel": "Le tenir hors de mon fil",
+    "addPhraseHardHint": "Mera les tient dehors. Si l'un devient une grande actualité, il s'affiche quand même, marqué pour que vous sachiez pourquoi. Laissé désactivé, Mera les affiche simplement moins, et l'oublie dans un mois.",
+    "addPhraseSubmit": "Le cacher",
+    "addPhraseSuccessTitle": "Fait",
+    "addPhraseSuccessBodyBlocked": "« {{phrase}} » est hors de votre fil maintenant. Seules les grandes actualités le traversent, et Mera le dira.",
+    "addPhraseSuccessBodySoft": "Vous verrez beaucoup moins sur « {{phrase}} ».",
+    "addPhraseFailedTitle": "Impossible d'enregistrer cela",
+    "addPhraseFailedBody": "Veuillez réessayer.",
+    "emptyTitle": "Rien de caché pour l'instant",
+    "emptyBody": "Quand vous dites à Mera que vous n'êtes pas intéressé par quelque chose, il s'affiche ici pour que vous puissiez l'annuler.",
+    "emptyFilters": "Vous n'avez pas caché de mots pour l'instant.",
+    "emptyTopics": "Aucun sujet rétrogradé pour l'instant.",
+    "emptySources": "Vous n'avez pas mis en sourdine ou réduit de sources pour l'instant."
+  },
+  "headlineDepth": {
+    "title": "À la une",
+    "subtitle": "Combien Mera lit pour vous",
+    "intro": "Mera lit les plus grandes histoires de chaque section, puis sélectionne celles qui vous concernent. Augmentez une section pour en voir plus ; diminuez-la pour garder les choses resserrées.",
+    "worldwide": "Mondiale",
+    "optionLabel": "Top {{n}}",
+    "usingDefault": "Utilisation du {{n}} standard.",
+    "customised": "Changé du {{n}} standard. Choisissez {{n}} à nouveau pour revenir.",
+    "saveFailedTitle": "Impossible d'enregistrer cela",
+    "saveFailedBody": "Votre modification n'a pas été enregistrée. Réessayez."
+  },
   "profileHub": {
     "facts": "Faits",
     "factsCount_one": "{{count}} fait façonne votre fil",
@@ -1091,12 +1190,23 @@
     "prefsCount_one": "{{count}} source ajustée",
     "prefsCount_other": "{{count}} sources ajustées",
     "prefsEmpty": "Boostez, rétrogradez ou masquez des sources",
+    "visitedSubtitle": "Publications que vous avez ouvertes récemment",
     "activity": "Activité",
     "activitySubtitle": "Historique des modifications de votre profil",
     "personaHealth": "Santé du profil",
     "healthPending_one": "{{count}} suggestion de nettoyage",
     "healthPending_other": "{{count}} suggestions de nettoyage",
-    "healthAllHealthy": "Tout va bien"
+    "healthAllHealthy": "Tout va bien",
+    "groupKnows": "Mera vous connaît",
+    "groupFeed": "Votre fil",
+    "groupLibrary": "Sources et bibliothèque",
+    "groupInternals": "Sous le capot",
+    "notInterested": "Pas intéressé",
+    "notInterestedSubtitle_one": "{{count}} chose que vous avez cachée",
+    "notInterestedSubtitle_other": "{{count}} choses que vous avez cachées",
+    "notInterestedEmpty": "Rien de caché pour l'instant",
+    "headlineDepth": "À la une",
+    "headlineDepthSubtitle": "Combien Mera lit par section"
   },
   "profile": {
     "talkToMera": "Parler à Mera",
@@ -1137,7 +1247,8 @@
     "kindMute": "Masquer",
     "clear": "Effacer",
     "clearA11y": "Effacer la préférence",
-    "empty": "Vous n'avez encore ajusté aucune source. Boostez, rétrogradez ou masquez une publication depuis n'importe quel article pour la voir ici."
+    "empty": "Vous n'avez encore ajusté aucune source. Boostez, rétrogradez ou masquez une publication depuis n'importe quel article pour la voir ici.",
+    "scopeKindCountry": "Pays"
   },
   "optimisationPlan": {
     "notificationTitle": "Votre optimisation quotidienne du fil est prête",
@@ -1157,5 +1268,40 @@
     "appliedToast": "{{count}} changements appliqués",
     "appliedTitle": "Fil optimisé",
     "empty": "Rien à optimiser pour le moment."
+  },
+  "pin": {
+    "lockTitle": "Entrez votre PIN",
+    "lockSubtitle": "Entrez votre code PIN de 4 chiffres pour déverrouiller Mera",
+    "incorrect": "PIN incorrect. Réessayez.",
+    "lockedTryAgain": "Trop de tentatives. Réessayez dans {{time}}",
+    "forgot": "Oublié le PIN ?",
+    "forgotTitle": "Réinitialiser votre PIN",
+    "forgotBody": "Pour réinitialiser votre PIN, connectez-vous à nouveau avec un code de courrier électronique unique. Vos données enregistrées restent sur cet appareil.",
+    "forgotOffline": "La réinitialisation de votre PIN nécessite une connexion internet pour envoyer un code de connexion. Connectez-vous à internet et réessayez.",
+    "forgotConfirm": "Se connecter pour réinitialiser",
+    "setupTitle": "Définir un PIN",
+    "setupSubtitle": "Choisissez un code PIN de 4 chiffres pour protéger l'application sur cet appareil",
+    "confirmTitle": "Confirmez votre PIN",
+    "confirmSubtitle": "Réentrez votre code PIN de 4 chiffres",
+    "mismatch": "Les PINs ne correspondent pas. Recommencez."
+  },
+  "security": {
+    "title": "Sécurité",
+    "subtitle": "Choisissez si Mera vous demande un PIN sur cet appareil",
+    "requirePinTitle": "Exiger un PIN pour déverrouiller",
+    "requirePinDescription": "Demander un code PIN de 4 chiffres quand vous ouvrez Mera",
+    "setPinTitle": "Définir un PIN",
+    "setPinSubtitle": "Choisissez un code PIN de 4 chiffres pour déverrouiller Mera sur cet appareil",
+    "lockEnabledTitle": "Déverrouillage par PIN activé",
+    "lockEnabledDescription": "Vous entrerez votre PIN quand vous ouvrez Mera.",
+    "lockDisabledTitle": "Déverrouillage par PIN désactivé",
+    "lockDisabledDescription": "Mera s'ouvrira sans PIN. Votre PIN a été supprimé.",
+    "changePin": "Changer le PIN",
+    "verifyCurrentTitle": "Entrez le PIN actuel",
+    "verifyCurrentSubtitle": "Confirmez votre PIN actuel pour continuer",
+    "newPinTitle": "Définir un nouveau PIN",
+    "newPinSubtitle": "Choisissez un nouveau code PIN de 4 chiffres",
+    "pinChangedTitle": "PIN mis à jour",
+    "pinChangedDescription": "Votre PIN a été modifié."
   }
 }

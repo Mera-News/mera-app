@@ -9,6 +9,26 @@ export async function getSetting(key: string): Promise<string | null> {
   return results.length > 0 ? results[0].value : null;
 }
 
+/**
+ * Every setting whose key starts with `prefix`, as a `{ key: value }` map.
+ *
+ * Exists so a family of per-instance settings (one row per headline scope, say)
+ * can be read in ONE query instead of N `getSetting` calls whose key set the
+ * caller would first have to know. Callers that need "all overrides" cannot
+ * enumerate keys up front — absence is the default, so the rows that exist ARE
+ * the answer.
+ */
+export async function getSettingsByPrefix(
+  prefix: string,
+): Promise<Record<string, string>> {
+  const results = await settings
+    .query(Q.where('key', Q.like(`${Q.sanitizeLikeString(prefix)}%`)))
+    .fetch();
+  const out: Record<string, string> = {};
+  for (const record of results) out[record.key] = record.value;
+  return out;
+}
+
 export async function setSetting(key: string, value: string): Promise<void> {
   // Read-modify-write must happen inside a single write() so the query and the
   // mutation share one transaction. WatermelonDB serializes writes, so this

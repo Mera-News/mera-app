@@ -20,6 +20,7 @@ import {
   mergeAndClampOverrides,
   applyScoringOverrides,
   type CalibrationCase,
+  type ScoringConstantDeltas,
 } from '../calibration';
 
 const eng = DEFAULT_HARNESS_CONFIG.scoringEngine;
@@ -180,6 +181,34 @@ describe('layering overrides over a base config', () => {
   it('returns the SAME reference when there is nothing to apply', () => {
     expect(applyScoringOverrides(eng, {})).toBe(eng);
     expect(applyScoringOverrides(eng, { W_TOPIC: 0 })).toBe(eng);
+  });
+
+  // RELEVANCE_V2 is a ROUTING SWITCH, not a tunable. The calibration layer
+  // applies `base × (1 + delta)` over a closed numeric allowlist, so a boolean
+  // cannot ride it: adding it to TUNABLE_CONSTANTS would make the self-tuning
+  // loop able to flip the scoring path. Pinned in both directions — it must not
+  // survive clamping, and it must not be touched by layering.
+  it('IGNORES RELEVANCE_V2 — it is not a tunable and cannot be calibrated', () => {
+    expect(clampCalibrationDeltas({ RELEVANCE_V2: 0.2 }, eng)).not.toHaveProperty(
+      'RELEVANCE_V2',
+    );
+
+    const applied = applyScoringOverrides(
+      eng,
+      { RELEVANCE_V2: 0.2 } as unknown as ScoringConstantDeltas,
+    );
+    // Nothing to apply ⇒ the SAME reference back, exactly as for `{}`.
+    expect(applied).toBe(eng);
+    expect(applied.RELEVANCE_V2).toBe(false);
+
+    // Alongside a real tunable it is still dropped, and stays boolean.
+    const mixed = applyScoringOverrides(
+      eng,
+      { W_TOPIC: 0.1, RELEVANCE_V2: 0.2 } as unknown as ScoringConstantDeltas,
+    );
+    expect(mixed.W_TOPIC).toBeCloseTo(eng.W_TOPIC * 1.1, 6);
+    expect(mixed.RELEVANCE_V2).toBe(false);
+    expect(typeof mixed.RELEVANCE_V2).toBe('boolean');
   });
 
   it('scales each tunable constant by (1 + delta), leaving the rest untouched', () => {

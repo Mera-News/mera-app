@@ -3,33 +3,49 @@
 const mockHandleSaveExtractedFacts = jest.fn();
 const mockHandleUpdateUserConfig = jest.fn();
 const mockHandleDeleteUserFacts = jest.fn();
-const mockHandleAdvanceQuestionnaireLevel = jest.fn();
 const mockHandleIssueWarning = jest.fn();
 
 jest.mock('../../chat-tools/tool-handlers', () => ({
   handleSaveExtractedFacts: (...args: unknown[]) => mockHandleSaveExtractedFacts(...args),
   handleUpdateUserConfig: (...args: unknown[]) => mockHandleUpdateUserConfig(...args),
   handleDeleteUserFacts: (...args: unknown[]) => mockHandleDeleteUserFacts(...args),
-  handleAdvanceQuestionnaireLevel: (...args: unknown[]) => mockHandleAdvanceQuestionnaireLevel(...args),
   handleIssueWarning: (...args: unknown[]) => mockHandleIssueWarning(...args),
 }));
 
 const mockGetFacts = jest.fn();
-const mockGetCoveredAttributeKeys = jest.fn();
-const mockGetQuestionnaireLevel = jest.fn();
-const mockSetQuestionnaireLevel = jest.fn();
 
 jest.mock('../../database/services/fact-service', () => ({
-  getCoveredAttributeKeys: (...args: unknown[]) => mockGetCoveredAttributeKeys(...args),
   getFacts: (...args: unknown[]) => mockGetFacts(...args),
-  getQuestionnaireLevel: (...args: unknown[]) => mockGetQuestionnaireLevel(...args),
-  setQuestionnaireLevel: (...args: unknown[]) => mockSetQuestionnaireLevel(...args),
 }));
 
 const mockRunCalibration = jest.fn();
 
 jest.mock('../../database/services/calibration-service', () => ({
   runCalibration: (...args: unknown[]) => mockRunCalibration(...args),
+}));
+
+// not-interested P4a: PersonaUpdateAgent gained the staged filter-proposal path
+// (D6), so three more real modules would otherwise be pulled in — including
+// lib/database (a live SQLiteAdapter at import time). Mock scaffold only; no
+// pre-existing assertion in this file changed.
+const mockGetActiveSuppressions = jest.fn();
+
+jest.mock('../../database/services/suppression-service', () => ({
+  getActive: (...args: unknown[]) => mockGetActiveSuppressions(...args),
+}));
+
+const mockExecuteProposalActions = jest.fn();
+
+jest.mock('../../chat-tools/proposal-handlers', () => ({
+  executeProposalActions: (...args: unknown[]) => mockExecuteProposalActions(...args),
+}));
+
+const mockFloatingChatGetState = jest.fn();
+
+jest.mock('../../stores/floating-chat-store', () => ({
+  useFloatingChatStore: {
+    getState: (...args: unknown[]) => mockFloatingChatGetState(...args),
+  },
 }));
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn(), info: jest.fn() };
@@ -47,15 +63,6 @@ jest.mock('../../mera-protocol/prompts', () => ({
   buildPersonaUpdateStaticPrompt: (...args: unknown[]) => mockBuildPersonaUpdateStaticPrompt(...args),
   buildPersonaUpdateContext: (...args: unknown[]) => mockBuildPersonaUpdateContext(...args),
   buildToolDefinitions: (...args: unknown[]) => mockBuildToolDefinitions(...args),
-}));
-
-const mockBuildQuestionnaireGuide = jest.fn();
-const mockGetAttributeKeysForLevel = jest.fn();
-
-jest.mock('../../mera-protocol/questionnaire-data', () => ({
-  buildQuestionnaireGuide: (...args: unknown[]) => mockBuildQuestionnaireGuide(...args),
-  getAttributeKeysForLevel: (...args: unknown[]) => mockGetAttributeKeysForLevel(...args),
-  TOTAL_LEVELS: 3,
 }));
 
 const mockAppLanguageGetState = jest.fn();
@@ -102,17 +109,21 @@ describe('PersonaUpdateAgent', () => {
     mockAppLanguageGetState.mockReturnValue({ appLanguage: 'en' });
     mockMeraProtocolGetState.mockReturnValue({
       processingMode: 'CLOUD',
-      useLegacyPersonaUpdate: false,
     });
     mockBuildPersonaUpdateStaticPrompt.mockReturnValue('static-prompt');
     mockBuildPersonaUpdateContext.mockReturnValue('context-string');
     mockBuildToolDefinitions.mockReturnValue([{ type: 'function', function: { name: 'saveFacts' } }]);
     mockGetFacts.mockResolvedValue([]);
-    mockGetCoveredAttributeKeys.mockResolvedValue(new Set());
-    mockGetQuestionnaireLevel.mockResolvedValue(1);
-    mockSetQuestionnaireLevel.mockResolvedValue(undefined);
-    mockGetAttributeKeysForLevel.mockReturnValue([]);
-    mockBuildQuestionnaireGuide.mockReturnValue('guide');
+    // not-interested P4a defaults — no filters, no pending proposal, so every
+    // pre-existing expectation observes the same call args as before.
+    mockGetActiveSuppressions.mockResolvedValue([]);
+    mockFloatingChatGetState.mockReturnValue({ proposal: null });
+    mockExecuteProposalActions.mockResolvedValue({
+      applied: 1,
+      errors: [],
+      summaries: ['Hid "celebrity gossip"'],
+      changeLogIds: ['log-1'],
+    });
   });
 
   describe('constructor', () => {
@@ -138,7 +149,6 @@ describe('PersonaUpdateAgent', () => {
         includeToolFormat: false,
         languageName: 'English',
         mode: 'CLOUD', // ProcessingMode.Cloud → 'CLOUD'
-        useLegacy: false,
       });
       expect(result).toBe('static-prompt');
     });
@@ -146,7 +156,6 @@ describe('PersonaUpdateAgent', () => {
     it('maps ON_DEVICE processingMode to LOCAL', async () => {
       mockMeraProtocolGetState.mockReturnValue({
         processingMode: 'ON_DEVICE',
-        useLegacyPersonaUpdate: false,
       });
       const agent = makeAgent();
       await agent.buildSystemPrompt(true);
@@ -159,7 +168,6 @@ describe('PersonaUpdateAgent', () => {
     it('maps CLOUD processingMode to CLOUD', async () => {
       mockMeraProtocolGetState.mockReturnValue({
         processingMode: 'CLOUD',
-        useLegacyPersonaUpdate: false,
       });
       const agent = makeAgent();
       await agent.buildSystemPrompt(false);
@@ -216,10 +224,9 @@ describe('PersonaUpdateAgent', () => {
   });
 
   describe('buildContext', () => {
-    it('returns context string from buildPersonaUpdateContext (non-legacy)', async () => {
+    it('returns context string from buildPersonaUpdateContext', async () => {
       mockMeraProtocolGetState.mockReturnValue({
         processingMode: 'CLOUD',
-        useLegacyPersonaUpdate: false,
       });
       mockGetFacts.mockResolvedValue([
         { id: 'f1', statement: 'I live in Berlin', questionnaireAttribute: 'location' },
@@ -228,7 +235,7 @@ describe('PersonaUpdateAgent', () => {
       const result = await agent.buildContext();
 
       expect(mockBuildPersonaUpdateContext).toHaveBeenCalledWith(
-        expect.objectContaining({ useLegacy: false }),
+        expect.objectContaining({ knownFactsList: expect.any(String) }),
       );
       expect(result).toBe('context-string');
     });
@@ -244,6 +251,61 @@ describe('PersonaUpdateAgent', () => {
       const callArgs = mockBuildPersonaUpdateContext.mock.calls[0][0];
       expect(callArgs.knownFactsList).toContain("'interest': fact one");
       expect(callArgs.knownFactsList).toContain("'other': fact two");
+    });
+
+    // not-interested P4a: filters + the in-flight proposal reach <context> so
+    // the one-shot LOCAL path can still resolve a confirm.
+    it('threads active filters and the pending proposal into the context (CONFIG)', async () => {
+      mockGetActiveSuppressions.mockResolvedValue([
+        { id: 'sup-1', pattern: 'celebrity gossip', kind: 'keyword', value: null, strength: 0.9 },
+      ]);
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'p1',
+          explanation: 'You asked to hide that.',
+          expectedEffects: 'x',
+          actions: [{ type: 'retire_suppression', suppressionId: 'sup-1', pattern: 'celebrity gossip' }],
+        },
+      });
+      await makeAgent('CONFIG').buildContext();
+
+      const callArgs = mockBuildPersonaUpdateContext.mock.calls[0][0];
+      expect(callArgs.filtersList).toContain('- [sup-1] "celebrity gossip"');
+      expect(callArgs.pendingProposal).toContain('remove the filter "celebrity gossip"');
+    });
+
+    // not-interested P4a: the filter feature YIELDS to the user's data. When the
+    // facts alone leave no room, the agent degrades its own prompt rather than
+    // letting the turn overflow (useLocalLLM hard-errors above the budget).
+    it('degrades the filter variant and drops the block when the facts leave no room', async () => {
+      // Variant-sized system prompts: only `off` is small enough to fit.
+      mockBuildPersonaUpdateStaticPrompt.mockImplementation(
+        (p: { filterTools?: string }) => (p.filterTools === 'off' ? 'tiny' : 'X'.repeat(12000)),
+      );
+      mockGetFacts.mockResolvedValue(
+        Array.from({ length: 22 }, (_, i) => ({
+          id: `f${i}`,
+          statement: 'A'.repeat(199),
+          questionnaireAttribute: 'location: residence',
+        })),
+      );
+      mockGetActiveSuppressions.mockResolvedValue([
+        { id: 'sup-1', pattern: 'celebrity gossip', kind: 'keyword', value: null, strength: 0.9 },
+      ]);
+
+      const agent = makeAgent('CONFIG');
+      expect(await agent.buildSystemPrompt(true)).toBe('tiny');
+      await agent.buildContext();
+      expect(mockBuildPersonaUpdateContext.mock.calls[0][0].filtersList).toBeUndefined();
+      // …and the cloud tool payload loses the three filter tools too.
+      agent.getToolDefinitions();
+      expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG');
+    });
+
+    it('does NOT read filters on the ONBOARDING surface', async () => {
+      await makeAgent('ONBOARDING').buildContext();
+      expect(mockGetActiveSuppressions).not.toHaveBeenCalled();
+      expect(mockBuildPersonaUpdateContext.mock.calls[0][0].filtersList).toBeUndefined();
     });
 
     it('uses "Nothing yet." when facts are empty', async () => {
@@ -270,92 +332,6 @@ describe('PersonaUpdateAgent', () => {
       expect(lines.length).toBe(22);
     });
 
-    describe('legacy path', () => {
-      beforeEach(() => {
-        mockMeraProtocolGetState.mockReturnValue({
-          processingMode: 'CLOUD',
-          useLegacyPersonaUpdate: true,
-        });
-      });
-
-      it('calls buildPersonaUpdateContext with useLegacy=true', async () => {
-        mockGetAttributeKeysForLevel.mockReturnValue(['q1_location']);
-        mockGetCoveredAttributeKeys.mockResolvedValue(new Set(['q1_location']));
-        mockGetQuestionnaireLevel.mockResolvedValue(1);
-        const agent = makeAgent();
-        await agent.buildContext();
-
-        expect(mockBuildPersonaUpdateContext).toHaveBeenCalledWith(
-          expect.objectContaining({ useLegacy: true }),
-        );
-      });
-
-      it('calls setQuestionnaireLevel after computing level', async () => {
-        mockGetAttributeKeysForLevel.mockReturnValue([]);
-        mockGetCoveredAttributeKeys.mockResolvedValue(new Set());
-        mockGetQuestionnaireLevel.mockResolvedValue(1);
-        const agent = makeAgent();
-        await agent.buildContext();
-
-        expect(mockSetQuestionnaireLevel).toHaveBeenCalled();
-      });
-
-      it('decrements level when previous level is not fully covered (lines 120-123)', async () => {
-        // Start at level 3, level 2 keys are not all covered → should decrement to 2
-        mockGetQuestionnaireLevel.mockResolvedValue(3);
-        // getAttributeKeysForLevel(2) returns keys not in coveredAttributes
-        mockGetAttributeKeysForLevel.mockImplementation((level: number) => {
-          if (level === 2) return ['key_level2'];
-          if (level === 3) return ['key_level3'];
-          return [];
-        });
-        // coveredAttributes does NOT include key_level2
-        mockGetCoveredAttributeKeys.mockResolvedValue(new Set(['key_level3']));
-
-        const agent = makeAgent();
-        await agent.buildContext();
-
-        // The loop should have decremented from 3 to 2
-        expect(mockSetQuestionnaireLevel).toHaveBeenCalledWith(expect.any(Number));
-      });
-
-      it('breaks the while-downgrade loop when prevLevel is fully covered', async () => {
-        // Start at level 3, level 2 keys ARE all covered → break immediately
-        mockGetQuestionnaireLevel.mockResolvedValue(3);
-        mockGetAttributeKeysForLevel.mockImplementation((level: number) => {
-          if (level === 2) return ['key_l2'];
-          if (level === 3) return ['key_l3'];
-          return [];
-        });
-        // All prevLevel keys are covered → allPrevCovered=true → break
-        mockGetCoveredAttributeKeys.mockResolvedValue(new Set(['key_l2', 'key_l3']));
-
-        const agent = makeAgent();
-        await agent.buildContext();
-
-        // setQuestionnaireLevel called (level computed without unnecessary decrement)
-        expect(mockSetQuestionnaireLevel).toHaveBeenCalled();
-      });
-
-      it('increments level when all current-level keys are covered (line 129 else branch)', async () => {
-        // Start at level 1, all level 1 keys covered → loop increments to level 2
-        mockGetQuestionnaireLevel.mockResolvedValue(1);
-        // TOTAL_LEVELS = 3, so while currentLevel < 3
-        mockGetAttributeKeysForLevel.mockImplementation((level: number) => {
-          if (level === 1) return ['key_l1']; // all covered → currentLevel++
-          if (level === 2) return ['key_l2']; // NOT covered → break
-          return [];
-        });
-        // key_l1 is covered, key_l2 is not
-        mockGetCoveredAttributeKeys.mockResolvedValue(new Set(['key_l1']));
-
-        const agent = makeAgent();
-        await agent.buildContext();
-
-        // Level should have been advanced past 1 (to 2) before breaking
-        expect(mockSetQuestionnaireLevel).toHaveBeenCalledWith(2);
-      });
-    });
   });
 
   describe('getToolDefinitions', () => {
@@ -363,7 +339,7 @@ describe('PersonaUpdateAgent', () => {
       const agent = makeAgent('CONFIG');
       const tools = agent.getToolDefinitions();
 
-      expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG', false);
+      expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG');
       expect(tools).toEqual([{ type: 'function', function: { name: 'saveFacts' } }]);
     });
   });
@@ -514,15 +490,6 @@ describe('PersonaUpdateAgent', () => {
       expect(result.result).toEqual({ deleted: 2 });
     });
 
-    it('calls handleAdvanceQuestionnaireLevel for advanceQuestionnaireLevel', async () => {
-      mockHandleAdvanceQuestionnaireLevel.mockResolvedValue({ level: 2 });
-      const agent = makeAgent();
-      const result = await agent.executeTool('advanceQuestionnaireLevel', {});
-
-      expect(mockHandleAdvanceQuestionnaireLevel).toHaveBeenCalled();
-      expect(result.result).toEqual({ level: 2 });
-    });
-
     describe('issueWarning', () => {
       it('returns result without sideEffects when blocked is not true', async () => {
         mockHandleIssueWarning.mockResolvedValue({ message: 'noted', blocked: false });
@@ -581,6 +548,80 @@ describe('PersonaUpdateAgent', () => {
         expect(result.result).toMatchObject({ status: 'failed' });
         expect(String(result.result.summary)).toMatch(/could not/i);
       });
+    });
+
+    // --- not-interested P4a (D6): the staged filter-proposal path ---
+
+    it('proposeChanges stages a filter proposal against the ACTIVE filters', async () => {
+      mockGetActiveSuppressions.mockResolvedValue([
+        { id: 'sup-1', pattern: 'celebrity gossip', kind: 'keyword', value: null, strength: 0.9 },
+      ]);
+      const agent = makeAgent('CONFIG');
+      const result = await agent.executeTool('proposeChanges', {
+        explanation: 'You want that gone.',
+        expected_effects: 'It stops showing up.',
+        actions: [{ type: 'retire_suppression', suppressionId: 'sup-1' }],
+      });
+
+      expect(result.result.staged).toBe(true);
+      expect(result.sideEffects?.proposal?.actions[0]).toEqual({
+        type: 'retire_suppression',
+        suppressionId: 'sup-1',
+        pattern: 'celebrity gossip',
+      });
+    });
+
+    it('proposeChanges never reads filters on ONBOARDING (no feed to filter yet)', async () => {
+      const agent = makeAgent('ONBOARDING');
+      const result = await agent.executeTool('proposeChanges', {
+        explanation: 'e',
+        expected_effects: 'x',
+        actions: [{ type: 'retire_suppression', suppressionId: 'sup-1' }],
+      });
+
+      expect(mockGetActiveSuppressions).not.toHaveBeenCalled();
+      expect(result.result.error).toContain('unknown suppressionId');
+    });
+
+    it('proposeChanges survives a suppression-service failure', async () => {
+      mockGetActiveSuppressions.mockRejectedValue(new Error('db down'));
+      const agent = makeAgent('CONFIG');
+      const result = await agent.executeTool('proposeChanges', {
+        explanation: 'e',
+        expected_effects: 'x',
+        actions: [{ type: 'add_suppression', suppressionPattern: 'celebrity gossip' }],
+      });
+      expect(result.result.staged).toBe(true);
+    });
+
+    it('applyProposal runs the shared executor and reports the resolution', async () => {
+      const proposal = {
+        id: 'p1',
+        explanation: 'e',
+        expectedEffects: 'x',
+        actions: [{ type: 'add_suppression', suppressionPattern: 'celebrity gossip' }],
+      };
+      mockFloatingChatGetState.mockReturnValue({ proposal });
+      const agent = makeAgent('CONFIG');
+      const result = await agent.executeTool('applyProposal', {});
+
+      expect(mockExecuteProposalActions).toHaveBeenCalledWith(proposal.actions);
+      expect(result.result.applied).toBe(1);
+      expect(result.sideEffects?.proposalResolved).toBe('applied');
+    });
+
+    it('applyProposal errors when nothing is pending', async () => {
+      mockFloatingChatGetState.mockReturnValue({ proposal: null });
+      const result = await makeAgent('CONFIG').executeTool('applyProposal', {});
+      expect(result.result).toEqual({ error: 'no pending proposal' });
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+    });
+
+    it('cancelProposal resolves the proposal without executing anything', async () => {
+      const result = await makeAgent('CONFIG').executeTool('cancelProposal', {});
+      expect(result.result).toEqual({ cancelled: true });
+      expect(result.sideEffects?.proposalResolved).toBe('cancelled');
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
     });
 
     it('returns error for unknown tool names', async () => {

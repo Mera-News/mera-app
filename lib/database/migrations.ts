@@ -1209,5 +1209,79 @@ export default schemaMigrations({
         ),
       ],
     },
+    {
+      // ── Structured "not interested" filters (schema v46) ─────────────────
+      // `persona_suppressions` is a USER-OWNED table (long-lived negative
+      // preferences) — additive `addColumns` ONLY, never DROP+recreate.
+      //
+      // `kind` names WHAT the filter matches ('keyword' | 'category' |
+      // 'event_type' | 'entity' | 'publication' | 'place' | 'topic') and
+      // `value` is the single normalized token the non-keyword kinds compare
+      // against. Both are nullable and there is NO backfill: a NULL `kind`
+      // reads as 'keyword' (suppression-service.kindOf), so every pre-v46 row
+      // keeps its exact keyword-substring behaviour.
+      toVersion: 46,
+      steps: [
+        addColumns({
+          table: 'persona_suppressions',
+          columns: [
+            { name: 'kind', type: 'string', isOptional: true },
+            { name: 'value', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
+    {
+      // ── Source SCOPE preferences (schema v47) ────────────────────────────
+      // `publication_preferences` is a USER-OWNED table (long-lived explicit
+      // source preferences) — additive `addColumns` ONLY, never DROP+recreate.
+      //
+      // "More news from Indian sources" is stored as ONE row carrying
+      // `scope_kind='country'` + `scope_value='IND'` and evaluated against a
+      // suggestion's `country_code` at render time (D2), rather than expanded
+      // into the 300+ publication rows that would match today and go stale the
+      // moment a feed is added. `publication_name` still carries the human
+      // label ("India") so the existing Source-preferences screen renders a
+      // scope row with no new plumbing (D6).
+      //
+      // Both columns are nullable and there is NO backfill: a NULL
+      // `scope_kind` reads as "this is a named-publication preference", which
+      // is what every pre-v47 row is, so their name-matching behaviour is
+      // byte-identical.
+      toVersion: 47,
+      steps: [
+        addColumns({
+          table: 'publication_preferences',
+          columns: [
+            { name: 'scope_kind', type: 'string', isOptional: true },
+            { name: 'scope_value', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
+    {
+      // ── Headline COUNTRY provenance (schema v48) ────────────────────────
+      // `headline_scope` records only the LABEL ('CITY'|'COUNTRY'|'GLOBAL'),
+      // so a row retrieved as a COUNTRY headline could not say WHICH country
+      // asked for it — the server sent `countryCode` on every headline result
+      // and feed-sync threw it away. Without it no per-country Dashboard
+      // section ("top Indian headlines") can be built from local rows.
+      //
+      // ADDITIVE `addColumns` ONLY. `article_suggestions` must NEVER be
+      // DROP+recreated for an additive change: that empties every device's
+      // feed until a full re-sync AND destroys the 48h score-propagation
+      // donor pool (the v37/v41 incident — see CLAUDE.md). One nullable
+      // column changes nothing for existing rows: NULL reads as "not a
+      // country-scoped headline", which is exactly what every pre-v48 row is.
+      toVersion: 48,
+      steps: [
+        addColumns({
+          table: 'article_suggestions',
+          columns: [
+            { name: 'headline_country_code', type: 'string', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

@@ -195,6 +195,23 @@ export async function executeProposalActions(
           );
           break;
         }
+        case 'set_source_scope_pref': {
+          // source-pref v47 (D2/D6). The sanitizer already resolved the model's
+          // English country name to the ISO alpha-3 stored in `scopeValue` and
+          // rejected `mute`, so there is nothing to re-resolve here — same
+          // "the sanitizer owns resolution" split as retire_suppression.
+          await runRails(
+            {
+              action_type: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+              scopeKind: action.scopeKind,
+              scopeValue: action.scopeValue,
+              scopeLabel: action.label,
+              publicationPref: action.publicationPref,
+            },
+            'set_source_scope_pref',
+          );
+          break;
+        }
         case 'add_suppression': {
           await runRails(
             {
@@ -204,8 +221,32 @@ export async function executeProposalActions(
               ...(typeof action.suppressionStrength === 'number'
                 ? { suppressionStrength: action.suppressionStrength }
                 : {}),
+              // D9 — a STRUCTURED filter (kind + value) matches by exact
+              // normalized equality on one article field. These two fields were
+              // dropped here, so every structured filter the agents staged was
+              // flattened back to a keyword one at execution and the whole
+              // conversational-filter feature was a no-op end-to-end. The
+              // executor's normalizeSuppressionKind is the final gate: a kind
+              // with no usable value degrades to 'keyword' there.
+              ...(action.suppressionKind ? { suppressionKind: action.suppressionKind } : {}),
+              ...(action.suppressionValue ? { suppressionValue: action.suppressionValue } : {}),
             },
             'add_suppression',
+          );
+          break;
+        }
+        case 'retire_suppression': {
+          // D6 — removing a filter is an audited, invertible mutation, not a
+          // silent delete. The sanitizer already resolved `suppressionId`
+          // against the filters IT put in <context>, so there is nothing to
+          // re-resolve here; the executor re-reads the row for the change-log
+          // summary and the un-exclude sweep.
+          await runRails(
+            {
+              action_type: ACTION_NAMES.RETIRE_SUPPRESSION,
+              suppressionId: action.suppressionId,
+            },
+            'retire_suppression',
           );
           break;
         }

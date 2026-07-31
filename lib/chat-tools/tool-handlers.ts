@@ -6,9 +6,6 @@ import {
   deleteFact,
   getFacts,
   updateFact,
-  getCoveredAttributeKeys,
-  getQuestionnaireLevel,
-  setQuestionnaireLevel,
 } from '../database/services/fact-service';
 import { getSetting } from '../database/services/setting-service';
 import { runGeoDerivationSweep } from '../database/services/geo-derivation-service';
@@ -19,7 +16,6 @@ import { useUserStore } from '../stores/user-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import { inferenceQueue } from '../inference/InferenceQueue';
-import { getAttributeKeysForLevel, TOTAL_LEVELS } from '../mera-protocol/questionnaire-data';
 import { cloudComplete, cloudBatchComplete } from '../llm/cloudComplete';
 import logger from '../logger';
 import {
@@ -297,41 +293,6 @@ export async function handleDeleteUserFacts(
   useFloatingChatStore.getState().notifyFactMutation();
 
   return { success: true, deletedCount, deletedStatements };
-}
-
-/** Advances questionnaire to the next level. */
-export async function handleAdvanceQuestionnaireLevel(): Promise<Record<string, unknown>> {
-  const currentLevel = await getQuestionnaireLevel();
-  if (currentLevel >= TOTAL_LEVELS) {
-    return {
-      success: true,
-      level: currentLevel,
-      message: 'Already at the final level. All questionnaire topics have been covered.',
-    };
-  }
-
-  // Prevent advancing if no facts gathered for the current level
-  const coveredAttributes = await getCoveredAttributeKeys();
-  const currentKeys = getAttributeKeysForLevel(currentLevel);
-  const anyCovered = currentKeys.some((key) => coveredAttributes.has(key));
-  if (!anyCovered) {
-    return {
-      success: false,
-      level: currentLevel,
-      message: 'Cannot advance — no facts gathered for current level yet.',
-    };
-  }
-
-  const nextLevel = currentLevel + 1;
-  await setQuestionnaireLevel(nextLevel);
-
-  return {
-    success: true,
-    previousLevel: currentLevel,
-    level: nextLevel,
-    totalLevels: TOTAL_LEVELS,
-    message: `Advanced to level ${nextLevel} of ${TOTAL_LEVELS}. The next set of topics will be loaded in the next response.`,
-  };
 }
 
 /**

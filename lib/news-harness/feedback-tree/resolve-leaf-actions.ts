@@ -7,12 +7,34 @@
 // is SKIPPED (never throws) — the app simply applies the actions it can resolve.
 
 import { ACTION_NAMES } from '../persona-management/action-names';
+import type { SuppressionKindName } from '../core/types';
+import { isDiscriminatingCategory } from './category-specificity';
 import type {
   FeedbackTreeAbstractAction,
   FeedbackTreeLeaf,
   LocalFeedbackContext,
   ResolvedPersonaAction,
 } from './types';
+
+/**
+ * `add_suppression` pattern placeholders → the context field they copy, plus the
+ * suppression KIND that field legitimately backs.
+ *
+ * D9: a structured filter matches by exact normalized equality against ONE
+ * article field, so its value must BE that field, verbatim. A placeholder is the
+ * only thing that guarantees it — hence the kind is tied to the placeholder
+ * rather than trusted from the leaf alone. `from_context_title` backs no kind: a
+ * headline is not a matchable field, so a title-derived filter is always a
+ * keyword one.
+ */
+const SUPPRESSION_SOURCES: Record<
+  string,
+  { read: (c: LocalFeedbackContext) => string | null | undefined; kind?: SuppressionKindName }
+> = {
+  from_context_title: { read: (c) => c.articleTitle },
+  from_context_category: { read: (c) => c.category, kind: 'category' },
+  from_context_eventType: { read: (c) => c.eventType, kind: 'event_type' },
+};
 
 /** Numeric passthrough — undefined when the field isn't a finite number. */
 function num(v: unknown): number | undefined {
@@ -85,22 +107,48 @@ function resolveOne(
     }
 
     case 'add_suppression': {
-      const pattern =
-        a.pattern === 'from_context_title'
-          ? ctx.articleTitle?.trim()
-          : a.pattern === 'from_context_category'
-            ? ctx.category?.trim()
-            : a.pattern === 'from_context_eventType'
-              ? ctx.eventType?.trim()
-              : typeof a.pattern === 'string'
-                ? a.pattern.trim()
-                : undefined;
+      const source = typeof a.pattern === 'string' ? SUPPRESSION_SOURCES[a.pattern] : undefined;
+      const pattern = source
+        ? source.read(ctx)?.trim()
+        : typeof a.pattern === 'string'
+          ? a.pattern.trim()
+          : undefined;
       if (!pattern) return [];
+
+      // GENERIC CATEGORY ⇒ MINT NOTHING. Two different failures were sharing
+      // one answer, and that was a defect:
+      //   • PROVENANCE — we can't prove the value is the article's own field.
+      //     Keyword is right: narrower than claimed, but honest and it fires.
+      //   • GENERICNESS — the value IS proven and simply useless. Degrading to
+      //     keyword here is strictly WORSE than the structured filter it
+      //     replaces: `keyword` is a normalized SUBSTRING scan over title +
+      //     description + entities, so a filter on "News" demotes a large slice
+      //     of everything, where exact category equality would at least have
+      //     been confined to one field.
+      // Returning [] also makes the option DISAPPEAR instead of no-opping:
+      // `isInertActionLeaf` (useFeedbackTreeEngine) hides an action-declaring
+      // leaf whose actions resolve to nothing, so "This category" is absent on
+      // a generic-category article and present on a specific-category one.
+      //
+      // Gated on the PLACEHOLDER, not on `a.kind`: the tree is server-owned and
+      // the live prod tree still ships `this_category` with no `kind` at all, so
+      // keying off the leaf's declaration would leave that (majority) path
+      // minting exactly the "News" keyword filter this guard exists to stop.
+      if (source?.kind === 'category' && !isDiscriminatingCategory(pattern)) return [];
+
+      // The kind rides along ONLY when the leaf asks for exactly the kind its
+      // placeholder's field backs. A literal pattern, a mismatched kind or an
+      // unknown one degrades to a keyword filter: matching fewer things is
+      // fine, matching nothing while looking active is not.
+      const structuredKind = source?.kind && a.kind === source.kind ? source.kind : undefined;
       return [
         {
           action_type: ACTION_NAMES.ADD_SUPPRESSION,
           suppressionPattern: pattern,
           suppressionStrength: num(a.strength),
+          ...(structuredKind
+            ? { suppressionKind: structuredKind, suppressionValue: pattern }
+            : {}),
         },
       ];
     }

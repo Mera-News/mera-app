@@ -47,8 +47,81 @@ export function resolveCountryName(
 /** Chunk size used when fanning score prompts into BatchCalls. */
 export const CLOUD_SCORE_CHUNK_SIZE = ARTICLE_CFG.articlesPerScorePrompt;
 
+/** Chunk size for the TOP-HEADLINE relevance variant. Smaller than
+ *  CLOUD_SCORE_CHUNK_SIZE because the headline rubric is ~1.5× longer (see the
+ *  derivation in core/config.ts). */
+export const CLOUD_HEADLINE_SCORE_CHUNK_SIZE =
+  ARTICLE_CFG.headlineArticlesPerScorePrompt;
+
 /** Raw-score floor for phase-2 reason generation in the async reconciler. */
 export const REASON_MIN_RAW_SCORE = 0;
+
+// --- Prompt variant routing (P4b) ----------------------------------------
+//
+// A candidate reaches the scorer by one of two routes: it matched one of the
+// user's topics (standard), or it was retrieved as a TOP HEADLINE for one of
+// the user's scopes (headline). The two get different system prompts — the
+// headline pair carries the indirect-impact rubric — and, because that rubric
+// is longer, different relevance chunk sizes.
+//
+// The chunk-size difference is why the variant is a property of the WHOLE
+// bundle rather than of each chunk: the async decoder rebuilds the
+// `score:N` → candidates join by re-chunking a flat id list, so one bundle must
+// use exactly ONE chunk size. `resolveScoringVariant` therefore returns
+// 'headline' only when EVERY candidate is headline-sourced; a mixed set falls
+// back to 'standard' (and the caller keeps the batch homogeneous upstream, so a
+// mixed set should never occur in the first place).
+
+export type ScoringVariant = 'standard' | 'headline';
+
+/** True for the three top-headline scope labels the retrieval profile emits. */
+export function isHeadlineScope(scope: string | null | undefined): boolean {
+  return scope === 'CITY' || scope === 'COUNTRY' || scope === 'GLOBAL';
+}
+
+/** A candidate is headline-sourced when its stage metadata carries a scope. */
+export function isHeadlineCandidate(c: ScoringCandidate): boolean {
+  return isHeadlineScope(c.meta?.headlineScope);
+}
+
+/**
+ * The variant a single relevance bundle must be built with. 'headline' ONLY
+ * when every candidate is headline-sourced — a mixed or empty set is
+ * 'standard', which is exactly the pre-P4b behaviour.
+ */
+export function resolveScoringVariant(
+  candidates: ScoringCandidate[],
+): ScoringVariant {
+  if (candidates.length === 0) return 'standard';
+  return candidates.every(isHeadlineCandidate) ? 'headline' : 'standard';
+}
+
+export function relevanceSystemPromptFor(
+  config: ArticlePipelineConfig,
+  variant: ScoringVariant,
+): string {
+  return variant === 'headline'
+    ? config.headlineRelevanceSystemPrompt
+    : config.relevanceSystemPrompt;
+}
+
+export function reasonSystemPromptFor(
+  config: ArticlePipelineConfig,
+  variant: ScoringVariant,
+): string {
+  return variant === 'headline'
+    ? config.headlineReasonSystemPrompt
+    : config.reasonSystemPrompt;
+}
+
+export function scoreChunkSizeFor(
+  config: ArticlePipelineConfig,
+  variant: ScoringVariant,
+): number {
+  return variant === 'headline'
+    ? config.headlineArticlesPerScorePrompt
+    : config.articlesPerScorePrompt;
+}
 
 // --- Helpers ---
 
@@ -70,6 +143,41 @@ export function buildUserContext(
 
 export function isEligible(c: ScoringCandidate): boolean {
   return Boolean(c.titleEn && c.descriptionEn && c.relatedFacts.length > 0);
+}
+
+/**
+ * ADMISSION predicate — "may this row enter scoring at all?" — as opposed to
+ * {@link isEligible}, which additionally demands a linked fact.
+ *
+ * The two differ on exactly one population: TOP-HEADLINE rows. A headline is
+ * injected with a SYNTHETIC matched topic carrying `topicId: null`
+ * (feed-sync-steps `pushMatched`), and the fact-link step skips those
+ * (`if (!m.topicId) continue`), so a PURE headline — one that matched no real
+ * persona topic — has zero rows in `article_suggestion_facts` BY DESIGN. That
+ * is not the same condition as a genuinely orphaned row, and it must not be
+ * treated as one: `relatedFacts.length === 0` was tombstoning every pure
+ * headline (relevance 0, status `complete`) before any scoring existed, which
+ * is why the feature never delivered a single headline card.
+ *
+ * Title + description are still REQUIRED here — a row with no text cannot be
+ * scored by any prompt, headline or not. Only the fact requirement is lifted.
+ *
+ * WHERE THIS IS USED (deliberately narrow — see the blast radius below):
+ *   - the feed-sync ineligibility tombstone + its eligible-id collection,
+ *   - `enqueueUnscoredEligible` (the post-finalize / quiet-feed enqueue),
+ *   - the four relevance/reason BUNDLE BUILDERS (this module and the
+ *     mera-protocol shim).
+ *
+ * WHERE IT IS NOT: `batchScoreAndReason` and `buildFeedVerifierCalls` keep
+ * `isEligible`. Relaxing the shared predicate there would flip factless rows
+ * off `INELIGIBLE_RELEVANCE` on the sync/on-device path as a side effect. The
+ * consequence is that the inline path still scores a pure headline 0.2 — below
+ * every gate, so it fails CLOSED — while the E2EE path (what production runs)
+ * scores it for real.
+ */
+export function isScorableCandidate(c: ScoringCandidate): boolean {
+  if (isEligible(c)) return true;
+  return isHeadlineCandidate(c) && Boolean(c.titleEn && c.descriptionEn);
 }
 
 export function chunk<T>(arr: T[], size: number): T[][] {
@@ -127,15 +235,30 @@ export function buildScoreCallForChunk(
  * Phase-1 of the two-phase async flow: score-only calls, no reason prompts.
  * Each chunk produces one BatchCall with id `score:N`. Pure — fact statements
  * are supplied by the caller (previously loaded from WatermelonDB inside).
+ *
+ * The system prompt AND the chunk size both come from the resolved variant
+ * (P4b): TOP-HEADLINE candidates get the indirect-impact prompt at
+ * `headlineArticlesPerScorePrompt`, everything else the standard pair. Pass
+ * `variant` to force one; omit it and it is derived from the candidates, which
+ * yields 'headline' only for an all-headline set. The size actually used is
+ * returned as `scoreChunkSize` so an async caller persists the real value
+ * rather than re-deriving it at decode time.
  */
 export function buildRelevanceCalls(
   candidates: ScoringCandidate[],
   factStatements: string[],
   config: ArticlePipelineConfig = ARTICLE_CFG,
   logger: HarnessLogger = NOOP_LOGGER,
+  variant?: ScoringVariant,
 ): CloudCallBundle {
-  const eligible = candidates.filter(isEligible);
-  const chunks = chunk(eligible, config.articlesPerScorePrompt);
+  // isScorableCandidate, not isEligible: a pure TOP-HEADLINE row is factless by
+  // design and would otherwise be silently dropped from the bundle here even
+  // after surviving the feed-sync tombstone.
+  const eligible = candidates.filter(isScorableCandidate);
+  const resolved = variant ?? resolveScoringVariant(eligible);
+  const scoreChunkSize = scoreChunkSizeFor(config, resolved);
+  const systemPrompt = relevanceSystemPromptFor(config, resolved);
+  const chunks = chunk(eligible, scoreChunkSize);
 
   const calls: BatchCall[] = [];
   const promptsById = new Map<string, string>();
@@ -145,7 +268,7 @@ export function buildRelevanceCalls(
     const { prompt, system } = buildScoreCallForChunk(
       chunkCandidates,
       factStatements,
-      config.relevanceSystemPrompt,
+      systemPrompt,
     );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
@@ -164,6 +287,7 @@ export function buildRelevanceCalls(
     promptsById,
     chunkIdToCandidates,
     eligibleCandidates: eligible,
+    scoreChunkSize,
   };
 }
 
@@ -171,6 +295,10 @@ export function buildRelevanceCalls(
  * Phase-2 of the two-phase async flow: reason-only calls for the subset of
  * candidates whose relevance (computed in phase-1) exceeds `subsetThreshold`.
  * Pure — fact statements are supplied by the caller.
+ *
+ * One call per candidate (`reason:<id>`), so unlike the relevance pass there is
+ * no chunking to keep uniform — the headline reason prompt is selected
+ * PER CANDIDATE, and a mixed subset is fine.
  */
 export function buildReasonCallsForSubset(
   candidates: ScoringCandidate[],
@@ -181,7 +309,10 @@ export function buildReasonCallsForSubset(
   logger: HarnessLogger = NOOP_LOGGER,
 ): CloudCallBundle {
   const subset = candidates.filter((c) => {
-    if (!isEligible(c)) return false;
+    // isScorableCandidate: without it a factless headline that SCORED well gets
+    // no reason call, stays `reason_pending`, and isVisible keeps it invisible
+    // anyway — the fix upstream would buy nothing.
+    if (!isScorableCandidate(c)) return false;
     const rel = relevanceMap[c.id];
     return typeof rel === 'number' && rel > subsetThreshold;
   });
@@ -203,7 +334,10 @@ export function buildReasonCallsForSubset(
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
-      system: config.reasonSystemPrompt,
+      system: reasonSystemPromptFor(
+        config,
+        isHeadlineCandidate(c) ? 'headline' : 'standard',
+      ),
       prompt: reasonPrompt,
       temperature: config.reasonTemperature,
       maxTokens: config.reasonMaxTokens,

@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt';
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
@@ -405,7 +406,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     if (isLoading) {
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center">
+            <Box className="flex-1 items-center justify-center">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <Spinner size="large" />
             </Box>
         );
@@ -417,7 +422,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         // an expected condition, not a failure. Auto-retries when
         // connectivity returns (see the retryNonce effect above).
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
+            <Box className="flex-1 items-center justify-center p-5">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <MaterialIcons
                     name="wifi-off"
                     size={48}
@@ -437,7 +446,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     if (error || !article) {
         return (
-            <Box className="flex-1 bg-background-50 items-center justify-center p-5">
+            <Box className="flex-1 items-center justify-center p-5">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
                 <MaterialIcons
                     name="error-outline"
                     size={48}
@@ -460,7 +473,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const read = isOpenedId(article._id, stableClusterId, openedIds);
 
     return (
-        <Box className="flex-1 bg-background-50">
+        <Box className="flex-1">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             {/* Status bar scrim — this screen's hero image is a full-bleed
                 parallax header (ArticleSuggestionContainer's SmoothScrollView),
                 so without this a light photo makes the system clock/battery
@@ -515,6 +532,14 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
+                                    // REQUIRED: this screen also serves articles
+                                    // with NO local article_suggestions row
+                                    // (Explore, a tracked story, a shared link).
+                                    // Without it those verdicts persist an empty
+                                    // context and the feedback tree has no
+                                    // publication / category / event / place to
+                                    // act on — the gap this wave closed.
+                                    article={article}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'article',

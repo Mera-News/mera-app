@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -45,7 +46,12 @@ export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
     }, []);
 
     return (
-        <Box className="flex-1 bg-background-0 items-center justify-center">
+        // No opaque fill: the AbstractGradientBackdrop below is the page background.
+        <Box className="flex-1 items-center justify-center">
+            {/* Page background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
             <Box className="items-center mb-8">
                 <MeraLogo size={120} />
             </Box>

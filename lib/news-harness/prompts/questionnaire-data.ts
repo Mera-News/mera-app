@@ -1,16 +1,15 @@
-// Questionnaire guide for on-device chat system prompt.
+// Questionnaire data for the on-device chat system prompt.
 //
-// Each level is fed to the LLM individually based on the user's current progress.
-// Only the current level is included in the prompt to conserve context window.
+// The LLM reads Known Facts and autonomously picks the most relevant
+// unanswered question — no level tracking required.
 //
-// The legacy level-based system is preserved here alongside the new approach.
-// Toggle between them via the "Use Legacy persona update logic" setting.
-
-// ============================================================
-// NEW: Example-questions approach
-// The LLM reads Known Facts and autonomously picks the most
-// relevant unanswered question — no level tracking required.
-// ============================================================
+// The `questionnaireLevels` table below is NO LONGER a prompt input. It
+// survives purely as the ATTRIBUTE-TEXT → STABLE-ID lookup table backing
+// buildAttributeTextToIdMap(), which topic generation uses to recognise a
+// user's own-location fact (see persona-management/topic-generation.ts and
+// lib/inference/handlers/topic-gen-handler.ts). Facts saved before the
+// level-based questionnaire was removed still carry those full attribute
+// strings, so the table must stay for their geo-anchoring to keep working.
 
 export const EXAMPLE_QUESTIONS: string[] = [
   'Where do you live? (neighborhood, city, country)',
@@ -41,7 +40,7 @@ export function buildExampleQuestionsText(): string {
 }
 
 // ============================================================
-// LEGACY: Level-based questionnaire (kept for reference)
+// Attribute-text → stable-ID lookup table (see file header).
 // ============================================================
 
 export interface QuestionnaireAttribute {
@@ -56,8 +55,6 @@ export interface QuestionnaireLevel {
     category: string;
     attributes: QuestionnaireAttribute[];
 }
-
-export const TOTAL_LEVELS = 10;
 
 export const questionnaireLevels: QuestionnaireLevel[] = [
     {
@@ -214,45 +211,4 @@ export function buildIdToAttributeTextMap(): Map<string, string> {
         }
     }
     return map;
-}
-
-/**
- * Extracts the attribute key (text before the colon) from an attribute string.
- * e.g., "location: neighborhood/area, city" → "location"
- */
-export function parseAttributeKey(attributeString: string): string {
-    const colonIdx = attributeString.indexOf(':');
-    return colonIdx >= 0 ? attributeString.substring(0, colonIdx).trim() : attributeString.trim();
-}
-
-/**
- * Returns all attribute keys for a given level.
- */
-export function getAttributeKeysForLevel(level: number): string[] {
-    const levelData = questionnaireLevels.find((l) => l.level === level);
-    if (!levelData) return [];
-    return levelData.attributes.map((attr) => parseAttributeKey(attr.text));
-}
-
-/**
- * Builds the questionnaire guide string for the system prompt.
- * Includes only the current level to conserve context window.
- * When coveredAttributes is provided, annotates each attribute as [DONE] or [ASK].
- */
-export function buildQuestionnaireGuide(
-    currentLevel: number,
-    coveredAttributes?: Set<string>,
-): string {
-    const current = questionnaireLevels.find((l) => l.level === currentLevel);
-    if (!current) return '';
-
-    const lines = current.attributes.map((attr) => {
-        const key = parseAttributeKey(attr.text);
-        if (coveredAttributes && coveredAttributes.has(key)) {
-            return `- ${attr.text} [DONE] SKIP`;
-        }
-        return `- ${attr.text} [ASK]`;
-    });
-
-    return `### Level ${current.level}: ${current.category}\n${lines.join('\n')}`;
 }

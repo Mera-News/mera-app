@@ -8,13 +8,21 @@ import {
   decideProposeChanges,
   decideProposeTrack,
   getArticleFeedbackToolDefinitions,
+  selectActiveFiltersForContext,
 } from '../article-feedback/agent-core';
+import { estimateTokens } from '@/lib/llm/tokens';
+import { SUPPRESSION_KINDS } from '../core/types';
 import type {
+  ActiveSuppressionView,
   Fact,
   SuggestionFeedbackContext,
   StagedProposal,
   TrackFeedbackSubject,
 } from '../core/types';
+
+/** not-interested P4a: named ceiling for the XML-path system prompt, so the
+ *  budget assertion states a number instead of "fits". Measured 2080. */
+const ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING = 2200;
 
 /** Fixed injected clock — 2026-03-04T05:06:07Z. Pinned so every assertion over
  *  the rendered context stays deterministic (the builder never reads Date.now). */
@@ -76,13 +84,49 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     expect(prompt).toContain('0.5');
   });
 
-  it('stays within the ≤250-token prompt-delta budget (heuristic ceiling)', () => {
-    // The XML-format path (local) is the larger of the two; keep the whole thing
-    // comfortably under the ~3072 input budget.
+  // not-interested P4a — contract delta: the chars-proxy (`prompt.length <
+  // 8000`) is replaced by the real estimator the runtime budgets against
+  // (lib/llm/tokens::estimateTokens, mirrored inside agent-core). MEASURED
+  // 2026-07-29: 2080 tokens for the XML path with the D9 suppression wording;
+  // the ceiling leaves ~120 tokens of drift room before it fails.
+  it('stays under the measured system-prompt token ceiling', () => {
+    // The XML-format path (local) is the larger of the two.
     const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
-    // ~4 chars/token heuristic — the assembled prompt should stay well under 900
-    // tokens (base ≈ 1580 chars-region measured; guardrail against runaway growth).
-    expect(prompt.length).toBeLessThan(8000);
+    expect(estimateTokens(prompt)).toBeLessThan(ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING);
+  });
+
+  // not-interested P4a — new: the YOUR FILTERS block is the only unbounded
+  // addition to this surface's context, so pin system + a saturated context
+  // (full article, 12 long facts, filters at MAX_ACTIVE_FILTERS) against the
+  // on-device input budget. MEASURED 2026-07-29: 2080 + 660 = 2740.
+  it('system + a filter-saturated context fits the ~3072-token input budget', () => {
+    const system = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    const context = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: Array.from({ length: 12 }, (_, i) => fact(`f${i}`, 'A'.repeat(199), ['alpha', 'beta', 'gamma'])),
+      context: scoredContext(),
+      proposal: null,
+      activeSuppressions: Array.from({ length: 12 }, (_, i) => ({
+        id: `abcdefgh1234567${i % 10}`,
+        pattern: 'celebrity gossip and reality television',
+        kind: 'keyword' as const,
+      })),
+    });
+    expect(estimateTokens(system) + estimateTokens(context)).toBeLessThan(3072);
+  });
+
+  it('documents the verbatim-value rule and retire_suppression', () => {
+    // not-interested P4a — contract delta: D9 wording must survive edits. A
+    // structured filter matches by EXACT equality, so an invented value is a
+    // filter that silently never fires; the prompt must say so in both paths.
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    expect(prompt).toContain('COPY THE VALUE VERBATIM');
+    expect(prompt).toContain('matches NOTHING');
+    expect(prompt).toContain('retire_suppression');
+    expect(prompt).toContain('YOUR FILTERS');
+    // The XML tool-format block (local path) repeats the rule — the JSON-Schema
+    // descriptions the cloud path reads are NOT sent on that path.
+    expect(prompt).toContain('copy VERBATIM from <context>');
   });
 
   it('forbids dated track scopes and points at the <context> dates', () => {
@@ -452,6 +496,9 @@ describe('getArticleFeedbackToolDefinitions', () => {
       'add_negative_topic',
       'set_publication_pref',
       'add_suppression',
+      // not-interested P4a — contract delta: removing a filter is a first-class
+      // chat action (D6), staged and confirmed like any other proposal.
+      'retire_suppression',
       'set_high_priority',
       'retire_topic',
     ]);
@@ -462,10 +509,17 @@ describe('getArticleFeedbackToolDefinitions', () => {
     const props = (propose.function.parameters.properties.actions as {
       items: { properties: Record<string, unknown> };
     }).items.properties;
-    for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'suppressionKeywords', 'suppressionStrength', 'highPriority']) {
+    // not-interested P4a — contract delta: suppressionKind / suppressionValue
+    // (structured filters) and suppressionId (retire) join the action schema.
+    // A schema field the sanitizer drops is worse than no field, so the
+    // decideProposeChanges specs below cover every one of them.
+    for (const key of ['topicText', 'delta', 'weight', 'publicationId', 'publicationPref', 'suppressionPattern', 'suppressionKeywords', 'suppressionStrength', 'suppressionKind', 'suppressionValue', 'suppressionId', 'highPriority']) {
       expect(props[key]).toBeDefined();
     }
     expect((props.publicationPref as { enum: string[] }).enum).toEqual(['boost', 'deprioritize', 'mute']);
+    // The kind enum mirrors SUPPRESSION_KINDS verbatim (order is load-bearing —
+    // it is the same array the DB model persists against).
+    expect((props.suppressionKind as { enum: string[] }).enum).toEqual([...SUPPRESSION_KINDS]);
   });
 
   it('declares the choose_one flag on proposeChanges and options[] on proposeTrack', () => {
@@ -847,5 +901,197 @@ describe('decideProposeTrack', () => {
     };
     expect(action.label.length).toBeLessThanOrEqual(200);
     expect(action.searchText.length).toBeLessThanOrEqual(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// not-interested P4a — "not interested" filters in the article chat (D6 + D9)
+// ---------------------------------------------------------------------------
+
+const filter = (over: Partial<ActiveSuppressionView> = {}): ActiveSuppressionView => ({
+  id: 's1',
+  pattern: 'celebrity gossip',
+  kind: 'keyword',
+  ...over,
+});
+
+function articleContext(): SuggestionFeedbackContext {
+  return {
+    ...scoredContext(),
+    entities: ['European Union', 'DeepMind'],
+    category: 'Technology',
+  };
+}
+
+describe('selectActiveFiltersForContext', () => {
+  it('puts the filters matching THIS article first, then the rest in caller order', () => {
+    const rows = selectActiveFiltersForContext(
+      [
+        filter({ id: 'a', pattern: 'football' }),
+        filter({ id: 'b', kind: 'category', value: 'Technology', pattern: 'Technology' }),
+        filter({ id: 'c', pattern: 'cricket' }),
+      ],
+      articleContext(),
+    );
+    expect(rows.map((r) => r.row.id)).toEqual(['b', 'a', 'c']);
+    expect(rows[0].matches).toBe(true);
+    expect(rows[1].matches).toBe(false);
+  });
+
+  it('matches a keyword filter as a normalized substring of title/description/entities', () => {
+    const rows = selectActiveFiltersForContext(
+      [filter({ id: 'k', pattern: 'DEEPMIND' })],
+      articleContext(),
+    );
+    expect(rows[0].matches).toBe(true);
+  });
+
+  it('caps the list and drops rows without an id', () => {
+    const many = Array.from({ length: 20 }, (_, i) => filter({ id: `x${i}` }));
+    expect(selectActiveFiltersForContext(many, null)).toHaveLength(8);
+    expect(selectActiveFiltersForContext([filter({ id: '' })], null)).toHaveLength(0);
+  });
+});
+
+describe('buildFeedbackContext — YOUR FILTERS block', () => {
+  it('renders id, phrase and the kind (kind omitted for the default keyword)', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: articleContext(),
+      proposal: null,
+      activeSuppressions: [
+        filter({ id: 'k1', pattern: 'football' }),
+        filter({ id: 'c1', kind: 'category', value: 'Technology', pattern: 'Technology' }),
+      ],
+    });
+    expect(ctx).toContain('## YOUR FILTERS');
+    expect(ctx).toContain('- [k1] "football"');
+    expect(ctx).toContain('- [c1] "Technology" (category) — matches this article');
+  });
+
+  it('omits the block entirely when the user has no filters', () => {
+    const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, proposal: null });
+    expect(ctx).not.toContain('YOUR FILTERS');
+  });
+
+  it('survives the over-budget trim that drops ALL YOUR FACTS', () => {
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      // Enough fact text to blow CONTEXT_TOKEN_BUDGET and trigger the trim
+      // (statements are truncated; the per-fact topic preview is not).
+      facts: Array.from({ length: 12 }, (_, i) =>
+        fact(`f${i}`, 'x'.repeat(115), ['a'.repeat(300), 'b'.repeat(300), 'c'.repeat(300)]),
+      ),
+      context: articleContext(),
+      proposal: null,
+      activeSuppressions: [filter({ id: 'keep-me', pattern: 'football' })],
+    });
+    expect(ctx).not.toContain('## ALL YOUR FACTS');
+    expect(ctx).toContain('- [keep-me] "football"');
+  });
+});
+
+describe('decideProposeChanges — suppression kinds (D9)', () => {
+  const sanitizer: {
+    article: SuggestionFeedbackContext | null;
+    activeSuppressions: ActiveSuppressionView[];
+  } = { article: articleContext(), activeSuppressions: [filter({ id: 's1' })] };
+
+  function stage(action: Record<string, unknown>, ctx = sanitizer) {
+    return decideProposeChanges(
+      { explanation: 'e', expected_effects: 'x', actions: [action] },
+      new Set<string>(),
+      ctx,
+    );
+  }
+
+  it('keeps a structured pair the article corroborates verbatim', () => {
+    const r = stage({ type: 'add_suppression', suppressionPattern: 'tech news', suppressionKind: 'category', suppressionValue: 'Technology' });
+    const a = r.sideEffects!.proposal!.actions[0] as { suppressionKind?: string; suppressionValue?: string };
+    expect(a.suppressionKind).toBe('category');
+    expect(a.suppressionValue).toBe('Technology');
+  });
+
+  it('corroborates case-insensitively (the runtime matcher normalizes too)', () => {
+    const r = stage({ type: 'add_suppression', suppressionPattern: 'p', suppressionKind: 'entity', suppressionValue: 'deepmind' });
+    expect((r.sideEffects!.proposal!.actions[0] as { suppressionKind?: string }).suppressionKind).toBe('entity');
+  });
+
+  it('DOWNGRADES an invented structured value to a keyword filter instead of staging a filter that never fires', () => {
+    const r = stage({ type: 'add_suppression', suppressionPattern: 'celebrity', suppressionKind: 'category', suppressionValue: 'celebrity stuff' });
+    const a = r.sideEffects!.proposal!.actions[0] as { type: string; suppressionPattern: string; suppressionKind?: string; suppressionValue?: string };
+    expect(a.type).toBe('add_suppression');
+    expect(a.suppressionPattern).toBe('celebrity');
+    expect(a.suppressionKind).toBeUndefined();
+    expect(a.suppressionValue).toBeUndefined();
+  });
+
+  it('downgrades kinds the article context cannot corroborate at all (event_type, place)', () => {
+    for (const kind of ['event_type', 'place']) {
+      const r = stage({ type: 'add_suppression', suppressionPattern: 'p', suppressionKind: kind, suppressionValue: 'Technology' });
+      expect((r.sideEffects!.proposal!.actions[0] as { suppressionKind?: string }).suppressionKind).toBeUndefined();
+    }
+  });
+
+  it('downgrades when there is no article context to corroborate against', () => {
+    const r = stage(
+      { type: 'add_suppression', suppressionPattern: 'p', suppressionKind: 'category', suppressionValue: 'Technology' },
+      { article: null, activeSuppressions: [] },
+    );
+    expect((r.sideEffects!.proposal!.actions[0] as { suppressionKind?: string }).suppressionKind).toBeUndefined();
+  });
+
+  it('falls back to the structured value as the display phrase when no pattern was sent', () => {
+    const r = stage({ type: 'add_suppression', suppressionKind: 'publication', suppressionValue: 'Euronews' });
+    const a = r.sideEffects!.proposal!.actions[0] as { suppressionPattern: string; suppressionKind?: string };
+    expect(a.suppressionPattern).toBe('Euronews');
+    expect(a.suppressionKind).toBe('publication');
+  });
+
+  it('still rejects an add_suppression with neither a pattern nor a value', () => {
+    expect(stage({ type: 'add_suppression' }).result.error).toContain('suppressionPattern');
+  });
+});
+
+describe('decideProposeChanges — retire_suppression', () => {
+  const rows = [filter({ id: 'sup-1', pattern: 'celebrity gossip' })];
+
+  function stage(action: Record<string, unknown>, activeSuppressions = rows) {
+    return decideProposeChanges(
+      { explanation: 'e', expected_effects: 'x', actions: [action] },
+      new Set<string>(),
+      { article: null, activeSuppressions },
+    );
+  }
+
+  it('stages the id AND resolves the display pattern from our own list, not the model', () => {
+    const r = stage({ type: 'retire_suppression', suppressionId: 'sup-1', pattern: 'something else entirely' });
+    expect(r.sideEffects!.proposal!.actions[0]).toEqual({
+      type: 'retire_suppression',
+      suppressionId: 'sup-1',
+      pattern: 'celebrity gossip',
+    });
+  });
+
+  it('rejects an id that is not in the filters the agent was shown', () => {
+    expect(stage({ type: 'retire_suppression', suppressionId: 'made-up' }).result.error)
+      .toContain('unknown suppressionId');
+  });
+
+  it('rejects outright when no filters were put in context', () => {
+    expect(stage({ type: 'retire_suppression', suppressionId: 'sup-1' }, []).result.error)
+      .toContain('unknown suppressionId');
+  });
+
+  it('rejects a missing suppressionId', () => {
+    expect(stage({ type: 'retire_suppression' }).result.error).toContain('suppressionId');
+  });
+
+  it('renders in the PENDING PROPOSAL line with the resolved phrase', () => {
+    const proposal = stage({ type: 'retire_suppression', suppressionId: 'sup-1' })
+      .sideEffects!.proposal!;
+    const ctx = buildFeedbackContext({ nowMs: NOW_MS, facts: [], context: null, proposal });
+    expect(ctx).toContain('remove the filter "celebrity gossip"');
   });
 });

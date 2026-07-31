@@ -227,19 +227,21 @@ export function toBatchResult(
 export function reconstructLookups(
   callIds: string[],
   candidateIds: string[],
+  /** P4b — the chunk size the SUBMIT built `score:N` with. Defaults to the
+   *  standard size, which is what every pre-P4b batch used; an all-TOP-HEADLINE
+   *  batch passes its (smaller) headline size, read off the batch record. */
+  chunkSize: number = CLOUD_SCORE_CHUNK_SIZE,
 ): {
   chunkIdToCandidates: Map<string, ScoringCandidate[]>;
 } {
   const chunkIdToCandidates = new Map<string, ScoringCandidate[]>();
+  const size = chunkSize > 0 ? chunkSize : CLOUD_SCORE_CHUNK_SIZE;
 
   for (const callId of callIds) {
     if (callId.startsWith('score:')) {
       const idx = Number(callId.slice('score:'.length));
-      const start = idx * CLOUD_SCORE_CHUNK_SIZE;
-      const chunkIds = candidateIds.slice(
-        start,
-        start + CLOUD_SCORE_CHUNK_SIZE,
-      );
+      const start = idx * size;
+      const chunkIds = candidateIds.slice(start, start + size);
       const chunkCandidates: ScoringCandidate[] = chunkIds.map((id) => ({
         id,
         titleEn: null,

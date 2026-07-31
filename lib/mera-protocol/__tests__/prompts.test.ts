@@ -276,29 +276,8 @@ describe('buildPersonaUpdateContext', () => {
     expect(result).toContain('</context>');
   });
 
-  it('omits questionnaire when useLegacy is false (default)', () => {
+  it('never emits a questionnaire block', () => {
     const result = buildPersonaUpdateContext({ knownFactsList: 'fact' });
-    expect(result).not.toContain('Questionnaire');
-  });
-
-  it('includes questionnaire section when useLegacy is true and all fields provided', () => {
-    const result = buildPersonaUpdateContext({
-      knownFactsList: 'fact',
-      useLegacy: true,
-      questionnaireGuide: '## Guide',
-      currentLevel: 2,
-      totalLevels: 10,
-    });
-    expect(result).toContain('Questionnaire: Level 2/10');
-    expect(result).toContain('## Guide');
-  });
-
-  it('omits questionnaire even with useLegacy=true when guide/level fields are missing', () => {
-    const result = buildPersonaUpdateContext({
-      knownFactsList: 'fact',
-      useLegacy: true,
-      // no questionnaireGuide, no currentLevel, no totalLevels
-    });
     expect(result).not.toContain('Questionnaire');
   });
 });
@@ -319,13 +298,8 @@ describe('buildToolDefinitions', () => {
     expect(tools.some((t) => t.function.name === 'issueWarning')).toBe(true);
   });
 
-  it('includes advanceQuestionnaireLevel when useLegacy=true (default)', () => {
-    const tools = buildToolDefinitions('ONBOARDING', true);
-    expect(tools.some((t) => t.function.name === 'advanceQuestionnaireLevel')).toBe(true);
-  });
-
-  it('omits advanceQuestionnaireLevel when useLegacy=false', () => {
-    const tools = buildToolDefinitions('ONBOARDING', false);
+  it('never offers advanceQuestionnaireLevel', () => {
+    const tools = buildToolDefinitions('ONBOARDING');
     expect(tools.some((t) => t.function.name === 'advanceQuestionnaireLevel')).toBe(false);
   });
 
@@ -423,14 +397,10 @@ describe('buildPersonaUpdateStaticPrompt', () => {
     expect(cloudPrompt).not.toBe(localPrompt);
   });
 
-  it('includes legacy questionnaire rules when useLegacy=true', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', useLegacy: true });
-    expect(prompt).toContain('[ASK]');
-  });
-
-  it('includes new example-questions approach when useLegacy=false (default)', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', useLegacy: false });
+  it('includes the example-questions approach', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING' });
     expect(prompt).toContain('Questions to explore');
+    expect(prompt).not.toContain('[ASK]');
   });
 
   it('omits deletion section for ONBOARDING', () => {
@@ -598,37 +568,27 @@ describe('buildToolFormatSection — compact signature edge cases', () => {
 });
 
 // ============================================================
-// buildPersonaUpdateStaticPrompt — LOCAL + useLegacy branches
+// buildPersonaUpdateStaticPrompt — LOCAL / CLOUD surface branches
 // ============================================================
 
-describe('buildPersonaUpdateStaticPrompt — LOCAL useLegacy branches', () => {
-  it('uses legacy questionnaire rules for LOCAL mode when useLegacy=true', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL', useLegacy: true });
-    expect(prompt).toContain('[ASK]');
-  });
-
-  it('uses new example-questions for LOCAL mode when useLegacy=false', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL', useLegacy: false });
+describe('buildPersonaUpdateStaticPrompt — LOCAL/CLOUD surface branches', () => {
+  it('uses the example-questions list for LOCAL mode', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'LOCAL' });
     expect(prompt).toContain('Questions to explore');
   });
 
-  it('LOCAL CONFIG useLegacy=true responds directly rather than using onboarding start', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'LOCAL', useLegacy: true });
+  it('LOCAL CONFIG responds directly rather than using the onboarding start', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'LOCAL' });
     expect(prompt).toContain('Respond directly');
   });
 
-  it('LOCAL CONFIG useLegacy=false responds directly', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'LOCAL', useLegacy: false });
-    expect(prompt).toContain('Respond directly');
-  });
-
-  it('CLOUD ONBOARDING useLegacy=true uses welcome message start', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'CLOUD', useLegacy: true });
+  it('CLOUD ONBOARDING uses the welcome message start', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'ONBOARDING', mode: 'CLOUD' });
     expect(prompt).toContain('welcome message');
   });
 
-  it('CLOUD CONFIG useLegacy=true responds to user messages directly', () => {
-    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'CLOUD', useLegacy: true });
+  it('CLOUD CONFIG responds to user messages directly', () => {
+    const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'CLOUD' });
     expect(prompt).toContain('Respond to user messages directly');
   });
 });
