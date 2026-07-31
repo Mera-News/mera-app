@@ -7,19 +7,26 @@ export interface RelevanceColors {
 
 // Shared reason box styling - lighter grey background with bold white text
 export const reasonBoxColors = {
-    // 50% translucent rather than the old solid #374151: the box sits on a card
-    // that is itself glass over the animated page backdrop, and a solid fill
-    // punched an opaque slab through that whole stack. Same hue, half the
-    // opacity — the card's glass and the gradient now read through it.
-    backgroundColor: 'rgba(55, 65, 81, 0.10)',
+    // A neutral DARKENING, not a tint. This box sits on a translucent card over
+    // the animated gradient backdrop, and the old fill was #374151 — a blue-grey
+    // with a hue of its own, which fought whatever colour the gradient happened
+    // to be behind it and read as a pasted-on slab no matter how far the alpha
+    // dropped. Plain black at 25% has no hue to clash: it darkens whatever is
+    // behind it, so the gradient's colour still comes through, just deeper. That
+    // is what makes it blend instead of sit on top.
+    //
+    // Still comfortably dark enough for the white `textColor` and for
+    // `aiDisclosureColor` (#D1D5DB) over any palette entry.
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
     textColor: '#FFFFFF'
 };
 
 /**
  * Colour for the AI-disclosure label rendered inside the reason box. Dimmer
  * than `reasonBoxColors.textColor` so the label stays subordinate to the note,
- * but still 7.0:1 against the box's `#374151` — the muted typography token the
- * label uses elsewhere does not clear 4.5:1 on that background.
+ * and comfortable against the box, which is now a 25% black darkening of the page
+ * rather than the old solid `#374151`. The muted typography token the label uses
+ * elsewhere does not clear 4.5:1 there.
  */
 export const aiDisclosureColor = '#D1D5DB';
 
