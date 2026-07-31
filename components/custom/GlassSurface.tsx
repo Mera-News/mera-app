@@ -127,18 +127,19 @@ export interface GlassPanelProps {
   className?: string;
   /** Classes for the inner content box: padding and layout. */
   contentClassName?: string;
-  /** Background applied INSTEAD of glass wherever glass is unavailable. Without
-   *  it the panel would be invisible on Android and iOS < 26. */
+  /**
+   * @deprecated Ignored, and kept only so existing call sites still compile.
+   * It existed because a real `GlassView` paints nothing off iOS 26, so a panel
+   * needed an opaque fallback or it vanished. `GlassPanel` now uses
+   * `TranslucentPlate`, which is just a background colour and therefore works on
+   * every platform — there is nothing left to fall back to.
+   */
   fallbackClassName?: string;
   /** Draw the hairline edge. Default true. */
   edge?: boolean;
   /**
-   * Overrides the plate's tint. The default lifts the surface with a faint
-   * white, which is right for a panel that should read as sitting ABOVE the
-   * page — a card, a row, a header. Pass a dark translucent value instead for a
-   * surface that should recede into the page and merely occlude what is behind
-   * it, where a white lift would read as a grey slab pasted across the
-   * background.
+   * @deprecated Ignored. It tuned the glass plate's tint; this panel no longer
+   * uses a glass plate. Kept so existing call sites still compile.
    */
   tint?: string;
   style?: StyleProp<ViewStyle>;
@@ -147,12 +148,17 @@ export interface GlassPanelProps {
 }
 
 /**
- * A rounded surface backed by glass, with an opaque fallback. The ergonomic
- * wrapper for chrome that used to paint a flat `bg-background-0`: settings rows,
- * accordions, panels.
+ * A rounded translucent surface: settings rows, accordions, chips, small panels.
  *
- * Structure exists to satisfy `GlassPlate`'s contract — an unpadded, clipping
- * outer box holding the plate plus a padded inner box for content.
+ * Deliberately NOT real glass. These are CONTENT surfaces and they come in
+ * quantity — the settings list alone renders nine of them, a profile's fact
+ * accordions a dozen more — and every real glass surface recomputes a blur on
+ * every frame the animated page backdrop changes. That is what made the app
+ * slow. `TranslucentPlate` gives the same read over a gradient at no cost.
+ *
+ * If you need actual frosted glass, the surface is chrome, and chrome uses
+ * `GlassPlate` directly. Keep that set small and static — today it is the three
+ * screen headers, the status-bar scrim and the scroll FAB.
  */
 export const GlassPanel: React.FC<GlassPanelProps> = ({
   radius = 12,
@@ -160,23 +166,16 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({
   contentClassName = '',
   fallbackClassName = 'bg-background-0',
   edge = true,
-  tint,
   style,
   testID,
   children,
 }) => (
   <Box
     testID={testID}
-    className={[
-      className,
-      edge && GLASS_AVAILABLE ? GLASS_EDGE : '',
-      GLASS_AVAILABLE ? '' : fallbackClassName,
-    ]
-      .filter(Boolean)
-      .join(' ')}
+    className={[className, edge ? GLASS_EDGE : ''].filter(Boolean).join(' ')}
     style={[{ borderRadius: radius, overflow: 'hidden' }, style]}
   >
-    <GlassPlate tint={tint} />
+    <TranslucentPlate />
     <Box className={contentClassName}>{children}</Box>
   </Box>
 );
