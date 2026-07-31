@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { AppState, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
+  makeMutable,
+  useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
-  useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, G, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 /**
  * The app-wide background for the five tab pages: a slowly drifting,
@@ -147,14 +148,22 @@ const BLOBS = [
 
 const TAU = Math.PI * 2;
 
-/** The oversized layer box: `OVERSCAN`× the screen on both axes, centred. */
-const LAYER: ViewStyle = {
-  position: 'absolute',
-  left: `${-((OVERSCAN - 1) / 2) * 100}%`,
-  top: `${-((OVERSCAN - 1) / 2) * 100}%`,
-  width: `${OVERSCAN * 100}%`,
-  height: `${OVERSCAN * 100}%`,
-};
+/**
+ * The oversize now lives on the RECT INSIDE the Svg, not on the hosting view.
+ *
+ * This is a memory decision, not a cosmetic one. A React Native view's backing
+ * store is proportional to its area, so an `OVERSCAN`× view is OVERSCAN²×
+ * the pixels — at 2× that is 4× a full screen, and the old structure had SIX of
+ * them per backdrop (3 blobs × 2 cross-fade copies). Multiplied by the tab
+ * screens that stay mounted it reached ~1.5 GB of backing store.
+ *
+ * Keeping the Svg exactly screen-sized and oversizing the rect inside it gives
+ * the identical picture — the rect still extends far enough that drift never
+ * drags a gradient boundary into view — while the Svg viewport clips to the
+ * screen, so nothing off-screen is ever rasterised.
+ */
+const RECT_INSET = `${-((OVERSCAN - 1) / 2) * 100}%`;
+const RECT_SIZE = `${OVERSCAN * 100}%`;
 
 /** FNV-1a 32-bit — the same hash `lib/section-color.ts` uses to key a fact's
  *  colour, so a seeded backdrop is stable across launches and screens. */
@@ -200,99 +209,191 @@ function colorSequence(rand: () => number): string[] {
   return seq;
 }
 
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * THE SHARED ENGINE
+ *
+ * There is ONE animation for the whole app, not one per mounted backdrop.
+ *
+ * Why this matters: the backdrop cannot be mounted a single time. expo-router
+ * wraps every tab's content in an opaque `View` (navigation theme background),
+ * and native-stack screens must stay opaque or you see the outgoing screen
+ * through the incoming one mid-push. So the component is mounted per screen —
+ * dozens of times.
+ *
+ * Left to itself each of those instances would run its own clock and draw its
+ * own random palette at mount, which is exactly what made every screen look
+ * different and made a single screen change colours when you navigated away and
+ * back. Hoisting the clock, the cross-fade driver, the step counter and the
+ * colour sequences to module scope makes every instance render the IDENTICAL
+ * frame of the IDENTICAL animation. Visually and behaviourally it is one
+ * background; the instances are just render targets.
+ *
+ * It is also cheaper: one `withRepeat` and one interval for the whole app
+ * regardless of how many screens are mounted.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/** The shared 0→1 drift clock. Module scope, so every instance reads the same
+ *  phase and switching screens never jumps the animation. */
+const sharedClock = makeMutable(0);
+/** A permanently-zero clock for the Reduce Motion path, so `BlobField` can stay
+ *  one component instead of growing a static variant. */
+const STILL_CLOCK = makeMutable(0);
+/** The shared 0↔1 colour cross-fade driver. */
+const sharedMix = makeMutable(0);
+
+/** The shared colour-step counter. Lives outside React because every instance
+ *  must observe the same value; `useSyncExternalStore` subscribes them. */
+const stepStore = {
+  value: 0,
+  listeners: new Set<() => void>(),
+  get: () => stepStore.value,
+  subscribe(fn: () => void) {
+    stepStore.listeners.add(fn);
+    return () => stepStore.listeners.delete(fn);
+  },
+  advance() {
+    stepStore.value += 1;
+    stepStore.listeners.forEach((fn) => fn());
+  },
+};
+
+/** The app-wide colour sequences — one per blob, drawn once at module load.
+ *  Every unseeded instance shares these, which is what makes the whole app one
+ *  background rather than N random ones. */
+const SHARED_SEQUENCES = BLOBS.map((_, i) => colorSequence(makeRandom(`house#${i}`)));
+
+/** Refcount of mounted backdrops. The engine starts on the first and stops on
+ *  the last, so nothing runs when no backdrop is on screen. */
+let mountCount = 0;
+let colorTimer: ReturnType<typeof setInterval> | null = null;
+let appStateSub: { remove: () => void } | null = null;
+let running = false;
+
+function startEngine() {
+  if (running) return;
+  running = true;
+  // Restart from 0 rather than resuming mid-cycle: the loop is seamless at the
+  // boundary, and this only happens on a cold start or a return to foreground,
+  // where no one is watching the jump.
+  sharedClock.value = 0;
+  sharedClock.value = withRepeat(
+    withTiming(1, { duration: CYCLE_MS, easing: Easing.linear }),
+    -1,
+    false
+  );
+  colorTimer = setInterval(() => {
+    stepStore.advance();
+    sharedMix.value = withTiming(stepStore.value % 2 === 0 ? 0 : 1, {
+      duration: COLOR_STEP_MS,
+      easing: Easing.inOut(Easing.ease),
+    });
+  }, COLOR_STEP_MS);
+}
+
+function stopEngine() {
+  if (!running) return;
+  running = false;
+  cancelAnimation(sharedClock);
+  if (colorTimer) {
+    clearInterval(colorTimer);
+    colorTimer = null;
+  }
+}
+
+/** Mount/unmount bookkeeping for one backdrop instance. The engine is gated on
+ *  the app being in the foreground — a backgrounded app animates nothing. */
+function useSharedEngine(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    mountCount += 1;
+    if (mountCount === 1) {
+      if (AppState.currentState === 'active') startEngine();
+      appStateSub = AppState.addEventListener('change', (state) => {
+        if (state === 'active') startEngine();
+        else stopEngine();
+      });
+    }
+    return () => {
+      mountCount -= 1;
+      if (mountCount === 0) {
+        stopEngine();
+        appStateSub?.remove();
+        appStateSub = null;
+      }
+    };
+  }, [enabled]);
+}
+
 type BlobSpec = (typeof BLOBS)[number];
 
 /** One static, single-colour copy of a blob. Memoized so a colour tick only
  *  rebuilds the layer whose colour actually changed. */
-const BlobLayer = React.memo<{ spec: BlobSpec; color: string; gradientId: string }>(
-  ({ spec, color, gradientId }) => (
-    <Svg width="100%" height="100%">
-      <Defs>
-        <RadialGradient id={gradientId} cx={spec.cx} cy={spec.cy} r={spec.r}>
-          <Stop offset="0" stopColor={color} stopOpacity={spec.alpha} />
-          <Stop offset="0.5" stopColor={color} stopOpacity={spec.alpha * 0.34} />
-          <Stop offset="1" stopColor={color} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${gradientId})`} />
-    </Svg>
-  )
-);
-BlobLayer.displayName = 'BlobLayer';
+const AnimatedG = Animated.createAnimatedComponent(G);
 
-interface BlobProps {
-  spec: BlobSpec;
-  index: number;
-  step: number;
-  /** The shared 0→1 clock. */
-  clock: { value: number };
-  /** The shared 0↔1 colour cross-fade driver. */
-  mix: { value: number };
-  still: boolean;
-  /** Optional determinism key — see `AbstractGradientBackdropProps.seed`. */
-  seed?: string;
-}
-
-const Blob: React.FC<BlobProps> = ({ spec, index, step, clock, mix, still, seed }) => {
-  // Drawn once at mount: re-rolling on a re-render would jump the colour. The
-  // blob index is folded into the seed so the three blobs never draw the same
-  // sequence as each other on a seeded surface.
-  const [sequence] = useState(() =>
-    colorSequence(makeRandom(seed === undefined ? undefined : `${seed}#${index}`))
-  );
-
-  // A closed Lissajous figure: x on the fundamental, y on the second harmonic,
-  // scale on the third. All integer multiples of the same clock, so the path
-  // closes exactly at clock = 1 and repeats forever without a seam.
-  const layerStyle = useAnimatedStyle(() => {
-    const a = TAU * (clock.value + spec.phase);
-    return {
-      transform: [
-        { translateX: spec.dx * Math.sin(a) },
-        { translateY: spec.dy * Math.cos(2 * a) },
-        { scale: 1 + spec.amp * Math.sin(3 * a) },
-      ],
-    };
-  });
-
-  const styleA = useAnimatedStyle(() => ({ opacity: 1 - mix.value }));
-  const styleB = useAnimatedStyle(() => ({ opacity: mix.value }));
-
-  // The layer FADING IN takes the new colour; the outgoing one keeps what it
-  // was showing until it is fully transparent. Reading the incoming layer at
-  // `step` and the outgoing at `step - 1` is what creates that hold — swap
-  // either and the outgoing layer jumps mid-fade.
-  //
-  // `+ index` staggers the blobs through their sequences so a shared tick does
-  // not move all three to visually similar colours at once.
-  const at = (i: number) =>
-    sequence[(((i + index) % sequence.length) + sequence.length) % sequence.length];
-  const colorA = at(step % 2 === 0 ? step : step - 1);
-  const colorB = at(step % 2 === 1 ? step : step - 1);
-
-  const idBase = `blob-grad-${index}`;
-
-  if (still) {
-    // Reduce Motion: one frame, no animated styles, no layers to cross-fade.
-    // Still uses the oversized layer so the framing matches the animated case.
-    return (
-      <View style={LAYER}>
-        <BlobLayer spec={spec} color={colorA} gradientId={`${idBase}-a`} />
-      </View>
-    );
-  }
+/**
+ * One colour phase of the whole field: a SINGLE screen-sized `Svg` holding all
+ * three blobs.
+ *
+ * The drift lives on an animated SVG `<G transform>` per blob rather than on a
+ * React Native view per blob. That is what collapses the old six full-screen
+ * layers into ONE — the three blobs now share a single rasterised surface — and
+ * `<G>` transforms are a proven animated-SVG path in this codebase (see
+ * `MeraLogo`'s spotlight). Only the two colour phases remain as separate views,
+ * because cross-fading them is a view-opacity animation.
+ */
+const BlobField: React.FC<{ colors: string[]; idBase: string; clock: { value: number } }> = ({
+  colors,
+  idBase,
+  clock,
+}) => {
+  // A closed Lissajous figure per blob: x on the fundamental, y on the second
+  // harmonic, scale on the third. All integer multiples of the same clock, so
+  // every path closes exactly at clock = 1 and repeats without a seam.
+  // Hook count is fixed (BLOBS is a module constant), so these are unconditional.
+  const g0 = useAnimatedProps(() => gTransform(BLOBS[0], clock.value));
+  const g1 = useAnimatedProps(() => gTransform(BLOBS[1], clock.value));
+  const g2 = useAnimatedProps(() => gTransform(BLOBS[2], clock.value));
+  const gProps = [g0, g1, g2];
 
   return (
-    <Animated.View style={[LAYER, layerStyle]}>
-      <Animated.View style={[StyleSheet.absoluteFill, styleA]}>
-        <BlobLayer spec={spec} color={colorA} gradientId={`${idBase}-a`} />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, styleB]}>
-        <BlobLayer spec={spec} color={colorB} gradientId={`${idBase}-b`} />
-      </Animated.View>
-    </Animated.View>
+    <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+      <Defs>
+        {BLOBS.map((spec, i) => (
+          <RadialGradient key={i} id={`${idBase}-${i}`} cx={spec.cx} cy={spec.cy} r={spec.r}>
+            <Stop offset="0" stopColor={colors[i]} stopOpacity={spec.alpha} />
+            <Stop offset="0.5" stopColor={colors[i]} stopOpacity={spec.alpha * 0.34} />
+            <Stop offset="1" stopColor={colors[i]} stopOpacity={0} />
+          </RadialGradient>
+        ))}
+      </Defs>
+      {BLOBS.map((_, i) => (
+        <AnimatedG key={i} animatedProps={gProps[i]}>
+          <Rect
+            x={RECT_INSET}
+            y={RECT_INSET}
+            width={RECT_SIZE}
+            height={RECT_SIZE}
+            fill={`url(#${idBase}-${i})`}
+          />
+        </AnimatedG>
+      ))}
+    </Svg>
   );
 };
+
+/** Worklet: the drift transform for one blob at a given clock position. */
+function gTransform(spec: BlobSpec, t: number) {
+  'worklet';
+  const a = TAU * (t + spec.phase);
+  return {
+    transform: [
+      { translateX: spec.dx * Math.sin(a) },
+      { translateY: spec.dy * Math.cos(2 * a) },
+      { scale: 1 + spec.amp * Math.sin(3 * a) },
+    ],
+  } as any;
+}
 
 export interface AbstractGradientBackdropProps {
   /**
@@ -310,79 +411,53 @@ export interface AbstractGradientBackdropProps {
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed }) => {
   const reduceMotion = useReducedMotion();
 
-  const clock = useSharedValue(0);
-  const mix = useSharedValue(0);
-  const [step, setStep] = useState(0);
+  // One engine for the whole app — see THE SHARED ENGINE above. Reduce Motion
+  // opts this instance out entirely: no clock, no timer, no animated styles.
+  useSharedEngine(!reduceMotion);
+  const step = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
 
-  // One clock and one timer for the whole field, both gated on the app being
-  // in the foreground — a backgrounded app animates nothing.
-  useEffect(() => {
-    if (reduceMotion) return;
+  // Unseeded surfaces share the app-wide sequences, which is what makes every
+  // screen the same background. A seed opts out into its own deterministic walk
+  // — the fact news-list keys it by fact id.
+  const [sequences] = useState(() =>
+    seed === undefined
+      ? SHARED_SEQUENCES
+      : BLOBS.map((_, i) => colorSequence(makeRandom(`${seed}#${i}`)))
+  );
 
-    let timer: ReturnType<typeof setInterval> | null = null;
+  // The field FADING IN takes the new colour; the outgoing one keeps what it
+  // was showing until it is fully transparent. Reading the incoming at `step`
+  // and the outgoing at `step - 1` is what creates that hold — swap either and
+  // the outgoing field jumps mid-fade. `+ i` staggers the blobs so a shared
+  // tick does not move all three to similar colours at once.
+  const at = (seq: string[], i: number, n: number) =>
+    seq[(((n + i) % seq.length) + seq.length) % seq.length];
+  const colorsA = sequences.map((seq, i) => at(seq, i, step % 2 === 0 ? step : step - 1));
+  const colorsB = sequences.map((seq, i) => at(seq, i, step % 2 === 1 ? step : step - 1));
 
-    const start = () => {
-      if (timer) return;
-      // Restart from 0 rather than resuming mid-cycle: the loop is seamless at
-      // the boundary, and any positional jump happens while the app is not on
-      // screen.
-      clock.value = 0;
-      clock.value = withRepeat(
-        withTiming(1, { duration: CYCLE_MS, easing: Easing.linear }),
-        -1,
-        false
-      );
-      timer = setInterval(() => setStep((s) => s + 1), COLOR_STEP_MS);
-    };
+  const styleA = useAnimatedStyle(() => ({ opacity: 1 - sharedMix.value }));
+  const styleB = useAnimatedStyle(() => ({ opacity: sharedMix.value }));
 
-    const stop = () => {
-      cancelAnimation(clock);
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-    };
-
-    if (AppState.currentState === 'active') start();
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') start();
-      else stop();
-    });
-
-    return () => {
-      sub.remove();
-      stop();
-    };
-  }, [clock, reduceMotion]);
-
-  // Cross-fade toward the parity of the current step. Driven by the same tick
-  // as the colour swap, so the fade always takes exactly one step.
-  useEffect(() => {
-    if (reduceMotion) return;
-    mix.value = withTiming(step % 2 === 0 ? 0 : 1, {
-      duration: COLOR_STEP_MS,
-      easing: Easing.inOut(Easing.ease),
-    });
-  }, [mix, step, reduceMotion]);
+  // `pointerEvents` goes on a plain RN View, NOT on the Svg. `Svg` is
+  // `RNSVGSvgView`, which does its own hit-testing and does not reliably honour
+  // the prop — and this is an absolute fill over the ENTIRE screen, so a
+  // swallowed touch would make every tab untappable.
+  if (reduceMotion) {
+    return (
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <BlobField colors={colorsA} idBase="bg-a" clock={STILL_CLOCK} />
+      </View>
+    );
+  }
 
   return (
-    // `pointerEvents` goes on a plain RN View, NOT on the Svg. `Svg` is
-    // `RNSVGSvgView`, which does its own hit-testing and does not reliably
-    // honour the prop — and this is an absolute fill over the ENTIRE screen, so
-    // a swallowed touch would make every tab untappable.
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {BLOBS.map((spec, i) => (
-        <Blob
-          key={`blob-${i}`}
-          spec={spec}
-          index={i}
-          step={step}
-          clock={clock}
-          mix={mix}
-          still={reduceMotion}
-          seed={seed}
-        />
-      ))}
+      <Animated.View style={[StyleSheet.absoluteFill, styleA]}>
+        <BlobField colors={colorsA} idBase="bg-a" clock={sharedClock} />
+      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, styleB]}>
+        <BlobField colors={colorsB} idBase="bg-b" clock={sharedClock} />
+      </Animated.View>
     </View>
   );
 };

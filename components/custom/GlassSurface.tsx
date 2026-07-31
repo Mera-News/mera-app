@@ -1,7 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import React from 'react';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 /**
  * The app's shared Liquid Glass primitives — one place to tune how glass looks
@@ -49,6 +49,10 @@ const GLASS_TINT = 'rgba(255,255,255,0.10)';
 export const GLASS_HEADER_TINT = 'rgba(255,255,255,0.16)';
 export const GLASS_HEADER_SCRIM = 'rgba(0,0,0,0.42)';
 
+/** Fill for `TranslucentPlate`. Matches the default glass tint's lift so a
+ *  content surface and a chrome surface read as the same material. */
+const TRANSLUCENT_FILL = 'rgba(255,255,255,0.07)';
+
 /** Hairline edge that gives a glass surface a defined boundary. Glass alone has
  *  no outline against a dark page, so without this the surface reads as a smudge
  *  rather than a panel. */
@@ -85,6 +89,35 @@ export const GlassPlate: React.FC<{ tint?: string; style?: StyleProp<ViewStyle> 
     />
   );
 };
+
+/**
+ * The cheap stand-in for `GlassPlate`, for surfaces that exist in QUANTITY.
+ *
+ * ## Why this exists — read before "upgrading" a caller to real glass
+ *
+ * A `GlassView` is a `UIVisualEffectView`, and a blur must re-sample its
+ * backdrop every frame that backdrop changes. The page backdrop
+ * (`AbstractGradientBackdrop`) animates continuously, so every real glass
+ * surface on screen recomputes a full-screen blur every frame — even while the
+ * user is perfectly still. That cost is per-surface, so it multiplies: ~10
+ * visible article cards meant ~10 continuous blurs, and it measurably slowed
+ * the app.
+ *
+ * So the rule is: **real glass for chrome, this for content.** Chrome is few
+ * and mostly static (headers, the scroll FAB, the status panel, the tab bar).
+ * Content is many and scrolls (article cards, list rows).
+ *
+ * Over a colourful gradient a translucent white lift is nearly indistinguishable
+ * from frosted glass anyway — the blur has little high-frequency detail to
+ * diffuse — so this keeps the look at essentially zero cost. It also works
+ * everywhere, with no iOS 26 gate, because it is just a background colour.
+ */
+export const TranslucentPlate: React.FC<{ style?: StyleProp<ViewStyle> }> = ({ style }) => (
+  <View
+    pointerEvents="none"
+    style={[StyleSheet.absoluteFill, { backgroundColor: TRANSLUCENT_FILL }, style]}
+  />
+);
 
 export interface GlassPanelProps {
   /** Corner radius in points. Applied as a style, not a class — see `GlassPlate`. */

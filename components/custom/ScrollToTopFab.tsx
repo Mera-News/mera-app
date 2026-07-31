@@ -1,3 +1,4 @@
+import { GLASS_AVAILABLE, GlassPlate } from '@/components/custom/GlassSurface';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -32,12 +33,31 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress, extra
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(200)}
             onPress={onPress}
-            style={[styles.fab, { bottom: 20 + insets.bottom + extraBottomOffset }]}
+            style={[
+                styles.fab,
+                // The soft-white pill only applies OFF glass. Where glass paints,
+                // the plate is the surface and a solid fill would cancel it.
+                GLASS_AVAILABLE ? null : styles.fabSolid,
+                { bottom: 20 + insets.bottom + extraBottomOffset },
+            ]}
         >
-            <MaterialIcons name="keyboard-arrow-up" size={28} color="#6b7280" />
+            {/* Radius goes on the plate's own style rather than clipping the
+                Pressable: RN drops a view's shadow the moment that same view sets
+                `overflow: hidden`, and the FAB's shadow is what lifts it off the
+                feed. */}
+            <GlassPlate style={{ borderRadius: FAB_RADIUS }} />
+            <MaterialIcons
+                name="keyboard-arrow-up"
+                size={28}
+                // Dark-on-white off glass; light-on-glass otherwise, where the
+                // surface is the dark page showing through.
+                color={GLASS_AVAILABLE ? '#e5e7eb' : '#6b7280'}
+            />
         </AnimatedPressable>
     );
 };
+
+const FAB_RADIUS = 25;
 
 const styles = StyleSheet.create({
     fab: {
@@ -45,8 +65,7 @@ const styles = StyleSheet.create({
         right: 20,
         width: 50,
         height: 50,
-        borderRadius: 25,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)', // soft white
+        borderRadius: FAB_RADIUS,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
@@ -54,6 +73,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 8, // Android shadow
+    },
+    // Non-glass fallback only (Android, iOS < 26): without it the FAB would have
+    // no surface at all, since GlassPlate renders nothing there.
+    fabSolid: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', // soft white
     },
 });
 

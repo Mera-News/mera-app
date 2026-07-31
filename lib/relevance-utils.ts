@@ -7,7 +7,11 @@ export interface RelevanceColors {
 
 // Shared reason box styling - lighter grey background with bold white text
 export const reasonBoxColors = {
-    backgroundColor: '#374151', // Lighter grey than card background
+    // 50% translucent rather than the old solid #374151: the box sits on a card
+    // that is itself glass over the animated page backdrop, and a solid fill
+    // punched an opaque slab through that whole stack. Same hue, half the
+    // opacity — the card's glass and the gradient now read through it.
+    backgroundColor: 'rgba(55, 65, 81, 0.10)',
     textColor: '#FFFFFF'
 };
 
