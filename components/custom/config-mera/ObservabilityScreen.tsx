@@ -23,6 +23,7 @@ import { computeFeedFunnel, type FeedFunnelReport } from '@/lib/stores/feed-diag
 import { getOpenedSeenBreakdown } from '@/lib/database/services/story-impression-service';
 import { getScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
 import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
+import { effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { Box } from '@/components/ui/box';
@@ -397,13 +398,19 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         // never hydrates, ingests, or marks anything. Its own try/catch so a
         // diagnostic failure can never take the rest of the screen down.
         try {
-            const [breakdown, userCtx, scoringModes] = await Promise.all([
+            const [breakdown, userCtx, scoringModes, effectiveCfg] = await Promise.all([
                 getOpenedSeenBreakdown().catch(() => null),
                 loadUserGeoLanguageContext(),
                 // Its own catch: this walks every scored row's audit JSON, and a
                 // parse/read failure must degrade to "—" on two rows, not take
                 // the whole funnel down.
                 getScoringModeBreakdown().catch(() => null),
+                // The EFFECTIVE config, not HARNESS_CONFIG_BASE: the relevance-v2
+                // switch layers USE_ARTICLE_TAGS on at this seam, so reading the
+                // base would report `false` while scoring actually runs with tags
+                // on. Fail-open to the base so a diagnostic read can't break the
+                // funnel.
+                effectiveHarnessConfig().catch(() => HARNESS_CONFIG_BASE),
             ]);
             const fo = useFeedOrderStore.getState();
             const os = useOpenedStoriesStore.getState();
@@ -424,7 +431,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     headerRelevantCount: counts.relevantCount,
                     openedStats: breakdown?.stats ?? null,
                     scoringModes,
-                    useArticleTags: HARNESS_CONFIG_BASE.scoringEngine.USE_ARTICLE_TAGS,
+                    useArticleTags: effectiveCfg.scoringEngine.USE_ARTICLE_TAGS,
                     userCtx,
                     nowMs: Date.now(),
                 }),

@@ -251,6 +251,16 @@ describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
     expect(e.USE_ARTICLE_TAGS).toBe(false);
   });
 
+  it('pins relevance v2 to OFF', () => {
+    // The runtime (settings-toggle) half of the same routing switch. Stated as
+    // an explicit boolean literal, never left undefined: the harness default
+    // must always describe the SHIPPED behaviour, and `effectiveHarnessConfig`
+    // is the only place allowed to layer the user's choice on top.
+    expect(e.RELEVANCE_V2).toBe(false);
+    expect('RELEVANCE_V2' in e).toBe(true);
+    expect(typeof e.RELEVANCE_V2).toBe('boolean');
+  });
+
   it('pins the affinity component weights (positives sum ≈ 1.0)', () => {
     // Round-3 A2: freshness (W_FRESH 0.08) removed; the seven remaining positive
     // weights renormalized ÷0.92 so full-saturation affinity stays ≈1.0.

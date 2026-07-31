@@ -1087,25 +1087,43 @@ async function doSubmitRelevance(
   }
 
   // --- JUDGE MODE (all candidates are math-mode) ---------------------------
-  // Round-3 B1: PERSIST THE MATH IMMEDIATELY (bucketed relevance, reason:'',
+  // Round-3 B1: PERSIST THE MATH IMMEDIATELY (relevance, reason:'',
   // reasonSkipped for sub-threshold rows, scored_at, audit columns) so cards are
   // renderable now — the judge no longer decides the score (Part A: advisory),
-  // it only writes the note. Bucket a copy; keep the raw computed as rawScore.
-  const bucketed = new Map(math.computedScoreMap);
-  bucketScores(bucketed);
-  const bucketedRecord: Record<string, number> = {};
+  // it only writes the note. Score a COPY; keep the raw computed as rawScore.
+  //
+  // RELEVANCE_V2 — skip the bucketing. The buckets (0.4/0.6/0.8/1.1) exist for
+  // the legacy LLM path, whose integer-ish scores carry no more resolution than
+  // that; the deterministic math emits a continuous 0.05–1.10 value and
+  // flattening it throws away the ordering the engine just computed. Note the
+  // membership of every threshold test below is UNCHANGED either way:
+  // bucketScores leaves anything under discardFloor (0.4) untouched and maps
+  // everything at/above it to ≥0.4, so no value ever crosses
+  // REASON_RELEVANCE_THRESHOLD (0.3) by being bucketed — only the spacing
+  // between survivors changes. Read once, here (the backstop path returned
+  // above, so it gains no config I/O), and reused for buildJudgeCalls.
+  const judgeCfg = await judgeHarnessConfig();
+  const relevanceV2 = judgeCfg.scoringEngine?.RELEVANCE_V2 === true;
+
+  // ONE map for all three consumers — persisted `relevance`/`reasonSkipped`, the
+  // judged-subset filter, and the `relevanceMap` decode uses for its discard. If
+  // these disagreed, a row could persist as renderable and then be discarded at
+  // decode (or vice versa).
+  const relevanceScores = new Map(math.computedScoreMap);
+  if (!relevanceV2) bucketScores(relevanceScores);
+  const relevanceRecord: Record<string, number> = {};
   for (const c of math.stage) {
     const id = c.input.id;
-    bucketedRecord[id] = bucketed.get(id) ?? 0;
+    relevanceRecord[id] = relevanceScores.get(id) ?? 0;
   }
   await batchSaveMathScores(
     math.stage.map((c) => {
       const id = c.input.id;
-      const bucket = bucketed.get(id) ?? 0;
+      const relevance = relevanceScores.get(id) ?? 0;
       return {
         id,
-        relevance: bucket,
-        reasonSkipped: bucket <= REASON_RELEVANCE_THRESHOLD,
+        relevance,
+        reasonSkipped: relevance <= REASON_RELEVANCE_THRESHOLD,
         computedScore: math.computedScoreMap.get(id)!,
         rawScore: math.computedScoreMap.get(id)!,
         scoreComponentsJson: JSON.stringify(math.componentsMap.get(id)!),
@@ -1131,7 +1149,7 @@ async function doSubmitRelevance(
   // (reasonSkipped). buildJudgeCalls chunks this subset in order → the `judge:N`
   // decode join key stored as judgedIds.
   const judgedStage = math.stage.filter(
-    (c) => (bucketed.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
+    (c) => (relevanceScores.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
   );
   const judgedIds = judgedStage.map((c) => c.input.id);
 
@@ -1139,7 +1157,7 @@ async function doSubmitRelevance(
     logger.info(
       `${TAG} batch ${batch.batchId} judge: no above-threshold rows — marking done`,
     );
-    const discarded = await discardLowRelevance(batch.candidateIds, bucketedRecord);
+    const discarded = await discardLowRelevance(batch.candidateIds, relevanceRecord);
     if (discarded > 0) await refreshUi();
     await markBatchDone(batch.batchId);
     return;
@@ -1150,13 +1168,13 @@ async function doSubmitRelevance(
     math.computedScoreMap,
     math.componentsMap,
     math.persona,
-    await judgeHarnessConfig(),
+    judgeCfg,
   );
   if (calls.length === 0) {
     logger.info(
       `${TAG} batch ${batch.batchId} judge bundle empty — marking done`,
     );
-    const discarded = await discardLowRelevance(batch.candidateIds, bucketedRecord);
+    const discarded = await discardLowRelevance(batch.candidateIds, relevanceRecord);
     if (discarded > 0) await refreshUi();
     await markBatchDone(batch.batchId);
     return;
@@ -1185,8 +1203,9 @@ async function doSubmitRelevance(
 
   if (outcome.status === 'ok') {
     // Carry the computed scores of the JUDGED subset forward via rawRelevanceMap
-    // (decode fail-open + the reason-threshold filter), the bucketed relevance
-    // map (for the decode-time discard), and the judged id order (decode join).
+    // (decode fail-open + the reason-threshold filter), the SAME relevance map
+    // that was just persisted (for the decode-time discard — bucketed, or raw
+    // under RELEVANCE_V2), and the judged id order (decode join).
     const computedRecord: Record<string, number> = {};
     for (const id of judgedIds) {
       computedRecord[id] = math.computedScoreMap.get(id)!;
@@ -1200,7 +1219,7 @@ async function doSubmitRelevance(
       {
         judgeMode: true,
         computedScoreMap: computedRecord,
-        relevanceMap: bucketedRecord,
+        relevanceMap: relevanceRecord,
         judgedIds,
       },
     );

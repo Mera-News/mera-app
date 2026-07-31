@@ -8,14 +8,12 @@
 // react-native, lib/logger, or lib/config/endpoints imports.
 //
 // Seam note: the prompt-string builders (buildPersonaUpdateStaticPrompt,
-// buildPersonaUpdateContext, buildToolDefinitions) and the questionnaire
-// helpers (buildQuestionnaireGuide, getAttributeKeysForLevel, TOTAL_LEVELS)
-// are all accepted as INJECTABLE parameters, defaulting to this harness's own
-// canonical imports. PersonaUpdateAgent.ts passes its own imports from the
-// (test-mockable) lib/mera-protocol/prompts + lib/mera-protocol/questionnaire-
-// data shims explicitly, so the frozen PersonaUpdateAgent.test.ts — which
-// mocks those shim modules and asserts on the mock call args — keeps passing
-// unmodified. Same pattern as
+// buildPersonaUpdateContext, buildToolDefinitions) are accepted as INJECTABLE
+// parameters, defaulting to this harness's own canonical imports.
+// PersonaUpdateAgent.ts passes its own imports from the (test-mockable)
+// lib/mera-protocol/prompts shim explicitly, so the frozen
+// PersonaUpdateAgent.test.ts — which mocks that shim module and asserts on the
+// mock call args — keeps passing unmodified. Same pattern as
 // lib/news-harness/persona-management/topic-generation.ts's `systemPrompts`
 // injection and lib/mera-protocol/scoring-service.ts's mockable-seam notes.
 
@@ -39,11 +37,6 @@ import {
   buildToolDefinitions,
   type FilterToolsVariant,
 } from '../prompts/prompts';
-import {
-  buildQuestionnaireGuide,
-  getAttributeKeysForLevel,
-  TOTAL_LEVELS,
-} from '../prompts/questionnaire-data';
 
 countries.registerLocale(en);
 
@@ -115,8 +108,6 @@ export interface PersonaSystemPromptInput {
   languageName: string;
   /** Inference path — CLOUD (large MoE) vs LOCAL (on-device). */
   mode: PersonaMode;
-  /** When true, uses the legacy level-based questionnaire with [ASK]/[DONE] annotations. */
-  useLegacy: boolean;
   /** not-interested P4a: how much of the FILTERS feature this turn can afford
    *  (planPersonaPrompt). Defaults to `full`. */
   filterTools?: FilterToolsVariant;
@@ -138,7 +129,6 @@ export function buildPersonaSystemPrompt(
     includeToolFormat: input.includeToolFormat,
     languageName: input.languageName,
     mode: input.mode,
-    useLegacy: input.useLegacy,
     // Spread CONDITIONALLY so a caller that never plans keeps the exact
     // pre-P4a call-args shape the frozen PersonaUpdateAgent seam test observes.
     ...(input.filterTools ? { filterTools: input.filterTools } : {}),
@@ -524,63 +514,11 @@ export function decidePersonaProposeChanges(
 }
 
 // ---------------------------------------------------------------------------
-// Questionnaire level recomputation (legacy path)
-// ---------------------------------------------------------------------------
-
-export type GetAttributeKeysForLevelFn = typeof getAttributeKeysForLevel;
-
-export interface RecomputeQuestionnaireLevelInput {
-  /** Currently persisted level, before recomputation. */
-  currentLevel: number;
-  /** Attribute keys the user has already covered. */
-  coveredAttributes: Set<string>;
-}
-
-/**
- * Recomputes the questionnaire level given coverage — pure port of the
- * decrement/increment while-loops previously inline in
- * PersonaUpdateAgent.buildContext's legacy branch. The caller (RN class) owns
- * persisting the result via setQuestionnaireLevel.
- *
- * `getKeysForLevel` and `totalLevels` are injectable (default to this
- * harness's own questionnaire-data) so callers that inject the app's
- * (test-mockable) questionnaire-data shim observe the overridden behavior.
- */
-export function recomputeQuestionnaireLevel(
-  input: RecomputeQuestionnaireLevelInput,
-  getKeysForLevel: GetAttributeKeysForLevelFn = getAttributeKeysForLevel,
-  totalLevels: number = TOTAL_LEVELS,
-): number {
-  let { currentLevel } = input;
-  const { coveredAttributes } = input;
-
-  while (currentLevel > 1) {
-    const prevLevelKeys = getKeysForLevel(currentLevel - 1);
-    const allPrevCovered =
-      prevLevelKeys.length > 0 && prevLevelKeys.every((key) => coveredAttributes.has(key));
-    if (allPrevCovered) break;
-    currentLevel--;
-  }
-  while (currentLevel < totalLevels) {
-    const levelKeys = getKeysForLevel(currentLevel);
-    if (levelKeys.length === 0) break;
-    const allCovered = levelKeys.every((key) => coveredAttributes.has(key));
-    if (!allCovered) break;
-    currentLevel++;
-  }
-  return currentLevel;
-}
-
-// ---------------------------------------------------------------------------
 // Dynamic <context> block
 // ---------------------------------------------------------------------------
 
 export interface PersonaContextInput {
   facts: ContextFact[];
-  useLegacy: boolean;
-  /** Legacy-only: the already-recomputed level (see recomputeQuestionnaireLevel) + coverage. */
-  currentLevel?: number;
-  coveredAttributes?: Set<string>;
   /** not-interested P4a: the user's ACTIVE filters, newest-first. Capped at
    *  MAX_FILTERS_IN_CONTEXT. Absent/empty ⇒ no block and no prompt cost. */
   suppressions?: ActiveSuppressionView[];
@@ -592,45 +530,30 @@ export interface PersonaContextInput {
   includeFiltersBlock?: boolean;
 }
 
-export type BuildQuestionnaireGuideFn = typeof buildQuestionnaireGuide;
 export type BuildContextFn = typeof buildPersonaUpdateContext;
 
 export interface PersonaContextDeps {
   buildContext?: BuildContextFn;
-  buildGuide?: BuildQuestionnaireGuideFn;
-  totalLevels?: number;
 }
 
 /**
  * Builds the DYNAMIC <context> block injected into user messages. Mirrors
- * PersonaUpdateAgent.buildContext exactly: caps + formats the known-facts
- * list, and (legacy path) builds the questionnaire guide for the given
- * (already-recomputed) level.
+ * PersonaUpdateAgent.buildContext exactly: caps + formats the known-facts list.
  *
- * `deps` lets the caller inject its own (test-mockable) prompt/questionnaire
- * builders — defaults to this harness's own canonical implementations.
+ * `deps` lets the caller inject its own (test-mockable) prompt builder —
+ * defaults to this harness's own canonical implementation.
  */
 export function buildPersonaContext(
   input: PersonaContextInput,
   deps: PersonaContextDeps = {},
 ): string {
   const buildContextFn = deps.buildContext ?? buildPersonaUpdateContext;
-  const buildGuideFn = deps.buildGuide ?? buildQuestionnaireGuide;
-  const totalLevels = deps.totalLevels ?? TOTAL_LEVELS;
 
   const knownFactsList = formatKnownFactsList(input.facts);
 
-  const coveredAttributes = input.coveredAttributes ?? new Set<string>();
-  const currentLevel = input.currentLevel ?? 1;
-  const questionnaireGuide = input.useLegacy
-    ? buildGuideFn(currentLevel, coveredAttributes)
-    : undefined;
-
   // The pre-P4a call args, built first so the FILTERS block can be sized
   // against what the rest of <context> already costs.
-  const base = input.useLegacy
-    ? { knownFactsList, useLegacy: true as const, questionnaireGuide: questionnaireGuide!, currentLevel, totalLevels }
-    : { knownFactsList, useLegacy: false as const };
+  const base = { knownFactsList };
 
   // A pending proposal is NEVER dropped — without it the one-shot LOCAL path
   // cannot resolve a confirm at all, and it is a handful of tokens.
@@ -667,16 +590,15 @@ const FILTER_TOOL_NAMES: ReadonlySet<string> = new Set([
 /** Tool definitions for the persona-update agent (OpenAI JSON Schema, cloud).
  *
  *  `filterTools` is applied by FILTERING the builder's output rather than by
- *  passing a third argument to `buildDefs` — that keeps the injected-seam call
- *  exactly `buildDefs(surface, useLegacy)`, which the frozen
- *  PersonaUpdateAgent.test.ts asserts on with an exact-arity toHaveBeenCalledWith. */
+ *  passing a second argument to `buildDefs` — that keeps the injected-seam call
+ *  exactly `buildDefs(surface)`, which the frozen PersonaUpdateAgent.test.ts
+ *  asserts on with an exact-arity toHaveBeenCalledWith. */
 export function getPersonaToolDefinitions(
   surface: PersonaSurface,
-  useLegacy: boolean,
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
   filterTools: FilterToolsVariant = 'full',
 ): ToolDefinition[] {
-  const defs = buildDefs(surface, useLegacy);
+  const defs = buildDefs(surface);
   if (filterTools !== 'off') return defs;
   return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
 }

@@ -56,6 +56,12 @@ const mockComputeMathStage = jest.fn(async (candidates: any[] = []) => ({
   modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
 }));
 const mockBucketScores = jest.fn();
+// The effective (store + calibration aware) harness config. `undefined` is the
+// pre-existing shape these tests exercised — before this export was mocked at
+// all, `judgeHarnessConfig` fail-opened to DEFAULT_HARNESS_CONFIG, and
+// `?? DEFAULT_HARNESS_CONFIG` keeps that identical. The RELEVANCE_V2 cases
+// override it per-test.
+const mockEffectiveHarnessConfig = jest.fn();
 const mockBuildRelevanceCalls = jest.fn();
 const mockBuildReasonCallsForSubset = jest.fn();
 const mockDecodeResults = jest.fn();
@@ -171,6 +177,7 @@ jest.mock('@/lib/database/services/calibration-service', () => ({
 // legacy backstop path (see mockComputeMathStage above).
 jest.mock('@/lib/mera-protocol/stage-scoring', () => ({
   computeMathStage: (...args: any[]) => mockComputeMathStage(...args),
+  effectiveHarnessConfig: (...args: any[]) => mockEffectiveHarnessConfig(...args),
 }));
 
 jest.mock('@/lib/mera-protocol/scoring-service', () => ({
@@ -270,6 +277,7 @@ import {
   MAX_BATCH_ARTICLES_HEADLINE,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
 import logger from '@/lib/logger';
 
@@ -353,6 +361,7 @@ beforeEach(() => {
   mockSaveReason.mockResolvedValue(undefined);
   mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
   mockBucketScores.mockImplementation(() => undefined); // no-op: raw == bucketed
+  mockEffectiveHarnessConfig.mockResolvedValue(undefined); // → DEFAULT (v2 off)
   mockBuildRelevanceCalls.mockImplementation(async (subset: any[]) => ({
     calls: Array.from(
       { length: Math.max(1, Math.ceil(subset.length / 5)) },
@@ -1656,6 +1665,48 @@ describe('judge mode (advisory)', () => {
     expect(batch.phase).toBe('waiting-relevance');
     expect(batch.judgeMode).toBe(true);
     expect(batch.judgedIds).toEqual(['a0']);
+
+    // RELEVANCE_V2 OFF (the default) → the bucketing still runs. This is the
+    // "nothing changed" half of the flag.
+    expect(mockBucketScores).toHaveBeenCalled();
+  });
+
+  // RELEVANCE_V2 changes exactly one thing on this path: the value persisted as
+  // `relevance`. `bucketScores` is a no-op in these orchestrator tests (raw ==
+  // bucketed), so the routing decision is pinned by whether it is CALLED.
+  it('RELEVANCE_V2 ON: persists the UNBUCKETED computed score and never buckets', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue({
+      ...DEFAULT_HARNESS_CONFIG,
+      scoringEngine: {
+        ...DEFAULT_HARNESS_CONFIG.scoringEngine,
+        USE_ARTICLE_TAGS: true,
+        RELEVANCE_V2: true,
+      },
+    });
+    // 0.83 would have bucketed to 0.8; 0.44 to 0.4. 0.2 is under discardFloor,
+    // so bucketing never touched it either way.
+    mockMathMode({ a0: 0.83, a1: 0.44, a2: 0.2 });
+    await enqueueCandidates(['a0', 'a1', 'a2']);
+
+    expect(mockBucketScores).not.toHaveBeenCalled();
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'a0', relevance: 0.83, reasonSkipped: false }),
+        expect.objectContaining({ id: 'a1', relevance: 0.44, reasonSkipped: false }),
+        expect.objectContaining({ id: 'a2', relevance: 0.2, reasonSkipped: true }),
+      ]),
+    );
+    // rawScore / computedScore are the SAME raw value as before — untouched.
+    expect(saved.find((s) => s.id === 'a0')).toMatchObject({
+      rawScore: 0.83,
+      computedScore: 0.83,
+    });
+    // Threshold membership is unchanged by the flag: bucketing never moves a
+    // value across REASON_RELEVANCE_THRESHOLD (0.3), so the judged subset is
+    // exactly the same one the bucketed path would have produced.
+    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
+    expect(judgeStage.map((c) => c.input.id)).toEqual(['a0', 'a1']);
   });
 
   it('marks the batch done at submit without a judge job when nothing is above threshold', async () => {

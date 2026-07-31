@@ -10,7 +10,6 @@ import {
   formatKnownFactsList,
   formatPendingProposal,
   getPersonaToolDefinitions,
-  recomputeQuestionnaireLevel,
   FILTERS_BLOCK_TOKEN_CEILING,
   MAX_FACTS_IN_CONTEXT,
   MAX_FILTERS_IN_CONTEXT,
@@ -58,7 +57,6 @@ function worstCaseSystemPrompt(filterTools: FilterToolsVariant = 'full'): string
     includeToolFormat: true,
     languageName: 'French',
     mode: 'LOCAL',
-    useLegacy: false,
     filterTools,
   });
 }
@@ -132,7 +130,6 @@ describe('buildPersonaSystemPrompt', () => {
         includeToolFormat: true,
         languageName: 'French',
         mode: 'CLOUD',
-        useLegacy: false,
       },
       mockBuild,
     );
@@ -142,7 +139,6 @@ describe('buildPersonaSystemPrompt', () => {
       includeToolFormat: true,
       languageName: 'French',
       mode: 'CLOUD',
-      useLegacy: false,
     });
     expect(result).toBe('built-prompt');
   });
@@ -153,7 +149,6 @@ describe('buildPersonaSystemPrompt', () => {
       includeToolFormat: false,
       languageName: 'English',
       mode: 'CLOUD',
-      useLegacy: false,
     });
     expect(typeof result).toBe('string');
     expect(result.length).toBeGreaterThan(0);
@@ -161,163 +156,47 @@ describe('buildPersonaSystemPrompt', () => {
   });
 });
 
-describe('recomputeQuestionnaireLevel', () => {
-  it('decrements when the previous level is not fully covered, stopping once it is', () => {
-    const getKeysForLevel = (level: number) => {
-      if (level === 1) return ['key_l1'];
-      if (level === 2) return ['key_l2'];
-      if (level === 3) return ['key_l3'];
-      return [];
-    };
-    // Level 3 → check level 2 (not covered) → decrement to 2 → check level 1
-    // (covered) → break at 2. Then increment-check: level 2 itself not fully
-    // covered → stays at 2.
-    const result = recomputeQuestionnaireLevel(
-      { currentLevel: 3, coveredAttributes: new Set(['key_l1', 'key_l3']) },
-      getKeysForLevel,
-      3,
-    );
-    expect(result).toBe(2);
-  });
-
-  it('breaks the downgrade loop when the previous level is fully covered', () => {
-    const getKeysForLevel = (level: number) => {
-      if (level === 2) return ['key_l2'];
-      if (level === 3) return ['key_l3'];
-      return [];
-    };
-    const result = recomputeQuestionnaireLevel(
-      { currentLevel: 3, coveredAttributes: new Set(['key_l2', 'key_l3']) },
-      getKeysForLevel,
-      3,
-    );
-    expect(result).toBe(3);
-  });
-
-  it('increments when all current-level keys are covered', () => {
-    const getKeysForLevel = (level: number) => {
-      if (level === 1) return ['key_l1'];
-      if (level === 2) return ['key_l2'];
-      return [];
-    };
-    const result = recomputeQuestionnaireLevel(
-      { currentLevel: 1, coveredAttributes: new Set(['key_l1']) },
-      getKeysForLevel,
-      3,
-    );
-    expect(result).toBe(2);
-  });
-
-  it('does not increment past totalLevels', () => {
-    const getKeysForLevel = () => ['always_covered'];
-    const result = recomputeQuestionnaireLevel(
-      { currentLevel: 3, coveredAttributes: new Set(['always_covered']) },
-      getKeysForLevel,
-      3,
-    );
-    expect(result).toBe(3);
-  });
-
-  it('stays at level 1 with no coverage and no keys', () => {
-    const getKeysForLevel = () => [];
-    const result = recomputeQuestionnaireLevel(
-      { currentLevel: 1, coveredAttributes: new Set() },
-      getKeysForLevel,
-      3,
-    );
-    expect(result).toBe(1);
-  });
-
-  it('defaults to the real harness getAttributeKeysForLevel/TOTAL_LEVELS when no overrides are passed', () => {
-    // No injected fns — exercises the default-parameter branches directly.
-    const result = recomputeQuestionnaireLevel({
-      currentLevel: 1,
-      coveredAttributes: new Set(),
-    });
-    expect(typeof result).toBe('number');
-    expect(result).toBeGreaterThanOrEqual(1);
-  });
-});
-
 describe('buildPersonaContext', () => {
   const facts: ContextFact[] = [{ statement: 'Lives in Berlin', questionnaireAttribute: 'location' }];
 
-  it('non-legacy: calls the injected buildContext with useLegacy=false and the formatted facts list', () => {
+  it('calls the injected buildContext with the formatted facts list', () => {
     const mockBuildContext = jest.fn().mockReturnValue('ctx-string');
-    const result = buildPersonaContext(
-      { facts, useLegacy: false },
-      { buildContext: mockBuildContext },
-    );
+    const result = buildPersonaContext({ facts }, { buildContext: mockBuildContext });
 
     expect(mockBuildContext).toHaveBeenCalledWith({
       knownFactsList: "- 'location': Lives in Berlin",
-      useLegacy: false,
     });
     expect(result).toBe('ctx-string');
   });
 
-  it('legacy: calls buildGuide with the given level + coverage, and buildContext with the guide output', () => {
-    const mockBuildGuide = jest.fn().mockReturnValue('guide-text');
-    const mockBuildContext = jest.fn().mockReturnValue('ctx-string-legacy');
-    const coveredAttributes = new Set(['location']);
-
-    const result = buildPersonaContext(
-      { facts, useLegacy: true, currentLevel: 2, coveredAttributes },
-      { buildContext: mockBuildContext, buildGuide: mockBuildGuide, totalLevels: 5 },
-    );
-
-    expect(mockBuildGuide).toHaveBeenCalledWith(2, coveredAttributes);
-    expect(mockBuildContext).toHaveBeenCalledWith({
-      knownFactsList: "- 'location': Lives in Berlin",
-      useLegacy: true,
-      questionnaireGuide: 'guide-text',
-      currentLevel: 2,
-      totalLevels: 5,
-    });
-    expect(result).toBe('ctx-string-legacy');
-  });
-
-  it('legacy: defaults currentLevel to 1 and coveredAttributes to empty set when omitted', () => {
-    const mockBuildGuide = jest.fn().mockReturnValue('guide-text');
-    const mockBuildContext = jest.fn().mockReturnValue('ctx');
-
-    buildPersonaContext(
-      { facts, useLegacy: true },
-      { buildContext: mockBuildContext, buildGuide: mockBuildGuide },
-    );
-
-    expect(mockBuildGuide).toHaveBeenCalledWith(1, new Set());
-  });
-
   it('defaults to the real harness builders when no deps are passed', () => {
-    const result = buildPersonaContext({ facts: [], useLegacy: false });
+    const result = buildPersonaContext({ facts: [] });
     expect(result).toContain('Nothing yet.');
     expect(result).toContain('<context>');
   });
 });
 
 describe('getPersonaToolDefinitions', () => {
-  it('calls the injected builder with surface and useLegacy', () => {
+  it('calls the injected builder with the surface', () => {
     const mockBuildDefs = jest.fn().mockReturnValue([{ type: 'function', function: { name: 'x' } }]);
-    const result = getPersonaToolDefinitions('CONFIG', false, mockBuildDefs as never);
+    const result = getPersonaToolDefinitions('CONFIG', mockBuildDefs as never);
 
-    expect(mockBuildDefs).toHaveBeenCalledWith('CONFIG', false);
+    expect(mockBuildDefs).toHaveBeenCalledWith('CONFIG');
     expect(result).toEqual([{ type: 'function', function: { name: 'x' } }]);
   });
 
   it('defaults to the real harness builder, including deleteUserFacts + runCalibration for CONFIG', () => {
-    const defs = getPersonaToolDefinitions('CONFIG', false);
+    const defs = getPersonaToolDefinitions('CONFIG');
     const names = defs.map((d) => d.function.name);
     expect(names).toContain('saveExtractedFacts');
     expect(names).toContain('deleteUserFacts');
     expect(names).toContain('runCalibration');
   });
 
-  it('defaults exclude deleteUserFacts, advanceQuestionnaireLevel + runCalibration for ONBOARDING + non-legacy', () => {
-    const defs = getPersonaToolDefinitions('ONBOARDING', false);
+  it('defaults exclude deleteUserFacts + runCalibration for ONBOARDING', () => {
+    const defs = getPersonaToolDefinitions('ONBOARDING');
     const names = defs.map((d) => d.function.name);
     expect(names).not.toContain('deleteUserFacts');
-    expect(names).not.toContain('advanceQuestionnaireLevel');
     expect(names).not.toContain('runCalibration');
   });
 
@@ -326,12 +205,12 @@ describe('getPersonaToolDefinitions', () => {
   // celebrity gossip" works without an article. CONFIG only — onboarding has no
   // feed yet, so there is nothing to filter and nothing to pay tokens for.
   it('exposes the staged filter-proposal tools on CONFIG only', () => {
-    const config = getPersonaToolDefinitions('CONFIG', false).map((d) => d.function.name);
+    const config = getPersonaToolDefinitions('CONFIG').map((d) => d.function.name);
     expect(config).toContain('proposeChanges');
     expect(config).toContain('applyProposal');
     expect(config).toContain('cancelProposal');
 
-    const onboarding = getPersonaToolDefinitions('ONBOARDING', false).map((d) => d.function.name);
+    const onboarding = getPersonaToolDefinitions('ONBOARDING').map((d) => d.function.name);
     expect(onboarding).not.toContain('proposeChanges');
     expect(onboarding).not.toContain('applyProposal');
     expect(onboarding).not.toContain('cancelProposal');
@@ -345,7 +224,7 @@ describe('getPersonaToolDefinitions', () => {
   // source-pref P3 UPDATE: the enum now also carries the two SOURCE actions —
   // at the `full` rung ONLY. The keyword-only clause above is unchanged.
   it('restricts the persona proposeChanges schema to the filter + source actions, keyword-only', () => {
-    const propose = getPersonaToolDefinitions('CONFIG', false)
+    const propose = getPersonaToolDefinitions('CONFIG')
       .find((d) => d.function.name === 'proposeChanges')!;
     expect(propose.function.parameters.required).toEqual(['explanation', 'expected_effects', 'actions']);
     const items = (propose.function.parameters.properties.actions as {
@@ -374,7 +253,7 @@ describe('getPersonaToolDefinitions', () => {
   // schema half of that decision (the prose half is
   // FILTERS_PROMPT_SECTION_COMPACT, deliberately unchanged).
   it('drops the source actions from the schema at the `compact` rung', () => {
-    const propose = buildToolDefinitions('CONFIG', false, 'compact')
+    const propose = buildToolDefinitions('CONFIG', 'compact')
       .find((d) => d.function.name === 'proposeChanges')!;
     const items = (propose.function.parameters.properties.actions as {
       items: { properties: Record<string, unknown> };
@@ -459,8 +338,8 @@ describe('formatPendingProposal', () => {
 describe('buildPersonaContext — filters + pending proposal', () => {
   it('adds neither key when there are no filters and no proposal (pre-P4a call shape)', () => {
     const mockBuildContext = jest.fn().mockReturnValue('ctx');
-    buildPersonaContext({ facts: [], useLegacy: false }, { buildContext: mockBuildContext });
-    expect(mockBuildContext).toHaveBeenCalledWith({ knownFactsList: 'Nothing yet.', useLegacy: false });
+    buildPersonaContext({ facts: [] }, { buildContext: mockBuildContext });
+    expect(mockBuildContext).toHaveBeenCalledWith({ knownFactsList: 'Nothing yet.' });
   });
 
   it('passes filtersList and pendingProposal through when present', () => {
@@ -468,7 +347,6 @@ describe('buildPersonaContext — filters + pending proposal', () => {
     buildPersonaContext(
       {
         facts: [],
-        useLegacy: false,
         suppressions: [{ id: 's1', pattern: 'football' }],
         proposal: {
           id: 'p',
@@ -487,7 +365,6 @@ describe('buildPersonaContext — filters + pending proposal', () => {
   it('renders the block through the real builder', () => {
     const out = buildPersonaContext({
       facts: [],
-      useLegacy: false,
       suppressions: [{ id: 's1', pattern: 'football' }],
     });
     expect(out).toContain('## YOUR FILTERS');
@@ -499,7 +376,6 @@ describe('buildPersonaContext — filters + pending proposal', () => {
     buildPersonaContext(
       {
         facts: saturatedFacts(199),
-        useLegacy: false,
         suppressions: saturatedFilters(),
         includeFiltersBlock: false,
       },
@@ -518,10 +394,12 @@ describe('persona prompt token budget', () => {
     const system = worstCaseSystemPrompt();
     const context = buildPersonaContext({
       facts: saturatedFacts(),
-      useLegacy: false,
       suppressions: saturatedFilters(),
     });
-    // MEASURED 2026-07-29: system 1705 + context 1263 = 2968 (104 to spare).
+    // MEASURED 2026-07-31 (legacy-questionnaire removal): system 1768 +
+    // context 1263 = 3031 (41 to spare). The legacy-capable prompt this
+    // replaced measured 1786 + 1263 = 3049, so removing the dead branches
+    // bought back 18 tokens.
     expect(estimateTokens(system) + estimateTokens(context)).toBeLessThan(INPUT_TOKEN_BUDGET);
   });
 
@@ -529,10 +407,9 @@ describe('persona prompt token budget', () => {
     // This is what MAX_FILTERS_IN_CONTEXT is DERIVED from — the cap is a
     // measurement, not a guess. MEASURED 2026-07-29: 187 tokens for 10 rows.
     const facts = saturatedFacts();
-    const without = buildPersonaContext({ facts, useLegacy: false });
+    const without = buildPersonaContext({ facts });
     const withFilters = buildPersonaContext({
       facts,
-      useLegacy: false,
       suppressions: saturatedFilters(),
     });
     const marginal = estimateTokens(withFilters) - estimateTokens(without);
@@ -566,7 +443,6 @@ describe('persona prompt token budget', () => {
       + estimateTokens(
         buildPersonaContext({
           facts,
-          useLegacy: false,
           suppressions: saturatedFilters(filterCount),
           includeFiltersBlock: plan.includeFiltersBlock,
         }),

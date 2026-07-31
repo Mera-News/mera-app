@@ -7,7 +7,6 @@ import { buildExampleQuestionsText } from './questionnaire-data';
 /**
  * Builds tool definitions in OpenAI JSON Schema format (sent to cloud backend).
  * Same tools as the XML format in buildToolFormatSection() — single source of truth.
- * When useLegacy is false, advanceQuestionnaireLevel is omitted.
  */
 /**
  * How much of the "not interested" FILTERS feature this turn's prompt can
@@ -31,7 +30,6 @@ export type FilterToolsVariant = 'full' | 'compact' | 'off';
 
 export function buildToolDefinitions(
   surface: 'ONBOARDING' | 'CONFIG',
-  useLegacy = true,
   filterTools: FilterToolsVariant = 'full',
 ): ToolDefinition[] {
   const tools: ToolDefinition[] = [
@@ -50,8 +48,6 @@ export function buildToolDefinitions(
                 type: 'object',
                 properties: {
                   statement: { type: 'string', description: 'Fact in English, <200 chars' },
-                  questionnaire_level: { type: 'number', description: 'Level number (1, 2, 3...)' },
-                  questionnaire_level_category: { type: 'string', description: 'Category name (e.g. "Core")' },
                   questionnaire_attribute: { type: 'string', description: 'Full attribute string (e.g. "location: neighborhood/area, city, and country")' },
                 },
                 required: ['statement'],
@@ -94,20 +90,6 @@ export function buildToolDefinitions(
       },
     },
   ];
-
-  if (useLegacy) {
-    tools.push({
-      type: 'function',
-      function: {
-        name: 'advanceQuestionnaireLevel',
-        description: 'Move to next level after all current-level topics are covered or skipped.',
-        parameters: {
-          type: 'object',
-          properties: {},
-        },
-      },
-    });
-  }
 
   if (surface === 'CONFIG') {
     tools.push({
@@ -291,34 +273,19 @@ function schemaTypeToString(schema: Record<string, unknown>): string {
  */
 export function buildToolFormatSection(
   surface: 'ONBOARDING' | 'CONFIG',
-  useLegacy = true,
   filterTools: FilterToolsVariant = 'full',
 ): string {
   const isOnboarding = surface === 'ONBOARDING';
 
-  const tools = buildToolDefinitions(surface, useLegacy, filterTools);
+  const tools = buildToolDefinitions(surface, filterTools);
   const toolLines = tools
     .map((t) => `- ${t.function.name}: ${schemaToCompactSignature(t.function.parameters)}`)
     .join('\n');
 
-  const saveFactsFields = useLegacy
-    ? '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_level / _category / _attribute: copy verbatim from the questionnaire entry the fact answers. If no entry fits, mint a new attribute as "key: description".'
-    : '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_attribute: a short category label for this fact (e.g. "location: residence", "profession: job", "background: origin"). Mint freely.';
+  const saveFactsFields =
+    '- statement: English (translate if user wrote in another language); preserve specifics; <200 chars.\n- questionnaire_attribute: a short category label for this fact (e.g. "location: residence", "profession: job", "background: origin"). Mint freely.';
 
-  const examples = useLegacy
-    ? `<examples>
-<example>
-<user_input>I live near Brixton in London</user_input>
-<assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
-<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Lives near Brixton, London, UK", "questionnaire_level": 1, "questionnaire_level_category": "Core", "questionnaire_attribute": "location: neighborhood/area, city, and country (preserve specifics)"}]}}</tool_call></assistant_output>
-</example>
-<example>
-<user_input>I'm a senior ML engineer at DeepMind</user_input>
-<assistant_output>${isOnboarding ? "DeepMind, exciting! Tracking any stocks?" : "Got it, updated your profession. Anything else?"}
-<tool_call>{"name": "saveExtractedFacts", "arguments": {"extracted_user_information": [{"statement": "Senior ML engineer at DeepMind", "questionnaire_level": 1, "questionnaire_level_category": "Core", "questionnaire_attribute": "profession: job role and industry"}, {"statement": "Works in AI/Machine Learning industry", "questionnaire_level": 2, "questionnaire_level_category": "Professional", "questionnaire_attribute": "sub_industry: specific niche"}]}}</tool_call></assistant_output>
-</example>
-</examples>`
-    : `<examples>
+  const examples = `<examples>
 <example>
 <user_input>I live near Brixton in London</user_input>
 <assistant_output>${isOnboarding ? "Brixton, nice area! What do you do for work?" : "Got it, updated your location. Anything else?"}
@@ -402,43 +369,29 @@ export function buildPersonaUpdateStaticPrompt(params: {
    *  the over-compressed Qwen3 4B prompt would imply — see
    *  buildPersonaUpdateLocalPrompt for the architecture-aware rationale). */
   mode?: 'CLOUD' | 'LOCAL';
-  /** When false (default), uses the new example-questions approach where the LLM
-   *  autonomously picks questions based on Known Facts. When true, uses the legacy
-   *  level-based questionnaire with [ASK]/[DONE] annotations. */
-  useLegacy?: boolean;
   /** not-interested P4a: how much of the FILTERS feature this turn can afford.
    *  Chosen by measurement per turn (planPersonaPrompt); `off` reproduces the
    *  pre-P4a prompt exactly. Defaults to `full`. */
   filterTools?: FilterToolsVariant;
 }): string {
-  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', useLegacy = false, filterTools = 'full' } = params;
+  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', filterTools = 'full' } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   if (mode === 'LOCAL') {
-    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, useLegacy, filterTools });
+    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, filterTools });
   }
 
   const languageRule = languageName
     ? `- LANGUAGE: User's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch languages even if the user writes in English, Chinese, or any other language; reply in ${languageName} regardless. Fact statements stay English (see Facts).`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English (see Facts).`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy, filterTools) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
 
   const deletingFactsSection = isOnboarding ? '' : `
 - DELETE (deleteUserFacts) only when the user explicitly asks to remove info OR is correcting themselves about the SAME subject ("I moved to Berlin, not Paris"; "I work at Stripe now, not Google"). Adding a fact about a DIFFERENT subject is NEVER a correction — "parents live in Bhopal" does not replace "I live in Porto Santo". Match by attribute key (the text before ': ' in Known Facts). If unsure, ask first.
 - RECALIBRATE (runCalibration): if the user was invited to recalibrate scoring and explicitly confirms, call runCalibration (no args); never call it unprompted.${filtersPromptSection(filterTools)}`;
 
-  const conversationGuide = useLegacy
-    ? `## Rules
-${languageRule}
-- The questionnaire is a **suggestion**, not a script. [ASK] items are prompts to use ONLY when the user has nothing to add on their own. The user's own input always wins.
-- **If the user volunteers any new personal info — even when it doesn't match the current [ASK] — extract it FIRST** via saveExtractedFacts, acknowledge briefly, then either ask a follow-up about that info or move on to the next [ASK]. Mint a new attribute as "key: description" when no questionnaire entry fits ("expat from India" → questionnaire_attribute "background: origin / cultural identity"). NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
-- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
-${isOnboarding
-        ? '- A welcome message was already shown — start with the first [ASK] question.'
-        : '- Respond to user messages directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
-- Stay on profile/news topics. Redirect off-topic politely.`
-    : `## Rules
+  const conversationGuide = `## Rules
 ${languageRule}
 - **Save first, then ask.** If the user volunteers any info, extract it via saveExtractedFacts before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
 - **Read Known Facts before asking.** Never ask about a topic that is already present in Known Facts, even partially — if the city is known, don't ask for the city again.
@@ -496,32 +449,20 @@ function buildPersonaUpdateLocalPrompt(params: {
   surface: 'ONBOARDING' | 'CONFIG';
   includeToolFormat: boolean;
   languageName?: string;
-  useLegacy?: boolean;
   filterTools?: FilterToolsVariant;
 }): string {
-  const { surface, includeToolFormat, languageName, useLegacy = false, filterTools = 'full' } = params;
+  const { surface, includeToolFormat, languageName, filterTools = 'full' } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
     ? `ALWAYS reply in **${languageName}**. NEVER switch languages, even if the user writes in English or any other language — reply in ${languageName} regardless. Fact statements stay English.`
     : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
 
-  const toolSection = includeToolFormat ? buildToolFormatSection(surface, useLegacy, filterTools) : '';
+  const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
 
   const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.' + filtersPromptSection(filterTools);
 
-  const rulesSection = useLegacy
-    ? `## Rules
-- ${languageRule}
-- The questionnaire [ASK] items are **suggestions, not a script**. The user's own input always wins. If the user gives any new personal info — even off-topic for the current [ASK] — save it FIRST via saveExtractedFacts, acknowledge briefly, then either follow up on the new info or move to the next [ASK]. NEVER repeat the same [ASK] question after the user has told you something new — that ignores their input.
-- If no [ASK] fits the new info, mint a new attribute "key: description" (e.g. "background: origin / cultural identity" for "expat").
-- **Off-script example.** Asked "What do you do for work?", user says "I'm an expat" → save \`{"statement": "Expatriate / lives outside country of origin", "questionnaire_attribute": "background: origin / cultural identity"}\`, reply "Got it — where are you originally from, and what do you do for work?". Do NOT re-ask "What do you do for work?".
-- After all current-level [ASK]s are covered or skipped, call advanceQuestionnaireLevel.
-${isOnboarding
-        ? '- A welcome message was already shown — start with the first [ASK] question.'
-        : '- Respond directly; for guided questions, target the gaps. After extracting, confirm briefly and ask if there\'s more.'}
-- Stay on profile/news topics; redirect off-topic politely.`
-    : `## Rules
+  const rulesSection = `## Rules
 - ${languageRule}
 - **Save first, then ask.** Save any info the user volunteers before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
 - **Read Known Facts before asking.** Never ask about a topic already in Known Facts — if the city is known, do not ask for the city again.
@@ -561,16 +502,10 @@ ${rulesSection}
 
 /**
  * Builds the DYNAMIC context block injected into user messages.
- * Legacy path includes the questionnaire level + guide with [ASK]/[DONE] markers.
- * New path omits the questionnaire entirely — just Known Facts.
+ * The questionnaire is omitted entirely — just Known Facts (+ filters/proposal).
  */
 export function buildPersonaUpdateContext(params: {
   knownFactsList: string;
-  useLegacy?: boolean;
-  // Legacy-only fields:
-  questionnaireGuide?: string;
-  currentLevel?: number;
-  totalLevels?: number;
   /** not-interested P4a: pre-rendered `- [id] "phrase"` rows of the user's
    *  ACTIVE filters. Omitted (not empty-stated) when there are none, so a user
    *  with no filters pays zero tokens for the feature. */
@@ -579,13 +514,9 @@ export function buildPersonaUpdateContext(params: {
    *  Re-injected every turn so the one-shot LOCAL path can still confirm. */
   pendingProposal?: string;
 }): string {
-  const { knownFactsList, useLegacy = false, questionnaireGuide, currentLevel, totalLevels, filtersList, pendingProposal } = params;
+  const { knownFactsList, filtersList, pendingProposal } = params;
 
   const blocks: string[] = [];
-
-  if (useLegacy && questionnaireGuide !== undefined && currentLevel !== undefined && totalLevels !== undefined) {
-    blocks.push(`## Questionnaire: Level ${currentLevel}/${totalLevels}\n${questionnaireGuide}`);
-  }
 
   blocks.push(`## Known Facts\n${knownFactsList}`);
 

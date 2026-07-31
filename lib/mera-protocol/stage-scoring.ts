@@ -322,14 +322,38 @@ async function loadAllFactStatements(): Promise<string[]> {
  * The base is HARNESS_CONFIG_BASE, not DEFAULT_HARNESS_CONFIG, so the
  * env-bound article-tag policy applies on EVERY branch — including the `catch`.
  * A calibration read failure must not quietly flip the tagging policy back.
+ *
+ * It is ALSO where the RUNTIME `relevanceV2` switch is layered in (the settings
+ * toggle), for the same reason: `lib/news-harness/**` is RN-free and must never
+ * import the store, and the calibration-overrides layer cannot carry a boolean
+ * (`applyScoringOverrides` filters on a closed numeric allowlist and applies
+ * `base × (1 + delta)`). The flag SUBSUMES USE_ARTICLE_TAGS — one switch, so
+ * `tag-policy` keeps its single `USE_ARTICLE_TAGS` gate and RELEVANCE_V2 is read
+ * for exactly one thing downstream: skipping the relevance bucketing on the
+ * math/judge persist path.
+ *
+ * The store read is INSIDE the try: a hydration/store failure fail-opens to
+ * HARNESS_CONFIG_BASE (v2 off), which is today's behaviour.
  */
 export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
+    const relevanceV2 = useMeraProtocolStore.getState().relevanceV2 === true;
+    // Fast path preserved: with the flag off this is HARNESS_CONFIG_BASE ITSELF,
+    // so a no-override read still returns that exact reference (identity is
+    // asserted by harness-config-base.test.ts and relied on below).
+    const base: HarnessConfig = relevanceV2
+      ? {
+          ...HARNESS_CONFIG_BASE,
+          scoringEngine: {
+            ...HARNESS_CONFIG_BASE.scoringEngine,
+            USE_ARTICLE_TAGS: HARNESS_CONFIG_BASE.scoringEngine.USE_ARTICLE_TAGS || relevanceV2,
+            RELEVANCE_V2: relevanceV2,
+          },
+        }
+      : HARNESS_CONFIG_BASE;
     const overrides = await getScoringOverrides();
-    const eng = applyScoringOverrides(HARNESS_CONFIG_BASE.scoringEngine, overrides);
-    return eng === HARNESS_CONFIG_BASE.scoringEngine
-      ? HARNESS_CONFIG_BASE
-      : { ...HARNESS_CONFIG_BASE, scoringEngine: eng };
+    const eng = applyScoringOverrides(base.scoringEngine, overrides);
+    return eng === base.scoringEngine ? base : { ...base, scoringEngine: eng };
   } catch {
     return HARNESS_CONFIG_BASE;
   }

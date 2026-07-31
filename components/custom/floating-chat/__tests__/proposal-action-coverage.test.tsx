@@ -99,7 +99,7 @@ function proposalActionEnum(defs: ToolDefinition[]): string[] {
 }
 
 const ARTICLE_FEEDBACK_ENUM = proposalActionEnum(getArticleFeedbackToolDefinitions());
-const PERSONA_ENUM = proposalActionEnum(getPersonaToolDefinitions('CONFIG', false));
+const PERSONA_ENUM = proposalActionEnum(getPersonaToolDefinitions('CONFIG'));
 
 /** Every action type either agent can stage. */
 const ALL_ACTION_TYPES = Array.from(

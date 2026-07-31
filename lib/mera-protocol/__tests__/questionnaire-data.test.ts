@@ -3,15 +3,11 @@
 
 import {
   EXAMPLE_QUESTIONS,
-  TOTAL_LEVELS,
   questionnaireLevels,
   isLocationAttribute,
   buildExampleQuestionsText,
   buildAttributeTextToIdMap,
   buildIdToAttributeTextMap,
-  parseAttributeKey,
-  getAttributeKeysForLevel,
-  buildQuestionnaireGuide,
   type QuestionnaireLevel,
   type QuestionnaireAttribute,
 } from '../questionnaire-data';
@@ -33,16 +29,6 @@ describe('EXAMPLE_QUESTIONS', () => {
 
   it('starts with a location question', () => {
     expect(EXAMPLE_QUESTIONS[0].toLowerCase()).toContain('where do you live');
-  });
-});
-
-describe('TOTAL_LEVELS', () => {
-  it('is 10', () => {
-    expect(TOTAL_LEVELS).toBe(10);
-  });
-
-  it('matches the number of levels in questionnaireLevels', () => {
-    expect(questionnaireLevels.length).toBe(TOTAL_LEVELS);
   });
 });
 
@@ -214,118 +200,5 @@ describe('buildIdToAttributeTextMap', () => {
     for (const [text, id] of textToId) {
       expect(idToText.get(id)).toBe(text);
     }
-  });
-});
-
-// ============================================================
-// parseAttributeKey
-// ============================================================
-
-describe('parseAttributeKey', () => {
-  it('extracts the key before the colon', () => {
-    expect(parseAttributeKey('location: neighborhood/area, city')).toBe('location');
-  });
-
-  it('trims whitespace from the key', () => {
-    expect(parseAttributeKey('  profession : job role')).toBe('profession');
-  });
-
-  it('returns the full string when there is no colon', () => {
-    expect(parseAttributeKey('nokeyhere')).toBe('nokeyhere');
-  });
-
-  it('handles empty string', () => {
-    expect(parseAttributeKey('')).toBe('');
-  });
-
-  it('uses only the FIRST colon position', () => {
-    expect(parseAttributeKey('outer: inner: value')).toBe('outer');
-  });
-});
-
-// ============================================================
-// getAttributeKeysForLevel
-// ============================================================
-
-describe('getAttributeKeysForLevel', () => {
-  it('returns the correct keys for level 1', () => {
-    const keys = getAttributeKeysForLevel(1);
-    expect(keys).toContain('location');
-    expect(keys).toContain('profession');
-    expect(keys).toContain('topics');
-  });
-
-  it('returns empty array for a non-existent level', () => {
-    expect(getAttributeKeysForLevel(99)).toEqual([]);
-    expect(getAttributeKeysForLevel(0)).toEqual([]);
-  });
-
-  it('returns the parsed keys (not the full attribute texts)', () => {
-    const keys = getAttributeKeysForLevel(1);
-    keys.forEach((k) => expect(k).not.toContain(':'));
-  });
-
-  it('returns correct count of keys for each level', () => {
-    questionnaireLevels.forEach((l) => {
-      expect(getAttributeKeysForLevel(l.level).length).toBe(l.attributes.length);
-    });
-  });
-});
-
-// ============================================================
-// buildQuestionnaireGuide
-// ============================================================
-
-describe('buildQuestionnaireGuide', () => {
-  it('returns empty string for a non-existent level', () => {
-    expect(buildQuestionnaireGuide(99)).toBe('');
-  });
-
-  it('includes level number and category in header', () => {
-    const guide = buildQuestionnaireGuide(1);
-    expect(guide).toContain('Level 1:');
-    expect(guide).toContain('Core');
-  });
-
-  it('marks all attributes as [ASK] when coveredAttributes is not provided', () => {
-    const guide = buildQuestionnaireGuide(1);
-    expect(guide).toContain('[ASK]');
-    expect(guide).not.toContain('[DONE]');
-  });
-
-  it('marks covered attributes as [DONE] SKIP', () => {
-    const covered = new Set(['location']);
-    const guide = buildQuestionnaireGuide(1, covered);
-    expect(guide).toContain('[DONE] SKIP');
-  });
-
-  it('marks uncovered attributes as [ASK]', () => {
-    const covered = new Set(['location']); // only location covered
-    const guide = buildQuestionnaireGuide(1, covered);
-    expect(guide).toContain('[ASK]'); // profession/topics still [ASK]
-  });
-
-  it('marks all as [DONE] when all keys for the level are covered', () => {
-    const level1Keys = getAttributeKeysForLevel(1);
-    const allCovered = new Set(level1Keys);
-    const guide = buildQuestionnaireGuide(1, allCovered);
-    expect(guide).not.toContain('[ASK]');
-    expect(guide).toContain('[DONE] SKIP');
-  });
-
-  it('marks all as [ASK] when covered set is empty', () => {
-    const guide = buildQuestionnaireGuide(1, new Set());
-    expect(guide).not.toContain('[DONE]');
-    expect(guide).toContain('[ASK]');
-  });
-
-  it('produces a consistent multi-line format for level 2', () => {
-    const guide = buildQuestionnaireGuide(2);
-    expect(guide).toContain('Level 2:');
-    expect(guide).toContain('Professional');
-    // Each attribute on its own line
-    const lines = guide.split('\n').filter((l) => l.startsWith('- '));
-    const level2 = questionnaireLevels.find((l) => l.level === 2)!;
-    expect(lines.length).toBe(level2.attributes.length);
   });
 });

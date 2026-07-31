@@ -36,7 +36,6 @@ const KNOWN_TOOLS = new Set([
   'saveExtractedsFacts', // common LLM misspelling
   'updateUserConfig',
   'deleteUserFacts',
-  'advanceQuestionnaireLevel',
   'issueWarning',
   'runCalibration',
   // Article-feedback agent — proposal confirm flow.

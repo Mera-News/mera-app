@@ -62,6 +62,34 @@ describe('DEFAULT_HARNESS_CONFIG — the shipped default', () => {
     expect('USE_ARTICLE_TAGS' in DEFAULT_HARNESS_CONFIG.scoringEngine).toBe(true);
     expect(typeof DEFAULT_HARNESS_CONFIG.scoringEngine.USE_ARTICLE_TAGS).toBe('boolean');
   });
+
+  it('ships with relevance v2 OFF, stated explicitly', () => {
+    expect(DEFAULT_HARNESS_CONFIG.scoringEngine.RELEVANCE_V2).toBe(false);
+    expect('RELEVANCE_V2' in DEFAULT_HARNESS_CONFIG.scoringEngine).toBe(true);
+    expect(typeof DEFAULT_HARNESS_CONFIG.scoringEngine.RELEVANCE_V2).toBe('boolean');
+  });
+});
+
+// RELEVANCE_V2 subsumes USE_ARTICLE_TAGS at the composition root
+// (`effectiveHarnessConfig` ORs the two), so tag-policy itself keeps ONE gate.
+// These pin that: the engine-side blanking must react to USE_ARTICLE_TAGS alone,
+// never to RELEVANCE_V2 — a second gate here would let the two disagree.
+describe('applyArticleTagPolicy — RELEVANCE_V2 is not a second gate', () => {
+  it('RELEVANCE_V2 alone does NOT un-blank the tags', () => {
+    const v2Only: ScoringEngineConfig = { ...OFF, RELEVANCE_V2: true };
+    const out = applyArticleTagPolicy(tagged(), v2Only);
+    expect(out.geoTags).toEqual([]);
+    expect(out.entities).toEqual([]);
+    expect(out.eventType).toBeNull();
+    expect(computeRelevance(out, persona(), v2Only, NOW).mode).toBe('backstop');
+  });
+
+  it('with both on (what the composition root actually produces) the tags pass through', () => {
+    const both: ScoringEngineConfig = { ...OFF, USE_ARTICLE_TAGS: true, RELEVANCE_V2: true };
+    const input = tagged();
+    expect(applyArticleTagPolicy(input, both)).toBe(input); // same reference
+    expect(computeRelevance(input, persona(), both, NOW).mode).toBe('math');
+  });
 });
 
 describe('applyArticleTagPolicy — routing', () => {

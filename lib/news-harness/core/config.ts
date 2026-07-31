@@ -179,6 +179,27 @@ export interface ScoringEngineConfig {
    *  a persisted row becomes a `ScoredCandidateInput` — so "off" means the
    *  engine never SEES a tag, not that one code path ignores them. */
   USE_ARTICLE_TAGS: boolean;
+  /** Relevance v2 — the RUNTIME (user-toggleable) half of the same switch.
+   *  Like `USE_ARTICLE_TAGS` this is NOT a tunable; it is a routing switch, and
+   *  it is deliberately absent from `calibration::TUNABLE_CONSTANTS` (that layer
+   *  applies `base × (1 + delta)` to NUMBERS only — a boolean cannot ride it).
+   *
+   *  `false` (the default) ⇒ exactly today's behaviour on every path.
+   *
+   *  `true` ⇒ (a) it SUBSUMES `USE_ARTICLE_TAGS`: the composition root
+   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`) ORs the two, so the
+   *  server's tags stop being blanked and a tagged candidate routes to the
+   *  deterministic math path — `tag-policy` needs no second gate and keeps
+   *  reading `USE_ARTICLE_TAGS` alone; and (b) the math/judge path persists the
+   *  UNBUCKETED computed score as `relevance` instead of the coarse
+   *  articlePipeline bucket, so ranking keeps its resolution. Both effects are
+   *  inert until the server actually emits `geo_tags`/`entities`/`event_type` —
+   *  with no tags every candidate is still `isBackstop`, so the legacy two-pass
+   *  LLM path runs and bucketing there is untouched.
+   *
+   *  Bound from the Zustand store field `relevanceV2` in that composition root;
+   *  the harness itself never reads the store or `process.env`. */
+  RELEVANCE_V2: boolean;
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
   /** Explicit topic interest (magnitude of the strongest matched topic). */
   W_TOPIC: number;
@@ -373,6 +394,11 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // key read as falsy. This preserves today's behaviour (every article
     // untagged ⇒ legacy LLM path) even after the server starts sending tags.
     USE_ARTICLE_TAGS: false,
+    // Relevance v2 is OFF by default for the same reason and in the same style:
+    // an explicit literal, not an absent key read as falsy. It is layered in at
+    // runtime from the store in `effectiveHarnessConfig`; the harness default
+    // must always describe today's shipped behaviour.
+    RELEVANCE_V2: false,
     // affinity component weights (positives sum to ≈ 1.0 at full saturation).
     // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH.
     // Round-3 A2: freshness decay removed (W_FRESH 0.08 deleted). The remaining

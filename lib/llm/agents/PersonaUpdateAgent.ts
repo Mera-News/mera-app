@@ -3,26 +3,20 @@
 // Conversations are ephemeral (in-memory only, managed by useMeraLLM).
 
 import {
-  handleAdvanceQuestionnaireLevel,
   handleDeleteUserFacts,
   handleIssueWarning,
   handleSaveExtractedFacts,
   handleUpdateUserConfig,
 } from '../../chat-tools/tool-handlers';
-import { getCoveredAttributeKeys, getFacts, getQuestionnaireLevel, setQuestionnaireLevel } from '../../database/services/fact-service';
+import { getFacts } from '../../database/services/fact-service';
 import { runCalibration } from '../../database/services/calibration-service';
 import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
 import { buildPersonaUpdateStaticPrompt, buildPersonaUpdateContext, buildToolDefinitions } from '../../mera-protocol/prompts';
-import {
-  buildQuestionnaireGuide,
-  getAttributeKeysForLevel,
-  TOTAL_LEVELS,
-} from '../../mera-protocol/questionnaire-data';
 import { useAppLanguageStore } from '../../stores/app-language-store';
-import { useMeraProtocolStore, useUseLegacyPersonaUpdate } from '../../stores/mera-protocol-store';
+import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import {
@@ -34,7 +28,6 @@ import {
   getPersonaToolDefinitions,
   normalizePublicationNameForMatch,
   planPersonaPrompt,
-  recomputeQuestionnaireLevel,
   type PersonaMode,
   type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
@@ -70,7 +63,6 @@ export class PersonaUpdateAgent implements IAgent {
   private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
-  private lastUseLegacy: boolean | null = null;
   private lastFilterTools: PersonaPromptPlan['filterTools'] | null = null;
 
   /**
@@ -90,7 +82,6 @@ export class PersonaUpdateAgent implements IAgent {
       useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
         ? 'LOCAL'
         : 'CLOUD';
-    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
 
     // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
     // so persona-agent-core calls THIS function reference rather than its own
@@ -107,7 +98,6 @@ export class PersonaUpdateAgent implements IAgent {
           includeToolFormat: needsToolFormat,
           languageName,
           mode,
-          useLegacy,
           // ONBOARDING carries no filter tools at all, so leave the pre-P4a
           // call-args shape untouched there.
           ...(this.surface === 'CONFIG' ? { filterTools } : {}),
@@ -118,17 +108,16 @@ export class PersonaUpdateAgent implements IAgent {
       return prompt;
     };
 
-    this.turnPlan = await this.planTurn({ useLegacy, buildAt });
+    this.turnPlan = await this.planTurn({ buildAt });
 
-    // Static prompt depends on surface + needsToolFormat + languageName + mode +
-    // useLegacy — all fixed per session — PLUS this turn's filter variant, which
-    // is data-dependent and so must be part of the cache key.
+    // Static prompt depends on surface + needsToolFormat + languageName + mode —
+    // all fixed per session — PLUS this turn's filter variant, which is
+    // data-dependent and so must be part of the cache key.
     if (
       this.cachedSystemPrompt
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
       && this.lastMode === mode
-      && this.lastUseLegacy === useLegacy
       && this.lastFilterTools === this.turnPlan.filterTools
     ) {
       return this.cachedSystemPrompt;
@@ -137,7 +126,6 @@ export class PersonaUpdateAgent implements IAgent {
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
-    this.lastUseLegacy = useLegacy;
     this.lastFilterTools = this.turnPlan.filterTools;
     return this.cachedSystemPrompt;
   }
@@ -151,7 +139,6 @@ export class PersonaUpdateAgent implements IAgent {
    * variant renders the same prompt and there is nothing to yield.
    */
   private async planTurn(params: {
-    useLegacy: boolean;
     buildAt: (v: PersonaPromptPlan['filterTools']) => string;
   }): Promise<PersonaPromptPlan> {
     if (this.surface !== 'CONFIG') {
@@ -162,23 +149,9 @@ export class PersonaUpdateAgent implements IAgent {
     const suppressions = await this.loadActiveSuppressions();
     const filtersBlock = formatActiveFiltersList(suppressions);
 
-    // The legacy questionnaire guide is the other variable-size payload in
-    // <context>; read-only here (buildContext still owns persisting the level).
-    let guideTokens = 0;
-    if (params.useLegacy) {
-      const coveredAttributes = await getCoveredAttributeKeys();
-      const storedLevel = await getQuestionnaireLevel();
-      const level = recomputeQuestionnaireLevel(
-        { currentLevel: storedLevel, coveredAttributes },
-        getAttributeKeysForLevel,
-        TOTAL_LEVELS,
-      );
-      guideTokens = estimateTokens(buildQuestionnaireGuide(level, coveredAttributes));
-    }
-
     return planPersonaPrompt({
       systemTokensFor: (variant) => estimateTokens(params.buildAt(variant)),
-      baseContextTokens: estimateTokens(formatKnownFactsList(facts)) + guideTokens,
+      baseContextTokens: estimateTokens(formatKnownFactsList(facts)),
       filtersBlockTokens: filtersBlock ? estimateTokens(filtersBlock) : 0,
     });
   }
@@ -251,61 +224,27 @@ export class PersonaUpdateAgent implements IAgent {
   }
 
   async buildContext(): Promise<string> {
-    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
-
     const facts = await getFacts();
     const suppressions = await this.loadActiveSuppressions();
     // Re-injected every turn so the one-shot LOCAL path can resolve a confirm.
     const proposal = useFloatingChatStore.getState().proposal;
 
-    if (!useLegacy) {
-      return buildPersonaContext(
-        {
-          facts,
-          useLegacy: false,
-          suppressions,
-          proposal,
-          includeFiltersBlock: this.turnPlan.includeFiltersBlock,
-        },
-        { buildContext: buildPersonaUpdateContext },
-      );
-    }
-
-    // Legacy path: level-based questionnaire with [ASK]/[DONE] annotations.
-    // Level recomputation is pure (delegated); the DB read/write stays here.
-    const coveredAttributes = await getCoveredAttributeKeys();
-    const storedLevel = await getQuestionnaireLevel();
-    const currentLevel = recomputeQuestionnaireLevel(
-      { currentLevel: storedLevel, coveredAttributes },
-      getAttributeKeysForLevel,
-      TOTAL_LEVELS,
-    );
-    await setQuestionnaireLevel(currentLevel);
-
     return buildPersonaContext(
       {
         facts,
-        useLegacy: true,
-        currentLevel,
-        coveredAttributes,
         suppressions,
         proposal,
         includeFiltersBlock: this.turnPlan.includeFiltersBlock,
       },
-      {
-        buildContext: buildPersonaUpdateContext,
-        buildGuide: buildQuestionnaireGuide,
-        totalLevels: TOTAL_LEVELS,
-      },
+      { buildContext: buildPersonaUpdateContext },
     );
   }
 
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---
 
   getToolDefinitions(): ToolDefinition[] {
-    const useLegacy = useMeraProtocolStore.getState().useLegacyPersonaUpdate;
     // The turn's plan also decides whether the cloud tool payload carries them.
-    return getPersonaToolDefinitions(this.surface, useLegacy, buildToolDefinitions, this.turnPlan.filterTools);
+    return getPersonaToolDefinitions(this.surface, buildToolDefinitions, this.turnPlan.filterTools);
   }
 
   // --- IAgent: message formatting ---
@@ -368,11 +307,6 @@ export class PersonaUpdateAgent implements IAgent {
 
       case 'deleteUserFacts': {
         const result = await handleDeleteUserFacts(args);
-        return { result };
-      }
-
-      case 'advanceQuestionnaireLevel': {
-        const result = await handleAdvanceQuestionnaireLevel();
         return { result };
       }
 
