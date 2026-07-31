@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
-import { AppState, StyleSheet, View, type ViewStyle } from 'react-native';
+import { AppState, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   makeMutable,
@@ -224,8 +224,13 @@ function colorSequence(rand: () => number): string[] {
  * screens are mounted.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-/** The shared 0↔1 colour cross-fade driver. */
-const sharedMix = makeMutable(0);
+/** The shared fade-out driver for the outgoing colour layer. */
+const outgoing = makeMutable(0);
+
+/** How long a colour change takes. Deliberately much shorter than
+ *  `COLOR_STEP_MS`: the second gradient layer only exists for this long, so the
+ *  app runs on a single backdrop layer the rest of the time. */
+const FADE_MS = 2500;
 
 /** The shared colour-step counter. Lives outside React because every instance
  *  must observe the same value; `useSyncExternalStore` subscribes them. */
@@ -258,13 +263,9 @@ let running = false;
 function startEngine() {
   if (running) return;
   running = true;
-  colorTimer = setInterval(() => {
-    stepStore.advance();
-    sharedMix.value = withTiming(stepStore.value % 2 === 0 ? 0 : 1, {
-      duration: COLOR_STEP_MS,
-      easing: Easing.inOut(Easing.ease),
-    });
-  }, COLOR_STEP_MS);
+  // Only advances the step; each mounted backdrop runs its own short fade off
+  // that shared tick (see the component).
+  colorTimer = setInterval(() => stepStore.advance(), COLOR_STEP_MS);
 }
 
 function stopEngine() {
@@ -358,12 +359,39 @@ export interface AbstractGradientBackdropProps {
   seed?: string;
 }
 
+/**
+ * DISABLED ON ANDROID — deliberately, and this needs to stay until it can be
+ * tested on a real Android build.
+ *
+ * Two Android-only problems, both traced to this component being a full-screen
+ * `Svg` mounted on every screen:
+ *
+ * 1. **A crash.** `java.lang.NullPointerException` in
+ *    `ViewGroup.dispatchGetDisplayList()` — Android's render thread walking a
+ *    display list and finding a null child, i.e. a view removed from the
+ *    hierarchy while it was being drawn. `RNSVGSvgView` is a `ViewGroup`, and
+ *    this component put one on ~47 screens.
+ * 2. **Slowness.** RNSVG draws through the Canvas/Picture path on Android
+ *    rather than a cached layer, so a full-screen radial gradient is far more
+ *    expensive there than on iOS — multiplied by every mounted tab.
+ *
+ * Android therefore renders nothing here and falls back to the flat dark page
+ * it had before this feature, which is correct-looking, just less pretty. iOS
+ * is unaffected.
+ *
+ * To bring Android back, do NOT simply re-enable this: use a non-SVG path
+ * (a `View` with `experimental_backgroundImage` radial-gradients is the
+ * obvious candidate) and verify it on a device, since neither of the problems
+ * above reproduces on iOS.
+ */
+const ANDROID_DISABLED = Platform.OS === 'android';
+
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed }) => {
   const reduceMotion = useReducedMotion();
 
   // One engine for the whole app — see THE SHARED ENGINE above. Reduce Motion
   // opts this instance out entirely: no clock, no timer, no animated styles.
-  useSharedEngine(!reduceMotion);
+  useSharedEngine(!reduceMotion && !ANDROID_DISABLED);
   const step = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
 
   // Unseeded surfaces share the app-wide sequences, which is what makes every
@@ -375,39 +403,52 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
       : BLOBS.map((_, i) => colorSequence(makeRandom(`${seed}#${i}`)))
   );
 
-  // The field FADING IN takes the new colour; the outgoing one keeps what it
-  // was showing until it is fully transparent. Reading the incoming at `step`
-  // and the outgoing at `step - 1` is what creates that hold — swap either and
-  // the outgoing field jumps mid-fade. `+ i` staggers the blobs so a shared
-  // tick does not move all three to similar colours at once.
+  // ONE layer at rest, two only while a colour is changing.
+  //
+  // This is the Android fix, and it helps everywhere. Keeping two full-screen
+  // `Svg`s mounted permanently just so they could cross-fade meant paying for
+  // two rasterised gradient layers 100% of the time to animate for a couple of
+  // seconds every ten. That is expensive on Android in particular, where RNSVG
+  // draws through the Canvas/Picture path rather than a cached CALayer, and it
+  // was multiplied by every tab screen that stays mounted.
+  //
+  // So: the CURRENT colours render underneath at full opacity, permanently. On
+  // a step change the PREVIOUS colours mount on top at full opacity and fade
+  // out, revealing the new ones, then unmount. The swap underneath is invisible
+  // because the outgoing layer covers it while it happens.
   const at = (seq: string[], i: number, n: number) =>
     seq[(((n + i) % seq.length) + seq.length) % seq.length];
-  const colorsA = sequences.map((seq, i) => at(seq, i, step % 2 === 0 ? step : step - 1));
-  const colorsB = sequences.map((seq, i) => at(seq, i, step % 2 === 1 ? step : step - 1));
+  const current = sequences.map((seq, i) => at(seq, i, step));
+  const previous = sequences.map((seq, i) => at(seq, i, step - 1));
 
-  const styleA = useAnimatedStyle(() => ({ opacity: 1 - sharedMix.value }));
-  const styleB = useAnimatedStyle(() => ({ opacity: sharedMix.value }));
+  // Mounted only for the duration of a fade. `step > 0` keeps it off the very
+  // first render, which has nothing to fade from.
+  const [fading, setFading] = useState(false);
+  useEffect(() => {
+    if (reduceMotion || step === 0) return;
+    setFading(true);
+    outgoing.value = 1;
+    outgoing.value = withTiming(0, { duration: FADE_MS, easing: Easing.inOut(Easing.ease) });
+    const t = setTimeout(() => setFading(false), FADE_MS);
+    return () => clearTimeout(t);
+  }, [step, reduceMotion]);
+
+  const outgoingStyle = useAnimatedStyle(() => ({ opacity: outgoing.value }));
 
   // `pointerEvents` goes on a plain RN View, NOT on the Svg. `Svg` is
   // `RNSVGSvgView`, which does its own hit-testing and does not reliably honour
   // the prop — and this is an absolute fill over the ENTIRE screen, so a
   // swallowed touch would make every tab untappable.
-  if (reduceMotion) {
-    return (
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <BlobField colors={colorsA} idBase="bg-a" />
-      </View>
-    );
-  }
+  if (ANDROID_DISABLED) return null;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Animated.View style={[StyleSheet.absoluteFill, styleA]}>
-        <BlobField colors={colorsA} idBase="bg-a" />
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, styleB]}>
-        <BlobField colors={colorsB} idBase="bg-b" />
-      </Animated.View>
+      <BlobField colors={current} idBase="bg-current" />
+      {fading && !reduceMotion ? (
+        <Animated.View style={[StyleSheet.absoluteFill, outgoingStyle]}>
+          <BlobField colors={previous} idBase="bg-prev" />
+        </Animated.View>
+      ) : null}
     </View>
   );
 };
