@@ -54,6 +54,7 @@ import {
   recordAuthFailure,
   recordAuthSuccess,
   onAppForeground,
+  onNetworkReconnect,
   _resetForTests,
   _getBreakerState,
 } from '../auth-failure-breaker';
@@ -399,5 +400,85 @@ describe('onAppForeground', () => {
     onAppForeground();
     expect(mockResumeTask).not.toHaveBeenCalled();
     expect(mockGetSession).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// onNetworkReconnect
+// ---------------------------------------------------------------------------
+// AppScheduler._onNetworkReconnect skips paused tasks as its FIRST check, so the
+// network-reconnect trigger can never revive a breaker-paused feed-sync on its
+// own. Before this hook, recovery required a real background→foreground cycle or
+// an unrelated successful query — so a user who lost signal for an hour and
+// regained it without ever backgrounding the app stayed paused.
+describe('onNetworkReconnect', () => {
+  async function tripInconclusive() {
+    mockGetSession.mockResolvedValueOnce({ data: null, error: { status: 500 } });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+    expect(_getBreakerState().breakerOpen).toBe(true);
+    jest.clearAllMocks();
+  }
+
+  it('revalidates and resumes feed-sync once the session proves alive', async () => {
+    await tripInconclusive();
+    mockGetSession.mockResolvedValueOnce({ data: { session: { id: 's1' } } });
+
+    onNetworkReconnect();
+    expect(mockGetSession).toHaveBeenCalledWith({ query: { disableCookieCache: true } });
+
+    await flush();
+    expect(mockResumeTask).toHaveBeenCalledWith('feed-sync');
+    expect(_getBreakerState().breakerOpen).toBe(false);
+  });
+
+  it('does NOT resume on a still-inconclusive re-check', async () => {
+    await tripInconclusive();
+    mockGetSession.mockResolvedValueOnce({ data: null, error: { status: 503 } });
+
+    onNetworkReconnect();
+    await flush();
+
+    expect(mockResumeTask).not.toHaveBeenCalled();
+    expect(_getBreakerState().breakerOpen).toBe(true);
+  });
+
+  it('refuses to self-heal a CONFIRMED-dead session', async () => {
+    // Same guard as onAppForeground: resuming here would only buy
+    // AUTH_FAILURE_THRESHOLD more 401s and an immediate re-trip. ReauthBanner is
+    // the only way out of this state.
+    await tripInconclusive();
+    mockNeedsReauth = true;
+
+    onNetworkReconnect();
+    await flush();
+
+    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockResumeTask).not.toHaveBeenCalled();
+    mockNeedsReauth = false;
+  });
+
+  it('is a no-op when the breaker never tripped — no round-trip per reconnect', () => {
+    onNetworkReconnect();
+    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockResumeTask).not.toHaveBeenCalled();
+  });
+
+  it('ignores the cooldown — an explicit reconnect always gets a fresh check', async () => {
+    await tripInconclusive();
+    mockGetSession.mockResolvedValueOnce({ data: null, error: { status: 500 } });
+    onNetworkReconnect();
+    await flush();
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
+
+    // A second reconnect moments later (well inside RECHECK_COOLDOWN_MS) must
+    // still ask: connectivity genuinely changed, which is new information.
+    mockGetSession.mockResolvedValueOnce({ data: { session: { id: 's1' } } });
+    onNetworkReconnect();
+    await flush();
+    expect(mockGetSession).toHaveBeenCalledTimes(2);
+    expect(mockResumeTask).toHaveBeenCalledWith('feed-sync');
   });
 });

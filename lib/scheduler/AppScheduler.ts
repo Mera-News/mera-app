@@ -1,5 +1,5 @@
 import { AppState } from 'react-native';
-import { useNetworkStore } from '@/lib/stores/network-store';
+import { resetSlowRequests, useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { getJwtToken } from '@/lib/auth-client';
@@ -214,6 +214,15 @@ class _AppScheduler {
       // best-effort
     }
 
+    // Drop any slow-request bookkeeping stranded by the background freeze.
+    // iOS freezes timers while backgrounded, so a request interrupted mid-flight
+    // can arm the offline band from a timer that fires on resume and then never
+    // settle — the `finally` that would decrement never runs, and the band stays
+    // pinned for the rest of the app session. Exactly the same class of problem
+    // as the stale 'running' flags swept just below, so it is swept in the same
+    // place. Self-correcting: a genuinely still-slow request re-arms in 8s.
+    resetSlowRequests();
+
     // Recover any task whose in-memory 'running' flag outlived its run. The
     // runner aborts at `task.timeout`, but that setTimeout is frozen while the
     // app is backgrounded on iOS — so a run interrupted mid-flight never
@@ -256,6 +265,23 @@ class _AppScheduler {
   }
 
   private _onNetworkReconnect(): void {
+    // Give the auth-failure breaker a chance to recover BEFORE the loop below.
+    // The loop's first check skips paused tasks, so a breaker-paused feed-sync
+    // can never be revived by the reconnect trigger itself — it needs the
+    // breaker to re-check the session and call resumeTask. Lazy require to avoid
+    // an import cycle (same as _onForeground).
+    //
+    // The resume lands a round-trip later, so feed-sync is still paused when the
+    // loop runs and will instead fire on the next 5s tick. That is the right
+    // order: syncing BEFORE we know the session is alive just buys more 401s.
+    try {
+      const { onNetworkReconnect } =
+        require('@/lib/auth-failure-breaker') as typeof import('@/lib/auth-failure-breaker');
+      onNetworkReconnect();
+    } catch {
+      // best-effort
+    }
+
     void (async () => {
       for (const task of this.tasks.values()) {
         if (this.pausedTasks.has(task.name)) continue;

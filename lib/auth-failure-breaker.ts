@@ -231,6 +231,37 @@ export function onAppForeground(): void {
 }
 
 /**
+ * Connectivity just came back. If the breaker had tripped on failures we could
+ * NOT conclude anything from — offline or 5xx, i.e. 'inconclusive' — this is the
+ * moment to re-ask the server.
+ *
+ * Without this, a breaker-paused feed-sync never resumes on reconnect:
+ * AppScheduler._onNetworkReconnect skips paused tasks as its very first check,
+ * so the reconnect trigger cannot revive the poller by itself. Recovery
+ * otherwise required a real background→foreground cycle (onAppForeground) or an
+ * unrelated successful query — so a user who went out of range for an hour and
+ * came back without ever backgrounding the app stayed paused.
+ *
+ * Mirrors onAppForeground exactly, INCLUDING its proven-dead early return: a
+ * confirmed-dead session must not self-heal, or we buy AUTH_FAILURE_THRESHOLD
+ * more 401s and an immediate re-trip. ReauthBanner stays the only path out of
+ * that state.
+ */
+export function onNetworkReconnect(): void {
+  if (!breakerOpen) return;
+  if (getNeedsReauth()) return;
+
+  // Abandon rather than join any in-flight re-check: one started before the
+  // outage may never settle, and an explicit reconnect should not be subject to
+  // the cooldown. triggerRecheck's finally is identity-guarded, so the abandoned
+  // run cannot clear the handle of the one we start here.
+  pendingRecheck = null;
+  lastRecheckAt = 0;
+
+  void triggerRecheck();
+}
+
+/**
  * Single deduped server-truth session re-check. Only one runs at a time
  * (mirrors auth-client's _pendingJwtRequest pattern).
  *  - alive     → transient: reset counter, close breaker, resume feed-sync.
