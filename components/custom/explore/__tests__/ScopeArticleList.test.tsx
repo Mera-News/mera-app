@@ -16,52 +16,73 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (k: string) => k }),
 }));
 
-// RN's real FlatList drags in native ScrollView components that don't load in
-// this Jest env (same reason DashboardSectionsFeed.test.tsx mocks reanimated's
-// FlatList). This mock also renders the `refreshControl` PROP as a child, which
-// is what lets the test read the RefreshControl's wiring back out.
+// Plain RN stubs — no FlatList here anymore: the component now renders
+// `Animated.FlatList` (see the react-native-reanimated mock below), same
+// reason DashboardSectionsFeed.test.tsx mocks reanimated's FlatList instead of
+// RN's — RN's real ScrollView-backed FlatList doesn't load in this Jest env.
 jest.mock('react-native', () => {
     const ReactLib = require('react');
-    const asNode = (c: any) =>
-        c == null ? null : ReactLib.isValidElement(c) ? c : ReactLib.createElement(c);
     const host = (name: string) => (props: any) => ReactLib.createElement(name, props, props.children);
     const View = host('View');
-    const FlatList = ({
-        data,
-        renderItem,
-        keyExtractor,
-        ListEmptyComponent,
-        ListFooterComponent,
-        refreshControl,
-    }: any) => {
-        const items = data ?? [];
-        const kids: any[] = [];
-        if (refreshControl) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'rc' }, refreshControl));
-        if (items.length === 0) {
-            const empty = asNode(ListEmptyComponent);
-            if (empty) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'le' }, empty));
-        }
-        items.forEach((item: any, index: number) => {
-            kids.push(
-                ReactLib.createElement(
-                    ReactLib.Fragment,
-                    { key: keyExtractor ? keyExtractor(item, index) : index },
-                    renderItem({ item, index }),
-                ),
-            );
-        });
-        const footer = asNode(ListFooterComponent);
-        if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
-        return ReactLib.createElement(ReactLib.Fragment, null, kids);
-    };
     return {
         __esModule: true,
         View,
         Text: host('Text'),
-        FlatList,
         RefreshControl: (props: any) => ReactLib.createElement(View, props),
         Platform: { OS: 'ios', select: (o: any) => o.ios },
         StyleSheet: { create: (s: any) => s, flatten: (s: any) => s },
+    };
+});
+
+// Reanimated: render Animated.FlatList as items (+ refreshControl/empty/footer),
+// and stub the scroll-handler hooks so composition doesn't crash. This mock
+// also renders the `refreshControl` PROP as a child, which is what lets the
+// test read the RefreshControl's wiring back out. Mirrors
+// DashboardSectionsFeed.test.tsx's reanimated mock.
+jest.mock('react-native-reanimated', () => {
+    const ReactLib = require('react');
+    const asNode = (c: any) =>
+        c == null ? null : ReactLib.isValidElement(c) ? c : ReactLib.createElement(c);
+    const FlatListMock = ReactLib.forwardRef(
+        (
+            {
+                data,
+                renderItem,
+                keyExtractor,
+                ListEmptyComponent,
+                ListFooterComponent,
+                refreshControl,
+            }: any,
+            _ref: any,
+        ) => {
+            const items = data ?? [];
+            const kids: any[] = [];
+            if (refreshControl) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'rc' }, refreshControl));
+            if (items.length === 0) {
+                const empty = asNode(ListEmptyComponent);
+                if (empty) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'le' }, empty));
+            }
+            items.forEach((item: any, index: number) => {
+                kids.push(
+                    ReactLib.createElement(
+                        ReactLib.Fragment,
+                        { key: keyExtractor ? keyExtractor(item, index) : index },
+                        renderItem({ item, index }),
+                    ),
+                );
+            });
+            const footer = asNode(ListFooterComponent);
+            if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
+            return ReactLib.createElement(ReactLib.Fragment, null, kids);
+        },
+    );
+    return {
+        __esModule: true,
+        default: { FlatList: FlatListMock },
+        useAnimatedScrollHandler: (config: any) => config,
+        useComposedEventHandler: () => undefined,
+        useSharedValue: (initial: any) => ({ value: initial }),
+        runOnJS: (fn: any) => fn,
     };
 });
 
@@ -105,6 +126,11 @@ import ScopeArticleList from '../ScopeArticleList';
 
 const scope = { id: 'world', kind: 'world', countryCodeAlpha3: null } as any;
 
+// The mocked `useComposedEventHandler` above ignores its arguments, so a bare
+// stub satisfies the (now required) collapsible-header `scrollHandler` prop
+// without needing a real worklet handler in this suite.
+const stubScrollHandler = {} as any;
+
 const page = (ids: string[], cursor: string | null, more: boolean) => ({
     headlines: ids.map((id) => ({ article: { _id: id }, stableClusterId: null })),
     pageInfo: { endCursor: cursor, hasNextPage: more },
@@ -118,7 +144,9 @@ beforeEach(() => {
 describe('ScopeArticleList pull-to-refresh', () => {
     it('refetches page 1 WITHOUT a cursor and replaces the list', async () => {
         mockGetTopHeadlines.mockResolvedValueOnce(page(['a', 'b'], 'cur1', true));
-        const { getByTestId, queryByTestId } = render(<ScopeArticleList scope={scope} />);
+        const { getByTestId, queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
 
         await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
         expect(mockGetTopHeadlines).toHaveBeenCalledWith('GLOBAL', { first: 10, after: undefined });
@@ -137,7 +165,9 @@ describe('ScopeArticleList pull-to-refresh', () => {
 
     it('wires the SAME handler into the RefreshControl and the tab-press hook', async () => {
         mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], null, false));
-        const { getByTestId } = render(<ScopeArticleList scope={scope} />);
+        const { getByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
         await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
 
         const control = getByTestId('explore-refresh');
@@ -148,7 +178,7 @@ describe('ScopeArticleList pull-to-refresh', () => {
     });
 
     it('does not refresh while the query is gated (enabled=false)', async () => {
-        render(<ScopeArticleList scope={scope} enabled={false} />);
+        render(<ScopeArticleList scope={scope} enabled={false} scrollHandler={stubScrollHandler} />);
         expect(mockGetTopHeadlines).not.toHaveBeenCalled();
 
         await act(async () => {

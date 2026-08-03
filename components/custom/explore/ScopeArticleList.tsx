@@ -14,13 +14,13 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    FlatList,
-    RefreshControl,
-    type ListRenderItem,
-    type NativeScrollEvent,
-    type NativeSyntheticEvent,
-} from 'react-native';
+import { RefreshControl, type ListRenderItem } from 'react-native';
+import Animated, {
+    runOnJS,
+    useAnimatedScrollHandler,
+    useComposedEventHandler,
+    useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PAGE_SIZE = 10;
@@ -41,6 +41,10 @@ interface ScopeArticleListProps {
     /** Measured height of ExploreScreen's pinned header overlay — the list
      *  scrolls UNDER it, so its content starts below it. */
     readonly headerHeight?: number;
+    /** ExploreScreen's collapsible-header worklet scroll handler — composed
+     *  here with this list's own scroll-tick handler via
+     *  `useComposedEventHandler` (mirrors DashboardSectionsFeed). */
+    readonly scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
 }
 
 /**
@@ -76,6 +80,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     scope,
     enabled = true,
     headerHeight = 0,
+    scrollHandler,
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
@@ -159,11 +164,13 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // Re-tap the Explore icon → scroll to top; tap again at the top → refresh,
     // same as Feed and Dashboard. Passes the SAME `onRefresh` the RefreshControl
     // calls, so both entry points share one guard and one spinner.
-    const listRef = useRef<FlatList<TopHeadline>>(null);
-    const lastOffset = useRef(0);
+    const listRef = useRef<Animated.FlatList<TopHeadline>>(null);
+    // UI-thread shared value (not a plain ref) — set inside the worklet tick
+    // handler below, same as DashboardSectionsFeed's `lastOffsetShared`.
+    const lastOffsetShared = useSharedValue(0);
     useTabPressScrollRefresh({
         listRef,
-        getOffset: () => lastOffset.current,
+        getOffset: () => lastOffsetShared.value,
         onRefresh,
         isRefreshing,
     });
@@ -253,13 +260,23 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         );
     }, [isLoading, enabled, t]);
 
-    const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-        lastOffset.current = e.nativeEvent.contentOffset.y;
-        notifyScrollTick();
-    }, []);
+    // Compose the collapsible-header handler (from ExploreScreen) with a
+    // scroll-tick notifier (drives deferred TranslatableDynamic translation as
+    // items enter the viewport) and the tab-press-refresh offset — mirrors
+    // DashboardSectionsFeed.tsx:172-186. UI thread only: no bridge crossing,
+    // no re-render, so this replaces the old plain-JS `onScroll` entirely
+    // rather than running alongside it (the list can only take one `onScroll`
+    // prop).
+    const tickHandler = useAnimatedScrollHandler({
+        onScroll: (e) => {
+            runOnJS(notifyScrollTick)();
+            lastOffsetShared.value = e.contentOffset.y;
+        },
+    });
+    const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
     return (
-        <FlatList
+        <Animated.FlatList
             ref={listRef}
             testID="explore-list"
             data={headlines}
