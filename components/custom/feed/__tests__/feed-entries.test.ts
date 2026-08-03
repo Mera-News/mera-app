@@ -10,6 +10,9 @@ import {
   isViewedEntry,
   relevanceBandRank,
   countUnviewed,
+  extendPinnedIds,
+  INITIAL_VISIBLE_FLOOR,
+  type SortedFeed,
 } from '../feed-entries';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
@@ -45,7 +48,12 @@ function item(
   };
 }
 
-const ids = (entries: FeedListItem[]) => entries.map((e) => e.id);
+/** Accepts either a raw row array or a `SortedFeed`, so the pre-pin assertions
+ *  below read exactly as they did before `sortFeedEntries` grew `pinnedCount`. */
+const ids = (entries: FeedListItem[] | SortedFeed) =>
+  (Array.isArray(entries) ? entries : entries.rows).map((e) => e.id);
+/** The rows of a `SortedFeed` — for assertions that need the array itself. */
+const rows = (out: SortedFeed) => out.rows;
 
 const noStates: Record<string, CardStateRecord> = {};
 const skipped = (at = 1): CardStateRecord => ({ state: 'skipped', at });
@@ -66,8 +74,8 @@ describe('relevanceBandRank', () => {
 });
 
 describe('sortFeedEntries', () => {
-  it('returns an empty array for an empty feed', () => {
-    expect(sortFeedEntries([], noStates, new Set())).toEqual([]);
+  it('returns an empty result for an empty feed', () => {
+    expect(sortFeedEntries([], noStates, new Set())).toEqual({ rows: [], pinnedCount: 0 });
   });
 
   it('orders unviewed by relevance band, high to low', () => {
@@ -143,7 +151,7 @@ describe('sortFeedEntries', () => {
   it('NOTHING is dropped — every input id survives the sort', () => {
     const data = [item('a', 0.9), item('b', 0.4), item('c', 0.6), item('d', 0.2)];
     const out = sortFeedEntries(data, { a: viewed(), c: skipped() }, new Set(['b']));
-    expect(out).toHaveLength(4);
+    expect(rows(out)).toHaveLength(4);
     expect([...ids(out)].sort()).toEqual(['a', 'b', 'c', 'd']);
   });
 
@@ -168,7 +176,7 @@ describe('sortFeedEntries', () => {
     ];
     const cardStates = { a: viewed() };
     const openedArticleIds = new Set(['art-b']);
-    const out = sortFeedEntries(data, cardStates, openedArticleIds);
+    const out = rows(sortFeedEntries(data, cardStates, openedArticleIds));
     const boundary = countUnviewed(out, cardStates, openedArticleIds);
 
     for (const raw of data) {
@@ -177,6 +185,126 @@ describe('sortFeedEntries', () => {
       if (isViewed) expect(idxInOut).toBeGreaterThanOrEqual(boundary);
       else expect(idxInOut).toBeLessThan(boundary);
     }
+  });
+});
+
+describe('extendPinnedIds', () => {
+  const sorted = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => item(id));
+
+  it('pins 4 rows before the user has scrolled (deepestSeenId null)', () => {
+    expect(extendPinnedIds([], sorted, null)).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  it('pins deepest-seen + 1 slack card: 3 rows visible ⇒ 4 pinned ⇒ 5th is dynamic', () => {
+    // Rows 0,1,2 visible, row 2 deepest ⇒ indices 0..3 pinned.
+    expect(extendPinnedIds([], sorted, 'c')).toEqual(['a', 'b', 'c', 'd']);
+    expect(extendPinnedIds([], sorted, 'c')).toHaveLength(INITIAL_VISIBLE_FLOOR + 2);
+  });
+
+  it('grows as the user scrolls deeper', () => {
+    expect(extendPinnedIds([], sorted, 'e')).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+  });
+
+  it('is MONOTONIC and returns prev by IDENTITY when nothing new is covered', () => {
+    const prev = extendPinnedIds([], sorted, 'e'); // 6 long
+    // Scrolling back up to row 1 must not shrink the pin...
+    const next = extendPinnedIds(prev, sorted, 'b');
+    expect(next).toBe(prev); // identity — no re-render
+  });
+
+  it('falls back to the floor (never collapses) when the anchor row is gone', () => {
+    // The anchor was dropped by hydrate/removeIds and is not in `sorted`.
+    expect(extendPinnedIds([], sorted, 'vanished')).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  it('a dropped anchor cannot shrink an existing pin', () => {
+    const prev = extendPinnedIds([], sorted, 'f'); // 7 long
+    expect(extendPinnedIds(prev, sorted, 'vanished')).toBe(prev);
+  });
+
+  it('clamps to the list length when the list is shorter than one screen', () => {
+    const short = [item('a'), item('b')];
+    expect(extendPinnedIds([], short, null)).toEqual(['a', 'b']);
+  });
+
+  it('returns prev by identity for an empty list', () => {
+    const prev: string[] = [];
+    expect(extendPinnedIds(prev, [], null)).toBe(prev);
+  });
+});
+
+describe('sortFeedEntries — pinned prefix (the static/dynamic boundary)', () => {
+  it('with no pin, output is byte-identical to the pre-pin ordering', () => {
+    const data = [item('low', 0.4), item('high', 0.9), item('med', 0.6)];
+    const withoutPin = sortFeedEntries(data, noStates, new Set());
+    const explicitEmpty = sortFeedEntries(data, noStates, new Set(), []);
+    expect(ids(withoutPin)).toEqual(ids(explicitEmpty));
+    expect(withoutPin.pinnedCount).toBe(0);
+  });
+
+  it('pinned rows keep pinnedIds ORDER even when their tier changed under them', () => {
+    // 'p1' is now viewed and 'p2' is low-relevance — both would sink if they
+    // were re-sorted. Pinned means pinned: the user read them in this order.
+    const data = [item('p1', 0.9), item('p2', 0.35), item('x', 0.85)];
+    const out = sortFeedEntries(data, { p1: viewed() }, new Set(), ['p1', 'p2']);
+    expect(ids(out)).toEqual(['p1', 'p2', 'x']);
+    expect(out.pinnedCount).toBe(2);
+  });
+
+  it('the unpinned remainder is still tier- and band-sorted', () => {
+    const data = [
+      item('p1', 0.4),
+      item('u-low', 0.4),
+      item('u-high', 0.9),
+      item('v-high', 0.9),
+    ];
+    const out = sortFeedEntries(data, { 'v-high': viewed() }, new Set(), ['p1']);
+    expect(ids(out)).toEqual(['p1', 'u-high', 'u-low', 'v-high']);
+  });
+
+  it('skips a pinned id missing from data WITHOUT shifting the rest, and pinnedCount counts survivors', () => {
+    // 'gone' was dropped by hydrate/removeIds between renders.
+    const data = [item('p1', 0.6), item('p2', 0.6), item('x', 0.9)];
+    const out = sortFeedEntries(data, noStates, new Set(), ['p1', 'gone', 'p2']);
+    expect(ids(out)).toEqual(['p1', 'p2', 'x']);
+    // NOT 3 — dividers get placed at this boundary, and using pinnedIds.length
+    // would push them past it and into the pinned prefix.
+    expect(out.pinnedCount).toBe(2);
+  });
+
+  // THE regression assertion for this whole wave: complaints #1 and #3 both
+  // reduce to "a new arrival must never render above the boundary".
+  it('REGRESSION: a brand-new high-relevance arrival renders at index >= pinnedCount', () => {
+    const pinned = ['p1', 'p2', 'p3', 'p4'];
+    const data = [
+      // The store PREPENDS, so the fresh item leads the incoming array...
+      item('fresh', 1.1),
+      ...pinned.map((id) => item(id, 0.4)),
+    ];
+    const out = sortFeedEntries(data, noStates, new Set(), pinned);
+    const idx = rows(out).findIndex((e) => e.id === 'fresh');
+    expect(idx).toBeGreaterThanOrEqual(out.pinnedCount);
+    expect(ids(out)).toEqual(['p1', 'p2', 'p3', 'p4', 'fresh']);
+  });
+
+  it('a fresh arrival still leads the DYNAMIC region (top of its band)', () => {
+    const data = [item('fresh', 0.9), item('p1', 0.9), item('older', 0.9)];
+    const out = sortFeedEntries(data, noStates, new Set(), ['p1']);
+    expect(ids(out)).toEqual(['p1', 'fresh', 'older']);
+  });
+
+  it('does not mutate the input array', () => {
+    const data = [item('a', 0.4), item('b', 0.9)];
+    const snapshot = ids(data);
+    sortFeedEntries(data, noStates, new Set(), ['b']);
+    expect(ids(data)).toEqual(snapshot);
+  });
+
+  it('pinning everything leaves an empty dynamic region and drops nothing', () => {
+    const data = [item('a', 0.4), item('b', 0.9)];
+    const out = sortFeedEntries(data, noStates, new Set(), ['a', 'b']);
+    expect(ids(out)).toEqual(['a', 'b']);
+    expect(out.pinnedCount).toBe(2);
   });
 });
 

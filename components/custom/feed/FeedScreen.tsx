@@ -1,27 +1,42 @@
-// FeedScreen — the "Feed" tab (landing tab). A static, insert-only vertical
-// scroll feed of personalized story cards. The candidate set is insert-only:
-// new Complete suggestions are PREPENDED into `feed-order-store.order` and
-// `maintainVisibleContentPosition` anchors the viewport, so the list grows
-// without moving the card being read. The order persists across app restarts.
+// FeedScreen — the "Feed" tab (landing tab). A vertical scroll feed of
+// personalized story cards, split into a STATIC region the user has already read
+// past and a DYNAMIC region below it. The order persists across app restarts.
 //
-// DISPLAY ORDER (feed-entries.sortFeedEntries): unviewed high → medium → low,
-// then viewed high → medium → low, in one continuous run. There is no
-// "All Caught Up" DIVIDER — nothing partitions the list mid-scroll — but the
-// same card does render once as a static end-of-list FOOTER
+// THE ZIP. New Complete suggestions are still PREPENDED into
+// `feed-order-store.order`, but `order` position is only a tie-break WITHIN a
+// relevance band — where a row may actually render is decided here, by the
+// PINNED PREFIX (`pinnedIds`). The prefix covers every story down to the deepest
+// one the user has seen, plus one card of slack: three rows visible ⇒ four
+// pinned ⇒ the fifth card is the first dynamic slot. Anything new lands at index
+// >= that boundary, sorted among the dynamic region by priority. So the list
+// "zips": what you have read stays put in the order you read it, and everything
+// below you keeps re-ranking as news arrives. Nothing is ever inserted above the
+// reader — which is also why the feed no longer opens mid-list (the old prepend
+// moved the viewport by the height of every newly-inserted card).
+//
+// The prefix is SESSION-ONLY and resets on exactly the two events that re-freeze
+// the partition (see `resetSession`).
+//
+// DISPLAY ORDER (feed-entries.sortFeedEntries): pinned prefix in reading order,
+// then unviewed high → medium → low, then viewed high → medium → low. The
+// "All Caught Up" card renders once as a static end-of-list FOOTER
 // (`ListFooterComponent`, testID `feed-caught-up-footer`) so the feed's end is
-// explicit. The footer is display-only: no lifecycle meaning, and no card ever
-// moves across it. NOTHING is ever removed for being read: a viewed card SINKS,
-// so it stays reachable by scrolling on. Cards leave the feed by exactly one
-// route: `hydrate` dropping a persisted id whose story aged out of the
-// publication window between sessions (FEED_WINDOW_MS).
+// explicit. NOTHING is ever removed for being read: a viewed card SINKS below
+// the boundary, so it stays reachable by scrolling on. Cards leave the feed by
+// exactly one route: `hydrate` dropping a persisted id whose story aged out of
+// the publication window between sessions (FEED_WINDOW_MS).
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
-// under the reader mid-session. It refreshes at exactly TWO moments: app launch,
-// and an explicit pull-to-refresh. Notably NOT on tab blur — opening an article
+// under the reader mid-session. Together with the pinned prefix it refreshes at
+// exactly TWO moments (see `resetSession`): an explicit pull-to-refresh, and
+// returning to the app after being away longer than SESSION_RESUME_AFTER_MS —
+// including every cold launch, which gets it for free because neither the
+// snapshot nor the pin is persisted. Notably NOT on tab blur: opening an article
 // blurs this tab, and re-sorting there made the card you just tapped vanish from
-// its slot while you were reading it. And notably NOT on app-background either:
-// a re-sort on the next foreground would reshuffle the list under a reader
-// sitting mid-feed, with no scroll compensation.
+// its slot while you were reading it. And notably NOT on a SHORT background
+// either — a glance at a notification must not reshuffle the list under a reader
+// sitting mid-feed. Both re-sort paths return the list to the top, which is what
+// makes a re-sort safe at all.
 //
 // Pull-to-refresh RESETS TO TOP. That gesture is the one moment the user has
 // unambiguously asked for a fresh view, and it is the only moment rows move; the
@@ -62,6 +77,7 @@ import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
   sortFeedEntries,
   countUnviewed,
+  extendPinnedIds,
   type FeedEntry,
 } from './feed-entries';
 import {
@@ -117,6 +133,14 @@ const REFRESH_TINT = '#EDA77E';
 
 /** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
+
+/** How long the app must be BACKGROUNDED before coming back counts as a new
+ *  reading session (re-freeze the partition, drop the pinned prefix, return to
+ *  the top). Protects a mid-read user: glancing at a notification, taking a
+ *  call, or checking another app for a moment must not reshuffle the list and
+ *  throw away where they were. Duration is the ONLY condition — deliberately not
+ *  also gated on "new content arrived". */
+const SESSION_RESUME_AFTER_MS = 5 * 60 * 1000;
 
 // Module-constant empty exclusion set: candidates keep opened items (they back
 // frozen rows for refresh + hydrate survival). Opened-exclusion happens only
@@ -214,11 +238,30 @@ const FeedScreen: React.FC = () => {
   const orderHydrated = useFeedOrderStore((s) => s.hydrated);
   const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
 
+  // ── Pinned prefix (the static region) ──
+  // `pinnedIds` is the exact rendered prefix the user has already read past,
+  // top-to-bottom. New arrivals are never in it, so they can only render below
+  // it — that is what makes the store's `unshift` un-observable above the
+  // reader, and why the feed no longer opens mid-list.
+  //
+  // SESSION-ONLY, deliberately not persisted: it resets on a session resume, and
+  // a cold launch IS a resume, so a persisted value would be discarded on the
+  // very next read. Persisting would buy nothing and add a corrupt-blob surface.
+  const [pinnedIds, setPinnedIds] = useState<readonly string[]>([]);
+  // Live mirror of the rendered STORY order for the viewability tracker. Created
+  // once (stable identity) because the tracker's callbacks are frozen at mount.
+  const renderedIdsRef = useRef<readonly string[]>([]);
+  // Live mirror of the rendered story rows, so the ingest effect can extend the
+  // pin from the PRE-ingest list without depending on `listData` (which would
+  // re-run the effect on every re-sort).
+  const listDataRef = useRef<FeedListItem[]>([]);
+
   // ── Freeze boundary + skip dwell (viewability → refs only; no store/DB
   //    writes mid-scroll). `FeedRow` subscribes to the opened set per row for
   //    its own eye indicator, so the screen deliberately does NOT — that used
   //    to re-render the entire list on every markOpened. ──
-  const { viewabilityConfigCallbackPairs, flushSkips } = useVisibleIndex();
+  const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen } =
+    useVisibleIndex(renderedIdsRef);
 
   // ── Scroll-to-top FAB ── The list ref forwards to the underlying FlatList
   // (Animated.createAnimatedComponent), so scrollToOffset is available. The
@@ -264,6 +307,22 @@ const FeedScreen: React.FC = () => {
     });
   }, []);
 
+  /**
+   * Start a NEW reading session: re-freeze the partition AND drop the pinned
+   * prefix + its anchor, so the whole list is free to re-sort and new arrivals
+   * may land anywhere — including the top.
+   *
+   * These three must move together. The pin is the rendered prefix OF the
+   * partition; re-sorting without clearing it would leave rows pinned by their
+   * old positions, and clearing it without re-sorting would un-pin rows for no
+   * reason. One function, so the two can never drift apart.
+   */
+  const resetSession = useCallback(() => {
+    refreshPartitionSnapshot();
+    setPinnedIds([]);
+    resetDeepestSeen();
+  }, [refreshPartitionSnapshot, resetDeepestSeen]);
+
   // Seed once BOTH stores are hydrated — deliberately not inside `hydrate`,
   // which resolves before the opened store has loaded. Seeding there would
   // snapshot an empty `articleIds` and leave every previously-opened card in the
@@ -287,50 +346,107 @@ const FeedScreen: React.FC = () => {
     if (!isFocused && was) flushSkips();
   }, [isFocused, flushSkips]);
 
-  // App background: persist, but deliberately do NOT re-sort ('background' only —
-  // iOS also fires 'inactive' for the app switcher and Control Centre). A
-  // background re-sort lands on the next foreground, reshuffling the list under a
-  // reader who is sitting mid-feed with no scroll compensation — the same
-  // "where did my place go?" jump that pull-to-refresh had to be fixed for.
-  // Pull-to-refresh is the ONLY re-sort, and it resets the scroll to the top.
+  // App background/foreground.
+  //
+  // Going to BACKGROUND: flush + persist, and stamp the moment. ('background'
+  // only — iOS also fires 'inactive' for the app switcher, Control Centre and
+  // permission dialogs, and none of those end a reading session.)
+  //
+  // Coming back to ACTIVE from background: if the app was away longer than
+  // SESSION_RESUME_AFTER_MS, this is a NEW session — re-freeze the partition,
+  // drop the pinned prefix, and return to the top. Below the threshold nothing
+  // moves at all, which is the whole point of the gate: a re-sort with no scroll
+  // compensation under a reader sitting mid-feed is the "where did my place go?"
+  // jump, and it must cost a real absence, not a glance.
+  //
+  // The scroll reset deliberately goes through `pendingScrollResetRef` and the
+  // post-commit effect below rather than calling `scrollToOffset` here — a
+  // re-sort racing a scroll-to-top while anchoring is live is exactly how a
+  // refresh from the top used to dump the user 1300–2000px down the feed.
+  //
+  // A COLD LAUNCH needs no special case and gets one for free: there is no
+  // previous AppState and no recorded background stamp, so no gate is evaluated,
+  // and both `pinnedIds` and `partitionSnapshot` start empty because neither is
+  // persisted. It always re-partitions.
+  const backgroundedAtRef = useRef<number | null>(null);
+  const appStateRef = useRef<string>(AppState.currentState);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
-      if (next !== 'background') return;
-      flushSkips();
-      useFeedOrderStore.getState().flushPersist();
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if (next === 'background') {
+        backgroundedAtRef.current = Date.now();
+        flushSkips();
+        useFeedOrderStore.getState().flushPersist();
+        return;
+      }
+      if (next !== 'active' || prev !== 'background') return;
+      const since = backgroundedAtRef.current;
+      backgroundedAtRef.current = null;
+      if (since === null || Date.now() - since < SESSION_RESUME_AFTER_MS) return;
+      pendingScrollResetRef.current = true;
+      resetSession();
     });
     return () => sub.remove();
-  }, [flushSkips]);
+  }, [flushSkips, resetSession]);
 
-  // Insert newly-Complete candidates while the tab is active. They are PREPENDED
-  // (see feed-order-store) and the list is anchored by
-  // `maintainVisibleContentPosition`, so an insert above the reader does not move
-  // the card being read. `articleIds`, not the union set — see
+  // Insert newly-Complete candidates while the tab is active. They are still
+  // PREPENDED into `order` (see feed-order-store) — that is deliberate and
+  // unchanged: `order` position is only a TIE-BREAK within a relevance band, and
+  // the pinned prefix below decides where a row may actually render. A fresh
+  // arrival therefore lands at the top of its band INSIDE the dynamic region,
+  // never above the reader. `articleIds`, not the union set — see
   // opened-stories-store.
+  //
+  // The pin is extended HERE, immediately before the insert, rather than from
+  // the scroll path: the anchor is a ref written by the viewability callback
+  // (free), and this is the moment the list is about to change anyway. So
+  // `setPinnedIds` fires on ingest, never on scroll — this file must not do
+  // state updates mid-scroll (see use-visible-index's header, the scroll-lag
+  // fix).
   useEffect(() => {
     if (!isFocused || !orderHydrated || !openedHydrated) return;
+    setPinnedIds((prev) =>
+      extendPinnedIds(prev, listDataRef.current, deepestSeenIdRef.current),
+    );
     useFeedOrderStore
       .getState()
       .ingest(candidates, useOpenedStoriesStore.getState().articleIds);
-  }, [candidates, isFocused, orderHydrated, openedHydrated]);
+  }, [candidates, isFocused, orderHydrated, openedHydrated, deepestSeenIdRef]);
 
   const data = useMemo(
     () => order.map((id) => itemsById[id]).filter((it): it is FeedListItem => !!it),
     [order, itemsById],
   );
 
-  // Display list: unviewed (high → med → low), then viewed (high → med → low),
-  // one continuous run. Nothing is ever removed; a viewed card sinks, it does not
-  // disappear. Empty when there are no stories, so the empty-state chain renders.
-  const listData = useMemo(
+  // Display list: the STATIC pinned prefix (what the user has already read past,
+  // in reading order), then the DYNAMIC region — unviewed (high → med → low),
+  // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
+  // below the boundary, it does not disappear. Empty when there are no stories,
+  // so the empty-state chain renders.
+  const { rows: listData } = useMemo(
     () =>
       sortFeedEntries(
         data,
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
+        pinnedIds,
       ),
-    [data, partitionSnapshot],
+    [data, partitionSnapshot, pinnedIds],
   );
+  listDataRef.current = listData;
+  renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
+
+  // Seed the pin the first time the list is non-empty. This is NOT redundant
+  // with the extend inside the ingest effect: on a cold launch the first ingest
+  // fires while `listData` is still empty (order empty, candidates just landed),
+  // so it would seed nothing — and the NEXT ingest, seconds later, would prepend
+  // against an empty pin and reproduce the mid-list-open jump this phase exists
+  // to remove.
+  useEffect(() => {
+    if (listData.length === 0 || pinnedIds.length > 0) return;
+    setPinnedIds(extendPinnedIds([], listData, deepestSeenIdRef.current));
+  }, [listData, pinnedIds.length, deepestSeenIdRef]);
 
   // How many rows sit in the unviewed block. No longer a rendered boundary — the
   // funnel diagnostic still reports the split as its `dividerIdx`.
@@ -439,9 +555,9 @@ const FeedScreen: React.FC = () => {
   const onRefresh = useCallback(() => {
     flushSkips();
     pendingScrollResetRef.current = true;
-    refreshPartitionSnapshot();
+    resetSession();
     onRefreshSync();
-  }, [flushSkips, refreshPartitionSnapshot, onRefreshSync]);
+  }, [flushSkips, resetSession, onRefreshSync]);
 
   // Re-tap the Feed tab icon → scroll to top; tap again at the top → refresh.
   // Deliberately the SAME `onRefresh` the RefreshControl below calls, not
@@ -617,13 +733,32 @@ const FeedScreen: React.FC = () => {
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
-        // The list GROWS UPWARD: new cards are prepended (feed-order-store),
-        // and this anchors the first visible row so the card being read stays
-        // visually fixed while its index changes. Deliberately WITHOUT the
-        // Dashboard's `autoscrollToTopThreshold` — that would yank a user
-        // reading the very first card up to the new top, which is the exact
-        // behaviour this removes. Anchoring must be unconditional.
-        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+        // Anchoring is now a HEIGHT-CHANGE guard, not an insertion guard: the
+        // pinned prefix means nothing is ever inserted above the deepest row the
+        // user has seen, but rows still CHANGE HEIGHT above the viewport (images
+        // decoding, the TranslatableDynamic original→translated title swap
+        // re-wrapping), and without an anchor each of those shifts content under
+        // the reader. Removing it outright would trade a fixed jump for an
+        // intermittent one, which is worse because it is unreproducible.
+        //
+        // `autoscrollToTopThreshold` is what fixes "the feed opens mid-list", and
+        // the cause is NOT what it looks like. It is not the store's prepend —
+        // measured on the resident device, the drop was still exactly 561px with
+        // the pinned prefix already active and provably suppressing insertion.
+        // It is the INITIAL LAYOUT: the first cell mounts at ~0 height (its image
+        // has not decoded), so the first *visible* row is really row 1; when row
+        // 0 then grows to its true height, plain anchoring faithfully holds row 1
+        // in place and the content slides down by exactly one card. Hence the
+        // signature: drop == one card height + the header padding, present in the
+        // very first frame, identical on every launch.
+        //
+        // This threshold says "if the adjustment happens while within 100px of
+        // the top, go to the top instead of holding". The Feed omitted it before
+        // because it would yank a reader of the very first card up to a new top —
+        // but with the pin, nothing is inserted above the reader any more, so it
+        // can now only fire at the top, which is precisely where we want it.
+        // The two changes are a pair: this is unsafe without the pin.
+        maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: 100 }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={onScroll}

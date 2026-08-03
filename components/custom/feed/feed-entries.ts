@@ -43,6 +43,61 @@ export { relevanceBandRank };
 /** A rendered Feed row. Every row is a real story — the divider entry is gone. */
 export type FeedEntry = FeedListItem;
 
+/** How many rows are pinned before the user has scrolled at all. Expressed as a
+ *  floor on the deepest-seen INDEX, so `+ 2` below yields 4 pinned rows: three
+ *  are visible on a phone screen (one whole, two partial) and the fourth is the
+ *  slack card. */
+export const INITIAL_VISIBLE_FLOOR = 2;
+
+/**
+ * Extend the PINNED PREFIX — the static region the user has already read past.
+ *
+ * The rule: pin every story down to the deepest one the user has actually seen,
+ * plus one card of slack. Three rows visible ⇒ four pinned ⇒ the fifth card is
+ * the first dynamic slot.
+ *
+ * MONOTONIC: the prefix only ever grows within a session (a shorter `want`
+ * returns `prev` by IDENTITY, so React skips the re-render). Scrolling back up
+ * never shrinks it, which is what stops the boundary chasing the viewport and
+ * turning the whole list static inside one scroll.
+ *
+ * `deepestSeenId` is an ID, never an index. An index would have to survive both
+ * a re-sort and (once dividers exist) a sentinel-row splice into the rendered
+ * array, and those are two different index spaces — the exact divergence that
+ * killed the previous "deepest row" tracker (see use-visible-index's header).
+ * Resolving the id against `sorted` in the same tick it is consumed means no
+ * index ever crosses a boundary.
+ *
+ * `sorted` must be the STORY-only list, never a union array containing dividers:
+ * a divider must never occupy a pin slot.
+ *
+ * An unresolvable id (row dropped by `hydrate` / `removeIds`) falls back to the
+ * floor rather than collapsing the pin — combined with the monotonic guard, a
+ * dropped row can never shrink the static region.
+ */
+export function extendPinnedIds(
+  prev: readonly string[],
+  sorted: readonly FeedListItem[],
+  deepestSeenId: string | null,
+): string[] {
+  const found = deepestSeenId ? sorted.findIndex((it) => it.id === deepestSeenId) : -1;
+  const want = Math.max(found, INITIAL_VISIBLE_FLOOR) + 2;
+  const n = Math.min(Math.max(want, prev.length), sorted.length);
+  if (n <= prev.length) return prev as string[];
+  return sorted.slice(0, n).map((it) => it.id);
+}
+
+/** What `sortFeedEntries` returns: the rendered story order plus the length of
+ *  its pinned prefix. */
+export interface SortedFeed {
+  rows: FeedEntry[];
+  /** How many leading entries of `rows` are the pinned prefix. Deliberately the
+   *  count of SURVIVORS, not `pinnedIds.length` — the two diverge whenever
+   *  `hydrate`/`removeIds` has dropped a pinned row, and consumers place things
+   *  (dividers) relative to this boundary. One producer, one number. */
+  pinnedCount: number;
+}
+
 /**
  * True when a laid-out card counts as VIEWED: it carries a lifecycle record
  * (opened, thumbed, saved, handed to Mera, or dwelt on for DWELL_READ_SECONDS),
@@ -76,21 +131,47 @@ function feedPriorityFacts(
 }
 
 /**
- * Order the feed: unviewed first (by relevance band, high → low), then viewed
- * (same banding). Ties inside a band keep the incoming `data` order, i.e. the
- * store's insert-only order, so newly-prepended arrivals sit at the top of their
- * band and nothing shuffles between refreshes.
+ * Order the feed: a STATIC PINNED PREFIX (everything the user has already read
+ * past this session, in the exact order they read it), then the DYNAMIC region —
+ * unviewed first by relevance band high → low, then viewed. Ties inside a band
+ * keep the incoming `data` order, i.e. the store's insert-only order, so
+ * newly-prepended arrivals sit at the top of their band and nothing shuffles
+ * between refreshes.
  *
- * Pure and total: returns a NEW array, never mutates `data`, and returns an
- * empty array for an empty feed so the screen's empty-state chain renders.
+ * The pinned prefix is what makes the store's `unshift` safe: a brand-new item
+ * is never in `pinnedIds`, so it lands in the dynamic region and can only render
+ * at an index >= `pinnedCount`. Nothing is ever inserted above the reader.
+ *
+ * `pinnedIds` ORDER drives the output — the rows are looked up by id rather than
+ * filtered out of `data`, because filtering would silently re-derive the order
+ * from `data` and lose the reading order, which is the entire point.
+ *
+ * Pure and total: returns NEW arrays, never mutates `data`, and returns an empty
+ * result for an empty feed so the screen's empty-state chain renders. Omitting
+ * `pinnedIds` reproduces the pre-pin ordering exactly.
  */
 export function sortFeedEntries(
   data: FeedListItem[],
   cardStates: Record<string, CardStateRecord>,
   openedArticleIds: Set<string>,
-): FeedEntry[] {
-  if (data.length === 0) return [];
-  return sortByPriority(data, (it) => feedPriorityFacts(it, cardStates, openedArticleIds));
+  pinnedIds: readonly string[] = [],
+): SortedFeed {
+  if (data.length === 0) return { rows: [], pinnedCount: 0 };
+  const facts = (it: FeedListItem) => feedPriorityFacts(it, cardStates, openedArticleIds);
+  if (pinnedIds.length === 0) {
+    return { rows: sortByPriority(data, facts), pinnedCount: 0 };
+  }
+  const byId = new Map(data.map((it) => [it.id, it]));
+  const pinned: FeedListItem[] = [];
+  const pinnedSet = new Set<string>();
+  for (const id of pinnedIds) {
+    const it = byId.get(id);
+    if (!it) continue; // dropped by hydrate / removeIds — skip, don't shift the rest
+    pinned.push(it);
+    pinnedSet.add(id);
+  }
+  const rest = data.filter((it) => !pinnedSet.has(it.id));
+  return { rows: [...pinned, ...sortByPriority(rest, facts)], pinnedCount: pinned.length };
 }
 
 /** How many rows at the head of a sorted list are unviewed. The boundary is no
