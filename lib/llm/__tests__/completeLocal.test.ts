@@ -20,7 +20,7 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
   },
 }));
 
-import { completeLocal } from '../completeLocal';
+import { completeLocal, LocalTruncatedReasoningError } from '../completeLocal';
 
 describe('completeLocal', () => {
   beforeEach(() => {
@@ -186,6 +186,90 @@ describe('completeLocal', () => {
       expect(mockInfer).toHaveBeenCalledWith(
         expect.objectContaining({ enableThinking: true }),
       );
+    });
+  });
+
+  // r12 P0b — a LIVE production defect. Local topic generation runs with
+  // enableThinking:true; when the reasoning trace exhausted the (previously 400)
+  // token budget the model stopped mid-<think>, the strip regex (which needs a
+  // CLOSING tag) matched nothing, and the raw trace was returned as `output`.
+  // The caller's JSON parser then found no array and the user was told
+  // "no usable topics" for a fact that had generated fine.
+  describe('truncated reasoning (P0b)', () => {
+    it('throws on an unclosed <think> instead of returning the trace as output', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({
+        output: '<think>I should list topics about Bhopal, starting with loc',
+      });
+
+      await expect(
+        completeLocal({ systemPrompt: 'sys', prompt: 'u', enableThinking: true }),
+      ).rejects.toThrow(LocalTruncatedReasoningError);
+    });
+
+    it('names the budget in the error so the fix is obvious', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({ output: '<think>reasoning cut off' });
+
+      await expect(
+        completeLocal({ systemPrompt: 'sys', prompt: 'u', maxTokens: 400 }),
+      ).rejects.toThrow(/maxTokens=400/);
+    });
+
+    it('throws when llama.rn reports truncation and nothing usable remains', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({ output: '   ', truncated: true });
+
+      await expect(
+        completeLocal({ systemPrompt: 'sys', prompt: 'u' }),
+      ).rejects.toThrow(LocalTruncatedReasoningError);
+    });
+
+    it('returns a truncated-but-substantive answer rather than throwing', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({ output: '["a","b"', truncated: true });
+
+      const result = await completeLocal({ systemPrompt: 'sys', prompt: 'u' });
+
+      expect(result).toBe('["a","b"');
+    });
+
+    it('does not throw for a well-formed think block (the normal case)', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({ output: '<think>done</think>["a"]' });
+
+      await expect(
+        completeLocal({ systemPrompt: 'sys', prompt: 'u' }),
+      ).resolves.toBe('["a"]');
+    });
+
+    it('handles the chat-template PREFILL shape: a closer with no opener', async () => {
+      // The Qwen3 template can inject the opening <think> into the PROMPT, so a
+      // successful generation comes back as `reasoning</think>answer`. That is a
+      // success path, not a truncation.
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({
+        output: 'let me think about this</think>\n["topic one"]',
+      });
+
+      const result = await completeLocal({
+        systemPrompt: 'sys',
+        prompt: 'u',
+        enableThinking: true,
+      });
+
+      expect(result).toBe('["topic one"]');
+    });
+
+    it('uses the LAST closer when reasoning mentions the tag', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInfer.mockResolvedValue({
+        output: 'first</think>middle</think>["final"]',
+      });
+
+      const result = await completeLocal({ systemPrompt: 'sys', prompt: 'u' });
+
+      expect(result).toBe('["final"]');
     });
   });
 
