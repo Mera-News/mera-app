@@ -1315,5 +1315,11 @@
     "pinChangedDescription": "PIN이 변경되었습니다.",
     "blurImagesTitle": "이미지 흐리기",
     "blurImagesDescription": "앱 전체의 기사 이미지를 흐리게 처리하여 그래픽이나 불안감을 주는 이미지가 선명하게 표시되지 않도록 합니다."
+  },
+  "display": {
+    "title": "디스플레이",
+    "subtitle": "이 장치에서 Mera가 시각 요소를 렌더링하는 방식을 맞춤설정하세요",
+    "staticGradientTitle": "정적 배경",
+    "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다"
   }
 }

@@ -1382,5 +1382,11 @@
     "pinChangedDescription": "تم تغيير رقم PIN الخاص بك.",
     "blurImagesTitle": "إخفاء الصور",
     "blurImagesDescription": "خفّف الصور في المقالات على التطبيق حتى لا تظهر الصور الحادة أو المزعجة بوضوح."
+  },
+  "display": {
+    "title": "العرض",
+    "subtitle": "اضبط كيفية عرض Mera للمحتوى البصري على هذا الجهاز",
+    "staticGradientTitle": "خلفية ثابتة",
+    "staticGradientDescription": "استخدم تدرجًا ثابتًا بدلاً من الخلفية المتحركة — أخف وطأة على البطارية والأجهزة القديمة"
   }
 }

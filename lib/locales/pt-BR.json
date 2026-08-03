@@ -1320,5 +1320,11 @@
     "pinChangedDescription": "Seu PIN foi alterado.",
     "blurImagesTitle": "Desfocar imagens",
     "blurImagesDescription": "Suavize imagens de artigos em todo o app para que visuais gráficos ou perturbadores não sejam exibidos com nitidez."
+  },
+  "display": {
+    "title": "Exibição",
+    "subtitle": "Personalize como o Mera renderiza elementos visuais neste dispositivo",
+    "staticGradientTitle": "Fundo estático",
+    "staticGradientDescription": "Use um gradiente fixo em vez do fundo animado — mais fácil para a bateria e dispositivos antigos"
   }
 }

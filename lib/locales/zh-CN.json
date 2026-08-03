@@ -1316,5 +1316,11 @@
     "pinChangedDescription": "您的 PIN 已被更改。",
     "blurImagesTitle": "模糊处理图像",
     "blurImagesDescription": "在应用中对文章图像进行柔和处理，以便图形或令人不适的图像不会清晰显示。"
+  },
+  "display": {
+    "title": "显示",
+    "subtitle": "自定义Mera在此设备上如何呈现视觉效果",
+    "staticGradientTitle": "静态背景",
+    "staticGradientDescription": "使用固定渐变代替动画背景 — 对电池和旧设备更友好"
   }
 }

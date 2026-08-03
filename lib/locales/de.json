@@ -1320,5 +1320,11 @@
     "pinChangedDescription": "Ihre PIN wurde geändert.",
     "blurImagesTitle": "Bilder verwischen",
     "blurImagesDescription": "Glätten Sie Artikelbilder in der gesamten App, damit grafische oder verstörende Bilder nicht scharf angezeigt werden."
+  },
+  "display": {
+    "title": "Anzeige",
+    "subtitle": "Passen Sie an, wie Mera Visuals auf diesem Gerät darstellt",
+    "staticGradientTitle": "Statischer Hintergrund",
+    "staticGradientDescription": "Verwenden Sie einen festen Farbverlauf statt des animierten Hintergrunds — schont den Akku und ältere Geräte"
   }
 }

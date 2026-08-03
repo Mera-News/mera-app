@@ -1345,5 +1345,11 @@
     "pinChangedTitle": "PIN zaktualizowany",
     "pinChangedDescription": "Twój PIN został zmieniony.",
     "blurImagesTitle": "Rozmyj zdjęcia"
+  },
+  "display": {
+    "title": "Wyświetlacz",
+    "subtitle": "Dostosuj sposób renderowania elementów wizualnych Mery na tym urządzeniu",
+    "staticGradientTitle": "Statyczne tło",
+    "staticGradientDescription": "Używaj stałego gradientu zamiast animowanego tła — łatwiej dla baterii i starszych urządzeń"
   }
 }

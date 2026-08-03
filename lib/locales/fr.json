@@ -1325,5 +1325,11 @@
     "pinChangedDescription": "Votre PIN a été modifié.",
     "blurImagesTitle": "Flouter les images",
     "blurImagesDescription": "Atténuez les images des articles dans toute l'application afin que les visuels choquants ou perturbants ne s'affichent pas nettement."
+  },
+  "display": {
+    "title": "Affichage",
+    "subtitle": "Personnalisez la façon dont Mera affiche les éléments visuels sur cet appareil",
+    "staticGradientTitle": "Fond statique",
+    "staticGradientDescription": "Utilisez un dégradé fixe à la place du fond animé — plus facile pour la batterie et les appareils anciens"
   }
 }

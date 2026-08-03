@@ -1320,5 +1320,11 @@
     "pinChangedDescription": "Je PIN is gewijzigd.",
     "blurImagesTitle": "Afbeeldingen vervagen",
     "blurImagesDescription": "Maak artikelafbeeldingen in de hele app zachter, zodat schokkende of verontrustende beelden niet scherp worden getoond."
+  },
+  "display": {
+    "title": "Weergave",
+    "subtitle": "Pas aan hoe Mera visuele elementen op dit apparaat weergeeft",
+    "staticGradientTitle": "Statische achtergrond",
+    "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten"
   }
 }

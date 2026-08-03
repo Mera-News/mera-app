@@ -1315,5 +1315,11 @@
     "pinChangedDescription": "PIN Anda telah diubah.",
     "blurImagesTitle": "Buram Gambar",
     "blurImagesDescription": "Lembut kan gambar artikel di seluruh aplikasi sehingga visual grafis atau mengganggu tidak ditampilkan dengan tajam."
+  },
+  "display": {
+    "title": "Tampilan",
+    "subtitle": "Sesuaikan cara Mera merender visual pada perangkat ini",
+    "staticGradientTitle": "Latar belakang statis",
+    "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama"
   }
 }

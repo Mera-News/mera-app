@@ -1316,5 +1316,11 @@
     "pinChangedDescription": "PIN của bạn đã được thay đổi.",
     "blurImagesTitle": "Làm mờ ảnh",
     "blurImagesDescription": "Làm mềm ảnh bài viết trên toàn ứng dụng để các hình ảnh đồ họa hoặc không phù hợp không được hiển thị rõ nét."
+  },
+  "display": {
+    "title": "Hiển thị",
+    "subtitle": "Tùy chỉnh cách Mera hiển thị các yếu tố hình ảnh trên thiết bị này",
+    "staticGradientTitle": "Nền tĩnh",
+    "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ"
   }
 }

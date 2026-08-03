@@ -1285,5 +1285,11 @@
     "pinChangedDescription": "Your PIN has been changed.",
     "blurImagesTitle": "Blur images",
     "blurImagesDescription": "Soften article images across the app so graphic or disturbing visuals aren't shown sharply."
+  },
+  "display": {
+    "title": "Display",
+    "subtitle": "Tune how Mera renders visuals on this device",
+    "staticGradientTitle": "Static background",
+    "staticGradientDescription": "Use a fixed gradient instead of the animated background — easier on battery and older devices."
   }
 }

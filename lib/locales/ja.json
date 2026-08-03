@@ -1315,5 +1315,11 @@
     "pinChangedDescription": "あなたのPINが変更されました。",
     "blurImagesTitle": "画像をぼかす",
     "blurImagesDescription": "記事の画像をソフトにしてグラフィックまたは不安な画像が鮮明に表示されないようにします。"
+  },
+  "display": {
+    "title": "表示",
+    "subtitle": "このデバイスでMeraがビジュアルをどのようにレンダリングするかをカスタマイズします",
+    "staticGradientTitle": "静的背景",
+    "staticGradientDescription": "アニメーション背景の代わりに固定グラデーションを使用します — バッテリーと古いデバイスに優しい"
   }
 }

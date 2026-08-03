@@ -1320,5 +1320,11 @@
     "pinChangedDescription": "Il tuo PIN è stato cambiato.",
     "blurImagesTitle": "Sfoca immagini",
     "blurImagesDescription": "Attenua le immagini degli articoli in tutta l'app affinché i contenuti grafici o disturbanti non vengano visualizzati nitidamente."
+  },
+  "display": {
+    "title": "Visualizzazione",
+    "subtitle": "Personalizza come Mera renderizza gli elementi visivi su questo dispositivo",
+    "staticGradientTitle": "Sfondo statico",
+    "staticGradientDescription": "Usa una sfumatura fissa invece dello sfondo animato — più facile per la batteria e i dispositivi meno recenti"
   }
 }

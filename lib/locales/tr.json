@@ -1322,5 +1322,11 @@
     "pinChangedDescription": "PIN'in değiştirildi.",
     "blurImagesTitle": "Resimleri Bulanıklaştır",
     "blurImagesDescription": "Uygulamada makale resimlerini yumuşat, böylece grafik veya rahatsız edici görseller keskin görünmez."
+  },
+  "display": {
+    "title": "Görünüm",
+    "subtitle": "Mera'nın bu cihazda görsel öğeleri nasıl işlediğini özelleştirin",
+    "staticGradientTitle": "Sabit arka plan",
+    "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay"
   }
 }

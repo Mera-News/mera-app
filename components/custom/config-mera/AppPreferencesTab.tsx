@@ -133,6 +133,12 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
         },
         {
+            id: 'display',
+            title: t('display.title'),
+            icon: 'palette',
+            onPress: () => routerHook.push('/logged-in/preferences/display' as any),
+        },
+        {
             id: 'security',
             title: t('security.title'),
             icon: 'lock',

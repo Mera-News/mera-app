@@ -1351,5 +1351,11 @@
     "pinChangedTitle": "PIN змінено",
     "pinChangedDescription": "Ваш PIN успішно змінено.",
     "blurImagesTitle": "Розмити зображення"
+  },
+  "display": {
+    "title": "Екран",
+    "subtitle": "Налаштуйте, як Mera відображає візуальні елементи на цьому пристрої",
+    "staticGradientTitle": "Статичний фон",
+    "staticGradientDescription": "Використовуйте фіксований градієнт замість анімованого фону — економить батарею на старих пристроях"
   }
 }
