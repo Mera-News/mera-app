@@ -1038,6 +1038,7 @@
     "effectTooBroad": "Lowers this interest's weight so it pulls in fewer off-topic stories.",
     "effectStaleTopic": "Retires this quiet topic. You can restore it from the change log.",
     "effectStaleFact": "Removes this fact; none of its topics are active anymore.",
+    "effectIncoherentTopics": "Replaces these topics with better ones for this interest. The old ones are reversible from the change log.",
     "appliedTitle": "Cleanup applied",
     "appliedBody": "Your profile was tidied up. See the change log to review.",
     "applyFailedTitle": "Couldn't apply cleanup",

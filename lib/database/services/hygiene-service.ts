@@ -31,6 +31,19 @@ import * as changeLogService from './persona-change-log-service';
 const PENDING_KEY = 'hygiene_pending_proposals';
 const REJECTED_KEY = 'hygiene_rejected_fingerprints';
 const LAST_SWEEP_KEY = 'hygiene_last_sweep_at';
+/** Proposals produced but not yet SHOWN — see HYGIENE_PENDING_PRESENTATION_CAP. */
+const BACKLOG_KEY = 'hygiene_proposal_backlog';
+
+/**
+ * Most proposals the review sheet ever holds at once.
+ *
+ * The one-time backfill can produce ~60 at a stroke, and a wall of 60 cards is a
+ * dialog nobody reads — the user either bulk-accepts without looking or bounces.
+ * Overflow is parked in a KV backlog and topped back up as each decision is
+ * made, so the list stays short and self-refilling instead of being metered out
+ * one sweep per week (which would take longer than the backlog it is draining).
+ */
+export const HYGIENE_PENDING_PRESENTATION_CAP = 10;
 
 /** Don't sweep a persona with fewer facts than this — too little to clean. */
 export const MIN_FACTS_FOR_SWEEP = 10;
@@ -124,6 +137,47 @@ async function writePending(proposals: HygieneProposal[]): Promise<void> {
   await setSetting(PENDING_KEY, JSON.stringify(proposals));
 }
 
+async function readBacklog(): Promise<HygieneProposal[]> {
+  return parseArray<HygieneProposal>(await getSetting(BACKLOG_KEY)).filter(
+    (p) => p && typeof p.id === 'string' && Array.isArray(p.ops),
+  );
+}
+
+async function writeBacklog(proposals: HygieneProposal[]): Promise<void> {
+  await setSetting(BACKLOG_KEY, JSON.stringify(proposals));
+}
+
+/**
+ * Split a freshly-analyzed proposal set into what is shown now and what waits.
+ * Order is preserved, so the analyzer's deterministic kind-ordering decides what
+ * the user sees first.
+ */
+async function publishWithCap(proposals: HygieneProposal[]): Promise<void> {
+  await writePending(proposals.slice(0, HYGIENE_PENDING_PRESENTATION_CAP));
+  await writeBacklog(proposals.slice(HYGIENE_PENDING_PRESENTATION_CAP));
+}
+
+/**
+ * After a decision removes a proposal, pull the next one forward immediately.
+ * Immediate — not "next sweep" — because the backfill's whole point is clearing
+ * a backlog fast; refilling weekly would drain 60 proposals slower than the four
+ * weeks the one-time pass exists to beat.
+ */
+async function refillFromBacklog(remainingPending: HygieneProposal[]): Promise<void> {
+  const room = HYGIENE_PENDING_PRESENTATION_CAP - remainingPending.length;
+  if (room <= 0) {
+    await writePending(remainingPending);
+    return;
+  }
+  const backlog = await readBacklog();
+  if (backlog.length === 0) {
+    await writePending(remainingPending);
+    return;
+  }
+  await writePending([...remainingPending, ...backlog.slice(0, room)]);
+  await writeBacklog(backlog.slice(room));
+}
+
 async function readRejected(): Promise<string[]> {
   return parseArray<string>(await getSetting(REJECTED_KEY));
 }
@@ -143,9 +197,13 @@ export async function getPendingProposals(): Promise<HygieneProposal[]> {
   return readPending();
 }
 
-/** Cheap count for the Profile indicator row (polled on focus + on change). */
+/** Cheap count for the Profile indicator row (polled on focus + on change).
+ *  Counts pending PLUS backlog: the sheet shows at most
+ *  HYGIENE_PENDING_PRESENTATION_CAP at a time, but the user is told the real
+ *  number of outstanding cleanups rather than the paging window. */
 export async function getPendingCount(): Promise<number> {
-  return (await readPending()).length;
+  const [pending, backlog] = await Promise.all([readPending(), readBacklog()]);
+  return pending.length + backlog.length;
 }
 
 // ── Sweep ──────────────────────────────────────────────────────────────────
@@ -229,7 +287,7 @@ export async function runHygieneSweep(opts?: {
   };
   const proposals = analyzeHygiene(input);
 
-  await writePending(proposals);
+  await publishWithCap(proposals);
   await setSetting(LAST_SWEEP_KEY, String(now));
   notifyChange();
 
@@ -284,7 +342,7 @@ async function publishSanityOnly(
     return { ran: false, reason, proposalCount: await getPendingCount() };
   }
 
-  await writePending(proposals);
+  await publishWithCap(proposals);
   notifyChange();
   void toastManager.showNotifiedToast({
     type: 'hygiene',
@@ -389,7 +447,7 @@ export async function acceptProposal(id: string): Promise<AcceptResult> {
     }
   }
 
-  await writePending(pending.filter((p) => p.id !== id));
+  await refillFromBacklog(pending.filter((p) => p.id !== id));
   notifyChange();
   return { applied: true, ok };
 }
@@ -403,6 +461,6 @@ export async function rejectProposal(id: string): Promise<void> {
   if (!rejected.includes(id)) {
     await writeRejected([...rejected, id]);
   }
-  await writePending(pending.filter((p) => p.id !== id));
+  await refillFromBacklog(pending.filter((p) => p.id !== id));
   notifyChange();
 }

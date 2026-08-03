@@ -64,6 +64,7 @@ import {
   rejectProposal,
   MIN_FACTS_FOR_SWEEP,
   SANITY_RACE_MS,
+  HYGIENE_PENDING_PRESENTATION_CAP,
 } from '../hygiene-service';
 import * as factService from '../fact-service';
 import * as topicService from '../topic-service';
@@ -383,5 +384,117 @@ describe('acceptProposal — generate_replacements is fail-closed', () => {
     expect(executor.applyPersonaAction).not.toHaveBeenCalled();
     // And the proposal survives so the user can try again.
     expect(await getPendingProposals()).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// r12 K-P4b — presentation cap + immediate backlog refill
+// ---------------------------------------------------------------------------
+
+describe('presentation cap + backlog refill', () => {
+  /** N incoherent facts => N proposals, one per fact. */
+  function seedManyProposals(n: number) {
+    // Statements must be genuinely DISSIMILAR: near-identical wording trips the
+    // duplicate_facts detector, whose delete-target suppresses the incoherent
+    // proposal for that fact (a doomed fact isn't worth cleaning).
+    const subjects = [
+      'Follows Indian cricket', 'Lives in Amsterdam', 'Works in machine learning',
+      'Parents reside near Bhopal', 'Attends jazz festivals', 'Cycles competitively',
+      'Reads Nordic crime fiction', 'Invests in renewable energy', 'Cooks Sichuan food',
+      'Volunteers at an animal shelter', 'Studies Japanese', 'Collects vinyl records',
+      'Runs marathons', 'Plays chess online', 'Restores vintage cameras',
+      'Brews espresso at home', 'Sails dinghies', 'Writes science fiction',
+      'Teaches mathematics', 'Practises pottery', 'Watches Formula One',
+      'Grows bonsai trees', 'Climbs indoor routes', 'Tracks migratory birds',
+      'Repairs mechanical watches',
+    ];
+    const facts = Array.from({ length: n }, (_, i) => ({
+      id: `f${i}`,
+      statement: subjects[i % subjects.length],
+    }));
+    const topics = facts.map((f, i) => ({
+      id: `t${i}`,
+      factId: f.id,
+      text: `bad topic ${i}`,
+      normalizedText: `bad topic ${i}`,
+      weight: 0.5,
+      status: 'active' as const,
+      lastSignalAtMs: Date.now(),
+    }));
+    (factService.getFacts as jest.Mock).mockResolvedValue(facts);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(topics);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue(
+      facts.map((f) => ({ id: f.id, weight: null, createdAtMs: 0 })),
+    );
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: facts.map((f, i) => ({
+        factId: f.id,
+        topicIds: [`t${i}`],
+        fillTo: 3,
+      })),
+      audited: n,
+    });
+  }
+
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+  });
+
+  it('shows at most the cap, even when the sweep produced far more', async () => {
+    seedManyProposals(25);
+    await runHygieneSweep({ force: true });
+
+    expect(await getPendingProposals()).toHaveLength(
+      HYGIENE_PENDING_PRESENTATION_CAP,
+    );
+  });
+
+  it('reports the TRUE outstanding total, not the paging window', async () => {
+    seedManyProposals(25);
+    await runHygieneSweep({ force: true });
+
+    // The notification and Profile row must not claim 10 when 25 are waiting.
+    expect(await getPendingCount()).toBe(25);
+  });
+
+  it('refills IMMEDIATELY on reject, not on the next sweep', async () => {
+    seedManyProposals(25);
+    await runHygieneSweep({ force: true });
+    const before = await getPendingProposals();
+
+    await rejectProposal(before[0].id);
+    const after = await getPendingProposals();
+
+    // Still a full window — one drained, one pulled forward.
+    expect(after).toHaveLength(HYGIENE_PENDING_PRESENTATION_CAP);
+    expect(after.map((p) => p.id)).not.toContain(before[0].id);
+    expect(await getPendingCount()).toBe(24);
+  });
+
+  it('drains to empty without stranding backlog entries', async () => {
+    seedManyProposals(13);
+    await runHygieneSweep({ force: true });
+
+    for (let guard = 0; guard < 40; guard += 1) {
+      const [next] = await getPendingProposals();
+      if (!next) break;
+      await rejectProposal(next.id);
+    }
+
+    expect(await getPendingProposals()).toEqual([]);
+    expect(await getPendingCount()).toBe(0);
+  });
+
+  it('is a no-op when the sweep produced fewer than the cap', async () => {
+    seedManyProposals(3);
+    await runHygieneSweep({ force: true });
+
+    expect(await getPendingProposals()).toHaveLength(3);
+    expect(await getPendingCount()).toBe(3);
+
+    const [first] = await getPendingProposals();
+    await rejectProposal(first.id);
+    expect(await getPendingProposals()).toHaveLength(2);
   });
 });
