@@ -196,16 +196,19 @@ describe('FeedSyncIndicator', () => {
         expect(isVisible(getByTestId)).toBe(false);
     });
 
-    it('shows the offline notice only when disconnected, and never when notices are suppressed', () => {
-        const { queryByText, rerender } = render(<FeedSyncIndicator />);
+    it('no longer renders an inline offline notice — the global band owns that', () => {
+        // The band moved to components/custom/OfflineBanner, mounted once at the
+        // root layout. It renders the same warning in the same style at the same
+        // position, so keeping this one stacked two identical bands ~40px apart;
+        // and the global one also covers /login and /pin-lock, which this never
+        // could. `showConnectivityNotices` went with it — its only job was to
+        // hide this row.
+        const { queryByText } = render(<FeedSyncIndicator />);
         expect(queryByText('feed.offlineCached')).toBeNull();
 
         act(() => {
             useNetworkStore.setState({ isConnected: false });
         });
-        expect(queryByText('feed.offlineCached')).toBeTruthy();
-
-        rerender(<FeedSyncIndicator showConnectivityNotices={false} />);
         expect(queryByText('feed.offlineCached')).toBeNull();
     });
 });

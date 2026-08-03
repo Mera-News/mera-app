@@ -615,15 +615,14 @@ const MeraNewsScreen: React.FC = () => {
                         <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
                     </View>
 
-                    {/* Shared sync surface — indeterminate bar + expand accordion,
-                        plus the offline notice and the re-auth prompt. Identical
-                        to the Feed tab's, and it goes up on the same frame as a
-                        pull on EITHER screen (see FeedSyncIndicator). */}
+                    {/* Shared sync surface — indeterminate bar + expand accordion.
+                        Identical to the Feed tab's, and it goes up on the same
+                        frame as a pull on EITHER screen (see FeedSyncIndicator).
+                        The offline notice moved to the global OfflineBanner at
+                        the root layout, so there is no longer a per-sub-tab
+                        connectivity prop to pass. */}
                     <View pointerEvents="box-none">
-                        <FeedSyncIndicator
-                            lastProcessedLabel={lastProcessedLabel}
-                            showConnectivityNotices={activeSubTab === 'feed'}
-                        />
+                        <FeedSyncIndicator lastProcessedLabel={lastProcessedLabel} />
                     </View>
                 </VStack>
             </Animated.View>

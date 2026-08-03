@@ -10,6 +10,7 @@ import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useIsOnline } from '@/lib/stores/network-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -83,6 +84,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     scrollHandler,
 }) => {
     const { t } = useTranslation();
+    const isOnline = useIsOnline();
     const insets = useSafeAreaInsets();
     const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -254,11 +256,18 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
                 <MaterialIcons name="article" size={48} color="#666666" />
                 <Text size="md" className="text-gray-400 text-center">
-                    {t('explore.noArticles')}
+                    {/* Explore is server-paginated with no local cache, so an
+                        offline visit produces an empty list rather than an
+                        error. Saying "no articles found" there would be a lie
+                        about the world; name the real reason instead. This used
+                        to be a warning band in the Explore header, which stacked
+                        with the global connectivity band — it belongs here, on
+                        the emptiness it explains. */}
+                    {isOnline ? t('explore.noArticles') : t('explore.offlineUnavailable')}
                 </Text>
             </VStack>
         );
-    }, [isLoading, enabled, t]);
+    }, [isLoading, enabled, isOnline, t]);
 
     // Compose the collapsible-header handler (from ExploreScreen) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as

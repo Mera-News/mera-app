@@ -1,5 +1,6 @@
 {
   "common": {
+    "offlineBanner": "Slow or no connection to Mera. Showing saved news — we'll keep trying.",
     "home": "Home",
     "yes": "Yes",
     "no": "No",
