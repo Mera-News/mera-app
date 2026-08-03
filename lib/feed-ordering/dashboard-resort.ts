@@ -15,7 +15,7 @@
 // is accepted — the alternative is an order that never converges.
 
 /** How long a sort snapshot is held before it may be replaced. */
-export const DASHBOARD_RESORT_INTERVAL_MINUTES = 30;
+export const DASHBOARD_RESORT_INTERVAL_MINUTES = 10;
 
 export const DASHBOARD_RESORT_INTERVAL_MS = DASHBOARD_RESORT_INTERVAL_MINUTES * 60_000;
 
