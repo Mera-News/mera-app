@@ -102,7 +102,7 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
         >
             <Box className="flex-1 justify-center">
                 <Box className="items-center mb-8">
-                    <MeraLogo size={150} />
+                    <MeraLogo size={150} animated />
                 </Box>
 
                 <VStack space="lg" className="mb-8">

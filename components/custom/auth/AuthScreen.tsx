@@ -127,7 +127,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
             <Box className="flex-1 justify-center">
                 {/* Logo */}
                 <Box className="items-center mb-8">
-                    <MeraLogo size={150} />
+                    <MeraLogo size={150} animated />
                 </Box>
 
                 <Box className="mb-8">
