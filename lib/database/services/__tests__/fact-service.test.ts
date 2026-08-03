@@ -16,6 +16,7 @@ import {
   getFactsForTopicTexts,
   hasAnyFacts,
   markOrphanedFactsAsFailed,
+  appendFactMetadataTopics,
 } from '../fact-service';
 
 const db = database as any;
@@ -394,5 +395,92 @@ describe('hasAnyFacts', () => {
     const q = (col.query as jest.Mock).mock.results[0].value;
     expect(q.fetchCount).toHaveBeenCalledTimes(1);
     expect(q.fetch).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// r12 J-P2 — appendFactMetadataTopics
+//
+// Fact.updateFact assigns `fact.metadata = metadata` (a WHOLESALE REPLACE), so
+// an append that naively wrote { topics: newOnes } would destroy the existing
+// list — which the legacy retrieval path still reads on unmigrated devices —
+// along with every other metadata key.
+// ---------------------------------------------------------------------------
+
+describe('appendFactMetadataTopics', () => {
+  function factWithMetadata(metadata: Record<string, string[]> | undefined) {
+    const rec = makeRecord({
+      id: 'f1',
+      statement: 'Follows Indian cricket',
+      metadata,
+      updateFact: jest.fn(async () => {}),
+    });
+    db._setRows('facts', [rec]);
+    return rec;
+  }
+
+  it('APPENDS to the existing list rather than replacing it', async () => {
+    const rec = factWithMetadata({ topics: ['India cricket news'] });
+
+    await appendFactMetadataTopics('f1', ['Bengaluru cricket news']);
+
+    expect(rec.updateFact).toHaveBeenCalledWith('Follows Indian cricket', {
+      topics: ['India cricket news', 'Bengaluru cricket news'],
+    });
+  });
+
+  it('preserves OTHER metadata keys', async () => {
+    const rec = factWithMetadata({
+      topics: ['India cricket news'],
+      topicGenError: ['some earlier failure'],
+    });
+
+    await appendFactMetadataTopics('f1', ['Bengaluru cricket news']);
+
+    const [, written] = (rec.updateFact as jest.Mock).mock.calls[0];
+    expect(written.topicGenError).toEqual(['some earlier failure']);
+  });
+
+  it('does not duplicate an existing topic (case-insensitive)', async () => {
+    const rec = factWithMetadata({ topics: ['India cricket news'] });
+
+    await appendFactMetadataTopics('f1', ['india CRICKET news']);
+
+    expect(rec.updateFact).not.toHaveBeenCalled();
+  });
+
+  it('seeds the list when the fact has no metadata at all', async () => {
+    const rec = factWithMetadata(undefined);
+
+    await appendFactMetadataTopics('f1', ['Bengaluru cricket news']);
+
+    expect(rec.updateFact).toHaveBeenCalledWith('Follows Indian cricket', {
+      topics: ['Bengaluru cricket news'],
+    });
+  });
+
+  it('never rewrites the statement', async () => {
+    const rec = factWithMetadata({ topics: [] });
+
+    await appendFactMetadataTopics('f1', ['New topic']);
+
+    const [statement] = (rec.updateFact as jest.Mock).mock.calls[0];
+    expect(statement).toBe('Follows Indian cricket');
+  });
+
+  it('is a no-op for an empty append', async () => {
+    const rec = factWithMetadata({ topics: ['India cricket news'] });
+
+    await appendFactMetadataTopics('f1', []);
+
+    expect(rec.updateFact).not.toHaveBeenCalled();
+  });
+
+  it('drops blank texts', async () => {
+    const rec = factWithMetadata({ topics: ['India cricket news'] });
+
+    await appendFactMetadataTopics('f1', ['', '   ']);
+
+    expect(rec.updateFact).not.toHaveBeenCalled();
   });
 });

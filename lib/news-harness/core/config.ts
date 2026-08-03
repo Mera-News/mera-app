@@ -151,6 +151,18 @@ export interface TopicGenConfig {
    * 4096 there); do not reuse this constant for it.
    */
   cloudThinkingMaxTokens: number;
+  /**
+   * Seed weight for a topic appended by the fact-combination TOP-UP, as opposed
+   * to one generated when the fact was first saved.
+   *
+   * Lower than `llmTopicWeight` on purpose. Seed weight drives per-topic
+   * retrieval depth (retrieval-profile: limit = clamp(round(10 + 40*w))), so
+   * 0.5 requests 30 articles where 0.75 requests 40 — a 25% cut in first-sync
+   * depth per appended topic. These are speculative combinations the user never
+   * asked for, so they should not arrive at full strength; user signal can
+   * still promote them later.
+   */
+  topupTopicWeight: number;
   /** System prompt for the fact-only topic-generation call. */
   factOnlySystemPrompt: string;
   /** System prompt for the fact+others combo topic-generation call. */
@@ -400,6 +412,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     maxFactLength: 200,
     llmTopicWeight: 0.75,
     cloudThinkingMaxTokens: 2048,
+    topupTopicWeight: 0.5,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },

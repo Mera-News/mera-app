@@ -265,6 +265,77 @@ export async function getWeightsByIds(ids: string[]): Promise<{ id: string; weig
   return rows.map((t) => ({ id: t.id, weight: t.weight }));
 }
 
+/**
+ * Every normalized text currently on the device, ANY fact, ANY status, ANY
+ * provenance — the exclusion set the fact-combination top-up plans against.
+ *
+ * Deliberately global and deliberately including retired and tracked rows:
+ *  - a `tracked` collision would mint a metered row for a text a followed story
+ *    already owns, silently making that story's articles billable again;
+ *  - a `retired` collision would re-append, week after week, exactly what the
+ *    sanity pass just persuaded the user to retire.
+ *
+ * Note this is WIDER than createTopics' own (normalized_text, fact_id) floor,
+ * which must stay per-fact so the hygiene duplicate_facts detector can still see
+ * one text owned by two facts.
+ */
+export async function getAllNormalizedTexts(): Promise<Set<string>> {
+  const rows = await topicsCollection.query().fetch();
+  return new Set(rows.map((t) => t.normalizedText));
+}
+
+/** Active-topic rows projected for the top-up planner (RN-free shape). */
+export interface TopupTopicSnapshot {
+  id: string;
+  factId: string;
+  text: string;
+  createdAtMs: number;
+  isActive: boolean;
+}
+
+/** Fact-owned topic rows (any status) for top-up candidate selection. */
+export async function getTopupTopicSnapshots(): Promise<TopupTopicSnapshot[]> {
+  const rows = await topicsCollection
+    .query(Q.where('fact_id', Q.notEq(null)))
+    .fetch();
+  return rows.map((t) => ({
+    id: t.id,
+    factId: t.factId as string,
+    text: t.text,
+    createdAtMs: t.createdAt instanceof Date ? t.createdAt.getTime() : 0,
+    isActive: t.status === 'active',
+  }));
+}
+
+/**
+ * Append top-up topics to a fact. APPEND-ONLY: no existing row is updated,
+ * re-weighted, retired, or destroyed.
+ *
+ * Seeded at `topupTopicWeight` rather than the full `llmTopicWeight` — these are
+ * speculative combinations the user never asked for, and the seed weight drives
+ * per-topic retrieval depth, so a lower weight costs less quota per appended
+ * topic. Provenance is `llm`: they are ordinary metered interest topics derived
+ * from persona facts, and marking them `tracked` would grant quota-exempt
+ * hydration for articles the user never followed.
+ */
+export async function appendTopupTopicsForFact(
+  factId: string,
+  planned: { text: string; normalizedText: string }[],
+): Promise<TopicModel[]> {
+  if (planned.length === 0) return [];
+  return createTopics(
+    planned.map((p) => ({
+      factId,
+      text: p.text,
+      normalizedText: p.normalizedText,
+      weight: DEFAULT_HARNESS_CONFIG.topicGen.topupTopicWeight,
+      status: 'active' as const,
+      provenance: 'llm' as const,
+      highPriority: false,
+    })),
+  );
+}
+
 /** All topics sharing a normalized text (dedup + cross-fact overlap detection). */
 export async function getAllByNormalizedText(normalizedText: string): Promise<TopicModel[]> {
   return topicsCollection
