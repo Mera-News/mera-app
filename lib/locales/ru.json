@@ -498,6 +498,8 @@
     "refreshSuggestionsFailedDescription": "Не удалось обновить предложения. Пожалуйста, попробуйте ещё раз.",
     "personaUpdatedRefreshHint": "Я вижу, что вы обновили свой профиль. Хотите, чтобы я перегенерировал вашу ленту?",
     "articleCount_one": "{{count}} статья",
+    "articleCount_few": "{{count}} статьи",
+    "articleCount_many": "{{count}} статей",
     "articleCount_other": "{{count}} статей",
     "addTopic": "Добавить тему",
     "addTopicDescription": "Введите тему, которую вы хотите отслеживать для этого факта. Приложение находит новости по вашей теме и оценивает их релевантность на основе факта.",

@@ -78,9 +78,9 @@
     "newBadge": "नया",
     "newsCluster": "समाचार क्लस्टर",
     "justNow": "अभी",
-    "minutesAgo": "{{count}}मि पहले",
-    "hoursAgo": "{{count}}घं पहले",
-    "daysAgo": "{{count}}दि पहले",
+    "minutesAgo": "{{count}} मि पहले",
+    "hoursAgo": "{{count}} घं पहले",
+    "daysAgo": "{{count}} दि पहले",
     "mindfulness": [
       "फ़ोन रखने का समय हो गया है।",
       "कुछ गहरी साँसें लें।",
