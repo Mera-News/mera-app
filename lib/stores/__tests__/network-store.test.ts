@@ -26,7 +26,21 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { renderHook } from '@testing-library/react-native';
-import { useNetworkStore, initNetworkListener, stopNetworkListener, useIsConnected } from '../network-store';
+import {
+    useNetworkStore,
+    initNetworkListener,
+    stopNetworkListener,
+    useIsConnected,
+    _resetNetworkTrackingForTests,
+    isOnline,
+    markServerUnreachable,
+    probeServerReachable,
+    recordServerReachable,
+    recordServerTransportFailure,
+    reportRequestSlow,
+    reportSlowRequestEnded,
+    resetSlowRequests,
+} from '../network-store';
 
 describe('useNetworkStore', () => {
     beforeEach(() => {
@@ -170,5 +184,158 @@ describe('useNetworkStore', () => {
     it('useIsConnected returns isConnected value', () => {
         const { result } = renderHook(() => useIsConnected());
         expect(result.current).toBe(true);
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Server reachability — device connectivity and SERVER reachability are
+// different facts. Conflating them is what ejected users into a "Welcome back"
+// screen they could not complete: a live LTE connection to a dead server
+// satisfies `isConnected`.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('server reachability', () => {
+    beforeEach(() => {
+        useNetworkStore.setState({
+            isConnected: true,
+            serverReachable: true,
+            serverSlow: false,
+        });
+        _resetNetworkTrackingForTests();
+        jest.restoreAllMocks();
+    });
+
+    describe('transport-failure threshold', () => {
+        it('tolerates a single failure — one blip is not an outage', () => {
+            recordServerTransportFailure();
+            expect(useNetworkStore.getState().serverReachable).toBe(true);
+        });
+
+        it('declares the server unreachable on the second consecutive failure', () => {
+            recordServerTransportFailure();
+            recordServerTransportFailure();
+            expect(useNetworkStore.getState().serverReachable).toBe(false);
+        });
+
+        it('resets the run — an interleaved success makes the next failure start over', () => {
+            recordServerTransportFailure();
+            recordServerReachable();
+            recordServerTransportFailure();
+            expect(useNetworkStore.getState().serverReachable).toBe(true);
+        });
+
+        it('markServerUnreachable bypasses the threshold (the probe is authoritative)', () => {
+            markServerUnreachable();
+            expect(useNetworkStore.getState().serverReachable).toBe(false);
+        });
+    });
+
+    describe('isOnline', () => {
+        it('requires BOTH device connectivity and a reachable server', () => {
+            expect(isOnline()).toBe(true);
+            useNetworkStore.setState({ isConnected: false });
+            expect(isOnline()).toBe(false);
+            useNetworkStore.setState({ isConnected: true, serverReachable: false });
+            expect(isOnline()).toBe(false);
+        });
+
+        it('ignores serverSlow — a slow server can still complete an OTP', () => {
+            useNetworkStore.setState({ serverSlow: true });
+            expect(isOnline()).toBe(true);
+        });
+    });
+
+    describe('slow-request tracking', () => {
+        it('arms on the first slow request and disarms when the last one settles', () => {
+            reportRequestSlow();
+            expect(useNetworkStore.getState().serverSlow).toBe(true);
+            reportRequestSlow();
+            reportSlowRequestEnded();
+            // One slow request still outstanding.
+            expect(useNetworkStore.getState().serverSlow).toBe(true);
+            reportSlowRequestEnded();
+            expect(useNetworkStore.getState().serverSlow).toBe(false);
+        });
+
+        it('never underflows on an extra settle', () => {
+            reportSlowRequestEnded();
+            reportSlowRequestEnded();
+            expect(useNetworkStore.getState().serverSlow).toBe(false);
+            // The counter really is at zero, so one slow request still arms.
+            reportRequestSlow();
+            expect(useNetworkStore.getState().serverSlow).toBe(true);
+        });
+
+        it('resetSlowRequests clears a band stranded by a frozen background timer', () => {
+            // iOS freezes timers while backgrounded: a request interrupted
+            // mid-flight can arm the band from a timer that fires on resume and
+            // then never settle, so the decrementing `finally` never runs and
+            // the band pins on for the rest of the session.
+            reportRequestSlow();
+            reportRequestSlow();
+            expect(useNetworkStore.getState().serverSlow).toBe(true);
+
+            resetSlowRequests();
+            expect(useNetworkStore.getState().serverSlow).toBe(false);
+
+            // And the counter is genuinely zero — not merely the flag.
+            reportRequestSlow();
+            expect(useNetworkStore.getState().serverSlow).toBe(true);
+            reportSlowRequestEnded();
+            expect(useNetworkStore.getState().serverSlow).toBe(false);
+        });
+    });
+
+    describe('probeServerReachable', () => {
+        it('short-circuits false when the device is offline (no round-trip spent)', async () => {
+            const fetchSpy = jest.spyOn(global, 'fetch');
+            useNetworkStore.setState({ isConnected: false });
+
+            await expect(probeServerReachable()).resolves.toBe(false);
+            expect(fetchSpy).not.toHaveBeenCalled();
+        });
+
+        it('hits the better-auth health route under /api/auth', async () => {
+            const fetchSpy = jest
+                .spyOn(global, 'fetch')
+                .mockResolvedValue({ status: 200 } as Response);
+
+            await expect(probeServerReachable()).resolves.toBe(true);
+            expect(String(fetchSpy.mock.calls[0][0])).toContain('/api/auth/ok');
+        });
+
+        it('treats any answer below 500 as reachable', async () => {
+            jest.spyOn(global, 'fetch').mockResolvedValue({ status: 401 } as Response);
+            useNetworkStore.setState({ serverReachable: false });
+
+            await expect(probeServerReachable()).resolves.toBe(true);
+            expect(useNetworkStore.getState().serverReachable).toBe(true);
+        });
+
+        it('treats a 5xx as unreachable — the user still could not complete an OTP', async () => {
+            jest.spyOn(global, 'fetch').mockResolvedValue({ status: 503 } as Response);
+
+            await expect(probeServerReachable()).resolves.toBe(false);
+            expect(useNetworkStore.getState().serverReachable).toBe(false);
+        });
+
+        it('treats a throw (timeout / DNS / refused) as unreachable', async () => {
+            jest.spyOn(global, 'fetch').mockRejectedValue(new Error('connection refused'));
+
+            await expect(probeServerReachable()).resolves.toBe(false);
+            expect(useNetworkStore.getState().serverReachable).toBe(false);
+        });
+
+        it('is bounded — a hanging probe resolves false rather than blocking launch', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(
+                (_input, init) =>
+                    new Promise((_resolve, reject) => {
+                        (init as RequestInit).signal?.addEventListener('abort', () =>
+                            reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })),
+                        );
+                    }),
+            );
+
+            await expect(probeServerReachable(20)).resolves.toBe(false);
+        });
     });
 });

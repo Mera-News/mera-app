@@ -11,14 +11,26 @@ jest.mock('@/lib/database/index', () => {
 import client, { shouldRetryOperation } from '@/lib/apollo-client';
 import { gql } from '@apollo/client';
 import { __resetIdentityFaultForTests } from '@/lib/security/identity-gate';
-import { useNetworkStore } from '@/lib/stores/network-store';
+import {
+  _resetNetworkTrackingForTests,
+  useNetworkStore,
+} from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { toastManager } from '@/lib/toast-manager';
 import logger from '@/lib/logger';
 
 describe('apollo-client', () => {
   beforeEach(() => {
-    useNetworkStore.setState({ isConnected: true });
+    useNetworkStore.setState({
+      isConnected: true,
+      serverReachable: true,
+      serverSlow: false,
+    });
+    // The transport-failure counter is module-level and therefore leaks across
+    // tests in this file: without this, the failures driven by one test push a
+    // later one past SERVER_FAILURE_THRESHOLD and silently change its outcome
+    // (it suppressed the toast-while-online assertion when first added).
+    _resetNetworkTrackingForTests();
     jest.restoreAllMocks();
   });
 
@@ -98,6 +110,89 @@ describe('apollo-client', () => {
         client.query({ query: QUERY, fetchPolicy: 'network-only' }),
       ).rejects.toBeTruthy();
       expect(toastManager.showNetworkError).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops toasting once the server is known unreachable', async () => {
+      // The global offline band covers this state persistently, so a per-query
+      // toast on top of it repeats the same message once per query.
+      useNetworkStore.setState({ isConnected: true, serverReachable: false });
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+      expect(toastManager.showNetworkError).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── server-reachability signal ───────────────────────────────────────────
+  // The band and the identity gate both key off this. The distinctions that
+  // matter: a server that ANSWERS (any status < 500) is reachable however it
+  // answered, and a CANCELLED request proves nothing either way.
+  describe('server reachability tracking', () => {
+    const QUERY = gql`query Smoke { smoke }`;
+    let fetchSpy: jest.SpyInstance;
+
+    afterEach(() => {
+      fetchSpy?.mockRestore();
+    });
+
+    const runFailingQuery = async () => {
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+    };
+
+    it('needs two consecutive transport failures before declaring the server down', async () => {
+      fetchSpy = jest
+        .spyOn(global, 'fetch')
+        .mockRejectedValue(new Error('network fail'));
+      jest.spyOn(toastManager, 'showNetworkError').mockImplementation(() => {});
+
+      await runFailingQuery();
+      // One failed operation is not an outage — it is a blip.
+      expect(useNetworkStore.getState().serverReachable).toBe(true);
+
+      await runFailingQuery();
+      expect(useNetworkStore.getState().serverReachable).toBe(false);
+    });
+
+    it('treats our own request timeout as evidence the server is down', async () => {
+      const timeout = Object.assign(new Error('Request timed out after 30000ms'), {
+        isRequestTimeout: true as const,
+        name: 'AbortError',
+      });
+      fetchSpy = jest.spyOn(global, 'fetch').mockRejectedValue(timeout);
+      jest.spyOn(toastManager, 'showNetworkError').mockImplementation(() => {});
+
+      await runFailingQuery();
+      await runFailingQuery();
+      expect(useNetworkStore.getState().serverReachable).toBe(false);
+    });
+
+    it('does NOT count a cancelled request — navigation must not fake an outage', async () => {
+      // Screen unmount / tab switch / superseded pull-to-refresh. Same "no
+      // statusCode" shape as a timeout, but it carries no timeout marker.
+      const abort = Object.assign(new Error('Aborted'), { name: 'AbortError' });
+      fetchSpy = jest.spyOn(global, 'fetch').mockRejectedValue(abort);
+      jest.spyOn(toastManager, 'showNetworkError').mockImplementation(() => {});
+
+      await runFailingQuery();
+      await runFailingQuery();
+      await runFailingQuery();
+      expect(useNetworkStore.getState().serverReachable).toBe(true);
+    });
+
+    it('recovers the moment the server answers again', async () => {
+      useNetworkStore.setState({ isConnected: true, serverReachable: false });
+      fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ data: { smoke: 'ok' } }),
+        json: async () => ({ data: { smoke: 'ok' } }),
+        headers: new Headers({ 'content-type': 'application/json' }),
+      } as unknown as Response);
+
+      await client.query({ query: QUERY, fetchPolicy: 'network-only' });
+      expect(useNetworkStore.getState().serverReachable).toBe(true);
     });
   });
 
