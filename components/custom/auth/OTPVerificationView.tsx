@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { authClient, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { setSetting } from '@/lib/database/services/setting-service';
+import { clearIdentityFault } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -83,6 +84,13 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                 setSetting('cached_user_email', email).catch(() => {});
                 // A successful sign-in resolves any pending re-auth prompt.
                 useUserStore.getState().setNeedsReauth(false);
+                // ...including an identity fault (ownership-403). This is the
+                // ONLY place it clears: the user has just re-proved which
+                // account they are, which is precisely what the fault could not
+                // determine locally. Deliberately not tied to the auth-failure
+                // breaker's success path — an unrelated query succeeding proves
+                // nothing about the userId argument the 403 was about.
+                clearIdentityFault().catch(() => {});
                 onVerificationSuccess?.(data.user.id);
             } else {
                 setErrorMessage(t('auth.invalidOtpServer'));

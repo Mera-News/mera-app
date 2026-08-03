@@ -132,6 +132,23 @@ export async function getFactSectionSnapshots(): Promise<FactSectionSnapshot[]> 
   });
 }
 
+/** True when this device holds at least one fact.
+ *
+ *  This is the onboarding gate. Facts are what the app actually needs to
+ *  function (topics, scoring and the whole feed derive from them), whereas the
+ *  server's `onboardingStage` lies: the wizard's Next button writes FINISHED
+ *  even when the persona chat captured nothing. Counting in SQL via
+ *  `fetchCount()` never materialises rows, and it needs no network — the gate
+ *  works offline.
+ *
+ *  Note `facts` is device-global (no user column); callers that may be running
+ *  for a freshly signed-in user must run `clearPreviousUserData(userId)` first.
+ */
+export async function hasAnyFacts(): Promise<boolean> {
+  const count = await factsCollection.query().fetchCount();
+  return count > 0;
+}
+
 export async function getFacts(): Promise<Fact[]> {
   const records = await factsCollection
     .query(Q.sortBy('created_at', Q.desc))

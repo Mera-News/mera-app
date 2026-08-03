@@ -10,7 +10,9 @@ jest.mock('@/lib/database/index', () => {
 
 import client, { shouldRetryOperation } from '@/lib/apollo-client';
 import { gql } from '@apollo/client';
+import { __resetIdentityFaultForTests } from '@/lib/security/identity-gate';
 import { useNetworkStore } from '@/lib/stores/network-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import { toastManager } from '@/lib/toast-manager';
 import logger from '@/lib/logger';
 
@@ -150,6 +152,88 @@ describe('apollo-client', () => {
       await expect(
         client.query({ query: QUERY, fetchPolicy: 'network-only' }),
       ).rejects.toBeTruthy();
+      expect(captureSpy).toHaveBeenCalled();
+    });
+  });
+
+  // ── identity-fault backstop (ownership 403) ──────────────────────────────
+  // The server raises ForbiddenException('Access denied: resource belongs to
+  // another user') whenever the authenticated session and the `userId` query
+  // ARGUMENT disagree. Every personalized query on a screen fails identically,
+  // so the link must collapse the storm into ONE recovery trigger instead of
+  // one Sentry event + one "sync failed" banner + one LogBox toast per query.
+  describe('identity-fault backstop (ownership 403)', () => {
+    const QUERY = gql`query Ownership { ownership }`;
+    let fetchSpy: jest.SpyInstance;
+    let captureSpy: jest.SpyInstance;
+    let messageSpy: jest.SpyInstance;
+
+    const ownershipResponse = (message = 'Access denied: resource belongs to another user') => ({
+      status: 200,
+      ok: true,
+      headers: { get: () => 'application/json' },
+      text: async () =>
+        JSON.stringify({
+          data: null,
+          errors: [{ message, extensions: { code: 'FORBIDDEN', statusCode: 403 } }],
+        }),
+    });
+
+    beforeEach(() => {
+      __resetIdentityFaultForTests();
+      useUserStore.setState({ needsReauth: false });
+      useNetworkStore.setState({ isConnected: true });
+      fetchSpy = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(ownershipResponse() as unknown as Response);
+      captureSpy = jest.spyOn(logger, 'captureException').mockImplementation(() => undefined as any);
+      messageSpy = jest.spyOn(logger, 'captureMessage').mockImplementation(() => undefined as any);
+    });
+
+    afterEach(() => {
+      fetchSpy.mockRestore();
+    });
+
+    const run = async () => {
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+    };
+
+    it('flips needsReauth exactly once and logs one identity-gate message', async () => {
+      await run();
+      expect(useUserStore.getState().needsReauth).toBe(true);
+      expect(messageSpy).toHaveBeenCalledTimes(1);
+      expect(messageSpy.mock.calls[0][1]).toMatchObject({ tags: { source: 'identity-gate' } });
+    });
+
+    it('suppresses the per-query Sentry capture and the sync-failed banner', async () => {
+      await run();
+      // captureException and setSyncStatusMessage({state:'failed'}) live in the
+      // same generic branch; returning before it silences both.
+      expect(captureSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not retry the operation', async () => {
+      await run();
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('a second ownership 403 does not re-trigger the recovery flow', async () => {
+      await run();
+      await run();
+      await run();
+      expect(messageSpy).toHaveBeenCalledTimes(1);
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    });
+
+    it('leaves an unrelated FORBIDDEN error on the generic path', async () => {
+      fetchSpy.mockResolvedValue(
+        ownershipResponse('Forbidden') as unknown as Response,
+      );
+      await run();
+      expect(messageSpy).not.toHaveBeenCalled();
+      expect(useUserStore.getState().needsReauth).toBe(false);
       expect(captureSpy).toHaveBeenCalled();
     });
   });

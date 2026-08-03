@@ -14,6 +14,7 @@ import {
   deleteFact,
   getFacts,
   getFactsForTopicTexts,
+  hasAnyFacts,
   markOrphanedFactsAsFailed,
 } from '../fact-service';
 
@@ -362,5 +363,36 @@ describe('markOrphanedFactsAsFailed', () => {
       someOtherKey: ['val'],
       topicGenError: ['custom error'],
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// hasAnyFacts — the onboarding gate
+// ---------------------------------------------------------------------------
+
+describe('hasAnyFacts', () => {
+  it('returns false when the facts table is empty', async () => {
+    db._setRows('facts', []);
+    await expect(hasAnyFacts()).resolves.toBe(false);
+  });
+
+  it('returns true for a single fact', async () => {
+    db._setRows('facts', [makeFactRecord({ id: 'f1' })]);
+    await expect(hasAnyFacts()).resolves.toBe(true);
+  });
+
+  it('returns true for several facts', async () => {
+    db._setRows('facts', [makeFactRecord({ id: 'f1' }), makeFactRecord({ id: 'f2' })]);
+    await expect(hasAnyFacts()).resolves.toBe(true);
+  });
+
+  it('counts in SQL rather than materialising rows', async () => {
+    const rec = makeFactRecord({ id: 'f1' });
+    db._setRows('facts', [rec]);
+    const col = db._collections['facts'];
+    await hasAnyFacts();
+    const q = (col.query as jest.Mock).mock.results[0].value;
+    expect(q.fetchCount).toHaveBeenCalledTimes(1);
+    expect(q.fetch).not.toHaveBeenCalled();
   });
 });

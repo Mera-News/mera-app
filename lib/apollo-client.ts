@@ -16,6 +16,7 @@ import {
 import { authClient } from './auth-client';
 import { recordAuthFailure, recordAuthSuccess } from './auth-failure-breaker';
 import logger from './logger';
+import { isOwnershipFault, recordOwnershipFault } from './security/identity-gate';
 import { useForYouStore } from './stores/for-you-store';
 import { useNetworkStore } from './stores/network-store';
 import { toastManager } from './toast-manager';
@@ -45,6 +46,22 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             const { extensions } = graphQLError;
             const ext = extensions as GraphQLErrorExtensions | undefined;
             const errorCode = ext?.code;
+
+            // Identity fault BACKSTOP. The real fix is the pre-shell gate
+            // (lib/security/identity-gate.ts, used by app/logged-in/index.tsx
+            // and the onboarding gate); this catches the case where the
+            // mismatch appears mid-session. Every personalized query on a
+            // screen fails identically, so without this the user gets one
+            // Sentry event, one "sync failed" banner and one LogBox toast PER
+            // QUERY. recordOwnershipFault is idempotent per app session: it
+            // fires the existing needs-reauth recovery (banner + feed-sync
+            // halt) once and persists a marker so the next cold start resolves
+            // it before the shell. Returning here also guarantees the
+            // operation is not forwarded/retried.
+            if (isOwnershipFault(graphQLError)) {
+                recordOwnershipFault({ operationName: operation.operationName });
+                return;
+            }
 
             // UNAUTHENTICATED is logged but does NOT auto-logout. A single
             // failed request — e.g. a transient keychain-locked window during
