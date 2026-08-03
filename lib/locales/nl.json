@@ -98,11 +98,7 @@
       "Beweeg je lichaam, op de manier die goed voelt.",
       "Je telefoon is er straks nog. Wees nu aanwezig."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} zijn de afgelopen 24 uur gepubliceerd, {{analysed}} artikelen zijn voor je geanalyseerd en {{impactful}} bleken relevant voor je.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} zijn de afgelopen 24 uur gepubliceerd.",
     "noiseRemovedSummary": "{{count}} nep-{{articleWord}} zijn gefilterd vóór de analyse.",
-    "articleSingular": "artikel",
-    "articlePlural": "artikelen",
     "processing": {
       "doneFlash": "Alles klaar: hier is je nieuws",
       "errorFlash": "We konden de nieuwste inhoud niet laden. Probeer het opnieuw.",
@@ -191,7 +187,18 @@
       "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden morgen ontgrendeld.",
       "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden om {{time}} ontgrendeld.",
       "title": "Daglimiet voor artikelen bereikt"
-    }
+    },
+    "exploreCta": "Bekijk Verkennen",
+    "statsPublishedPending_one": "{{formatted}} artikel is gepubliceerd in de afgelopen 24 uur.",
+    "statsPublishedPending_other": "{{formatted}} artikelen zijn gepubliceerd in de afgelopen 24 uur.",
+    "statsPublished_one": "{{formatted}} artikel is gepubliceerd in de afgelopen 24 uur,",
+    "statsPublished_other": "{{formatted}} artikelen zijn gepubliceerd in de afgelopen 24 uur,",
+    "statsAnalysed_one": "{{formatted}} is voor je geanalyseerd,",
+    "statsAnalysed_other": "{{formatted}} zijn voor je geanalyseerd,",
+    "statsRelevant_one": "{{formatted}} lijkt relevant,",
+    "statsRelevant_other": "{{formatted}} lijken relevant,",
+    "statsRead_one": "en je hebt {{formatted}} gelezen.",
+    "statsRead_other": "en je hebt {{formatted}} gelezen."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -326,7 +333,8 @@
     "packMissingIosPath": "Instellingen → Algemeen → Taal en regio",
     "retry": "Opnieuw proberen",
     "watchGuide": "Bekijk hoe je een taal aan je apparaat toevoegt",
-    "iosLanguageHint": "Alleen deze taal selecteren is niet genoeg. Je moet deze taal ook selecteren in de iOS-taalinstellingen."
+    "iosLanguageHint": "Alleen deze taal selecteren is niet genoeg. Je moet deze taal ook selecteren in de iOS-taalinstellingen.",
+    "managePacksPrefix": "Ga naar"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +608,9 @@
       "submittedConfirmation": "Je aanvraag is ingediend en wacht op beoordeling. We controleren je status opnieuw wanneer je op Vernieuwen tikt.",
       "alreadyPending": "Je hebt al een deblokkeringsaanvraag die wacht op beoordeling.",
       "error": "Kon je aanvraag niet indienen. Probeer het opnieuw."
-    }
+    },
+    "topicGenFailed": "Kon geen onderwerpen voor dit genereren.",
+    "topicGenRetry": "Opnieuw"
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",
@@ -843,7 +853,8 @@
     "headlineDenominatorNone_other": "Mera heeft {{count}} koppen gelezen · vandaag leken er geen relevant.",
     "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
-    "subTabSaved": "Opgeslagen"
+    "subTabSaved": "Opgeslagen",
+    "subTabHistory": "Geschiedenis"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -998,7 +1009,11 @@
     "thanks": "Bedankt voor je feedback",
     "seenAck": "Begrepen: we tonen minder artikelen die je al hebt gezien",
     "nudgeSubscribe": "Abonneren op {{publication}} ontgrendelt volledige artikelen",
-    "nudgeBrowse": "Zoek naar gerelateerde berichtgeving van andere bronnen"
+    "nudgeBrowse": "Zoek naar gerelateerde berichtgeving van andere bronnen",
+    "paywallRelatedOption": "Gerelateerde coverage tonen",
+    "paywallRelatedDesc": "Een vergelijkbaar verhaal van een ander medium is mogelijk niet achter een betaalmuur — controleer de gerelateerde artikelen.",
+    "paywallSubscribeDesc": "Je hebt {{publication}} {{visits}} keer bezocht deze maand — overweeg een abonnement voor volledige toegang.",
+    "paywallBlockOption": "In plaats daarvan {{publication}} blokkeren"
   },
   "topicPlan": {
     "title": "Onderwerpen die ik volg",
@@ -1302,6 +1317,8 @@
     "newPinTitle": "Nieuwe PIN instellen",
     "newPinSubtitle": "Kies een nieuwe 4-cijferige PIN",
     "pinChangedTitle": "PIN bijgewerkt",
-    "pinChangedDescription": "Je PIN is gewijzigd."
+    "pinChangedDescription": "Je PIN is gewijzigd.",
+    "blurImagesTitle": "Afbeeldingen vervagen",
+    "blurImagesDescription": "Maak artikelafbeeldingen in de hele app zachter, zodat schokkende of verontrustende beelden niet scherp worden getoond."
   }
 }

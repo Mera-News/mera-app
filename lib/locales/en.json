@@ -142,11 +142,7 @@
       "Move your body, however feels good.",
       "Your phone will be here later. Be present now."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} were published in the last 24 hours, {{analysed}} articles were analysed for you, and {{impactful}} found relevant for you.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} were published in the last 24 hours.",
     "noiseRemovedSummary": "{{count}} decoy {{articleWord}} were filtered out before analysis.",
-    "articleSingular": "article",
-    "articlePlural": "articles",
     "processing": {
       "doneFlash": "All set: here’s your news",
       "errorFlash": "We couldn’t load the latest content. Please try again.",

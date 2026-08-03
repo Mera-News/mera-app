@@ -98,11 +98,7 @@
       "Рухайте тілом так, як вам комфортно.",
       "Ваш телефон нікуди не дінеться. Будьте присутні зараз."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} опубліковано за останні 24 години, {{analysed}} статей проаналізовано для вас, і {{impactful}} визнано релевантними для вас.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} опубліковано за останні 24 години.",
     "noiseRemovedSummary": "{{count}} фіктивних {{articleWord}} відфільтровано до аналізу.",
-    "articleSingular": "стаття",
-    "articlePlural": "статті",
     "processing": {
       "doneFlash": "Все готово, ось ваші новини",
       "errorFlash": "Не вдалося завантажити останній вміст. Будь ласка, спробуйте ще раз.",
@@ -193,7 +189,28 @@
     "waitingForNextBatch_one": "{{count}} нова стаття очікує наступної партії аналізу",
     "waitingForNextBatch_few": "{{count}} нові статті очікують наступної партії аналізу",
     "waitingForNextBatch_many": "{{count}} нових статей очікують наступної партії аналізу",
-    "waitingForNextBatch_other": "{{count}} нові статті очікують наступної партії аналізу"
+    "waitingForNextBatch_other": "{{count}} нові статті очікують наступної партії аналізу",
+    "exploreCta": "Огляд",
+    "statsPublishedPending_one": "{{formatted}} стаття опубліковано за останні 24 години.",
+    "statsPublishedPending_few": "{{formatted}} статті опубліковано за останні 24 години.",
+    "statsPublishedPending_many": "{{formatted}} статей опубліковано за останні 24 години.",
+    "statsPublishedPending_other": "{{formatted}} статті опубліковано за останні 24 години.",
+    "statsPublished_one": "{{formatted}} стаття опубліковано за останні 24 години,",
+    "statsPublished_few": "{{formatted}} статті опубліковано за останні 24 години,",
+    "statsPublished_many": "{{formatted}} статей опубліковано за останні 24 години,",
+    "statsPublished_other": "{{formatted}} статті опубліковано за останні 24 години,",
+    "statsAnalysed_one": "{{formatted}} проаналізовано для вас,",
+    "statsAnalysed_few": "{{formatted}} проаналізовано для вас,",
+    "statsAnalysed_many": "{{formatted}} проаналізовано для вас,",
+    "statsAnalysed_other": "{{formatted}} проаналізовано для вас,",
+    "statsRelevant_one": "{{formatted}} виглядає релевантною,",
+    "statsRelevant_few": "{{formatted}} виглядають релевантними,",
+    "statsRelevant_many": "{{formatted}} виглядає релевантною,",
+    "statsRelevant_other": "{{formatted}} виглядають релевантними,",
+    "statsRead_one": "і ви прочитали {{formatted}}.",
+    "statsRead_few": "і ви прочитали {{formatted}}.",
+    "statsRead_many": "і ви прочитали {{formatted}}.",
+    "statsRead_other": "і ви прочитали {{formatted}}."
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -328,7 +345,8 @@
     "packMissingIosPath": "Налаштування → Загальні → Мова та регіон",
     "retry": "Повторити",
     "watchGuide": "Перегляньте, як додати мову на пристрій",
-    "iosLanguageHint": "Самого вибору цієї мови недостатньо: вам також потрібно вибрати її в налаштуваннях мови iOS."
+    "iosLanguageHint": "Самого вибору цієї мови недостатньо: вам також потрібно вибрати її в налаштуваннях мови iOS.",
+    "managePacksPrefix": "Щоб керувати завантаженими мовами, перейдіть в"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -604,7 +622,9 @@
       "submittedConfirmation": "Ваш запит надіслано, і він очікує розгляду. Ми перевіримо статус, коли ви натиснете «Оновити».",
       "alreadyPending": "У вас вже є запит на розблокування, що очікує розгляду.",
       "error": "Не вдалося надіслати запит. Будь ласка, спробуйте ще раз."
-    }
+    },
+    "topicGenFailed": "Не вдалося створити теми для цього.",
+    "topicGenRetry": "Повторити"
   },
   "articleFeedback": {
     "thumbsUp": "Подобається",
@@ -849,7 +869,8 @@
     "headlineDenominatorNone_other": "Mera прочитала {{count}} заголовків · сьогодні нічого не виглядало релевантним.",
     "subTabFeed": "Огляд",
     "subTabStories": "Історії",
-    "subTabSaved": "Збережене"
+    "subTabSaved": "Збережене",
+    "subTabHistory": "Історія"
   },
   "feedStatus": {
     "title": "Стан стрічки",
@@ -1010,7 +1031,11 @@
     "thanks": "Дякуємо за відгук",
     "seenAck": "Готово, показуватимемо менше того, що ви вже бачили",
     "nudgeSubscribe": "Підписка на {{publication}} відкриває повні статті",
-    "nudgeBrowse": "Пошукайте схожі матеріали з інших джерел"
+    "nudgeBrowse": "Пошукайте схожі матеріали з інших джерел",
+    "paywallRelatedOption": "Показати схожі матеріали",
+    "paywallRelatedDesc": "Схожу історію від іншого видання може бути не закрито paywall — перевірте схожі статті.",
+    "paywallSubscribeDesc": "Ви відвідали {{publication}} {{visits}} разів у цьому місяці — розгляньте підписку для повного доступу.",
+    "paywallBlockOption": "Замість цього заблокувати {{publication}}"
   },
   "topicPlan": {
     "title": "Теми, які я відстежуватиму",
@@ -1324,6 +1349,7 @@
     "newPinTitle": "Встановити новий PIN",
     "newPinSubtitle": "Виберіть новий 4-значний PIN",
     "pinChangedTitle": "PIN змінено",
-    "pinChangedDescription": "Ваш PIN успішно змінено."
+    "pinChangedDescription": "Ваш PIN успішно змінено.",
+    "blurImagesTitle": "Розмити зображення"
   }
 }

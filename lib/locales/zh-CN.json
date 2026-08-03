@@ -98,11 +98,7 @@
       "活动一下身体，怎么舒服怎么来。",
       "手机稍后还会在的，活在当下吧。"
     ],
-    "analysedArticles": "过去24小时内发布了 {{processed}} {{articleWord}}，其中 {{analysed}} 篇文章经过分析，{{impactful}} 篇与您相关。",
-    "analysedArticlesPending": "过去24小时内发布了 {{processed}} {{articleWord}}。",
     "noiseRemovedSummary": "{{count}} 篇{{articleWord}}在分析前已被过滤为干扰内容。",
-    "articleSingular": "篇文章",
-    "articlePlural": "篇文章",
     "processing": {
       "doneFlash": "一切就绪 — 这是您的新闻",
       "errorFlash": "无法加载最新内容，请重试。",
@@ -191,7 +187,13 @@
     },
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
     "waitingForNextBatch_one": "{{count}} 篇新文章等待下一批分析",
-    "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析"
+    "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析",
+    "exploreCta": "浏览探索",
+    "statsPublishedPending_other": "过去24小时内发布了{{formatted}}篇文章。",
+    "statsPublished_other": "过去24小时内发布了{{formatted}}篇文章。",
+    "statsAnalysed_other": "{{formatted}}篇文章经过分析。",
+    "statsRelevant_other": "{{formatted}}篇与您相关。",
+    "statsRead_other": "您已读过{{formatted}}篇。"
   },
   "relevance": {
     "emergency": "紧急",
@@ -326,7 +328,8 @@
     "packMissingIosPath": "设置 → 通用 → 语言与地区",
     "retry": "重试",
     "watchGuide": "观看如何为设备添加语言",
-    "iosLanguageHint": "仅选择此语言是不够的——您还需要在 iOS 语言设置中选择此语言。"
+    "iosLanguageHint": "仅选择此语言是不够的——您还需要在 iOS 语言设置中选择此语言。",
+    "managePacksPrefix": "要管理已下载的语言，请前往"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +603,9 @@
       "submittedConfirmation": "你的申请已提交，正在等待审核。点击刷新即可重新检查你的状态。",
       "alreadyPending": "你已经有一个正在审核中的解封申请。",
       "error": "无法提交你的申请，请重试。"
-    }
+    },
+    "topicGenFailed": "无法为此生成主题。",
+    "topicGenRetry": "重试"
   },
   "articleFeedback": {
     "thumbsUp": "喜欢",
@@ -843,7 +848,8 @@
     "headlineDenominator_one": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
     "headlineDenominator_other": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
     "headlineDenominatorNone_one": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
-    "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。"
+    "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
+    "subTabHistory": "历史"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -999,7 +1005,11 @@
     "thanks": "感谢你的反馈",
     "seenAck": "好的——我们会减少你已看过的内容",
     "nudgeSubscribe": "订阅 {{publication}} 即可解锁完整文章",
-    "nudgeBrowse": "查看其他来源的相关报道"
+    "nudgeBrowse": "查看其他来源的相关报道",
+    "paywallRelatedOption": "显示相关报道",
+    "paywallRelatedDesc": "另一家出版机构的类似报道可能不在付费墙后面 — 请查看相关文章。",
+    "paywallSubscribeDesc": "本月您访问了{{publication}}{{visits}}次 — 请考虑订阅以获得完全访问权限。",
+    "paywallBlockOption": "改为屏蔽{{publication}}"
   },
   "topicPlan": {
     "title": "我将追踪的话题",
@@ -1303,6 +1313,8 @@
     "newPinTitle": "设置新 PIN",
     "newPinSubtitle": "选择一个新的 4 位 PIN",
     "pinChangedTitle": "PIN 已更新",
-    "pinChangedDescription": "您的 PIN 已被更改。"
+    "pinChangedDescription": "您的 PIN 已被更改。",
+    "blurImagesTitle": "模糊处理图像",
+    "blurImagesDescription": "在应用中对文章图像进行柔和处理，以便图形或令人不适的图像不会清晰显示。"
   }
 }

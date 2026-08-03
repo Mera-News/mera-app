@@ -98,11 +98,7 @@
       "Porusz ciałem w sposób, który sprawia Ci przyjemność.",
       "Twój telefon tu będzie. Bądź teraz obecny."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} zostało opublikowanych w ciągu ostatnich 24 godzin, {{analysed}} artykuły zostały przeanalizowane dla Ciebie, a {{impactful}} okazało się trafnych.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} zostało opublikowanych w ciągu ostatnich 24 godzin.",
     "noiseRemovedSummary": "{{count}} fałszywy(-ch) {{articleWord}} odfiltrowano przed analizą.",
-    "articleSingular": "artykuł",
-    "articlePlural": "artykuły",
     "processing": {
       "doneFlash": "Gotowe: oto Twoje wiadomości",
       "errorFlash": "Nie udało się załadować najnowszych treści. Spróbuj ponownie.",
@@ -193,7 +189,28 @@
     "waitingForNextBatch_one": "{{count}} nowy artykuł czeka na kolejną turę analizy",
     "waitingForNextBatch_few": "{{count}} nowe artykuły czekają na kolejną turę analizy",
     "waitingForNextBatch_many": "{{count}} nowych artykułów czeka na kolejną turę analizy",
-    "waitingForNextBatch_other": "{{count}} nowe artykuły czekają na kolejną turę analizy"
+    "waitingForNextBatch_other": "{{count}} nowe artykuły czekają na kolejną turę analizy",
+    "exploreCta": "Odkrywaj",
+    "statsPublishedPending_one": "{{formatted}} artykuł został opublikowany w ciągu ostatnich 24 godzin.",
+    "statsPublishedPending_few": "{{formatted}} artykuły zostały opublikowane w ciągu ostatnich 24 godzin.",
+    "statsPublishedPending_many": "{{formatted}} artykułów zostało opublikowanych w ciągu ostatnich 24 godzin.",
+    "statsPublishedPending_other": "{{formatted}} artykuły zostały opublikowane w ciągu ostatnich 24 godzin.",
+    "statsPublished_one": "{{formatted}} artykuł został opublikowany w ciągu ostatnich 24 godzin,",
+    "statsPublished_few": "{{formatted}} artykuły zostały opublikowane w ciągu ostatnich 24 godzin,",
+    "statsPublished_many": "{{formatted}} artykułów zostało opublikowanych w ciągu ostatnich 24 godzin,",
+    "statsPublished_other": "{{formatted}} artykuły zostały opublikowane w ciągu ostatnich 24 godzin,",
+    "statsAnalysed_one": "{{formatted}} artykuł został przeanalizowany dla Ciebie,",
+    "statsAnalysed_few": "{{formatted}} artykuły zostały przeanalizowane dla Ciebie,",
+    "statsAnalysed_many": "{{formatted}} artykułów zostało przeanalizowanych dla Ciebie,",
+    "statsAnalysed_other": "{{formatted}} artykuły zostały przeanalizowane dla Ciebie,",
+    "statsRelevant_one": "{{formatted}} wygląda trafnie,",
+    "statsRelevant_few": "{{formatted}} wyglądają trafnie,",
+    "statsRelevant_many": "{{formatted}} wygląda trafnie,",
+    "statsRelevant_other": "{{formatted}} wyglądają trafnie,",
+    "statsRead_one": "i przeczytałeś {{formatted}}.",
+    "statsRead_few": "i przeczytałeś {{formatted}}.",
+    "statsRead_many": "i przeczytałeś {{formatted}}.",
+    "statsRead_other": "i przeczytałeś {{formatted}}."
   },
   "relevance": {
     "emergency": "Pilne",
@@ -328,7 +345,8 @@
     "packMissingIosPath": "Ustawienia → Ogólne → Język i region",
     "retry": "Ponów",
     "watchGuide": "Zobacz, jak dodać język do urządzenia",
-    "iosLanguageHint": "Samo wybranie tego języka nie wystarczy. Musisz również wybrać ten język w ustawieniach języka iOS."
+    "iosLanguageHint": "Samo wybranie tego języka nie wystarczy. Musisz również wybrać ten język w ustawieniach języka iOS.",
+    "managePacksPrefix": "Aby zarządzać pobranymi językami, przejdź do"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -602,7 +620,9 @@
       "submittedConfirmation": "Twoja prośba została wysłana i oczekuje na przegląd. Ponownie sprawdzimy Twój status, gdy dotkniesz Odśwież.",
       "alreadyPending": "Masz już prośbę o odblokowanie oczekującą na przegląd.",
       "error": "Nie udało się wysłać prośby. Spróbuj ponownie."
-    }
+    },
+    "topicGenFailed": "Nie udało się wygenerować tematy dla tego.",
+    "topicGenRetry": "Ponów"
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",
@@ -847,7 +867,8 @@
     "headlineDenominatorNone_other": "Mera przeczytała {{count}} nagłówki · dzisiaj żaden nie wyglądał na istotny.",
     "subTabFeed": "Przegląd",
     "subTabStories": "historie",
-    "subTabSaved": "Zapisane"
+    "subTabSaved": "Zapisane",
+    "subTabHistory": "Historia"
   },
   "feedStatus": {
     "title": "Stan kanału",
@@ -1004,7 +1025,11 @@
     "thanks": "Dziękujemy za opinię",
     "seenAck": "Rozumiem: pokażemy mniej artykułów, które już widziałeś",
     "nudgeSubscribe": "Subskrypcja {{publication}} odblokowuje pełne artykuły",
-    "nudgeBrowse": "Poszukaj powiązanych relacji z innych źródeł"
+    "nudgeBrowse": "Poszukaj powiązanych relacji z innych źródeł",
+    "paywallRelatedOption": "Pokaż powiązane materiały",
+    "paywallRelatedDesc": "Podobna historia z innego wydawcy może nie być za paywallem — sprawdź powiązane artykuły.",
+    "paywallSubscribeDesc": "Odwiedziłeś {{publication}} {{visits}} razy w tym miesiącu — rozważ subskrypcję, aby uzyskać pełny dostęp.",
+    "paywallBlockOption": "Zamiast tego zablokuj {{publication}}"
   },
   "topicPlan": {
     "title": "Tematy, które będę śledzić",
@@ -1318,6 +1343,7 @@
     "newPinTitle": "Ustaw nowy PIN",
     "newPinSubtitle": "Wybierz nowy 4-cyfrowy PIN",
     "pinChangedTitle": "PIN zaktualizowany",
-    "pinChangedDescription": "Twój PIN został zmieniony."
+    "pinChangedDescription": "Twój PIN został zmieniony.",
+    "blurImagesTitle": "Rozmyj zdjęcia"
   }
 }

@@ -98,11 +98,7 @@
       "अपने शरीर को हिलाएं, जैसा अच्छा लगे।",
       "आपका फ़ोन बाद में भी यहीं रहेगा। अभी वर्तमान में रहें।"
     ],
-    "analysedArticles": "पिछले 24 घंटों में {{processed}} {{articleWord}} प्रकाशित हुए, {{analysed}} लेखों का आपके लिए विश्लेषण किया गया, और {{impactful}} आपके लिए प्रासंगिक पाए गए।",
-    "analysedArticlesPending": "पिछले 24 घंटों में {{processed}} {{articleWord}} प्रकाशित हुए।",
     "noiseRemovedSummary": "विश्लेषण से पहले {{count}} डिकॉय {{articleWord}} फ़िल्टर कर दिए गए।",
-    "articleSingular": "लेख",
-    "articlePlural": "लेख",
     "processing": {
       "doneFlash": "सब तैयार है। यहाँ आपके समाचार हैं",
       "errorFlash": "नवीनतम सामग्री लोड नहीं हो सकी। कृपया पुनः प्रयास करें।",
@@ -191,7 +187,18 @@
     },
     "analysingProgress": "{{total}} में से {{done}} लेखों का विश्लेषण हो रहा है",
     "waitingForNextBatch_one": "{{count}} नया लेख अगले विश्लेषण बैच का इंतज़ार कर रहा है",
-    "waitingForNextBatch_other": "{{count}} नए लेख अगले विश्लेषण बैच का इंतज़ार कर रहे हैं"
+    "waitingForNextBatch_other": "{{count}} नए लेख अगले विश्लेषण बैच का इंतज़ार कर रहे हैं",
+    "exploreCta": "एक्सप्लोर देखें",
+    "statsPublishedPending_one": "{{formatted}} लेख पिछले 24 घंटों में प्रकाशित हुआ।",
+    "statsPublishedPending_other": "{{formatted}} लेख पिछले 24 घंटों में प्रकाशित हुए।",
+    "statsPublished_one": "{{formatted}} लेख पिछले 24 घंटों में प्रकाशित हुआ,",
+    "statsPublished_other": "{{formatted}} लेख पिछले 24 घंटों में प्रकाशित हुए,",
+    "statsAnalysed_one": "{{formatted}} आपके लिए विश्लेषण किया गया,",
+    "statsAnalysed_other": "{{formatted}} आपके लिए विश्लेषण किए गए,",
+    "statsRelevant_one": "{{formatted}} प्रासंगिक लग रहा है,",
+    "statsRelevant_other": "{{formatted}} प्रासंगिक लग रहे हैं,",
+    "statsRead_one": "और आपने {{formatted}} पढ़ा है।",
+    "statsRead_other": "और आपने {{formatted}} पढ़े हैं।"
   },
   "relevance": {
     "emergency": "आपातकालीन",
@@ -326,7 +333,8 @@
     "packMissingIosPath": "सेटिंग्स → सामान्य → भाषा और क्षेत्र",
     "retry": "पुनः प्रयास करें",
     "watchGuide": "अपने डिवाइस में भाषा जोड़ने का तरीका देखें",
-    "iosLanguageHint": "केवल यह भाषा चुनना पर्याप्त नहीं है। आपको iOS भाषा सेटिंग्स में भी इसे चुनना होगा।"
+    "iosLanguageHint": "केवल यह भाषा चुनना पर्याप्त नहीं है। आपको iOS भाषा सेटिंग्स में भी इसे चुनना होगा।",
+    "managePacksPrefix": "डाउनलोड की गई भाषाओं को प्रबंधित करने के लिए, यहाँ जाएं"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +608,9 @@
       "submittedConfirmation": "आपका अनुरोध सबमिट कर दिया गया है और समीक्षा के लिए लंबित है। रीफ्रेश टैप करने पर हम आपकी स्थिति दोबारा जांचेंगे।",
       "alreadyPending": "आपके पास पहले से ही समीक्षा के लिए लंबित एक अनब्लॉक अनुरोध है।",
       "error": "आपका अनुरोध सबमिट नहीं हो सका। कृपया पुनः प्रयास करें।"
-    }
+    },
+    "topicGenFailed": "इसके लिए विषय तैयार नहीं हो सके।",
+    "topicGenRetry": "पुनः प्रयास करें"
   },
   "articleFeedback": {
     "thumbsUp": "मुझे पसंद है",
@@ -843,7 +853,8 @@
     "headlineDenominatorNone_other": "Mera ने {{count}} खबरें पढ़ीं · आज कोई भी प्रासंगिक नहीं लगा।",
     "subTabFeed": "अवलोकन",
     "subTabStories": "स्टोरीज़",
-    "subTabSaved": "सहेजे गए"
+    "subTabSaved": "सहेजे गए",
+    "subTabHistory": "इतिहास"
   },
   "feedStatus": {
     "title": "फ़ीड स्थिति",
@@ -1000,7 +1011,11 @@
     "thanks": "फ़ीडबैक के लिए धन्यवाद",
     "seenAck": "समझ गया, हम आपकी देखी हुई कम दिखाएंगे",
     "nudgeSubscribe": "{{publication}} को सब्सक्राइब करने पर पूरे लेख अनलॉक होते हैं",
-    "nudgeBrowse": "अन्य स्रोतों से संबंधित कवरेज देखें"
+    "nudgeBrowse": "अन्य स्रोतों से संबंधित कवरेज देखें",
+    "paywallRelatedOption": "संबंधित कवरेज दिखाएं",
+    "paywallRelatedDesc": "किसी अन्य प्रकाशन से एक समान कहानी पेवॉल के पीछे नहीं हो सकती — संबंधित लेखों को देखें।",
+    "paywallSubscribeDesc": "आपने इस महीने {{publication}} को {{visits}} बार देखा है — पूर्ण पहुंच के लिए सदस्यता लेने पर विचार करें।",
+    "paywallBlockOption": "इसके बजाय {{publication}} को ब्लॉक करें"
   },
   "topicPlan": {
     "title": "जिन विषयों को मैं ट्रैक करूंगा",
@@ -1304,6 +1319,8 @@
     "newPinTitle": "नया PIN सेट करें",
     "newPinSubtitle": "नया 4-अंकीय PIN चुनें",
     "pinChangedTitle": "PIN अपडेट हुआ",
-    "pinChangedDescription": "आपका PIN बदल दिया गया है।"
+    "pinChangedDescription": "आपका PIN बदल दिया गया है।",
+    "blurImagesTitle": "छवियों को धुंधला करें",
+    "blurImagesDescription": "ऐप में लेखों की छवियों को नरम करें ताकि ग्राफिक या परेशान करने वाले दृश्य तीक्ष्ण दिखाई न दें।"
   }
 }

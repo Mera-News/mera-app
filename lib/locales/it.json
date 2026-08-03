@@ -98,11 +98,7 @@
       "Muovi il corpo, come ti fa stare bene.",
       "Il tuo telefono sarà qui dopo. Sii presente ora."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} pubblicati nelle ultime 24 ore, {{analysed}} articoli analizzati per te e {{impactful}} trovati rilevanti per te.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} pubblicati nelle ultime 24 ore.",
     "noiseRemovedSummary": "{{count}} {{articleWord}} esca filtrati prima dell'analisi.",
-    "articleSingular": "articolo",
-    "articlePlural": "articoli",
     "processing": {
       "doneFlash": "Tutto pronto. Ecco le tue notizie",
       "errorFlash": "Non è stato possibile caricare i contenuti più recenti. Per favore riprova.",
@@ -191,7 +187,18 @@
     },
     "analysingProgress": "Analisi di {{done}} di {{total}} articoli",
     "waitingForNextBatch_one": "{{count}} nuovo articolo in attesa del prossimo lotto di analisi",
-    "waitingForNextBatch_other": "{{count}} nuovi articoli in attesa del prossimo lotto di analisi"
+    "waitingForNextBatch_other": "{{count}} nuovi articoli in attesa del prossimo lotto di analisi",
+    "exploreCta": "Sfoglia Esplora",
+    "statsPublishedPending_one": "{{formatted}} articolo è stato pubblicato nelle ultime 24 ore.",
+    "statsPublishedPending_other": "{{formatted}} articoli sono stati pubblicati nelle ultime 24 ore.",
+    "statsPublished_one": "{{formatted}} articolo è stato pubblicato nelle ultime 24 ore,",
+    "statsPublished_other": "{{formatted}} articoli sono stati pubblicati nelle ultime 24 ore,",
+    "statsAnalysed_one": "{{formatted}} è stato analizzato per te,",
+    "statsAnalysed_other": "{{formatted}} sono stati analizzati per te,",
+    "statsRelevant_one": "{{formatted}} sembra rilevante,",
+    "statsRelevant_other": "{{formatted}} sembrano rilevanti,",
+    "statsRead_one": "e hai letto {{formatted}}.",
+    "statsRead_other": "e hai letto {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -326,7 +333,8 @@
     "packMissingIosPath": "Impostazioni → Generali → Lingua e Regione",
     "retry": "Riprova",
     "watchGuide": "Guarda come aggiungere una lingua al tuo dispositivo",
-    "iosLanguageHint": "Selezionare solo questa lingua non basta: dovrai selezionarla anche nelle impostazioni della lingua di iOS."
+    "iosLanguageHint": "Selezionare solo questa lingua non basta: dovrai selezionarla anche nelle impostazioni della lingua di iOS.",
+    "managePacksPrefix": "Per gestire le lingue scaricate, vai a"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +608,9 @@
       "submittedConfirmation": "La tua richiesta è stata inviata ed è in attesa di revisione. Verificheremo di nuovo il tuo stato quando toccherai Aggiorna.",
       "alreadyPending": "Hai già una richiesta di sblocco in attesa di revisione.",
       "error": "Impossibile inviare la tua richiesta. Per favore riprova."
-    }
+    },
+    "topicGenFailed": "Impossibile generare gli argomenti.",
+    "topicGenRetry": "Riprova"
   },
   "articleFeedback": {
     "thumbsUp": "Mi piace",
@@ -843,7 +853,8 @@
     "headlineDenominatorNone_other": "Mera ha letto {{count}} notizie principali · nessuna è sembrata rilevante oggi.",
     "subTabFeed": "Panoramica",
     "subTabStories": "Storie",
-    "subTabSaved": "Salvati"
+    "subTabSaved": "Salvati",
+    "subTabHistory": "Cronologia"
   },
   "feedStatus": {
     "title": "Stato del feed",
@@ -998,7 +1009,11 @@
     "nudgeSubscribe": "Abbonarti a {{publication}} sblocca gli articoli completi",
     "nudgeBrowse": "Cerca copertura correlata da altre fonti",
     "moreAboutTopicNamed": "Più su: {{topic}}",
-    "moreAboutTopicNamedWithCount": "Più su: {{topic}} e {{extra}} altri"
+    "moreAboutTopicNamedWithCount": "Più su: {{topic}} e {{extra}} altri",
+    "paywallRelatedOption": "Mostra copertura correlata",
+    "paywallRelatedDesc": "Una storia simile da un'altra pubblicazione potrebbe non essere protetta da paywall – controlla gli articoli correlati.",
+    "paywallSubscribeDesc": "Hai visitato {{publication}} {{visits}} volte questo mese – considera l'abbonamento per accesso completo.",
+    "paywallBlockOption": "Blocca {{publication}} invece"
   },
   "topicPlan": {
     "title": "Argomenti che monitorerò",
@@ -1302,6 +1317,8 @@
     "newPinTitle": "Imposta un nuovo PIN",
     "newPinSubtitle": "Scegli un nuovo PIN a 4 cifre",
     "pinChangedTitle": "PIN aggiornato",
-    "pinChangedDescription": "Il tuo PIN è stato cambiato."
+    "pinChangedDescription": "Il tuo PIN è stato cambiato.",
+    "blurImagesTitle": "Sfoca immagini",
+    "blurImagesDescription": "Attenua le immagini degli articoli in tutta l'app affinché i contenuti grafici o disturbanti non vengano visualizzati nitidamente."
   }
 }

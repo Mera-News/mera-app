@@ -98,11 +98,7 @@
       "حرّك جسمك بالطريقة التي تريحك.",
       "هاتفك سيكون هنا لاحقًا. عِش اللحظة الآن."
     ],
-    "analysedArticles": "نُشرت {{processed}} {{articleWord}} في آخر 24 ساعة، وتم تحليل {{analysed}} مقالة لك، ووُجد {{impactful}} مقالة ذات صلة بك.",
-    "analysedArticlesPending": "نُشرت {{processed}} {{articleWord}} في آخر 24 ساعة.",
     "noiseRemovedSummary": "تمت تصفية {{count}} {{articleWord}} وهمية قبل التحليل.",
-    "articleSingular": "مقال",
-    "articlePlural": "مقالات",
     "processing": {
       "doneFlash": "كل شيء جاهز: إليك أخبارك",
       "errorFlash": "تعذّر تحميل أحدث المحتوى. يرجى المحاولة مرة أخرى.",
@@ -195,7 +191,38 @@
     "waitingForNextBatch_two": "{{count}} مقالان جديدان ينتظران الدفعة التالية من التحليل",
     "waitingForNextBatch_few": "{{count}} مقالات جديدة تنتظر الدفعة التالية من التحليل",
     "waitingForNextBatch_many": "{{count}} مقالًا جديدًا ينتظر الدفعة التالية من التحليل",
-    "waitingForNextBatch_other": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل"
+    "waitingForNextBatch_other": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
+    "exploreCta": "تصفح الاستكشاف",
+    "statsPublishedPending_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
+    "statsPublishedPending_one": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
+    "statsPublishedPending_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة.",
+    "statsPublishedPending_few": "{{formatted}} مقالات نُشرت في آخر 24 ساعة.",
+    "statsPublishedPending_many": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
+    "statsPublishedPending_other": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
+    "statsPublished_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
+    "statsPublished_one": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
+    "statsPublished_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة،",
+    "statsPublished_few": "{{formatted}} مقالات نُشرت في آخر 24 ساعة،",
+    "statsPublished_many": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
+    "statsPublished_other": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
+    "statsAnalysed_zero": "{{formatted}} تم تحليلها لك،",
+    "statsAnalysed_one": "{{formatted}} تم تحليلها لك،",
+    "statsAnalysed_two": "{{formatted}} تم تحليلهما لك،",
+    "statsAnalysed_few": "{{formatted}} تم تحليلها لك،",
+    "statsAnalysed_many": "{{formatted}} تم تحليلها لك،",
+    "statsAnalysed_other": "{{formatted}} تم تحليلها لك،",
+    "statsRelevant_zero": "{{formatted}} تبدو ذات صلة،",
+    "statsRelevant_one": "{{formatted}} تبدو ذات صلة،",
+    "statsRelevant_two": "{{formatted}} يبدوان ذا صلة،",
+    "statsRelevant_few": "{{formatted}} تبدو ذات صلة،",
+    "statsRelevant_many": "{{formatted}} تبدو ذات صلة،",
+    "statsRelevant_other": "{{formatted}} تبدو ذات صلة،",
+    "statsRead_zero": "وقرأت {{formatted}}.",
+    "statsRead_one": "وقرأت {{formatted}}.",
+    "statsRead_two": "وقرأت {{formatted}}.",
+    "statsRead_few": "وقرأت {{formatted}}.",
+    "statsRead_many": "وقرأت {{formatted}}.",
+    "statsRead_other": "وقرأت {{formatted}}."
   },
   "relevance": {
     "emergency": "طارئ",
@@ -330,7 +357,8 @@
     "packMissingIosPath": "الإعدادات ← عام ← اللغة والمنطقة",
     "retry": "إعادة المحاولة",
     "watchGuide": "شاهد كيفية إضافة لغة إلى جهازك",
-    "iosLanguageHint": "لا يكفي اختيار هذه اللغة فقط. ستحتاج أيضًا إلى تحديد هذه اللغة في إعدادات لغة iOS."
+    "iosLanguageHint": "لا يكفي اختيار هذه اللغة فقط. ستحتاج أيضًا إلى تحديد هذه اللغة في إعدادات لغة iOS.",
+    "managePacksPrefix": "لإدارة اللغات المُنزلة، اذهب إلى"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -608,7 +636,9 @@
       "submittedConfirmation": "تم إرسال طلبك وهو قيد المراجعة. سنعيد التحقق من حالتك عند الضغط على تحديث.",
       "alreadyPending": "لديك بالفعل طلب إلغاء حظر قيد المراجعة.",
       "error": "تعذّر إرسال طلبك. يرجى المحاولة مرة أخرى."
-    }
+    },
+    "topicGenFailed": "تعذّر إنشاء الموضوعات لهذا.",
+    "topicGenRetry": "إعادة المحاولة"
   },
   "articleFeedback": {
     "thumbsUp": "أعجبني",
@@ -855,7 +885,8 @@
     "headlineDenominatorNone_other": "قرأ Mera {{count}} عناوين · لا شيء بدا ذا صلة اليوم.",
     "subTabFeed": "النظرة",
     "subTabStories": "القصص",
-    "subTabSaved": "المحفوظات"
+    "subTabSaved": "المحفوظات",
+    "subTabHistory": "السجل"
   },
   "feedStatus": {
     "title": "حالة الخلاصة",
@@ -1020,7 +1051,11 @@
     "thanks": "شكرًا على ملاحظاتك",
     "seenAck": "تم: سنعرض عددًا أقل مما شاهدته",
     "nudgeSubscribe": "الاشتراك في {{publication}} يفتح المقالات كاملة",
-    "nudgeBrowse": "ابحث عن تغطية ذات صلة من مصادر أخرى"
+    "nudgeBrowse": "ابحث عن تغطية ذات صلة من مصادر أخرى",
+    "paywallRelatedOption": "عرض التغطية ذات الصلة",
+    "paywallRelatedDesc": "قد لا تكون هناك حاجز دفع في قصة مشابهة من منشور آخر — تحقق من المقالات ذات الصلة.",
+    "paywallSubscribeDesc": "زرت {{publication}} {{visits}} مرات هذا الشهر — فكّر في الاشتراك للحصول على وصول كامل.",
+    "paywallBlockOption": "حظر {{publication}} بدلاً من ذلك"
   },
   "topicPlan": {
     "title": "الموضوعات التي سأتابعها",
@@ -1344,6 +1379,8 @@
     "newPinTitle": "عيّن رقم PIN جديد",
     "newPinSubtitle": "اختر رقم PIN جديد مكون من 4 أرقام",
     "pinChangedTitle": "تم تحديث رقم PIN",
-    "pinChangedDescription": "تم تغيير رقم PIN الخاص بك."
+    "pinChangedDescription": "تم تغيير رقم PIN الخاص بك.",
+    "blurImagesTitle": "إخفاء الصور",
+    "blurImagesDescription": "خفّف الصور في المقالات على التطبيق حتى لا تظهر الصور الحادة أو المزعجة بوضوح."
   }
 }

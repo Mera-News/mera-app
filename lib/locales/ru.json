@@ -98,11 +98,7 @@
       "Подвигайтесь: так, как вам комфортно.",
       "Телефон никуда не денется. Будьте здесь и сейчас."
     ],
-    "analysedArticles": "За последние 24 часа опубликовано {{processed}} {{articleWord}}, проанализировано {{analysed}} статей, из которых {{impactful}} оказались актуальными для вас.",
-    "analysedArticlesPending": "За последние 24 часа опубликовано {{processed}} {{articleWord}}.",
     "noiseRemovedSummary": "{{count}} {{articleWord}}-приманок было отфильтровано до начала анализа.",
-    "articleSingular": "статья",
-    "articlePlural": "статей",
     "processing": {
       "doneFlash": "Всё готово, вот ваши новости",
       "errorFlash": "Не удалось загрузить последние материалы. Пожалуйста, попробуйте ещё раз.",
@@ -193,7 +189,28 @@
     "waitingForNextBatch_one": "{{count}} новая статья ожидает следующей партии анализа",
     "waitingForNextBatch_few": "{{count}} новые статьи ожидают следующей партии анализа",
     "waitingForNextBatch_many": "{{count}} новых статей ожидают следующей партии анализа",
-    "waitingForNextBatch_other": "{{count}} новые статьи ожидают следующей партии анализа"
+    "waitingForNextBatch_other": "{{count}} новые статьи ожидают следующей партии анализа",
+    "exploreCta": "Обзор",
+    "statsPublishedPending_one": "{{formatted}} статья опубликована за последние 24 часа.",
+    "statsPublishedPending_few": "{{formatted}} статьи опубликованы за последние 24 часа.",
+    "statsPublishedPending_many": "{{formatted}} статей опубликовано за последние 24 часа.",
+    "statsPublishedPending_other": "{{formatted}} статьи опубликованы за последние 24 часа.",
+    "statsPublished_one": "{{formatted}} статья опубликована за последние 24 часа,",
+    "statsPublished_few": "{{formatted}} статьи опубликованы за последние 24 часа,",
+    "statsPublished_many": "{{formatted}} статей опубликовано за последние 24 часа,",
+    "statsPublished_other": "{{formatted}} статьи опубликованы за последние 24 часа,",
+    "statsAnalysed_one": "{{formatted}} проанализирована для вас,",
+    "statsAnalysed_few": "{{formatted}} проанализированы для вас,",
+    "statsAnalysed_many": "{{formatted}} проанализировано для вас,",
+    "statsAnalysed_other": "{{formatted}} проанализированы для вас,",
+    "statsRelevant_one": "{{formatted}} выглядит актуальной,",
+    "statsRelevant_few": "{{formatted}} выглядят актуальными,",
+    "statsRelevant_many": "{{formatted}} выглядит актуальной,",
+    "statsRelevant_other": "{{formatted}} выглядят актуальными,",
+    "statsRead_one": "и вы прочитали {{formatted}}.",
+    "statsRead_few": "и вы прочитали {{formatted}}.",
+    "statsRead_many": "и вы прочитали {{formatted}}.",
+    "statsRead_other": "и вы прочитали {{formatted}}."
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -328,7 +345,8 @@
     "packMissingIosPath": "Настройки → Основные → Язык и регион",
     "retry": "Повторить",
     "watchGuide": "Посмотрите, как добавить язык на устройство",
-    "iosLanguageHint": "Одного выбора этого языка недостаточно: вам также нужно выбрать его в настройках языка iOS."
+    "iosLanguageHint": "Одного выбора этого языка недостаточно: вам также нужно выбрать его в настройках языка iOS.",
+    "managePacksPrefix": "Чтобы управлять загруженными языками, перейдите в"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -604,7 +622,9 @@
       "submittedConfirmation": "Ваш запрос отправлен и находится на рассмотрении. Мы проверим статус, когда вы нажмёте «Обновить».",
       "alreadyPending": "У вас уже есть запрос на разблокировку, ожидающий рассмотрения.",
       "error": "Не удалось отправить запрос. Пожалуйста, попробуйте ещё раз."
-    }
+    },
+    "topicGenFailed": "Не удалось сгенерировать темы для этого.",
+    "topicGenRetry": "Повторить"
   },
   "articleFeedback": {
     "thumbsUp": "Нравится",
@@ -849,7 +869,8 @@
     "headlineDenominatorNone_other": "Mera прочитала {{count}} заголовков · сегодня ничего не выглядело релевантным.",
     "subTabFeed": "Обзор",
     "subTabStories": "Истории",
-    "subTabSaved": "Сохранённое"
+    "subTabSaved": "Сохранённое",
+    "subTabHistory": "История"
   },
   "feedStatus": {
     "title": "Статус ленты",
@@ -1006,7 +1027,11 @@
     "thanks": "Спасибо за отзыв",
     "seenAck": "Готово, будем показывать меньше уже просмотренного",
     "nudgeSubscribe": "Подписка на {{publication}} открывает полные статьи",
-    "nudgeBrowse": "Поищите похожие материалы от других источников"
+    "nudgeBrowse": "Поищите похожие материалы от других источников",
+    "paywallRelatedOption": "Показать похожие материалы",
+    "paywallRelatedDesc": "Похожую историю от другого издания может быть не закрыто паywallом — проверьте похожие статьи.",
+    "paywallSubscribeDesc": "Вы посетили {{publication}} {{visits}} раз в этом месяце — подумайте о подписке для полного доступа.",
+    "paywallBlockOption": "Вместо этого заблокировать {{publication}}"
   },
   "topicPlan": {
     "title": "Темы, которые я буду отслеживать",
@@ -1320,6 +1345,7 @@
     "newPinTitle": "Установить новый PIN",
     "newPinSubtitle": "Выберите новый 4-значный PIN",
     "pinChangedTitle": "PIN изменён",
-    "pinChangedDescription": "PIN был успешно изменён."
+    "pinChangedDescription": "PIN был успешно изменён.",
+    "blurImagesTitle": "Размыть изображения"
   }
 }
