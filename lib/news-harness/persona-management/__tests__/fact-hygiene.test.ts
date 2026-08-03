@@ -266,3 +266,139 @@ describe('ordering', () => {
     expect(kinds.indexOf('too_broad_fact')).toBeLessThan(kinds.indexOf('stale_topic'));
   });
 });
+
+// ---------------------------------------------------------------------------
+// r12 K-P3 — incoherent_topics (LLM sanity verdicts, grouped PER FACT)
+// ---------------------------------------------------------------------------
+
+describe('incoherent_topics', () => {
+  const cricket = fact('f1', 'Follows the Indian national cricket team');
+  const good = topic('t-good', 'f1', 'India cricket team news');
+  const bad1 = topic('t-bad1', 'f1', 'Amsterdam cricket festival music tech');
+  const bad2 = topic('t-bad2', 'f1', 'Netherlands cricket expat tech trends');
+
+  const incoherent = (topicIds: string[], fillTo = 3) => [
+    { factId: 'f1', topicIds, fillTo },
+  ];
+
+  it('emits ONE proposal per fact, not one per topic', () => {
+    const out = run({
+      facts: [cricket],
+      topics: [good, bad1, bad2],
+      incoherentFacts: incoherent(['t-bad1', 't-bad2']),
+    }).filter((p) => p.kind === 'incoherent_topics');
+
+    expect(out).toHaveLength(1);
+    expect(out[0].targetTopicIds).toEqual(['t-bad1', 't-bad2']);
+    expect(out[0].targetFactIds).toEqual(['f1']);
+  });
+
+  it('names the fact and previews the topics in the summary', () => {
+    const [p] = run({
+      facts: [cricket],
+      topics: [good, bad1],
+      incoherentFacts: incoherent(['t-bad1']),
+    }).filter((x) => x.kind === 'incoherent_topics');
+
+    expect(p.summary).toContain('Follows the Indian national cricket team');
+    // Topic previews are truncated for the card, so match the visible prefix.
+    expect(p.summary).toContain('Amsterdam cricket festival musi');
+    // Singular reads correctly — "1 topic ... doesn't match it".
+    expect(p.summary).toContain("1 topic");
+    expect(p.summary).toContain("doesn't match it");
+    expect(p.summary).not.toContain("don't match it");
+  });
+
+  it('pluralises correctly for multiple topics', () => {
+    const [p] = run({
+      facts: [cricket],
+      topics: [good, bad1, bad2],
+      incoherentFacts: incoherent(['t-bad1', 't-bad2']),
+    }).filter((x) => x.kind === 'incoherent_topics');
+
+    expect(p.summary).toContain('2 topics');
+    expect(p.summary).toContain("don't match it");
+    expect(p.summary).toContain('replace them');
+  });
+
+  it('orders generate_replacements FIRST, then the retires', () => {
+    const [p] = run({
+      facts: [cricket],
+      topics: [good, bad1, bad2],
+      incoherentFacts: incoherent(['t-bad1', 't-bad2']),
+    }).filter((x) => x.kind === 'incoherent_topics');
+
+    expect(p.ops[0]).toEqual({ type: 'generate_replacements', factId: 'f1', fillTo: 3 });
+    expect(p.ops.slice(1)).toEqual([
+      { type: 'persona_action', action: { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: 't-bad1' } },
+      { type: 'persona_action', action: { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: 't-bad2' } },
+    ]);
+  });
+
+  it('is invertible — retire is reversible, nothing is destroyed', () => {
+    const [p] = run({
+      facts: [cricket],
+      topics: [good, bad1],
+      incoherentFacts: incoherent(['t-bad1']),
+    }).filter((x) => x.kind === 'incoherent_topics');
+    expect(p.invertible).toBe(true);
+  });
+
+  it('drops verdicts for topics that no longer exist or moved fact', () => {
+    const out = run({
+      facts: [cricket],
+      topics: [good],
+      incoherentFacts: incoherent(['t-vanished']),
+    }).filter((p) => p.kind === 'incoherent_topics');
+    expect(out).toEqual([]);
+  });
+
+  it('ignores a verdict for a fact that no longer exists', () => {
+    const out = run({
+      facts: [],
+      topics: [],
+      incoherentFacts: incoherent(['t-bad1']),
+    }).filter((p) => p.kind === 'incoherent_topics');
+    expect(out).toEqual([]);
+  });
+
+  it('never proposes against a fact already being deleted', () => {
+    // Two duplicate facts → the loser is deleted; an incoherent proposal on it
+    // would be redundant work on a doomed fact.
+    const a = fact('f1', 'Follows the Indian national cricket team', 0.2);
+    const b = fact('f2', 'Follows the Indian national cricket team', 0.9);
+    const out = run({
+      facts: [a, b],
+      topics: [good, bad1],
+      incoherentFacts: incoherent(['t-bad1']),
+    });
+    expect(out.some((p) => p.kind === 'duplicate_facts')).toBe(true);
+    expect(out.some((p) => p.kind === 'incoherent_topics')).toBe(false);
+  });
+
+  it('respects the rejected-fingerprint memory', () => {
+    const out = run({
+      facts: [cricket],
+      topics: [good, bad1],
+      incoherentFacts: incoherent(['t-bad1']),
+      rejectedFingerprints: ['incoherent_topics:f1'],
+    }).filter((p) => p.kind === 'incoherent_topics');
+    expect(out).toEqual([]);
+  });
+
+  it('only considers ACTIVE topics — a retired one is not re-proposed', () => {
+    const retired = topic('t-ret', 'f1', 'old thing', { status: 'retired' });
+    const out = run({
+      facts: [cricket],
+      topics: [good, retired],
+      incoherentFacts: incoherent(['t-ret']),
+    }).filter((p) => p.kind === 'incoherent_topics');
+    expect(out).toEqual([]);
+  });
+
+  it('produces nothing when no verdicts are supplied', () => {
+    const out = run({ facts: [cricket], topics: [good, bad1] })
+      .filter((p) => p.kind === 'incoherent_topics');
+    expect(out).toEqual([]);
+  });
+});

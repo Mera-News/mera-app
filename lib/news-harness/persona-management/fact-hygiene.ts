@@ -69,12 +69,27 @@ export interface HygieneTopicInput {
   lastSignalAtMs: number | null;
 }
 
+/** One fact's incoherent topics, as judged by the (impure) LLM sanity sweep.
+ *  The judging happens in the RN adapter; this module only shapes the proposal,
+ *  so the analyzer stays pure and deterministic. */
+export interface HygieneIncoherentFactInput {
+  factId: string;
+  /** Topic ids on that fact the sweep judged not to match it. */
+  topicIds: string[];
+  /** Active-topic count the fact had BEFORE these are retired — the count the
+   *  replacement generation should refill toward, so coverage never dips. */
+  fillTo: number;
+}
+
 export interface HygieneAnalyzeInput {
   facts: HygieneFactInput[];
   topics: HygieneTopicInput[];
   now: number;
   /** Proposal fingerprints the user has already rejected — never re-proposed. */
   rejectedFingerprints?: string[];
+  /** Verdicts from the LLM topic-sanity sweep, already filtered by the adapter
+   *  (tracked/user provenance and story-bound topics are never included). */
+  incoherentFacts?: HygieneIncoherentFactInput[];
   thresholds?: HygieneThresholds;
 }
 
@@ -84,7 +99,12 @@ export type HygieneProposalKind =
   | 'duplicate_facts'
   | 'too_broad_fact'
   | 'stale_topic'
-  | 'stale_fact';
+  | 'stale_fact'
+  // Topics that do not match the fact that owns them — the combo-prompt
+  // contamination ("Amsterdam cricket festival music tech"). Grouped PER FACT,
+  // not per topic: the fact statement is the only context that makes the
+  // verdict judgeable, and it turns ~60 verdicts into ~15 review cards.
+  | 'incoherent_topics';
 
 /** A minimal PersonaAction shape, structurally compatible with the executor's
  *  richer `PersonaAction` — kept local so the pure module never imports RN. */
@@ -98,7 +118,11 @@ export interface HygienePersonaAction {
 /** One concrete op an accept runs, in order. */
 export type HygieneOp =
   | { type: 'persona_action'; action: HygienePersonaAction }
-  | { type: 'delete_fact'; factId: string };
+  | { type: 'delete_fact'; factId: string }
+  // Regenerate topics for a fact BEFORE its incoherent ones are retired. Always
+  // ordered first in `ops` so the executor can hold the invariant that a topic
+  // is never retired unless its replacement is already committed.
+  | { type: 'generate_replacements'; factId: string; fillTo: number };
 
 export interface HygieneProposal {
   /** Stable fingerprint (kind + sorted target ids). Dedup + rejected-memory key. */
@@ -270,12 +294,68 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     });
   }
 
+  // 5. incoherent_topics (LLM sanity verdicts, grouped per fact) -----------
+  // The judging is impure and happens in the RN adapter; this only shapes the
+  // verdicts into proposals so fingerprinting, rejection memory and ordering
+  // stay in one place. `ops` puts generate_replacements FIRST — the executor
+  // relies on that order to never retire a topic before its replacement exists.
+  const factById = new Map(input.facts.map((f) => [f.id, f]));
+  for (const inc of input.incoherentFacts ?? []) {
+    if (inc.topicIds.length === 0) continue;
+    if (factsBeingDeleted.has(inc.factId)) continue; // fact is going anyway
+    const fact = factById.get(inc.factId);
+    if (!fact) continue; // stale verdict for a fact deleted since the sweep read
+    const id = `incoherent_topics:${inc.factId}`;
+    if (rejected.has(id)) continue;
+
+    // Only topics that still exist AND still belong to this fact.
+    const owned = new Set(
+      (activeTopicsByFact.get(inc.factId) ?? []).map((t) => t.id),
+    );
+    const topicIds = inc.topicIds.filter((tid) => owned.has(tid));
+    if (topicIds.length === 0) continue;
+
+    const textById = new Map(
+      (activeTopicsByFact.get(inc.factId) ?? []).map((t) => [t.id, t.text]),
+    );
+    const preview = topicIds
+      .slice(0, 3)
+      .map((tid) => `"${shorten(textById.get(tid) ?? '', 32)}"`)
+      .join(', ');
+    const more = topicIds.length > 3 ? ` and ${topicIds.length - 3} more` : '';
+
+    proposals.push({
+      id,
+      kind: 'incoherent_topics',
+      summary:
+        (topicIds.length === 1
+          ? `1 topic under "${shorten(fact.statement)}" doesn't match it`
+          : `${topicIds.length} topics under "${shorten(fact.statement)}" don't match it`) +
+        ` (${preview}${more}) — replace ${topicIds.length === 1 ? 'it' : 'them'} with better ones?`,
+      targetFactIds: [inc.factId],
+      targetTopicIds: [...topicIds].sort(),
+      // generate_replacements FIRST, then the retires. The executor holds both
+      // safety rules — replacements committed before anything is retired, and
+      // never retire a fact's last active topic — because only it knows whether
+      // the generation actually produced rows.
+      ops: [
+        { type: 'generate_replacements', factId: inc.factId, fillTo: inc.fillTo },
+        ...topicIds.map((tid) => ({
+          type: 'persona_action' as const,
+          action: { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: tid },
+        })),
+      ],
+      invertible: true,
+    });
+  }
+
   // Deterministic order: by kind, then fingerprint.
   const kindOrder: Record<HygieneProposalKind, number> = {
     duplicate_facts: 0,
     stale_fact: 1,
-    too_broad_fact: 2,
-    stale_topic: 3,
+    incoherent_topics: 2,
+    too_broad_fact: 3,
+    stale_topic: 4,
   };
   proposals.sort((a, b) => {
     const k = kindOrder[a.kind] - kindOrder[b.kind];

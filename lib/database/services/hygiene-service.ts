@@ -23,6 +23,7 @@ import { getFacts, getFactSectionSnapshots, deleteFact } from './fact-service';
 import { getAllTopicSnapshots } from './topic-service';
 import { getSetting, setSetting } from './setting-service';
 import { applyPersonaAction, type PersonaAction } from './persona-action-executor';
+import * as sanityService from './topic-sanity-service';
 import * as changeLogService from './persona-change-log-service';
 
 // ── KV keys + tunables ────────────────────────────────────────────────────
@@ -42,10 +43,36 @@ export const SWEEP_COOLDOWN_MS = 6 * 24 * 60 * 60 * 1000;
 /** Cap the remembered-rejections list so the KV blob can't grow unbounded. */
 const MAX_REJECTED_FINGERPRINTS = 200;
 
+/** Hard cap on how long the sweep waits for the LLM sanity audit before
+ *  publishing without it. Sits under the task's 90s timeout, and the race NEVER
+ *  rejects — a slow audit degrades to "no sanity proposals this week", never to
+ *  a failed sweep or a retried (double-billed) call. */
+export const SANITY_RACE_MS = 60_000;
+
 export interface SweepResult {
   ran: boolean;
   reason?: 'cooldown' | 'too_few_facts' | 'persona_too_young';
   proposalCount: number;
+}
+
+/** Resolve `fn` normally, or `fallback` if it takes too long / throws. Never
+ *  rejects — that property is what makes raising the task timeout safe. */
+async function raceWithFallback<T>(
+  promise: Promise<T>,
+  ms: number,
+  fallback: T,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise.catch(() => fallback),
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 // ── Change notifier (Profile row / review sheet refresh) ───────────────────
@@ -149,8 +176,23 @@ export async function runHygieneSweep(opts?: {
     getAllTopicSnapshots(),
   ]);
 
+  // Kick the LLM sanity audit off BEFORE the size/age gates. Those gates exist
+  // for the four *cleanup* kinds ("too little to clean", "let the profile
+  // settle") and neither rationale transfers: contamination is present from the
+  // very first generation, is worse the more facts there are, and auditing a
+  // young persona carries no false-positive risk. Left behind the gates, a
+  // 9-fact persona would never be cleaned and a new user would wait 7 days to
+  // see the topics they are complaining about today.
+  const sanityPromise = raceWithFallback(
+    sanityService.runSanityAudit({
+      facts: facts.map((f) => ({ id: f.id, statement: f.statement })),
+    }),
+    SANITY_RACE_MS,
+    { incoherentFacts: [], audited: 0 },
+  );
+
   if (facts.length < MIN_FACTS_FOR_SWEEP) {
-    return { ran: false, reason: 'too_few_facts', proposalCount: 0 };
+    return publishSanityOnly(await sanityPromise, facts, topics, now, 'too_few_facts');
   }
 
   // Persona age = time since the earliest fact was created.
@@ -159,7 +201,7 @@ export async function runHygieneSweep(opts?: {
     .filter((ms) => ms > 0);
   const earliest = createdTimes.length > 0 ? Math.min(...createdTimes) : now;
   if (now - earliest < MIN_PERSONA_AGE_MS) {
-    return { ran: false, reason: 'persona_too_young', proposalCount: 0 };
+    return publishSanityOnly(await sanityPromise, facts, topics, now, 'persona_too_young');
   }
 
   // Join fact weight (from section snapshots) onto the analyzer input.
@@ -173,11 +215,17 @@ export async function runHygieneSweep(opts?: {
   }));
 
   const rejected = await readRejected();
+  // Wait for the audit here — its verdicts must reach the SAME pending set and
+  // the SAME single notification (persona-hygiene-task documents "fires ONE
+  // hygiene notification"). Bounded and non-rejecting, so the worst case is
+  // zero sanity proposals rather than a failed sweep.
+  const sanity = await sanityPromise;
   const input: HygieneAnalyzeInput = {
     facts: factInputs,
     topics,
     now,
     rejectedFingerprints: rejected,
+    incoherentFacts: sanity.incoherentFacts,
   };
   const proposals = analyzeHygiene(input);
 
@@ -200,7 +248,75 @@ export async function runHygieneSweep(opts?: {
   return { ran: true, proposalCount: proposals.length };
 }
 
+/**
+ * Publish sanity proposals when the sweep bailed on the size/age gate.
+ *
+ * The four cleanup kinds are correctly withheld for a small or young persona,
+ * but the sanity verdicts are not — so instead of returning `proposalCount: 0`
+ * blindly, run the analyzer with an EMPTY fact list (which suppresses every
+ * fact-derived kind) and publish whatever the audit found. `ran` stays false and
+ * the reason is preserved, so the caller's bookkeeping is unchanged.
+ */
+async function publishSanityOnly(
+  sanity: { incoherentFacts: HygieneAnalyzeInput['incoherentFacts'] },
+  facts: { id: string; statement: string }[],
+  topics: HygieneAnalyzeInput['topics'],
+  now: number,
+  reason: 'too_few_facts' | 'persona_too_young',
+): Promise<SweepResult> {
+  const incoherentFacts = sanity.incoherentFacts ?? [];
+  if (incoherentFacts.length === 0) {
+    return { ran: false, reason, proposalCount: await getPendingCount() };
+  }
+
+  const proposals = analyzeHygiene({
+    // Facts ARE supplied (the summary needs their statements) but every
+    // fact-derived kind needs >= 2 facts or a weight/staleness signal; the
+    // incoherent kind is the only one these inputs can produce.
+    facts: facts.map((f) => ({ id: f.id, statement: f.statement, weight: null, createdAtMs: now })),
+    topics,
+    now,
+    rejectedFingerprints: await readRejected(),
+    incoherentFacts,
+  }).filter((p) => p.kind === 'incoherent_topics');
+
+  if (proposals.length === 0) {
+    return { ran: false, reason, proposalCount: await getPendingCount() };
+  }
+
+  await writePending(proposals);
+  notifyChange();
+  void toastManager.showNotifiedToast({
+    type: 'hygiene',
+    source: 'hygiene',
+    title: 'hygiene.notificationTitle',
+    body: 'hygiene.notificationBody',
+    icon: 'cleaning-services',
+    context: { count: proposals.length },
+    actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
+  });
+  return { ran: false, reason, proposalCount: proposals.length };
+}
+
 // ── Accept / Reject ──────────────────────────────────────────────────────────
+
+/**
+ * Generate replacement topics for a fact whose incoherent ones are about to be
+ * retired. Returns true only when the fact is safe to prune.
+ *
+ * FAIL-CLOSED. K-P3 ships the proposal kind and this seam; the generator itself
+ * arrives with K-P5 (it reuses J's combo-only builder rather than a third
+ * generation path). Until then this returns false, which aborts the accept
+ * before any retire runs — the proposal simply stays pending. That is the
+ * deliberate ordering: the destructive half must never be able to land ahead of
+ * the half that protects it.
+ */
+async function runGenerateReplacements(
+  _factId: string,
+  _fillTo: number,
+): Promise<boolean> {
+  return false;
+}
 
 export interface AcceptResult {
   applied: boolean;
@@ -218,10 +334,41 @@ export async function acceptProposal(id: string): Promise<AcceptResult> {
   const proposal = pending.find((p) => p.id === id);
   if (!proposal) return { applied: false, ok: false };
 
+  // PHASE 1 — regeneration, before anything is removed.
+  //
+  // The invariant for `incoherent_topics`: a topic is NEVER retired unless its
+  // replacement is already committed. So every generate_replacements op runs
+  // first, and if any of them fails we abort the whole proposal WITHOUT running
+  // a single retire and leave it pending. The user is then exactly where they
+  // started — worst case they tap again — instead of holding a fact that lost
+  // topics and gained nothing.
+  const genOps = proposal.ops.filter((op) => op.type === 'generate_replacements');
+  for (const op of genOps) {
+    if (op.type !== 'generate_replacements') continue;
+    let generated = false;
+    try {
+      generated = await runGenerateReplacements(op.factId, op.fillTo);
+    } catch (error) {
+      logger.captureException(error, {
+        tags: { service: 'hygiene-service', method: 'acceptProposal.generate' },
+      });
+    }
+    if (!generated) {
+      logger.warn('[hygiene] replacement generation failed — nothing retired', {
+        proposalId: proposal.id,
+        factId: op.factId,
+      });
+      return { applied: false, ok: false };
+    }
+  }
+
+  // PHASE 2 — the removals, now safe to apply.
   let ok = true;
   for (const op of proposal.ops) {
     try {
-      if (op.type === 'delete_fact') {
+      if (op.type === 'generate_replacements') {
+        continue; // already handled in phase 1
+      } else if (op.type === 'delete_fact') {
         await deleteFact(op.factId);
         await changeLogService.append({
           actionType: ACTION_NAMES.HYGIENE_DELETE_FACT,

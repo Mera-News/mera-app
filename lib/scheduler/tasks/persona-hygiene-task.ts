@@ -19,7 +19,12 @@ AppScheduler.register({
   // db-ready + idle: a low-priority sweep that defers to the feed sync /
   // inference queue and re-checks on the next tick when the app is busy.
   conditions: [{ type: 'db-ready' }, { type: 'custom', check: backgroundWorkIsIdle }],
-  timeout: 30_000,
+  // 90s, raised from 30s for the r12 LLM topic-sanity audit (SANITY_RACE_MS is
+  // 60s and sits inside this). Safe despite maxAttempts: the audit is wrapped in
+  // a race that NEVER rejects, so a slow audit resolves to "no sanity proposals"
+  // and the handler completes — the retry path is never entered, and a second
+  // billed call can't happen.
+  timeout: 90_000,
   maxAttempts: 2,
   exclusive: true,
   handler: async (_input, ctx) => {

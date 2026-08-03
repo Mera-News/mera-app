@@ -6,7 +6,7 @@ const mockKv = new Map<string, string>();
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
-  default: { captureException: jest.fn(() => 'evt') },
+  default: { captureException: jest.fn(() => 'evt'), warn: jest.fn(), debug: jest.fn() },
 }));
 
 jest.mock('@/lib/toast-manager', () => ({
@@ -34,6 +34,20 @@ jest.mock('../topic-service', () => ({
   getAllTopicSnapshots: jest.fn(async () => []),
 }));
 
+// r12 K-P3: the sanity audit is an LLM + DB call; mocked so the sweep's wiring
+// (gate hoist, race, merge into ONE notification) is what these tests exercise.
+const mockRunSanityAudit: jest.Mock<
+  Promise<{
+    incoherentFacts: { factId: string; topicIds: string[]; fillTo: number }[];
+    audited: number;
+  }>,
+  []
+> = jest.fn(async () => ({ incoherentFacts: [], audited: 0 }));
+jest.mock('../topic-sanity-service', () => ({
+  runSanityAudit: (...a: unknown[]) => mockRunSanityAudit(...(a as [])),
+  resetSanityCursor: jest.fn(async () => {}),
+}));
+
 jest.mock('../persona-action-executor', () => ({
   applyPersonaAction: jest.fn(async () => ({ applied: true, summary: 'ok' })),
 }));
@@ -49,6 +63,7 @@ import {
   acceptProposal,
   rejectProposal,
   MIN_FACTS_FOR_SWEEP,
+  SANITY_RACE_MS,
 } from '../hygiene-service';
 import * as factService from '../fact-service';
 import * as topicService from '../topic-service';
@@ -237,5 +252,136 @@ describe('rejectProposal', () => {
     const pending = await getPendingProposals();
     expect(pending.find((p) => p.id === proposal.id)).toBeUndefined();
     expect(res.proposalCount).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// r12 K-P3 — sanity audit: gate hoist, single notification, fail-closed accept
+// ---------------------------------------------------------------------------
+
+describe('sanity audit wiring', () => {
+  const factRows = [
+    { id: 'f1', statement: 'Follows the Indian national cricket team' },
+  ];
+  const topicRows = [
+    {
+      id: 't-bad',
+      factId: 'f1',
+      text: 'Amsterdam cricket festival music tech',
+      normalizedText: 'amsterdam cricket festival music tech',
+      weight: 0.5,
+      status: 'active' as const,
+      lastSignalAtMs: Date.now(),
+    },
+  ];
+
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+    mockRunSanityAudit.mockResolvedValue({ incoherentFacts: [], audited: 0 });
+    (factService.getFacts as jest.Mock).mockResolvedValue(factRows);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(topicRows);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue(
+      factRows.map((f) => ({ id: f.id, weight: null, createdAtMs: 0 })),
+    );
+  });
+
+  it('publishes sanity proposals even when there are TOO FEW facts', async () => {
+    // The size gate exists for the cleanup kinds; contamination is present from
+    // the first generation, so withholding it here would fail the very user who
+    // is complaining. One fact is far below MIN_FACTS_FOR_SWEEP.
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+
+    const res = await runHygieneSweep({ force: true });
+
+    expect(res.reason).toBe('too_few_facts');
+    expect(res.proposalCount).toBe(1);
+    const pending = await getPendingProposals();
+    expect(pending[0].kind).toBe('incoherent_topics');
+  });
+
+  it('still reports zero when the audit found nothing and the gate bails', async () => {
+    const res = await runHygieneSweep({ force: true });
+    expect(res.reason).toBe('too_few_facts');
+    expect(res.proposalCount).toBe(0);
+    expect(await getPendingProposals()).toEqual([]);
+  });
+
+  it('never fires a SECOND notification — the sweep publishes once', async () => {
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+
+    await runHygieneSweep({ force: true });
+
+    expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
+  });
+
+  it('completes normally when the audit throws (race never rejects)', async () => {
+    mockRunSanityAudit.mockRejectedValue(new Error('gateway down'));
+
+    const res = await runHygieneSweep({ force: true });
+
+    expect(res.reason).toBe('too_few_facts');
+    expect(res.proposalCount).toBe(0);
+  });
+
+  it('completes when the audit hangs past the race window', async () => {
+    jest.useFakeTimers();
+    mockRunSanityAudit.mockReturnValue(new Promise(() => {}));
+
+    const promise = runHygieneSweep({ force: true });
+    await jest.advanceTimersByTimeAsync(SANITY_RACE_MS + 1000);
+    const res = await promise;
+
+    expect(res.proposalCount).toBe(0);
+    jest.useRealTimers();
+  });
+});
+
+describe('acceptProposal — generate_replacements is fail-closed', () => {
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+    (factService.getFacts as jest.Mock).mockResolvedValue([
+      { id: 'f1', statement: 'Follows the Indian national cricket team' },
+    ]);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue([
+      {
+        id: 't-bad',
+        factId: 'f1',
+        text: 'Amsterdam cricket festival music tech',
+        normalizedText: 'amsterdam cricket festival music tech',
+        weight: 0.5,
+        status: 'active' as const,
+        lastSignalAtMs: Date.now(),
+      },
+    ]);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue([
+      { id: 'f1', weight: null, createdAtMs: 0 },
+    ]);
+  });
+
+  it('retires NOTHING when replacement generation cannot run', async () => {
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+    expect(proposal.kind).toBe('incoherent_topics');
+
+    const res = await acceptProposal(proposal.id);
+
+    // Generation is not wired until K-P5, so the accept must abort whole.
+    expect(res.applied).toBe(false);
+    // The invariant: not a single retire ran.
+    expect(executor.applyPersonaAction).not.toHaveBeenCalled();
+    // And the proposal survives so the user can try again.
+    expect(await getPendingProposals()).toHaveLength(1);
   });
 });
