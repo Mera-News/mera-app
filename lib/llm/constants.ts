@@ -10,14 +10,18 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  * TIMEOUT-CLASS way (see lib/llm/model-fallback) we stop sending it for the rest
  * of the JS session and send its fallback instead.
  *
- * `openai/gpt-oss-120b` is a similar-cost TEE-served model on the same NEAR
- * fleet — verified `is_ready: true` with a healthy attestation report on
- * 2026-08-03, and confirmed as the fallback choice the same day. This map is
- * the single point to change if a different fallback is ever chosen.
+ * Both fallbacks are TEE-served models on the same NEAR fleet, verified
+ * `is_ready: true` with healthy attestation reports (ecdsa signing — the same
+ * shape the E2EE path already handles) on 2026-08-03, and confirmed as the
+ * fallback choices the same day. Each matches its primary's class:
+ * `openai/gpt-oss-120b` (~120B, $0.15/$0.55) backs the big chat model;
+ * `google/gemma-4-31B-it` (~31B dense, $0.13/$0.40, 262K ctx, tools +
+ * structured outputs) backs the small scoring/topics/reasons model. This map
+ * is the single point to change if a different fallback is ever chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
   [BIG_MODEL]: 'openai/gpt-oss-120b',
-  [SMALL_MODEL]: 'openai/gpt-oss-120b',
+  [SMALL_MODEL]: 'google/gemma-4-31B-it',
 };
 
 /**

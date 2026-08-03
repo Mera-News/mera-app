@@ -37,7 +37,7 @@ describe('model-fallback', () => {
 
   describe('MODEL_FALLBACKS wiring', () => {
     it('maps both primaries to the TEE-served fallback', () => {
-      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('openai/gpt-oss-120b');
+      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('google/gemma-4-31B-it');
       expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('openai/gpt-oss-120b');
     });
   });

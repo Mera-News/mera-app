@@ -83,7 +83,7 @@ import { SMALL_MODEL } from '../constants';
 import type { BatchCall } from '../types';
 import logger from '@/lib/logger';
 
-const FALLBACK_MODEL = 'openai/gpt-oss-120b';
+const FALLBACK_MODEL = 'google/gemma-4-31B-it';
 
 /** A rejection whose wording matches expo/fetch's cancellation. */
 function makeCanceledError(): Error {
