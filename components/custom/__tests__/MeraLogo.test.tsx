@@ -28,15 +28,27 @@ jest.mock('react-native-svg', () => {
   return { __esModule: true, default: Svg, Svg, Circle, ClipPath, G, Path, Rect };
 });
 
+const mockCancelAnimation = jest.fn();
+
 jest.mock('react-native-reanimated', () => ({
   __esModule: true,
   default: { createAnimatedComponent: (c: unknown) => c },
   useSharedValue: (...args: unknown[]) => mockUseSharedValue(...args),
-  useAnimatedProps: () => ({}),
+  // Non-empty so the animated <G> is distinguishable from the frozen frame,
+  // which renders a plain `transform` string and no animatedProps.
+  useAnimatedProps: () => ({ transform: [] }),
   withRepeat: jest.fn(),
   withTiming: jest.fn(),
   withSequence: jest.fn(),
+  cancelAnimation: (...args: unknown[]) => mockCancelAnimation(...args),
   Easing: { inOut: () => () => 0, ease: () => 0 },
+}));
+
+// Drives the focus/foreground gate. Default true so the pre-existing specs
+// (which assert the animated path) keep describing the same behaviour.
+let mockAnimationsActive = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({
+  useAnimationsActive: () => mockAnimationsActive,
 }));
 
 import { render } from '@testing-library/react-native';
@@ -44,7 +56,11 @@ import React from 'react';
 import MeraLogo from '../MeraLogo';
 
 describe('MeraLogo', () => {
-  beforeEach(() => mockUseSharedValue.mockClear());
+  beforeEach(() => {
+    mockUseSharedValue.mockClear();
+    mockCancelAnimation.mockClear();
+    mockAnimationsActive = true;
+  });
 
   it('renders static by default with no reanimated involvement', () => {
     const { getByTestId } = render(<MeraLogo size={24} />);
@@ -61,6 +77,38 @@ describe('MeraLogo', () => {
   it('keeps the tight viewBox when animated', () => {
     const { getByTestId } = render(<MeraLogo size={56} animated />);
     expect(getByTestId('svg-Svg').props.viewBox).toBe('255 146 514 732');
+  });
+
+  // B1.5 — this animates an SVG <G transform>, which RNSVG rasterises on the
+  // CPU every frame. AllCaughtUpCard puts one at the bottom of the Feed, and
+  // tabs stay mounted, so an ungated loop re-rasterises forever off-screen.
+  describe('focus/foreground gate', () => {
+    const STATIC_TRANSFORM = 'rotate(-15 512 760)';
+
+    it('animates while focused and foregrounded', () => {
+      mockAnimationsActive = true;
+      const { queryAllByTestId } = render(<MeraLogo size={56} animated />);
+      const gs = queryAllByTestId('svg-G');
+      // The animated node carries animatedProps; the frozen frame does not.
+      expect(gs.some((g) => g.props.animatedProps !== undefined)).toBe(true);
+      expect(gs.some((g) => g.props.transform === STATIC_TRANSFORM)).toBe(false);
+    });
+
+    it('falls back to the frozen frame when blurred or backgrounded', () => {
+      mockAnimationsActive = false;
+      const { queryAllByTestId } = render(<MeraLogo size={56} animated />);
+      const gs = queryAllByTestId('svg-G');
+      // Animated node gone entirely — cheaper than merely pausing it, and
+      // visually identical to the static call path at rest.
+      expect(gs.some((g) => g.props.animatedProps !== undefined)).toBe(false);
+      expect(gs.some((g) => g.props.transform === STATIC_TRANSFORM)).toBe(true);
+    });
+
+    it('cancels the shared value so nothing keeps driving it on the UI thread', () => {
+      mockAnimationsActive = false;
+      render(<MeraLogo size={56} animated />);
+      expect(mockCancelAnimation).toHaveBeenCalled();
+    });
   });
 });
 
