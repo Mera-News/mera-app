@@ -56,6 +56,25 @@ function finalizeToolCalls(accumulators: Map<number, ToolCallAccumulator>): Arra
   return results;
 }
 
+/**
+ * True when a tool call "used up" the model's mandatory call without extracting
+ * anything — `saveExtractedFacts` with an empty (or malformed) list.
+ *
+ * Observed in production 2026-08-03: the user states a fact, the model replies
+ * conversationally AND calls saveExtractedFacts with
+ * `{extracted_user_information: []}`. The call is well-formed, so the
+ * zero-tool-call safety net below never fires, executeTool saves nothing, and
+ * the fact is silently lost — the failure the user reports as "it just replied
+ * to me". Treating this as no call at all routes it back through the same
+ * forced-extraction pass that already covers a model skipping the tool.
+ */
+function isEmptyExtractionCall(tc: { name: string; input: unknown }): boolean {
+  if (tc.name !== 'saveExtractedFacts') return false;
+  const list = (tc.input as { extracted_user_information?: unknown } | null)
+    ?.extracted_user_information;
+  return !Array.isArray(list) || list.length === 0;
+}
+
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
@@ -309,14 +328,26 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const first = await streamOne(assistantId, true, 'auto');
       pushAssistantToWire(first.accContent, first.toolCalls);
 
-      if (first.toolCalls.length === 0) {
-        // Model skipped its mandatory tool call. Guarantee extraction in the
-        // background; do not block the reply the user already has.
+      if (first.toolCalls.length > 0) {
+        await executeToolsAndPushResults(assistantId, first.toolCalls);
+      }
+
+      // Did the turn actually extract anything? Zero tool calls and an EMPTY
+      // saveExtractedFacts call both mean no — see isEmptyExtractionCall.
+      const extractedSomething = first.toolCalls.some((tc) => !isEmptyExtractionCall(tc));
+
+      // The user already has their reply, but nothing was extracted: guarantee
+      // extraction in the background without blocking that reply. Runs at most
+      // once — 'required' obliges >=1 call and this branch is never re-entered.
+      //
+      // Gated on text being present: with NO text the continuation pass below
+      // is the better instrument, because it gives the user a visible reply AND
+      // another chance to call the tool, where a hidden forced pass would leave
+      // the bubble blank.
+      if (!extractedSomething && first.accContent.trim() !== '') {
         void runForcedExtraction();
         return;
       }
-
-      await executeToolsAndPushResults(assistantId, first.toolCalls);
 
       // ---------- Continuation pass ----------
       // When the model returns tool calls but no conversational text, post the
