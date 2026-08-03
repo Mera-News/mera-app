@@ -61,6 +61,21 @@ export interface PipelineBatch {
   reasonsOnly?: boolean;
   /** ≤25 ids; array order is the decode join key for `score:N` results. */
   candidateIds: string[];
+  /**
+   * Every ARTICLE this batch is responsible for: its candidates plus the
+   * duplicate siblings the scoring gate held back, which inherit a candidate's
+   * score instead of earning their own (`coveredIdsByRep` in score-propagation).
+   * Written once at enqueue and NEVER rewritten — unlike `candidateIds`, which
+   * the submit path replaces with the eligible subset — so it is the only stable
+   * denominator for the "Analysing X of Y articles" header.
+   *
+   * Sets from different batches CAN overlap: a held-back sibling is not
+   * in-flight, so the next gate pass re-elects it into a batch of its own. The
+   * projection unions them, which is exactly why this is a set of ids and not a
+   * count. Absent on runs persisted before this shipped ⇒ falls back to
+   * `candidateIds`.
+   */
+  coveredIds?: string[];
   /** LEGACY (Round-3 B1): the primary fact this batch's candidates were grouped
    *  under. Round-4 B removed per-fact grouping — batches are FIFO 25-article
    *  quanta, so this is always null on new batches. Kept optional only so a run

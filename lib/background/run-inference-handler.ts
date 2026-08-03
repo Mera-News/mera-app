@@ -131,7 +131,7 @@ export async function runBackgroundCycle(
       }
       const toEnqueue = gate.enqueueIds.filter((id) => eligibleIds.has(id));
       if (toEnqueue.length > 0) {
-        await pipeline.enqueueCandidates(toEnqueue);
+        await pipeline.enqueueCandidates(toEnqueue, false, gate.coveredIdsByRep);
       }
     }
     await pipeline.enqueueOrphanedReasons();

@@ -426,6 +426,11 @@ export async function stepHydratePersistEnqueue(
   // The trailing sub-25 partial the most recent enqueue held back (empty when
   // nothing was deferred). Flushed to scoring once the whole lot is hydrated.
   let pendingDeferred: string[] = [];
+  // That same pass's gate coverage (rep id → the duplicate group it stands in
+  // for), carried alongside so the tail flush records the same article coverage
+  // the greedy enqueues did — otherwise the flushed remainder would look like it
+  // covers only itself and undercount the header's denominator.
+  let pendingCoveredIdsByRep: Record<string, string[]> = {};
 
   const gateAndEnqueue = async (): Promise<void> => {
     const inFlight = await getNonTerminalCandidateIds();
@@ -450,8 +455,13 @@ export async function stepHydratePersistEnqueue(
     // an already-scored story into a `Complete` row without any inference. Only
     // the dispatch is suppressed.
     if (!opts.suppressEnqueue && gate.enqueueIds.length > 0) {
-      const res = await enqueueCandidates(gate.enqueueIds);
+      const res = await enqueueCandidates(
+        gate.enqueueIds,
+        false,
+        gate.coveredIdsByRep,
+      );
       pendingDeferred = res?.deferred ?? [];
+      pendingCoveredIdsByRep = gate.coveredIdsByRep ?? {};
     }
     if (!opts.suppressEnqueue) enqueuedCount += gate.enqueueIds.length;
     const enqueuedLabel = opts.suppressEnqueue
@@ -556,7 +566,7 @@ export async function stepHydratePersistEnqueue(
   if (!ctx.signal.aborted) {
     try {
       if (!opts.suppressEnqueue && pendingDeferred.length > 0) {
-        await enqueueCandidates(pendingDeferred, true);
+        await enqueueCandidates(pendingDeferred, true, pendingCoveredIdsByRep);
       } else if (
         opts.suppressEnqueue &&
         (await scoringPipeline.getPipelineStatus()) === 'idle'

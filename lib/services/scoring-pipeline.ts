@@ -358,15 +358,38 @@ async function lookupHeadlineIds(ids: string[]): Promise<Set<string>> {
   return out;
 }
 
+/** The articles a chunk is responsible for: each candidate plus the duplicate
+ *  siblings the gate elected it to stand in for. Deduped, candidate order first.
+ *  Written unconditionally — a batch whose coverage happens to equal its
+ *  candidates still needs the field, because `candidateIds` is REPLACED by the
+ *  eligible subset at submit and would otherwise shrink the denominator mid-run. */
+function coveredIdsFor(
+  candidateIds: string[],
+  coveredIdsByRep?: Readonly<Record<string, string[]>>,
+): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const id of candidateIds) {
+    for (const covered of coveredIdsByRep?.[id] ?? [id]) {
+      if (seen.has(covered)) continue;
+      seen.add(covered);
+      out.push(covered);
+    }
+  }
+  return out;
+}
+
 function makeQueuedBatch(
   batchId: number,
   candidateIds: string[],
   reasonsOnly = false,
+  coveredIdsByRep?: Readonly<Record<string, string[]>>,
 ): PipelineBatch {
   return {
     batchId,
     phase: 'queued',
     candidateIds,
+    coveredIds: coveredIdsFor(candidateIds, coveredIdsByRep),
     attempt: 0,
     ...(reasonsOnly ? { reasonsOnly: true } : {}),
   };
@@ -462,12 +485,7 @@ export function derivePipelineUiState(run: PipelineRun): PipelineUiState {
   for (const b of run.batches) {
     const n = b.candidateIds.length;
     total += n;
-    const relevanceKnown =
-      b.reasonsOnly === true ||
-      (b.phase !== 'queued' &&
-        b.phase !== 'submitting-relevance' &&
-        b.phase !== 'waiting-relevance');
-    if (relevanceKnown) processed += n;
+    if (isRelevanceKnown(b)) processed += n;
     if (isTerminal(b.phase)) continue;
     anyNonTerminal = true;
     // A non-reasonsOnly batch that hasn't reached needs-reasons-submit still
@@ -507,30 +525,79 @@ export async function getPipelineUiState(): Promise<PipelineUiState> {
 /** How much of the current run has finished, in ARTICLE counts. `done` counts
  *  the articles whose relevance is known (relevance-known batches: past the
  *  pre-relevance phases; reasonsOnly + terminal batches count too — same
- *  numerator as {@link derivePipelineUiState}); `total` counts every candidate
- *  article across all batches. `null` when no run is active. */
+ *  numerator rule as {@link derivePipelineUiState}); `total` counts every article
+ *  the run covers. `null` when no run is active. */
 export interface PipelineBatchProgress {
   done: number;
   total: number;
 }
 
-/** Project a run onto {done, total} article counts. Reuses the header UI
- *  projection so the shimmer's "Analysing done/total" is in lockstep with the
- *  cloud-progress row. A legacy per-fact run projects identically (batches are
- *  just counted). */
-export function derivePipelineBatchProgress(run: PipelineRun): PipelineBatchProgress {
-  const ui = derivePipelineUiState(run);
-  return { done: ui.processedCount, total: ui.totalCount };
+/** True when a batch's articles have a relevance verdict — see the numerator
+ *  rationale on {@link derivePipelineUiState}. Shared so the two projections
+ *  can never drift on what "processed" means. */
+function isRelevanceKnown(b: PipelineBatch): boolean {
+  return (
+    b.reasonsOnly === true ||
+    (b.phase !== 'queued' &&
+      b.phase !== 'submitting-relevance' &&
+      b.phase !== 'waiting-relevance')
+  );
 }
 
-/** Read the persisted run and project its batch progress. `null` when no run
- *  exists / every batch is terminal. Consumed by the store's boot hydration. */
+/**
+ * Project a run onto {done, total} ARTICLE counts — the "Analysing X of Y
+ * articles" line.
+ *
+ * Deliberately NOT `derivePipelineUiState`'s numbers, which count only the
+ * candidates the cloud carries. The scoring gate elects ONE representative per
+ * duplicate story group and holds the siblings back to inherit its score, so
+ * those candidates are a small fraction of the articles being analysed — a feed
+ * of 500 would read "5 of 15". `coveredIds` (written at enqueue) restores the
+ * siblings; the accordion's `feedStatus.cloudProgress` row keeps the
+ * representative-only numbers, which is what its label promises.
+ *
+ * UNION, not sum: a held-back sibling is not in-flight, so the next gate pass
+ * re-elects it into a batch of its own and its id legitimately appears in two
+ * batches' sets. Summing would inflate the denominator by the duplicate factor —
+ * an overcount replacing the undercount. `done ⊆ total` by construction, so the
+ * ratio can never invert.
+ *
+ * Batches persisted before `coveredIds` shipped fall back to `candidateIds`,
+ * i.e. exactly the old numbers — including the old denominator shrink when
+ * submit replaces that array. Bounded to one run (RUN_ABANDON_MS caps it at
+ * 24h); every batch enqueued after this carries its own covered set.
+ */
+export function derivePipelineBatchProgress(run: PipelineRun): PipelineBatchProgress {
+  // Idle (every batch terminal) reports zero, matching derivePipelineUiState —
+  // a finished run must not leave a stale ratio on screen.
+  if (run.batches.every((b) => isTerminal(b.phase))) return { done: 0, total: 0 };
+  const total = new Set<string>();
+  const done = new Set<string>();
+  for (const b of run.batches) {
+    const covered = b.coveredIds ?? b.candidateIds;
+    const known = isRelevanceKnown(b);
+    for (const id of covered) {
+      total.add(id);
+      // A sibling covered by a relevance-known rep counts as done even if it
+      // also sits in a queued batch of its own (propagateToUnscoredSiblings
+      // skips in-flight ids, so it may still earn its own score). Bounded by
+      // `total`, and it can only ever run slightly ahead — never inflate it.
+      if (known) done.add(id);
+    }
+  }
+  return { done: done.size, total: total.size };
+}
+
+/** Read the persisted run and project its article progress. `null` when no run
+ *  exists / every batch is terminal. Consumed by the store's boot hydration.
+ *  Idle is read off the projection's own zero total rather than
+ *  derivePipelineUiState's phase — one definition of idle, not two that must be
+ *  kept in lockstep. */
 export async function getPipelineBatchProgress(): Promise<PipelineBatchProgress | null> {
   const snap = await getPipeline();
   if (!snap) return null;
-  const ui = derivePipelineUiState(snap.run);
-  if (ui.phase === 'idle') return null;
-  return { done: ui.processedCount, total: ui.totalCount };
+  const progress = derivePipelineBatchProgress(snap.run);
+  return progress.total === 0 ? null : progress;
 }
 
 /** Best-effort push of the derived phase + progress into the For-You header
@@ -544,12 +611,17 @@ async function pushUiProgress(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useForYouStore } = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
     const store = useForYouStore.getState();
-    if (ui.phase === 'idle') {
+    // `!snap` first: it implies `ui.phase === 'idle'` anyway, and it is what
+    // narrows `snap` for the else branch.
+    if (!snap || ui.phase === 'idle') {
       store.setAsyncJobPhase('idle');
       store.setBatchProgress(null);
     } else {
+      // Two projections on purpose: the cloud-progress row wants the candidates
+      // the cloud actually carries, the "Analysing X of Y articles" line wants
+      // the articles those candidates cover. See derivePipelineBatchProgress.
       store.setAsyncJobPhase(ui.phase, ui.processedCount, ui.totalCount);
-      store.setBatchProgress({ done: ui.processedCount, total: ui.totalCount });
+      store.setBatchProgress(derivePipelineBatchProgress(snap.run));
     }
   } catch (err) {
     logger.captureException(err, {
@@ -585,10 +657,17 @@ function makeRunId(): string {
  * as one request carrying 8 calls — small feeds get latency, busy feeds keep
  * throughput. The rule is uniform for run creation AND appends; no foreground
  * special-case.
+ *
+ * `coveredIdsByRep` is the scoring gate's group membership (rep id → every
+ * article in its duplicate group). It is recorded on each batch as `coveredIds`
+ * so the header can count the articles the run really covers, and never affects
+ * what is dispatched. Omit it and every id simply covers itself — correct for
+ * the callers that bypass the gate.
  */
 export async function enqueueCandidates(
   ids: string[],
   flushPartial = false,
+  coveredIdsByRep?: Readonly<Record<string, string[]>>,
 ): Promise<{ deferred: string[] }> {
   if (ids.length === 0) return { deferred: [] };
   const snap = await getPipeline();
@@ -686,7 +765,7 @@ export async function enqueueCandidates(
   );
 
   const build = (base: number): PipelineBatch[] =>
-    dispatch.map((c, i) => makeQueuedBatch(base + i, c, false));
+    dispatch.map((c, i) => makeQueuedBatch(base + i, c, false, coveredIdsByRep));
 
   if (!snap) {
     await createRunWithBatches(build);

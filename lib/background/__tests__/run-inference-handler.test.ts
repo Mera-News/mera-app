@@ -89,6 +89,7 @@ beforeEach(() => {
     enqueueIds: ['a', 'b'],
     propagatedCount: 0,
     heldBackCount: 0,
+    coveredIdsByRep: { 'a': ['a'], 'b': ['b'] },
   }));
   mockRequestSuggestionsRefresh.mockResolvedValue(undefined);
   mockLoadUserGeoLanguageContext.mockResolvedValue(null);
@@ -143,6 +144,7 @@ describe('runBackgroundCycle — scoring-pass', () => {
       enqueueIds: ['a', 'z'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'a': ['a'], 'z': ['z'] },
     });
     mockGetPipelineStatus.mockResolvedValue('running');
 
@@ -151,7 +153,7 @@ describe('runBackgroundCycle — scoring-pass', () => {
     // Gate was fed the pipeline's in-flight set plus the (fail-open null) user
     // geo/language context loaded for this pass.
     expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight']), null);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a'], false, expect.any(Object));
     expect(mockEnqueueOrphanedReasons).toHaveBeenCalledTimes(1);
     expect(mockPollTick).toHaveBeenCalledWith('foreground');
     expect(result).toBe('running');
@@ -163,6 +165,7 @@ describe('runBackgroundCycle — scoring-pass', () => {
       enqueueIds: [],
       propagatedCount: 3,
       heldBackCount: 0,
+      coveredIdsByRep: {},
     });
     mockGetPipelineStatus.mockResolvedValue('running');
 
