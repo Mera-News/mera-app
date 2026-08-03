@@ -12,6 +12,10 @@ import {
   countUnviewed,
   extendPinnedIds,
   INITIAL_VISIBLE_FLOOR,
+  seenTierOfEntry,
+  buildFeedRows,
+  DIVIDER_CAUGHT_UP,
+  DIVIDER_OPENED,
   type SortedFeed,
 } from '../feed-entries';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
@@ -305,6 +309,123 @@ describe('sortFeedEntries — pinned prefix (the static/dynamic boundary)', () =
     const out = sortFeedEntries(data, noStates, new Set(), ['a', 'b']);
     expect(ids(out)).toEqual(['a', 'b']);
     expect(out.pinnedCount).toBe(2);
+  });
+});
+
+describe('seenTierOfEntry', () => {
+  it('0 unseen, 1 card-state only, 2 opened', () => {
+    const a = item('a', 0.6, 'art-a');
+    expect(seenTierOfEntry(a, noStates, new Set())).toBe(0);
+    expect(seenTierOfEntry(a, { a: skipped() }, new Set())).toBe(1);
+    expect(seenTierOfEntry(a, noStates, new Set(['art-a']))).toBe(2);
+  });
+
+  it('an OPEN outranks a card state (tapping stamps both)', () => {
+    const a = item('a', 0.6, 'art-a');
+    expect(seenTierOfEntry(a, { a: viewed() }, new Set(['art-a']))).toBe(2);
+  });
+
+  it("a 'viewed' card state from a save/thumb/ask is tier 1, NOT tier 2", () => {
+    // Those paths stamp cardStates but deliberately record no open, so the card
+    // is acknowledged-but-unread.
+    const a = item('a', 0.6, 'art-a');
+    expect(seenTierOfEntry(a, { a: viewed() }, new Set())).toBe(1);
+  });
+
+  it('agrees with isViewedEntry (tier > 0)', () => {
+    const a = item('a', 0.6, 'art-a');
+    for (const [states, opened] of [
+      [noStates, new Set<string>()],
+      [{ a: skipped() }, new Set<string>()],
+      [noStates, new Set(['art-a'])],
+    ] as const) {
+      expect(seenTierOfEntry(a, states, opened) > 0).toBe(
+        isViewedEntry(a, states, opened),
+      );
+    }
+  });
+});
+
+describe('buildFeedRows — the two dividers', () => {
+  const tierOf =
+    (states: Record<string, CardStateRecord>, opened: Set<string>) => (it: FeedListItem) =>
+      seenTierOfEntry(it, states, opened);
+
+  const kinds = (rows: ReturnType<typeof buildFeedRows>['rows']) =>
+    rows.map((r) => (r.kind === 'divider' ? r.id : r.id));
+
+  it('splices both dividers at the tier boundaries', () => {
+    const data = [item('u', 0.9), item('s', 0.9, 'art-s'), item('o', 0.9, 'art-o')];
+    const out = buildFeedRows(data, 0, tierOf({ s: skipped() }, new Set(['art-o'])));
+    expect(kinds(out.rows)).toEqual(['u', DIVIDER_CAUGHT_UP, 's', DIVIDER_OPENED, 'o']);
+    expect(out.caughtUpIsFooter).toBe(false);
+  });
+
+  it('caughtUpIsFooter when nothing below the boundary has been seen', () => {
+    const data = [item('u1', 0.9), item('u2', 0.6)];
+    const out = buildFeedRows(data, 0, tierOf(noStates, new Set()));
+    expect(kinds(out.rows)).toEqual(['u1', 'u2']);
+    expect(out.caughtUpIsFooter).toBe(true);
+  });
+
+  it('omits divider #2 when nothing was opened', () => {
+    const data = [item('u', 0.9), item('s', 0.9, 'art-s')];
+    const out = buildFeedRows(data, 0, tierOf({ s: skipped() }, new Set()));
+    expect(kinds(out.rows)).toEqual(['u', DIVIDER_CAUGHT_UP, 's']);
+  });
+
+  it('emits both dividers in order even when the dynamic region is ALL opened', () => {
+    const data = [item('o', 0.9, 'art-o')];
+    const out = buildFeedRows(data, 0, tierOf(noStates, new Set(['art-o'])));
+    expect(kinds(out.rows)).toEqual([DIVIDER_CAUGHT_UP, DIVIDER_OPENED, 'o']);
+  });
+
+  it('NEVER puts a divider inside the pinned prefix, whatever tiers it holds', () => {
+    // The prefix is the user's reading order and deliberately mixes tiers.
+    const data = [item('p1', 0.9, 'art-p1'), item('p2', 0.9), item('u', 0.9)];
+    const out = buildFeedRows(data, 2, tierOf(noStates, new Set(['art-p1'])));
+    expect(kinds(out.rows).slice(0, 2)).toEqual(['p1', 'p2']);
+    expect(out.rows.slice(0, 2).every((r) => r.kind === 'story')).toBe(true);
+  });
+
+  // The scrolled-to-the-bottom case: everything pinned ⇒ empty dynamic region ⇒
+  // the caught-up marker is the footer ⇒ the NEXT arrival appears ABOVE it.
+  it('a new arrival lands above the caught-up divider once everything is pinned', () => {
+    const pinned = [item('p1', 0.9, 'art-p1'), item('p2', 0.9, 'art-p2')];
+    const allPinned = buildFeedRows(
+      pinned,
+      2,
+      tierOf(noStates, new Set(['art-p1', 'art-p2'])),
+    );
+    expect(allPinned.caughtUpIsFooter).toBe(true);
+
+    // ...now one fresh story arrives into the dynamic region.
+    const withFresh = buildFeedRows(
+      [...pinned, item('fresh', 0.9)],
+      2,
+      tierOf(noStates, new Set(['art-p1', 'art-p2'])),
+    );
+    expect(kinds(withFresh.rows)).toEqual(['p1', 'p2', 'fresh']);
+    expect(withFresh.caughtUpIsFooter).toBe(true);
+  });
+
+  it('clamps a pinnedCount past the end and never drops a story', () => {
+    const data = [item('a', 0.9), item('b', 0.6)];
+    const out = buildFeedRows(data, 99, tierOf(noStates, new Set()));
+    expect(kinds(out.rows)).toEqual(['a', 'b']);
+  });
+
+  it('divider ids never collide with story ids (keyExtractor stays unique)', () => {
+    const data = [item('u', 0.9), item('s', 0.9, 'art-s'), item('o', 0.9, 'art-o')];
+    const out = buildFeedRows(data, 0, tierOf({ s: skipped() }, new Set(['art-o'])));
+    const ks = out.rows.map((r) => r.id);
+    expect(new Set(ks).size).toBe(ks.length);
+  });
+
+  it('returns an empty result for an empty feed', () => {
+    const out = buildFeedRows([], 0, tierOf(noStates, new Set()));
+    expect(out.rows).toEqual([]);
+    expect(out.caughtUpIsFooter).toBe(true);
   });
 });
 

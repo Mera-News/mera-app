@@ -28,8 +28,10 @@ import {
   countUnviewedBy,
   isViewedArticle,
   relevanceBandRank,
+  seenTierOf,
   sortByPriority,
   type PriorityFacts,
+  type SeenTier,
 } from '@/lib/feed-ordering/priority-order';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
@@ -118,15 +120,33 @@ export function isViewedEntry(
   return isViewedArticle(item.id, item.suggestion.articleId, cardStates, openedArticleIds);
 }
 
+/**
+ * Which of the three attention tiers a laid-out card is in: 0 unseen, 1 seen but
+ * not opened, 2 opened. The Feed renders a divider at each boundary.
+ *
+ * Same namespacing caveat as `isViewedEntry`: `item.id` is the feed-order row
+ * key, the opened set is keyed by ARTICLE id.
+ */
+export function seenTierOfEntry(
+  item: FeedListItem,
+  cardStates: Record<string, CardStateRecord>,
+  openedArticleIds: Set<string>,
+): SeenTier {
+  return seenTierOf(item.id, item.suggestion.articleId, cardStates, openedArticleIds);
+}
+
 /** Project a Feed row onto the shared ordering facts. */
 function feedPriorityFacts(
   item: FeedListItem,
   cardStates: Record<string, CardStateRecord>,
   openedArticleIds: Set<string>,
 ): PriorityFacts {
+  const tier = seenTierOfEntry(item, cardStates, openedArticleIds);
   return {
     relevance: item.suggestion.relevance ?? 0,
-    viewed: isViewedEntry(item, cardStates, openedArticleIds),
+    // Both are supplied and cannot disagree — `isViewedEntry` IS `tier > 0`.
+    viewed: tier > 0,
+    tier,
   };
 }
 
@@ -172,6 +192,80 @@ export function sortFeedEntries(
   }
   const rest = data.filter((it) => !pinnedSet.has(it.id));
   return { rows: [...pinned, ...sortByPriority(rest, facts)], pinnedCount: pinned.length };
+}
+
+/** Stable keys for the two divider sentinels. Constants, so `keyExtractor` stays
+ *  unique and stable and the rows never remount. */
+export const DIVIDER_CAUGHT_UP = 'feed-divider-caught-up';
+export const DIVIDER_OPENED = 'feed-divider-opened';
+
+/** One rendered row: a story, or one of the two dividers. */
+export type FeedRowEntry =
+  | { kind: 'story'; id: string; item: FeedListItem }
+  | { kind: 'divider'; id: typeof DIVIDER_CAUGHT_UP | typeof DIVIDER_OPENED };
+
+export interface FeedRows {
+  rows: FeedRowEntry[];
+  /** True when the caught-up divider has nothing below it and should render as
+   *  the list FOOTER instead of in-list — so exactly one instance exists. */
+  caughtUpIsFooter: boolean;
+}
+
+/**
+ * Wrap the sorted stories as render rows and splice in the two dividers.
+ *
+ *   [ pinned prefix — the user's timeline, mixed tiers, static ]
+ *   [ tier 0 — the DYNAMIC sublist; new arrivals land here by priority ]
+ *   ── divider #1 "You're all caught up" ──
+ *   [ tier 1 — seen, not opened ]
+ *   ── divider #2 "Stories you opened" ──
+ *   [ tier 2 — opened ]
+ *
+ * Dividers are placed by scanning the DYNAMIC region only, never the pinned
+ * prefix. Two consequences, both deliberate:
+ *
+ *  - The pinned prefix keeps the order the user actually read in, so it may hold
+ *    a mix of tiers. Slicing a divider into it would contradict that.
+ *  - When the user has scrolled to the very bottom, everything is pinned and the
+ *    dynamic region is empty — so the caught-up divider degrades to the footer,
+ *    and the NEXT arrival appears in tier 0, i.e. ABOVE it. That only works
+ *    because divider position is derived from the region's composition rather
+ *    than from a fixed index.
+ */
+export function buildFeedRows(
+  sorted: readonly FeedListItem[],
+  pinnedCount: number,
+  tierOf: (it: FeedListItem) => SeenTier,
+): FeedRows {
+  const rows: FeedRowEntry[] = [];
+  const story = (item: FeedListItem): FeedRowEntry => ({ kind: 'story', id: item.id, item });
+
+  // `pinnedCount` must come from `sortFeedEntries` — it counts SURVIVORS, so it
+  // cannot run past the end even when pinned ids were dropped.
+  const boundary = Math.min(Math.max(pinnedCount, 0), sorted.length);
+  for (let i = 0; i < boundary; i += 1) rows.push(story(sorted[i]));
+
+  const dynamic = sorted.slice(boundary);
+  let seenDivider = false;
+  let openedDivider = false;
+  for (const item of dynamic) {
+    const tier = tierOf(item);
+    if (tier >= 1 && !seenDivider) {
+      seenDivider = true;
+      rows.push({ kind: 'divider', id: DIVIDER_CAUGHT_UP });
+    }
+    if (tier >= 2 && !openedDivider) {
+      openedDivider = true;
+      // Only meaningful once the caught-up divider exists above it; a feed whose
+      // dynamic region is ALL opened rows still gets both, in order.
+      rows.push({ kind: 'divider', id: DIVIDER_OPENED });
+    }
+    rows.push(story(item));
+  }
+
+  // Nothing below the boundary is seen ⇒ the caught-up marker belongs at the very
+  // end, which is the footer's job. Never both.
+  return { rows, caughtUpIsFooter: !seenDivider };
 }
 
 /** How many rows at the head of a sorted list are unviewed. The boundary is no

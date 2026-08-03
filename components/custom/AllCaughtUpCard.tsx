@@ -12,7 +12,11 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MeraLogo from './MeraLogo';
 
-const AllCaughtUpCard: React.FC = () => {
+/** `subtitle` is rendered under the "all caught up" line. Only the Feed's
+ *  IN-LIST divider passes it, to say what the rows below the boundary are
+ *  ("everything below, you've already seen"). The end-of-list footer and the
+ *  empty state pass nothing and are byte-identical to before. */
+const AllCaughtUpCard: React.FC<{ subtitle?: string }> = ({ subtitle }) => {
     const { t } = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(0);
     const messages = t('feed.mindfulness', { returnObjects: true }) as string[];
@@ -42,6 +46,12 @@ const AllCaughtUpCard: React.FC = () => {
             >
                 {t('feed.allCaughtUp')}
             </Text>
+
+            {subtitle ? (
+                <Text size="sm" className="text-typography-400 text-center mb-4">
+                    {subtitle}
+                </Text>
+            ) : null}
 
             {/* Cycling mindfulness message */}
             <Text

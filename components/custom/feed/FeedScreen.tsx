@@ -17,14 +17,23 @@
 // The prefix is SESSION-ONLY and resets on exactly the two events that re-freeze
 // the partition (see `resetSession`).
 //
-// DISPLAY ORDER (feed-entries.sortFeedEntries): pinned prefix in reading order,
-// then unviewed high → medium → low, then viewed high → medium → low. The
-// "All Caught Up" card renders once as a static end-of-list FOOTER
-// (`ListFooterComponent`, testID `feed-caught-up-footer`) so the feed's end is
-// explicit. NOTHING is ever removed for being read: a viewed card SINKS below
-// the boundary, so it stays reachable by scrolling on. Cards leave the feed by
-// exactly one route: `hydrate` dropping a persisted id whose story aged out of
-// the publication window between sessions (FEED_WINDOW_MS).
+// DISPLAY ORDER (feed-entries.sortFeedEntries + buildFeedRows) — three attention
+// tiers with a divider at each boundary, all inside the dynamic region:
+//
+//   [ pinned prefix — reading order, mixed tiers, static ]
+//   [ tier 0 unseen — high → med → low; new arrivals land here ]
+//   ── divider #1: AllCaughtUpCard, testID `feed-divider-caught-up` ──
+//   [ tier 1 seen but not opened ]
+//   ── divider #2: FeedOpenedDivider, testID `feed-divider-opened` ──
+//   [ tier 2 opened ]
+//
+// When nothing below the boundary has been seen there is no in-list divider #1;
+// it renders as the end-of-list FOOTER (`feed-caught-up-footer`) instead, so
+// exactly ONE caught-up card exists either way. NOTHING is ever removed for
+// being read: a read card SINKS past a divider, so it stays reachable by
+// scrolling on. Cards leave the feed by exactly one route: `hydrate` dropping a
+// persisted id whose story aged out of the publication window between sessions
+// (FEED_WINDOW_MS).
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
 // under the reader mid-session. Together with the pinned prefix it refreshes at
@@ -78,8 +87,12 @@ import {
   sortFeedEntries,
   countUnviewed,
   extendPinnedIds,
-  type FeedEntry,
+  buildFeedRows,
+  seenTierOfEntry,
+  DIVIDER_CAUGHT_UP,
+  type FeedRowEntry,
 } from './feed-entries';
+import FeedOpenedDivider from './FeedOpenedDivider';
 import {
   useFeedbackSheet,
   type CardFeedbackHandlers,
@@ -267,7 +280,7 @@ const FeedScreen: React.FC = () => {
   // (Animated.createAnimatedComponent), so scrollToOffset is available. The
   // visibility boolean is driven from the scroll worklet (below) but only
   // crosses the JS bridge when it actually flips (showFabShared guard).
-  const listRef = useRef<Animated.FlatList<FeedEntry>>(null);
+  const listRef = useRef<Animated.FlatList<FeedRowEntry>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const showFabShared = useSharedValue(false);
   // Raw offset mirror, updated on every scroll frame (see tickHandler below) —
@@ -424,7 +437,7 @@ const FeedScreen: React.FC = () => {
   // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
   // below the boundary, it does not disappear. Empty when there are no stories,
   // so the empty-state chain renders.
-  const { rows: listData } = useMemo(
+  const { rows: listData, pinnedCount } = useMemo(
     () =>
       sortFeedEntries(
         data,
@@ -448,8 +461,22 @@ const FeedScreen: React.FC = () => {
     setPinnedIds(extendPinnedIds([], listData, deepestSeenIdRef.current));
   }, [listData, pinnedIds.length, deepestSeenIdRef]);
 
-  // How many rows sit in the unviewed block. No longer a rendered boundary — the
-  // funnel diagnostic still reports the split as its `dividerIdx`.
+  // Render rows = the sorted stories with the two divider sentinels spliced into
+  // the DYNAMIC region (never into the pinned prefix). `caughtUpIsFooter` is true
+  // when nothing below the boundary has been seen, in which case the caught-up
+  // card renders as the end-of-list footer instead — exactly one instance, always.
+  const { rows: feedRows, caughtUpIsFooter } = useMemo(
+    () =>
+      buildFeedRows(listData, pinnedCount, (it) =>
+        seenTierOfEntry(it, partitionSnapshot.cardStates, partitionSnapshot.openedArticleIds),
+      ),
+    [listData, pinnedCount, partitionSnapshot],
+  );
+
+  // How many rows sit in the unviewed block — now a RENDERED boundary again (the
+  // caught-up divider). The funnel diagnostic reports it as its `dividerIdx`, and
+  // is deliberately fed the STORY-only list, not `feedRows`: its index space must
+  // stay free of sentinels, exactly like the pin's.
   const unviewedCount = useMemo(
     () =>
       countUnviewed(
@@ -624,38 +651,53 @@ const FeedScreen: React.FC = () => {
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedEntry }) => (
-      <FeedRow
-        item={item}
-        onPress={openSuggestion}
-        onVerdict={onVerdict}
-        onAskMera={onAskMera}
-        onSaveToggled={onSaveToggled}
-        feedbackHandlers={feedbackHandlers}
-      />
-    ),
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers],
+    ({ item }: { item: FeedRowEntry }) => {
+      if (item.kind === 'divider') {
+        // Divider #1 is the full AllCaughtUpCard — the rest stop. Divider #2 is
+        // a slim label. Both are prop-free/memoised, so neither re-renders as
+        // the list changes around it.
+        return item.id === DIVIDER_CAUGHT_UP ? (
+          <Box style={{ marginTop: 16 }} testID="feed-divider-caught-up">
+            <AllCaughtUpCard subtitle={t('feed.divider.caughtUpSubtitle')} />
+          </Box>
+        ) : (
+          <FeedOpenedDivider />
+        );
+      }
+      return (
+        <FeedRow
+          item={item.item}
+          onPress={openSuggestion}
+          onVerdict={onVerdict}
+          onAskMera={onAskMera}
+          onSaveToggled={onSaveToggled}
+          feedbackHandlers={feedbackHandlers}
+        />
+      );
+    },
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, t],
   );
 
-  const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
+  // Story ids and the two divider constants are disjoint, so keys stay unique and
+  // stable and no row remounts when a divider appears or moves.
+  const keyExtractor = useCallback((item: FeedRowEntry) => item.id, []);
 
-  // End-of-feed marker. A static FOOTER after the last card — deliberately NOT
-  // the mid-list divider that was removed: it never partitions the list, carries
-  // no lifecycle meaning, and no card ever moves across it, so the sort and the
-  // viewed/unviewed blocks are untouched.
+  // End-of-feed marker — the caught-up card, rendered HERE only when it is not
+  // already in-list (`caughtUpIsFooter`), so exactly one instance exists whether
+  // the user has seen everything below the boundary or nothing.
   //
-  // Gated on a non-empty list because FlatList renders `ListFooterComponent`
-  // even when `data` is empty — without this, the zero-item case would show the
-  // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
-  // that case, and still does).
+  // Still gated on a non-empty list because FlatList renders
+  // `ListFooterComponent` even when `data` is empty — without this the zero-item
+  // case would show the AllCaughtUpCard twice (the empty-state chain in
+  // `renderEmpty` already owns that case, and still does).
   const listFooter = useMemo(
     () =>
-      listData.length > 0 ? (
+      feedRows.length > 0 && caughtUpIsFooter ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
           <AllCaughtUpCard />
         </Box>
       ) : null,
-    [listData.length],
+    [feedRows.length, caughtUpIsFooter],
   );
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
@@ -729,7 +771,7 @@ const FeedScreen: React.FC = () => {
       <Animated.FlatList
         ref={listRef}
         testID="feed-list"
-        data={listData}
+        data={feedRows}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}

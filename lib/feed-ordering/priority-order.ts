@@ -3,6 +3,11 @@
 //
 //   unviewed (high → medium → low) … then viewed (high → medium → low)
 //
+// The Feed refines "viewed" into two tiers — seen-but-not-opened, then opened —
+// and renders a divider at each boundary; see `SeenTier`. The tier is the
+// OUTERMOST key, so relevance banding still applies WITHIN each tier. The
+// Dashboard keeps the two-state projection and is unaffected.
+//
 // PURE and RN-free: no DB / expo / react-native imports, so it unit-tests
 // without a device.
 //
@@ -12,13 +17,31 @@
 // user-visible: the same story ranked differently on two screens, or a "High"
 // chip rendered below a "Medium" one.
 
+/**
+ * How far a story has got through the user's attention. LOWER sorts first.
+ *
+ *   0 UNSEEN            never in the viewport long enough, never touched
+ *   1 SEEN_NOT_OPENED   dwelt past, thumbed, saved, or handed to Mera —
+ *                       acknowledged, but not read
+ *   2 OPENED            actually tapped through
+ *
+ * The Feed renders a divider at each of the two boundaries. The Dashboard has
+ * no such split and stays on the two-state `viewed` projection below, which maps
+ * onto 0/1 and is bit-identical to the old behaviour.
+ */
+export type SeenTier = 0 | 1 | 2;
+
 /** What the ordering actually keys on, projected out of whatever row shape a
  *  caller has. */
 export interface PriorityFacts {
   /** The scored relevance the worded chip displays (`suggestion.relevance`). */
   relevance: number;
-  /** Opened (tap) OR dwelt on for DWELL_READ_SECONDS — see `isViewedArticle`. */
+  /** Opened (tap) OR dwelt on for DWELL_READ_SECONDS — see `isViewedArticle`.
+   *  The two-state projection; ignored when `tier` is supplied. */
   viewed: boolean;
+  /** The three-state projection. Optional so the Dashboard can keep passing
+   *  `viewed` alone and get byte-identical output. */
+  tier?: SeenTier;
 }
 
 /**
@@ -67,8 +90,32 @@ export function isViewedArticle(
   cardStates: Record<string, unknown>,
   openedArticleIds: ReadonlySet<string>,
 ): boolean {
-  if (cardStateKey && cardStates[cardStateKey] !== undefined) return true;
-  return !!articleId && openedArticleIds.has(articleId);
+  return seenTierOf(cardStateKey, articleId, cardStates, openedArticleIds) > 0;
+}
+
+/**
+ * The three-state refinement of `isViewedArticle`, and the SAME two signals —
+ * they are just no longer collapsed. An explicit OPEN outranks a card state:
+ * tapping a card stamps both, and "opened" is the stronger statement.
+ *
+ * Note what lands in tier 1 rather than tier 2: a thumbs-up, a save, or an
+ * Ask-Mera stamps `cardStates` but deliberately records NO open (those must stay
+ * out of the personalization seen-set), so an interacted-with-but-unread card
+ * sits with the dwelt-past ones. That is the intended reading of "seen but not
+ * opened".
+ *
+ * Every caveat on `isViewedArticle` above applies unchanged — in particular
+ * `openedArticleIds` must be the EXACT-article set, never the cluster-wide union.
+ */
+export function seenTierOf(
+  cardStateKey: string | null | undefined,
+  articleId: string | null | undefined,
+  cardStates: Record<string, unknown>,
+  openedArticleIds: ReadonlySet<string>,
+): SeenTier {
+  if (articleId && openedArticleIds.has(articleId)) return 2;
+  if (cardStateKey && cardStates[cardStateKey] !== undefined) return 1;
+  return 0;
 }
 
 /**
@@ -86,9 +133,12 @@ export function sortByPriority<T>(
   return items
     .map((item, idx) => {
       const f = project(item);
-      return { item, idx, viewed: f.viewed ? 1 : 0, band: relevanceBandRank(f.relevance) };
+      // `tier` when the caller supplies it, else the two-state projection — so a
+      // `viewed`-only caller (the Dashboard) gets exactly the previous ordering.
+      const tier = f.tier ?? (f.viewed ? 1 : 0);
+      return { item, idx, tier, band: relevanceBandRank(f.relevance) };
     })
-    .sort((a, b) => a.viewed - b.viewed || a.band - b.band || a.idx - b.idx)
+    .sort((a, b) => a.tier - b.tier || a.band - b.band || a.idx - b.idx)
     .map((d) => d.item);
 }
 
