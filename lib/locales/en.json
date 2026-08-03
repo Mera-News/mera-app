@@ -104,6 +104,11 @@
   "feed": {
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
+    "divider": {
+      "caughtUpSubtitle": "Everything below, you've already seen.",
+      "openedTitle": "Stories you opened",
+      "openedSubtitle": "Tap any of these to read them again."
+    },
     "preparingFeed": "Mera is preparing your feed.",
     "preparingFeedExploreHint": "Meanwhile, check out the Explore tab for top stories.",
     "noInterests": "Mera cannot analyze news for you",
@@ -215,7 +220,8 @@
   },
   "aiDisclosure": {
     "caption": "AI-generated note",
-    "short": "AI-generated"
+    "short": "AI-generated",
+    "listNote": "Some story headlines here are AI-generated"
   },
   "articleDetail": {
     "readArticle": "Read Article",
@@ -954,7 +960,8 @@
     "successTitle": "Recalibrated",
     "successBody": "I tuned my ranking to better match your taste.",
     "noChangeBody": "Your ranking already looks well-tuned: no changes needed.",
-    "failedBody": "I couldn't finish recalibrating just now. I'll try again later."
+    "failedBody": "I couldn't finish recalibrating just now. I'll try again later.",
+    "actionRecalibrate": "Re-tune relevance scoring"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "More about: {{topic}}",

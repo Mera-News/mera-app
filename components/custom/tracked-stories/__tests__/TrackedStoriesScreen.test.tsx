@@ -44,16 +44,27 @@ jest.mock('react-native', () => {
                 return ({ children, ...rest }: any) => ReactLib.createElement(actual.View, rest, children);
             }
             if (prop === 'FlatList') {
-                return ({ data, renderItem, keyExtractor, ListEmptyComponent }: any) => {
+                return ({
+                    data,
+                    renderItem,
+                    keyExtractor,
+                    ListEmptyComponent,
+                    ListHeaderComponent,
+                }: any) => {
+                    const resolve = (C: any) =>
+                        ReactLib.isValidElement(C) ? C : typeof C === 'function' ? ReactLib.createElement(C) : null;
+                    // Real RN renders the header EVEN WHEN `data` is empty, next
+                    // to the empty component. The AI-disclosure note relies on
+                    // its own `anyLlmHeadline` gate rather than on emptiness, so
+                    // the mock must reproduce that or the gate goes untested.
+                    const header = resolve(ListHeaderComponent);
                     if (!data || data.length === 0) {
-                        if (ReactLib.isValidElement(ListEmptyComponent)) return ListEmptyComponent;
-                        return typeof ListEmptyComponent === 'function'
-                            ? ReactLib.createElement(ListEmptyComponent)
-                            : null;
+                        return ReactLib.createElement(actual.View, null, header, resolve(ListEmptyComponent));
                     }
                     return ReactLib.createElement(
                         actual.View,
                         null,
+                        header,
                         data.map((item: any, index: number) =>
                             ReactLib.createElement(
                                 actual.View,
@@ -199,6 +210,70 @@ describe('TrackedStoriesScreen', () => {
         // …and it is NOT the icon's label.
         expect(confirm.props.accessibilityLabel).not.toBe('trackedStories.untrackAction');
         expect(getByLabelText('trackedStories.untrackAction')).toBeTruthy();
+    });
+
+    // EU AI Act Art. 50 (Group C1). The per-row caption was replaced by ONE
+    // list-level note because repeating it under every row read as noise. The
+    // disclosure itself is not optional, so these pin down exactly when it shows
+    // and that a screen-reader user still gets it per-row.
+    describe('AI disclosure', () => {
+        it('shows one list-level note when a row has an LLM headline', () => {
+            mockRows = [
+                story({ id: 'a1', llmHeadline: 'Generated one' }),
+                story({ id: 'a2', llmHeadline: 'Generated two' }),
+            ];
+            const { getAllByText } = render(<TrackedStoriesScreen embedded />);
+            // ONE note for the whole list, not one per row.
+            expect(getAllByText('aiDisclosure.listNote')).toHaveLength(1);
+        });
+
+        it('hides the note when NO row has an LLM headline', () => {
+            // Every row is still on its `fallbackTitle` — nothing on screen is
+            // AI-written, so a blanket disclosure would itself be inaccurate.
+            mockRows = [
+                story({ id: 'b1', llmHeadline: null, fallbackTitle: 'Plain one' }),
+                story({ id: 'b2', llmHeadline: null, fallbackTitle: 'Plain two' }),
+            ];
+            const { queryByText } = render(<TrackedStoriesScreen embedded />);
+            expect(queryByText('aiDisclosure.listNote')).toBeNull();
+        });
+
+        it('still shows the note on a MIXED list (copy is hedged for exactly this)', () => {
+            mockRows = [
+                story({ id: 'c1', llmHeadline: 'Generated' }),
+                story({ id: 'c2', llmHeadline: null, fallbackTitle: 'Not generated yet' }),
+            ];
+            const { getAllByText } = render(<TrackedStoriesScreen embedded />);
+            expect(getAllByText('aiDisclosure.listNote')).toHaveLength(1);
+        });
+
+        it('hides the note on an EMPTY list, where RN would otherwise still render the header', () => {
+            mockRows = [];
+            const { queryByText, getByText } = render(<TrackedStoriesScreen embedded />);
+            expect(getByText('trackedStories.emptyTitle')).toBeTruthy();
+            expect(queryByText('aiDisclosure.listNote')).toBeNull();
+        });
+
+        it('announces the disclosure per-row for a screen reader, invisibly', () => {
+            // A screen-reader user landing mid-list never passes the header note,
+            // so the row label carries it too. It is NOT rendered as text — the
+            // whole point of the change was to remove the visible repetition.
+            mockRows = [story({ id: 'd1', llmHeadline: 'Generated headline' })];
+            const { getByLabelText, queryByText } = render(<TrackedStoriesScreen embedded />);
+            const label = getByLabelText(/^Generated headline,/).props.accessibilityLabel;
+            expect(label).toContain('aiDisclosure.short');
+            // …and the headline still comes first, with the disclosure right after it.
+            expect(label.indexOf('Generated headline')).toBeLessThan(label.indexOf('aiDisclosure.short'));
+            expect(queryByText('aiDisclosure.short')).toBeNull();
+        });
+
+        it('does NOT announce it for a row still showing its fallback title', () => {
+            mockRows = [story({ id: 'e1', llmHeadline: null, fallbackTitle: 'Human title' })];
+            const { getByLabelText } = render(<TrackedStoriesScreen embedded />);
+            expect(getByLabelText(/^Human title,/).props.accessibilityLabel).not.toContain(
+                'aiDisclosure.short',
+            );
+        });
     });
 
     it('untracks after confirming the modal', () => {

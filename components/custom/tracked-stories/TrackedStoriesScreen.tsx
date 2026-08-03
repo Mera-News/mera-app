@@ -82,10 +82,15 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
     const renderItem: ListRenderItem<TrackedStoryModel> = useCallback(
         ({ item }) => {
             const headline = item.llmHeadline ?? item.fallbackTitle;
-            // EU AI Act Art. 50 transparency label (Group C1) — only when the
+            // EU AI Act Art. 50 transparency (Group C1) — true only when the
             // displayed headline is actually the LLM-generated one; the
             // `fallbackTitle` path (no `llmHeadline` yet) has no AI text to
             // disclose.
+            //
+            // The VISIBLE per-row caption this used to gate is gone: repeated
+            // under every row it was noise, so the disclosure moved to a single
+            // list-level note (see `listNote` below). This flag still gates the
+            // AUDIBLE half — see the accessibilityLabel.
             const isLlmHeadline = !!item.llmHeadline;
             const latest = item.latestTitle;
             const showLatest = !!latest && latest.trim().length > 0 && latest !== headline;
@@ -111,8 +116,18 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                     // The card renders four things; a label of just the headline
                     // dropped the rest for a screen-reader user. Order mirrors
                     // the visual order: title, unseen badge, total, age.
+                    //
+                    // The disclosure rides here too, right after the headline it
+                    // qualifies. It is deliberately NOT visible — sighted users
+                    // get the list-level note above row 1, but a screen-reader
+                    // user who lands mid-list (rotor, restored scroll position,
+                    // returning from a story) never passes that header and would
+                    // otherwise get no signal at all that the headline is
+                    // machine-generated. Costs nothing visually; restores exactly
+                    // what removing the per-row caption took away.
                     accessibilityLabel={[
                         headline,
+                        isLlmHeadline ? t('aiDisclosure.short') : null,
                         unseen > 0 ? t('trackedStories.updatesBadge', { count: unseen }) : null,
                         total > 0 ? totalLabel : null,
                         relative || null,
@@ -146,14 +161,6 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                                 numberOfLines={2}
                                 className="text-white"
                             />
-                            {/* Short copy here, not the article caption: this is a
-                                section heading for a story the user chose to follow,
-                                not a recommendation — "check other sources" would be
-                                a non-sequitur, and the full string wraps to 2-3 lines
-                                under every row. */}
-                            {isLlmHeadline && (
-                                <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} />
-                            )}
                             {showLatest && (
                                 <TranslatableDynamic
                                     text={latest as string}
@@ -200,6 +207,33 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
 
     const keyExtractor = useCallback((item: TrackedStoryModel) => item.id, []);
 
+    // EU AI Act Art. 50 transparency (Group C1), lifted from the rows to the
+    // list. One note instead of N identical captions.
+    //
+    // The gate is load-bearing, not belt-and-braces: RN renders
+    // `ListHeaderComponent` even when `data` is empty (alongside
+    // `ListEmptyComponent`), so without it an empty followed-stories list would
+    // carry a disclosure about headlines that aren't there. It also handles the
+    // all-`fallbackTitle` case, where nothing on screen is AI-written yet.
+    //
+    // Copy is hedged ("Some story headlines here…") because the list can be
+    // MIXED — a story tracked seconds ago still shows its `fallbackTitle` while
+    // the generated headline is in flight. An unhedged note would be false about
+    // those rows.
+    const anyLlmHeadline = stories.some((s) => !!s.llmHeadline);
+    const ListHeader = anyLlmHeadline ? (
+        // Inside the FlatList (not the title block above it) so it scrolls with
+        // the rows it describes, and so it precedes row 1 in the accessibility
+        // reading order.
+        <Box className="px-5 pb-2">
+            <AiDisclosureCaption
+                variant="compact"
+                align="left"
+                text={t('aiDisclosure.listNote')}
+            />
+        </Box>
+    ) : null;
+
     const goToFeed = useCallback(() => {
         router.push('/logged-in/app_container/feed');
     }, []);
@@ -215,10 +249,11 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
             </Text>
             {/* The empty body used to stop at "how" without saying "where". QA's
                 filed wording ("feed card → 👍 → the 'More like this' panel")
-                doesn't match the current wiring: Feed cards (CardActionBar) have
-                no track affordance at all — the track ("track-changes" /
-                crosshair) icon only exists in ArticleFeedbackPrompt's action row
-                on the article DETAIL screen (opened by tapping a Feed card), and
+                doesn't match the current wiring: Feed cards render no track
+                affordance — CardActionBar can show one, but ArticleSuggestionCard
+                passes no `onTrack`. The crosshair only appears in
+                ArticleFeedbackPrompt's action row on the article DETAIL screen
+                (opened by tapping a Feed card), and
                 it sits in that row independent of the like/dislike panel, not
                 inside it. Hint text reflects that traced path rather than the
                 filed description. CTA styling matches the other
@@ -271,6 +306,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                 data={stories}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
+                ListHeaderComponent={ListHeader}
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     paddingTop: 12,
