@@ -32,6 +32,35 @@ export function resolveModel(model: string): string {
   return MODEL_FALLBACKS[model] ?? model;
 }
 
+/** The configured fallback for `model`, or null when none exists. */
+export function fallbackFor(model: string): string | null {
+  return MODEL_FALLBACKS[model] ?? null;
+}
+
+/**
+ * Engage `model`'s session fallback. Both causes share one guard set, so a model
+ * that first loses a hedge race and later times out (or vice versa) still
+ * produces exactly ONE Sentry event for the session — it is one incident.
+ */
+function engage(model: string, cause: 'timeout' | 'hedge'): void {
+  const fallback = MODEL_FALLBACKS[model];
+  if (!fallback) return; // nothing to fall back to — leave the caller as-is
+  if (engagedAt.has(model)) return; // already engaged; report once per session
+  engagedAt.set(model, Date.now());
+  if (cause === 'timeout') {
+    logger.captureMessage('NEAR primary model failing — session fallback engaged', {
+      level: 'error',
+      tags: { model, fallback },
+    });
+    return;
+  }
+  // A hedge win is a slow primary, not a dead one — warning, not error.
+  logger.captureMessage('NEAR primary model slow — hedged fallback won, session fallback engaged', {
+    level: 'warning',
+    tags: { model, fallback },
+  });
+}
+
 /**
  * Record a TIMEOUT-CLASS terminal failure for `model`. Engages the session
  * fallback iff one is configured; the first engagement per model per session
@@ -39,14 +68,17 @@ export function resolveModel(model: string): string {
  * everything after it is the same incident).
  */
 export function reportModelFailure(model: string): void {
-  const fallback = MODEL_FALLBACKS[model];
-  if (!fallback) return; // nothing to fall back to — leave the caller as-is
-  if (engagedAt.has(model)) return; // already engaged; report once per session
-  engagedAt.set(model, Date.now());
-  logger.captureMessage('NEAR primary model failing — session fallback engaged', {
-    level: 'error',
-    tags: { model, fallback },
-  });
+  engage(model, 'timeout');
+}
+
+/**
+ * Record that `model` lost a hedge race — the same request answered faster on
+ * its fallback (lib/llm/cloudComplete, HEDGE_DELAY_MS). Same session-scoped
+ * engagement as a timeout, reported at a lower severity because the primary is
+ * merely slow.
+ */
+export function reportModelSlow(model: string): void {
+  engage(model, 'hedge');
 }
 
 /**

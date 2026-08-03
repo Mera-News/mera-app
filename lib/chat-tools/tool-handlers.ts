@@ -16,7 +16,7 @@ import { useUserStore } from '../stores/user-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import { inferenceQueue } from '../inference/InferenceQueue';
-import { cloudComplete, cloudBatchComplete } from '../llm/cloudComplete';
+import { cloudComplete, cloudBatchComplete, HEDGE_DELAY_MS } from '../llm/cloudComplete';
 import logger from '../logger';
 import {
   filterNewFacts,
@@ -286,7 +286,11 @@ async function batchGenerateTopics(
   await generateTopicsForFactsBatch(
     {
       llm: {
-        batchComplete: (calls, opts) => cloudBatchComplete(calls, opts?.model),
+        // Hedged: this batch runs inside a live chat turn, so a cold primary is
+        // dead air the user sits through. The single `complete` below is a
+        // background touch-up and stays un-hedged.
+        batchComplete: (calls, opts) =>
+          cloudBatchComplete(calls, opts?.model, { hedgeAfterMs: HEDGE_DELAY_MS }),
         complete: (req) => cloudComplete(req),
       },
       personaStore: {

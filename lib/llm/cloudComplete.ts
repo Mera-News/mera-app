@@ -15,7 +15,14 @@ import {
 } from '../e2ee/e2ee-service';
 import logger from '../logger';
 import { SMALL_MODEL } from './constants';
-import { reportModelFailure, reportModelSuccess, resolveModel } from './model-fallback';
+import {
+  fallbackFor,
+  reportModelFailure,
+  reportModelSlow,
+  reportModelSuccess,
+  resolveModel,
+} from './model-fallback';
+import { sseEvents } from './sse';
 import { estimateTokens } from './tokens';
 import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
@@ -48,6 +55,24 @@ export const UPSTREAM_ALIGNED_TIMEOUT_MS = 130_000;
  *  502 in bounded time. The chat model is warmed ahead of the first turn by
  *  prewarmCloudChat() (lib/llm/prewarm). */
 export const UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS = 2;
+
+/** Hedge delay for user-facing calls: after this long with nothing back from
+ *  the primary model, the SAME request is fired at its fallback and the two
+ *  race. With streaming, response headers ≈ the first token through the
+ *  gateway, so this only fires when literally nothing has arrived — a warming
+ *  or stalled model — never when a model is simply generating a long answer. */
+export const HEDGE_DELAY_MS = 5_000;
+
+/** Max gap BETWEEN CHUNKS of an in-flight SSE body — deliberately not the time
+ *  to the FIRST chunk, which stays on {@link UPSTREAM_ALIGNED_TIMEOUT_MS}.
+ *
+ *  Whether NEAR flushes SSE headers on accept or only with the first token is
+ *  unverified (the gateway relays whatever it gets). If headers land on accept,
+ *  a single 30s window measured from headers would abort a cold model that the
+ *  old buffered path tolerated for 130s — a regression on exactly the path this
+ *  is meant to speed up. Two windows make the constant mean what it says under
+ *  either upstream behavior. */
+export const STREAM_IDLE_TIMEOUT_MS = 30_000;
 
 /** Build auth headers, fetching a fresh JWT from the auth service. Throws if
  *  no token is available — sending an unauthenticated request just produces
@@ -90,6 +115,64 @@ export interface AuthFetchOptions {
    *  surfaces the gateway's 502 in bounded time instead of a multi-minute loop.
    *  401 refresh and non-502 5xx retries are unaffected. */
   maxTimeoutAttempts?: number;
+  /** Keep the response BODY readable after {@link authFetch} returns. Normally
+   *  authFetch tears the attempt down the moment headers arrive — correct when
+   *  the caller immediately buffers, wrong for a stream that is only starting.
+   *  With this set the abort bridge stays attached and the caller must take the
+   *  handle via {@link takeStreamHandle} and release it when the body ends.
+   *  Chat streaming is the only caller. */
+  streamBody?: boolean;
+}
+
+/** Per-call options for the cloud entry points, which additionally choose
+ *  whether to hedge. `authFetch` itself never hedges — a hedge is two whole
+ *  requests on two different models, which only the model-fallback layer above
+ *  it can reason about. */
+export interface CloudCallOptions extends AuthFetchOptions {
+  /** Fire the same request at the primary's fallback after this many ms and
+   *  race them. Omit (the default) to disable hedging entirely. */
+  hedgeAfterMs?: number;
+}
+
+/**
+ * A caller's own signal aborted the request. Distinct from the per-attempt
+ * timeout abort, which is indistinguishable by message alone: both surface as
+ * "aborted"/"canceled" from expo/fetch. A caller abort is not evidence about
+ * the model and must never consume the timeout budget, retry, or engage the
+ * session fallback.
+ */
+export class CallerAbortError extends Error {
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'CallerAbortError';
+    if (cause !== undefined) (this as { cause?: unknown }).cause = cause;
+  }
+}
+
+export function isCallerAbort(err: unknown): boolean {
+  return err instanceof CallerAbortError;
+}
+
+/** Live per-attempt resources of a response whose body is still being read. */
+interface StreamHandle {
+  /** Abort the in-flight body (the per-attempt controller). */
+  abort: () => void;
+  /** Detach the caller-signal bridge. Must run once the body is done. */
+  release: () => void;
+}
+
+// Keyed by Response so the handle follows whichever leg actually won a hedge
+// race, with no plumbing through the return shape every non-stream caller uses.
+// A losing leg's handle is simply never taken: the entry dies with its Response,
+// and the listener it would have detached sits on that leg's own throwaway
+// controller.
+const streamHandles = new WeakMap<Response, StreamHandle>();
+
+/** Take (and remove) the stream handle attached to a `streamBody` response. */
+export function takeStreamHandle(response: Response): StreamHandle | undefined {
+  const handle = streamHandles.get(response);
+  if (handle) streamHandles.delete(response);
+  return handle;
 }
 
 /**
@@ -165,10 +248,21 @@ export async function authFetch(
   let timeoutAttempts = 0;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    // The ONLY reliable discriminator between a caller abort and our own
+    // per-attempt timeout: the caller's original signal. The combined signal is
+    // aborted by both. Checked at the loop top so an aborted leg that is mid
+    // backoff exits here (sleep() is deliberately not abort-aware — the extra
+    // wait is bounded and never turns into another request).
+    if (init.signal?.aborted) {
+      throw new CallerAbortError('authFetch: caller aborted', lastError);
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
     // A caller signal must ADD to the timeout, never replace it.
     const { signal, release } = combineSignals(init.signal, controller.signal);
+    // Set when the attempt's teardown is handed to the caller (streamBody).
+    let handedOff = false;
 
     try {
       const response = await (expoFetch as unknown as typeof globalThis.fetch)(url, {
@@ -213,8 +307,23 @@ export async function authFetch(
         continue;
       }
 
+      if (options.streamBody) {
+        // Headers are in, the body is not. Drop the 130s header timer but keep
+        // the caller-signal bridge attached so an abort still cancels the
+        // in-flight body (on the RN polyfill path nothing else would).
+        clearTimeout(timeoutId);
+        handedOff = true;
+        streamHandles.set(response, {
+          abort: () => controller.abort(),
+          release,
+        });
+      }
       return response;
     } catch (err) {
+      // A caller abort ends the call here: no budget spent, no retry, no sleep.
+      if (init.signal?.aborted) {
+        throw new CallerAbortError('authFetch: caller aborted', err);
+      }
       lastError = err instanceof Error ? err : new Error(String(err));
       const isAbort = isAbortLike(lastError);
       if (isAbort) {
@@ -235,8 +344,10 @@ export async function authFetch(
         break;
       }
     } finally {
-      clearTimeout(timeoutId);
-      release();
+      if (!handedOff) {
+        clearTimeout(timeoutId);
+        release();
+      }
     }
   }
 
@@ -244,8 +355,9 @@ export async function authFetch(
 }
 
 /** Apply the gateway-aligned defaults, letting an explicit caller value win. */
-function withUpstreamAlignedDefaults(options: AuthFetchOptions): AuthFetchOptions {
+function withUpstreamAlignedDefaults(options: CloudCallOptions): CloudCallOptions {
   return {
+    ...options,
     requestTimeoutMs: options.requestTimeoutMs ?? UPSTREAM_ALIGNED_TIMEOUT_MS,
     maxTimeoutAttempts: options.maxTimeoutAttempts ?? UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS,
   };
@@ -272,9 +384,43 @@ function withUpstreamAlignedDefaults(options: AuthFetchOptions): AuthFetchOption
 async function sendWithModelFallback<C>(
   url: string,
   primaryModel: string,
-  build: (model: string) => Promise<{ init: RequestInit; ctx: C }>,
+  build: Build<C>,
+  options: CloudCallOptions,
+): Promise<Leg<C>> {
+  const hedgeAfterMs = options.hedgeAfterMs;
+  const hedgeModel = fallbackFor(primaryModel);
+  // Hedge only from a still-healthy primary onto a DIFFERENT model. Once the
+  // session fallback is engaged there is nothing left to race against, and a
+  // caller that didn't opt in stays on the sequential path.
+  const canHedge =
+    hedgeAfterMs != null &&
+    resolveModel(primaryModel) === primaryModel &&
+    hedgeModel != null &&
+    hedgeModel !== primaryModel;
+
+  if (!canHedge) return sendSequential(url, primaryModel, build, options);
+  return sendHedged(url, primaryModel, hedgeModel, build, options, hedgeAfterMs);
+}
+
+type Build<C> = (model: string) => Promise<{ init: RequestInit; ctx: C }>;
+
+/** A settled request leg: the response, the E2EE context that decrypts it, and
+ *  the model it was sent to. Raced as ONE tuple so ctx always follows the
+ *  winner — a response decrypted under the loser's key is garbage. */
+interface Leg<C> {
+  response: Response;
+  ctx: C;
+  model: string;
+}
+
+/** The original (pre-hedge) sequential behavior: one request, and on a
+ *  timeout-class failure, engage + retry once on the fallback. */
+async function sendSequential<C>(
+  url: string,
+  primaryModel: string,
+  build: Build<C>,
   options: AuthFetchOptions,
-): Promise<{ response: Response; ctx: C; model: string }> {
+): Promise<Leg<C>> {
   const model = resolveModel(primaryModel);
   const first = await build(model);
 
@@ -289,18 +435,38 @@ async function sendWithModelFallback<C>(
     // 502 = the gateway's own "NEAR never answered" verdict.
     originalResponse = response;
   } catch (err) {
+    // A caller abort says nothing about the model — never engage on it.
+    if (isCallerAbort(err)) throw err;
     // Only a client timeout/cancellation is model-evidence. Everything else
     // (network down, JSON, auth) is surfaced as-is.
     if (!isAbortLike(err)) throw err;
     originalError = err;
   }
 
+  return engageAndRetry(url, primaryModel, build, options, {
+    model,
+    ctx: first.ctx,
+    response: originalResponse,
+    error: originalError,
+  });
+}
+
+/** The shared timeout-class tail: engage the session fallback and, if that
+ *  actually moves us to a different model, retry the call ONCE there. The
+ *  original failure is surfaced if the retry doesn't land. */
+async function engageAndRetry<C>(
+  url: string,
+  primaryModel: string,
+  build: Build<C>,
+  options: AuthFetchOptions,
+  failed: { model: string; ctx: C; response: Response | null; error: unknown },
+): Promise<Leg<C>> {
   reportModelFailure(primaryModel);
   const fallbackModel = resolveModel(primaryModel);
-  if (fallbackModel !== model) {
+  if (fallbackModel !== failed.model) {
     logger.warn(`${TAG} timeout-class failure — retrying once on session fallback`, {
       url,
-      failedModel: model,
+      failedModel: failed.model,
       fallbackModel,
     });
     try {
@@ -317,8 +483,169 @@ async function sendWithModelFallback<C>(
     }
   }
 
-  if (originalResponse) return { response: originalResponse, ctx: first.ctx, model };
-  throw originalError;
+  if (failed.response) return { response: failed.response, ctx: failed.ctx, model: failed.model };
+  throw failed.error;
+}
+
+/** How a leg ended. Never a rejection — both legs are tracked, and a loser's
+ *  error must not surface as an unhandled rejection or reach the classifier. */
+type Settled<C> = { kind: 'leg'; leg: Leg<C> } | { kind: 'error'; err: unknown };
+
+const dropLoserError = () => { /* loser outcome, deliberately dropped */ };
+
+/**
+ * Race the primary against its fallback, starting the fallback `hedgeAfterMs`
+ * after the primary. The first usable answer wins and the loser is aborted.
+ *
+ * Both legs get their OWN `build(model)` — E2EE encrypts in place and the
+ * attestation key is per-model, so a shared build result would send one leg's
+ * ciphertext under the other's key.
+ */
+async function sendHedged<C>(
+  url: string,
+  primaryModel: string,
+  hedgeModel: string,
+  build: Build<C>,
+  options: CloudCallOptions,
+  hedgeAfterMs: number,
+): Promise<Leg<C>> {
+  const runLeg = async (
+    model: string,
+    signal: AbortSignal,
+    legOptions: AuthFetchOptions,
+  ): Promise<Leg<C>> => {
+    const { init, ctx } = await build(model);
+    const response = await authFetch(url, { ...init, signal }, legOptions);
+    return { response, ctx, model };
+  };
+
+  const primaryController = new AbortController();
+  const primaryRaw = runLeg(primaryModel, primaryController.signal, options);
+  // `track` attaches handlers immediately, so neither raw promise can ever be
+  // an unhandled rejection, and the tagged promise never rejects.
+  const primaryP = track('primary', primaryRaw);
+
+  // ─── Phase 1: primary alone, until it settles or the hedge timer fires ──────
+  let hedgeTimer: ReturnType<typeof setTimeout> | undefined;
+  const timerFired = new Promise<'timer'>((resolve) => {
+    hedgeTimer = setTimeout(() => resolve('timer'), hedgeAfterMs);
+  });
+  const firstUp = await Promise.race([
+    primaryP.then(() => 'primary' as const),
+    timerFired,
+  ]);
+  clearTimeout(hedgeTimer);
+
+  if (firstUp === 'primary') {
+    // Nothing was hedged — reproduce the sequential semantics exactly,
+    // including the engage + retry tail.
+    const { settled } = await primaryP;
+    if (settled.kind === 'leg' && settled.leg.response.status !== 502) {
+      if (settled.leg.response.ok) reportModelSuccess(primaryModel);
+      return settled.leg;
+    }
+    if (settled.kind === 'error') {
+      if (isCallerAbort(settled.err)) throw settled.err;
+      if (!isAbortLike(settled.err)) throw settled.err;
+    }
+    return engageAndRetry(url, primaryModel, build, options, {
+      model: primaryModel,
+      // Only read when a response is being surfaced, which implies `kind: leg`.
+      ctx: settled.kind === 'leg' ? settled.leg.ctx : (undefined as unknown as C),
+      response: settled.kind === 'leg' ? settled.leg.response : null,
+      error: settled.kind === 'error' ? settled.err : null,
+    });
+  }
+
+  // ─── Phase 2: both legs in flight ──────────────────────────────────────────
+  logger.warn(`${TAG} hedge fired`, { primaryModel, hedgeModel });
+  const hedgeController = new AbortController();
+  // ONE attempt: the hedge exists to answer FAST. A retrying hedge is just a
+  // second storm on a second model.
+  const hedgeRaw = runLeg(hedgeModel, hedgeController.signal, {
+    ...options,
+    maxTimeoutAttempts: 1,
+  });
+  const hedgeP = track('hedge', hedgeRaw);
+
+  // The winner latch: whichever tagged promise `Promise.race` resolves first.
+  // Already-settled promises resolve in array order, so a same-tick tie goes to
+  // the primary — which is what "the primary stays authoritative" means.
+  let pendingPrimary: Promise<Tagged<C>> | null = primaryP;
+  let pendingHedge: Promise<Tagged<C>> | null = hedgeP;
+  let primaryFailure: { ctx: C; response: Response | null; error: unknown } | null = null;
+
+  const surfacePrimaryFailure = (): Leg<C> => {
+    if (primaryFailure!.response) {
+      return { response: primaryFailure!.response, ctx: primaryFailure!.ctx, model: primaryModel };
+    }
+    throw primaryFailure!.error;
+  };
+
+  for (;;) {
+    const racers: Promise<Tagged<C>>[] = [];
+    if (pendingPrimary) racers.push(pendingPrimary);
+    if (pendingHedge) racers.push(pendingHedge);
+    const out = await Promise.race(racers);
+
+    if (out.who === 'primary') {
+      pendingPrimary = null;
+      if (out.settled.kind === 'leg' && out.settled.leg.response.status !== 502) {
+        // Any non-502 verdict — including a 4xx — is the primary's to give. A
+        // fallback response must never mask a real HTTP error.
+        hedgeController.abort();
+        void hedgeRaw.catch(dropLoserError);
+        if (out.settled.leg.response.ok) reportModelSuccess(primaryModel);
+        return out.settled.leg;
+      }
+      if (out.settled.kind === 'leg') {
+        primaryFailure = {
+          ctx: out.settled.leg.ctx,
+          response: out.settled.leg.response,
+          error: null,
+        };
+        reportModelFailure(primaryModel); // 502 = timeout-class
+      } else {
+        primaryFailure = {
+          ctx: undefined as unknown as C, // never read: no response to decrypt
+          response: null,
+          error: out.settled.err,
+        };
+        // A caller abort (our own loser-abort included) and plain network
+        // errors say nothing about the model.
+        if (!isCallerAbort(out.settled.err) && isAbortLike(out.settled.err)) {
+          // No sequential retry here — the in-flight hedge IS that retry.
+          reportModelFailure(primaryModel);
+        }
+      }
+      if (!pendingHedge) return surfacePrimaryFailure();
+      continue; // the hedge is the only remaining hope
+    }
+
+    pendingHedge = null;
+    if (out.settled.kind === 'leg' && out.settled.leg.response.ok) {
+      primaryController.abort();
+      void primaryRaw.catch(dropLoserError);
+      reportModelSlow(primaryModel);
+      logger.warn(`${TAG} hedge won`, { primaryModel, hedgeModel });
+      return out.settled.leg;
+    }
+    // The hedge's own failure is never classified, reported, or budgeted — it
+    // is a bonus leg, not evidence.
+    if (primaryFailure) return surfacePrimaryFailure();
+  }
+}
+
+interface Tagged<C> {
+  who: 'primary' | 'hedge';
+  settled: Settled<C>;
+}
+
+function track<C>(who: 'primary' | 'hedge', p: Promise<Leg<C>>): Promise<Tagged<C>> {
+  return p.then(
+    (leg) => ({ who, settled: { kind: 'leg', leg } as Settled<C> }),
+    (err) => ({ who, settled: { kind: 'error', err } as Settled<C> }),
+  );
 }
 
 function sleep(ms: number): Promise<void> {
@@ -377,7 +704,7 @@ interface ChatCompletionResponse {
 /** Single E2EE completion call (used for scoring). */
 export async function cloudComplete(
   request: CloudCompleteRequest,
-  options: AuthFetchOptions = {},
+  options: CloudCallOptions = {},
 ): Promise<string> {
   const temperature = request.temperature ?? 0.3;
   const primary = request.model ?? SMALL_MODEL;
@@ -441,7 +768,7 @@ export async function cloudComplete(
 export async function cloudBatchComplete(
   calls: BatchCall[],
   model?: string,
-  options: AuthFetchOptions = {},
+  options: CloudCallOptions = {},
 ): Promise<BatchCompletionResult[]> {
   if (calls.length === 0) return [];
   const primary = model ?? SMALL_MODEL;
@@ -611,7 +938,32 @@ export interface CloudChatStreamRequest {
   frequencyPenalty?: number;
 }
 
-/** E2EE chat: encrypt messages, send non-streaming, decrypt, emit synthetic events. */
+/** One OpenAI streaming chunk. `choices` is optional AND may be empty — the
+ *  final usage-only chunk carries `choices: []`. */
+interface ChatCompletionChunk {
+  choices?: {
+    delta?: {
+      content?: string | null;
+      reasoning_content?: string | null;
+      role?: string;
+      tool_calls?: {
+        index?: number;
+        id?: string;
+        function?: { name?: string; arguments?: string };
+      }[];
+    };
+    finish_reason?: string | null;
+  }[];
+}
+
+/**
+ * E2EE chat: encrypt messages, stream the response, decrypt each delta, emit
+ * events. NEAR encrypts every streamed `delta.content` as its OWN self-contained
+ * envelope under the same client key, so decryption is per-delta and the user
+ * sees text as it is generated (verified against cloud-api.near.ai, 2026-08-03).
+ * A non-SSE response (upstream ignoring `stream: true`) falls through to the
+ * original buffered handling.
+ */
 export async function* cloudChatStream(
   request: CloudChatStreamRequest,
 ): AsyncGenerator<SseEvent> {
@@ -636,58 +988,62 @@ export async function* cloudChatStream(
 
   logger.debug(`${TAG} cloudChatStream POST`, { url: CHAT_API });
 
-  // Dev-only timing: per-request POST→response wall time (includes model time +
-  // the non-streaming double-turn when a tool fires). Tagged for first-chat
+  // Rebuilt per attempt/leg: the deep copy must be FRESH, or a fallback retry
+  // would re-encrypt already-encrypted content (and under the wrong key).
+  const buildChatRequest = async (sendModel: string) => {
+    const messages = request.messages.map((m) => ({ ...m }));
+    const attemptCtx = await encryptMessages(
+      messages as { role: string; content: string;[k: string]: unknown }[],
+      sendModel,
+    );
+
+    // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss
+    // = real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
+    const jwtStartMs = Date.now();
+    const baseHeaders = await getAuthHeaders();
+    logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
+
+    const body: Record<string, unknown> = {
+      messages,
+      // Each streamed delta is its own E2EE envelope, so streaming and E2EE
+      // coexist — see cloudChatStream's doc comment.
+      stream: true,
+      model: sendModel,
+      chat_template_kwargs: { enable_thinking: true },
+    };
+    if (request.tools && request.tools.length > 0) {
+      body.tools = request.tools;
+      body.tool_choice = request.toolChoice ?? 'auto';
+    }
+    if (request.temperature !== undefined) body.temperature = request.temperature;
+    if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
+    if (request.maxCompletionTokens !== undefined) body.max_completion_tokens = request.maxCompletionTokens;
+    if (request.topP !== undefined) body.top_p = request.topP;
+    if (request.n !== undefined) body.n = request.n;
+    if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
+    if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
+
+    return {
+      init: {
+        method: 'POST',
+        headers: { ...baseHeaders, ...attemptCtx.headers },
+        body: JSON.stringify(body),
+      } satisfies RequestInit,
+      ctx: attemptCtx,
+    };
+  };
+
+  // Dev-only timing: per-request POST→response wall time. Tagged for first-chat
   // latency attribution.
   const postStartMs = Date.now();
-  const { response, ctx } = await sendWithModelFallback(
+  const { response, ctx, model: sentModel } = await sendWithModelFallback(
     CHAT_API,
     primary,
-    // Rebuilt per attempt: the deep copy must be FRESH, or a fallback retry
-    // would re-encrypt already-encrypted content (and under the wrong key).
-    async (sendModel) => {
-      const messages = request.messages.map((m) => ({ ...m }));
-      const attemptCtx = await encryptMessages(
-        messages as { role: string; content: string;[k: string]: unknown }[],
-        sendModel,
-      );
-
-      // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss
-      // = real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
-      const jwtStartMs = Date.now();
-      const baseHeaders = await getAuthHeaders();
-      logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
-
-      const body: Record<string, unknown> = {
-        messages,
-        stream: false, // E2EE requires complete response for decryption
-        model: sendModel,
-        chat_template_kwargs: { enable_thinking: true },
-      };
-      if (request.tools && request.tools.length > 0) {
-        body.tools = request.tools;
-        body.tool_choice = request.toolChoice ?? 'auto';
-      }
-      if (request.temperature !== undefined) body.temperature = request.temperature;
-      if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
-      if (request.maxCompletionTokens !== undefined) body.max_completion_tokens = request.maxCompletionTokens;
-      if (request.topP !== undefined) body.top_p = request.topP;
-      if (request.n !== undefined) body.n = request.n;
-      if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
-      if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
-
-      return {
-        init: {
-          method: 'POST',
-          headers: { ...baseHeaders, ...attemptCtx.headers },
-          body: JSON.stringify(body),
-        } satisfies RequestInit,
-        ctx: attemptCtx,
-      };
-    },
+    buildChatRequest,
     // Chat has always used the gateway-aligned budget; every other cloud call
-    // now shares it (plan A).
-    withUpstreamAlignedDefaults({}),
+    // now shares it (plan A). Chat is the only user-facing path, so it is also
+    // the only one that hedges and the only one that streams its body.
+    withUpstreamAlignedDefaults({ hedgeAfterMs: HEDGE_DELAY_MS, streamBody: true }),
   );
   logger.debug('[chat-timing] chat POST→response', {
     ms: Date.now() - postStartMs,
@@ -695,11 +1051,155 @@ export async function* cloudChatStream(
   });
 
   if (!response.ok) {
+    takeStreamHandle(response)?.release();
     const errorText = await response.text().catch(() => '');
     logger.error(`${TAG} cloudChatStream HTTP error`, undefined, { status: response.status, errorText });
     throw new Error(`E2EE chat failed: ${response.status} ${response.statusText} — ${errorText}`);
   }
 
+  let textYielded = false;
+  try {
+    for await (const event of consumeChatResponse(response, ctx.privateKey, ctx.algo)) {
+      if (event.type === 'text-delta') textYielded = true;
+      yield event;
+    }
+    return;
+  } catch (err) {
+    // Text already reached the user: surface the error so the existing
+    // failed-turn UX finalizes. Silently re-sending a half-answered prompt
+    // would duplicate the answer.
+    if (textYielded) throw err;
+    // Already on the fallback (session-engaged, or a hedge winner) — there is
+    // no healthier model left to try.
+    if (sentModel !== primary) throw err;
+    // Only an abort-class death (idle stall, cancelled body) is model-evidence.
+    // A decrypt failure is NOT: model-fallback.ts is explicit that "4xx, auth,
+    // E2EE/decrypt and plain network errors say nothing about the model".
+    if (isAbortLike(err) && !isCallerAbort(err)) reportModelFailure(primary);
+    logger.warn(`${TAG} stream died before any text — one fresh attempt`, {
+      failedModel: sentModel,
+      error: String(err),
+    });
+  }
+
+  // ONE fresh request, on whatever the primary now resolves to. Bounded by
+  // construction: this branch is only reachable with zero text yielded, and it
+  // never recurses.
+  const retry = await buildChatRequest(resolveModel(primary));
+  const retryResponse = await authFetch(CHAT_API, retry.init, {
+    ...withUpstreamAlignedDefaults({ streamBody: true }),
+    maxTimeoutAttempts: 1,
+  });
+  if (!retryResponse.ok) {
+    takeStreamHandle(retryResponse)?.release();
+    const errorText = await retryResponse.text().catch(() => '');
+    throw new Error(
+      `E2EE chat failed: ${retryResponse.status} ${retryResponse.statusText} — ${errorText}`,
+    );
+  }
+  yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo);
+}
+
+/** Turn an OK chat response into events, streaming when the gateway relayed
+ *  SSE and buffering when it relayed JSON. */
+async function* consumeChatResponse(
+  response: Response,
+  privateKey: Uint8Array,
+  algo: SigningAlgo,
+): AsyncGenerator<SseEvent> {
+  const handle = takeStreamHandle(response);
+  const contentType = response.headers?.get('content-type') ?? '';
+  if (!response.body || !contentType.includes('text/event-stream')) {
+    // The gateway relays NEAR's content-type verbatim, so JSON here means the
+    // upstream ignored `stream: true`. Buffered handling, unchanged.
+    handle?.release();
+    yield* consumeBufferedChat(response, privateKey, algo);
+    return;
+  }
+  yield* consumeSseChat(response, privateKey, algo, handle);
+}
+
+/** Streaming path: one E2EE envelope per `delta.content`, decrypted as it lands. */
+async function* consumeSseChat(
+  response: Response,
+  privateKey: Uint8Array,
+  algo: SigningAlgo,
+  handle: StreamHandle | undefined,
+): AsyncGenerator<SseEvent> {
+  const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
+  let idleTimedOut = false;
+  const armIdle = (ms: number) => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      idleTimedOut = true;
+      // Abort the in-flight body so the pending read rejects instead of
+      // hanging forever behind a silent upstream.
+      handle?.abort();
+      void reader.cancel().catch(() => { /* already dead */ });
+    }, ms);
+  };
+
+  let finishReason = 'stop';
+  try {
+    // authFetch dropped its own 130s header timer at handoff; until the first
+    // chunk arrives this reinstates the same budget (a cold model may sit on an
+    // open, silent stream). Every chunk after that tightens it.
+    armIdle(UPSTREAM_ALIGNED_TIMEOUT_MS);
+    for await (const payload of sseEvents(reader, () => armIdle(STREAM_IDLE_TIMEOUT_MS))) {
+      if (payload === '[DONE]') break;
+      let chunk: ChatCompletionChunk;
+      try {
+        chunk = JSON.parse(payload) as ChatCompletionChunk;
+      } catch {
+        logger.debug(`${TAG} unparseable SSE payload (skipped)`, {
+          prefix: payload.slice(0, 80),
+        });
+        continue;
+      }
+      // The trailing usage chunk carries `choices: []`.
+      const choice = chunk.choices?.[0];
+      if (!choice) continue;
+      if (choice.finish_reason) finishReason = choice.finish_reason;
+      const delta = choice.delta;
+      if (!delta) continue;
+
+      // `delta.reasoning_content` is chain-of-thought. It arrives as its own
+      // field and may itself be an encrypted envelope; it is dropped WITHOUT
+      // decrypting, and must never be yielded as assistant text.
+      if (delta.content) {
+        yield { type: 'text-delta', delta: decryptContent(delta.content, privateKey, algo) };
+      }
+
+      // Tool-call arguments arrive as CLEARTEXT fragments (see the E2EE gap
+      // note below). Forwarded as they land; the consumer accumulates them.
+      for (const tc of delta.tool_calls ?? []) {
+        yield {
+          type: 'tool-call-delta',
+          index: tc.index ?? 0,
+          id: tc.id,
+          name: tc.function?.name,
+          argumentsDelta: tc.function?.arguments ?? '',
+        };
+      }
+    }
+    // A cancelled reader ends the loop cleanly, so the flag is the only signal.
+    if (idleTimedOut) throw new Error(`${TAG} chat stream went idle`);
+  } finally {
+    clearTimeout(idleTimer);
+    handle?.release();
+  }
+
+  yield { type: 'finish', reason: finishReason === 'tool_calls' ? 'tool_calls' : 'stop' };
+}
+
+/** Buffered path: a whole non-streaming completion, one envelope for the whole
+ *  answer. Reached when the upstream ignores `stream: true`. */
+async function* consumeBufferedChat(
+  response: Response,
+  privateKey: Uint8Array,
+  algo: SigningAlgo,
+): AsyncGenerator<SseEvent> {
   const data = (await response.json()) as ChatCompletionResponse;
   const choice = data.choices?.[0];
   if (!choice) {
@@ -719,22 +1219,22 @@ export async function* cloudChatStream(
       finishReason: choice.finish_reason,
       hasReasoning: !!choice.message.reasoning_content,
     });
-    const decrypted = decryptContent(rawContent, ctx.privateKey, ctx.algo);
+    const decrypted = decryptContent(rawContent, privateKey, algo);
     yield { type: 'text-delta', delta: decrypted };
   }
 
   // Tool calls are NOT encrypted — emit them as-is.
   //
   // E2EE GAP (documented, intentional): the NEAR-v2 envelope only covers
-  // `message.content`, which is decrypted above. Tool-call function arguments
-  // are emitted by the gateway in cleartext because the gateway must read/route
-  // them. For the persona-update agent these arguments are model-generated
-  // structured data derived from the user's conversation (e.g. persona-fact
-  // updates), so any user-derived content placed in a tool-call argument is
-  // visible to the inference gateway operator and is NOT protected by E2EE.
-  // See SECURITY.md ("What E2EE does and does not cover") for the threat-model
-  // boundary. Encrypting tool-call args would require a matching gateway-side
-  // change and is only worth it if the gateway is treated as untrusted.
+  // `message.content` / `delta.content`, which is decrypted above. Tool-call
+  // function arguments are emitted by the gateway in cleartext because the
+  // gateway must read/route them. For the persona-update agent these arguments
+  // are model-generated structured data derived from the user's conversation
+  // (e.g. persona-fact updates), so any user-derived content placed in a
+  // tool-call argument is visible to the inference gateway operator and is NOT
+  // protected by E2EE. Encrypting tool-call args would require a matching
+  // gateway-side change and is only worth it if the gateway is treated as
+  // untrusted.
   if (choice.message?.tool_calls) {
     for (const tc of choice.message.tool_calls) {
       yield {

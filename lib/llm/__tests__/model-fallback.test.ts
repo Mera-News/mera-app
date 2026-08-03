@@ -15,8 +15,10 @@ jest.mock('@/lib/logger', () => ({
 
 import {
   __resetForTests,
+  fallbackFor,
   isFallbackEngaged,
   reportModelFailure,
+  reportModelSlow,
   reportModelSuccess,
   resolveModel,
 } from '../model-fallback';
@@ -99,6 +101,65 @@ describe('model-fallback', () => {
     });
   });
 
+  describe('fallbackFor', () => {
+    it('maps a configured primary to its fallback', () => {
+      expect(fallbackFor(SMALL_MODEL)).toBe(MODEL_FALLBACKS[SMALL_MODEL]);
+      expect(fallbackFor(BIG_MODEL)).toBe(MODEL_FALLBACKS[BIG_MODEL]);
+    });
+
+    it('returns null for a model with no configured fallback', () => {
+      expect(fallbackFor(UNKNOWN_MODEL)).toBeNull();
+    });
+
+    it('is unaffected by engagement (it reports config, not state)', () => {
+      reportModelFailure(SMALL_MODEL);
+      expect(fallbackFor(SMALL_MODEL)).toBe(MODEL_FALLBACKS[SMALL_MODEL]);
+    });
+  });
+
+  describe('reportModelSlow', () => {
+    it('engages the fallback, like a timeout does', () => {
+      reportModelSlow(SMALL_MODEL);
+      expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+      expect(resolveModel(SMALL_MODEL)).toBe(MODEL_FALLBACKS[SMALL_MODEL]);
+    });
+
+    it('reports at WARNING with its own message — a slow primary is not a dead one', () => {
+      reportModelSlow(SMALL_MODEL);
+      expect(logger.captureMessage as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(logger.captureMessage as jest.Mock).toHaveBeenCalledWith(
+        'NEAR primary model slow — hedged fallback won, session fallback engaged',
+        {
+          level: 'warning',
+          tags: { model: SMALL_MODEL, fallback: MODEL_FALLBACKS[SMALL_MODEL] },
+        },
+      );
+    });
+
+    it('never engages or reports for a model with no configured fallback', () => {
+      reportModelSlow(UNKNOWN_MODEL);
+      expect(isFallbackEngaged(UNKNOWN_MODEL)).toBe(false);
+      expect(logger.captureMessage as jest.Mock).not.toHaveBeenCalled();
+    });
+
+    it('dedupes with reportModelFailure: slow → failure is ONE event', () => {
+      reportModelSlow(SMALL_MODEL);
+      reportModelFailure(SMALL_MODEL);
+      reportModelSlow(SMALL_MODEL);
+
+      expect(logger.captureMessage as jest.Mock).toHaveBeenCalledTimes(1);
+      expect((logger.captureMessage as jest.Mock).mock.calls[0][1].level).toBe('warning');
+    });
+
+    it('dedupes with reportModelFailure: failure → slow is ONE event', () => {
+      reportModelFailure(SMALL_MODEL);
+      reportModelSlow(SMALL_MODEL);
+
+      expect(logger.captureMessage as jest.Mock).toHaveBeenCalledTimes(1);
+      expect((logger.captureMessage as jest.Mock).mock.calls[0][1].level).toBe('error');
+    });
+  });
+
   describe('reportModelSuccess', () => {
     it('never engages anything', () => {
       reportModelSuccess(SMALL_MODEL);
@@ -130,6 +191,13 @@ describe('model-fallback', () => {
       // Reported again: a reset simulates a fresh app launch, which is exactly
       // how the primary gets retried in production.
       expect(logger.captureMessage as jest.Mock).toHaveBeenCalledTimes(2);
+    });
+
+    it('clears a hedge engagement too (both causes share one guard set)', () => {
+      reportModelSlow(SMALL_MODEL);
+      __resetForTests();
+      expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+      expect(resolveModel(SMALL_MODEL)).toBe(SMALL_MODEL);
     });
   });
 });
