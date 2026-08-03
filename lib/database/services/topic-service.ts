@@ -219,6 +219,15 @@ export async function reactivate(topicId: string): Promise<void> {
   await setStatus(topicId, 'active');
 }
 
+/** Every topic id currently on the device — the liveness set the suggestion
+ *  purge screens against (see article-suggestion-service). Includes retired and
+ *  suppressed rows on purpose: those still EXIST, so a suggestion matching one
+ *  is stale, not orphaned, and must not be destroyed. */
+export async function getAllTopicIds(): Promise<Set<string>> {
+  const rows = await topicsCollection.query().fetch();
+  return new Set(rows.map((t) => t.id));
+}
+
 /**
  * Startup repair: destroy topics whose owning fact no longer exists.
  *
