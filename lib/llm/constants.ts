@@ -10,17 +10,34 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  * TIMEOUT-CLASS way (see lib/llm/model-fallback) we stop sending it for the rest
  * of the JS session and send its fallback instead.
  *
- * Both fallbacks are TEE-served models on the same NEAR fleet, verified
- * `is_ready: true` with healthy attestation reports (ecdsa signing — the same
- * shape the E2EE path already handles) on 2026-08-03, and confirmed as the
- * fallback choices the same day. Each matches its primary's class:
- * `openai/gpt-oss-120b` (~120B, $0.15/$0.55) backs the big chat model;
- * `google/gemma-4-31B-it` (~31B dense, $0.13/$0.40, 262K ctx, tools +
- * structured outputs) backs the small scoring/topics/reasons model. This map
- * is the single point to change if a different fallback is ever chosen.
+ * Both fallbacks are TEE-served on the same NEAR fleet with healthy
+ * attestation reports (verified 2026-08-03). They are picked per PRIMARY by
+ * what that primary's callers actually need, not by price:
+ *
+ *   BIG (persona chat) needs FUNCTION TOOL CALLING. `openai/gpt-oss-120b` held
+ *   this slot until a live session exposed the cost: it answers conversation-
+ *   ally while calling `saveExtractedFacts` with an empty list, so the user's
+ *   fact is silently dropped. A streamed tool-call probe across every ready
+ *   model (2026-08-03, same prompt + schema) separates them cleanly — only
+ *   DeepSeek-V4-Flash (the primary) and `zai-org/GLM-5.1-FP8` returned
+ *   schema-conformant arguments. Qwen3.5-122B leaked `</parameter>` markers
+ *   into its JSON, both Qwen3.6 variants emitted a call with EMPTY arguments,
+ *   and Gemma-4-31B made no call at all under `tool_choice: 'required'`.
+ *   GLM-5.1 costs ~10x the primary ($1.40/$4.40 vs $0.17/$0.35), which is the
+ *   right trade for a path that only runs when the primary has stalled.
+ *
+ *   SMALL (scoring / topics / reasons) uses JSON MODE, never function tools
+ *   (`responseFormat: 'json'`), so the tool-call probe above does not apply to
+ *   it. `google/gemma-4-31B-it` (~31B dense, $0.13/$0.40, 262K ctx, json_mode
+ *   + structured outputs) stays.
+ *
+ * Kimi K2.6 was evaluated and REJECTED: it serves no usable attestation
+ * report, so the E2EE path cannot key against it at all.
+ *
+ * This map is the single point to change if a different fallback is chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
-  [BIG_MODEL]: 'openai/gpt-oss-120b',
+  [BIG_MODEL]: 'zai-org/GLM-5.1-FP8',
   [SMALL_MODEL]: 'google/gemma-4-31B-it',
 };
 

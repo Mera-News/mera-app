@@ -38,9 +38,19 @@ describe('model-fallback', () => {
   });
 
   describe('MODEL_FALLBACKS wiring', () => {
-    it('maps both primaries to the TEE-served fallback', () => {
+    it('maps each primary to its class-appropriate TEE-served fallback', () => {
+      // BIG backs the persona chat, which needs FUNCTION TOOL CALLING — a live
+      // probe (2026-08-03) showed GLM-5.1 is the only ready non-primary model
+      // that returns schema-conformant tool arguments. SMALL uses JSON mode, so
+      // the cheaper Gemma is right there. Rationale in constants.ts.
+      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('zai-org/GLM-5.1-FP8');
       expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('google/gemma-4-31B-it');
-      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('openai/gpt-oss-120b');
+    });
+
+    it('never falls back to a model that is its own primary', () => {
+      for (const [primary, fallback] of Object.entries(MODEL_FALLBACKS)) {
+        expect(fallback).not.toBe(primary);
+      }
     });
   });
 
@@ -174,6 +184,24 @@ describe('model-fallback', () => {
       reportModelSuccess(SMALL_MODEL);
       expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
       expect(resolveModel(SMALL_MODEL)).toBe(MODEL_FALLBACKS[SMALL_MODEL]);
+    });
+  });
+
+  describe('a fresh process always retries the primary', () => {
+    it('holds engagement in module memory only — nothing is persisted', () => {
+      // The user-facing contract: "once the app restarts, always use the
+      // primary model first again". Engagement lives in a module-level Map, so
+      // it dies with the JS context and a relaunched app starts on the primary.
+      // A regression here would be someone adding storage/hydration; this
+      // asserts the module reaches for neither.
+      reportModelFailure(SMALL_MODEL);
+      expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+
+      jest.resetModules(); // simulates the process restart
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const fresh = require('../model-fallback') as typeof import('../model-fallback');
+      expect(fresh.isFallbackEngaged(SMALL_MODEL)).toBe(false);
+      expect(fresh.resolveModel(SMALL_MODEL)).toBe(SMALL_MODEL);
     });
   });
 
