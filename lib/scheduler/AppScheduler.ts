@@ -128,14 +128,14 @@ class _AppScheduler {
     // A paused task never fires — including via the scheduler-runner retry path
     // that re-triggers by name.
     if (this.pausedTasks.has(taskName)) {
-      logger.info(`[AppScheduler] trigger skipped — task=${taskName} paused`);
+      logger.debug(`[AppScheduler] trigger skipped — task=${taskName} paused`);
       return;
     }
     // Honor exclusivity for triggered runs too (e.g. the scheduler-runner retry
     // path). A run already in progress supersedes the trigger — without this an
     // exclusive task could run concurrently with its own retry.
     if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) {
-      logger.info(`[AppScheduler] trigger skipped — task=${task.name} already running`);
+      logger.debug(`[AppScheduler] trigger skipped — task=${task.name} already running`);
       return;
     }
     await this._enqueueAndRun(task, input);
@@ -196,7 +196,7 @@ class _AppScheduler {
 
       if (!(await this._conditionsMet(task))) continue;
 
-      logger.info(`[AppScheduler] tick-firing task=${task.name} lastRun=${lastRun ? Math.round((now - lastRun) / 1000) + 's ago' : 'never'}`);
+      logger.debug(`[AppScheduler] tick-firing task=${task.name} lastRun=${lastRun ? Math.round((now - lastRun) / 1000) + 's ago' : 'never'}`);
       await this._enqueueAndRun(task);
     }
   }
@@ -270,7 +270,7 @@ class _AppScheduler {
   private async _conditionsMet(task: TaskDefinition): Promise<boolean> {
     for (const cond of task.conditions ?? []) {
       if (!(await this._checkCondition(cond))) {
-        logger.info(`[AppScheduler] task=${task.name} blocked by condition type=${cond.type}`);
+        logger.debug(`[AppScheduler] task=${task.name} blocked by condition type=${cond.type}`);
         return false;
       }
     }

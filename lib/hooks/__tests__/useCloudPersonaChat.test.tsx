@@ -247,6 +247,104 @@ describe('useCloudPersonaChat', () => {
   });
 
   describe('tool call handling', () => {
+    it('an EMPTY saveExtractedFacts call still triggers the forced-extraction pass', async () => {
+      // Regression, observed in production 2026-08-03 (a session running the
+      // hedged fallback model): the model replies conversationally AND calls
+      // saveExtractedFacts with an empty list. The call is well-formed, so the
+      // zero-call check passed, executeTool saved nothing, and the user's fact
+      // was silently dropped. An empty extraction must count as "extracted
+      // nothing" and route to the same 'required' pass.
+      const empty = JSON.stringify({ extracted_user_information: [] });
+      mockCloudChatStream.mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Got it — noted!' },
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-empty',
+            name: 'saveExtractedFacts',
+            argumentsDelta: empty,
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      );
+
+      const agent = makeAgent();
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('I follow Formula 1');
+      });
+
+      await waitFor(
+        () => expect(mockCloudChatStream).toHaveBeenCalledTimes(2),
+        { timeout: 3000 },
+      );
+      const [secondArg] = mockCloudChatStream.mock.calls[1] as [{ toolChoice?: string }];
+      expect(secondArg.toolChoice).toBe('required');
+    });
+
+    it('a NON-empty saveExtractedFacts call does NOT trigger a second pass', async () => {
+      const filled = JSON.stringify({
+        extracted_user_information: [{ statement: 'Follows Formula 1' }],
+      });
+      mockCloudChatStream.mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Noted!' },
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-real',
+            name: 'saveExtractedFacts',
+            argumentsDelta: filled,
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      );
+
+      const executeTool = jest.fn().mockResolvedValue({ result: { saved: 1 } });
+      const agent = makeAgent({ executeTool });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('I follow Formula 1');
+      });
+
+      await waitFor(() => expect(executeTool).toHaveBeenCalled(), { timeout: 3000 });
+      // Give a stray forced pass a chance to appear before asserting absence.
+      await new Promise((r) => setTimeout(r, 50));
+      expect(mockCloudChatStream).toHaveBeenCalledTimes(1);
+    });
+
+    it('a non-extraction tool call is substantive — no forced pass', async () => {
+      mockCloudChatStream.mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Tracking that.' },
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-track',
+            name: 'proposeTrack',
+            argumentsDelta: JSON.stringify({ topic: 'F1' }),
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      );
+
+      const executeTool = jest.fn().mockResolvedValue({ result: { ok: true } });
+      const agent = makeAgent({ executeTool });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('track F1 for me');
+      });
+
+      await waitFor(() => expect(executeTool).toHaveBeenCalled(), { timeout: 3000 });
+      await new Promise((r) => setTimeout(r, 50));
+      expect(mockCloudChatStream).toHaveBeenCalledTimes(1);
+    });
+
+
     it('accumulates tool-call-delta events and calls executeTool', async () => {
       const argsJson = JSON.stringify({ extracted_user_information: [] });
       mockCloudChatStream.mockImplementation(() =>

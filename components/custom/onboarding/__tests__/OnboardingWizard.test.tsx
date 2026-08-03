@@ -102,23 +102,32 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 }));
 
 let mockStep = 0;
+// Stable action mocks (not re-created per render) so the resume tests below can
+// assert what the mount effect did with the server stage.
+const mockSetStep = jest.fn();
+const mockUpdatePreferences = jest.fn();
+const mockSetIsInitializing = jest.fn();
+const mockResetOnboarding = jest.fn();
 jest.mock('@/lib/stores/onboarding-store', () => ({
     useOnboardingStep: () => mockStep,
     useOnboardingPreferences: () => ({ userId: 'u1', notificationHours: [] as number[] }),
     useOnboardingIsInitializing: () => false,
     useOnboardingStore: () => ({
-        setStep: jest.fn(),
-        updatePreferences: jest.fn(),
-        setIsInitializing: jest.fn(),
-        resetOnboarding: jest.fn(),
+        setStep: mockSetStep,
+        updatePreferences: mockUpdatePreferences,
+        setIsInitializing: mockSetIsInitializing,
+        resetOnboarding: mockResetOnboarding,
     }),
 }));
 
+import { AccountService } from '@/lib/account-service';
+import { OnboardingStage } from '@/lib/generated/graphql-types';
 import OnboardingWizard from '../OnboardingWizard';
 
 beforeEach(() => {
     jest.clearAllMocks();
     mockStep = 0;
+    (AccountService.getUserPersona as jest.Mock).mockResolvedValue(null);
 });
 
 describe('OnboardingWizard step rendering', () => {
@@ -148,5 +157,59 @@ describe('OnboardingWizard step rendering', () => {
         });
         // ScreenChatBubble is no longer imported or rendered by the wizard.
         expect(queryByTestId('screen-chat-bubble')).toBeNull();
+    });
+});
+
+// The onboarding gate moved from the server's onboardingStage to the local fact
+// count, so the wizard is now legitimately mounted for a user whose stage is
+// already FINISHED (they tapped Next through the persona chat and captured
+// nothing). The stage may only pick the RESUME step — it must never shortcut
+// straight to completion.
+describe('OnboardingWizard resume step from the server stage', () => {
+    const renderAndSettle = async (onComplete = jest.fn()) => {
+        const utils = render(<OnboardingWizard onComplete={onComplete} />);
+        await waitFor(() => expect(mockSetStep).toHaveBeenCalled());
+        return { ...utils, onComplete };
+    };
+
+    it('starts at step 1 (persona chat) when the server stage is FINISHED', async () => {
+        (AccountService.getUserPersona as jest.Mock).mockResolvedValue({
+            onboardingStage: OnboardingStage.Finished,
+            preferredNotificationWindow: [],
+        });
+        const { onComplete } = await renderAndSettle();
+
+        expect(mockSetStep).toHaveBeenCalledWith(1);
+        // Critically: no auto-advance to completion off the server stage.
+        expect(onComplete).not.toHaveBeenCalled();
+        expect(mockResetOnboarding).not.toHaveBeenCalled();
+    });
+
+    it('starts at step 1 when the server stage is PERSONA_CHAT', async () => {
+        (AccountService.getUserPersona as jest.Mock).mockResolvedValue({
+            onboardingStage: OnboardingStage.PersonaChat,
+            preferredNotificationWindow: [],
+        });
+        const { onComplete } = await renderAndSettle();
+
+        expect(mockSetStep).toHaveBeenCalledWith(1);
+        expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it('starts at step 0 when the server stage is NOTIFICATIONS', async () => {
+        (AccountService.getUserPersona as jest.Mock).mockResolvedValue({
+            onboardingStage: OnboardingStage.Notifications,
+            preferredNotificationWindow: [],
+        });
+        await renderAndSettle();
+
+        expect(mockSetStep).toHaveBeenCalledWith(0);
+    });
+
+    it('starts at step 0 when there is no persona at all (first run)', async () => {
+        (AccountService.getUserPersona as jest.Mock).mockResolvedValue(null);
+        await renderAndSettle();
+
+        expect(mockSetStep).toHaveBeenCalledWith(0);
     });
 });

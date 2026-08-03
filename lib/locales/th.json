@@ -98,11 +98,7 @@
       "ขยับร่างกายในแบบที่คุณสบาย",
       "โทรศัพท์จะยังอยู่ตรงนี้ ใช้ชีวิตกับปัจจุบันเถอะ"
     ],
-    "analysedArticles": "มีการเผยแพร่ {{processed}} {{articleWord}} ใน 24 ชั่วโมงที่ผ่านมา วิเคราะห์ {{analysed}} บทความให้คุณแล้ว และพบ {{impactful}} บทความที่เกี่ยวข้องกับคุณ",
-    "analysedArticlesPending": "มีการเผยแพร่ {{processed}} {{articleWord}} ใน 24 ชั่วโมงที่ผ่านมา",
     "noiseRemovedSummary": "กรอง {{count}} {{articleWord}} หลอกออกก่อนการวิเคราะห์",
-    "articleSingular": "บทความ",
-    "articlePlural": "บทความ",
     "processing": {
       "doneFlash": "พร้อมแล้ว: นี่คือข่าวของคุณ",
       "errorFlash": "ไม่สามารถโหลดเนื้อหาล่าสุดได้ กรุณาลองอีกครั้ง",
@@ -191,7 +187,13 @@
     },
     "analysingProgress": "กำลังวิเคราะห์ {{done}} จาก {{total}} บทความ",
     "waitingForNextBatch_one": "มี{{count}}บทความใหม่รอการวิเคราะห์รอบถัดไป",
-    "waitingForNextBatch_other": "มีบทความใหม่ {{count}} รายการรอการวิเคราะห์รอบถัดไป"
+    "waitingForNextBatch_other": "มีบทความใหม่ {{count}} รายการรอการวิเคราะห์รอบถัดไป",
+    "exploreCta": "สำรวจ",
+    "statsPublishedPending_other": "{{formatted}} {{articleWord}} ได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา",
+    "statsPublished_other": "เผยแพร่ {{formatted}} {{articleWord}} ใน 24 ชั่วโมงที่ผ่านมา,",
+    "statsAnalysed_other": "วิเคราะห์ {{formatted}} ให้คุณแล้ว,",
+    "statsRelevant_other": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
+    "statsRead_other": "และคุณได้อ่าน {{formatted}}."
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -326,7 +328,8 @@
     "packMissingIosPath": "การตั้งค่า → ทั่วไป → ภาษาและภูมิภาค",
     "retry": "ลองใหม่",
     "watchGuide": "ดูวิธีเพิ่มภาษาลงในอุปกรณ์ของคุณ",
-    "iosLanguageHint": "การเลือกภาษานี้เพียงอย่างเดียวไม่เพียงพอ คุณต้องเลือกภาษานี้ในการตั้งค่าภาษาของ iOS ด้วย"
+    "iosLanguageHint": "การเลือกภาษานี้เพียงอย่างเดียวไม่เพียงพอ คุณต้องเลือกภาษานี้ในการตั้งค่าภาษาของ iOS ด้วย",
+    "managePacksPrefix": "เพื่อจัดการภาษาที่ดาวน์โหลด ไปที่"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +603,9 @@
       "submittedConfirmation": "คำขอของคุณถูกส่งแล้วและกำลังรอการตรวจสอบ เราจะตรวจสอบสถานะอีกครั้งเมื่อคุณแตะรีเฟรช",
       "alreadyPending": "คุณมีคำขอปลดบล็อกที่รอการตรวจสอบอยู่แล้ว",
       "error": "ไม่สามารถส่งคำขอของคุณได้ กรุณาลองอีกครั้ง"
-    }
+    },
+    "topicGenFailed": "ไม่สามารถสร้างหัวข้อได้",
+    "topicGenRetry": "ลองใหม่"
   },
   "articleFeedback": {
     "thumbsUp": "ถูกใจ",
@@ -843,7 +848,8 @@
     "headlineDenominatorNone_other": "Mera อ่าน{{count}}ข่าวเด่น · ไม่มีที่เกี่ยวข้องวันนี้",
     "subTabFeed": "ภาพรวม",
     "subTabStories": "เรื่องราว",
-    "subTabSaved": "บันทึกไว้"
+    "subTabSaved": "บันทึกไว้",
+    "subTabHistory": "ประวัติ"
   },
   "feedStatus": {
     "title": "สถานะฟีด",
@@ -998,7 +1004,11 @@
     "thanks": "ขอบคุณสำหรับความคิดเห็น",
     "seenAck": "เรียบร้อย: เราจะแสดงเนื้อหาที่คุณเคยเห็นน้อยลง",
     "nudgeSubscribe": "สมัครสมาชิก {{publication}} เพื่อปลดล็อกบทความเต็ม",
-    "nudgeBrowse": "ลองหาเนื้อหาที่เกี่ยวข้องจากแหล่งข่าวอื่น"
+    "nudgeBrowse": "ลองหาเนื้อหาที่เกี่ยวข้องจากแหล่งข่าวอื่น",
+    "paywallRelatedOption": "แสดงข่าวที่เกี่ยวข้อง",
+    "paywallRelatedDesc": "เรื่องราวที่คล้ายกันจากสำนักพิมพ์อื่นอาจไม่มีเพย์วอลล์ — ลองดูบทความที่เกี่ยวข้อง",
+    "paywallSubscribeDesc": "คุณไปที่ {{publication}} {{visits}} ครั้งในเดือนนี้ — ลองพิจารณาสมัครสมาชิกเพื่อเข้าถึงเต็มที่",
+    "paywallBlockOption": "บล็อก {{publication}} แทน"
   },
   "topicPlan": {
     "title": "หัวข้อที่ฉันจะติดตาม",
@@ -1010,7 +1020,6 @@
     "saveAll": "บันทึกทั้งหมด ({{count}})",
     "delete": "ลบหัวข้อ",
     "undo": "เลิกทำ",
-    "highPriority": "ให้ความสำคัญกับหัวข้อนี้",
     "settledTitle": "บันทึกหัวข้อแล้ว",
     "settledSummary": "มี {{count}} หัวข้อที่ใช้งานอยู่สำหรับข้อเท็จจริงนี้"
   },
@@ -1302,6 +1311,14 @@
     "newPinTitle": "ตั้ง PIN ใหม่",
     "newPinSubtitle": "เลือก PIN 4 หลักใหม่",
     "pinChangedTitle": "PIN อัปเดต",
-    "pinChangedDescription": "PIN เปลี่ยน"
+    "pinChangedDescription": "PIN เปลี่ยน",
+    "blurImagesTitle": "เบลอภาพ",
+    "blurImagesDescription": "ทำให้ภาพบทความเบลออ่อนลง เพื่อว่ารูปภาพกราฟิกหรือที่รบกวนจิตใจจะไม่แสดงอย่างชัดเจน"
+  },
+  "display": {
+    "title": "จอแสดงผล",
+    "subtitle": "ปรับแต่งวิธีการเรนเดอร์องค์ประกอบภาพของ Mera บนอุปกรณ์นี้",
+    "staticGradientTitle": "พื้นหลังแบบคงที่",
+    "staticGradientDescription": "ใช้การไล่ระดับสีคงที่แทนพื้นหลังแบบเคลื่อนไหว — ง่ายต่อแบตเตอรี่และอุปกรณ์เก่า"
   }
 }

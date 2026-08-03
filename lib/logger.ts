@@ -138,29 +138,50 @@ const logger = {
    * Log methods for different severity levels
    */
   debug(message: string, context?: LogContext): void {
-    if (__DEV__) {
-      console.debug('[Debug]', message, context);
+    // Only print to console when explicitly opted in — debug is chatty and
+    // otherwise floods the dev console on every tick/batch.
+    if (__DEV__ && process.env.EXPO_PUBLIC_VERBOSE_LOGS === 'true') {
+      if (context !== undefined) {
+        console.debug('[Debug]', message, context);
+      } else {
+        console.debug('[Debug]', message);
+      }
     }
-    this.addBreadcrumb(message, 'debug', context, 'debug');
+    // Breadcrumbs only in dev — chatty debug calls would otherwise evict
+    // useful context from the 100-breadcrumb ring ahead of prod crash reports.
+    if (__DEV__) {
+      this.addBreadcrumb(message, 'debug', context, 'debug');
+    }
   },
 
   info(message: string, context?: LogContext): void {
     if (__DEV__) {
-      console.info('[Info]', message, context);
+      if (context !== undefined) {
+        console.info('[Info]', message, context);
+      } else {
+        console.info('[Info]', message);
+      }
     }
     this.addBreadcrumb(message, 'info', context, 'info');
   },
 
   warn(message: string, context?: LogContext): void {
     if (__DEV__) {
-      console.warn('[Warn]', message, context);
+      if (context !== undefined) {
+        console.warn('[Warn]', message, context);
+      } else {
+        console.warn('[Warn]', message);
+      }
     }
     this.addBreadcrumb(message, 'warning', context, 'warning');
   },
 
   error(message: string, error?: unknown, context?: LogContext): void {
     if (__DEV__) {
-      console.error('[Error]', message, error, context);
+      const args: unknown[] = ['[Error]', message];
+      if (error !== undefined) args.push(error);
+      if (context !== undefined) args.push(context);
+      console.error(...args);
     }
 
     if (error) {

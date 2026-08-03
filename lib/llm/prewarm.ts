@@ -20,7 +20,7 @@ import { ProcessingMode } from '../generated/graphql-types';
 import logger from '../logger';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { cloudComplete } from './cloudComplete';
-import { BIG_MODEL } from './constants';
+import { BIG_MODEL, MODEL_FALLBACKS, SMALL_MODEL } from './constants';
 
 // Model-warmup dedupe: unlike attestation/JWT (client-cached), a throwaway
 // completion actually hits the model on every call, so gate it to the
@@ -44,7 +44,17 @@ export function prewarmCloudChat(): void {
   }
 
   const startMs = Date.now();
-  void Promise.allSettled([fetchModelPublicKey(BIG_MODEL), getJwtToken()]).then(
+  // Fallback ATTESTATION is warmed too (key only, no throwaway completion): a
+  // hedge leg that has to fetch attestation cold starts several hundred ms
+  // behind and can lose a race it should win. Residual gap, accepted: this
+  // warms the key, not the MODEL, so a cold fallback can still lose — the
+  // 130s sequential fallback path remains the backstop.
+  void Promise.allSettled([
+    fetchModelPublicKey(BIG_MODEL),
+    fetchModelPublicKey(MODEL_FALLBACKS[BIG_MODEL]),
+    fetchModelPublicKey(MODEL_FALLBACKS[SMALL_MODEL]),
+    getJwtToken(),
+  ]).then(
     (results) => {
       const failed = results.filter(
         (r): r is PromiseRejectedResult => r.status === 'rejected',

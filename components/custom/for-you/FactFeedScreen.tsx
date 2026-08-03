@@ -165,7 +165,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         prev[key] ? { ...prev, [key]: { ...prev[key], committed } } : prev,
       ),
   };
-  const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter);
+  const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter, {
+    onOpenSuggestion: handlePress,
+  });
   const dismissedMap = useFeedbackDismissedStore((s) => s.dismissed);
 
   const renderItem = useCallback(

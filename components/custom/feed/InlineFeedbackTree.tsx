@@ -63,6 +63,11 @@ export interface InlineFeedbackTreeProps {
   /** A TERMINAL leaf (childless, NON-openChat: actions/nudge/seenOnly) was tapped
    *  after its path was recorded — the overlay uses this to settle + auto-advance. */
   onLeafCommitted?: (suggestion: ForYouSuggestion, verdict: Verdict, pathIds: string[]) => void;
+  /** A `nudge` leaf was tapped — a SUGGESTION, not a persona mutation, so the
+   *  host acts on it instead of applying anything. 'browse_related' means "take
+   *  me to the related coverage"; 'subscribe' is only reachable from a stale
+   *  cached tree (the current tree no longer authors one) and hosts ignore it. */
+  onNudge?: (nudge: 'subscribe' | 'browse_related') => void;
   /** Stored node-id path to resume when revisiting a card (Back). */
   initialPathIds?: string[];
   /** Breadcrumb ROOT label — the parent panel's own title (e.g. "More like
@@ -140,6 +145,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
   onTreePathChanged,
   onInvokeMera,
   onLeafCommitted,
+  onNudge,
   initialPathIds,
   rootLabel,
   contextFallback,
@@ -235,7 +241,31 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
           ) as string;
         }
       }
-      return t(node.labelKey, { defaultValue: node.labelDefault }) as string;
+      // `publication` / `visits` are supplied to EVERY label, not just the
+      // paywall ones: a label without those placeholders ignores them, and the
+      // alternative — resolving them per-node — is how "Block {{publication}}
+      // instead" would have shipped with the braces still in it, in the chip AND
+      // in the breadcrumb crumb (both render through this one callback).
+      return t(node.labelKey, {
+        defaultValue: node.labelDefault,
+        publication: context.publicationName ?? '',
+        visits: context.publicationVisits ?? 0,
+      }) as string;
+    },
+    [t, context],
+  );
+
+  /** The optional per-node MESSAGE (v4 `descKey`/`descDefault`). Empty string
+   *  when the node declares none — the vast majority. Same interpolation set as
+   *  the label; see FeedbackTreeNode's doc for why it is `visits`, not `count`. */
+  const desc = useCallback(
+    (node: FeedbackTreeNode) => {
+      if (!node.descKey && !node.descDefault) return '';
+      return t(node.descKey ?? '', {
+        defaultValue: node.descDefault ?? '',
+        publication: context.publicationName ?? '',
+        visits: context.publicationVisits ?? 0,
+      }) as string;
     },
     [t, context],
   );
@@ -298,6 +328,18 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       // Terminal (non-openChat) leaf — let the host settle + auto-advance.
       onLeafCommitted?.(suggestion, verdict, nextIds);
 
+      // A NUDGE leaf carries no persona actions by declaration — it asks the
+      // HOST to do something (open the related coverage) instead. Placed after
+      // `onLeafCommitted`, which already commits the verdict and closes the
+      // surface on every host, so this only has to hand over the intent.
+      // Returning here also keeps it out of `resolveLeafActions`, which would
+      // return [] for it anyway — but silently, which is how "Browse related
+      // coverage" spent its whole life as a chip that closed the panel.
+      if (node.leaf?.nudge) {
+        onNudge?.(node.leaf.nudge);
+        return;
+      }
+
       // D16 — and APPLY it. `resolveLeafActions` returns [] for nudge /
       // seenOnly leaves and for any leaf whose placeholders the local context
       // can't fill, which is also the guard that keeps the DB/persona modules
@@ -318,6 +360,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       onTreePathChanged,
       onInvokeMera,
       onLeafCommitted,
+      onNudge,
       suggestion,
       verdict,
       context,
@@ -349,7 +392,14 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
           defaultValue: 'Tap again to confirm',
         }) as string)
       : label(node);
-    return (
+    // The node's own message, ABOVE the chip — it explains why the option is
+    // being offered, so it has to be readable before the tap, not after.
+    // Suppressed while the chip is armed: the chip has become "Tap again to
+    // confirm" and a rationale for the un-armed option would be describing a
+    // row that is no longer on screen. Caption styling matches the surface's
+    // own caption (CardFeedbackSurface).
+    const message = arming ? '' : desc(node);
+    const chip = (
       <Pressable
         key={node.id}
         testID={`feedback-tree-leaf-${node.id}`}
@@ -382,6 +432,20 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
           ) : null}
         </HStack>
       </Pressable>
+    );
+
+    if (!message) return chip;
+
+    return (
+      <VStack key={node.id} space="xs">
+        <Text
+          testID={`feedback-tree-desc-${node.id}`}
+          style={{ color: '#9A9A9A', fontSize: 11, lineHeight: 15 }}
+        >
+          {message}
+        </Text>
+        {chip}
+      </VStack>
     );
   };
 

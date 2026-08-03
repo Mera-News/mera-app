@@ -121,7 +121,13 @@ describe('i18n initialisation', () => {
   // getFixedT closure, NOT i18n.t. If the fixed-t override didn't win, the
   // footer would silently stay in the app language with nothing failing.
   it('honours lng on the fixed t that useTranslation returns', () => {
-    const t = i18n.getFixedT(null);
+    // Loosely typed on purpose: the strict TFunction overloads reject a
+    // runtime-built { lng } options bag, and this test exercises exactly that
+    // runtime behaviour.
+    const t = i18n.getFixedT(null, 'translation') as unknown as (
+      key: string,
+      opts?: Record<string, unknown>,
+    ) => string;
     const opts = { downloadUrl: 'https://mera.news' };
 
     expect(t('articleDetail.shareVia', { ...opts, lng: 'hi' }))

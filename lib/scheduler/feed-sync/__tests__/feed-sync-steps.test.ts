@@ -95,6 +95,7 @@ jest.mock('@/lib/tracking/track-actions', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
+    debug: (...args: any[]) => mockLogInfo(...args),
     info: (...args: any[]) => mockLogInfo(...args),
     warn: jest.fn(),
     captureException: (...args: any[]) => mockCaptureException(...args),
@@ -166,6 +167,7 @@ beforeEach(() => {
     enqueueIds: [],
     propagatedCount: 0,
     heldBackCount: 0,
+    coveredIdsByRep: {},
   });
   mockReconcileTrackedStories.mockResolvedValue(undefined);
   mockMigrateLegacyTrackedStories.mockResolvedValue(0);
@@ -635,6 +637,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-1'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-1': ['art-1'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['art-1'],
@@ -655,7 +658,7 @@ describe('stepHydratePersistEnqueue', () => {
       topicMap,
       undefined,
     );
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1'], false, expect.any(Object));
     expect(opts.refreshStore).toHaveBeenCalled();
     expect(result.insertedCount).toBe(1);
     expect(result.enqueuedCount).toBe(1);
@@ -675,6 +678,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-1'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-1': ['art-1'] },
     });
     // The pipeline held art-1 back as a sub-25 trailing partial (returned to us).
     mockEnqueueCandidates.mockResolvedValue({ deferred: ['art-1'] });
@@ -686,10 +690,13 @@ describe('stepHydratePersistEnqueue', () => {
 
     await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
-    // Greedy enqueue (one arg) then a direct tail flush with flushPartial=true —
-    // no extra gate pass (the ids were already elected).
-    expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(1, ['art-1']);
-    expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(2, ['art-1'], true);
+    // Greedy enqueue then a direct tail flush with flushPartial=true — no extra
+    // gate pass (the ids were already elected). The flush carries the SAME gate
+    // coverage the greedy pass used, so the flushed remainder is not booked as
+    // covering only itself.
+    const coverage = { 'art-1': ['art-1'] };
+    expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(1, ['art-1'], false, coverage);
+    expect(mockEnqueueCandidates).toHaveBeenNthCalledWith(2, ['art-1'], true, coverage);
     expect(mockGateUnscoredForScoring).toHaveBeenCalledTimes(1);
   });
 
@@ -708,6 +715,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-1'],
       propagatedCount: 2,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-1': ['art-1'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['art-1'],
@@ -742,6 +750,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-1'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-1': ['art-1'] },
     });
     mockEnqueueCandidates.mockResolvedValue({ deferred: ['art-1'] });
     const diffResult: DiffResult = {
@@ -768,6 +777,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-1'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-1': ['art-1'] },
     });
     mockEnqueueCandidates.mockResolvedValue({ deferred: [] });
     const diffResult: DiffResult = {
@@ -780,7 +790,7 @@ describe('stepHydratePersistEnqueue', () => {
 
     // Greedy enqueue only — nothing deferred, so no flush call.
     expect(mockEnqueueCandidates).toHaveBeenCalledTimes(1);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-1'], false, expect.any(Object));
   });
 
   it('migrates legacy follows then fires reconcileTrackedStories fire-and-forget after a successful persist', async () => {
@@ -847,6 +857,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['good'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'good': ['good'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['good', 'bad'],
@@ -857,7 +868,7 @@ describe('stepHydratePersistEnqueue', () => {
     const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
     expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['bad']);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['good']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['good'], false, expect.any(Object));
     expect(result.enqueuedCount).toBe(1);
   });
 
@@ -889,6 +900,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['headline'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'headline': ['headline'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['headline', 'orphan'],
@@ -900,7 +912,7 @@ describe('stepHydratePersistEnqueue', () => {
 
     // The headline is NOT in the tombstone batch; the true orphan still is.
     expect(mockBatchMarkAsScoredByIds).toHaveBeenCalledWith(['orphan']);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['headline']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['headline'], false, expect.any(Object));
     expect(result.enqueuedCount).toBe(1);
   });
 
@@ -925,6 +937,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: [],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: {},
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['headline-no-text'],
@@ -953,6 +966,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['chunk-id'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'chunk-id': ['chunk-id'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['chunk-id'],
@@ -962,7 +976,7 @@ describe('stepHydratePersistEnqueue', () => {
 
     await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['chunk-id']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['chunk-id'], false, expect.any(Object));
   });
 
   it('throws a daily-limit coded error (with resetAt) when the cap left nothing to deliver', async () => {
@@ -1005,6 +1019,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-0'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-0': ['art-0'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
@@ -1020,7 +1035,7 @@ describe('stepHydratePersistEnqueue', () => {
     expect(result.resetAt).toBe('2026-06-26T00:00:00.000Z');
     // Chunk 1's article still landed.
     expect(result.insertedCount).toBe(1);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-0']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-0'], false, expect.any(Object));
   });
 
   it('runs the gate + enqueue PER chunk (greedy overlap), not once at the end', async () => {
@@ -1048,6 +1063,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['elected'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'elected': ['elected'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
@@ -1062,7 +1078,7 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockPersistAndLinkV2Suggestions).toHaveBeenCalledTimes(2);
     expect(mockGateUnscoredForScoring).toHaveBeenCalledTimes(2);
     expect(mockEnqueueCandidates).toHaveBeenCalledTimes(2);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['elected']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['elected'], false, expect.any(Object));
     // enqueuedCount accumulates gate.enqueueIds.length across both invocations.
     expect(result.enqueuedCount).toBe(2);
   });
@@ -1085,6 +1101,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['art-0'],
       propagatedCount: 0,
       heldBackCount: 0,
+      coveredIdsByRep: { 'art-0': ['art-0'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: missingIds,
@@ -1095,7 +1112,7 @@ describe('stepHydratePersistEnqueue', () => {
     const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
 
     expect(mockEnqueueCandidates).toHaveBeenCalledTimes(1);
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-0']);
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['art-0'], false, expect.any(Object));
     expect(result.dailyLimitReached).toBe(true);
     expect(result.enqueuedCount).toBe(1);
   });
@@ -1275,6 +1292,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: ['a'],
       propagatedCount: 0,
       heldBackCount: 1,
+      coveredIdsByRep: { 'a': ['a', 'a-sib'] },
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['a', 'b'],
@@ -1288,7 +1306,11 @@ describe('stepHydratePersistEnqueue', () => {
     // plus the (fail-open null) user geo/language context loaded once per run.
     expect(mockGateUnscoredForScoring).toHaveBeenCalledWith(new Set(['in-flight-id']), null);
     // Only the elected representative is enqueued; the held-back sibling is not.
-    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a']);
+    // Its coverage rides along so the pipeline can count the sibling as an
+    // article being analysed rather than reporting one representative.
+    expect(mockEnqueueCandidates).toHaveBeenCalledWith(['a'], false, {
+      a: ['a', 'a-sib'],
+    });
     expect(result.enqueuedCount).toBe(1);
   });
 
@@ -1306,6 +1328,7 @@ describe('stepHydratePersistEnqueue', () => {
       enqueueIds: [],
       propagatedCount: 1,
       heldBackCount: 0,
+      coveredIdsByRep: {},
     });
     const diffResult: DiffResult = {
       serverArticleIds: ['a'],

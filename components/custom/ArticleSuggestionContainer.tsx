@@ -279,10 +279,28 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             className="rounded-lg p-3 flex-row items-center"
             style={{ backgroundColor: reasonBoxColors.backgroundColor }}
         >
-            {/* Left: the priority chip alone. The Mera glyph briefly lived here;
-                it moved back to the action row, which is the sole Ask-Mera
-                affordance. Text stays right-aligned and non-italic. */}
-            <RelevanceChip relevance={relevance} />
+            {/* Left column: the priority chip with the Art. 50 disclosure
+                directly beneath it. The Mera glyph briefly lived here; it moved
+                back to the action row, which is the sole Ask-Mera affordance.
+                Reason text stays right-aligned and non-italic.
+
+                `items-start` so the chip keeps hugging its own content instead
+                of stretching to the caption's width (RN's default cross-axis
+                stretch), and a maxWidth so a long localized caption wraps
+                rather than squeezing the reason text. */}
+            <VStack className="items-start" style={{ maxWidth: 150 }}>
+                <RelevanceChip relevance={relevance} />
+                {/* Still gated on `reason` — the disclosure renders only when
+                    there IS AI-generated text to disclose, never beside the
+                    streaming placeholder. */}
+                {reason ? (
+                    <AiDisclosureCaption
+                        color={aiDisclosureColor}
+                        align="left"
+                        className="mt-1"
+                    />
+                ) : null}
+            </VStack>
             {reason ? (
                 <Box className="ml-3 flex-1 items-end">
                     <TranslatableDynamic
@@ -292,11 +310,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                         className="text-right"
                         style={{ color: reasonBoxColors.textColor }}
                     />
-                    {/* Art. 50 label INSIDE the box, under the note it
-                        describes — outside, it read as unrelated chrome.
-                        Lighter grey keeps it subordinate to the note while
-                        still clearing contrast on the box's #374151. */}
-                    <AiDisclosureCaption color={aiDisclosureColor} className="mt-1" />
                 </Box>
             ) : (
                 <Box className="ml-3 flex-1 items-end">

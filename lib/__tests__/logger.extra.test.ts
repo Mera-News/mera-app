@@ -89,11 +89,9 @@ describe('logger — __DEV__ = false (non-dev paths)', () => {
   });
 
   describe('debug/info/warn/error convenience methods in non-dev mode', () => {
-    it('logger.debug adds breadcrumb but does NOT call console.debug', () => {
+    it('logger.debug does NOT add a breadcrumb and does NOT call console.debug (dev-only breadcrumb gate)', () => {
       logger.debug('debug in prod', { key: 'val' });
-      expect(mockAddBreadcrumb).toHaveBeenCalledWith(
-        expect.objectContaining({ category: 'debug', level: 'debug' }),
-      );
+      expect(mockAddBreadcrumb).not.toHaveBeenCalled();
       expect(mockConsoleDebug).not.toHaveBeenCalled();
     });
 

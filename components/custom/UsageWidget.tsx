@@ -86,7 +86,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
             fallbackClassName="bg-gray-900 border border-gray-800"
         >
             <HStack className="items-start justify-between mb-3">
-                <VStack className="flex-1">
+                <VStack className="flex-1 min-w-0">
                     <Text className="text-white font-bold text-3xl leading-9">
                         {used}
                         {hasLimit ? (
@@ -94,7 +94,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         ) : null}
                     </Text>
                     <HStack className="items-center mt-0.5" space="xs">
-                        <Text size="xs" className="text-gray-300 font-medium">{usedLabel}</Text>
+                        <Text size="xs" className="text-gray-300 font-medium flex-shrink" numberOfLines={2}>{usedLabel}</Text>
                         {onInfoPress ? (
                             <Pressable onPress={onInfoPress} hitSlop={8}>
                                 <MaterialIcons name="info-outline" size={14} color="#9ca3af" />

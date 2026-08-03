@@ -98,11 +98,7 @@
       "Mueve tu cuerpo, como te resulte bien.",
       "Tu teléfono estará aquí después. Vive el presente ahora."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} fueron publicados en las últimas 24 horas, {{analysed}} artículos fueron analizados para ti, y {{impactful}} resultaron relevantes para ti.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} fueron publicados en las últimas 24 horas.",
     "noiseRemovedSummary": "{{count}} {{articleWord}} señuelo fueron filtrados antes del análisis.",
-    "articleSingular": "artículo",
-    "articlePlural": "artículos",
     "processing": {
       "doneFlash": "Todo listo: aquí están tus noticias",
       "errorFlash": "No pudimos cargar el contenido más reciente. Por favor, inténtalo de nuevo.",
@@ -191,7 +187,18 @@
     },
     "analysingProgress": "Analizando {{done}} de {{total}} artículos",
     "waitingForNextBatch_one": "{{count}} artículo nuevo esperando el próximo lote de análisis",
-    "waitingForNextBatch_other": "{{count}} artículos nuevos esperando el próximo lote de análisis"
+    "waitingForNextBatch_other": "{{count}} artículos nuevos esperando el próximo lote de análisis",
+    "exploreCta": "Explorar examinar",
+    "statsPublishedPending_one": "{{formatted}} artículo fue publicado en las últimas 24 horas.",
+    "statsPublishedPending_other": "{{formatted}} artículos fueron publicados en las últimas 24 horas.",
+    "statsPublished_one": "{{formatted}} artículo fue publicado en las últimas 24 horas,",
+    "statsPublished_other": "{{formatted}} artículos fueron publicados en las últimas 24 horas,",
+    "statsAnalysed_one": "{{formatted}} fue analizado para ti,",
+    "statsAnalysed_other": "{{formatted}} fueron analizados para ti,",
+    "statsRelevant_one": "{{formatted}} parece relevante,",
+    "statsRelevant_other": "{{formatted}} parecen relevantes,",
+    "statsRead_one": "y has leído {{formatted}}.",
+    "statsRead_other": "y has leído {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -326,7 +333,8 @@
     "packMissingIosPath": "Ajustes → General → Idioma y región",
     "retry": "Reintentar",
     "watchGuide": "Mira cómo añadir un idioma a tu dispositivo",
-    "iosLanguageHint": "Seleccionar solo este idioma no es suficiente. También deberás seleccionarlo en la configuración de idioma de iOS."
+    "iosLanguageHint": "Seleccionar solo este idioma no es suficiente. También deberás seleccionarlo en la configuración de idioma de iOS.",
+    "managePacksPrefix": "Para gestionar los idiomas descargados, ve a"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +608,9 @@
       "submittedConfirmation": "Tu solicitud fue enviada y está en revisión. Volveremos a comprobar tu estado cuando toques Actualizar.",
       "alreadyPending": "Ya tienes una solicitud de desbloqueo en revisión.",
       "error": "No se pudo enviar tu solicitud. Por favor, inténtalo de nuevo."
-    }
+    },
+    "topicGenFailed": "No se pudo generar temas.",
+    "topicGenRetry": "Reintentar"
   },
   "articleFeedback": {
     "thumbsUp": "Me gusta",
@@ -843,7 +853,8 @@
     "headlineDenominatorNone_other": "Mera leyó {{count}} titulares · ninguno parecía relevante hoy.",
     "subTabFeed": "Panorama",
     "subTabStories": "Historias",
-    "subTabSaved": "Guardados"
+    "subTabSaved": "Guardados",
+    "subTabHistory": "Historial"
   },
   "feedStatus": {
     "title": "Estado del feed",
@@ -998,7 +1009,11 @@
     "nudgeSubscribe": "Suscribirte a {{publication}} desbloquea los artículos completos",
     "nudgeBrowse": "Busca cobertura relacionada de otras fuentes",
     "moreAboutTopicNamed": "Más sobre: {{topic}}",
-    "moreAboutTopicNamedWithCount": "Más sobre: {{topic}} y {{extra}} más"
+    "moreAboutTopicNamedWithCount": "Más sobre: {{topic}} y {{extra}} más",
+    "paywallRelatedOption": "Mostrar cobertura relacionada",
+    "paywallRelatedDesc": "Una historia similar de otra publicación podría no estar tras un muro de pago – consulta los artículos relacionados.",
+    "paywallSubscribeDesc": "Has visitado {{publication}} {{visits}} veces este mes – considera suscribirte para acceso completo.",
+    "paywallBlockOption": "Bloquear {{publication}} en su lugar"
   },
   "topicPlan": {
     "title": "Temas que voy a seguir",
@@ -1010,7 +1025,6 @@
     "saveAll": "Guardar todo ({{count}})",
     "delete": "Eliminar tema",
     "undo": "Deshacer",
-    "highPriority": "Priorizar tema",
     "settledTitle": "Temas guardados",
     "settledSummary": "{{count}} temas activos para este hecho."
   },
@@ -1302,6 +1316,14 @@
     "newPinTitle": "Establecer un nuevo PIN",
     "newPinSubtitle": "Elige un nuevo PIN de 4 dígitos",
     "pinChangedTitle": "PIN actualizado",
-    "pinChangedDescription": "Tu PIN ha sido cambiado."
+    "pinChangedDescription": "Tu PIN ha sido cambiado.",
+    "blurImagesTitle": "Desenfoque de imágenes",
+    "blurImagesDescription": "Suaviza las imágenes de los artículos en toda la aplicación para que los elementos gráficos o perturbadores no se muestren nítidamente."
+  },
+  "display": {
+    "title": "Pantalla",
+    "subtitle": "Personaliza cómo Mera muestra los elementos visuales en este dispositivo",
+    "staticGradientTitle": "Fondo estático",
+    "staticGradientDescription": "Usa un gradiente fijo en lugar del fondo animado — más fácil para la batería y dispositivos antiguos"
   }
 }

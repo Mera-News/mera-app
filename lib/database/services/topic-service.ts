@@ -60,9 +60,15 @@ export async function getByFact(factId: string): Promise<TopicModel[]> {
   return topicsCollection.query(Q.where('fact_id', factId)).fetch();
 }
 
-/** Reactive query of a fact's topics — for the in-chat topic-review widget. */
+/** Reactive query of a fact's topics — for the in-chat topic-review widget.
+ *  `observeWithColumns`, not `observe()`: the widget's delete/undo flips the
+ *  row's `status` in place, which never changes query MEMBERSHIP — a plain
+ *  `observe()` stays silent and the card looks dead (the retire lands in the
+ *  DB but the row never strikes through). */
 export function observeByFact(factId: string) {
-  return topicsCollection.query(Q.where('fact_id', factId)).observe();
+  return topicsCollection
+    .query(Q.where('fact_id', factId))
+    .observeWithColumns(['status']);
 }
 
 /**
@@ -211,6 +217,38 @@ export async function suppress(topicId: string): Promise<void> {
 /** Reactivate a suppressed/retired topic. */
 export async function reactivate(topicId: string): Promise<void> {
   await setStatus(topicId, 'active');
+}
+
+/** Every topic id currently on the device — the liveness set the suggestion
+ *  purge screens against (see article-suggestion-service). Includes retired and
+ *  suppressed rows on purpose: those still EXIST, so a suggestion matching one
+ *  is stale, not orphaned, and must not be destroyed. */
+export async function getAllTopicIds(): Promise<Set<string>> {
+  const rows = await topicsCollection.query().fetch();
+  return new Set(rows.map((t) => t.id));
+}
+
+/**
+ * Startup repair: destroy topics whose owning fact no longer exists.
+ *
+ * `Fact.destroyCascade` used to delete only the fact row, so every fact
+ * deletion before 2026-08-03 left its topics behind — active, still fetching
+ * feed content for the deleted interest, and swallowing every suggestion they
+ * matched (Dashboard ownership resolution drops rows whose winning fact is
+ * missing). The cascade is fixed, but devices that already deleted facts hold
+ * the orphans forever; this sweep is their one path back to a working
+ * Dashboard. Location topics (`fact_id` null) are not orphans and are skipped.
+ */
+export async function destroyOrphanedTopics(validFactIds: Set<string>): Promise<number> {
+  const owned = await topicsCollection
+    .query(Q.where('fact_id', Q.notEq(null)))
+    .fetch();
+  const orphans = owned.filter((t) => t.factId && !validFactIds.has(t.factId));
+  if (orphans.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(orphans.map((t) => t.prepareDestroyPermanently()));
+  });
+  return orphans.length;
 }
 
 /**

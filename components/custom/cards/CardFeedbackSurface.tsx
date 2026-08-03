@@ -26,6 +26,10 @@ export interface CardFeedbackSurfaceProps {
   onTreePathChanged: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
   onInvokeMera: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
   onLeafCommitted: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
+  /** A `nudge` leaf was tapped — pure pass-through to the tree. The host decides
+   *  what "browse related" means on its surface (the feed opens the detail
+   *  screen; the detail screen scrolls to its related-articles footer). */
+  onNudge?: (nudge: 'subscribe' | 'browse_related') => void;
   /** Fill the parent (the feed card's absolute overlay slot). When false the
    *  surface sizes to its content with a capped height + rounded corners — the
    *  detail screen's floating panel. Default true. */
@@ -49,6 +53,7 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
   onTreePathChanged,
   onInvokeMera,
   onLeafCommitted,
+  onNudge,
   fill = true,
 }) => {
   const { t } = useTranslation();
@@ -104,6 +109,7 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
           onTreePathChanged={onTreePathChanged}
           onInvokeMera={onInvokeMera}
           onLeafCommitted={onLeafCommitted}
+          onNudge={onNudge}
         />
       </ScrollView>
     </Box>

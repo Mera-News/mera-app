@@ -47,16 +47,16 @@ describe('LANGUAGE_WORD_BY_CODE', () => {
     expect(LANGUAGE_WORD_BY_CODE['de']).toBe('Sprache');
   });
 
-  it('maps "zh-CN" to simplified Chinese', () => {
-    expect(LANGUAGE_WORD_BY_CODE['zh-CN']).toBe('语言');
+  it('maps "zh-Hans" to simplified Chinese', () => {
+    expect(LANGUAGE_WORD_BY_CODE['zh-Hans']).toBe('语言');
   });
 
-  it('maps "zh-TW" to traditional Chinese', () => {
-    expect(LANGUAGE_WORD_BY_CODE['zh-TW']).toBe('語言');
+  it('maps "zh-Hant" to traditional Chinese', () => {
+    expect(LANGUAGE_WORD_BY_CODE['zh-Hant']).toBe('語言');
   });
 
-  it('maps "pt-BR" to Portuguese word', () => {
-    expect(LANGUAGE_WORD_BY_CODE['pt-BR']).toBe('Idioma');
+  it('maps "pt" to Portuguese word', () => {
+    expect(LANGUAGE_WORD_BY_CODE['pt']).toBe('Idioma');
   });
 
   it('maps "es" to Spanish word', () => {

@@ -98,11 +98,7 @@
       "Gerakkan tubuh Anda, sesuka hati.",
       "Ponsel Anda akan tetap di sini nanti. Hadirlah sekarang."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} diterbitkan dalam 24 jam terakhir, {{analysed}} artikel dianalisis untuk Anda, dan {{impactful}} ditemukan relevan untuk Anda.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} diterbitkan dalam 24 jam terakhir.",
     "noiseRemovedSummary": "{{count}} {{articleWord}} umpan palsu disaring sebelum analisis.",
-    "articleSingular": "artikel",
-    "articlePlural": "artikel",
     "processing": {
       "doneFlash": "Siap. Ini berita Anda",
       "errorFlash": "Kami tidak dapat memuat konten terbaru. Silakan coba lagi.",
@@ -191,7 +187,13 @@
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
     "waitingForNextBatch_one": "{{count}} artikel baru menunggu batch analisis berikutnya",
-    "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya"
+    "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya",
+    "exploreCta": "Jelajahi Eksplorasi",
+    "statsPublishedPending_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
+    "statsPublished_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
+    "statsAnalysed_other": "{{formatted}} dianalisis untuk Anda,",
+    "statsRelevant_other": "{{formatted}} terlihat relevan,",
+    "statsRead_other": "dan Anda telah membaca {{formatted}}."
   },
   "relevance": {
     "emergency": "Darurat",
@@ -326,7 +328,8 @@
     "packMissingIosPath": "Pengaturan → Umum → Bahasa & Wilayah",
     "retry": "Coba Lagi",
     "watchGuide": "Lihat cara menambahkan bahasa ke perangkat Anda",
-    "iosLanguageHint": "Hanya memilih bahasa ini saja tidak cukup. Anda juga perlu memilih bahasa ini di pengaturan bahasa iOS."
+    "iosLanguageHint": "Hanya memilih bahasa ini saja tidak cukup. Anda juga perlu memilih bahasa ini di pengaturan bahasa iOS.",
+    "managePacksPrefix": "Untuk mengelola bahasa yang diunduh, buka"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +603,9 @@
       "submittedConfirmation": "Permintaan Anda telah dikirim dan sedang menunggu peninjauan. Kami akan memeriksa ulang status Anda saat Anda mengetuk Segarkan.",
       "alreadyPending": "Anda sudah memiliki permintaan buka blokir yang menunggu peninjauan.",
       "error": "Tidak dapat mengirim permintaan Anda. Silakan coba lagi."
-    }
+    },
+    "topicGenFailed": "Tidak dapat membuat topik untuk ini.",
+    "topicGenRetry": "Coba Lagi"
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",
@@ -843,7 +848,8 @@
     "headlineDenominatorNone_other": "Mera membaca {{count}} berita utama · tidak ada yang terlihat relevan hari ini.",
     "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
-    "subTabSaved": "Tersimpan"
+    "subTabSaved": "Tersimpan",
+    "subTabHistory": "Riwayat"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -998,7 +1004,11 @@
     "thanks": "Terima kasih atas masukannya",
     "seenAck": "Dimengerti, kami akan menampilkan lebih sedikit yang sudah Anda lihat",
     "nudgeSubscribe": "Berlangganan {{publication}} membuka artikel lengkap",
-    "nudgeBrowse": "Cari liputan terkait dari sumber lain"
+    "nudgeBrowse": "Cari liputan terkait dari sumber lain",
+    "paywallRelatedOption": "Tampilkan Liputan Terkait",
+    "paywallRelatedDesc": "Cerita serupa dari publikasi lain mungkin tidak dibayar — periksa artikel terkait.",
+    "paywallSubscribeDesc": "Anda telah mengunjungi {{publication}} {{visits}} kali bulan ini — pertimbangkan untuk berlangganan akses penuh.",
+    "paywallBlockOption": "Blokir {{publication}} sebagai gantinya"
   },
   "topicPlan": {
     "title": "Topik yang akan saya lacak",
@@ -1010,7 +1020,6 @@
     "saveAll": "Simpan semua ({{count}})",
     "delete": "Hapus topik",
     "undo": "Urungkan",
-    "highPriority": "Prioritaskan topik",
     "settledTitle": "Topik disimpan",
     "settledSummary": "{{count}} topik aktif untuk fakta ini."
   },
@@ -1302,6 +1311,14 @@
     "newPinTitle": "Atur PIN baru",
     "newPinSubtitle": "Pilih PIN 4 digit baru",
     "pinChangedTitle": "PIN diperbarui",
-    "pinChangedDescription": "PIN Anda telah diubah."
+    "pinChangedDescription": "PIN Anda telah diubah.",
+    "blurImagesTitle": "Buram Gambar",
+    "blurImagesDescription": "Lembut kan gambar artikel di seluruh aplikasi sehingga visual grafis atau mengganggu tidak ditampilkan dengan tajam."
+  },
+  "display": {
+    "title": "Tampilan",
+    "subtitle": "Sesuaikan cara Mera merender visual pada perangkat ini",
+    "staticGradientTitle": "Latar belakang statis",
+    "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama"
   }
 }

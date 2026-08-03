@@ -10,8 +10,12 @@ import { Redirect, router } from "expo-router";
 export default function Onboarding() {
     const { data: session, isPending } = authClient.useSession();
 
+    // reauth:'1' is load-bearing. The onboarding gate calls this when session
+    // and local identity are unresolvably out of sync, and the session is still
+    // live — without the param, login.tsx short-circuits on that session and
+    // redirects straight back to /logged-in/onboarding, an infinite bounce.
     const handleLoginRedirect = () => {
-        router.replace("/login");
+        router.replace({ pathname: "/login", params: { reauth: "1" } });
     };
 
     const handleComplete = () => {

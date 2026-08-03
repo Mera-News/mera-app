@@ -9,6 +9,8 @@ const mockOnboardingHydrateFromDb = jest.fn(() => Promise.resolve());
 const mockAppLanguageHydrateFromDb = jest.fn(() => Promise.resolve());
 const mockAppStateHydrateFromDb = jest.fn(() => Promise.resolve());
 const mockForYouPrefsHydrate = jest.fn(() => Promise.resolve());
+const mockBlurImagesHydrate = jest.fn(() => Promise.resolve());
+const mockDisplayPrefsHydrate = jest.fn(() => Promise.resolve());
 const mockSetReady = jest.fn();
 
 jest.mock('@/lib/stores/for-you-store', () => ({
@@ -68,6 +70,22 @@ jest.mock('@/lib/stores/for-you-prefs-store', () => ({
   },
 }));
 
+jest.mock('@/lib/stores/blur-images-store', () => ({
+  useBlurImagesStore: {
+    getState: jest.fn(() => ({
+      hydrate: mockBlurImagesHydrate,
+    })),
+  },
+}));
+
+jest.mock('@/lib/stores/display-prefs-store', () => ({
+  useDisplayPrefsStore: {
+    getState: jest.fn(() => ({
+      hydrate: mockDisplayPrefsHydrate,
+    })),
+  },
+}));
+
 jest.mock('@/lib/stores/database-store', () => ({
   useDatabaseStore: {
     getState: jest.fn(() => ({
@@ -108,6 +126,8 @@ describe('hydrateAllStores', () => {
     expect(mockAppLanguageHydrateFromDb).toHaveBeenCalledTimes(1);
     expect(mockAppStateHydrateFromDb).toHaveBeenCalledTimes(1);
     expect(mockForYouPrefsHydrate).toHaveBeenCalledTimes(1);
+    expect(mockBlurImagesHydrate).toHaveBeenCalledTimes(1);
+    expect(mockDisplayPrefsHydrate).toHaveBeenCalledTimes(1);
   });
 
   it('calls pruneStaleVisits after hydration', async () => {

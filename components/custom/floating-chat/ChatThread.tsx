@@ -162,7 +162,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         return (
           <Message role="assistant">
             <MessageContent role="assistant">
-              <StreamingIndicator />
+              <StreamingIndicator dotsOnly />
             </MessageContent>
           </Message>
         );

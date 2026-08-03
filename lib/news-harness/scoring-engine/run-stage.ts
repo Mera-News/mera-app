@@ -145,14 +145,14 @@ export async function computeAndJudge(
   const active =
     excludedIds.size > 0 ? candidates.filter((c) => !excludedIds.has(c.input.id)) : candidates;
   if (excludedIds.size > 0) {
-    logger.info('[computeAndJudge] hard filters excluded candidates', {
+    logger.debug('[computeAndJudge] hard filters excluded candidates', {
       excluded: excludedIds.size,
       of: candidates.length,
       values: [...new Set(excludedValueById.values())].slice(0, 10),
     });
   }
   if (exemptedValueById.size > 0) {
-    logger.info('[computeAndJudge] hard filters demoted (not removed) headlines', {
+    logger.debug('[computeAndJudge] hard filters demoted (not removed) headlines', {
       exempted: exemptedValueById.size,
       of: candidates.length,
       values: [...new Set(exemptedValueById.values())].slice(0, 10),
@@ -312,7 +312,7 @@ export async function computeAndJudge(
       });
     });
     if (penalised > 0) {
-      logger.info('[computeAndJudge] soft filters penalised backstop candidates', {
+      logger.debug('[computeAndJudge] soft filters penalised backstop candidates', {
         penalised,
         of: scorable.length,
       });

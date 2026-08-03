@@ -10,19 +10,34 @@ import {
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
+import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrillDownHeader from './DrillDownHeader';
 
 interface Props {
     readonly onBack: () => void;
+    /** When embedded inside another screen (e.g. the For-You "History" sub-tab),
+     *  the DrillDownHeader is suppressed (the host already owns the top chrome)
+     *  and the list's bottom padding accounts for the floating tab bar — mirrors
+     *  SavedSuggestionsScreen's `embedded` prop. Route usage leaves this unset,
+     *  which keeps non-embedded behavior byte-identical. */
+    embedded?: boolean;
+    /** Embedded hosts keep this component mounted behind display:none and flip
+     *  this when the sub-tab becomes visible. Visits recorded while hidden
+     *  (e.g. the open-article button on feed cards) would otherwise never show:
+     *  the initial fetch runs once, and the empty state renders outside the
+     *  FlatList so pull-to-refresh can't recover either. Unset = always active. */
+    active?: boolean;
 }
 
-const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
+const VisitedPublicationsList: React.FC<Props> = ({ onBack, embedded = false, active = true }) => {
+    const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const [items, setItems] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,12 +56,16 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
     }, []);
 
     useEffect(() => {
+        if (!active) return;
         if (!hasFetched.current) {
             hasFetched.current = true;
             setIsLoading(true);
             load().finally(() => setIsLoading(false));
+            return;
         }
-    }, [load]);
+        // Re-activation of an already-fetched embedded list: silent refresh.
+        void load();
+    }, [active, load]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -109,11 +128,17 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
         // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
         // its SafeAreaView, so the page background spans the safe areas.
         <Box className="flex-1">
-            <DrillDownHeader
-                title={t('publicationVisits.visitedListTitle')}
-                subtitle={t('publicationVisits.last30Days')}
-                onBack={onBack}
-            />
+            {/* DrillDownHeader suppressed when embedded — the host (the
+                Dashboard's History sub-tab) already owns the top chrome and its
+                own back affordance is the sub-tab pill row, exactly like the
+                Saved sub-tab's SavedSuggestionsScreen. */}
+            {!embedded && (
+                <DrillDownHeader
+                    title={t('publicationVisits.visitedListTitle')}
+                    subtitle={t('publicationVisits.last30Days')}
+                    onBack={onBack}
+                />
+            )}
             {isLoading ? (
                 <Box className="flex-1 items-center justify-center">
                     <Spinner size="large" />
@@ -131,7 +156,11 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack }) => {
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
                     ListHeaderComponent={ListHeader}
-                    contentContainerStyle={{ paddingBottom: 20 }}
+                    contentContainerStyle={{
+                        paddingBottom: embedded
+                            ? insets.bottom + TAB_BAR_HEIGHT + 24
+                            : 20,
+                    }}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl

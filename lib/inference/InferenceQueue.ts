@@ -10,7 +10,9 @@ import {
   purgeFailedJobs,
   getActiveTopicGenFactIds,
 } from '../database/services/inference-job-service';
-import { markOrphanedFactsAsFailed } from '../database/services/fact-service';
+import { getFacts, markOrphanedFactsAsFailed } from '../database/services/fact-service';
+import { destroyOrphanedTopics, getAllTopicIds } from '../database/services/topic-service';
+import { purgeSuggestionsForDeadTopics } from '../database/services/article-suggestion-service';
 import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
@@ -81,6 +83,29 @@ class InferenceQueueImpl {
       }
     } catch (err) {
       logger.error('[InferenceQueue] Orphan-fact sweep failed', err);
+    }
+
+    // Repair sweep: destroy topics whose owning fact is gone. Facts deleted
+    // before destroyCascade actually cascaded (2026-08-03) left their topics
+    // active — still fetching content for the deleted interest and emptying
+    // the Dashboard (see topic-service.destroyOrphanedTopics).
+    try {
+      const factIds = new Set((await getFacts()).map((f) => f.id));
+      const destroyed = await destroyOrphanedTopics(factIds);
+      if (destroyed > 0) {
+        logger.warn('[InferenceQueue] Destroyed orphaned topics', { count: destroyed });
+      }
+      // Same repair on the other side of the join: suggestions retrieved by
+      // topics that no longer exist can never render a Dashboard section, so
+      // they are dead weight on devices that deleted facts. Runs every start
+      // (cheap when there is nothing to purge), not just when topics were
+      // destroyed above — a device may already have swept its topics.
+      const purged = await purgeSuggestionsForDeadTopics(await getAllTopicIds());
+      if (purged > 0) {
+        logger.warn('[InferenceQueue] Purged suggestions for dead topics', { count: purged });
+      }
+    } catch (err) {
+      logger.error('[InferenceQueue] Orphan-topic sweep failed', err);
     }
 
     const stats = await getQueueStats();

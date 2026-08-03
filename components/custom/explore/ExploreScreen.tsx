@@ -2,7 +2,6 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import {
     GlassPlate,
     GLASS_AVAILABLE,
-    GLASS_EDGE,
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
 } from '@/components/custom/GlassSurface';
@@ -16,12 +15,15 @@ import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
+import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import logger from '@/lib/logger';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
@@ -46,6 +48,11 @@ const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const isConnected = useIsConnected();
+
+    // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
+    // with the Feed/Dashboard tabs.
+    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
+        useCollapsibleHeader();
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
     // Cold-mount opens on the FIRST chip, which is World; the persisted
@@ -117,6 +124,23 @@ const ExploreScreen: React.FC = () => {
         setSelectedId(scopes[0]?.id ?? 'world');
     }, [scopes, selectedId, locationsLoaded]);
 
+    // Always reveal the collapsing header on a scope switch — whether from an
+    // explicit chip tap (handleSelect) or the snap-back effect above (the
+    // selected scope disappeared, e.g. a location was removed). The list below
+    // remounts on `selectedScope.id` regardless of which path changed it, so
+    // this tracks that same id rather than duplicating a reveal() call in both
+    // triggers (mirrors ForYouScreen's sub-tab-switch reveal()).
+    const previousScopeIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (
+            previousScopeIdRef.current !== null &&
+            previousScopeIdRef.current !== selectedScope.id
+        ) {
+            reveal();
+        }
+        previousScopeIdRef.current = selectedScope.id;
+    }, [selectedScope.id, reveal]);
+
     const handleSelect = (scope: ExploreScope) => {
         setSelectedId(scope.id);
         setSetting(LAST_SCOPE_KEY, scope.id).catch((err: unknown) => {
@@ -125,12 +149,6 @@ const ExploreScreen: React.FC = () => {
             });
         });
     };
-
-    // Measured height of the pinned header overlay. The list's content top
-    // padding is derived from it rather than hardcoded — the header grows and
-    // shrinks (the offline banner appears/disappears, chip labels wrap), and a
-    // fixed number would hide the first article behind the chips.
-    const [headerHeight, setHeaderHeight] = useState(0);
 
     return (
         // ROOT IS UNPADDED ON PURPOSE. A padding here would inset the scroll
@@ -161,7 +179,15 @@ const ExploreScreen: React.FC = () => {
                 // and the real locations landing re-keys this component — a
                 // wasted round-trip plus a flash of the wrong country.
                 enabled={locationsLoaded}
+                // Measured height of the pinned header overlay below — the
+                // list's content top padding is derived from it rather than
+                // hardcoded — the header grows and shrinks (the offline banner
+                // appears/disappears, chip labels wrap), and a fixed number
+                // would hide the first article behind the chips.
                 headerHeight={headerHeight}
+                // Collapsible-header worklet — composed with the list's own
+                // scroll-tick handler inside ScopeArticleList.
+                scrollHandler={scrollHandler}
             />
 
             {/* Pinned header overlay — title + Sources button, offline banner,
@@ -170,36 +196,63 @@ const ExploreScreen: React.FC = () => {
                 or glass backing or article rows scroll visibly through the
                 chips. On iOS 26+ that backing is real Liquid Glass (GlassPlate);
                 everywhere else it falls back to opaque `bg-black`, since
-                GlassView paints nothing pre-26/off-iOS. The outer box is
+                GlassView paints nothing pre-26/off-iOS. The outer view is
                 UNPADDED — GlassPlate is an absolute fill and needs an unpadded
                 parent so its insets resolve against the full header, not just
                 the content box inside the padding (see GlassSurface.tsx) — the
-                safe-area/16pt padding lives on the inner box instead. */}
-            <Box
+                safe-area/16pt padding lives on the inner box instead.
+
+                Animated.View (not Box/plain View), driven by the collapsible-
+                header hook — translates up on scroll-down and back on
+                scroll-up / reveal(), same as FeedScreen/ForYouScreen.
+                `className` is dropped in favor of inline style: NativeWind
+                does not apply its cssInterop to `Animated.View` here (neither
+                template screen uses className on this node either), so the
+                GLASS_EDGE border and bg-black fallback both move into the
+                style object below. */}
+            <Animated.View
                 testID="explore-header"
-                onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
-                className={GLASS_AVAILABLE ? GLASS_EDGE : 'bg-black'}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 10,
-                    overflow: 'hidden',
-                    // Only in the glass branch. The non-glass fallback is the
-                    // `bg-black` CLASS above, and an inline backgroundColor
-                    // would beat it — so gating this keeps the fallback fully
-                    // opaque. The scrim paints behind the plate, which is what
-                    // the glass samples: that is what cuts the see-through.
-                    ...(GLASS_AVAILABLE ? { backgroundColor: GLASS_HEADER_SCRIM } : null),
-                }}
+                onLayout={onHeaderLayout}
+                // box-none: the absolute header must not swallow the
+                // top-of-list pull-to-refresh gesture — touches pass through
+                // its empty area to the list beneath, while its interactive
+                // children (the Sources button, the chips) still receive taps.
+                // Same requirement documented at ForYouScreen.tsx:519-536.
+                pointerEvents="box-none"
+                style={[
+                    {
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        zIndex: 10,
+                        overflow: 'hidden',
+                        ...(GLASS_AVAILABLE
+                            ? {
+                                  // The scrim paints BEHIND the plate, which is
+                                  // what the glass samples — that is what cuts
+                                  // the see-through. The white/10 border
+                                  // reproduces the old GLASS_EDGE class.
+                                  backgroundColor: GLASS_HEADER_SCRIM,
+                                  borderWidth: StyleSheet.hairlineWidth,
+                                  borderColor: 'rgba(255,255,255,0.10)',
+                              }
+                            : { backgroundColor: '#000000' }),
+                    },
+                    headerStyle,
+                ]}
             >
                 <GlassPlate tint={GLASS_HEADER_TINT} />
-                <Box style={{ paddingTop: insets.top + 16 }}>
+                <Box pointerEvents="box-none" style={{ paddingTop: insets.top + 16 }}>
                     {/* Header — title + a right-slot Sources button (mirrors the
                         Dashboard's circular outline icon-button pattern). */}
-                    <HStack className="items-center justify-between px-5 mb-2">
-                        <Heading size="3xl" className="text-white flex-shrink mr-3" numberOfLines={1}>
+                    <HStack className="items-center justify-between px-5 mb-2" pointerEvents="box-none">
+                        <Heading
+                            size="3xl"
+                            className="text-white flex-shrink mr-3"
+                            numberOfLines={1}
+                            pointerEvents="none"
+                        >
                             {t('explore.title')}
                         </Heading>
                         <Pressable
@@ -218,20 +271,27 @@ const ExploreScreen: React.FC = () => {
                         like a jarring generic "no articles found" empty state from
                         ScopeArticleList. This makes the reason explicit and
                         non-blocking; that list already falls back to its friendly
-                        empty state, not a hard error, on fetch failure. */}
+                        empty state, not a hard error, on fetch failure. Purely
+                        decorative — pointerEvents="none" so a pull can start on it. */}
                     {!isConnected && (
-                        <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2" space="sm">
+                        <HStack
+                            className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2"
+                            space="sm"
+                            pointerEvents="none"
+                        >
                             <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
                             <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
                         </HStack>
                     )}
 
-                    {/* Scope chips */}
-                    <Box className="mb-2">
+                    {/* Scope chips — box-none: the row is a full-width band and
+                        must not swallow a pull; only the chips themselves (and
+                        ScopeChipRow's own FlatList) take touches. */}
+                    <Box className="mb-2" pointerEvents="box-none">
                         <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
                     </Box>
                 </Box>
-            </Box>
+            </Animated.View>
         </Box>
     );
 };

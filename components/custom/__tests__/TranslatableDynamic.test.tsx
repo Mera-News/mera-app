@@ -12,6 +12,14 @@
 
 let mockAppLanguage = 'en';
 
+// Controllable stand-in for the host node's `measureInWindow`. Plain `let`s, not
+// jest mocks: `jest.clearAllMocks()` in beforeEach would silently reset a
+// mock-based counter and make the retry-ladder test lie.
+let mockMeasureCalls = 0;
+/** Default = the RN test-renderer behaviour: the callback never fires. */
+let mockMeasureImpl: (call: number, cb: (x: number, y: number, w: number, h: number) => void) => void =
+    () => {};
+
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -53,23 +61,42 @@ jest.mock('@/components/ui/heading', () => {
     const { Text } = require('react-native');
     return { Heading: (p: any) => <Text {...p} /> };
 });
+// The component measures through the ref it puts on this node, so the mock
+// exposes a controllable `measureInWindow` via an imperative handle.
 jest.mock('@/components/ui/text', () => {
+    const ReactLib = require('react');
     const { Text } = require('react-native');
-    return { Text };
+    const MockText = ReactLib.forwardRef((props: any, ref: any) => {
+        ReactLib.useImperativeHandle(
+            ref,
+            () => ({
+                measureInWindow: (cb: any) => {
+                    mockMeasureCalls += 1;
+                    mockMeasureImpl(mockMeasureCalls, cb);
+                },
+            }),
+            [],
+        );
+        return <Text {...props} />;
+    });
+    return { Text: MockText };
 });
 jest.mock('@/components/ui/pressable', () => {
     const { Pressable } = require('react-native');
     return { Pressable };
 });
 
-import { render, waitFor } from '@testing-library/react-native';
+import { act, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { translateText } from '@/lib/translation-service';
 import TranslatableDynamic from '../TranslatableDynamic';
 
 describe('TranslatableDynamic onDisplayChange', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockAppLanguage = 'en';
+        mockMeasureCalls = 0;
+        mockMeasureImpl = () => {};
     });
 
     it('fires with the English text when appLanguage is en (showingOriginal false)', async () => {
@@ -146,5 +173,54 @@ describe('TranslatableDynamic onDisplayChange', () => {
             displayedText: 'Breaking news headline',
             displayedLanguage: 'en',
         });
+    });
+});
+
+// The mount-time visibility check. Under Fabric a freshly-mounted FlatList cell
+// can hand back a `measureInWindow` that returns WITHOUT invoking its callback,
+// and the old single-shot `setTimeout(check, 0)` had no second chance: the node
+// stayed "not on screen", the title rendered in its original language, and the
+// user's first scroll tick was what finally resolved it — swapping the text and
+// re-wrapping the card mid-scroll. The ladder re-asks at 0/150/450ms.
+describe('TranslatableDynamic mount-time visibility ladder', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.useFakeTimers();
+        mockAppLanguage = 'de';
+        mockMeasureCalls = 0;
+        mockMeasureImpl = () => {};
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('requests the translation without any scroll tick when the first measure callback never fires', () => {
+        mockMeasureImpl = (call, cb) => {
+            // 1st attempt: silently dropped. 2nd onwards: on-screen geometry.
+            if (call >= 2) cb(0, 100, 320, 40);
+        };
+
+        render(<TranslatableDynamic text="Breaking news headline" />);
+        // Only the component's own retries run — no `notifyScrollTick` is ever
+        // delivered (subscribeScrollTick is mocked and its listener never called).
+        act(() => {
+            jest.advanceTimersByTime(500);
+        });
+
+        expect(mockMeasureCalls).toBeGreaterThanOrEqual(2);
+        expect(translateText).toHaveBeenCalledWith('Breaking news headline', 'de');
+    });
+
+    it('does not treat a callback that never fires as visible', () => {
+        // Guard against "just assume visible on timeout" — that would translate
+        // (and pay the OS translator cost for) every off-screen node in the list.
+        render(<TranslatableDynamic text="Another headline" />);
+        act(() => {
+            jest.advanceTimersByTime(500);
+        });
+
+        expect(mockMeasureCalls).toBeGreaterThanOrEqual(2);
+        expect(translateText).not.toHaveBeenCalled();
     });
 });

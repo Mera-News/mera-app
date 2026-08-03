@@ -12,6 +12,7 @@
 import logger from '../logger';
 import {
   cloudBatchComplete,
+  HEDGE_DELAY_MS,
   type BatchCompletionResult,
 } from '../llm/cloudComplete';
 import type { BatchCall } from '../llm/types';
@@ -136,7 +137,11 @@ export async function generateTopicsForFact(
         });
       }
       if (calls.length > 0) {
-        const results = (await cloudBatchComplete(calls)) as BatchCompletionResult[];
+        // Hedged: topic generation blocks the user-visible onboarding/persona
+        // flow, so a cold primary costs the user directly.
+        const results = (await cloudBatchComplete(calls, undefined, {
+          hedgeAfterMs: HEDGE_DELAY_MS,
+        })) as BatchCompletionResult[];
         for (const r of results) {
           if (r.error) {
             logger.warn('[topic-gen] cloud half failed', { half: r.id, error: r.error });

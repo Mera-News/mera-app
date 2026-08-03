@@ -104,7 +104,10 @@ function emitFunnelLog(
     const fo = useFeedOrderStore.getState();
     const os = useOpenedStoriesStore.getState();
     const suggestions = useForYouStore.getState().suggestions;
-    const header = computeFeedCounts(suggestions, now);
+    const header = computeFeedCounts(suggestions, {
+      nowMs: now,
+      openedArticleIds: os.articleIds,
+    });
 
     const r = computeFeedFunnel({
       suggestions,
@@ -130,7 +133,7 @@ function emitFunnelLog(
     const lines: string[] = [
       '',
       `${TAG} ── RENDERED ${data.length} cards (${dividerIdx} unseen · ${Math.max(0, data.length - dividerIdx)} seen) ──`,
-      `  header says            : ${header.relevantCount} relevant / ${header.analysedCount} analysed  [48h window, includes reason_pending]`,
+      `  header says            : ${header.relevantCount} relevant / ${header.analysedCount} analysed / ${header.readCount} read  [48h window, includes reason_pending]`,
       `  suggestions in DB      : ${r.totals.rows}  (unscored ${r.totals.status.unscored} · reason_pending ${r.totals.status.reasonPending} · complete ${r.totals.status.complete})`,
       `  ── why rows never reached the feed (${Math.round(r.gates.renderWindowMs / 3_600_000)}h window + relevance > ${r.gates.renderGate}, complete only) ──`,
       `    not complete         : -${r.dropped.notComplete}${pct(r.dropped.notComplete)}`,
@@ -192,7 +195,7 @@ function emitFunnelLog(
       lines.push(`    … +${data.length - MAX_CARD_LINES} more`);
     }
 
-    logger.info(lines.join('\n'));
+    logger.debug(lines.join('\n'));
   } catch (err) {
     // A diagnostic must never take the feed down with it.
     logger.warn(`${TAG} failed`, { error: String(err) });

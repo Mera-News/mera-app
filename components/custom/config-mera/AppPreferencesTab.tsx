@@ -133,6 +133,12 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
         },
         {
+            id: 'display',
+            title: t('display.title'),
+            icon: 'palette',
+            onPress: () => routerHook.push('/logged-in/preferences/display' as any),
+        },
+        {
             id: 'security',
             title: t('security.title'),
             icon: 'lock',
@@ -242,14 +248,23 @@ const AppPreferencesTab: React.FC = () => {
         // behind this content — an opaque fill here would fully block it,
         // leaving the glass rows below with nothing to refract (a solid
         // background over glass cancels it).
-        <Box className="flex-1">
+        //
+        // No `flex-1` here (or on the Box below): this screen is mounted
+        // inside SettingsTabScreen's ScrollView, which already stretches via
+        // `contentContainerStyle={{ flexGrow: 1 }}` and reserves
+        // `insets.bottom + TAB_BAR_HEIGHT + 24` of bottom padding. A `flex-1`
+        // wrapper here fights that flexGrow chain and can consume the
+        // reserved padding, leaving the user/version/copyright footer behind
+        // the floating tab bar — let content size to its natural height so
+        // the ScrollView's own padding is what clears the tab bar.
+        <Box>
             <VStack className="px-5 pt-2 pb-3">
                 <Text size="sm" className="text-gray-400">
                     {t('preferences.manageSettings')}
                 </Text>
             </VStack>
 
-            <Box className="flex-1 px-5">
+            <Box className="px-5">
                 <VStack>
                     {preferenceOptions.map(renderOption)}
                 </VStack>

@@ -16,6 +16,7 @@ jest.mock('@nozbe/watermelondb', () => {
         return ops.flat();
       }
     },
+    Q: { where: (column: string, value: unknown) => ({ column, value }) },
   };
 });
 
@@ -102,14 +103,47 @@ describe('Fact model', () => {
   });
 
   describe('destroyCascade', () => {
-    it('calls batch with prepareDestroyPermanently result', async () => {
+    /** A Fact instance wired to a fake `topics` collection. */
+    function makeFact(id: string, topicRows: any[]) {
       const instance: any = new (Fact as any)();
+      instance.id = id;
+      const query = jest.fn(() => ({ fetch: jest.fn(async () => topicRows) }));
+      instance.collections = { get: jest.fn(() => ({ query })) };
+      return { instance, query };
+    }
+
+    function topicRow(id: string) {
+      return { id, prepareDestroyPermanently: jest.fn(() => ({ _type: 'destroyPermanently', id })) };
+    }
+
+    it('destroys the fact AND every topic that belongs to it', async () => {
+      // The cascade must be real: an orphaned ACTIVE topic keeps fetching feed
+      // content for a deleted interest, and the Dashboard then drops every
+      // suggestion it claims (ownership needs the fact snapshot) — measured as
+      // a permanently empty Dashboard on a device with 74 orphans.
+      const { instance, query } = makeFact('fact-1', [topicRow('t1'), topicRow('t2')]);
       const batchSpy = jest.spyOn(instance, 'batch');
+
       await instance.destroyCascade();
+
+      expect(instance.collections.get).toHaveBeenCalledWith('topics');
+      expect(query).toHaveBeenCalledWith({ column: 'fact_id', value: 'fact-1' });
       expect(batchSpy).toHaveBeenCalledTimes(1);
-      // The argument should be the result of prepareDestroyPermanently
-      const arg = batchSpy.mock.calls[0][0];
-      expect((arg as any)._type).toBe('destroyPermanently');
+      const ops = batchSpy.mock.calls[0] as any[];
+      expect(ops).toHaveLength(3); // the fact + both topics, one batch
+      expect(ops[0]._type).toBe('destroyPermanently');
+      expect(ops.slice(1).map((o: any) => o.id)).toEqual(['t1', 't2']);
+    });
+
+    it('still destroys the fact when it owns no topics', async () => {
+      const { instance } = makeFact('fact-2', []);
+      const batchSpy = jest.spyOn(instance, 'batch');
+
+      await instance.destroyCascade();
+
+      const ops = batchSpy.mock.calls[0] as any[];
+      expect(ops).toHaveLength(1);
+      expect(ops[0]._type).toBe('destroyPermanently');
     });
   });
 });

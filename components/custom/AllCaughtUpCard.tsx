@@ -4,8 +4,10 @@ import {
     GLASS_CARD_EDGE,
 } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MeraLogo from './MeraLogo';
@@ -48,6 +50,17 @@ const AllCaughtUpCard: React.FC = () => {
             >
                 {messages[currentIndex]}
             </Text>
+
+            <Button
+                testID="all-caught-up-explore-cta"
+                variant="outline"
+                action="secondary"
+                size="sm"
+                className="mt-6"
+                onPress={() => router.navigate('/logged-in/app_container/around')}
+            >
+                <ButtonText>{t('feed.exploreCta')}</ButtonText>
+            </Button>
         </Box>
     );
 

@@ -51,17 +51,32 @@ interface StreamingIndicatorProps {
     compact?: boolean;
     /** Overrides both label and dot color (defaults: gray label, orange dots). */
     color?: string;
+    /**
+     * Dots only, no cycling label — no label state, no crossfade timers at all.
+     * Used by the chat typing bubble, where the real reply text replaces the
+     * indicator as soon as it arrives, so a rotating status label never has
+     * time to mean anything and only makes the content-sized bubble resize on
+     * every swap.
+     */
+    dotsOnly?: boolean;
 }
 
-const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false, color }) => {
+const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
+    compact = false,
+    color,
+    dotsOnly = false,
+}) => {
     const [labelIndex, setLabelIndex] = useState(0);
     const labelColor = color ?? DEFAULT_LABEL_COLOR;
     const dotColor = color ?? DEFAULT_DOT_COLOR;
 
     // Cycle through labels — fade the single caption out, swap the text while it
     // is invisible, fade it back in. One mounted label, one visible caption.
+    // Skipped entirely when dotsOnly: no interval, no swap timeout, no re-render
+    // churn from the label ever gets scheduled.
     const labelOpacity = useSharedValue(1);
     useEffect(() => {
+        if (dotsOnly) return;
         let swapTimer: ReturnType<typeof setTimeout> | undefined;
         const interval = setInterval(() => {
             labelOpacity.value = withTiming(0, { duration: LABEL_FADE_MS });
@@ -74,7 +89,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false
             clearInterval(interval);
             if (swapTimer) clearTimeout(swapTimer);
         };
-    }, [labelOpacity]);
+    }, [labelOpacity, dotsOnly]);
 
     const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.value }));
 
@@ -112,15 +127,17 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({ compact = false
                 {/* Only the WORD crossfades. The dots stay at full opacity: they
                     are the liveness signal, and the fade trough would otherwise
                     blank the whole indicator for a beat every cycle. */}
-                <Animated.View style={labelStyle}>
-                    <Text
-                        testID="streaming-caption"
-                        size="sm"
-                        style={[streamingIndicatorStyles.label, { color: labelColor }]}
-                    >
-                        {STREAMING_LABELS[labelIndex]}
-                    </Text>
-                </Animated.View>
+                {!dotsOnly && (
+                    <Animated.View style={labelStyle}>
+                        <Text
+                            testID="streaming-caption"
+                            size="sm"
+                            style={[streamingIndicatorStyles.label, { color: labelColor }]}
+                        >
+                            {STREAMING_LABELS[labelIndex]}
+                        </Text>
+                    </Animated.View>
+                )}
                 <View style={streamingIndicatorStyles.dotsRow}>
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot1Style]} />
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot2Style]} />

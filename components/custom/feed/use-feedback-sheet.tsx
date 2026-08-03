@@ -98,6 +98,23 @@ export interface CardFeedbackHandlers {
   onInvokeMera: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
   /** A terminal (non-openChat) leaf settled — persist the path (no auto-close). */
   onLeafCommitted: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
+  /** A `nudge` leaf settled — act on the SUGGESTION it carries. Fired after
+   *  `onLeafCommitted`, which has already committed the verdict and dismissed
+   *  the surface, so this only has to do the navigation. */
+  onNudge: (s: ForYouSuggestion, nudge: 'subscribe' | 'browse_related') => void;
+}
+
+/**
+ * Host wiring the hook cannot derive. Read through a ref (like `adapter`), so it
+ * may be recreated every render without destabilising the returned handlers.
+ */
+export interface UseFeedbackSheetOptions {
+  /** Open a suggestion's detail screen. The 'browse_related' nudge routes here:
+   *  the related coverage lives in the detail screen's footer, and this is the
+   *  same call the card's own tap-to-open makes, so the card lifecycle
+   *  (markViewed / recordOpen) is stamped identically. Omitted ⇒ the nudge just
+   *  closes the surface, which is what `onLeafCommitted` already did. */
+  onOpenSuggestion?: (s: ForYouSuggestion) => void;
 }
 
 export interface UseFeedbackSheet {
@@ -115,9 +132,14 @@ export interface UseFeedbackSheet {
  * through a ref, so the handlers stay stable and the memoized card rows bail out
  * unchanged.
  */
-export function useFeedbackSheet(adapter: VerdictStoreAdapter): UseFeedbackSheet {
+export function useFeedbackSheet(
+  adapter: VerdictStoreAdapter,
+  options?: UseFeedbackSheetOptions,
+): UseFeedbackSheet {
   const adapterRef = useRef(adapter);
   adapterRef.current = adapter;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
   const onVerdict = useCallback((suggestion: ForYouSuggestion, next: Verdict) => {
     const a = adapterRef.current;
@@ -191,6 +213,17 @@ export function useFeedbackSheet(adapter: VerdictStoreAdapter): UseFeedbackSheet
           adapterRef.current.setCommitted(key, true);
           useFeedbackDismissedStore.getState().dismiss(key);
         }
+      },
+      onNudge: (s, nudge) => {
+        // 'subscribe' is deliberately ignored: the current tree authors no such
+        // leaf, so it is only reachable from a tree cached before this change,
+        // and there is nothing honest for the app to do with it (it never had a
+        // subscribe flow — the old leaf only ever showed a toast).
+        if (nudge !== 'browse_related') return;
+        // `onLeafCommitted` already fired for this leaf, so the verdict is
+        // committed and the surface dismissed; all that is left is to take the
+        // user to the related coverage, which lives on the detail screen.
+        optionsRef.current?.onOpenSuggestion?.(s);
       },
     }),
     [],

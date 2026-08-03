@@ -135,6 +135,31 @@ describe('gateUnscoredForScoring — same-sync election', () => {
     expect(mockBatchPropagateScores).not.toHaveBeenCalled();
   });
 
+  it('reports the elected rep as covering its whole group (rep + held-back siblings)', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({ id: 'a', hasDescription: true, firstPubDateMs: 1_000 }),
+      row({ id: 'b', hasDescription: true, firstPubDateMs: 9_000 }), // elected
+      row({ id: 'c', hasDescription: true, firstPubDateMs: 2_000 }),
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(Object.keys(result.coveredIdsByRep)).toEqual(['b']);
+    expect(result.coveredIdsByRep.b.slice().sort()).toEqual(['a', 'b', 'c']);
+  });
+
+  it('omits donor groups from the coverage map — they are propagated, never enqueued', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([row({ id: 'cand' })]);
+    mockGetScoredDonorRows.mockResolvedValue([
+      row({ id: 'donor', status: 'complete' as any, relevance: 0.7, reason: 'why' }),
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.enqueueIds).toEqual([]);
+    expect(result.coveredIdsByRep).toEqual({});
+  });
+
   it('prefers a candidate with a description when electing the representative', async () => {
     mockGetUnscoredGroupingRows.mockResolvedValue([
       row({ id: 'a', hasDescription: false, firstPubDateMs: 9_000 }),
@@ -157,6 +182,10 @@ describe('gateUnscoredForScoring — same-sync election', () => {
 
     expect(result.enqueueIds).toEqual(expect.arrayContaining(['solo-1', 'solo-2']));
     expect(result.enqueueIds).toHaveLength(2);
+    expect(result.coveredIdsByRep).toEqual({
+      'solo-1': ['solo-1'],
+      'solo-2': ['solo-2'],
+    });
     expect(result.heldBackCount).toBe(0);
     expect(result.propagatedCount).toBe(0);
     expect(mockBatchPropagateScores).not.toHaveBeenCalled();
@@ -247,7 +276,12 @@ describe('gateUnscoredForScoring — in-flight + edge cases', () => {
 
     const result = await gateUnscoredForScoring(new Set());
 
-    expect(result).toEqual({ enqueueIds: [], propagatedCount: 0, heldBackCount: 0 });
+    expect(result).toEqual({
+      enqueueIds: [],
+      propagatedCount: 0,
+      heldBackCount: 0,
+      coveredIdsByRep: {},
+    });
     expect(mockGetScoredDonorRows).not.toHaveBeenCalled();
   });
 
@@ -260,6 +294,8 @@ describe('gateUnscoredForScoring — in-flight + edge cases', () => {
     expect(result.propagatedCount).toBe(0);
     expect(result.heldBackCount).toBe(0);
     expect(result.enqueueIds).toEqual(['x', 'y']);
+    // No election happened, so every id covers exactly itself.
+    expect(result.coveredIdsByRep).toEqual({ x: ['x'], y: ['y'] });
     expect(mockCaptureException).toHaveBeenCalledWith(
       expect.any(Error),
       { tags: { module: 'score-propagation' } },

@@ -118,7 +118,7 @@ class FeedSyncMachine {
     if (this._inFlight) {
       const age = Date.now() - this._inFlightStartedAt;
       if (age <= INFLIGHT_STALE_MS) {
-        logger.info('[FeedSyncMachine] start() called while a run is in flight — joining existing run');
+        logger.debug('[FeedSyncMachine] start() called while a run is in flight — joining existing run');
         return this._inFlight;
       }
       // The previous run's promise is never going to settle (the JS timer that
@@ -185,7 +185,7 @@ class FeedSyncMachine {
   }
 
   private async _run(personaId: string, ctx: TaskContext): Promise<void> {
-    logger.info('[FeedSyncMachine] run start');
+    logger.debug('[FeedSyncMachine] run start');
     // Clear any prior scoring-pipeline error at the start of a fresh cycle — the
     // header status reflects this cycle's outcome. It re-appears if scoring fails
     // again, and resolves on its own if scoring succeeds.
@@ -224,12 +224,12 @@ class FeedSyncMachine {
           await scoringPipeline.abortRun('stale-guard');
         } else if (FETCH_WHILE_SCORING) {
           suppressScoring = true;
-          logger.info('[FeedSyncMachine] scoring pipeline active — fetching without scoring');
+          logger.debug('[FeedSyncMachine] scoring pipeline active — fetching without scoring');
         } else {
           // Legacy behaviour, kept behind the kill-switch: bail out with the
           // machine untouched (still `idle` — no transitions, no persisted
           // state, no server calls).
-          logger.info('[FeedSyncMachine] skipped — scoring pipeline active');
+          logger.debug('[FeedSyncMachine] skipped — scoring pipeline active');
           ctx.markNoOp();
           return;
         }
@@ -242,7 +242,7 @@ class FeedSyncMachine {
       // `updateMachineState` bookkeeping still runs so the machine + persisted
       // snapshot stay consistent.
       this._transitionTo('fetching-topic-ids');
-      logger.info('[FeedSyncMachine] → fetching-topic-ids');
+      logger.debug('[FeedSyncMachine] → fetching-topic-ids');
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
       await this._awaitResumeIfPaused();
@@ -265,7 +265,7 @@ class FeedSyncMachine {
 
       // Step 2: diff (status intentionally not published — see Step 1 note).
       this._transitionTo('diffing');
-      logger.info('[FeedSyncMachine] → diffing');
+      logger.debug('[FeedSyncMachine] → diffing');
       await feedPersistence.updateMachineState('diffing');
 
       if (ctx.signal.aborted) { ctx.markNoOp(); return; }
@@ -282,7 +282,7 @@ class FeedSyncMachine {
         // run so the machine stays consistent. If scoring actually finds work,
         // the scoring-pipeline publishes its own header progress independently.
         this._transitionTo('scoring');
-        logger.info('[FeedSyncMachine] → scoring (no new articles, silent)');
+        logger.debug('[FeedSyncMachine] → scoring (no new articles, silent)');
         await feedPersistence.updateMachineState('scoring');
 
         if (ctx.signal.aborted) { ctx.markNoOp(); return; }

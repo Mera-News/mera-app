@@ -149,7 +149,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                             >
                                 <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
                                 <Text className="text-violet-400 text-sm font-medium flex-1">
-                                    Watch translation guide
+                                    {t('language.watchGuide')}
                                 </Text>
                             </Pressable>
 
@@ -160,7 +160,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                             {t('language.languagePacksIos')}
                                         </Text>
                                         <Text className="text-typography-400 text-sm leading-5">
-                                            To manage downloaded languages, go to{' '}
+                                            {t('language.managePacksPrefix')}{' '}
                                             <Text className="text-white text-sm font-medium">
                                                 {t('language.languagePacksIosPath')}
                                             </Text>

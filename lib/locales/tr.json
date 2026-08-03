@@ -98,11 +98,7 @@
       "Vücudunu hareket ettir, nasıl iyi hissediyorsan öyle.",
       "Telefonun sonra da burada olacak. Şimdi anın içinde ol."
     ],
-    "analysedArticles": "Son 24 saatte {{processed}} {{articleWord}} yayınlandı, {{analysed}} makale senin için analiz edildi ve {{impactful}} tanesi sana uygun bulundu.",
-    "analysedArticlesPending": "Son 24 saatte {{processed}} {{articleWord}} yayınlandı.",
     "noiseRemovedSummary": "Analizden önce {{count}} sahte {{articleWord}} filtrelendi.",
-    "articleSingular": "makale",
-    "articlePlural": "makale",
     "processing": {
       "doneFlash": "Her şey hazır, işte haberlerin",
       "errorFlash": "En son içerik yüklenemedi. Lütfen tekrar dene.",
@@ -191,7 +187,18 @@
     },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
     "waitingForNextBatch_one": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
-    "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor"
+    "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
+    "exploreCta": "Keşfet'i Tara",
+    "statsPublishedPending_one": "{{formatted}} makale son 24 saatte yayınlandı.",
+    "statsPublishedPending_other": "{{formatted}} makale son 24 saatte yayınlandı.",
+    "statsPublished_one": "{{formatted}} makale son 24 saatte yayınlandı,",
+    "statsPublished_other": "{{formatted}} makale son 24 saatte yayınlandı,",
+    "statsAnalysed_one": "{{formatted}} senin için analiz edildi,",
+    "statsAnalysed_other": "{{formatted}} senin için analiz edildi,",
+    "statsRelevant_one": "{{formatted}} uygun görünüyor,",
+    "statsRelevant_other": "{{formatted}} uygun görünüyor,",
+    "statsRead_one": "ve {{formatted}} okumuşsun.",
+    "statsRead_other": "ve {{formatted}} okumuşsun."
   },
   "relevance": {
     "emergency": "Acil",
@@ -326,7 +333,8 @@
     "packMissingIosPath": "Ayarlar → Genel → Dil ve Bölge",
     "retry": "Tekrar Dene",
     "watchGuide": "Cihazınıza dil eklemeyi izleyin",
-    "iosLanguageHint": "Yalnızca bu dili seçmek yeterli değildir: bu dili iOS dil ayarlarında da seçmeniz gerekir."
+    "iosLanguageHint": "Yalnızca bu dili seçmek yeterli değildir: bu dili iOS dil ayarlarında da seçmeniz gerekir.",
+    "managePacksPrefix": "İndirilen dilleri yönetmek için git"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +608,9 @@
       "submittedConfirmation": "İsteğin gönderildi ve inceleme bekliyor. Yenile'ye dokunduğunda durumunu tekrar kontrol edeceğiz.",
       "alreadyPending": "Zaten inceleme bekleyen bir engel kaldırma isteğin var.",
       "error": "İsteğin gönderilemedi. Lütfen tekrar dene."
-    }
+    },
+    "topicGenFailed": "Bu için konular oluşturulamadı.",
+    "topicGenRetry": "Tekrar Dene"
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",
@@ -843,7 +853,8 @@
     "headlineDenominatorNone_other": "Mera {{count}} başlığı okudu · bugün hiçbiri ilgili görünmedi.",
     "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
-    "subTabSaved": "Kaydedilenler"
+    "subTabSaved": "Kaydedilenler",
+    "subTabHistory": "Geçmiş"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -1000,7 +1011,11 @@
     "thanks": "Geri bildirim için teşekkürler",
     "seenAck": "Tamam, gördüklerinden daha azını göstereceğiz",
     "nudgeSubscribe": "{{publication}}'a abone olmak makalelerin tamamının kilidini açar",
-    "nudgeBrowse": "Diğer kaynaklardan ilgili haberlere göz at"
+    "nudgeBrowse": "Diğer kaynaklardan ilgili haberlere göz at",
+    "paywallRelatedOption": "İlgili Haberleri Göster",
+    "paywallRelatedDesc": "Başka bir yayından benzer bir haber ödeme duvarı arkasında olmayabilir — ilgili makaleleri kontrol et.",
+    "paywallSubscribeDesc": "{{publication}}'i bu ay {{visits}} kez ziyaret ettin — tam erişim için abone olmayı düşün.",
+    "paywallBlockOption": "Bunun yerine {{publication}}'i Engelle"
   },
   "topicPlan": {
     "title": "Takip edeceğim konular",
@@ -1012,7 +1027,6 @@
     "saveAll": "Tümünü kaydet ({{count}})",
     "delete": "Konuyu kaldır",
     "undo": "Geri al",
-    "highPriority": "Konuyu önceliklendir",
     "settledTitle": "Konular kaydedildi",
     "settledSummary": "Bu bilgi için {{count}} konu aktif."
   },
@@ -1304,6 +1318,14 @@
     "newPinTitle": "Yeni PIN ayarla",
     "newPinSubtitle": "Yeni 4 haneli bir PIN seç",
     "pinChangedTitle": "PIN güncellendi",
-    "pinChangedDescription": "PIN'in değiştirildi."
+    "pinChangedDescription": "PIN'in değiştirildi.",
+    "blurImagesTitle": "Resimleri Bulanıklaştır",
+    "blurImagesDescription": "Uygulamada makale resimlerini yumuşat, böylece grafik veya rahatsız edici görseller keskin görünmez."
+  },
+  "display": {
+    "title": "Görünüm",
+    "subtitle": "Mera'nın bu cihazda görsel öğeleri nasıl işlediğini özelleştirin",
+    "staticGradientTitle": "Sabit arka plan",
+    "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay"
   }
 }

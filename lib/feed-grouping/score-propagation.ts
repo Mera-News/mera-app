@@ -88,6 +88,21 @@ export interface GateResult {
     /** How many same-sync duplicate siblings were held back (not enqueued, no
      *  state written — picked up next sync or by the post-results hook). */
     heldBackCount: number;
+    /**
+     * Elected rep id → EVERY candidate id in that rep's group, the rep included
+     * (so always non-empty, and `[id]` for a donor-less singleton). Keyed only by
+     * ids that appear in `enqueueIds`; donor groups contribute nothing since they
+     * are propagated, never enqueued.
+     *
+     * This is the ENQUEUE side of the gate, not the propagated set — the
+     * HARD FILTERS note above (which pins `propagatedCount` to a count) is about
+     * ids the gate WROTE and is untouched by this. The scoring pipeline persists
+     * the union of these sets per batch so the "Analysing X of Y articles" header
+     * can count the articles a run really covers — a representative plus the
+     * siblings that will inherit its score — instead of the representatives
+     * alone, which undercounts by the duplicate factor of the feed.
+     */
+    coveredIdsByRep: Record<string, string[]>;
 }
 
 /**
@@ -216,7 +231,12 @@ export async function gateUnscoredForScoring(
         const candidates = (await getUnscoredGroupingRows()).filter((r) => !inFlightIds.has(r.id));
         candidateIds = candidates.map((c) => c.id);
         if (candidates.length === 0) {
-            return { enqueueIds: [], propagatedCount: 0, heldBackCount: 0 };
+            return {
+                enqueueIds: [],
+                propagatedCount: 0,
+                heldBackCount: 0,
+                coveredIdsByRep: {},
+            };
         }
 
         const donors = await getScoredDonorRows(Date.now() - SCORE_PROPAGATION_LOOKBACK_MS);
@@ -231,6 +251,7 @@ export async function gateUnscoredForScoring(
 
         const propagateEntries: { id: string; relevance: number; reason: string }[] = [];
         const enqueueIds: string[] = [];
+        const coveredIdsByRep: Record<string, string[]> = {};
         let heldBackCount = 0;
 
         for (const group of groups) {
@@ -249,12 +270,19 @@ export async function gateUnscoredForScoring(
                     });
                 }
             } else if (groupCandidates.length >= 2) {
-                // Same-sync election: score one, hold the siblings back.
-                enqueueIds.push(electRepresentative(groupCandidates, userCtx).id);
+                // Same-sync election: score one, hold the siblings back. The rep
+                // COVERS the whole group — the siblings inherit its score rather
+                // than earning their own — so report the membership for the
+                // pipeline's article-coverage counter.
+                const repId = electRepresentative(groupCandidates, userCtx).id;
+                enqueueIds.push(repId);
+                coveredIdsByRep[repId] = groupCandidates.map((c) => c.id);
                 heldBackCount += groupCandidates.length - 1;
             } else {
-                // Donor-less singleton → score it directly.
-                enqueueIds.push(groupCandidates[0].id);
+                // Donor-less singleton → score it directly, covering only itself.
+                const soloId = groupCandidates[0].id;
+                enqueueIds.push(soloId);
+                coveredIdsByRep[soloId] = [soloId];
             }
         }
 
@@ -265,11 +293,24 @@ export async function gateUnscoredForScoring(
         console.log(
             `[score-propagation] propagated ${propagateEntries.length}, held back ${heldBackCount}, enqueue ${enqueueIds.length}`,
         );
-        return { enqueueIds, propagatedCount: propagateEntries.length, heldBackCount };
+        return {
+            enqueueIds,
+            propagatedCount: propagateEntries.length,
+            heldBackCount,
+            coveredIdsByRep,
+        };
     } catch (err) {
         logger.captureException(err, { tags: { module: 'score-propagation' } });
         // Fail open: enqueue every candidate we knew about, propagate nothing.
-        return { enqueueIds: candidateIds, propagatedCount: 0, heldBackCount: 0 };
+        // No election happened, so every id covers exactly itself.
+        const coveredIdsByRep: Record<string, string[]> = {};
+        for (const id of candidateIds) coveredIdsByRep[id] = [id];
+        return {
+            enqueueIds: candidateIds,
+            propagatedCount: 0,
+            heldBackCount: 0,
+            coveredIdsByRep,
+        };
     }
 }
 

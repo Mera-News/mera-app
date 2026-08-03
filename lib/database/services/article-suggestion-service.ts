@@ -1691,3 +1691,62 @@ export async function getDistinctSuggestionPublicationNames(): Promise<Set<strin
   }
   return names;
 }
+
+/**
+ * Destroy suggestions that survive only because of topics that no longer exist.
+ *
+ * Deleting a fact removes the interest AND (since the cascade fix) its topics —
+ * but the suggestions those topics retrieved stayed on the device forever.
+ * They are not merely stale: the Dashboard resolves a suggestion to its section
+ * through matched topic → fact, so a suggestion whose every matched topic is
+ * gone can never render a section again. It occupies the local feed, counts
+ * toward "analysed for you", and is re-read on every rebuild, for an interest
+ * the user explicitly deleted. Measured 2026-08-03: a device that deleted all
+ * but one fact carried 417 such rows and rendered an empty Dashboard.
+ *
+ * Conservative by construction — a row is destroyed ONLY when all three hold:
+ *   1. it carries at least one matched topic with a real `topicId` (rows with
+ *      no topic evidence are never judged here), AND
+ *   2. none of those topic ids still exists, AND
+ *   3. it is not a top-headline row (`headline_scope` set) — those belong to a
+ *      scope section and never depended on a fact in the first place.
+ *
+ * Returns the number destroyed. Never throws: a failure here must not turn a
+ * committed fact deletion into an error.
+ */
+export async function purgeSuggestionsForDeadTopics(
+  liveTopicIds: Set<string>,
+): Promise<number> {
+  try {
+    const rows = await articleSuggestionsCol.query().fetch();
+    const doomed: ArticleSuggestionModel[] = [];
+    for (const row of rows) {
+      if (row.headlineScope) continue; // has a scope section regardless
+      const refs = parseMatchedTopicRefs(row.matchedTopicsJson);
+      const owned = refs.filter((r): r is { topicId: string; text: string } => !!r.topicId);
+      if (owned.length === 0) continue; // no topic evidence — leave it alone
+      if (owned.some((r) => liveTopicIds.has(r.topicId))) continue; // still owned
+      doomed.push(row);
+    }
+    if (doomed.length === 0) return 0;
+
+    // The join rows carry the suggestion id, so they must go in the same batch
+    // or they outlive their parent as unreachable orphans of their own.
+    const suggestionIds = new Set(doomed.map((r) => r.id));
+    const joins = await articleSuggestionFactsCol.query().fetch();
+    const doomedJoins = joins.filter((j) => suggestionIds.has(j.articleSuggestionId));
+
+    await database.write(async () => {
+      await database.batch([
+        ...doomed.map((r) => r.prepareDestroyPermanently()),
+        ...doomedJoins.map((j) => j.prepareDestroyPermanently()),
+      ]);
+    });
+    return doomed.length;
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'article-suggestion', method: 'purgeSuggestionsForDeadTopics' },
+    });
+    return 0;
+  }
+}

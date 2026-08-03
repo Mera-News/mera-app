@@ -142,11 +142,7 @@
       "Move your body, however feels good.",
       "Your phone will be here later. Be present now."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} were published in the last 24 hours, {{analysed}} articles were analysed for you, and {{impactful}} found relevant for you.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} were published in the last 24 hours.",
     "noiseRemovedSummary": "{{count}} decoy {{articleWord}} were filtered out before analysis.",
-    "articleSingular": "article",
-    "articlePlural": "articles",
     "processing": {
       "doneFlash": "All set: here’s your news",
       "errorFlash": "We couldn’t load the latest content. Please try again.",
@@ -195,7 +191,18 @@
     },
     "analysingProgress": "Analysing {{done}} of {{total}} articles",
     "waitingForNextBatch_one": "{{count}} new article waiting for the next analysis batch",
-    "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch"
+    "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch",
+    "exploreCta": "Browse Explore",
+    "statsPublishedPending_one": "{{formatted}} article was published in the last 24 hours.",
+    "statsPublishedPending_other": "{{formatted}} articles were published in the last 24 hours.",
+    "statsPublished_one": "{{formatted}} article was published in the last 24 hours,",
+    "statsPublished_other": "{{formatted}} articles were published in the last 24 hours,",
+    "statsAnalysed_one": "{{formatted}} was analysed for you,",
+    "statsAnalysed_other": "{{formatted}} were analysed for you,",
+    "statsRelevant_one": "{{formatted}} looks relevant,",
+    "statsRelevant_other": "{{formatted}} look relevant,",
+    "statsRead_one": "and you've read {{formatted}}.",
+    "statsRead_other": "and you've read {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergency",
@@ -287,7 +294,8 @@
     "headlineDenominatorNone_other": "Mera read {{count}} headlines · none looked relevant today.",
     "subTabFeed": "Overview",
     "subTabStories": "Stories",
-    "subTabSaved": "Saved"
+    "subTabSaved": "Saved",
+    "subTabHistory": "History"
   },
   "feedStatus": {
     "title": "Feed status",
@@ -445,7 +453,8 @@
     "packMissingIosPath": "Settings → General → Language & Region",
     "retry": "Retry",
     "watchGuide": "Watch how to add language to your device",
-    "iosLanguageHint": "Only selecting this language is not enough: you'll need to also select this language in the iOS language settings."
+    "iosLanguageHint": "Only selecting this language is not enough: you'll need to also select this language in the iOS language settings.",
+    "managePacksPrefix": "To manage downloaded languages, go to"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -722,7 +731,9 @@
       "submittedConfirmation": "Your request has been submitted and is pending review. We'll re-check your status when you tap Refresh.",
       "alreadyPending": "You already have an unblock request pending review.",
       "error": "Couldn't submit your request. Please try again."
-    }
+    },
+    "topicGenFailed": "Couldn't generate topics for this.",
+    "topicGenRetry": "Retry"
   },
   "articleFeedback": {
     "thumbsUp": "I like it",
@@ -963,7 +974,11 @@
     "thanks": "Thanks for the feedback",
     "seenAck": "Got it: we'll show fewer you've seen",
     "nudgeSubscribe": "Subscribing to {{publication}} unlocks full articles",
-    "nudgeBrowse": "Look for related coverage from other sources"
+    "nudgeBrowse": "Look for related coverage from other sources",
+    "paywallRelatedOption": "Show related coverage",
+    "paywallRelatedDesc": "A similar story from another publication may not be paywalled — check the related articles.",
+    "paywallSubscribeDesc": "You've visited {{publication}} {{visits}} times this month — consider subscribing for full access.",
+    "paywallBlockOption": "Block {{publication}} instead"
   },
   "topicPlan": {
     "title": "Topics I'll track",
@@ -975,7 +990,6 @@
     "saveAll": "Save all ({{count}})",
     "delete": "Remove topic",
     "undo": "Undo",
-    "highPriority": "Prioritize topic",
     "settledTitle": "Topics saved",
     "settledSummary": "{{count}} topics active for this fact."
   },
@@ -1267,6 +1281,14 @@
     "newPinTitle": "Set a new PIN",
     "newPinSubtitle": "Choose a new 4-digit PIN",
     "pinChangedTitle": "PIN updated",
-    "pinChangedDescription": "Your PIN has been changed."
+    "pinChangedDescription": "Your PIN has been changed.",
+    "blurImagesTitle": "Blur images",
+    "blurImagesDescription": "Soften article images across the app so graphic or disturbing visuals aren't shown sharply."
+  },
+  "display": {
+    "title": "Display",
+    "subtitle": "Tune how Mera renders visuals on this device",
+    "staticGradientTitle": "Static background",
+    "staticGradientDescription": "Use a fixed gradient instead of the animated background — easier on battery and older devices."
   }
 }

@@ -93,6 +93,7 @@ jest.mock('react-native', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
     captureException: jest.fn(),
@@ -602,6 +603,33 @@ describe('enqueueCandidates', () => {
     expect(b1.phase).toBe('waiting-relevance');
     expect(mockSaveScoringResult).not.toHaveBeenCalled();
     expect(mockSendInferenceRequest).toHaveBeenCalledTimes(3);
+  });
+});
+
+// The gate elects ONE representative per duplicate story group and holds the
+// siblings back to inherit its score, so `candidateIds` is a fraction of the
+// articles a run analyses. Each batch records the articles it covers, which is
+// what the "Analysing X of Y articles" header counts.
+describe('enqueueCandidates — covered-id bookkeeping', () => {
+  it('records the gate coverage on the batch and leaves dispatch untouched', async () => {
+    await enqueueCandidates(['rep', 'solo', 'x1', 'x2', 'x3'], false, {
+      rep: ['rep', 'sib1', 'sib2'],
+      solo: ['solo'],
+    });
+
+    const batch = currentRun().batches[0];
+    expect(batch.candidateIds).toEqual(['rep', 'solo', 'x1', 'x2', 'x3']);
+    // Ids without a gate entry cover themselves.
+    expect(batch.coveredIds).toEqual([
+      'rep', 'sib1', 'sib2', 'solo', 'x1', 'x2', 'x3',
+    ]);
+    expect(derivePipelineBatchProgress(currentRun()).total).toBe(7);
+  });
+
+  it('writes coveredIds even with no gate map, so the denominator survives the submit shrink', async () => {
+    await enqueueCandidates(ids(MIN_DISPATCH));
+    const batch = currentRun().batches[0];
+    expect(batch.coveredIds).toEqual(batch.candidateIds);
   });
 });
 
@@ -1795,7 +1823,73 @@ describe('derivePipelineBatchProgress', () => {
       ),
     ).toEqual({ done: 1, total: 3 });
   });
+
+  // --- coverage: the articles a run REALLY analyses -----------------------
+  // The gate enqueues one elected representative per duplicate story group, so
+  // the candidate count is a fraction of the articles being analysed. Batches
+  // carry the covered ids so the header can count articles, not representatives.
+
+  it('counts the held-back siblings a representative covers, not just the candidates', () => {
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([
+          // 1 candidate standing in for a group of 3, plus a singleton.
+          {
+            phase: 'done',
+            candidateIds: ['rep'],
+            coveredIds: ['rep', 'sib1', 'sib2'],
+          },
+          { phase: 'waiting-relevance', candidateIds: ['solo'], coveredIds: ['solo'] },
+        ]),
+      ),
+    ).toEqual({ done: 3, total: 4 });
+  });
+
+  it('unions overlapping covered sets so a re-elected sibling is not double-counted', () => {
+    // A held-back sibling is not in-flight, so the next gate pass elects IT and
+    // enqueues it in a batch of its own — its id legitimately appears twice.
+    // Summing would report 5 articles for 3.
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([
+          { phase: 'waiting-relevance', candidateIds: ['rep'], coveredIds: ['rep', 'sib1', 'sib2'] },
+          { phase: 'queued', candidateIds: ['sib1'], coveredIds: ['sib1', 'sib2'] },
+        ]),
+      ),
+    ).toEqual({ done: 0, total: 3 });
+  });
+
+  it('falls back to candidateIds for batches persisted before coveredIds shipped', () => {
+    expect(
+      derivePipelineBatchProgress(
+        makeRun([
+          { phase: 'done', candidateIds: ['a', 'b'] }, // legacy: no coveredIds
+          { phase: 'waiting-relevance', candidateIds: ['c'], coveredIds: ['c', 'c-sib'] },
+        ]),
+      ),
+    ).toEqual({ done: 2, total: 4 });
+  });
+
+  it('is immune to the submit-time candidateIds shrink (coveredIds is never rewritten)', () => {
+    // The backstop path replaces candidateIds with the eligible subset at
+    // submit; the denominator must not shrink underneath the user.
+    const before = derivePipelineBatchProgress(
+      makeRun([
+        { phase: 'queued', candidateIds: ['a', 'b', 'c'], coveredIds: ['a', 'b', 'c'] },
+        { phase: 'waiting-relevance', candidateIds: ['z'], coveredIds: ['z'] },
+      ]),
+    );
+    const afterShrink = derivePipelineBatchProgress(
+      makeRun([
+        { phase: 'queued', candidateIds: ['a'], coveredIds: ['a', 'b', 'c'] },
+        { phase: 'waiting-relevance', candidateIds: ['z'], coveredIds: ['z'] },
+      ]),
+    );
+    expect(afterShrink).toEqual(before);
+    expect(afterShrink.total).toBe(4);
+  });
 });
+
 
 // ---------------------------------------------------------------------------
 // apply-step throw → attempt cap (MERA-APP-53/55)

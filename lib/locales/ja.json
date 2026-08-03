@@ -98,11 +98,7 @@
       "気持ちの良い方法で体を動かしましょう。",
       "スマホはあとで使えます。今この瞬間を大切に。"
     ],
-    "analysedArticles": "過去24時間に{{processed}}{{articleWord}}が公開され、{{analysed}}件の記事があなたのために分析され、{{impactful}}件があなたに関連するものとして見つかりました。",
-    "analysedArticlesPending": "過去24時間に{{processed}}{{articleWord}}が公開されました。",
     "noiseRemovedSummary": "分析前に{{count}}件のおとり{{articleWord}}が除外されました。",
-    "articleSingular": "記事",
-    "articlePlural": "記事",
     "processing": {
       "doneFlash": "準備完了 — こちらがあなたのニュースです",
       "errorFlash": "最新コンテンツを読み込めませんでした。もう一度お試しください。",
@@ -191,7 +187,13 @@
     },
     "analysingProgress": "{{total}}件中{{done}}件の記事を分析中",
     "waitingForNextBatch_one": "{{count}}件の新着記事が次の分析バッチを待機中です",
-    "waitingForNextBatch_other": "次の分析バッチを待っている新着記事が{{count}}件あります"
+    "waitingForNextBatch_other": "次の分析バッチを待っている新着記事が{{count}}件あります",
+    "exploreCta": "探索を見る",
+    "statsPublishedPending_other": "{{formatted}}件の記事が過去24時間に公開されました。",
+    "statsPublished_other": "{{formatted}}件の記事が過去24時間に公開されました。",
+    "statsAnalysed_other": "{{formatted}}件が分析されました。",
+    "statsRelevant_other": "{{formatted}}件があなたに関連性があります。",
+    "statsRead_other": "そしてあなたは{{formatted}}件を読みました。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -326,7 +328,8 @@
     "packMissingIosPath": "設定 → 一般 → 言語と地域",
     "retry": "再試行",
     "watchGuide": "デバイスに言語を追加する方法を見る",
-    "iosLanguageHint": "この言語を選択するだけでは不十分です。iOSの言語設定でもこの言語を選択する必要があります。"
+    "iosLanguageHint": "この言語を選択するだけでは不十分です。iOSの言語設定でもこの言語を選択する必要があります。",
+    "managePacksPrefix": "ダウンロード済みの言語を管理するには、"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +603,9 @@
       "submittedConfirmation": "リクエストを送信し、審査待ちです。「更新」をタップするとステータスを再確認します。",
       "alreadyPending": "すでに審査待ちのブロック解除リクエストがあります。",
       "error": "リクエストを送信できませんでした。もう一度お試しください。"
-    }
+    },
+    "topicGenFailed": "このトピックを生成できませんでした。",
+    "topicGenRetry": "再試行"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",
@@ -843,7 +848,8 @@
     "headlineDenominator_one": "Meraが{{count}}件のニュースを読みました。{{shown}}件があなたの時間を価値があるもの。",
     "headlineDenominator_other": "Meraが{{count}}件のニュースを読みました。{{shown}}件があなたの時間を価値があるもの。",
     "headlineDenominatorNone_one": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
-    "headlineDenominatorNone_other": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。"
+    "headlineDenominatorNone_other": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
+    "subTabHistory": "履歴"
   },
   "feedStatus": {
     "title": "フィードの状態",
@@ -998,7 +1004,11 @@
     "thanks": "フィードバックありがとうございます",
     "seenAck": "了解しました — 既読の記事を減らして表示します",
     "nudgeSubscribe": "{{publication}}を購読すると全文記事が読めます",
-    "nudgeBrowse": "他のソースから関連報道を探す"
+    "nudgeBrowse": "他のソースから関連報道を探す",
+    "paywallRelatedOption": "関連カバレッジを表示",
+    "paywallRelatedDesc": "別の出版社から似た記事が出ており、ペイウォール内にないかもしれません — 関連記事を確認してください。",
+    "paywallSubscribeDesc": "この月、{{publication}}に{{visits}}回訪問しました — フルアクセスのために購読を検討してください。",
+    "paywallBlockOption": "代わりに{{publication}}をブロック"
   },
   "topicPlan": {
     "title": "追跡するトピック",
@@ -1010,7 +1020,6 @@
     "saveAll": "すべて保存 ({{count}})",
     "delete": "トピックを削除",
     "undo": "元に戻す",
-    "highPriority": "トピックを優先",
     "settledTitle": "トピックを保存しました",
     "settledSummary": "このファクトに対して{{count}}件のトピックが有効です。"
   },
@@ -1302,6 +1311,14 @@
     "newPinTitle": "新しいPINを設定",
     "newPinSubtitle": "新しい4桁のPINを選択してください",
     "pinChangedTitle": "PINが更新されました",
-    "pinChangedDescription": "あなたのPINが変更されました。"
+    "pinChangedDescription": "あなたのPINが変更されました。",
+    "blurImagesTitle": "画像をぼかす",
+    "blurImagesDescription": "記事の画像をソフトにしてグラフィックまたは不安な画像が鮮明に表示されないようにします。"
+  },
+  "display": {
+    "title": "表示",
+    "subtitle": "このデバイスでMeraがビジュアルをどのようにレンダリングするかをカスタマイズします",
+    "staticGradientTitle": "静的背景",
+    "staticGradientDescription": "アニメーション背景の代わりに固定グラデーションを使用します — バッテリーと古いデバイスに優しい"
   }
 }

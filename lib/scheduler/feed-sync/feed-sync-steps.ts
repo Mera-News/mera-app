@@ -221,7 +221,7 @@ async function fetchTopicIdsPersona(
   };
 
   ctx.log(`fetching persona ids for ${profile.topics.length} topics + ${profile.headlineScopes.length} scopes`);
-  logger.info(
+  logger.debug(
     `[feed-sync-steps] calling articleIdsForPersona: ${profile.topics.length} topics, ${profile.headlineScopes.length} headline scopes`,
   );
 
@@ -290,7 +290,7 @@ async function fetchTopicIdsPersona(
   }
 
   const serverArticleIds = [...matchedTopics.keys()];
-  logger.info(`[feed-sync-steps] articleIdsForPersona returned ${serverArticleIds.length} article ids`);
+  logger.debug(`[feed-sync-steps] articleIdsForPersona returned ${serverArticleIds.length} article ids`);
   ctx.log(`server returned ${serverArticleIds.length} article ids (persona path)`);
 
   return {
@@ -308,7 +308,7 @@ async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResul
     throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
   ctx.log(`fetching ids for ${topicTexts.length} topics (legacy path)`);
-  logger.info(`[feed-sync-steps] calling getArticleIdsForTopics with ${topicTexts.length} topics (legacy)`);
+  logger.debug(`[feed-sync-steps] calling getArticleIdsForTopics with ${topicTexts.length} topics (legacy)`);
 
   const idsResponse = await withRetry(
     () =>
@@ -331,7 +331,7 @@ async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResul
   }
   const serverArticleIds = [...articleToTopicTexts.keys()];
 
-  logger.info(`[feed-sync-steps] getArticleIdsForTopics returned ${serverArticleIds.length} article ids`);
+  logger.debug(`[feed-sync-steps] getArticleIdsForTopics returned ${serverArticleIds.length} article ids`);
   ctx.log(`server returned ${serverArticleIds.length} article ids`);
   return { articleToTopicTexts, serverArticleIds };
 }
@@ -426,6 +426,11 @@ export async function stepHydratePersistEnqueue(
   // The trailing sub-25 partial the most recent enqueue held back (empty when
   // nothing was deferred). Flushed to scoring once the whole lot is hydrated.
   let pendingDeferred: string[] = [];
+  // That same pass's gate coverage (rep id → the duplicate group it stands in
+  // for), carried alongside so the tail flush records the same article coverage
+  // the greedy enqueues did — otherwise the flushed remainder would look like it
+  // covers only itself and undercount the header's denominator.
+  let pendingCoveredIdsByRep: Record<string, string[]> = {};
 
   const gateAndEnqueue = async (): Promise<void> => {
     const inFlight = await getNonTerminalCandidateIds();
@@ -450,8 +455,13 @@ export async function stepHydratePersistEnqueue(
     // an already-scored story into a `Complete` row without any inference. Only
     // the dispatch is suppressed.
     if (!opts.suppressEnqueue && gate.enqueueIds.length > 0) {
-      const res = await enqueueCandidates(gate.enqueueIds);
+      const res = await enqueueCandidates(
+        gate.enqueueIds,
+        false,
+        gate.coveredIdsByRep,
+      );
       pendingDeferred = res?.deferred ?? [];
+      pendingCoveredIdsByRep = gate.coveredIdsByRep ?? {};
     }
     if (!opts.suppressEnqueue) enqueuedCount += gate.enqueueIds.length;
     const enqueuedLabel = opts.suppressEnqueue
@@ -460,7 +470,7 @@ export async function stepHydratePersistEnqueue(
     ctx.log(
       `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}`,
     );
-    logger.info(
+    logger.debug(
       `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}`,
     );
   };
@@ -525,7 +535,7 @@ export async function stepHydratePersistEnqueue(
       completedIds += chunk.length;
       opts.onProgress(completedIds);
       ctx.log(`chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`);
-      logger.info(
+      logger.debug(
         `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
       );
 
@@ -533,7 +543,7 @@ export async function stepHydratePersistEnqueue(
       // further chunks. The throw-vs-keep decision is made AFTER the pool drains.
       if (dailyLimitReached && chunkArticles.length === 0) {
         stopLaunching = true;
-        logger.info(
+        logger.debug(
           '[feed-sync-steps] daily limit hit — stopping the hydration pool',
         );
         return;
@@ -556,7 +566,7 @@ export async function stepHydratePersistEnqueue(
   if (!ctx.signal.aborted) {
     try {
       if (!opts.suppressEnqueue && pendingDeferred.length > 0) {
-        await enqueueCandidates(pendingDeferred, true);
+        await enqueueCandidates(pendingDeferred, true, pendingCoveredIdsByRep);
       } else if (
         opts.suppressEnqueue &&
         (await scoringPipeline.getPipelineStatus()) === 'idle'
@@ -638,7 +648,7 @@ async function getLocalTopicTextsForPersona(): Promise<string[]> {
       if (topic.length > 0) texts.add(topic);
     }
   }
-  logger.info(`[feed-sync-steps] found ${texts.size} topic texts from facts`);
+  logger.debug(`[feed-sync-steps] found ${texts.size} topic texts from facts`);
   return Array.from(texts);
 }
 

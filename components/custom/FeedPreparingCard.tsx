@@ -5,8 +5,10 @@ import {
 } from '@/components/custom/cards/CardGlassPlate';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
+import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,6 +24,17 @@ const FeedPreparingCard: React.FC = () => {
             <Text size="sm" className="text-gray-500 text-center mt-2">
                 {t('feed.preparingFeedExploreHint')}
             </Text>
+
+            <Button
+                testID="feed-preparing-explore-cta"
+                variant="outline"
+                action="secondary"
+                size="sm"
+                className="mt-6"
+                onPress={() => router.navigate('/logged-in/app_container/around')}
+            >
+                <ButtonText>{t('feed.exploreCta')}</ButtonText>
+            </Button>
         </Box>
     );
 

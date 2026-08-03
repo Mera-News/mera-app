@@ -147,6 +147,38 @@ describe('refreshFeedbackTree', () => {
     expect(tree.likeRoot).toHaveLength(1);
   });
 
+  // Pins APP_FEEDBACK_SCHEMA itself. Every other case here uses minAppSchema 1,
+  // 2 or 99, all of which behave identically at 3 and at 4 — so before these two
+  // a botched bump changed nothing observable in the suite. The live server tree
+  // (v3) publishes minAppSchema 4, which is exactly the boundary below.
+  it('ACCEPTS a tree requiring app schema 4 (the desc-carrying server tree)', async () => {
+    mockGetSetting.mockResolvedValue(null);
+    mockQuery.mockResolvedValue({
+      data: {
+        feedbackTree: { version: 3, minAppSchema: 4, updatedAt: 'now', treeJson: serverTree(3) },
+      },
+    });
+
+    await refreshFeedbackTree({ force: true });
+
+    expect(mockSetSetting).toHaveBeenCalledWith(KEY_JSON, serverTree(3));
+    expect((await getFeedbackTree()).version).toBe(3);
+  });
+
+  it('DROPS a tree requiring app schema 5 — one past what this app understands', async () => {
+    mockGetSetting.mockResolvedValue(null);
+    mockQuery.mockResolvedValue({
+      data: {
+        feedbackTree: { version: 4, minAppSchema: 5, updatedAt: 'now', treeJson: serverTree(4) },
+      },
+    });
+
+    await refreshFeedbackTree({ force: true });
+
+    expect(mockSetSetting).not.toHaveBeenCalledWith(KEY_JSON, expect.anything());
+    expect(await getFeedbackTree()).toBe(BUNDLED_FEEDBACK_TREE);
+  });
+
   it('rejects (does not persist) a server tree with a malformed likeRoot', async () => {
     mockGetSetting.mockResolvedValue(null);
     const malformed = serverTree(2, { likeRoot: 'not-an-array' });

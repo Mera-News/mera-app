@@ -2,6 +2,7 @@
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
+import logger from '../../logger';
 import type FactModel from '../models/Fact';
 import type { Fact } from '../../mera-protocol-toolkit/types';
 
@@ -63,6 +64,20 @@ export async function updateFact(
 export async function deleteFact(id: string): Promise<void> {
   const record = await factsCollection.find(id);
   await record.destroyCascade();
+  // The cascade takes the fact's topics; the suggestions those topics
+  // retrieved must go with them. Without this they linger for the full 48h
+  // window as content for a deleted interest — unable to render a Dashboard
+  // section (ownership needs the fact) while still counting as "analysed for
+  // you". Lazy require: article-suggestion-service imports this module.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const topics = require('./topic-service') as typeof import('./topic-service');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const suggestions =
+    require('./article-suggestion-service') as typeof import('./article-suggestion-service');
+  const purged = await suggestions.purgeSuggestionsForDeadTopics(await topics.getAllTopicIds());
+  if (purged > 0) {
+    logger.warn('[fact-service] Purged suggestions for deleted fact', { factId: id, purged });
+  }
 }
 
 /**
@@ -130,6 +145,23 @@ export async function getFactSectionSnapshots(): Promise<FactSectionSnapshot[]> 
       sectionTitle,
     };
   });
+}
+
+/** True when this device holds at least one fact.
+ *
+ *  This is the onboarding gate. Facts are what the app actually needs to
+ *  function (topics, scoring and the whole feed derive from them), whereas the
+ *  server's `onboardingStage` lies: the wizard's Next button writes FINISHED
+ *  even when the persona chat captured nothing. Counting in SQL via
+ *  `fetchCount()` never materialises rows, and it needs no network — the gate
+ *  works offline.
+ *
+ *  Note `facts` is device-global (no user column); callers that may be running
+ *  for a freshly signed-in user must run `clearPreviousUserData(userId)` first.
+ */
+export async function hasAnyFacts(): Promise<boolean> {
+  const count = await factsCollection.query().fetchCount();
+  return count > 0;
 }
 
 export async function getFacts(): Promise<Fact[]> {

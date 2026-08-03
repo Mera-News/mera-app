@@ -1,9 +1,10 @@
 import { Box } from "@/components/ui/box";
 import MeraLogo from "@/components/custom/MeraLogo";
-import { OnboardingStage } from "@/lib/generated/graphql-types";
 import { authClient } from "@/lib/auth-client";
 import { clearPreviousUserData } from "@/lib/stores";
+import { hasAnyFacts } from "@/lib/database/services/fact-service";
 import { getSetting } from "@/lib/database/services/setting-service";
+import { hasIdentityFault, resolveIdentity } from "@/lib/security/identity-gate";
 import { useUserStore } from "@/lib/stores/user-store";
 import { useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
@@ -38,16 +39,40 @@ export default function LoggedInIndex() {
             const userStore = useUserStore.getState();
 
             try {
-                // Only a genuinely different signed-in user wipes local data.
-                if (session?.user?.id) {
+                // Resolve session <-> local-identity coherence BEFORE anything
+                // reads persona/facts or fires a personalized query. A mismatch
+                // that reaches the shell surfaces as a 403 per query
+                // ("resource belongs to another user"), which is exactly what
+                // this gate exists to prevent. Same helper as the onboarding
+                // gate so the two can't drift.
+                const verdict = resolveIdentity({
+                    sessionUserId: session?.user?.id,
+                    cachedUserId: localUserId,
+                    ownershipFault: await hasIdentityFault(),
+                    isConnected: useNetworkStore.getState().isConnected,
+                });
+
+                if (verdict === 'reauth') {
+                    // Unresolvable locally — OTP is the only way to learn which
+                    // side is stale. reauth:'1' is load-bearing: without it
+                    // login.tsx short-circuits on the existing session and
+                    // bounces straight back here.
+                    if (!cancelled) {
+                        router.replace({ pathname: '/login', params: { reauth: '1' } });
+                    }
+                    return;
+                }
+
+                if (verdict === 'wipeAndProceed' && session?.user?.id) {
                     await clearPreviousUserData(session.user.id);
                 }
                 userStore.setUserId(userId);
 
-                // Local-first: hydrate the persisted persona and route on its
-                // (possibly stale) onboardingStage immediately — no network.
+                // Local-first: hydrate the persisted persona. It no longer
+                // decides the route (see the fact gate below) but downstream
+                // screens read it, so keep it warm.
                 await userStore.hydrateFromDb();
-                let persona = useUserStore.getState().userPersona;
+                const persona = useUserStore.getState().userPersona;
 
                 const isConnected = useNetworkStore.getState().isConnected;
 
@@ -58,24 +83,34 @@ export default function LoggedInIndex() {
                         if (info) useSubscriptionStore.getState().setCustomerInfo(info);
                     });
 
-                    // No cached persona yet (fresh login) — we genuinely can't
-                    // know the stage without the server, so wait for it here.
+                    // No cached persona yet (fresh login) — downstream screens
+                    // read it, so pull it before handing off. Routing no longer
+                    // depends on it, so a failure here is simply swallowed.
                     if (!persona) {
                         try {
-                            persona = await userStore.fetchUserPersonaOrThrow(userId, true);
+                            await userStore.fetchUserPersonaOrThrow(userId, true);
                         } catch {
-                            persona = null;
+                            // Non-fatal — the fact gate below is local.
                         }
                     }
                 }
 
-                // Unknown stage (offline with no cache, or a server error) →
-                // fall through to the feed rather than trapping a returning user
-                // in onboarding.
-                const stage = persona?.onboardingStage ?? OnboardingStage.Finished;
+                // Onboarding is gated on LOCAL FACTS, never on the server's
+                // onboardingStage. The stage flag lies — the wizard's Next
+                // button writes FINISHED even when the persona chat captured
+                // nothing — and it needs the network to be trusted. Facts are
+                // what the app actually needs to build a feed, and counting
+                // them is local, so this branch is offline-safe by
+                // construction. Zero facts ALWAYS re-enters onboarding.
+                let hasFacts = false;
+                try {
+                    hasFacts = await hasAnyFacts();
+                } catch {
+                    hasFacts = false;
+                }
 
                 if (cancelled) return;
-                if (stage !== OnboardingStage.Finished) {
+                if (!hasFacts) {
                     router.replace('/logged-in/onboarding');
                 } else {
                     router.replace('/logged-in/app_container/feed');

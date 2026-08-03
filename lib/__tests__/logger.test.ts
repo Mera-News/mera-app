@@ -175,9 +175,15 @@ describe('logger.startTransaction', () => {
 });
 
 describe('logger convenience log levels', () => {
+  const originalVerbose = process.env.EXPO_PUBLIC_VERBOSE_LOGS;
+
   beforeEach(() => jest.clearAllMocks());
 
-  it('logger.debug adds breadcrumb with "debug" category and level', () => {
+  afterEach(() => {
+    process.env.EXPO_PUBLIC_VERBOSE_LOGS = originalVerbose;
+  });
+
+  it('logger.debug adds breadcrumb with "debug" category and level in __DEV__', () => {
     logger.debug('test debug', { key: 'val' });
     expect(mockAddBreadcrumb).toHaveBeenCalledWith(
       expect.objectContaining({ category: 'debug', level: 'debug' }),
@@ -210,6 +216,51 @@ describe('logger convenience log levels', () => {
       'no error obj',
       expect.objectContaining({ level: 'error' }),
     );
+  });
+
+  it('logger.debug does not call console.debug when EXPO_PUBLIC_VERBOSE_LOGS is unset', () => {
+    delete process.env.EXPO_PUBLIC_VERBOSE_LOGS;
+    const spy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    logger.debug('quiet debug');
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('logger.debug calls console.debug when EXPO_PUBLIC_VERBOSE_LOGS is "true"', () => {
+    process.env.EXPO_PUBLIC_VERBOSE_LOGS = 'true';
+    const spy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    logger.debug('verbose debug', { key: 'val' });
+    expect(spy).toHaveBeenCalledWith('[Debug]', 'verbose debug', { key: 'val' });
+    spy.mockRestore();
+  });
+
+  it('logger.info omits the trailing context arg from console.info when context is undefined', () => {
+    const spy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    logger.info('no context here');
+    expect(spy).toHaveBeenCalledWith('[Info]', 'no context here');
+    spy.mockRestore();
+  });
+
+  it('logger.warn omits the trailing context arg from console.warn when context is undefined', () => {
+    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    logger.warn('no context warn');
+    expect(spy).toHaveBeenCalledWith('[Warn]', 'no context warn');
+    spy.mockRestore();
+  });
+
+  it('logger.error omits undefined error/context args from console.error', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    logger.error('bare message');
+    expect(spy).toHaveBeenCalledWith('[Error]', 'bare message');
+    spy.mockRestore();
+  });
+
+  it('logger.error includes error but omits context when context is undefined', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const err = new Error('boom');
+    logger.error('with error only', err);
+    expect(spy).toHaveBeenCalledWith('[Error]', 'with error only', err);
+    spy.mockRestore();
   });
 });
 

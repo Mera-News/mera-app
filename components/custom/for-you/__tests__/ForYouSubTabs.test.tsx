@@ -15,6 +15,25 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+// jest-expo mis-transforms RN's ScrollView native-component file ("Unexpected
+// token 'export'") — same trap documented in AddLocationView.test.tsx /
+// ScopeChipRow.test.tsx. Proxy RN so ScrollView renders as a plain View; every
+// other export stays lazy/real.
+jest.mock('react-native', () => {
+    const actual = jest.requireActual('react-native');
+    const ReactLib = require('react');
+    const StubScrollView = ({ children, ...rest }: any) => ReactLib.createElement(actual.View, rest, children);
+    StubScrollView.Context = ReactLib.createContext(null);
+    return new Proxy(actual, {
+        get(target, prop) {
+            if (prop === 'ScrollView') {
+                return StubScrollView;
+            }
+            return (target as any)[prop];
+        },
+    });
+});
+
 // Emit a fixed unseen total synchronously on subscribe.
 let mockEmitTotal = 3;
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
@@ -57,6 +76,7 @@ describe('ForYouSubTabs', () => {
         expect(getByText('forYou.subTabFeed')).toBeTruthy();
         expect(getByText('forYou.subTabStories')).toBeTruthy();
         expect(getByText('forYou.subTabSaved')).toBeTruthy();
+        expect(getByText('forYou.subTabHistory')).toBeTruthy();
     });
 
     it('shows the unseen tracked-story badge on the Stories pill', () => {
@@ -81,6 +101,15 @@ describe('ForYouSubTabs', () => {
         );
         fireEvent.press(getByText('forYou.subTabStories'));
         expect(onSelect).toHaveBeenCalledWith('stories');
+    });
+
+    it('fires onSelect with history when the History pill is tapped', () => {
+        const onSelect = jest.fn();
+        const { getByText } = render(
+            <ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />,
+        );
+        fireEvent.press(getByText('forYou.subTabHistory'));
+        expect(onSelect).toHaveBeenCalledWith('history');
     });
 
     it('marks the active pill via accessibilityState', () => {

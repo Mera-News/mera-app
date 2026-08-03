@@ -71,11 +71,14 @@ const TREE = {
       ],
     },
     {
-      // Mirrors the production "paywall" node: a raw non-empty `children`
-      // array whose only child is gated on `cluster_size_gte` — a condition
+      // HISTORICAL shape — this is what the production "paywall" node looked
+      // like when the dead-branch rule was written: a raw non-empty `children`
+      // array whose only child is gated on `cluster_size_gte`, a condition
       // InlineFeedbackTree's local context never supplies (buildLocalContext
-      // never sets `clusterSize`). It must render WITHOUT a chevron: tapping
-      // it would otherwise descend into an empty "Thanks — noted." dead end.
+      // never sets `clusterSize`). Production has since rebuilt that branch
+      // around an UNGATED first child, so it is no longer dead — but the ENGINE
+      // behaviour this fixture exercises is still exactly right and still worth
+      // pinning, so the fixture stays as a synthetic dead branch.
       id: 'gated_branch',
       labelKey: 'k.gb',
       labelDefault: 'Gated branch',

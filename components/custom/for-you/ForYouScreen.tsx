@@ -21,6 +21,7 @@ import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
+import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
@@ -114,10 +115,20 @@ const MeraNewsScreen: React.FC = () => {
     // so a newly-synced story still slots into its band immediately while every
     // already-present story keeps its relative position. The throttle governs
     // re-RANKING, not arrival.
+    //
+    // `openedIds` here mirrors the live opened-stories store's full `ids` set
+    // (article_id ∪ stable_cluster_id) — NOT just `openedArticleIds` (article-id
+    // only, kept alongside for other consumers of this snapshot). buildFactRows'
+    // unread-count/section-order sort key is `isSuggestionOpened`, which matches
+    // on EITHER key (fact-rows-selector.ts:697-699); snapshotting only the
+    // article-id subset would silently degrade that match for an ongoing story
+    // whose representative article changes id between resorts, so the full set
+    // is carried across intact rather than narrowed.
     const [sortSnapshot, setSortSnapshot] = useState<{
         cardStates: Record<string, unknown>;
         openedArticleIds: Set<string>;
-    }>(() => ({ cardStates: {}, openedArticleIds: new Set() }));
+        openedIds: Set<string>;
+    }>(() => ({ cardStates: {}, openedArticleIds: new Set(), openedIds: new Set() }));
     const lastResortAtRef = useRef<number | null>(null);
 
     const applyResort = useCallback((trigger: ResortTrigger) => {
@@ -127,6 +138,7 @@ const MeraNewsScreen: React.FC = () => {
         setSortSnapshot({
             cardStates: useFeedOrderStore.getState().cardStates,
             openedArticleIds: useOpenedStoriesStore.getState().articleIds,
+            openedIds: useOpenedStoriesStore.getState().ids,
         });
     }, []);
 
@@ -172,15 +184,18 @@ const MeraNewsScreen: React.FC = () => {
             }
         }), []);
 
-    // Sub-tab state — Feed / Stories / Saved. All three are kept mounted after
-    // their first visit (display-toggled) so scroll state survives a switch.
+    // Sub-tab state — Feed / Stories / Saved / History. All four are kept
+    // mounted after their first visit (display-toggled) so scroll state
+    // survives a switch.
     const [activeSubTab, setActiveSubTab] = useState<ForYouSubTab>('feed');
     const [storiesVisited, setStoriesVisited] = useState(false);
     const [savedVisited, setSavedVisited] = useState(false);
+    const [historyVisited, setHistoryVisited] = useState(false);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
         if (tab === 'saved') setSavedVisited(true);
+        if (tab === 'history') setHistoryVisited(true);
         // Always reveal the header on a sub-tab switch.
         reveal();
     }, [reveal]);
@@ -271,10 +286,20 @@ const MeraNewsScreen: React.FC = () => {
 
     // The fact-rows selector output (breaking strip + per-fact rows). Empty until
     // the snapshots hydrate.
+    //
+    // Reads `sortSnapshot.openedIds` — NOT the live `openedIds` — because
+    // `row.unreadCount` is section-order sort key #2 (fact-rows-selector.ts:
+    // 666-673): opening an article flips the LIVE set the instant the tap
+    // happens, and buildFactRows would immediately move that whole section.
+    // The live `openedIds` still flows separately to `DashboardSectionsFeed`
+    // below for per-card read/dim state, which must update instantly — only the
+    // section-order input is frozen. Deliberately depending on `sortSnapshot`
+    // itself (not `openedIds`) means this only recomputes on a resort, an
+    // arrival, or a snapshot input change — never on a live open.
     const feed = useMemo(() => {
         if (!snapshots) return { breaking: [], rows: [] };
-        return buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
+        return buildFactRows(suggestions, snapshots, sortSnapshot.openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
+    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx]);
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 
@@ -462,6 +487,13 @@ const MeraNewsScreen: React.FC = () => {
                 {savedVisited && (
                     <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }} testID="dashboard-saved-content">
                         <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} />
+                    </View>
+                )}
+
+                {/* History (lazy-mounted on first visit) */}
+                {historyVisited && (
+                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
+                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} />
                     </View>
                 )}
             </View>

@@ -65,6 +65,12 @@ jest.mock('@/components/ui/modal', () => {
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
 
 // --- child components → light stubs ----------------------------------------
+// MeraChatInvite pulls in the animated MeraLogo (reanimated + svg), which has
+// no native side under jest — same stub as cards.test.tsx.
+jest.mock('@/components/custom/MeraLogo', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
+});
 jest.mock('@/components/custom/BlockedBanner', () => { const { Text } = require('react-native'); return { __esModule: true, default: () => <Text>blocked-banner</Text> }; });
 jest.mock('@/components/custom/UsageWidget', () => {
     const { View, Text, Pressable } = require('react-native');
@@ -116,7 +122,10 @@ jest.mock('@/lib/stores/user-store', () => ({
     useUserStore: () => ({ userPersona: { blockedByLlm: false }, fetchUserPersona: jest.fn() }),
 }));
 
-jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: jest.fn() }));
+jest.mock('@/lib/visibility-tick', () => ({
+    notifyScrollTick: jest.fn(),
+    subscribeScrollTick: jest.fn(() => () => {}),
+}));
 
 import ProfileScreen from '../ProfileScreen';
 
@@ -139,10 +148,10 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByText('tabs.profile')).toBeTruthy());
     });
 
-    it('empty persona → shows the Start-talking CTA and no About-you section', async () => {
+    it('empty persona → shows the Mera chat invite and no About-you section', async () => {
         mockGetFacts.mockResolvedValue([]);
         const { getByText, queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('Start talking')).toBeTruthy());
+        await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
         expect(queryByText('ABOUT YOU')).toBeNull();
         expect(queryByText('facts-list')).toBeNull();
         // Usage card + Advanced row still present.
@@ -157,11 +166,11 @@ describe('ProfileScreen', () => {
         expect(getByText('facts-list')).toBeTruthy();
     });
 
-    it('empty-persona Start-talking CTA opens the persona chat', async () => {
+    it('Mera chat invite opens the persona chat', async () => {
         mockGetFacts.mockResolvedValue([]);
         const { getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('Start talking')).toBeTruthy());
-        fireEvent.press(getByText('Start talking'));
+        await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
+        fireEvent.press(getByText('profile.meraInvite'));
         expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
     });
 

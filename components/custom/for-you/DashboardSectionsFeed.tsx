@@ -276,6 +276,11 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={onScroll}
+        // Initial visibility tick — same reason as FeedScreen's list: without a
+        // tick at mount, TranslatableDynamic titles stay on the original text
+        // until the user's first scroll and then swap (and re-wrap) under them.
+        // Plain JS prop; does not touch the reanimated `onScroll` above.
+        onContentSizeChange={notifyScrollTick}
         // Tuned for SECTIONS, not rows: each item is ~5 subviews, so these are
         // scaled down from the old per-row values to keep a comparable amount of
         // work per batch.

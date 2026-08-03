@@ -42,7 +42,7 @@ jest.mock('@/lib/logger', () => ({
   default: { debug: jest.fn() },
 }));
 
-import { BIG_MODEL } from '../constants';
+import { BIG_MODEL, MODEL_FALLBACKS, SMALL_MODEL } from '../constants';
 
 /** Fresh module instance (resets lastModelWarmAt) using the persistent mocks. */
 function loadPrewarm(): () => void {
@@ -75,14 +75,40 @@ describe('prewarmCloudChat', () => {
     expect(mockCloudComplete).not.toHaveBeenCalled();
   });
 
-  it('warms attestation (BIG_MODEL) + JWT under cloud processing', async () => {
+  it('warms attestation (BIG_MODEL + both hedge fallbacks) + JWT under cloud processing', async () => {
     const prewarmCloudChat = loadPrewarm();
     prewarmCloudChat();
     await flush();
 
-    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(1);
+    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(3);
     expect(mockFetchModelPublicKey).toHaveBeenCalledWith(BIG_MODEL);
+    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(MODEL_FALLBACKS[BIG_MODEL]);
+    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(MODEL_FALLBACKS[SMALL_MODEL]);
     expect(mockGetJwtToken).toHaveBeenCalled();
+  });
+
+  it('warms the fallbacks KEY-only — no throwaway completion for them', async () => {
+    const prewarmCloudChat = loadPrewarm();
+    prewarmCloudChat();
+    await flush();
+
+    const warmedModels = (mockCloudComplete.mock.calls as [{ model: string }][]).map(
+      ([req]) => req.model,
+    );
+    expect(warmedModels).toEqual([BIG_MODEL]);
+  });
+
+  it('swallows a failing FALLBACK attestation fetch (never blocks the primary warm)', async () => {
+    mockFetchModelPublicKey.mockImplementation((model: unknown) =>
+      model === MODEL_FALLBACKS[BIG_MODEL]
+        ? Promise.reject(new Error('fallback attestation down'))
+        : Promise.resolve({ publicKey: 'ab', algo: 'ed25519' }),
+    );
+
+    const prewarmCloudChat = loadPrewarm();
+    expect(() => prewarmCloudChat()).not.toThrow();
+    await expect(flush()).resolves.toBeUndefined();
+    expect(mockCloudComplete).toHaveBeenCalledTimes(1);
   });
 
   it('fires a tiny throwaway completion against BIG_MODEL (max_tokens 1)', async () => {
@@ -156,7 +182,7 @@ describe('prewarmCloudChat', () => {
     const prewarmCloudChat = loadPrewarm();
     expect(() => prewarmCloudChat()).not.toThrow();
     await expect(flush()).resolves.toBeUndefined();
-    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(1);
+    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(3);
   });
 
   it('swallows a failing model completion without throwing', async () => {

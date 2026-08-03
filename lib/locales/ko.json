@@ -98,11 +98,7 @@
       "편한 방식으로 몸을 움직여 보세요.",
       "폰은 나중에도 있습니다. 지금 이 순간에 집중하세요."
     ],
-    "analysedArticles": "지난 24시간 동안 {{processed}}개의 {{articleWord}}이 게재되었으며, {{analysed}}개의 기사가 분석되었고, {{impactful}}개가 관련 있는 것으로 확인되었습니다.",
-    "analysedArticlesPending": "지난 24시간 동안 {{processed}}개의 {{articleWord}}이 게재되었습니다.",
     "noiseRemovedSummary": "분석 전에 {{count}}개의 디코이 {{articleWord}}이 필터링되었습니다.",
-    "articleSingular": "기사",
-    "articlePlural": "기사",
     "processing": {
       "doneFlash": "준비 완료. 맞춤 뉴스를 확인하세요",
       "errorFlash": "최신 콘텐츠를 불러올 수 없습니다. 다시 시도해 주세요.",
@@ -191,7 +187,13 @@
       "body": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 내일 잠금 해제됩니다.",
       "bodyWithTime": "지금은 새 기사를 가져올 수 없습니다. 기기에 저장된 기사를 살펴보세요. 새 기사는 {{time}}에 잠금 해제됩니다.",
       "title": "일일 기사 한도에 도달했습니다"
-    }
+    },
+    "exploreCta": "탐색 보기",
+    "statsPublishedPending_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
+    "statsPublished_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
+    "statsAnalysed_other": "{{formatted}}개의 기사가 분석되었습니다.",
+    "statsRelevant_other": "{{formatted}}개가 관련 있는 것으로 확인되었습니다.",
+    "statsRead_other": "당신은 {{formatted}}개를 읽었습니다."
   },
   "relevance": {
     "emergency": "긴급",
@@ -326,7 +328,8 @@
     "packMissingIosPath": "설정 → 일반 → 언어 및 지역",
     "retry": "재시도",
     "watchGuide": "기기에 언어를 추가하는 방법 보기",
-    "iosLanguageHint": "이 언어를 선택하는 것만으로는 충분하지 않습니다. iOS 언어 설정에서도 이 언어를 선택해야 합니다."
+    "iosLanguageHint": "이 언어를 선택하는 것만으로는 충분하지 않습니다. iOS 언어 설정에서도 이 언어를 선택해야 합니다.",
+    "managePacksPrefix": "다운로드한 언어를 관리하려면 다음으로 이동하세요"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +603,9 @@
       "submittedConfirmation": "요청이 제출되었으며 검토 대기 중입니다. 새로고침을 탭하면 상태를 다시 확인해 드립니다.",
       "alreadyPending": "이미 검토 대기 중인 차단 해제 요청이 있습니다.",
       "error": "요청을 제출하지 못했습니다. 다시 시도해 주세요."
-    }
+    },
+    "topicGenFailed": "이 주제에 대한 토픽을 생성할 수 없습니다.",
+    "topicGenRetry": "재시도"
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",
@@ -843,7 +848,8 @@
     "headlineDenominator_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
     "headlineDenominator_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
     "headlineDenominatorNone_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
-    "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다."
+    "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
+    "subTabHistory": "기록"
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -998,7 +1004,11 @@
     "thanks": "피드백 감사합니다",
     "seenAck": "알겠습니다. 이미 보신 기사는 줄여서 보여드릴게요",
     "nudgeSubscribe": "{{publication}} 구독 시 전체 기사를 볼 수 있습니다",
-    "nudgeBrowse": "다른 출처의 관련 보도를 찾아보세요"
+    "nudgeBrowse": "다른 출처의 관련 보도를 찾아보세요",
+    "paywallRelatedOption": "관련 보도 표시",
+    "paywallRelatedDesc": "다른 출판사의 유사 기사가 있을 수 있으며 유료화가 아닐 수 있습니다 — 관련 기사를 확인해 보세요.",
+    "paywallSubscribeDesc": "이번 달에 {{publication}}을(를) {{visits}}회 방문했습니다 — 전체 액세스를 위해 구독을 고려해 보세요.",
+    "paywallBlockOption": "대신 {{publication}} 차단"
   },
   "topicPlan": {
     "title": "추적할 토픽",
@@ -1010,7 +1020,6 @@
     "saveAll": "모두 저장 ({{count}})",
     "delete": "토픽 제거",
     "undo": "실행 취소",
-    "highPriority": "토픽 우선순위 지정",
     "settledTitle": "토픽이 저장되었습니다",
     "settledSummary": "이 정보에 대해 {{count}}개의 토픽이 활성화되었습니다."
   },
@@ -1302,6 +1311,14 @@
     "newPinTitle": "새 PIN 설정",
     "newPinSubtitle": "새 4자리 PIN을 선택하세요",
     "pinChangedTitle": "PIN 업데이트됨",
-    "pinChangedDescription": "PIN이 변경되었습니다."
+    "pinChangedDescription": "PIN이 변경되었습니다.",
+    "blurImagesTitle": "이미지 흐리기",
+    "blurImagesDescription": "앱 전체의 기사 이미지를 흐리게 처리하여 그래픽이나 불안감을 주는 이미지가 선명하게 표시되지 않도록 합니다."
+  },
+  "display": {
+    "title": "디스플레이",
+    "subtitle": "이 장치에서 Mera가 시각 요소를 렌더링하는 방식을 맞춤설정하세요",
+    "staticGradientTitle": "정적 배경",
+    "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다"
   }
 }

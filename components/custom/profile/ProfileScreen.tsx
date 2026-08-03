@@ -153,7 +153,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                                 ? t('configPanel.individualPlan')
                                 : billing?.subscriptionTier === 'starter'
                                     ? t('configPanel.starterPlan')
-                                    : t('configPanel.promoPlan')
+                                    : t('subscription.planPromo')
                     }
                     onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
                     upgradeLabel={t('subscription.upgrade')}

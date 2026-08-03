@@ -1,0 +1,161 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Cold-start routing gate (app/logged-in/index.tsx).
+//
+// Two invariants live here:
+//   1. Session <-> local-identity coherence is resolved BEFORE any persona /
+//      fact read and before the app shell is entered. A 'reauth' verdict must
+//      leave for /login WITH reauth:'1' — without that param login.tsx
+//      short-circuits on the live session and bounces straight back, an
+//      infinite loop.
+//   2. Onboarding is gated on LOCAL FACTS, never the server onboardingStage.
+import { render, waitFor } from '@testing-library/react-native';
+import React from 'react';
+
+jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
+
+jest.mock('react-native-css-interop/jsx-runtime', () => {
+    const ReactJSXRuntime = require('react/jsx-runtime');
+    return { jsx: ReactJSXRuntime.jsx, jsxs: ReactJSXRuntime.jsxs, Fragment: ReactJSXRuntime.Fragment };
+});
+jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
+    const ReactJSXRuntime = require('react/jsx-dev-runtime');
+    return { jsxDEV: ReactJSXRuntime.jsxDEV, Fragment: ReactJSXRuntime.Fragment };
+});
+
+const mockReplace = jest.fn();
+const mockDismissAll = jest.fn();
+jest.mock('expo-router', () => ({ router: { replace: (...a: any[]) => mockReplace(...a), dismissAll: () => mockDismissAll() } }));
+
+let mockSession: any = { user: { id: 'u1' } };
+jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => ({ data: mockSession }) } }));
+
+const mockClearPreviousUserData = jest.fn(async () => {});
+jest.mock('@/lib/stores', () => ({ clearPreviousUserData: (...a: any[]) => mockClearPreviousUserData(...(a as [])) }));
+
+const mockHasAnyFacts = jest.fn(async () => true);
+jest.mock('@/lib/database/services/fact-service', () => ({ hasAnyFacts: () => mockHasAnyFacts() }));
+
+const mockGetSetting = jest.fn(async (_k: string): Promise<string | null> => 'u1');
+jest.mock('@/lib/database/services/setting-service', () => ({ getSetting: (k: string) => mockGetSetting(k) }));
+
+const mockResolveIdentity = jest.fn(() => 'coherent' as string);
+const mockHasIdentityFault = jest.fn(async () => false);
+jest.mock('@/lib/security/identity-gate', () => ({
+    resolveIdentity: (...a: any[]) => mockResolveIdentity(...(a as [])),
+    hasIdentityFault: () => mockHasIdentityFault(),
+}));
+
+const mockSetUserId = jest.fn();
+const mockHydrateFromDb = jest.fn(async () => {});
+const mockFetchUserPersona = jest.fn(async () => null);
+const mockFetchUserPersonaOrThrow = jest.fn(async () => ({}));
+jest.mock('@/lib/stores/user-store', () => ({
+    useUserStore: {
+        getState: () => ({
+            setUserId: mockSetUserId,
+            hydrateFromDb: mockHydrateFromDb,
+            fetchUserPersona: mockFetchUserPersona,
+            fetchUserPersonaOrThrow: mockFetchUserPersonaOrThrow,
+            userPersona: { onboardingStage: 'FINISHED' },
+        }),
+    },
+}));
+jest.mock('@/lib/stores/network-store', () => ({ useNetworkStore: { getState: () => ({ isConnected: true }) } }));
+jest.mock('@/lib/stores/subscription-store', () => ({ useSubscriptionStore: { getState: () => ({ setCustomerInfo: jest.fn() }) } }));
+jest.mock('@/lib/revenuecat', () => ({ loginRevenueCat: jest.fn(async () => null) }));
+
+import LoggedInIndex from '../logged-in/index';
+
+beforeEach(() => {
+    jest.clearAllMocks();
+    mockSession = { user: { id: 'u1' } };
+    mockGetSetting.mockResolvedValue('u1');
+    mockResolveIdentity.mockReturnValue('coherent');
+    mockHasIdentityFault.mockResolvedValue(false);
+    mockHasAnyFacts.mockResolvedValue(true);
+});
+
+describe('cold-start identity gate', () => {
+    it('reauth verdict leaves for /login with reauth:"1" and never enters the shell', async () => {
+        mockResolveIdentity.mockReturnValue('reauth');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+        // The param is load-bearing: login.tsx redirects a live session back to
+        // /logged-in/onboarding unless reauthMode is on.
+        expect(mockReplace).toHaveBeenCalledWith({ pathname: '/login', params: { reauth: '1' } });
+        expect(mockReplace).toHaveBeenCalledTimes(1);
+        // Nothing local was touched, and no personalized read happened.
+        expect(mockClearPreviousUserData).not.toHaveBeenCalled();
+        expect(mockSetUserId).not.toHaveBeenCalled();
+        expect(mockHydrateFromDb).not.toHaveBeenCalled();
+        expect(mockHasAnyFacts).not.toHaveBeenCalled();
+    });
+
+    it('wipeAndProceed wipes the previous owner before hydrating or counting', async () => {
+        mockResolveIdentity.mockReturnValue('wipeAndProceed');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockHasAnyFacts).toHaveBeenCalled());
+        expect(mockClearPreviousUserData).toHaveBeenCalledWith('u1');
+        const wipeOrder = mockClearPreviousUserData.mock.invocationCallOrder[0];
+        expect(wipeOrder).toBeLessThan(mockHydrateFromDb.mock.invocationCallOrder[0]);
+        expect(wipeOrder).toBeLessThan(mockHasAnyFacts.mock.invocationCallOrder[0]);
+    });
+
+    it('coherent verdict skips the wipe', async () => {
+        mockResolveIdentity.mockReturnValue('coherent');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockHasAnyFacts).toHaveBeenCalled());
+        expect(mockClearPreviousUserData).not.toHaveBeenCalled();
+        expect(mockSetUserId).toHaveBeenCalledWith('u1');
+    });
+
+    it('feeds the session id, the on-disk owner, the fault and connectivity into the verdict', async () => {
+        mockGetSetting.mockResolvedValue('other-user');
+        mockHasIdentityFault.mockResolvedValue(true);
+        mockResolveIdentity.mockReturnValue('reauth');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockResolveIdentity).toHaveBeenCalledWith({
+            sessionUserId: 'u1',
+            cachedUserId: 'other-user',
+            ownershipFault: true,
+            isConnected: true,
+        });
+    });
+
+    it('no local identity at all → back to the launch gate', async () => {
+        mockSession = null;
+        mockGetSetting.mockResolvedValue(null);
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+        expect(mockResolveIdentity).not.toHaveBeenCalled();
+    });
+});
+
+describe('cold-start fact gate', () => {
+    it('routes to the feed when the device holds facts', async () => {
+        mockHasAnyFacts.mockResolvedValue(true);
+        render(<LoggedInIndex />);
+        await waitFor(() =>
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
+        );
+    });
+
+    it('routes to onboarding on 0 facts, whatever the server stage says', async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        render(<LoggedInIndex />);
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
+    });
+
+    it('treats an unreadable fact count as 0 facts (onboarding, not a broken feed)', async () => {
+        mockHasAnyFacts.mockRejectedValue(new Error('db unreadable'));
+        render(<LoggedInIndex />);
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
+    });
+});

@@ -105,9 +105,31 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
     setConfirming(null);
   }, [visible, root]);
 
+  // `publication` / `visits` go to EVERY label — a label with no placeholders
+  // ignores them, and the paywall branch's "Block {{publication}} instead" would
+  // otherwise render its braces verbatim. Matches InlineFeedbackTree.
   const label = useCallback(
-    (node: FeedbackTreeNode) => t(node.labelKey, { defaultValue: node.labelDefault }) as string,
-    [t],
+    (node: FeedbackTreeNode) =>
+      t(node.labelKey, {
+        defaultValue: node.labelDefault,
+        publication: context.publicationName ?? '',
+        visits: context.publicationVisits ?? 0,
+      }) as string,
+    [t, context],
+  );
+
+  /** The optional per-node MESSAGE (v4 `descKey`/`descDefault`), empty when the
+   *  node declares none. Same interpolation set as the label. */
+  const desc = useCallback(
+    (node: FeedbackTreeNode) => {
+      if (!node.descKey && !node.descDefault) return '';
+      return t(node.descKey ?? '', {
+        defaultValue: node.descDefault ?? '',
+        publication: context.publicationName ?? '',
+        visits: context.publicationVisits ?? 0,
+      }) as string;
+    },
+    [t, context],
   );
 
   const fastPathNode = useMemo(() => findNode('not_important'), [findNode]);
@@ -235,7 +257,9 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
 
   // ---- Render --------------------------------------------------------------
 
-  const renderChip = (node: FeedbackTreeNode) => (
+  const renderChip = (node: FeedbackTreeNode) => {
+    const message = desc(node);
+    const chip = (
     <Pressable
       key={node.id}
       accessibilityRole="button"
@@ -262,7 +286,25 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
         ) : null}
       </HStack>
     </Pressable>
-  );
+    );
+
+    if (!message) return chip;
+
+    // Same treatment as the inline surface: the node's own message sits ABOVE
+    // its chip, so it is readable before the tap rather than after it.
+    return (
+      <VStack key={node.id} space="xs">
+        <Text
+          testID={`feedback-tree-desc-${node.id}`}
+          className="text-typography-400"
+          style={{ fontSize: 11, lineHeight: 15 }}
+        >
+          {message}
+        </Text>
+        {chip}
+      </VStack>
+    );
+  };
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={goBack} statusBarTranslucent>

@@ -98,11 +98,7 @@
       "Vận động cơ thể theo cách bạn thích.",
       "Điện thoại sẽ vẫn ở đây sau. Hãy sống trong hiện tại."
     ],
-    "analysedArticles": "{{processed}} {{articleWord}} đã được đăng trong 24 giờ qua, {{analysed}} bài viết đã được phân tích cho bạn, và {{impactful}} bài được xác định là phù hợp với bạn.",
-    "analysedArticlesPending": "{{processed}} {{articleWord}} đã được đăng trong 24 giờ qua.",
     "noiseRemovedSummary": "{{count}} {{articleWord}} giả mồi đã được lọc ra trước khi phân tích.",
-    "articleSingular": "bài viết",
-    "articlePlural": "bài viết",
     "processing": {
       "doneFlash": "Xong rồi, đây là tin tức của bạn",
       "errorFlash": "Chúng tôi không thể tải nội dung mới nhất. Vui lòng thử lại.",
@@ -191,7 +187,13 @@
     },
     "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
     "waitingForNextBatch_one": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
-    "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo"
+    "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
+    "exploreCta": "Khám phá",
+    "statsPublishedPending_other": "{{formatted}} {{articleWord}} đã được đăng trong 24 giờ qua",
+    "statsPublished_other": "đăng {{formatted}} {{articleWord}} trong 24 giờ qua,",
+    "statsAnalysed_other": "phân tích {{formatted}} cho bạn,",
+    "statsRelevant_other": "{{formatted}} có vẻ phù hợp,",
+    "statsRead_other": "và bạn đã đọc {{formatted}}."
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -326,7 +328,8 @@
     "packMissingIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng",
     "retry": "Thử lại",
     "watchGuide": "Xem cách thêm ngôn ngữ vào thiết bị của bạn",
-    "iosLanguageHint": "Chỉ chọn ngôn ngữ này thôi là chưa đủ: bạn cũng cần chọn ngôn ngữ này trong cài đặt ngôn ngữ của iOS."
+    "iosLanguageHint": "Chỉ chọn ngôn ngữ này thôi là chưa đủ: bạn cũng cần chọn ngôn ngữ này trong cài đặt ngôn ngữ của iOS.",
+    "managePacksPrefix": "Để quản lý các ngôn ngữ đã tải, hãy"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -600,7 +603,9 @@
       "submittedConfirmation": "Yêu cầu của bạn đã được gửi và đang chờ xem xét. Chúng tôi sẽ kiểm tra lại trạng thái khi bạn chạm Làm mới.",
       "alreadyPending": "Bạn đã có một yêu cầu mở khóa đang chờ xem xét.",
       "error": "Không thể gửi yêu cầu của bạn. Vui lòng thử lại."
-    }
+    },
+    "topicGenFailed": "Không thể tạo chủ đề cho điều này.",
+    "topicGenRetry": "Thử lại"
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",
@@ -843,7 +848,8 @@
     "headlineDenominatorNone_other": "Mera đã đọc {{count}} tiêu đề · không có cái nào trông liên quan hôm nay.",
     "subTabFeed": "Tổng quan",
     "subTabStories": "Câu chuyện",
-    "subTabSaved": "Đã lưu"
+    "subTabSaved": "Đã lưu",
+    "subTabHistory": "Lịch sử"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
@@ -999,7 +1005,11 @@
     "thanks": "Cảm ơn phản hồi của bạn",
     "seenAck": "Đã hiểu, chúng tôi sẽ hiện ít bài bạn đã xem hơn",
     "nudgeSubscribe": "Đăng ký {{publication}} để mở khóa toàn bộ bài viết",
-    "nudgeBrowse": "Tìm các bài đưa tin liên quan từ nguồn khác"
+    "nudgeBrowse": "Tìm các bài đưa tin liên quan từ nguồn khác",
+    "paywallRelatedOption": "Hiển thị tin bao phủ liên quan",
+    "paywallRelatedDesc": "Một câu chuyện tương tự từ một ấn phẩm khác có thể không có tường lửa thanh toán — hãy kiểm tra các bài viết liên quan.",
+    "paywallSubscribeDesc": "Bạn đã truy cập {{publication}} {{visits}} lần tháng này — hãy cân nhắc đăng ký để có quyền truy cập đầy đủ.",
+    "paywallBlockOption": "Chặn {{publication}} thay vào đó"
   },
   "topicPlan": {
     "title": "Chủ đề mình sẽ theo dõi",
@@ -1011,7 +1021,6 @@
     "saveAll": "Lưu tất cả ({{count}})",
     "delete": "Xóa chủ đề",
     "undo": "Hoàn tác",
-    "highPriority": "Ưu tiên chủ đề",
     "settledTitle": "Đã lưu chủ đề",
     "settledSummary": "{{count}} chủ đề đang hoạt động cho thông tin này."
   },
@@ -1303,6 +1312,14 @@
     "newPinTitle": "Đặt PIN mới",
     "newPinSubtitle": "Chọn PIN 4 chữ số mới",
     "pinChangedTitle": "PIN được cập nhật",
-    "pinChangedDescription": "PIN của bạn đã được thay đổi."
+    "pinChangedDescription": "PIN của bạn đã được thay đổi.",
+    "blurImagesTitle": "Làm mờ ảnh",
+    "blurImagesDescription": "Làm mềm ảnh bài viết trên toàn ứng dụng để các hình ảnh đồ họa hoặc không phù hợp không được hiển thị rõ nét."
+  },
+  "display": {
+    "title": "Hiển thị",
+    "subtitle": "Tùy chỉnh cách Mera hiển thị các yếu tố hình ảnh trên thiết bị này",
+    "staticGradientTitle": "Nền tĩnh",
+    "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ"
   }
 }

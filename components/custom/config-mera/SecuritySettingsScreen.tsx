@@ -10,6 +10,7 @@ import { VStack } from '@/components/ui/vstack';
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
 import logger from '@/lib/logger';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
@@ -35,6 +36,8 @@ const SecuritySettingsScreen: React.FC<SecuritySettingsScreenProps> = ({ onBack 
 
   const lockEnabled = usePinStore((s) => s.lockEnabled);
   const setLockEnabled = usePinStore((s) => s.setLockEnabled);
+  const blurImages = useBlurImagesStore((s) => s.blurImages);
+  const setBlurImages = useBlurImagesStore((s) => s.setBlurImages);
   // Guards the toggle against a second tap while the secure-store write from
   // the first is still in flight.
   const [lockBusy, setLockBusy] = useState(false);
@@ -196,6 +199,24 @@ const SecuritySettingsScreen: React.FC<SecuritySettingsScreenProps> = ({ onBack 
             <MaterialIcons name="chevron-right" size={20} color="#999999" />
           </Pressable>
         )}
+
+        <HStack className="items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg">
+          <HStack space="md" className="items-center flex-1 pr-3">
+            <MaterialIcons
+              name="blur-on"
+              size={24}
+              color={blurImages ? '#10b981' : '#9ca3af'}
+            />
+            <VStack className="flex-1">
+              <Text className="text-base text-white">{t('security.blurImagesTitle')}</Text>
+              <Text size="sm" className="text-gray-400 mt-0.5">
+                {t('security.blurImagesDescription')}
+              </Text>
+            </VStack>
+          </HStack>
+
+          <Switch testID="blur-images-switch" value={blurImages} onToggle={setBlurImages} size="md" />
+        </HStack>
       </VStack>
     </Box>
     </Box>

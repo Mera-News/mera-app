@@ -28,9 +28,17 @@ import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
 import NotificationSettingsScreen from '../config-mera/NotificationSettingsScreen';
 
-// 2-step wizard: 0 = Notifications, 1 = PersonaChat. Both steps are backed by
-// the server OnboardingStage enum, which is authoritative for `currentStep`
-// on mount so refresh/cold-start resumes correctly.
+// 2-step wizard: 0 = Notifications, 1 = PersonaChat. The server OnboardingStage
+// picks which step to RESUME at on mount; it never decides whether the wizard
+// runs at all — that gate is the local fact count (OnboardingScreen /
+// app/logged-in/index.tsx).
+//
+// FINISHED maps to step 1 on purpose, and it is a reachable entry state, not a
+// defensive fallback: a user whose stage is FINISHED but who has zero local
+// facts (they tapped Next through the persona chat) is deliberately sent back
+// in, and the step that captures facts is step 1. The wizard must never
+// auto-advance to completion off the server stage — only the user pressing Next
+// on step 1 calls onComplete().
 const STAGE_TO_STEP: Record<OnboardingStage, number> = {
     [OnboardingStage.Notifications]: 0,
     [OnboardingStage.ProcessingMode]: 1,
@@ -90,12 +98,13 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                             updatePreferences('notificationHours', localHours);
                         }
 
-                        // Server stage is authoritative for which server-backed
-                        // step to show on resume. If FINISHED, the wizard
-                        // shouldn't be mounted anyway (logged-in/index.tsx
-                        // redirects away) — defensively map to the last step.
+                        // Server stage picks the RESUME step only. FINISHED is a
+                        // legitimate entry state now (stage FINISHED + 0 local
+                        // facts re-enters the wizard) and maps to step 1, the
+                        // persona chat — the step that actually captures facts.
+                        // Deliberately no completion shortcut here.
                         const serverStage = userPersona.onboardingStage ?? OnboardingStage.Notifications;
-                        serverStep = STAGE_TO_STEP[serverStage];
+                        serverStep = STAGE_TO_STEP[serverStage] ?? 0;
                     }
 
                     setStep(serverStep);
