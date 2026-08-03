@@ -10,6 +10,7 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import {
@@ -249,11 +250,26 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       className="rounded-lg p-3 flex-row items-center"
       style={{ backgroundColor: reasonBoxColors.backgroundColor }}
     >
-      {/* Left: the priority chip alone. The Mera glyph that briefly lived here
-          moved back to the action row (CardActionBar owns `card-action-mera`),
-          which is now the sole Ask-Mera affordance. Text stays right-aligned and
-          non-italic. */}
-      <RelevanceChip relevance={relevance} />
+      {/* Left column: the priority chip with the Art. 50 disclosure directly
+          beneath it. The Mera glyph that briefly lived here moved back to the
+          action row (CardActionBar owns `card-action-mera`), which is now the
+          sole Ask-Mera affordance. Reason text stays right-aligned and
+          non-italic.
+
+          `items-start` so the chip keeps hugging its own content instead of
+          stretching to the caption's width (RN's default cross-axis stretch),
+          and a maxWidth so a long localized caption wraps rather than squeezing
+          the reason text — the right column is the one that must breathe. */}
+      <VStack className="items-start" style={{ maxWidth: 150 }}>
+        <RelevanceChip relevance={relevance} />
+        {/* Still gated on `reason`: the disclosure's whole contract is that it
+            renders when there IS AI-generated text to disclose (see the
+            component's docblock), so it must not appear next to the streaming
+            placeholder. */}
+        {reason ? (
+          <AiDisclosureCaption color={aiDisclosureColor} align="left" className="mt-1" />
+        ) : null}
+      </VStack>
       {reason ? (
         <Box className="ml-3 flex-1 items-end">
           <TranslatableDynamic
@@ -263,11 +279,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
             className="text-right"
             style={{ color: reasonBoxColors.textColor }}
           />
-          {/* Art. 50 label lives INSIDE the box, under the note it describes —
-              a disclosure floating outside the box read as unrelated chrome.
-              Lighter grey than the note so it stays subordinate while still
-              clearing contrast against the box's hardcoded #374151. */}
-          <AiDisclosureCaption color={aiDisclosureColor} className="mt-1" />
         </Box>
       ) : (
         <Box className="ml-3 flex-1 items-end">
@@ -324,6 +335,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
         onTreePathChanged={feedbackHandlers.onPathChanged}
         onInvokeMera={feedbackHandlers.onInvokeMera}
         onLeafCommitted={feedbackHandlers.onLeafCommitted}
+        onNudge={(n) => feedbackHandlers.onNudge?.(suggestion, n)}
       />
     ) : undefined;
 

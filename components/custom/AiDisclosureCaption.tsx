@@ -31,6 +31,17 @@ interface AiDisclosureCaptionProps {
      * displayed text is AI-generated, so it must not reuse this copy verbatim.
      */
     text?: string;
+    /**
+     * Which edge the row (and its text) hugs. Defaults to 'right' — the
+     * historical behaviour, kept byte-identical for the consumers that sit under
+     * a right-aligned block (tracked stories, story timeline, chat thread).
+     *
+     * The reason boxes pass 'left': the caption moved out from under the
+     * right-aligned reason text and now sits directly beneath the priority chip
+     * in the box's LEFT column, where a right-hugging row would read as
+     * detached from the chip it labels.
+     */
+    align?: 'left' | 'right';
     className?: string;
 }
 
@@ -53,18 +64,20 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
     variant = 'caption',
     text,
     color = DEFAULT_COLOR,
+    align = 'right',
     className,
 }) => {
     const { t } = useTranslation();
     const message = text ?? t('aiDisclosure.caption');
     const compact = variant === 'compact';
+    const left = align === 'left';
 
     return (
         <HStack
-            // `justify-end` + no `flex-1` on the Text: the row hugs its content
-            // and sits flush right, matching the right-aligned reason text it
-            // now sits beneath.
-            className={`items-center justify-end${className ? ` ${className}` : ''}`}
+            // No `flex-1` on the Text either way: the row hugs its content and
+            // sits flush against the chosen edge — flush right under a
+            // right-aligned reason, flush left under the priority chip.
+            className={`items-center ${left ? 'justify-start' : 'justify-end'}${className ? ` ${className}` : ''}`}
             space="xs"
             accessible
             accessibilityLabel={message}
@@ -77,7 +90,7 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
             <Text
                 size={compact ? '2xs' : 'xs'}
                 italic={!compact}
-                className="text-right"
+                className={left ? 'text-left' : 'text-right'}
                 style={{ color }}
             >
                 {message}

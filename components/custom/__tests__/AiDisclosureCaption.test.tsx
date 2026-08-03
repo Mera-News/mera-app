@@ -65,4 +65,29 @@ describe('AiDisclosureCaption', () => {
         expect(text.props.size).toBe('xs');
         expect(text.props.italic).toBe(true);
     });
+
+    // `align` exists so the reason boxes could move this caption out from under
+    // the right-aligned reason text and into the LEFT column, under the priority
+    // chip. The default must stay 'right' — three other consumers (tracked
+    // stories, story timeline, chat thread header) render unchanged.
+    describe('align', () => {
+        it('hugs the RIGHT edge by default — unchanged for the pre-existing consumers', () => {
+            const { getByLabelText, getByText } = render(<AiDisclosureCaption />);
+            expect(getByLabelText('aiDisclosure.caption').props.className).toContain('justify-end');
+            expect(getByText('aiDisclosure.caption').props.className).toBe('text-right');
+        });
+
+        it('hugs the LEFT edge with align="left" (under the priority chip)', () => {
+            const { getByLabelText, getByText } = render(<AiDisclosureCaption align="left" />);
+            const row = getByLabelText('aiDisclosure.caption');
+            expect(row.props.className).toContain('justify-start');
+            expect(row.props.className).not.toContain('justify-end');
+            expect(getByText('aiDisclosure.caption').props.className).toBe('text-left');
+        });
+
+        it('keeps appending an extra className after the alignment classes', () => {
+            const { getByLabelText } = render(<AiDisclosureCaption align="left" className="mt-1" />);
+            expect(getByLabelText('aiDisclosure.caption').props.className).toContain('mt-1');
+        });
+    });
 });
