@@ -20,9 +20,17 @@ jest.mock('../../database/services/inference-job-service', () => ({
 }));
 
 const mockMarkOrphanedFactsAsFailed = jest.fn();
+const mockGetFacts = jest.fn();
 
 jest.mock('../../database/services/fact-service', () => ({
   markOrphanedFactsAsFailed: (...args: unknown[]) => mockMarkOrphanedFactsAsFailed(...args),
+  getFacts: (...args: unknown[]) => mockGetFacts(...args),
+}));
+
+const mockDestroyOrphanedTopics = jest.fn();
+
+jest.mock('../../database/services/topic-service', () => ({
+  destroyOrphanedTopics: (...args: unknown[]) => mockDestroyOrphanedTopics(...args),
 }));
 
 const mockHandleTopicGenJob = jest.fn();
@@ -114,6 +122,8 @@ describe('InferenceQueue', () => {
     mockPruneCompletedJobs.mockResolvedValue(undefined);
     mockGetActiveTopicGenFactIds.mockResolvedValue([]);
     mockMarkOrphanedFactsAsFailed.mockResolvedValue(0);
+    mockGetFacts.mockResolvedValue([]);
+    mockDestroyOrphanedTopics.mockResolvedValue(0);
     mockGetQueueStats.mockResolvedValue({ pending: 0, running: 0, failed: 0, completed: 0 });
     mockGetFailedJobs.mockResolvedValue([]);
     mockDequeueJob.mockResolvedValue(null);

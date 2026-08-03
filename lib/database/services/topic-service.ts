@@ -220,6 +220,29 @@ export async function reactivate(topicId: string): Promise<void> {
 }
 
 /**
+ * Startup repair: destroy topics whose owning fact no longer exists.
+ *
+ * `Fact.destroyCascade` used to delete only the fact row, so every fact
+ * deletion before 2026-08-03 left its topics behind — active, still fetching
+ * feed content for the deleted interest, and swallowing every suggestion they
+ * matched (Dashboard ownership resolution drops rows whose winning fact is
+ * missing). The cascade is fixed, but devices that already deleted facts hold
+ * the orphans forever; this sweep is their one path back to a working
+ * Dashboard. Location topics (`fact_id` null) are not orphans and are skipped.
+ */
+export async function destroyOrphanedTopics(validFactIds: Set<string>): Promise<number> {
+  const owned = await topicsCollection
+    .query(Q.where('fact_id', Q.notEq(null)))
+    .fetch();
+  const orphans = owned.filter((t) => t.factId && !validFactIds.has(t.factId));
+  if (orphans.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(orphans.map((t) => t.prepareDestroyPermanently()));
+  });
+  return orphans.length;
+}
+
+/**
  * Wave 11 — mint `topics` rows for the texts an LLM topic-generation run produced
  * for a fact. This is the gap-fix: live fact-saves used to land topics only in
  * `fact.metadata.topics`, so they never reached the wave-7 feed retrieval (which

@@ -1,4 +1,4 @@
-import { Model } from '@nozbe/watermelondb';
+import { Model, Q } from '@nozbe/watermelondb';
 import { text, json, date, field, writer } from '@nozbe/watermelondb/decorators';
 
 const sanitizeMetadata = (raw: unknown) => raw || undefined;
@@ -39,6 +39,18 @@ export default class Fact extends Model {
   }
 
   @writer async destroyCascade() {
-    await this.batch(this.prepareDestroyPermanently());
+    // The cascade must be real: topics carry this fact's id, and an orphaned
+    // ACTIVE topic keeps fetching and matching feed content for an interest
+    // the user deleted — while the Dashboard drops every suggestion it claims
+    // (ownership resolution requires the fact snapshot). Measured 2026-08-03:
+    // a device with 74 orphaned topics rendered a permanently empty Dashboard.
+    const topics = await this.collections
+      .get('topics')
+      .query(Q.where('fact_id', this.id))
+      .fetch();
+    await this.batch(
+      this.prepareDestroyPermanently(),
+      ...topics.map((t) => t.prepareDestroyPermanently()),
+    );
   }
 }
