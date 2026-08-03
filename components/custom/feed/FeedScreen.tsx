@@ -311,12 +311,18 @@ const FeedScreen: React.FC = () => {
   const [partitionSnapshot, setPartitionSnapshot] = useState<{
     cardStates: Record<string, CardStateRecord>;
     openedArticleIds: Set<string>;
-  }>(() => ({ cardStates: {}, openedArticleIds: new Set() }));
+    /** Clock the staleness demotion is evaluated against, frozen with the rest
+     *  of the snapshot. Without this the sort would re-rank on every render as
+     *  wall-clock crossed a bucket edge — the same drift `FeedListItem.score` is
+     *  frozen at build time to avoid. */
+    at: number;
+  }>(() => ({ cardStates: {}, openedArticleIds: new Set(), at: Date.now() }));
 
   const refreshPartitionSnapshot = useCallback(() => {
     setPartitionSnapshot({
       cardStates: useFeedOrderStore.getState().cardStates,
       openedArticleIds: useOpenedStoriesStore.getState().articleIds,
+      at: Date.now(),
     });
   }, []);
 
@@ -444,6 +450,7 @@ const FeedScreen: React.FC = () => {
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
         pinnedIds,
+        partitionSnapshot.at,
       ),
     [data, partitionSnapshot, pinnedIds],
   );

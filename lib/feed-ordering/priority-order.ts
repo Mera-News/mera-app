@@ -42,6 +42,14 @@ export interface PriorityFacts {
   /** The three-state projection. Optional so the Dashboard can keep passing
    *  `viewed` alone and get byte-identical output. */
   tier?: SeenTier;
+  /** Pre-computed band, overriding `relevanceBandRank(relevance)`.
+   *
+   *  Exists so a SURFACE can apply its own band policy without that policy
+   *  leaking into the shared rule: the Feed demotes stale unseen stories by a
+   *  band or two (see `feed-entries`), which must not follow the Dashboard,
+   *  whose chip order is a hard guarantee. This module stays the generic
+   *  comparator; the policy lives in the caller's projection. */
+  band?: number;
 }
 
 /**
@@ -136,7 +144,7 @@ export function sortByPriority<T>(
       // `tier` when the caller supplies it, else the two-state projection — so a
       // `viewed`-only caller (the Dashboard) gets exactly the previous ordering.
       const tier = f.tier ?? (f.viewed ? 1 : 0);
-      return { item, idx, tier, band: relevanceBandRank(f.relevance) };
+      return { item, idx, tier, band: f.band ?? relevanceBandRank(f.relevance) };
     })
     .sort((a, b) => a.tier - b.tier || a.band - b.band || a.idx - b.idx)
     .map((d) => d.item);

@@ -16,8 +16,13 @@ import {
   buildFeedRows,
   DIVIDER_CAUGHT_UP,
   DIVIDER_OPENED,
+  stalenessBandPenalty,
+  effectiveBand,
+  STALE_ONE_BAND_HOURS,
+  STALE_TWO_BAND_HOURS,
   type SortedFeed,
 } from '../feed-entries';
+import { FEED_HALF_LIFE_HOURS } from '@/lib/stores/feed-list-selector';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -426,6 +431,113 @@ describe('buildFeedRows — the two dividers', () => {
     const out = buildFeedRows([], 0, tierOf(noStates, new Set()));
     expect(out.rows).toEqual([]);
     expect(out.caughtUpIsFooter).toBe(true);
+  });
+});
+
+describe('staleness demotion (tier 0 only)', () => {
+  const NOW = Date.parse('2026-08-04T12:00:00.000Z');
+  const hoursAgo = (h: number) => new Date(NOW - h * 3_600_000).toISOString();
+
+  /** A FeedListItem with a real `firstPubDate` — the field the card's age label
+   *  is rendered from, and what the demotion keys on. */
+  function aged(id: string, relevance: number, ageH: number, articleId?: string) {
+    const it = item(id, relevance, articleId);
+    (it.suggestion as unknown as { firstPubDate: string }).firstPubDate = hoursAgo(ageH);
+    return it;
+  }
+
+  it('buckets are derived from FEED_HALF_LIFE_HOURS, not hand-picked', () => {
+    expect(STALE_ONE_BAND_HOURS).toBe(FEED_HALF_LIFE_HOURS * 2); // 12h
+    expect(STALE_TWO_BAND_HOURS).toBe(FEED_HALF_LIFE_HOURS * 4); // 24h
+  });
+
+  it('penalty steps at the two boundaries', () => {
+    expect(stalenessBandPenalty(0)).toBe(0);
+    expect(stalenessBandPenalty(STALE_ONE_BAND_HOURS - 0.1)).toBe(0);
+    expect(stalenessBandPenalty(STALE_ONE_BAND_HOURS)).toBe(1);
+    expect(stalenessBandPenalty(STALE_TWO_BAND_HOURS - 0.1)).toBe(1);
+    expect(stalenessBandPenalty(STALE_TWO_BAND_HOURS)).toBe(2);
+    // Unknown age ⇒ NO penalty: a data defect must not bury a story.
+    expect(stalenessBandPenalty(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(stalenessBandPenalty(Number.NaN)).toBe(0);
+  });
+
+  it('demotes an unseen story by one band at 12h and two at 24h', () => {
+    expect(effectiveBand(aged('a', 0.9, 1), 0, NOW)).toBe(1); // high, fresh
+    expect(effectiveBand(aged('a', 0.9, 13), 0, NOW)).toBe(2); // → medium
+    expect(effectiveBand(aged('a', 0.9, 30), 0, NOW)).toBe(3); // → low
+  });
+
+  it('EMERGENCY floors at band 1 — a big development still surfaces', () => {
+    expect(effectiveBand(aged('e', 1.2, 1), 0, NOW)).toBe(0);
+    expect(effectiveBand(aged('e', 1.2, 13), 0, NOW)).toBe(1);
+    expect(effectiveBand(aged('e', 1.2, 47), 0, NOW)).toBe(1); // never worse
+  });
+
+  it('clamps at the existing bottom band — no new band value is invented', () => {
+    expect(effectiveBand(aged('l', 0.35, 30), 0, NOW)).toBe(4);
+  });
+
+  it('does NOT touch tiers 1 and 2 — history keeps the order it was read in', () => {
+    const old = aged('o', 0.9, 40);
+    expect(effectiveBand(old, 1, NOW)).toBe(1);
+    expect(effectiveBand(old, 2, NOW)).toBe(1);
+  });
+
+  it('does NOT demote a row whose date is missing or unparseable', () => {
+    // Opposite of feedScore's rule, on purpose: there an unknown date must not
+    // win on freshness; here it must not incur a penalty. Degrade toward showing.
+    const noDate = item('x', 0.9);
+    expect(effectiveBand(noDate, 0, NOW)).toBe(1); // unchanged high
+
+    const bad = item('y', 0.9);
+    (bad.suggestion as unknown as { firstPubDate: string }).firstPubDate = 'not-a-date';
+    expect(effectiveBand(bad, 0, NOW)).toBe(1);
+  });
+
+  it('falls back to createdAt when firstPubDate is absent (matches the card label)', () => {
+    const it = item('z', 0.9);
+    (it.suggestion as unknown as { createdAt: string }).createdAt = hoursAgo(30);
+    expect(effectiveBand(it, 0, NOW)).toBe(3);
+  });
+
+  // The user-visible complaint, end to end.
+  it("REGRESSION: today's medium story outranks yesterday's high one", () => {
+    const data = [aged('yesterday-high', 0.9, 30), aged('today-med', 0.6, 2)];
+    expect(ids(sortFeedEntries(data, noStates, new Set(), [], NOW))).toEqual([
+      'today-med',
+      'yesterday-high',
+    ]);
+  });
+
+  it('a fresh HIGH still beats a fresh MEDIUM — relevance still leads', () => {
+    const data = [aged('med', 0.6, 1), aged('high', 0.9, 1)];
+    expect(ids(sortFeedEntries(data, noStates, new Set(), [], NOW))).toEqual(['high', 'med']);
+  });
+
+  it('an aged EMERGENCY still outranks a fresh medium', () => {
+    const data = [aged('med-fresh', 0.6, 1), aged('emergency-old', 1.2, 40)];
+    expect(ids(sortFeedEntries(data, noStates, new Set(), [], NOW))).toEqual([
+      'emergency-old',
+      'med-fresh',
+    ]);
+  });
+
+  it('never reorders across tiers — a stale unseen card still beats a seen one', () => {
+    const data = [aged('seen-high', 0.9, 1, 'art-seen'), aged('unseen-stale', 0.9, 40)];
+    const out = ids(sortFeedEntries(data, { 'seen-high': viewed() }, new Set(), [], NOW));
+    expect(out).toEqual(['unseen-stale', 'seen-high']);
+  });
+
+  it('the pinned prefix is immune — pinned rows never re-rank by age', () => {
+    const data = [aged('p-stale', 0.9, 40), aged('fresh', 0.9, 1)];
+    const out = sortFeedEntries(data, noStates, new Set(), ['p-stale'], NOW);
+    expect(ids(out)).toEqual(['p-stale', 'fresh']);
+  });
+
+  it('countUnviewed is unaffected — staleness changes the band, never the tier', () => {
+    const data = [aged('a', 0.9, 40), aged('b', 0.6, 1)];
+    expect(countUnviewed(data, noStates, new Set())).toBe(2);
   });
 });
 
