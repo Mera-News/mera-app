@@ -1,0 +1,21 @@
+{
+  "description": "A NON-confirmation ('thanks!') after the same invitation. 'thanks' is gratitude, not consent, so runCalibration must NOT fire. This is the over-trigger guard for the widened history window.",
+  "knownFacts": "- 'location: residence': Lives in Porto Santo, Madeira, Portugal, Europe",
+  "wire": [
+    {
+      "role": "user",
+      "content": "Mera's on-device ranking disagreed with its own judgement 59 times lately. Recalibrate to close the gap."
+    },
+    {
+      "role": "assistant",
+      "content": "Would you like me to go ahead and recalibrate the scoring to close that gap?"
+    },
+    {
+      "role": "user",
+      "content": "thanks!"
+    }
+  ],
+  "expect": {
+    "toolNotCalled": "runCalibration"
+  }
+}
