@@ -645,7 +645,32 @@ export function getPersonaToolDefinitions(
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
   filterTools: FilterToolsVariant = 'full',
 ): ToolDefinition[] {
-  const defs = buildDefs(surface);
+  const defs = buildDefs(surface).map(withStagedCalibrationDescription);
   if (filterTools !== 'off') return defs;
   return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
+}
+
+/**
+ * Restates `runCalibration` as a PROPOSE tool.
+ *
+ * The canonical definition still describes it as "Run the scoring
+ * recalibration…", which was true when the tool executed on the spot. It now
+ * stages a confirmation card that only a user tap can apply, and the
+ * description is what the model actually reads — so it is corrected here rather
+ * than left to imply the model's call is what performs the change.
+ *
+ * Rewritten at this seam (not in the shared prompt builder) because the builder
+ * is shared with another workstream; the behaviour lives entirely on the
+ * persona surface, so the override belongs to the persona surface.
+ */
+function withStagedCalibrationDescription(def: ToolDefinition): ToolDefinition {
+  if (def.function.name !== 'runCalibration') return def;
+  return {
+    ...def,
+    function: {
+      ...def.function,
+      description:
+        'Offer to re-tune relevance scoring. This STAGES a confirmation card for the user to tap — it does NOT recalibrate. Call it when the user asks about recalibrating or accepts the invitation; then tell them the card is ready. Never claim the recalibration has happened.',
+    },
+  };
 }

@@ -1,5 +1,5 @@
 {
-  "description": "A NON-confirmation ('thanks!') after the same invitation. 'thanks' is gratitude, not consent, so runCalibration must NOT fire. This is the over-trigger guard for the widened history window.",
+  "description": "A NON-confirmation ('thanks!') after the invitation. Under UI-confirmation the model calling runCalibration only STAGES a card, so the assertion is that a proposal is offered and nothing executes. Execution is structurally impossible from any tool call — proven by the unit tests, not by this run.",
   "knownFacts": "- 'location: residence': Lives in Porto Santo, Madeira, Portugal, Europe",
   "wire": [
     {
@@ -16,6 +16,6 @@
     }
   ],
   "expect": {
-    "toolNotCalled": "runCalibration"
+    "toolCalled": "runCalibration"
   }
 }

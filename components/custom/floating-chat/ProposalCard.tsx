@@ -233,6 +233,14 @@ export function actionToRow(action: ProposalAction): ActionRow {
         labelDefault: 'Retire a topic',
         detail: action.topicText,
       };
+    case 'run_calibration':
+      // The Confirm button on this row is the ONLY thing that recalibrates.
+      return {
+        icon: 'tune',
+        labelKey: 'calibration.actionRecalibrate',
+        labelDefault: 'Re-tune relevance scoring',
+        detail: undefined,
+      };
     default:
       // Exhaustiveness guard — a future action type still renders a bare row.
       return { icon: 'tune', labelKey: 'articleFeedback.proposalTitle' };
@@ -277,7 +285,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       : proposal.actions;
     setIsApplying(true);
     try {
-      await executeProposalActions(toApply);
+      // The ONLY caller allowed to apply user-confirmed-only actions: this
+      // runs from the Confirm button's onPress, i.e. a real tap.
+      await executeProposalActions(toApply, { confirmedByUser: true });
     } finally {
       setIsApplying(false);
     }

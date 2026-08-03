@@ -212,6 +212,18 @@ export type ProposalAction =
    *  trackStoryWithProposal (embedded so the confirm is reconstructable from the
    *  persisted tool call, with no store read). */
   | { type: 'track_story'; label: string; searchText: string; subject: TrackFeedbackSubject }
+  // -- Scoring recalibration (M-P5c) — UI-CONFIRMED ONLY --
+  /** Re-tune the on-device scoring constants from the retained override sample.
+   *
+   *  Staged, never called directly. MEASURED 2026-08-03 against the real
+   *  gateway: with the invitation in history the model called the old execute-
+   *  immediately `runCalibration` tool on a bare "thanks!" 20/20 times, and an
+   *  explicit "this is the ONLY action a confirmation may trigger" prompt block
+   *  did NOT change that (also 20/20). Prompt wording is therefore not a
+   *  consent gate, so consent moved to the UI: this action executes only when
+   *  the user taps Confirm on the ProposalCard. The agent's `applyProposal`
+   *  tool deliberately REFUSES to apply it, so no phrasing can execute it. */
+  | { type: 'run_calibration' }
   | { type: 'update_fact'; fact_id: string; new_statement: string }
   | { type: 'delete_fact'; fact_id: string }
   | { type: 'add_topics'; fact_id: string; topics: string[] }

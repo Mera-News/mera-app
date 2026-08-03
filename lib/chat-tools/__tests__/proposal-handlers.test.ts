@@ -30,6 +30,11 @@ jest.mock('../../database/services/persona-action-executor', () => ({
     Promise.resolve({ applied: true, changeLogId: 'cl-1', summary: 'ok' }),
   ),
 }));
+const mockRunCalibration = jest.fn();
+jest.mock('../../database/services/calibration-service', () => ({
+  runCalibration: (...args: unknown[]) => mockRunCalibration(...args),
+}));
+
 jest.mock('../../tracking/track-actions', () => ({
   trackStoryWithProposal: jest.fn(() => Promise.resolve()),
 }));
@@ -453,5 +458,61 @@ describe('executeProposalActions — track_story (follow-in-chat)', () => {
     expect(result.applied).toBe(0);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('mint boom');
+  });
+});
+
+// --- run_calibration: the UI-CONFIRMED action -------------------------------
+// This executor is reached from ProposalCard's Confirm button (a real tap).
+// PersonaUpdateAgent.applyProposal strips the action before delegating here, so
+// this path is unreachable from a model tool call — see PersonaUpdateAgent.test.
+describe('run_calibration', () => {
+  beforeEach(() => mockRunCalibration.mockReset());
+
+  it('recalibrates and summarises when tweaks were applied', async () => {
+    mockRunCalibration.mockResolvedValue({ status: 'applied', applied: { W_TOPIC: 0.1 } });
+
+    const result = await executeProposalActions([{ type: 'run_calibration' }], { confirmedByUser: true });
+
+    expect(mockRunCalibration).toHaveBeenCalledTimes(1);
+    expect(result.applied).toBe(1);
+    expect(result.summaries[0]).toMatch(/recalibrated/i);
+  });
+
+  it('summarises a no-op run without reporting an error', async () => {
+    mockRunCalibration.mockResolvedValue({ status: 'no_change' });
+
+    const result = await executeProposalActions([{ type: 'run_calibration' }], { confirmedByUser: true });
+
+    expect(result.applied).toBe(1);
+    expect(result.errors).toHaveLength(0);
+    expect(result.summaries[0]).toMatch(/no changes/i);
+  });
+
+  it('reports an error when the calibration run fails', async () => {
+    mockRunCalibration.mockResolvedValue({ status: 'failed' });
+
+    const result = await executeProposalActions([{ type: 'run_calibration' }], { confirmedByUser: true });
+
+    expect(result.applied).toBe(0);
+    expect(result.errors).toHaveLength(1);
+  });
+
+  it('REFUSES to run without an explicit user confirmation (the default)', async () => {
+    // The single seam that makes "no phrasing can execute it" true for every
+    // caller — including agents added later that forget to filter.
+    const result = await executeProposalActions([{ type: 'run_calibration' }]);
+
+    expect(mockRunCalibration).not.toHaveBeenCalled();
+    expect(result.applied).toBe(0);
+  });
+
+  it('still applies co-staged actions when it refuses the calibration', async () => {
+    const result = await executeProposalActions([
+      { type: 'run_calibration' },
+      { type: 'add_fact', statement: 'Follows Formula 1' },
+    ]);
+
+    expect(mockRunCalibration).not.toHaveBeenCalled();
+    expect(result.applied).toBe(1);
   });
 });

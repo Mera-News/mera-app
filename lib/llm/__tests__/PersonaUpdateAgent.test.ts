@@ -418,33 +418,51 @@ describe('PersonaUpdateAgent', () => {
       });
     });
 
-    describe('runCalibration', () => {
-      it('calls calibrationService.runCalibration and returns outcome + a human summary (applied)', async () => {
-        mockRunCalibration.mockResolvedValue({ status: 'applied', applied: { W_TOPIC: 0.1 } });
+    describe('runCalibration (stages, never executes)', () => {
+      // Consent moved from the model's reading of a message to a UI tap.
+      // Measured 2026-08-03 against the real gateway: with the invitation in
+      // history, a bare "thanks!" produced this call 20/20 times, and an
+      // explicit "confirmation only" <context> block did not change that.
+      it('stages a run_calibration proposal instead of recalibrating', async () => {
         const agent = makeAgent();
         const result = await agent.executeTool('runCalibration', {});
 
-        expect(mockRunCalibration).toHaveBeenCalled();
-        expect(result.result).toMatchObject({
-          status: 'applied',
-          summary: expect.stringContaining('applied'),
+        expect(mockRunCalibration).not.toHaveBeenCalled();
+        expect(result.result).toMatchObject({ staged: true });
+        expect(result.sideEffects?.proposal?.actions).toEqual([{ type: 'run_calibration' }]);
+      });
+
+      it('refuses to apply its own proposal — only a tap can', async () => {
+        mockFloatingChatGetState.mockReturnValue({
+          proposal: { id: 'p-1', explanation: 'e', expectedEffects: 'x', actions: [{ type: 'run_calibration' }] },
         });
+        const agent = makeAgent();
+        const result = await agent.executeTool('applyProposal', {});
+
+        // The second half of the guarantee: staging would be pointless if the
+        // model could then decide the user said yes and apply it.
+        expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+        expect(mockRunCalibration).not.toHaveBeenCalled();
+        expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+        // The card must survive so the user can still tap it.
+        expect(result.sideEffects?.proposalResolved).toBeUndefined();
       });
 
-      it('surfaces a no_change summary', async () => {
-        mockRunCalibration.mockResolvedValue({ status: 'no_change' });
+      it('still applies the OTHER actions in a mixed proposal', async () => {
+        mockFloatingChatGetState.mockReturnValue({
+          proposal: {
+            id: 'p-2', explanation: 'e', expectedEffects: 'x',
+            actions: [{ type: 'run_calibration' }, { type: 'add_suppression', suppressionPattern: 'gossip' }],
+          },
+        });
         const agent = makeAgent();
-        const result = await agent.executeTool('runCalibration', {});
-        expect(result.result).toMatchObject({ status: 'no_change' });
-        expect(String(result.result.summary)).toMatch(/no changes/i);
-      });
+        const result = await agent.executeTool('applyProposal', {});
 
-      it('surfaces a failed summary', async () => {
-        mockRunCalibration.mockResolvedValue({ status: 'failed' });
-        const agent = makeAgent();
-        const result = await agent.executeTool('runCalibration', {});
-        expect(result.result).toMatchObject({ status: 'failed' });
-        expect(String(result.result.summary)).toMatch(/could not/i);
+        expect(mockExecuteProposalActions).toHaveBeenCalledWith([
+          { type: 'add_suppression', suppressionPattern: 'gossip' },
+        ]);
+        expect(result.result).toMatchObject({ awaitingUserConfirmation: true });
+        expect(result.sideEffects?.proposalResolved).toBeUndefined();
       });
     });
 

@@ -9,7 +9,6 @@ import {
   handleUpdateUserConfig,
 } from '../../chat-tools/tool-handlers';
 import { getFacts } from '../../database/services/fact-service';
-import { runCalibration } from '../../database/services/calibration-service';
 import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
@@ -36,6 +35,7 @@ import { normalizeToolName } from '@/lib/news-harness/persona-management/tool-na
 import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
   IAgent,
+  StagedProposal,
   ToolDefinition,
   ToolExecutionResult,
 } from '../types';
@@ -337,12 +337,42 @@ export class PersonaUpdateAgent implements IAgent {
       case 'applyProposal': {
         const proposal = useFloatingChatStore.getState().proposal;
         if (!proposal) return { result: { error: 'no pending proposal' } };
+
+        // UI-ONLY actions are stripped here. This is the second half of the
+        // consent guarantee: staging alone would be pointless if the model
+        // could then apply its own proposal by deciding the user said yes —
+        // which is exactly the judgement it was measured getting wrong. Only
+        // ProposalCard's Confirm button reaches these.
+        const uiOnly = proposal.actions.filter((a) => a.type === 'run_calibration');
+        const applicable = proposal.actions.filter((a) => a.type !== 'run_calibration');
+
+        if (applicable.length === 0) {
+          return {
+            result: {
+              applied: 0,
+              awaitingUserConfirmation: true,
+              message:
+                'This change needs the user to tap Confirm on the card. Tell them it is ready and waiting; do not claim it is done.',
+            },
+          };
+        }
+
         // Same executor as the article surface — one seam, one audit trail.
         const { applied, errors, summaries, changeLogIds } =
-          await executeProposalActions(proposal.actions);
+          await executeProposalActions(applicable);
         return {
-          result: { applied, errors, summaries, changeLogIds },
-          sideEffects: { proposalResolved: 'applied' },
+          result: {
+            applied,
+            errors,
+            summaries,
+            changeLogIds,
+            ...(uiOnly.length > 0 ? { awaitingUserConfirmation: true } : {}),
+          },
+          // Only resolve when nothing is still waiting on a tap — otherwise the
+          // card would vanish before the user could confirm it.
+          ...(uiOnly.length === 0
+            ? { sideEffects: { proposalResolved: 'applied' as const } }
+            : {}),
         };
       }
 
@@ -350,18 +380,32 @@ export class PersonaUpdateAgent implements IAgent {
         return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
 
       case 'runCalibration': {
-        // The user was invited to recalibrate scoring (calibration notification)
-        // and confirmed in chat. Self-contained — makes ONE gateway round-trip and
-        // persists the tuned overrides. Include a human summary so the agent can
-        // report the outcome in its reply.
-        const outcome = await runCalibration();
-        const summary =
-          outcome.status === 'applied'
-            ? 'Recalibration applied — your scoring has been tuned.'
-            : outcome.status === 'no_change'
-              ? 'Recalibration ran, but no changes were needed.'
-              : 'Recalibration could not be completed right now — please try again later.';
-        return { result: { ...outcome, summary } };
+        // STAGES a confirmation card. Does NOT recalibrate.
+        //
+        // This tool used to run the recalibration outright, which made the
+        // model's reading of a message the consent gate. Measured against the
+        // real gateway on 2026-08-03: once the invitation was in history, a bare
+        // "thanks!" produced the call 20/20 times, and adding an explicit
+        // "confirmation only" block to <context> did not change that (also
+        // 20/20) — while an explicit refusal WAS respected. The model reads a
+        // polite acknowledgement as assent, and no wording fixed it.
+        //
+        // So consent moved out of the prompt and into the UI: this stages a
+        // `run_calibration` proposal, ProposalCard renders it, and the action
+        // executes only when the user taps Confirm. The model can still be
+        // wrong about WHEN to offer — it can no longer be wrong about whether
+        // the user agreed.
+        const proposal: StagedProposal = {
+          id: `proposal-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          explanation: 'Re-tune how Mera scores relevance, using your recent corrections.',
+          expectedEffects:
+            'Scoring constants shift by at most ±20%. Reversible from your change history.',
+          actions: [{ type: 'run_calibration' }],
+        };
+        return {
+          result: { staged: true, proposalId: proposal.id },
+          sideEffects: { proposal },
+        };
       }
 
       default:

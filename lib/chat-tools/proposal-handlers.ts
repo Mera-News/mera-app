@@ -56,13 +56,45 @@ async function resolveActiveTopicId(topicText: string): Promise<string | null> {
  * invertible persona_change_log row (so we never double-log here). Never throws;
  * failures are collected into `errors`. Finishes with a fact-mutation notify.
  */
+/**
+ * Actions that a MODEL may stage but may never apply — only an explicit user
+ * tap can. Enforced here, at the single seam every caller goes through, rather
+ * than in each agent: there are three call sites today (ProposalCard's Confirm
+ * button, PersonaUpdateAgent.applyProposal, ArticleFeedbackAgent.applyProposal)
+ * and a per-agent guard would silently miss the next one.
+ */
+const USER_CONFIRMED_ONLY_ACTIONS: ReadonlySet<ProposalAction['type']> = new Set([
+  'run_calibration',
+]);
+
+export interface ExecuteProposalOptions {
+  /**
+   * True ONLY when a real user tap is driving this call (ProposalCard's Confirm
+   * button). Defaults to false, so any agent-driven path — present or future —
+   * cannot apply a USER_CONFIRMED_ONLY action however the model phrases its
+   * request. Never set this from a tool handler.
+   */
+  confirmedByUser?: boolean;
+}
+
 export async function executeProposalActions(
-  actions: ProposalAction[],
+  allActions: ProposalAction[],
+  options: ExecuteProposalOptions = {},
 ): Promise<ExecuteProposalResult> {
   const errors: string[] = [];
   const summaries: string[] = [];
   const changeLogIds: string[] = [];
   let applied = 0;
+
+  const actions = options.confirmedByUser
+    ? allActions
+    : allActions.filter((a) => {
+        if (!USER_CONFIRMED_ONLY_ACTIONS.has(a.type)) return true;
+        logger.warn('[proposal-handlers] refused a user-confirmed-only action', {
+          type: a.type,
+        });
+        return false;
+      });
 
   // Route a rails-backed action through the executor and fold its result in.
   const runRails = async (personaAction: PersonaAction, label: string): Promise<void> => {
@@ -293,6 +325,32 @@ export async function executeProposalActions(
             searchText,
           });
           summaries.push(`Following "${label || searchText}"`);
+          applied++;
+          break;
+        }
+        case 'run_calibration': {
+          // The ONLY execution path for recalibration. Reached from the
+          // ProposalCard's Confirm button (a real tap) — never from a model
+          // tool call, because PersonaUpdateAgent.applyProposal strips this
+          // action before delegating here. See the ProposalAction doc comment
+          // for the measurement that moved consent out of the prompt.
+          // Lazily required, mirroring PersonaUpdateAgent.loadKnownPublicationNames:
+          // a static import would drag the calibration service — and with it the
+          // settings/WatermelonDB and cloudComplete graphs — into every consumer
+          // of this executor, for a branch only a calibration confirm reaches.
+          /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+          const { runCalibration } =
+            require('../database/services/calibration-service') as typeof import('../database/services/calibration-service');
+          const outcome = await runCalibration();
+          if (outcome.status === 'failed') {
+            errors.push('run_calibration: recalibration could not be completed');
+            break;
+          }
+          summaries.push(
+            outcome.status === 'applied'
+              ? 'Recalibrated scoring to match your corrections'
+              : 'Recalibration ran — no changes were needed',
+          );
           applied++;
           break;
         }
