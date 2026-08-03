@@ -68,8 +68,9 @@ describe('AiDisclosureCaption', () => {
 
     // `align` exists so the reason boxes could move this caption out from under
     // the right-aligned reason text and into the LEFT column, under the priority
-    // chip. The default must stay 'right' — three other consumers (tracked
-    // stories, story timeline, chat thread header) render unchanged.
+    // chip. The default must stay 'right' — the chat thread header is the one
+    // remaining consumer that relies on it (the tracked-stories surfaces have
+    // since moved to align="left", under their left-aligned headings).
     describe('align', () => {
         it('hugs the RIGHT edge by default — unchanged for the pre-existing consumers', () => {
             const { getByLabelText, getByText } = render(<AiDisclosureCaption />);
