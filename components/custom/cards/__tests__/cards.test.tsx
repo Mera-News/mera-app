@@ -77,6 +77,7 @@ jest.mock('lucide-react-native', () => {
     ThumbsUp: (p: any) => <View testID="icon-thumbsup" fill={p.fill} color={p.color} />,
     ThumbsDown: (p: any) => <View testID="icon-thumbsdown" fill={p.fill} color={p.color} />,
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
+    Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
     Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
   };
 });

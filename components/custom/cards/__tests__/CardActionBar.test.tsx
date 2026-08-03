@@ -29,6 +29,7 @@ jest.mock('lucide-react-native', () => {
     ThumbsUp: (p: any) => <View testID="icon-thumbsup" fill={p.fill} color={p.color} />,
     ThumbsDown: (p: any) => <View testID="icon-thumbsdown" fill={p.fill} color={p.color} />,
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
+    Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
     Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
   };
 });
@@ -43,19 +44,25 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
   const onAskMera = jest.fn();
   const onToggleSave = jest.fn();
   const onShare = jest.fn();
+  const onTrack = jest.fn();
   const utils = render(
     <CardActionBar
       verdict={overrides.verdict ?? null}
+      provisional={overrides.provisional}
       saved={overrides.saved ?? false}
       onLike={onLike}
       onDislike={onDislike}
       onAskMera={onAskMera}
-      onToggleSave={onToggleSave}
+      onToggleSave={'onToggleSave' in overrides ? overrides.onToggleSave : onToggleSave}
+      // Defaults to ABSENT — the feed card's shape. Only the detail screens and
+      // the standalone card pass a track handler.
+      onTrack={'onTrack' in overrides ? overrides.onTrack : undefined}
+      tracked={overrides.tracked}
       onShare={'onShare' in overrides ? overrides.onShare : onShare}
       horizontalPadding={overrides.horizontalPadding}
     />,
   );
-  return { ...utils, onLike, onDislike, onAskMera, onToggleSave, onShare };
+  return { ...utils, onLike, onDislike, onAskMera, onToggleSave, onShare, onTrack };
 }
 
 describe('CardActionBar', () => {
@@ -100,6 +107,34 @@ describe('CardActionBar', () => {
     expect(getByTestId('icon-thumbsup').props.fill).toBe('none');
   });
 
+  // D15/F3, and the whole reason the detail screens adopted this row rather
+  // than being restyled in place. Their old treatment carried these three
+  // states in the button's BACKGROUND (orange fill = committed, 18% tint =
+  // provisional, transparent = none), so deleting the circle — the actual ask —
+  // would have collapsed provisional into committed. Here COLOUR says "the
+  // verdict is recorded" and FILL says "a reason backs it", which survives
+  // having no background at all. Pin both halves so a future tidy-up of the
+  // fill logic cannot silently re-merge the two states.
+  it('shows a provisional like coloured but HOLLOW, and a committed one filled', () => {
+    const provisional = setup({ verdict: 'like', provisional: true });
+    expect(provisional.getByTestId('icon-thumbsup').props.color).toBe('#22C55E');
+    expect(provisional.getByTestId('icon-thumbsup').props.fill).toBe('none');
+
+    const committed = setup({ verdict: 'like', provisional: false });
+    expect(committed.getByTestId('icon-thumbsup').props.color).toBe('#22C55E');
+    expect(committed.getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
+  });
+
+  it('shows a provisional dislike coloured but HOLLOW, and a committed one filled', () => {
+    const provisional = setup({ verdict: 'dislike', provisional: true });
+    expect(provisional.getByTestId('icon-thumbsdown').props.color).toBe('#EF4444');
+    expect(provisional.getByTestId('icon-thumbsdown').props.fill).toBe('none');
+
+    const committed = setup({ verdict: 'dislike', provisional: false });
+    expect(committed.getByTestId('icon-thumbsdown').props.color).toBe('#EF4444');
+    expect(committed.getByTestId('icon-thumbsdown').props.fill).toBe('#EF4444');
+  });
+
   // Item F1-1: the label was the constant "Saved" on every card, so a screen
   // reader could not tell saved from unsaved and it lied on unsaved cards.
   it('labels the bookmark by STATE: Save when unsaved, Remove when saved', () => {
@@ -128,5 +163,41 @@ describe('CardActionBar', () => {
     const { queryByTestId, queryByLabelText } = setup({ onShare: undefined });
     expect(queryByTestId('icon-share')).toBeNull();
     expect(queryByLabelText('articleDetail.share')).toBeNull();
+  });
+
+  // The track button exists for the detail screens and the standalone card,
+  // which had it before they adopted this row. Feed cards pass no handler and
+  // must keep showing nothing — the affordance is deliberately absent there.
+  it('hides the track icon by default (the feed card shape)', () => {
+    const { queryByTestId, queryByLabelText } = setup();
+    expect(queryByTestId('card-action-track')).toBeNull();
+    expect(queryByTestId('icon-crosshair')).toBeNull();
+    expect(queryByLabelText('trackedStories.trackAction')).toBeNull();
+  });
+
+  it('renders the track icon and fires onTrack when a track handler is provided', () => {
+    const onTrack = jest.fn();
+    const { getByTestId } = setup({ onTrack });
+    expect(getByTestId('icon-crosshair')).toBeTruthy();
+    fireEvent.press(getByTestId('card-action-track'));
+    expect(onTrack).toHaveBeenCalledTimes(1);
+  });
+
+  it('labels the track button by STATE and accents it when tracked', () => {
+    const untracked = setup({ onTrack: jest.fn(), tracked: false });
+    expect(untracked.queryByLabelText('trackedStories.trackAction')).toBeTruthy();
+    expect(untracked.getByTestId('icon-crosshair').props.color).toBe('#FFFFFF');
+
+    const tracked = setup({ onTrack: jest.fn(), tracked: true });
+    expect(tracked.queryByLabelText('trackedStories.untrackAction')).toBeTruthy();
+    expect(tracked.getByTestId('icon-crosshair').props.color).toBe('rgb(231,138,83)');
+  });
+
+  // The detail screens' `save` prop is optional, so the bookmark has to be able
+  // to disappear rather than render a toggle that toggles nothing.
+  it('hides the bookmark when no save handler is provided', () => {
+    const { queryByTestId, queryByLabelText } = setup({ onToggleSave: undefined });
+    expect(queryByTestId('icon-bookmark')).toBeNull();
+    expect(queryByLabelText('savedSuggestions.saveAction')).toBeNull();
   });
 });

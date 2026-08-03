@@ -1,8 +1,25 @@
 // CardActionBar — the Instagram-style action row under a story card. Borderless
 // icons, no pills, no backgrounds: Mera · thumb-up · thumb-down · bookmark ·
-// (optional) share, distributed EVENLY across the row. Shared by the For You
-// feed (FeedScreen) and the fact feed (FactFeedScreen) via the one suggestion
-// card (ArticleSuggestionCard).
+// (optional) track · (optional) share, distributed EVENLY across the row.
+//
+// THE one action row. Consumers:
+//   - ArticleSuggestionCard — the For You feed (FeedScreen) and the fact feed
+//     (FactFeedScreen).
+//   - ArticleFeedbackPrompt — the article + suggestion DETAIL screens.
+//   - ArticleActionsRow — the standalone card (Saved list).
+// The latter two used to hand-roll their own row of 48pt round,
+// primary-orange-outlined buttons. They were converted to this component
+// because the circle was load-bearing for state, not just decoration: it was
+// the ONLY carrier of the D15 provisional treatment (orange fill = committed,
+// 18% tint = recorded-without-a-reason, transparent = none). Dropping the
+// circle there — the user's ask — would have collapsed provisional and
+// committed into the same pixels, i.e. reintroduced F3. This row already
+// encodes the same three states without a background (colour = the verdict is
+// registered, FILL = it has been backed by a reason), so converging was the
+// only way to honour the visual ask without losing the state. That is also why
+// a liked article now reads GREEN on the detail screens rather than orange:
+// deliberate card parity, chosen over the literal "make them white", because
+// all-white cannot distinguish recorded from not-recorded.
 //
 // The Mera glyph is DELIBERATELY here as well as on the rationale block
 // ("Mera's voice" — see ArticleSuggestionCard). It was briefly removed from this
@@ -22,7 +39,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
-import { ThumbsUp, ThumbsDown, Bookmark, Share2 } from 'lucide-react-native';
+import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share2 } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -40,7 +57,18 @@ interface CardActionBarProps {
   onDislike: () => void;
   /** Ask Mera. The SAME handler the rationale block's glyph calls. */
   onAskMera: () => void;
-  onToggleSave: () => void;
+  /** Optional — omitted ⇒ no bookmark at all, same contract as `onShare`.
+   *  `ArticleFeedbackPrompt`'s `save` prop is optional and a bookmark that
+   *  toggles nothing is worse than no bookmark. */
+  onToggleSave?: () => void;
+  /** Optional "track story" toggle — a crosshair right of the bookmark. Hidden
+   *  entirely when undefined, which is the FEED's case: a feed card has no
+   *  track affordance by design (see TrackedStoriesScreen's empty state), the
+   *  detail screens and the standalone card do. Added when those two adopted
+   *  this row; without it the conversion would have had to DELETE an existing
+   *  affordance, which is not a styling change. */
+  onTrack?: () => void;
+  tracked?: boolean;
   /** Optional share action — renders a Share2 icon right of the bookmark. Hidden
    *  entirely when undefined (e.g. a story with no article URL). */
   onShare?: () => void;
@@ -65,6 +93,8 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   onDislike,
   onAskMera,
   onToggleSave,
+  onTrack,
+  tracked = false,
   onShare,
   horizontalPadding = 16,
   provisional = false,
@@ -128,21 +158,44 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         />
       </Pressable>
 
-      <Pressable
-        testID="card-action-save"
-        onPress={onToggleSave}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityState={{ selected: saved }}
-        accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
-      >
-        <Bookmark
-          size={ICON_SIZE}
-          strokeWidth={STROKE}
-          color={saved ? SAVE_ACCENT : WHITE}
-          fill={saved ? SAVE_ACCENT : 'none'}
-        />
-      </Pressable>
+      {onToggleSave ? (
+        <Pressable
+          testID="card-action-save"
+          onPress={onToggleSave}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityState={{ selected: saved }}
+          accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
+        >
+          <Bookmark
+            size={ICON_SIZE}
+            strokeWidth={STROKE}
+            color={saved ? SAVE_ACCENT : WHITE}
+            fill={saved ? SAVE_ACCENT : 'none'}
+          />
+        </Pressable>
+      ) : null}
+
+      {onTrack ? (
+        <Pressable
+          testID="card-action-track"
+          onPress={onTrack}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityState={{ selected: tracked }}
+          accessibilityLabel={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
+        >
+          {/* Crosshair has no enclosed area worth filling, so tracked state is
+              carried by COLOUR plus `accessibilityState` plus a changed label —
+              never by colour alone. */}
+          <Crosshair
+            size={ICON_SIZE}
+            strokeWidth={STROKE}
+            color={tracked ? SAVE_ACCENT : WHITE}
+            fill="none"
+          />
+        </Pressable>
+      ) : null}
 
       {onShare ? (
         <Pressable
