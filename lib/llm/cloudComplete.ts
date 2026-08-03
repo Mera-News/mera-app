@@ -62,13 +62,13 @@ export const UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS = 2;
  *  gateway, so this only fires when literally nothing has arrived — a warming
  *  or stalled model — never when a model is simply generating a long answer.
  *
- *  Raised 5s → 15s on 2026-08-03. A hedge WIN switches the whole session to
+ *  Raised 5s → 10s on 2026-08-03. A hedge WIN switches the whole session to
  *  the fallback, and no fallback matches the primary's quality (see
  *  MODEL_FALLBACKS): at 5s a merely-warming primary lost races it should have
- *  won, and the session paid for it in every later turn. 15s is well past a
- *  healthy first token yet far short of the 130s timeout this exists to
- *  pre-empt, so the hedge stays a stall-rescue rather than a latency tuner. */
-export const HEDGE_DELAY_MS = 15_000;
+ *  won, and the session paid for it in every later turn. 10s is past a healthy
+ *  first token yet far short of the 130s timeout this exists to pre-empt, so
+ *  the hedge stays a stall-rescue rather than a latency tuner. */
+export const HEDGE_DELAY_MS = 10_000;
 
 /** Max gap BETWEEN CHUNKS of an in-flight SSE body — deliberately not the time
  *  to the FIRST chunk, which stays on {@link UPSTREAM_ALIGNED_TIMEOUT_MS}.
