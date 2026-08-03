@@ -629,6 +629,15 @@ const FeedScreen: React.FC = () => {
         // only thing standing between a skip and app termination.
         onMomentumScrollEnd={flushSkips}
         onScrollEndDrag={flushSkips}
+        // Initial visibility tick. TranslatableDynamic only resolves its
+        // on-screen check when something tells it to re-measure, and on a fresh
+        // cell `measureInWindow` can return without ever invoking its callback —
+        // so without this the FIRST tick was the user's first scroll, and every
+        // title visibly swapped from original to translated (changing its wrap
+        // height) at that moment. Content-size changes fire on mount and on
+        // every prepend; `notifyScrollTick`'s 150ms trailing throttle coalesces
+        // the burst. Plain JS prop — independent of the reanimated `onScroll`.
+        onContentSizeChange={notifyScrollTick}
         refreshControl={
           <RefreshControl
             testID="feed-refresh"

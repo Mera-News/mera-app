@@ -212,8 +212,18 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         setIsOnScreen(false);
         setLocalShowOriginal(false);
         firedRef.current = null;
-        const id = setTimeout(checkVisibility, 0);
-        return () => clearTimeout(id);
+        // RETRY LADDER, not a single shot. Under Fabric, `measureInWindow` on a
+        // freshly-mounted (or freshly-recycled) FlatList cell can return without
+        // ever invoking its callback — the node has no committed shadow-tree
+        // position yet — and there is no error to catch and no second chance:
+        // `isOnScreen` simply stays false. That left the first scroll as the
+        // only thing that resolved the check, so titles swapped from the
+        // original to the translation mid-scroll and re-wrapped (2↔3 lines).
+        // Re-asking a few times costs one cheap measure each and self-heals as
+        // soon as layout commits. A callback that never fires is NOT treated as
+        // visible — an unresolved measure must not translate an off-screen node.
+        const ids = [0, 150, 450].map((ms) => setTimeout(checkVisibility, ms));
+        return () => ids.forEach(clearTimeout);
     }, [text, checkVisibility]);
 
     // Subscribe to scroll ticks until we know the node is on screen. Once visible

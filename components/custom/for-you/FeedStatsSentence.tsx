@@ -1,7 +1,16 @@
-// FeedStatsSentence — the presentational "N articles published / M analysed /
-// K relevant" line for the last 24h. Reads the shared `useFeedCounts()` hook and
-// renders the same interpolation recipe the (now-deleted) ArticleCountForYouBanner
-// used. Mounted in both the Feed tab header and the Dashboard header.
+// FeedStatsSentence — the presentational "N published / M analysed / K relevant
+// / R read" line. Reads the shared `useFeedCounts()` hook. Mounted in both the
+// Feed tab header and the Dashboard header.
+//
+// PLURALS: each clause is its own i18next key with a `count` option, so the
+// library picks the right plural form per language (`_one`/`_other` in en, and
+// up to six forms in ar/pl/ru — `compatibilityJSON: 'v4'`, see lib/i18n/index.ts).
+// The previous single-string version interpolated a hand-picked
+// `articleSingular`/`articlePlural` word, which is wrong in every language with
+// more than two forms AND in every language where the verb agrees too. The
+// grouped number is passed separately as `formatted` because `count` must stay a
+// raw number for the plural resolver — `formatCount` output ("1,024") is a
+// string and would break it.
 
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
@@ -14,29 +23,41 @@ interface FeedStatsSentenceProps {
   className?: string;
 }
 
+/** The five clause keys, spelled out as literals so the typed `t()` still
+ *  checks them — a plain `string` parameter drops to the overload that demands
+ *  a default value. */
+type StatsClauseKey =
+  | 'feed.statsPublished'
+  | 'feed.statsPublishedPending'
+  | 'feed.statsAnalysed'
+  | 'feed.statsRelevant'
+  | 'feed.statsRead';
+
 const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   className = 'text-typography-400 leading-6',
 }) => {
   const { t } = useTranslation();
   const appLanguage = useAppLanguage();
-  const { articleCount, analysedCount, relevantCount } = useFeedCounts();
+  const { articleCount, analysedCount, relevantCount, readCount } = useFeedCounts();
 
-  const articleWord =
-    articleCount === 1 ? t('feed.articleSingular') : t('feed.articlePlural');
+  const clause = (key: StatsClauseKey, count: number) =>
+    t(key, { count, formatted: formatCount(count, appLanguage) });
+
+  // Nothing scored yet: the published count is the only honest number, so the
+  // sentence is that clause alone (it carries its own full stop).
+  const sentence =
+    analysedCount === 0
+      ? clause('feed.statsPublishedPending', articleCount)
+      : [
+          clause('feed.statsPublished', articleCount),
+          clause('feed.statsAnalysed', analysedCount),
+          clause('feed.statsRelevant', relevantCount),
+          clause('feed.statsRead', readCount),
+        ].join(' ');
 
   return (
     <Text size="sm" className={className}>
-      {analysedCount === 0
-        ? t('feed.analysedArticlesPending', {
-            processed: formatCount(articleCount, appLanguage),
-            articleWord,
-          })
-        : t('feed.analysedArticles', {
-            processed: formatCount(articleCount, appLanguage),
-            articleWord,
-            analysed: formatCount(analysedCount, appLanguage),
-            impactful: formatCount(relevantCount, appLanguage),
-          })}
+      {sentence}
     </Text>
   );
 };

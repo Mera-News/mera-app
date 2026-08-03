@@ -19,6 +19,7 @@ import { useMemo } from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
 import { RENDER_GATE } from '@/lib/stores/fact-rows-selector';
+import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
 
 // Was 24h; storage TTL (SUGGESTION_TTL_MS, lib/scheduler/tasks/data-cleanup-task.ts)
@@ -43,6 +44,21 @@ export interface FeedCounts {
   analysedCount: number;
   /** Scored suggestions in the last 48h with relevance above the gate. */
   relevantCount: number;
+  /** Of those relevant ones, how many the reader has actually opened. A subset
+   *  of `relevantCount` by construction — a row the user opened but which never
+   *  cleared the relevance gate was never offered to them as "relevant", so
+   *  counting it here would make the sentence's own arithmetic ("K relevant,
+   *  you read R") read as a contradiction. */
+  readCount: number;
+}
+
+export interface ComputeFeedCountsOptions {
+  /** Clock injection for tests; defaults to `Date.now()`. */
+  nowMs?: number;
+  /** Live opened set (article ids only) from `useOpenedStoriesStore`. Omitted
+   *  ⇒ `readCount` is 0 rather than an error, so non-UI callers can ask for
+   *  just the analysed/relevant pair. */
+  openedArticleIds?: ReadonlySet<string>;
 }
 
 /**
@@ -54,30 +70,39 @@ export interface FeedCounts {
  * make the whole "header says 90, feed shows 23" reconciliation a lie.
  */
 export function computeFeedCounts(
-  suggestions: { status: string; firstPubDate: string; relevance: number }[],
-  nowMs: number = Date.now(),
-): { analysedCount: number; relevantCount: number } {
-  const cutoffMs = nowMs - FEED_WINDOW_MS;
+  suggestions: { status: string; firstPubDate: string; relevance: number; articleId: string }[],
+  opts?: ComputeFeedCountsOptions,
+): { analysedCount: number; relevantCount: number; readCount: number } {
+  const cutoffMs = (opts?.nowMs ?? Date.now()) - FEED_WINDOW_MS;
+  const opened = opts?.openedArticleIds;
   let analysed = 0;
   let relevant = 0;
+  let read = 0;
   for (const s of suggestions) {
     if (s.status === ArticleSuggestionStatus.Unscored) continue;
     const pt = Date.parse(s.firstPubDate);
     if (!Number.isFinite(pt) || pt < cutoffMs) continue;
     analysed++;
-    if (s.relevance > RELEVANT_GATE) relevant++;
+    if (s.relevance > RELEVANT_GATE) {
+      relevant++;
+      if (opened?.has(s.articleId)) read++;
+    }
   }
-  return { analysedCount: analysed, relevantCount: relevant };
+  return { analysedCount: analysed, relevantCount: relevant, readCount: read };
 }
 
 export function useFeedCounts(): FeedCounts {
   const suggestions = useForYouSuggestions();
   const { articleCount } = useForYouCounts();
+  // Subscribed, not read via getState(): every open replaces the Set (see
+  // `markOpened`), so this identity change is what re-renders the sentence's
+  // read count the moment the reader opens a story.
+  const openedArticleIds = useOpenedStoriesStore((s) => s.articleIds);
 
-  const { analysedCount, relevantCount } = useMemo(
-    () => computeFeedCounts(suggestions),
-    [suggestions],
+  const { analysedCount, relevantCount, readCount } = useMemo(
+    () => computeFeedCounts(suggestions, { openedArticleIds }),
+    [suggestions, openedArticleIds],
   );
 
-  return { articleCount, analysedCount, relevantCount };
+  return { articleCount, analysedCount, relevantCount, readCount };
 }
