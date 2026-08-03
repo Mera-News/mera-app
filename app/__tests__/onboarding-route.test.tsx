@@ -33,6 +33,14 @@ jest.mock('expo-router', () => ({
 let mockSession: any = { user: { id: 'u1' } };
 jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => ({ data: mockSession, isPending: false }) } }));
 
+// The route now reads `cached_user_id` directly — identity is a LOCAL fact, so
+// a dead/slow session can no longer eject the user. Mock the settings read (and
+// with it the WatermelonDB singleton the real module instantiates at import).
+let mockCachedUserId: string | null = 'cached-u1';
+jest.mock('@/lib/database/services/setting-service', () => ({
+    getSetting: jest.fn(async () => mockCachedUserId),
+}));
+
 // Stand-in for the gate: immediately pulls whichever escape hatch the test asks
 // for, so the route's handlers are exercised without the real gate's DB reads.
 let mockInvoke: 'login' | 'complete' | null = null;
@@ -53,6 +61,7 @@ import Onboarding from '../logged-in/onboarding';
 beforeEach(() => {
     jest.clearAllMocks();
     mockSession = { user: { id: 'u1' } };
+    mockCachedUserId = 'cached-u1';
     mockInvoke = null;
 });
 
@@ -77,5 +86,58 @@ describe('onboarding route', () => {
             pathname: '/logged-in/app_container/for_you',
             params: { fromOnboarding: '1' },
         });
+    });
+
+    // ── local-first identity ─────────────────────────────────────────────
+    // The bug this route caused: a failed/slow /get-session settles with
+    // `session === undefined`, the old `if (!session) return <Redirect
+    // href="/login"/>` fired, and login.tsx rendered PreviousUserView — the
+    // "Welcome back" screen — at a user who was perfectly signed in.
+    it('mounts the gate from the CACHED owner when the session is missing', async () => {
+        mockSession = undefined;
+        const { UNSAFE_getByType } = render(<Onboarding />);
+
+        await waitFor(() => {
+            const gate = UNSAFE_getByType(
+                require('@/components/custom/onboarding/OnboardingScreen').default,
+            );
+            expect(gate.props.userId).toBe('cached-u1');
+        });
+    });
+
+    it('reports the missing session as undefined rather than faking it from the cache', async () => {
+        // Load-bearing: if the coalesced owner were also passed as sessionUserId,
+        // resolveIdentity would compare the local id against itself and the
+        // cross-user wipe would never fire again.
+        mockSession = undefined;
+        const { UNSAFE_getByType } = render(<Onboarding />);
+
+        await waitFor(() => {
+            const gate = UNSAFE_getByType(
+                require('@/components/custom/onboarding/OnboardingScreen').default,
+            );
+            expect(gate.props.sessionUserId).toBeUndefined();
+        });
+    });
+
+    it('prefers the live session id over the cached one when both exist', async () => {
+        mockSession = { user: { id: 'live-u9' } };
+        const { UNSAFE_getByType } = render(<Onboarding />);
+
+        await waitFor(() => {
+            const gate = UNSAFE_getByType(
+                require('@/components/custom/onboarding/OnboardingScreen').default,
+            );
+            expect(gate.props.userId).toBe('live-u9');
+            expect(gate.props.sessionUserId).toBe('live-u9');
+        });
+    });
+
+    it('never ejects to /login on a session failure alone', async () => {
+        mockSession = undefined;
+        render(<Onboarding />);
+
+        // Give the async identity resolution a chance to settle.
+        await waitFor(() => expect(mockReplace).not.toHaveBeenCalled());
     });
 });

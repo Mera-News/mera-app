@@ -42,6 +42,22 @@ export interface IdentityInput {
    * to a login screen they cannot complete would trap them.
    */
   isConnected?: boolean;
+  /**
+   * Whether the AUTH SERVER is actually answering. Same `=== false` rule, and
+   * the same underlying principle as `isConnected` — this is the second half of
+   * the question that flag was only ever half-answering.
+   *
+   * Device connectivity is NOT sufficient. A user on a healthy LTE connection
+   * whose auth service is returning 502, hanging, or unresolvable satisfies
+   * `isConnected !== false` and would be ejected into an OTP flow that cannot
+   * send an OTP — the exact trap the `isConnected` gate exists to prevent,
+   * reached by a different road. Deferring is safe and NOT a weakening of the
+   * gate: the fault stays persisted, the next launch with a reachable server
+   * ejects exactly as before, the server's own ownership guard still refuses
+   * every mismatched query in the meantime, and callers keep `needsReauth` set
+   * so no authenticated background task runs while the fault is unresolved.
+   */
+  serverReachable?: boolean;
 }
 
 export function resolveIdentity({
@@ -49,12 +65,20 @@ export function resolveIdentity({
   cachedUserId,
   ownershipFault = false,
   isConnected,
+  serverReachable,
 }: IdentityInput): IdentityVerdict {
   // Checked FIRST, before the id comparison. A fault means the server has
   // already rejected the pairing we would otherwise "fix" locally, so a wipe
   // would be guesswork — and a fault with mismatched ids must still land on
   // reauth, not on a silent wipe. Do not reorder.
-  if (ownershipFault && isConnected !== false) return 'reauth';
+  //
+  // Note the fall-through is deliberate and load-bearing: when re-auth is
+  // unreachable we do NOT return early with some third verdict, we drop into
+  // the id comparison below. That keeps the cross-user wipe intact for a
+  // deferred fault whose session and cache genuinely disagree.
+  if (ownershipFault && isConnected !== false && serverReachable !== false) {
+    return 'reauth';
+  }
 
   // No live session is the OFFLINE path, not a fault. A dead or not-yet-loaded
   // session must never eject a user who has local data to read.

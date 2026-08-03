@@ -94,6 +94,70 @@ describe('resolveIdentity', () => {
         ).toBe('reauth');
     });
 
+    // ── server reachability ──────────────────────────────────────────────
+    // `isConnected` only ever answered half the question. A device with a live
+    // connection to a DEAD auth server satisfies it, and ejecting there drops
+    // the user on an OTP screen that cannot send an OTP — the same trap the
+    // isConnected gate exists to prevent, reached by a different road.
+    it('never ejects when the auth server is confirmed unreachable, even with a fault', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: 'A',
+                cachedUserId: 'A',
+                ownershipFault: true,
+                isConnected: true,
+                serverReachable: false,
+            }),
+        ).toBe('coherent');
+    });
+
+    it('treats unknown server reachability as reachable (acts on the fault)', () => {
+        // Unprobed must fall on the ACT side, same optimistic-unknown rule as
+        // isConnected — the gate must not be disarmed by simply not asking.
+        expect(
+            resolveIdentity({
+                sessionUserId: 'A',
+                cachedUserId: 'A',
+                ownershipFault: true,
+                isConnected: true,
+                serverReachable: undefined,
+            }),
+        ).toBe('reauth');
+    });
+
+    it('ejects as before once the server IS reachable — deferral, not cancellation', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: 'A',
+                cachedUserId: 'A',
+                ownershipFault: true,
+                isConnected: true,
+                serverReachable: true,
+            }),
+        ).toBe('reauth');
+    });
+
+    // The deferral must NOT swallow the cross-user wipe. This is why the
+    // unreachable branch falls through to the id comparison instead of
+    // returning some third verdict early.
+    it('still wipes on a deferred fault whose ids genuinely disagree', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: 'B',
+                cachedUserId: 'A',
+                ownershipFault: true,
+                isConnected: true,
+                serverReachable: false,
+            }),
+        ).toBe('wipeAndProceed');
+    });
+
+    it('existing callers that omit serverReachable are unaffected', () => {
+        expect(
+            resolveIdentity({ sessionUserId: 'A', cachedUserId: 'A', ownershipFault: true }),
+        ).toBe('reauth');
+    });
+
     it('coherent: no live session is the OFFLINE path, not a fault', () => {
         expect(resolveIdentity({ sessionUserId: null, cachedUserId: 'A' })).toBe('coherent');
         expect(resolveIdentity({ sessionUserId: undefined, cachedUserId: 'A' })).toBe('coherent');

@@ -46,9 +46,12 @@ const callOrder: string[] = [];
 
 const mockClearPreviousUserData = jest.fn(async () => { callOrder.push('clear'); });
 const mockSetUserId = jest.fn((_id: string) => { callOrder.push('setUserId'); });
+const mockSetNeedsReauth = jest.fn((_v: boolean) => { callOrder.push('setNeedsReauth'); });
 jest.mock('@/lib/stores', () => ({
     clearPreviousUserData: (...args: any[]) => mockClearPreviousUserData(...(args as [])),
-    useUserStore: { getState: () => ({ setUserId: mockSetUserId }) },
+    useUserStore: {
+        getState: () => ({ setUserId: mockSetUserId, setNeedsReauth: mockSetNeedsReauth }),
+    },
 }));
 
 const mockHasAnyFacts = jest.fn(async () => { callOrder.push('count'); return false; });
@@ -71,8 +74,10 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     getSetting: (k: string) => mockGetSetting(k),
 }));
 
+const mockProbeServerReachable = jest.fn(async () => true);
 jest.mock('@/lib/stores/network-store', () => ({
     useNetworkStore: { getState: () => ({ isConnected: true }) },
+    probeServerReachable: () => mockProbeServerReachable(),
 }));
 
 import OnboardingScreen from '../OnboardingScreen';
@@ -86,11 +91,24 @@ beforeEach(() => {
     mockResolveIdentity.mockReturnValue('wipeAndProceed');
     mockHasIdentityFault.mockResolvedValue(false);
     mockGetSetting.mockResolvedValue('u1');
+    mockProbeServerReachable.mockResolvedValue(true);
 });
 
-function renderScreen(onComplete = jest.fn(), onLoginRedirect = jest.fn()) {
+// `userId` is the EFFECTIVE owner (session ?? cached); `sessionUserId` is the
+// live session id and is undefined when offline. They are separate props on
+// purpose — see the prop docs on OnboardingScreen.
+function renderScreen(
+    onComplete = jest.fn(),
+    onLoginRedirect = jest.fn(),
+    props: { userId?: string; sessionUserId?: string } = {},
+) {
     const utils = render(
-        <OnboardingScreen userId="u1" onLoginRedirect={onLoginRedirect} onComplete={onComplete} />,
+        <OnboardingScreen
+            userId={props.userId ?? 'u1'}
+            sessionUserId={'sessionUserId' in props ? props.sessionUserId : 'u1'}
+            onLoginRedirect={onLoginRedirect}
+            onComplete={onComplete}
+        />,
     );
     return { ...utils, onComplete, onLoginRedirect };
 }
@@ -194,5 +212,75 @@ describe('OnboardingScreen identity gate', () => {
         expect(mockResolveIdentity).toHaveBeenCalledWith(
             expect.objectContaining({ ownershipFault: true, isConnected: true }),
         );
+    });
+
+    // ── server-reachability probe ────────────────────────────────────────
+    it('probes reachability ONLY on the fault path (no round-trip on the happy path)', async () => {
+        renderScreen();
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockProbeServerReachable).not.toHaveBeenCalled();
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({ serverReachable: undefined }),
+        );
+    });
+
+    it('feeds the probe result into the verdict when a fault is present', async () => {
+        mockHasIdentityFault.mockResolvedValue(true);
+        mockProbeServerReachable.mockResolvedValue(false);
+        renderScreen();
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockProbeServerReachable).toHaveBeenCalledTimes(1);
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({ ownershipFault: true, serverReachable: false }),
+        );
+    });
+
+    it('keeps needsReauth set when a fault is deferred, so no server task runs', async () => {
+        // Deferring the eject must not leave background work ungated: the
+        // scheduler's auth pre-flight is what actually halts feed-sync, and it
+        // keys off needsReauth.
+        mockHasIdentityFault.mockResolvedValue(true);
+        mockProbeServerReachable.mockResolvedValue(false);
+        mockResolveIdentity.mockReturnValue('coherent');
+        renderScreen();
+
+        await waitFor(() => expect(mockSetNeedsReauth).toHaveBeenCalledWith(true));
+        // Ordering: the wipe resets the user store, so the flag must be set
+        // AFTER it or it would be zeroed again.
+        expect(callOrder.indexOf('setNeedsReauth')).toBeGreaterThan(
+            callOrder.indexOf('setUserId'),
+        );
+    });
+
+    it('does not touch needsReauth when there is no fault', async () => {
+        renderScreen();
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockSetNeedsReauth).not.toHaveBeenCalled();
+    });
+
+    // ── the prop split ───────────────────────────────────────────────────
+    // The caller coalesces `session ?? cached` into `userId` so this screen
+    // works offline. If that coalesced value were ALSO passed as sessionUserId,
+    // resolveIdentity would compare the local id against itself and the
+    // fresh-login cross-user wipe would silently never fire again.
+    it('passes the LIVE session id as sessionUserId, not the coalesced owner', async () => {
+        renderScreen(jest.fn(), jest.fn(), { userId: 'local-owner', sessionUserId: 'live-session' });
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({ sessionUserId: 'live-session', cachedUserId: 'u1' }),
+        );
+    });
+
+    it('reports an absent session as undefined (the offline path), not as the local id', async () => {
+        renderScreen(jest.fn(), jest.fn(), { userId: 'local-owner', sessionUserId: undefined });
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({ sessionUserId: undefined }),
+        );
+        // ...while the wipe/stamp still target the effective owner.
+        expect(mockSetUserId).toHaveBeenCalledWith('local-owner');
     });
 });

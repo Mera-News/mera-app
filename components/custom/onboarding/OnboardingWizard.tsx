@@ -23,6 +23,7 @@ import {
     useOnboardingStore,
 } from '../../../lib/stores/onboarding-store';
 import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
+import { isOnline, useIsOnline } from '../../../lib/stores/network-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
 import PersonaUpdateChatStep from './PersonaUpdateChatStep';
@@ -56,12 +57,21 @@ const NEXT_STAGE_FOR_STEP: Record<number, OnboardingStage> = {
 
 // OnboardingWizard now uses Zustand store for state persistence
 
+/** Bound on the mount-time session lookup. See initializeUserId below. */
+const SESSION_LOOKUP_TIMEOUT_MS = 3_000;
+
 interface OnboardingWizardProps {
+    /**
+     * Effective owner, resolved locally by the caller (session id, else the
+     * persisted `cached_user_id`). Seeds the wizard synchronously so the persona
+     * step has an owner even when the session lookup below yields nothing.
+     */
+    userId?: string;
     onComplete: () => void;
 }
 
 
-const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUserId, onComplete }) => {
     const { t } = useTranslation();
     // Use Zustand store for persistent state
     const currentStep = useOnboardingStep();
@@ -77,12 +87,32 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     // Server error modal state
     const [showServerErrorModal, setShowServerErrorModal] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    // Reactive so the destructive action reappears the moment connectivity does.
+    const offline = !useIsOnline();
 
     // Initialize userId and pre-populate with existing user data on mount
     useEffect(() => {
         const initializeUserId = async () => {
             try {
-                const sessionData = await authClient.getSession();
+                // Seed the owner from the locally-resolved prop FIRST, so the
+                // persona step (which takes userPreferences.userId) has one even
+                // if the lookup below returns nothing. Previously the id was set
+                // only inside the `if (sessionData?.data …)` branch, so offline
+                // it was never set at all.
+                if (initialUserId) updatePreferences('userId', initialUserId);
+
+                // Bounded. authClient uses better-auth's own transport, NOT
+                // Apollo's HttpLink, so the slow/abort thresholds in
+                // lib/apollo-fetch.ts do not apply to it — an unreachable server
+                // that accepts the socket and never answers would otherwise hang
+                // this promise forever and pin the "Loading…" spinner, because
+                // the `finally` that clears isInitializing never runs.
+                const sessionData = await Promise.race([
+                    authClient.getSession(),
+                    new Promise<null>((resolve) =>
+                        setTimeout(() => resolve(null), SESSION_LOOKUP_TIMEOUT_MS),
+                    ),
+                ]);
                 if (sessionData?.data && sessionData.data.user?.id) {
                     const userId = sessionData.data.user.id;
                     updatePreferences('userId', userId);
@@ -117,7 +147,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         };
 
         initializeUserId();
-    }, [updatePreferences, setIsInitializing, setStep]);
+    }, [initialUserId, updatePreferences, setIsInitializing, setStep]);
 
     // The persona step is now an inline chat (PersonaUpdateChatStep), so the
     // wizard no longer orchestrates the floating bubble/popover. This defensive
@@ -131,13 +161,19 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         };
     }, []);
 
-    // Helper function to get current user ID
+    // Helper function to get current user ID. Falls back to the locally-resolved
+    // owner: a session lookup that fails for network reasons is not proof the
+    // user is unauthenticated, and treating it as such is what used to raise the
+    // "server error" modal below. Safe because handleNext only ever calls this
+    // once it has established the network is believed up.
     const getCurrentUserId = async (): Promise<string> => {
-        const sessionData = await authClient.getSession();
-        if (!sessionData?.data?.user?.id) {
+        const sessionData = await authClient.getSession().catch(() => null);
+        const resolved =
+            sessionData?.data?.user?.id ?? userPreferences.userId ?? initialUserId;
+        if (!resolved) {
             throw new Error('User not authenticated');
         }
-        return sessionData.data.user.id;
+        return resolved;
     };
 
     const handleServerErrorLogout = async () => {
@@ -179,6 +215,23 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
     const handleBack = useCallback(() => setStep(currentStep - 1), [currentStep, setStep]);
 
     const handleNext = useCallback(async () => {
+        // Offline check FIRST, before getCurrentUserId and before any mutation.
+        //
+        // Putting this in the catch below would still fire
+        // updateNotificationPreferences → ensurePushTokenRegistered →
+        // advanceOnboardingStage against a server we already know we cannot
+        // reach. This function has no busy state and OnboardingNavBar's onSkip
+        // is not disabled while it awaits, so against a hanging server the user
+        // gets no feedback and can re-tap, stacking duplicate mutations.
+        //
+        // It also makes getCurrentUserId's local fallback safe rather than
+        // merely probably-safe: the fallback can now only supply an id on a path
+        // where the network is believed up.
+        if (!isOnline()) {
+            setShowServerErrorModal(true);
+            return;
+        }
+
         try {
             const userId = await getCurrentUserId();
             switch (currentStep) {
@@ -297,16 +350,28 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     </ModalBody>
                     <ModalFooter className="border-t border-gray-700 pt-4">
                         <VStack className="w-full" space="md">
-                            <Button
-                                action="negative"
-                                onPress={handleServerErrorLogout}
-                                disabled={isLoggingOut}
-                                className="w-full"
-                            >
-                                <ButtonText>
-                                    {isLoggingOut ? t('onboarding.loggingOut') : t('onboarding.logout')}
-                                </ButtonText>
-                            </Button>
+                            {/* Log out is DESTRUCTIVE — handleServerErrorLogout
+                                calls clearAuthStorage(). Offer it only when the
+                                server actually answered and rejected us, never
+                                when the cause is connectivity: this modal is
+                                raised by a failed request, so an offline user
+                                pressing Next was being handed "wipe your
+                                credentials" as the primary remedy for a network
+                                blip. Offline they get Close only, and the global
+                                offline band explains why. */}
+                            {!offline && (
+                                <Button
+                                    action="negative"
+                                    onPress={handleServerErrorLogout}
+                                    disabled={isLoggingOut}
+                                    className="w-full"
+                                    testID="onboarding-server-error-logout"
+                                >
+                                    <ButtonText>
+                                        {isLoggingOut ? t('onboarding.loggingOut') : t('onboarding.logout')}
+                                    </ButtonText>
+                                </Button>
+                            )}
                             <Button
                                 variant="outline"
                                 action="secondary"

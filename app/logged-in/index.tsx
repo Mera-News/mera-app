@@ -6,7 +6,7 @@ import { hasAnyFacts } from "@/lib/database/services/fact-service";
 import { getSetting } from "@/lib/database/services/setting-service";
 import { hasIdentityFault, resolveIdentity } from "@/lib/security/identity-gate";
 import { useUserStore } from "@/lib/stores/user-store";
-import { useNetworkStore } from "@/lib/stores/network-store";
+import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { router } from "expo-router";
@@ -45,11 +45,20 @@ export default function LoggedInIndex() {
                 // ("resource belongs to another user"), which is exactly what
                 // this gate exists to prevent. Same helper as the onboarding
                 // gate so the two can't drift.
+                const ownershipFault = await hasIdentityFault();
+                const isConnected = useNetworkStore.getState().isConnected;
+                // Probe ONLY when it can change the outcome. The fault path is
+                // rare; the happy path must not pay a round-trip on every cold
+                // start. Bounded at 3s inside probeServerReachable().
+                const serverReachable =
+                    ownershipFault && isConnected ? await probeServerReachable() : undefined;
+
                 const verdict = resolveIdentity({
                     sessionUserId: session?.user?.id,
                     cachedUserId: localUserId,
-                    ownershipFault: await hasIdentityFault(),
-                    isConnected: useNetworkStore.getState().isConnected,
+                    ownershipFault,
+                    isConnected,
+                    serverReachable,
                 });
 
                 if (verdict === 'reauth') {
@@ -68,15 +77,35 @@ export default function LoggedInIndex() {
                 }
                 userStore.setUserId(userId);
 
+                // DEFERRED FAULT. We chose not to eject because re-auth is
+                // unreachable, but the fault is still unresolved — so keep every
+                // authenticated background task off until it is. AppScheduler's
+                // auth pre-flight returns false on needsReauth, which is what
+                // actually stops feed-sync.
+                //
+                // Ordering: this MUST come after clearPreviousUserData above,
+                // which resets the user store (zeroing needsReauth). And it is
+                // not redundant with the flag recordOwnershipFault already set:
+                // recordAuthSuccess clears needsReauth on ANY error-free
+                // operation, including unauthenticated ones that prove nothing
+                // about the userId the 403 was about. Only OTP success clears
+                // the persisted fault itself.
+                if (ownershipFault) {
+                    userStore.setNeedsReauth(true);
+                }
+
                 // Local-first: hydrate the persisted persona. It no longer
                 // decides the route (see the fact gate below) but downstream
                 // screens read it, so keep it warm.
                 await userStore.hydrateFromDb();
                 const persona = useUserStore.getState().userPersona;
 
-                const isConnected = useNetworkStore.getState().isConnected;
+                // Deliberately re-read rather than reusing the value from the
+                // identity gate above: several awaits have happened since, and
+                // connectivity may have changed under them.
+                const isConnectedNow = useNetworkStore.getState().isConnected;
 
-                if (isConnected) {
+                if (isConnectedNow) {
                     // Background refresh — must never block routing.
                     void userStore.fetchUserPersona(userId, true);
                     void loginRevenueCat(userId).then((info) => {
