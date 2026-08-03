@@ -81,6 +81,15 @@ export interface FeedbackTreeNode {
   id: string;
   labelKey: string;
   labelDefault: string;
+  /** v4 — an optional per-node MESSAGE rendered with the option, explaining what
+   *  picking it does or why it is being offered. Resolved exactly like the label
+   *  (`t(descKey, { defaultValue: descDefault })`) and interpolated from LOCAL
+   *  context only: `{{publication}}` ← publicationName, `{{visits}}` ←
+   *  publicationVisits. Deliberately NOT `{{count}}` — i18next reserves that var
+   *  to select `_one`/`_other` plural suffixes on the key itself, which would
+   *  404 to `descDefault` on every locale shipping only the base key. */
+  descKey?: string;
+  descDefault?: string;
   icon?: string;
   visibleIf?: FeedbackTreeCondition;
   children?: FeedbackTreeNode[];

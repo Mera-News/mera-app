@@ -8,6 +8,14 @@
 // v2: adds `likeRoot` (the LIKE-side tree for the verdict bar) and the
 // dislike-root `not_important_to_me` branch — kept verbatim in sync with the
 // server's v2 feedback-tree-v1.ts.
+//
+// v3: rebuilds the `paywall` branch. Its two old children were both gated
+// (`publication_visits_gte` / `cluster_size_gte`) and both informational, so on
+// most articles they gated out and `isDeadBranch` hid "It's paywalled" entirely.
+// It now leads with an UNGATED `paywall_related` (which un-deadens the branch by
+// construction) and offers muting the publication only once the user has
+// actually kept hitting it. Both children carry a per-node `descKey`/`descDefault`
+// message. Kept verbatim in sync with the server's v3 feedback-tree-v1.ts.
 
 import type { FeedbackTree } from '../news-harness/feedback-tree/types';
 
@@ -17,11 +25,19 @@ import type { FeedbackTree } from '../news-harness/feedback-tree/types';
  *  publish a tree that uses the key with `minAppSchema: 3` and have it dropped
  *  by older apps rather than silently ignored. (Publishing it unguarded is also
  *  safe — `evaluateCondition` ignores gate keys it doesn't know — so the bump
- *  is about intent, not safety.) */
-export const APP_FEEDBACK_SCHEMA = 3;
+ *  is about intent, not safety.)
+ *
+ *  v4 adds per-node `descKey`/`descDefault` (the option MESSAGE). Unlike the v3
+ *  gate key, this one is NOT safe to publish unguarded: a pre-desc app renders
+ *  the node's label and silently drops its message, so the rebuilt `paywall`
+ *  branch would arrive there as two bare chips — one of them ("Show related
+ *  coverage") ungated and, on that older build, wired to nothing but a nudge
+ *  that closes the panel. Better that such an app keeps its cached v2 tree,
+ *  which is why the server publishes v3 with `minAppSchema: 4`. */
+export const APP_FEEDBACK_SCHEMA = 4;
 
 export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
-  version: 2,
+  version: 3,
   root: [
     {
       id: 'publication_website',
@@ -36,18 +52,35 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           icon: 'lock',
           children: [
             {
-              id: 'nudge_subscribe',
-              labelKey: 'feedback.nudge_subscribe',
-              labelDefault: 'Subscribe to this publication',
-              visibleIf: { publication_visits_gte: 5 },
-              leaf: { nudge: 'subscribe' },
+              // UNGATED on purpose — this is the option that keeps the whole
+              // "It's paywalled" branch alive. Both of the old children were
+              // gated (visit count / cluster size), so `isDeadBranch` hid the
+              // branch outright on any article satisfying neither, which was
+              // most of them. It is also the only useful answer to a paywall:
+              // the same story, elsewhere, readable.
+              id: 'paywall_related',
+              labelKey: 'feedbackTree.paywallRelatedOption',
+              labelDefault: 'Show related coverage',
+              descKey: 'feedbackTree.paywallRelatedDesc',
+              descDefault:
+                'A similar story from another publication may not be paywalled — check the related articles.',
+              icon: 'library-books',
+              leaf: { nudge: 'browse_related' },
             },
             {
-              id: 'nudge_browse_related',
-              labelKey: 'feedback.nudge_browse_related',
-              labelDefault: 'Browse related coverage',
-              visibleIf: { cluster_size_gte: 2 },
-              leaf: { nudge: 'browse_related' },
+              // Muting is destructive, so it stays behind the visit gate and
+              // carries the exact `never_show` leaf shape (mute + confirm) —
+              // both surfaces already route that shape through their confirm
+              // step, so it inherits tap-to-arm for free.
+              id: 'paywall_block_source',
+              labelKey: 'feedbackTree.paywallBlockOption',
+              labelDefault: 'Block {{publication}} instead',
+              descKey: 'feedbackTree.paywallSubscribeDesc',
+              descDefault:
+                "You've visited {{publication}} {{visits}} times this month — consider subscribing for full access.",
+              icon: 'block',
+              visibleIf: { publication_visits_gte: 5 },
+              leaf: { actions: [{ type: 'set_publication_pref', value: 'mute' }], confirm: true },
             },
           ],
         },

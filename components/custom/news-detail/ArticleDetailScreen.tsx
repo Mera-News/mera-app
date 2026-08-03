@@ -178,6 +178,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         scrollViewRef.current?.scrollToTop(true);
     }, []);
 
+    // The feedback tree's "Show related coverage" nudge. The related articles
+    // are this page's footer, so the answer is to scroll there, not to navigate.
+    const scrollToRelated = useCallback(() => {
+        scrollViewRef.current?.scrollToEnd(true);
+    }, []);
+
     useEffect(() => {
         let cancelled = false;
         setIsLoading(true);
@@ -540,6 +546,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     // publication / category / event / place to
                                     // act on — the gap this wave closed.
                                     article={article}
+                                    onBrowseRelated={scrollToRelated}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'article',

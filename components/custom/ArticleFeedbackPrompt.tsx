@@ -48,6 +48,11 @@ interface ArticleFeedbackPromptProps {
      *  time via `getNewsClusterForArticle`. */
     track?: FeedbackSubject;
     share?: ShareArticleParams;
+    /** The feedback tree's 'browse_related' nudge ("Show related coverage" on
+     *  the paywall branch) fired. On a detail screen the related coverage is
+     *  already on the page — its footer — so the host scrolls there rather than
+     *  navigating anywhere. Omitted ⇒ the nudge just closes the surface. */
+    onBrowseRelated?: () => void;
 }
 
 // Primary-orange accent for the three feedback buttons. Dark-locked: these
@@ -97,6 +102,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     save,
     track,
     share,
+    onBrowseRelated,
 }) => {
     const { t } = useTranslation();
     const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -236,6 +242,17 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         [articleId],
     );
     const handleCloseSurface = useCallback(() => setSurfaceClosed(true), []);
+    // A nudge leaf. `handleLeafCommitted` has already run (the tree fires it
+    // first), so the verdict is committed and the surface closed — this only
+    // has to act on the suggestion. 'subscribe' is ignored: no current tree
+    // authors one, and a stale cached tree offering it has nothing to open.
+    const handleNudge = useCallback(
+        (nudge: 'subscribe' | 'browse_related') => {
+            if (nudge !== 'browse_related') return;
+            onBrowseRelated?.();
+        },
+        [onBrowseRelated],
+    );
 
     const handleChatPress = useCallback(() => {
         hapticMedium();
@@ -311,6 +328,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                         onTreePathChanged={handleTreePathChanged}
                         onInvokeMera={handleInvokeMera}
                         onLeafCommitted={handleLeafCommitted}
+                        onNudge={handleNudge}
                     />
                 </Box>
             ) : null}

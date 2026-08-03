@@ -36,6 +36,12 @@ interface SmoothScrollViewProps {
 
 export interface SmoothScrollViewRef {
     scrollToTop: (animated?: boolean) => void;
+    /** Jump to the bottom of the content. Used by the "show related coverage"
+     *  feedback nudge on the detail screens, whose related-articles list is the
+     *  page footer. Note that on a screen with `onEndReached` wired to grow that
+     *  list, arriving at the bottom legitimately extends the content — so this
+     *  lands at the bottom *as it was*, with more rows appearing below. */
+    scrollToEnd: (animated?: boolean) => void;
     getScrollY: () => number;
 }
 
@@ -124,6 +130,9 @@ const SmoothScrollView = forwardRef<SmoothScrollViewRef, SmoothScrollViewProps>(
     useImperativeHandle(ref, () => ({
         scrollToTop: (animated = true) => {
             scrollViewRef.current?.scrollTo({ y: 0, animated });
+        },
+        scrollToEnd: (animated = true) => {
+            scrollViewRef.current?.scrollToEnd({ animated });
         },
         getScrollY: () => lastScrollY.current,
     }), []);

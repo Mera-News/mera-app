@@ -11,6 +11,7 @@
 // another agent's; the predicate is copied, not imported, so this test asserts
 // the CONTRACT between the two rather than re-testing their implementation).
 
+import { evaluateCondition } from '../../news-harness/feedback-tree/evaluate-condition';
 import { resolveLeafActions } from '../../news-harness/feedback-tree/resolve-leaf-actions';
 import type {
   FeedbackTreeNode,
@@ -33,6 +34,20 @@ function isInertActionLeaf(node: FeedbackTreeNode, context: LocalFeedbackContext
   if (!leaf?.actions?.length) return false;
   if (leaf.openChat || leaf.nudge || leaf.seenOnly) return false;
   return resolveLeafActions(leaf, context).length === 0;
+}
+
+/** Verbatim copies of the engine's other two visibility predicates — same
+ *  contract-not-implementation rationale as `isInertActionLeaf` above. */
+function isDeadBranch(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  if (node.leaf) return false;
+  const children = node.children;
+  if (!children?.length) return false;
+  return !children.some((c) => isVisibleNode(c, context));
+}
+function isVisibleNode(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
+  if (!evaluateCondition(node.visibleIf, context)) return false;
+  if (isInertActionLeaf(node, context)) return false;
+  return !isDeadBranch(node, context);
 }
 
 const thisCategory = findNode(BUNDLED_FEEDBACK_TREE.root, 'this_category');
@@ -84,6 +99,64 @@ describe('bundled tree — this_kind_of_event', () => {
     // (and therefore hidden) while no article carries an event type.
     expect(isInertActionLeaf(node!, {})).toBe(true);
     expect(isInertActionLeaf(node!, { eventType: 'Earnings call' })).toBe(false);
+  });
+});
+
+// v3 — the paywall branch. It was DEAD: both of its children were gated
+// (publication_visits_gte / cluster_size_gte) and the local context satisfies
+// neither on a typical article, so `isDeadBranch` hid "It's paywalled"
+// altogether. The whole point of `paywall_related` is that it carries no
+// `visibleIf`, which makes the branch reachable by construction.
+describe('bundled tree — the paywall branch is alive again', () => {
+  const paywall = findNode(BUNDLED_FEEDBACK_TREE.root, 'paywall');
+  const related = findNode(BUNDLED_FEEDBACK_TREE.root, 'paywall_related');
+  const block = findNode(BUNDLED_FEEDBACK_TREE.root, 'paywall_block_source');
+
+  it('is NOT a dead branch under an empty context — the regression this replaced', () => {
+    expect(paywall).not.toBeNull();
+    expect(isDeadBranch(paywall!, {})).toBe(false);
+    expect(isVisibleNode(paywall!, {})).toBe(true);
+  });
+
+  it('shows related coverage unconditionally, and the block option only after 5 visits', () => {
+    expect(related!.visibleIf).toBeUndefined();
+    expect(related!.leaf).toEqual({ nudge: 'browse_related' });
+    expect(isVisibleNode(related!, {})).toBe(true);
+
+    // `publicationName` matters as much as the gate: the mute action resolves
+    // off it, so without one the leaf is INERT and hidden regardless of visits
+    // (same as `never_show`). Not a hole — the visit count is itself keyed by
+    // publication name, so a context with 5 visits always has one.
+    expect(block!.visibleIf).toEqual({ publication_visits_gte: 5 });
+    expect(isVisibleNode(block!, { publicationName: 'The Hindu', publicationVisits: 4 })).toBe(
+      false,
+    );
+    expect(isVisibleNode(block!, { publicationName: 'The Hindu', publicationVisits: 5 })).toBe(
+      true,
+    );
+    expect(isVisibleNode(block!, { publicationVisits: 5 })).toBe(false);
+  });
+
+  it('keys its copy off `feedbackTree.*` (the namespace those four strings ship in)', () => {
+    expect(related!.labelKey).toBe('feedbackTree.paywallRelatedOption');
+    expect(related!.descKey).toBe('feedbackTree.paywallRelatedDesc');
+    expect(block!.labelKey).toBe('feedbackTree.paywallBlockOption');
+    expect(block!.descKey).toBe('feedbackTree.paywallSubscribeDesc');
+  });
+
+  it('reuses the exact never_show leaf shape for the block option (mute + confirm)', () => {
+    const neverShow = findNode(BUNDLED_FEEDBACK_TREE.root, 'never_show');
+    expect(block!.leaf).toEqual(neverShow!.leaf);
+    // A `confirm` leaf must actually declare actions — the confirm branch in
+    // both surfaces is gated on `actions.length > 0`, so a confirm-only leaf
+    // would silently skip the arming step.
+    expect(block!.leaf?.actions?.length).toBeGreaterThan(0);
+  });
+
+  it('interpolates {{visits}}, never {{count}} (i18next reserves count for plurals)', () => {
+    const json = JSON.stringify(BUNDLED_FEEDBACK_TREE);
+    expect(json).toContain('{{visits}}');
+    expect(json).not.toContain('{{count}}');
   });
 });
 

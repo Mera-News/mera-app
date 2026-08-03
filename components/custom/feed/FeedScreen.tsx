@@ -395,11 +395,15 @@ const FeedScreen: React.FC = () => {
     setCommitted: (key, committed) =>
       useFeedOrderStore.getState().setCommitted(key, committed),
   };
+  // The 'browse_related' nudge ("Show related coverage" on the paywall branch)
+  // opens the story's detail screen, whose footer IS the related-articles list.
+  // Deliberately `openSuggestion`, not `openSuggestionBase` — a nudge that opens
+  // a card must stamp that card's lifecycle exactly like a tap does.
   const {
     onVerdict,
     onAskMera: askMeraBase,
     feedbackHandlers,
-  } = useFeedbackSheet(feedAdapter);
+  } = useFeedbackSheet(feedAdapter, { onOpenSuggestion: openSuggestion });
 
   // Ask Mera and Save mark the card `viewed` but deliberately do NOT record an
   // open — skips and these two must stay out of the personalization seen-set.

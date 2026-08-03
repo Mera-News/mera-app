@@ -302,6 +302,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         scrollViewRef.current?.scrollToTop(true);
     }, []);
 
+    // The feedback tree's "Show related coverage" nudge. The related articles
+    // are this page's footer, so the answer is to scroll there, not to navigate.
+    // Landing at the bottom trips `onEndReached` → `handleRelatedEndReached`, so
+    // the list grows underneath: the user arrives at what WAS the bottom with
+    // more related rows appearing below. That is the intended reading of the
+    // nudge, not a mis-scroll.
+    const scrollToRelated = useCallback(() => {
+        scrollViewRef.current?.scrollToEnd(true);
+    }, []);
+
     // Related-list lazy growth: start small, grow when the user scrolls near
     // the bottom (SmoothScrollView's `onEndReached`, FlatList-like — fires
     // once per approach, re-arms after scrolling back up).
@@ -586,6 +596,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // articleId), which carries strictly more
                                     // than this screen could hand it — category,
                                     // event type, cluster size and place.
+                                    onBrowseRelated={scrollToRelated}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'suggestion',
