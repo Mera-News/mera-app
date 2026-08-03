@@ -446,6 +446,11 @@ type Query {
     first: Int = 20
     newsPublisherId: ID!
   ): ArticlesForPublicationSourceResponse!
+
+  """
+  Hydrate articles by id for followed ("tracked") stories. Identical payload to articlesForTopicsByIds, but deliberately NOT charged against the daily article cap — following a story must not consume the allowance. dailyLimitReached is always false and resetAt is always absent. Capped at 50 ids per request.
+  """
+  articlesForStories(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
   articlesForTopicsByIds(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
 
   """
