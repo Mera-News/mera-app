@@ -25,6 +25,7 @@ jest.mock('@/lib/stores/user-store', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
     captureException: jest.fn(),
@@ -38,7 +39,7 @@ import '../feed-sync-task';
 const { AppScheduler: { register: mockRegister } } = jest.requireMock('@/lib/scheduler/AppScheduler') as any;
 const { feedSyncMachine: { start: mockFeedSyncMachineStart } } = jest.requireMock('@/lib/scheduler/feed-sync/FeedSyncMachine') as any;
 const { useUserStore: { getState: mockGetUserStoreState } } = jest.requireMock('@/lib/stores/user-store') as any;
-const { default: { info: mockLogInfo } } = jest.requireMock('@/lib/logger') as any;
+const { default: { debug: mockLogDebug } } = jest.requireMock('@/lib/logger') as any;
 
 const registeredDef = mockRegister.mock.calls[0]?.[0];
 
@@ -130,7 +131,7 @@ describe('feed-sync-task handler', () => {
     await expect(registeredDef.handler(undefined, ctx)).rejects.toThrow('UserPersona not found');
   });
 
-  it('logs handler start with userId and personaId', async () => {
+  it('logs handler start with userId and personaId (debug — per-run handler start, not a milestone)', async () => {
     mockGetUserStoreState.mockReturnValue({
       userPersona: { _id: 'p-123' },
       userId: 'u-456',
@@ -139,7 +140,7 @@ describe('feed-sync-task handler', () => {
 
     await registeredDef.handler(undefined, ctx);
 
-    expect(mockLogInfo).toHaveBeenCalledWith(
+    expect(mockLogDebug).toHaveBeenCalledWith(
       expect.stringContaining('feed-sync-task'),
     );
   });
@@ -155,7 +156,7 @@ describe('feed-sync-task handler', () => {
 
     await registeredDef.handler(undefined, ctx);
 
-    expect(mockLogInfo).toHaveBeenCalledWith(
+    expect(mockLogDebug).toHaveBeenCalledWith(
       expect.stringContaining('userId=null'),
     );
   });

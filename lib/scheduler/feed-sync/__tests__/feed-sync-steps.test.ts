@@ -95,6 +95,7 @@ jest.mock('@/lib/tracking/track-actions', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
+    debug: (...args: any[]) => mockLogInfo(...args),
     info: (...args: any[]) => mockLogInfo(...args),
     warn: jest.fn(),
     captureException: (...args: any[]) => mockCaptureException(...args),

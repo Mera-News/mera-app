@@ -114,6 +114,7 @@ jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
     captureException: (...args: any[]) => mockCaptureException(...args),
+    debug: (...args: any[]) => mockLogInfo(...args),
     info: (...args: any[]) => mockLogInfo(...args),
     warn: jest.fn(),
   },

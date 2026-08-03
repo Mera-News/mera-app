@@ -149,7 +149,7 @@ export async function sendInferenceRequest(args: {
   const rawBytes = bodyJson.length;
   const gzippedBytes = gzipped.length;
   const ratio = rawBytes > 0 ? (gzippedBytes / rawBytes) * 100 : 0;
-  logger.info(
+  logger.debug(
     `${TAG} payload: calls=${bundle.calls.length} raw=${rawBytes}B gzipped=${gzippedBytes}B (${ratio.toFixed(1)}%)`,
   );
 

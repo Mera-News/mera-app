@@ -648,7 +648,7 @@ export async function enqueueCandidates(
       // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
       // next fetch coming to top it up — dispatch it immediately.
       if (flushPartial) {
-        logger.info(
+        logger.debug(
           `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
         );
         dispatch.push(chunk);
@@ -659,14 +659,14 @@ export async function enqueueCandidates(
       // dispatches on the fast path above regardless of feed warmth.)
       const age = await readOldestAgeMs();
       if (age !== null && age >= MAX_UNSCORED_WAIT_MS) {
-        logger.info(
+        logger.debug(
           `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(age / 60_000)}min)`,
         );
         dispatch.push(chunk);
       } else {
         deferred += chunk.length;
         deferredIds.push(...chunk);
-        logger.info(
+        logger.debug(
           `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${minDispatch} dispatch floor, oldest ${Math.round((age ?? 0) / 60_000)}min)`,
         );
       }
@@ -681,7 +681,7 @@ export async function enqueueCandidates(
     return { deferred: deferredIds };
   }
 
-  logger.info(
+  logger.debug(
     `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${dispatch.length} batch(es) dispatched, ${deferred} deferred (run ${snap ? 'exists' : 'new'})`,
   );
 
@@ -730,7 +730,7 @@ export async function enqueueOrphanedReasons(): Promise<void> {
     qualified.map((c) => c.id),
     BATCH_SIZE,
   );
-  logger.info(
+  logger.debug(
     `${TAG} enqueueOrphanedReasons: ${qualified.length} rows → ${chunks.length} reasonsOnly batch(es)`,
   );
 
@@ -818,7 +818,7 @@ async function doDrain(context: ExecutionContext): Promise<void> {
     // wake stays within its "≤1 GET + ≤1 POST per batch" budget via the
     // needs-reasons-submit path, which does carry a token.
     if (context === 'background') {
-      logger.info(
+      logger.debug(
         `${TAG} drain(background): ${run.batches.filter((b) => b.phase === 'queued').length} queued batch(es) deferred to foreground (no capability token for fresh submits)`,
       );
       break;
@@ -967,7 +967,7 @@ async function doSubmitRelevance(
   const excludedIds = math.excludedIds ?? new Set<string>();
   let active = subset;
   if (excludedIds.size > 0) {
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} hard filters excluded ${excludedIds.size}/${subset.length}: ${[
         ...new Set((math.excludedValueById ?? new Map<string, string>()).values()),
       ]
@@ -984,7 +984,7 @@ async function doSubmitRelevance(
   // the run finalize); without this the batch would wedge in
   // `submitting-relevance` or submit an empty inference request.
   if (math.stage.length === 0) {
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} fully hard-filtered — marking done`,
     );
     await markBatchDone(batch.batchId);
@@ -1011,7 +1011,7 @@ async function doSubmitRelevance(
   if (backstop.length > 0) {
     const bundle = await buildRelevanceCalls(active);
     if (bundle.calls.length === 0 || bundle.eligibleCandidates.length === 0) {
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batch.batchId} relevance bundle empty — marking done`,
       );
       // Terminal transition inside the drain loop; doDrain's maybeFinalize
@@ -1040,7 +1040,7 @@ async function doSubmitRelevance(
     }
     const penalisedCount = Object.keys(suppressPenaltyMap).length;
     if (penalisedCount > 0) {
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batch.batchId} soft filters will penalise ${penalisedCount}/${math.stage.length} at decode`,
       );
     }
@@ -1053,7 +1053,7 @@ async function doSubmitRelevance(
     const scoreChunkSize = bundle.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
 
     const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls, chunk=${scoreChunkSize} (token=${token ? 'yes' : 'no'})`,
     );
     const outcome = await sendInferenceRequest({
@@ -1074,7 +1074,7 @@ async function doSubmitRelevance(
         penalisedCount > 0 ? suppressPenaltyMap : undefined,
         scoreChunkSize,
       );
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
       );
     } else if (outcome.status === 'throttled') {
@@ -1154,7 +1154,7 @@ async function doSubmitRelevance(
   const judgedIds = judgedStage.map((c) => c.input.id);
 
   if (judgedStage.length === 0) {
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} judge: no above-threshold rows — marking done`,
     );
     const discarded = await discardLowRelevance(batch.candidateIds, relevanceRecord);
@@ -1171,7 +1171,7 @@ async function doSubmitRelevance(
     judgeCfg,
   );
   if (calls.length === 0) {
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} judge bundle empty — marking done`,
     );
     const discarded = await discardLowRelevance(batch.candidateIds, relevanceRecord);
@@ -1190,7 +1190,7 @@ async function doSubmitRelevance(
   };
 
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
-  logger.info(
+  logger.debug(
     `${TAG} batch ${batch.batchId} submit judge notes: ${judgedIds.length}/${math.stage.length} ids in ${calls.length} calls (token=${token ? 'yes' : 'no'})`,
   );
   const outcome = await sendInferenceRequest({
@@ -1223,7 +1223,7 @@ async function doSubmitRelevance(
         judgedIds,
       },
     );
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} → waiting-relevance (judge notes) requestId=${outcome.requestId}`,
     );
   } else if (outcome.status === 'throttled') {
@@ -1253,7 +1253,7 @@ async function doSubmitReasonsOnly(
     REASON_RELEVANCE_THRESHOLD,
   );
   if (bundle.calls.length === 0) {
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} reasonsOnly bundle empty — marking done`,
     );
     // Terminal inside the drain loop; doDrain's maybeFinalize handles finalize.
@@ -1265,7 +1265,7 @@ async function doSubmitReasonsOnly(
     AppState.currentState !== 'active' ? run.expoPushToken : null;
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
   const reasonIds = bundle.eligibleCandidates.map((c) => c.id);
-  logger.info(
+  logger.debug(
     `${TAG} batch ${batch.batchId} submit reasonsOnly: ${reasonIds.length} ids in ${bundle.calls.length} calls`,
   );
   const outcome = await sendInferenceRequest({
@@ -1278,7 +1278,7 @@ async function doSubmitReasonsOnly(
 
   if (outcome.status === 'ok') {
     await transitionToWaitingReasons(batch.batchId, outcome, reasonIds, rawMap);
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
   } else if (outcome.status === 'throttled') {
@@ -1384,7 +1384,7 @@ async function requeueThrottled(
     b.phase = 'queued';
     return true;
   });
-  logger.info(`${TAG} batch ${batchId} throttled — requeued (attempt unchanged)`);
+  logger.debug(`${TAG} batch ${batchId} throttled — requeued (attempt unchanged)`);
 }
 
 /** Submit POST failed — attempt+1; fail at cap, else requeue. */
@@ -1637,7 +1637,7 @@ async function handleJudgeResults(
     }
   }
 
-  logger.info(
+  logger.debug(
     `${TAG} batch ${batch.batchId} judge notes decoded: notes=${reasonMap.size} overrides=${overriddenIds.length}`,
   );
 
@@ -1711,7 +1711,7 @@ async function handleRelevanceResults(
       penalised += 1;
     }
     if (penalised > 0) {
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batch.batchId} soft filters penalised ${penalised}/${scoreMap.size}`,
       );
     }
@@ -1767,7 +1767,7 @@ async function handleRelevanceResults(
       (rawRelevanceMap[id] ?? 0) >= REASON_MIN_RAW_SCORE,
   );
 
-  logger.info(
+  logger.debug(
     `${TAG} batch ${batch.batchId} relevance decoded: scored=${Object.keys(relevanceMap).length} impactful=${impactfulIds.length}`,
   );
 
@@ -1835,13 +1835,13 @@ async function handleReasonResults(
   );
   await refreshUi();
   if (discarded > 0) {
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batch.batchId} discarded ${discarded} low-relevance rows`,
     );
   }
 
   await markBatchDone(batch.batchId);
-  logger.info(`${TAG} batch ${batch.batchId} reasons done`);
+  logger.debug(`${TAG} batch ${batch.batchId} reasons done`);
   await afterTerminal(context);
 }
 
@@ -1877,7 +1877,7 @@ async function submitNeedsReasons(
     );
     await refreshUi();
     if (discarded > 0) {
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
       );
     }
@@ -1921,7 +1921,7 @@ async function submitNeedsReasons(
     );
     await refreshUi();
     if (discarded > 0) {
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
       );
     }
@@ -1929,7 +1929,7 @@ async function submitNeedsReasons(
     return;
   }
   const reasonIds = bundle.eligibleCandidates.map((c) => c.id);
-  logger.info(
+  logger.debug(
     `${TAG} batch ${batchId} submit reasons: ${reasonIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
   );
   const outcome = await sendInferenceRequest({
@@ -1947,7 +1947,7 @@ async function submitNeedsReasons(
 
   if (outcome.status === 'ok') {
     await transitionToWaitingReasons(batchId, outcome, reasonIds);
-    logger.info(
+    logger.debug(
       `${TAG} batch ${batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
   } else if (outcome.status === 'throttled') {
@@ -1972,7 +1972,7 @@ async function submitNeedsReasons(
     );
     await refreshUi();
     if (discarded > 0) {
-      logger.info(
+      logger.debug(
         `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
       );
     }
@@ -2029,7 +2029,7 @@ async function requeueWaitingOrFail(
       );
       await refreshUi();
       if (discarded > 0) {
-        logger.info(
+        logger.debug(
           `${TAG} batch ${batch.batchId} discarded ${discarded} low-relevance rows`,
         );
       }

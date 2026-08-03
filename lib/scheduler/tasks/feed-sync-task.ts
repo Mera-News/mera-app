@@ -54,7 +54,7 @@ AppScheduler.register({
   handler: async (_input, ctx) => {
     const userStore = useUserStore.getState();
     const personaId = userStore.userPersona?._id;
-    logger.info(`[feed-sync-task] handler start — userId=${userStore.userId ?? 'null'} personaId=${personaId ?? 'null'} attempt=${ctx.attempt}`);
+    logger.debug(`[feed-sync-task] handler start — userId=${userStore.userId ?? 'null'} personaId=${personaId ?? 'null'} attempt=${ctx.attempt}`);
     if (!personaId) throw new Error('UserPersona not found');
     await feedSyncMachine.start(personaId, ctx);
   },

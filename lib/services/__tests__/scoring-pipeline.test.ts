@@ -93,6 +93,7 @@ jest.mock('react-native', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
     captureException: jest.fn(),

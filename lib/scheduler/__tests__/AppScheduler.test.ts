@@ -98,6 +98,7 @@ jest.mock('@/lib/scheduler/scheduler-runner', () => ({
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
+    debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
     captureException: jest.fn(),
