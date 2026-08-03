@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { AppState, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -8,6 +8,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 
 /**
  * The app-wide background for the five tab pages: a slowly drifting,
@@ -43,7 +45,9 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
  *     return. A backgrounded app animates nothing.
  *   • **Reduce Motion is honoured** — the field renders as a static frame with
  *     no clock, no timer, and no animated styles at all. That is both the
- *     accessibility behaviour and the cheapest possible mode.
+ *     accessibility behaviour and the cheapest possible mode. Settings →
+ *     Display → "Static background" (`display-prefs-store`) selects the exact
+ *     same mode by hand, for battery or for older devices.
  *
  * The per-frame CPU cost is negligible by construction; what remains is the
  * GPU compositing six full-screen layers, which is the irreducible price of an
@@ -227,6 +231,18 @@ function colorSequence(rand: () => number): string[] {
 /** The shared fade-out driver for the outgoing colour layer. */
 const outgoing = makeMutable(0);
 
+/**
+ * Puts the cover at full opacity. A named module function rather than a bare
+ * `outgoing.value = 1` at the call sites for one concrete reason: the component
+ * has to do this DURING RENDER (see the long comment there), and React Compiler
+ * refuses to compile a component that mutates a module value inline in render
+ * ("This value cannot be modified") — it silently skips optimising the whole
+ * component. Behind a function call it compiles normally.
+ */
+function armCover() {
+  outgoing.value = 1;
+}
+
 /** How long a colour change takes. Deliberately much shorter than
  *  `COLOR_STEP_MS`: the second gradient layer only exists for this long, so the
  *  app runs on a single backdrop layer the rest of the time. */
@@ -388,10 +404,18 @@ const ANDROID_DISABLED = Platform.OS === 'android';
 
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed }) => {
   const reduceMotion = useReducedMotion();
+  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
 
-  // One engine for the whole app — see THE SHARED ENGINE above. Reduce Motion
-  // opts this instance out entirely: no clock, no timer, no animated styles.
-  useSharedEngine(!reduceMotion && !ANDROID_DISABLED);
+  // OS Reduce Motion and the app's own "Static background" setting
+  // (Settings → Display) are the SAME mode: a single static frame, no clock,
+  // no timer, no animated styles. Both are global — every mounted instance
+  // agrees — so when either is on the shared engine has no subscribers left
+  // and stops, which is what keeps `step` from advancing underneath a static
+  // field.
+  const isStatic = reduceMotion || staticGradient;
+
+  // One engine for the whole app — see THE SHARED ENGINE above.
+  useSharedEngine(!isStatic && !ANDROID_DISABLED);
   const step = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
 
   // Unseeded surfaces share the app-wide sequences, which is what makes every
@@ -421,17 +445,81 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   const current = sequences.map((seq, i) => at(seq, i, step));
   const previous = sequences.map((seq, i) => at(seq, i, step - 1));
 
-  // Mounted only for the duration of a fade. `step > 0` keeps it off the very
-  // first render, which has nothing to fade from.
-  const [fading, setFading] = useState(false);
-  useEffect(() => {
-    if (reduceMotion || step === 0) return;
-    setFading(true);
-    outgoing.value = 1;
+  /* ──────────────────────────────────────────────────────────────────────────
+   * WHY THE COVER IS MOUNTED FROM RENDER AND NOT FROM AN EFFECT
+   *
+   * This used to be a `useEffect` on [step] that called `setFading(true)` and
+   * set `outgoing` to 1. That is one commit too late, and it produced the
+   * "background snaps to a different colour" bug: the step advance re-rendered
+   * `current` with the NEW colours and committed them with NO cover mounted —
+   * one or more frames of raw new colour — and only then did the effect mount
+   * the previous colours over the top, so the old colour visibly popped BACK
+   * before fading. Two things fix it, and both are load-bearing:
+   *
+   * 1. **Same-commit mounting.** `displayed` is adjusted DURING render (the
+   *    "adjust state when a value changes" pattern): React re-runs this
+   *    component synchronously and throws the first pass away, so the commit
+   *    that first paints the new `current` colours ALSO contains the cover.
+   *    There is no in-between frame to paint.
+   *
+   * 2. **`outgoing.value = 1` during that same render pass, not in the
+   *    effect.** Reanimated computes an animated component's initial JS-side
+   *    style by re-running the style worklet at that component's FIRST render
+   *    (`PropsFilter.filterNonAnimatedProps` → `initialUpdaterRun`, reanimated
+   *    4.x). So the cover's opacity at mount is whatever `outgoing` reads at
+   *    the moment it renders. Between fades `outgoing` rests at 0 — set it in
+   *    an effect (which runs AFTER the commit) and the cover mounts
+   *    TRANSPARENT, re-exposing the raw new colours for a frame and defeating
+   *    fix 1 entirely. Do not "tidy" this write into the effect below.
+   *
+   * `useLayoutEffect` then starts the fade-out. It runs after the commit but
+   * before the frame is drawn, and by then the cover is already opaque, so all
+   * it does is animate 1 → 0.
+   *
+   * Multi-instance coherence: `stepStore.advance()` notifies every subscriber
+   * inside one interval callback, so React batches them into a SINGLE render
+   * pass and a single commit — every instance's render-phase write happens
+   * before any instance's layout effect, and the repeated `outgoing.value = 1`
+   * / `withTiming(0)` in that one frame are idempotent (same target, same
+   * duration). That is the whole coordination mechanism; there is deliberately
+   * no per-instance driver, because one shared value is what makes every
+   * mounted backdrop show the IDENTICAL frame.
+   * ────────────────────────────────────────────────────────────────────────── */
+
+  // The step THIS instance has painted, plus whether that transition is being
+  // cross-faded. Seeded with the live shared step, which is what stops a
+  // backdrop mounted mid-session (every navigation push mounts one) from
+  // re-arming a fade — the old effect did, and it reset the SHARED `outgoing`
+  // for every other mounted instance mid-fade.
+  const [displayed, setDisplayed] = useState(() => ({ step, fading: false }));
+
+  if (displayed.step !== step) {
+    // See point 2 above: this must happen before the cover renders.
+    if (!isStatic) armCover();
+    setDisplayed({ step, fading: !isStatic });
+  } else if (displayed.fading && isStatic) {
+    // Static mode switched on mid-fade: drop the cover in this same render so
+    // no animation is left stranded on screen.
+    setDisplayed({ step, fading: false });
+  }
+
+  const fading = displayed.fading && !isStatic;
+
+  useLayoutEffect(() => {
+    if (!fading) return;
+    // Already armed by the render pass; re-asserted so the animation always
+    // starts from a known, fully-covering value.
+    armCover();
     outgoing.value = withTiming(0, { duration: FADE_MS, easing: Easing.inOut(Easing.ease) });
-    const t = setTimeout(() => setFading(false), FADE_MS);
+    // Unmounts the cover once it is fully transparent — the whole point of the
+    // one-layer-at-rest design. Cleared on unmount and whenever a new step
+    // supersedes this fade.
+    const t = setTimeout(
+      () => setDisplayed((d) => (d.fading ? { ...d, fading: false } : d)),
+      FADE_MS,
+    );
     return () => clearTimeout(t);
-  }, [step, reduceMotion]);
+  }, [displayed.step, fading]);
 
   const outgoingStyle = useAnimatedStyle(() => ({ opacity: outgoing.value }));
 
@@ -444,7 +532,7 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <BlobField colors={current} idBase="bg-current" />
-      {fading && !reduceMotion ? (
+      {fading ? (
         <Animated.View style={[StyleSheet.absoluteFill, outgoingStyle]}>
           <BlobField colors={previous} idBase="bg-prev" />
         </Animated.View>
