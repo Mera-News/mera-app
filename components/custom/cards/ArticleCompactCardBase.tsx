@@ -129,6 +129,10 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 resizeMode="cover"
                 recyclingKey={recyclingKey}
                 blurRadius={blurImages ? 24 : undefined}
+                // Decorative, and these arrive by the screenful — yield decode
+                // work to whatever the user is waiting on. See the longer note
+                // in ArticleCardBase.
+                priority="low"
               />
             ) : (
               <ArticleImagePlaceholder />
