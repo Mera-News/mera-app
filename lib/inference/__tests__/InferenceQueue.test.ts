@@ -83,6 +83,8 @@ jest.mock('../../logger', () => ({
 
 jest.useFakeTimers();
 
+import { AppState } from 'react-native';
+
 import { inferenceQueue } from '../InferenceQueue';
 
 // Helper to build fake job objects
@@ -655,6 +657,133 @@ describe('InferenceQueue', () => {
       await flushMicrotasks(25);
 
       expect(job.markFailed).toHaveBeenCalledWith('Native crash (no error message)');
+    });
+  });
+
+  describe('idle poll backoff + AppState gate (B1.3)', () => {
+    /** Drives one full consumeLoop iteration: settle the awaits, then fire the
+     *  pending sleep so the loop comes back around. */
+    async function step(delays: number[]) {
+      await flushMicrotasks(5);
+      const pending = delays[delays.length - 1] ?? 0;
+      jest.advanceTimersByTime(pending);
+      await flushMicrotasks(5);
+    }
+
+    function captureDelays(): { delays: number[]; restore: () => void } {
+      const delays: number[] = [];
+      const original = global.setTimeout;
+      const spy = jest
+        .spyOn(global, 'setTimeout')
+        .mockImplementation(((fn: () => void, ms?: number) => {
+          delays.push(ms ?? 0);
+          return (original as unknown as (f: () => void, m?: number) => unknown)(fn, ms);
+        }) as never);
+      return { delays, restore: () => spy.mockRestore() };
+    }
+
+    it('doubles the empty-queue sleep 2s -> 30s and caps there', async () => {
+      mockDequeueJob.mockResolvedValue(null);
+      const { delays, restore } = captureDelays();
+      try {
+        await inferenceQueue.start();
+        // Six iterations: 2000, 4000, 8000, 16000, 30000 (capped), 30000.
+        for (let i = 0; i < 6; i++) await step(delays);
+        expect(delays.slice(0, 6)).toEqual([2000, 4000, 8000, 16000, 30000, 30000]);
+      } finally {
+        restore();
+      }
+    });
+
+    it('notify() resets the backoff to the 2s minimum', async () => {
+      mockDequeueJob.mockResolvedValue(null);
+      const { delays, restore } = captureDelays();
+      try {
+        await inferenceQueue.start();
+        for (let i = 0; i < 4; i++) await step(delays);
+        expect(delays.slice(0, 5)).toEqual([2000, 4000, 8000, 16000, 30000]);
+
+        // An enqueue wakes the loop mid-sleep; the very next idle sleep is back
+        // at MIN, i.e. the reset survives the loop resuming.
+        inferenceQueue.notify();
+        await flushMicrotasks(5);
+        expect(delays[5]).toBe(2000);
+      } finally {
+        restore();
+      }
+    });
+
+    it('does NOT back off the paused branch — chat hand-back stays at 2s', async () => {
+      mockDequeueJob.mockResolvedValue(null);
+      const { delays, restore } = captureDelays();
+      try {
+        await inferenceQueue.start();
+        for (let i = 0; i < 3; i++) await step(delays);
+        expect(delays[2]).toBe(8000); // idle backoff has climbed
+
+        await inferenceQueue.pause();
+        const before = delays.length;
+        await step(delays);
+        // Every sleep taken while paused is the fixed minimum, never the backoff.
+        expect(delays.slice(before)).toEqual(
+          delays.slice(before).map(() => 2000),
+        );
+        expect(delays.length).toBeGreaterThan(before);
+        inferenceQueue.resume();
+      } finally {
+        restore();
+      }
+    });
+
+    it('stop() removes the AppState subscription it armed in start()', async () => {
+      mockDequeueJob.mockResolvedValue(null);
+      const remove = jest.fn();
+      const addSpy = jest
+        .spyOn(AppState, 'addEventListener')
+        .mockReturnValue({ remove } as never);
+      try {
+        await inferenceQueue.start();
+        await flushMicrotasks(5);
+        expect(addSpy).toHaveBeenCalledWith('change', expect.any(Function));
+
+        jest.runAllTimers();
+        await inferenceQueue.stop();
+        expect(remove).toHaveBeenCalledTimes(1);
+      } finally {
+        addSpy.mockRestore();
+      }
+    });
+
+    it('backgrounding pins the sleep to the cap; foregrounding resets it', async () => {
+      mockDequeueJob.mockResolvedValue(null);
+      let handler: ((s: string) => void) | undefined;
+      const addSpy = jest
+        .spyOn(AppState, 'addEventListener')
+        .mockImplementation(((_e: string, cb: (s: string) => void) => {
+          handler = cb;
+          return { remove: jest.fn() };
+        }) as never);
+      const { delays, restore } = captureDelays();
+      try {
+        await inferenceQueue.start();
+        await flushMicrotasks(5);
+        expect(delays[0]).toBe(2000);
+
+        // Backgrounding lands while the first sleep is pending. The write must
+        // survive the loop resuming, so the NEXT sleep is the cap, not 4000.
+        handler?.('background');
+        jest.advanceTimersByTime(2000);
+        await flushMicrotasks(5);
+        expect(delays[1]).toBe(30000);
+
+        // Foregrounding wakes the loop and resets to the minimum.
+        handler?.('active');
+        await flushMicrotasks(5);
+        expect(delays[2]).toBe(2000);
+      } finally {
+        restore();
+        addSpy.mockRestore();
+      }
     });
   });
 });
