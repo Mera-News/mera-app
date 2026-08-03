@@ -12,8 +12,8 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *
  * `openai/gpt-oss-120b` is a similar-cost TEE-served model on the same NEAR
  * fleet — verified `is_ready: true` with a healthy attestation report on
- * 2026-08-03. The ids here are pending final user sign-off; this map is the
- * single point to change if a different fallback is chosen.
+ * 2026-08-03, and confirmed as the fallback choice the same day. This map is
+ * the single point to change if a different fallback is ever chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
   [BIG_MODEL]: 'openai/gpt-oss-120b',
