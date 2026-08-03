@@ -28,9 +28,15 @@ interface Props {
      *  SavedSuggestionsScreen's `embedded` prop. Route usage leaves this unset,
      *  which keeps non-embedded behavior byte-identical. */
     embedded?: boolean;
+    /** Embedded hosts keep this component mounted behind display:none and flip
+     *  this when the sub-tab becomes visible. Visits recorded while hidden
+     *  (e.g. the open-article button on feed cards) would otherwise never show:
+     *  the initial fetch runs once, and the empty state renders outside the
+     *  FlatList so pull-to-refresh can't recover either. Unset = always active. */
+    active?: boolean;
 }
 
-const VisitedPublicationsList: React.FC<Props> = ({ onBack, embedded = false }) => {
+const VisitedPublicationsList: React.FC<Props> = ({ onBack, embedded = false, active = true }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const [items, setItems] = useState<VisitedPublication[]>([]);
@@ -50,12 +56,16 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack, embedded = false }) 
     }, []);
 
     useEffect(() => {
+        if (!active) return;
         if (!hasFetched.current) {
             hasFetched.current = true;
             setIsLoading(true);
             load().finally(() => setIsLoading(false));
+            return;
         }
-    }, [load]);
+        // Re-activation of an already-fetched embedded list: silent refresh.
+        void load();
+    }, [active, load]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);

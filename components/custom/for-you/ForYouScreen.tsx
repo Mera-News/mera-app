@@ -493,7 +493,7 @@ const MeraNewsScreen: React.FC = () => {
                 {/* History (lazy-mounted on first visit) */}
                 {historyVisited && (
                     <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
-                        <VisitedPublicationsList embedded onBack={() => selectSubTab('feed')} />
+                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} />
                     </View>
                 )}
             </View>
