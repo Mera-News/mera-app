@@ -97,7 +97,7 @@ jest.mock('../../translation-service', () => ({
   ],
 }));
 
-import { PersonaUpdateAgent, MAX_HISTORY_MESSAGES } from '../agents/PersonaUpdateAgent';
+import { PersonaUpdateAgent } from '../agents/PersonaUpdateAgent';
 
 function makeAgent(surface: 'ONBOARDING' | 'CONFIG' = 'ONBOARDING') {
   return new PersonaUpdateAgent('user-123', surface);
@@ -112,7 +112,15 @@ describe('PersonaUpdateAgent', () => {
     });
     mockBuildPersonaUpdateStaticPrompt.mockReturnValue('static-prompt');
     mockBuildPersonaUpdateContext.mockReturnValue('context-string');
-    mockBuildToolDefinitions.mockReturnValue([{ type: 'function', function: { name: 'saveFacts' } }]);
+    // Real tool names — executeTool normalises misspellings against THIS list,
+    // so a fictional name here would make that repair untestable.
+    mockBuildToolDefinitions.mockReturnValue([
+      { type: 'function', function: { name: 'saveExtractedFacts' } },
+      { type: 'function', function: { name: 'updateUserConfig' } },
+      { type: 'function', function: { name: 'deleteUserFacts' } },
+      { type: 'function', function: { name: 'issueWarning' } },
+      { type: 'function', function: { name: 'runCalibration' } },
+    ]);
     mockGetFacts.mockResolvedValue([]);
     // not-interested P4a defaults — no filters, no pending proposal, so every
     // pre-existing expectation observes the same call args as before.
@@ -340,117 +348,7 @@ describe('PersonaUpdateAgent', () => {
       const tools = agent.getToolDefinitions();
 
       expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG');
-      expect(tools).toEqual([{ type: 'function', function: { name: 'saveFacts' } }]);
-    });
-  });
-
-  describe('formatMessages', () => {
-    it('returns messages sliced to MAX_HISTORY_MESSAGES', () => {
-      const agent = makeAgent();
-      const msgs = Array.from({ length: 20 }, (_, i) => ({
-        id: `m${i}`,
-        role: (i % 2 === 0 ? 'user' : 'assistant') as 'user' | 'assistant',
-        content: `msg ${i}`,
-      }));
-
-      const result = agent.formatMessages(msgs);
-      // Should have at most MAX_HISTORY_MESSAGES + possible prepended user
-      expect(result.length).toBeLessThanOrEqual(MAX_HISTORY_MESSAGES + 1);
-    });
-
-    it('ensures result starts with a user turn', () => {
-      const agent = makeAgent();
-      // Messages where last MAX_HISTORY_MESSAGES might start with assistant
-      const msgs = [
-        { id: 'u1', role: 'user' as const, content: 'hello' },
-        { id: 'a1', role: 'assistant' as const, content: 'hi', toolCalls: [] },
-        { id: 'a2', role: 'assistant' as const, content: 'follow-up', toolCalls: [] },
-      ];
-
-      const result = agent.formatMessages(msgs);
-      expect(result[0].role).toBe('user');
-    });
-
-    it('prepends last user message when slice starts with assistant (lines 161-162)', () => {
-      const agent = makeAgent();
-      // Fill history so the last MAX_HISTORY_MESSAGES slice starts with an assistant turn
-      const msgs = [
-        { id: 'u0', role: 'user' as const, content: 'first user msg' },
-        ...Array.from({ length: MAX_HISTORY_MESSAGES }, (_, i) => ({
-          id: `a${i}`,
-          role: 'assistant' as const,
-          content: `assistant ${i}`,
-        })),
-      ];
-
-      const result = agent.formatMessages(msgs);
-      // First element should be a user turn (prepended from original messages)
-      expect(result[0].role).toBe('user');
-      expect((result[0] as { content: string }).content).toBe('first user msg');
-    });
-
-    it('does not prepend when no user message exists at all', () => {
-      const agent = makeAgent();
-      // Only assistant messages — no user message to prepend
-      const msgs = [
-        { id: 'a1', role: 'assistant' as const, content: 'hi' },
-      ];
-
-      // Should not throw — lastUser is undefined, limited stays as-is
-      expect(() => agent.formatMessages(msgs)).not.toThrow();
-    });
-
-    it('appends tool results as tool messages after assistant', () => {
-      const agent = makeAgent();
-      const msgs = [
-        {
-          id: 'u1',
-          role: 'user' as const,
-          content: 'save my fact',
-        },
-        {
-          id: 'a1',
-          role: 'assistant' as const,
-          content: 'done',
-          toolCalls: [
-            {
-              id: 'tc1',
-              name: 'saveExtractedFacts',
-              input: { facts: [] },
-              result: { saved: true },
-              status: 'done' as const,
-            },
-          ],
-        },
-      ];
-
-      const result = agent.formatMessages(msgs);
-      expect(result).toHaveLength(3); // user + assistant + tool
-      expect(result[2].role).toBe('tool');
-    });
-
-    it('does NOT append tool messages when result is undefined', () => {
-      const agent = makeAgent();
-      const msgs = [
-        { id: 'u1', role: 'user' as const, content: 'hi' },
-        {
-          id: 'a1',
-          role: 'assistant' as const,
-          content: 'ok',
-          toolCalls: [
-            {
-              id: 'tc1',
-              name: 'saveFacts',
-              input: {},
-              result: undefined,
-              status: 'pending' as const,
-            },
-          ],
-        },
-      ];
-
-      const result = agent.formatMessages(msgs);
-      expect(result.filter((m) => m.role === 'tool')).toHaveLength(0);
+      expect(tools.map((t) => t.function.name)).toContain('saveExtractedFacts');
     });
   });
 

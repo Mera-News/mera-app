@@ -32,20 +32,13 @@ import {
   type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { estimateTokens } from '../tokens';
+import { normalizeToolName } from '@/lib/news-harness/persona-management/tool-names';
 import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
-  ConversationMessage,
   IAgent,
   ToolDefinition,
   ToolExecutionResult,
 } from '../types';
-
-// Local copy — ProviderMessage removed from shared types.ts (engine-only concern, deleted in Phase 5)
-type ProviderMessage =
-  | { role: 'user' | 'assistant'; content: string }
-  | { role: 'tool'; toolCallId: string; toolName: string; input: unknown; result: unknown };
-
-export const MAX_HISTORY_MESSAGES = 8; // wire history now includes tool_call/tool_result entries; allow more turns
 
 export class PersonaUpdateAgent implements IAgent {
   readonly id: string;
@@ -137,6 +130,22 @@ export class PersonaUpdateAgent implements IAgent {
    *
    * ONBOARDING short-circuits: it never carries the filter tools, so every
    * variant renders the same prompt and there is nothing to yield.
+   *
+   * ── planTurn does NOT measure conversation history, and must not start ──
+   *
+   * The tempting inference — "widening the chat history window will push turns
+   * over this budget and evict the tools" — is FALSE, and was verified false
+   * before the history window was widened. planPersonaPrompt's only inputs are
+   * the system prompt, the known-facts block, and the filters block (see its
+   * signature); wire history is not among them and never reaches it. Widening
+   * history therefore cannot move `filterTools` toward `off` and cannot strip
+   * tools from the cloud payload.
+   *
+   * Do not "fix" this by adding history tokens to baseContextTokens. It would
+   * couple the two, and the visible effect would be the ladder dropping the
+   * user's own FILTERS block partway through a long conversation — a product
+   * change, not a safety guard. History is budgeted separately and yields
+   * BEFORE this ladder does; see lib/news-harness/persona-management/history-window.ts.
    */
   private async planTurn(params: {
     buildAt: (v: PersonaPromptPlan['filterTools']) => string;
@@ -247,40 +256,26 @@ export class PersonaUpdateAgent implements IAgent {
     return getPersonaToolDefinitions(this.surface, buildToolDefinitions, this.turnPlan.filterTools);
   }
 
-  // --- IAgent: message formatting ---
-
-  formatMessages(messages: ConversationMessage[]): ProviderMessage[] {
-    // Slice to limit history, but guarantee the result starts with a user message.
-    // During re-inference loops (cloud tool-call loop) the naive slice drops the user
-    // message once convoBuf grows beyond MAX_HISTORY_MESSAGES — LLM APIs require the
-    // first message to be a user turn.
-    let limited = messages.slice(-MAX_HISTORY_MESSAGES);
-    if (limited[0]?.role !== 'user') {
-      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-      if (lastUser) limited = [lastUser, ...limited];
-    }
-    const result: ProviderMessage[] = [];
-
-    for (const msg of limited) {
-      result.push({ role: msg.role, content: msg.content });
-
-      // Append tool results as separate tool messages (must come after assistant text)
-      if (msg.role === 'assistant' && msg.toolCalls) {
-        for (const tc of msg.toolCalls) {
-          if (tc.result !== undefined) {
-            result.push({
-              role: 'tool',
-              toolCallId: tc.id,
-              toolName: tc.name,
-              input: tc.input,
-              result: tc.result,
-            });
-          }
-        }
-      }
-    }
-
-    return result;
+  /**
+   * Forced-extraction payload: `saveExtractedFacts` and NOTHING ELSE.
+   *
+   * The forced pass runs with tool_choice:'required', so every tool listed here
+   * can be called on a turn the user never asked anything of ("hi", "thanks").
+   * `saveExtractedFacts` is the only persona tool that is safe under that
+   * pressure: with no facts to extract the model emits an empty array and
+   * `handleSaveExtractedFacts` returns { factsSaved: 0 } without touching the
+   * database (lib/chat-tools/tool-handlers.ts).
+   *
+   * Everything else is deliberately excluded. `deleteUserFacts` is destructive;
+   * `runCalibration` takes NO arguments, which makes it the cheapest possible
+   * way for a model to satisfy 'required' — forcing it would fabricate exactly
+   * the confirmation the calibration flow exists to require; and the proposal
+   * tools stage or apply changes.
+   */
+  getForcedExtractionTools(): ToolDefinition[] {
+    return this.getToolDefinitions().filter(
+      (d) => d.function.name === 'saveExtractedFacts',
+    );
   }
 
   // --- IAgent: tool execution ---
@@ -291,8 +286,11 @@ export class PersonaUpdateAgent implements IAgent {
   ): Promise<ToolExecutionResult> {
     const args = (input as Record<string, unknown>) ?? {};
 
-    // Normalize common LLM misspellings of tool names
-    const normalizedName = name === 'saveExtractedsFacts' ? 'saveExtractedFacts' : name;
+    // Normalize LLM misspellings against the REAL tool list rather than a
+    // single hardcoded typo — casing, separators, and small edit distances all
+    // resolve; genuine unknowns still fall to `default:` below.
+    const normalizedName =
+      normalizeToolName(name, this.getToolDefinitions().map((d) => d.function.name)) ?? name;
 
     switch (normalizedName) {
       case 'saveExtractedFacts': {
