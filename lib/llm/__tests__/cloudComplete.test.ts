@@ -54,6 +54,7 @@ jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
     captureException: jest.fn(),
+    captureMessage: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
@@ -72,10 +73,22 @@ import {
   cloudComplete,
   cloudBatchComplete,
   cloudChatStream,
+  isAbortLike,
+  UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS,
+  UPSTREAM_ALIGNED_TIMEOUT_MS,
   type SseEvent,
 } from '../cloudComplete';
+import { __resetForTests as resetModelFallback, isFallbackEngaged } from '../model-fallback';
+import { SMALL_MODEL } from '../constants';
 import type { BatchCall } from '../types';
 import logger from '@/lib/logger';
+
+const FALLBACK_MODEL = 'openai/gpt-oss-120b';
+
+/** A rejection whose wording matches expo/fetch's cancellation. */
+function makeCanceledError(): Error {
+  return new Error('fetch failed: Fetch request has been canceled');
+}
 
 // ─── Constants (mirrored from source) ─────────────────────────────────────────
 
@@ -124,6 +137,7 @@ describe('authFetch', () => {
     mockInvalidateJwtCache.mockReset();
     [(logger.captureException as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
     jest.useRealTimers();
+    resetModelFallback();
     mockGetJwtToken.mockResolvedValue('test-jwt');
     mockPrepareE2EEContext.mockResolvedValue(makeE2EECtx());
   });
@@ -215,16 +229,84 @@ describe('authFetch', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
   }, 10_000);
 
-  it('respects a caller-supplied signal (uses it directly)', async () => {
+  it('combines a caller-supplied signal with the timeout instead of replacing it', async () => {
+    // Regression: `init.signal ?? controller.signal` silently DISABLED the
+    // per-attempt timeout whenever a caller passed a signal, so the request
+    // could hang forever. The timeout must still fire with a caller signal
+    // attached, and the signal handed to fetch must not be the caller's.
     const controller = new AbortController();
-    mockFetch.mockResolvedValueOnce(makeResponse(200));
-    await authFetch('https://test.test/api', {
-      method: 'POST',
-      signal: controller.signal,
-    });
+    mockFetch.mockImplementation((_url: unknown, init: unknown) =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = (init as RequestInit).signal;
+        signal?.addEventListener('abort', () =>
+          reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+        );
+      }),
+    );
+
+    await expect(
+      authFetch(
+        'https://test.test/api',
+        { method: 'POST', signal: controller.signal },
+        { requestTimeoutMs: 50, maxTimeoutAttempts: 1 },
+      ),
+    ).rejects.toThrow(/aborted/);
+
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    // When caller supplies signal, authFetch uses it (init.signal ?? controller.signal)
-    expect(init.signal).toBe(controller.signal);
+    expect(init.signal).not.toBe(controller.signal);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    mockFetch.mockReset();
+  }, 10_000);
+
+  it('still aborts when the CALLER signal fires (combined, not dropped)', async () => {
+    const controller = new AbortController();
+    mockFetch.mockImplementation((_url: unknown, init: unknown) =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = (init as RequestInit).signal;
+        signal?.addEventListener('abort', () =>
+          reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+        );
+      }),
+    );
+
+    const promise = authFetch(
+      'https://test.test/api',
+      { method: 'POST', signal: controller.signal },
+      // Timeout far away — only the caller's abort can end this.
+      { requestTimeoutMs: 60_000, maxTimeoutAttempts: 1 },
+    );
+    controller.abort();
+    await expect(promise).rejects.toThrow(/aborted/);
+    mockFetch.mockReset();
+  }, 10_000);
+
+  it('classifies expo/fetch "canceled" wording as a timeout, not a network error', async () => {
+    // expo/fetch words its cancellation "Fetch request has been canceled" —
+    // the old /abort/-only test logged our own timeouts as `timedOut: false`.
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(makeResponse(200));
+
+    const result = await authFetch('https://test.test/api', { method: 'POST' });
+
+    expect(result.status).toBe(200);
+    expect((logger.warn as jest.Mock)).toHaveBeenCalledWith(
+      expect.stringContaining('timed out'),
+      { url: 'https://test.test/api' },
+    );
+    expect((logger.warn as jest.Mock)).toHaveBeenCalledWith(
+      expect.stringContaining('fetch error'),
+      expect.objectContaining({ timedOut: true }),
+    );
+  }, 10_000);
+
+  it('isAbortLike matches abort and cancel wording only', () => {
+    expect(isAbortLike(Object.assign(new Error('x'), { name: 'AbortError' }))).toBe(true);
+    expect(isAbortLike(new Error('The operation was aborted'))).toBe(true);
+    expect(isAbortLike(makeCanceledError())).toBe(true);
+    expect(isAbortLike(new Error('Request was cancelled'))).toBe(true);
+    expect(isAbortLike(new Error('Network request failed'))).toBe(false);
+    expect(isAbortLike('not an error')).toBe(false);
   });
 
   it('logs abort/timeout errors with url context', async () => {
@@ -348,6 +430,7 @@ describe('cloudComplete', () => {
     mockDecryptContent.mockReset();
     [(logger.captureException as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
     jest.useRealTimers();
+    resetModelFallback();
     mockGetJwtToken.mockResolvedValue('test-jwt');
     mockEncryptMessages.mockImplementation(
       async (messages: { role: string; content: string }[]) => {
@@ -526,6 +609,7 @@ describe('cloudBatchComplete', () => {
     mockDecryptContent.mockReset();
     [(logger.captureException as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
     jest.useRealTimers();
+    resetModelFallback();
     mockGetJwtToken.mockResolvedValue('test-jwt');
     mockPrepareE2EEContext.mockResolvedValue(makeE2EECtx());
     mockEncryptContent.mockImplementation((s: string) => `enc(${s})`);
@@ -834,6 +918,249 @@ describe('cloudBatchComplete', () => {
   });
 });
 
+// ─── session model fallback (plan E) ───────────────────────────────────────────
+
+describe('session model fallback', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockGetJwtToken.mockReset();
+    mockEncryptMessages.mockReset();
+    mockPrepareE2EEContext.mockReset();
+    mockEncryptContent.mockReset();
+    mockDecryptContent.mockReset();
+    [(logger.captureMessage as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
+    jest.useRealTimers();
+    resetModelFallback();
+    mockGetJwtToken.mockResolvedValue('test-jwt');
+    mockPrepareE2EEContext.mockResolvedValue(makeE2EECtx());
+    mockEncryptContent.mockImplementation((s: string) => `enc(${s})`);
+    mockDecryptContent.mockImplementation((s: string) => s);
+    mockEncryptMessages.mockImplementation(
+      async (messages: { role: string; content: string }[]) => {
+        for (const msg of messages) {
+          if (msg.content.length > 0) msg.content = `enc(${msg.content})`;
+        }
+        return makeE2EECtx();
+      },
+    );
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    resetModelFallback();
+  });
+
+  const bodyModelOf = (i: number) =>
+    JSON.parse((mockFetch.mock.calls[i] as [string, RequestInit])[1].body as string).model;
+
+  it('cloudComplete: exhausted timeout attempts engage the fallback and retry the SAME call once', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError()) // attempt 1 on the primary
+      .mockRejectedValueOnce(makeCanceledError()) // attempt 2 — budget exhausted
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob'))); // fallback
+    mockDecryptContent.mockReturnValueOnce('recovered');
+
+    const result = await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+
+    expect(result).toBe('recovered');
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(bodyModelOf(0)).toBe(SMALL_MODEL);
+    expect(bodyModelOf(2)).toBe(FALLBACK_MODEL);
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+  }, 10_000);
+
+  it('a gateway 502 upstream-timeout verdict engages the fallback too', async () => {
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(502)) // budget (2) exhausted → surfaced
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+    mockDecryptContent.mockReturnValueOnce('ok');
+
+    const result = await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+
+    expect(result).toBe('ok');
+    expect(bodyModelOf(2)).toBe(FALLBACK_MODEL);
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
+  }, 10_000);
+
+  it('substitutes the fallback on SUBSEQUENT calls once engaged', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('a')))
+      .mockResolvedValueOnce(
+        makeResponse(200, {
+          results: [
+            { index: 0, response: { choices: [{ message: { content: 'b' }, finish_reason: 'stop' }] } },
+          ],
+        }),
+      );
+    mockDecryptContent.mockImplementation((s: string) => s);
+
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+    await cloudBatchComplete([{ id: 'c1', system: 's', prompt: 'p', temperature: 0.3 }]);
+
+    const batchBody = JSON.parse(
+      (mockFetch.mock.calls[3] as [string, RequestInit])[1].body as string,
+    );
+    expect(batchBody.requests[0].model).toBe(FALLBACK_MODEL);
+  }, 10_000);
+
+  it('encrypts the RETRY under the RESOLVED fallback model (attestation is per-model)', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+
+    const models = (mockEncryptMessages as jest.Mock).mock.calls.map((c: unknown[]) => c[1]);
+    expect(models).toEqual([SMALL_MODEL, FALLBACK_MODEL]);
+  }, 10_000);
+
+  it('the fallback retry re-encrypts FRESH plaintext (never double-encrypts)', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+
+    const retryBody = JSON.parse(
+      (mockFetch.mock.calls[2] as [string, RequestInit])[1].body as string,
+    );
+    expect(retryBody.messages[0].content).toBe('enc(sys)'); // not enc(enc(sys))
+    expect(retryBody.messages[1].content).toBe('enc(p)');
+  }, 10_000);
+
+  it('batch: rebuilds the E2EE context for the fallback attempt', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(
+        makeResponse(200, {
+          results: [
+            { index: 0, response: { choices: [{ message: { content: 'blob' }, finish_reason: 'stop' }] } },
+          ],
+        }),
+      );
+
+    await cloudBatchComplete([{ id: 'c1', system: 's', prompt: 'p', temperature: 0.3 }]);
+
+    const models = (mockPrepareE2EEContext as jest.Mock).mock.calls.map((c: unknown[]) => c[0]);
+    expect(models).toEqual([SMALL_MODEL, FALLBACK_MODEL]);
+  }, 10_000);
+
+  it('does NOT engage on a plain network error', async () => {
+    for (let i = 0; i < 11; i++) mockFetch.mockRejectedValueOnce(new Error('Network request failed'));
+    await expect(
+      cloudComplete({ systemPrompt: 'sys', prompt: 'p' }, { maxTimeoutAttempts: 1 }),
+    ).rejects.toThrow(/Network request failed/);
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  }, 10_000);
+
+  it('does NOT engage on a 4xx', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(400, {}, { text: 'nope' }));
+    await expect(cloudComplete({ systemPrompt: 'sys', prompt: 'p' })).rejects.toThrow(
+      /E2EE completion failed/,
+    );
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT engage on an E2EE/auth failure', async () => {
+    mockGetJwtToken.mockResolvedValueOnce(null);
+    await expect(cloudComplete({ systemPrompt: 'sys', prompt: 'p' })).rejects.toThrow(
+      /no JWT token available/,
+    );
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+  });
+
+  it('does NOT engage on success', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    expect((logger.captureMessage as jest.Mock)).not.toHaveBeenCalled();
+  });
+
+  it('surfaces the ORIGINAL error when the fallback retry also fails', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(new Error('fallback exploded'));
+
+    await expect(cloudComplete({ systemPrompt: 'sys', prompt: 'p' })).rejects.toThrow(
+      /has been canceled/,
+    );
+  }, 10_000);
+
+  it('reports to Sentry exactly once per model per session', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')))
+      // second call: already on the fallback, which also times out
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError());
+
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+    await expect(cloudComplete({ systemPrompt: 'sys', prompt: 'p' })).rejects.toThrow();
+
+    expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledTimes(1);
+    expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledWith(
+      'NEAR primary model failing — session fallback engaged',
+      { level: 'error', tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL } },
+    );
+  }, 15_000);
+
+  it('does not fire a pointless second attempt once already on the fallback', async () => {
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockResolvedValueOnce(makeResponse(200, makeChatResponse('blob')));
+    await cloudComplete({ systemPrompt: 'sys', prompt: 'p' });
+    mockFetch.mockReset();
+
+    // Engaged now — the primary resolves to the fallback, so a timeout-class
+    // failure has nowhere else to go: 2 attempts and out, no third call.
+    mockFetch
+      .mockRejectedValueOnce(makeCanceledError())
+      .mockRejectedValueOnce(makeCanceledError());
+    await expect(cloudComplete({ systemPrompt: 'sys', prompt: 'p' })).rejects.toThrow();
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  }, 15_000);
+});
+
+// ─── gateway-aligned timeout defaults (plan A) ─────────────────────────────────
+
+describe('gateway-aligned timeout defaults', () => {
+  it('exports 130s / 2 attempts (must outlast the gateway 120s upstream limit)', () => {
+    expect(UPSTREAM_ALIGNED_TIMEOUT_MS).toBe(130_000);
+    expect(UPSTREAM_ALIGNED_TIMEOUT_MS).toBeGreaterThan(120_000);
+    expect(UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS).toBe(2);
+  });
+
+  it('cloudBatchComplete caps 502 attempts at 2 by default (was 11)', async () => {
+    mockFetch.mockReset();
+    resetModelFallback();
+    mockGetJwtToken.mockResolvedValue('test-jwt');
+    mockPrepareE2EEContext.mockResolvedValue(makeE2EECtx());
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(502))
+      // the fallback attempt (engaged by the 502 verdict) also 502s
+      .mockResolvedValueOnce(makeResponse(502, {}, { text: 'gateway timeout' }));
+
+    await expect(
+      cloudBatchComplete([{ id: 'c1', system: 's', prompt: 'p', temperature: 0.3 }]),
+    ).rejects.toThrow(/E2EE batch failed: 502/);
+    // 2 on the primary + exactly 1 fallback retry — not an 11-attempt storm.
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    resetModelFallback();
+  }, 15_000);
+});
+
 // ─── cloudChatStream ───────────────────────────────────────────────────────────
 
 describe('cloudChatStream', () => {
@@ -844,6 +1171,7 @@ describe('cloudChatStream', () => {
     mockDecryptContent.mockReset();
     [(logger.captureException as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
     jest.useRealTimers();
+    resetModelFallback();
     mockGetJwtToken.mockResolvedValue('test-jwt');
     mockEncryptMessages.mockImplementation(
       async (messages: { role: string; content: string }[]) => {
@@ -1024,16 +1352,20 @@ describe('cloudChatStream', () => {
   });
 
   it('caps 502 retries on the chat path (surfaces the gateway 502 without storming)', async () => {
-    // Chat passes maxTimeoutAttempts=2 → the 3rd fetch never happens; the 502 is
-    // surfaced as an E2EE chat failure instead of a multi-minute retry storm.
+    // maxTimeoutAttempts=2 exhausts the primary's budget, then the session model
+    // fallback (plan E) buys exactly ONE more attempt on a different model —
+    // 3 upstream attempts total, not an 11-attempt multi-minute storm. The
+    // ORIGINAL 502 is what surfaces.
     mockFetch
       .mockResolvedValueOnce(makeResponse(502))
       .mockResolvedValueOnce(makeResponse(502))
-      .mockResolvedValueOnce(makeResponse(200));
+      .mockResolvedValueOnce(makeResponse(502))
+      .mockResolvedValueOnce(makeResponse(200)); // never reached
     await expect(
       collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
     ).rejects.toThrow(/E2EE chat failed: 502/);
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    resetModelFallback();
   }, 10_000);
 
   it('sends tools and tool_choice when tools are provided', async () => {

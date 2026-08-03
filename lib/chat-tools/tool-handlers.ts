@@ -128,6 +128,32 @@ export async function handleSaveExtractedFacts(
 }
 
 /**
+ * factIds with a CLOUD topic-generation batch in flight.
+ *
+ * The local branch is deduped by `hasPendingJob('topic_gen', ...)` against the
+ * inference_jobs table, but the cloud branch has no such record — so before this
+ * set, a double-tapped Retry (TopicPlanCard) fired two concurrent
+ * `cloudBatchComplete` calls for the same fact. Module-level because the guard
+ * has to hold across every caller, not per component instance.
+ */
+const inFlightCloudTopicGen = new Set<string>();
+
+/** Claim the entries not already in flight (synchronously, so two callers in the
+ *  same tick cannot both win). Returns only the entries this caller owns. */
+function claimTopicGen(
+  entries: Array<{ id: string; statement: string }>,
+): Array<{ id: string; statement: string }> {
+  const claimed = entries.filter((e) => !inFlightCloudTopicGen.has(e.id));
+  for (const e of claimed) inFlightCloudTopicGen.add(e.id);
+  return claimed;
+}
+
+/** True while a cloud topic-generation batch is running for this fact. */
+export function isTopicGenerationInFlight(factId: string): boolean {
+  return inFlightCloudTopicGen.has(factId);
+}
+
+/**
  * Kicks off topic generation for newly-saved facts. Cloud mode issues one
  * batch call; on-device mode enqueues an individual job per fact for
  * sequential llama.rn access. Fire-and-forget — errors are logged, never
@@ -136,16 +162,38 @@ export async function handleSaveExtractedFacts(
 export function triggerTopicGeneration(
   savedFactEntries: Array<{ id: string; statement: string }>,
 ): void {
+  void startTopicGeneration(savedFactEntries);
+}
+
+/**
+ * Awaitable form of {@link triggerTopicGeneration}. Same behaviour, but the
+ * promise settles when generation does, so a UI retry can keep its button
+ * disabled for the real duration instead of guessing. Never rejects.
+ */
+export async function startTopicGeneration(
+  savedFactEntries: Array<{ id: string; statement: string }>,
+): Promise<void> {
   if (savedFactEntries.length === 0) return;
 
   const useCloud =
     useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
 
   if (useCloud) {
-    // Cloud path: single batch call for all facts
-    batchGenerateTopics(savedFactEntries).catch((err: unknown) =>
-      logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) }),
-    );
+    // Cloud path: single batch call for all facts, minus any already running.
+    const entries = claimTopicGen(savedFactEntries);
+    if (entries.length === 0) return;
+    try {
+      await batchGenerateTopics(entries);
+    } catch (err: unknown) {
+      logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) });
+      // The harness catches a batch-call throw and writes topicGenError itself,
+      // but a throw from anywhere else (call building, fact reads, metadata
+      // writes) escapes it — and a fact with neither topics nor an error leaves
+      // TopicPlanCard spinning forever. Record the failure so the card settles.
+      await markTopicGenFailed(entries, err);
+    } finally {
+      for (const e of entries) inFlightCloudTopicGen.delete(e.id);
+    }
   } else {
     // Local path: enqueue individual jobs for sequential llama.rn access
     for (const entry of savedFactEntries) {
@@ -160,6 +208,69 @@ export function triggerTopicGeneration(
       }).catch((err: unknown) => logger.warn('Failed to enqueue topic gen', { error: String(err) }));
     }
   }
+}
+
+/** Read one fact's current metadata (empty object if it can't be read). */
+async function readFactMetadata(factId: string): Promise<Record<string, string[]>> {
+  const facts = await getFacts();
+  return facts.find((f) => f.id === factId)?.metadata ?? {};
+}
+
+/**
+ * Records a topic-generation failure the harness didn't record itself, so the
+ * fact carries the same `topicGenError` marker every reader already understands
+ * (TopicPlanCard, FactAccordion, PersonaL1MeraProtocol).
+ */
+async function markTopicGenFailed(
+  entries: Array<{ id: string; statement: string }>,
+  err: unknown,
+): Promise<void> {
+  const message = err instanceof Error ? err.message : String(err);
+  for (const entry of entries) {
+    try {
+      const metadata = await readFactMetadata(entry.id);
+      await updateFact(entry.id, { metadata: { ...metadata, topicGenError: [message] } });
+    } catch (writeErr: unknown) {
+      logger.warn('[topicGen] Failed to record topicGenError', {
+        factId: entry.id,
+        error: String(writeErr),
+      });
+    }
+  }
+  useFloatingChatStore.getState().notifyFactMutation();
+}
+
+/** Drops the stored `topicGenError` so the fact leaves the failed state. */
+async function clearTopicGenError(factId: string): Promise<void> {
+  const metadata = await readFactMetadata(factId);
+  if (!metadata.topicGenError) return;
+  const { topicGenError: _dropped, ...rest } = metadata;
+  await updateFact(factId, { metadata: rest });
+  useFloatingChatStore.getState().notifyFactMutation();
+}
+
+/**
+ * User-initiated retry of topic generation for ONE fact (TopicPlanCard's failed
+ * state). Clears the recorded error, then re-runs the SAME path
+ * `startTopicGeneration` uses — no duplicated batch call, and the cloud in-flight
+ * claim is what actually makes a double-fire impossible (it is synchronous, so
+ * the second of two same-tick retries finds the fact claimed and drops out).
+ * Never rejects.
+ */
+export async function retryTopicGeneration(
+  factId: string,
+  factStatement: string,
+): Promise<void> {
+  if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
+  try {
+    await clearTopicGenError(factId);
+  } catch (err: unknown) {
+    logger.warn('[topicGen] Failed to clear topicGenError before retry', {
+      factId,
+      error: String(err),
+    });
+  }
+  await startTopicGeneration([{ id: factId, statement: factStatement }]);
 }
 
 /**

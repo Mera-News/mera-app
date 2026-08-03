@@ -70,6 +70,8 @@ import {
   handleUpdateUserConfig,
   handleDeleteUserFacts,
   handleIssueWarning,
+  isTopicGenerationInFlight,
+  retryTopicGeneration,
   MAX_FACT_LENGTH,
 } from '../tool-handlers';
 import {
@@ -851,5 +853,110 @@ describe('batchGenerateTopics (via handleSaveExtractedFacts cloud path)', () => 
       expect.objectContaining({ userLocation: 'Lives in Amsterdam' }),
       'f1',
     );
+  });
+});
+
+// ============================================================
+// retryTopicGeneration / in-flight guard (NEAR-stall plan B)
+// ============================================================
+
+describe('retryTopicGeneration', () => {
+  const { buildCloudBatchCallsForFact } =
+    require('../../mera-protocol/topic-generation-service') as {
+      buildCloudBatchCallsForFact: jest.Mock;
+    };
+
+  beforeEach(() => {
+    (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
+    buildCloudBatchCallsForFact.mockReturnValue([
+      { id: 'f1:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+    ]);
+  });
+
+  it('clears the stored topicGenError before re-running generation', async () => {
+    mockGetFacts.mockResolvedValue([
+      { id: 'f1', statement: 'Works in AI', metadata: { topicGenError: ['boom'] } } as never,
+    ]);
+
+    await retryTopicGeneration('f1', 'Works in AI');
+
+    expect(mockUpdateFact).toHaveBeenCalledWith('f1', { metadata: {} });
+    expect(mockCloudBatchComplete).toHaveBeenCalled();
+  });
+
+  it('preserves other metadata keys when clearing the error', async () => {
+    mockGetFacts.mockResolvedValue([
+      {
+        id: 'f1',
+        statement: 'Works in AI',
+        metadata: { topicGenError: ['boom'], topics: ['old'] },
+      } as never,
+    ]);
+
+    await retryTopicGeneration('f1', 'Works in AI');
+
+    expect(mockUpdateFact).toHaveBeenCalledWith('f1', { metadata: { topics: ['old'] } });
+  });
+
+  it('reuses the batch path — exactly one cloudBatchComplete call per retry', async () => {
+    mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Works in AI' } as never]);
+
+    await retryTopicGeneration('f1', 'Works in AI');
+
+    expect(mockCloudBatchComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a concurrent retry for the same factId (no double batch call)', async () => {
+    mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Works in AI' } as never]);
+    let release: (v: unknown) => void = () => { };
+    mockCloudBatchComplete.mockImplementationOnce(
+      () => new Promise((resolve) => { release = resolve as (v: unknown) => void; }) as never,
+    );
+
+    const first = retryTopicGeneration('f1', 'Works in AI');
+    // Let the first claim the fact, then fire a second retry while it runs.
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+    const second = retryTopicGeneration('f1', 'Works in AI');
+    await second;
+
+    expect(mockCloudBatchComplete).toHaveBeenCalledTimes(1);
+    release([]);
+    await first;
+    expect(isTopicGenerationInFlight('f1')).toBe(false);
+  });
+
+  it('reports in-flight while running and releases afterwards', async () => {
+    mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Works in AI' } as never]);
+    let release: (v: unknown) => void = () => { };
+    mockCloudBatchComplete.mockImplementationOnce(
+      () => new Promise((resolve) => { release = resolve as (v: unknown) => void; }) as never,
+    );
+
+    const promise = retryTopicGeneration('f1', 'Works in AI');
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+    expect(isTopicGenerationInFlight('f1')).toBe(true);
+
+    release([]);
+    await promise;
+    expect(isTopicGenerationInFlight('f1')).toBe(false);
+  });
+
+  it('a retry whose generation throws OUTSIDE the harness still records topicGenError', async () => {
+    // buildCloudBatchCallsForFact throwing escapes the harness try/catch — the
+    // card would otherwise spin forever with no error and no topics.
+    mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Works in AI' } as never]);
+    buildCloudBatchCallsForFact.mockImplementationOnce(() => {
+      throw new Error('call building blew up');
+    });
+
+    await retryTopicGeneration('f1', 'Works in AI');
+
+    expect(mockUpdateFact).toHaveBeenCalledWith('f1', {
+      metadata: { topicGenError: ['call building blew up'] },
+    });
+    expect(mockNotifyFactMutation).toHaveBeenCalled();
+    expect(isTopicGenerationInFlight('f1')).toBe(false);
   });
 });

@@ -15,6 +15,7 @@ import {
 } from '../e2ee/e2ee-service';
 import logger from '../logger';
 import { SMALL_MODEL } from './constants';
+import { reportModelFailure, reportModelSuccess, resolveModel } from './model-fallback';
 import { estimateTokens } from './tokens';
 import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
@@ -24,16 +25,29 @@ const TAG = '[CloudLLM]';
 const CHAT_API = `${INFERENCE_ENDPOINT}/v1/chat/completions`;
 const BATCH_API = `${INFERENCE_ENDPOINT}/v1/chat/completions/batch`;
 
-/** Chat per-attempt timeout — must exceed the gateway's UPSTREAM_TIMEOUT_MS
- *  (120s) so the gateway's own 200/502 verdict lands before the client aborts.
- *  130s = 120s gateway + 10s slack. */
-const CHAT_REQUEST_TIMEOUT_MS = 130_000;
+/** Per-attempt timeout for EVERY gateway-bound cloud call (chat, single
+ *  completion, batch). It must exceed the gateway's own UPSTREAM_TIMEOUT_MS
+ *  (120s) so the gateway's verdict — a 200, or the 502 it emits when NEAR never
+ *  answered — lands before the client aborts. A client that aborts FIRST never
+ *  learns anything and just starts a fresh attempt against a model that is
+ *  still warming: that is the retry storm this constant exists to kill.
+ *  130s = 120s gateway + 10s slack.
+ *
+ *  COUPLING (mera-inference-gateway fix C.1): `client 130s > gateway 120s` is
+ *  only true once the gateway's deadline is stamped at REQUEST ENTRY and so
+ *  bounds queue wait + upstream. Today it starts at slot acquisition, which
+ *  makes the real gateway budget `queue wait + 120s` — unbounded under
+ *  saturation, and the client still aborts first, just at a bigger number.
+ *  This 130s assumption lands together with that gateway change; changing one
+ *  without the other silently re-opens the storm. */
+export const UPSTREAM_ALIGNED_TIMEOUT_MS = 130_000;
 
-/** Chat 502/timeout attempt cap. A cold NEAR model can exceed even 120s, and
- *  retrying the SAME cold model storms; cap at 2 total attempts so a persistent
- *  cold model surfaces the gateway 502 in bounded time. The model is warmed
- *  ahead of the first turn by prewarmCloudChat() (lib/llm/prewarm). */
-const CHAT_MAX_TIMEOUT_ATTEMPTS = 2;
+/** 502/timeout attempt cap for every gateway-bound cloud call. A cold or
+ *  stalled NEAR model can exceed even 120s, and retrying the SAME model just
+ *  storms; cap at 2 total attempts so a persistent stall surfaces the gateway's
+ *  502 in bounded time. The chat model is warmed ahead of the first turn by
+ *  prewarmCloudChat() (lib/llm/prewarm). */
+export const UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS = 2;
 
 /** Build auth headers, fetching a fresh JWT from the auth service. Throws if
  *  no token is available — sending an unauthenticated request just produces
@@ -79,6 +93,59 @@ export interface AuthFetchOptions {
 }
 
 /**
+ * Is this error a client-side cancellation (our per-attempt timeout, or a
+ * caller abort)? `expo/fetch` words its cancellation "Fetch request has been
+ * canceled", which the old `/abort/`-only test missed — so our own 60s timeouts
+ * were logged as `timedOut: false` and read as network errors during the
+ * 2026-07-31 incident. Matching `cancel` as well makes the log state the truth;
+ * the retry budget is unaffected (aborts and network errors already share it).
+ */
+export function isAbortLike(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.name === 'AbortError') return true;
+  const message = err.message.toLowerCase();
+  return message.includes('abort') || message.includes('cancel');
+}
+
+/**
+ * Combine a caller-supplied signal with the per-attempt timeout signal.
+ *
+ * The previous `init.signal ?? controller.signal` silently DISABLED the timeout
+ * for any caller that passed a signal — the request could then hang forever.
+ * `AbortSignal.any` is not in React Native's `abort-controller` polyfill, so it
+ * is feature-detected and bridged with listeners otherwise. The returned
+ * `release` must be called per attempt, or listeners stack up on the caller's
+ * (long-lived) signal once per retry.
+ */
+function combineSignals(
+  external: AbortSignal | null | undefined,
+  timeout: AbortSignal,
+): { signal: AbortSignal; release: () => void } {
+  const noop = () => { /* nothing to release */ };
+  if (!external) return { signal: timeout, release: noop };
+
+  const anyFn = (AbortSignal as unknown as {
+    any?: (signals: AbortSignal[]) => AbortSignal;
+  }).any;
+  if (typeof anyFn === 'function') {
+    return { signal: anyFn.call(AbortSignal, [external, timeout]), release: noop };
+  }
+
+  const combined = new AbortController();
+  if (external.aborted || timeout.aborted) combined.abort();
+  const onAbort = () => combined.abort();
+  external.addEventListener('abort', onAbort);
+  timeout.addEventListener('abort', onAbort);
+  return {
+    signal: combined.signal,
+    release: () => {
+      external.removeEventListener('abort', onAbort);
+      timeout.removeEventListener('abort', onAbort);
+    },
+  };
+}
+
+/**
  * Fetch with exponential backoff and a per-attempt timeout.
  * Retries on 401 (refreshes JWT), 5xx, timeout, and network errors.
  *
@@ -100,11 +167,13 @@ export async function authFetch(
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
+    // A caller signal must ADD to the timeout, never replace it.
+    const { signal, release } = combineSignals(init.signal, controller.signal);
 
     try {
       const response = await (expoFetch as unknown as typeof globalThis.fetch)(url, {
         ...init,
-        signal: init.signal ?? controller.signal,
+        signal,
       });
 
       if (response.status === 401 && attempt < MAX_RETRIES) {
@@ -147,9 +216,7 @@ export async function authFetch(
       return response;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      const isAbort =
-        lastError.name === 'AbortError' ||
-        lastError.message.toLowerCase().includes('abort');
+      const isAbort = isAbortLike(lastError);
       if (isAbort) {
         logger.warn(
           `${TAG} request timed out after ${requestTimeoutMs}ms (attempt ${attempt + 1})`,
@@ -169,10 +236,89 @@ export async function authFetch(
       }
     } finally {
       clearTimeout(timeoutId);
+      release();
     }
   }
 
   throw lastError ?? new Error('authFetch failed after retries');
+}
+
+/** Apply the gateway-aligned defaults, letting an explicit caller value win. */
+function withUpstreamAlignedDefaults(options: AuthFetchOptions): AuthFetchOptions {
+  return {
+    requestTimeoutMs: options.requestTimeoutMs ?? UPSTREAM_ALIGNED_TIMEOUT_MS,
+    maxTimeoutAttempts: options.maxTimeoutAttempts ?? UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS,
+  };
+}
+
+/**
+ * The single choke point every cloud call goes through, so the session model
+ * fallback (lib/llm/model-fallback) is wired in exactly once.
+ *
+ * Sends the request on the currently-resolved model. If — and only if — it ends
+ * in a TIMEOUT-CLASS terminal failure (the client's timeout-attempt budget
+ * exhausted, or the gateway's 502 upstream-timeout verdict) it engages the
+ * session fallback and retries ONCE against it, so the call that discovered the
+ * stall can still succeed. If that retry also fails, the ORIGINAL failure is
+ * surfaced — the fallback must never mask the real error. 4xx, auth failures,
+ * E2EE/decrypt errors and plain network errors are surfaced untouched and never
+ * engage the fallback.
+ *
+ * `build` MUST construct its payload from scratch on every invocation: E2EE
+ * encryption mutates message content in place, and attestation keys are
+ * per-model, so the retry needs a fresh plaintext body encrypted for the
+ * fallback model.
+ */
+async function sendWithModelFallback<C>(
+  url: string,
+  primaryModel: string,
+  build: (model: string) => Promise<{ init: RequestInit; ctx: C }>,
+  options: AuthFetchOptions,
+): Promise<{ response: Response; ctx: C; model: string }> {
+  const model = resolveModel(primaryModel);
+  const first = await build(model);
+
+  let originalResponse: Response | null = null;
+  let originalError: unknown = null;
+  try {
+    const response = await authFetch(url, first.init, options);
+    if (response.status !== 502) {
+      if (response.ok) reportModelSuccess(primaryModel);
+      return { response, ctx: first.ctx, model };
+    }
+    // 502 = the gateway's own "NEAR never answered" verdict.
+    originalResponse = response;
+  } catch (err) {
+    // Only a client timeout/cancellation is model-evidence. Everything else
+    // (network down, JSON, auth) is surfaced as-is.
+    if (!isAbortLike(err)) throw err;
+    originalError = err;
+  }
+
+  reportModelFailure(primaryModel);
+  const fallbackModel = resolveModel(primaryModel);
+  if (fallbackModel !== model) {
+    logger.warn(`${TAG} timeout-class failure — retrying once on session fallback`, {
+      url,
+      failedModel: model,
+      fallbackModel,
+    });
+    try {
+      const retry = await build(fallbackModel);
+      // ONE attempt, deliberately: this retry exists so the call that
+      // discovered the stall can still succeed, not to open a second budget.
+      // Worst case per call stays bounded at (timeout budget + 1) attempts.
+      const response = await authFetch(url, retry.init, { ...options, maxTimeoutAttempts: 1 });
+      if (response.status !== 502) {
+        return { response, ctx: retry.ctx, model: fallbackModel };
+      }
+    } catch {
+      // Fall through — the original failure is the one worth surfacing.
+    }
+  }
+
+  if (originalResponse) return { response: originalResponse, ctx: first.ctx, model };
+  throw originalError;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -229,13 +375,14 @@ interface ChatCompletionResponse {
 }
 
 /** Single E2EE completion call (used for scoring). */
-export async function cloudComplete(request: CloudCompleteRequest): Promise<string> {
-  const messages = [
-    { role: 'system', content: request.systemPrompt },
-    { role: 'user', content: request.prompt },
-  ];
+export async function cloudComplete(
+  request: CloudCompleteRequest,
+  options: AuthFetchOptions = {},
+): Promise<string> {
   const temperature = request.temperature ?? 0.3;
-  const model = request.model ?? SMALL_MODEL;
+  const primary = request.model ?? SMALL_MODEL;
+  const model = resolveModel(primary);
+  const maxTokens = request.maxTokens ?? request.maxCompletionTokens;
 
   const systemTokens = estimateTokens(request.systemPrompt);
   const promptTokens = estimateTokens(request.prompt);
@@ -247,22 +394,35 @@ export async function cloudComplete(request: CloudCompleteRequest): Promise<stri
     model,
   });
 
-  const ctx = await encryptMessages(messages, model);
-
-  const baseHeaders = await getAuthHeaders();
-  const allHeaders = { ...baseHeaders, ...ctx.headers };
-  const maxTokens = request.maxTokens ?? request.maxCompletionTokens;
-  const response = await authFetch(CHAT_API, {
-    method: 'POST',
-    headers: allHeaders,
-    body: JSON.stringify({
-      messages, stream: false, temperature, model,
-      chat_template_kwargs: { enable_thinking: false },
-      // Honor the caller's output cap — lets the prewarm warmup request a single
-      // throwaway token instead of a full completion.
-      ...(maxTokens !== undefined && { max_tokens: maxTokens }),
-    }),
-  });
+  const { response, ctx } = await sendWithModelFallback(
+    CHAT_API,
+    primary,
+    // Rebuilt per attempt: encryptMessages encrypts in place and the
+    // attestation key is per-model, so a fallback retry needs fresh plaintext.
+    async (sendModel) => {
+      const messages = [
+        { role: 'system', content: request.systemPrompt },
+        { role: 'user', content: request.prompt },
+      ];
+      const attemptCtx = await encryptMessages(messages, sendModel);
+      const baseHeaders = await getAuthHeaders();
+      return {
+        init: {
+          method: 'POST',
+          headers: { ...baseHeaders, ...attemptCtx.headers },
+          body: JSON.stringify({
+            messages, stream: false, temperature, model: sendModel,
+            chat_template_kwargs: { enable_thinking: false },
+            // Honor the caller's output cap — lets the prewarm warmup request a
+            // single throwaway token instead of a full completion.
+            ...(maxTokens !== undefined && { max_tokens: maxTokens }),
+          }),
+        } satisfies RequestInit,
+        ctx: attemptCtx,
+      };
+    },
+    withUpstreamAlignedDefaults(options),
+  );
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
@@ -281,9 +441,11 @@ export async function cloudComplete(request: CloudCompleteRequest): Promise<stri
 export async function cloudBatchComplete(
   calls: BatchCall[],
   model?: string,
+  options: AuthFetchOptions = {},
 ): Promise<BatchCompletionResult[]> {
   if (calls.length === 0) return [];
-  const resolvedModel = model ?? SMALL_MODEL;
+  const primary = model ?? SMALL_MODEL;
+  const resolvedModel = resolveModel(primary);
 
   // Per-call token estimate — helps diagnose empty outputs and context issues.
   let totalSystemTokens = 0;
@@ -310,36 +472,46 @@ export async function cloudBatchComplete(
     model: resolvedModel,
   });
 
-  const ctx = await prepareE2EEContext(resolvedModel);
+  const { response, ctx } = await sendWithModelFallback(
+    BATCH_API,
+    primary,
+    // Rebuilt per attempt — a fallback retry needs its own E2EE context and a
+    // body encrypted under the fallback model's attestation key.
+    async (sendModel) => {
+      const attemptCtx = await prepareE2EEContext(sendModel);
 
-  const requests = calls.map((call) => {
-    const messages = [
-      { role: 'system', content: call.system },
-      { role: 'user', content: call.prompt },
-    ];
-    for (const msg of messages) {
-      if (msg.content.length > 0) {
-        msg.content = encryptContent(msg.content, ctx);
-      }
-    }
-    return {
-      messages,
-      stream: false,
-      temperature: call.temperature ?? 0.3,
-      model: resolvedModel,
-      chat_template_kwargs: { enable_thinking: false },
-      ...(call.maxTokens !== undefined && { max_tokens: call.maxTokens }),
-    };
-  });
+      const requests = calls.map((call) => {
+        const messages = [
+          { role: 'system', content: call.system },
+          { role: 'user', content: call.prompt },
+        ];
+        for (const msg of messages) {
+          if (msg.content.length > 0) {
+            msg.content = encryptContent(msg.content, attemptCtx);
+          }
+        }
+        return {
+          messages,
+          stream: false,
+          temperature: call.temperature ?? 0.3,
+          model: sendModel,
+          chat_template_kwargs: { enable_thinking: false },
+          ...(call.maxTokens !== undefined && { max_tokens: call.maxTokens }),
+        };
+      });
 
-  const baseHeaders = await getAuthHeaders();
-  const allHeaders = { ...baseHeaders, ...ctx.headers };
-
-  const response = await authFetch(BATCH_API, {
-    method: 'POST',
-    headers: allHeaders,
-    body: JSON.stringify({ requests }),
-  });
+      const baseHeaders = await getAuthHeaders();
+      return {
+        init: {
+          method: 'POST',
+          headers: { ...baseHeaders, ...attemptCtx.headers },
+          body: JSON.stringify({ requests }),
+        } satisfies RequestInit,
+        ctx: attemptCtx,
+      };
+    },
+    withUpstreamAlignedDefaults(options),
+  );
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
@@ -445,52 +617,22 @@ export async function* cloudChatStream(
 ): AsyncGenerator<SseEvent> {
   logger.debug(`${TAG} cloudChatStream ENTER`, { messageCount: request.messages.length });
 
-  // Deep-copy messages so encryption doesn't mutate the caller's array
-  const messages = request.messages.map((m) => ({ ...m }));
-  const model = request.model ?? SMALL_MODEL;
+  const primary = request.model ?? SMALL_MODEL;
+  const model = resolveModel(primary);
 
   // Token estimate — parallel to useLocalLLM's [LocalLLM:chat] Token estimate log.
   let totalInputTokens = 0;
-  for (const m of messages) {
+  for (const m of request.messages) {
     const content = typeof m.content === 'string' ? m.content : '';
     totalInputTokens += estimateTokens(content);
   }
   logger.debug('[CloudLLM:chat] Token estimate', {
-    messageCount: messages.length,
+    messageCount: request.messages.length,
     totalInputTokens,
     toolCount: request.tools?.length ?? 0,
     maxOutputTokens: request.maxTokens ?? request.maxCompletionTokens,
     model,
   });
-  const ctx = await encryptMessages(
-    messages as { role: string; content: string;[k: string]: unknown }[],
-    model,
-  );
-
-  // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss =
-  // real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
-  const jwtStartMs = Date.now();
-  const baseHeaders = await getAuthHeaders();
-  logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
-  const allHeaders = { ...baseHeaders, ...ctx.headers };
-
-  const body: Record<string, unknown> = {
-    messages,
-    stream: false, // E2EE requires complete response for decryption
-    model,
-    chat_template_kwargs: { enable_thinking: true },
-  };
-  if (request.tools && request.tools.length > 0) {
-    body.tools = request.tools;
-    body.tool_choice = request.toolChoice ?? 'auto';
-  }
-  if (request.temperature !== undefined) body.temperature = request.temperature;
-  if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
-  if (request.maxCompletionTokens !== undefined) body.max_completion_tokens = request.maxCompletionTokens;
-  if (request.topP !== undefined) body.top_p = request.topP;
-  if (request.n !== undefined) body.n = request.n;
-  if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
-  if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
 
   logger.debug(`${TAG} cloudChatStream POST`, { url: CHAT_API });
 
@@ -498,19 +640,54 @@ export async function* cloudChatStream(
   // the non-streaming double-turn when a tool fires). Tagged for first-chat
   // latency attribution.
   const postStartMs = Date.now();
-  const response = await authFetch(
+  const { response, ctx } = await sendWithModelFallback(
     CHAT_API,
-    {
-      method: 'POST',
-      headers: allHeaders,
-      body: JSON.stringify(body),
+    primary,
+    // Rebuilt per attempt: the deep copy must be FRESH, or a fallback retry
+    // would re-encrypt already-encrypted content (and under the wrong key).
+    async (sendModel) => {
+      const messages = request.messages.map((m) => ({ ...m }));
+      const attemptCtx = await encryptMessages(
+        messages as { role: string; content: string;[k: string]: unknown }[],
+        sendModel,
+      );
+
+      // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss
+      // = real auth round-trip). getAuthHeaders' only awaited work is getJwtToken.
+      const jwtStartMs = Date.now();
+      const baseHeaders = await getAuthHeaders();
+      logger.debug('[chat-timing] jwt fetch (chat)', { ms: Date.now() - jwtStartMs });
+
+      const body: Record<string, unknown> = {
+        messages,
+        stream: false, // E2EE requires complete response for decryption
+        model: sendModel,
+        chat_template_kwargs: { enable_thinking: true },
+      };
+      if (request.tools && request.tools.length > 0) {
+        body.tools = request.tools;
+        body.tool_choice = request.toolChoice ?? 'auto';
+      }
+      if (request.temperature !== undefined) body.temperature = request.temperature;
+      if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
+      if (request.maxCompletionTokens !== undefined) body.max_completion_tokens = request.maxCompletionTokens;
+      if (request.topP !== undefined) body.top_p = request.topP;
+      if (request.n !== undefined) body.n = request.n;
+      if (request.presencePenalty !== undefined) body.presence_penalty = request.presencePenalty;
+      if (request.frequencyPenalty !== undefined) body.frequency_penalty = request.frequencyPenalty;
+
+      return {
+        init: {
+          method: 'POST',
+          headers: { ...baseHeaders, ...attemptCtx.headers },
+          body: JSON.stringify(body),
+        } satisfies RequestInit,
+        ctx: attemptCtx,
+      };
     },
-    {
-      // Outlast the gateway's 120s upstream timeout and stop the 502/timeout
-      // storm on a cold model (see the constants above).
-      requestTimeoutMs: CHAT_REQUEST_TIMEOUT_MS,
-      maxTimeoutAttempts: CHAT_MAX_TIMEOUT_ATTEMPTS,
-    },
+    // Chat has always used the gateway-aligned budget; every other cloud call
+    // now shares it (plan A).
+    withUpstreamAlignedDefaults({}),
   );
   logger.debug('[chat-timing] chat POST→response', {
     ms: Date.now() - postStartMs,

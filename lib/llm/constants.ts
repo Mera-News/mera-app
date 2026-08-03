@@ -6,6 +6,21 @@ export const BIG_MODEL = 'deepseek-ai/DeepSeek-V4-Flash';
 export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
 /**
+ * Session-scoped fallback model per primary. When a primary model fails in a
+ * TIMEOUT-CLASS way (see lib/llm/model-fallback) we stop sending it for the rest
+ * of the JS session and send its fallback instead.
+ *
+ * `openai/gpt-oss-120b` is a similar-cost TEE-served model on the same NEAR
+ * fleet — verified `is_ready: true` with a healthy attestation report on
+ * 2026-08-03. The ids here are pending final user sign-off; this map is the
+ * single point to change if a different fallback is chosen.
+ */
+export const MODEL_FALLBACKS: Record<string, string> = {
+  [BIG_MODEL]: 'openai/gpt-oss-120b',
+  [SMALL_MODEL]: 'openai/gpt-oss-120b',
+};
+
+/**
  * Max output tokens for a CHAT turn — the on-device path and the cloud path
  * share this so the same conversation can't be cut at two different lengths
  * depending on which engine served it.
