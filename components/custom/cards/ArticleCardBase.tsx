@@ -12,6 +12,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { VStack } from '@/components/ui/vstack';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -123,6 +124,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
 }) => {
   const { t } = useTranslation();
   const [imageFailed, setImageFailed] = useState(false);
+  const blurImages = useBlurImagesStore((s) => s.blurImages);
 
   const displayTitle = titleEnglish || t('feed.newsCluster');
   const showImage = !!imageUrl && !imageFailed;
@@ -154,6 +156,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               resizeMode="cover"
               recyclingKey={recyclingKey}
               onError={() => setImageFailed(true)}
+              blurRadius={blurImages ? 24 : undefined}
             />
           ) : (
             <ArticleImagePlaceholder />

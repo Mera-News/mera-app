@@ -49,7 +49,7 @@ jest.mock('@/components/ui/card', () => {
 });
 jest.mock('@/components/ui/image', () => {
   const { View } = require('react-native');
-  return { Image: (p: any) => <View {...p} /> };
+  return { Image: (p: any) => <View testID="article-image" {...p} /> };
 });
 jest.mock('@/components/ui/pressable', () => {
   const { Pressable } = require('react-native');
@@ -58,6 +58,13 @@ jest.mock('@/components/ui/pressable', () => {
 jest.mock('@/components/ui/text', () => {
   const { Text } = require('react-native');
   return { Text };
+});
+jest.mock('@/components/ui/icon', () => {
+  const { View } = require('react-native');
+  return {
+    Icon: (props: any) => <View testID="icon" {...props} />,
+    ExternalLinkIcon: 'ExternalLinkIcon',
+  };
 });
 jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
@@ -159,8 +166,18 @@ jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
   deleteSavedSuggestion: (...a: any[]) => mockDeleteSavedSuggestion(...a),
   isSuggestionSaved: (...a: any[]) => mockIsSuggestionSaved(...a),
 }));
+const mockRecordPublicationVisit = jest.fn((..._a: any[]) => Promise.resolve());
 jest.mock('@/lib/database/services/publication-visit-service', () => ({
   getVisitCountForPublication: jest.fn(() => Promise.resolve(0)),
+  recordPublicationVisit: (...a: any[]) => mockRecordPublicationVisit(...a),
+}));
+const mockOpenArticleInAppBrowser = jest.fn((..._a: any[]) => Promise.resolve());
+jest.mock('@/lib/web-browser-utils', () => ({
+  openArticleInAppBrowser: (...a: any[]) => mockOpenArticleInAppBrowser(...a),
+}));
+let mockBlurImages = false;
+jest.mock('@/lib/stores/blur-images-store', () => ({
+  useBlurImagesStore: (selector: any) => selector({ blurImages: mockBlurImages }),
 }));
 // The universal actions row now hosts a "Track story" button backed by the
 // tracking layer (which reaches Apollo + WatermelonDB). Stub the hook so these
@@ -273,7 +290,10 @@ function opacityOf(node: any): number | undefined {
   return undefined;
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockBlurImages = false;
+});
 
 describe('ArticleSuggestionCard', () => {
   it('renders the reason box (RelevanceChip + reason text) when complete with a reason', () => {
@@ -622,5 +642,59 @@ describe('CompactActionsSheet', () => {
       <CompactActionsSheet visible={false} onClose={jest.fn()} subject={subject} article={makeArticle()} />,
     );
     expect(queryByText('articleFeedback.likeLabel')).toBeNull();
+  });
+});
+
+describe('ArticleStandaloneCompactCard — open-article button', () => {
+  it('renders the button and records a visit + opens the browser when pressed', async () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
+    );
+    fireEvent.press(getByTestId('card-action-open-article'));
+    expect(mockRecordPublicationVisit).toHaveBeenCalledWith(
+      expect.objectContaining({ articleUrl: 'https://example.com/s', publicationName: 'Die Zeit' }),
+    );
+    await waitFor(() =>
+      expect(mockOpenArticleInAppBrowser).toHaveBeenCalledWith('https://example.com/s'),
+    );
+  });
+
+  it('does not render the button when the article has no url', () => {
+    const { queryByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle({ article_url: undefined })} onPress={jest.fn()} />,
+    );
+    expect(queryByTestId('card-action-open-article')).toBeNull();
+  });
+
+  it('does not fire the card onPress when the open-article button is pressed', () => {
+    const onPress = jest.fn();
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={onPress} />,
+    );
+    fireEvent.press(getByTestId('card-action-open-article'));
+    expect(onPress).not.toHaveBeenCalled();
+  });
+});
+
+describe('Blur-images preference — compact card thumbnail', () => {
+  it('applies no blurRadius when the preference is off (default)', () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(getByTestId('article-image').props.blurRadius).toBeUndefined();
+  });
+
+  it('applies blurRadius 24 when the preference is on', () => {
+    mockBlurImages = true;
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({ image_url: 'https://example.com/a.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(getByTestId('article-image').props.blurRadius).toBe(24);
   });
 });

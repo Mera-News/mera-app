@@ -1,10 +1,11 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
 import CompactActionsSheet from '@/components/custom/cards/CompactActionsSheet';
 import type { FeedbackSubject, FeedbackSurface } from '@/components/custom/cards/feedback-subject';
+import { useOpenArticleUrl } from '@/components/custom/feed/use-open-article-url';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 interface ArticleSuggestionCompactCardProps {
   suggestion: ForYouSuggestion;
@@ -37,6 +38,11 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   isNew = false,
 }) => {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const openArticleUrl = useOpenArticleUrl();
+  const onOpenArticle = useCallback(
+    () => openArticleUrl(suggestion),
+    [openArticleUrl, suggestion],
+  );
 
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
@@ -84,6 +90,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
         footerAccessory={footerAccessory}
+        onOpenArticle={suggestion.article_url ? onOpenArticle : undefined}
       />
       <CompactActionsSheet
         visible={sheetOpen}

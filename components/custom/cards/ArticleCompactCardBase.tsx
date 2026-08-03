@@ -10,9 +10,11 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
+import { ExternalLinkIcon, Icon } from '@/components/ui/icon';
 import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import React from 'react';
 
 /**
@@ -55,6 +57,12 @@ export interface ArticleCompactCardBaseProps {
   read?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
+  /** Opens the article's original publisher URL directly, bypassing the card's
+   *  own onPress. Renders a small icon button at the far right of the footer,
+   *  after the source flag + publisher name. Absent ⇒ no button (pixel-identical
+   *  default). Only meaningful when the caller knows the article has a URL —
+   *  the base component renders unconditionally on the callback's presence. */
+  onOpenArticle?: () => void;
   metaAccessory?: React.ReactNode;
   footerAccessory?: React.ReactNode;
   /** Optional testID passthrough for the card's root Pressable — used by
@@ -78,11 +86,13 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   read = false,
   onPress,
   onLongPress,
+  onOpenArticle,
   metaAccessory,
   footerAccessory,
   testID,
 }) => {
   const displayTitle = titleEnglish || titleOriginal || '';
+  const blurImages = useBlurImagesStore((s) => s.blurImages);
 
   const surface = (
     <Card
@@ -118,6 +128,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 className="absolute inset-0 w-full h-full"
                 resizeMode="cover"
                 recyclingKey={recyclingKey}
+                blurRadius={blurImages ? 24 : undefined}
               />
             ) : (
               <ArticleImagePlaceholder />
@@ -171,6 +182,20 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   </Text>
                 ) : null}
               </HStack>
+              {onOpenArticle ? (
+                // Nested inside the card's own Pressable — RN's responder system
+                // gives the touch to this inner Pressable rather than bubbling it
+                // to the parent (unlike a DOM click), so no dimmed/read styling
+                // (applied only to the outer Pressable) affects this button.
+                <Pressable
+                  testID="card-action-open-article"
+                  onPress={onOpenArticle}
+                  hitSlop={8}
+                  className="flex-shrink-0"
+                >
+                  <Icon as={ExternalLinkIcon} size="sm" className="text-typography-500" />
+                </Pressable>
+              ) : null}
             </Box>
           </Box>
         </Box>

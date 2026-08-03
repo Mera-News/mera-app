@@ -43,7 +43,16 @@ jest.mock('@/components/ui/spinner', () => { const { View } = require('react-nat
 jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
 jest.mock('@/components/ui/switch', () => {
     const { Pressable } = require('react-native');
-    return { Switch: ({ onToggle, value, ...p }: any) => <Pressable testID="lock-switch" accessibilityState={{ checked: value }} onPress={onToggle} {...p} /> };
+    return {
+        Switch: ({ onToggle, value, testID, ...p }: any) => (
+            <Pressable
+                testID={testID ?? 'lock-switch'}
+                accessibilityState={{ checked: value }}
+                onPress={() => onToggle(!value)}
+                {...p}
+            />
+        ),
+    };
 });
 jest.mock('@/components/ui/toast', () => ({
     useToast: () => ({ show: jest.fn() }),
@@ -84,11 +93,20 @@ jest.mock('@/lib/stores/pin-store', () => ({
         selector({ lockEnabled: mockLockEnabled, setLockEnabled: mockSetLockEnabled }),
 }));
 
+const mockSetBlurImages = jest.fn();
+let mockBlurImages = false;
+
+jest.mock('@/lib/stores/blur-images-store', () => ({
+    useBlurImagesStore: (selector: any) =>
+        selector({ blurImages: mockBlurImages, setBlurImages: mockSetBlurImages }),
+}));
+
 import SecuritySettingsScreen from '../SecuritySettingsScreen';
 
 beforeEach(() => {
     jest.clearAllMocks();
     mockLockEnabled = false;
+    mockBlurImages = false;
 });
 
 describe('SecuritySettingsScreen — require-PIN toggle', () => {
@@ -141,5 +159,21 @@ describe('SecuritySettingsScreen — require-PIN toggle', () => {
         const { getByText, queryByTestId } = render(<SecuritySettingsScreen onBack={jest.fn()} />);
         fireEvent.press(getByText('security.changePin'));
         expect(queryByTestId('pin-lock-screen')).toBeTruthy();
+    });
+});
+
+describe('SecuritySettingsScreen — blur-images toggle', () => {
+    it('renders the blur-images row bound to the store value', () => {
+        mockBlurImages = true;
+        const { getByTestId, getByText } = render(<SecuritySettingsScreen onBack={jest.fn()} />);
+        expect(getByText('security.blurImagesTitle')).toBeTruthy();
+        expect(getByTestId('blur-images-switch').props.accessibilityState.checked).toBe(true);
+    });
+
+    it('fires setBlurImages with the flipped value on toggle', () => {
+        mockBlurImages = false;
+        const { getByTestId } = render(<SecuritySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('blur-images-switch'));
+        expect(mockSetBlurImages).toHaveBeenCalledWith(true);
     });
 });

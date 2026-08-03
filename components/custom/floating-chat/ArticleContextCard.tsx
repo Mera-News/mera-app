@@ -9,6 +9,7 @@ import { Image } from '@/components/ui/image';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getSuggestionByServerId } from '@/lib/database/services/article-suggestion-service';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
   const { t } = useTranslation();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
+  const blurImages = useBlurImagesStore((s) => s.blurImages);
 
   // Resolve a thumbnail from the on-device suggestion row (best-effort — degrade
   // to a title-only card when the row is gone / has no image).
@@ -59,6 +61,7 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
               className="w-full h-full"
               resizeMode="cover"
               onError={() => setImageFailed(true)}
+              blurRadius={blurImages ? 24 : undefined}
             />
           </Box>
         ) : (
