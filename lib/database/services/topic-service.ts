@@ -30,29 +30,128 @@ export interface CreateTopicInput {
   lastSignalAt?: number | null;
 }
 
-/** Batch-creates topic rows in a single write. Returns the created records. */
+/**
+ * Batch-creates topic rows in a single write, with a **dedupe floor**.
+ *
+ * `normalized_text` is documented on the model as "the dedup + article-match
+ * key", but this writer used to `prepareCreate` unconditionally — so any caller
+ * that ran twice minted a second identical row. Duplicates are not cosmetic:
+ * each one is independently retrieved and independently billed on every feed
+ * sync.
+ *
+ * SEMANTICS — resolve-or-create, NOT filter. For each input, if a live row
+ * already holds the same key, that row is RETURNED instead of a new one being
+ * created. Callers therefore always get one row per input, in order, and never
+ * an `undefined` hole. This matters: four call sites destructure
+ * `const [created] = await createTopics([...])` and treat a missing row as a
+ * hard failure — `persona-action-executor` would report "failed to create
+ * topic" for a topic that exists, and `track-actions` /
+ * `tracked-story-migrate-handler` would bind a tracked story to a NULL topic_id,
+ * silently stopping that followed story from ever matching new articles. The
+ * migrate handler's own comment already asks for these semantics ("Mint (or
+ * resolve an existing) 'tracked' topic").
+ *
+ * KEY — `(normalized_text, fact_id)`, deliberately NOT `normalized_text` alone.
+ * The same text under a DIFFERENT fact is not a duplicate: the hygiene
+ * `duplicate_facts` detector finds near-duplicate facts precisely by looking for
+ * one normalized text owned by ≥2 facts (`findTopicOverlapAcrossFacts`, which
+ * skips `factId === null` and requires `factIds.size >= 2`). A global key would
+ * collapse those rows and delete that signal.
+ *
+ * RETIRED ROWS ARE EXEMPT. A retired row is dedup/history only; re-minting its
+ * text is how a caller legitimately revives an interest, and resurrecting the
+ * retired row instead must stay an explicit `reactivate()` decision.
+ */
 export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicModel[]> {
   if (inputs.length === 0) return [];
-  return database.write(async () => {
-    const now = new Date();
-    const prepared = inputs.map((input) =>
-      topicsCollection.prepareCreate((t) => {
-        t.factId = input.factId ?? null;
-        t.text = input.text;
-        t.normalizedText = input.normalizedText ?? normalizeTopicText(input.text);
-        t.weight = input.weight ?? 0;
-        t.status = input.status ?? 'active';
-        t.provenance = input.provenance ?? 'user';
-        t.highPriority = input.highPriority ?? false;
-        t.locationId = input.locationId ?? null;
-        t.lastSignalAt = input.lastSignalAt ?? null;
-        t.createdAt = now;
-        t.updatedAt = now;
-      }),
-    );
-    await database.batch(prepared);
-    return prepared;
+
+  // NUL separator, written as an ESCAPE so this file stays plain text (a literal
+  // NUL byte in the source makes git treat it as binary and kills diff/blame).
+  // NUL is the delimiter because it is the one byte that cannot occur in either
+  // half: normalizeTopicText collapses to printable text, and ids are hex-ish.
+  // A printable separator like ':' would let (factId 'a:b', text 'c') collide
+  // with (factId 'a', text 'b:c') — do not "simplify" this.
+  const keyOf = (factId: string | null, normalizedText: string) =>
+    `${factId ?? ''}\x00${normalizedText}`;
+
+  const normalizedInputs = inputs.map((input) => ({
+    input,
+    factId: input.factId ?? null,
+    normalizedText: input.normalizedText ?? normalizeTopicText(input.text),
+  }));
+
+  // One query for every candidate text; filter to live (non-retired) rows.
+  const distinctTexts = [...new Set(normalizedInputs.map((n) => n.normalizedText))];
+  const existingRows = await topicsCollection
+    .query(
+      Q.where('normalized_text', Q.oneOf(distinctTexts)),
+      Q.where('status', Q.notEq('retired')),
+    )
+    .fetch();
+
+  const existingByKey = new Map<string, TopicModel>();
+  for (const row of existingRows) {
+    // Retired rows never block a create (see doc comment). Re-checked here and
+    // not left to the query alone so the rule is explicit at the point it
+    // matters — and so it holds regardless of what the query layer returns.
+    if (row.status === 'retired') continue;
+    const k = keyOf(row.factId ?? null, row.normalizedText);
+    if (!existingByKey.has(k)) existingByKey.set(k, row);
+  }
+
+  // Resolve each input to an existing row, or claim it for creation. A repeated
+  // key WITHIN one batch resolves to the single row this call creates for it.
+  const results: (TopicModel | undefined)[] = new Array(inputs.length);
+  const claimedBy = new Map<string, number>();
+  const toCreate: { index: number; input: CreateTopicInput; normalizedText: string }[] = [];
+
+  normalizedInputs.forEach(({ input, factId, normalizedText }, i) => {
+    const k = keyOf(factId, normalizedText);
+    const existing = existingByKey.get(k);
+    if (existing) {
+      results[i] = existing;
+      return;
+    }
+    if (claimedBy.has(k)) return; // intra-batch duplicate — filled in below
+    claimedBy.set(k, i);
+    toCreate.push({ index: i, input, normalizedText });
   });
+
+  if (toCreate.length > 0) {
+    const created = await database.write(async () => {
+      const now = new Date();
+      const prepared = toCreate.map(({ input, normalizedText }) =>
+        topicsCollection.prepareCreate((t) => {
+          t.factId = input.factId ?? null;
+          t.text = input.text;
+          t.normalizedText = normalizedText;
+          t.weight = input.weight ?? 0;
+          t.status = input.status ?? 'active';
+          t.provenance = input.provenance ?? 'user';
+          t.highPriority = input.highPriority ?? false;
+          t.locationId = input.locationId ?? null;
+          t.lastSignalAt = input.lastSignalAt ?? null;
+          t.createdAt = now;
+          t.updatedAt = now;
+        }),
+      );
+      await database.batch(prepared);
+      return prepared;
+    });
+
+    toCreate.forEach(({ index }, n) => {
+      results[index] = created[n];
+    });
+  }
+
+  // Fill intra-batch duplicates from the row their key's claimant produced.
+  normalizedInputs.forEach(({ factId, normalizedText }, i) => {
+    if (results[i]) return;
+    const claimant = claimedBy.get(keyOf(factId, normalizedText));
+    if (claimant !== undefined) results[i] = results[claimant];
+  });
+
+  return results.filter((r): r is TopicModel => r !== undefined);
 }
 
 /** Returns all topic rows owned by a fact (any status). */
