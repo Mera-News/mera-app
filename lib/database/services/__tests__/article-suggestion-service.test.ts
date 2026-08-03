@@ -761,14 +761,47 @@ describe('batchPropagateScores', () => {
     expect(sug2.status).toBe('complete');
   });
 
-  it('always sets status=complete, never reason_pending, even with an empty reason', async () => {
+  // An EMPTY propagated reason means the donor had nothing to donate (it was
+  // itself still `reason_pending`). Stamping `complete` there produced a row
+  // that was visible, reason-less, and invisible to the orphaned-reasons sweep
+  // (which selects `reason_pending` only) — permanently broken. It must stay
+  // `reason_pending` so that sweep picks it up.
+  it('leaves status=reason_pending when the propagated reason is empty', async () => {
     const sug = makeSuggestion({ id: 'sug-1', status: 'unscored' });
     db._setRows('article_suggestions', [sug]);
 
-    await batchPropagateScores([{ id: 'sug-1', relevance: 0.1, reason: '' }]);
+    await batchPropagateScores([{ id: 'sug-1', relevance: 0.72, reason: '' }]);
 
-    expect(sug.reason).toBe('');
-    expect(sug.status).toBe('complete');
+    expect(sug.relevance).toBe(0.72); // relevance still propagates — the saving is kept
+    expect(sug.status).toBe('reason_pending');
+  });
+
+  it('treats a whitespace-only propagated reason as empty', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+
+    await batchPropagateScores([{ id: 'sug-1', relevance: 0.72, reason: '   \n ' }]);
+
+    expect(sug.status).toBe('reason_pending');
+  });
+
+  // Monotonicity: a propagation from a reason-less donor must never CLEAR a
+  // reason the row already carried. Without this, reason-presence flip-flops and
+  // a card could lose its explanation.
+  it('does not clear an existing reason when the propagated reason is empty', async () => {
+    const sug = makeSuggestion({
+      id: 'sug-1',
+      relevance: 0.6,
+      reason: 'Its own hard-won reason',
+      status: 'complete',
+    });
+    db._setRows('article_suggestions', [sug]);
+
+    await batchPropagateScores([{ id: 'sug-1', relevance: 0.72, reason: '' }]);
+
+    expect(sug.reason).toBe('Its own hard-won reason');
+    expect(sug.relevance).toBe(0.72);
+    expect(sug.status).toBe('reason_pending');
   });
 
   it('tolerates a row deleted mid-flight: applies scores to present rows, skips missing ids, no throw', async () => {
@@ -794,6 +827,32 @@ describe('batchPropagateScores', () => {
     db._setRows('article_suggestions', []);
     await batchPropagateScores([{ id: 'gone', relevance: 0.5, reason: 'x' }]);
     expect(database.write).not.toHaveBeenCalled();
+  });
+
+  // THE claim the whole fix rests on: a row left `reason_pending` by an
+  // empty-reason propagation must be picked up by the recovery sweep. That sweep
+  // is `enqueueOrphanedReasons`, which reads getScoredSuggestionsWithoutReasons()
+  // (status == reason_pending ONLY — "Do not widen this query") and then keeps
+  // rows with `relevance > REASON_RELEVANCE_THRESHOLD` (0.3). An inherited
+  // above-gate relevance satisfies that, so no query widening is needed. If
+  // either predicate ever moves, this fails loudly instead of silently
+  // stranding the row.
+  it('leaves a propagated reason-less row where the orphaned-reasons sweep can find it', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', relevance: 0, reason: '', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+    db._setRows('article_suggestion_facts', []);
+    db._setRows('facts', []);
+
+    // Donor cleared the render gate but had no reason yet.
+    await batchPropagateScores([{ id: 'sug-1', relevance: 0.72, reason: '' }]);
+    expect(sug.status).toBe('reason_pending');
+
+    const swept = await getScoredSuggestionsWithoutReasons();
+    const found = swept.find((c) => c.id === 'sug-1');
+
+    expect(found).toBeDefined();
+    // enqueueOrphanedReasons' own filter, asserted on the value it reads.
+    expect(found!.relevance).toBeGreaterThan(0.3);
   });
 });
 

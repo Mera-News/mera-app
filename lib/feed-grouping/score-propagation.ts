@@ -157,13 +157,30 @@ const PROPAGATION_OPTIONS = {
 } as const;
 
 /**
- * Pick the donor whose score should propagate to a group's candidates:
- * highest relevance, tie-broken by newest `firstPubDateMs`, then (via
- * pickRepresentative) the lexicographically smaller id. Biasing up on ties fails
- * open — worst case a slight over-rank, never a silently hidden story.
+ * Pick the donor whose score should propagate to a group's candidates: a donor
+ * that actually HAS a reason first, then highest relevance, tie-broken by newest
+ * `firstPubDateMs`, then (via pickRepresentative) the lexicographically smaller
+ * id. Biasing up on ties fails open — worst case a slight over-rank, never a
+ * silently hidden story.
+ *
+ * `hasReason` leads because a reason-less donor donates `''`, which leaves the
+ * candidate in `reason_pending` still owing its own LLM reason call (see
+ * `batchPropagateScores`, which no longer stamps `complete` on an empty copy).
+ * When ANY donor in the group carries a reason, taking that one lands the
+ * candidate on `complete` for free.
+ *
+ * This only REORDERS donors that were already eligible — it never shrinks the
+ * donor pool. That distinction matters: donors are grouping INPUT
+ * (`buildStoryGroups([...donors, ...candidates])`), not a lookup table, so
+ * dropping one could split a group that only cohered through it and cause the
+ * same story to be scored twice. Reordering cannot.
  */
 function pickDonor(donors: SuggestionGroupingRow[]): SuggestionGroupingRow {
     return pickRepresentative(donors, (a, b) => {
+        // 0 = has a reason, 1 = none. Lower sorts first.
+        const aNoReason = (a.reason ?? '').trim().length > 0 ? 0 : 1;
+        const bNoReason = (b.reason ?? '').trim().length > 0 ? 0 : 1;
+        if (aNoReason !== bNoReason) return aNoReason - bNoReason; // has-reason first
         if (a.relevance !== b.relevance) return b.relevance - a.relevance; // higher first
         if (a.firstPubDateMs !== b.firstPubDateMs) return b.firstPubDateMs - a.firstPubDateMs; // newer first
         return 0; // id tiebreak handled by pickRepresentative
