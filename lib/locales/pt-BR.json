@@ -1025,7 +1025,6 @@
     "saveAll": "Salvar tudo ({{count}})",
     "delete": "Remover tópico",
     "undo": "Desfazer",
-    "highPriority": "Priorizar tópico",
     "settledTitle": "Tópicos salvos",
     "settledSummary": "{{count}} tópicos ativos para este fato."
   },

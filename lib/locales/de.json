@@ -1025,7 +1025,6 @@
     "saveAll": "Alle speichern ({{count}})",
     "delete": "Thema entfernen",
     "undo": "Rückgängig machen",
-    "highPriority": "Thema priorisieren",
     "settledTitle": "Themen gespeichert",
     "settledSummary": "{{count}} Themen für diesen Fakt aktiv."
   },

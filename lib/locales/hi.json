@@ -1027,7 +1027,6 @@
     "saveAll": "सभी सहेजें ({{count}})",
     "delete": "विषय हटाएं",
     "undo": "पूर्ववत करें",
-    "highPriority": "विषय को प्राथमिकता दें",
     "settledTitle": "विषय सहेजे गए",
     "settledSummary": "इस तथ्य के लिए {{count}} विषय सक्रिय हैं।"
   },

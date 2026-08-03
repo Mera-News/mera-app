@@ -1067,7 +1067,6 @@
     "saveAll": "حفظ الكل ({{count}})",
     "delete": "إزالة الموضوع",
     "undo": "تراجع",
-    "highPriority": "إعطاء الموضوع أولوية",
     "settledTitle": "تم حفظ الموضوعات",
     "settledSummary": "{{count}} موضوعات نشطة لهذه الحقيقة."
   },

@@ -1021,7 +1021,6 @@
     "saveAll": "Lưu tất cả ({{count}})",
     "delete": "Xóa chủ đề",
     "undo": "Hoàn tác",
-    "highPriority": "Ưu tiên chủ đề",
     "settledTitle": "Đã lưu chủ đề",
     "settledSummary": "{{count}} chủ đề đang hoạt động cho thông tin này."
   },

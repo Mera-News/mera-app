@@ -1025,7 +1025,6 @@
     "saveAll": "Guardar todo ({{count}})",
     "delete": "Eliminar tema",
     "undo": "Deshacer",
-    "highPriority": "Priorizar tema",
     "settledTitle": "Temas guardados",
     "settledSummary": "{{count}} temas activos para este hecho."
   },

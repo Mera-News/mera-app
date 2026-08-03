@@ -11,8 +11,6 @@
 //     invert mechanism (revertChange reactivates the topic + logs a revert_change
 //     row, keeping the audit trail honest). Fallback to reactivate() only if no
 //     change-log id came back.
-//   - HIGH-PRIORITY (star) routes through mutationRailsService.setTopicHighPriority
-//     — score-only boost, never touches weight; logs an invertible set_high_priority row.
 // ACCEPT-ALL settles the widget (everything stays active). GENERATE-MORE mints
 // additional topics excluding the existing texts (topic-planning-service).
 
@@ -20,7 +18,6 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
-import { setTopicHighPriority } from '@/lib/database/services/mutation-rails-service';
 import { revertChange } from '@/lib/database/services/persona-change-log-service';
 import { observeByFact, reactivate } from '@/lib/database/services/topic-service';
 import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
@@ -39,7 +36,6 @@ import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
-const STAR_ON = 'rgb(245, 197, 66)';
 
 function cardEntering() {
   'worklet';
@@ -60,7 +56,6 @@ interface TopicRow {
   id: string;
   text: string;
   status: TopicModel['status'];
-  highPriority: boolean;
 }
 
 export interface TopicPlanCardProps {
@@ -111,7 +106,6 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
           id: m.id,
           text: m.text,
           status: m.status,
-          highPriority: m.highPriority,
         })),
       );
       setLoaded(true);
@@ -154,17 +148,6 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         // No logged retire to invert (e.g. re-opened thread) — reactivate directly.
         await reactivate(row.id);
       }
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const handleToggleHighPriority = async (row: TopicRow) => {
-    if (busyId) return;
-    setBusyId(row.id);
-    hapticLight();
-    try {
-      await setTopicHighPriority(row.id, !row.highPriority, 'user');
     } finally {
       setBusyId(null);
     }
@@ -282,30 +265,15 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
                     <MaterialIcons name="undo" size={18} color={ACCENT} />
                   </Pressable>
                 ) : (
-                  <View style={styles.rowActions}>
-                    <Pressable
-                      onPress={() => handleToggleHighPriority(row)}
-                      disabled={rowBusy}
-                      hitSlop={8}
-                      style={styles.iconButton}
-                      accessibilityLabel={t('topicPlan.highPriority')}
-                    >
-                      <MaterialIcons
-                        name={row.highPriority ? 'star' : 'star-border'}
-                        size={18}
-                        color={row.highPriority ? STAR_ON : 'rgb(150, 150, 150)'}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDelete(row)}
-                      disabled={rowBusy}
-                      hitSlop={8}
-                      style={styles.iconButton}
-                      accessibilityLabel={t('topicPlan.delete')}
-                    >
-                      <MaterialIcons name="close" size={18} color="rgb(150, 150, 150)" />
-                    </Pressable>
-                  </View>
+                  <Pressable
+                    onPress={() => handleDelete(row)}
+                    disabled={rowBusy}
+                    hitSlop={8}
+                    style={styles.iconButton}
+                    accessibilityLabel={t('topicPlan.delete')}
+                  >
+                    <MaterialIcons name="close" size={18} color="rgb(150, 150, 150)" />
+                  </Pressable>
                 )}
               </View>
             );
@@ -377,7 +345,6 @@ const styles = StyleSheet.create({
   topicRowRetired: { opacity: 0.55 },
   topicText: { flex: 1, color: 'rgb(210, 210, 210)' },
   topicTextRetired: { textDecorationLine: 'line-through', color: 'rgb(150, 150, 150)' },
-  rowActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   iconButton: { padding: 4 },
   buttonRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
 });

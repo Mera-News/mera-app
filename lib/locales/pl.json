@@ -1041,7 +1041,6 @@
     "saveAll": "Zapisz wszystko ({{count}})",
     "delete": "Usuń temat",
     "undo": "Cofnij",
-    "highPriority": "Nadaj priorytet tematowi",
     "settledTitle": "Tematy zapisane",
     "settledSummary": "{{count}} tematów aktywnych dla tego faktu."
   },

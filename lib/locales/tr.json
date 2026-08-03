@@ -1027,7 +1027,6 @@
     "saveAll": "Tümünü kaydet ({{count}})",
     "delete": "Konuyu kaldır",
     "undo": "Geri al",
-    "highPriority": "Konuyu önceliklendir",
     "settledTitle": "Konular kaydedildi",
     "settledSummary": "Bu bilgi için {{count}} konu aktif."
   },

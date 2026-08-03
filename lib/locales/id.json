@@ -1020,7 +1020,6 @@
     "saveAll": "Simpan semua ({{count}})",
     "delete": "Hapus topik",
     "undo": "Urungkan",
-    "highPriority": "Prioritaskan topik",
     "settledTitle": "Topik disimpan",
     "settledSummary": "{{count}} topik aktif untuk fakta ini."
   },

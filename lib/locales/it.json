@@ -1025,7 +1025,6 @@
     "saveAll": "Salva tutto ({{count}})",
     "delete": "Rimuovi argomento",
     "undo": "Annulla",
-    "highPriority": "Dai priorità all'argomento",
     "settledTitle": "Argomenti salvati",
     "settledSummary": "{{count}} argomenti attivi per questo fatto."
   },

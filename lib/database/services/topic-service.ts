@@ -60,9 +60,15 @@ export async function getByFact(factId: string): Promise<TopicModel[]> {
   return topicsCollection.query(Q.where('fact_id', factId)).fetch();
 }
 
-/** Reactive query of a fact's topics — for the in-chat topic-review widget. */
+/** Reactive query of a fact's topics — for the in-chat topic-review widget.
+ *  `observeWithColumns`, not `observe()`: the widget's delete/undo flips the
+ *  row's `status` in place, which never changes query MEMBERSHIP — a plain
+ *  `observe()` stays silent and the card looks dead (the retire lands in the
+ *  DB but the row never strikes through). */
 export function observeByFact(factId: string) {
-  return topicsCollection.query(Q.where('fact_id', factId)).observe();
+  return topicsCollection
+    .query(Q.where('fact_id', factId))
+    .observeWithColumns(['status']);
 }
 
 /**

@@ -1021,7 +1021,6 @@
     "saveAll": "保存全部 ({{count}})",
     "delete": "移除主題",
     "undo": "復原",
-    "highPriority": "優先此主題",
     "settledTitle": "主題已儲存",
     "settledSummary": "此事實目前有 {{count}} 個使用中的主題。"
   },

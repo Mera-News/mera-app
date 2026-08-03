@@ -1020,7 +1020,6 @@
     "saveAll": "すべて保存 ({{count}})",
     "delete": "トピックを削除",
     "undo": "元に戻す",
-    "highPriority": "トピックを優先",
     "settledTitle": "トピックを保存しました",
     "settledSummary": "このファクトに対して{{count}}件のトピックが有効です。"
   },

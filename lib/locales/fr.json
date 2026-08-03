@@ -1030,7 +1030,6 @@
     "saveAll": "Tout enregistrer ({{count}})",
     "delete": "Supprimer le sujet",
     "undo": "Annuler",
-    "highPriority": "Prioriser le sujet",
     "settledTitle": "Sujets enregistrés",
     "settledSummary": "{{count}} sujets actifs pour ce fait."
   },

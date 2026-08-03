@@ -1021,7 +1021,6 @@
     "saveAll": "保存全部 ({{count}})",
     "delete": "移除话题",
     "undo": "撤销",
-    "highPriority": "优先此话题",
     "settledTitle": "话题已保存",
     "settledSummary": "此事实目前有 {{count}} 个活跃话题。"
   },

@@ -990,7 +990,6 @@
     "saveAll": "Save all ({{count}})",
     "delete": "Remove topic",
     "undo": "Undo",
-    "highPriority": "Prioritize topic",
     "settledTitle": "Topics saved",
     "settledSummary": "{{count}} topics active for this fact."
   },

@@ -1025,7 +1025,6 @@
     "saveAll": "Alles opslaan ({{count}})",
     "delete": "Onderwerp verwijderen",
     "undo": "Ongedaan maken",
-    "highPriority": "Onderwerp prioriteren",
     "settledTitle": "Onderwerpen opgeslagen",
     "settledSummary": "{{count}} onderwerpen actief voor dit feit."
   },
