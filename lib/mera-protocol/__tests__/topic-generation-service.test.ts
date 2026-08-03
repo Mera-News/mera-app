@@ -223,7 +223,15 @@ describe('buildCloudBatchCallsForFact', () => {
     const combo = calls.find((c) => c.id === 'f:combo')!;
     // 2026-07-16: combo = floor(16*0.4) = 6, factOnly = 16 - 6 = 10.
     expect(factOnly.prompt).toContain('Generate 10 topics');
-    expect(combo.prompt).toContain('Generate 6 topics');
+    // r12 K-P1: the COMBO count is a CEILING, not a quota. The split arithmetic
+    // is unchanged — only the instruction is, because an exact count with no
+    // genuine overlap is what made the model pad.
+    expect(combo.prompt).toContain('Generate at most 6 topics');
+    expect(combo.prompt).toContain('fewer is correct');
+    // The fact-only half keeps its exact count on purpose: it never sees other
+    // facts, so it cannot mash them, and its topics measured as the best
+    // feed-worthy performers.
+    expect(factOnly.prompt).not.toContain('at most');
   });
 
   it('uses full count for factOnly when no others exist', () => {

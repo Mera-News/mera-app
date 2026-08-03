@@ -33,6 +33,7 @@ import {
   parseTopicsFromOutput as harnessParseTopicsFromOutput,
   type RealTopicGenInputs,
 } from '@/lib/news-harness/persona-management/topic-generation';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
 // Re-export moved pure helpers (canonical home is the harness).
 export { buildBaseUserPrompt, splitCount, mergeTopicsAppend } from '@/lib/news-harness/persona-management/topic-generation';
@@ -57,6 +58,12 @@ const DEFAULT_TOTAL_LOCAL = 14;
  * already claim a large share of it. CLOUD budgets are deliberately untouched.
  */
 const LOCAL_TOPIC_GEN_MAX_TOKENS = 1024;
+
+/** CLOUD topic-generation output budget. Sourced from the harness config so this
+ *  (duplicate) generation path can never drift from the harness builder's value
+ *  — both run with thinking on, where the trace shares the budget with the
+ *  answer. See TopicGenConfig.cloudThinkingMaxTokens. */
+const cloudThinkingMaxTokens = DEFAULT_HARNESS_CONFIG.topicGen.cloudThinkingMaxTokens;
 
 /**
  * Merge the raw factOnly + combo outputs for a single fact into a deduped
@@ -147,16 +154,18 @@ export async function generateTopicsForFact(
           system: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
           prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
           temperature: 0.3,
-          maxTokens: Math.max(400, factOnlyCount * 30),
+          maxTokens: cloudThinkingMaxTokens,
+          enableThinking: true,
         });
       }
       if (comboCount > 0 && hasOthers) {
         calls.push({
           id: 'combo',
           system: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-          prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate ${comboCount} topics.`,
+          prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
           temperature: 0.3,
-          maxTokens: Math.max(400, comboCount * 30),
+          maxTokens: cloudThinkingMaxTokens,
+          enableThinking: true,
         });
       }
       if (calls.length > 0) {
@@ -195,7 +204,7 @@ export async function generateTopicsForFact(
         try {
           comboOutput = await completeLocal({
             systemPrompt: LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-            prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate ${comboCount} topics.`,
+            prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
             maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, comboCount * 30),
             temperature: 0.3,
             responseFormat: 'json',

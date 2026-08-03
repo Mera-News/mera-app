@@ -138,6 +138,19 @@ export interface TopicGenConfig {
    *  moderate-positive value: below a default user/fact weight but comfortably
    *  retrievable + positively scored by the math engine. */
   llmTopicWeight: number;
+  /**
+   * Output budget for CLOUD topic-generation calls that run with thinking on.
+   *
+   * The reasoning trace shares `max_tokens` with the answer, so the old
+   * `Math.max(400, count * 30)` was far too small: a trace could consume the
+   * whole allowance and the response came back with an empty `content`. 2048
+   * leaves ~1600 tokens of trace headroom over the ~200-400 a 10-string answer
+   * needs — 4-5x the old ceiling without over-provisioning at $1.10/M output.
+   *
+   * CLOUD ONLY. The on-device path has its own, much smaller budget (n_ctx is
+   * 4096 there); do not reuse this constant for it.
+   */
+  cloudThinkingMaxTokens: number;
   /** System prompt for the fact-only topic-generation call. */
   factOnlySystemPrompt: string;
   /** System prompt for the fact+others combo topic-generation call. */
@@ -386,6 +399,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     temperature: 0.3,
     maxFactLength: 200,
     llmTopicWeight: 0.75,
+    cloudThinkingMaxTokens: 2048,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },

@@ -164,6 +164,56 @@ describe('parseTopicsFromOutput', () => {
 });
 
 // ---------------------------------------------------------------------------
+// r12 K-P1 / K-P2 — the count is a CEILING, and both halves reason.
+// ---------------------------------------------------------------------------
+
+describe('buildCloudBatchCallsForFact — ceiling + thinking (r12)', () => {
+  const inputs = {
+    factStatement: 'Follows the Indian national cricket team',
+    userLocation: 'Amsterdam, Netherlands',
+    otherFacts: ['Is an expat', 'Attends music festivals'],
+    totalCount: 10,
+  };
+
+  it('instructs the combo half with a CEILING, not an exact count', () => {
+    const combo = buildCloudBatchCallsForFact(inputs, 'f').find(
+      (c) => c.id === 'f:combo',
+    )!;
+    // The padding instruction: an exact count with no genuine overlap is what
+    // produced "Amsterdam cricket festival music tech".
+    expect(combo.prompt).toContain('Generate at most 4 topics');
+    expect(combo.prompt).toContain('fewer is correct');
+    expect(combo.prompt).not.toMatch(/Generate 4 topics/);
+  });
+
+  it('leaves the fact-only half on an exact count', () => {
+    const factOnly = buildCloudBatchCallsForFact(inputs, 'f').find(
+      (c) => c.id === 'f:factOnly',
+    )!;
+    expect(factOnly.prompt).toContain('Generate 6 topics');
+    expect(factOnly.prompt).not.toContain('at most');
+  });
+
+  it('enables thinking on BOTH halves', () => {
+    for (const call of buildCloudBatchCallsForFact(inputs, 'f')) {
+      expect(call.enableThinking).toBe(true);
+    }
+  });
+
+  it('raises maxTokens with the flag — the trace shares the budget', () => {
+    // Shipping enableThinking without this is the silent-empty-topics failure.
+    for (const call of buildCloudBatchCallsForFact(inputs, 'f')) {
+      expect(call.maxTokens).toBe(2048);
+    }
+  });
+
+  it('scales the budget above the floor for a very large count', () => {
+    const calls = buildCloudBatchCallsForFact({ ...inputs, totalCount: 100 }, 'f');
+    for (const call of calls) expect(call.maxTokens).toBe(3000);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // generateTopicsForFactsBatch (port-based)
 // ---------------------------------------------------------------------------
 
