@@ -198,6 +198,7 @@ export type IssueLlmWarningInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  acknowledgeLapseInterstitial: UserBillingInfo;
   advanceOnboardingStage: UserPersona;
   deleteExpoPushToken: UserPersona;
   issueLlmWarning: UserPersona;
@@ -721,8 +722,12 @@ export type UserBillingInfo = {
   dailyArticleLimit: Scalars['Int']['output'];
   /** ISO timestamp when the active entitlement expires; null = no entitlement or lifetime. */
   entitlementExpiresAt?: Maybe<Scalars['String']['output']>;
+  /** True if this user has ever held a paid tier (now or in the past). False is what selects the app's first-open paywall over the softer lapse interstitial. */
+  hasEverSubscribed: Scalars['Boolean']['output'];
   /** ISO timestamp of the next UTC midnight — when usage resets. */
   resetAt: Scalars['String']['output'];
+  /** True when the user has lapsed out of a paid tier and has not yet acknowledged the interstitial for THAT lapse. Call acknowledgeLapseInterstitial once it has been shown; a later lapse flips this back to true on its own. */
+  showLapseInterstitial: Scalars['Boolean']['output'];
   /** Subscription tier: 'none' | 'starter' | 'individual' | 'professional'. */
   subscriptionTier: Scalars['String']['output'];
 };
