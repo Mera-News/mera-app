@@ -104,6 +104,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             getOfferingSafe(),
         ]);
         if (billingInfo || awaitTierChangeFrom === undefined) setBilling(billingInfo);
+        // Mirror the server's verdict into the store so companion mode lifts
+        // (or falls) app-wide, not just on this screen's usage card.
+        useSubscriptionStore.getState().setServerBilling(billingInfo);
         if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
 
         const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;

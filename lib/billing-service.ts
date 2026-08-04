@@ -11,6 +11,8 @@ const GET_USER_BILLING = gql`
       articlesUsedToday
       entitlementExpiresAt
       resetAt
+      hasEverSubscribed
+      showLapseInterstitial
     }
   }
 `;

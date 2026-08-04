@@ -9,6 +9,7 @@ import { useUserStore } from "@/lib/stores/user-store";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
+import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { router } from "expo-router";
 import { useEffect } from "react";
 
@@ -111,6 +112,11 @@ export default function LoggedInIndex() {
                     void loginRevenueCat(userId).then((info) => {
                         if (info) useSubscriptionStore.getState().setCustomerInfo(info);
                     });
+                    // The server's verdict, which outranks RevenueCat's mirror
+                    // above. Forced: this is a fresh session, and the 60s
+                    // debounce must not make a returning user wait a minute to
+                    // learn their plan lapsed while the app was closed.
+                    void syncEntitlement({ force: true });
 
                     // No cached persona yet (fresh login) — downstream screens
                     // read it, so pull it before handing off. Routing no longer

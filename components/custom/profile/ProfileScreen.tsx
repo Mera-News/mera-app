@@ -10,6 +10,7 @@ import { Heading } from '@/components/ui/heading';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
+import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
@@ -108,7 +109,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
             // The webhook is async, so this retries briefly (bounded).
             if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
                 const fresh = await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
-                if (fresh) setBilling(fresh);
+                if (fresh) {
+                    setBilling(fresh);
+                    // App-wide: lifts companion mode the moment the purchase lands.
+                    useSubscriptionStore.getState().setServerBilling(fresh);
+                }
             }
         } catch (error) {
             logger.captureException(error, {

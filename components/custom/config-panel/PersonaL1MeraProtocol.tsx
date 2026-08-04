@@ -28,6 +28,7 @@ import { buildTopicGenContext } from '@/lib/inference/handlers/topic-gen-handler
 import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/topic-generation-service';
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
+import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -431,7 +432,11 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             // server webhook is async, so this retries briefly (bounded).
             if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
                 const fresh = await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
-                if (fresh) setBilling(fresh);
+                if (fresh) {
+                    setBilling(fresh);
+                    // App-wide: lifts companion mode the moment the purchase lands.
+                    useSubscriptionStore.getState().setServerBilling(fresh);
+                }
             }
         } catch (error) {
             logger.captureException(error, {
