@@ -1,4 +1,5 @@
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { isNotSubscribedError } from '@/lib/subscription/not-subscribed-error';
 import type { FeedSyncState, SyncErrorCode, SyncStatusMessage } from './feed-sync-types';
 
 function makeMessage(
@@ -44,6 +45,10 @@ export function publishSyncError(
     'daily-limit':         'sync.dailyLimitReached',
     'storage-error':       'sync.storageFull',
     'scoring-unavailable': 'sync.syncFailed',
+    // Present only to satisfy exhaustiveness. FeedSyncMachine routes this code
+    // to a quiet `idle` and never reaches publishSyncError with it — companion
+    // mode must not paint red sync chrome.
+    'not-subscribed':      '',
     unknown:               'sync.syncFailed',
   };
 
@@ -58,6 +63,14 @@ export function publishSyncError(
 }
 
 export function classifyError(err: unknown): SyncErrorCode {
+  // FIRST, above the `instanceof Error` guard and above every substring
+  // heuristic below. Apollo v4's CombinedGraphQLErrors IS an Error subclass, so
+  // a 402 falls straight into that block, and its message routinely contains
+  // "session" or "fetch" — it would be misfiled as auth-expired or
+  // server-unreachable and painted as a red sync failure, which is the exact
+  // outcome companion mode exists to avoid.
+  if (isNotSubscribedError(err)) return 'not-subscribed';
+
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
     if (msg.includes('no-topics-configured') || msg === 'no-topics-configured') {

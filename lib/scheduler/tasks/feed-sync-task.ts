@@ -2,6 +2,7 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { feedSyncMachine } from '../feed-sync/FeedSyncMachine';
 import { AppScheduler } from '../AppScheduler';
 import { getCurrentPathname } from '@/lib/nav-state';
+import { getAiAccess } from '@/lib/stores/subscription-store';
 import logger from '@/lib/logger';
 
 AppScheduler.register({
@@ -19,6 +20,19 @@ AppScheduler.register({
     {
       type: 'custom',
       check: () => !getCurrentPathname().includes('not-subscribed'),
+    },
+    // Companion mode: every one of the four queries this task runs is behind
+    // SubscriptionGuard, so a locked device would fire four 402s a minute,
+    // forever, and get nothing back. Gating here stops the requests, not just
+    // the notice.
+    //
+    // `!== 'locked'` rather than `=== 'entitled'` on purpose: 'unknown' must
+    // still sync. Cold start reaches this condition before the first
+    // `userBilling` answer lands, and treating "we haven't heard yet" as locked
+    // would silently cost a paying user their first sync of every launch.
+    {
+      type: 'custom',
+      check: () => getAiAccess() !== 'locked',
     },
     // Don't burn a round trip every 60s once the daily cap has clipped a run:
     // the server will just clip again until the reset. Gating here rather than
