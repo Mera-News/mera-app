@@ -1,6 +1,8 @@
 import { getSetting } from '@/lib/database/services/setting-service';
 import { navigateToPaywall } from '@/lib/nav-state';
+import { ROUTE_SETTLE_MS } from './LapseInterstitialGate';
 import { getAiAccess, useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { deriveHasEverSubscribed } from '@/lib/subscription/ai-access';
 import { usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
@@ -35,7 +37,9 @@ export const FIRST_OPEN_DISMISSED_SETTING_KEY = 'companion_first_open_dismissed'
  */
 export default function FirstOpenPaywallGate() {
     const pathname = usePathname();
-    const hasEverSubscribed = useSubscriptionStore((s) => s.hasEverSubscribed);
+    const hasEverSubscribed = deriveHasEverSubscribed(
+        useSubscriptionStore((s) => s.hasEverSubscribed),
+    );
 
     // `null` = the device setting has not been read yet. Must not be treated as
     // "not dismissed": doing so would race the read and re-show the paywall to
@@ -75,10 +79,17 @@ export default function FirstOpenPaywallGate() {
         // paywall itself.
         if (!pathname.includes('/logged-in/app_container')) return;
 
-        firedRef.current = true;
-        // No `reason` argument: this deliberately gets the screen's original
-        // behaviour, purchase sheet and all.
-        navigateToPaywall();
+        // Same route-settle wait as the lapse gate, for the same measured
+        // reason: the logged-in index replaces into the shell after its async
+        // identity work, and a navigation issued inside that window is stomped.
+        const timer = setTimeout(() => {
+            firedRef.current = true;
+            // No `reason` argument: this deliberately gets the screen's original
+            // behaviour, purchase sheet and all.
+            navigateToPaywall();
+        }, ROUTE_SETTLE_MS);
+
+        return () => clearTimeout(timer);
     }, [hasEverSubscribed, dismissed, pathname]);
 
     return null;

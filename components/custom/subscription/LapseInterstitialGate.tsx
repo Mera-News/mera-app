@@ -25,6 +25,13 @@ import { useEffect, useRef, useState } from 'react';
  * a boolean that has been set stays set, whereas the timestamp comparison
  * re-arms for free.
  */
+/**
+ * How long the route must hold still before either gate navigates. Long enough
+ * to outlast the logged-in index's async routing, short enough that the user
+ * doesn't see the shell and then get moved off it.
+ */
+export const ROUTE_SETTLE_MS = 900;
+
 export default function LapseInterstitialGate() {
     const pathname = usePathname();
     const serverFlag = useSubscriptionStore((s) => s.showLapseInterstitial);
@@ -69,27 +76,40 @@ export default function LapseInterstitialGate() {
         // a moment later — and the user has to reach the shell eventually.
         if (!pathname.includes('/logged-in/app_container')) return;
 
-        firedRef.current = true;
+        // Wait for routing to SETTLE before navigating.
+        //
+        // Measured on the harness, not theorised: firing immediately sent the
+        // ack and issued the replace, and the user still landed on the feed.
+        // `app/logged-in/index.tsx` finishes its async identity work and then
+        // `router.replace()`s into the shell — a navigation issued inside that
+        // window is silently stomped by it, and `firedRef` meant we never tried
+        // again. Any pathname change cancels and restarts this timer, so we act
+        // only once the route has actually held still.
+        const timer = setTimeout(() => {
+            firedRef.current = true;
 
-        // Soft mode: explanation first, purchase only on an explicit tap. This
-        // user just lost something; opening a purchase sheet in their face is
-        // the aggressive-funnel behaviour the tone direction rejects.
-        navigateToPaywall('lapsed');
+            // Soft mode: explanation first, purchase only on an explicit tap.
+            // This user just lost something; opening a purchase sheet in their
+            // face is the aggressive-funnel behaviour the tone direction rejects.
+            navigateToPaywall('lapsed');
 
-        // Clear locally right away so a re-render can't re-fire, then tell the
-        // server. Ack failure is deliberately swallowed — worst case it shows
-        // once more on a later launch.
-        clearLapseInterstitial();
-        void acknowledgeLapseInterstitial();
+            // Clear locally right away so a re-render can't re-fire, then tell
+            // the server. Ack failure is deliberately swallowed — worst case it
+            // shows once more on a later launch.
+            clearLapseInterstitial();
+            void acknowledgeLapseInterstitial();
 
-        if (__DEV__ && DEV_FORCE_LAPSED) {
-            // Records the dev acknowledgement so the override stops seeding.
-            // Without this, DEV_FORCE_LAPSED would behave as a clamp and the
-            // interstitial would reappear on every relaunch — hiding the very
-            // "shown once" behaviour it is set to test.
-            void setSetting(DEV_LAPSE_ACK_SETTING_KEY, 'true');
-            setDevAcked(true);
-        }
+            if (__DEV__ && DEV_FORCE_LAPSED) {
+                // Records the dev acknowledgement so the override stops seeding.
+                // Without this, DEV_FORCE_LAPSED would behave as a clamp and the
+                // interstitial would reappear on every relaunch — hiding the very
+                // "shown once" behaviour it is set to test.
+                void setSetting(DEV_LAPSE_ACK_SETTING_KEY, 'true');
+                setDevAcked(true);
+            }
+        }, ROUTE_SETTLE_MS);
+
+        return () => clearTimeout(timer);
     }, [serverFlag, devAcked, pathname, clearLapseInterstitial]);
 
     return null;

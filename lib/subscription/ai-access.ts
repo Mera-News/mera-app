@@ -93,5 +93,20 @@ export function deriveShowLapseInterstitial(
     return serverFlag === true;
 }
 
+/**
+ * `hasEverSubscribed`, with the one dev accommodation the first-open push needs.
+ *
+ * That field only exists on a server carrying the lapse change, and the query
+ * for it is skipped entirely while the ship gate is false — so on the harness
+ * it stays `null` forever, and `null` is deliberately not `false`, which makes
+ * the first-open push unreachable. When the override is explicitly forcing
+ * `'locked'`, "never subscribed" is exactly the state being simulated, so
+ * resolve unknown to `false` there and nowhere else.
+ */
+export function deriveHasEverSubscribed(serverValue: boolean | null): boolean | null {
+    if (__DEV__ && DEV_FORCE_AI_ACCESS === 'locked' && serverValue === null) return false;
+    return serverValue;
+}
+
 /** Local device setting recording a dev-only acknowledgement of `DEV_FORCE_LAPSED`. */
 export const DEV_LAPSE_ACK_SETTING_KEY = 'dev_companion_lapse_acked';
