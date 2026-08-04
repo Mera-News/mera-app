@@ -74,6 +74,16 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 jest.mock('@/lib/haptics', () => ({ hapticSuccess: jest.fn() }));
+// `actionToRow` is pure, but importing it loads the component module — which now
+// imports the display-translation wrapper, and through it `expo-translate-text`
+// (no native module under jest). Stub it as a plain Text of the source string.
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const { Text } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ text }: Record<string, unknown>) => <Text>{text as string}</Text>,
+  };
+});
 
 import { actionToRow } from '../ProposalCard';
 import { parseProposalAction } from '../deriveThreadItems';

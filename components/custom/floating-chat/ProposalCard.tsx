@@ -16,6 +16,7 @@
 //      otherwise expired (older superseded proposals, or in-memory store lost on
 //      app restart, dim out with no buttons).
 
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { executeProposalActions } from '@/lib/chat-tools/proposal-handlers';
@@ -69,6 +70,17 @@ export interface ActionRow {
   detail?: string;
   /** Optional bold heading above the detail (feature-request title). */
   heading?: string;
+  /**
+   * Whether `heading` / `detail` are English PROSE that should be display-
+   * translated into the reader's app language (see the block comment above
+   * `actionToRow`). Opt-IN, deliberately: the default for an unknown row is to
+   * show the literal string, because the rows that must not be translated are
+   * the ones whose text is a machine value (a match pattern, a publication
+   * name), and a new action type is more likely to carry one of those than to
+   * carry prose.
+   */
+  translateHeading?: boolean;
+  translateDetail?: boolean;
   /** Optional small pill rendered before the detail — currently the structured
    *  suppression KIND ("Category", "Publication", …). Absent for a plain
    *  keyword filter, whose label already says "phrase". */
@@ -88,18 +100,47 @@ const SUPPRESSION_KIND_CHIPS: Record<string, { key: string; default: string }> =
   topic: { key: 'notInterested.kinds.topic', default: 'Topic' },
 };
 
-/** Maps a ProposalAction to its display row. Exported for the action-type
- *  coverage test — a type that falls through to the guard renders a detail-less
- *  "tune" row, which is a silent presentation bug, not a compile error. */
+/**
+ * Maps a ProposalAction to its display row. Exported for the action-type
+ * coverage test — a type that falls through to the guard renders a detail-less
+ * "tune" row, which is a silent presentation bug, not a compile error.
+ *
+ * TRANSLATION POLICY (`translateHeading` / `translateDetail`). The agent writes
+ * its conversational text in the reader's language but keeps every structured
+ * payload English — see the LANGUAGE rule in
+ * `lib/news-harness/article-feedback/agent-core.ts`. So the strings that reach
+ * this card are English regardless of app language, and the row text is the ONLY
+ * copy of them the reader ever sees. Those get display-translated.
+ *
+ * Three rows deliberately do NOT:
+ *   - `set_publication_pref` → `publicationId` is an outlet's proper NAME;
+ *   - `add_suppression` → `suppressionPattern` and
+ *   - `retire_suppression` → `pattern` are literal MATCH strings.
+ * Machine-translating any of those would tell the reader their filter matches a
+ * Hindi phrase when it matches an English one, and would rename a publication
+ * that is not renamed anywhere else in the app. An untranslated proper noun is a
+ * smaller cost than a confidently wrong one.
+ *
+ * The translation is DISPLAY-ONLY and cannot leak into anything persisted:
+ * `handleConfirm` hands `executeProposalActions` the ProposalAction OBJECTS, not
+ * the rendered rows, so `action.label` / `action.searchText` / `topicText` reach
+ * the executor exactly as the agent staged them.
+ */
 export function actionToRow(action: ProposalAction): ActionRow {
   switch (action.type) {
     case 'add_fact':
-      return { icon: 'add-circle', labelKey: 'articleFeedback.actionAddFact', detail: action.statement };
+      return {
+        icon: 'add-circle',
+        labelKey: 'articleFeedback.actionAddFact',
+        detail: action.statement,
+        translateDetail: true,
+      };
     case 'update_fact':
       return {
         icon: 'edit',
         labelKey: 'articleFeedback.actionUpdateFact',
         detail: action.new_statement,
+        translateDetail: true,
       };
     case 'delete_fact':
       return { icon: 'remove-circle', labelKey: 'articleFeedback.actionDeleteFact' };
@@ -108,30 +149,42 @@ export function actionToRow(action: ProposalAction): ActionRow {
         icon: 'label',
         labelKey: 'articleFeedback.actionAddTopics',
         detail: action.topics.join(', '),
+        translateDetail: true,
       };
     case 'remove_topics':
       return {
         icon: 'label-off',
         labelKey: 'articleFeedback.actionRemoveTopics',
         detail: action.topics.join(', '),
+        translateDetail: true,
       };
     case 'submit_feature_request':
+      // Both fields are English by schema ("summary: 2–4 sentence description,
+      // English") because they are read by the Mera team, not stored as feed
+      // signal — so the reader is the one person who needs them translated.
       return {
         icon: 'send',
         labelKey: 'articleFeedback.actionFeatureRequest',
         labelDefault: 'Send feature request to the Mera team',
         heading: action.title,
         detail: action.summary,
+        translateHeading: true,
+        translateDetail: true,
       };
     case 'track_story':
       // The scope label is the load-bearing choice, so render it as the bold
       // heading with "Follow story" as the small category line above it. This
       // reads cleanly when the card offers 3–4 scope pills to pick between.
+      // DISPLAY-translated only. `action.label` is what gets persisted as the
+      // followed story's name and `action.searchText` is what drives retrieval
+      // against an English corpus — neither is read back from this row, so the
+      // Hindi the reader sees never reaches either.
       return {
         icon: 'track-changes',
         labelKey: 'trackedStories.trackAction',
         labelDefault: 'Follow story',
         heading: action.label,
+        translateHeading: true,
       };
     // -- Wave-9 rails-backed feed-tuning actions (the "less of this" choose-one
     //    alternatives) — each renders its own labelled row so the radio card is
@@ -145,6 +198,7 @@ export function actionToRow(action: ProposalAction): ActionRow {
             : 'articleFeedback.actionShowMoreTopic',
         labelDefault: action.delta < 0 ? 'Show less of a topic' : 'Show more of a topic',
         detail: action.topicText,
+        translateDetail: true,
       };
     case 'add_negative_topic':
       return {
@@ -152,6 +206,7 @@ export function actionToRow(action: ProposalAction): ActionRow {
         labelKey: 'articleFeedback.actionDownRank',
         labelDefault: 'Down-rank a topic',
         detail: action.topicText,
+        translateDetail: true,
       };
     // FIX (source-pref v47): this row used to read "Adjust a publication" for
     // all three prefs, so boost and deprioritize differed only by having the
@@ -178,6 +233,9 @@ export function actionToRow(action: ProposalAction): ActionRow {
             : action.publicationPref === 'boost'
               ? 'Show more from a publication'
               : 'Show less from a publication',
+        // NOT translated: this is the outlet's NAME. It is the same string the
+        // publication-preferences screen and the article meta row show, and
+        // machine-translating a masthead invents an outlet that does not exist.
         detail: action.publicationId,
       };
     // source-pref v47 (D2/D6). The scope LABEL is the load-bearing thing the
@@ -194,13 +252,19 @@ export function actionToRow(action: ProposalAction): ActionRow {
           action.publicationPref === 'boost'
             ? 'Show more from sources in a country'
             : 'Show less from sources in a country',
+        // A closed-vocabulary English COUNTRY name resolved by
+        // `resolveCountryScope`. The persisted value is `scopeValue` (an ISO
+        // code), so translating the label for display cannot drift the scope.
         detail: action.label,
+        translateDetail: true,
       };
     case 'add_suppression':
       return {
         icon: 'block',
         labelKey: 'articleFeedback.actionSuppress',
         labelDefault: 'Filter out a phrase',
+        // NOT translated: a literal MATCH string. Showing a Hindi rendering
+        // would promise a filter the English-corpus matcher does not implement.
         detail: action.suppressionPattern,
         // A structured filter is a different promise from a keyword one (exact
         // field match vs "anywhere in the story"), so the card has to say which.
@@ -215,6 +279,9 @@ export function actionToRow(action: ProposalAction): ActionRow {
         labelDefault: 'Remove a filter',
         // Empty on a resumed card — the sanitizer resolves `pattern` from our
         // own filter list and it is not echoed into the persisted tool result.
+        // NOT translated, for the same reason as add_suppression: it is the
+        // literal pattern, and it must read identically here and on the
+        // Not-interested screen where the filter is later managed.
         detail: action.pattern,
       };
     case 'set_high_priority':
@@ -225,6 +292,7 @@ export function actionToRow(action: ProposalAction): ActionRow {
           : 'articleFeedback.actionUnpinTopic',
         labelDefault: action.highPriority ? 'Pin a topic' : 'Unpin a topic',
         detail: action.topicText,
+        translateDetail: true,
       };
     case 'retire_topic':
       return {
@@ -232,6 +300,7 @@ export function actionToRow(action: ProposalAction): ActionRow {
         labelKey: 'articleFeedback.actionRetireTopic',
         labelDefault: 'Retire a topic',
         detail: action.topicText,
+        translateDetail: true,
       };
     case 'run_calibration':
       // The Confirm button on this row is the ONLY thing that recalibrates.
@@ -332,6 +401,16 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         </Text>
       )}
 
+      {/* `explanation` / `expectedEffects` are NOT display-translated, unlike
+          the action rows. They are the agent's own prose to the reader, and the
+          LANGUAGE rule in agent-core makes conversational text follow the app
+          language — so they should already arrive in Hindi. That is not proven
+          (the prompt also hard-codes English sample sentences for the
+          feature-request case), and translating text that is ALREADY in the
+          target language is not a no-op here: translateText declares
+          sourceLangCode 'en' unconditionally on iOS, so feeding it Hindi
+          produces garbage rather than the same string back. Leaving them is the
+          recoverable direction; confirm on-device before changing it. */}
       {proposal.explanation.length > 0 && (
         <Text size="sm" style={styles.explanation}>
           {proposal.explanation}
@@ -359,11 +438,19 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                     ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
                     : t(row.labelKey as TKey)}
                 </Text>
-                {row.heading && (
-                  <Text size="sm" bold style={styles.actionHeading}>
-                    {row.heading}
-                  </Text>
-                )}
+                {row.heading &&
+                  (row.translateHeading ? (
+                    <TranslatableDynamic
+                      text={row.heading}
+                      size="sm"
+                      bold
+                      style={styles.actionHeading}
+                    />
+                  ) : (
+                    <Text size="sm" bold style={styles.actionHeading}>
+                      {row.heading}
+                    </Text>
+                  ))}
                 {row.chip && (
                   <View style={styles.chip}>
                     <Text size="xs" style={styles.chipText}>
@@ -371,11 +458,18 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                     </Text>
                   </View>
                 )}
-                {row.detail && (
-                  <Text size="sm" style={styles.actionDetail}>
-                    {row.detail}
-                  </Text>
-                )}
+                {row.detail &&
+                  (row.translateDetail ? (
+                    <TranslatableDynamic
+                      text={row.detail}
+                      size="sm"
+                      style={styles.actionDetail}
+                    />
+                  ) : (
+                    <Text size="sm" style={styles.actionDetail}>
+                      {row.detail}
+                    </Text>
+                  ))}
               </View>
             </>
           );
