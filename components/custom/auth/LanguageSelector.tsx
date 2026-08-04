@@ -174,16 +174,15 @@ const LanguageSelector: React.FC = () => {
 
             {/* Below the selector, never beside it — the ticker and the
                 selector share one centred row, and prose in that row would
-                fight the animation for the reader's eye. Indented to the same
-                20pt gutter as the progress card that appears here once a
-                switch starts, so the guidance and the thing it describes line
-                up. Renders on iOS only, from inside the component. */}
-            <View style={styles.hintWrap}>
-                <LanguageDownloadHint
-                    testID="auth-language-download-hint"
-                    className="text-center"
-                />
-            </View>
+                fight the animation for the reader's eye. Its own margins
+                rather than a wrapper View, so that on Android — where the
+                component renders nothing, there being no download sheet —
+                it leaves no gap behind. The 20pt gutter is the progress
+                card's, so the guidance and the card that replaces it line up. */}
+            <LanguageDownloadHint
+                testID="auth-language-download-hint"
+                className="text-center mt-3 mx-5"
+            />
 
             {busy && pendingCode ? (
                 <View style={styles.progressWrap}>
@@ -280,10 +279,6 @@ const styles = StyleSheet.create({
     },
     progressWrap: {
         marginTop: 16,
-        marginHorizontal: 20,
-    },
-    hintWrap: {
-        marginTop: 12,
         marginHorizontal: 20,
     },
     selectorButtonDisabled: {
