@@ -465,7 +465,18 @@
     "managePacksPrefix": "To manage downloaded languages, go to",
     "translationUnavailableTitle": "Translation unavailable",
     "translationUnavailableTapToRetry": "The {{language}} language pack may still be downloading, or the download may have failed. Showing English for now — tap to try again.",
-    "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}. Showing English instead — updating iOS will enable it."
+    "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}. Showing English instead — updating iOS will enable it.",
+    "switchingTitle": "Setting up {{language}}…",
+    "switchingNudge": "Your device is preparing the {{language}} translation pack. Please keep this screen open until it finishes — if you leave now, news articles will stay in English.",
+    "switchingCancel": "Stop switching language",
+    "switchFailedTitle": "Couldn't switch to {{language}}",
+    "switchFailedBody": "The {{language}} translation pack couldn't be prepared, so you're still using {{previous}}. It may still be downloading — try again in a moment.",
+    "switchTimedOutBody": "Preparing {{language}} is taking too long, so you're still using {{previous}}. The download may finish in the background — try again shortly.",
+    "switchUnsupportedBody": "This version of iOS can't translate into {{language}}, so you're still using {{previous}}.",
+    "switchPartialTitle": "{{language}} is set, with a limit",
+    "switchDeviceUnsupportedBody": "{{language}} is now your app language, but this device can't translate news articles, so article text will stay in English.",
+    "translationUnavailableOnThisDevice": "This device can't translate news articles into {{language}}. Showing English instead.",
+    "translationFailedTooltip": "Translation failed, please reopen the app or check your settings"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

@@ -5,12 +5,14 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { SUPPORTED_LANGUAGES, translateText } from '@/lib/translation-service';
+import { getNativeLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
+import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -18,16 +20,17 @@ import * as Updates from 'expo-updates';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
+    /** Lets the route lock the stack's swipe-back gesture while a switch runs. */
+    onBusyChange?: (busy: boolean) => void;
 }
 
 const RTL_CODES = new Set(['ar', 'he']);
 
-const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack }) => {
+const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack, onBusyChange }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
 
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
-    const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
 
     const [showLangPicker, setShowLangPicker] = useState(false);
     const [showGuideVideo, setShowGuideVideo] = useState(false);
@@ -36,28 +39,72 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
 
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
 
-    const handleSelectLanguage = async (code: string) => {
-        setShowLangPicker(false);
-        const wasRTL = RTL_CODES.has(appLanguage);
-        const willBeRTL = RTL_CODES.has(code);
-        await setAppLanguage(code);
-        // Ask the OS for the pack once, here, where the user just asked for
-        // this language — one deliberate gesture, one system sheet. The
-        // outcome is reported by the root <TranslationUnavailablePrompt>.
-        if (code !== 'en') void translateText('Hello', code);
-        if (wasRTL !== willBeRTL) {
+    // Only fires on a language that was actually applied, so a failed attempt
+    // can never prompt for a restart the user did not ask for.
+    const handleCommitted = useCallback(
+        (code: string, previousCode: string) => {
+            if (RTL_CODES.has(previousCode) === RTL_CODES.has(code)) return;
             Alert.alert(
                 t('language.restartRequired'),
                 t('language.restartDescription'),
                 [
                     { text: t('language.later'), style: 'cancel' },
-                    {
-                        text: t('language.restart'),
-                        onPress: () => Updates.reloadAsync(),
-                    },
+                    { text: t('language.restart'), onPress: () => Updates.reloadAsync() },
                 ],
             );
-        }
+        },
+        [t],
+    );
+
+    // Every non-success ending is reported by name, and names the language the
+    // user is left on — an attempt that silently does nothing is the thing
+    // being fixed here.
+    const handleResult = useCallback(
+        ({ code, outcome, committedAnyway }: LanguageSwitchResult) => {
+            const language = getNativeLanguageName(code) ?? code;
+            const current = getNativeLanguageName(
+                useAppLanguageStore.getState().appLanguage,
+            ) ?? 'English';
+            if (committedAnyway) {
+                Alert.alert(
+                    t('language.switchPartialTitle', { language }),
+                    t('language.switchDeviceUnsupportedBody', { language }),
+                );
+                return;
+            }
+            const body = outcome === 'timeout'
+                ? t('language.switchTimedOutBody', { language, previous: current })
+                : outcome === 'language-unsupported'
+                    ? t('language.switchUnsupportedBody', { language, previous: current })
+                    : t('language.switchFailedBody', { language, previous: current });
+            Alert.alert(t('language.switchFailedTitle', { language }), body);
+        },
+        [t],
+    );
+
+    const {
+        pendingCode,
+        busy,
+        requestSwitch,
+        notifyPickerDismissed,
+        cancel,
+    } = useLanguageSwitch({ onCommitted: handleCommitted, onResult: handleResult });
+
+    React.useEffect(() => {
+        onBusyChange?.(busy);
+    }, [busy, onBusyChange]);
+
+    // Closing the picker is all that happens here. The probe waits for the
+    // modal's `onDismiss` — presenting Apple's sheet on top of a dismissing
+    // pageSheet is a native crash. See lib/hooks/use-language-switch.ts.
+    const handleSelectLanguage = (code: string) => {
+        requestSwitch(code);
+        setShowLangPicker(false);
+    };
+
+    const handleBack = () => {
+        if (busy) return;
+        onBack?.();
     };
 
     return (
@@ -71,10 +118,16 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                 {onBack && (
                     <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
                         <Pressable
-                            onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            testID="language-back"
+                            onPress={handleBack}
+                            disabled={busy}
+                            className={`bg-gray-900 rounded-full p-3 shadow-hard-2 ${busy ? 'opacity-40' : ''}`}
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            <MaterialIcons
+                                name="arrow-back"
+                                size={24}
+                                color={busy ? '#6b7280' : '#ffffff'}
+                            />
                         </Pressable>
                     </Box>
                 )}
@@ -104,8 +157,10 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                             </HStack>
 
                             <Pressable
+                                testID="language-current-row"
                                 onPress={() => setShowLangPicker(true)}
-                                className="flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg"
+                                disabled={busy}
+                                className={`flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg ${busy ? 'opacity-40' : ''}`}
                             >
                                 <VStack>
                                     <Text className="text-white text-base font-medium">
@@ -117,6 +172,10 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                                 </VStack>
                                 <MaterialIcons name="chevron-right" size={20} color="#999999" />
                             </Pressable>
+
+                            {busy && pendingCode ? (
+                                <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
+                            ) : null}
 
                             {Platform.OS === 'ios' && (
                                 <VStack space="sm">
@@ -210,6 +269,11 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
                 animationType="slide"
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowLangPicker(false)}
+                // THE HANDSHAKE. iOS fires this once the dismissal transition
+                // has actually finished; only then may the probe present
+                // Apple's system sheet. Presenting it during the dismissal is
+                // a hard native crash — see lib/hooks/use-language-switch.ts.
+                onDismiss={notifyPickerDismissed}
             >
                 <GluestackUIProvider mode="dark">
                     <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>

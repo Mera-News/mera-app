@@ -13,7 +13,9 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { SUPPORTED_LANGUAGES, translateText } from '@/lib/translation-service';
+import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
+import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
+import { getNativeLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 
 const RTL_CODES = new Set(['ar', 'he']);
 
@@ -55,7 +57,6 @@ const LanguageSelector: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
-    const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
     const [showPicker, setShowPicker] = useState(false);
 
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
@@ -65,42 +66,62 @@ const LanguageSelector: React.FC = () => {
         setShowPicker(true);
     }, []);
 
-    // Probe pack availability at the one moment the user has actually asked
-    // for this language. On iOS this is where Apple's download sheet belongs:
-    // a single presentation, in response to a single deliberate gesture.
-    //
-    // The OUTCOME is not reported here. translateText's per-language breaker
-    // records it, and the single root-level <TranslationUnavailablePrompt>
-    // speaks for every surface — this screen used to keep its own
-    // `packMissing` banner, which died with the component and so left a user
-    // who switched language from Settings with no feedback at all.
-    const probePack = useCallback((code: string) => {
-        if (code === 'en') return;
-        void translateText('Hello', code);
-    }, []);
+    // Only fires on a language that was actually applied.
+    const handleCommitted = useCallback(
+        (code: string, previousCode: string) => {
+            if (RTL_CODES.has(previousCode) === RTL_CODES.has(code)) return;
+            Alert.alert(
+                t('language.restartRequired'),
+                t('language.restartDescription'),
+                [
+                    { text: t('language.later'), style: 'cancel' },
+                    { text: t('language.restart'), onPress: () => Updates.reloadAsync() },
+                ],
+            );
+        },
+        [t],
+    );
+
+    const handleResult = useCallback(
+        ({ code, outcome, committedAnyway }: LanguageSwitchResult) => {
+            const language = getNativeLanguageName(code) ?? code;
+            const current = getNativeLanguageName(
+                useAppLanguageStore.getState().appLanguage,
+            ) ?? 'English';
+            if (committedAnyway) {
+                Alert.alert(
+                    t('language.switchPartialTitle', { language }),
+                    t('language.switchDeviceUnsupportedBody', { language }),
+                );
+                return;
+            }
+            const body = outcome === 'timeout'
+                ? t('language.switchTimedOutBody', { language, previous: current })
+                : outcome === 'language-unsupported'
+                    ? t('language.switchUnsupportedBody', { language, previous: current })
+                    : t('language.switchFailedBody', { language, previous: current });
+            Alert.alert(t('language.switchFailedTitle', { language }), body);
+        },
+        [t],
+    );
+
+    // Identical machine to the Settings picker, deliberately shared rather
+    // than copied — the copy that used to live here is what let the two drift
+    // into the same native crash. See lib/hooks/use-language-switch.ts.
+    const {
+        pendingCode,
+        busy,
+        requestSwitch,
+        notifyPickerDismissed,
+        cancel,
+    } = useLanguageSwitch({ onCommitted: handleCommitted, onResult: handleResult });
 
     const handleSelectLanguage = useCallback(
-        async (code: string) => {
+        (code: string) => {
+            requestSwitch(code);
             setShowPicker(false);
-            const wasRTL = RTL_CODES.has(appLanguage);
-            const willBeRTL = RTL_CODES.has(code);
-            await setAppLanguage(code);
-            probePack(code);
-            if (wasRTL !== willBeRTL) {
-                Alert.alert(
-                    t('language.restartRequired'),
-                    t('language.restartDescription'),
-                    [
-                        { text: t('language.later'), style: 'cancel' },
-                        {
-                            text: t('language.restart'),
-                            onPress: () => Updates.reloadAsync(),
-                        },
-                    ],
-                );
-            }
         },
-        [appLanguage, setAppLanguage, t, probePack],
+        [requestSwitch],
     );
 
     return (
@@ -127,7 +148,12 @@ const LanguageSelector: React.FC = () => {
                 </View>
 
                 {/* Language selector with glow */}
-                <Pressable onPress={handleOpenPicker} style={styles.selectorButton}>
+                <Pressable
+                    testID="auth-language-selector"
+                    onPress={handleOpenPicker}
+                    disabled={busy}
+                    style={[styles.selectorButton, busy ? styles.selectorButtonDisabled : null]}
+                >
                     <HStack className="items-center" space="xs">
                         <Text className="text-white text-lg">
                             {selectedLanguage?.native ?? 'English'}
@@ -137,12 +163,21 @@ const LanguageSelector: React.FC = () => {
                 </Pressable>
             </HStack>
 
+            {busy && pendingCode ? (
+                <View style={styles.progressWrap}>
+                    <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
+                </View>
+            ) : null}
+
             {/* Language Picker Modal */}
             <Modal
                 visible={showPicker}
                 animationType="slide"
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowPicker(false)}
+                // Probe only once the dismissal transition has finished —
+                // presenting Apple's sheet during it is a native crash.
+                onDismiss={notifyPickerDismissed}
             >
                 <GluestackUIProvider mode="dark">
                     <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
@@ -220,6 +255,13 @@ const styles = StyleSheet.create({
     tickerText: {
         fontSize: 18,
         color: '#ffffff',
+    },
+    progressWrap: {
+        marginTop: 16,
+        marginHorizontal: 20,
+    },
+    selectorButtonDisabled: {
+        opacity: 0.4,
     },
     selectorButton: {
         borderWidth: 1,
