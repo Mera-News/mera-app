@@ -14,6 +14,7 @@
 // ACCEPT-ALL settles the widget (everything stays active). GENERATE-MORE mints
 // additional topics excluding the existing texts (topic-planning-service).
 
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -209,9 +210,17 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
           {t('topicPlan.title')}
         </Text>
       </View>
-      <Text size="xs" style={styles.factLine} numberOfLines={2}>
-        {factStatement}
-      </Text>
+      {/* The owning fact, English by the agent's LANGUAGE rule. Display only —
+          `factStatement` reaches retryTopicGeneration / generateMoreTopicsForFact
+          straight from the PROP, never from what is rendered here, so topic
+          generation keeps seeing the English statement. */}
+      <TranslatableDynamic
+        text={factStatement}
+        size="xs"
+        italic
+        style={styles.factLine}
+        numberOfLines={2}
+      />
 
       {showFailed ? (
         <View style={styles.failedRow} testID="topic-plan-failed">
@@ -247,13 +256,18 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
             const rowBusy = busyId === row.id;
             return (
               <View key={row.id} style={[styles.topicRow, retired && styles.topicRowRetired]}>
-                <Text
+                {/* Topic texts are the RETRIEVAL keys — English, and sent to
+                    the server as-is. Only the rendering is translated: delete /
+                    undo act on `row.id`, and the row is never written back. */}
+                <TranslatableDynamic
+                  text={row.text}
                   size="sm"
-                  style={[styles.topicText, retired && styles.topicTextRetired]}
+                  style={{
+                    ...styles.topicText,
+                    ...(retired ? styles.topicTextRetired : {}),
+                  }}
                   numberOfLines={2}
-                >
-                  {row.text}
-                </Text>
+                />
                 {retired ? (
                   <Pressable
                     onPress={() => handleUndo(row)}
@@ -320,7 +334,10 @@ const styles = StyleSheet.create({
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { color: ACCENT },
-  factLine: { color: 'rgb(180, 180, 180)', fontStyle: 'italic' },
+  // `fontStyle` moved to TranslatableDynamic's `italic` PROP — the wrapper
+  // resolves it to a class, and leaving it as a raw style depends on gluestack
+  // merging `style` after its className-derived styles.
+  factLine: { color: 'rgb(180, 180, 180)' },
   settledSub: { color: 'rgb(170, 170, 170)' },
   generatingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   generatingText: { color: 'rgb(170, 170, 170)' },

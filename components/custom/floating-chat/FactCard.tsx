@@ -2,6 +2,7 @@
 // deleted / config updated) produced by a tool call. No delete/undo behavior
 // yet — display only.
 
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
@@ -66,9 +67,17 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements }) => {
           {statements.map((statement, idx) => (
             <View key={`${idx}-${statement}`} style={styles.statementRow}>
               <View style={styles.dot} />
-              <Text size="sm" style={styles.statementText}>
-                {statement}
-              </Text>
+              {/* Fact statements are English BY DESIGN — the agent's LANGUAGE
+                  rule keeps them English even when it is talking Hindi — so
+                  this card is where a Hindi reader would otherwise meet raw
+                  English. Display only: the statement was already written to
+                  the DB by the tool call that produced this card, and nothing
+                  reads back from here. */}
+              <TranslatableDynamic
+                text={statement}
+                size="sm"
+                style={styles.statementText}
+              />
             </View>
           ))}
         </View>

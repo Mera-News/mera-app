@@ -17,6 +17,7 @@
 // Settlement is recorded in the floating-chat store (resolvedConflicts), keyed by
 // `${newFactId}:${existingFactId}`, mirroring resolvedProposals.
 
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { deleteFact, updateFact } from '@/lib/database/services/fact-service';
@@ -130,22 +131,32 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
         </Text>
       </View>
 
+      {/* The two statements are READ-ONLY previews of English fact text, so they
+          are display-translated like every other fact statement in the thread.
+          The merge TextInput below deliberately is NOT: its value is written
+          back via updateFact, so a translated seed would silently replace an
+          English fact with a Hindi one and change what the topics behind it
+          retrieve. Same file, opposite answers — read vs write. */}
       <View style={styles.statements}>
         <View style={styles.statementBlock}>
           <Text size="xs" bold style={styles.statementLabel}>
             {t('conflict.newLabel')}
           </Text>
-          <Text size="sm" style={styles.statementText}>
-            {conflict.newStatement}
-          </Text>
+          <TranslatableDynamic
+            text={conflict.newStatement}
+            size="sm"
+            style={styles.statementText}
+          />
         </View>
         <View style={styles.statementBlock}>
           <Text size="xs" bold style={styles.statementLabel}>
             {t('conflict.existingLabel')}
           </Text>
-          <Text size="sm" style={styles.statementText}>
-            {conflict.existingStatement}
-          </Text>
+          <TranslatableDynamic
+            text={conflict.existingStatement}
+            size="sm"
+            style={styles.statementText}
+          />
         </View>
       </View>
 
@@ -158,6 +169,11 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
             onPress={handleKeepBoth}
             disabled={busy}
           />
+          {/* KNOWN GAP: the two previews below interpolate a runtime English
+              statement INTO a translated sentence, so they read half-Hindi
+              half-English. A component cannot live inside an i18next
+              interpolation, and the fix is a key-shape change — out of scope
+              while the locale files are being swept. */}
           <VerbRow
             icon="published-with-changes"
             label={t('conflict.replaceOld')}
@@ -190,6 +206,9 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
           <Text size="xs" bold style={styles.statementLabel}>
             {t('conflict.mergeEditLabel')}
           </Text>
+          {/* NEVER translated. `mergeText` is seeded from suggestedMerge and
+              handed straight to updateFact — this is a WRITE path, and the
+              stored fact must stay English. */}
           <TextInput
             value={mergeText}
             onChangeText={setMergeText}
