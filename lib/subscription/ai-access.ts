@@ -10,7 +10,11 @@
 // imperative getter derive from the SAME function. A stored `aiAccess` field
 // would go stale the first time one of its three writers forgot to recompute.
 
-import { DEV_FORCE_AI_ACCESS, DEV_FORCE_LAPSED } from '@/lib/config/feature-gates';
+import {
+    COMPANION_MODE_ENABLED,
+    DEV_FORCE_AI_ACCESS,
+    DEV_FORCE_LAPSED,
+} from '@/lib/config/feature-gates';
 
 /**
  * - `unknown` — we have not heard from the server OR RevenueCat yet. Surfaces
@@ -51,6 +55,12 @@ export interface AiAccessInputs {
  */
 export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
     if (__DEV__ && DEV_FORCE_AI_ACCESS !== null) return DEV_FORCE_AI_ACCESS;
+
+    // Ship gate. While false this wave is inert and the app behaves exactly as
+    // it did before it — see COMPANION_MODE_ENABLED for why the OTA must not be
+    // the cutover. Below the dev override so the harness can still drive every
+    // state; above everything else so nothing can leak past it.
+    if (!COMPANION_MODE_ENABLED) return 'entitled';
 
     if (inputs.serverTier !== null) {
         return inputs.serverTier === 'none' ? 'locked' : 'entitled';

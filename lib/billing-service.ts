@@ -11,11 +11,54 @@ const GET_USER_BILLING = gql`
       articlesUsedToday
       entitlementExpiresAt
       resetAt
+    }
+  }
+`;
+
+// DELIBERATELY A SEPARATE QUERY, not two more fields on the one above.
+//
+// `hasEverSubscribed` / `showLapseInterstitial` exist on the server's `dev`
+// branch and are NOT deployed to prod yet (this repo's branch→env model has no
+// CD from `dev`). Selecting an unknown field is a GraphQL VALIDATION error, and
+// validation rejects the WHOLE operation — so folding them into the query above
+// would not degrade the lapse feature, it would take out `subscriptionTier`,
+// `dailyArticleLimit` and `articlesUsedToday` too, for every user, immediately.
+// That is the same failure mode `feature-gates.ts` documents at length for
+// HEADLINE_DEPTH_UI_ENABLED.
+//
+// Split like this, an un-deployed server costs exactly one swallowed error and
+// leaves `hasEverSubscribed` null — which every consumer already reads as
+// "unknown, do nothing". Delete this split and re-merge the fields once the
+// server change is live in prod.
+const GET_USER_BILLING_LAPSE_STATE = gql`
+  query GetUserBillingLapseState {
+    userBilling {
+      subscriptionTier
       hasEverSubscribed
       showLapseInterstitial
     }
   }
 `;
+
+/**
+ * Fetch ONLY the lapse-related fields. Returns null on any error — including
+ * the expected "this server doesn't know those fields yet" validation error,
+ * which is why this is deliberately quiet: it would otherwise fire a Sentry
+ * event on every foreground, every login and every Profile focus, for every
+ * user, until the server change reaches prod.
+ */
+export async function fetchUserBillingLapseState(): Promise<UserBillingInfo | null> {
+    try {
+        const { data } = await client.query<UserBillingResponse>({
+            query: GET_USER_BILLING_LAPSE_STATE,
+            fetchPolicy: 'no-cache',
+        });
+        return data?.userBilling ?? null;
+    } catch {
+        // Intentionally not reported. See the query's comment.
+        return null;
+    }
+}
 
 // Self-scoped: no userId argument, the server resolves the caller from the
 // session. It stamps `lapseInterstitialShownAt`, which is what makes the

@@ -5,7 +5,7 @@
 // calls this: app foreground, login, a completed purchase, and a 402 from a
 // guarded query.
 
-import { fetchUserBilling } from '@/lib/billing-service';
+import { fetchUserBilling, fetchUserBillingLapseState } from '@/lib/billing-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 
 /**
@@ -42,7 +42,13 @@ export async function syncEntitlement(
 
     const run = (async () => {
         try {
-            const billing = await fetchUserBilling();
+            // Two queries, on purpose — see fetchUserBillingLapseState. The
+            // second is allowed to fail on a server that predates the lapse
+            // fields without taking the tier down with it.
+            const [billing, lapseState] = await Promise.all([
+                fetchUserBilling(),
+                fetchUserBillingLapseState(),
+            ]);
             if (billing) {
                 useSubscriptionStore.getState().setServerBilling(billing);
                 // Only a successful read counts towards the debounce. A failed
@@ -50,6 +56,12 @@ export async function syncEntitlement(
                 // briefly offline stuck on stale entitlement for a full minute
                 // after connectivity returned.
                 lastSyncAt = Date.now();
+            }
+            // Null when the server has no such fields yet, which leaves
+            // hasEverSubscribed/showLapseInterstitial at their `null`
+            // "unknown" — every consumer already treats that as "do nothing".
+            if (lapseState) {
+                useSubscriptionStore.getState().setServerBilling(lapseState);
             }
         } finally {
             inFlight = null;
