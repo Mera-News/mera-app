@@ -624,6 +624,36 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
                 showsVerticalScrollIndicator={false}
             >
+                {/* Transparency note. Deliberately narrower than "Mera cannot
+                    access any of this": two things on this screen DO leave the
+                    device, and the note names both rather than sweeping them
+                    up — `user_personas` mirrors a server-side document
+                    (lib/account-service.ts GET_USER_PERSONA), and fact
+                    statements ride the cloud-scoring/chat prompts (E2EE'd, but
+                    the privacy policy itself stops short of "cannot"). Wording
+                    tracks the vetted policy line "Mera's servers do not
+                    store…" rather than inventing a stronger claim. */}
+                <Box
+                    testID="observability-privacy-note"
+                    className="bg-gray-900 rounded-xl p-3 border border-gray-800 mb-2"
+                >
+                    <HStack space="xs" className="items-center mb-1.5">
+                        <MaterialIcons name="lock-outline" size={14} color="#9ca3af" />
+                        <Text size="xs" className="text-gray-300 font-semibold">
+                            {t('observability.noteTitle')}
+                        </Text>
+                    </HStack>
+                    <Text size="xs" className="text-gray-400 leading-5">
+                        {t('observability.noteBody')}
+                    </Text>
+                    <Text size="xs" className="text-gray-500 leading-5 mt-1.5">
+                        {t('observability.noteExceptions')}
+                    </Text>
+                    <Text size="xs" className="text-gray-500 leading-5 mt-1.5">
+                        {t('observability.noteFooter')}
+                    </Text>
+                </Box>
+
                 {/* Top metric cards */}
                 <HStack space="sm" className="mb-2">
                     <MetricCard title={t('observability.articles')} value={String(articleCount)} />

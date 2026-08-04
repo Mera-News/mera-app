@@ -853,6 +853,10 @@
   },
   "observability": {
     "title": "Observability",
+    "noteTitle": "Your data, on your device",
+    "noteBody": "This screen reads Mera's on-device database directly — the data that builds your feed, shown here for visibility and for debugging. Mera's servers don't store your facts, your reading history, or the suggestions built from them.",
+    "noteExceptions": "Two exceptions: your account profile (sign-in, notifications, language) is synced to your Mera account, and when cloud AI is switched on, your facts are encrypted on this device before being sent for scoring.",
+    "noteFooter": "Values here are raw and diagnostic. Feed rows clear themselves after 48 hours; you can delete your facts, feed cache and viewing history from Manage Data.",
     "articles": "Articles",
     "relevant": "Relevant",
     "unscored": "Unscored",

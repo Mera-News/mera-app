@@ -15,7 +15,11 @@ export const TABLE_LABELS: Record<string, { label: string; description?: string 
     article_suggestion_facts: { label: 'Suggestion reasons', description: 'Why each article was picked' },
     publication_visits: { label: 'Publications you’ve read', description: 'Sources you’ve opened' },
     facts: { label: 'Things Mera knows about you', description: 'What shapes your feed' },
-    user_personas: { label: 'Your profile', description: 'Your on-device profile' },
+    // NOT device-only, unlike every other row here: these fields mirror a
+    // server-side document (lib/account-service.ts GET_USER_PERSONA), so the
+    // old "Your on-device profile" was inaccurate and contradicted the
+    // transparency note above it.
+    user_personas: { label: 'Your profile', description: 'Account settings, synced to your Mera account' },
     scheduler_jobs: { label: 'Background tasks', description: 'Work Mera does behind the scenes' },
     inference_jobs: { label: 'AI jobs', description: 'On-device AI work' },
 };
