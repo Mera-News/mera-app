@@ -48,6 +48,19 @@ jest.mock('../topic-sanity-service', () => ({
   resetSanityCursor: jest.fn(async () => {}),
 }));
 
+// r12 K-P5: the replacement generator (network + atomic write) is mocked so
+// these tests exercise the hygiene wiring; its own atomicity properties are
+// owned by topic-replacement-service.test.ts / topic-replacement-atomicity.test.ts.
+const mockGenerateAndReplace = jest.fn(async () => ({
+  ok: false,
+  minted: 0,
+  retired: 0,
+  floorHeld: false,
+}));
+jest.mock('../topic-replacement-service', () => ({
+  generateAndReplace: (...a: unknown[]) => mockGenerateAndReplace(...(a as [])),
+}));
+
 jest.mock('../persona-action-executor', () => ({
   applyPersonaAction: jest.fn(async () => ({ applied: true, summary: 'ok' })),
 }));
@@ -371,14 +384,14 @@ describe('acceptProposal — generate_replacements is fail-closed', () => {
     ]);
   });
 
-  it('retires NOTHING when replacement generation cannot run', async () => {
+  it('retires NOTHING when replacement generation fails', async () => {
     await runHygieneSweep({ force: true });
     const [proposal] = await getPendingProposals();
     expect(proposal.kind).toBe('incoherent_topics');
 
     const res = await acceptProposal(proposal.id);
 
-    // Generation is not wired until K-P5, so the accept must abort whole.
+    // Generation failed, so the accept aborts whole — nothing is removed.
     expect(res.applied).toBe(false);
     // The invariant: not a single retire ran.
     expect(executor.applyPersonaAction).not.toHaveBeenCalled();
@@ -496,5 +509,103 @@ describe('presentation cap + backlog refill', () => {
     const [first] = await getPendingProposals();
     await rejectProposal(first.id);
     expect(await getPendingProposals()).toHaveLength(2);
+  });
+});
+
+describe('acceptProposal — incoherent_topics happy path (K-P5)', () => {
+  beforeEach(async () => {
+    mockKv.clear();
+    jest.clearAllMocks();
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+    (factService.getFacts as jest.Mock).mockResolvedValue([
+      { id: 'f1', statement: 'Follows the Indian national cricket team' },
+    ]);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue([
+      {
+        id: 't-bad',
+        factId: 'f1',
+        text: 'Amsterdam cricket festival music tech',
+        normalizedText: 'amsterdam cricket festival music tech',
+        weight: 0.5,
+        status: 'active' as const,
+        lastSignalAtMs: Date.now(),
+      },
+    ]);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue([
+      { id: 'f1', weight: null, createdAtMs: 0 },
+    ]);
+  });
+
+  it('routes the WHOLE proposal through the atomic replacement path', async () => {
+    mockGenerateAndReplace.mockResolvedValue({
+      ok: true,
+      minted: 2,
+      retired: 1,
+      floorHeld: false,
+    });
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+
+    expect(res).toEqual({ applied: true, ok: true });
+    expect(mockGenerateAndReplace).toHaveBeenCalledWith('f1', 3, ['t-bad']);
+    // The generic op loop must NOT also run the retires — that would be a
+    // second, non-atomic write of the same removal.
+    expect(executor.applyPersonaAction).not.toHaveBeenCalled();
+    expect(await getPendingProposals()).toEqual([]);
+  });
+
+  it('logs the retire so it stays reversible from the change log', async () => {
+    mockGenerateAndReplace.mockResolvedValue({
+      ok: true,
+      minted: 1,
+      retired: 1,
+      floorHeld: false,
+    });
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    await acceptProposal(proposal.id);
+
+    expect(changeLog.append).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionType: ACTION_NAMES.RETIRE_TOPIC,
+        action: { targetId: 't-bad' },
+        source: 'digest',
+      }),
+    );
+  });
+
+  it('reports NOT-ok when the floor withheld the retire', async () => {
+    // The UI shows the retry toast rather than claiming a cleanup that the
+    // floor deliberately prevented.
+    mockGenerateAndReplace.mockResolvedValue({
+      ok: true,
+      minted: 0,
+      retired: 0,
+      floorHeld: true,
+    });
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+
+    expect(res).toEqual({ applied: true, ok: false });
+    expect(changeLog.append).not.toHaveBeenCalled();
+  });
+
+  it('leaves the proposal pending when the replacement path throws', async () => {
+    mockGenerateAndReplace.mockRejectedValue(new Error('boom'));
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+
+    expect(res).toEqual({ applied: false, ok: false });
+    expect(await getPendingProposals()).toHaveLength(1);
   });
 });

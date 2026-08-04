@@ -379,6 +379,90 @@ export async function retire(topicId: string): Promise<void> {
   await setStatus(topicId, 'retired');
 }
 
+export interface ReplaceTopicsResult {
+  /** Rows actually created (after the dedupe floor). */
+  minted: TopicModel[];
+  /** Topic ids actually moved to `retired`. */
+  retired: string[];
+  /** True when the retire was withheld to keep the fact from going dark. */
+  floorHeld: boolean;
+}
+
+/**
+ * Mint replacement topics and retire the bad ones for ONE fact, in a SINGLE
+ * write. The atomic half of the r12 "replace, don't just delete" pass.
+ *
+ * Why one `database.write`/`batch` rather than mint-then-retire: WatermelonDB
+ * commits a batch atomically, so an app killed mid-write yields both or
+ * neither. Sequenced separately, a kill between them leaves a fact that lost
+ * topics and gained nothing — and these rows are derived from the user's own
+ * facts, which no server can rebuild.
+ *
+ * THE FLOOR (`retireIds` is ignored when it would empty the fact): if retiring
+ * everything asked for would leave the fact with ZERO active topics, the retire
+ * is withheld and only the mint lands. A fact going dark stops producing feed
+ * content entirely; keeping a mediocre topic is strictly the lesser harm.
+ * Callers should surface `floorHeld` rather than treat it as success.
+ *
+ * Mints are NOT routed through `createTopics` — this needs the inserts and the
+ * status flips in the same batch — so the caller is responsible for having
+ * deduped `planned` (planTopupTopicRows does it globally).
+ */
+export async function replaceTopicsForFact(
+  factId: string,
+  planned: { text: string; normalizedText: string }[],
+  retireIds: string[],
+): Promise<ReplaceTopicsResult> {
+  const owned = await getByFact(factId);
+  const activeNow = owned.filter((t) => t.status === 'active');
+  const toRetire = owned.filter(
+    (t) => retireIds.includes(t.id) && t.status === 'active',
+  );
+
+  // Would this leave the fact with nothing active? mints land either way.
+  const survivors = activeNow.length - toRetire.length + planned.length;
+  const floorHeld = survivors < 1;
+  const retireRows = floorHeld ? [] : toRetire;
+
+  if (planned.length === 0 && retireRows.length === 0) {
+    return { minted: [], retired: [], floorHeld };
+  }
+
+  const now = new Date();
+  const result = await database.write(async () => {
+    const creates = planned.map((p) =>
+      topicsCollection.prepareCreate((t) => {
+        t.factId = factId;
+        t.text = p.text;
+        t.normalizedText = p.normalizedText;
+        t.weight = DEFAULT_HARNESS_CONFIG.topicGen.topupTopicWeight;
+        t.status = 'active';
+        t.provenance = 'llm';
+        t.highPriority = false;
+        t.locationId = null;
+        t.lastSignalAt = null;
+        t.createdAt = now;
+        t.updatedAt = now;
+      }),
+    );
+    const retires = retireRows.map((r) =>
+      r.prepareUpdate((t) => {
+        t.status = 'retired';
+        t.updatedAt = now;
+      }),
+    );
+    // ONE batch: both or neither.
+    await database.batch([...creates, ...retires]);
+    return creates;
+  });
+
+  return {
+    minted: result,
+    retired: retireRows.map((r) => r.id),
+    floorHeld,
+  };
+}
+
 /** Suppress a topic (hard filter). */
 export async function suppress(topicId: string): Promise<void> {
   await setStatus(topicId, 'suppressed');

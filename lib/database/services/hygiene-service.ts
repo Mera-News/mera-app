@@ -16,6 +16,7 @@ import { ACTION_NAMES } from '../../news-harness/persona-management/action-names
 import {
   analyzeHygiene,
   type HygieneProposal,
+  type HygieneOp,
   type HygieneFactInput,
   type HygieneAnalyzeInput,
 } from '../../news-harness/persona-management/fact-hygiene';
@@ -24,6 +25,7 @@ import { getAllTopicSnapshots } from './topic-service';
 import { getSetting, setSetting } from './setting-service';
 import { applyPersonaAction, type PersonaAction } from './persona-action-executor';
 import * as sanityService from './topic-sanity-service';
+import * as replacementService from './topic-replacement-service';
 import * as changeLogService from './persona-change-log-service';
 
 // ── KV keys + tunables ────────────────────────────────────────────────────
@@ -359,21 +361,73 @@ async function publishSanityOnly(
 // ── Accept / Reject ──────────────────────────────────────────────────────────
 
 /**
- * Generate replacement topics for a fact whose incoherent ones are about to be
- * retired. Returns true only when the fact is safe to prune.
+ * Apply an `incoherent_topics` proposal as ONE unit (r12 K-P5).
  *
- * FAIL-CLOSED. K-P3 ships the proposal kind and this seam; the generator itself
- * arrives with K-P5 (it reuses J's combo-only builder rather than a third
- * generation path). Until then this returns false, which aborts the accept
- * before any retire runs — the proposal simply stays pending. That is the
- * deliberate ordering: the destructive half must never be able to land ahead of
- * the half that protects it.
+ * Handled off the generic op loop on purpose. The generic loop runs each op
+ * independently — a mint through one writer, each retire through
+ * applyPersonaAction's own write — which cannot give the atomicity this kind
+ * needs. Here generation, minting and retiring are a single decision:
+ *
+ *   (a) generate first; ANY failure returns applied:false having changed
+ *       nothing, and the proposal stays pending for another tap;
+ *   (b) the mint and the retires land in ONE database.write/batch;
+ *   (c) if replacements came back empty, the retire is withheld rather than
+ *       leave the fact with zero active topics.
+ *
+ * The change-log rows are appended AFTER the write commits — an audit entry is
+ * worth less than the invariant, so it must never be what forces the ordering.
  */
-async function runGenerateReplacements(
-  _factId: string,
-  _fillTo: number,
-): Promise<boolean> {
-  return false;
+async function applyIncoherentTopicsProposal(
+  proposal: HygieneProposal,
+): Promise<AcceptResult> {
+  const genOp = proposal.ops.find((op) => op.type === 'generate_replacements');
+  if (!genOp || genOp.type !== 'generate_replacements') {
+    return { applied: false, ok: false };
+  }
+
+  const retireIds = proposal.ops
+    .filter(
+      (op): op is Extract<HygieneOp, { type: 'persona_action' }> =>
+        op.type === 'persona_action',
+    )
+    .map((op) => op.action.topicId)
+    .filter((id): id is string => !!id);
+
+  const outcome = await replacementService.generateAndReplace(
+    genOp.factId,
+    genOp.fillTo,
+    retireIds,
+  );
+
+  if (!outcome.ok) {
+    logger.warn('[hygiene] replacement generation failed — nothing retired', {
+      proposalId: proposal.id,
+      factId: genOp.factId,
+    });
+    return { applied: false, ok: false };
+  }
+
+  for (const topicId of retireIds.slice(0, outcome.retired)) {
+    await changeLogService
+      .append({
+        actionType: ACTION_NAMES.RETIRE_TOPIC,
+        action: { targetId: topicId },
+        source: 'digest',
+        summary: proposal.summary,
+      })
+      .catch(() => {
+        /* audit only — never fails the applied change */
+      });
+  }
+
+  const pending = await readPending();
+  await refillFromBacklog(pending.filter((p) => p.id !== proposal.id));
+  notifyChange();
+
+  // floorHeld ⇒ the fact would have gone dark, so the removal was withheld.
+  // Report it as not-fully-ok so the UI shows the retry toast rather than
+  // claiming a cleanup that did not happen.
+  return { applied: true, ok: !outcome.floorHeld };
 }
 
 export interface AcceptResult {
@@ -392,35 +446,19 @@ export async function acceptProposal(id: string): Promise<AcceptResult> {
   const proposal = pending.find((p) => p.id === id);
   if (!proposal) return { applied: false, ok: false };
 
-  // PHASE 1 — regeneration, before anything is removed.
-  //
-  // The invariant for `incoherent_topics`: a topic is NEVER retired unless its
-  // replacement is already committed. So every generate_replacements op runs
-  // first, and if any of them fails we abort the whole proposal WITHOUT running
-  // a single retire and leave it pending. The user is then exactly where they
-  // started — worst case they tap again — instead of holding a fact that lost
-  // topics and gained nothing.
-  const genOps = proposal.ops.filter((op) => op.type === 'generate_replacements');
-  for (const op of genOps) {
-    if (op.type !== 'generate_replacements') continue;
-    let generated = false;
+  // `incoherent_topics` is generate-then-retire and needs its ops applied as a
+  // single atomic unit, which the generic per-op loop below cannot provide.
+  if (proposal.kind === 'incoherent_topics') {
     try {
-      generated = await runGenerateReplacements(op.factId, op.fillTo);
+      return await applyIncoherentTopicsProposal(proposal);
     } catch (error) {
       logger.captureException(error, {
-        tags: { service: 'hygiene-service', method: 'acceptProposal.generate' },
-      });
-    }
-    if (!generated) {
-      logger.warn('[hygiene] replacement generation failed — nothing retired', {
-        proposalId: proposal.id,
-        factId: op.factId,
+        tags: { service: 'hygiene-service', method: 'acceptProposal.incoherent' },
       });
       return { applied: false, ok: false };
     }
   }
 
-  // PHASE 2 — the removals, now safe to apply.
   let ok = true;
   for (const op of proposal.ops) {
     try {
