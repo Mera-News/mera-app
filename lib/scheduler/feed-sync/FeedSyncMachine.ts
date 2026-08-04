@@ -96,6 +96,17 @@ class FeedSyncMachine {
    *  (keep-awake tag, network subscription); if an abandoned run settles late
    *  it must not tear down the run that replaced it. */
   private _runSeq = 0;
+  /**
+   * Whether THIS machine currently holds the `expo-keep-awake` tag.
+   *
+   * The lock is taken and released at several points in a run (fetch/hydrate
+   * start, every `paused-offline` wait, and again before scoring hands off), so
+   * the release path is reachable more than once per run. `deactivateKeepAwake`
+   * on a tag that is not held is not a no-op worth relying on, so the flag makes
+   * release idempotent rather than assuming the call sites are mutually
+   * exclusive.
+   */
+  private _keepAwakeHeld = false;
 
   get state(): FeedSyncState {
     return this._state;
@@ -164,9 +175,9 @@ class FeedSyncMachine {
       }
     });
 
-    await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+    await this._acquireKeepAwake(runId);
     try {
-      await this._run(personaId, ctx);
+      await this._run(personaId, ctx, runId);
     } finally {
       // Terminal exactness across EVERY exit path (completion, mid-run abort
       // return, error throw): flush any pending coalesced refresh so the store
@@ -177,14 +188,41 @@ class FeedSyncMachine {
       // replacement started; releasing the keep-awake tag and the network
       // subscription then would silently maim the live run.
       if (this._runSeq === runId) {
-        deactivateKeepAwake(KEEP_AWAKE_TAG);
+        // Idempotent: on the happy path `_run` already handed the lock off
+        // before scoring. This is the catch-all for the paths that never got
+        // there — an early abort, or a throw during fetch/hydrate.
+        this._releaseKeepAwake(runId);
         this._networkUnsubscribe?.();
         this._networkUnsubscribe = null;
       }
     }
   }
 
-  private async _run(personaId: string, ctx: TaskContext): Promise<void> {
+  /**
+   * Take the wake lock for `runId`, once.
+   *
+   * Guarded by run identity for the same reason the teardown in `_start` is: an
+   * abandoned run (see the `INFLIGHT_STALE_MS` branch in `start()`) must not
+   * re-arm a lock the live run has deliberately dropped.
+   */
+  private async _acquireKeepAwake(runId: number): Promise<void> {
+    if (this._runSeq !== runId) return;
+    if (this._keepAwakeHeld) return;
+    this._keepAwakeHeld = true;
+    await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+  }
+
+  /** Drop the wake lock. Safe to call when it is not held, and a no-op for any
+   *  run that is no longer the newest — the same identity guard `_start`'s
+   *  teardown uses, repeated here because this is now reachable mid-run. */
+  private _releaseKeepAwake(runId: number): void {
+    if (this._runSeq !== runId) return;
+    if (!this._keepAwakeHeld) return;
+    this._keepAwakeHeld = false;
+    deactivateKeepAwake(KEEP_AWAKE_TAG);
+  }
+
+  private async _run(personaId: string, ctx: TaskContext, runId: number): Promise<void> {
     logger.debug('[FeedSyncMachine] run start');
     // Clear any prior scoring-pipeline error at the start of a fresh cycle — the
     // header status reflects this cycle's outcome. It re-appears if scoring fails
@@ -245,7 +283,7 @@ class FeedSyncMachine {
       logger.debug('[FeedSyncMachine] → fetching-topic-ids');
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
-      await this._awaitResumeIfPaused();
+      await this._awaitResumeIfPaused(runId);
       if (ctx.signal.aborted) { ctx.markNoOp(); return; }
 
       const [topicResult, recentCount] = await Promise.all([
@@ -286,6 +324,10 @@ class FeedSyncMachine {
         await feedPersistence.updateMachineState('scoring');
 
         if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+        // Fetch/hydrate is over; scoring owns its own wake lock (the on-device
+        // path takes one in SuggestionSyncService, and the cloud path needs
+        // none). See `_releaseKeepAwake`.
+        this._releaseKeepAwake(runId);
         // Suppressed: a live scoring run already owns the unscored backlog and
         // will re-derive it on finalize. Everything else about this branch is
         // bookkeeping, so we still walk it to `done`.
@@ -309,7 +351,7 @@ class FeedSyncMachine {
       publishSyncStatus('hydrating');
       await feedPersistence.updateMachineState('hydrating');
 
-      await this._awaitResumeIfPaused();
+      await this._awaitResumeIfPaused(runId);
       if (ctx.signal.aborted) { ctx.markNoOp(); return; }
 
       const total = diffResult.missingIds.length;
@@ -318,7 +360,7 @@ class FeedSyncMachine {
           ctx.reportProgress({ step: 'hydrating', current: completed, total });
           publishSyncStatus('hydrating', { progress: { current: completed, total } });
         },
-        awaitResumeIfPaused: () => this._awaitResumeIfPaused(),
+        awaitResumeIfPaused: () => this._awaitResumeIfPaused(runId),
         // A1: coalesce the per-chunk store refreshes into a leading+trailing
         // throttle instead of a full reload after every 25-item chunk.
         refreshStore: () => requestSuggestionsRefresh(),
@@ -349,6 +391,8 @@ class FeedSyncMachine {
       await feedPersistence.updateMachineState('scoring');
 
       if (ctx.signal.aborted) { ctx.markNoOp(); return; }
+      // Fetch/hydrate is over — hand the lock off (see the no-op branch above).
+      this._releaseKeepAwake(runId);
       // See the no-op branch above: the `scoring` transition and its published
       // status still happen (hydrating → done is not a legal transition), only
       // the dispatch is suppressed.
@@ -485,14 +529,30 @@ class FeedSyncMachine {
     this._state = next;
   }
 
-  private _awaitResumeIfPaused(): Promise<void> {
-    if (!this._paused) return Promise.resolve();
-    return new Promise((resolve) => {
+  /**
+   * Block until the network comes back, holding NO wake lock while we wait.
+   *
+   * `paused-offline` is entered from the network subscription and is released
+   * only by the device regaining connectivity — it can last minutes, a flight,
+   * or the rest of the day. The lock used to span it because it was taken once
+   * in `_start` and dropped once in that method's `finally`, so a device that
+   * went offline mid-sync simply never dimmed. With feed-sync re-arming every
+   * 60s that is close to a permanent "never sleep".
+   *
+   * Waiting is not work, so nothing is lost by dropping the lock here and
+   * re-taking it on resume — the fetch/hydrate that follows is what actually
+   * needs the screen kept alive.
+   */
+  private async _awaitResumeIfPaused(runId: number): Promise<void> {
+    if (!this._paused) return;
+    this._releaseKeepAwake(runId);
+    await new Promise<void>((resolve) => {
       this._resumeCallback = () => {
         this._resumeCallback = null;
         resolve();
       };
     });
+    await this._acquireKeepAwake(runId);
   }
 }
 

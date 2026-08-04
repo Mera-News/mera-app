@@ -1256,4 +1256,74 @@ describe('FeedSyncMachine — stale in-flight run', () => {
   });
 });
 
+describe('FeedSyncMachine — wake lock is scoped to fetch/hydrate (B1.4)', () => {
+  it('releases the wake lock before scoring rather than only in the finally', async () => {
+    // The lock used to span the whole run, scoring included. Scoring owns its
+    // own lock (SuggestionSyncService on the on-device path; the cloud path
+    // needs none), so by the time stepScore runs the tag must already be down.
+    let heldDuringScoring = true;
+    mockStepScore.mockImplementation(async () => {
+      heldDuringScoring = mockDeactivateKeepAwake.mock.calls.length === 0;
+    });
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepScore).toHaveBeenCalled();
+    expect(heldDuringScoring).toBe(false);
+  });
+
+  it('deactivates exactly once per run — the finally is idempotent, not a second release', async () => {
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockActivateKeepAwakeAsync).toHaveBeenCalledTimes(1);
+    expect(mockDeactivateKeepAwake).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops the wake lock while paused-offline and re-takes it on resume', async () => {
+    // Same suspension trick as the _awaitResumeIfPaused coverage test above:
+    // disconnect while updateMachineState('hydrating') is in flight, so the
+    // machine reaches _awaitResumeIfPaused with _paused === true.
+    let hydratingResolveFn: (() => void) | null = null;
+    const hydratingDeferred = new Promise<void>((resolve) => {
+      hydratingResolveFn = resolve;
+    });
+
+    mockUpdateMachineState.mockImplementation(async (state: string) => {
+      if (state === 'hydrating') {
+        networkSubscribeFn?.({ isConnected: false }, { isConnected: true });
+        await hydratingDeferred;
+      }
+    });
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+
+    (hydratingResolveFn as (() => void) | null)?.();
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Suspended in _awaitResumeIfPaused: the lock taken at the top of the run
+    // must have been dropped, because this wait is unbounded.
+    expect(mockDeactivateKeepAwake).toHaveBeenCalledWith('mera-feed-sync');
+    const releasesWhilePaused = mockDeactivateKeepAwake.mock.calls.length;
+    const acquiresBeforeResume = mockActivateKeepAwakeAsync.mock.calls.length;
+
+    networkSubscribeFn?.({ isConnected: true }, { isConnected: false });
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    // ...and re-taken once the work resumes.
+    expect(mockActivateKeepAwakeAsync.mock.calls.length).toBeGreaterThan(
+      acquiresBeforeResume,
+    );
+    expect(releasesWhilePaused).toBeGreaterThan(0);
+  });
+});
+
 export {};
