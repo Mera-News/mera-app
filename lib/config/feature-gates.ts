@@ -32,3 +32,38 @@
  * all already built and wired.
  */
 export const HEADLINE_DEPTH_UI_ENABLED = false;
+
+// ───────────────────────────────────────────────────────────────────────────
+// Companion-mode dev overrides
+// ───────────────────────────────────────────────────────────────────────────
+//
+// `FORCE_SUBSCRIPTIONS` is off server-side, so none of the three entitlement
+// states (entitled / locked / lapsed) are reachable from a real account — the
+// server hands every user a working AI layer. These two constants let the
+// simulator harness drive each state without flipping a server flag, logging
+// the resident account out, or standing up a second account.
+//
+// BOTH ARE READ ONLY INSIDE `if (__DEV__)` (see lib/subscription/ai-access.ts)
+// and BOTH MUST BE COMMITTED INERT (`null` / `false`). A committed
+// `DEV_FORCE_AI_ACCESS = 'locked'` would ship companion mode to every user on
+// the next OTA, and dead-code elimination of `__DEV__` in release bundles will
+// NOT save you — the constant is still what production logic reads in dev
+// builds handed to testers.
+
+/**
+ * Force the derived `aiAccess` verdict, bypassing the server tier, the
+ * RevenueCat mirror, and any recorded 402. `null` = no override (ship state).
+ */
+export const DEV_FORCE_AI_ACCESS: 'entitled' | 'locked' | null = null;
+
+/**
+ * Force `showLapseInterstitial` on, as if the server had reported a lapse the
+ * user has not acknowledged yet.
+ *
+ * Deliberately a SEED, not a clamp: the interstitial gate's acknowledge path
+ * writes a local dev-only ack flag, and this override stops applying once that
+ * flag is set. A clamp would make the interstitial reappear on every relaunch
+ * forever, which is precisely the "shown exactly once" behaviour under test.
+ * Clear the flag (see `DEV_LAPSE_ACK_SETTING_KEY`) to re-arm it.
+ */
+export const DEV_FORCE_LAPSED = false;
