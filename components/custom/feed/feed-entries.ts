@@ -322,8 +322,8 @@ export interface FeedRows {
  *   [ tier 2 — opened ]
  *
  * Both sentinels render one component (AllCaughtUpCard); only the variant, and
- * therefore one line of copy, differs. This module is unchanged by that — it
- * owns WHERE the sentinels go, never what they look like.
+ * therefore the headline and instruction line, differs. This module is unchanged
+ * by that — it owns WHERE the sentinels go, never what they look like.
  *
  * Dividers are placed by scanning the DYNAMIC region only, never the pinned
  * prefix. Two consequences, both deliberate:

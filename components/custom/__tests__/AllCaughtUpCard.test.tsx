@@ -2,13 +2,24 @@
 //
 // This card renders at SIX call sites along two INDEPENDENT axes.
 //
-//  `variant` — which boundary the card marks, and the ONE line of copy that
-//  differs: `seen` (Feed divider #1), `read` (Feed divider #2, which used to be
-//  the separate FeedOpenedDivider component), and `end` (the DEFAULT — the
+//  `variant` — which boundary the card marks, and the copy that differs with it:
+//  `seen` (Feed divider #1), `read` (Feed divider #2, which used to be the
+//  separate FeedOpenedDivider component), and `end` (the DEFAULT — the
 //  end-of-list footer and the three empty states, where there is no boundary
-//  below to describe). Everything else — headline, cycling mindfulness nudge,
-//  Explore CTA — is identical in all three, which is the whole point of the
-//  consolidation and is pinned below.
+//  below to describe).
+//
+//  TWO strings are variant-dependent: the HEADLINE and the instruction line
+//  beneath it. The headline used to be shared, and this file used to pin that it
+//  was ("exactly one line differs"). It was changed deliberately — two visually
+//  identical cards ten rows apart were too weakly separated by one short line,
+//  and the shared "You're all caught up with what impacts you." was wrong on its
+//  face above the pile the user had already read. The tests below now pin the
+//  replacement contract: the headline is DISTINCT per variant (so this cannot
+//  silently regress to one shared string), while the cycling mindfulness nudge
+//  and the Explore CTA stay identical in all three.
+//
+//  `end` keeps the ORIGINAL `feed.allCaughtUp` key, which is why five of the six
+//  call sites and their 19 translations needed no edit at all.
 //
 //  `compact` — scale. Three call sites are rows inside the Feed list (both
 //  dividers and the footer, all `compact`) and three are terminal EMPTY STATES
@@ -71,7 +82,7 @@ import en from '@/lib/locales/en.json';
 const rootClass = () => screen.getByTestId('all-caught-up-card').props.className as string;
 
 describe('AllCaughtUpCard', () => {
-  it('renders the headline and the Explore CTA in both scales', () => {
+  it('renders the end headline and the Explore CTA in both scales', () => {
     for (const compact of [false, true]) {
       const { unmount } = render(<AllCaughtUpCard compact={compact} />);
       expect(screen.getByText(en.feed.allCaughtUp)).toBeTruthy();
@@ -112,43 +123,59 @@ describe('AllCaughtUpCard', () => {
     expect(compactLogo).toBeLessThan(roomyLogo);
   });
 
-  // ── The one line that differs ──
+  // ── The copy that differs per variant ──
   //
   // Asserted against the REAL en.json values (the i18n mock resolves the actual
   // file), so a renamed or missing key fails here rather than silently rendering
   // the raw key path on device.
-  it('renders the seen boundary line for variant="seen" and nothing else', () => {
+  it('renders the seen headline and line for variant="seen" and nothing else', () => {
     render(<AllCaughtUpCard compact variant="seen" />);
+    expect(screen.getByText(en.feed.divider.seenTitle)).toBeTruthy();
     expect(screen.getByText(en.feed.divider.seenLine)).toBeTruthy();
+    expect(screen.queryByText(en.feed.divider.readTitle)).toBeNull();
     expect(screen.queryByText(en.feed.divider.readLine)).toBeNull();
+    // The shared headline is gone from the dividers — that is the change.
+    expect(screen.queryByText(en.feed.allCaughtUp)).toBeNull();
   });
 
-  it('renders the read boundary line for variant="read" and nothing else', () => {
+  it('renders the read headline and line for variant="read" and nothing else', () => {
     render(<AllCaughtUpCard compact variant="read" />);
+    expect(screen.getByText(en.feed.divider.readTitle)).toBeTruthy();
     expect(screen.getByText(en.feed.divider.readLine)).toBeTruthy();
+    expect(screen.queryByText(en.feed.divider.seenTitle)).toBeNull();
     expect(screen.queryByText(en.feed.divider.seenLine)).toBeNull();
+    expect(screen.queryByText(en.feed.allCaughtUp)).toBeNull();
   });
 
   // "the basic all caught up card, with no props" — the footer and the three
-  // empty states. `end` is the default precisely so those call sites pass none.
-  it('renders NO boundary line by default, i.e. the end variant', () => {
-    render(<AllCaughtUpCard compact />);
-    expect(screen.queryByText(en.feed.divider.seenLine)).toBeNull();
-    expect(screen.queryByText(en.feed.divider.readLine)).toBeNull();
-    screen.unmount();
-    render(<AllCaughtUpCard compact variant="end" />);
-    expect(screen.queryByText(en.feed.divider.seenLine)).toBeNull();
-    expect(screen.queryByText(en.feed.divider.readLine)).toBeNull();
+  // empty states. `end` is the default precisely so those call sites pass none,
+  // and it keeps the ORIGINAL key so their 19 translations stay valid.
+  it('keeps the original allCaughtUp headline and NO boundary line by default, i.e. the end variant', () => {
+    for (const el of [<AllCaughtUpCard compact key="d" />, <AllCaughtUpCard compact variant="end" key="e" />]) {
+      const { unmount } = render(el);
+      expect(screen.getByText(en.feed.allCaughtUp)).toBeTruthy();
+      expect(screen.queryByText(en.feed.divider.seenTitle)).toBeNull();
+      expect(screen.queryByText(en.feed.divider.readTitle)).toBeNull();
+      expect(screen.queryByText(en.feed.divider.seenLine)).toBeNull();
+      expect(screen.queryByText(en.feed.divider.readLine)).toBeNull();
+      unmount();
+    }
   });
 
-  // The consolidation's actual contract: ONE component, and exactly one line
-  // moves between variants. If a future change makes the headline, the nudge or
-  // the CTA variant-dependent too, this fails.
-  it('keeps the headline, the mindfulness nudge and the Explore CTA identical in ALL three variants', () => {
+  // The replacement contract. The headline MOVES with the variant (three
+  // distinct strings, asserted below), while the nudge and the CTA do not. If a
+  // future change collapses the headlines back to one shared string, or gates
+  // the nudge/CTA to a variant, this fails.
+  it('gives each variant its own headline while the nudge and the Explore CTA stay identical', () => {
     const messages = require('@/lib/locales/en.json').feed.mindfulness as string[];
+    const headlines: string[] = [];
     for (const variant of ['seen', 'read', 'end'] as const) {
       const { unmount } = render(<AllCaughtUpCard compact variant={variant} />);
-      expect(screen.getByText(en.feed.allCaughtUp)).toBeTruthy();
+      headlines.push(
+        String(
+          screen.getByTestId('all-caught-up-headline').props.children,
+        ),
+      );
       // The nudge to step away must render everywhere — the user's explicit ask.
       expect(screen.getByText(messages[0])).toBeTruthy();
       // The CTA is deliberately NOT gated to `end`: the footer only renders when
@@ -158,16 +185,28 @@ describe('AllCaughtUpCard', () => {
       expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
       unmount();
     }
+    expect(headlines).toEqual([
+      en.feed.divider.seenTitle,
+      en.feed.divider.readTitle,
+      en.feed.allCaughtUp,
+    ]);
+    // Rendered, not just declared: no two variants may show the same headline.
+    expect(new Set(headlines).size).toBe(3);
   });
 
-  // The two boundary lines must not read alike — the variant line is now the
-  // ONLY thing distinguishing two otherwise identical cards ten rows apart.
-  it('the two boundary strings exist and are distinguishable from each other and the headline', () => {
-    expect(en.feed.divider.seenLine).toBeTruthy();
-    expect(en.feed.divider.readLine).toBeTruthy();
-    expect(en.feed.divider.seenLine).not.toBe(en.feed.divider.readLine);
-    expect(en.feed.divider.seenLine).not.toBe(en.feed.allCaughtUp);
-    expect(en.feed.divider.readLine).not.toBe(en.feed.allCaughtUp);
+  // Nothing may read alike: `seen` and `read` are two otherwise identical cards
+  // ten rows apart, and a headline that duplicated its own line beneath would be
+  // two lines saying one thing. Pinned across all six strings.
+  it('keeps all six variant strings distinct from one another', () => {
+    const strings = [
+      en.feed.divider.seenTitle,
+      en.feed.divider.seenLine,
+      en.feed.divider.readTitle,
+      en.feed.divider.readLine,
+      en.feed.allCaughtUp,
+    ];
+    for (const s of strings) expect(s).toBeTruthy();
+    expect(new Set(strings).size).toBe(strings.length);
   });
 
   // Long translations must WRAP, not clip — nothing here sets numberOfLines, and
@@ -184,11 +223,12 @@ describe('AllCaughtUpCard', () => {
     expect(screen.getByTestId('glass-plate')).toBeTruthy();
   });
 
-    it('renders the functional boundary line brighter than the cycling mindfulness line', () => {
+    it('renders the functional instruction line brighter than the cycling mindfulness line', () => {
         // Regression guard: these two sat at identical weight on device and a user could not
-        // tell which line explained the boundary. They must stay visually distinct. Checked on
-        // BOTH boundary variants — the hierarchy is keyed off "a boundary line renders", not
-        // off which one.
+        // tell which line was actionable. They must stay visually distinct. Checked on BOTH
+        // boundary variants — the hierarchy is keyed off "a boundary line renders", not off
+        // which one. (The per-variant headline sits ABOVE both, brighter still; it names the
+        // state, this line names the action.)
         for (const variant of ['seen', 'read'] as const) {
             const line = variant === 'seen' ? en.feed.divider.seenLine : en.feed.divider.readLine;
             const { unmount } = render(<AllCaughtUpCard variant={variant} compact />);

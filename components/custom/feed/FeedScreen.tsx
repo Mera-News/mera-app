@@ -28,15 +28,18 @@
 //   [ tier 2 opened ]
 //
 // BOTH dividers and the footer are the SAME component — AllCaughtUpCard — with a
-// `variant` selecting the one line that differs. Divider #2 used to be a separate
+// `variant` selecting the copy that differs. Divider #2 used to be a separate
 // slim label row (FeedOpenedDivider, now deleted) on the rationale that two
 // full cards would "read alike at a glance". The user overrode that: they want
-// one card everywhere, with the mindfulness nudge on every instance and the
-// variant line as the sole distinguisher ("that line could tell the exact
-// divider that it is"). The overridden rationale is recorded here rather than
-// dropped, because two identical headlines ten cards apart is the thing most
-// likely to come back — if it does, the fix is stronger per-variant copy, not a
-// second component.
+// one card everywhere, with the mindfulness nudge on every instance.
+//
+// The overridden rationale did come back, exactly as predicted: one differing
+// line under a shared headline was too thin a separation ten cards apart, and
+// "You're all caught up with what impacts you." read oddly above the pile the
+// user had already READ. The fix applied was the one predicted here — stronger
+// per-variant copy, not a second component: the HEADLINE is now per-variant too
+// ("That's everything new." / "Already read."), with the instruction line
+// trimmed to what to DO. If it comes back again, keep going that way.
 //
 // When nothing below the boundary has been seen there is no in-list divider #1;
 // it renders as the end-of-list FOOTER (`feed-caught-up-footer`, variant `end`)

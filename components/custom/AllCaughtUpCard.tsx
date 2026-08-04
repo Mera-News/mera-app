@@ -19,19 +19,48 @@ import MeraLogo from './MeraLogo';
  *  - `end`  — the end of the list. No boundary to name; the card exists purely
  *    to say "that's everything" and to nudge the user off the phone.
  *
+ * Each variant has its OWN headline as well as its own instruction line — see
+ * `HEADLINE_KEY` for why one shared headline stopped working.
+ *
  * `end` is the DEFAULT so the end-of-list footer and the three full-screen
  * empty states need no variant at all — the user's "the basic all caught up
  * card, with no props".
  */
 export type AllCaughtUpVariant = 'seen' | 'read' | 'end';
 
-/** The one line that differs per variant. `end` has none — it is the terminal
- *  card, and there is no boundary below it to describe.
+/** The HEADLINE, per variant. Two things differ between variants now: this and
+ *  the instruction line below. The headline names the STATE ("that's everything
+ *  new" / "already read"); the line says what to DO about it.
+ *
+ *  Splitting it this way is what stopped the two divider cards reading alike:
+ *  one differing line ten cards apart was too thin a separation, and
+ *  "You're all caught up with what impacts you." read oddly sitting on top of
+ *  the pile the user has ALREADY read.
+ *
+ *  `end` deliberately keeps the original `feed.allCaughtUp` key. Five of the six
+ *  call sites are `end` (the footer and the three empty states), and that string
+ *  is already live in 20 languages — reusing it makes this change purely
+ *  ADDITIVE for them: no re-translation, no edit at the call sites.
  *
  *  `as const` is load-bearing, not decoration: `t` is typed against the literal
  *  union of keys generated from en.json, so a widened `string` here does not
  *  type-check. This way a typo'd or deleted key is a compile error rather than
  *  the raw key path rendering on a device. */
+const HEADLINE_KEY = {
+    seen: 'feed.divider.seenTitle',
+    read: 'feed.divider.readTitle',
+    end: 'feed.allCaughtUp',
+} as const satisfies Record<AllCaughtUpVariant, string>;
+
+/** The instruction line, per variant. `end` has none — it is the terminal card,
+ *  and there is no pile below it to act on.
+ *
+ *  These used to carry the state too ("You've seen everything below. Open any to
+ *  read.") because the headline was generic. Now that the headline states it,
+ *  the line is trimmed to its second sentence — its own words, kept verbatim.
+ *  Two lines saying the same thing in different words is worse than one saying
+ *  it well; the instruction is the half that the headline can't carry without
+ *  getting long. */
 const BOUNDARY_KEY = {
     seen: 'feed.divider.seenLine',
     read: 'feed.divider.readLine',
@@ -41,14 +70,20 @@ const BOUNDARY_KEY = {
 interface AllCaughtUpCardProps {
     /**
      * Which boundary this instance marks. ONE component, three variants, and
-     * exactly ONE line of copy differs between them — the headline, the cycling
-     * mindfulness nudge and the Explore CTA are identical everywhere.
+     * TWO lines of copy differ between them — the headline (`HEADLINE_KEY`) and
+     * the instruction line (`BOUNDARY_KEY`). The cycling mindfulness nudge and
+     * the Explore CTA stay identical everywhere.
      *
-     * Deliberately NOT a free-text `subtitle` prop (which this replaced): with
-     * both a variant and a subtitle there would be two ways to say the same
-     * thing, and the two would drift. The boundary copy is resolved from
-     * `BOUNDARY_KEY` here, so every call site naming the same boundary is
-     * guaranteed to render the same words.
+     * The headline was originally shared too. It moved per-variant because the
+     * two divider cards sit ~10 rows apart and looked interchangeable at a
+     * glance with only one short line between them, and because the shared
+     * headline was wrong on its face above the already-read pile.
+     *
+     * Deliberately NOT free-text `title`/`subtitle` props (which this replaced):
+     * with both a variant and free text there would be two ways to say the same
+     * thing, and the two would drift. Both strings are resolved from the maps
+     * above, so every call site naming the same boundary is guaranteed to render
+     * the same words.
      */
     variant?: AllCaughtUpVariant;
     /**
@@ -85,6 +120,7 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
         return () => clearInterval(interval);
     }, [messages.length]);
 
+    const headline = t(HEADLINE_KEY[variant]);
     const boundaryKey = BOUNDARY_KEY[variant];
     const boundaryLine = boundaryKey ? t(boundaryKey) : null;
 
@@ -94,9 +130,11 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
     // grow the card rather than clipping. The worst cases in the locale files are
     // de `allCaughtUp` (60 chars), fr `mindfulness` (60) and de `exploreCta`
     // (21, inside an auto-sizing Button); all wrap to at most two lines here. The
-    // boundary line is ~46-49 chars in en and German runs ~1.4x, so expect three
-    // lines there — it grows the card, which is the intended trade for not
-    // truncating a line that explains what the boundary means.
+    // per-variant strings are the SHORT ones: the `seen`/`read` headlines are
+    // 13-22 chars in en and their instruction lines 17-20, so even at German's
+    // ~1.4x they stay on one line each. (They were ~46-49 chars while the line
+    // carried the state as well, which wrapped to three lines in German — moving
+    // the state into the headline shortened both halves.)
     const innerContent = (
         <Box
             className={
@@ -112,23 +150,28 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
                 <MeraLogo size={compact ? 64 : 100} animated />
             </Box>
 
-            {/* "You're all caught up" text. IDENTICAL in all three variants — this
-                is one card shown in three places, not three cards, and the user
-                asked for exactly one line to differ. */}
+            {/* Headline — PER VARIANT (see HEADLINE_KEY). It is the top of a three-tier
+                hierarchy and the thing that tells the three surfaces apart at a glance,
+                so it is the brightest and heaviest text on the card. Its classes are
+                shared across variants on purpose: only the words change, never the
+                weight — a variant that also restyled itself would read as a different
+                card rather than the same card at a different boundary. */}
             <Text
+                testID="all-caught-up-headline"
                 size={compact ? 'lg' : 'xl'}
                 className={`text-white text-center font-semibold ${compact ? 'mb-2' : 'mb-4'}`}
             >
-                {t('feed.allCaughtUp')}
+                {headline}
             </Text>
 
-            {/* The boundary line is FUNCTIONAL — it names which divider this is and what
-                the rows below it are — while the mindfulness line below is decorative and
-                cycles every 3s. Rendered at the same weight they read as equal-weight
-                siblings and the user cannot tell which one is telling them something
-                structural (observed on device). So the boundary line leads: brighter and
-                medium weight, with the cycling line receding beneath it. Keep the two
-                visually distinct; do not collapse them back to one class. */}
+            {/* Three tiers, brightest first: the headline above names the STATE, this line
+                is the FUNCTIONAL instruction (what you can do with the rows below), and the
+                mindfulness line beneath is decorative and cycles every 3s. This line and
+                the cycling one rendered at the same weight read as equal-weight siblings
+                and the user could not tell which one was telling them something actionable
+                (observed on device). So this one leads: brighter and medium weight, with
+                the cycling line receding beneath it. Keep the two visually distinct; do not
+                collapse them back to one class. */}
             {boundaryLine ? (
                 <Text
                     size="sm"
@@ -155,8 +198,8 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
                 pin boundary has been seen (`caughtUpIsFooter: !seenDivider`) and the
                 empty states only when the feed is empty, so on a normal populated feed
                 — the common case, where divider #1 is spliced in-list — a gated CTA
-                would leave the screen with no Explore affordance at all. It is also the
-                second thing that would differ per variant, and the user asked for one. */}
+                would leave the screen with no Explore affordance at all. That was settled
+                with the user; the per-variant copy above is not a reason to revisit it. */}
             <Button
                 testID="all-caught-up-explore-cta"
                 variant="outline"
@@ -188,8 +231,9 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
     // suggestion cards' corners, and `rounded-2xl` reads correctly at both
     // scales. Only the SIZE responds to `compact`.
     //
-    // NOTE `all-caught-up-card` is no longer unique within one Feed render — both
-    // dividers can be in-list at once, so two nodes carry it. The wrapper testIDs
+    // NOTE `all-caught-up-card` (and `all-caught-up-headline` inside it) is no
+    // longer unique within one Feed render — both dividers can be in-list at
+    // once, so two nodes carry each. The wrapper testIDs
     // (`feed-divider-caught-up` / `feed-divider-opened` / `feed-caught-up-footer`
     // in FeedScreen) are what disambiguate for the simulator harness.
     return (
