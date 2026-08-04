@@ -1,4 +1,5 @@
 import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
+import CompanionModeCard from '@/components/custom/subscription/CompanionModeCard';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
@@ -233,11 +234,23 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     [onPressSuggestion, openedIds, openFactFeed],
   );
 
+  // Composed, not replaced: the companion card sits ABOVE the breaking strip,
+  // and both are above the sections. Mounted here rather than threaded down
+  // from ForYouScreen as a prop because this component is the Dashboard's list
+  // and its only consumer — a prop would be indirection with one caller.
+  //
+  // The card reads entitlement itself and renders null unless locked, so this
+  // costs an empty fragment in the normal case, and every section below keeps
+  // rendering underneath it when it does appear. Nothing is hidden or replaced.
   const ListHeader = useMemo(
-    () =>
-      breaking.length > 0 ? (
-        <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
-      ) : null,
+    () => (
+      <>
+        <CompanionModeCard surface="dashboard" />
+        {breaking.length > 0 ? (
+          <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
+        ) : null}
+      </>
+    ),
     [breaking, onPressSuggestion],
   );
 

@@ -134,6 +134,13 @@ jest.mock('@/components/custom/for-you/BreakingStrip', () => ({
     __esModule: true,
     default: () => null,
 }));
+// Same reason as BreakingStrip: it's list-header chrome this suite doesn't
+// assert on. It also reaches MeraLogo, whose `createAnimatedComponent(G)` the
+// reanimated mock above deliberately doesn't provide.
+jest.mock('@/components/custom/subscription/CompanionModeCard', () => ({
+    __esModule: true,
+    default: () => null,
+}));
 
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
