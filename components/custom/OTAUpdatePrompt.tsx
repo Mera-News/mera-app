@@ -35,7 +35,11 @@ export default function OTAUpdatePrompt() {
             });
           }}
         >
-          <Toast nativeID={toastId} action="info" variant="solid">
+          {/* `persistent` because of the `duration: null` above — it is a cost
+              flag, not a look one: an indefinitely-mounted glass panel
+              re-blurs the animated backdrop every frame forever. See the prop's
+              doc comment in components/ui/toast. */}
+          <Toast nativeID={toastId} action="info" variant="solid" persistent>
             <ToastTitle>{t('ota.updateReady')}</ToastTitle>
             <ToastDescription>
               {t('ota.updateDescription')}

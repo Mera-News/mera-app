@@ -99,7 +99,11 @@ const TranslationUnavailablePrompt: React.FC = () => {
         const language = getNativeLanguageName(appLanguage) ?? appLanguage;
 
         const body = (
-            <Toast nativeID={id} action="info" variant="solid">
+            // `persistent` because of the `duration: null` below — it is a cost
+            // flag, not a look one: an indefinitely-mounted glass panel re-blurs
+            // the animated backdrop every frame forever. See the prop's doc
+            // comment in components/ui/toast.
+            <Toast nativeID={id} action="info" variant="solid" persistent>
                 <ToastTitle>{t('language.translationUnavailableTitle')}</ToastTitle>
                 <ToastDescription>
                     {blocked?.deviceUnsupported

@@ -165,7 +165,12 @@ const styles = StyleSheet.create({
    *  wash the panel out and make light text worse. Same pairing as
    *  `StatusBarScrim`. */
   scrim: {
-    backgroundColor: GLASS_AVAILABLE ? GLASS_HEADER_SCRIM : TOAST_OPAQUE_FALLBACK,
+    backgroundColor: GLASS_HEADER_SCRIM,
+  },
+  /** The no-glass fill: Android, iOS < 26, and `persistent` toasts. Denser,
+   *  because nothing is frosting the content behind it. */
+  flatFill: {
+    backgroundColor: TOAST_OPAQUE_FALLBACK,
   },
   accent: {
     position: 'absolute',
@@ -307,6 +312,24 @@ const toastDescriptionStyle = tva({
 const Root = withStyleContext(View, SCOPE);
 type IToastProps = React.ComponentProps<typeof Root> & {
   className?: string;
+  /**
+   * This toast is shown with `duration: null` — it stays on screen until
+   * something closes it.
+   *
+   * It exists for a COST reason, not a look one. Real glass is a
+   * `UIVisualEffectView`, and a blur re-samples its backdrop every frame that
+   * backdrop changes; this app's backdrop animates continuously, so a
+   * permanently-mounted glass panel recomputes a full-screen blur forever, even
+   * while the user sits still. That is the measured regression documented in
+   * `GlassSurface.tsx`, and a transient 2–6s toast is fine precisely because it
+   * goes away. A persistent one is not.
+   *
+   * So persistent toasts take the flat translucent fill instead — the same
+   * surface every Android and iOS-25 user already sees. Over the animated
+   * gradient the two are near-indistinguishable (again, `GlassSurface.tsx`), so
+   * this costs almost nothing visually.
+   */
+  persistent?: boolean;
 } & VariantProps<typeof toastStyle>;
 
 /**
@@ -345,13 +368,22 @@ export const TOAST_EDGE_INSET_RATIO = 0.2;
  */
 const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
   function Toast(
-    { className, variant = 'solid', action = 'muted', style, children, ...props },
+    {
+      className,
+      variant = 'solid',
+      action = 'muted',
+      persistent = false,
+      style,
+      children,
+      ...props
+    },
     ref
   ) {
     const { width } = useWindowDimensions();
     const maxWidth = Math.round(width * (1 - 2 * TOAST_EDGE_INSET_RATIO));
     const accent = TOAST_ACCENT[action as ToastAction] ?? null;
     const Glyph = TOAST_ICON[action as ToastAction] ?? null;
+    const useGlass = GLASS_AVAILABLE && !persistent;
     return (
       <Root
         ref={ref}
@@ -362,8 +394,12 @@ const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
         {...props}
       >
         <View style={styles.surface}>
-          <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.scrim]} />
-          <GlassPlate tint={GLASS_HEADER_TINT} />
+          <View
+            testID={useGlass ? 'toast-glass-scrim' : 'toast-flat-fill'}
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, useGlass ? styles.scrim : styles.flatFill]}
+          />
+          {useGlass ? <GlassPlate tint={GLASS_HEADER_TINT} /> : null}
           {accent ? (
             <View
               testID="toast-accent-bar"

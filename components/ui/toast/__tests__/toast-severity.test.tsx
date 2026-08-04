@@ -159,6 +159,30 @@ describe('<Toast /> — the frosted panel itself', () => {
     }
   });
 
+  it('frosts by default, but a `persistent` toast takes the flat fill instead', () => {
+    // Not a look preference: a `duration: null` toast never goes away, and a
+    // permanently-mounted GlassView re-blurs the animated backdrop every frame
+    // forever. Both banner surfaces (OTAUpdatePrompt,
+    // TranslationUnavailablePrompt) rely on this.
+    const transient = render(
+      <Toast action="info" variant="solid">
+        <ToastTitle>Title</ToastTitle>
+      </Toast>,
+    );
+    // Off iOS 26 — which is where jest runs — even a transient toast falls back
+    // to the flat fill, because GlassPlate paints nothing there. What is being
+    // pinned is that `persistent` NEVER takes the glass branch.
+    transient.unmount();
+
+    const { queryByTestId } = render(
+      <Toast action="info" variant="solid" persistent>
+        <ToastTitle>Title</ToastTitle>
+      </Toast>,
+    );
+    expect(queryByTestId('toast-glass-scrim')).toBeNull();
+    expect(queryByTestId('toast-flat-fill')).toBeTruthy();
+  });
+
   it('rounds to the article cards’ radius', () => {
     const { getByTestId } = render(
       <Toast testID="toast-root" action="info" variant="solid">
