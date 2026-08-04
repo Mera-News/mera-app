@@ -3,6 +3,7 @@ import React from 'react';
 import { createToastHook } from '@gluestack-ui/core/toast/creator';
 import {
   AccessibilityInfo,
+  StyleSheet,
   Text,
   View,
   ViewStyle,
@@ -20,6 +21,13 @@ import {
   AnimatePresence,
   MotionComponentProps,
 } from '@legendapp/motion';
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
+import {
+  GLASS_AVAILABLE,
+  GLASS_HEADER_SCRIM,
+  GLASS_HEADER_TINT,
+  GlassPlate,
+} from '@/components/custom/GlassSurface';
 
 type IMotionViewProps = React.ComponentProps<typeof View> &
   MotionComponentProps<typeof View, ViewStyle, unknown, unknown, unknown>;
@@ -31,26 +39,165 @@ const SCOPE = 'TOAST';
 
 cssInterop(MotionView, { className: 'style' });
 
+/**
+ * ## Why a toast carries NO background colour any more
+ *
+ * Every action used to be a saturated pastel pill (`bg-error-800` and friends —
+ * light fills, because the dark ramp is inverted — with near-black text on top).
+ * They read as a different design language from the rest of the app, which is
+ * frosted panels over an animated gradient.
+ *
+ * A toast is now an Apple-Notification-Center-style frosted panel: one neutral
+ * material for every severity. That deletes the ONLY thing that told an error
+ * apart from a confirmation, so the severity signal MOVED rather than
+ * disappearing — see `TOAST_ACCENT` / `TOAST_ICON` below.
+ *
+ * The `action` / `variant` variants are kept with EMPTY classes on purpose:
+ * they still type `VariantProps` and still feed the style context that
+ * `ToastTitle` / `ToastDescription` read, they just no longer paint anything.
+ * Re-adding a `bg-*` here would sit an opaque fill on top of the glass and
+ * cancel it.
+ */
 const toastStyle = tva({
-  base: 'p-4 m-1 rounded-md gap-1 web:pointer-events-auto shadow-hard-5 border-outline-100',
+  base: 'm-1 web:pointer-events-auto',
   variants: {
     action: {
-      error: 'bg-error-800',
-      warning: 'bg-warning-700',
-      success: 'bg-success-700',
-      info: 'bg-info-700',
-      muted: 'bg-background-800',
+      error: '',
+      warning: '',
+      success: '',
+      info: '',
+      muted: '',
     },
 
     variant: {
       solid: '',
-      outline: 'border bg-background-0',
+      outline: '',
     },
   },
 });
 
+/** Corner radius, in points. `rounded-2xl` — the article cards' radius, so a
+ *  toast reads as the same family of surface rather than a rounder cousin. */
+export const TOAST_RADIUS = 16;
+
+/** Width of the leading severity bar. */
+const ACCENT_WIDTH = 4;
+
+/**
+ * Near-opaque panel fill for platforms where glass does not paint at all
+ * (Android, iOS < 26 — `GlassPlate` renders `null` there). Deliberately not
+ * fully opaque, so the surface still reads as a floating panel rather than a
+ * slab, but far denser than the glass branch's scrim because nothing is
+ * frosting the content behind it.
+ */
+const TOAST_OPAQUE_FALLBACK = 'rgba(20,20,22,0.94)';
+
+export type ToastAction = 'error' | 'warning' | 'success' | 'info' | 'muted';
+
+/**
+ * THE SEVERITY MAPPING. A frosted panel cannot carry severity in its fill, so
+ * severity is carried by two things instead, both driven from this one map:
+ *
+ *  1. a full-height 4pt leading bar in the accent colour, and
+ *  2. a SHAPE-DISTINCT glyph (`TOAST_ICON`) tinted the same colour.
+ *
+ * Two carriers, one of which survives colour blindness, is what keeps an error
+ * unmistakable at a glance without reading the words.
+ *
+ * Values are the app's dark-mode ramp read out of
+ * `components/ui/gluestack-ui-provider/config.ts`, picked per-hue for equal
+ * brightness on a dark panel rather than by a single ramp step — the ramp is
+ * not perceptually uniform (`success-500` is a dark forest green while
+ * `error-500` is a bright coral, so success takes a lighter step).
+ *
+ * `muted` has no accent by design: it is the neutral default, and a grey bar
+ * would be noise. Both the bar and the glyph are skipped entirely for it —
+ * they are not rendered transparent, or they would still take up space.
+ */
+export const TOAST_ACCENT: Record<ToastAction, string | null> = {
+  error: '#F37373', // error-500
+  warning: '#FB954B', // warning-500
+  success: '#84D3A2', // success-700
+  info: '#32B4F4', // info-500
+  muted: null,
+};
+
+/** Glyph per severity. Shapes are deliberately distinct from one another
+ *  (triangle vs circle, ! vs ✓ vs i) so the signal does not rest on hue. */
+export const TOAST_ICON: Record<
+  ToastAction,
+  React.ComponentType<{ size?: number; color?: string }> | null
+> = {
+  error: CircleAlert,
+  warning: TriangleAlert,
+  success: CircleCheck,
+  info: Info,
+  muted: null,
+};
+
+const styles = StyleSheet.create({
+  /**
+   * The lift. Replaces the old `shadow-hard-5` class, which is a hard, offset
+   * shadow that suited a solid pill and reads as a smudge under a translucent
+   * one. These are the ScrollToTopFab's numbers verbatim — the app's other
+   * floating glass surface — so the two lift off the page identically.
+   */
+  root: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8, // Android
+  },
+  /** The clipped, rounded surface. Separate from the Root because RN drops a
+   *  view's shadow the moment that same view sets `overflow: hidden` — so the
+   *  shadow lives on the Root and the clipping lives here. */
+  surface: {
+    borderRadius: TOAST_RADIUS,
+    overflow: 'hidden',
+    borderWidth: 1,
+    // Matches GLASS_EDGE (`border-white/10`): glass has no outline of its own
+    // against a dark page and reads as a smudge without one.
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  /** Painted BEHIND the glass plate — the glass samples it, and that is what
+   *  actually cuts see-through. Raising the plate's white tint alone would only
+   *  wash the panel out and make light text worse. Same pairing as
+   *  `StatusBarScrim`. */
+  scrim: {
+    backgroundColor: GLASS_AVAILABLE ? GLASS_HEADER_SCRIM : TOAST_OPAQUE_FALLBACK,
+  },
+  accent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: ACCENT_WIDTH,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  /** Nudged down so the glyph's centre lands on the title's cap height rather
+   *  than floating above it. */
+  glyph: {
+    paddingTop: 17,
+    paddingLeft: 12,
+  },
+  content: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingRight: 16,
+    gap: 4,
+  },
+});
+
+// `text-typography-900`, NOT `-0`. The dark ramp is inverted, so `typography-0`
+// is rgb(23,23,23) — near black. It was correct while a toast was a light
+// pastel pill; on the frosted dark panel it is invisible. Same reason the
+// description below moved from `-50` to `-600`.
 const toastTitleStyle = tva({
-  base: 'text-typography-0 font-medium font-body tracking-md text-left',
+  base: 'text-typography-900 font-medium font-body tracking-md text-left',
   variants: {
     isTruncated: {
       true: '',
@@ -151,8 +298,8 @@ const toastDescriptionStyle = tva({
   },
   parentVariants: {
     variant: {
-      solid: 'text-typography-50',
-      outline: 'text-typography-900',
+      solid: 'text-typography-600',
+      outline: 'text-typography-600',
     },
   },
 });
@@ -178,22 +325,75 @@ type IToastProps = React.ComponentProps<typeof Root> & {
  */
 export const TOAST_EDGE_INSET_RATIO = 0.2;
 
+/**
+ * A frosted, rounded notification panel.
+ *
+ * Layering, outside in — the order is load-bearing:
+ *
+ *  - `Root` owns the margin, the shadow and the width cap, and must NOT clip.
+ *  - `styles.surface` is the rounded, clipping box. It carries no fill of its
+ *    own: an opaque background here would sit on top of the glass and cancel it.
+ *  - the scrim and the glass plate are absolute fills inside it. BOTH are
+ *    `pointerEvents="none"` — `showUndoToast` puts a real `Pressable` in
+ *    `children`, and a plate that swallowed taps would silently kill it.
+ *  - the accent bar is inside the clip, so it picks up the corner radius.
+ *
+ * Children are rendered untouched into `styles.content`. `showUndoToast` builds
+ * its children with `React.createElement` (no NativeWind JSX transform), so its
+ * flat `Text` / `Pressable` elements rely on this wrapper — not on classes of
+ * their own — for their padding and 4pt rhythm.
+ */
 const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
   function Toast(
-    { className, variant = 'solid', action = 'muted', style, ...props },
+    { className, variant = 'solid', action = 'muted', style, children, ...props },
     ref
   ) {
     const { width } = useWindowDimensions();
     const maxWidth = Math.round(width * (1 - 2 * TOAST_EDGE_INSET_RATIO));
+    const accent = TOAST_ACCENT[action as ToastAction] ?? null;
+    const Glyph = TOAST_ICON[action as ToastAction] ?? null;
     return (
       <Root
         ref={ref}
         className={toastStyle({ variant, action, class: className })}
         context={{ variant, action }}
         // Caller style last so a specific toast can still opt out.
-        style={[{ maxWidth }, style]}
+        style={[styles.root, { maxWidth, borderRadius: TOAST_RADIUS }, style]}
         {...props}
-      />
+      >
+        <View style={styles.surface}>
+          <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.scrim]} />
+          <GlassPlate tint={GLASS_HEADER_TINT} />
+          {accent ? (
+            <View
+              testID="toast-accent-bar"
+              pointerEvents="none"
+              style={[styles.accent, { backgroundColor: accent }]}
+            />
+          ) : null}
+          {/* The bar's width is reserved here rather than absorbed by the
+              content's padding, so a `muted` toast (no bar) stays optically
+              symmetrical instead of sitting 4pt off-centre. */}
+          <View style={[styles.row, { paddingLeft: accent ? ACCENT_WIDTH : 0 }]}>
+            {Glyph ? (
+              // Hidden from assistive tech: ToastTitle already announces the
+              // message via `announceForAccessibility`, and a second, wordless
+              // node would only add noise.
+              <View
+                testID="toast-accent-icon"
+                style={styles.glyph}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                <Glyph size={18} color={accent ?? undefined} />
+              </View>
+            ) : null}
+            <View style={[styles.content, { paddingLeft: Glyph ? 10 : 16 }]}>
+              {children}
+            </View>
+          </View>
+        </View>
+      </Root>
     );
   }
 );
