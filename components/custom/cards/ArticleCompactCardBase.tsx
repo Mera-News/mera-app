@@ -167,7 +167,11 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 originalText={titleOriginal}
                 originalLanguage={sourceLanguage}
                 size="md"
-                className="leading-5 font-medium"
+                // No `leading-5`: 20px on 16px type (1.25) is a Latin-sized
+                // line box, and this is the most-translated text in the app —
+                // Devanagari/Thai marks sit above it and get sliced. Dropping
+                // the class lets TranslatableDynamic's own 1.5 ratio apply.
+                className="font-medium"
                 numberOfLines={2}
               />
             </Box>

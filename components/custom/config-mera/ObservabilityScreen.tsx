@@ -292,7 +292,10 @@ const SectionHeader = ({ title }: { title: string }) => (
 const MetricCard = ({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) => (
     <Box className="flex-1 bg-gray-900 rounded-xl p-3 border border-gray-800">
         <Text size="xs" className="text-gray-500 mb-0.5" numberOfLines={1}>{title}</Text>
-        <Text className="text-white font-bold text-2xl leading-8">{value}</Text>
+        {/* No `leading-8` (1.33 on 24px type): most values are digits, but
+            `schedulerStatus` is prose, and a tight line box clips tall marks.
+            `text-2xl` now carries a script-safe 36px line box. */}
+        <Text className="text-white font-bold text-2xl">{value}</Text>
         {subtitle ? <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text> : null}
     </Box>
 );
