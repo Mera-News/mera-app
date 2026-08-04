@@ -15,6 +15,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
+import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
 import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 
 const RTL_CODES = new Set(['ar', 'he']);
@@ -171,6 +172,19 @@ const LanguageSelector: React.FC = () => {
                 </Pressable>
             </HStack>
 
+            {/* Below the selector, never beside it — the ticker and the
+                selector share one centred row, and prose in that row would
+                fight the animation for the reader's eye. Indented to the same
+                20pt gutter as the progress card that appears here once a
+                switch starts, so the guidance and the thing it describes line
+                up. Renders on iOS only, from inside the component. */}
+            <View style={styles.hintWrap}>
+                <LanguageDownloadHint
+                    testID="auth-language-download-hint"
+                    className="text-center"
+                />
+            </View>
+
             {busy && pendingCode ? (
                 <View style={styles.progressWrap}>
                     <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
@@ -266,6 +280,10 @@ const styles = StyleSheet.create({
     },
     progressWrap: {
         marginTop: 16,
+        marginHorizontal: 20,
+    },
+    hintWrap: {
+        marginTop: 12,
         marginHorizontal: 20,
     },
     selectorButtonDisabled: {

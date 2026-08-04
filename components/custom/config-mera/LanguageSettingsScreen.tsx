@@ -10,8 +10,9 @@ import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
+import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -200,21 +201,8 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                     {/* Read BEFORE the picker opens. Once Apple's
                                         "Required Downloads" sheet is up it covers the
                                         lower half of the screen, so this is the last
-                                        calm moment to say what that sheet expects. The
-                                        icon is inline so the glyph to look for is
-                                        unmistakable. */}
-                                    <Text
-                                        testID="language-download-hint"
-                                        className="text-typography-400 text-xs leading-5"
-                                    >
-                                        {t('language.downloadHintBeforePrefix')}{' '}
-                                        <MaterialCommunityIcons
-                                            name="arrow-down-circle-outline"
-                                            size={14}
-                                            color="#a78bfa"
-                                        />
-                                        {' '}{t('language.downloadHintBeforeSuffix')}
-                                    </Text>
+                                        calm moment to say what that sheet expects. */}
+                                    <LanguageDownloadHint />
                                     {/* On-device translation is the OPTIONAL path.
                                         A reader who cannot or will not download a
                                         pack must leave this screen knowing they can
