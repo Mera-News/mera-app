@@ -8,8 +8,8 @@ import {
     type VisitedArticle,
 } from '@/lib/database/services/publication-visit-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
-import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -81,16 +81,29 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
         setRefreshing(false);
     }, [load]);
 
-    const handleArticlePress = useCallback(async (url: string | null) => {
-        if (!url) return;
-        try {
-            await openArticleInAppBrowser(url);
-        } catch (err) {
-            logger.captureException(err, {
-                tags: { screen: 'PublicationArticleHistoryList', method: 'openUrl' },
-            });
-        }
-    }, []);
+    // History rows go to the DETAIL screen, never straight to the publisher.
+    // This list used to open the article URL on tap, which skipped the only
+    // screen carrying the translate affordance — the reader landed on a page in
+    // a language they may not read with no way back to the translate options.
+    //
+    // An article older than the server's 48h TTL still works: article-detail
+    // falls back to this very visit row's snapshot (see
+    // `getVisitedArticleById`), so the read/translate block is always reachable.
+    //
+    // `articleId` is nullable on the ROW but not in practice: every current
+    // caller of `recordPublicationVisit` passes one, and the column has been
+    // written since migration v22 — far outside the 30-day prune window. A row
+    // without one is inert rather than dead-ending: `articleUrl` is not an
+    // article id, and routing it as one would pollute the saved/visit tables,
+    // which key off that param.
+    const openArticle = useOpenArticle();
+    const handleArticlePress = useCallback(
+        (articleId: string | null) => {
+            if (!articleId) return;
+            openArticle({ articleId });
+        },
+        [openArticle],
+    );
 
     const keyExtractor = useCallback(
         (item: VisitedArticle, index: number) =>
@@ -103,7 +116,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
             <Box className="mx-4">
                 <ArticleStandaloneCompactCard
                     article={visitedToNewsArticle(item)}
-                    onPress={() => handleArticlePress(item.articleUrl)}
+                    onPress={() => handleArticlePress(item.articleId)}
                     subjectExtras={{ surface: 'detail' }}
                 />
             </Box>
