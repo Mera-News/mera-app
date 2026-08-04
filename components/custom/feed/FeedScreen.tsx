@@ -847,7 +847,18 @@ const FeedScreen: React.FC = () => {
         ListEmptyComponent={renderEmpty()}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
-        windowSize={7}
+        // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7
+        // screens of retained cells is far more than scrolling needs, and every
+        // retained cell holds a decoded image. Tuned against the POST-divider
+        // geometry deliberately: the sentinel rows changed both the row count and
+        // the mix of row heights, so measuring this earlier would have tuned a
+        // list that no longer exists.
+        //
+        // REVERT CONDITION (Area B's, kept verbatim in intent): if blank cells
+        // appear during fast scrolling, or the anchored row shifts on ingest, put
+        // this back to 7 rather than compensating with the other three props.
+        // It is one line precisely so the revert is one line.
+        windowSize={5}
         maxToRenderPerBatch={3}
         updateCellsBatchingPeriod={50}
         removeClippedSubviews={false}
