@@ -107,6 +107,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         }, [refreshFactCount, refreshBilling]),
     );
 
+    // A purchase confirmed on ANOTHER screen (e.g. Manage Subscription) mirrors
+    // its result into the shared store (`setServerBilling`), but this screen
+    // keeps its own local `billing` copy for the full usage-card snapshot
+    // (limit/used-today aren't tracked in the store). Without this, Profile
+    // stays stuck on its last local fetch until it happens to regain focus —
+    // exactly the "purchased elsewhere, still shows the old plan here" bug.
+    // Re-fetching the moment the shared tier changes closes that gap
+    // immediately, independent of navigation.
+    const storeServerTier = useSubscriptionStore((s) => s.serverTier);
+    useEffect(() => {
+        if (storeServerTier == null) return;
+        setBilling((current) => {
+            if (current && current.subscriptionTier === storeServerTier) return current;
+            refreshBilling();
+            return current;
+        });
+    }, [storeServerTier, refreshBilling]);
+
     // A chat (or sheet) that mutated facts bumps this — refresh the count so the
     // empty-persona CTA flips promptly.
     useEffect(() => {
@@ -202,13 +220,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     limit={billing?.dailyArticleLimit ?? null}
                     usedLabel={t('configPanel.articlesAnalyzedLast24h')}
                     planLabel={
-                        billing?.subscriptionTier === 'professional'
-                            ? t('configPanel.professionalPlan')
-                            : billing?.subscriptionTier === 'individual'
-                                ? t('configPanel.individualPlan')
-                                : billing?.subscriptionTier === 'starter'
-                                    ? t('configPanel.starterPlan')
-                                    : t('subscription.planPromo')
+                        billing == null
+                            // Still loading — no label beats a wrong one; avoids a
+                            // "Promo" flash on every cold mount before the first
+                            // fetch resolves.
+                            ? undefined
+                            : billing.subscriptionTier === 'professional'
+                                ? t('configPanel.professionalPlan')
+                                : billing.subscriptionTier === 'individual'
+                                    ? t('configPanel.individualPlan')
+                                    : billing.subscriptionTier === 'starter'
+                                        ? t('configPanel.starterPlan')
+                                        // Loaded and genuinely not on a paid tier —
+                                        // matches ManageSubscriptionScreen's `isPaid`
+                                        // gate. "Promo" was the old fallback here for
+                                        // BOTH "still loading" and "unsubscribed",
+                                        // which is what made this label read wrong
+                                        // for the now-common no-plan case.
+                                        : t('subscription.freePlan')
                     }
                     onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
                     upgradeLabel={t('subscription.upgrade')}
