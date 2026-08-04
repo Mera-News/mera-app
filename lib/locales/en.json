@@ -463,7 +463,7 @@
     "translationUnavailableTitle": "Translation unavailable",
     "translationUnavailableTapToRetry": "The {{language}} language pack may still be downloading, or the download may have failed. Showing English for now — tap to try again.",
     "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}. Showing English instead — updating iOS will enable it.",
-    "downloadHintBeforePrefix": "After you pick a language, iOS asks you to download it. Tap the",
+    "downloadHintBeforePrefix": "After you pick a language, iOS may ask you to download it. Tap the",
     "downloadHintBeforeSuffix": "next to each language in that sheet — nothing downloads until you do.",
     "downloadHintNowPrefix": "Tap the",
     "downloadHintNowSuffix": "next to each language in the sheet below to start the download.",
