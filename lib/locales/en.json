@@ -226,9 +226,8 @@
   },
   "articleDetail": {
     "readArticle": "Read Article",
-    "viewAndTranslateOnDevice": "View article & translate on device",
-    "viewOriginal": "View original article",
-    "viewOriginalIn": "View original article in {{language}}",
+    "readOn": "Read on {{publication}}",
+    "readOnGoogleTranslate": "Read on Google Translate",
     "relatedArticles": "Related Articles",
     "articleUnavailable": "This article is no longer available",
     "storyUnavailable": "This story is no longer available",
@@ -381,8 +380,6 @@
     "notTranslatableOsOutdated": "This article is in {{language}}. On-device translation needs iOS {{requiredVersion}}: you're on iOS {{currentVersion}}. Update iOS, or use Google Translate below to read it in your language.",
     "unknownLanguage": "another language",
     "translationGuideLink": "Show me how to translate the article",
-    "viewInGoogleTranslate": "View in Google Translate",
-    "readViaGoogleTranslate": "Read in your language (Google Translate)",
     "showOriginal": "Show original",
     "showTranslation": "Show translation"
   },
