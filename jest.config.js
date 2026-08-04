@@ -1,12 +1,17 @@
 module.exports = {
   preset: 'jest-expo',
   transformIgnorePatterns: [
+    // `@legendapp/motion` is in here for the same reason, one layer further
+    // out: `components/ui/tooltip` imports it, and ArticleMetaRow imports the
+    // tooltip for the failed-translation affordance — which drags it into
+    // every suite that renders a card.
+    //
     // `@gluestack-ui/*` ships untranspiled ESM. It only started mattering when
     // the shared glass primitive (components/custom/GlassSurface.tsx) pulled
     // `@/components/ui/box` into test graphs that had never imported a
     // gluestack component before — without it those suites die on
     // `SyntaxError: Unexpected token 'export'` from @gluestack-ui/utils.
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|better-auth|@better-auth|@apollo|graphql|nanostores|@noble|@gluestack-ui/.*)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|better-auth|@better-auth|@apollo|graphql|nanostores|@noble|@gluestack-ui/.*|@legendapp/.*)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],

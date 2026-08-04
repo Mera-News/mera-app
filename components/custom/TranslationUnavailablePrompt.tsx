@@ -70,9 +70,14 @@ const TranslationUnavailablePrompt: React.FC = () => {
             <Toast nativeID={id} action="info" variant="solid">
                 <ToastTitle>{t('language.translationUnavailableTitle')}</ToastTitle>
                 <ToastDescription>
-                    {permanent
-                        ? t('language.translationUnsupportedOnThisIos', { language })
-                        : t('language.translationUnavailableTapToRetry', { language })}
+                    {blocked?.deviceUnsupported
+                        // Distinct from the iOS-version case on purpose:
+                        // telling someone to update iOS would be a lie when
+                        // the device has no translator at all.
+                        ? t('language.translationUnavailableOnThisDevice', { language })
+                        : permanent
+                            ? t('language.translationUnsupportedOnThisIos', { language })
+                            : t('language.translationUnavailableTapToRetry', { language })}
                 </ToastDescription>
             </Toast>
         );
