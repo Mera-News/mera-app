@@ -113,6 +113,75 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     expect(result.propagatedCount).toBe(1);
     expect(result.enqueueIds).toEqual([]);
   });
+
+  // THE assertion that distinguishes the chosen fix from the rejected one.
+  // The alternative was to disqualify reason-less rows as DONORS, which would
+  // have sent this candidate to `enqueueIds` for a full relevance + reason
+  // scoring round. Instead the relevance still propagates (that saving is kept)
+  // and only the reason is owed — `batchPropagateScores` parks the row in
+  // `reason_pending` for the orphaned-reasons sweep.
+  it('still propagates relevance from a reason-less donor rather than enqueueing the candidate', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([row({ id: 'cand-1' })]);
+    mockGetScoredDonorRows.mockResolvedValue([
+      // Scored, above the render gate, reason not back yet.
+      row({ id: 'donor-pending', status: 'reason_pending' as any, relevance: 0.72, reason: '' }),
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(mockBatchPropagateScores).toHaveBeenCalledWith([
+      { id: 'cand-1', relevance: 0.72, reason: '' },
+    ]);
+    expect(result.propagatedCount).toBe(1);
+    expect(result.enqueueIds).toEqual([]); // NOT re-scored from scratch
+  });
+
+  it('prefers a reason-bearing donor over a higher-relevance reason-less one', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([row({ id: 'cand-1' })]);
+    mockGetScoredDonorRows.mockResolvedValue([
+      row({ id: 'donor-hi-noreason', status: 'reason_pending' as any, relevance: 0.9, reason: '' }),
+      row({ id: 'donor-lo-reason', status: 'complete' as any, relevance: 0.5, reason: 'real reason' }),
+    ]);
+
+    await gateUnscoredForScoring(new Set());
+
+    // Taking the reason-bearing donor lands the candidate on `complete` for
+    // free; taking the 0.9 one would have cost an LLM reason call.
+    expect(mockBatchPropagateScores).toHaveBeenCalledWith([
+      { id: 'cand-1', relevance: 0.5, reason: 'real reason' },
+    ]);
+  });
+
+  it('treats a whitespace-only donor reason as reason-less when picking', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([row({ id: 'cand-1' })]);
+    mockGetScoredDonorRows.mockResolvedValue([
+      row({ id: 'donor-blank', status: 'complete' as any, relevance: 0.9, reason: '   ' }),
+      row({ id: 'donor-real', status: 'complete' as any, relevance: 0.4, reason: 'real reason' }),
+    ]);
+
+    await gateUnscoredForScoring(new Set());
+
+    expect(mockBatchPropagateScores).toHaveBeenCalledWith([
+      { id: 'cand-1', relevance: 0.4, reason: 'real reason' },
+    ]);
+  });
+
+  // Determinism guard: when every donor carries a reason the new key is inert,
+  // so the legacy relevance → pubDate → id ordering must be untouched.
+  it('keeps the legacy relevance/pubDate ordering when every donor has a reason', async () => {
+    mockGetUnscoredGroupingRows.mockResolvedValue([row({ id: 'cand-1' })]);
+    mockGetScoredDonorRows.mockResolvedValue([
+      row({ id: 'd-lo', status: 'complete' as any, relevance: 0.5, reason: 'lo', firstPubDateMs: 9_000 }),
+      row({ id: 'd-hi-old', status: 'complete' as any, relevance: 0.8, reason: 'hi-old', firstPubDateMs: 1_000 }),
+      row({ id: 'd-hi-new', status: 'complete' as any, relevance: 0.8, reason: 'hi-new', firstPubDateMs: 5_000 }),
+    ]);
+
+    await gateUnscoredForScoring(new Set());
+
+    expect(mockBatchPropagateScores).toHaveBeenCalledWith([
+      { id: 'cand-1', relevance: 0.8, reason: 'hi-new' },
+    ]);
+  });
 });
 
 // ===========================================================================

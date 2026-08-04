@@ -8,6 +8,17 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     deleteSetting: jest.fn(() => Promise.resolve()),
 }));
 
+// Mutable so each case can pose as a different device. `null` is expo-device's
+// "couldn't determine" and must NOT be read as low-memory.
+let mockTotalMemory: number | null = null;
+jest.mock('expo-device', () => ({
+    get totalMemory() {
+        return mockTotalMemory;
+    },
+}));
+
+const GB = 1024 * 1024 * 1024;
+
 const mockCaptureException = jest.fn();
 
 jest.mock('@/lib/logger', () => ({
@@ -26,6 +37,7 @@ import { useDisplayPrefsStore } from '../display-prefs-store';
 describe('useDisplayPrefsStore', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockTotalMemory = null;
         useDisplayPrefsStore.setState({ staticGradient: false, hydrated: false });
     });
 
@@ -52,12 +64,52 @@ describe('useDisplayPrefsStore', () => {
         expect(useDisplayPrefsStore.getState().hydrated).toBe(true);
     });
 
-    // An unset preference means the animated background — the designed default.
-    it('hydrate leaves staticGradient false when the setting is absent', async () => {
-        mockGetSetting.mockResolvedValueOnce(null);
-        await useDisplayPrefsStore.getState().hydrate();
-        expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
-        expect(useDisplayPrefsStore.getState().hydrated).toBe(true);
+    // ── device-derived default when the user has never chosen (B1.8) ───────
+    // `null` from getSetting means "no row", which is NOT the same as '0'. Only
+    // the null case consults the device.
+    describe('unset preference falls back to the device default', () => {
+        it('stays animated when total memory is unknown (null)', async () => {
+            mockTotalMemory = null;
+            mockGetSetting.mockResolvedValueOnce(null);
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
+            expect(useDisplayPrefsStore.getState().hydrated).toBe(true);
+        });
+
+        it('stays animated on an 8 GB device', async () => {
+            mockTotalMemory = 8 * GB;
+            mockGetSetting.mockResolvedValueOnce(null);
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
+        });
+
+        it('defaults to the static backdrop on a 4 GB device', async () => {
+            mockTotalMemory = 4 * GB;
+            mockGetSetting.mockResolvedValueOnce(null);
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().staticGradient).toBe(true);
+        });
+
+        it('treats exactly 6 GB as not-low', async () => {
+            mockTotalMemory = 6 * GB;
+            mockGetSetting.mockResolvedValueOnce(null);
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
+        });
+
+        it('never overrides an explicit "0" on a low-memory device', async () => {
+            mockTotalMemory = 4 * GB;
+            mockGetSetting.mockResolvedValueOnce('0');
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
+        });
+
+        it('honours an explicit "1" on a high-memory device', async () => {
+            mockTotalMemory = 8 * GB;
+            mockGetSetting.mockResolvedValueOnce('1');
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().staticGradient).toBe(true);
+        });
     });
 
     it('hydrate reads the correct setting key', async () => {

@@ -292,7 +292,10 @@ const SectionHeader = ({ title }: { title: string }) => (
 const MetricCard = ({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) => (
     <Box className="flex-1 bg-gray-900 rounded-xl p-3 border border-gray-800">
         <Text size="xs" className="text-gray-500 mb-0.5" numberOfLines={1}>{title}</Text>
-        <Text className="text-white font-bold text-2xl leading-8">{value}</Text>
+        {/* No `leading-8` (1.33 on 24px type): most values are digits, but
+            `schedulerStatus` is prose, and a tight line box clips tall marks.
+            `text-2xl` now carries a script-safe 36px line box. */}
+        <Text className="text-white font-bold text-2xl">{value}</Text>
         {subtitle ? <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text> : null}
     </Box>
 );
@@ -624,6 +627,36 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
                 showsVerticalScrollIndicator={false}
             >
+                {/* Transparency note. Deliberately narrower than "Mera cannot
+                    access any of this": two things on this screen DO leave the
+                    device, and the note names both rather than sweeping them
+                    up — `user_personas` mirrors a server-side document
+                    (lib/account-service.ts GET_USER_PERSONA), and fact
+                    statements ride the cloud-scoring/chat prompts (E2EE'd, but
+                    the privacy policy itself stops short of "cannot"). Wording
+                    tracks the vetted policy line "Mera's servers do not
+                    store…" rather than inventing a stronger claim. */}
+                <Box
+                    testID="observability-privacy-note"
+                    className="bg-gray-900 rounded-xl p-3 border border-gray-800 mb-2"
+                >
+                    <HStack space="xs" className="items-center mb-1.5">
+                        <MaterialIcons name="lock-outline" size={14} color="#9ca3af" />
+                        <Text size="xs" className="text-gray-300 font-semibold">
+                            {t('observability.noteTitle')}
+                        </Text>
+                    </HStack>
+                    <Text size="xs" className="text-gray-400 leading-5">
+                        {t('observability.noteBody')}
+                    </Text>
+                    <Text size="xs" className="text-gray-500 leading-5 mt-1.5">
+                        {t('observability.noteExceptions')}
+                    </Text>
+                    <Text size="xs" className="text-gray-500 leading-5 mt-1.5">
+                        {t('observability.noteFooter')}
+                    </Text>
+                </Box>
+
                 {/* Top metric cards */}
                 <HStack space="sm" className="mb-2">
                     <MetricCard title={t('observability.articles')} value={String(articleCount)} />

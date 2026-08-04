@@ -11,16 +11,23 @@ import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
 import type { ConversationMessage, IAgent, ToolCallRecord } from './types';
 import { estimateTokens } from './tokens';
+import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
+import { normalizeToolName } from '../news-harness/persona-management/tool-names';
+import {
+  HISTORY_RESERVE_TOKENS,
+  MAX_HISTORY_USER_TURNS,
+} from '../news-harness/persona-management/persona-agent-core';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-// Local LLM sends ONLY the current user turn — matches the cloud path. Fresh
-// facts are re-loaded from the `facts` table each turn via buildContext() and
-// prepended to the user message, so the LLM cannot hallucinate persisted state
-// from prior assistant claims like "Got it, saved".
-const MAX_HISTORY_MESSAGES = 1;
+// Local LLM carries a TOKEN-BUDGETED window of recent turns, matching the cloud
+// path (same selector, same invariants) but with the budget derived by
+// subtraction against this path's hard 3072-token input ceiling rather than
+// from a fixed cap. Fresh facts are re-loaded from the `facts` table each turn
+// via buildContext() and prepended to the LAST user message, so a wider window
+// cannot make the LLM hallucinate persisted state from a stale assistant claim.
 const TOOL_CALL_OPEN = '<tool_call>';
 const TOOL_CALL_CLOSE = '</tool_call>';
 const TOTAL_TOKEN_LIMIT = 4096;
@@ -31,19 +38,23 @@ const INPUT_TOKEN_BUDGET = TOTAL_TOKEN_LIMIT - MAX_OUTPUT_TOKENS; // 3072
 
 const TAG = '[LocalLLM]';
 
-const KNOWN_TOOLS = new Set([
-  'saveExtractedFacts',
-  'saveExtractedsFacts', // common LLM misspelling
-  'updateUserConfig',
-  'deleteUserFacts',
-  'issueWarning',
-  'runCalibration',
-  // Article-feedback agent — proposal confirm flow.
-  'proposeChanges',
-  'proposeTrack',
-  'applyProposal',
-  'cancelProposal',
-]);
+/**
+ * The tool names this turn will accept, taken from the AGENT'S OWN definitions.
+ *
+ * This used to be a hardcoded Set, which had already drifted: it carried the
+ * misspelling `saveExtractedsFacts` as a literal member while the real repair
+ * lived elsewhere, and it listed both agents' tools regardless of which agent
+ * was actually driving the turn. Deriving it removes both problems, and
+ * normalizeToolName handles casing/separator/typo variants.
+ */
+function knownToolNames(agent: IAgent): string[] {
+  return (agent.getToolDefinitions?.() ?? []).map((d) => d.function.name);
+}
+
+/** Resolve a model-emitted name to a real tool, or null to reject it. */
+function resolveToolName(raw: string, known: string[]): string | null {
+  return normalizeToolName(raw, known);
+}
 
 // Module-level counter ensures unique tool call IDs across all inference runs.
 let toolCallCounter = 0;
@@ -74,17 +85,37 @@ export interface UseLocalLLMResult {
 // Helper functions (absorbed from LocalInferenceEngine)
 // ---------------------------------------------------------------------------
 
+/** Token cost of one conversation message as this file renders it — content
+ *  PLUS the inline <tool_call> blocks, which is what buildPromptFromMessages
+ *  actually emits. Counting content alone would under-count exactly the turns
+ *  that cost the most, and the budget would stop being a budget. */
+function messageTokens(msg: ConversationMessage): number {
+  let text = msg.content ?? '';
+  for (const tc of msg.toolCalls ?? []) {
+    text += JSON.stringify({ name: tc.name, arguments: tc.input ?? {} });
+  }
+  return estimateTokens(text);
+}
+
 /**
  * Converts ConversationMessage[] to a formatted prompt string for local LLM.
- * Slices to MAX_HISTORY_MESSAGES (= 1, just the current user turn), guarantees
- * the first message is a user turn, and prepends fresh `context` (from
- * buildContext) onto that last user message.
+ * Carries as much recent history as `historyBudgetTokens` allows (see
+ * history-window.ts), guarantees the first message is a user turn, and prepends
+ * fresh `context` (from buildContext) onto that last user message.
  */
 function buildPromptFromMessages(
   messages: ConversationMessage[],
   context?: string,
+  historyBudgetTokens = 0,
 ): string {
-  let limited = messages.slice(-MAX_HISTORY_MESSAGES);
+  const startIdx = selectHistoryWindow<ConversationMessage>({
+    entries: messages,
+    budgetTokens: historyBudgetTokens,
+    maxUserTurns: MAX_HISTORY_USER_TURNS,
+    roleOf: (m) => m.role,
+    tokensOf: messageTokens,
+  });
+  let limited = messages.slice(startIdx);
   if (limited[0]?.role !== 'user') {
     const lastUser = [...messages].reverse().find((m) => m.role === 'user');
     if (lastUser) limited = [lastUser, ...limited];
@@ -193,7 +224,7 @@ function flushBuffer(
 }
 
 /** Detects bare JSON tool calls (without tags) that the LLM sometimes emits. */
-function* extractBareJsonToolCalls(text: string): Iterable<InferenceEvent> {
+function* extractBareJsonToolCalls(text: string, known: string[]): Iterable<InferenceEvent> {
   let searchFrom = 0;
   while (searchFrom < text.length) {
     const braceIdx = text.indexOf('{', searchFrom);
@@ -211,11 +242,12 @@ function* extractBareJsonToolCalls(text: string): Iterable<InferenceEvent> {
     const jsonStr = text.substring(braceIdx, endIdx + 1);
     try {
       const parsed = JSON.parse(jsonStr) as { name?: string; arguments?: Record<string, unknown> };
-      if (parsed.name && KNOWN_TOOLS.has(parsed.name)) {
+      const resolvedBare = parsed.name ? resolveToolName(parsed.name, known) : null;
+      if (resolvedBare) {
         yield {
           type: 'tool-call',
           id: `local-tc-${toolCallCounter++}`,
-          name: parsed.name,
+          name: resolvedBare,
           input: parsed.arguments ?? {},
         };
         searchFrom = endIdx + 1;
@@ -284,10 +316,22 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
           }
         }
 
-        const prompt = buildPromptFromMessages(conversationMessages, context);
-
-        // Token budget check
+        // Derive the history budget from what the fixed costs leave behind, so
+        // history SHRINKS to fit instead of pushing the turn over the hard
+        // ceiling below. Measured 2026-08-03: a CONFIG turn's system prompt
+        // (~1,769 tok with the XML tool format) plus a full 22-fact <context>
+        // (~1,156 tok) already leaves ~19 tokens — a heavy user gets one turn of
+        // history, which is correct. A typical fact bank leaves ~1,150.
         const systemTokens = estimateTokens(systemPrompt);
+        const contextTokens = context ? estimateTokens(context) : 0;
+        const historyBudget =
+          INPUT_TOKEN_BUDGET - systemTokens - contextTokens - HISTORY_RESERVE_TOKENS;
+
+        const prompt = buildPromptFromMessages(conversationMessages, context, historyBudget);
+
+        // Token budget check. Now only reachable when the system prompt +
+        // <context> + the CURRENT user turn alone exceed the budget (a
+        // facts-too-large problem), never because history grew.
         const promptTokens = estimateTokens(prompt);
         const totalInputTokens = systemTokens + promptTokens;
         logger.debug('[LocalLLM:chat] Token estimate', { systemTokens, promptTokens, totalInputTokens, budget: INPUT_TOKEN_BUDGET });
@@ -377,6 +421,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         // split across tokens. Split on the open tag to reliably find all blocks.
         logger.debug(`${TAG} LLM output — fullResponse`, { fullResponse });
         logger.debug(`${TAG} stream complete`, { responseLength: fullResponse.length, toolCallsSoFar: accToolCalls.length });
+        const known = knownToolNames(agent);
         const detectedInputs = new Set(accToolCalls.map(tc => JSON.stringify(tc.input)));
         const segments = fullResponse.split(TOOL_CALL_OPEN).slice(1); // each segment starts after a <tool_call>
         for (const segment of segments) {
@@ -384,14 +429,15 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
           const jsonStr = segment.split(TOOL_CALL_CLOSE)[0].trim();
           try {
             const parsed = JSON.parse(jsonStr) as { name: string; arguments?: Record<string, unknown> };
-            if (parsed.name && KNOWN_TOOLS.has(parsed.name)) {
+            const resolved = parsed.name ? resolveToolName(parsed.name, known) : null;
+            if (resolved) {
               const input = parsed.arguments ?? {};
               // Skip if already detected during streaming
               if (detectedInputs.has(JSON.stringify(input))) continue;
-              logger.debug(`${TAG} tool call detected (rescan)`, { name: parsed.name, inputKeys: Object.keys(input) });
+              logger.debug(`${TAG} tool call detected (rescan)`, { name: resolved, inputKeys: Object.keys(input) });
               const tc: ToolCallRecord = {
                 id: `local-tc-${toolCallCounter++}`,
-                name: parsed.name,
+                name: resolved,
                 input,
                 status: 'pending',
               };
@@ -407,7 +453,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
             }
           } catch {
             // JSON in this segment may be truncated — try bare JSON extraction as fallback
-            for (const event of extractBareJsonToolCalls(jsonStr)) {
+            for (const event of extractBareJsonToolCalls(jsonStr, known)) {
               if (event.type === 'tool-call') {
                 const input = event.input as Record<string, unknown>;
                 if (detectedInputs.has(JSON.stringify(input))) continue;

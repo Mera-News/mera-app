@@ -451,6 +451,44 @@ const GET_ARTICLES_FOR_TOPICS_BY_IDS = gql`
   }
 `;
 
+// [r12] Quota-EXEMPT sibling of GET_ARTICLES_FOR_TOPICS_BY_IDS, for articles
+// that reached the device ONLY because the user follows a story. Identical
+// selection set minus the cap fields: this query is never charged against the
+// daily article limit, so `dailyLimitReached` is always false and `resetAt`
+// always absent — selecting them would be dead weight on every request.
+const GET_ARTICLES_FOR_STORIES = gql`
+  query GetArticlesForStories($articleIds: [ID!]!) {
+    articlesForStories(articleIds: $articleIds) {
+      articles {
+        _id
+        clusters {
+          clusterId
+          confidence
+          stableClusterId
+        }
+        title_en
+        title
+        description_en
+        article_url
+        image_url
+        country_code
+        publication_name
+        language_code
+        pubDate
+        geo_tags {
+          city
+          region
+          countryCode
+        }
+        entities
+        event_type
+        category
+        maxClusterSize
+      }
+    }
+  }
+`;
+
 // [Persona v3] Privacy-lean candidate listing: topic texts + limits +
 // COUNTRY/GLOBAL headline scopes only (NO locations/weights/negatives ever leave
 // the device). The server stores nothing and charges no quota here (quota is
@@ -833,6 +871,84 @@ export class ArticleService {
                 '[ArticleService] getArticlesForTopicsByIds FAILED',
                 'article-service',
                 { method: 'getArticlesForTopicsByIds', idCount: articleIds.length },
+                'error',
+            );
+            throw error;
+        }
+    }
+
+    /**
+     * Quota-EXEMPT hydration for articles that reached the device ONLY because
+     * the user follows a story. Same payload as
+     * {@link getArticlesForTopicsByIds}; the difference is purely billing —
+     * nothing fetched here counts against the daily article cap, so there is no
+     * `dailyLimitReached`/`resetAt` to report and the caller never has to handle
+     * a clipped response.
+     *
+     * ONLY the feed-sync partition may call this. The caller must have
+     * established that every topic which matched these ids is a followed-story
+     * topic (see `partitionStoryIds` in feed-sync-steps) — the server cannot
+     * verify that claim without persisting a user→topic link, which the privacy
+     * invariant forbids, so correctness of the exemption lives here.
+     *
+     * CHUNK is 50 to match the server's hard per-request ceiling on this query
+     * exactly (the metered sibling has no such cap — its quota is its cap).
+     */
+    static async getArticlesForStories(
+        articleIds: string[],
+        onProgress?: (completed: number, total: number) => void,
+    ): Promise<{ articles: ArticleWithClusters[] }> {
+        if (articleIds.length === 0) return { articles: [] };
+
+        // Must not exceed MAX_STORY_ARTICLE_IDS_PER_REQUEST on the server (50);
+        // a larger batch is rejected with BAD_USER_INPUT, not silently trimmed.
+        const CHUNK = 50;
+        const CONCURRENCY = 5;
+        const batches: string[][] = [];
+        for (let i = 0; i < articleIds.length; i += CHUNK) {
+            batches.push(articleIds.slice(i, i + CHUNK));
+        }
+        const results: ArticleWithClusters[] = [];
+        let completedIds = 0;
+        onProgress?.(0, articleIds.length);
+
+        try {
+            let nextIndex = 0;
+            const workers = Array.from(
+                { length: Math.min(CONCURRENCY, batches.length) },
+                async () => {
+                    while (true) {
+                        const idx = nextIndex++;
+                        if (idx >= batches.length) return;
+                        const batch = batches[idx];
+                        const { data } = await client.query<{
+                            articlesForStories: ArticlesForTopicsByIdsResponse;
+                        }>({
+                            query: GET_ARTICLES_FOR_STORIES,
+                            variables: { articleIds: batch },
+                            fetchPolicy: 'no-cache',
+                        });
+                        const rows = data?.articlesForStories?.articles ?? [];
+                        if (rows.length) results.push(...rows);
+                        completedIds += batch.length;
+                        onProgress?.(completedIds, articleIds.length);
+                    }
+                },
+            );
+            await Promise.all(workers);
+            return { articles: results };
+        } catch (error) {
+            // Same policy as the metered sibling: SubscriptionGuard still
+            // applies to this query, so a NotSubscribed error must still route
+            // to the paywall.
+            if (isNotSubscribedError(error)) {
+                navigateToPaywall();
+                throw error;
+            }
+            logger.addBreadcrumb(
+                '[ArticleService] getArticlesForStories FAILED',
+                'article-service',
+                { method: 'getArticlesForStories', idCount: articleIds.length },
                 'error',
             );
             throw error;

@@ -61,6 +61,41 @@ export async function updateFact(
   return toFact(record);
 }
 
+/**
+ * APPEND topic texts onto a fact's `metadata.topics`, preserving what is there.
+ *
+ * `Fact.updateFact` assigns `fact.metadata = metadata` — a WHOLESALE REPLACE.
+ * That is tolerable for first generation (which owns the whole list), but for an
+ * append it is data loss: writing `{ topics: newOnes }` would drop the fact's
+ * existing metadata.topics, which the legacy retrieval path still reads on
+ * devices that have not run the persona-v3 migration, and would drop any other
+ * metadata key (e.g. topicGenError) with it.
+ *
+ * Reads the current metadata, merges case-insensitively (existing order kept,
+ * new texts appended), and writes the whole object back.
+ */
+export async function appendFactMetadataTopics(
+  id: string,
+  newTopics: string[],
+): Promise<void> {
+  if (newTopics.length === 0) return;
+  const record = await factsCollection.find(id);
+  const current = record.metadata ?? {};
+  const existing = Array.isArray(current.topics) ? current.topics : [];
+
+  const seen = new Set(existing.map((t) => t.toLowerCase().trim()));
+  const merged = [...existing];
+  for (const t of newTopics) {
+    const key = t.toLowerCase().trim();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(t);
+  }
+  if (merged.length === existing.length) return; // nothing new
+
+  await record.updateFact(record.statement, { ...current, topics: merged });
+}
+
 export async function deleteFact(id: string): Promise<void> {
   const record = await factsCollection.find(id);
   await record.destroyCascade();

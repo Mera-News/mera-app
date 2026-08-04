@@ -98,6 +98,13 @@ export function buildCloudBatchCallsForFact(
     total,
     hasOthers,
   );
+  // Thinking is ON for both halves: deciding whether a candidate topic is
+  // genuinely good — rather than emitting N because N was asked for — is exactly
+  // the judgement a reasoning pass helps with. The budget MUST be raised with
+  // it (the trace shares max_tokens with the answer); shipping the flag without
+  // the budget yields silently empty topic lists.
+  const maxTokens = Math.max(TOPIC_CFG.cloudThinkingMaxTokens, total * 30);
+
   const calls: BatchCall[] = [];
   if (factOnlyCount > 0) {
     calls.push({
@@ -105,16 +112,23 @@ export function buildCloudBatchCallsForFact(
       system: systemPrompts.factOnly,
       prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
       temperature: 0.3,
-      maxTokens: Math.max(400, factOnlyCount * 30),
+      maxTokens,
+      enableThinking: true,
     });
   }
   if (comboCount > 0 && hasOthers) {
     calls.push({
       id: `${idPrefix}:combo`,
       system: systemPrompts.combo,
-      prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate ${comboCount} topics.`,
+      // "at most" — a CEILING, not a quota. The combo prompt used to be told an
+      // exact count while ALSO being offered `[]` as an escape, and the exact
+      // count won: with 4 slots and no genuine cricket/AI/music overlap the
+      // model padded with "Amsterdam cricket festival music tech". The system
+      // prompt now says ceiling everywhere; this is the other half of that fix.
+      prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
       temperature: 0.3,
-      maxTokens: Math.max(400, comboCount * 30),
+      maxTokens,
+      enableThinking: true,
     });
   }
   return calls;

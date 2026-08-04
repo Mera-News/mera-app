@@ -1,11 +1,11 @@
 // NOTE(app-rethink wave): still LIVE on the article/suggestion detail screens.
-// New card/feed code should use components/custom/cards/ArticleActionsRow (the
-// origin-aware universal actions row) instead of this widget.
+// This widget owns the detail screens' feedback STATE; the row itself is
+// components/custom/cards/CardActionBar, which is now the one action row across
+// cards, detail screens and the standalone card. New surfaces should render
+// CardActionBar directly rather than growing a fourth copy.
 import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import MeraLogo from '@/components/custom/MeraLogo';
+import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
-import { Pressable } from '@/components/ui/pressable';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 
 import {
@@ -23,10 +23,7 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ArticleFeedbackPromptProps {
     articleId: string;
@@ -55,35 +52,24 @@ interface ArticleFeedbackPromptProps {
     onBrowseRelated?: () => void;
 }
 
-// Primary-orange accent for the three feedback buttons. Dark-locked: these
-// stay orange-on-dark regardless of app theme. (Close to primary-500 but not an
-// exact token match, so the hex is used directly.)
-const PRIMARY = '#EDA77E';
-// Icon color when a button is in its filled/selected state — dark for contrast
-// against the orange fill.
-const SELECTED_ICON = '#1a1a1a';
-// D15 — the PROVISIONAL treatment (see CardActionBar): recorded, but with no
-// reason attached, so it is tinted rather than filled.
-const PROVISIONAL_BG = 'rgba(237,167,126,0.18)';
-
-// Slightly larger than the original 19/45 — the row lost the Mera button on the
-// suggestion detail screen, so the survivors get more room and `justify-evenly`
-// spreads them across the freed width.
-const ICON_SIZE = 22;
-const BUTTON_SIZE = 48;
-
 /**
  * Prominent feedback widget rendered directly under the reason box on the
- * article detail screens. Single row of round, primary-orange-outlined
- * buttons spread evenly across the width:
+ * article detail screens. The row is `CardActionBar` — the SAME borderless,
+ * backgroundless row the feed cards use. It was a bespoke row of 48pt round,
+ * primary-orange-outlined buttons until the user asked for card parity; see
+ * CardActionBar's header for why that conversion had to take the row wholesale
+ * (the circle was the only carrier of the D15 provisional state) and why a
+ * liked article therefore reads green here now instead of orange.
+ *
+ * This component owns the STATE; CardActionBar is purely presentational:
  *   - Chat with Mera → opens the floating Mera chat for this article (plain
  *     open, no auto-sent message).
  *   - Like / Dislike → records the verdict (latest-wins, mutually exclusive) and
  *     FLOATS the inline feedback surface over the content above the row so the
  *     user can pick a reason. Re-tapping the same thumb removes the verdict +
  *     its feedback; the surface's × just hides it (keeps the verdict). The
- *     thumb stays tinted-not-filled until a reason is given: a bare verdict is
- *     provisional and gets discarded (D15), and a terminal tree leaf applies
+ *     thumb stays coloured-but-HOLLOW until a reason is given: a bare verdict
+ *     is provisional and gets discarded (D15), and a terminal tree leaf applies
  *     its persona actions on the spot (D16) — matching the For You feed.
  *
  * The feedback CONTEXT is resolved here, not passed in. See
@@ -104,7 +90,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     share,
     onBrowseRelated,
 }) => {
-    const { t } = useTranslation();
     const [verdict, setVerdict] = useState<Verdict | null>(null);
     const [initialPath, setInitialPath] = useState<string[]>([]);
     // F3 — the fill discriminator, restored from the row rather than inferred
@@ -272,43 +257,10 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // The surface can only render once the real context has resolved — there is
     // no half-built stand-in to fall back on any more, by design.
     const surfaceVisible = verdict != null && !surfaceClosed && surfaceSuggestion != null;
-    // D15 — a verdict with no reason attached carries no promise: coloured
-    // outline + tint, never the filled treatment. F3 — keyed off the COMMITTED
-    // flag, not `initialPath`, which a branch descent also fills. See CardActionBar.
+    // D15 — a verdict with no reason attached carries no promise: coloured but
+    // HOLLOW, never filled. F3 — keyed off the COMMITTED flag, not
+    // `initialPath`, which a branch descent also fills. See CardActionBar.
     const provisional = !committed;
-
-    // A single action button. `selected` fills it (filled/orange treatment);
-    // `provisionalFill` is the softer "recorded, not yet explained" tint.
-    const renderButton = (
-        icon: React.ReactNode,
-        label: string,
-        onPress: () => void,
-        selected: boolean,
-        testID?: string,
-        provisionalFill = false,
-    ) => (
-        <Pressable
-            testID={testID}
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            accessibilityLabel={label}
-            className="items-center justify-center rounded-full"
-            style={{
-                width: BUTTON_SIZE,
-                height: BUTTON_SIZE,
-                backgroundColor: selected
-                    ? PRIMARY
-                    : provisionalFill
-                      ? PROVISIONAL_BG
-                      : 'transparent',
-                borderWidth: 1.75,
-                borderColor: PRIMARY,
-            }}
-        >
-            {icon}
-        </Pressable>
-    );
 
     return (
         <Box className="relative">
@@ -333,82 +285,24 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 </Box>
             ) : null}
 
-            <HStack className="items-center justify-evenly px-1 py-3">
-                {/* Mera — the single Ask-Mera affordance on this screen. It
-                    briefly moved onto the rationale block above; that was
-                    reverted, so it lives here unconditionally, matching the
-                    card action bar. */}
-                <Pressable
-                    testID="card-action-mera"
-                    onPress={handleChatPress}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('swipeFeed.askMera')}
-                    className="items-center justify-center rounded-full"
-                    style={{
-                        width: BUTTON_SIZE,
-                        height: BUTTON_SIZE,
-                        backgroundColor: 'transparent',
-                        borderWidth: 1.75,
-                        borderColor: PRIMARY,
-                    }}
-                >
-                    <MeraLogo size={30} />
-                </Pressable>
-                {renderButton(
-                    <MaterialIcons
-                        name="thumb-up"
-                        size={ICON_SIZE}
-                        color={verdict === 'like' && !provisional ? SELECTED_ICON : PRIMARY}
-                    />,
-                    t('articleFeedback.likeLabel'),
-                    handleLike,
-                    verdict === 'like' && !provisional,
-                    'card-action-like',
-                    verdict === 'like' && provisional,
-                )}
-                {renderButton(
-                    <MaterialIcons
-                        name="thumb-down"
-                        size={ICON_SIZE}
-                        color={verdict === 'dislike' && !provisional ? SELECTED_ICON : PRIMARY}
-                    />,
-                    t('articleFeedback.dislikeLabel'),
-                    handleDislike,
-                    verdict === 'dislike' && !provisional,
-                    'card-action-dislike',
-                    verdict === 'dislike' && provisional,
-                )}
-                {save ? renderButton(
-                    <MaterialIcons
-                        name={save.saved ? 'bookmark' : 'bookmark-border'}
-                        size={ICON_SIZE}
-                        color={save.saved ? SELECTED_ICON : PRIMARY}
-                    />,
-                    t(save.saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction'),
-                    save.onToggle,
-                    save.saved,
-                ) : null}
-                {track ? renderButton(
-                    <MaterialIcons
-                        name="track-changes"
-                        size={ICON_SIZE}
-                        color={storyTracked ? SELECTED_ICON : PRIMARY}
-                    />,
-                    t(storyTracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
-                    onTrackPress,
-                    storyTracked,
-                ) : null}
-                {share?.url ? renderButton(
-                    <MaterialIcons
-                        name={Platform.OS === 'ios' ? 'ios-share' : 'share'}
-                        size={ICON_SIZE}
-                        color={PRIMARY}
-                    />,
-                    t('articleDetail.share'),
-                    handleSharePress,
-                    false,
-                ) : null}
-            </HStack>
+            {/* `horizontalPadding={0}`: the detail screens drop this widget into
+                ArticleSuggestionContainer's `footer` slot, which already sits
+                inside that screen's `p-5`. The old row added `px-1` on top of
+                it; 0 is the honest value, and mirrors what ArticleSuggestionCard
+                passes for ArticleCardBase's own padding. */}
+            <CardActionBar
+                verdict={verdict}
+                provisional={provisional}
+                saved={!!save?.saved}
+                onLike={handleLike}
+                onDislike={handleDislike}
+                onAskMera={handleChatPress}
+                onToggleSave={save?.onToggle}
+                onTrack={track ? onTrackPress : undefined}
+                tracked={storyTracked}
+                onShare={share?.url ? handleSharePress : undefined}
+                horizontalPadding={0}
+            />
         </Box>
     );
 };

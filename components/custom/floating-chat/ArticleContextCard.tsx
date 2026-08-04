@@ -3,6 +3,7 @@
 // (resolved from the suggestion row when available) + the article title, so the
 // conversation always shows what it's about. Non-pressable — purely contextual.
 
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
@@ -83,12 +84,27 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
               inverted dark ramp — near-black glyphs on a near-black card, ~1.03:1
               contrast, i.e. invisible. Matches ChatThread's convention of
               explicit rgb() values on this surface. */}
-          <Text
-            style={{ color: 'rgb(245, 245, 245)', fontSize: 13, fontWeight: '600' }}
+          {/* The headline is RUNTIME content (title_en — English by this app's
+              design), so i18next can never reach it: it goes through the same
+              on-device translator the feed cards use. No `originalText` is
+              plumbed into the chat context, so while a translation is pending
+              — or whenever the translator is gated/blocked — this renders the
+              English source, exactly as TranslatableDynamic documents. That
+              also means no translate icon and no show-original toggle here,
+              unlike a feed card, which does hold the original.
+              `lineHeight` is explicit because TranslatableDynamic derives its
+              own from the `size` TOKEN (md → 24), which would be wrong for the
+              13px font this card sets in `style`. Caller style spreads last. */}
+          <TranslatableDynamic
+            text={title}
+            style={{
+              color: 'rgb(245, 245, 245)',
+              fontSize: 13,
+              fontWeight: '600',
+              lineHeight: 18,
+            }}
             numberOfLines={2}
-          >
-            {title}
-          </Text>
+          />
         </VStack>
       </HStack>
     </Box>

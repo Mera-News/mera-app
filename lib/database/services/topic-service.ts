@@ -30,29 +30,128 @@ export interface CreateTopicInput {
   lastSignalAt?: number | null;
 }
 
-/** Batch-creates topic rows in a single write. Returns the created records. */
+/**
+ * Batch-creates topic rows in a single write, with a **dedupe floor**.
+ *
+ * `normalized_text` is documented on the model as "the dedup + article-match
+ * key", but this writer used to `prepareCreate` unconditionally — so any caller
+ * that ran twice minted a second identical row. Duplicates are not cosmetic:
+ * each one is independently retrieved and independently billed on every feed
+ * sync.
+ *
+ * SEMANTICS — resolve-or-create, NOT filter. For each input, if a live row
+ * already holds the same key, that row is RETURNED instead of a new one being
+ * created. Callers therefore always get one row per input, in order, and never
+ * an `undefined` hole. This matters: four call sites destructure
+ * `const [created] = await createTopics([...])` and treat a missing row as a
+ * hard failure — `persona-action-executor` would report "failed to create
+ * topic" for a topic that exists, and `track-actions` /
+ * `tracked-story-migrate-handler` would bind a tracked story to a NULL topic_id,
+ * silently stopping that followed story from ever matching new articles. The
+ * migrate handler's own comment already asks for these semantics ("Mint (or
+ * resolve an existing) 'tracked' topic").
+ *
+ * KEY — `(normalized_text, fact_id)`, deliberately NOT `normalized_text` alone.
+ * The same text under a DIFFERENT fact is not a duplicate: the hygiene
+ * `duplicate_facts` detector finds near-duplicate facts precisely by looking for
+ * one normalized text owned by ≥2 facts (`findTopicOverlapAcrossFacts`, which
+ * skips `factId === null` and requires `factIds.size >= 2`). A global key would
+ * collapse those rows and delete that signal.
+ *
+ * RETIRED ROWS ARE EXEMPT. A retired row is dedup/history only; re-minting its
+ * text is how a caller legitimately revives an interest, and resurrecting the
+ * retired row instead must stay an explicit `reactivate()` decision.
+ */
 export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicModel[]> {
   if (inputs.length === 0) return [];
-  return database.write(async () => {
-    const now = new Date();
-    const prepared = inputs.map((input) =>
-      topicsCollection.prepareCreate((t) => {
-        t.factId = input.factId ?? null;
-        t.text = input.text;
-        t.normalizedText = input.normalizedText ?? normalizeTopicText(input.text);
-        t.weight = input.weight ?? 0;
-        t.status = input.status ?? 'active';
-        t.provenance = input.provenance ?? 'user';
-        t.highPriority = input.highPriority ?? false;
-        t.locationId = input.locationId ?? null;
-        t.lastSignalAt = input.lastSignalAt ?? null;
-        t.createdAt = now;
-        t.updatedAt = now;
-      }),
-    );
-    await database.batch(prepared);
-    return prepared;
+
+  // NUL separator, written as an ESCAPE so this file stays plain text (a literal
+  // NUL byte in the source makes git treat it as binary and kills diff/blame).
+  // NUL is the delimiter because it is the one byte that cannot occur in either
+  // half: normalizeTopicText collapses to printable text, and ids are hex-ish.
+  // A printable separator like ':' would let (factId 'a:b', text 'c') collide
+  // with (factId 'a', text 'b:c') — do not "simplify" this.
+  const keyOf = (factId: string | null, normalizedText: string) =>
+    `${factId ?? ''}\x00${normalizedText}`;
+
+  const normalizedInputs = inputs.map((input) => ({
+    input,
+    factId: input.factId ?? null,
+    normalizedText: input.normalizedText ?? normalizeTopicText(input.text),
+  }));
+
+  // One query for every candidate text; filter to live (non-retired) rows.
+  const distinctTexts = [...new Set(normalizedInputs.map((n) => n.normalizedText))];
+  const existingRows = await topicsCollection
+    .query(
+      Q.where('normalized_text', Q.oneOf(distinctTexts)),
+      Q.where('status', Q.notEq('retired')),
+    )
+    .fetch();
+
+  const existingByKey = new Map<string, TopicModel>();
+  for (const row of existingRows) {
+    // Retired rows never block a create (see doc comment). Re-checked here and
+    // not left to the query alone so the rule is explicit at the point it
+    // matters — and so it holds regardless of what the query layer returns.
+    if (row.status === 'retired') continue;
+    const k = keyOf(row.factId ?? null, row.normalizedText);
+    if (!existingByKey.has(k)) existingByKey.set(k, row);
+  }
+
+  // Resolve each input to an existing row, or claim it for creation. A repeated
+  // key WITHIN one batch resolves to the single row this call creates for it.
+  const results: (TopicModel | undefined)[] = new Array(inputs.length);
+  const claimedBy = new Map<string, number>();
+  const toCreate: { index: number; input: CreateTopicInput; normalizedText: string }[] = [];
+
+  normalizedInputs.forEach(({ input, factId, normalizedText }, i) => {
+    const k = keyOf(factId, normalizedText);
+    const existing = existingByKey.get(k);
+    if (existing) {
+      results[i] = existing;
+      return;
+    }
+    if (claimedBy.has(k)) return; // intra-batch duplicate — filled in below
+    claimedBy.set(k, i);
+    toCreate.push({ index: i, input, normalizedText });
   });
+
+  if (toCreate.length > 0) {
+    const created = await database.write(async () => {
+      const now = new Date();
+      const prepared = toCreate.map(({ input, normalizedText }) =>
+        topicsCollection.prepareCreate((t) => {
+          t.factId = input.factId ?? null;
+          t.text = input.text;
+          t.normalizedText = normalizedText;
+          t.weight = input.weight ?? 0;
+          t.status = input.status ?? 'active';
+          t.provenance = input.provenance ?? 'user';
+          t.highPriority = input.highPriority ?? false;
+          t.locationId = input.locationId ?? null;
+          t.lastSignalAt = input.lastSignalAt ?? null;
+          t.createdAt = now;
+          t.updatedAt = now;
+        }),
+      );
+      await database.batch(prepared);
+      return prepared;
+    });
+
+    toCreate.forEach(({ index }, n) => {
+      results[index] = created[n];
+    });
+  }
+
+  // Fill intra-batch duplicates from the row their key's claimant produced.
+  normalizedInputs.forEach(({ factId, normalizedText }, i) => {
+    if (results[i]) return;
+    const claimant = claimedBy.get(keyOf(factId, normalizedText));
+    if (claimant !== undefined) results[i] = results[claimant];
+  });
+
+  return results.filter((r): r is TopicModel => r !== undefined);
 }
 
 /** Returns all topic rows owned by a fact (any status). */
@@ -166,6 +265,77 @@ export async function getWeightsByIds(ids: string[]): Promise<{ id: string; weig
   return rows.map((t) => ({ id: t.id, weight: t.weight }));
 }
 
+/**
+ * Every normalized text currently on the device, ANY fact, ANY status, ANY
+ * provenance — the exclusion set the fact-combination top-up plans against.
+ *
+ * Deliberately global and deliberately including retired and tracked rows:
+ *  - a `tracked` collision would mint a metered row for a text a followed story
+ *    already owns, silently making that story's articles billable again;
+ *  - a `retired` collision would re-append, week after week, exactly what the
+ *    sanity pass just persuaded the user to retire.
+ *
+ * Note this is WIDER than createTopics' own (normalized_text, fact_id) floor,
+ * which must stay per-fact so the hygiene duplicate_facts detector can still see
+ * one text owned by two facts.
+ */
+export async function getAllNormalizedTexts(): Promise<Set<string>> {
+  const rows = await topicsCollection.query().fetch();
+  return new Set(rows.map((t) => t.normalizedText));
+}
+
+/** Active-topic rows projected for the top-up planner (RN-free shape). */
+export interface TopupTopicSnapshot {
+  id: string;
+  factId: string;
+  text: string;
+  createdAtMs: number;
+  isActive: boolean;
+}
+
+/** Fact-owned topic rows (any status) for top-up candidate selection. */
+export async function getTopupTopicSnapshots(): Promise<TopupTopicSnapshot[]> {
+  const rows = await topicsCollection
+    .query(Q.where('fact_id', Q.notEq(null)))
+    .fetch();
+  return rows.map((t) => ({
+    id: t.id,
+    factId: t.factId as string,
+    text: t.text,
+    createdAtMs: t.createdAt instanceof Date ? t.createdAt.getTime() : 0,
+    isActive: t.status === 'active',
+  }));
+}
+
+/**
+ * Append top-up topics to a fact. APPEND-ONLY: no existing row is updated,
+ * re-weighted, retired, or destroyed.
+ *
+ * Seeded at `topupTopicWeight` rather than the full `llmTopicWeight` — these are
+ * speculative combinations the user never asked for, and the seed weight drives
+ * per-topic retrieval depth, so a lower weight costs less quota per appended
+ * topic. Provenance is `llm`: they are ordinary metered interest topics derived
+ * from persona facts, and marking them `tracked` would grant quota-exempt
+ * hydration for articles the user never followed.
+ */
+export async function appendTopupTopicsForFact(
+  factId: string,
+  planned: { text: string; normalizedText: string }[],
+): Promise<TopicModel[]> {
+  if (planned.length === 0) return [];
+  return createTopics(
+    planned.map((p) => ({
+      factId,
+      text: p.text,
+      normalizedText: p.normalizedText,
+      weight: DEFAULT_HARNESS_CONFIG.topicGen.topupTopicWeight,
+      status: 'active' as const,
+      provenance: 'llm' as const,
+      highPriority: false,
+    })),
+  );
+}
+
 /** All topics sharing a normalized text (dedup + cross-fact overlap detection). */
 export async function getAllByNormalizedText(normalizedText: string): Promise<TopicModel[]> {
   return topicsCollection
@@ -207,6 +377,90 @@ async function setStatus(topicId: string, status: TopicStatus): Promise<void> {
 /** Retire a topic (dedup/history only — never retrieved or scored). */
 export async function retire(topicId: string): Promise<void> {
   await setStatus(topicId, 'retired');
+}
+
+export interface ReplaceTopicsResult {
+  /** Rows actually created (after the dedupe floor). */
+  minted: TopicModel[];
+  /** Topic ids actually moved to `retired`. */
+  retired: string[];
+  /** True when the retire was withheld to keep the fact from going dark. */
+  floorHeld: boolean;
+}
+
+/**
+ * Mint replacement topics and retire the bad ones for ONE fact, in a SINGLE
+ * write. The atomic half of the r12 "replace, don't just delete" pass.
+ *
+ * Why one `database.write`/`batch` rather than mint-then-retire: WatermelonDB
+ * commits a batch atomically, so an app killed mid-write yields both or
+ * neither. Sequenced separately, a kill between them leaves a fact that lost
+ * topics and gained nothing — and these rows are derived from the user's own
+ * facts, which no server can rebuild.
+ *
+ * THE FLOOR (`retireIds` is ignored when it would empty the fact): if retiring
+ * everything asked for would leave the fact with ZERO active topics, the retire
+ * is withheld and only the mint lands. A fact going dark stops producing feed
+ * content entirely; keeping a mediocre topic is strictly the lesser harm.
+ * Callers should surface `floorHeld` rather than treat it as success.
+ *
+ * Mints are NOT routed through `createTopics` — this needs the inserts and the
+ * status flips in the same batch — so the caller is responsible for having
+ * deduped `planned` (planTopupTopicRows does it globally).
+ */
+export async function replaceTopicsForFact(
+  factId: string,
+  planned: { text: string; normalizedText: string }[],
+  retireIds: string[],
+): Promise<ReplaceTopicsResult> {
+  const owned = await getByFact(factId);
+  const activeNow = owned.filter((t) => t.status === 'active');
+  const toRetire = owned.filter(
+    (t) => retireIds.includes(t.id) && t.status === 'active',
+  );
+
+  // Would this leave the fact with nothing active? mints land either way.
+  const survivors = activeNow.length - toRetire.length + planned.length;
+  const floorHeld = survivors < 1;
+  const retireRows = floorHeld ? [] : toRetire;
+
+  if (planned.length === 0 && retireRows.length === 0) {
+    return { minted: [], retired: [], floorHeld };
+  }
+
+  const now = new Date();
+  const result = await database.write(async () => {
+    const creates = planned.map((p) =>
+      topicsCollection.prepareCreate((t) => {
+        t.factId = factId;
+        t.text = p.text;
+        t.normalizedText = p.normalizedText;
+        t.weight = DEFAULT_HARNESS_CONFIG.topicGen.topupTopicWeight;
+        t.status = 'active';
+        t.provenance = 'llm';
+        t.highPriority = false;
+        t.locationId = null;
+        t.lastSignalAt = null;
+        t.createdAt = now;
+        t.updatedAt = now;
+      }),
+    );
+    const retires = retireRows.map((r) =>
+      r.prepareUpdate((t) => {
+        t.status = 'retired';
+        t.updatedAt = now;
+      }),
+    );
+    // ONE batch: both or neither.
+    await database.batch([...creates, ...retires]);
+    return creates;
+  });
+
+  return {
+    minted: result,
+    retired: retireRows.map((r) => r.id),
+    floorHeld,
+  };
 }
 
 /** Suppress a topic (hard filter). */

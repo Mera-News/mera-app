@@ -30,14 +30,13 @@
 
 import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
 import { HStack } from '@/components/ui/hstack';
-import { AlertCircleIcon, Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
-import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
+import { useNetworkStore } from '@/lib/stores/network-store';
 import {
     useForYouAsyncJobPhase,
     useForYouDailyLimitResetAt,
@@ -206,22 +205,23 @@ export interface FeedSyncIndicatorProps {
      *  in the expanded detail panel. The Dashboard already computes this for its
      *  header line against a 30s tick; the Feed tab omits it. */
     readonly lastProcessedLabel?: string | null;
-    /** Render the offline row. The Dashboard passes false while a
-     *  non-feed sub-tab (Stories / Saved) is showing — connectivity notices are
-     *  about the feed, not those panes. Defaults to true. */
-    readonly showConnectivityNotices?: boolean;
 }
 
 /**
  * The header sync surface: an indeterminate status bar with an expandable detail
- * accordion (FeedStatusShimmer), plus the offline notice and the re-auth prompt.
+ * accordion (FeedStatusShimmer).
+ *
+ * The inline offline row that used to live here was removed: the global
+ * OfflineBanner (mounted at the root layout) shows the same warning, in the same
+ * style, at the same position, so the two stacked. It also covers /login and
+ * /pin-lock, which this one never could. The `showConnectivityNotices` prop went
+ * with it — its only purpose was hiding that row.
  *
  * Everything except `lastProcessedLabel` is self-subscribed, so mounting it is a
  * one-liner on either screen and the two can't drift.
  */
 const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
     lastProcessedLabel = null,
-    showConnectivityNotices = true,
 }) => {
     const { t } = useTranslation();
 
@@ -234,7 +234,6 @@ const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
     const noisyDiscardedCount = useForYouNoisyDiscardedCount();
     const injectNoiseEnabled = useInjectNoise();
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
-    const isConnected = useIsConnected();
 
     // Evaluated at render rather than off a ticking clock — same trade-off
     // FeedStatusDetails already makes. The limit is sticky enough that the next
@@ -256,19 +255,6 @@ const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
                 injectNoiseEnabled={injectNoiseEnabled}
                 lastProcessedLabel={lastProcessedLabel}
             />
-
-            {showConnectivityNotices && !isConnected && (
-                <HStack
-                    testID="feed-offline-notice"
-                    className="items-center bg-warning-900 rounded-lg px-3 py-2 mt-2"
-                    space="sm"
-                >
-                    <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                    <Text size="sm" className="text-warning-400">
-                        {t('feed.offlineCached')}
-                    </Text>
-                </HStack>
-            )}
         </>
     );
 };

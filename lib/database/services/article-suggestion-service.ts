@@ -854,9 +854,36 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
 
 /**
  * One batched write applying propagated scores (sibling stories inheriting a
- * donor's relevance + reason). Status is ALWAYS Complete — never ReasonPending,
- * or the orphaned-reasons sweep would re-spend the LLM calls this propagation
- * just saved. Mirrors batchMarkAsScoredByIds's prepareUpdate+batch shape.
+ * donor's relevance + reason).
+ *
+ * STATUS IS CONDITIONAL, and the condition is "was a reason actually
+ * propagated?":
+ *   - reason non-empty → `complete`. Terminal, and the orphaned-reasons sweep
+ *     never touches it — which is the entire point: propagation just saved that
+ *     row's LLM reason call, and re-spending it would defeat the mechanism.
+ *   - reason EMPTY     → `reason_pending`, and `reason` is left untouched.
+ *
+ * This was an UNCONDITIONAL `complete`, justified by that same "don't re-spend
+ * the saved LLM calls" argument. The argument only holds when a reason was
+ * actually copied. `getScoredDonorRows` qualifies donors on
+ * `status != unscored ∧ relevance > 0` with NO reason predicate, so a donor
+ * still sitting in `reason_pending` (scored, reason not back yet) is fully
+ * eligible and donates `''`. Stamping `complete` on that copy produced a row
+ * that was VISIBLE (the inherited relevance clears the render gate),
+ * REASON-LESS (so the card fell back to its fact chips), and UNREACHABLE by
+ * `getScoredSuggestionsWithoutReasons`, which selects `reason_pending` ONLY.
+ * That is permanently broken, not transient — the donor later self-corrects via
+ * `saveReason` while the propagated sibling never does. Leaving it
+ * `reason_pending` costs exactly one reason call and hands the row to the
+ * recovery sweep that already exists (`enqueueOrphanedReasons` keeps rows with
+ * `relevance > REASON_RELEVANCE_THRESHOLD`, which an inherited above-gate
+ * relevance satisfies). Do not restore the unconditional write.
+ *
+ * `reason` is deliberately NOT written when empty, so a propagation from a
+ * reason-less donor can never CLEAR a reason the row already had. That keeps
+ * reason-presence monotonic — a card can gain an explanation, never lose one.
+ *
+ * Mirrors batchMarkAsScoredByIds's prepareUpdate+batch shape.
  */
 export async function batchPropagateScores(
   entries: { id: string; relevance: number; reason: string }[],
@@ -875,10 +902,17 @@ export async function batchPropagateScores(
     await database.batch(
       rows.map((row) => {
         const entry = entryById.get(row.id)!;
+        // `?? ''` is defensive only — the type says string, but this value comes
+        // from a donor ROW, and a partially-written row can carry null.
+        const propagatedReason = (entry.reason ?? '').trim();
         return row.prepareUpdate((r) => {
           r.relevance = entry.relevance;
-          r.reason = entry.reason;
-          r.status = ArticleSuggestionStatus.Complete;
+          if (propagatedReason.length > 0) {
+            r.reason = entry.reason;
+            r.status = ArticleSuggestionStatus.Complete;
+          } else {
+            r.status = ArticleSuggestionStatus.ReasonPending;
+          }
         });
       }),
     );

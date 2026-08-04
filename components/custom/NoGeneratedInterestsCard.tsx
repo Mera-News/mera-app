@@ -1,10 +1,8 @@
 import {
     CARDS_USE_GLASS,
     CardGlassPlate,
-    GLASS_CARD_EDGE,
 } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
-import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,31 +36,34 @@ const NoGeneratedInterestsCard: React.FC = () => {
         </Box>
     );
 
-    // Glass, matching AllCaughtUpCard and ArticleCardBase's non-flat branch: the
-    // plate must hang off an UNPADDED, clipping box, so margin + radius + edge
-    // move out here while the `Card` keeps its own padding. The opaque
-    // `bg-black` has to GO rather than sit under the plate — a solid fill
-    // painted over glass cancels it. Off iOS 26 the original opaque card is kept
-    // verbatim, `bg-black border-black` included.
-    return CARDS_USE_GLASS ? (
-        <Box
-            testID="no-interests-card"
-            className={`mb-4 rounded-md overflow-hidden ${GLASS_CARD_EDGE}`}
-        >
-            <CardGlassPlate />
-            <Card variant="elevated" size="md" className="bg-transparent">
+    // Surface copied from ArticleCardBase's FLAT branch — the one the Feed's
+    // article cards actually render through — via AllCaughtUpCard, which is the
+    // reference implementation for every list-level card. This card used to copy
+    // the NON-flat branch, so it read as a different kind of surface: `rounded-md`
+    // against its neighbours' `rounded-2xl`, no shadow, and a `Card` wrapper whose
+    // own `p-4` stacked on top of the content's `py-20 px-6` — 40px of horizontal
+    // padding where 24 was intended.
+    //
+    // Two nested Boxes, and the nesting is load-bearing: RN drops a view's shadow
+    // the moment that same view also sets `overflow: hidden`, so the shadow lives
+    // on the outer, non-clipping Box and the rounded/clipped surface is the inner
+    // one. The plate must hang off an UNPADDED box, and the opaque background has
+    // to GO rather than sit under it — a solid fill painted over glass cancels the
+    // effect entirely. Where glass does not paint, the opaque `bg-background-0`
+    // comes back (NOT the old `bg-black border-black`, which no other card uses).
+    return (
+        <Box testID="no-interests-card" className="mb-4 rounded-2xl shadow-hard-2">
+            <Box
+                className={
+                    CARDS_USE_GLASS
+                        ? 'rounded-2xl overflow-hidden border border-white/10'
+                        : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
+                }
+            >
+                <CardGlassPlate />
                 {innerContent}
-            </Card>
+            </Box>
         </Box>
-    ) : (
-        <Card
-            variant="elevated"
-            size="md"
-            className="mb-4 overflow-hidden bg-black border-black"
-            testID="no-interests-card"
-        >
-            {innerContent}
-        </Card>
     );
 };
 

@@ -82,6 +82,53 @@ export const PERSONA_INPUT_TOKEN_BUDGET = 3072;
  */
 export const PERSONA_TURN_RESERVE_TOKENS = 128;
 
+/**
+ * Hard cap on USER TURNS carried as chat history (see history-window.ts).
+ *
+ * Bounds two things at once: per-turn latency/cost, and how far back a stale
+ * confirmation can reach. The second is load-bearing — an invitation the user
+ * never answered must not still be honourable ten turns later, so an
+ * invocation intent expires on exactly this constant.
+ *
+ * 6 comfortably spans the flow this wave exists to fix (invitation -> question
+ * -> "Yes" -> follow-up) with slack, without letting a conversation from ten
+ * minutes ago steer the current turn.
+ */
+export const MAX_HISTORY_USER_TURNS = 6;
+
+/**
+ * Chat-history token budget for the CLOUD path.
+ *
+ * NOT a correctness limit: the cloud path enforces no input budget of its own
+ * (cloudChatStream posts what it is given, and both BIG_MODEL and its fallback
+ * carry context windows far larger than this). It is a self-imposed
+ * latency/cost cap, so the number is a policy choice rather than a measurement.
+ *
+ * MEASURED 2026-08-03 (estimateTokens over the real builders):
+ *
+ *   CLOUD system prompt, CONFIG, includeToolFormat=false ... 5,972 ch / ~1,493 tok
+ *   CLOUD system prompt, ONBOARDING .......................  4,370 ch / ~1,093 tok
+ *   <context>, 22 maximum-length facts ....................  4,623 ch / ~1,156 tok
+ *   <context>, one typical fact ...........................     81 ch /    ~21 tok
+ *
+ * Worst realistic cloud turn is therefore ~1,493 + ~1,156 + 1,500 + 128 reserve
+ * = ~4.3k input tokens, a small fraction of the smallest context window in the
+ * fallback chain. 1,500 stands.
+ *
+ * The LOCAL path derives its own budget by subtraction against a hard 3,072
+ * ceiling and does NOT use this constant — necessarily, because the same
+ * measurement shows a local CONFIG turn (system prompt WITH the XML tool format,
+ * ~1,769 tok) plus a full 22-fact <context> (~1,156 tok) already leaves only
+ * ~19 tokens. A heavy on-device user gets roughly one turn of history and that
+ * is correct: the alternative is the hard "Context too long" error that the
+ * subtraction exists to make unreachable.
+ */
+export const CLOUD_HISTORY_BUDGET_TOKENS = 1500;
+
+/** Headroom reserved for the user's own message when deriving the LOCAL
+ *  history budget by subtraction. Mirrors PERSONA_TURN_RESERVE_TOKENS. */
+export const HISTORY_RESERVE_TOKENS = 128;
+
 /** Defensive trim on a rendered filter phrase (a pattern is user/LLM text). */
 const FILTER_PATTERN_TRUNC = 60;
 
@@ -598,7 +645,32 @@ export function getPersonaToolDefinitions(
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
   filterTools: FilterToolsVariant = 'full',
 ): ToolDefinition[] {
-  const defs = buildDefs(surface);
+  const defs = buildDefs(surface).map(withStagedCalibrationDescription);
   if (filterTools !== 'off') return defs;
   return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
+}
+
+/**
+ * Restates `runCalibration` as a PROPOSE tool.
+ *
+ * The canonical definition still describes it as "Run the scoring
+ * recalibration…", which was true when the tool executed on the spot. It now
+ * stages a confirmation card that only a user tap can apply, and the
+ * description is what the model actually reads — so it is corrected here rather
+ * than left to imply the model's call is what performs the change.
+ *
+ * Rewritten at this seam (not in the shared prompt builder) because the builder
+ * is shared with another workstream; the behaviour lives entirely on the
+ * persona surface, so the override belongs to the persona surface.
+ */
+function withStagedCalibrationDescription(def: ToolDefinition): ToolDefinition {
+  if (def.function.name !== 'runCalibration') return def;
+  return {
+    ...def,
+    function: {
+      ...def.function,
+      description:
+        'Offer to re-tune relevance scoring. This STAGES a confirmation card for the user to tap — it does NOT recalibrate. Call it when the user asks about recalibrating or accepts the invitation; then tell them the card is ready. Never claim the recalibration has happened.',
+    },
+  };
 }

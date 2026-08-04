@@ -56,11 +56,13 @@ jest.mock('react-native', () => ({
   },
 }));
 
+const mockResetSlowRequests = jest.fn();
 jest.mock('@/lib/stores/network-store', () => ({
   useNetworkStore: {
     subscribe: (...args: any[]) => mockNetworkStoreSubscribe(...args),
     getState: () => mockNetworkState,
   },
+  resetSlowRequests: () => mockResetSlowRequests(),
 }));
 
 jest.mock('@/lib/stores/user-store', () => ({

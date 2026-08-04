@@ -1,31 +1,14 @@
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import NotSubscribedScreen from "@/components/custom/auth/NotSubscribedScreen";
-import { Box } from "@/components/ui/box";
-import { Spinner } from "@/components/ui/spinner";
-import { authClient } from "@/lib/auth-client";
-import { Redirect } from "expo-router";
 
+// No session gate. This route is only ever reached via navigateToPaywall()
+// (lib/nav-state.ts), i.e. after the server has answered a query with a 402 —
+// which already proves a session exists. The old `if (!session) return
+// <Redirect href="/login" />` therefore could not protect anything, but a slow
+// or failed /get-session made it turn the paywall into a login screen.
+//
+// NotSubscribedScreen runs its own useSession and already tolerates its absence
+// (checkServerSubscribed short-circuits when there is no userId), so it degrades
+// to "can't verify yet" rather than ejecting.
 export default function NotSubscribed() {
-    const { data: session, isPending } = authClient.useSession();
-
-    // Show loading screen while checking auth state
-    if (isPending) {
-        return (
-            <Box className="flex-1 justify-center items-center">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-
-                <Spinner size="large" />
-            </Box>
-        );
-    }
-
-    // If no session, redirect to login
-    if (!session) {
-        return <Redirect href="/login" />;
-    }
-
-    // Render the screen component with auto-check logic
     return <NotSubscribedScreen />;
 }

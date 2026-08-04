@@ -1,5 +1,6 @@
 {
   "common": {
+    "offlineBanner": "Slow or no connection to Mera. Showing saved news — we'll keep trying.",
     "home": "Home",
     "yes": "Yes",
     "no": "No",
@@ -103,6 +104,12 @@
   "feed": {
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
+    "divider": {
+      "seenTitle": "That's everything new.",
+      "seenLine": "Open any to read.",
+      "readTitle": "Already read.",
+      "readLine": "Open any to revisit."
+    },
     "preparingFeed": "Mera is preparing your feed.",
     "preparingFeedExploreHint": "Meanwhile, check out the Explore tab for top stories.",
     "noInterests": "Mera cannot analyze news for you",
@@ -214,13 +221,13 @@
   },
   "aiDisclosure": {
     "caption": "AI-generated note",
-    "short": "AI-generated"
+    "short": "AI-generated",
+    "listNote": "Some story headlines here are AI-generated"
   },
   "articleDetail": {
     "readArticle": "Read Article",
-    "viewAndTranslateOnDevice": "View article & translate on device",
-    "viewOriginal": "View original article",
-    "viewOriginalIn": "View original article in {{language}}",
+    "readOn": "Read on {{publication}}",
+    "readOnGoogleTranslate": "Read on Google Translate",
     "relatedArticles": "Related Articles",
     "articleUnavailable": "This article is no longer available",
     "storyUnavailable": "This story is no longer available",
@@ -368,13 +375,11 @@
     "dailyLimitBody": "You've reached today's article limit. It resets soon."
   },
   "clusterDetail": {
-    "translatable": "This article is in {{language}}: your device can translate it while you read. If translation doesn't work, you can open the site in Google Translate below; just note you'll be browsing it through Google.",
-    "notTranslatable": "This article is in {{language}}. Your device can't translate it: use Google Translate below to read it in your language.",
-    "notTranslatableOsOutdated": "This article is in {{language}}. On-device translation needs iOS {{requiredVersion}}: you're on iOS {{currentVersion}}. Update iOS, or use Google Translate below to read it in your language.",
+    "translatable": "This article is in {{language}}: your device can translate it while you read. If translation doesn't work, you can open the site in Google Translate; just note you'll be browsing it through Google.",
+    "notTranslatable": "This article is in {{language}}. Your device can't translate it — use Google Translate to read it in your language.",
+    "notTranslatableOsOutdated": "This article is in {{language}}. On-device translation needs iOS {{requiredVersion}}: you're on iOS {{currentVersion}}. Update iOS, or use Google Translate to read it in your language.",
     "unknownLanguage": "another language",
     "translationGuideLink": "Show me how to translate the article",
-    "viewInGoogleTranslate": "View in Google Translate",
-    "readViaGoogleTranslate": "Read in your language (Google Translate)",
     "showOriginal": "Show original",
     "showTranslation": "Show translation"
   },
@@ -439,7 +444,6 @@
     "title": "Language",
     "appLanguage": "App Language",
     "appLanguageDescription": "Used for the app interface and translating news content",
-    "languagePacks": "Language Packs",
     "languagePacksIos": "Translation models are managed by your device. You only need to download the model for your selected language; iOS handles the rest.",
     "languagePacksIosPath": "Settings → General → Language & Region → Translation Languages",
     "languagePacksAndroid": "Translation models (~30MB each) are downloaded automatically when you first translate to a new language.",
@@ -453,8 +457,28 @@
     "packMissingIosPath": "Settings → General → Language & Region",
     "retry": "Retry",
     "watchGuide": "Watch how to add language to your device",
-    "iosLanguageHint": "Only selecting this language is not enough: you'll need to also select this language in the iOS language settings.",
-    "managePacksPrefix": "To manage downloaded languages, go to"
+    "googleTranslateAlways": "You can read any article in any language with \"Read on Google Translate\" on the article page — that always works, with nothing to download.",
+    "onDeviceTranslationHint": "If you'd rather your device did the translating, make sure your language is available in your iOS settings; the video below shows how to enable it.",
+    "advanced": "Advanced",
+    "advancedDescription": "On-device translation. Optional — everything above works without it.",
+    "managePacksPrefix": "To manage downloaded languages, go to",
+    "translationUnavailableTitle": "Translation unavailable",
+    "translationUnavailableTapToRetry": "The {{language}} language pack may still be downloading, or the download may have failed. Showing English for now — tap to try again.",
+    "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}. Showing English instead — updating iOS will enable it.",
+    "downloadHintBeforePrefix": "After you pick a language, iOS may ask you to download it. Tap the",
+    "downloadHintBeforeSuffix": "next to each language in that sheet — nothing downloads until you do.",
+    "downloadHintNowPrefix": "Tap the",
+    "downloadHintNowSuffix": "next to each language in the sheet below to start the download.",
+    "switchingTitle": "Setting up {{language}}…",
+    "switchingNudge": "Your device is preparing the {{language}} translation pack. Please keep this screen open until it finishes — if you leave now, news articles will stay in English.",
+    "switchingCancel": "Stop switching language",
+    "switchFailedTitle": "Couldn't switch to {{language}}",
+    "switchFailedBody": "The {{language}} translation pack couldn't be prepared, so you're still using {{previous}}. It may still be downloading — try again in a moment.",
+    "switchTimedOutBody": "Preparing {{language}} is taking too long, so you're still using {{previous}}. The download may finish in the background — try again shortly.",
+    "switchUnsupportedBody": "This version of iOS can't translate into {{language}}, so you're still using {{previous}}.",
+    "switchDeviceUnsupportedBody": "This device can't translate news articles into any language, so the app is using English. {{language}} would leave articles untranslated.",
+    "translationUnavailableOnThisDevice": "This device can't translate news articles into {{language}}. Showing English instead.",
+    "translationFailedTooltip": "Translation failed, please reopen the app or check your settings"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -847,6 +871,10 @@
   },
   "observability": {
     "title": "Observability",
+    "noteTitle": "Your data, on your device",
+    "noteBody": "This screen reads Mera's on-device database directly — the data that builds your feed, shown here for visibility and for debugging. Mera's servers don't store your facts, your reading history, or the suggestions built from them.",
+    "noteExceptions": "Two exceptions: your account profile (sign-in, notifications, language) is synced to your Mera account, and when cloud AI is switched on, your facts are encrypted on this device before being sent for scoring.",
+    "noteFooter": "Values here are raw and diagnostic. Feed rows clear themselves after 48 hours; you can delete your facts, feed cache and viewing history from Manage Data.",
     "articles": "Articles",
     "relevant": "Relevant",
     "unscored": "Unscored",
@@ -953,7 +981,8 @@
     "successTitle": "Recalibrated",
     "successBody": "I tuned my ranking to better match your taste.",
     "noChangeBody": "Your ranking already looks well-tuned: no changes needed.",
-    "failedBody": "I couldn't finish recalibrating just now. I'll try again later."
+    "failedBody": "I couldn't finish recalibrating just now. I'll try again later.",
+    "actionRecalibrate": "Re-tune relevance scoring"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "More about: {{topic}}",
@@ -978,7 +1007,8 @@
     "paywallRelatedOption": "Show related coverage",
     "paywallRelatedDesc": "A similar story from another publication may not be paywalled — check the related articles.",
     "paywallSubscribeDesc": "You've visited {{publication}} {{visits}} times this month — consider subscribing for full access.",
-    "paywallBlockOption": "Block {{publication}} instead"
+    "paywallBlockOption": "Block {{publication}} instead",
+    "tooMuchOfThis": "I'm seeing too much of this"
   },
   "topicPlan": {
     "title": "Topics I'll track",
@@ -1030,6 +1060,7 @@
     "effectTooBroad": "Lowers this interest's weight so it pulls in fewer off-topic stories.",
     "effectStaleTopic": "Retires this quiet topic. You can restore it from the change log.",
     "effectStaleFact": "Removes this fact; none of its topics are active anymore.",
+    "effectIncoherentTopics": "Replaces these topics with better ones for this interest. The old ones are reversible from the change log.",
     "appliedTitle": "Cleanup applied",
     "appliedBody": "Your profile was tidied up. See the change log to review.",
     "applyFailedTitle": "Couldn't apply cleanup",

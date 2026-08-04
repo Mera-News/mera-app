@@ -45,6 +45,8 @@ function iconForKind(kind: HygieneProposalKind): GlyphName {
             return 'history-toggle-off';
         case 'stale_fact':
             return 'delete-sweep';
+        case 'incoherent_topics':
+            return 'wrong-location';
         default:
             return 'cleaning-services';
     }
@@ -68,6 +70,11 @@ function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
         case 'stale_fact':
             return t('hygiene.effectStaleFact', {
                 defaultValue: 'Removes this fact — none of its topics are active anymore.',
+            });
+        case 'incoherent_topics':
+            return t('hygiene.effectIncoherentTopics', {
+                defaultValue:
+                    'Replaces these topics with better ones for this interest. The old ones are reversible from the change log.',
             });
         default:
             return '';

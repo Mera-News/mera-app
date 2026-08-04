@@ -220,6 +220,62 @@ export async function getVisitsForPublication(
   }
 }
 
+/**
+ * The most recent visit row for one article id, or null.
+ *
+ * Exists so the article-detail screen can still render a story whose server row
+ * has TTL'd out. Server articles are deleted after 48h (`v3_ingestedAt_ttl`),
+ * while the visit log keeps 30 days — so most rows in the per-publication
+ * history point at an article `articleById` no longer returns. Every surface now
+ * routes through the detail screen (it owns the translate affordance), and a
+ * detail screen that dead-ends on "article unavailable" would be worse than the
+ * direct-open it replaced. These snapshot columns carry exactly what that screen
+ * needs: title (both variants), source language, image, publisher and the URL.
+ */
+export async function getVisitedArticleById(
+  articleId: string,
+): Promise<VisitedArticle | null> {
+  const id = articleId.trim();
+  if (!id) return null;
+
+  try {
+    const rows = await publicationVisitsCol.query(Q.where('article_id', id)).fetch();
+    if (rows.length === 0) return null;
+
+    const toMs = (v: Date | number | null | undefined): number | null => {
+      if (v == null) return null;
+      return v instanceof Date ? v.getTime() : Number(v);
+    };
+
+    // Freshest visit wins — later rows carry the most complete snapshot (early
+    // v22 rows pre-date the snapshot columns entirely).
+    const row = rows.reduce((best, candidate) =>
+      (toMs(candidate.visitedAt) ?? 0) > (toMs(best.visitedAt) ?? 0) ? candidate : best,
+    );
+
+    return {
+      articleId: row.articleId,
+      articleSuggestionId: row.articleSuggestionId,
+      articleUrl: row.articleUrl,
+      publicationName: row.publicationName,
+      countryCode: row.countryCode,
+      titleEn: row.titleEn,
+      titleOriginal: row.titleOriginal,
+      languageCode: row.languageCode,
+      imageUrl: row.imageUrl,
+      pubDate: toMs(row.pubDate),
+      visitedAt: toMs(row.visitedAt) ?? 0,
+      visitCount: rows.length,
+    };
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'publication-visit', method: 'getVisitedArticleById' },
+      extra: { articleId },
+    });
+    return null;
+  }
+}
+
 export interface VisitedPublication {
   publicationName: string;
   countryCode: string | null;

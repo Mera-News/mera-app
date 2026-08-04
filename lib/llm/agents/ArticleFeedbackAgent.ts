@@ -239,6 +239,34 @@ export class ArticleFeedbackAgent implements IAgent {
     return getArticleFeedbackToolDefinitions();
   }
 
+  /**
+   * NO forced-extraction pass on this surface — returns empty, which the cloud
+   * hook reads as "skip the pass entirely".
+   *
+   * The forced pass exists for ONE reason: PersonaUpdateAgent's prompt makes
+   * `saveExtractedFacts` mandatory every turn ("ALWAYS at least
+   * saveExtractedFacts, empty array if nothing new") and the model sometimes
+   * skips it. THIS agent has no mandatory tool — every tool it exposes is a
+   * propose/confirm action that must fire only on real user intent — so there
+   * is nothing here for a repair pass to repair.
+   *
+   * Running it anyway is actively harmful, because tool_choice:'required'
+   * forces one of the four to be called and executed:
+   *   - proposeChanges / proposeTrack -> stages a confirm card the user never
+   *     asked for (sideEffects.proposal -> setProposal);
+   *   - applyProposal -> runs executeProposalActions, mutating the persona and
+   *     writing change-log rows WITHOUT the user confirming;
+   *   - cancelProposal -> silently discards a proposal the user was about to
+   *     accept.
+   *
+   * Suppressing the pass whenever a proposal is already pending is NOT enough
+   * on its own: with no proposal in flight, a forced proposeChanges/proposeTrack
+   * still invents one. Only an empty payload closes it.
+   */
+  getForcedExtractionTools(): ToolDefinition[] {
+    return [];
+  }
+
   // --- IAgent: tool execution ---
 
   async executeTool(name: string, input: unknown): Promise<ToolExecutionResult> {

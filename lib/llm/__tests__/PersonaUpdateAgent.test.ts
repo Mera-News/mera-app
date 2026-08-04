@@ -97,7 +97,7 @@ jest.mock('../../translation-service', () => ({
   ],
 }));
 
-import { PersonaUpdateAgent, MAX_HISTORY_MESSAGES } from '../agents/PersonaUpdateAgent';
+import { PersonaUpdateAgent } from '../agents/PersonaUpdateAgent';
 
 function makeAgent(surface: 'ONBOARDING' | 'CONFIG' = 'ONBOARDING') {
   return new PersonaUpdateAgent('user-123', surface);
@@ -112,7 +112,15 @@ describe('PersonaUpdateAgent', () => {
     });
     mockBuildPersonaUpdateStaticPrompt.mockReturnValue('static-prompt');
     mockBuildPersonaUpdateContext.mockReturnValue('context-string');
-    mockBuildToolDefinitions.mockReturnValue([{ type: 'function', function: { name: 'saveFacts' } }]);
+    // Real tool names — executeTool normalises misspellings against THIS list,
+    // so a fictional name here would make that repair untestable.
+    mockBuildToolDefinitions.mockReturnValue([
+      { type: 'function', function: { name: 'saveExtractedFacts' } },
+      { type: 'function', function: { name: 'updateUserConfig' } },
+      { type: 'function', function: { name: 'deleteUserFacts' } },
+      { type: 'function', function: { name: 'issueWarning' } },
+      { type: 'function', function: { name: 'runCalibration' } },
+    ]);
     mockGetFacts.mockResolvedValue([]);
     // not-interested P4a defaults — no filters, no pending proposal, so every
     // pre-existing expectation observes the same call args as before.
@@ -340,117 +348,7 @@ describe('PersonaUpdateAgent', () => {
       const tools = agent.getToolDefinitions();
 
       expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG');
-      expect(tools).toEqual([{ type: 'function', function: { name: 'saveFacts' } }]);
-    });
-  });
-
-  describe('formatMessages', () => {
-    it('returns messages sliced to MAX_HISTORY_MESSAGES', () => {
-      const agent = makeAgent();
-      const msgs = Array.from({ length: 20 }, (_, i) => ({
-        id: `m${i}`,
-        role: (i % 2 === 0 ? 'user' : 'assistant') as 'user' | 'assistant',
-        content: `msg ${i}`,
-      }));
-
-      const result = agent.formatMessages(msgs);
-      // Should have at most MAX_HISTORY_MESSAGES + possible prepended user
-      expect(result.length).toBeLessThanOrEqual(MAX_HISTORY_MESSAGES + 1);
-    });
-
-    it('ensures result starts with a user turn', () => {
-      const agent = makeAgent();
-      // Messages where last MAX_HISTORY_MESSAGES might start with assistant
-      const msgs = [
-        { id: 'u1', role: 'user' as const, content: 'hello' },
-        { id: 'a1', role: 'assistant' as const, content: 'hi', toolCalls: [] },
-        { id: 'a2', role: 'assistant' as const, content: 'follow-up', toolCalls: [] },
-      ];
-
-      const result = agent.formatMessages(msgs);
-      expect(result[0].role).toBe('user');
-    });
-
-    it('prepends last user message when slice starts with assistant (lines 161-162)', () => {
-      const agent = makeAgent();
-      // Fill history so the last MAX_HISTORY_MESSAGES slice starts with an assistant turn
-      const msgs = [
-        { id: 'u0', role: 'user' as const, content: 'first user msg' },
-        ...Array.from({ length: MAX_HISTORY_MESSAGES }, (_, i) => ({
-          id: `a${i}`,
-          role: 'assistant' as const,
-          content: `assistant ${i}`,
-        })),
-      ];
-
-      const result = agent.formatMessages(msgs);
-      // First element should be a user turn (prepended from original messages)
-      expect(result[0].role).toBe('user');
-      expect((result[0] as { content: string }).content).toBe('first user msg');
-    });
-
-    it('does not prepend when no user message exists at all', () => {
-      const agent = makeAgent();
-      // Only assistant messages — no user message to prepend
-      const msgs = [
-        { id: 'a1', role: 'assistant' as const, content: 'hi' },
-      ];
-
-      // Should not throw — lastUser is undefined, limited stays as-is
-      expect(() => agent.formatMessages(msgs)).not.toThrow();
-    });
-
-    it('appends tool results as tool messages after assistant', () => {
-      const agent = makeAgent();
-      const msgs = [
-        {
-          id: 'u1',
-          role: 'user' as const,
-          content: 'save my fact',
-        },
-        {
-          id: 'a1',
-          role: 'assistant' as const,
-          content: 'done',
-          toolCalls: [
-            {
-              id: 'tc1',
-              name: 'saveExtractedFacts',
-              input: { facts: [] },
-              result: { saved: true },
-              status: 'done' as const,
-            },
-          ],
-        },
-      ];
-
-      const result = agent.formatMessages(msgs);
-      expect(result).toHaveLength(3); // user + assistant + tool
-      expect(result[2].role).toBe('tool');
-    });
-
-    it('does NOT append tool messages when result is undefined', () => {
-      const agent = makeAgent();
-      const msgs = [
-        { id: 'u1', role: 'user' as const, content: 'hi' },
-        {
-          id: 'a1',
-          role: 'assistant' as const,
-          content: 'ok',
-          toolCalls: [
-            {
-              id: 'tc1',
-              name: 'saveFacts',
-              input: {},
-              result: undefined,
-              status: 'pending' as const,
-            },
-          ],
-        },
-      ];
-
-      const result = agent.formatMessages(msgs);
-      expect(result.filter((m) => m.role === 'tool')).toHaveLength(0);
+      expect(tools.map((t) => t.function.name)).toContain('saveExtractedFacts');
     });
   });
 
@@ -520,33 +418,51 @@ describe('PersonaUpdateAgent', () => {
       });
     });
 
-    describe('runCalibration', () => {
-      it('calls calibrationService.runCalibration and returns outcome + a human summary (applied)', async () => {
-        mockRunCalibration.mockResolvedValue({ status: 'applied', applied: { W_TOPIC: 0.1 } });
+    describe('runCalibration (stages, never executes)', () => {
+      // Consent moved from the model's reading of a message to a UI tap.
+      // Measured 2026-08-03 against the real gateway: with the invitation in
+      // history, a bare "thanks!" produced this call 20/20 times, and an
+      // explicit "confirmation only" <context> block did not change that.
+      it('stages a run_calibration proposal instead of recalibrating', async () => {
         const agent = makeAgent();
         const result = await agent.executeTool('runCalibration', {});
 
-        expect(mockRunCalibration).toHaveBeenCalled();
-        expect(result.result).toMatchObject({
-          status: 'applied',
-          summary: expect.stringContaining('applied'),
+        expect(mockRunCalibration).not.toHaveBeenCalled();
+        expect(result.result).toMatchObject({ staged: true });
+        expect(result.sideEffects?.proposal?.actions).toEqual([{ type: 'run_calibration' }]);
+      });
+
+      it('refuses to apply its own proposal — only a tap can', async () => {
+        mockFloatingChatGetState.mockReturnValue({
+          proposal: { id: 'p-1', explanation: 'e', expectedEffects: 'x', actions: [{ type: 'run_calibration' }] },
         });
+        const agent = makeAgent();
+        const result = await agent.executeTool('applyProposal', {});
+
+        // The second half of the guarantee: staging would be pointless if the
+        // model could then decide the user said yes and apply it.
+        expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+        expect(mockRunCalibration).not.toHaveBeenCalled();
+        expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+        // The card must survive so the user can still tap it.
+        expect(result.sideEffects?.proposalResolved).toBeUndefined();
       });
 
-      it('surfaces a no_change summary', async () => {
-        mockRunCalibration.mockResolvedValue({ status: 'no_change' });
+      it('still applies the OTHER actions in a mixed proposal', async () => {
+        mockFloatingChatGetState.mockReturnValue({
+          proposal: {
+            id: 'p-2', explanation: 'e', expectedEffects: 'x',
+            actions: [{ type: 'run_calibration' }, { type: 'add_suppression', suppressionPattern: 'gossip' }],
+          },
+        });
         const agent = makeAgent();
-        const result = await agent.executeTool('runCalibration', {});
-        expect(result.result).toMatchObject({ status: 'no_change' });
-        expect(String(result.result.summary)).toMatch(/no changes/i);
-      });
+        const result = await agent.executeTool('applyProposal', {});
 
-      it('surfaces a failed summary', async () => {
-        mockRunCalibration.mockResolvedValue({ status: 'failed' });
-        const agent = makeAgent();
-        const result = await agent.executeTool('runCalibration', {});
-        expect(result.result).toMatchObject({ status: 'failed' });
-        expect(String(result.result.summary)).toMatch(/could not/i);
+        expect(mockExecuteProposalActions).toHaveBeenCalledWith([
+          { type: 'add_suppression', suppressionPattern: 'gossip' },
+        ]);
+        expect(result.result).toMatchObject({ awaitingUserConfirmation: true });
+        expect(result.sideEffects?.proposalResolved).toBeUndefined();
       });
     });
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { getLocales } from 'expo-localization';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { clearTranslationFailuresFor, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { applyLanguage } from '@/lib/i18n';
 
 const APP_LANGUAGE_KEY = 'app_language';
@@ -72,6 +72,13 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         // Full invalidation: replace the Map/Set references (a language switch
         // means every cached translation is now stale).
         set({ appLanguage: normalized, cache: new Map(), pending: new Set() });
+        // Picking a language is a deliberate user action — give the new one a
+        // clean slate. Scoped to the language being ADOPTED, not the whole
+        // map: the language being left keeps its breaker state, so a failed
+        // switch that reverts here lands the user back exactly where they
+        // were, rather than silently re-arming a language already known to be
+        // broken.
+        clearTranslationFailuresFor(normalized);
         applyLanguage(normalized);
         await setSetting(APP_LANGUAGE_KEY, normalized);
 
@@ -117,6 +124,12 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         if (stored && stored !== normalized) {
             await setSetting(APP_LANGUAGE_KEY, normalized);
         }
+
+        // NO native call here. Re-verifying the saved language is deliberately
+        // NOT done during boot hydration — see the once-per-launch probe in
+        // components/custom/TranslationUnavailablePrompt.tsx, which waits for
+        // the app to be mounted and idle first, because that call can present
+        // Apple's system sheet.
     },
 }));
 

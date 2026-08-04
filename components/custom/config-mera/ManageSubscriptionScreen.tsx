@@ -277,7 +277,11 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             </Box>
                             <VStack className="ml-3 flex-1">
                                 <Text size="xs" className="text-gray-500">{t('subscription.planLabel')}</Text>
-                                <Text className="text-white font-bold text-2xl leading-8">
+                                {/* No `leading-8`: this renders a TRANSLATED plan
+                                    name, and 32px on 24px type (1.33) sliced the
+                                    top off Devanagari/Thai marks. `text-2xl` now
+                                    carries a script-safe 36px line box. */}
+                                <Text className="text-white font-bold text-2xl">
                                     {isPaid ? planName(effectiveTier) : t('subscription.freePlan')}
                                 </Text>
                             </VStack>

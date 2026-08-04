@@ -35,7 +35,27 @@ jest.mock('@expo/vector-icons', () => {
 jest.mock('@/components/custom/SourceFlag', () => ({ SourceFlag: () => null }));
 jest.mock('@/components/custom/SourceCountryFlag', () => ({ SourceCountryFlag: () => null }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguage: () => 'en' }));
-jest.mock('@/lib/translation-service', () => ({ getArticleTranslatableStatus: () => 'translatable' }));
+jest.mock('@/lib/translation-service', () => ({
+  getArticleTranslatableStatus: () => 'translatable',
+  useTranslationBlocked: () => null,
+}));
+jest.mock('@/components/ui/pressable', () => {
+  const { Pressable } = require('react-native');
+  return { Pressable };
+});
+// The failed-translation affordance uses the gluestack Tooltip, which pulls in
+// @legendapp/motion and, through it, RN's Animated internals — more than these
+// suites mount react-native for. The tooltip's own behaviour is not what is
+// under test here.
+jest.mock('@/components/ui/tooltip', () => {
+  const { View, Text } = require('react-native');
+  return {
+    Tooltip: ({ trigger }: any) => trigger({}),
+    TooltipContent: (p: any) => <View {...p} />,
+    TooltipText: (p: any) => <Text {...p} />,
+  };
+});
+
 jest.mock('@/lib/language-names', () => ({ getLocalizedLanguageName: () => 'German' }));
 // NOTE: '@/lib/utils/time-ago' and '@/lib/time-tick' are deliberately NOT mocked.
 

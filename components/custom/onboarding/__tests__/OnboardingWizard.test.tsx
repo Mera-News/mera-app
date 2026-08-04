@@ -3,7 +3,7 @@
 // (wizard is now 2 steps: 0 = Notifications, 1 = PersonaChat):
 //   - step 1 renders the inline PersonaUpdateChatStep (not PersonaL1MeraProtocol)
 //   - the floating ScreenChatBubble is no longer mounted anywhere in the wizard
-import { render, waitFor } from '@testing-library/react-native';
+import { act, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration and asserts nothing here,
@@ -101,6 +101,12 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
     useFloatingChatStore: { getState: () => ({ collapse: mockCollapse, setSuppressed: mockSetSuppressed }) },
 }));
 
+let mockOnline = true;
+jest.mock('@/lib/stores/network-store', () => ({
+    isOnline: () => mockOnline,
+    useIsOnline: () => mockOnline,
+}));
+
 let mockStep = 0;
 // Stable action mocks (not re-created per render) so the resume tests below can
 // assert what the mount effect did with the server stage.
@@ -127,6 +133,7 @@ import OnboardingWizard from '../OnboardingWizard';
 beforeEach(() => {
     jest.clearAllMocks();
     mockStep = 0;
+    mockOnline = true;
     (AccountService.getUserPersona as jest.Mock).mockResolvedValue(null);
 });
 
@@ -212,4 +219,93 @@ describe('OnboardingWizard resume step from the server stage', () => {
 
         expect(mockSetStep).toHaveBeenCalledWith(0);
     });
+});
+
+// ---------------------------------------------------------------------------
+// Offline safety
+// ---------------------------------------------------------------------------
+// The wizard raises a "connection issue" modal whenever a request fails, and
+// that modal's PRIMARY, action="negative" button calls handleServerErrorLogout
+// → clearAuthStorage(). So a plain network blip during onboarding was putting
+// "destroy your credentials" under the user's thumb as the headline remedy.
+describe('OnboardingWizard offline safety', () => {
+    const pressNext = async (utils: ReturnType<typeof render>) => {
+        const navBar = utils.getByTestId('onboarding-nav-bar');
+        await act(async () => {
+            await navBar.props.onSkip();
+        });
+    };
+
+    it('does not fire ANY server mutation while offline', async () => {
+        // The guard is at the top of handleNext, not in its catch: otherwise
+        // three unbounded fetches still go out against a server we already know
+        // we cannot reach, with no busy state and a re-tappable Next button.
+        mockOnline = false;
+        const utils = render(<OnboardingWizard userId="u1" onComplete={jest.fn()} />);
+        await pressNext(utils);
+
+        expect(AccountService.updateNotificationPreferences).not.toHaveBeenCalled();
+        expect(AccountService.advanceOnboardingStage).not.toHaveBeenCalled();
+        const { ensurePushTokenRegistered } = require('@/lib/notification-service');
+        expect(ensurePushTokenRegistered).not.toHaveBeenCalled();
+    });
+
+    it('offers NO logout button while offline — only a non-destructive dismiss', async () => {
+        mockOnline = false;
+        const utils = render(<OnboardingWizard userId="u1" onComplete={jest.fn()} />);
+        await pressNext(utils);
+
+        expect(utils.queryByTestId('onboarding-server-error-logout')).toBeNull();
+    });
+
+    it('never reaches clearAuthStorage from an offline Next', async () => {
+        mockOnline = false;
+        const utils = render(<OnboardingWizard userId="u1" onComplete={jest.fn()} />);
+        await pressNext(utils);
+
+        const { clearAuthStorage } = require('@/lib/auth-client');
+        expect(clearAuthStorage).not.toHaveBeenCalled();
+    });
+
+    it('keeps the logout escape hatch when the server genuinely rejected us', async () => {
+        // Online + a real failure is a different situation: the session may
+        // actually be broken, and logging out is a legitimate way out.
+        mockOnline = true;
+        (AccountService.advanceOnboardingStage as jest.Mock).mockRejectedValueOnce(
+            new Error('403'),
+        );
+        const utils = render(<OnboardingWizard userId="u1" onComplete={jest.fn()} />);
+        await pressNext(utils);
+
+        await waitFor(() =>
+            expect(utils.queryByTestId('onboarding-server-error-logout')).toBeTruthy(),
+        );
+    });
+
+    it('seeds the owner from the prop so the persona step works offline', async () => {
+        // Previously the id was set only inside the getSession success branch,
+        // so offline it was never set and step 1 got userId={undefined}.
+        mockOnline = false;
+        render(<OnboardingWizard userId="local-owner" onComplete={jest.fn()} />);
+
+        await waitFor(() =>
+            expect(mockUpdatePreferences).toHaveBeenCalledWith('userId', 'local-owner'),
+        );
+    });
+
+    it('clears the init spinner even when the session lookup never answers', async () => {
+        // authClient uses better-auth's transport, NOT Apollo's HttpLink, so the
+        // slow/abort thresholds in lib/apollo-fetch.ts do not bound it. Without
+        // its own race, a hanging server pins "Loading…" forever.
+        const { authClient } = require('@/lib/auth-client');
+        (authClient.getSession as jest.Mock).mockImplementationOnce(
+            () => new Promise(() => {}),
+        );
+        render(<OnboardingWizard userId="u1" onComplete={jest.fn()} />);
+
+        await waitFor(
+            () => expect(mockSetIsInitializing).toHaveBeenCalledWith(false),
+            { timeout: 6000 },
+        );
+    }, 10000);
 });

@@ -40,6 +40,8 @@ jest.mock('@/lib/translation-service', () => ({
         { code: 'zh-Hant', name: 'Chinese (Traditional)', native: '繁體中文' },
         { code: 'pt', name: 'Portuguese', native: 'Português' },
     ],
+    clearTranslationFailures: jest.fn(),
+    clearTranslationFailuresFor: jest.fn(),
 }));
 
 import { act, renderHook } from '@testing-library/react-native';

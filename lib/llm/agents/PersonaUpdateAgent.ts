@@ -9,7 +9,6 @@ import {
   handleUpdateUserConfig,
 } from '../../chat-tools/tool-handlers';
 import { getFacts } from '../../database/services/fact-service';
-import { runCalibration } from '../../database/services/calibration-service';
 import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
@@ -32,20 +31,14 @@ import {
   type PersonaPromptPlan,
 } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { estimateTokens } from '../tokens';
+import { normalizeToolName } from '@/lib/news-harness/persona-management/tool-names';
 import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
-  ConversationMessage,
   IAgent,
+  StagedProposal,
   ToolDefinition,
   ToolExecutionResult,
 } from '../types';
-
-// Local copy — ProviderMessage removed from shared types.ts (engine-only concern, deleted in Phase 5)
-type ProviderMessage =
-  | { role: 'user' | 'assistant'; content: string }
-  | { role: 'tool'; toolCallId: string; toolName: string; input: unknown; result: unknown };
-
-export const MAX_HISTORY_MESSAGES = 8; // wire history now includes tool_call/tool_result entries; allow more turns
 
 export class PersonaUpdateAgent implements IAgent {
   readonly id: string;
@@ -137,6 +130,22 @@ export class PersonaUpdateAgent implements IAgent {
    *
    * ONBOARDING short-circuits: it never carries the filter tools, so every
    * variant renders the same prompt and there is nothing to yield.
+   *
+   * ── planTurn does NOT measure conversation history, and must not start ──
+   *
+   * The tempting inference — "widening the chat history window will push turns
+   * over this budget and evict the tools" — is FALSE, and was verified false
+   * before the history window was widened. planPersonaPrompt's only inputs are
+   * the system prompt, the known-facts block, and the filters block (see its
+   * signature); wire history is not among them and never reaches it. Widening
+   * history therefore cannot move `filterTools` toward `off` and cannot strip
+   * tools from the cloud payload.
+   *
+   * Do not "fix" this by adding history tokens to baseContextTokens. It would
+   * couple the two, and the visible effect would be the ladder dropping the
+   * user's own FILTERS block partway through a long conversation — a product
+   * change, not a safety guard. History is budgeted separately and yields
+   * BEFORE this ladder does; see lib/news-harness/persona-management/history-window.ts.
    */
   private async planTurn(params: {
     buildAt: (v: PersonaPromptPlan['filterTools']) => string;
@@ -247,40 +256,26 @@ export class PersonaUpdateAgent implements IAgent {
     return getPersonaToolDefinitions(this.surface, buildToolDefinitions, this.turnPlan.filterTools);
   }
 
-  // --- IAgent: message formatting ---
-
-  formatMessages(messages: ConversationMessage[]): ProviderMessage[] {
-    // Slice to limit history, but guarantee the result starts with a user message.
-    // During re-inference loops (cloud tool-call loop) the naive slice drops the user
-    // message once convoBuf grows beyond MAX_HISTORY_MESSAGES — LLM APIs require the
-    // first message to be a user turn.
-    let limited = messages.slice(-MAX_HISTORY_MESSAGES);
-    if (limited[0]?.role !== 'user') {
-      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-      if (lastUser) limited = [lastUser, ...limited];
-    }
-    const result: ProviderMessage[] = [];
-
-    for (const msg of limited) {
-      result.push({ role: msg.role, content: msg.content });
-
-      // Append tool results as separate tool messages (must come after assistant text)
-      if (msg.role === 'assistant' && msg.toolCalls) {
-        for (const tc of msg.toolCalls) {
-          if (tc.result !== undefined) {
-            result.push({
-              role: 'tool',
-              toolCallId: tc.id,
-              toolName: tc.name,
-              input: tc.input,
-              result: tc.result,
-            });
-          }
-        }
-      }
-    }
-
-    return result;
+  /**
+   * Forced-extraction payload: `saveExtractedFacts` and NOTHING ELSE.
+   *
+   * The forced pass runs with tool_choice:'required', so every tool listed here
+   * can be called on a turn the user never asked anything of ("hi", "thanks").
+   * `saveExtractedFacts` is the only persona tool that is safe under that
+   * pressure: with no facts to extract the model emits an empty array and
+   * `handleSaveExtractedFacts` returns { factsSaved: 0 } without touching the
+   * database (lib/chat-tools/tool-handlers.ts).
+   *
+   * Everything else is deliberately excluded. `deleteUserFacts` is destructive;
+   * `runCalibration` takes NO arguments, which makes it the cheapest possible
+   * way for a model to satisfy 'required' — forcing it would fabricate exactly
+   * the confirmation the calibration flow exists to require; and the proposal
+   * tools stage or apply changes.
+   */
+  getForcedExtractionTools(): ToolDefinition[] {
+    return this.getToolDefinitions().filter(
+      (d) => d.function.name === 'saveExtractedFacts',
+    );
   }
 
   // --- IAgent: tool execution ---
@@ -291,8 +286,11 @@ export class PersonaUpdateAgent implements IAgent {
   ): Promise<ToolExecutionResult> {
     const args = (input as Record<string, unknown>) ?? {};
 
-    // Normalize common LLM misspellings of tool names
-    const normalizedName = name === 'saveExtractedsFacts' ? 'saveExtractedFacts' : name;
+    // Normalize LLM misspellings against the REAL tool list rather than a
+    // single hardcoded typo — casing, separators, and small edit distances all
+    // resolve; genuine unknowns still fall to `default:` below.
+    const normalizedName =
+      normalizeToolName(name, this.getToolDefinitions().map((d) => d.function.name)) ?? name;
 
     switch (normalizedName) {
       case 'saveExtractedFacts': {
@@ -339,12 +337,42 @@ export class PersonaUpdateAgent implements IAgent {
       case 'applyProposal': {
         const proposal = useFloatingChatStore.getState().proposal;
         if (!proposal) return { result: { error: 'no pending proposal' } };
+
+        // UI-ONLY actions are stripped here. This is the second half of the
+        // consent guarantee: staging alone would be pointless if the model
+        // could then apply its own proposal by deciding the user said yes —
+        // which is exactly the judgement it was measured getting wrong. Only
+        // ProposalCard's Confirm button reaches these.
+        const uiOnly = proposal.actions.filter((a) => a.type === 'run_calibration');
+        const applicable = proposal.actions.filter((a) => a.type !== 'run_calibration');
+
+        if (applicable.length === 0) {
+          return {
+            result: {
+              applied: 0,
+              awaitingUserConfirmation: true,
+              message:
+                'This change needs the user to tap Confirm on the card. Tell them it is ready and waiting; do not claim it is done.',
+            },
+          };
+        }
+
         // Same executor as the article surface — one seam, one audit trail.
         const { applied, errors, summaries, changeLogIds } =
-          await executeProposalActions(proposal.actions);
+          await executeProposalActions(applicable);
         return {
-          result: { applied, errors, summaries, changeLogIds },
-          sideEffects: { proposalResolved: 'applied' },
+          result: {
+            applied,
+            errors,
+            summaries,
+            changeLogIds,
+            ...(uiOnly.length > 0 ? { awaitingUserConfirmation: true } : {}),
+          },
+          // Only resolve when nothing is still waiting on a tap — otherwise the
+          // card would vanish before the user could confirm it.
+          ...(uiOnly.length === 0
+            ? { sideEffects: { proposalResolved: 'applied' as const } }
+            : {}),
         };
       }
 
@@ -352,18 +380,32 @@ export class PersonaUpdateAgent implements IAgent {
         return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
 
       case 'runCalibration': {
-        // The user was invited to recalibrate scoring (calibration notification)
-        // and confirmed in chat. Self-contained — makes ONE gateway round-trip and
-        // persists the tuned overrides. Include a human summary so the agent can
-        // report the outcome in its reply.
-        const outcome = await runCalibration();
-        const summary =
-          outcome.status === 'applied'
-            ? 'Recalibration applied — your scoring has been tuned.'
-            : outcome.status === 'no_change'
-              ? 'Recalibration ran, but no changes were needed.'
-              : 'Recalibration could not be completed right now — please try again later.';
-        return { result: { ...outcome, summary } };
+        // STAGES a confirmation card. Does NOT recalibrate.
+        //
+        // This tool used to run the recalibration outright, which made the
+        // model's reading of a message the consent gate. Measured against the
+        // real gateway on 2026-08-03: once the invitation was in history, a bare
+        // "thanks!" produced the call 20/20 times, and adding an explicit
+        // "confirmation only" block to <context> did not change that (also
+        // 20/20) — while an explicit refusal WAS respected. The model reads a
+        // polite acknowledgement as assent, and no wording fixed it.
+        //
+        // So consent moved out of the prompt and into the UI: this stages a
+        // `run_calibration` proposal, ProposalCard renders it, and the action
+        // executes only when the user taps Confirm. The model can still be
+        // wrong about WHEN to offer — it can no longer be wrong about whether
+        // the user agreed.
+        const proposal: StagedProposal = {
+          id: `proposal-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          explanation: 'Re-tune how Mera scores relevance, using your recent corrections.',
+          expectedEffects:
+            'Scoring constants shift by at most ±20%. Reversible from your change history.',
+          actions: [{ type: 'run_calibration' }],
+        };
+        return {
+          result: { staged: true, proposalId: proposal.id },
+          sideEffects: { proposal },
+        };
       }
 
       default:

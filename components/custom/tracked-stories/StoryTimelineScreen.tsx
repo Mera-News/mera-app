@@ -338,9 +338,19 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                         )}
                         {/* Short copy — see TrackedStoriesScreen: this is a followed-
                             story heading, and the header box is a narrow flex-1 slot
-                            between the back and delete buttons. */}
+                            between the back and delete buttons.
+
+                            `align="left"` so the caption sits flush under the START of
+                            the title rather than drifting to the far right of the
+                            header slot. The title is left-aligned; a right-hugging
+                            caption read as belonging to the delete button beside it
+                            instead of to the heading it discloses. */}
                         {isLlmHeadline && (
-                            <AiDisclosureCaption variant="compact" text={t('aiDisclosure.short')} />
+                            <AiDisclosureCaption
+                                variant="compact"
+                                text={t('aiDisclosure.short')}
+                                align="left"
+                            />
                         )}
                     </Box>
                     {/* Delete is the ONLY way to stop following a story (Q13):

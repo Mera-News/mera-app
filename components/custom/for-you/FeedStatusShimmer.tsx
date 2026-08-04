@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LayoutChangeEvent } from 'react-native';
 import Animated, {
+    cancelAnimation,
     Easing,
     FadeIn,
     FadeOut,
@@ -22,6 +23,7 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
+import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import FeedStatusDetails, { type FeedStatusDetailsProps } from './FeedStatusDetails';
 
 const BAR_HEIGHT = 3;
@@ -110,17 +112,35 @@ interface FeedStatusShimmerProps extends FeedStatusDetailsProps {
     readonly unscoredCount: number;
 }
 
+/**
+ * The travelling shimmer segment.
+ *
+ * Gated on focus + foreground. The transform itself is native-driven and cheap,
+ * but this sits inside a `GlassPanel` — a real `UIVisualEffectView` — and a blur
+ * RE-SAMPLES its backdrop every frame that backdrop changes. So an unattended
+ * shimmer on a blurred tab keeps a full-screen blur recomputing behind whatever
+ * the user is actually reading. Tabs stay mounted (FocusFreeze @deprecated), and
+ * this shimmer runs for as long as processing takes, so that is not a brief
+ * window.
+ */
 function IndeterminateSegment() {
     const [trackWidth, setTrackWidth] = useState(0);
     const progress = useSharedValue(0);
+    const active = useAnimationsActive();
 
     useEffect(() => {
+        if (!active) {
+            cancelAnimation(progress);
+            progress.value = 0;
+            return;
+        }
         progress.value = withRepeat(
             withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
             -1,
             false,
         );
-    }, [progress]);
+        return () => cancelAnimation(progress);
+    }, [progress, active]);
 
     const segmentWidth = Math.max(trackWidth * SEGMENT_FRACTION, 1);
 

@@ -645,6 +645,10 @@ function describeAction(a: ProposalAction): string {
       return `update [${a.fact_id}] → "${trunc(a.new_statement, 60)}"`;
     case 'delete_fact':
       return `delete [${a.fact_id}]`;
+    case 'run_calibration':
+      // Staged only by the PERSONA surface; listed so this switch stays
+      // exhaustive over ProposalAction.
+      return 're-tune relevance scoring';
     case 'add_topics':
       return `add topics to [${a.fact_id}]: ${a.topics.join(', ')}`;
     case 'remove_topics':

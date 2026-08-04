@@ -25,6 +25,7 @@ jest.mock('react-native-reanimated', () => {
         useAnimatedStyle: () => ({}),
         withRepeat: (v: unknown) => v,
         withTiming: (v: unknown) => v,
+        cancelAnimation: jest.fn(),
         Easing: { inOut: (fn: unknown) => fn, ease: (v: unknown) => v },
         FadeIn: anim,
         FadeOut: anim,

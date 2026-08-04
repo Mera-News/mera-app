@@ -1,7 +1,5 @@
-import { HStack } from '@/components/ui/hstack';
-import MeraLogo from '@/components/custom/MeraLogo';
+import CardActionBar from '@/components/custom/cards/CardActionBar';
 import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';
-import { Pressable } from '@/components/ui/pressable';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import {
   getArticleVerdict,
@@ -25,23 +23,9 @@ import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareAr
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSavedOverride } from '@/lib/saved-state';
-import { Platform } from 'react-native';
-
-// Primary-orange accent — dark-locked, matches ArticleFeedbackPrompt exactly so
-// the row is pixel-identical wherever the two coexist.
-const PRIMARY = '#EDA77E';
-const SELECTED_ICON = '#1a1a1a';
-// D15 — the PROVISIONAL treatment: a verdict is recorded but carries no reason
-// yet, so the button is tinted, not filled. Filled is a promise ("this changed
-// your persona") and a bare tap has not earned it. Same translucent accent the
-// feedback tree uses for a picked chip — no new token.
-const PROVISIONAL_BG = 'rgba(237,167,126,0.18)';
-const ICON_SIZE = 22;
-const BUTTON_SIZE = 48;
 
 /** A thumb's three states: untouched → tapped-but-context-less → committed. */
 type VerdictState = 'none' | 'provisional' | 'committed';
@@ -59,10 +43,11 @@ interface ArticleActionsRowProps {
 }
 
 /**
- * Universal, origin-aware actions row. Visually identical to
- * `ArticleFeedbackPrompt` (Mera chat / like / dislike / save / share), but every
- * action is driven by a {@link FeedbackSubject} so it works for both
- * personalized suggestions and standalone articles:
+ * Universal, origin-aware actions row. Renders the shared `CardActionBar` — the
+ * same row the feed cards and the detail screens use (Mera chat / like /
+ * dislike / save / track / share) — but every action is driven by a
+ * {@link FeedbackSubject} so it works for both personalized suggestions and
+ * standalone articles:
  *   - Like/Dislike → `recordArticleFeedback` carrying origin + surface + a JSON
  *     context snapshot, then opens the server-owned feedback tree for THAT
  *     verdict (D17 — a thumbs-up used to open nothing, so the like tree's
@@ -225,110 +210,33 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     void handleShare();
   }, [handleShare]);
 
-  const renderButton = (
-    icon: React.ReactNode,
-    label: string,
-    onPress: () => void,
-    selected: boolean,
-    testID: string,
-    provisional = false,
-  ) => (
-    <Pressable
-      testID={testID}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      accessibilityLabel={label}
-      className="items-center justify-center rounded-full"
-      style={{
-        width: BUTTON_SIZE,
-        height: BUTTON_SIZE,
-        backgroundColor: selected ? PRIMARY : provisional ? PROVISIONAL_BG : 'transparent',
-        borderWidth: 1.75,
-        borderColor: PRIMARY,
-      }}
-    >
-      {icon}
-    </Pressable>
-  );
-
   return (
     <>
-      <HStack className="items-center justify-evenly px-1 py-3">
-        {/* Mera stays in THIS row. Its only consumer is ArticleStandaloneCard —
-            a standalone article has no relevance rationale, so there is no
-            "Mera's voice" block for the glyph to move onto (unlike the
-            suggestion card / suggestion detail screen, where it did move).
-            Removing it here would delete the affordance outright. */}
-        <Pressable
-          testID="card-action-mera"
-          onPress={handleChatPress}
-          accessibilityRole="button"
-          accessibilityLabel="Mera"
-          className="items-center justify-center rounded-full"
-          style={{
-            width: BUTTON_SIZE,
-            height: BUTTON_SIZE,
-            backgroundColor: 'transparent',
-            borderWidth: 1.75,
-            borderColor: PRIMARY,
-          }}
-        >
-          <MeraLogo size={28} />
-        </Pressable>
-        {renderButton(
-          <MaterialIcons
-            name="thumb-up"
-            size={ICON_SIZE}
-            color={likeState === 'committed' ? SELECTED_ICON : PRIMARY}
-          />,
-          t('articleFeedback.likeLabel'),
-          handleLike,
-          likeState === 'committed',
-          'card-action-like',
-          likeState === 'provisional',
-        )}
-        {renderButton(
-          <MaterialIcons name="thumb-down" size={ICON_SIZE} color={PRIMARY} />,
-          t('articleFeedback.dislikeLabel'),
-          handleDislike,
-          false,
-          'card-action-dislike',
-        )}
-        {renderButton(
-          <MaterialIcons
-            name={saved ? 'bookmark' : 'bookmark-border'}
-            size={ICON_SIZE}
-            color={saved ? SELECTED_ICON : PRIMARY}
-          />,
-          t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction'),
-          handleSave,
-          saved,
-          'card-action-save',
-        )}
-        {renderButton(
-          <MaterialIcons
-            name="track-changes"
-            size={ICON_SIZE}
-            color={tracked ? SELECTED_ICON : PRIMARY}
-          />,
-          t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction'),
-          onTrackPress,
-          tracked,
-          'card-action-track',
-        )}
-        {share?.url ? renderButton(
-          <MaterialIcons
-            name={Platform.OS === 'ios' ? 'ios-share' : 'share'}
-            size={ICON_SIZE}
-            color={PRIMARY}
-          />,
-          t('articleDetail.share'),
-          handleSharePress,
-          false,
-          'card-action-share',
-        ) : null}
-      </HStack>
+      {/* The Mera glyph stays in this row (CardActionBar renders it
+          unconditionally). Its only consumer is ArticleStandaloneCard — a
+          standalone article has no relevance rationale, so there is no "Mera's
+          voice" block for the glyph to move onto, unlike the suggestion card.
+
+          `horizontalPadding={0}`: this row renders as ArticleCardBase's
+          CHILDREN, which already sit inside that card's `p-4`.
+
+          Dislike maps to a null verdict, not to 'dislike': this row has never
+          persisted or restored a dislike (only likes are read back on mount),
+          so a selected-looking thumb-down would be a state the component cannot
+          actually hold. */}
+      <CardActionBar
+        verdict={likeState !== 'none' ? 'like' : null}
+        provisional={likeState === 'provisional'}
+        saved={saved}
+        onLike={handleLike}
+        onDislike={handleDislike}
+        onAskMera={handleChatPress}
+        onToggleSave={handleSave}
+        onTrack={onTrackPress}
+        tracked={tracked}
+        onShare={share?.url ? handleSharePress : undefined}
+        horizontalPadding={0}
+      />
       {trackDialog}
       <FeedbackTreeOverlay
         visible={overlayOpen}

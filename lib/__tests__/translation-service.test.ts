@@ -37,6 +37,17 @@ import {
     SUPPORTED_LANGUAGES,
     translateText,
     translateTexts,
+    armTranslationRetry,
+    canTranslateIntoLanguage,
+    clearTranslationFailures,
+    clearTranslationFailuresFor,
+    getTranslationFailure,
+    isTranslationBlocked,
+    isTranslationVerified,
+    probeTranslationLanguage,
+    TRANSLATION_FAILURE_THRESHOLD,
+    VERIFIED_TRANSLATION_FAILURE_THRESHOLD,
+    __resetTranslationStateForTests,
 } from '../translation-service';
 import logger from '@/lib/logger';
 
@@ -428,10 +439,26 @@ describe('buildGoogleTranslateUrl', () => {
 // translateText — queuing + retry logic
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Open the native-call gate for a language the way production does: one
+ * successful probe. Nothing else is allowed to make the first native call for
+ * an unverified iOS language, so every test that exercises ordinary
+ * translateText behaviour has to go through this first.
+ */
+async function openGate(code: string): Promise<void> {
+    mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'ok' });
+    const p = probeTranslationLanguage(code);
+    await jest.runAllTimersAsync();
+    await p;
+    mockOnTranslateTask.mockClear();
+    mockOnTranslateTask.mockReset();
+}
+
 describe('translateText', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.useFakeTimers();
+        __resetTranslationStateForTests();
     });
 
     afterEach(() => {
@@ -439,6 +466,7 @@ describe('translateText', () => {
     });
 
     it('returns translated string on first attempt success', async () => {
+        await openGate('fr');
         mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Bonjour' });
 
         const promise = translateText('Hello', 'fr');
@@ -449,6 +477,7 @@ describe('translateText', () => {
     });
 
     it('returns null when translatedTexts is not a string', async () => {
+        await openGate('fr');
         mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: ['Bonjour'] });
 
         const promise = translateText('Hello', 'fr');
@@ -459,6 +488,7 @@ describe('translateText', () => {
     });
 
     it('uses sourceLangCode "en" on iOS', async () => {
+        await openGate('es');
         mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Hola' });
 
         const promise = translateText('Hello', 'es');
@@ -471,6 +501,7 @@ describe('translateText', () => {
     });
 
     it('passes requiresWifi: false and requireCharging: false', async () => {
+        await openGate('it');
         mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Ciao' });
 
         const promise = translateText('Hello', 'it');
@@ -482,7 +513,8 @@ describe('translateText', () => {
         );
     });
 
-    it('retries on failure and succeeds on second attempt', async () => {
+    it('retries on failure and succeeds on second attempt (verified language)', async () => {
+        await openGate('fr');
         mockOnTranslateTask
             .mockRejectedValueOnce(new Error('session busy'))
             .mockResolvedValueOnce({ translatedTexts: 'Bonjour' });
@@ -495,7 +527,47 @@ describe('translateText', () => {
         expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
     });
 
+    it('makes NO native call at all for an unverified language on iOS', async () => {
+        // THE GATE. Every native call against missing assets re-presents
+        // Apple's download sheet, and a language switch fires one per visible
+        // text node. Only the probe may make that first call.
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+
+        const promise = translateText('Hello', 'de');
+        await jest.runAllTimersAsync();
+
+        expect(await promise).toBeNull();
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        expect(isTranslationBlocked('de')).toBe(false);
+    });
+
+    it('does NOT retry in-call when the PROBE fails on iOS', async () => {
+        // The probe is allowed through the gate, but still gets exactly one
+        // shot: each retry would be another sheet.
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+
+        const promise = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+
+        expect(await promise).toBe('failed');
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+    });
+
+    it('a successful probe opens the gate for ordinary callers', async () => {
+        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Hallo' });
+        const probe = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+        expect(await probe).toBe('success');
+        expect(isTranslationVerified('de')).toBe(true);
+
+        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Welt' });
+        const p = translateText('World', 'de');
+        await jest.runAllTimersAsync();
+        expect(await p).toBe('Welt');
+    });
+
     it('retries up to 3 times then returns null after all retries exhausted', async () => {
+        await openGate('fr');
         // 4 calls total (1 initial + 3 retries) all fail → null
         mockOnTranslateTask.mockRejectedValue(new Error('always fails'));
 
@@ -517,6 +589,7 @@ describe('translateText', () => {
     });
 
     it('returns null when translation has no translatedTexts field', async () => {
+        await openGate('fr');
         mockOnTranslateTask.mockResolvedValueOnce({});
 
         const promise = translateText('Hello', 'fr');
@@ -531,10 +604,245 @@ describe('translateText', () => {
 // translateTexts
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Translation availability breaker — the loop break
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('translation availability breaker', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.useFakeTimers();
+        __resetTranslationStateForTests();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('makes ZERO native calls for a BURST of concurrent requests on an unverified language', async () => {
+        // The shape that actually caused the bug: a language switch fires every
+        // mounted <TranslatableDynamic> in one flush, so all N requests are
+        // queued before anything can learn from the first. Deliberately NOT
+        // awaited between calls — awaiting would let a call-time check pass.
+        //
+        // The old contract capped this at TRANSLATION_FAILURE_THRESHOLD calls.
+        // The gate caps it at none: none of these is the probe, so none of them
+        // may be the call that presents Apple's sheet.
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+
+        const promises = Array.from({ length: 8 }, (_, i) =>
+            translateText(`headline ${i}`, 'de'),
+        );
+        await jest.runAllTimersAsync();
+        const results = await Promise.all(promises);
+
+        expect(results.every((r) => r === null)).toBe(true);
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+    });
+
+    it('caps a BURST at the threshold once the gate is open', async () => {
+        // Same shape, but for a language already proven to work. Here calls DO
+        // go out — no sheet can appear for verified assets — and the
+        // head-of-queue check is what stops them once the budget is spent.
+        await openGate('de');
+        mockOnTranslateTask.mockRejectedValue(new Error('session busy'));
+
+        const promises = Array.from({ length: 40 }, (_, i) =>
+            translateText(`headline ${i}`, 'de'),
+        );
+        await jest.runAllTimersAsync();
+        const results = await Promise.all(promises);
+
+        expect(results.every((r) => r === null)).toBe(true);
+        expect(isTranslationBlocked('de')).toBe(true);
+        // Each translateText spends the full retry ladder before it counts as
+        // one failure, and the language blocks after the verified threshold.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(
+            VERIFIED_TRANSLATION_FAILURE_THRESHOLD * 4,
+        );
+    });
+
+    it('reports a non-permanent failure when the cause is unknown', async () => {
+        mockOnTranslateTask.mockRejectedValue(new Error('download failed'));
+
+        const probe = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+        await probe;
+
+        expect(getTranslationFailure('de')).toEqual({
+            targetLangCode: 'de',
+            lastError: 'download failed',
+            permanent: false,
+            deviceUnsupported: false,
+        });
+    });
+
+    it('is a counter, not a latch — one success resets it', async () => {
+        await openGate('de');
+
+        mockOnTranslateTask.mockRejectedValueOnce(new Error('blip'));
+        let p = translateText('a', 'de');
+        await jest.runAllTimersAsync();
+        await p;
+        expect(isTranslationBlocked('de')).toBe(false);
+
+        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Hallo' });
+        p = translateText('b', 'de');
+        await jest.runAllTimersAsync();
+        await p;
+
+        // The earlier failure has been forgiven, so the next one starts over.
+        mockOnTranslateTask.mockRejectedValueOnce(new Error('blip'));
+        p = translateText('c', 'de');
+        await jest.runAllTimersAsync();
+        await p;
+        expect(isTranslationBlocked('de')).toBe(false);
+    });
+
+    it('blocks the language on a SINGLE failed probe', async () => {
+        // The probe is the one deliberate, isolated attempt, so its verdict is
+        // conclusive enough to show the user: blocked means the article rows
+        // draw the red translate icon and the prompt has something to say.
+        // Without this the feed would just be silently English — the exact
+        // "nothing happened" the user reported.
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+
+        const p = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+
+        expect(await p).toBe('failed');
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        expect(isTranslationBlocked('de')).toBe(true);
+        expect(getTranslationFailure('de')?.permanent).toBe(false);
+    });
+
+    it('a fresh probe re-arms a language its predecessor blocked', async () => {
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+        let p = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+        await p;
+        expect(isTranslationBlocked('de')).toBe(true);
+
+        mockOnTranslateTask.mockReset();
+        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Hallo' });
+        p = probeTranslationLanguage('de');
+        await jest.runAllTimersAsync();
+
+        expect(await p).toBe('success');
+        expect(isTranslationBlocked('de')).toBe(false);
+        expect(isTranslationVerified('de')).toBe(true);
+    });
+
+    async function blockLanguage(code: string): Promise<void> {
+        await openGate(code);
+        mockOnTranslateTask.mockRejectedValue(new Error('assets missing'));
+        const ps = Array.from({ length: VERIFIED_TRANSLATION_FAILURE_THRESHOLD }, (_, i) =>
+            translateText(`x${i}`, code),
+        );
+        await jest.runAllTimersAsync();
+        await Promise.all(ps);
+        mockOnTranslateTask.mockClear();
+        mockOnTranslateTask.mockReset();
+    }
+
+    it('armTranslationRetry allows exactly ONE attempt, then re-blocks', async () => {
+        await blockLanguage('de');
+
+        armTranslationRetry('de');
+        expect(isTranslationBlocked('de')).toBe(false);
+
+        mockOnTranslateTask.mockRejectedValue(new Error('still failing'));
+        const promises = [
+            translateText('a', 'de'),
+            translateText('b', 'de'),
+            translateText('c', 'de'),
+        ];
+        await jest.runAllTimersAsync();
+        await Promise.all(promises);
+
+        // One tap, one translateText — a failed retry must not re-arm the
+        // loop. The language is verified here, so that single attempt spends
+        // the in-call retry ladder (4 native calls) and then re-blocks; no
+        // sheet can appear for a language whose assets are installed.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
+        expect(isTranslationBlocked('de')).toBe(true);
+    });
+
+    it('a successful retry unblocks the language for good', async () => {
+        await blockLanguage('de');
+
+        armTranslationRetry('de');
+        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Hallo' });
+        const p = translateText('a', 'de');
+        await jest.runAllTimersAsync();
+
+        expect(await p).toBe('Hallo');
+        expect(isTranslationBlocked('de')).toBe(false);
+    });
+
+    it('clearTranslationFailures resets everything', async () => {
+        await blockLanguage('de');
+        clearTranslationFailures();
+        expect(isTranslationBlocked('de')).toBe(false);
+    });
+
+    it('clearTranslationFailuresFor leaves every OTHER language untouched', async () => {
+        // The reverting path depends on this: an attempt on one language must
+        // not wipe the breaker state of the language being returned to.
+        await blockLanguage('de');
+        await blockLanguage('fr');
+        expect(isTranslationBlocked('de')).toBe(true);
+        expect(isTranslationBlocked('fr')).toBe(true);
+
+        clearTranslationFailuresFor('de');
+
+        expect(isTranslationBlocked('de')).toBe(false);
+        expect(isTranslationBlocked('fr')).toBe(true);
+    });
+
+    it('blocks a language the OS cannot translate into WITHOUT calling out', async () => {
+        // No attempt at all: a doomed call still costs the user a system sheet
+        // before it fails.
+        const p = translateText('Hello', 'sw');
+        await jest.runAllTimersAsync();
+
+        expect(await p).toBeNull();
+        expect(mockOnTranslateTask).not.toHaveBeenCalled();
+        expect(getTranslationFailure('sw')?.permanent).toBe(true);
+    });
+
+    it('refuses to arm a retry for a permanently unsupported language', async () => {
+        const p = translateText('Hello', 'sw');
+        await jest.runAllTimersAsync();
+        await p;
+
+        armTranslationRetry('sw');
+        expect(isTranslationBlocked('sw')).toBe(true);
+    });
+});
+
+describe('canTranslateIntoLanguage', () => {
+    it('routes into the same per-language iOS-version ladder as article support', () => {
+        expect(canTranslateIntoLanguage('hi', 17)).toBe(false);
+        expect(canTranslateIntoLanguage('hi', 18)).toBe(true);
+        expect(canTranslateIntoLanguage('uk', 16)).toBe(false);
+        expect(canTranslateIntoLanguage('uk', 17)).toBe(true);
+    });
+
+    it('rejects languages Apple has no translator for at any version', () => {
+        expect(canTranslateIntoLanguage('sw', 26)).toBe(false);
+    });
+
+    it('assumes it works when the OS version cannot be read', () => {
+        expect(canTranslateIntoLanguage('hi')).toBe(true);
+    });
+});
+
 describe('translateTexts', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         jest.useFakeTimers();
+        __resetTranslationStateForTests();
     });
 
     afterEach(() => {
@@ -542,6 +850,7 @@ describe('translateTexts', () => {
     });
 
     it('returns an array aligned with the input', async () => {
+        await openGate('fr');
         mockOnTranslateTask
             .mockResolvedValueOnce({ translatedTexts: 'Bonjour' })
             .mockResolvedValueOnce({ translatedTexts: 'Monde' });
@@ -563,6 +872,7 @@ describe('translateTexts', () => {
     });
 
     it('returns null entries when individual translations fail', async () => {
+        await openGate('fr');
         mockOnTranslateTask
             .mockResolvedValueOnce({ translatedTexts: 'Bonjour' })
             .mockRejectedValue(new Error('fail'));
@@ -577,6 +887,7 @@ describe('translateTexts', () => {
     });
 
     it('processes single text correctly', async () => {
+        await openGate('es');
         mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Hola' });
 
         const promise = translateTexts(['Hello'], 'es');

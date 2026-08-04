@@ -80,6 +80,15 @@ const TREE = {
       labelDefault: "I've seen this already",
       leaf: { seenOnly: true },
     },
+    {
+      // v4 — the FREQUENCY leaf. Verbatim from the shipped tree so this suite
+      // fails if the snapshot ever regresses to the `add_suppression` shape.
+      id: 'too_many',
+      labelKey: 'feedbackTree.tooMuchOfThis',
+      labelDefault: "I'm seeing too much of this",
+      icon: 'trending-down',
+      leaf: { actions: [{ type: 'set_topic_weight', topics: 'matched', delta: -0.3 }] },
+    },
   ],
   likeRoot: [
     {
@@ -174,6 +183,42 @@ describe('InlineFeedbackTree — terminal leaves apply (D16)', () => {
       expect.objectContaining({ publicationId: 'The Hindu', publicationPref: 'boost' }),
     ]);
     expect(spend).toEqual({ articleId: 'art-1', sentiment: 'like' });
+  });
+
+  // "I'm seeing too much of this" is a complaint about VOLUME, not relevance:
+  // the user still wants the subject, just less of it. So it must reduce the
+  // topic's weight (which drives both the score and the per-topic retrieval
+  // limit) and must NOT mint a suppression, which would filter the subject out
+  // of a feed the user said they still wanted.
+  it('reduces the matched topics’ weight for the frequency leaf — and mints no filter', async () => {
+    const { getByText } = renderTree('dislike');
+    fireEvent.press(await waitFor(() => getByText("I'm seeing too much of this")));
+
+    await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
+    const [actions, summary, spend] = mockApplyLeafActions.mock.calls[0] as unknown as [
+      Record<string, unknown>[],
+      string,
+      { articleId: string; sentiment: string },
+    ];
+    expect(actions).toEqual([
+      { action_type: 'set_topic_weight', topicId: 't1', delta: -0.3 },
+    ]);
+    // The load-bearing negative: a suppression here would be elimination, not
+    // frequency reduction.
+    expect(actions.some((a) => a.action_type === 'add_suppression')).toBe(false);
+    expect(summary).toBe("I'm seeing too much of this");
+    // Same commit/undo contract as its siblings — applied on the spot, so the
+    // row is stamped spent and the Undo toast can revert exactly this change.
+    expect(spend).toEqual({ articleId: 'art-1', sentiment: 'dislike' });
+  });
+
+  it('taps straight through — the frequency leaf is not destructive, so no confirm step', async () => {
+    const { getByText } = renderTree('dislike');
+    const chip = await waitFor(() => getByText("I'm seeing too much of this"));
+    fireEvent.press(chip);
+    // A `confirm` leaf would have re-rendered as "Tap again to confirm" and
+    // applied nothing on the first press.
+    await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
   });
 
   it('applies nothing — and stamps nothing — for a leaf that carries no actions', async () => {

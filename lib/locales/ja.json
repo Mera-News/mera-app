@@ -20,7 +20,8 @@
     "yes": "はい",
     "no": "いいえ",
     "saving": "保存中...",
-    "home": "ホーム"
+    "home": "ホーム",
+    "offlineBanner": "Meraへの接続が遅い、または接続がありません。保存されたニュースを表示しています — 引き続きお試しします。"
   },
   "auth": {
     "reauthBanner": "再度サインインして同期してください",
@@ -193,7 +194,18 @@
     "statsPublished_other": "{{formatted}}件の記事が過去24時間に公開されました。",
     "statsAnalysed_other": "{{formatted}}件が分析されました。",
     "statsRelevant_other": "{{formatted}}件があなたに関連性があります。",
-    "statsRead_other": "そしてあなたは{{formatted}}件を読みました。"
+    "statsRead_other": "そしてあなたは{{formatted}}件を読みました。",
+    "divider": {
+      "readLine": "開き直す。",
+      "seenLine": "開いて読む。",
+      "readTitle": "読み済み。",
+      "seenTitle": "新着はここまで。"
+    },
+    "statsAnalysed_one": "{{formatted}}件が分析されました、",
+    "statsPublishedPending_one": "{{formatted}}件の記事が過去24時間に公開されました。",
+    "statsPublished_one": "{{formatted}}件の記事が過去24時間に公開されました、",
+    "statsRead_one": "そしてあなたは{{formatted}}件を読みました。",
+    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、"
   },
   "relevance": {
     "emergency": "緊急",
@@ -205,7 +217,8 @@
   },
   "aiDisclosure": {
     "caption": "AIが生成したメモ",
-    "short": "AI生成"
+    "short": "AI生成",
+    "listNote": "ここにあるいくつかのストーリー見出しはAIが生成したものです"
   },
   "articleDetail": {
     "readArticle": "記事を読む",
@@ -215,13 +228,12 @@
     "failedToLoad": "記事の読み込みに失敗しました",
     "articleNotFound": "記事が見つかりません",
     "offlineUnavailable": "オフライン状態です。この記事はオフライン読み込み用に保存されていません",
-    "viewOriginal": "元の記事を表示",
-    "viewOriginalIn": "{{language}}で元の記事を表示",
-    "viewAndTranslateOnDevice": "記事を表示して端末で翻訳",
     "share": "共有",
     "shareVia": "{{downloadUrl}}経由で共有",
     "sourceCountryGlobal": "グローバル",
-    "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。"
+    "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。",
+    "readOn": "{{publication}}で読む",
+    "readOnGoogleTranslate": "Google 翻訳で読む"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -243,13 +255,11 @@
     "addedToLocations": "自分の場所に追加しました"
   },
   "clusterDetail": {
-    "translatable": "この記事は{{language}}で書かれています — 読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、下のGoogle 翻訳でサイトを開くこともできます — その場合、Google経由での閲覧になる点にご注意ください。",
-    "notTranslatable": "この記事は{{language}}で書かれています。端末では翻訳できません — 下のGoogle 翻訳を使ってあなたの言語で読んでください。",
-    "notTranslatableOsOutdated": "この記事は{{language}}で書かれています。端末上の翻訳にはiOS {{requiredVersion}}が必要です — 現在のバージョンはiOS {{currentVersion}}です。iOSを更新するか、下のGoogle 翻訳を使ってあなたの言語で読んでください。",
+    "translatable": "この記事は{{language}}で書かれています。読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、Google 翻訳でサイトを開くこともできますが、その場合はGoogle経由での閲覧になる点にご注意ください。",
+    "notTranslatable": "この記事は{{language}}で書かれています。端末では翻訳できません。ご自身の言語で読むにはGoogle 翻訳をご利用ください。",
+    "notTranslatableOsOutdated": "この記事は{{language}}で書かれています。端末上での翻訳にはiOS {{requiredVersion}}が必要ですが、現在のバージョンはiOS {{currentVersion}}です。iOSをアップデートするか、ご自身の言語で読むにはGoogle 翻訳をご利用ください。",
     "unknownLanguage": "別の言語",
     "translationGuideLink": "記事の翻訳方法を教えてください",
-    "viewInGoogleTranslate": "Google 翻訳で見る",
-    "readViaGoogleTranslate": "あなたの言語で読む（Google 翻訳）",
     "showOriginal": "原文を表示",
     "showTranslation": "翻訳を表示"
   },
@@ -314,7 +324,6 @@
     "title": "言語",
     "appLanguage": "アプリの言語",
     "appLanguageDescription": "アプリのインターフェイスとニュースコンテンツの翻訳に使用されます",
-    "languagePacks": "言語パック",
     "languagePacksIos": "翻訳モデルはデバイスが管理しています。選択した言語のモデルをダウンロードするだけで、iOS が残りを処理します。",
     "languagePacksIosPath": "設定 → 一般 → 言語と地域 → 翻訳言語",
     "languagePacksAndroid": "翻訳モデル（各約30MB）は、新しい言語に初めて翻訳するときに自動的にダウンロードされます。",
@@ -328,8 +337,28 @@
     "packMissingIosPath": "設定 → 一般 → 言語と地域",
     "retry": "再試行",
     "watchGuide": "デバイスに言語を追加する方法を見る",
-    "iosLanguageHint": "この言語を選択するだけでは不十分です。iOSの言語設定でもこの言語を選択する必要があります。",
-    "managePacksPrefix": "ダウンロード済みの言語を管理するには、"
+    "managePacksPrefix": "ダウンロード済みの言語を管理するには、",
+    "translationUnavailableTapToRetry": "{{language}}言語パックはまだダウンロード中か、ダウンロードに失敗した可能性があります。現在は英語を表示しています — もう一度試すにはタップしてください。",
+    "translationUnavailableTitle": "翻訳は利用できません",
+    "translationUnsupportedOnThisIos": "お使いのiOSバージョンは{{language}}に翻訳できません。代わりに英語を表示しています — iOSを更新するとこれが有効になります。",
+    "advanced": "詳細設定",
+    "advancedDescription": "端末上での翻訳です。任意設定なので、上記の機能はこれがなくても使えます。",
+    "downloadHintBeforePrefix": "言語を選択すると、iOSがダウンロードを求めることがあります。そのシートで各言語の横にある",
+    "downloadHintBeforeSuffix": "をタップしてください。タップするまでは何もダウンロードされません。",
+    "downloadHintNowPrefix": "下のシートで各言語の横にある",
+    "downloadHintNowSuffix": "をタップすると、ダウンロードが始まります。",
+    "googleTranslateAlways": "記事ページの「Google 翻訳で読む」を使えば、どの記事もどの言語でも読めます。これは常に使え、ダウンロードは一切必要ありません。",
+    "onDeviceTranslationHint": "デバイス側で翻訳させたい場合は、iOSの設定でご自身の言語が利用できるか確認してください。有効にする方法は下の動画で紹介しています。",
+    "switchDeviceUnsupportedBody": "この端末はニュース記事をどの言語にも翻訳できないため、アプリは英語を使用しています。{{language}}にすると、記事は翻訳されないままになります。",
+    "switchFailedBody": "{{language}}の翻訳パックを準備できなかったため、引き続き{{previous}}を使用しています。まだダウンロード中の可能性があります。少し時間をおいてもう一度お試しください。",
+    "switchFailedTitle": "{{language}}に切り替えられませんでした",
+    "switchTimedOutBody": "{{language}}の準備に時間がかかりすぎているため、引き続き{{previous}}を使用しています。ダウンロードはバックグラウンドで完了する場合があります。しばらくしてからもう一度お試しください。",
+    "switchUnsupportedBody": "このバージョンのiOSは{{language}}に翻訳できないため、引き続き{{previous}}を使用しています。",
+    "switchingCancel": "言語の切り替えを中止",
+    "switchingNudge": "お使いの端末が{{language}}の翻訳パックを準備しています。完了するまでこの画面を閉じずにお待ちください。今ここを離れると、記事は英語のまま表示されてしまいます。",
+    "switchingTitle": "{{language}}を設定中…",
+    "translationFailedTooltip": "翻訳に失敗しました。アプリを再起動するか、設定をご確認ください",
+    "translationUnavailableOnThisDevice": "この端末はニュース記事を{{language}}に翻訳できません。代わりに英語で表示しています。"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -728,7 +757,11 @@
     "never": "なし",
     "running": "{{count}}件実行中",
     "failed": "{{count}}件失敗",
-    "pending": "{{count}}件保留中"
+    "pending": "{{count}}件保留中",
+    "noteBody": "このスクリーンはMeraのオンデバイスデータベースを直接読みます — フィードを構築するデータがここに表示されています。これは可視性とデバッグ用です。Meraサーバーはあなたの事実、読了履歴、またはそこから構築された提案を保存しません。",
+    "noteExceptions": "2つの例外があります：アカウントプロフィール（サインイン、通知、言語）がMeraアカウントと同期されます。また、クラウドAIがオンになっているとき、あなたの事実はスコアリングのために送信される前にこのデバイス上で暗号化されます。",
+    "noteFooter": "ここの値は生のデータと診断用です。フィード行は48時間後に自動削除されます。データ管理からあなたの事実、フィードキャッシュ、閲覧履歴を削除できます。",
+    "noteTitle": "あなたのデータ、あなたのデバイス上に"
   },
   "tableDetail": {
     "rowsOfCols": "{{total}}行中{{rows}}行 · {{cols}}列",
@@ -983,7 +1016,8 @@
     "successTitle": "再調整しました",
     "successBody": "あなたの好みによりよく合うようにランキングを調整しました。",
     "noChangeBody": "ランキングはすでによく調整されています — 変更の必要はありません。",
-    "failedBody": "今回は再調整を完了できませんでした。後でもう一度お試しします。"
+    "failedBody": "今回は再調整を完了できませんでした。後でもう一度お試しします。",
+    "actionRecalibrate": "関連性スコアリングを再調整する"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "詳細：{{topic}}",
@@ -1008,7 +1042,8 @@
     "paywallRelatedOption": "関連カバレッジを表示",
     "paywallRelatedDesc": "別の出版社から似た記事が出ており、ペイウォール内にないかもしれません — 関連記事を確認してください。",
     "paywallSubscribeDesc": "この月、{{publication}}に{{visits}}回訪問しました — フルアクセスのために購読を検討してください。",
-    "paywallBlockOption": "代わりに{{publication}}をブロック"
+    "paywallBlockOption": "代わりに{{publication}}をブロック",
+    "tooMuchOfThis": "これを見かけすぎます"
   },
   "topicPlan": {
     "title": "追跡するトピック",
@@ -1065,7 +1100,8 @@
     "applyFailedTitle": "整理を適用できませんでした",
     "applyFailedBody": "後でもう一度お試しください。",
     "profileRow_one": "ペルソナの健康度・{{count}}件の提案",
-    "profileRow_other": "プロフィールの健全性 · {{count}}件の提案"
+    "profileRow_other": "プロフィールの健全性 · {{count}}件の提案",
+    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。古いものは変更ログから復元可能です。"
   },
   "locations": {
     "title": "あなたの場所",
@@ -1313,7 +1349,7 @@
     "pinChangedTitle": "PINが更新されました",
     "pinChangedDescription": "あなたのPINが変更されました。",
     "blurImagesTitle": "画像をぼかす",
-    "blurImagesDescription": "記事の画像をソフトにしてグラフィックまたは不安な画像が鮮明に表示されないようにします。"
+    "blurImagesDescription": "アプリ全体の記事画像をソフト化して、グラフィックまたは不穏なビジュアルが鮮明に表示されないようにします。"
   },
   "display": {
     "title": "表示",

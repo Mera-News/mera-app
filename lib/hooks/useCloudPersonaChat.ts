@@ -11,15 +11,34 @@ import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
+import { estimateTokens } from '../llm/tokens';
+import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
+import { normalizeToolName } from '../news-harness/persona-management/tool-names';
+import {
+  CLOUD_HISTORY_BUDGET_TOKENS,
+  MAX_HISTORY_USER_TURNS,
+} from '../news-harness/persona-management/persona-agent-core';
 
 const TAG = '[CloudChat]';
 
-// Cloud chat sends ONLY the current user turn (plus any assistant/tool tail
-// from a continuation pass — the expand-backward loop in streamOne keeps that
-// pair intact). Fresh facts are re-loaded from the `facts` table each turn via
-// buildContext() and prepended to the user message, so the LLM cannot
-// hallucinate persisted state from prior assistant claims like "Got it, saved".
-const MAX_HISTORY_MESSAGES = 1;
+// Cloud chat carries a TOKEN-BUDGETED window of recent turns (see
+// lib/news-harness/persona-management/history-window.ts). It used to send only
+// the current user turn, which meant a tail of [..., user("Yes")] reached the
+// model as the bare word "Yes" with no trace of the question it answered — the
+// reported bug where Mera responded to a confirmation with "Great, good to see
+// you again!".
+//
+// Fresh facts are still re-loaded from the `facts` table every turn via
+// buildContext() and injected onto the LAST user message only, so a wider
+// window never lets the LLM hallucinate persisted state from a stale assistant
+// claim like "Got it, saved" — the facts block always reflects the database,
+// not the conversation.
+function wireMessageTokens(m: WireMessage): number {
+  const content = typeof m.content === 'string' ? m.content : '';
+  const calls =
+    'tool_calls' in m && m.tool_calls ? JSON.stringify(m.tool_calls) : '';
+  return estimateTokens(content) + estimateTokens(calls);
+}
 
 export interface UseCloudPersonaChatResult {
   messages: ConversationMessage[];
@@ -41,16 +60,41 @@ interface ToolCallAccumulator {
   arguments: string;
 }
 
-function finalizeToolCalls(accumulators: Map<number, ToolCallAccumulator>): Array<{ id: string; name: string; input: unknown }> {
-  const results: Array<{ id: string; name: string; input: unknown }> = [];
+interface FinalizedToolCall {
+  id: string;
+  name: string;
+  input: unknown;
+  /** Set when the model's argument JSON could not be parsed. Such a call is
+   *  NEVER executed and never reaches the wire — see the note below. */
+  malformed?: true;
+}
+
+function finalizeToolCalls(
+  accumulators: Map<number, ToolCallAccumulator>,
+): FinalizedToolCall[] {
+  const results: FinalizedToolCall[] = [];
   for (const [, acc] of accumulators) {
     if (!acc.name) continue;
     try {
       const input = acc.arguments ? JSON.parse(acc.arguments) : {};
       results.push({ id: acc.id, name: acc.name, input });
     } catch {
-      logger.warn(`${TAG} Failed to parse tool call arguments`, { name: acc.name, args: acc.arguments });
-      results.push({ id: acc.id, name: acc.name, input: {} });
+      // Do NOT substitute `{}`. That turned a truncated or corrupt call into a
+      // well-formed one with no arguments, which the handlers then answered as
+      // an ordinary validation failure ("fact_ids must be a non-empty array") —
+      // telling the model its ARGUMENTS were wrong when in fact its
+      // SERIALIZATION was, and making a dropped call look like a successful
+      // no-op in the logs.
+      logger.warn(`${TAG} Failed to parse tool call arguments`, {
+        name: acc.name,
+        args: acc.arguments,
+      });
+      logger.captureMessage(`${TAG} malformed tool arguments`, {
+        level: 'warning',
+        tags: { component: 'useCloudPersonaChat' },
+        extra: { tool: acc.name, argsLength: acc.arguments.length },
+      });
+      results.push({ id: acc.id, name: acc.name, input: null, malformed: true });
     }
   }
   return results;
@@ -124,27 +168,32 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         targetId: string,
         includeContext: boolean,
         toolChoice: 'required' | 'auto' = 'auto',
+        // Overrides the turn's tool payload (forced-extraction pass only).
+        toolsOverride?: ToolDefinition[],
+        // When true, text deltas are accumulated but NEVER written into
+        // `targetId`. The forced pass needs this: it targets the VISIBLE
+        // assistant bubble so its tool calls render and persist, and without
+        // this flag its own prose would overwrite — mid-turn — the reply the
+        // user is already reading (accContent restarts at '' on every call).
+        suppressText = false,
       ): Promise<{ accContent: string; toolCalls: ReturnType<typeof finalizeToolCalls> }> => {
         let accContent = '';
         const toolCallAccumulators = new Map<number, ToolCallAccumulator>();
 
-        // Window wireMessages to just the current user turn (MAX_HISTORY_MESSAGES = 1),
-        // then expand backward so the window (a) starts with a user turn (LLM APIs
-        // require it) and (b) never splits an assistant tool_calls / tool result pair.
-        // The continuation pass (after a tool call) lands here with the tail
-        // [user, assistant(tool_calls), tool] — the expand loop preserves it intact.
+        // Window wireMessages to a TOKEN BUDGET (not a message count), newest
+        // first. selectHistoryWindow owns the two structural invariants — the
+        // window starts on a user turn, and never splits an
+        // assistant(tool_calls) / tool result pair — so the continuation pass,
+        // which lands here with the tail [user, assistant(tool_calls), tool],
+        // keeps that tail intact.
         const allWire = useCloudChatStore.getState().wireMessages;
-        let startIdx = Math.max(0, allWire.length - MAX_HISTORY_MESSAGES);
-        while (startIdx > 0) {
-          const head = allWire[startIdx];
-          const prev = allWire[startIdx - 1];
-          if (head.role === 'user') break;
-          if (head.role === 'tool' && prev.role === 'assistant') {
-            startIdx -= 1;
-            continue;
-          }
-          startIdx -= 1;
-        }
+        const startIdx = selectHistoryWindow<WireMessage>({
+          entries: allWire,
+          budgetTokens: CLOUD_HISTORY_BUDGET_TOKENS,
+          maxUserTurns: MAX_HISTORY_USER_TURNS,
+          roleOf: (m) => m.role,
+          tokensOf: wireMessageTokens,
+        });
         let windowed: WireMessage[] = allWire.slice(startIdx);
         if (includeContext && context) {
           const lastUserIdx = windowed.map((m) => m.role).lastIndexOf('user');
@@ -161,7 +210,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
 
         const stream = cloudChatStream({
           messages: [{ role: 'system', content: systemPrompt }, ...windowed],
-          tools,
+          tools: toolsOverride ?? tools,
           toolChoice,
           model: BIG_MODEL,
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
@@ -179,9 +228,11 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           }
           if (event.type === 'text-delta') {
             accContent += event.delta;
-            useCloudChatStore.getState().setMessages((prev) =>
-              prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
-            );
+            if (!suppressText) {
+              useCloudChatStore.getState().setMessages((prev) =>
+                prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
+              );
+            }
           } else if (event.type === 'tool-call-delta') {
             // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
@@ -217,8 +268,14 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         accContent: string,
         toolCalls: ReturnType<typeof finalizeToolCalls>,
       ) => {
-        const wireToolCalls = toolCalls.length > 0
-          ? toolCalls.map((tc) => ({
+        // Malformed calls are EXCLUDED from the wire. Serialising them would
+        // record the assistant as having emitted `{}` — reintroducing on the
+        // wire exactly the fiction we removed from execution. Excluding them
+        // also means no paired `tool` result message is owed for them, so the
+        // "every tool_call must be answered" rule stays satisfied.
+        const usable = toolCalls.filter((tc) => !tc.malformed);
+        const wireToolCalls = usable.length > 0
+          ? usable.map((tc) => ({
               id: tc.id,
               type: 'function' as const,
               function: { name: tc.name, arguments: JSON.stringify(tc.input ?? {}) },
@@ -247,11 +304,34 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           prev.map((m) => m.id === targetId ? { ...m, toolCalls: toolCallRecords } : m),
         );
 
+        const knownNames = (agentRef.current.getToolDefinitions?.() ?? []).map(
+          (d) => d.function.name,
+        );
+
         const results = await Promise.all(
           toolCalls.map(async (tc, i) => {
+            // Never execute a call whose arguments did not parse — surface it
+            // as an error the user can see instead of running it with {}.
+            if (tc.malformed) {
+              return {
+                index: i,
+                result: { error: 'malformed tool arguments — call was not executed' },
+                status: 'error' as const,
+              };
+            }
             try {
-              logger.debug(`${TAG} executing tool`, { name: tc.name, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
-              const { result, sideEffects } = await agentRef.current.executeTool(tc.name, tc.input);
+              const resolved = normalizeToolName(tc.name, knownNames);
+              if (resolved && resolved !== tc.name) {
+                logger.warn(`${TAG} repaired tool name`, { from: tc.name, to: resolved });
+              } else if (!resolved) {
+                logger.warn(`${TAG} unresolvable tool name`, {
+                  name: tc.name,
+                  candidates: knownNames,
+                });
+              }
+              const callName = resolved ?? tc.name;
+              logger.debug(`${TAG} executing tool`, { name: callName, inputKeys: Object.keys(tc.input as Record<string, unknown>) });
+              const { result, sideEffects } = await agentRef.current.executeTool(callName, tc.input);
               logger.debug(`${TAG} tool result`, { name: tc.name, result: JSON.stringify(result).slice(0, 200), sideEffects });
 
               if (sideEffects?.blocked) {
@@ -281,7 +361,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           prev.map((m) => m.id === targetId ? { ...m, toolCalls: [...toolCallRecords] } : m),
         );
 
+        // Only calls that made it onto the wire are owed a `tool` reply.
         for (const tc of toolCalls) {
+          if (tc.malformed) continue;
           const matched = toolCallRecords.find((r) => r.id === tc.id);
           const resultPayload = matched?.result ?? { error: 'no result' };
           useCloudChatStore.getState().pushWireMessage({
@@ -290,6 +372,32 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             content: JSON.stringify(resultPayload),
           });
         }
+      };
+
+      // ---------- Forced extraction safety-net (GATED) ----------
+      //
+      // GATE (P0). This pass runs with tool_choice:'required', which obliges the
+      // model to emit >=1 tool call from whatever payload we hand it — and
+      // executeToolsAndPushResults then really RUNS it. On a purely
+      // conversational turn ("hi", "thanks") that means a tool call the user
+      // never asked for. Three conditions must therefore hold before it fires:
+      //
+      //  1. The agent opts in via getForcedExtractionTools() with a NON-EMPTY
+      //     payload of tools whose empty-argument call is a harmless no-op.
+      //     ArticleFeedbackAgent returns [] — every tool it has stages or
+      //     applies a change, so a forced call there fabricates consent.
+      //  2. No proposal is pending — otherwise 'required' can pick
+      //     applyProposal and apply it without the user confirming.
+      //  3. (LANDS WITH P2) No invocation intent is pending — a
+      //     notification-initiated action such as runCalibration takes NO
+      //     arguments, which makes it the cheapest possible way for a model to
+      //     satisfy 'required'. When the pendingIntent channel is added, add
+      //     `if (store.pendingIntent) return [];` below. P2 MUST NOT ship
+      //     without that line.
+      const forcedExtractionTools = (): ToolDefinition[] => {
+        const store = useFloatingChatStore.getState();
+        if (store.proposal) return [];
+        return agentRef.current.getForcedExtractionTools?.() ?? [];
       };
 
       // ---------- Forced extraction safety-net ----------
@@ -303,16 +411,28 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // second bubble renders; the side effects that matter (fact save →
       // topic-gen, conflict/proposal cards) still fire from executeTool. Runs at
       // most once — 'required' obliges ≥1 tool call, so there is no recursion.
-      const runForcedExtraction = async () => {
+      // Targets the VISIBLE assistant bubble (not a throwaway hidden id) with
+      // text suppressed, so the tool calls it produces actually render as fact /
+      // conflict cards and get captured by useChatPersistence. The previous
+      // hidden id was never inserted into `messages`, so every setMessages
+      // against it was a silent no-op: the user saw nothing and nothing
+      // persisted.
+      //
+      // Pushes NOTHING to wireMessages. This pass is a side effect, not a
+      // conversational turn — its text was never shown to the user, so putting
+      // it on the wire would make history diverge from what the user actually
+      // read (harmless while the window was 1 message, actively misleading once
+      // it widens). The facts it saves reach the next turn anyway: buildContext()
+      // re-reads them from the `facts` table every turn.
+      const runForcedExtraction = async (visibleId: string, tools: ToolDefinition[]) => {
         try {
-          const hiddenId = `forced-extract-${Date.now()}-${Math.random().toString(36).slice(2)}`;
           logger.debug(`${TAG} forced extraction pass (required)`, {
             wireMessages: useCloudChatStore.getState().wireMessages.length,
+            tools: tools.map((t) => t.function.name),
           });
-          const forced = await streamOne(hiddenId, true, 'required');
-          pushAssistantToWire(forced.accContent, forced.toolCalls);
+          const forced = await streamOne(visibleId, true, 'required', tools, true);
           if (forced.toolCalls.length > 0) {
-            await executeToolsAndPushResults(hiddenId, forced.toolCalls);
+            await executeToolsAndPushResults(visibleId, forced.toolCalls);
           }
         } catch (err) {
           logger.error(`${TAG} forced extraction failed`, undefined, { error: String(err) });
@@ -345,7 +465,19 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // another chance to call the tool, where a hidden forced pass would leave
       // the bubble blank.
       if (!extractedSomething && first.accContent.trim() !== '') {
-        void runForcedExtraction();
+        // Gate (P0): only run when the agent supplies a payload of tools that
+        // are safe to be FORCED. Empty => skip entirely. See
+        // forcedExtractionTools above.
+        const forcedTools = forcedExtractionTools();
+        if (forcedTools.length > 0) {
+          void runForcedExtraction(assistantId, forcedTools);
+        } else {
+          logger.debug(`${TAG} forced extraction skipped (gate)`, {
+            reason: useFloatingChatStore.getState().proposal
+              ? 'proposal pending'
+              : 'agent supplies no forced-extraction tools',
+          });
+        }
         return;
       }
 

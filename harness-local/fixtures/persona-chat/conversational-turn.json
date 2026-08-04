@@ -1,0 +1,21 @@
+{
+  "description": "A NON-confirmation ('thanks!') after the invitation. Under UI-confirmation the model calling runCalibration only STAGES a card, so the assertion is that a proposal is offered and nothing executes. Execution is structurally impossible from any tool call — proven by the unit tests, not by this run.",
+  "knownFacts": "- 'location: residence': Lives in Porto Santo, Madeira, Portugal, Europe",
+  "wire": [
+    {
+      "role": "user",
+      "content": "Mera's on-device ranking disagreed with its own judgement 59 times lately. Recalibrate to close the gap."
+    },
+    {
+      "role": "assistant",
+      "content": "Would you like me to go ahead and recalibrate the scoring to close that gap?"
+    },
+    {
+      "role": "user",
+      "content": "thanks!"
+    }
+  ],
+  "expect": {
+    "toolCalled": "runCalibration"
+  }
+}

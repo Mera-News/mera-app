@@ -21,6 +21,7 @@ import {
   pruneStaleVisits,
   clearAllVisits,
   getTopVisitedPublications,
+  getVisitedArticleById,
 } from '../publication-visit-service';
 
 const db = database as any;
@@ -662,6 +663,71 @@ describe('getTopVisitedPublications', () => {
     });
     const result = await getTopVisitedPublications();
     expect(result).toEqual([]);
+    expect(logger.captureException).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getVisitedArticleById — the article-detail TTL fallback
+//
+// Server articles are dropped after 48h; this log keeps 30 days. Since every
+// surface now routes through the detail screen (the only place the translate
+// affordance lives), that screen needs a local snapshot to fall back on or the
+// per-publication history dead-ends on "article unavailable".
+// ---------------------------------------------------------------------------
+
+describe('getVisitedArticleById', () => {
+  it('returns the snapshot for a visited article', async () => {
+    db._setRows('publication_visits', [makeVisitRecord({ articleId: 'article-7' })]);
+    const result = await getVisitedArticleById('article-7');
+    expect(result).toMatchObject({
+      articleId: 'article-7',
+      articleUrl: 'https://example.com/1',
+      titleEn: 'Test Article',
+      titleOriginal: 'Test Article Original',
+      languageCode: 'en',
+      publicationName: 'The Times',
+      countryCode: 'GB',
+    });
+  });
+
+  it('returns null for an article that was never visited', async () => {
+    db._setRows('publication_visits', []);
+    expect(await getVisitedArticleById('article-7')).toBeNull();
+  });
+
+  it('returns null for an empty id without querying', async () => {
+    expect(await getVisitedArticleById('   ')).toBeNull();
+  });
+
+  it('prefers the freshest visit — later rows carry the fuller snapshot', async () => {
+    db._setRows('publication_visits', [
+      makeVisitRecord({
+        articleId: 'article-7',
+        titleEn: null,
+        languageCode: null,
+        visitedAt: new Date(NOW - 10_000),
+      }),
+      makeVisitRecord({
+        articleId: 'article-7',
+        titleEn: 'Fresh title',
+        languageCode: 'de',
+        visitedAt: new Date(NOW),
+      }),
+    ]);
+    const result = await getVisitedArticleById('article-7');
+    expect(result?.titleEn).toBe('Fresh title');
+    expect(result?.languageCode).toBe('de');
+    expect(result?.visitCount).toBe(2);
+  });
+
+  it('returns null and captures the exception on a query error', async () => {
+    const col = db._collections['publication_visits'] ?? db.get('publication_visits');
+    col.query.mockReturnValueOnce({
+      fetch: jest.fn().mockRejectedValueOnce(new Error('lookup error')),
+      fetchCount: jest.fn(async () => 0),
+    });
+    expect(await getVisitedArticleById('article-7')).toBeNull();
     expect(logger.captureException).toHaveBeenCalledTimes(1);
   });
 });

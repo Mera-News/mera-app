@@ -20,7 +20,8 @@
     "articles": "Artikelen",
     "loggingOut": "Uitloggen...",
     "never": "Nooit",
-    "saving": "Opslaan..."
+    "saving": "Opslaan...",
+    "offlineBanner": "Traag of geen verbinding met Mera. Weergeven van opgeslagen nieuws — we proberen het opnieuw."
   },
   "auth": {
     "reauthBanner": "Log opnieuw in om te synchroniseren",
@@ -198,7 +199,13 @@
     "statsRelevant_one": "{{formatted}} lijkt relevant,",
     "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
-    "statsRead_other": "en je hebt {{formatted}} gelezen."
+    "statsRead_other": "en je hebt {{formatted}} gelezen.",
+    "divider": {
+      "readLine": "Open om terug te kijken.",
+      "seenLine": "Open om te lezen.",
+      "readTitle": "Alles gelezen.",
+      "seenTitle": "Tot zover het nieuwe."
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -210,7 +217,8 @@
   },
   "aiDisclosure": {
     "caption": "Door AI gegenereerde notitie",
-    "short": "Door AI gegenereerd"
+    "short": "Door AI gegenereerd",
+    "listNote": "Enkele verhaalkoppen hier zijn gegenereerd door AI"
   },
   "articleDetail": {
     "readArticle": "Artikel lezen",
@@ -220,13 +228,12 @@
     "failedToLoad": "Artikel laden mislukt",
     "articleNotFound": "Artikel niet gevonden",
     "offlineUnavailable": "Je bent offline en dit artikel is niet opgeslagen voor offline lezen",
-    "viewAndTranslateOnDevice": "Artikel bekijken en op je apparaat vertalen",
-    "viewOriginal": "Origineel artikel bekijken",
-    "viewOriginalIn": "Origineel artikel bekijken in het {{language}}",
     "share": "Delen",
     "shareVia": "Gedeeld via {{downloadUrl}}",
     "sourceCountryGlobal": "Wereldwijd",
-    "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen."
+    "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen.",
+    "readOn": "Lezen op {{publication}}",
+    "readOnGoogleTranslate": "Lezen op Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -248,13 +255,11 @@
     "addedToLocations": "Toegevoegd aan jouw plaatsen"
   },
   "clusterDetail": {
-    "translatable": "Dit artikel is in {{language}}. Je apparaat kan het vertalen terwijl je leest. Als vertalen niet werkt, kun je de site hieronder openen in Google Translate, let er wel op dat je deze dan via Google bekijkt.",
-    "notTranslatable": "Dit artikel is in {{language}}. Je apparaat kan het niet vertalen. Gebruik Google Translate hieronder om het in jouw taal te lezen.",
-    "notTranslatableOsOutdated": "Dit artikel is in {{language}}. Vertaling op het apparaat vereist iOS {{requiredVersion}}. Je gebruikt iOS {{currentVersion}}. Werk iOS bij, of gebruik Google Translate hieronder om het in jouw taal te lezen.",
+    "translatable": "Dit artikel is in {{language}}: je toestel kan het vertalen terwijl je leest. Werkt vertalen niet, dan kun je de site openen in Google Translate; let op dat je dan via Google surft.",
+    "notTranslatable": "Dit artikel is in {{language}}. Je toestel kan het niet vertalen — gebruik Google Translate om het in je eigen taal te lezen.",
+    "notTranslatableOsOutdated": "Dit artikel is in {{language}}. Vertalen op het toestel vereist iOS {{requiredVersion}}: jij gebruikt iOS {{currentVersion}}. Werk iOS bij, of gebruik Google Translate om het in je eigen taal te lezen.",
     "unknownLanguage": "een andere taal",
     "translationGuideLink": "Laat me zien hoe ik het artikel kan vertalen",
-    "viewInGoogleTranslate": "Bekijken in Google Translate",
-    "readViaGoogleTranslate": "Lees in jouw taal (Google Translate)",
     "showOriginal": "Origineel tonen",
     "showTranslation": "Vertaling tonen"
   },
@@ -319,7 +324,6 @@
     "title": "Taal",
     "appLanguage": "App-taal",
     "appLanguageDescription": "Wordt gebruikt voor de app-interface en het vertalen van nieuwsinhoud",
-    "languagePacks": "Taalpakketten",
     "languagePacksIos": "Vertaalmodellen worden beheerd door je apparaat. Je hoeft alleen het model voor je geselecteerde taal te downloaden. iOS doet de rest.",
     "languagePacksIosPath": "Instellingen → Algemeen → Taal en regio → Vertaaltalen",
     "languagePacksAndroid": "Vertaalmodellen (~30MB elk) worden automatisch gedownload wanneer je voor het eerst naar een nieuwe taal vertaalt.",
@@ -333,8 +337,28 @@
     "packMissingIosPath": "Instellingen → Algemeen → Taal en regio",
     "retry": "Opnieuw proberen",
     "watchGuide": "Bekijk hoe je een taal aan je apparaat toevoegt",
-    "iosLanguageHint": "Alleen deze taal selecteren is niet genoeg. Je moet deze taal ook selecteren in de iOS-taalinstellingen.",
-    "managePacksPrefix": "Ga naar"
+    "managePacksPrefix": "Ga naar",
+    "translationUnavailableTapToRetry": "Het {{language}}-taalpakket wordt mogelijk nog steeds gedownload, of de download is mislukt. Toont momenteel Engels — tik om het opnieuw te proberen.",
+    "translationUnavailableTitle": "Vertaling niet beschikbaar",
+    "translationUnsupportedOnThisIos": "Uw iOS-versie kan niet naar {{language}} vertalen. Toont momenteel Engels — iOS bijwerken maakt dit mogelijk.",
+    "advanced": "Geavanceerd",
+    "advancedDescription": "Vertalen op je toestel. Optioneel — alles hierboven werkt ook zonder dit.",
+    "downloadHintBeforePrefix": "Nadat je een taal kiest, kan iOS vragen om deze te downloaden. Tik op het",
+    "downloadHintBeforeSuffix": "icoontje naast elke taal in dat venster — er wordt pas iets gedownload als je dat doet.",
+    "downloadHintNowPrefix": "Tik op het",
+    "downloadHintNowSuffix": "icoontje naast elke taal in het venster hieronder om de download te starten.",
+    "googleTranslateAlways": "Je kunt elk artikel in elke taal lezen met \"Lezen op Google Translate\" op de artikelpagina — dat werkt altijd, zonder dat je iets hoeft te downloaden.",
+    "onDeviceTranslationHint": "Als je liever hebt dat je toestel het vertalen doet, zorg er dan voor dat je taal beschikbaar is in je iOS-instellingen; de video hieronder laat zien hoe je dit inschakelt.",
+    "switchDeviceUnsupportedBody": "Dit toestel kan nieuwsartikelen niet vertalen naar welke taal dan ook, dus de app gebruikt Engels. Met {{language}} zouden artikelen onvertaald blijven.",
+    "switchFailedBody": "Het vertaalpakket voor {{language}} kon niet worden voorbereid, dus je gebruikt nog steeds {{previous}}. Het wordt mogelijk nog gedownload — probeer het over een moment opnieuw.",
+    "switchFailedTitle": "Overschakelen naar {{language}} is mislukt",
+    "switchTimedOutBody": "Het voorbereiden van {{language}} duurt te lang, dus je gebruikt nog steeds {{previous}}. De download kan op de achtergrond nog worden voltooid — probeer het straks opnieuw.",
+    "switchUnsupportedBody": "Deze versie van iOS kan niet vertalen naar {{language}}, dus je gebruikt nog steeds {{previous}}.",
+    "switchingCancel": "Taalwijziging annuleren",
+    "switchingNudge": "Je toestel bereidt het vertaalpakket voor {{language}} voor. Laat dit scherm open staan tot het klaar is — als je nu weggaat, blijven nieuwsartikelen in het Engels.",
+    "switchingTitle": "{{language}} instellen…",
+    "translationFailedTooltip": "Vertalen mislukt, open de app opnieuw of controleer je instellingen",
+    "translationUnavailableOnThisDevice": "Dit toestel kan nieuwsartikelen niet naar {{language}} vertalen. In plaats daarvan tonen we Engels."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -733,7 +757,11 @@
     "never": "Nooit",
     "running": "{{count}} actief",
     "failed": "{{count}} mislukt",
-    "pending": "{{count}} in wachtrij"
+    "pending": "{{count}} in wachtrij",
+    "noteBody": "Dit scherm leest Mera's on-device database rechtstreeks — de gegevens die je feed opbouwen, hier weergegeven voor zichtbaarheid en debugging. Mera's servers slaan je feiten, je leesgeschiedenis of de suggesties die eruit ontstaan niet op.",
+    "noteExceptions": "Twee uitzonderingen: je accountprofiel (aanmelden, meldingen, taal) wordt gesynchroniseerd met je Mera-account, en wanneer cloud-AI is ingeschakeld, worden je feiten op dit apparaat versleuteld voordat ze voor scoring worden verzonden.",
+    "noteFooter": "Waarden hier zijn ruw en diagnostisch. Feedrijen wissen zichzelf na 48 uur; je kunt je feiten, feedcache en leesgeschiedenis verwijderen via Gegevens beheren.",
+    "noteTitle": "Je gegevens, op je apparaat"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} van {{total}} rijen · {{cols}} kolommen",
@@ -988,7 +1016,8 @@
     "successTitle": "Herkalibreerd",
     "successBody": "Ik heb mijn rangschikking afgestemd op jouw smaak.",
     "noChangeBody": "Je rangschikking is al goed afgestemd: geen wijzigingen nodig.",
-    "failedBody": "Ik kon het herkalibreren nu niet voltooien. Ik probeer het later opnieuw."
+    "failedBody": "Ik kon het herkalibreren nu niet voltooien. Ik probeer het later opnieuw.",
+    "actionRecalibrate": "Relevantie scoren opnieuw afstellen"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Meer over: {{topic}}",
@@ -1013,7 +1042,8 @@
     "paywallRelatedOption": "Gerelateerde coverage tonen",
     "paywallRelatedDesc": "Een vergelijkbaar verhaal van een ander medium is mogelijk niet achter een betaalmuur — controleer de gerelateerde artikelen.",
     "paywallSubscribeDesc": "Je hebt {{publication}} {{visits}} keer bezocht deze maand — overweeg een abonnement voor volledige toegang.",
-    "paywallBlockOption": "In plaats daarvan {{publication}} blokkeren"
+    "paywallBlockOption": "In plaats daarvan {{publication}} blokkeren",
+    "tooMuchOfThis": "Ik zie dit te vaak"
   },
   "topicPlan": {
     "title": "Onderwerpen die ik volg",
@@ -1070,7 +1100,8 @@
     "applyFailedTitle": "Kon opschoning niet toepassen",
     "applyFailedBody": "Probeer het later opnieuw.",
     "profileRow_one": "Persona-gezondheid · {{count}} suggestie",
-    "profileRow_other": "Persona-gezondheid · {{count}} suggesties"
+    "profileRow_other": "Persona-gezondheid · {{count}} suggesties",
+    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse. De oude onderwerpen kunnen worden teruggedraaid via het wijzigingslogboek."
   },
   "locations": {
     "title": "Jouw plaatsen",
@@ -1318,7 +1349,7 @@
     "pinChangedTitle": "PIN bijgewerkt",
     "pinChangedDescription": "Je PIN is gewijzigd.",
     "blurImagesTitle": "Afbeeldingen vervagen",
-    "blurImagesDescription": "Maak artikelafbeeldingen in de hele app zachter, zodat schokkende of verontrustende beelden niet scherp worden getoond."
+    "blurImagesDescription": "Verzwak artikelafbeeldingen in de app zodat grafische of verstorende beelden niet scherp worden weergegeven."
   },
   "display": {
     "title": "Weergave",

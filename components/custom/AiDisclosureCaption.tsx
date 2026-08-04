@@ -33,13 +33,15 @@ interface AiDisclosureCaptionProps {
     text?: string;
     /**
      * Which edge the row (and its text) hugs. Defaults to 'right' — the
-     * historical behaviour, kept byte-identical for the consumers that sit under
-     * a right-aligned block (tracked stories, story timeline, chat thread).
+     * historical behaviour, now kept only for the chat thread header, which sits
+     * under a right-aligned block.
      *
-     * The reason boxes pass 'left': the caption moved out from under the
-     * right-aligned reason text and now sits directly beneath the priority chip
-     * in the box's LEFT column, where a right-hugging row would read as
-     * detached from the chip it labels.
+     * Everything that discloses LEFT-aligned text passes 'left':
+     *   - the reason box (`ArticleSuggestionCard`), where the caption owns the
+     *     box's bottom-left edge beneath the chip+reason row;
+     *   - the story-timeline header (`StoryTimelineScreen`), under the title;
+     *   - the followed-stories list note (`TrackedStoriesScreen`), above row 1.
+     * A right-hugging row there reads as detached from the text it labels.
      */
     align?: 'left' | 'right';
     className?: string;

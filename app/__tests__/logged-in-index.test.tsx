@@ -50,10 +50,12 @@ const mockSetUserId = jest.fn();
 const mockHydrateFromDb = jest.fn(async () => {});
 const mockFetchUserPersona = jest.fn(async () => null);
 const mockFetchUserPersonaOrThrow = jest.fn(async () => ({}));
+const mockSetNeedsReauth = jest.fn((_v: boolean) => {});
 jest.mock('@/lib/stores/user-store', () => ({
     useUserStore: {
         getState: () => ({
             setUserId: mockSetUserId,
+            setNeedsReauth: mockSetNeedsReauth,
             hydrateFromDb: mockHydrateFromDb,
             fetchUserPersona: mockFetchUserPersona,
             fetchUserPersonaOrThrow: mockFetchUserPersonaOrThrow,
@@ -61,7 +63,11 @@ jest.mock('@/lib/stores/user-store', () => ({
         }),
     },
 }));
-jest.mock('@/lib/stores/network-store', () => ({ useNetworkStore: { getState: () => ({ isConnected: true }) } }));
+const mockProbeServerReachable = jest.fn(async () => true);
+jest.mock('@/lib/stores/network-store', () => ({
+    useNetworkStore: { getState: () => ({ isConnected: true }) },
+    probeServerReachable: () => mockProbeServerReachable(),
+}));
 jest.mock('@/lib/stores/subscription-store', () => ({ useSubscriptionStore: { getState: () => ({ setCustomerInfo: jest.fn() }) } }));
 jest.mock('@/lib/revenuecat', () => ({ loginRevenueCat: jest.fn(async () => null) }));
 
@@ -125,7 +131,56 @@ describe('cold-start identity gate', () => {
             cachedUserId: 'other-user',
             ownershipFault: true,
             isConnected: true,
+            // Probed because a fault is present — see the reachability tests below.
+            serverReachable: true,
         });
+    });
+
+    // ── server-reachability probe ────────────────────────────────────────
+    // The eject must not fire when the auth server cannot be reached: the OTP
+    // it sends the user to could not be completed. Deferral, not cancellation —
+    // the fault stays persisted and the next reachable launch ejects as before.
+    it('does not spend a probe round-trip on the happy path', async () => {
+        mockHasIdentityFault.mockResolvedValue(false);
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockProbeServerReachable).not.toHaveBeenCalled();
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({ serverReachable: undefined }),
+        );
+    });
+
+    it('probes and forwards the result when a fault is present', async () => {
+        mockHasIdentityFault.mockResolvedValue(true);
+        mockProbeServerReachable.mockResolvedValue(false);
+        mockResolveIdentity.mockReturnValue('coherent');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockProbeServerReachable).toHaveBeenCalledTimes(1);
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({ ownershipFault: true, serverReachable: false }),
+        );
+    });
+
+    it('keeps needsReauth set when the fault is deferred', async () => {
+        // Deferring the eject must not leave background work ungated — the
+        // scheduler's auth pre-flight keys off needsReauth to halt feed-sync.
+        mockHasIdentityFault.mockResolvedValue(true);
+        mockProbeServerReachable.mockResolvedValue(false);
+        mockResolveIdentity.mockReturnValue('coherent');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockSetNeedsReauth).toHaveBeenCalledWith(true));
+    });
+
+    it('leaves needsReauth alone when there is no fault', async () => {
+        mockHasIdentityFault.mockResolvedValue(false);
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
+        expect(mockSetNeedsReauth).not.toHaveBeenCalled();
     });
 
     it('no local identity at all → back to the launch gate', async () => {

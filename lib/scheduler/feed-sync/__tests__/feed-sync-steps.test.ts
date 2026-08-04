@@ -8,6 +8,7 @@ const mockPersistAndLinkV2Suggestions = jest.fn();
 const mockGetFactWeightById = jest.fn();
 const mockGetArticleIdsForTopics = jest.fn();
 const mockGetArticlesForTopicsByIds = jest.fn();
+const mockGetArticlesForStories = jest.fn();
 const mockGetArticleIdsForPersona = jest.fn();
 const mockWithRetry = jest.fn();
 const mockRunScoringPass = jest.fn();
@@ -30,6 +31,10 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 
 jest.mock('@/lib/database/services/topic-service', () => ({
   getActive: (...args: any[]) => mockGetActive(...args),
+  // Real implementation, not a stub: the billing partition compares NORMALIZED
+  // texts, so a mock that skipped normalization would make the collision tests
+  // below pass for the wrong reason.
+  normalizeTopicText: (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' '),
 }));
 
 jest.mock('@/lib/services/persona-migration-service', () => ({
@@ -59,6 +64,7 @@ jest.mock('@/lib/article-service', () => ({
   ArticleService: {
     getArticleIdsForTopics: (...args: any[]) => mockGetArticleIdsForTopics(...args),
     getArticlesForTopicsByIds: (...args: any[]) => mockGetArticlesForTopicsByIds(...args),
+    getArticlesForStories: (...args: any[]) => mockGetArticlesForStories(...args),
     getArticleIdsForPersona: (...args: any[]) => mockGetArticleIdsForPersona(...args),
   },
 }));
@@ -107,6 +113,8 @@ import {
   stepDiff,
   stepHydratePersistEnqueue,
   stepScore,
+  computeFreeTopicTexts,
+  partitionStoryIds,
   HYDRATE_CHUNK_SIZE,
   HYDRATE_CONCURRENCY,
 } from '../feed-sync-steps';
@@ -158,6 +166,9 @@ beforeEach(() => {
   mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 0, linkedCount: 0 });
   mockGetArticleIdsForTopics.mockResolvedValue({ results: [] });
   mockGetArticlesForTopicsByIds.mockResolvedValue({ articles: [], dailyLimitReached: false });
+  // The quota-exempt hydrator returns no cap fields at all — that absence is
+  // part of its contract, so the default mock must not invent them.
+  mockGetArticlesForStories.mockResolvedValue({ articles: [] });
   mockRunScoringPass.mockResolvedValue(5);
   mockEnqueueCandidates.mockResolvedValue(undefined);
   mockGetNonTerminalCandidateIds.mockResolvedValue(new Set());
@@ -603,6 +614,155 @@ describe('stepDiff', () => {
     await stepDiff(fetchResult, ctx);
 
     expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('3 missing'));
+  });
+});
+
+// ── billing partition (followed stories are quota-exempt) ───────────────────
+
+describe('computeFreeTopicTexts', () => {
+  const T = (text: string, provenance: string) => ({ text, provenance });
+
+  it('returns tracked topic texts, normalized', () => {
+    const free = computeFreeTopicTexts([
+      T('  Gaza   Ceasefire ', 'tracked'),
+      T('AI regulation', 'llm'),
+    ]);
+    expect([...free]).toEqual(['gaza ceasefire']);
+  });
+
+  it('subtracts any text also carried by a NON-tracked topic', () => {
+    // createTopics dedupes on (normalized_text, fact_id), so a tracked topic
+    // (fact_id null) and a fact-owned interest topic can hold the same text.
+    // Metered must win, or the interest's articles would hydrate free.
+    const free = computeFreeTopicTexts([
+      T('gaza ceasefire', 'tracked'),
+      T('gaza ceasefire', 'llm'),
+    ]);
+    expect(free.size).toBe(0);
+  });
+
+  it('subtracts on NORMALIZED text, so case/whitespace variants cannot slip past', () => {
+    const free = computeFreeTopicTexts([
+      T('Gaza Ceasefire', 'tracked'),
+      T('  gaza   ceasefire  ', 'user'),
+    ]);
+    expect(free.size).toBe(0);
+  });
+
+  it('ignores blank texts', () => {
+    expect(computeFreeTopicTexts([T('   ', 'tracked')]).size).toBe(0);
+  });
+
+  it('is empty when nothing is tracked', () => {
+    expect(
+      computeFreeTopicTexts([T('a', 'llm'), T('b', 'exploration')]).size,
+    ).toBe(0);
+  });
+});
+
+describe('partitionStoryIds', () => {
+  const free = new Set(['tracked topic']);
+
+  it('routes a tracked-ONLY article to the free set', () => {
+    const map = new Map([['art-1', ['tracked topic']]]);
+    expect(partitionStoryIds(['art-1'], map, free)).toEqual({
+      storyIds: ['art-1'],
+      personaIds: [],
+    });
+  });
+
+  it('METERED WINS when an article matched a persona topic too', () => {
+    const map = new Map([['art-1', ['tracked topic', 'ai regulation']]]);
+    expect(partitionStoryIds(['art-1'], map, free)).toEqual({
+      storyIds: [],
+      personaIds: ['art-1'],
+    });
+  });
+
+  it('keeps a headline-scope article metered even if its topics are all free', () => {
+    const map = new Map([['art-1', ['tracked topic']]]);
+    const headlineScope = new Map([['art-1', 'GLOBAL']]);
+    expect(partitionStoryIds(['art-1'], map, free, headlineScope)).toEqual({
+      storyIds: [],
+      personaIds: ['art-1'],
+    });
+  });
+
+  it('keeps an article with NO matched topics metered', () => {
+    expect(partitionStoryIds(['art-1'], new Map(), free)).toEqual({
+      storyIds: [],
+      personaIds: ['art-1'],
+    });
+  });
+
+  it('matches on normalized text', () => {
+    const map = new Map([['art-1', ['  Tracked   Topic ']]]);
+    expect(partitionStoryIds(['art-1'], map, free).storyIds).toEqual(['art-1']);
+  });
+
+  it('meters everything when there are no free texts', () => {
+    const map = new Map([['art-1', ['tracked topic']]]);
+    expect(partitionStoryIds(['art-1'], map, new Set())).toEqual({
+      storyIds: [],
+      personaIds: ['art-1'],
+    });
+    expect(partitionStoryIds(['art-1'], map, undefined)).toEqual({
+      storyIds: [],
+      personaIds: ['art-1'],
+    });
+  });
+
+  it('outputs are disjoint and their union is exactly the input', () => {
+    const ids = ['a', 'b', 'c', 'd'];
+    const map = new Map([
+      ['a', ['tracked topic']],
+      ['b', ['ai regulation']],
+      ['c', ['tracked topic', 'ai regulation']],
+      // 'd' has no entry at all
+    ]);
+    const { storyIds, personaIds } = partitionStoryIds(ids, map, free);
+
+    expect(storyIds).toEqual(['a']);
+    expect(personaIds).toEqual(['b', 'c', 'd']);
+    expect(storyIds.filter((x) => personaIds.includes(x))).toEqual([]);
+    expect([...storyIds, ...personaIds].sort()).toEqual([...ids].sort());
+  });
+});
+
+describe('stepDiff — billing partition', () => {
+  it('partitions AFTER the single new-to-device filter, never re-reading local ids', async () => {
+    // 'old' is already on device; only 'new-story' and 'new-persona' survive the
+    // diff, and the partition splits exactly those.
+    mockGetLocalSuggestionServerIds.mockResolvedValue(['old']);
+    const result: FetchTopicIdsResult = {
+      serverArticleIds: ['old', 'new-story', 'new-persona'],
+      articleToTopicTexts: new Map([
+        ['old', ['tracked topic']],
+        ['new-story', ['tracked topic']],
+        ['new-persona', ['ai regulation']],
+      ]),
+      freeTopicTexts: new Set(['tracked topic']),
+    };
+
+    const diff = await stepDiff(result, makeCtx());
+
+    expect(mockGetLocalSuggestionServerIds).toHaveBeenCalledTimes(1);
+    expect(diff.missingIds).toEqual(['new-story', 'new-persona']);
+    expect(diff.storyIds).toEqual(['new-story']);
+    expect(diff.personaIds).toEqual(['new-persona']);
+  });
+
+  it('meters everything when the fetch produced no free texts (legacy path)', async () => {
+    mockGetLocalSuggestionServerIds.mockResolvedValue([]);
+    const result: FetchTopicIdsResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map([['art-1', ['whatever']]]),
+    };
+
+    const diff = await stepDiff(result, makeCtx());
+
+    expect(diff.storyIds).toEqual([]);
+    expect(diff.personaIds).toEqual(['art-1']);
   });
 });
 
@@ -1132,6 +1292,125 @@ describe('stepHydratePersistEnqueue', () => {
     expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledTimes(2);
     expect(mockGetArticlesForTopicsByIds.mock.calls[0][0]).toHaveLength(HYDRATE_CHUNK_SIZE);
     expect(mockGetArticlesForTopicsByIds.mock.calls[1][0]).toHaveLength(5);
+  });
+
+  it('routes story ids to the quota-EXEMPT hydrator and persona ids to the metered one', async () => {
+    mockGetArticlesForStories.mockResolvedValue({ articles: [{ _id: 'story-1' }] });
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'persona-1' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+
+    const topicMap = new Map([
+      ['story-1', ['tracked topic']],
+      ['persona-1', ['ai regulation']],
+    ]);
+    const diffResult: DiffResult = {
+      serverArticleIds: ['story-1', 'persona-1'],
+      articleToTopicTexts: topicMap,
+      missingIds: ['story-1', 'persona-1'],
+      storyIds: ['story-1'],
+      personaIds: ['persona-1'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockGetArticlesForStories).toHaveBeenCalledTimes(1);
+    expect(mockGetArticlesForStories.mock.calls[0][0]).toEqual(['story-1']);
+    expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledTimes(1);
+    expect(mockGetArticlesForTopicsByIds.mock.calls[0][0]).toEqual(['persona-1']);
+
+    // A free-path article must still be persisted with the FULL, unfiltered
+    // topic map. `matched_topics_json` is the only thing the tracked-story
+    // reconcile matches on (tracked-story-reconcile.ts queries
+    // `matched_topics_json != null` and reads topicId out of it), so if the
+    // billing partition ever narrowed this argument, followed stories would
+    // stop growing — the user would get the articles in the Feed but the story
+    // timeline would never pick them up. That is the one regression that would
+    // make this whole change a net negative.
+    const storyPersist = mockPersistAndLinkV2Suggestions.mock.calls.find(
+      (c: any[]) => c[0].some((a: any) => a._id === 'story-1'),
+    );
+    expect(storyPersist).toBeDefined();
+    expect(storyPersist![1]).toBe(topicMap);
+    expect(storyPersist![1].get('story-1')).toEqual(['tracked topic']);
+  });
+
+  it('never sends a story id through the metered hydrator', async () => {
+    // The whole point of the wave: a followed-story-only article must not reach
+    // articlesForTopicsByIds, because that is the one call that charges quota.
+    const diffResult: DiffResult = {
+      serverArticleIds: ['story-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['story-1'],
+      storyIds: ['story-1'],
+      personaIds: [],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockGetArticlesForTopicsByIds).not.toHaveBeenCalled();
+    expect(mockGetArticlesForStories).toHaveBeenCalledWith(
+      ['story-1'],
+      expect.any(Function),
+    );
+  });
+
+  it('chunks each side independently at HYDRATE_CHUNK_SIZE', async () => {
+    const storyIds = Array.from({ length: 30 }, (_, i) => `s-${i}`);
+    const personaIds = Array.from({ length: 26 }, (_, i) => `p-${i}`);
+    const diffResult: DiffResult = {
+      serverArticleIds: [...storyIds, ...personaIds],
+      articleToTopicTexts: new Map(),
+      missingIds: [...storyIds, ...personaIds],
+      storyIds,
+      personaIds,
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // 30 → 25 + 5; 26 → 25 + 1. Neither side spills into the other's chunks.
+    expect(mockGetArticlesForStories).toHaveBeenCalledTimes(2);
+    expect(mockGetArticlesForStories.mock.calls[0][0]).toHaveLength(HYDRATE_CHUNK_SIZE);
+    expect(mockGetArticlesForStories.mock.calls[1][0]).toHaveLength(5);
+    expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledTimes(2);
+    expect(mockGetArticlesForTopicsByIds.mock.calls[1][0]).toHaveLength(1);
+  });
+
+  it('falls back to METERED for a DiffResult with no partition', async () => {
+    // Fail-safe direction: a caller that never partitioned must behave exactly
+    // as it did before r12 — charging for everything — not hydrate for free.
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-1'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockGetArticlesForStories).not.toHaveBeenCalled();
+    expect(mockGetArticlesForTopicsByIds).toHaveBeenCalledWith(
+      ['art-1'],
+      expect.any(Function),
+    );
+  });
+
+  it('the quota-exempt hydrator can never trip the daily-limit flag', async () => {
+    mockGetArticlesForStories.mockResolvedValue({ articles: [{ _id: 'story-1' }] });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    const diffResult: DiffResult = {
+      serverArticleIds: ['story-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['story-1'],
+      storyIds: ['story-1'],
+      personaIds: [],
+    };
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(result.dailyLimitReached).toBe(false);
+    expect(result.resetAt).toBeUndefined();
   });
 
   it('skips all work and returns zeros when missingIds is empty', async () => {

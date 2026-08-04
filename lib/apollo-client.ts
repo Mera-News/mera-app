@@ -18,7 +18,12 @@ import { recordAuthFailure, recordAuthSuccess } from './auth-failure-breaker';
 import logger from './logger';
 import { isOwnershipFault, recordOwnershipFault } from './security/identity-gate';
 import { useForYouStore } from './stores/for-you-store';
-import { useNetworkStore } from './stores/network-store';
+import {
+    recordServerReachable,
+    recordServerTransportFailure,
+    useNetworkStore,
+} from './stores/network-store';
+import { instrumentedFetch, isRequestTimeoutError } from './apollo-fetch';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
 
@@ -28,6 +33,11 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 const httpLink = new HttpLink({
     uri: `${GRAPHQL_SERVER_ENDPOINT}/graphql`,
     credentials: 'omit', // Important: prevents interference with manually set cookies
+    // Instrumented so a hanging server is detectable at all — RN's fetch has no
+    // default timeout, so without this a socket that is accepted and never
+    // answered produces no rejection, no failure count, and no user-visible
+    // signal. See lib/apollo-fetch.ts for the slow-vs-abort split.
+    fetch: instrumentedFetch,
 });
 
 const MAX_THROTTLE_RETRIES = 3;
@@ -41,6 +51,11 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
     // background queries.
 
     if (CombinedGraphQLErrors.is(error)) {
+        // A GraphQL error is still a SERVER RESPONSE — it proves we reached the
+        // server, whatever it thought of the query. Recorded before the loop so
+        // an error-carrying response can't leave us believing the server is down.
+        recordServerReachable();
+
         // Handle GraphQL errors
         for (const graphQLError of error.errors) {
             const { extensions } = graphQLError;
@@ -128,6 +143,26 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             | undefined;
         const statusCode = networkError?.statusCode || networkError?.response?.status;
 
+        // Feed the server-reachability signal before anything else acts on this
+        // error. Three cases, and the distinction between them is what keeps the
+        // offline band honest:
+        //   - a status < 500  → the server ANSWERED. Reachable, whatever it said.
+        //   - a 5xx, or no status at all (transport failure / our own timeout)
+        //                     → evidence the server is down.
+        //   - an AbortError with no timeout marker → a CANCELLATION (screen
+        //     unmount, tab switch, superseded refresh). Proves nothing; counting
+        //     it would let ordinary navigation fake an outage.
+        const isCancellation =
+            (error as { name?: string } | undefined)?.name === 'AbortError' &&
+            !isRequestTimeoutError(error);
+        if (!isCancellation) {
+            if (typeof statusCode === 'number' && statusCode < 500) {
+                recordServerReachable();
+            } else {
+                recordServerTransportFailure();
+            }
+        }
+
         // 401 is logged but does NOT auto-logout (see GraphQL UNAUTHENTICATED
         // branch above for rationale).
         if (statusCode === StatusCodes.UNAUTHORIZED) {
@@ -194,7 +229,11 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
         // background queries spams several toasts per second in airplane
         // mode. The offline banners (Feed/Dashboard headers) already cover
         // that state; the breadcrumb above is enough here for diagnostics.
-        if (isConnected) {
+        //
+        // Also suppressed once the server is known-unreachable: the global
+        // offline band now covers that state persistently, so a per-query toast
+        // on top of it is noise saying the same thing.
+        if (isConnected && useNetworkStore.getState().serverReachable) {
             toastManager.showNetworkError();
         }
     }
@@ -207,6 +246,10 @@ const authSuccessLink = new ApolloLink((operation, forward) =>
     new Observable((observer) => {
         const subscription = forward(operation).subscribe({
             next: (result) => {
+                // Any result at all reached us, so the server is up. Recorded
+                // unconditionally — unlike recordAuthSuccess below, which needs
+                // an ERROR-FREE result because it also clears needsReauth.
+                recordServerReachable();
                 if (!result.errors || result.errors.length === 0) {
                     recordAuthSuccess();
                 }

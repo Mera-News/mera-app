@@ -35,6 +35,14 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 jest.mock('@/lib/haptics', () => ({ hapticSuccess: jest.fn() }));
+// Display-translation wrapper → a plain Text of the SOURCE string. Mirrors the
+// cards suite. Without it the real component drags in `expo-translate-text`,
+// whose native module does not exist under jest ("Cannot find native module
+// 'ExpoTranslateText'"), and the whole suite fails to load.
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const { Text } = require('react-native');
+  return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
+});
 
 const mockExecuteProposalActions = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/lib/chat-tools/proposal-handlers', () => ({

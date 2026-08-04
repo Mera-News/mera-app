@@ -458,6 +458,8 @@ export type Query = {
   articlesForPublicationSource: ArticlesForPublicationSourceResponse;
   /** A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines). */
   articlesForPublisher: ArticlesForPublicationSourceResponse;
+  /** Hydrate articles by id for followed ("tracked") stories. Identical payload to articlesForTopicsByIds, but deliberately NOT charged against the daily article cap — following a story must not consume the allowance. dailyLimitReached is always false and resetAt is always absent. Capped at 50 ids per request. */
+  articlesForStories: ArticlesForTopicsByIdsResponse;
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
   feedbackTree?: Maybe<FeedbackTreeResponse>;
@@ -523,6 +525,11 @@ export type QueryArticlesForPublisherArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   newsPublisherId: Scalars['ID']['input'];
+};
+
+
+export type QueryArticlesForStoriesArgs = {
+  articleIds: Array<Scalars['ID']['input']>;
 };
 
 

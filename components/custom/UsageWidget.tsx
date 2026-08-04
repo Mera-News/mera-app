@@ -87,7 +87,12 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
         >
             <HStack className="items-start justify-between mb-3">
                 <VStack className="flex-1 min-w-0">
-                    <Text className="text-white font-bold text-3xl leading-9">
+                    {/* No `leading-9` (1.2 on 30px type). The content here is
+                        digits, so nothing clips today — but a tight override
+                        left in place is how the clipping bug comes back the
+                        moment a localized string lands in this slot.
+                        `text-3xl` now carries a script-safe 45px line box. */}
+                    <Text className="text-white font-bold text-3xl">
                         {used}
                         {hasLimit ? (
                             <Text className="text-gray-400 font-semibold text-xl"> / {limit}</Text>

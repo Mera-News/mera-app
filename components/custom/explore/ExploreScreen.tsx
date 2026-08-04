@@ -8,7 +8,6 @@ import {
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { setSetting } from '@/lib/database/services/setting-service';
@@ -17,7 +16,6 @@ import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
 import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import logger from '@/lib/logger';
-import { useIsConnected } from '@/lib/stores/network-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -47,7 +45,6 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
 const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
-    const isConnected = useIsConnected();
 
     // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
     // with the Feed/Dashboard tabs.
@@ -266,23 +263,13 @@ const ExploreScreen: React.FC = () => {
                         </Pressable>
                     </HStack>
 
-                    {/* Offline banner — Explore is direct server-paginated (no local
-                        cache), so an offline visit here would otherwise just look
-                        like a jarring generic "no articles found" empty state from
-                        ScopeArticleList. This makes the reason explicit and
-                        non-blocking; that list already falls back to its friendly
-                        empty state, not a hard error, on fetch failure. Purely
-                        decorative — pointerEvents="none" so a pull can start on it. */}
-                    {!isConnected && (
-                        <HStack
-                            className="items-center bg-warning-900 rounded-lg px-3 py-2 mx-5 mb-2"
-                            space="sm"
-                            pointerEvents="none"
-                        >
-                            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                            <Text size="sm" className="text-warning-400">{t('explore.offlineUnavailable')}</Text>
-                        </HStack>
-                    )}
+                    {/* The offline notice that used to sit here MOVED into
+                        ScopeArticleList's empty state. It answers a different
+                        question from the global OfflineBanner — "why is this list
+                        empty?" rather than "can Mera reach the server?" — and it
+                        answers it better in the place the emptiness actually
+                        appears. Keeping it here stacked two identical warning
+                        bands a few pixels apart. */}
 
                     {/* Scope chips — box-none: the row is a full-width band and
                         must not swallow a pull; only the chips themselves (and

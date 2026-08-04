@@ -40,6 +40,13 @@ export const DIGEST_CONSTANTS = {
   pathLowerTopic: -0.2,
   /** dislike → "not that important" weight delta (tree `not_important`). */
   pathLowerMild: -0.15,
+  /** dislike → "I'm seeing too much of this" weight delta (tree `too_many`).
+   *  A FREQUENCY complaint: the user still wants the subject, just less of it,
+   *  so it lowers the topic weight (which drives both the score and the
+   *  per-topic retrieval limit) instead of minting a filter. -0.3 is the strong
+   *  step of the same pair as `pathLowerMild`, mirroring `pathBoostStrong` /
+   *  `pathBoostMild` on the like side. */
+  pathLowerStrong: -0.3,
   /** Verdict-aggregate delta when a topic accrues repeated dislikes. */
   aggregateDislikeDelta: -0.2,
   /** Verdict-aggregate delta when a topic accrues repeated likes. */
@@ -56,8 +63,6 @@ export const DIGEST_CONSTANTS = {
   minDislikesForSuppress: 2,
   /** Default strength for a minted suppression. */
   suppressionStrength: 0.5,
-  /** Max title tokens folded into a title-based suppression's keywords. */
-  maxTitleKeywords: 4,
   /** Plan caps — at most this many auto changes + this many review items. */
   maxAutoCandidates: 8,
   maxReviewCandidates: 5,
@@ -178,18 +183,12 @@ function normalize(s: string): string {
   return s.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
-/** Lowercase content tokens (length ≥ 3), for title-based suppression keywords. */
-function titleKeywords(title: string, cap: number): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const w of title.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/)) {
-    if (w.length < 3 || seen.has(w)) continue;
-    seen.add(w);
-    out.push(w);
-    if (out.length >= cap) break;
-  }
-  return out;
-}
+// `titleKeywords` (lowercase content tokens off a headline) lived here for the
+// one caller that built a suppression out of an article's title — `too_many`,
+// which now downweights the topic instead. Nothing else ever tokenized a title:
+// a headline is not a matchable article field, so no structured filter can be
+// built from one, and the keyword scan it fell back to is exactly the
+// eliminate-the-subject behaviour that leaf must not have. Deleted with it.
 
 function shorten(s: string, max = 42): string {
   const t = s.trim();
@@ -303,10 +302,10 @@ function topicWeightCandidate(
  *
  * `structured` promotes the filter from a keyword substring scan to an exact
  * match on one article field (D9). It is only safe when the value is the
- * article's OWN snapshotted field, verbatim — which is why the two callers that
- * pass it read straight from `signal.context.category` / `.eventType`, and the
- * title-keyword caller (`too_many`) passes nothing: a headline is not an
- * indexed field, so it stays a keyword filter.
+ * article's OWN snapshotted field, verbatim — which is why both callers read
+ * straight from `signal.context.category` / `.eventType`. Since `too_many`
+ * stopped minting a title-keyword filter there is no caller that omits it: every
+ * suppression this digest mints is now a structured, single-field one.
  */
 function suppressionCandidate(
   targetKey: string,
@@ -399,23 +398,17 @@ function pathCandidates(
     case 'not_important':
       forEachTopic(c.pathLowerMild);
       break;
-    case 'too_many': {
-      const kws = titleKeywords(signal.title, c.maxTitleKeywords);
-      if (kws.length > 0) {
-        out.push(
-          suppressionCandidate(
-            `title:${kws.join('-')}`,
-            shorten(signal.title, 60),
-            kws,
-            `Fewer stories like "${shorten(signal.title)}"`,
-            signal.id,
-            c,
-            {},
-          ),
-        );
-      }
+    // "I'm seeing too much of this" is a complaint about VOLUME, not relevance.
+    // It used to mint a keyword suppression built from the headline's tokens,
+    // which is the wrong action family twice over: a filter ELIMINATES the
+    // subject the user just said they still wanted, and it did so through the
+    // back door — this path runs precisely when the tree's own downweight did
+    // NOT land (a `nudgeTopic` budget exhaustion leaves the row unstamped, so
+    // the digest picks it up later). Now it mirrors the tree leaf exactly, which
+    // is what every other constant in DIGEST_CONSTANTS documents itself as.
+    case 'too_many':
+      forEachTopic(c.pathLowerStrong);
       break;
-    }
     case 'this_kind_of_event':
       if (signal.context.eventType) {
         const evt = signal.context.eventType;

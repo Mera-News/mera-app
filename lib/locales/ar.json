@@ -20,7 +20,8 @@
     "yes": "نعم",
     "no": "لا",
     "saving": "جارٍ الحفظ...",
-    "home": "الصفحة الرئيسية"
+    "home": "الصفحة الرئيسية",
+    "offlineBanner": "اتصال بطيء أو معدوم بـ Mera. جارٍ عرض الأخبار المحفوظة — سنحاول مجددًا."
   },
   "auth": {
     "reauthBanner": "سجّل الدخول مجددًا لمزامنة البيانات",
@@ -194,19 +195,19 @@
     "waitingForNextBatch_other": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
     "exploreCta": "تصفح الاستكشاف",
     "statsPublishedPending_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
-    "statsPublishedPending_one": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
+    "statsPublishedPending_one": "تم نشر {{formatted}} مقالة في آخر 24 ساعة.",
     "statsPublishedPending_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة.",
     "statsPublishedPending_few": "{{formatted}} مقالات نُشرت في آخر 24 ساعة.",
     "statsPublishedPending_many": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
     "statsPublishedPending_other": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
     "statsPublished_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
-    "statsPublished_one": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
+    "statsPublished_one": "تم نشر {{formatted}} مقالة في آخر 24 ساعة،",
     "statsPublished_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة،",
     "statsPublished_few": "{{formatted}} مقالات نُشرت في آخر 24 ساعة،",
     "statsPublished_many": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
     "statsPublished_other": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
     "statsAnalysed_zero": "{{formatted}} تم تحليلها لك،",
-    "statsAnalysed_one": "{{formatted}} تم تحليلها لك،",
+    "statsAnalysed_one": "تم تحليل {{formatted}} لك،",
     "statsAnalysed_two": "{{formatted}} تم تحليلهما لك،",
     "statsAnalysed_few": "{{formatted}} تم تحليلها لك،",
     "statsAnalysed_many": "{{formatted}} تم تحليلها لك،",
@@ -218,11 +219,17 @@
     "statsRelevant_many": "{{formatted}} تبدو ذات صلة،",
     "statsRelevant_other": "{{formatted}} تبدو ذات صلة،",
     "statsRead_zero": "وقرأت {{formatted}}.",
-    "statsRead_one": "وقرأت {{formatted}}.",
+    "statsRead_one": "وقد قرأت {{formatted}}.",
     "statsRead_two": "وقرأت {{formatted}}.",
     "statsRead_few": "وقرأت {{formatted}}.",
     "statsRead_many": "وقرأت {{formatted}}.",
-    "statsRead_other": "وقرأت {{formatted}}."
+    "statsRead_other": "وقرأت {{formatted}}.",
+    "divider": {
+      "readLine": "افتح أي منها للمراجعة.",
+      "seenLine": "افتح أي منها للقراءة.",
+      "readTitle": "تمت قراءته.",
+      "seenTitle": "كل هذا جديد."
+    }
   },
   "relevance": {
     "emergency": "طارئ",
@@ -234,7 +241,8 @@
   },
   "aiDisclosure": {
     "caption": "ملاحظة مولّدة بالذكاء الاصطناعي",
-    "short": "مولّد بالذكاء الاصطناعي"
+    "short": "مولّد بالذكاء الاصطناعي",
+    "listNote": "بعض عناوين القصص هنا مولّدة بالذكاء الاصطناعي"
   },
   "articleDetail": {
     "readArticle": "قراءة المقال",
@@ -244,13 +252,12 @@
     "failedToLoad": "فشل تحميل المقال",
     "articleNotFound": "المقال غير موجود",
     "offlineUnavailable": "أنت غير متصل بالإنترنت والمقالة لم تُحفظ لقراءتها دون اتصال",
-    "viewOriginal": "عرض المقال الأصلي",
-    "viewOriginalIn": "عرض المقال الأصلي بلغة {{language}}",
-    "viewAndTranslateOnDevice": "عرض المقال وترجمته على الجهاز",
     "share": "مشاركة",
     "shareVia": "تمت المشاركة عبر {{downloadUrl}}",
     "sourceCountryGlobal": "عالمي",
-    "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد."
+    "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد.",
+    "readOn": "اقرأ على {{publication}}",
+    "readOnGoogleTranslate": "اقرأ على Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -272,13 +279,11 @@
     "addedToLocations": "أُضيف إلى أماكنك"
   },
   "clusterDetail": {
-    "translatable": "هذا المقال مكتوب بلغة {{language}}. يمكن لجهازك ترجمته أثناء القراءة. إذا لم تعمل الترجمة، يمكنك فتح الموقع في ترجمة Google أدناه؛ فقط لاحظ أنك ستتصفحه عبر Google.",
-    "notTranslatable": "هذا المقال مكتوب بلغة {{language}}. جهازك لا يمكنه ترجمته. استخدم ترجمة Google أدناه لقراءته بلغتك.",
-    "notTranslatableOsOutdated": "هذا المقال مكتوب بلغة {{language}}. تتطلب الترجمة على الجهاز نظام iOS {{requiredVersion}}. أنت تستخدم iOS {{currentVersion}}. حدّث نظام iOS، أو استخدم ترجمة Google أدناه لقراءته بلغتك.",
+    "translatable": "هذا المقال مكتوب بلغة {{language}}: يمكن لجهازك ترجمته أثناء القراءة. إذا لم تعمل الترجمة، يمكنك فتح الموقع عبر Google Translate؛ فقط لاحظ أنك ستتصفحه عندئذٍ عبر Google.",
+    "notTranslatable": "هذا المقال مكتوب بلغة {{language}}. لا يمكن لجهازك ترجمته — استخدم Google Translate لقراءته بلغتك.",
+    "notTranslatableOsOutdated": "هذا المقال مكتوب بلغة {{language}}. تتطلب الترجمة على الجهاز إصدار iOS {{requiredVersion}}: أنت تستخدم iOS {{currentVersion}}. حدّث iOS، أو استخدم Google Translate لقراءته بلغتك.",
     "unknownLanguage": "لغة أخرى",
     "translationGuideLink": "أرني كيفية ترجمة المقال",
-    "viewInGoogleTranslate": "عرض في ترجمة Google",
-    "readViaGoogleTranslate": "اقرأ بلغتك (ترجمة Google)",
     "showOriginal": "عرض النص الأصلي",
     "showTranslation": "عرض الترجمة"
   },
@@ -343,7 +348,6 @@
     "title": "اللغة",
     "appLanguage": "لغة التطبيق",
     "appLanguageDescription": "تُستخدم لواجهة التطبيق وترجمة محتوى الأخبار",
-    "languagePacks": "حزم اللغات",
     "languagePacksIos": "يتم إدارة نماذج الترجمة بواسطة جهازك. تحتاج فقط إلى تنزيل النموذج للغة المحددة. يتولى iOS الباقي.",
     "languagePacksIosPath": "الإعدادات ← عام ← اللغة والمنطقة ← لغات الترجمة",
     "languagePacksAndroid": "يتم تنزيل نماذج الترجمة (~30MB لكل نموذج) تلقائيًا عند الترجمة لأول مرة إلى لغة جديدة.",
@@ -357,8 +361,28 @@
     "packMissingIosPath": "الإعدادات ← عام ← اللغة والمنطقة",
     "retry": "إعادة المحاولة",
     "watchGuide": "شاهد كيفية إضافة لغة إلى جهازك",
-    "iosLanguageHint": "لا يكفي اختيار هذه اللغة فقط. ستحتاج أيضًا إلى تحديد هذه اللغة في إعدادات لغة iOS.",
-    "managePacksPrefix": "لإدارة اللغات المُنزلة، اذهب إلى"
+    "managePacksPrefix": "لإدارة اللغات المُنزلة، اذهب إلى",
+    "translationUnavailableTapToRetry": "قد تكون حزمة اللغة {{language}} قيد التنزيل، أو قد يكون التنزيل قد فشل. عرض الإنجليزية الآن — اضغط لإعادة المحاولة.",
+    "translationUnavailableTitle": "الترجمة غير متاحة",
+    "translationUnsupportedOnThisIos": "إصدار iOS الخاص بك لا يمكنه الترجمة إلى {{language}}. عرض الإنجليزية بدلاً من ذلك — تحديث iOS سيجعل ذلك ممكناً.",
+    "advanced": "متقدم",
+    "advancedDescription": "الترجمة على الجهاز. اختياري — كل ما سبق يعمل بدونها.",
+    "downloadHintBeforePrefix": "بعد اختيار لغة، قد يطلب منك iOS تنزيلها. اضغط على",
+    "downloadHintBeforeSuffix": "بجانب كل لغة في تلك القائمة — لن يبدأ أي تنزيل حتى تفعل ذلك.",
+    "downloadHintNowPrefix": "اضغط على",
+    "downloadHintNowSuffix": "بجانب كل لغة في القائمة أدناه لبدء التنزيل.",
+    "googleTranslateAlways": "يمكنك قراءة أي مقال بأي لغة عبر \"اقرأ على Google Translate\" في صفحة المقال — وهذا يعمل دائمًا دون الحاجة لتنزيل أي شيء.",
+    "onDeviceTranslationHint": "إذا كنت تفضل أن يقوم جهازك بالترجمة، فتأكد من توفر لغتك في إعدادات iOS؛ يوضح لك الفيديو أدناه كيفية تفعيل ذلك.",
+    "switchDeviceUnsupportedBody": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى أي لغة، لذا يستخدم التطبيق الإنجليزية. مع {{language}} ستبقى المقالات دون ترجمة.",
+    "switchFailedBody": "تعذر تجهيز حزمة ترجمة {{language}}، لذا ما زلت تستخدم {{previous}}. قد تكون لا تزال قيد التنزيل — أعد المحاولة بعد قليل.",
+    "switchFailedTitle": "تعذر التبديل إلى {{language}}",
+    "switchTimedOutBody": "يستغرق تجهيز {{language}} وقتًا طويلاً، لذا ما زلت تستخدم {{previous}}. قد يكتمل التنزيل في الخلفية — أعد المحاولة قريبًا.",
+    "switchUnsupportedBody": "لا يمكن لهذا الإصدار من iOS الترجمة إلى {{language}}، لذا ما زلت تستخدم {{previous}}.",
+    "switchingCancel": "إيقاف تغيير اللغة",
+    "switchingNudge": "يقوم جهازك بتجهيز حزمة ترجمة {{language}}. يرجى إبقاء هذه الشاشة مفتوحة حتى ينتهي الأمر — إذا غادرت الآن، ستبقى المقالات الإخبارية بالإنجليزية.",
+    "switchingTitle": "جارٍ إعداد {{language}}…",
+    "translationFailedTooltip": "فشلت الترجمة، يرجى إعادة فتح التطبيق أو التحقق من إعداداتك",
+    "translationUnavailableOnThisDevice": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى {{language}}. سيتم عرضها بالإنجليزية بدلاً من ذلك."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -761,7 +785,11 @@
     "never": "أبدًا",
     "running": "{{count}} قيد التشغيل",
     "failed": "{{count}} فشلت",
-    "pending": "{{count}} معلّقة"
+    "pending": "{{count}} معلّقة",
+    "noteBody": "تقرأ هذه الشاشة قاعدة بيانات Mera الموجودة على الجهاز مباشرة — البيانات التي تبني خلاصتك، معروضة هنا من أجل الرؤية والتصحيح. لا تخزّن خوادم Mera حقائقك، أو سجل قراءتك، أو الاقتراحات المبنية عليها.",
+    "noteExceptions": "استثناآن: ملف حسابك الشخصي (تسجيل الدخول، الإشعارات، اللغة) يتم مزامنته مع حسابك على Mera، وعند تفعيل الذكاء الاصطناعي السحابي، يتم تشفير حقائقك على هذا الجهاز قبل إرسالها للتقييم.",
+    "noteFooter": "القيم هنا خام وتشخيصية. تُمسح صفوف الخلاصة نفسها بعد 48 ساعة؛ يمكنك حذف حقائقك، وذاكرة التخزين المؤقت للخلاصة، وسجل المشاهدة من إدارة البيانات.",
+    "noteTitle": "بياناتك، على جهازك"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} من {{total}} صف · {{cols}} عمود",
@@ -1030,7 +1058,8 @@
     "successTitle": "تمت إعادة المعايرة",
     "successBody": "ضبطت ترتيبي ليتطابق بشكل أفضل مع ذوقك.",
     "noChangeBody": "ترتيبك يبدو مضبوطًا جيدًا بالفعل: لا حاجة لأي تغييرات.",
-    "failedBody": "لم أتمكن من إنهاء إعادة المعايرة الآن. سأحاول مرة أخرى لاحقًا."
+    "failedBody": "لم أتمكن من إنهاء إعادة المعايرة الآن. سأحاول مرة أخرى لاحقًا.",
+    "actionRecalibrate": "إعادة ضبط درجات الصلة"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "المزيد عن: {{topic}}",
@@ -1055,7 +1084,8 @@
     "paywallRelatedOption": "عرض التغطية ذات الصلة",
     "paywallRelatedDesc": "قد لا تكون هناك حاجز دفع في قصة مشابهة من منشور آخر — تحقق من المقالات ذات الصلة.",
     "paywallSubscribeDesc": "زرت {{publication}} {{visits}} مرات هذا الشهر — فكّر في الاشتراك للحصول على وصول كامل.",
-    "paywallBlockOption": "حظر {{publication}} بدلاً من ذلك"
+    "paywallBlockOption": "حظر {{publication}} بدلاً من ذلك",
+    "tooMuchOfThis": "أرى هذا كثيرًا جدًا"
   },
   "topicPlan": {
     "title": "الموضوعات التي سأتابعها",
@@ -1120,7 +1150,8 @@
     "profileRow_two": "صحة الشخصية · {{count}} اقتراحان",
     "profileRow_few": "صحة الشخصية · {{count}} اقتراحات",
     "profileRow_many": "صحة الشخصية · {{count}} اقتراحًا",
-    "profileRow_other": "صحة الشخصية · {{count}} اقتراح"
+    "profileRow_other": "صحة الشخصية · {{count}} اقتراح",
+    "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام. الموضوعات القديمة يمكن التراجع عنها من سجل التغييرات."
   },
   "locations": {
     "title": "أماكنك",
@@ -1380,7 +1411,7 @@
     "pinChangedTitle": "تم تحديث رقم PIN",
     "pinChangedDescription": "تم تغيير رقم PIN الخاص بك.",
     "blurImagesTitle": "إخفاء الصور",
-    "blurImagesDescription": "خفّف الصور في المقالات على التطبيق حتى لا تظهر الصور الحادة أو المزعجة بوضوح."
+    "blurImagesDescription": "خفّف صور المقالات في التطبيق حتى لا تظهر الصور الحادة أو المزعجة بوضوح."
   },
   "display": {
     "title": "العرض",

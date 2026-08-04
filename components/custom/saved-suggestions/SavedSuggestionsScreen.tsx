@@ -29,7 +29,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem } from 'react-native';
+import { ListRenderItem } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SavedSuggestionsScreenProps {
@@ -38,6 +39,17 @@ interface SavedSuggestionsScreenProps {
      *  the floating back button is hidden and the header padding is tightened —
      *  the host already owns the top chrome. Route usage leaves this unset. */
     embedded?: boolean;
+    /** The host's collapsing-header scroll handler (Dashboard sub-tab use). The
+     *  list MUST be an `Animated.FlatList` for this to do anything — a
+     *  `useAnimatedScrollHandler` worklet attached to a plain RN `FlatList` never
+     *  reaches the UI thread, which is why this panel's header stayed pinned
+     *  while Overview's collapsed. Omitted on the standalone route. */
+    scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
+    /** Measured height of the host's collapsing header. Becomes the list's
+     *  content `paddingTop` so the rows scroll UNDER the header instead of the
+     *  host padding a wrapper View (which would leave a dead gap once the header
+     *  translates away). Defaults to 0 — standalone route is unchanged. */
+    headerHeight?: number;
 }
 
 /** The WMDB row id backing a saved item (suggestion `_id` or the article's savedId). */
@@ -61,7 +73,12 @@ const DELETE_BUTTON_GAP = 8; // breathing room between the flag and the button
 const DELETE_BUTTON_RESERVE =
     EDGE_SWIPE_SAFE_RIGHT_INSET + DELETE_BUTTON_SIZE + DELETE_BUTTON_GAP;
 
-const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack, embedded = false }) => {
+const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
+    onBack,
+    embedded = false,
+    scrollHandler,
+    headerHeight = 0,
+}) => {
     const { t } = useTranslation();
     const toast = useToast();
     const insets = useSafeAreaInsets();
@@ -138,18 +155,32 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
     const renderItem: ListRenderItem<SavedItem> = useCallback(
         ({ item }) => (
             <Box className="relative">
+                {/* Both rows pass `flat`: it is the surface the Feed and
+                    Dashboard article cards render through (rounded-2xl, hairline
+                    border, drop shadow, full-bleed hero), and Saved is the same
+                    kind of list. Without it these were the app's ONLY cards still
+                    on ArticleCardBase's older `Card`-wrapped chrome — rounded-md,
+                    no shadow, and a hero inset by the Card's own p-4.
+
+                    It also makes DELETE_BUTTON_RESERVE correct. The reserve is
+                    quoted from the card's outer right edge and ArticleCardBase
+                    subtracts only the content VStack's px-4; the non-flat branch
+                    added a further 16px of Card padding, so this screen — the
+                    reserve's only caller — was under-reserving by 16px. */}
                 {item.origin === 'article' ? (
                     <ArticleStandaloneCard
                         article={item.article}
                         onPress={() => handleArticlePress(item.article._id)}
                         subjectExtras={{ surface: 'saved' }}
                         metaRowRightReserve={DELETE_BUTTON_RESERVE}
+                        flat
                     />
                 ) : (
                     <ArticleSuggestionCard
                         suggestion={item.suggestion}
                         onPress={(s) => handleSuggestionPress(s._id)}
                         metaRowRightReserve={DELETE_BUTTON_RESERVE}
+                        flat
                     />
                 )}
                 {/* Delete affordance. Kept clear of the Dashboard's right-edge
@@ -233,26 +264,43 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                 </Box>
             )}
 
-            <VStack
-                className="px-5 pb-2"
-                style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
-            >
-                <Heading size="3xl" className={embedded ? 'text-white' : 'text-white ml-14'}>
-                    {t('savedSuggestions.title')}
-                </Heading>
-            </VStack>
-
-            <FlatList
+            {/* The title moved INSIDE the list (below) so it scrolls away with
+                the rows under the host's collapsing header. Left as a sibling it
+                would sit pinned beneath an absolute header — jammed under the
+                status bar once the header hid, and eating the space the collapse
+                is supposed to reclaim. The 12px spacer reproduces the
+                `paddingTop: 12` this list used to carry, so the standalone route
+                (headerHeight 0) keeps its exact sequence: title, 12px, banner,
+                rows. */}
+            <Animated.FlatList
+                testID="saved-suggestions-list"
                 data={saved}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                // The banner explains how saving works on THIS device; over an
-                // empty list it explained a list that isn't there, stacked above
-                // the "you haven't saved anything" state. Only shown with rows.
-                ListHeaderComponent={saved.length > 0 ? ListHeader : null}
+                ListHeaderComponent={
+                    <>
+                        <VStack
+                            className="px-5 pb-2"
+                            style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
+                        >
+                            <Heading
+                                size="3xl"
+                                className={embedded ? 'text-white' : 'text-white ml-14'}
+                            >
+                                {t('savedSuggestions.title')}
+                            </Heading>
+                        </VStack>
+                        <Box style={{ height: 12 }} />
+                        {/* The banner explains how saving works on THIS device;
+                            over an empty list it explained a list that isn't
+                            there, stacked above the "you haven't saved anything"
+                            state. Only shown with rows. */}
+                        {saved.length > 0 ? ListHeader : null}
+                    </>
+                }
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
-                    paddingTop: 12,
+                    paddingTop: headerHeight,
                     // Embedded = rendered inside the Dashboard's "Saved" sub-tab,
                     // which sits INSIDE the floating tab navigator — needs the
                     // same tab-bar clearance as FeedScreen/DashboardSectionsFeed
@@ -265,6 +313,8 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
                         : insets.bottom + 40,
                 }}
                 showsVerticalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
             />
 
             {/* Delete confirmation (Gluestack Modal) */}

@@ -18,10 +18,13 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
+import {
+    findLocalArticleSnapshot,
+    type SnapshotSource,
+} from '@/components/custom/news-detail/local-article-snapshot';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import {
     deleteSavedSuggestion,
-    getSavedSuggestionByServerId,
     isSuggestionSaved,
     saveStandaloneArticle,
 } from '@/lib/database/services/saved-article-suggestion-service';
@@ -29,7 +32,6 @@ import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types'
 import logger from '@/lib/logger';
 import { useSavedOverride } from '@/lib/saved-state';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
-import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
@@ -73,30 +75,6 @@ const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
         : undefined,
 } as NewsArticle);
 
-// Map a saved-suggestion snapshot (ForYouSuggestion) to the NewsArticle shape
-// this screen renders. Used for the offline fallback: a standalone article's
-// saved row is keyed by the article's own `_id` (see
-// saved-article-suggestion-service.ts), so a prior "save for later" doubles
-// as an offline cache for this screen's card fields (title/description/image).
-const savedSuggestionToNewsArticle = (s: ForYouSuggestion): NewsArticle => ({
-    _id: s.articleId,
-    title: s.title_en ?? s.title_original ?? '',
-    title_en_internal_only: s.title_en ?? undefined,
-    description: s.description_en ?? undefined,
-    description_en_internal_only: s.description_en ?? undefined,
-    pubDate: s.firstPubDate ?? s.createdAt,
-    article_url: s.article_url ?? undefined,
-    image_url: s.image_url ?? undefined,
-    original_language_code: s.language_code ?? undefined,
-    publicationSource: s.publication_name || s.country_code
-        ? ({
-            _id: s.articleId,
-            publication_name: s.publication_name,
-            country_code: s.country_code,
-        } as NewsArticle['publicationSource'])
-        : undefined,
-} as NewsArticle);
-
 const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     articleId,
     onBack,
@@ -119,9 +97,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // of the generic error card. Auto-retries when connectivity returns (see
     // the retryNonce effect below).
     const [offlineUnavailable, setOfflineUnavailable] = useState(false);
-    // Article is rendered from a saved-suggestion snapshot (offline fallback)
-    // rather than the live query.
-    const [isOfflineSnapshot, setIsOfflineSnapshot] = useState(false);
+    // The article is rendered from a LOCAL snapshot rather than the live query,
+    // and which snapshot it came from — the two mean different things to the
+    // reader, so they must not share one banner:
+    //   'saved' — offline, restored from a "save for later" row. Gets the
+    //              "showing cached content" banner.
+    //   'visit'  — the server no longer has this article (48h TTL) but the
+    //              reader has opened it before, so the visit log still holds a
+    //              snapshot. Happens ONLINE, most often from the per-publication
+    //              history (30-day window). Gets NO banner — see the render.
+    const [snapshotSource, setSnapshotSource] = useState<SnapshotSource | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     // Mirror the title variant the reader currently sees (original vs
     // translated) so sharing carries that exact text — and the language it's
@@ -189,20 +174,18 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         setIsLoading(true);
         setError(null);
         setOfflineUnavailable(false);
-        setIsOfflineSnapshot(false);
+        setSnapshotSource(null);
 
         // Offline fallback: `getArticleById` is a live no-cache query, so it
-        // fails deterministically with no network. Try a saved snapshot
-        // instead of surfacing that as a generic failure — a standalone
-        // article's saved row is keyed by the article's own id (see
-        // saved-article-suggestion-service.ts).
+        // fails deterministically with no network. Fall back to a local snapshot
+        // instead of surfacing that as a generic failure.
         const attemptOfflineFallback = () => {
-            getSavedSuggestionByServerId(articleId)
-                .then((saved) => {
+            findLocalArticleSnapshot(articleId)
+                .then((snapshot) => {
                     if (cancelled) return;
-                    if (saved) {
-                        setArticle(savedSuggestionToNewsArticle(saved));
-                        setIsOfflineSnapshot(true);
+                    if (snapshot) {
+                        setArticle(snapshot.article);
+                        setSnapshotSource(snapshot.source);
                     } else {
                         setArticle(null);
                         hadOfflineFailureRef.current = true;
@@ -224,6 +207,37 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 });
         };
 
+        // Online, but the server has no such article. Server articles are
+        // dropped after 48h (`v3_ingestedAt_ttl`) while local history keeps 30
+        // days — so every surface that routes an OLD article here (notably the
+        // per-publication read history) would otherwise dead-end on "article
+        // unavailable". Since this screen is now the ONLY way to reach a
+        // publisher URL, that dead end would cost the reader the article AND the
+        // translate options. A local snapshot still carries both.
+        const attemptTtlFallback = () => {
+            findLocalArticleSnapshot(articleId)
+                .then((snapshot) => {
+                    if (cancelled) return;
+                    if (snapshot) {
+                        setArticle(snapshot.article);
+                        setSnapshotSource(snapshot.source);
+                    } else {
+                        setError(t('articleDetail.articleUnavailable'));
+                    }
+                })
+                .catch((err) => {
+                    if (cancelled) return;
+                    logger.captureException(err, {
+                        tags: { screen: 'ArticleDetailScreen', method: 'ttlSnapshotFallback' },
+                        extra: { articleId },
+                    });
+                    setError(t('articleDetail.articleUnavailable'));
+                })
+                .finally(() => {
+                    if (!cancelled) setIsLoading(false);
+                });
+        };
+
         if (!isConnected) {
             attemptOfflineFallback();
             return () => {
@@ -235,8 +249,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
-                    setError(t('articleDetail.articleUnavailable'));
-                    setIsLoading(false);
+                    attemptTtlFallback();
                 } else {
                     setArticle(row);
                     setIsLoading(false);
@@ -519,7 +532,20 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 contentBottomInset={insets.bottom + 20}
                 aboveReason={
                     <>
-                        {isOfflineSnapshot && (
+                        {/* Only the 'saved' snapshot gets a banner. That one is
+                            the offline path, where "showing cached content" is
+                            true and the read button may not even work.
+                            'visit' is deliberately silent: it happens ONLINE,
+                            and the only thing missing is Mera's server copy —
+                            the publisher's page is right there and the
+                            read/translate block below opens it. Every warning
+                            string this app owns ("no longer available",
+                            "offline: showing cached") would contradict the
+                            working Read button a few lines further down. An
+                            honest 'visit' string — "Mera no longer has this
+                            story, you can still open it at the publisher" — is
+                            new copy, and new copy means the 20-locale wave. */}
+                        {snapshotSource === 'saved' && (
                             <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mb-2" space="sm">
                                 <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
                                 <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
@@ -534,7 +560,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 footer={
                     <>
                         {articleUrl ? (
-                            <VStack space="xs">
+                            <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
@@ -574,6 +600,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
                                     sourceLanguage={sourceLanguage}
+                                    publicationName={article.publicationSource?.publication_name}
                                     onOpenUrl={handleArticleUrlPress}
                                 />
                             </VStack>

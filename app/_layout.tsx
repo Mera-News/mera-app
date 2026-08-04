@@ -11,15 +11,18 @@ import { router, Stack, useNavigationContainerRef, usePathname } from 'expo-rout
 import { useColorScheme } from 'nativewind';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import client from '../lib/apollo-client';
 
+import { OfflineBannerSlot } from '@/components/custom/OfflineBanner';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
+import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
@@ -61,6 +64,7 @@ import '@/lib/scheduler/tasks/push-token-check-task';
 import '@/lib/scheduler/tasks/data-cleanup-task';
 import '@/lib/scheduler/tasks/persona-migration-task';
 import '@/lib/scheduler/tasks/persona-hygiene-task';
+import '@/lib/scheduler/tasks/sanity-backfill-task';
 import '@/lib/scheduler/tasks/persona-geo-task';
 import '@/lib/scheduler/tasks/feedback-cycle-task';
 
@@ -267,6 +271,7 @@ function AppRoot() {
         <ApolloProvider client={client}>
           <StatusBar style="light" backgroundColor="#000000" />
           <ThemeProvider value={navigationTheme}>
+            <View style={{ flex: 1 }}>
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -312,6 +317,15 @@ function AppRoot() {
                 }}
               />
             </Stack>
+            {/* Global connectivity band. Mounted at the ROOT, not in the
+                /logged-in banner slot, because that slot cannot cover /login —
+                and /login is exactly where the "Welcome back" screen lives that
+                a failed request used to eject users onto. One mount also covers
+                /pin-lock and /pin-setup. Self-gates on connectivity, so it
+                renders nothing in the common case; insets are read inside the
+                component so this layout gains no new subscription. */}
+            <OfflineBannerSlot />
+            </View>
           </ThemeProvider>
         </ApolloProvider>
       </DatabaseProvider>
@@ -331,6 +345,7 @@ export default Sentry.wrap(function RootLayout() {
             <NativeUpdateGate>
               <ToastInitializer />
               <OTAUpdatePrompt />
+              <TranslationUnavailablePrompt />
               <AppRoot />
             </NativeUpdateGate>
           </GluestackUIProvider>

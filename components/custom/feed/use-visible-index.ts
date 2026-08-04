@@ -9,13 +9,15 @@
 // visible again just under the threshold would still satisfy it. So we take
 // clean enter/exit edges and measure dwell ourselves.
 //
+// It ALSO tracks the deepest story the user has actually seen, as an ID — the
+// anchor for the Feed's pinned prefix (the static region). See the note on
+// `deepestSeenIdRef` below for why this is not the tracker described next.
+//
 // This file used to carry a SECOND, looser pair that tracked "the deepest row
 // the user has scrolled to" so ingest could freeze everything above it before
 // insertion-sorting. That whole approximation is gone: it computed an index into
 // `order` while the list renders a PARTITIONED array, so the two index spaces
 // diverged the moment any card was seen and it protected the wrong region.
-// FlatList's `maintainVisibleContentPosition` solves it correctly in render
-// space instead — see FeedScreen.
 //
 // The callback writes ONLY into refs — no store writes, no DB writes, no state
 // updates mid-scroll (the scroll-lag fix). Marks are buffered and flushed on a
@@ -26,11 +28,21 @@ import type { ViewToken } from 'react-native';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 
 /** Seconds a card must stay ≥75% on screen before it counts as VIEWED by dwell.
- *  "Viewed" is opened (tap) OR this much uninterrupted visibility — 3s is a
- *  deliberate read, not a brisk scroll-past. Both signals feed the same
- *  `feed-order-store` card state; only the sort order consumes it, nothing is
- *  ever removed for being viewed. */
-export const DWELL_READ_SECONDS = 3;
+ *  "Viewed" is opened (tap) OR this much uninterrupted visibility. Both signals
+ *  feed the same `feed-order-store` card state; only the sort order consumes it,
+ *  nothing is ever removed for being viewed.
+ *
+ *  Was 3s ("a deliberate read, not a brisk scroll-past"). Halved because the
+ *  tiers now make this consequential: a card marked seen sinks below the
+ *  caught-up divider, so too LONG a dwell leaves the unseen tier full of cards
+ *  the user has already scrolled past, and the boundary never climbs. 1.5s is
+ *  still a pause rather than a glance.
+ *
+ *  The ≥75% visibility rule is deliberately UNCHANGED and is what keeps the
+ *  shorter window honest — a card clipped at the viewport edge still does not
+ *  count, so the timer only runs while the card is properly on screen. Do not
+ *  lower both at once. */
+export const DWELL_READ_SECONDS = 1.5;
 
 /** {@link DWELL_READ_SECONDS} in ms — what the dwell timer actually compares. */
 export const SKIP_DWELL_MS = DWELL_READ_SECONDS * 1000;
@@ -44,9 +56,35 @@ function tokenId(v: ViewToken): string | null {
   return typeof item?.id === 'string' ? item.id : null;
 }
 
-export function useVisibleIndex() {
+/**
+ * @param renderedIdsRef live ref to the CURRENT rendered STORY ids, top-to-bottom
+ *   (story ids only — never a union array containing divider sentinels, or a
+ *   divider would consume a pin slot). MUST be a ref created once with `useRef`
+ *   by the caller: the viewability callbacks below live inside a ref-frozen
+ *   array and capture render 0 forever, so this argument's OBJECT IDENTITY has
+ *   to be stable for its lifetime. It is stored into a local ref on first render
+ *   and read only through that.
+ */
+export function useVisibleIndex(renderedIdsRef?: { current: readonly string[] }) {
   /** id → epoch ms it became ≥75% visible (strict pair, currently on screen). */
   const enterAtRef = useRef<Map<string, number>>(new Map());
+  /** The deepest story (by rendered position) that has been ≥75% visible this
+   *  session — the pinned-prefix anchor. An ID, never an index: an index would
+   *  have to survive a re-sort and a sentinel-row splice, which are two
+   *  different index spaces (that divergence is what killed the old tracker
+   *  described in the header). Resolved against the rendered order only in the
+   *  same tick it is consumed, by `extendPinnedIds`. */
+  const deepestSeenIdRef = useRef<string | null>(null);
+  /** First-render capture of the caller's ref — see the @param note. Never read
+   *  the argument binding inside the frozen callbacks. */
+  const renderedIdsHolderRef = useRef(renderedIdsRef);
+  if (renderedIdsHolderRef.current === undefined) renderedIdsHolderRef.current = renderedIdsRef;
+
+  /** Drop the anchor — called when the partition re-freezes (pull-to-refresh,
+   *  session resume), since the rendered order is about to be rebuilt. */
+  const resetDeepestSeen = useCallback(() => {
+    deepestSeenIdRef.current = null;
+  }, []);
   /** Dwell-satisfied ids awaiting a flush into the store. */
   const skipBufferRef = useRef<Set<string>>(new Set());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,10 +131,28 @@ export function useVisibleIndex() {
       },
       onViewableItemsChanged: ({ changed }: { changed: ViewToken[] }) => {
         const now = Date.now();
+        const renderedIds = renderedIdsHolderRef.current?.current;
         for (const v of changed) {
           const id = tokenId(v);
           if (!id) continue;
           if (v.isViewable) {
+            // Advance the pinned-prefix anchor. Depth is resolved against the
+            // CURRENT rendered story order, never the token's own `index` — that
+            // index counts every rendered row including divider sentinels, while
+            // the pin slices the story-only array, and a monotonic mark would
+            // compound that overshoot on every divider scrolled past.
+            if (renderedIds && renderedIds.length > 0) {
+              const next = renderedIds.indexOf(id);
+              if (next >= 0) {
+                const cur = deepestSeenIdRef.current
+                  ? renderedIds.indexOf(deepestSeenIdRef.current)
+                  : -1;
+                // `cur === -1` (anchor row dropped) lets any viewable row win.
+                // Safe: the pin itself is monotonic in `extendPinnedIds`, so
+                // this can only ever move the boundary down, never shrink it.
+                if (next > cur) deepestSeenIdRef.current = id;
+              }
+            }
             // Only stamp on a genuine enter — a duplicate enter event must not
             // restart the clock on a row already being timed.
             if (!enterAtRef.current.has(id)) enterAtRef.current.set(id, now);
@@ -127,5 +183,10 @@ export function useVisibleIndex() {
     [],
   );
 
-  return { viewabilityConfigCallbackPairs: pairs.current, flushSkips };
+  return {
+    viewabilityConfigCallbackPairs: pairs.current,
+    flushSkips,
+    deepestSeenIdRef,
+    resetDeepestSeen,
+  };
 }

@@ -12,6 +12,7 @@ jest.mock('@/lib/stores/feed-order-store', () => ({
 import { renderHook, act } from '@testing-library/react-native';
 import type { ViewToken } from 'react-native';
 import { useVisibleIndex, SKIP_DWELL_MS } from '../use-visible-index';
+import { extendPinnedIds } from '../feed-entries';
 
 // ---- fixtures / helpers ----
 
@@ -342,6 +343,137 @@ describe('useVisibleIndex', () => {
 
       expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
       expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
+    });
+  });
+
+  // ---- deepest-seen anchor (the pinned-prefix input) ----
+  //
+  // THIS is where the index-space regression lives — not in extendPinnedIds,
+  // which only ever sees the story-only array and would pass such a test
+  // trivially. The overshoot the id-based design exists to prevent happens in
+  // the TRACKER, when a token's `index` counts divider sentinels that the pin's
+  // array does not contain.
+  describe('deepest-seen anchor', () => {
+    /** A token whose `index` deliberately disagrees with the story-only order —
+     *  as it will once divider rows are spliced into the rendered list. */
+    const tokenAt = (id: string, index: number): ViewToken => ({
+      key: id,
+      index,
+      item: { id },
+      isViewable: true,
+    });
+
+    function setup(ids: string[]) {
+      const renderedIdsRef = { current: ids as readonly string[] };
+      const { result } = renderHook(() => useVisibleIndex(renderedIdsRef));
+      return { renderedIdsRef, result, dwell: getDwell(result.current.viewabilityConfigCallbackPairs) };
+    }
+
+    it('starts null and tracks the deepest viewable story', () => {
+      const { result, dwell } = setup(['s0', 's1', 's2', 's3']);
+      expect(result.current.deepestSeenIdRef.current).toBeNull();
+
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s0', 0), tokenAt('s2', 2)] });
+      });
+      expect(result.current.deepestSeenIdRef.current).toBe('s2');
+    });
+
+    it('is monotonic: scrolling back up does not move the anchor', () => {
+      const { result, dwell } = setup(['s0', 's1', 's2', 's3']);
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s3', 3)] });
+      });
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s1', 1)] });
+      });
+      expect(result.current.deepestSeenIdRef.current).toBe('s3');
+    });
+
+    it('REGRESSION: ignores the token index, so divider rows consume no pin slots', () => {
+      // 10 stories rendered. Two divider rows sit above story 6, so the FlatList
+      // reports it at index 8 while it is story index 6.
+      const storyIds = Array.from({ length: 10 }, (_, i) => `s${i}`);
+      const { result, dwell } = setup(storyIds);
+
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s6', 8)] });
+      });
+
+      expect(result.current.deepestSeenIdRef.current).toBe('s6');
+
+      // The pin derived from it covers story index 6 + 1 slack = 8 rows.
+      const sorted = storyIds.map((id) => ({ id }) as never);
+      const pinned = extendPinnedIds([], sorted, result.current.deepestSeenIdRef.current);
+      expect(pinned).toHaveLength(8); // NOT 10 — the old index-based tracker gave 10
+      expect(pinned[pinned.length - 1]).toBe('s7');
+    });
+
+    it('a re-sort that moves the anchor UP cannot shrink the pin', () => {
+      const { result, dwell } = setup(['s0', 's1', 's2', 's3', 's4', 's5']);
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s4', 4)] });
+      });
+      const before = extendPinnedIds(
+        [],
+        ['s0', 's1', 's2', 's3', 's4', 's5'].map((id) => ({ id }) as never),
+        result.current.deepestSeenIdRef.current,
+      );
+      expect(before).toHaveLength(6);
+
+      // List re-sorts; the anchor is now near the top, and a shallower row
+      // becomes viewable.
+      const reordered = ['s4', 's0', 's1', 's2', 's3', 's5'];
+      act(() => {
+        result.current.deepestSeenIdRef.current = 's4';
+      });
+      const after = extendPinnedIds(
+        before,
+        reordered.map((id) => ({ id }) as never),
+        's4',
+      );
+      expect(after).toBe(before); // identity — monotonic guard holds
+    });
+
+    it('resetDeepestSeen drops the anchor for a new session', () => {
+      const { result, dwell } = setup(['s0', 's1', 's2']);
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s2', 2)] });
+      });
+      expect(result.current.deepestSeenIdRef.current).toBe('s2');
+
+      act(() => {
+        result.current.resetDeepestSeen();
+      });
+      expect(result.current.deepestSeenIdRef.current).toBeNull();
+    });
+
+    it('ignores ids absent from the rendered story order (e.g. a divider key)', () => {
+      const { result, dwell } = setup(['s0', 's1', 's2']);
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s1', 1)] });
+      });
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('feed-divider-caught-up', 2)] });
+      });
+      expect(result.current.deepestSeenIdRef.current).toBe('s1');
+    });
+
+    it('still records dwell normally while tracking (the two writes do not interfere)', () => {
+      const { dwell } = setup(['s0', 's1']);
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [tokenAt('s0', 0)] });
+      });
+      act(() => {
+        jest.advanceTimersByTime(SKIP_DWELL_MS + 100);
+      });
+      act(() => {
+        dwell.onViewableItemsChanged({ changed: [token('s0', false)] });
+      });
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+      expect(mockMarkSkipped).toHaveBeenCalledWith(['s0']);
     });
   });
 });

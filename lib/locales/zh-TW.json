@@ -20,7 +20,8 @@
     "yes": "是",
     "no": "否",
     "saving": "儲存中...",
-    "home": "首頁"
+    "home": "首頁",
+    "offlineBanner": "與Mera連線緩慢或無連線。正在顯示已儲存的新聞——我們會繼續嘗試。"
   },
   "auth": {
     "reauthBanner": "重新登入以同步",
@@ -193,7 +194,18 @@
     "statsPublished_other": "過去 24 小時內發佈了{{formatted}}篇文章。",
     "statsAnalysed_other": "{{formatted}}篇文章經過分析。",
     "statsRelevant_other": "{{formatted}}篇與您相關。",
-    "statsRead_other": "您已閱讀{{formatted}}篇。"
+    "statsRead_other": "您已閱讀{{formatted}}篇。",
+    "divider": {
+      "readLine": "打開重看",
+      "seenLine": "打開閱讀",
+      "readTitle": "已閱讀",
+      "seenTitle": "全是新的"
+    },
+    "statsAnalysed_one": "{{formatted}}篇文章經過分析,",
+    "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",
+    "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
+    "statsRead_one": "且您已閱讀{{formatted}}篇。",
+    "statsRelevant_one": "{{formatted}}篇與您相關,"
   },
   "relevance": {
     "emergency": "緊急",
@@ -205,7 +217,8 @@
   },
   "aiDisclosure": {
     "caption": "由 AI 產生的說明",
-    "short": "由 AI 產生"
+    "short": "由 AI 產生",
+    "listNote": "這裡的一些故事標題是由人工智慧產生的"
   },
   "articleDetail": {
     "readArticle": "閱讀文章",
@@ -215,13 +228,12 @@
     "failedToLoad": "文章載入失敗",
     "articleNotFound": "找不到文章",
     "offlineUnavailable": "您目前離線，此文章未儲存供離線閱讀",
-    "viewOriginal": "檢視原文",
-    "viewOriginalIn": "檢視{{language}}原文",
-    "viewAndTranslateOnDevice": "檢視文章並在裝置上翻譯",
     "share": "分享",
     "shareVia": "分享自 {{downloadUrl}}",
     "sourceCountryGlobal": "全球",
-    "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。"
+    "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。",
+    "readOn": "在{{publication}}閱讀",
+    "readOnGoogleTranslate": "在 Google 翻譯中閱讀"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -243,13 +255,11 @@
     "addedToLocations": "已新增至你的地點"
   },
   "clusterDetail": {
-    "translatable": "這篇文章是{{language}}的 — 您的裝置可以在您閱讀時為您翻譯。如果翻譯無法使用，您可以在下方透過 Google 翻譯開啟該網站 — 請注意，您將透過 Google 瀏覽該網站。",
-    "notTranslatable": "這篇文章是{{language}}的。您的裝置無法翻譯它 — 請使用下方的 Google 翻譯以您的語言閱讀。",
-    "notTranslatableOsOutdated": "這篇文章是{{language}}的。裝置端翻譯需要 iOS {{requiredVersion}} — 您目前使用的是 iOS {{currentVersion}}。請更新 iOS，或使用下方的 Google 翻譯以您的語言閱讀。",
+    "translatable": "這篇文章是{{language}}內容:你的裝置可以在你閱讀時進行翻譯。如果翻譯無法使用,你可以用 Google 翻譯開啟該網站;請注意屆時你會透過 Google 瀏覽內容。",
+    "notTranslatable": "這篇文章是{{language}}內容。你的裝置無法翻譯——請使用 Google 翻譯,以你的語言閱讀。",
+    "notTranslatableOsOutdated": "這篇文章是{{language}}內容。裝置端翻譯需要 iOS {{requiredVersion}},你目前是 iOS {{currentVersion}}。請更新 iOS,或使用 Google 翻譯以你的語言閱讀。",
     "unknownLanguage": "另一種語言",
     "translationGuideLink": "告訴我如何翻譯這篇文章",
-    "viewInGoogleTranslate": "在 Google 翻譯中查看",
-    "readViaGoogleTranslate": "以您的語言閱讀（Google 翻譯）",
     "showOriginal": "顯示原文",
     "showTranslation": "顯示譯文"
   },
@@ -314,7 +324,6 @@
     "title": "語言",
     "appLanguage": "應用程式語言",
     "appLanguageDescription": "用於應用程式介面及翻譯新聞內容",
-    "languagePacks": "語言套件",
     "languagePacksIos": "翻譯模型由您的裝置管理。您只需為所選語言下載模型 — iOS 會處理其餘部分。",
     "languagePacksIosPath": "設定 → 一般 → 語言與地區 → 翻譯語言",
     "languagePacksAndroid": "翻譯模型（每個約 30MB）會在您首次翻譯到新語言時自動下載。",
@@ -328,8 +337,28 @@
     "packMissingIosPath": "設定 → 一般 → 語言與地區",
     "retry": "重試",
     "watchGuide": "觀看如何為裝置新增語言",
-    "iosLanguageHint": "僅選擇此語言是不夠的——您還需要在 iOS 語言設定中選擇此語言。",
-    "managePacksPrefix": "要管理已下載的語言，請前往"
+    "managePacksPrefix": "要管理已下載的語言，請前往",
+    "translationUnavailableTapToRetry": "{{language}}語言包可能仍在下載或下載失敗。顯示英文——點擊重試。",
+    "translationUnavailableTitle": "翻譯無法使用",
+    "translationUnsupportedOnThisIos": "您的 iOS 版本無法翻譯為{{language}}。顯示英文——更新iOS可啟用。",
+    "advanced": "進階",
+    "advancedDescription": "裝置端翻譯。非必要功能——不開啟它,以上功能一樣能正常使用。",
+    "downloadHintBeforePrefix": "選擇語言後,iOS 可能會提示你下載該語言包。請點一下彈出視窗中每種語言旁的",
+    "downloadHintBeforeSuffix": "圖示——點了才會開始下載。",
+    "downloadHintNowPrefix": "點一下下方清單中每種語言旁的",
+    "downloadHintNowSuffix": "圖示,即可開始下載。",
+    "googleTranslateAlways": "你可以在文章頁面點選「在 Google 翻譯中閱讀」,用任何語言閱讀任何文章——這個方法一律有效,不需要下載任何東西。",
+    "onDeviceTranslationHint": "如果你希望由裝置進行翻譯,請確認你的語言已在 iOS 設定中開啟;下方影片會示範怎麼開啟。",
+    "switchDeviceUnsupportedBody": "這台裝置無法將新聞文章翻譯成任何語言,因此應用程式目前以英文顯示。若切換到{{language}},文章將無法翻譯。",
+    "switchFailedBody": "{{language}}翻譯包尚未準備完成,你目前仍在使用{{previous}}。它可能還在下載中——請稍後再試一次。",
+    "switchFailedTitle": "無法切換到{{language}}",
+    "switchTimedOutBody": "準備{{language}}花費的時間過長,你目前仍在使用{{previous}}。下載可能仍在背景進行——請稍後再試一次。",
+    "switchUnsupportedBody": "這個版本的 iOS 無法翻譯成{{language}},你目前仍在使用{{previous}}。",
+    "switchingCancel": "停止切換語言",
+    "switchingNudge": "你的裝置正在準備{{language}}翻譯包。請讓這個畫面保持開啟,直到準備完成——如果現在離開,新聞文章會繼續以英文顯示。",
+    "switchingTitle": "正在設定{{language}}…",
+    "translationFailedTooltip": "翻譯失敗,請重新開啟應用程式或檢查設定",
+    "translationUnavailableOnThisDevice": "這台裝置無法將新聞文章翻譯成{{language}},將改用英文顯示。"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -728,7 +757,11 @@
     "never": "從未",
     "running": "{{count}} 個執行中",
     "failed": "{{count}} 個失敗",
-    "pending": "{{count}} 個待處理"
+    "pending": "{{count}} 個待處理",
+    "noteBody": "此螢幕直接讀取Mera的裝置內資料庫——構建您的動態的資料,此處顯示用於可見性和偵錯。Mera的伺服器不儲存您的事實、閱讀歷史或從它們構建的建議。",
+    "noteExceptions": "兩個例外:您的帳戶資料(登入、通知、語言)與您的Mera帳戶同步,當雲端AI開啟時,您的事實在此裝置上加密後再傳送進行評分。",
+    "noteFooter": "此處的值是原始和診斷的。動態列在48小時後自動清除;您可以從管理資料中刪除您的事實、動態快取和瀏覽歷史。",
+    "noteTitle": "您的資料,在您的裝置上"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} / {{total}} 列 · {{cols}} 欄",
@@ -984,7 +1017,8 @@
     "successTitle": "已重新校準",
     "successBody": "我調整了排序，讓它更符合你的口味。",
     "noChangeBody": "你的排序看起來已經很合適了——不需要變更。",
-    "failedBody": "我暫時無法完成重新校準，稍後會再試一次。"
+    "failedBody": "我暫時無法完成重新校準，稍後會再試一次。",
+    "actionRecalibrate": "重新調整相關性評分"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "更多內容：{{topic}}",
@@ -1009,7 +1043,8 @@
     "paywallRelatedOption": "顯示相關報導",
     "paywallRelatedDesc": "另一家出版機構的類似報導可能不在付費牆後面 — 請查看相關文章。",
     "paywallSubscribeDesc": "本月您造訪了{{publication}}{{visits}}次 — 請考慮訂閱以獲得完整存取權限。",
-    "paywallBlockOption": "改為封鎖{{publication}}"
+    "paywallBlockOption": "改為封鎖{{publication}}",
+    "tooMuchOfThis": "這種內容我看到太多次了"
   },
   "topicPlan": {
     "title": "我將追蹤的主題",
@@ -1066,7 +1101,8 @@
     "applyFailedTitle": "無法套用整理",
     "applyFailedBody": "請稍後再試。",
     "profileRow_one": "檔案健康度 · {{count}} 項建議",
-    "profileRow_other": "人物誌健康度 · {{count}} 項建議"
+    "profileRow_other": "人物誌健康度 · {{count}} 項建議",
+    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。舊的可以從更改日誌中復原。"
   },
   "locations": {
     "title": "你的地點",
@@ -1314,7 +1350,7 @@
     "pinChangedTitle": "PIN 已更新",
     "pinChangedDescription": "您的 PIN 已被變更。",
     "blurImagesTitle": "模糊處理圖像",
-    "blurImagesDescription": "在應用程式中對文章圖像進行柔和處理，以便圖形或令人不適的圖像不會清晰顯示。"
+    "blurImagesDescription": "在整個應用程式中柔化文章圖像,使圖形或令人不安的視覺效果不會顯示清晰。"
   },
   "display": {
     "title": "顯示",

@@ -20,7 +20,8 @@
     "never": "Jamais",
     "yes": "Oui",
     "no": "Non",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "offlineBanner": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées — nous continuons d'essayer."
   },
   "auth": {
     "reauthBanner": "Connectez-vous à nouveau pour synchroniser",
@@ -203,7 +204,13 @@
     "statsRelevant_other": "{{formatted}} semblent pertinents,",
     "statsRead_one": "et vous avez lu {{formatted}}.",
     "statsRead_many": "et vous avez lu {{formatted}}.",
-    "statsRead_other": "et vous avez lu {{formatted}}."
+    "statsRead_other": "et vous avez lu {{formatted}}.",
+    "divider": {
+      "readLine": "Ouvrez n'importe lequel pour revisiter.",
+      "seenLine": "Ouvrez n'importe lequel pour lire.",
+      "readTitle": "Déjà lu.",
+      "seenTitle": "C'est tout nouveau."
+    }
   },
   "relevance": {
     "emergency": "Urgence",
@@ -215,7 +222,8 @@
   },
   "aiDisclosure": {
     "caption": "Note générée par l'IA",
-    "short": "Générée par l'IA"
+    "short": "Générée par l'IA",
+    "listNote": "Certains titres de récits ici sont générés par l'IA"
   },
   "articleDetail": {
     "readArticle": "Lire l'article",
@@ -225,13 +233,12 @@
     "failedToLoad": "Impossible de charger l'article",
     "articleNotFound": "Article introuvable",
     "offlineUnavailable": "Vous êtes hors ligne et cet article n'est pas enregistré pour la lecture hors ligne",
-    "viewOriginal": "Voir l'article original",
-    "viewOriginalIn": "Voir l'article original en {{language}}",
-    "viewAndTranslateOnDevice": "Voir l'article et le traduire sur l'appareil",
     "share": "Partager",
     "shareVia": "Partagé via {{downloadUrl}}",
     "sourceCountryGlobal": "International",
-    "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays."
+    "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays.",
+    "readOn": "Lire sur {{publication}}",
+    "readOnGoogleTranslate": "Lire sur Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -253,13 +260,11 @@
     "addedToLocations": "Ajouté à vos lieux"
   },
   "clusterDetail": {
-    "translatable": "Cet article est en {{language}}. Votre appareil peut le traduire pendant que vous lisez. Si la traduction ne fonctionne pas, vous pouvez ouvrir le site dans Google Traduction ci-dessous ; notez simplement que vous le consulterez alors via Google.",
-    "notTranslatable": "Cet article est en {{language}}. Votre appareil ne peut pas le traduire. Utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
-    "notTranslatableOsOutdated": "Cet article est en {{language}}. La traduction sur l'appareil nécessite iOS {{requiredVersion}}. Vous utilisez iOS {{currentVersion}}. Mettez à jour iOS, ou utilisez Google Traduction ci-dessous pour le lire dans votre langue.",
+    "translatable": "Cet article est en {{language}} : ton appareil peut le traduire pendant que tu lis. Si la traduction ne fonctionne pas, tu peux ouvrir le site dans Google Translate ; note que tu le consulteras alors via Google.",
+    "notTranslatable": "Cet article est en {{language}}. Ton appareil ne peut pas le traduire — utilise Google Translate pour le lire dans ta langue.",
+    "notTranslatableOsOutdated": "Cet article est en {{language}}. La traduction sur l'appareil nécessite iOS {{requiredVersion}} : tu es en iOS {{currentVersion}}. Mets à jour iOS, ou utilise Google Translate pour le lire dans ta langue.",
     "unknownLanguage": "une autre langue",
     "translationGuideLink": "Montrez-moi comment traduire l'article",
-    "viewInGoogleTranslate": "Voir dans Google Traduction",
-    "readViaGoogleTranslate": "Lire dans votre langue (Google Traduction)",
     "showOriginal": "Afficher l'original",
     "showTranslation": "Afficher la traduction"
   },
@@ -324,7 +329,6 @@
     "title": "Langue",
     "appLanguage": "Langue de l'application",
     "appLanguageDescription": "Utilisée pour l'interface de l'application et la traduction du contenu des actualités",
-    "languagePacks": "Packs de langues",
     "languagePacksIos": "Les modèles de traduction sont gérés par votre appareil. Vous n'avez besoin de télécharger que le modèle pour la langue sélectionnée. iOS gère le reste.",
     "languagePacksIosPath": "Réglages → Général → Langue et région → Langues de traduction",
     "languagePacksAndroid": "Les modèles de traduction (~30 Mo chacun) sont téléchargés automatiquement lors de votre première traduction vers une nouvelle langue.",
@@ -338,8 +342,28 @@
     "packMissingIosPath": "Réglages → Général → Langue et région",
     "retry": "Réessayer",
     "watchGuide": "Découvrez comment ajouter une langue à votre appareil",
-    "iosLanguageHint": "Il ne suffit pas de sélectionner cette langue ici. Vous devez aussi la sélectionner dans les réglages de langue iOS.",
-    "managePacksPrefix": "Pour gérer les langues téléchargées, allez sur"
+    "managePacksPrefix": "Pour gérer les langues téléchargées, allez sur",
+    "translationUnavailableTapToRetry": "Le pack de langue {{language}} télécharge peut-être encore, ou le téléchargement a échoué. Affichage de l'anglais pour l'instant — appuyez pour réessayer.",
+    "translationUnavailableTitle": "Traduction indisponible",
+    "translationUnsupportedOnThisIos": "Votre version iOS ne peut pas traduire vers {{language}}. Affichage de l'anglais à la place — la mise à jour iOS le permettra.",
+    "advanced": "Avancé",
+    "advancedDescription": "Traduction sur l'appareil. Facultatif — tout ce qui précède fonctionne sans elle.",
+    "downloadHintBeforePrefix": "Une fois que tu as choisi une langue, iOS peut te demander de la télécharger. Appuie sur le",
+    "downloadHintBeforeSuffix": "à côté de chaque langue dans cette liste — rien ne se télécharge tant que tu ne l'as pas fait.",
+    "downloadHintNowPrefix": "Appuie sur le",
+    "downloadHintNowSuffix": "à côté de chaque langue dans la liste ci-dessous pour lancer le téléchargement.",
+    "googleTranslateAlways": "Tu peux lire n'importe quel article dans n'importe quelle langue avec \"Lire sur Google Translate\" sur la page de l'article — ça fonctionne toujours, sans rien à télécharger.",
+    "onDeviceTranslationHint": "Si tu préfères que ce soit ton appareil qui traduise, vérifie que ta langue est disponible dans les réglages iOS ; la vidéo ci-dessous te montre comment l'activer.",
+    "switchDeviceUnsupportedBody": "Cet appareil ne peut traduire les articles d'actualité dans aucune langue, donc l'application utilise l'anglais. Avec {{language}}, les articles resteraient non traduits.",
+    "switchFailedBody": "Le pack de traduction {{language}} n'a pas pu être préparé, donc tu utilises toujours {{previous}}. Il est peut-être encore en cours de téléchargement — réessaie dans un instant.",
+    "switchFailedTitle": "Impossible de passer à {{language}}",
+    "switchTimedOutBody": "La préparation de {{language}} prend trop de temps, donc tu utilises toujours {{previous}}. Le téléchargement pourrait se terminer en arrière-plan — réessaie bientôt.",
+    "switchUnsupportedBody": "Cette version d'iOS ne peut pas traduire en {{language}}, donc tu utilises toujours {{previous}}.",
+    "switchingCancel": "Arrêter le changement de langue",
+    "switchingNudge": "Ton appareil prépare le pack de traduction {{language}}. Merci de garder cet écran ouvert jusqu'à la fin — si tu quittes maintenant, les articles resteront en anglais.",
+    "switchingTitle": "Configuration de {{language}}…",
+    "translationFailedTooltip": "Échec de la traduction : rouvre l'application ou vérifie tes réglages",
+    "translationUnavailableOnThisDevice": "Cet appareil ne peut pas traduire les articles d'actualité en {{language}}. Affichage en anglais à la place."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -738,7 +762,11 @@
     "never": "Jamais",
     "running": "{{count}} en cours",
     "failed": "{{count}} échoué(s)",
-    "pending": "{{count}} en attente"
+    "pending": "{{count}} en attente",
+    "noteBody": "Cet écran lit directement la base de données sur l'appareil de Mera — les données qui construisent votre fil, affichées ici pour la transparence et le débogage. Les serveurs de Mera ne stockent pas vos faits, votre historique de lecture, ni les suggestions construites à partir de ceux-ci.",
+    "noteExceptions": "Deux exceptions : votre profil de compte (connexion, notifications, langue) est synchronisé avec votre compte Mera, et quand l'IA cloud est activée, vos faits sont chiffrés sur cet appareil avant d'être envoyés pour évaluation.",
+    "noteFooter": "Les valeurs ici sont brutes et diagnostiques. Les lignes du fil s'effacent après 48 heures ; vous pouvez supprimer vos faits, cache du fil et historique de consultation dans Gérer les données.",
+    "noteTitle": "Vos données, sur votre appareil"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} sur {{total}} lignes · {{cols}} colonnes",
@@ -993,7 +1021,8 @@
     "successTitle": "Recalibré",
     "successBody": "J'ai ajusté mon classement pour mieux correspondre à vos goûts.",
     "noChangeBody": "Votre classement semble déjà bien ajusté : aucun changement nécessaire.",
-    "failedBody": "Je n'ai pas pu terminer le recalibrage pour l'instant. Je réessaierai plus tard."
+    "failedBody": "Je n'ai pas pu terminer le recalibrage pour l'instant. Je réessaierai plus tard.",
+    "actionRecalibrate": "Réajuster l'évaluation de pertinence"
   },
   "feedbackTree": {
     "title": "Dites-nous en plus",
@@ -1018,7 +1047,8 @@
     "paywallRelatedOption": "Afficher la couverture connexe",
     "paywallRelatedDesc": "Une histoire similaire d'un autre éditeur pourrait ne pas être protégée par un mur payant – vérifiez les articles connexes.",
     "paywallSubscribeDesc": "Vous avez visité {{publication}} {{visits}} fois ce mois-ci – envisagez de vous abonner pour un accès complet.",
-    "paywallBlockOption": "Bloquer {{publication}} à la place"
+    "paywallBlockOption": "Bloquer {{publication}} à la place",
+    "tooMuchOfThis": "J'en vois trop souvent"
   },
   "topicPlan": {
     "title": "Sujets que je vais suivre",
@@ -1075,7 +1105,8 @@
     "applyFailedTitle": "Impossible d'appliquer le nettoyage",
     "applyFailedBody": "Veuillez réessayer plus tard.",
     "profileRow_one": "Santé du profil · {{count}} suggestion",
-    "profileRow_other": "Santé du profil · {{count}} suggestions"
+    "profileRow_other": "Santé du profil · {{count}} suggestions",
+    "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour cet intérêt. Les anciens sont réversibles depuis l'historique des modifications."
   },
   "locations": {
     "title": "Vos lieux",
@@ -1323,7 +1354,7 @@
     "pinChangedTitle": "PIN mis à jour",
     "pinChangedDescription": "Votre PIN a été modifié.",
     "blurImagesTitle": "Flouter les images",
-    "blurImagesDescription": "Atténuez les images des articles dans toute l'application afin que les visuels choquants ou perturbants ne s'affichent pas nettement."
+    "blurImagesDescription": "Adoucir les images d'articles dans l'application afin que les visuels graphiques ou perturbateurs ne soient pas affichés nettement."
   },
   "display": {
     "title": "Affichage",

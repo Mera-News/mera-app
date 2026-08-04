@@ -13,6 +13,16 @@ interface ArticleStandaloneCardProps {
   /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
    *  host-owned control floating over the card's top-right (Saved list). */
   metaRowRightReserve?: number;
+  /** Pass-through to `ArticleCardBase` — renders the floating `rounded-2xl`
+   *  surface the Feed and Dashboard article cards use, instead of the older
+   *  `Card`-wrapped `rounded-md` chrome. Default false so nothing else moves;
+   *  the Saved list opts in so its rows match the rest of the app.
+   *
+   *  It also corrects `metaRowRightReserve`: that reserve is quoted from the
+   *  card's OUTER right edge and `ArticleCardBase` subtracts only the content
+   *  VStack's own `px-4`, but the non-flat branch adds a further 16px via the
+   *  `Card`'s `p-4` — so an un-flat card under-reserves by exactly that much. */
+  flat?: boolean;
 }
 
 /**
@@ -27,6 +37,7 @@ const ArticleStandaloneCardImpl: React.FC<ArticleStandaloneCardProps> = ({
   isNew = false,
   subjectExtras,
   metaRowRightReserve,
+  flat = false,
 }) => {
   const titleEnglish =
     article.title_en_internal_only ?? article.title_en ?? article.title ?? null;
@@ -57,6 +68,7 @@ const ArticleStandaloneCardImpl: React.FC<ArticleStandaloneCardProps> = ({
       recyclingKey={article._id}
       onPress={onPress}
       metaRowRightReserve={metaRowRightReserve}
+      flat={flat}
     >
       <ArticleActionsRow
         subject={subject}

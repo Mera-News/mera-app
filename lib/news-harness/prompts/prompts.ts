@@ -1318,7 +1318,7 @@ Output: JSON array of strings with exactly the requested count.`;
  * REQUIRED to weave one Other fact into every topic as a qualifier. The
  * caller never invokes this prompt when there are zero Other facts.
  */
-export const CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics that combine the Fact with one or more Other user facts. The exact count is specified in the user message. Output: JSON array of 1–5-word strings.
+export const CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics that combine the Fact with one or more Other user facts. The user message specifies a MAXIMUM count — emitting fewer, including none, is correct and expected. Output: JSON array of 1–5-word strings.
 
 ## Inputs
 1. **Fact** (primary) — the Fact is ALWAYS the subject of every topic you emit.
@@ -1331,6 +1331,19 @@ Every topic = Fact-subject + at least one Other-fact qualifier. NEVER invert:
 - Fact "Is an expat" + Other "Works in tech" + Other "Has young children" → ✓ "Amsterdam expat tech jobs", "Dutch expat parental leave"; ✗ "tech industry news", "childcare policy" (no expat anchor).
 
 If NO meaningful combo exists between the Fact and any Other fact, output \`[]\` — the sibling fact-only prompt will cover the user.
+
+## Count rule (hard requirement — read this twice)
+The number in the user message is a **CEILING, not a quota**. Emit only the combos that are genuinely good; **stop as soon as you run out**. Returning 1 topic when asked for at most 4, or \`[]\` when none work, is a CORRECT and PREFERRED answer — never a failure. Most facts in a large persona share no real overlap, so short outputs are the normal case.
+
+**NEVER invent a topic to reach the number.** Padding is the single worst failure here: a fabricated combo permanently pollutes the user's feed with articles about something they never expressed interest in. A short, honest list always beats a padded one.
+
+## Entity cap (hard requirement)
+**Maximum TWO real-world entities per topic.** A place, an organisation, a sport, a profession, an industry, or a hobby each count as ONE. Three or more means you have mashed unrelated facts together — drop the topic instead.
+- ✓ "Bhopal elder care" (place + life-stage = 2), "AI copyright rulings" (industry + policy = 2).
+- ✗ "Amsterdam cricket festival music tech" (place + sport + music + tech = 4).
+- ✗ "Netherlands cricket expat tech trends" (place + sport + expat + tech = 4).
+
+**Read-aloud test:** if the topic would not plausibly appear as a section heading in a real publication, drop it. No newsroom runs a "cricket festival music tech" desk.
 
 ## News-shape rule (hard requirement)
 Every topic must read like a NEWS ARTICLE HEADLINE a journalist would write — public-interest reporting on policy, debate, demographic/economic trends, government decisions, sector news, incidents. NEVER a TRANSACTIONAL SERVICE SEARCH a user would type when hiring a service or filing paperwork.
@@ -1372,7 +1385,7 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 - **Near-duplicate-fact guard.** If an Other fact describes essentially the SAME role/subject as the Fact (e.g. Fact "building an AI news-app startup" + Other "founding own startup"), do NOT restate the Fact's own concepts as near-synonym variants (e.g. "startup tax" / "startup tax incentives" / "founder tax incentives"; "startup regulation" / "startup regulatory changes"). Collapse each concept to ONE phrasing and prefer combos that add a genuinely NEW angle.
 - No personal names — use roles.
 - **No country-specific acronyms or diaspora terms** (NRI, OCI, PIO, CPA, MD, FRCS, JD, BEng — any abbreviation or label that only makes sense for one country's nationals or one country's credentialing system). Use neutral forms: "expat", "diaspora", "tax accountant", "physician", "engineer". Acronyms tied to one country are a one-bit triangulation tell.
-- Output EXACTLY the count specified in the user message, or \`[]\` if no meaningful combos exist.
+- Output AT MOST the count specified in the user message. Fewer is correct; \`[]\` is correct when nothing genuine exists. Never pad to reach the number.
 - JSON array only, no prose.
 
 ## Examples
@@ -1380,30 +1393,49 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 Fact: "Is an expat"
 User location: Amsterdam, Netherlands
 Other user facts: Works in tech; Has young children
-Generate 8 topics
+Generate at most 8 topics
 ["Amsterdam expat tech jobs", "Amsterdam expat childcare", "international schools Amsterdam", "Dutch expat parental leave", "Netherlands expat tech visa", "Schengen expat family rules", "EU expat childcare policy", "Randstad international school options"]
 
 Fact: "Parents live in Bhopal, India, Asia"
 User location: Amsterdam, Netherlands
 Other user facts: Building an AI news app; Senior software engineer; Enjoys Formula 1
 (Relational location — combos STAY at Bhopal. No MP/India/Asia ladder. No AI/F1/Amsterdam subjects — those have their own runs. Keep parents-in-Bhopal as subject. NO country-specific acronyms like NRI — use "expat" / "diaspora".)
-Generate 6 topics
+Generate at most 6 topics
 ["Bhopal remote-work elder care", "Bhopal expat tech remittances", "Bhopal elder telehealth tech", "Bhopal video-call apps for seniors", "Bhopal diaspora family services", "Bhopal AI-assisted eldercare"]
 
 Fact: "Interested in privacy-safe AI"
 User location: Amsterdam, Netherlands
 Other user facts: Interested in journalism conferences; Building an AI news app
 (AI × journalism intersection — Fact (AI) stays subject, journalism/news-app woven in. Concrete newsworthy shapes, not "industry trends".)
-Generate 4 topics
+Generate at most 4 topics
 ["AI training data lawsuits", "newsroom AI adoption", "AI copyright rulings news", "AI journalism tool launches"]
 
 Fact: "Senior ML engineer at DeepMind"
 Other user facts: Lives in Amsterdam; Enjoys Formula 1
 (combo permitted: London-Amsterdam tech corridor, F1 ML — Fact stays the subject)
-Generate 4 topics
+Generate at most 4 topics
 ["DeepMind Amsterdam recruitment", "UK-EU AI talent mobility", "Formula 1 AI research", "DeepMind racing simulation"]
 
-Output: JSON array of strings with exactly the requested count, or \`[]\` if no meaningful combos.`;
+Fact: "Follows the Indian national cricket team"
+User location: Amsterdam, Netherlands
+Other user facts: Is an expat; Building an AI news app; Senior software engineer; Attends music festivals
+(NO genuine overlap between cricket and AI / music / software. Only the expat fact yields a real
+combo — diaspora match viewing is a thing publications actually cover. So emit ONE and STOP, even
+though 4 were allowed. This is the CORRECT answer.
+✗ NEVER: "Amsterdam cricket fan SLM apps", "Netherlands cricket expat tech trends",
+"Amsterdam cricket festival music tech", "Bhopal cricket diaspora mobile apps" — each mashes 3–4
+unrelated entities to fill the quota and would pollute the feed for good.)
+Generate at most 4 topics
+["Netherlands cricket diaspora broadcasts"]
+
+Fact: "Collects vinyl records"
+Other user facts: Works in insurance; Parents live in Bhopal
+(No honest combo: insurance × vinyl and Bhopal × vinyl are both fabrications. Empty is correct —
+the sibling fact-only prompt still covers this fact.)
+Generate at most 3 topics
+[]
+
+Output: JSON array of strings, AT MOST the requested count. Fewer is correct, \`[]\` is correct. Never pad.`;
 
 /**
  * Shared LOCAL fact-only rules + examples — single source of truth embedded
@@ -1473,7 +1505,7 @@ Output: JSON array of strings with exactly the requested count.`;
  * second sequential local call (the 4B has no batch path). Caller skips this
  * prompt when otherFacts.length === 0.
  */
-export const LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics that combine the Fact with one or more Other user facts. The exact count is specified in the user message. Output: a JSON array of 1–5-word strings, nothing else.
+export const LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics that combine the Fact with one or more Other user facts. The user message specifies a MAXIMUM count — emitting fewer, including none, is correct. Output: a JSON array of 1–5-word strings, nothing else.
 
 ## Inputs
 1. **Fact** (primary) — the Fact is ALWAYS the subject of every topic.
@@ -1482,6 +1514,14 @@ export const LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news se
 
 ## Combo rule (hard requirement)
 Every topic = Fact-subject + Other-fact qualifier. NEVER invert (NEVER make an Other fact the subject). If no meaningful combo exists, output \`[]\`.
+
+## Count rule (hard requirement)
+The number in the user message is a **CEILING, not a quota**. Emit only genuinely good combos and STOP when you run out. 1 topic when 4 were allowed, or \`[]\`, is a CORRECT answer. **NEVER invent a topic to reach the number** — a fabricated combo pollutes the feed permanently.
+
+## Entity cap (hard requirement)
+**Maximum TWO real-world entities per topic** (a place, an org, a sport, a profession, an industry, a hobby each count as one). Three or more means unrelated facts have been mashed together — drop it.
+- ✓ "Bhopal elder care", "AI copyright rulings".
+- ✗ "Amsterdam cricket festival music tech", "Netherlands cricket expat tech trends".
 
 ## News-shape rule (hard requirement)
 Every topic must read like a NEWS HEADLINE (policy debate, reform, demographic trend, government decision, sector news), NOT a TRANSACTIONAL SERVICE search. Forbidden: "X services for Y", "X law for Y residents", "X-Y compliance", "notary/legal aid/tax filing/accounting services" patterns. These are looking-to-hire queries, not news.
@@ -1509,7 +1549,7 @@ Continent/bloc map: NL/DE/FR → EU; US/CA/MX → North America; IN/JP/ID → As
 - **Other-fact locations are exact too.** If an Other fact you weave in carries a relational/temporary location (parents in X, traveling in X), stay at that EXACT place X — never expand to X's country. ✗ "India AI news app trends" from a Chhindwara/Bhopal fact.
 - **Near-duplicate-fact guard.** If an Other fact is essentially the SAME role/subject as the Fact, don't restate the Fact's concepts as near-synonyms ("startup tax" / "startup tax incentives"). One phrasing per concept; add a new angle.
 - **No country-specific acronyms or diaspora terms** (NRI, OCI, PIO, CPA, MD, FRCS, JD, BEng — any abbreviation tied to one country's nationals or credentialing). Use neutral forms: "expat", "diaspora", "tax accountant", "physician".
-- Output EXACTLY the count specified, or \`[]\` if no meaningful combos.
+- Output AT MOST the count specified. Fewer is correct; \`[]\` is correct. Never pad.
 - JSON array only, no prose.
 
 ## Examples
@@ -1517,29 +1557,69 @@ Continent/bloc map: NL/DE/FR → EU; US/CA/MX → North America; IN/JP/ID → As
 Fact: "Is an expat"
 User location: Amsterdam, Netherlands
 Other user facts: Works in tech; Has young children
-Generate 7 topics
+Generate at most 7 topics
 ["Amsterdam expat tech jobs", "Amsterdam expat childcare", "international schools Amsterdam", "Dutch expat parental leave", "Netherlands expat tech visa", "Schengen expat family rules", "EU expat childcare policy"]
 
 Fact: "Parents live in Bhopal, India, Asia"
 Other user facts: Building an AI news app; Senior software engineer
 (Relational location — STAY at Bhopal. No MP/India/Asia ladder. NO country acronyms — use "expat" / "diaspora".)
-Generate 5 topics
+Generate at most 5 topics
 ["Bhopal remote-work elder care", "Bhopal expat tech remittances", "Bhopal elder telehealth tech", "Bhopal video-call apps for seniors", "Bhopal AI-assisted eldercare"]
 
 Fact: "Interested in privacy-safe AI"
 User location: Amsterdam, Netherlands
 Other user facts: Interested in journalism conferences; Building an AI news app
 (AI × journalism intersection — concrete newsworthy shapes, not "industry trends".)
-Generate 4 topics
+Generate at most 4 topics
 ["AI training data lawsuits", "newsroom AI adoption", "AI copyright rulings news", "AI journalism tool launches"]
 
-Output: JSON array of strings with exactly the requested count, or \`[]\`.`;
+Output: JSON array of strings, AT MOST the requested count. Fewer is correct, \`[]\` is correct. Never pad.`;
 
 /**
  * Back-compat alias. New code should import the explicit CLOUD_/LOCAL_ pair
  * and choose by mode at the call site (see topic-generation-service.ts and
  * topic-gen-handler.ts).
  */
+/**
+ * TOPIC SANITY prompt (r12 K-P3) — judges whether each already-minted topic
+ * genuinely belongs to the fact that owns it. Runs in the weekly hygiene sweep
+ * over topics the user has not yet had audited.
+ *
+ * Deliberately NARROW: it answers "does this topic belong to this fact?", NOT
+ * "is this a good topic". A false positive retires something the user may want,
+ * so the instruction is to keep anything defensible and only flag the clear
+ * mash-ups the old combo prompt produced.
+ */
+export const TOPIC_SANITY_SYSTEM_PROMPT = `You audit news topics that were generated from a user's stated fact. For each numbered item decide whether the topic genuinely belongs to its Fact.
+
+Output: a JSON array of objects \`{"i": <item number>, "ok": <true|false>}\` — one per item, no prose.
+
+## What "ok": true means
+The topic is a plausible news interest for someone with that Fact. Be GENEROUS: an indirect but defensible connection is fine. Local news for a place in the Fact is fine. A broader industry angle on the Fact's subject is fine.
+
+## What "ok": false means — flag ONLY these
+1. **Mash-ups.** The topic staples together THREE OR MORE unrelated things, at least one of which has nothing to do with the Fact. These came from a generator that was told to hit a quota and invented combinations to fill it.
+   - Fact "Follows the Indian national cricket team" → ✗ "Amsterdam cricket festival music tech", ✗ "Netherlands cricket expat tech trends", ✗ "Bhopal cricket diaspora mobile apps".
+2. **Subject drift.** The Fact is not the subject at all — the topic is really about something else the user happens to have mentioned elsewhere.
+   - Fact "Follows the Indian national cricket team" → ✗ "AI news app funding" (cricket is absent).
+3. **Not a news topic.** A transactional service search ("notary services for expats"), or a bare field name with no news hook ("industry trends", "career development").
+
+## Rules
+- Judge each item ONLY against its own Fact. Items are independent.
+- When genuinely unsure, answer \`true\`. Removing a topic the user wanted is worse than keeping a mediocre one.
+- Return EXACTLY one object per input item, in the same order. This count is a real requirement — unlike the topics themselves, every item must get a verdict.
+
+## Example
+Fact: "Follows the Indian national cricket team"
+1. "India cricket team news"
+2. "Amsterdam cricket festival music tech"
+3. "IPL broadcasting rights"
+Fact: "Parents live in Bhopal"
+4. "Bhopal healthcare"
+5. "Bhopal cricket diaspora mobile apps"
+
+[{"i":1,"ok":true},{"i":2,"ok":false},{"i":3,"ok":true},{"i":4,"ok":true},{"i":5,"ok":false}]`;
+
 export const TOPIC_GENERATION_SYSTEM_PROMPT = CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT;
 
 /**

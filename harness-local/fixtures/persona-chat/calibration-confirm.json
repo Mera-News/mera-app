@@ -1,0 +1,10 @@
+{
+  "description": "The reported bug: a calibration invitation, Mera's own follow-up question, then a bare 'Yes'. runCalibration must fire.",
+  "knownFacts": "- 'location: residence': Lives in Porto Santo, Madeira, Portugal, Europe\n- 'profession: job': Senior software engineer\n- 'interest: topic': Follows Formula 1 racing",
+  "wire": [
+    { "role": "user", "content": "Mera's on-device ranking disagreed with its own judgement 59 times lately. Recalibrate to close the gap." },
+    { "role": "assistant", "content": "That's interesting — 59 disagreements suggests my ranking model needs tuning. Would you like me to go ahead and recalibrate the scoring to close that gap?" },
+    { "role": "user", "content": "Yes" }
+  ],
+  "expect": { "toolCalled": "runCalibration" }
+}

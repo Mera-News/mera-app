@@ -6,11 +6,29 @@ import { hasAnyFacts } from "@/lib/database/services/fact-service";
 import { getSetting } from "@/lib/database/services/setting-service";
 import { hasIdentityFault, resolveIdentity } from "@/lib/security/identity-gate";
 import { clearPreviousUserData, useUserStore } from "@/lib/stores";
-import { useNetworkStore } from "@/lib/stores/network-store";
+import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useEffect, useState } from "react";
 
 interface OnboardingScreenProps {
+    /**
+     * EFFECTIVE owner of this device: the live session id when there is one,
+     * else the persisted `cached_user_id`. Used for the wipe target and the
+     * ownership stamp.
+     */
     userId: string;
+    /**
+     * LIVE session id, `undefined` when offline or unresolved.
+     *
+     * Deliberately separate from `userId`, and load-bearing. The caller now
+     * coalesces `session ?? local` into `userId` so this screen works offline —
+     * if that coalesced value were also passed as `sessionUserId`, then
+     * `sessionUserId === cachedUserId` would hold BY CONSTRUCTION and
+     * resolveIdentity's mismatch check would silently become a permanent no-op,
+     * disabling the fresh-login cross-user wipe this screen exists to perform.
+     * An absent session is the OFFLINE path, which resolveIdentity already reads
+     * as 'coherent'.
+     */
+    sessionUserId?: string;
     onLoginRedirect: () => void;
     onComplete: () => void;
 }
@@ -30,7 +48,7 @@ interface OnboardingScreenProps {
  * Consequence: this gate needs no network at all. It works offline and a dead
  * server session can no longer bounce a user through onboarding.
  */
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onLoginRedirect, onComplete }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete }) => {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
@@ -48,11 +66,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onLoginRedi
                 // Read the on-disk owner BEFORE anything else — the wipe below
                 // may delete it, so it cannot be read afterwards.
                 const cachedUserId = await getSetting('cached_user_id');
+                const ownershipFault = await hasIdentityFault();
+                const isConnected = useNetworkStore.getState().isConnected;
+                // Probe only on the (rare) fault path — see app/logged-in/index.tsx.
+                const serverReachable =
+                    ownershipFault && isConnected ? await probeServerReachable() : undefined;
+
                 const verdict = resolveIdentity({
-                    sessionUserId: userId,
+                    // The LIVE session id, never the coalesced `userId` — see
+                    // the prop doc. Passing `userId` here would make this
+                    // comparison compare the local id against itself.
+                    sessionUserId,
                     cachedUserId,
-                    ownershipFault: await hasIdentityFault(),
-                    isConnected: useNetworkStore.getState().isConnected,
+                    ownershipFault,
+                    isConnected,
+                    serverReachable,
                 });
 
                 if (verdict === 'reauth') {
@@ -76,6 +104,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onLoginRedi
                 // Order matters: wipe first (it may reset the whole DB), stamp
                 // after. Same prologue as app/logged-in/index.tsx.
                 useUserStore.getState().setUserId(userId);
+
+                // Deferred fault — keep authenticated background work gated
+                // until it is genuinely resolved. Must follow the wipe above,
+                // which resets the user store. See app/logged-in/index.tsx for
+                // the full rationale.
+                if (ownershipFault) {
+                    useUserStore.getState().setNeedsReauth(true);
+                }
             } catch {
                 // A broken wipe must not strand the user on a spinner — fall
                 // through to the count and let it decide.
@@ -108,7 +144,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onLoginRedi
         return () => {
             cancelled = true;
         };
-    }, [userId, onComplete]);
+    }, [userId, sessionUserId, onComplete]);
 
     const handleOnboardingComplete = () => {
         setShowOnboarding(false);
@@ -129,7 +165,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, onLoginRedi
     }
 
     if (showOnboarding) {
-        return <OnboardingWizard onComplete={handleOnboardingComplete} />;
+        // userId is threaded in so the wizard has an owner WITHOUT a round-trip.
+        // It used to derive one solely from authClient.getSession(), which
+        // yields nothing offline — leaving the persona step with an undefined
+        // userId.
+        return <OnboardingWizard userId={userId} onComplete={handleOnboardingComplete} />;
     }
 
     return null;

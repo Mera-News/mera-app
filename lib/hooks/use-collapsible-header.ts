@@ -39,6 +39,26 @@ export interface CollapsibleHeader {
   headerHeight: number;
   /** Force the header fully revealed (JS-callable). */
   reveal: () => void;
+  /**
+   * Tell the handler to treat the NEXT scroll event as a new baseline rather
+   * than as travel. JS-callable.
+   *
+   * Only needed when ONE handler is shared by SEVERAL independently-scrolled
+   * lists — the Dashboard, whose four sub-tab panels stay mounted behind
+   * `display:'none'` and keep their own offsets. `lastY` is a single shared
+   * value, so it holds whichever panel scrolled last; switching to a panel at a
+   * different offset makes the first event's `dy` the DIFFERENCE BETWEEN TWO
+   * PANELS. With Overview at 1500 and Saved at 800 that is a −690 spurious
+   * reveal, and in the other direction the header hides while the user is
+   * scrolling up.
+   *
+   * `reveal()` is not a substitute: it clears the accumulators but not `lastY`,
+   * which is the value actually carrying the cross-panel offset.
+   *
+   * INERT unless called. Feed and Explore each own their own hook instance with
+   * a single list, never call this, and are byte-identical to before it existed.
+   */
+  resetScrollOrigin: () => void;
 }
 
 export function useCollapsibleHeader(): CollapsibleHeader {
@@ -48,6 +68,9 @@ export function useCollapsibleHeader(): CollapsibleHeader {
   const downAccum = useSharedValue(0);
   const upAccum = useSharedValue(0);
   const headerH = useSharedValue(0);
+  // Set by `resetScrollOrigin()`; consumed by the next scroll event. Default
+  // false, so a caller that never resets sees the original handler exactly.
+  const originStale = useSharedValue(false);
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -55,6 +78,17 @@ export function useCollapsibleHeader(): CollapsibleHeader {
       const y = e.contentOffset.y;
       // Ignore iOS rubber-band overscroll above the top.
       if (y < 0) return;
+
+      // A different list is now driving this handler (Dashboard sub-tab switch).
+      // Adopt its offset as the baseline and read NO travel from this event —
+      // `dy` here would be the difference between two panels' scroll positions,
+      // not anything the user did. Must come before `dy` is computed.
+      if (originStale.value) {
+        originStale.value = false;
+        lastY.value = y;
+        return;
+      }
+
       const dy = y - lastY.value;
       lastY.value = y;
 
@@ -102,8 +136,24 @@ export function useCollapsibleHeader(): CollapsibleHeader {
     downAccum.value = 0;
     upAccum.value = 0;
     hidden.value = withTiming(0, { duration: DURATION });
+    // Deliberately does NOT touch `lastY` — see `resetScrollOrigin`. Feed and
+    // Explore call `reveal()` MID-SCROLL on error/offline states, so rebasing
+    // the origin here would make their next event read as a large positive `dy`
+    // and hide the header under the user.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal };
+  const resetScrollOrigin = useCallback(() => {
+    originStale.value = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return {
+    scrollHandler,
+    headerStyle,
+    onHeaderLayout,
+    headerHeight,
+    reveal,
+    resetScrollOrigin,
+  };
 }

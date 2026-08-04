@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, FlatList, Keyboard, Modal, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Keyboard, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,7 +13,10 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
-import { SUPPORTED_LANGUAGES, translateText } from '@/lib/translation-service';
+import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
+import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
+import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
+import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 
 const RTL_CODES = new Set(['ar', 'he']);
 
@@ -55,9 +58,7 @@ const LanguageSelector: React.FC = () => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
-    const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
     const [showPicker, setShowPicker] = useState(false);
-    const [packMissing, setPackMissing] = useState(false);
 
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
 
@@ -66,46 +67,70 @@ const LanguageSelector: React.FC = () => {
         setShowPicker(true);
     }, []);
 
-    // Probe pack availability. On iOS this surfaces the system sheet asking
-    // the user to download the en->target pack; on Android MLKit downloads
-    // the en->target model in the background. A null result means the pack
-    // isn't usable (user declined, no network, unsupported language).
-    const probePack = useCallback((code: string) => {
-        if (code === 'en') {
-            setPackMissing(false);
-            return;
-        }
-        translateText('Hello', code).then((result) => {
-            setPackMissing(result === null);
-        });
-    }, []);
+    // Only fires on a language that was actually applied.
+    const handleCommitted = useCallback(
+        (code: string, previousCode: string) => {
+            if (RTL_CODES.has(previousCode) === RTL_CODES.has(code)) return;
+            Alert.alert(
+                t('language.restartRequired'),
+                t('language.restartDescription'),
+                [
+                    { text: t('language.later'), style: 'cancel' },
+                    { text: t('language.restart'), onPress: () => Updates.reloadAsync() },
+                ],
+            );
+        },
+        [t],
+    );
 
-    const handleRetry = useCallback(() => {
-        probePack(appLanguage);
-    }, [appLanguage, probePack]);
+    const handleResult = useCallback(
+        ({ code, outcome, fellBackToEnglish }: LanguageSwitchResult) => {
+            // ENGLISH names, not endonyms — see the same note on the Settings
+            // picker. These are words inside a sentence explaining that the
+            // switch did not happen; the endonym put RTL script mid-LTR
+            // sentence and named the language in a script the reader may not
+            // read. The spinner TITLE keeps the endonym, where it is a label
+            // rather than prose.
+            const language = getLanguageName(code) ?? code;
+            const current = getLanguageName(
+                useAppLanguageStore.getState().appLanguage,
+            ) ?? 'English';
+            // Read AFTER the hook applied it, so `current` is already English
+            // here — the body names the landing spot rather than re-deriving it.
+            if (fellBackToEnglish) {
+                Alert.alert(
+                    t('language.switchFailedTitle', { language }),
+                    t('language.switchDeviceUnsupportedBody', { language }),
+                );
+                return;
+            }
+            const body = outcome === 'timeout'
+                ? t('language.switchTimedOutBody', { language, previous: current })
+                : outcome === 'language-unsupported'
+                    ? t('language.switchUnsupportedBody', { language, previous: current })
+                    : t('language.switchFailedBody', { language, previous: current });
+            Alert.alert(t('language.switchFailedTitle', { language }), body);
+        },
+        [t],
+    );
+
+    // Identical machine to the Settings picker, deliberately shared rather
+    // than copied — the copy that used to live here is what let the two drift
+    // into the same native crash. See lib/hooks/use-language-switch.ts.
+    const {
+        pendingCode,
+        busy,
+        requestSwitch,
+        notifyPickerDismissed,
+        cancel,
+    } = useLanguageSwitch({ onCommitted: handleCommitted, onResult: handleResult });
 
     const handleSelectLanguage = useCallback(
-        async (code: string) => {
+        (code: string) => {
+            requestSwitch(code);
             setShowPicker(false);
-            const wasRTL = RTL_CODES.has(appLanguage);
-            const willBeRTL = RTL_CODES.has(code);
-            await setAppLanguage(code);
-            probePack(code);
-            if (wasRTL !== willBeRTL) {
-                Alert.alert(
-                    t('language.restartRequired'),
-                    t('language.restartDescription'),
-                    [
-                        { text: t('language.later'), style: 'cancel' },
-                        {
-                            text: t('language.restart'),
-                            onPress: () => Updates.reloadAsync(),
-                        },
-                    ],
-                );
-            }
         },
-        [appLanguage, setAppLanguage, t, probePack],
+        [requestSwitch],
     );
 
     return (
@@ -132,7 +157,12 @@ const LanguageSelector: React.FC = () => {
                 </View>
 
                 {/* Language selector with glow */}
-                <Pressable onPress={handleOpenPicker} style={styles.selectorButton}>
+                <Pressable
+                    testID="auth-language-selector"
+                    onPress={handleOpenPicker}
+                    disabled={busy}
+                    style={[styles.selectorButton, busy ? styles.selectorButtonDisabled : null]}
+                >
                     <HStack className="items-center" space="xs">
                         <Text className="text-white text-lg">
                             {selectedLanguage?.native ?? 'English'}
@@ -142,36 +172,23 @@ const LanguageSelector: React.FC = () => {
                 </Pressable>
             </HStack>
 
-            {packMissing && (
-                <Box className="mx-5 mt-4 px-4 py-3 rounded-lg bg-red-900/30 border border-red-800/50">
-                    <HStack space="sm" className="items-start">
-                        <MaterialIcons
-                            name="error-outline"
-                            size={18}
-                            color="#fca5a5"
-                            style={{ marginTop: 2 }}
-                        />
-                        <VStack space="xs" className="flex-1">
-                            <Text className="text-red-300 text-sm">
-                                {t('language.packMissingBanner')}
-                            </Text>
-                            {Platform.OS === 'ios' && (
-                                <Text className="text-red-200 text-sm">
-                                    {t('language.packMissingIosPath')}
-                                </Text>
-                            )}
-                            <Pressable
-                                onPress={handleRetry}
-                                className="self-start mt-1 px-3 py-1.5 rounded-md bg-red-800/50 border border-red-700"
-                            >
-                                <Text className="text-red-100 text-sm font-semibold">
-                                    {t('language.retry')}
-                                </Text>
-                            </Pressable>
-                        </VStack>
-                    </HStack>
-                </Box>
-            )}
+            {/* Below the selector, never beside it — the ticker and the
+                selector share one centred row, and prose in that row would
+                fight the animation for the reader's eye. Its own margins
+                rather than a wrapper View, so that on Android — where the
+                component renders nothing, there being no download sheet —
+                it leaves no gap behind. The 20pt gutter is the progress
+                card's, so the guidance and the card that replaces it line up. */}
+            <LanguageDownloadHint
+                testID="auth-language-download-hint"
+                className="text-center mt-3 mx-5"
+            />
+
+            {busy && pendingCode ? (
+                <View style={styles.progressWrap}>
+                    <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
+                </View>
+            ) : null}
 
             {/* Language Picker Modal */}
             <Modal
@@ -179,6 +196,9 @@ const LanguageSelector: React.FC = () => {
                 animationType="slide"
                 presentationStyle="pageSheet"
                 onRequestClose={() => setShowPicker(false)}
+                // Probe only once the dismissal transition has finished —
+                // presenting Apple's sheet during it is a native crash.
+                onDismiss={notifyPickerDismissed}
             >
                 <GluestackUIProvider mode="dark">
                     <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
@@ -256,6 +276,13 @@ const styles = StyleSheet.create({
     tickerText: {
         fontSize: 18,
         color: '#ffffff',
+    },
+    progressWrap: {
+        marginTop: 16,
+        marginHorizontal: 20,
+    },
+    selectorButtonDisabled: {
+        opacity: 0.4,
     },
     selectorButton: {
         borderWidth: 1,

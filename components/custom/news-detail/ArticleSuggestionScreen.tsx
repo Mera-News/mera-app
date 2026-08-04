@@ -585,7 +585,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                     <>
                         {/* Read Article CTA */}
                         {suggestion.article_url ? (
-                            <VStack space="xs">
+                            <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
@@ -631,6 +631,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                 <ReadTranslateActions
                                     articleUrl={suggestion.article_url}
                                     sourceLanguage={sourceLanguage}
+                                    publicationName={suggestion.publication_name}
                                     onOpenUrl={handleArticleUrlPress}
                                 />
                             </VStack>

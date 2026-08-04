@@ -12,7 +12,10 @@ import {
   type MatchedTopicMeta,
 } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
-import { getActive as getActiveTopics } from '@/lib/database/services/topic-service';
+import {
+  getActive as getActiveTopics,
+  normalizeTopicText,
+} from '@/lib/database/services/topic-service';
 import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-service';
 import { getAll as getAllLocations } from '@/lib/database/services/location-service';
 import { getHeadlineDepths } from '@/lib/database/services/headline-depth-service';
@@ -21,7 +24,11 @@ import { buildRetrievalProfile } from '@/lib/news-harness/scoring-engine';
 // enqueue path and the bundle builders so a headline cannot be admitted by one
 // and dropped by another.
 import { isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
-import { HeadlineScope, type PersonaQueryInput } from '@/lib/generated/graphql-types';
+import {
+  HeadlineScope,
+  type ArticleWithClusters,
+  type PersonaQueryInput,
+} from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import logger from '@/lib/logger';
@@ -72,12 +79,32 @@ export interface FetchTopicIdsResult {
   /** Persona-v3 metadata (present on the persona path; absent on the empty-
    *  topics-table fallback, which routes persist + scoring to the legacy path). */
   personaMeta?: PersonaPersistMeta;
+  /** NORMALIZED texts of topics whose articles may be hydrated quota-FREE — i.e.
+   *  texts carried ONLY by `provenance: 'tracked'` topics. See
+   *  {@link computeFreeTopicTexts}. Absent on the legacy path (no topics table,
+   *  so no tracked topics can exist). */
+  freeTopicTexts?: Set<string>;
 }
 
 export interface DiffResult {
   serverArticleIds: string[];
   articleToTopicTexts: Map<string, string[]>;
+  /** Every new-to-device id. Kept as the exact union of `storyIds` and
+   *  `personaIds` so progress totals (FeedSyncMachine) are unaffected by the
+   *  billing partition. */
   missingIds: string[];
+  /** New-to-device ids matched ONLY by followed-story topics — hydrated through
+   *  the quota-EXEMPT `articlesForStories` query. Disjoint from `personaIds`.
+   *
+   *  Optional so that a DiffResult built without the billing partition still
+   *  works, and DELIBERATELY defaults to "everything metered" (see
+   *  stepHydratePersistEnqueue): forgetting to partition must fall back to the
+   *  pre-r12 behaviour of charging for everything, never to hydrating for free. */
+  storyIds?: string[];
+  /** Every other new-to-device id — hydrated through the METERED
+   *  `articlesForTopicsByIds`. Disjoint from `storyIds`. Defaults to the whole
+   *  `missingIds` set when the partition is absent. */
+  personaIds?: string[];
   personaMeta?: PersonaPersistMeta;
 }
 
@@ -146,6 +173,89 @@ export async function stepFetchTopicIds(
     return fetchTopicIdsLegacy(ctx);
   }
   return fetchTopicIdsPersona(activeTopics, ctx);
+}
+
+/**
+ * Normalized texts that may be hydrated QUOTA-FREE: the texts carried by
+ * `provenance: 'tracked'` topics, MINUS every text carried by any other active
+ * topic. Following a story must not consume the user's daily article
+ * allowance — but only articles that arrived *solely* because of a followed
+ * story qualify.
+ *
+ * WHY A SET DIFFERENCE AND NOT A MEMBERSHIP TEST. Two active topic rows can
+ * legitimately carry the same text. `createTopics` dedupes on
+ * `(normalized_text, fact_id)` — deliberately NOT on text alone, so that the
+ * hygiene `duplicate_facts` detector can still see one text owned by two facts.
+ * So a tracked topic ("gaza ceasefire", fact_id null) and an interest topic
+ * ("Gaza ceasefire", owned by a fact) coexist by design. A plain
+ * `trackedTexts.has(t)` would then hand every article matched by the INTEREST
+ * free hydration too.
+ *
+ * WHY NOT PARTITION ON topicId. The obvious instinct — use ids, not strings —
+ * does not work: the server keys its response by topic TEXT, so attributing a
+ * returned id back to a row means going through `textToTopicId`, which is
+ * first-writer-wins over duplicate texts. The id would be an arbitrary one of
+ * the colliding rows, whose provenance may be the wrong one. The set difference
+ * sidesteps id attribution entirely.
+ *
+ * Comparison is on NORMALIZED text so case/whitespace variants ("Gaza Ceasefire"
+ * vs "gaza ceasefire") collapse onto the metered side rather than slipping past
+ * the subtraction.
+ *
+ * Direction of failure is deliberate: a collision makes a followed story's
+ * articles METERED (the status quo before this change), never the reverse. The
+ * exemption can under-apply; it can never over-apply.
+ */
+export function computeFreeTopicTexts(
+  activeTopics: { text: string; provenance: string }[],
+): Set<string> {
+  const tracked = new Set<string>();
+  const nonTracked = new Set<string>();
+  for (const t of activeTopics) {
+    const key = normalizeTopicText(t.text ?? '');
+    if (!key) continue;
+    (t.provenance === 'tracked' ? tracked : nonTracked).add(key);
+  }
+  for (const key of nonTracked) tracked.delete(key);
+  return tracked;
+}
+
+/**
+ * Split new-to-device ids into the quota-EXEMPT (followed-story) set and the
+ * METERED set.
+ *
+ * An id is free ONLY if every topic text that matched it is a free text, and it
+ * did not also arrive via a headline scope (top-headline injection is ordinary
+ * feed delivery and stays metered — mirroring the first-writer precedence the
+ * headline pass already applies to `headlineScope`).
+ *
+ * METERED WINS on any overlap. An article matched by both a followed story and
+ * a real interest is content the user would have received anyway.
+ *
+ * The two outputs are disjoint by construction, and their union is exactly the
+ * input — the caller has already applied the new-to-device filter ONCE, and
+ * this must not re-filter or drop anything.
+ */
+export function partitionStoryIds(
+  missingIds: string[],
+  articleToTopicTexts: Map<string, string[]>,
+  freeTopicTexts: Set<string> | undefined,
+  headlineScope?: Map<string, string>,
+): { storyIds: string[]; personaIds: string[] } {
+  if (!freeTopicTexts || freeTopicTexts.size === 0) {
+    return { storyIds: [], personaIds: missingIds };
+  }
+  const storyIds: string[] = [];
+  const personaIds: string[] = [];
+  for (const id of missingIds) {
+    const texts = articleToTopicTexts.get(id) ?? [];
+    const free =
+      texts.length > 0 &&
+      !headlineScope?.has(id) &&
+      texts.every((t) => freeTopicTexts.has(normalizeTopicText(t)));
+    (free ? storyIds : personaIds).push(id);
+  }
+  return { storyIds, personaIds };
 }
 
 /** Persona-v3 privacy-lean retrieval: build the retrieval profile from weighted
@@ -297,6 +407,10 @@ async function fetchTopicIdsPersona(
     articleToTopicTexts,
     serverArticleIds,
     personaMeta: { matchedTopics, headlineScope, headlineCountryCode, stableClusterId },
+    // Billing partition input. Derived from the SAME activeTopics snapshot the
+    // retrieval profile was built from, so the two can't disagree about which
+    // texts were sent as tracked.
+    freeTopicTexts: computeFreeTopicTexts(activeTopics),
   };
 }
 
@@ -342,13 +456,37 @@ export async function stepDiff(
 ): Promise<DiffResult> {
   if (ctx.signal.aborted) throw new Error('aborted');
 
-  const { serverArticleIds, articleToTopicTexts, personaMeta } = result;
+  const { serverArticleIds, articleToTopicTexts, personaMeta, freeTopicTexts } =
+    result;
   const localIds = await getLocalSuggestionServerIds();
   const localIdSet = new Set(localIds);
   const missingIds = serverArticleIds.filter((id) => !localIdSet.has(id));
   ctx.log(`${missingIds.length} missing ids to hydrate`);
 
-  return { serverArticleIds, articleToTopicTexts, missingIds, personaMeta };
+  // Billing partition. Deliberately AFTER the new-to-device filter and derived
+  // from that single filtered array: the local-id read happens exactly once, so
+  // the two hydration calls can never both see the same id, and there is no
+  // window in which a stale local set could let one through twice.
+  const { storyIds, personaIds } = partitionStoryIds(
+    missingIds,
+    articleToTopicTexts,
+    freeTopicTexts,
+    personaMeta?.headlineScope,
+  );
+  if (storyIds.length > 0) {
+    ctx.log(
+      `${storyIds.length} of them are followed-story only (hydrated quota-free)`,
+    );
+  }
+
+  return {
+    serverArticleIds,
+    articleToTopicTexts,
+    missingIds,
+    storyIds,
+    personaIds,
+    personaMeta,
+  };
 }
 
 /**
@@ -378,7 +516,34 @@ export async function stepHydratePersistEnqueue(
   if (ctx.signal.aborted) throw new Error('aborted');
 
   const { missingIds, articleToTopicTexts, personaMeta } = diffResult;
-  const chunks = chunkArray(missingIds, HYDRATE_CHUNK_SIZE);
+  // Fail METERED, not free. A DiffResult that never went through the billing
+  // partition hydrates exactly as it did before r12 — charging for everything —
+  // rather than silently routing the whole run through the unmetered query.
+  const storyIds = diffResult.storyIds ?? [];
+  const personaIds = diffResult.personaIds ?? missingIds;
+
+  // Two hydrators, one pool. Followed-story-only ids go through the quota-EXEMPT
+  // `articlesForStories`; everything else through the METERED
+  // `articlesForTopicsByIds`. The two id arrays are disjoint (partitioned once,
+  // in stepDiff), so no article can be fetched — or charged — twice.
+  //
+  // Everything downstream of the response is IDENTICAL for both: same persist,
+  // same link, same gate, same enqueue. The only thing that differs is which
+  // server query delivered the rows.
+  //
+  // Story chunks are listed FIRST so that, if the metered path later trips the
+  // daily cap and stops the pool, the followed-story articles the user
+  // explicitly asked for have already landed.
+  const chunks: { ids: string[]; free: boolean }[] = [
+    ...chunkArray(storyIds, HYDRATE_CHUNK_SIZE).map((ids) => ({
+      ids,
+      free: true,
+    })),
+    ...chunkArray(personaIds, HYDRATE_CHUNK_SIZE).map((ids) => ({
+      ids,
+      free: false,
+    })),
+  ];
 
   let completedIds = 0;
   let insertedCount = 0;
@@ -487,13 +652,22 @@ export async function stepHydratePersistEnqueue(
       }
       const i = nextChunk++;
       if (i >= chunks.length) return;
-      const chunk = chunks[i];
+      const { ids: chunk, free } = chunks[i];
 
-      const response = await withRetry(
+      const onChunkProgress = (chunkCompleted: number) =>
+        opts.onProgress(completedIds + chunkCompleted);
+
+      const response: {
+        articles: ArticleWithClusters[];
+        // Only the metered query can report the cap. The quota-exempt one has
+        // no cap to hit, so these are absent on its result type by design.
+        dailyLimitReached?: boolean;
+        resetAt?: string;
+      } = await withRetry(
         () =>
-          ArticleService.getArticlesForTopicsByIds(chunk, (chunkCompleted) => {
-            opts.onProgress(completedIds + chunkCompleted);
-          }),
+          free
+            ? ArticleService.getArticlesForStories(chunk, onChunkProgress)
+            : ArticleService.getArticlesForTopicsByIds(chunk, onChunkProgress),
         ctx.signal,
       );
       const chunkArticles = response.articles;

@@ -184,6 +184,35 @@ module.exports = {
       },
       fontSize: {
         '2xs': '10px',
+        // Script-safe line boxes for the LARGE end of the scale.
+        //
+        // Tailwind's defaults are tuned to Latin ascenders and get tighter the
+        // bigger the type gets: text-2xl 24/32 (1.33), text-3xl 30/36 (1.20),
+        // text-4xl 36/40 (1.11), and text-5xl/6xl are a flat 1.0. React Native
+        // treats `lineHeight` as a hard line box on both platforms, so anything
+        // that sits above the Latin cap height is sliced off — Devanagari
+        // matras (सेटिंग्स), Thai upper vowels/tones (ไทย), stacked Vietnamese
+        // diacritics (Tiếng Việt). Every screen title in the app is a
+        // `<Heading size="3xl">`, which resolves to `text-4xl` — the tightest
+        // ratio in the whole scale — so all of them clipped in Hindi.
+        //
+        // 1.5 is not a guess: it is roughly the NATURAL line height of the
+        // scripts that were clipping (iOS falls back to Kohinoor Devanagari,
+        // ascent ~1.10em + descent ~0.44em ≈ 1.54em; Thai is comparable), so
+        // this gives the fallback font the room it already asks for instead of
+        // forcing it into a Latin-sized box. It also matches the
+        // LINE_HEIGHT_RATIO = 1.5 already used by
+        // components/custom/TranslatableDynamic.tsx for the same reason.
+        //
+        // Only 2xl and up are overridden. text-xl (20/28) and everything below
+        // is already at or above 1.4 and is the body-copy end of the scale —
+        // re-leading it would reflow every card and paragraph in the app for no
+        // reported defect. Those are documented as known-tight, not changed.
+        '2xl': ['24px', { lineHeight: '36px' }],
+        '3xl': ['30px', { lineHeight: '45px' }],
+        '4xl': ['36px', { lineHeight: '54px' }],
+        '5xl': ['48px', { lineHeight: '72px' }],
+        '6xl': ['60px', { lineHeight: '90px' }],
       },
       boxShadow: {
         'hard-1': '-2px 2px 8px 0px rgba(38, 38, 38, 0.20)',

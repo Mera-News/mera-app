@@ -118,6 +118,43 @@ surrounding `Box`/`View` instead. Text entry into gluestack inputs: tap the fiel
 - **agent-device serializes its own commands**, so you cannot screenshot mid-gesture with it —
   capture mid-gesture evidence with a concurrent `xcrun simctl io booted screenshot` burst from a
   second shell.
+
+## Traps that produce FALSE FINDINGS
+
+These don't fail loudly — they hand you a confident wrong answer. Each cost real time in r12.
+
+- **Never diagnose scroll, animation or backdrop behaviour on a Fast-Refreshed bundle. Cold launch
+  first.** A wedged Fast Refresh keeps *old module state* ticking while remounted components
+  subscribe elsewhere: a counter froze and the screen went pixel-identical across step boundaries
+  for 13 steps — a perfect "the gate is broken" signature. A cold launch cleared it entirely.
+- **`agent-device scroll down` can switch tabs.** Repeated scrolls silently landed on Explore, and
+  every subsequent snapshot showed `cards=0` on `explore-list` — read as "blank cells during fast
+  scrolling", i.e. a rendering regression that did not exist. Verify the surface by dumping
+  identifiers, and prefer coordinate swipes that stay inside the list.
+- **Judging collapse/scroll state at a list boundary always reads as a false negative.** A fling
+  that runs to the end of the list triggers the iOS rubber-band bounce, which scrolls *up* and
+  trips the collapsible header's `UP_THRESHOLD` — so the header reveals and looks like the fix
+  failed. Use controlled mid-list swipes.
+- **Don't judge or sample any process whose dev menu you've opened.** One such process burnt a flat
+  ~36% CPU indefinitely; a cold launch cleared it. It will contaminate any CPU measurement.
+- **`press 'id=gearshape.fill'` hits the dev-menu FAB, not the Settings tab** — the SF Symbol id
+  collides. Drive the tab bar by coordinates (`y=822`).
+- **Relative `--output` paths silently produce no file.** Always pass absolute paths.
+- **Gluestack `Switch` does not respond to XCTest synthetic taps at all** — `press @ref`,
+  `press 'role=Switch'`, `press 'text=…'`, `tap x y` and `click x y` all report success and leave
+  the value unchanged (verify against the DB, not the a11y tree). Route: terminate the app →
+  `sqlite3` the `settings` row (`settings(id, _changed, _status, key, value)`, only `value` needs
+  changing) → cold launch so `hydrate()` reads it. Distinct from the `InputField` testID note above.
+- **Deep list elements exist in the tree only within ~2.5 screens of the viewport** at
+  `windowSize={5}`. A fling carries ~1000px against a ~460px window, so an element can appear and
+  disappear *between* probes — you cannot binary-search for it. Probe during the fling, or drive
+  `scrollToOffset` directly.
+- **`all-caught-up-card` and `all-caught-up-explore-cta` are no longer unique** — up to three of
+  each render at once (both dividers plus the footer). Scope by the wrapper testIDs, which stay
+  unique: `feed-divider-caught-up`, `feed-divider-opened`, `feed-caught-up-footer`.
+- **Measuring CPU?** Cumulative CPU time going *backwards* means the PID was reused and the run is
+  invalid — guard for it, or a 10-minute soak yields a negative percentage and looks like a bug in
+  the sampler rather than a restarted app.
 - **A pull-to-refresh gesture that produces zero displacement** usually means an overlay view is
   consuming the pan: `pointerEvents="box-none"` on a container still leaves its CHILDREN touchable
   — full-width text rows in headers become invisible touch bands. Rows must be `none`, containers

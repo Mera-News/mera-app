@@ -35,7 +35,9 @@ interface TranslationNoticeProps {
  * — same layout, different colours and different copy paths.
  *
  * `not-translatable` deliberately reads as informational, not as an error:
- * the Google Translate button right below it always works.
+ * the Google Translate button beside it always works. (Do NOT reintroduce a
+ * directional word here or in the copy — the button has moved above this
+ * notice once already, and "below" then pointed at the publisher link.)
  */
 const TranslationNotice: React.FC<TranslationNoticeProps> = ({
     sourceLanguage,

@@ -6,7 +6,7 @@ const mockKv = new Map<string, string>();
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
-  default: { captureException: jest.fn(() => 'evt') },
+  default: { captureException: jest.fn(() => 'evt'), warn: jest.fn(), debug: jest.fn() },
 }));
 
 jest.mock('@/lib/toast-manager', () => ({
@@ -34,6 +34,33 @@ jest.mock('../topic-service', () => ({
   getAllTopicSnapshots: jest.fn(async () => []),
 }));
 
+// r12 K-P3: the sanity audit is an LLM + DB call; mocked so the sweep's wiring
+// (gate hoist, race, merge into ONE notification) is what these tests exercise.
+const mockRunSanityAudit: jest.Mock<
+  Promise<{
+    incoherentFacts: { factId: string; topicIds: string[]; fillTo: number }[];
+    audited: number;
+  }>,
+  []
+> = jest.fn(async () => ({ incoherentFacts: [], audited: 0 }));
+jest.mock('../topic-sanity-service', () => ({
+  runSanityAudit: (...a: unknown[]) => mockRunSanityAudit(...(a as [])),
+  resetSanityCursor: jest.fn(async () => {}),
+}));
+
+// r12 K-P5: the replacement generator (network + atomic write) is mocked so
+// these tests exercise the hygiene wiring; its own atomicity properties are
+// owned by topic-replacement-service.test.ts / topic-replacement-atomicity.test.ts.
+const mockGenerateAndReplace = jest.fn(async () => ({
+  ok: false,
+  minted: 0,
+  retired: 0,
+  floorHeld: false,
+}));
+jest.mock('../topic-replacement-service', () => ({
+  generateAndReplace: (...a: unknown[]) => mockGenerateAndReplace(...(a as [])),
+}));
+
 jest.mock('../persona-action-executor', () => ({
   applyPersonaAction: jest.fn(async () => ({ applied: true, summary: 'ok' })),
 }));
@@ -49,6 +76,9 @@ import {
   acceptProposal,
   rejectProposal,
   MIN_FACTS_FOR_SWEEP,
+  SANITY_RACE_MS,
+  HYGIENE_PENDING_PRESENTATION_CAP,
+  addSanityProposals,
 } from '../hygiene-service';
 import * as factService from '../fact-service';
 import * as topicService from '../topic-service';
@@ -237,5 +267,426 @@ describe('rejectProposal', () => {
     const pending = await getPendingProposals();
     expect(pending.find((p) => p.id === proposal.id)).toBeUndefined();
     expect(res.proposalCount).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// r12 K-P3 — sanity audit: gate hoist, single notification, fail-closed accept
+// ---------------------------------------------------------------------------
+
+describe('sanity audit wiring', () => {
+  const factRows = [
+    { id: 'f1', statement: 'Follows the Indian national cricket team' },
+  ];
+  const topicRows = [
+    {
+      id: 't-bad',
+      factId: 'f1',
+      text: 'Amsterdam cricket festival music tech',
+      normalizedText: 'amsterdam cricket festival music tech',
+      weight: 0.5,
+      status: 'active' as const,
+      lastSignalAtMs: Date.now(),
+    },
+  ];
+
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+    mockRunSanityAudit.mockResolvedValue({ incoherentFacts: [], audited: 0 });
+    (factService.getFacts as jest.Mock).mockResolvedValue(factRows);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(topicRows);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue(
+      factRows.map((f) => ({ id: f.id, weight: null, createdAtMs: 0 })),
+    );
+  });
+
+  it('publishes sanity proposals even when there are TOO FEW facts', async () => {
+    // The size gate exists for the cleanup kinds; contamination is present from
+    // the first generation, so withholding it here would fail the very user who
+    // is complaining. One fact is far below MIN_FACTS_FOR_SWEEP.
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+
+    const res = await runHygieneSweep({ force: true });
+
+    expect(res.reason).toBe('too_few_facts');
+    expect(res.proposalCount).toBe(1);
+    const pending = await getPendingProposals();
+    expect(pending[0].kind).toBe('incoherent_topics');
+  });
+
+  it('still reports zero when the audit found nothing and the gate bails', async () => {
+    const res = await runHygieneSweep({ force: true });
+    expect(res.reason).toBe('too_few_facts');
+    expect(res.proposalCount).toBe(0);
+    expect(await getPendingProposals()).toEqual([]);
+  });
+
+  it('never fires a SECOND notification — the sweep publishes once', async () => {
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+
+    await runHygieneSweep({ force: true });
+
+    expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
+  });
+
+  it('completes normally when the audit throws (race never rejects)', async () => {
+    mockRunSanityAudit.mockRejectedValue(new Error('gateway down'));
+
+    const res = await runHygieneSweep({ force: true });
+
+    expect(res.reason).toBe('too_few_facts');
+    expect(res.proposalCount).toBe(0);
+  });
+
+  it('completes when the audit hangs past the race window', async () => {
+    jest.useFakeTimers();
+    mockRunSanityAudit.mockReturnValue(new Promise(() => {}));
+
+    const promise = runHygieneSweep({ force: true });
+    await jest.advanceTimersByTimeAsync(SANITY_RACE_MS + 1000);
+    const res = await promise;
+
+    expect(res.proposalCount).toBe(0);
+    jest.useRealTimers();
+  });
+});
+
+describe('acceptProposal — generate_replacements is fail-closed', () => {
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+    (factService.getFacts as jest.Mock).mockResolvedValue([
+      { id: 'f1', statement: 'Follows the Indian national cricket team' },
+    ]);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue([
+      {
+        id: 't-bad',
+        factId: 'f1',
+        text: 'Amsterdam cricket festival music tech',
+        normalizedText: 'amsterdam cricket festival music tech',
+        weight: 0.5,
+        status: 'active' as const,
+        lastSignalAtMs: Date.now(),
+      },
+    ]);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue([
+      { id: 'f1', weight: null, createdAtMs: 0 },
+    ]);
+  });
+
+  it('retires NOTHING when replacement generation fails', async () => {
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+    expect(proposal.kind).toBe('incoherent_topics');
+
+    const res = await acceptProposal(proposal.id);
+
+    // Generation failed, so the accept aborts whole — nothing is removed.
+    expect(res.applied).toBe(false);
+    // The invariant: not a single retire ran.
+    expect(executor.applyPersonaAction).not.toHaveBeenCalled();
+    // And the proposal survives so the user can try again.
+    expect(await getPendingProposals()).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// r12 K-P4b — presentation cap + immediate backlog refill
+// ---------------------------------------------------------------------------
+
+describe('presentation cap + backlog refill', () => {
+  /** N incoherent facts => N proposals, one per fact. */
+  function seedManyProposals(n: number) {
+    // Statements must be genuinely DISSIMILAR: near-identical wording trips the
+    // duplicate_facts detector, whose delete-target suppresses the incoherent
+    // proposal for that fact (a doomed fact isn't worth cleaning).
+    const subjects = [
+      'Follows Indian cricket', 'Lives in Amsterdam', 'Works in machine learning',
+      'Parents reside near Bhopal', 'Attends jazz festivals', 'Cycles competitively',
+      'Reads Nordic crime fiction', 'Invests in renewable energy', 'Cooks Sichuan food',
+      'Volunteers at an animal shelter', 'Studies Japanese', 'Collects vinyl records',
+      'Runs marathons', 'Plays chess online', 'Restores vintage cameras',
+      'Brews espresso at home', 'Sails dinghies', 'Writes science fiction',
+      'Teaches mathematics', 'Practises pottery', 'Watches Formula One',
+      'Grows bonsai trees', 'Climbs indoor routes', 'Tracks migratory birds',
+      'Repairs mechanical watches',
+    ];
+    const facts = Array.from({ length: n }, (_, i) => ({
+      id: `f${i}`,
+      statement: subjects[i % subjects.length],
+    }));
+    const topics = facts.map((f, i) => ({
+      id: `t${i}`,
+      factId: f.id,
+      text: `bad topic ${i}`,
+      normalizedText: `bad topic ${i}`,
+      weight: 0.5,
+      status: 'active' as const,
+      lastSignalAtMs: Date.now(),
+    }));
+    (factService.getFacts as jest.Mock).mockResolvedValue(facts);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(topics);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue(
+      facts.map((f) => ({ id: f.id, weight: null, createdAtMs: 0 })),
+    );
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: facts.map((f, i) => ({
+        factId: f.id,
+        topicIds: [`t${i}`],
+        fillTo: 3,
+      })),
+      audited: n,
+    });
+  }
+
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+  });
+
+  it('shows at most the cap, even when the sweep produced far more', async () => {
+    seedManyProposals(25);
+    await runHygieneSweep({ force: true });
+
+    expect(await getPendingProposals()).toHaveLength(
+      HYGIENE_PENDING_PRESENTATION_CAP,
+    );
+  });
+
+  it('reports the TRUE outstanding total, not the paging window', async () => {
+    seedManyProposals(25);
+    await runHygieneSweep({ force: true });
+
+    // The notification and Profile row must not claim 10 when 25 are waiting.
+    expect(await getPendingCount()).toBe(25);
+  });
+
+  it('refills IMMEDIATELY on reject, not on the next sweep', async () => {
+    seedManyProposals(25);
+    await runHygieneSweep({ force: true });
+    const before = await getPendingProposals();
+
+    await rejectProposal(before[0].id);
+    const after = await getPendingProposals();
+
+    // Still a full window — one drained, one pulled forward.
+    expect(after).toHaveLength(HYGIENE_PENDING_PRESENTATION_CAP);
+    expect(after.map((p) => p.id)).not.toContain(before[0].id);
+    expect(await getPendingCount()).toBe(24);
+  });
+
+  it('drains to empty without stranding backlog entries', async () => {
+    seedManyProposals(13);
+    await runHygieneSweep({ force: true });
+
+    for (let guard = 0; guard < 40; guard += 1) {
+      const [next] = await getPendingProposals();
+      if (!next) break;
+      await rejectProposal(next.id);
+    }
+
+    expect(await getPendingProposals()).toEqual([]);
+    expect(await getPendingCount()).toBe(0);
+  });
+
+  it('is a no-op when the sweep produced fewer than the cap', async () => {
+    seedManyProposals(3);
+    await runHygieneSweep({ force: true });
+
+    expect(await getPendingProposals()).toHaveLength(3);
+    expect(await getPendingCount()).toBe(3);
+
+    const [first] = await getPendingProposals();
+    await rejectProposal(first.id);
+    expect(await getPendingProposals()).toHaveLength(2);
+  });
+});
+
+describe('acceptProposal — incoherent_topics happy path (K-P5)', () => {
+  beforeEach(async () => {
+    mockKv.clear();
+    jest.clearAllMocks();
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+    });
+    (factService.getFacts as jest.Mock).mockResolvedValue([
+      { id: 'f1', statement: 'Follows the Indian national cricket team' },
+    ]);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue([
+      {
+        id: 't-bad',
+        factId: 'f1',
+        text: 'Amsterdam cricket festival music tech',
+        normalizedText: 'amsterdam cricket festival music tech',
+        weight: 0.5,
+        status: 'active' as const,
+        lastSignalAtMs: Date.now(),
+      },
+    ]);
+    (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue([
+      { id: 'f1', weight: null, createdAtMs: 0 },
+    ]);
+  });
+
+  it('routes the WHOLE proposal through the atomic replacement path', async () => {
+    mockGenerateAndReplace.mockResolvedValue({
+      ok: true,
+      minted: 2,
+      retired: 1,
+      floorHeld: false,
+    });
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+
+    expect(res).toEqual({ applied: true, ok: true });
+    expect(mockGenerateAndReplace).toHaveBeenCalledWith('f1', 3, ['t-bad']);
+    // The generic op loop must NOT also run the retires — that would be a
+    // second, non-atomic write of the same removal.
+    expect(executor.applyPersonaAction).not.toHaveBeenCalled();
+    expect(await getPendingProposals()).toEqual([]);
+  });
+
+  it('logs the retire so it stays reversible from the change log', async () => {
+    mockGenerateAndReplace.mockResolvedValue({
+      ok: true,
+      minted: 1,
+      retired: 1,
+      floorHeld: false,
+    });
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    await acceptProposal(proposal.id);
+
+    expect(changeLog.append).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionType: ACTION_NAMES.RETIRE_TOPIC,
+        action: { targetId: 't-bad' },
+        source: 'digest',
+      }),
+    );
+  });
+
+  it('reports NOT-ok when the floor withheld the retire', async () => {
+    // The UI shows the retry toast rather than claiming a cleanup that the
+    // floor deliberately prevented.
+    mockGenerateAndReplace.mockResolvedValue({
+      ok: true,
+      minted: 0,
+      retired: 0,
+      floorHeld: true,
+    });
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+
+    expect(res).toEqual({ applied: true, ok: false });
+    expect(changeLog.append).not.toHaveBeenCalled();
+  });
+
+  it('leaves the proposal pending when the replacement path throws', async () => {
+    mockGenerateAndReplace.mockRejectedValue(new Error('boom'));
+    await runHygieneSweep({ force: true });
+    const [proposal] = await getPendingProposals();
+
+    const res = await acceptProposal(proposal.id);
+
+    expect(res).toEqual({ applied: false, ok: false });
+    expect(await getPendingProposals()).toHaveLength(1);
+  });
+});
+
+describe('addSanityProposals — the backfill entry point (K-P5)', () => {
+  const subjects = [
+    'Follows Indian cricket', 'Lives in Amsterdam', 'Works in machine learning',
+    'Parents reside near Bhopal', 'Attends jazz festivals', 'Cycles competitively',
+    'Reads Nordic crime fiction', 'Invests in renewable energy', 'Cooks Sichuan food',
+    'Volunteers at an animal shelter', 'Studies Japanese', 'Collects vinyl records',
+    'Runs marathons', 'Plays chess online', 'Restores vintage cameras',
+  ];
+
+  function seedCorpus(n: number) {
+    const facts = Array.from({ length: n }, (_, i) => ({
+      id: `f${i}`,
+      statement: subjects[i % subjects.length],
+    }));
+    (factService.getFacts as jest.Mock).mockResolvedValue(facts);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(
+      facts.map((f, i) => ({
+        id: `t${i}`,
+        factId: f.id,
+        text: `bad topic ${i}`,
+        normalizedText: `bad topic ${i}`,
+        weight: 0.5,
+        status: 'active' as const,
+        lastSignalAtMs: Date.now(),
+      })),
+    );
+    return facts.map((f, i) => ({ factId: f.id, topicIds: [`t${i}`], fillTo: 3 }));
+  }
+
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+  });
+
+  it('a corpus-wide pass cannot surface a wall of proposals', async () => {
+    const added = await addSanityProposals(seedCorpus(15));
+
+    expect(added).toBe(15);
+    // The window stays short; the rest is parked and refills on each decision.
+    expect(await getPendingProposals()).toHaveLength(
+      HYGIENE_PENDING_PRESENTATION_CAP,
+    );
+    expect(await getPendingCount()).toBe(15);
+  });
+
+  it('is additive across chunks and never duplicates a fingerprint', async () => {
+    const verdicts = seedCorpus(6);
+
+    await addSanityProposals(verdicts.slice(0, 3));
+    await addSanityProposals(verdicts); // chunk overlaps the previous one
+
+    expect(await getPendingCount()).toBe(6);
+    const ids = (await getPendingProposals()).map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('respects the rejected-fingerprint memory', async () => {
+    const verdicts = seedCorpus(3);
+    await rejectProposal('incoherent_topics:f0');
+
+    await addSanityProposals(verdicts);
+
+    const ids = (await getPendingProposals()).map((p) => p.id);
+    expect(ids).not.toContain('incoherent_topics:f0');
+  });
+
+  it('is a no-op for empty verdicts', async () => {
+    expect(await addSanityProposals([])).toBe(0);
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
+  });
+
+  it('notifies only when asked', async () => {
+    await addSanityProposals(seedCorpus(2), { notify: false });
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
+
+    await addSanityProposals(seedCorpus(4), { notify: true });
+    expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
   });
 });

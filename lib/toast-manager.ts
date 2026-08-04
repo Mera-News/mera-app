@@ -254,8 +254,22 @@ class ToastManager {
         }
 
         const React = require('react');
-        const { Toast } = require('@/components/ui/toast');
+        const { Toast, TOAST_ACCENT } = require('@/components/ui/toast');
         const { Text, Pressable } = require('react-native');
+
+        // These colours are hardcoded because the children below are built with
+        // `React.createElement` and therefore get NO NativeWind className
+        // styling (see the note further down). They were near-black (#1a1a1a),
+        // which was right while a toast was a light pastel pill — the toast is
+        // now a dark frosted panel, so they have to be light or the whole toast
+        // renders as an empty pane. Values mirror the dark ramp's
+        // typography-900 / typography-600, i.e. what ToastTitle and
+        // ToastDescription resolve to.
+        const TITLE_COLOR = '#F5F5F5';
+        const BODY_COLOR = '#D4D4D4';
+        // The Undo takes the toast's own success accent so it reads as the
+        // control it is rather than a third line of prose.
+        const UNDO_COLOR = TOAST_ACCENT.success;
 
         // VERIFIED ON DEVICE, and the shape matters more than it looks:
         //   • FLAT children of Toast. Wrapping them in an HStack/VStack row (to
@@ -278,13 +292,13 @@ class ToastManager {
                     { action: 'success', variant: 'solid' },
                     React.createElement(
                         Text,
-                        { style: { color: '#1a1a1a', fontWeight: '700', fontSize: 15 } },
+                        { style: { color: TITLE_COLOR, fontWeight: '700', fontSize: 15 } },
                         opts.title,
                     ),
                     opts.body
                         ? React.createElement(
                               Text,
-                              { style: { color: '#1a1a1a', fontSize: 13, paddingTop: 2 } },
+                              { style: { color: BODY_COLOR, fontSize: 13, paddingTop: 2 } },
                               opts.body,
                           )
                         : null,
@@ -312,7 +326,7 @@ class ToastManager {
                         },
                         React.createElement(
                             Text,
-                            { style: { color: '#1a1a1a', fontWeight: '800', textDecorationLine: 'underline' } },
+                            { style: { color: UNDO_COLOR, fontWeight: '800', textDecorationLine: 'underline' } },
                             opts.undoLabel,
                         ),
                     ),

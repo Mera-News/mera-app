@@ -880,15 +880,107 @@ describe('cloudBatchComplete', () => {
     expect(results[0].error).toBe('Decrypt error');
   });
 
-  it('uses reasoning_content when content is empty', async () => {
+  // r12 K-P2 — REPLACES the old 'uses reasoning_content when content is empty'
+  // pin, which asserted the substitution this guard removes. With thinking
+  // enabled a trace that exhausts max_tokens leaves `content` empty; handing the
+  // trace back AS the output made a pure budget problem look like a benign empty
+  // answer (the caller parsed prose as JSON, got nothing, and reported "no
+  // usable topics"). An error is retryable and countable; prose is neither.
+  it('errors instead of substituting reasoning_content for an empty content', async () => {
     const call = makeBatchCall('reasoning');
     mockFetch.mockResolvedValueOnce(
       makeResponse(200, makeBatchResponse([{ index: 0, output: '', reasoningContent: 'thought-blob' }])),
     );
-    mockDecryptContent.mockReturnValueOnce('thought');
 
     const results = await cloudBatchComplete([call]);
-    expect(results[0].output).toBe('thought');
+
+    expect(results[0].error).toBe('reasoning-overran-budget');
+    expect(results[0].output).toBe('');
+    // The trace must never even reach the decryptor as if it were an answer.
+    expect(mockDecryptContent).not.toHaveBeenCalled();
+  });
+
+  it('still returns content normally when BOTH content and reasoning are present', async () => {
+    const call = makeBatchCall('both');
+    mockFetch.mockResolvedValueOnce(
+      makeResponse(200, makeBatchResponse([
+        { index: 0, output: 'real-blob', reasoningContent: 'thought-blob' },
+      ])),
+    );
+    mockDecryptContent.mockReturnValueOnce('["a"]');
+
+    const results = await cloudBatchComplete([call]);
+
+    expect(results[0].error).toBeUndefined();
+    expect(results[0].output).toBe('["a"]');
+    expect(mockDecryptContent).toHaveBeenCalledWith('real-blob', expect.any(Uint8Array), 'ed25519');
+  });
+
+  // The batch path had NO enable_thinking pin before r12 K-P2 (the one at the
+  // top of this file covers the SINGLE-completion path). These two are that pin:
+  // the default must stay false so every pre-existing batch caller — relevance
+  // scoring, reason generation, noise generation — is byte-identical.
+  describe('enable_thinking (K-P2)', () => {
+    it('defaults to false when the call omits enableThinking', async () => {
+      const call = makeBatchCall('no-flag');
+      mockFetch.mockResolvedValueOnce(
+        makeResponse(200, makeBatchResponse([{ index: 0, output: 'blob' }])),
+      );
+
+      await cloudBatchComplete([call]);
+
+      const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(init.body as string);
+      expect(body.requests[0].chat_template_kwargs.enable_thinking).toBe(false);
+    });
+
+    it('sends false when enableThinking is explicitly false', async () => {
+      const call = makeBatchCall('off', { enableThinking: false });
+      mockFetch.mockResolvedValueOnce(
+        makeResponse(200, makeBatchResponse([{ index: 0, output: 'blob' }])),
+      );
+
+      await cloudBatchComplete([call]);
+
+      const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      expect(
+        JSON.parse(init.body as string).requests[0].chat_template_kwargs.enable_thinking,
+      ).toBe(false);
+    });
+
+    it('honours enableThinking: true', async () => {
+      const call = makeBatchCall('on', { enableThinking: true });
+      mockFetch.mockResolvedValueOnce(
+        makeResponse(200, makeBatchResponse([{ index: 0, output: 'blob' }])),
+      );
+
+      await cloudBatchComplete([call]);
+
+      const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      expect(
+        JSON.parse(init.body as string).requests[0].chat_template_kwargs.enable_thinking,
+      ).toBe(true);
+    });
+
+    it('sets the flag per call, not per batch', async () => {
+      const calls = [
+        makeBatchCall('a', { enableThinking: true }),
+        makeBatchCall('b'),
+      ];
+      mockFetch.mockResolvedValueOnce(
+        makeResponse(200, makeBatchResponse([
+          { index: 0, output: 'blob-a' },
+          { index: 1, output: 'blob-b' },
+        ])),
+      );
+
+      await cloudBatchComplete(calls);
+
+      const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const { requests } = JSON.parse(init.body as string);
+      expect(requests[0].chat_template_kwargs.enable_thinking).toBe(true);
+      expect(requests[1].chat_template_kwargs.enable_thinking).toBe(false);
+    });
   });
 
   it('uses the provided model', async () => {

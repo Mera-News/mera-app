@@ -157,6 +157,18 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               recyclingKey={recyclingKey}
               onError={() => setImageFailed(true)}
               blurRadius={blurImages ? 24 : undefined}
+              // Feed heroes are decorative and arrive by the screenful, so their
+              // fetch+decode must yield to anything the user is waiting on.
+              // Chrome and avatars stay at the default `normal`.
+              //
+              // Note there is deliberately no downscaling prop here:
+              // expo-image's `allowDownscaling` already defaults to true, so it
+              // is ALREADY decoding to the view's size. `cachePolicy` is left
+              // alone too — the app-wide `disk` default in
+              // components/ui/image/index.tsx is the measured fix for 498 MB of
+              // retained `CG image`, and this is exactly the surface that
+              // produced it.
+              priority="low"
             />
           ) : (
             <ArticleImagePlaceholder />

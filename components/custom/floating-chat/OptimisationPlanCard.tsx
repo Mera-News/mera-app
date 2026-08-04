@@ -11,6 +11,7 @@
 // registry and validates every op before it touches the persona. This card only
 // collects the user's checkbox/radio selections.
 
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { hapticSuccess, hapticLight } from '@/lib/haptics';
@@ -197,9 +198,12 @@ const OptimisationPlanCard: React.FC = () => {
                   color={checked ? ACCENT : 'rgb(140, 140, 140)'}
                   style={styles.rowIcon}
                 />
-                <Text size="sm" style={styles.rowLabel}>
-                  {a.summary}
-                </Text>
+                {/* Every runtime string on this card is English: the plan LLM
+                    is asked for "plain-English" questions and summaries, and
+                    the fallback option labels are the literals 'Apply'/'Skip'.
+                    Display only — handleApply sends fingerprints and option
+                    INDICES, never any of this text. */}
+                <TranslatableDynamic text={a.summary} size="sm" style={styles.rowLabel} />
               </Pressable>
             );
           })}
@@ -216,23 +220,38 @@ const OptimisationPlanCard: React.FC = () => {
             const chosen = reviewChoice[item.fingerprint] ?? item.defaultIndex;
             return (
               <View key={item.fingerprint} style={styles.reviewItem}>
-                <Text size="sm" bold style={styles.question}>
-                  {item.question}
-                </Text>
+                <TranslatableDynamic
+                  text={item.question}
+                  size="sm"
+                  bold
+                  style={styles.question}
+                />
                 {item.rationale.length > 0 && (
-                  <Text size="xs" style={styles.rationale}>
-                    {item.rationale}
-                  </Text>
+                  <TranslatableDynamic
+                    text={item.rationale}
+                    size="xs"
+                    style={styles.rationale}
+                  />
                 )}
                 {item.conflictsWith.length > 0 && (
                   <View style={styles.conflictBox}>
                     <Text size="xs" bold style={styles.conflictLabel}>
                       {t('optimisationPlan.conflictsLabel')}
                     </Text>
+                    {/* Liked-story headlines — title_en, same class as the
+                        pinned "About this story" card. The bullet is split out
+                        so the headline can be its own translatable node. */}
                     {item.conflictsWith.map((c, i) => (
-                      <Text key={i} size="xs" style={styles.conflictText}>
-                        • {c.title}
-                      </Text>
+                      <View key={i} style={styles.conflictRow}>
+                        <Text size="xs" style={styles.conflictText}>
+                          {'• '}
+                        </Text>
+                        <TranslatableDynamic
+                          text={c.title}
+                          size="xs"
+                          style={styles.conflictTitle}
+                        />
+                      </View>
                     ))}
                   </View>
                 )}
@@ -254,9 +273,11 @@ const OptimisationPlanCard: React.FC = () => {
                         color={selected ? ACCENT : 'rgb(140, 140, 140)'}
                         style={styles.rowIcon}
                       />
-                      <Text size="sm" style={styles.rowLabel}>
-                        {opt.label}
-                      </Text>
+                      <TranslatableDynamic
+                        text={opt.label}
+                        size="sm"
+                        style={styles.rowLabel}
+                      />
                     </Pressable>
                   );
                 })}
@@ -392,7 +413,15 @@ const styles = StyleSheet.create({
   conflictLabel: {
     color: '#F0A38A',
   },
+  conflictRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
   conflictText: {
+    color: 'rgb(200, 180, 175)',
+  },
+  conflictTitle: {
+    flex: 1,
     color: 'rgb(200, 180, 175)',
   },
   optionRow: {

@@ -1,6 +1,8 @@
 // InferenceQueue — Singleton FIFO consumer for on-device LLM jobs.
 // Serializes all non-chat llama.rn access. Supports pause/resume for chat priority.
 
+import { AppState } from 'react-native';
+
 import {
   dequeueJob,
   getQueueStats,
@@ -41,8 +43,28 @@ const JOB_HANDLERS: Record<InferenceJobType, JobHandler> = {
   tracked_story_migrate: adaptHandler(handleTrackedStoryMigrateJob),
 };
 
-/** Delay between queue polls when no jobs are available (ms). */
-const POLL_INTERVAL = 2000;
+/**
+ * Idle poll cadence, as a BACKOFF rather than a fixed interval.
+ *
+ * The loop is already event-driven: every enqueue path calls `notify()`
+ * (topic-planning-service, persona-summary-trigger, tool-handlers,
+ * track-actions, PersonaL1MeraProtocol, FactsList), which wakes the sleep
+ * immediately. The poll is a safety net for a path that forgets to notify — not
+ * the delivery mechanism — so paying two WatermelonDB round-trips every 2s
+ * forever buys nothing. In cloud mode the queue is started unconditionally
+ * (useModelLifecycle), which made this the only always-running ungated timer in
+ * the app.
+ *
+ * So: start at `POLL_INTERVAL_MIN` and double to `POLL_INTERVAL_MAX` while the
+ * queue keeps coming up empty, resetting to MIN the moment anything happens
+ * (`wake()` — i.e. notify/resume/stop — or a successful dequeue).
+ *
+ * `POLL_INTERVAL_MIN` is ALSO the fixed cadence of the `paused` branch, which
+ * must NOT back off: paused means chat is holding exclusive llama.rn access
+ * (useLocalLLM), and a slow re-check there is a slow hand-back to the queue.
+ */
+const POLL_INTERVAL_MIN = 2000;
+const POLL_INTERVAL_MAX = 30000;
 
 /** Prune completed jobs older than this (ms). */
 const PRUNE_AGE_MS = 60 * 60 * 1000; // 1 hour
@@ -53,6 +75,9 @@ class InferenceQueueImpl {
   private wakeResolver: (() => void) | null = null;
   private currentJobPromise: Promise<void> | null = null;
   private drainCallbacks: Array<() => void> = [];
+  /** Current idle backoff. See POLL_INTERVAL_MIN/MAX. */
+  private idleDelay = POLL_INTERVAL_MIN;
+  private appStateSub: { remove: () => void } | null = null;
 
   /**
    * Start the queue consumer loop.
@@ -110,6 +135,8 @@ class InferenceQueueImpl {
 
     const stats = await getQueueStats();
     this.state = 'running';
+    this.idleDelay = POLL_INTERVAL_MIN;
+    this.armAppStateGate();
     this.loopPromise = this.consumeLoop();
 
     // Log details of any failed jobs for debugging
@@ -135,6 +162,8 @@ class InferenceQueueImpl {
     if (this.state === 'stopped') return;
 
     this.state = 'stopped';
+    this.appStateSub?.remove();
+    this.appStateSub = null;
     this.wake(); // unblock any sleep
     if (this.loopPromise) {
       await this.loopPromise;
@@ -183,8 +212,9 @@ class InferenceQueueImpl {
    * Synchronous "is on-device inference busy right now?" signal for low-priority
    * background schedulers to yield to. True when a job is actively executing OR
    * the queue is paused for chat's exclusive llama.rn access. Deliberately does
-   * NOT count merely-pending jobs (the loop is idle between 2s polls) — this is a
-   * best-effort "something important is running" check, not a backlog gauge.
+   * NOT count merely-pending jobs (the loop is idle between polls, and those
+   * polls now back off to 30s) — this is a best-effort "something important is
+   * running" check, not a backlog gauge.
    */
   isBusy(): boolean {
     return this.currentJobPromise !== null || this.state === 'paused';
@@ -202,9 +232,10 @@ class InferenceQueueImpl {
 
   private async consumeLoop(): Promise<void> {
     while (this.state !== 'stopped') {
-      // If paused, sleep until resumed or stopped
+      // If paused, sleep until resumed or stopped. Deliberately the FIXED
+      // minimum, never the backoff — see POLL_INTERVAL_MIN.
       if (this.state === 'paused') {
-        await this.sleep(POLL_INTERVAL);
+        await this.sleep(POLL_INTERVAL_MIN);
         continue;
       }
 
@@ -231,10 +262,24 @@ class InferenceQueueImpl {
             }
           }
         }
-        // Wait before polling again
-        await this.sleep(POLL_INTERVAL);
+        // Nothing to do — back off before polling again, so an idle app is not
+        // running two DB round-trips every 2s forever. Any enqueue calls
+        // notify() -> wake(), which resets this to the minimum immediately.
+        //
+        // The backoff MUST advance before the await, not after it. `wake()` and
+        // the AppState gate both write `idleDelay` while this sleep is pending;
+        // advancing afterwards would overwrite what they wrote and the next
+        // sleep would use a stale value (a notify() landed on 4000 instead of
+        // 2000, and a background landed on 4000 instead of the 30s cap).
+        const delay = this.idleDelay;
+        this.idleDelay = Math.min(delay * 2, POLL_INTERVAL_MAX);
+        await this.sleep(delay);
         continue;
       }
+
+      // Real work found: the app is active again, so drop straight back to the
+      // fast cadence rather than crawling out of the backoff one job at a time.
+      this.idleDelay = POLL_INTERVAL_MIN;
 
       // Check state again after dequeue (might have been paused/stopped while querying)
       if (this.state !== 'running') continue;
@@ -294,10 +339,36 @@ class InferenceQueueImpl {
   }
 
   private wake(): void {
+    // Any wake is evidence something happened (notify / resume / stop), so the
+    // backoff has served its purpose and resets.
+    this.idleDelay = POLL_INTERVAL_MIN;
     if (this.wakeResolver) {
       this.wakeResolver();
       this.wakeResolver = null;
     }
+  }
+
+  /**
+   * Foreground gate. Backgrounding pins the idle poll to its slowest cadence;
+   * returning to the foreground resets it and wakes the loop at once.
+   *
+   * Deliberately NOT `stop()` on background: stop() makes the next start() redo
+   * recoverCrashedJobs + the orphan-fact/topic sweeps + a stats read, so gating
+   * that way would pay a full repair pass on every single foreground.
+   *
+   * In-flight work is untouched — only the empty-queue sleep changes — so
+   * `isBusy()` keeps reporting truthfully for background-idle.ts, and a job
+   * enqueued while backgrounded still calls notify() -> wake() and runs at once.
+   */
+  private armAppStateGate(): void {
+    if (this.appStateSub) return;
+    this.appStateSub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') {
+        this.wake(); // resets idleDelay to the minimum and unblocks the sleep
+      } else {
+        this.idleDelay = POLL_INTERVAL_MAX;
+      }
+    });
   }
 }
 

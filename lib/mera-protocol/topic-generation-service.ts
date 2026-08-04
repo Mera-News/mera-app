@@ -33,6 +33,7 @@ import {
   parseTopicsFromOutput as harnessParseTopicsFromOutput,
   type RealTopicGenInputs,
 } from '@/lib/news-harness/persona-management/topic-generation';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 
 // Re-export moved pure helpers (canonical home is the harness).
 export { buildBaseUserPrompt, splitCount, mergeTopicsAppend } from '@/lib/news-harness/persona-management/topic-generation';
@@ -40,6 +41,29 @@ export type { RealTopicGenInputs };
 
 const DEFAULT_TOTAL_CLOUD = 16;
 const DEFAULT_TOTAL_LOCAL = 14;
+
+/**
+ * Output budget for the ON-DEVICE topic-generation calls (1024 = the on-device
+ * max-output ceiling, CLAUDE.md § LLM Prompt Budget).
+ *
+ * These calls run with `enableThinking: true`, so the reasoning trace shares the
+ * budget with the answer. At the previous 400 a trace could consume the whole
+ * allowance and the completion came back mid-`<think>`; the topic parser then
+ * found no JSON array and the user was told "no usable topics" for a fact that
+ * had generated fine. `completeLocal` now also fails loudly on that shape (see
+ * LocalTruncatedReasoningError) — this constant makes it rare, that guard makes
+ * it visible.
+ *
+ * NOT raised further: n_ctx is 4096 and the local topic-gen system prompts
+ * already claim a large share of it. CLOUD budgets are deliberately untouched.
+ */
+const LOCAL_TOPIC_GEN_MAX_TOKENS = 1024;
+
+/** CLOUD topic-generation output budget. Sourced from the harness config so this
+ *  (duplicate) generation path can never drift from the harness builder's value
+ *  — both run with thinking on, where the trace shares the budget with the
+ *  answer. See TopicGenConfig.cloudThinkingMaxTokens. */
+const cloudThinkingMaxTokens = DEFAULT_HARNESS_CONFIG.topicGen.cloudThinkingMaxTokens;
 
 /**
  * Merge the raw factOnly + combo outputs for a single fact into a deduped
@@ -89,7 +113,13 @@ export async function generateTopicsFromFact(
   const output = await completeLocal({
     systemPrompt: LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
     prompt: `Fact: "${sanitizeForPrompt(factStatement)}"\nGenerate 14 topics.`,
-    maxTokens: 400,
+    // 1024 = the on-device max-output ceiling (see CLAUDE.md § LLM Prompt
+    // Budget). `enableThinking` below means the reasoning trace shares this
+    // budget with the answer; at the previous 400 a trace could consume the
+    // whole allowance, leaving the caller to parse a truncated <think> block
+    // and report "no usable topics". Not raised further: n_ctx is 4096 and the
+    // system prompt already claims a large share of it.
+    maxTokens: LOCAL_TOPIC_GEN_MAX_TOKENS,
     temperature: 0.3,
     responseFormat: 'json',
     enableThinking: true,
@@ -124,16 +154,18 @@ export async function generateTopicsForFact(
           system: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
           prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
           temperature: 0.3,
-          maxTokens: Math.max(400, factOnlyCount * 30),
+          maxTokens: cloudThinkingMaxTokens,
+          enableThinking: true,
         });
       }
       if (comboCount > 0 && hasOthers) {
         calls.push({
           id: 'combo',
           system: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-          prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate ${comboCount} topics.`,
+          prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
           temperature: 0.3,
-          maxTokens: Math.max(400, comboCount * 30),
+          maxTokens: cloudThinkingMaxTokens,
+          enableThinking: true,
         });
       }
       if (calls.length > 0) {
@@ -157,7 +189,7 @@ export async function generateTopicsForFact(
           factOnlyOutput = await completeLocal({
             systemPrompt: LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
             prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
-            maxTokens: Math.max(400, factOnlyCount * 30),
+            maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, factOnlyCount * 30),
             temperature: 0.3,
             responseFormat: 'json',
             enableThinking: true,
@@ -172,8 +204,8 @@ export async function generateTopicsForFact(
         try {
           comboOutput = await completeLocal({
             systemPrompt: LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-            prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate ${comboCount} topics.`,
-            maxTokens: Math.max(400, comboCount * 30),
+            prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
+            maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, comboCount * 30),
             temperature: 0.3,
             responseFormat: 'json',
             enableThinking: true,

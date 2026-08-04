@@ -289,6 +289,11 @@ export function parseProposalAction(value: unknown): ProposalAction | null {
       const topicText = typeof rec.topicText === 'string' ? rec.topicText.trim() : '';
       return topicText ? { type: 'retire_topic', topicText } : null;
     }
+    // No payload to validate — the action is its own instruction. Needed so a
+    // RESUMED conversation still renders the card (and so its Confirm button
+    // still works) after the popover was closed and reopened.
+    case 'run_calibration':
+      return { type: 'run_calibration' };
     default:
       return null;
   }

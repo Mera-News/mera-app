@@ -26,6 +26,19 @@ jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
   return { MaterialIcons: (p: any) => <View {...p} /> };
 });
+// The action row is CardActionBar now, so this file renders lucide icons. The
+// mock must enumerate EVERY icon the row imports — a missing entry resolves to
+// `undefined` and takes the whole suite file down, not just one assertion.
+jest.mock('lucide-react-native', () => {
+  const { View } = require('react-native');
+  return {
+    ThumbsUp: (p: any) => <View testID="icon-thumbsup" fill={p.fill} color={p.color} />,
+    ThumbsDown: (p: any) => <View testID="icon-thumbsdown" fill={p.fill} color={p.color} />,
+    Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
+    Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
+    Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+  };
+});
 jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View {...p} /> };

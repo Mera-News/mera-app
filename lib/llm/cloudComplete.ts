@@ -829,7 +829,12 @@ export async function cloudBatchComplete(
           stream: false,
           temperature: call.temperature ?? 0.3,
           model: sendModel,
-          chat_template_kwargs: { enable_thinking: false },
+          // Honour the per-call flag, mirroring the async path
+          // (submitInferenceJob.ts). DEFAULT FALSE: every existing batch caller
+          // (relevance scoring, reason generation, noise generation) passes no
+          // `enableThinking` and therefore keeps exactly the behaviour it had
+          // when this was hardcoded. Only callers that opt in change.
+          chat_template_kwargs: { enable_thinking: call.enableThinking ?? false },
           ...(call.maxTokens !== undefined && { max_tokens: call.maxTokens }),
         };
       });
@@ -879,7 +884,29 @@ function mapBatchResults(
 
     const choice = item.response?.choices?.[0];
     const msg = choice?.message;
-    const encContent = msg?.content || msg?.reasoning_content || '';
+
+    // Fail loud instead of substituting the reasoning trace for the answer.
+    // With thinking enabled, a trace that exhausts max_tokens leaves `content`
+    // empty — and the `||` below used to hand `reasoning_content` back AS the
+    // output. Callers then failed to parse prose as JSON and reported a benign
+    // "no usable result", hiding a pure budget problem. Surfacing an error
+    // instead makes it retryable and countable (topic generation already routes
+    // result.error into topicGenError, so the UI settles on a retryable state).
+    if (!msg?.content && msg?.reasoning_content) {
+      logger.warn(`${TAG} batch item returned only a reasoning trace`, {
+        id: call.id,
+        finishReason: choice?.finish_reason,
+        reasoningLength: msg.reasoning_content.length,
+        maxTokensRequested: call.maxTokens,
+      });
+      return {
+        id: call.id,
+        output: '',
+        error: 'reasoning-overran-budget',
+      };
+    }
+
+    const encContent = msg?.content || '';
     if (!encContent) {
       logger.warn(`${TAG} batch item returned empty content`, {
         id: call.id,
