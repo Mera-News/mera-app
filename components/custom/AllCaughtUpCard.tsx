@@ -74,19 +74,27 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ subtitle, compact = f
                 {t('feed.allCaughtUp')}
             </Text>
 
+            {/* The subtitle is FUNCTIONAL — it explains what the boundary means — while the
+                mindfulness line below is decorative and cycles every 3s. Rendered at the same
+                weight they read as equal-weight siblings and the user cannot tell which one is
+                telling them something structural (observed on device). So the subtitle leads:
+                brighter and medium weight, with the cycling line receding beneath it. Keep the
+                two visually distinct; do not collapse them back to one class. */}
             {subtitle ? (
                 <Text
                     size="sm"
-                    className={`text-typography-400 text-center ${compact ? 'mb-2' : 'mb-4'}`}
+                    className={`text-typography-200 font-medium text-center ${compact ? 'mb-2' : 'mb-4'}`}
                 >
                     {subtitle}
                 </Text>
             ) : null}
 
-            {/* Cycling mindfulness message */}
+            {/* Cycling mindfulness message. Dimmer than the subtitle when one is present; on the
+                footer and empty states no subtitle renders, so this is the primary line and its
+                appearance there is unchanged. */}
             <Text
                 size={compact ? 'sm' : 'md'}
-                className="text-gray-400 text-center"
+                className={subtitle ? 'text-typography-500 text-center' : 'text-gray-400 text-center'}
             >
                 {messages[currentIndex]}
             </Text>

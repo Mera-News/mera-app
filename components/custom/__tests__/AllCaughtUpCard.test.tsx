@@ -123,4 +123,22 @@ describe('AllCaughtUpCard', () => {
     render(<AllCaughtUpCard compact />);
     expect(screen.getByTestId('glass-plate')).toBeTruthy();
   });
+
+    it('renders the functional subtitle brighter than the cycling mindfulness line', () => {
+        // Regression guard: these two sat at identical weight on device and a user could not
+        // tell which line explained the boundary. They must stay visually distinct.
+        const { getByText } = render(<AllCaughtUpCard subtitle="Everything below, you've already seen." compact />);
+        const sub = getByText("Everything below, you've already seen.");
+        const subClass = String(sub.props.className ?? '');
+        expect(subClass).toContain('text-typography-200');
+        expect(subClass).toContain('font-medium');
+    });
+
+    it('leaves the mindfulness line as the primary line when no subtitle is passed', () => {
+        // Footer and empty states pass no subtitle, so the cycling line keeps its original class.
+        const messages = require('@/lib/locales/en.json').feed.mindfulness as string[];
+        const { getByText } = render(<AllCaughtUpCard />);
+        const msg = getByText(messages[0]);
+        expect(String(msg.props.className ?? '')).toContain('text-gray-400');
+    });
 });
