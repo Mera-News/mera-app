@@ -115,7 +115,7 @@ describe('useLanguageSwitch', () => {
         expect(onResult).toHaveBeenCalledWith({
             code: 'de',
             outcome: 'failed',
-            committedAnyway: false,
+            fellBackToEnglish: false,
         });
         await waitFor(() => expect(result.current.busy).toBe(false));
     });
@@ -130,25 +130,38 @@ describe('useLanguageSwitch', () => {
 
         expect(mockSetAppLanguage).not.toHaveBeenCalled();
         expect(onResult).toHaveBeenCalledWith(
-            expect.objectContaining({ outcome: 'timeout', committedAnyway: false }),
+            expect.objectContaining({ outcome: 'timeout', fellBackToEnglish: false }),
         );
         await waitFor(() => expect(result.current.busy).toBe(false));
     });
 
-    it('applies the language anyway when the DEVICE has no translator', async () => {
+    it('falls back to ENGLISH, not the previous language, when the DEVICE has no translator', async () => {
+        mockAppLanguage = 'fr';
         const onResult = jest.fn();
-        const { result } = renderHook(() => useLanguageSwitch({ onResult }));
+        const onCommitted = jest.fn();
+        const { result } = renderHook(() => useLanguageSwitch({ onResult, onCommitted }));
         mockProbe.mockResolvedValueOnce('device-unsupported');
 
         act(() => result.current.requestSwitch('de'));
         await act(async () => { result.current.notifyPickerDismissed(); });
 
-        // Reverting would be nonsense here: the previous language is equally
-        // untranslatable, so refusing would make the UI language permanently
-        // unchangeable on this device.
-        expect(mockSetAppLanguage).toHaveBeenCalledWith('de');
+        // English is the FINAL fallback, and this is the one case where it beats
+        // "revert to the previous language": on a device with no translator at
+        // all, 'fr' is exactly as untranslatable as 'de', so returning there
+        // would be theatre. English is the source language of every
+        // translatable string, so it is the one landing spot where nothing on
+        // screen is waiting on a translator that does not exist.
+        expect(mockSetAppLanguage).toHaveBeenCalledWith('en');
+        expect(mockSetAppLanguage).not.toHaveBeenCalledWith('de');
+        // Committed with the code that actually won, never the requested one —
+        // the RTL restart prompt hangs off this pair.
+        expect(onCommitted).toHaveBeenCalledWith('en', 'fr');
         expect(onResult).toHaveBeenCalledWith(
-            expect.objectContaining({ outcome: 'device-unsupported', committedAnyway: true }),
+            expect.objectContaining({
+                code: 'de',
+                outcome: 'device-unsupported',
+                fellBackToEnglish: true,
+            }),
         );
     });
 

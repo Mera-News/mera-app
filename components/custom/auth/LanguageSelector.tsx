@@ -83,14 +83,16 @@ const LanguageSelector: React.FC = () => {
     );
 
     const handleResult = useCallback(
-        ({ code, outcome, committedAnyway }: LanguageSwitchResult) => {
+        ({ code, outcome, fellBackToEnglish }: LanguageSwitchResult) => {
             const language = getNativeLanguageName(code) ?? code;
             const current = getNativeLanguageName(
                 useAppLanguageStore.getState().appLanguage,
             ) ?? 'English';
-            if (committedAnyway) {
+            // Read AFTER the hook applied it, so `current` is already English
+            // here — the body names the landing spot rather than re-deriving it.
+            if (fellBackToEnglish) {
                 Alert.alert(
-                    t('language.switchPartialTitle', { language }),
+                    t('language.switchFailedTitle', { language }),
                     t('language.switchDeviceUnsupportedBody', { language }),
                 );
                 return;

@@ -473,8 +473,7 @@
     "switchFailedBody": "The {{language}} translation pack couldn't be prepared, so you're still using {{previous}}. It may still be downloading — try again in a moment.",
     "switchTimedOutBody": "Preparing {{language}} is taking too long, so you're still using {{previous}}. The download may finish in the background — try again shortly.",
     "switchUnsupportedBody": "This version of iOS can't translate into {{language}}, so you're still using {{previous}}.",
-    "switchPartialTitle": "{{language}} is set, with a limit",
-    "switchDeviceUnsupportedBody": "{{language}} is now your app language, but this device can't translate news articles, so article text will stay in English.",
+    "switchDeviceUnsupportedBody": "This device can't translate news articles into any language, so the app is using English. {{language}} would leave articles untranslated.",
     "translationUnavailableOnThisDevice": "This device can't translate news articles into {{language}}. Showing English instead.",
     "translationFailedTooltip": "Translation failed, please reopen the app or check your settings"
   },

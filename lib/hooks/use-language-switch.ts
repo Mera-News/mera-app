@@ -55,8 +55,13 @@ export type LanguageSwitchPhase =
 export interface LanguageSwitchResult {
     readonly code: string;
     readonly outcome: TranslationProbeOutcome;
-    /** True when the language was applied despite not being verified. */
-    readonly committedAnyway: boolean;
+    /**
+     * True when the attempt ended by applying ENGLISH rather than either the
+     * requested language or the previous one — the `device-unsupported` case.
+     * See the note at that branch in `runProbe` for why English and not the
+     * previous language.
+     */
+    readonly fellBackToEnglish: boolean;
 }
 
 /**
@@ -139,22 +144,36 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
             // not act on it.
             if (generationRef.current !== generation) return;
 
-            // 'device-unsupported' means this device has NO on-device
-            // translator for ANY language, so reverting would be nonsense:
-            // the previous language is equally untranslatable, and refusing
-            // the switch would make the UI language unchangeable forever.
-            // Apply it, and let the failed-translation surface (red translate
-            // icon + prompt) carry the bad news about article text.
-            const committedAnyway = outcome === 'device-unsupported';
+            // 'device-unsupported' — this device has NO on-device translator
+            // for ANY language, so the previous language is exactly as
+            // untranslatable as the requested one. Reverting to it would be
+            // theatre. ENGLISH IS THE FINAL FALLBACK: the user's rule, and the
+            // one landing spot where the app is internally consistent, because
+            // English is the source language of every translatable string, so
+            // nothing on screen is waiting on a translator that does not exist.
+            //
+            // The cost, stated so it is not rediscovered as a bug: on such a
+            // device the app language cannot be changed away from English at
+            // all, even though the UI strings are BUNDLED and need no OS
+            // translator. `deviceCanTranslate()` keys off `Device.isDevice`,
+            // so that includes every simulator — a non-English UI cannot be
+            // exercised there. This was chosen deliberately over committing the
+            // requested language and letting the red-icon surface carry it.
+            const fellBackToEnglish = outcome === 'device-unsupported';
+            const appliedCode = fellBackToEnglish ? 'en' : code;
 
-            if (outcome === 'success' || committedAnyway) {
-                await setAppLanguage(code);
-                optionsRef.current.onCommitted?.(code, previous);
+            if (outcome === 'success' || fellBackToEnglish) {
+                // Applied with the code that actually won, never the requested
+                // one — so the RTL restart prompt hanging off `onCommitted`
+                // compares the right pair (leaving Arabic FOR English is still
+                // a direction change and must still prompt).
+                await setAppLanguage(appliedCode);
+                optionsRef.current.onCommitted?.(appliedCode, previous);
             }
 
             finish();
             if (outcome !== 'success') {
-                optionsRef.current.onResult?.({ code, outcome, committedAnyway });
+                optionsRef.current.onResult?.({ code, outcome, fellBackToEnglish });
             }
         },
         [finish, setAppLanguage],
