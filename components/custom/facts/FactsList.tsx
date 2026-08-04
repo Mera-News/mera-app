@@ -36,6 +36,12 @@ interface FactsListProps {
      *  doesn't need it since it already gates visibility via its own
      *  fact-count check. */
     readonly onFactsChange?: (facts: Fact[] | null) => void;
+    /** Companion-mode read-only flag (see CompanionReadOnlyBanner). Defaults to
+     *  false so ProfileScreen — the other consumer, out of scope for this wave
+     *  — keeps its facts fully mutable. Threaded down to FactAccordion, which
+     *  owns the only mutating control (influence nudge) this component has no
+     *  handler for. */
+    readonly readOnly?: boolean;
 }
 
 /**
@@ -48,7 +54,7 @@ interface FactsListProps {
  * mount it (optionally wiring `onFactsChange`/a ref for its own loading/empty
  * chrome and pull-to-refresh).
  */
-const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }, ref) => {
+const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, readOnly = false }, ref) => {
     const { data: session } = authClient.useSession();
     const userId = session?.user?.id;
     const { fetchUserPersona } = useUserStore();
@@ -337,6 +343,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
                     isExpanded={expandedFactIds.has(fact.id)}
                     articleCountByTopic={articleCountByTopic}
                     isGeneratingMore={generatingMoreFactIds.has(fact.id)}
+                    readOnly={readOnly}
                     onToggle={toggleFact}
                     onDeletePress={handleDeletePress}
                     onFactArticles={handleFactArticlesPress}

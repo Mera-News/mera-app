@@ -1,4 +1,5 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import CompanionReadOnlyBanner, { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -61,6 +62,7 @@ const SET_SOURCE_SCOPE_PREF_ACTION_TYPE = 'set_source_scope_pref';
  */
 const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const readOnly = useCompanionReadOnly();
     const [items, setItems] = useState<PublicationPreferenceModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     // Keyed on `pref.id`, not the display name/label — a scope row's label
@@ -186,12 +188,16 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
         ({ item }: { item: PublicationPreferenceModel }) => (
             <PublicationPrefRow
                 pref={item}
-                busy={busyId === item.id}
+                // `busy` is PublicationPrefRow's only disable input (drives
+                // `disabled=` on the clear/kind Pressables), so folding
+                // companion read-only into it disables the row without
+                // threading a new prop into that child.
+                busy={busyId === item.id || readOnly}
                 onSetKind={handleSetKind}
                 onClear={handleClear}
             />
         ),
-        [busyId, handleSetKind, handleClear],
+        [busyId, readOnly, handleSetKind, handleClear],
     );
 
     return (
@@ -225,6 +231,10 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     showsVerticalScrollIndicator={false}
                 />
             )}
+
+            {/* Pinned outside the FlatList (not a scrolled child) so it stays on
+                screen and explains why boost/downrank/mute/clear are frozen. */}
+            <CompanionReadOnlyBanner surface="publications" />
         </Box>
     );
 };
