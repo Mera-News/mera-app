@@ -105,9 +105,8 @@
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
     "divider": {
-      "caughtUpSubtitle": "Everything below, you've already seen.",
-      "openedTitle": "Stories you opened",
-      "openedSubtitle": "Tap any of these to read them again."
+      "seenLine": "You've seen everything below. Open any to read.",
+      "readLine": "You've read everything below. Open any to revisit."
     },
     "preparingFeed": "Mera is preparing your feed.",
     "preparingFeedExploreHint": "Meanwhile, check out the Explore tab for top stories.",

@@ -22,14 +22,25 @@
 //
 //   [ pinned prefix — reading order, mixed tiers, static ]
 //   [ tier 0 unseen — high → med → low; new arrivals land here ]
-//   ── divider #1: AllCaughtUpCard, testID `feed-divider-caught-up` ──
+//   ── divider #1: AllCaughtUpCard variant="seen", testID `feed-divider-caught-up` ──
 //   [ tier 1 seen but not opened ]
-//   ── divider #2: FeedOpenedDivider, testID `feed-divider-opened` ──
+//   ── divider #2: AllCaughtUpCard variant="read", testID `feed-divider-opened` ──
 //   [ tier 2 opened ]
 //
+// BOTH dividers and the footer are the SAME component — AllCaughtUpCard — with a
+// `variant` selecting the one line that differs. Divider #2 used to be a separate
+// slim label row (FeedOpenedDivider, now deleted) on the rationale that two
+// full cards would "read alike at a glance". The user overrode that: they want
+// one card everywhere, with the mindfulness nudge on every instance and the
+// variant line as the sole distinguisher ("that line could tell the exact
+// divider that it is"). The overridden rationale is recorded here rather than
+// dropped, because two identical headlines ten cards apart is the thing most
+// likely to come back — if it does, the fix is stronger per-variant copy, not a
+// second component.
+//
 // When nothing below the boundary has been seen there is no in-list divider #1;
-// it renders as the end-of-list FOOTER (`feed-caught-up-footer`) instead, so
-// exactly ONE caught-up card exists either way. NOTHING is ever removed for
+// it renders as the end-of-list FOOTER (`feed-caught-up-footer`, variant `end`)
+// instead, so exactly ONE caught-up card exists either way. NOTHING is ever removed for
 // being read: a read card SINKS past a divider, so it stays reachable by
 // scrolling on. Cards leave the feed by exactly one route: `hydrate` dropping a
 // persisted id whose story aged out of the publication window between sessions
@@ -92,7 +103,6 @@ import {
   DIVIDER_CAUGHT_UP,
   type FeedRowEntry,
 } from './feed-entries';
-import FeedOpenedDivider from './FeedOpenedDivider';
 import {
   useFeedbackSheet,
   type CardFeedbackHandlers,
@@ -660,15 +670,19 @@ const FeedScreen: React.FC = () => {
   const renderItem = useCallback(
     ({ item }: { item: FeedRowEntry }) => {
       if (item.kind === 'divider') {
-        // Divider #1 is the full AllCaughtUpCard — the rest stop. Divider #2 is
-        // a slim label. Both are prop-free/memoised, so neither re-renders as
-        // the list changes around it.
+        // Both dividers are the SAME card; only `variant` differs, and it picks
+        // the single line that names which boundary this is. The testIDs stay on
+        // the WRAPPERS — `all-caught-up-card` is no longer unique within a render
+        // (both dividers can be in-list at once), so these are what disambiguate
+        // for the simulator harness.
         return item.id === DIVIDER_CAUGHT_UP ? (
           <Box style={{ marginTop: 16 }} testID="feed-divider-caught-up">
-            <AllCaughtUpCard compact subtitle={t('feed.divider.caughtUpSubtitle')} />
+            <AllCaughtUpCard compact variant="seen" />
           </Box>
         ) : (
-          <FeedOpenedDivider />
+          <Box style={{ marginTop: 16 }} testID="feed-divider-opened">
+            <AllCaughtUpCard compact variant="read" />
+          </Box>
         );
       }
       return (
@@ -682,14 +696,16 @@ const FeedScreen: React.FC = () => {
         />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, t],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers],
   );
 
   // Story ids and the two divider constants are disjoint, so keys stay unique and
   // stable and no row remounts when a divider appears or moves.
   const keyExtractor = useCallback((item: FeedRowEntry) => item.id, []);
 
-  // End-of-feed marker — the caught-up card, rendered HERE only when it is not
+  // End-of-feed marker — the caught-up card at its DEFAULT variant (`end`): no
+  // boundary line, because there is no boundary below it, just the headline, the
+  // mindfulness nudge and the Explore CTA. Rendered HERE only when it is not
   // already in-list (`caughtUpIsFooter`), so exactly one instance exists whether
   // the user has seen everything below the boundary or nothing.
   //

@@ -7,9 +7,9 @@
 //
 //   [ PINNED PREFIX — what the user has already read past, in reading order ]
 //   [ tier 0 unseen — high → med → low; new arrivals land here ]
-//   ── divider #1 "all caught up" ──
+//   ── divider #1 "seen but not read below" ──
 //   [ tier 1 seen but not opened ]
-//   ── divider #2 "stories you opened" ──
+//   ── divider #2 "already read below" ──
 //   [ tier 2 opened ]
 //
 // Nothing is ever removed. A read card SINKS past a divider, it does not
@@ -316,10 +316,14 @@ export interface FeedRows {
  *
  *   [ pinned prefix — the user's timeline, mixed tiers, static ]
  *   [ tier 0 — the DYNAMIC sublist; new arrivals land here by priority ]
- *   ── divider #1 "You're all caught up" ──
+ *   ── divider #1 — caught-up card, variant "seen" ──
  *   [ tier 1 — seen, not opened ]
- *   ── divider #2 "Stories you opened" ──
+ *   ── divider #2 — the SAME caught-up card, variant "read" ──
  *   [ tier 2 — opened ]
+ *
+ * Both sentinels render one component (AllCaughtUpCard); only the variant, and
+ * therefore one line of copy, differs. This module is unchanged by that — it
+ * owns WHERE the sentinels go, never what they look like.
  *
  * Dividers are placed by scanning the DYNAMIC region only, never the pinned
  * prefix. Two consequences, both deliberate:
