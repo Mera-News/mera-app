@@ -347,7 +347,10 @@
     "retry": "Réessayer",
     "watchGuide": "Découvrez comment ajouter une langue à votre appareil",
     "iosLanguageHint": "Il ne suffit pas de sélectionner cette langue ici. Vous devez aussi la sélectionner dans les réglages de langue iOS.",
-    "managePacksPrefix": "Pour gérer les langues téléchargées, allez sur"
+    "managePacksPrefix": "Pour gérer les langues téléchargées, allez sur",
+    "translationUnavailableTapToRetry": "Le pack de langue {{language}} télécharge peut-être encore, ou le téléchargement a échoué. Affichage de l'anglais pour l'instant — appuyez pour réessayer.",
+    "translationUnavailableTitle": "Traduction indisponible",
+    "translationUnsupportedOnThisIos": "Votre version iOS ne peut pas traduire vers {{language}}. Affichage de l'anglais à la place — la mise à jour iOS le permettra."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

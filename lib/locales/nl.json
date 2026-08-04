@@ -342,7 +342,10 @@
     "retry": "Opnieuw proberen",
     "watchGuide": "Bekijk hoe je een taal aan je apparaat toevoegt",
     "iosLanguageHint": "Alleen deze taal selecteren is niet genoeg. Je moet deze taal ook selecteren in de iOS-taalinstellingen.",
-    "managePacksPrefix": "Ga naar"
+    "managePacksPrefix": "Ga naar",
+    "translationUnavailableTapToRetry": "Het {{language}}-taalpakket wordt mogelijk nog steeds gedownload, of de download is mislukt. Toont momenteel Engels — tik om het opnieuw te proberen.",
+    "translationUnavailableTitle": "Vertaling niet beschikbaar",
+    "translationUnsupportedOnThisIos": "Uw iOS-versie kan niet naar {{language}} vertalen. Toont momenteel Engels — iOS bijwerken maakt dit mogelijk."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

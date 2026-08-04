@@ -342,7 +342,10 @@
     "retry": "重試",
     "watchGuide": "觀看如何為裝置新增語言",
     "iosLanguageHint": "僅選擇此語言是不夠的——您還需要在 iOS 語言設定中選擇此語言。",
-    "managePacksPrefix": "要管理已下載的語言，請前往"
+    "managePacksPrefix": "要管理已下載的語言，請前往",
+    "translationUnavailableTapToRetry": "{{language}}語言包可能仍在下載或下載失敗。顯示英文——點擊重試。",
+    "translationUnavailableTitle": "翻譯無法使用",
+    "translationUnsupportedOnThisIos": "您的 iOS 版本無法翻譯為{{language}}。顯示英文——更新iOS可啟用。"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

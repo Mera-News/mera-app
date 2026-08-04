@@ -342,7 +342,10 @@
     "retry": "Tekrar Dene",
     "watchGuide": "Cihazınıza dil eklemeyi izleyin",
     "iosLanguageHint": "Yalnızca bu dili seçmek yeterli değildir: bu dili iOS dil ayarlarında da seçmeniz gerekir.",
-    "managePacksPrefix": "İndirilen dilleri yönetmek için git"
+    "managePacksPrefix": "İndirilen dilleri yönetmek için git",
+    "translationUnavailableTapToRetry": "{{language}} dil paketi hala indiriliyordur veya indirme başarısız olabilir. İngilizce gösteriliyor — tekrar denemek için dokunun.",
+    "translationUnavailableTitle": "Çeviri kullanılamıyor",
+    "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviremiyor. İngilizce gösteriliyor — iOS'u güncellemek bunu etkinleştirecektir."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

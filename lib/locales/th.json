@@ -342,7 +342,10 @@
     "retry": "ลองใหม่",
     "watchGuide": "ดูวิธีเพิ่มภาษาลงในอุปกรณ์ของคุณ",
     "iosLanguageHint": "การเลือกภาษานี้เพียงอย่างเดียวไม่เพียงพอ คุณต้องเลือกภาษานี้ในการตั้งค่าภาษาของ iOS ด้วย",
-    "managePacksPrefix": "เพื่อจัดการภาษาที่ดาวน์โหลด ไปที่"
+    "managePacksPrefix": "เพื่อจัดการภาษาที่ดาวน์โหลด ไปที่",
+    "translationUnavailableTapToRetry": "แพ็กเกจสำหรับ {{language}} อาจยังดาวน์โหลดอยู่ หรือการดาวน์โหลดอาจล้มเหลว แสดง English — แตะเพื่อลองใหม่",
+    "translationUnavailableTitle": "การแปลภาษาไม่พร้อมใช้งาน",
+    "translationUnsupportedOnThisIos": "เวอร์ชัน iOS ของคุณไม่สามารถแปลเป็น {{language}} ได้ แสดง English — อัปเดต iOS จะเปิดใช้งานได้"
   },
   "meraProtocol": {
     "title": "Mera Protocol",

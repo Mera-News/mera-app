@@ -342,7 +342,10 @@
     "retry": "Coba Lagi",
     "watchGuide": "Lihat cara menambahkan bahasa ke perangkat Anda",
     "iosLanguageHint": "Hanya memilih bahasa ini saja tidak cukup. Anda juga perlu memilih bahasa ini di pengaturan bahasa iOS.",
-    "managePacksPrefix": "Untuk mengelola bahasa yang diunduh, buka"
+    "managePacksPrefix": "Untuk mengelola bahasa yang diunduh, buka",
+    "translationUnavailableTapToRetry": "Paket bahasa {{language}} mungkin masih diunduh, atau unduhan mungkin gagal. Menampilkan bahasa Inggris untuk saat ini — ketuk untuk mencoba lagi.",
+    "translationUnavailableTitle": "Terjemahan tidak tersedia",
+    "translationUnsupportedOnThisIos": "Versi iOS Anda tidak dapat menerjemahkan ke {{language}}. Menampilkan bahasa Inggris sebagai gantinya — memperbarui iOS akan mengaktifkannya."
   },
   "meraProtocol": {
     "title": "Mera Protocol",

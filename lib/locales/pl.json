@@ -354,7 +354,10 @@
     "retry": "Ponów",
     "watchGuide": "Zobacz, jak dodać język do urządzenia",
     "iosLanguageHint": "Samo wybranie tego języka nie wystarczy. Musisz również wybrać ten język w ustawieniach języka iOS.",
-    "managePacksPrefix": "Aby zarządzać pobranymi językami, przejdź do"
+    "managePacksPrefix": "Aby zarządzać pobranymi językami, przejdź do",
+    "translationUnavailableTapToRetry": "Pakiet dla {{language}} może być pobierany, lub pobieranie mogło się nie powiść. Wyświetlanie angielskiego — stuknij, aby spróbować ponownie.",
+    "translationUnavailableTitle": "Tłumaczenie niedostępne",
+    "translationUnsupportedOnThisIos": "Twoja wersja iOS nie potrafi tłumaczyć na {{language}}. Wyświetlamy angielski — aktualizacja iOS to umożliwi."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
