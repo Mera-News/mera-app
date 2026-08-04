@@ -665,7 +665,7 @@ const FeedScreen: React.FC = () => {
         // the list changes around it.
         return item.id === DIVIDER_CAUGHT_UP ? (
           <Box style={{ marginTop: 16 }} testID="feed-divider-caught-up">
-            <AllCaughtUpCard subtitle={t('feed.divider.caughtUpSubtitle')} />
+            <AllCaughtUpCard compact subtitle={t('feed.divider.caughtUpSubtitle')} />
           </Box>
         ) : (
           <FeedOpenedDivider />
@@ -701,7 +701,7 @@ const FeedScreen: React.FC = () => {
     () =>
       feedRows.length > 0 && caughtUpIsFooter ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard />
+          <AllCaughtUpCard compact />
         </Box>
       ) : null,
     [feedRows.length, caughtUpIsFooter],
