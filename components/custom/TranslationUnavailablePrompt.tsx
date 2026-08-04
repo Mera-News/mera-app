@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Pressable } from 'react-native';
+import { InteractionManager, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
-    armTranslationRetry,
     getNativeLanguageName,
-    translateText,
+    isTranslationVerified,
+    probeTranslationLanguage,
     useTranslationBlocked,
 } from '@/lib/translation-service';
 
@@ -45,8 +45,40 @@ const TranslationUnavailablePrompt: React.FC = () => {
     const blocked = useTranslationBlocked(appLanguage);
     const toast = useToast();
     const shownToastIdRef = useRef<string | null>(null);
+    const startupProbedRef = useRef<string | null>(null);
 
     const permanent = blocked?.permanent ?? false;
+
+    // RE-VERIFY THE SAVED LANGUAGE ONCE PER LAUNCH.
+    //
+    // `verifiedLanguages` is in-memory and the native-call gate keys off it, so
+    // without this a relaunch leaves every article in English forever: no
+    // <TranslatableDynamic> is allowed to make the first call.
+    //
+    // It lives HERE, and not in the store's `hydrateFromDb`, deliberately.
+    // Hydration runs during boot, while the root layout, the update gate and
+    // the first screens are all still mounting — and this call can present
+    // Apple's system sheet. Presenting it mid-transition is the crash this
+    // wave is fixing; firing it from boot would have reintroduced the same
+    // hazard at the least controlled moment in the app's life. This component
+    // sits inside <NativeUpdateGate>, so the mandatory-update screen has
+    // already resolved, and `runAfterInteractions` waits for the mount work to
+    // drain before anything native happens.
+    //
+    // When the pack IS installed this resolves instantly with no UI at all;
+    // the sheet only appears for a language whose assets are missing, which is
+    // exactly the case the user needs to be asked about.
+    useEffect(() => {
+        if (appLanguage === 'en') return;
+        if (startupProbedRef.current === appLanguage) return;
+        if (isTranslationVerified(appLanguage)) return;
+        if (blocked) return;
+        startupProbedRef.current = appLanguage;
+        const handle = InteractionManager.runAfterInteractions(() => {
+            void probeTranslationLanguage(appLanguage).catch(() => {});
+        });
+        return () => handle.cancel();
+    }, [appLanguage, blocked]);
 
     useEffect(() => {
         const openId = shownToastIdRef.current;
@@ -92,13 +124,19 @@ const TranslationUnavailablePrompt: React.FC = () => {
                 ) : (
                     <Pressable
                         onPress={() => {
-                            // Deliberate, language-wide, and strictly one
-                            // attempt — armTranslationRetry leaves the counter
-                            // one short of the threshold, so if this probe
-                            // fails the language re-blocks on that single
-                            // failure instead of re-arming the loop.
-                            armTranslationRetry(appLanguage);
-                            void translateText('Hello', appLanguage);
+                            // The probe, not a plain translateText. Since the
+                            // native-call gate landed, an unverified language
+                            // is unreachable by any other caller — clearing
+                            // the block and calling translateText would have
+                            // produced no native call at all, i.e. a retry
+                            // button that silently did nothing while looking
+                            // like it had worked.
+                            //
+                            // The probe clears this language's failure state
+                            // itself, so it is still exactly one deliberate
+                            // attempt: one tap, one call, one sheet at most,
+                            // and a failure re-blocks immediately.
+                            void probeTranslationLanguage(appLanguage);
                         }}
                     >
                         {body}

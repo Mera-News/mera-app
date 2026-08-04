@@ -1,11 +1,7 @@
 import { create } from 'zustand';
 import { getLocales } from 'expo-localization';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import {
-    clearTranslationFailuresFor,
-    probeTranslationLanguage,
-    SUPPORTED_LANGUAGES,
-} from '@/lib/translation-service';
+import { clearTranslationFailuresFor, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { applyLanguage } from '@/lib/i18n';
 
 const APP_LANGUAGE_KEY = 'app_language';
@@ -129,17 +125,11 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
             await setSetting(APP_LANGUAGE_KEY, normalized);
         }
 
-        // Re-verify the saved language once per launch.
-        //
-        // `verifiedLanguages` is in-memory only, and the native-call gate keys
-        // off it — so without this, a relaunch would leave every article in
-        // English forever, since no <TranslatableDynamic> is allowed to make
-        // the first call. One probe, at startup, on the language the user
-        // already chose, is the whole cost. It is also the ONLY native call
-        // that will be made until it succeeds, so it cannot storm.
-        if (normalized !== 'en') {
-            void probeTranslationLanguage(normalized).catch(() => {});
-        }
+        // NO native call here. Re-verifying the saved language is deliberately
+        // NOT done during boot hydration — see the once-per-launch probe in
+        // components/custom/TranslationUnavailablePrompt.tsx, which waits for
+        // the app to be mounted and idle first, because that call can present
+        // Apple's system sheet.
     },
 }));
 

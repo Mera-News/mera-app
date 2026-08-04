@@ -434,6 +434,12 @@ export function getTranslationFailure(targetLangCode: string): TranslationFailur
  * user action. The counter is left one short of the threshold rather than
  * reset to zero, so a failed retry re-blocks immediately instead of re-arming
  * the loop: one tap, one attempt, one sheet at most.
+ *
+ * NOTE: on iOS this only helps a language that is already VERIFIED. Clearing
+ * the block on an unverified one changes nothing on its own, because the gate
+ * still refuses every caller but the probe — so the user-facing retry path is
+ * {@link probeTranslationLanguage}, not this. Kept for the verified case and
+ * for Android, where there is no gate.
  */
 export function armTranslationRetry(targetLangCode: string): void {
     const blocked = blockedLanguages.get(targetLangCode);
@@ -517,8 +523,8 @@ export function __resetTranslationStateForTests(): void {
     blockedLanguages.clear();
     verifiedLanguages.clear();
     availabilityListeners.clear();
-    lastProbeTimedOut = false;
-    lastProbeError = null;
+    probeTimedOut.clear();
+    probeErrors.clear();
     queue = Promise.resolve();
 }
 
@@ -754,13 +760,15 @@ export async function probeTranslationLanguage(
     //
     // It is not a latch: the next probe clears it before it runs, and
     // armTranslationRetry still offers a single in-place retry.
-    blockLanguage(targetLangCode, lastProbeError, false);
-    return lastProbeTimedOut ? 'timeout' : 'failed';
+    blockLanguage(targetLangCode, probeErrors.get(targetLangCode) ?? null, false);
+    return probeTimedOut.get(targetLangCode) ? 'timeout' : 'failed';
 }
 
-/** Set by the queued closure so the probe can name its own failure mode. */
-let lastProbeTimedOut = false;
-let lastProbeError: string | null = null;
+// Per-language, NOT single globals: a startup probe and a picker probe can be
+// in flight against different languages, and a shared slot would let one of
+// them report the other's failure reason to the user.
+const probeTimedOut = new Map<string, boolean>();
+const probeErrors = new Map<string, string | null>();
 
 interface TranslateOptions {
     /** Marks the one caller allowed through the gate. Defaults to false. */
@@ -778,8 +786,8 @@ export function translateText(
     const timeoutMs = options.timeoutMs
         ?? (isProbe ? TRANSLATION_PROBE_TIMEOUT_MS : TRANSLATE_CALL_TIMEOUT_MS);
     if (isProbe) {
-        lastProbeTimedOut = false;
-        lastProbeError = null;
+        probeTimedOut.set(targetLangCode, false);
+        probeErrors.set(targetLangCode, null);
     }
 
     const promise = queue.then(async () => {
@@ -846,7 +854,7 @@ export function translateText(
                     });
                     // Counts as a failure: the caller gets nothing back, so
                     // repeating it for the next 40 strings helps no one.
-                    if (isProbe) lastProbeError = 'translator returned no text';
+                    if (isProbe) probeErrors.set(targetLangCode, 'translator returned no text');
                     recordTranslationFailure(targetLangCode, 'translator returned no text');
                 } else {
                     recordTranslationSuccess(targetLangCode);
@@ -854,8 +862,13 @@ export function translateText(
                 return translated;
             } catch (err) {
                 if (isProbe) {
-                    lastProbeError = err instanceof Error ? err.message : String(err);
-                    if (err instanceof TranslationTimeoutError) lastProbeTimedOut = true;
+                    probeErrors.set(
+                        targetLangCode,
+                        err instanceof Error ? err.message : String(err),
+                    );
+                    if (err instanceof TranslationTimeoutError) {
+                        probeTimedOut.set(targetLangCode, true);
+                    }
                 }
                 logger.warn('[TranslationService] Translation attempt failed', {
                     textPreview: text.slice(0, 20),
