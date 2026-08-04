@@ -16,7 +16,7 @@ import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
+import { getActiveTier, getOfferingSafe } from '@/lib/revenuecat';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -116,6 +116,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // Re-fetching the moment the shared tier changes closes that gap
     // immediately, independent of navigation.
     const storeServerTier = useSubscriptionStore((s) => s.serverTier);
+    const customerInfo = useSubscriptionStore((s) => s.customerInfo);
+    const rcTier = getActiveTier(customerInfo);
     useEffect(() => {
         if (storeServerTier == null) return;
         setBilling((current) => {
@@ -193,6 +195,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
 
+    // Same fallback as ManageSubscriptionScreen's `effectiveTier`: DB is the
+    // source of truth, but fall back to RevenueCat's client-side tier while
+    // the webhook sync is still catching up, so a purchase shows the SAME
+    // plan text on both screens during that window instead of "Free plan"
+    // here and "Starter" there.
+    const effectiveTier = billing?.subscriptionTier && billing.subscriptionTier !== 'none'
+        ? billing.subscriptionTier
+        : rcTier;
+
     return (
         // No `bg-black`: ProfileTabScreen mounts AbstractGradientBackdrop
         // behind this screen — an opaque fill here would fully block it,
@@ -225,11 +236,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                             // "Promo" flash on every cold mount before the first
                             // fetch resolves.
                             ? undefined
-                            : billing.subscriptionTier === 'professional'
+                            : effectiveTier === 'professional'
                                 ? t('configPanel.professionalPlan')
-                                : billing.subscriptionTier === 'individual'
+                                : effectiveTier === 'individual'
                                     ? t('configPanel.individualPlan')
-                                    : billing.subscriptionTier === 'starter'
+                                    : effectiveTier === 'starter'
                                         ? t('configPanel.starterPlan')
                                         // Loaded and genuinely not on a paid tier —
                                         // matches ManageSubscriptionScreen's `isPaid`
@@ -239,7 +250,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                                         // for the now-common no-plan case.
                                         : t('subscription.freePlan')
                     }
-                    onUpgrade={billing?.subscriptionTier === 'professional' ? undefined : handleUpgrade}
+                    onUpgrade={effectiveTier === 'professional' ? undefined : handleUpgrade}
                     upgradeLabel={t('subscription.upgrade')}
                     resetAt={billing?.resetAt}
                     resetLabel={t('configPanel.resetsOn')}
