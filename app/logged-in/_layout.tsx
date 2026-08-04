@@ -6,6 +6,7 @@ import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import LapseInterstitialGate from '@/components/custom/subscription/LapseInterstitialGate';
+import FirstOpenPaywallGate from '@/components/custom/subscription/FirstOpenPaywallGate';
 
 export default function LoggedInLayout() {
   const insets = useSafeAreaInsets();
@@ -199,6 +200,9 @@ export default function LoggedInLayout() {
           the whole logged-in tree instead of one screen, and so it survives the
           tab switches a per-screen mount would miss. */}
       <LapseInterstitialGate />
+      {/* Mutually exclusive with the gate above: this one requires
+          hasEverSubscribed === false, which a lapse rules out. */}
+      <FirstOpenPaywallGate />
     </View>
   );
 }

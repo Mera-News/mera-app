@@ -9,6 +9,8 @@ import { VStack } from "@/components/ui/vstack";
 import { AccountService } from "@/lib/account-service";
 import { authClient } from "@/lib/auth-client";
 import { SUPPORT_EMAIL } from "@/lib/config/branding";
+import { setSetting } from "@/lib/database/services/setting-service";
+import { FIRST_OPEN_DISMISSED_SETTING_KEY } from "@/components/custom/subscription/FirstOpenPaywallGate";
 import logger from "@/lib/logger";
 import {
     getCustomerInfoSafe,
@@ -125,9 +127,26 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
 
     // Drop into the app in companion mode. `replace`, not `push`: this screen
     // must not sit on the back stack waiting to be swiped back into.
-    const handleContinueWithoutPlan = useCallback(() => {
+    const handleContinueWithoutPlan = useCallback(async () => {
+        // Default mode = the first-open push. Record the dismissal BEFORE
+        // navigating, so it cannot be lost if the user kills the app on the way
+        // out and gets asked again on the next launch.
+        //
+        // Not written for `lapsed`: that one's "shown once" state is the
+        // server's, and a local flag here would be a second, conflicting
+        // source of truth for the same question.
+        if (!isLapsed) {
+            try {
+                await setSetting(FIRST_OPEN_DISMISSED_SETTING_KEY, 'true');
+            } catch (error) {
+                // Non-fatal: worst case the push appears once more.
+                logger.captureException(error, {
+                    tags: { component: 'NotSubscribedScreen', method: 'dismissFirstOpen' },
+                });
+            }
+        }
         router.replace('/logged-in/app_container/feed');
-    }, [router]);
+    }, [isLapsed, router]);
 
     const handleRefresh = async () => {
         setBusy(true);
@@ -212,19 +231,17 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                   companion mode is a legitimate place to be,
                                   and a dead end here would strand a user who
                                   has chosen it. */}
-                              {isLapsed ? (
-                                  <Button
-                                      testID="not-subscribed-continue"
-                                      onPress={handleContinueWithoutPlan}
-                                      variant="link"
-                                      className="w-full"
-                                      size="lg"
-                                  >
-                                      <ButtonText className="text-gray-400">
-                                          {t('companion.continueWithoutPlan')}
-                                      </ButtonText>
-                                  </Button>
-                              ) : null}
+                              <Button
+                                  testID="not-subscribed-continue"
+                                  onPress={handleContinueWithoutPlan}
+                                  variant="link"
+                                  className="w-full"
+                                  size="lg"
+                              >
+                                  <ButtonText className="text-gray-400">
+                                      {t('companion.continueWithoutPlan')}
+                                  </ButtonText>
+                              </Button>
                           </VStack>
                       </Box>
 
