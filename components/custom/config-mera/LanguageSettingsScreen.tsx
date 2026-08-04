@@ -5,7 +5,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getNativeLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
@@ -61,8 +61,16 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     // being fixed here.
     const handleResult = useCallback(
         ({ code, outcome, fellBackToEnglish }: LanguageSwitchResult) => {
-            const language = getNativeLanguageName(code) ?? code;
-            const current = getNativeLanguageName(
+            // ENGLISH names here, not endonyms — these strings are prose in the
+            // reader's CURRENT language, explaining that the switch did not
+            // happen. `getNativeLanguageName` gave "Couldn't switch to العربية",
+            // which drops RTL script into the middle of an LTR sentence, and
+            // names the language in a script the reader may not read (the exact
+            // reasoning ArticleMetaRow already follows). The spinner TITLE keeps
+            // the endonym on purpose: there it is a label for what you are
+            // getting, not a word inside a sentence.
+            const language = getLanguageName(code) ?? code;
+            const current = getLanguageName(
                 useAppLanguageStore.getState().appLanguage,
             ) ?? 'English';
             // Read AFTER the hook applied it, so `current` is already English
@@ -123,6 +131,14 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                             testID="language-back"
                             onPress={handleBack}
                             disabled={busy}
+                            // Announced as disabled, not merely dimmed. The a11y
+                            // tree reported `enabled: true, hittable: false`
+                            // while probing, so VoiceOver offered a button that
+                            // silently did nothing — the sighted user sees the
+                            // 40% opacity, a screen-reader user got no signal at
+                            // all. `accessibilityState` is what carries it;
+                            // `disabled` alone does not on a Pressable.
+                            accessibilityState={{ disabled: busy }}
                             className={`bg-gray-900 rounded-full p-3 shadow-hard-2 ${busy ? 'opacity-40' : ''}`}
                         >
                             <MaterialIcons

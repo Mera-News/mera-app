@@ -15,7 +15,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
-import { getNativeLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 
 const RTL_CODES = new Set(['ar', 'he']);
 
@@ -84,8 +84,14 @@ const LanguageSelector: React.FC = () => {
 
     const handleResult = useCallback(
         ({ code, outcome, fellBackToEnglish }: LanguageSwitchResult) => {
-            const language = getNativeLanguageName(code) ?? code;
-            const current = getNativeLanguageName(
+            // ENGLISH names, not endonyms — see the same note on the Settings
+            // picker. These are words inside a sentence explaining that the
+            // switch did not happen; the endonym put RTL script mid-LTR
+            // sentence and named the language in a script the reader may not
+            // read. The spinner TITLE keeps the endonym, where it is a label
+            // rather than prose.
+            const language = getLanguageName(code) ?? code;
+            const current = getLanguageName(
                 useAppLanguageStore.getState().appLanguage,
             ) ?? 'English';
             // Read AFTER the hook applied it, so `current` is already English
