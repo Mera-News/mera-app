@@ -59,12 +59,13 @@ interface ReadTranslateActionsProps {
  * ONE layout in every state — the translation-support status only changes the
  * notice line and the two buttons' colours, never their order:
  *
- * 1. `TranslationNotice` (hidden when the article is already in the reader's
+ * 1. The Google Translate button — THREE-QUARTER width, centred, deliberately
+ *    smaller than the publisher button. Always rendered: prod data has
+ *    mislabeled-language articles, so Google Translate must stay reachable
+ *    even when on-device translation is (believed to be) moot.
+ * 2. `TranslationNotice` (hidden when the article is already in the reader's
  *    language; it is what names the source language, so the buttons don't).
- * 2. The Google Translate button — HALF width, centred, deliberately smaller
- *    than the publisher button. Always rendered: prod data has mislabeled-
- *    language articles, so Google Translate must stay reachable even when
- *    on-device translation is (believed to be) moot.
+ *    It sits BETWEEN the buttons so it reads as context for the choice.
  * 3. The full-width "Read on {{publication}}" button.
  *
  * Colour marks the route that will actually get the reader something they can
@@ -135,13 +136,12 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
             : 'text-white';
 
     return (
-        <VStack space="xs">
-            <TranslationNotice
-                sourceLanguage={sourceLanguage}
-                support={support}
-                showGuideLink={support.status === 'translatable'}
-            />
-
+        // `md` and not `xs`: the four things in this column — the action row
+        // above, this Google button, the notice, the publisher button — should
+        // read as one evenly-spaced stack. The parent VStack on both detail
+        // screens uses the SAME token for exactly that reason; if you change
+        // one, change all three or the rhythm breaks at the seam.
+        <VStack space="md">
             <Button
                 testID="detail-read-google-translate"
                 variant="outline"
@@ -149,7 +149,12 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 size="sm"
                 className={`rounded-full ${googleFillClass}`}
                 style={{
-                    width: '50%',
+                    // 3/4, not 1/2. At 375pt a half-width button left ~120pt of
+                    // label room for a string needing ~170, so "Read on Google
+                    // Translate" truncated to "Read on Google Tr…". Still
+                    // visibly subordinate to the full-width publisher button,
+                    // which is the point of sizing it down at all.
+                    width: '75%',
                     alignSelf: 'center',
                     borderWidth: 1,
                     backgroundColor: googleFilled ? GREEN_COLOR : 'transparent',
@@ -178,6 +183,17 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     {t('articleDetail.readOnGoogleTranslate')}
                 </ButtonText>
             </Button>
+
+            {/* BETWEEN the two buttons, deliberately: it explains what language the
+                article is in and which route will read it, so it sits with the
+                choice rather than above it. Its copy no longer says "below" —
+                the Google button is now ABOVE it, and a directional word has
+                already been invalidated twice by layout changes. */}
+            <TranslationNotice
+                sourceLanguage={sourceLanguage}
+                support={support}
+                showGuideLink={support.status === 'translatable'}
+            />
 
             <Button
                 testID="detail-read-publisher"

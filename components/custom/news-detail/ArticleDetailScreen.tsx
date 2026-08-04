@@ -560,7 +560,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 footer={
                     <>
                         {articleUrl ? (
-                            <VStack space="xs">
+                            <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}

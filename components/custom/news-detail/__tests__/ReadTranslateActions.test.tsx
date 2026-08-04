@@ -166,12 +166,15 @@ describe('ReadTranslateActions', () => {
     });
 
     describe('layout', () => {
-        it('renders the Google button at half width, centred, above the publisher button', () => {
+        it('renders the Google button at three-quarter width, centred, above the publisher button', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
             const { getByTestId, UNSAFE_root } = renderActions({ sourceLanguage: 'en' });
 
             const gt = getByTestId(GT_BUTTON);
-            expect(styleOf(gt).width).toBe('50%');
+            // 3/4 and not 1/2: at 375pt a half-width button left ~120pt of label
+            // room for a string needing ~170, so the label truncated. Still
+            // narrower than the full-width publisher button, which is the point.
+            expect(styleOf(gt).width).toBe('75%');
             expect(styleOf(gt).alignSelf).toBe('center');
 
             // Order: the Google button must precede the publisher button.
@@ -179,6 +182,27 @@ describe('ReadTranslateActions', () => {
                 .findAll((n: any) => typeof n.props?.testID === 'string')
                 .map((n: any) => n.props.testID);
             expect(ids.indexOf(GT_BUTTON)).toBeLessThan(ids.indexOf(PUBLISHER_BUTTON));
+        });
+
+        it('puts the translation notice BETWEEN the two buttons', () => {
+            // The notice has moved twice (above both -> between them), and each
+            // move silently invalidated the "Google Translate below" wording in
+            // its own copy. Pinned so a third move has to face the same question.
+            mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+            const { getByText, UNSAFE_root } = renderActions();
+
+            const nodes = UNSAFE_root.findAll(
+                (n: any) => typeof n.props?.testID === 'string' || n.type === 'Text',
+            );
+            const order = nodes.map((n: any) => n.props?.testID ?? String(n.props?.children ?? ''));
+            const gtAt = order.findIndex((v: string) => v === GT_BUTTON);
+            const pubAt = order.findIndex((v: string) => v === PUBLISHER_BUTTON);
+            const noticeAt = order.findIndex((v: string) => v.includes('clusterDetail.translatable'));
+
+            expect(noticeAt).toBeGreaterThan(gtAt);
+            expect(noticeAt).toBeLessThan(pubAt);
+            // And the copy must not point in a direction any more.
+            expect(getByText(/clusterDetail\.translatable/).props.children).toBeTruthy();
         });
 
         it('shows the translation notice + guide link only when the device can translate', () => {
