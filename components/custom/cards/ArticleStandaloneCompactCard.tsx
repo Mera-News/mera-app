@@ -2,12 +2,9 @@ import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCard
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
-import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
-import logger from '@/lib/logger';
 import { extractDomain } from '@/lib/publisher-utils';
-import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 interface ArticleStandaloneCompactCardProps {
   article: NewsArticle;
@@ -25,6 +22,10 @@ interface ArticleStandaloneCompactCardProps {
  * (source_uri → domain fallback, __DEV__ cluster-confidence chip) delegating all
  * layout to `ArticleCompactCardBase`. Tap-only: no "…" button and no actions
  * sheet (removed in the compact-card cleanup).
+ *
+ * The row NEVER opens the publisher URL itself. `onPress` must navigate to a
+ * detail screen (article-detail / suggestion-detail) — that is the only surface
+ * carrying the translate affordance, and opening the URL from here skipped it.
  */
 const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardProps> = ({
   article,
@@ -44,30 +45,6 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       </Box>
     ) : undefined;
 
-  const articleUrl = article.article_url;
-
-  // Mirrors ArticleDetailScreen.handleArticleUrlPress's field mapping — records
-  // the visit (fire-and-forget) then opens the publisher URL in-app.
-  const onOpenArticle = useCallback(() => {
-    if (!articleUrl) return;
-    recordPublicationVisit({
-      publicationName: article.publicationSource?.publication_name ?? null,
-      countryCode: article.publicationSource?.country_code ?? null,
-      articleId: article._id,
-      articleUrl,
-      titleEn: article.title_en_internal_only ?? article.title ?? null,
-      titleOriginal: article.title ?? null,
-      languageCode: article.original_language_code ?? null,
-      imageUrl: article.image_url ?? null,
-      pubDate: article.pubDate ?? null,
-    }).catch(() => {});
-    openArticleInAppBrowser(articleUrl).catch((err) => {
-      logger.captureException(err, {
-        tags: { component: 'ArticleStandaloneCompactCard', method: 'onOpenArticle' },
-      });
-    });
-  }, [article, articleUrl]);
-
   return (
     <ArticleCompactCardBase
       imageUrl={article.image_url}
@@ -80,7 +57,6 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       publicationName={publisherName}
       onPress={onPress}
       metaAccessory={metaAccessory}
-      onOpenArticle={articleUrl ? onOpenArticle : undefined}
     />
   );
 };

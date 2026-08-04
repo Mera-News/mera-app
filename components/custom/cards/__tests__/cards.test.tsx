@@ -646,34 +646,28 @@ describe('CompactActionsSheet', () => {
   });
 });
 
-describe('ArticleStandaloneCompactCard — open-article button', () => {
-  it('renders the button and records a visit + opens the browser when pressed', async () => {
-    const { getByTestId } = render(
-      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
-    );
-    fireEvent.press(getByTestId('card-action-open-article'));
-    expect(mockRecordPublicationVisit).toHaveBeenCalledWith(
-      expect.objectContaining({ articleUrl: 'https://example.com/s', publicationName: 'Die Zeit' }),
-    );
-    await waitFor(() =>
-      expect(mockOpenArticleInAppBrowser).toHaveBeenCalledWith('https://example.com/s'),
-    );
-  });
-
-  it('does not render the button when the article has no url', () => {
+// A compact row must never reach the publisher URL on its own: the detail
+// screen is the only place the translate affordance lives, so a direct open
+// leaves a reader whose language differs from the article's with no way to
+// translate. The row's ONLY job is to hand the tap to its `onPress` (which
+// navigates to a detail screen).
+describe('ArticleStandaloneCompactCard — never opens the article URL directly', () => {
+  it('renders no direct-open button', () => {
     const { queryByTestId } = render(
-      <ArticleStandaloneCompactCard article={makeArticle({ article_url: undefined })} onPress={jest.fn()} />,
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
     expect(queryByTestId('card-action-open-article')).toBeNull();
   });
 
-  it('does not fire the card onPress when the open-article button is pressed', () => {
+  it('tapping the row calls onPress and opens no browser / records no visit', async () => {
     const onPress = jest.fn();
-    const { getByTestId } = render(
+    const { getByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={onPress} />,
     );
-    fireEvent.press(getByTestId('card-action-open-article'));
-    expect(onPress).not.toHaveBeenCalled();
+    fireEvent.press(getByText('Standalone headline'));
+    expect(onPress).toHaveBeenCalled();
+    await waitFor(() => expect(mockOpenArticleInAppBrowser).not.toHaveBeenCalled());
+    expect(mockRecordPublicationVisit).not.toHaveBeenCalled();
   });
 });
 
