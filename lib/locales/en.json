@@ -57,14 +57,14 @@
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",
-    "pendingDescription": "Mera News is a subscription app. Choose a plan to unlock your personalized, on-device news feed.",
+    "pendingDescription": "Mera News runs on a subscription. A plan switches on the AI layer; without one, Explore stays open and free and everything already on this device stays yours.",
     "enquiries": "For any enquiries you can send a mail to",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Refresh 🔄"
   },
   "subscription": {
-    "title": "Unlock Mera News",
-    "description": "Subscribe to get your personalized, on-device news feed.",
+    "title": "Choose your Mera plan",
+    "description": "Mera is the AI layer: your personalized feed, your dashboard, followed stories, and chat. Without a plan you still have News — Explore stays open and free, and everything already on this device stays yours.",
     "viewPlans": "View plans",
     "subscribe": "Subscribe",
     "managePlan": "Manage subscription",
@@ -1321,5 +1321,21 @@
     "subtitle": "Tune how Mera renders visuals on this device",
     "staticGradientTitle": "Static background",
     "staticGradientDescription": "Use a fixed gradient instead of the animated background — easier on battery and older devices."
+  },
+  "companion": {
+    "cardTitle": "You're in companion mode",
+    "cardBody": "Mera isn't building your feed right now. Everything you've already saved, tracked, and read stays exactly where it is. For today's headlines, Explore is open and free.",
+    "seePlans": "See plans",
+    "trackTitle": "Story tracking is part of Mera",
+    "trackBody": "The stories you already follow keep everything they've collected — starting a new one needs an active plan.",
+    "trackDismiss": "Not now",
+    "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
+    "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
+    "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
+    "settingsRowNotice": "Mera is paused. Everything here stays yours to read.",
+    "trackedStoriesEmptyBody": "Nothing followed yet. Following a story is part of Mera — and whatever you follow later stays on this device, yours to keep.",
+    "lapseTitle": "Your Mera plan has ended",
+    "lapseBody": "Nothing has been taken away. Your saved articles, tracked stories, and reading history are yours, on this device, always. What pauses is the AI layer itself: your personalized feed, dashboard, new story tracking, and Mera chat.",
+    "continueWithoutPlan": "Continue without a plan"
   }
 }
