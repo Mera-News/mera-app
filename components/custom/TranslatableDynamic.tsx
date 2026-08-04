@@ -2,7 +2,7 @@ import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/language-codes';
-import { translateText } from '@/lib/translation-service';
+import { translateText, useTranslationBlocked } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
@@ -162,11 +162,19 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const originalIsTargetLang =
         !!originalText && languagesMatch(originalLanguage, appLanguage);
 
+    // The OS translator has given up on this language (see the breaker in
+    // lib/translation-service). Fall back SILENTLY to the server-side English
+    // — `text` is already title_en / description_en, so there is nothing to
+    // fetch and nothing to translate. No banner, no alert, no interruption:
+    // the one prompt the user gets is minted once per language, elsewhere.
+    const translationBlocked = useTranslationBlocked(appLanguage) !== null;
+
     const needsTranslation =
         !effectiveShowOriginal
         && !!appLanguage
         && appLanguage !== 'en'
-        && !originalIsTargetLang;
+        && !originalIsTargetLang
+        && !translationBlocked;
 
     // Per-key subscription (NOT the whole cache Map). The store mutates the
     // cache in place and bumps `cacheVersion`, so zustand re-runs this selector
@@ -234,6 +242,16 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         const unsubscribe = subscribeScrollTick(checkVisibility);
         return unsubscribe;
     }, [needsTranslation, isOnScreen, checkVisibility]);
+
+    // When the breaker clears (a successful retry), let a node that had already
+    // fired-and-failed try once more. `firedRef` is keyed on (text, language),
+    // neither of which changed, so without this the handful of nodes that took
+    // the failure would stay English until the list recycled them.
+    const wasBlockedRef = useRef(translationBlocked);
+    useEffect(() => {
+        if (wasBlockedRef.current && !translationBlocked) firedRef.current = null;
+        wasBlockedRef.current = translationBlocked;
+    }, [translationBlocked]);
 
     // Fire the translation request once we're on screen and still need one.
     useEffect(() => {

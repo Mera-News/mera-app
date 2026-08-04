@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { getLocales } from 'expo-localization';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
-import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { clearTranslationFailures, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 import { applyLanguage } from '@/lib/i18n';
 
 const APP_LANGUAGE_KEY = 'app_language';
@@ -72,6 +72,10 @@ export const useAppLanguageStore = create<AppLanguageState>((set, get) => ({
         // Full invalidation: replace the Map/Set references (a language switch
         // means every cached translation is now stale).
         set({ appLanguage: normalized, cache: new Map(), pending: new Set() });
+        // Picking a language is a deliberate user action — give the new one a
+        // clean slate. Also clears any block on the language being left, so
+        // coming back to it later re-arms rather than staying dead.
+        clearTranslationFailures();
         applyLanguage(normalized);
         await setSetting(APP_LANGUAGE_KEY, normalized);
 

@@ -41,6 +41,9 @@ jest.mock('@/lib/stores/app-language-store', () => {
 
 jest.mock('@/lib/translation-service', () => ({
     translateText: jest.fn(() => Promise.resolve(null)),
+    // Not blocked by default — the breaker's own behaviour is covered in
+    // lib/__tests__/translation-service.test.ts.
+    useTranslationBlocked: jest.fn(() => null),
 }));
 
 jest.mock('@/lib/visibility-tick', () => ({

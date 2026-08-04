@@ -1,5 +1,6 @@
 import { onTranslateTask } from 'expo-translate-text';
 import * as Device from 'expo-device';
+import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 import logger from '@/lib/logger';
 import { canonicalizeLanguageCode, primarySubtag } from '@/lib/language-codes';
@@ -254,6 +255,188 @@ export function getArticleTranslatableStatus(
     return getArticleTranslationSupport(originalLang, appLanguage).status;
 }
 
+/**
+ * Whether this device's OS can translate INTO the given language at all.
+ *
+ * Reuses the same per-language iOS-version ladder as
+ * {@link getArticleTranslationSupport} rather than duplicating it. Apple ships
+ * one asset per language and adds it in both directions in the same release,
+ * so the "first iOS that supported X" year is the same whether X is the source
+ * or the target.
+ *
+ * The point of asking is to never *attempt* a translation that cannot
+ * possibly succeed: an attempt that is doomed still costs the user a system
+ * sheet before it fails.
+ */
+export function canTranslateIntoLanguage(
+    targetLangCode: string,
+    osMajorOverride?: number,
+): boolean {
+    if (Platform.OS === 'android') {
+        return ANDROID_TRANSLATION_SOURCE_CODES.has(
+            primarySubtag(canonicalizeLanguageCode(targetLangCode) ?? targetLangCode),
+        );
+    }
+    if (Platform.OS !== 'ios') return false;
+
+    const canonical = canonicalizeLanguageCode(targetLangCode) ?? targetLangCode;
+    const required = IOS_TRANSLATION_MIN_VERSION[canonical]
+        ?? IOS_TRANSLATION_MIN_VERSION[primarySubtag(canonical)];
+    if (required === undefined) return false;
+
+    const osMajor = osMajorOverride ?? currentOSMajor();
+    // Unknown OS version: assume it works rather than disabling a feature we
+    // can't prove is missing (mirrors getArticleTranslationSupport).
+    if (osMajor === null || osMajor === undefined) return true;
+    return osMajor >= required;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Translation availability breaker
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// THE BUG THIS EXISTS FOR. Apple's `.translationTask` presents a system
+// "Download language" sheet from INSIDE the native call whenever the target
+// language's assets aren't installed (expo-translate-text's
+// ios/TranslationViews.swift). Each sheet belongs to exactly one call — the
+// native module tears its hosting controller down on both success and error
+// (ios/ExpoTranslateTextModule.swift) — so a sheet that "keeps popping up"
+// can only mean we keep calling. And we did: every visible
+// <TranslatableDynamic> fires its own request, each request was retried up to
+// four times, and nothing remembered that the previous one had failed.
+//
+// The break is deliberately CAUSE-INDEPENDENT. Any failure counts, whatever
+// it was and whether or not we can name it. Nothing here parses the error
+// message: Apple hands the bridge a localized string, not a code
+// (ios/TranslationHelpers.swift), so "the pack is still downloading", "the
+// download failed" and "unsupported language pair" are indistinguishable from
+// JS. Classification must never be load-bearing for un-blocking the user.
+//
+// It is a counter, not a latch. Any success resets it, the state is in-memory
+// only, and switching language clears it — being offline once cannot cost the
+// user a language permanently.
+
+/** Consecutive failures for one target language before we stop calling out. */
+export const TRANSLATION_FAILURE_THRESHOLD = 2;
+
+export interface TranslationFailureState {
+    readonly targetLangCode: string;
+    /** Raw OS message. Diagnostic only — never user-facing, never branched on. */
+    readonly lastError: string | null;
+    /**
+     * True when retrying is known to be pointless — the only case we can
+     * establish WITHOUT guessing at Apple's error strings: this OS version has
+     * no translator for the language at all
+     * ({@link canTranslateIntoLanguage}). The UI offers no retry for these.
+     *
+     * False means "we don't know why". That covers both "the pack is still
+     * downloading" and "the download failed", which the native bridge gives us
+     * no way to tell apart, so the copy has to own the uncertainty.
+     */
+    readonly permanent: boolean;
+}
+
+const failureCounts = new Map<string, number>();
+const blockedLanguages = new Map<string, TranslationFailureState>();
+/** Languages that have produced at least one successful translation this
+ *  session — proof the assets are installed, so no sheet can appear for them. */
+const verifiedLanguages = new Set<string>();
+const availabilityListeners = new Set<() => void>();
+
+function notifyAvailabilityChanged(): void {
+    availabilityListeners.forEach((listener) => listener());
+}
+
+function recordTranslationSuccess(targetLangCode: string): void {
+    verifiedLanguages.add(targetLangCode);
+    const wasBlocked = blockedLanguages.delete(targetLangCode);
+    failureCounts.delete(targetLangCode);
+    if (wasBlocked) notifyAvailabilityChanged();
+}
+
+function blockLanguage(
+    targetLangCode: string,
+    message: string | null,
+    permanent: boolean,
+): void {
+    if (blockedLanguages.has(targetLangCode)) return;
+    blockedLanguages.set(targetLangCode, { targetLangCode, lastError: message, permanent });
+    logger.warn('[TranslationService] Translation blocked for language', {
+        targetLangCode,
+        permanent,
+        lastError: message,
+    });
+    notifyAvailabilityChanged();
+}
+
+function recordTranslationFailure(targetLangCode: string, message: string | null): void {
+    const next = (failureCounts.get(targetLangCode) ?? 0) + 1;
+    failureCounts.set(targetLangCode, next);
+    if (next < TRANSLATION_FAILURE_THRESHOLD) return;
+    blockLanguage(targetLangCode, message, false);
+}
+
+/** True when we have stopped calling the OS translator for this language. */
+export function isTranslationBlocked(targetLangCode: string): boolean {
+    return blockedLanguages.has(targetLangCode);
+}
+
+export function getTranslationFailure(targetLangCode: string): TranslationFailureState | null {
+    return blockedLanguages.get(targetLangCode) ?? null;
+}
+
+/**
+ * Arm exactly ONE further attempt for a language, in response to a deliberate
+ * user action. The counter is left one short of the threshold rather than
+ * reset to zero, so a failed retry re-blocks immediately instead of re-arming
+ * the loop: one tap, one attempt, one sheet at most.
+ */
+export function armTranslationRetry(targetLangCode: string): void {
+    const blocked = blockedLanguages.get(targetLangCode);
+    if (!blocked || blocked.permanent) return;
+    blockedLanguages.delete(targetLangCode);
+    failureCounts.set(targetLangCode, TRANSLATION_FAILURE_THRESHOLD - 1);
+    notifyAvailabilityChanged();
+}
+
+/** Full reset — called when the app language changes. */
+export function clearTranslationFailures(): void {
+    const hadBlocked = blockedLanguages.size > 0;
+    blockedLanguages.clear();
+    failureCounts.clear();
+    if (hadBlocked) notifyAvailabilityChanged();
+}
+
+export function subscribeTranslationAvailability(listener: () => void): () => void {
+    availabilityListeners.add(listener);
+    return () => {
+        availabilityListeners.delete(listener);
+    };
+}
+
+/**
+ * Reactive read of the breaker for one language. `useSyncExternalStore` (not
+ * zustand) because the breaker lives in this module and `app-language-store`
+ * already imports from here — putting it in the store would make the
+ * dependency circular.
+ */
+export function useTranslationBlocked(targetLangCode: string): TranslationFailureState | null {
+    return useSyncExternalStore(
+        subscribeTranslationAvailability,
+        () => blockedLanguages.get(targetLangCode) ?? null,
+        () => null,
+    );
+}
+
+/** Test seam — clears every module-level translation state. */
+export function __resetTranslationStateForTests(): void {
+    failureCounts.clear();
+    blockedLanguages.clear();
+    verifiedLanguages.clear();
+    availabilityListeners.clear();
+    queue = Promise.resolve();
+}
+
 // Serializes native translation calls to prevent the OS from cancelling
 // concurrent translation sessions.
 let queue: Promise<void> = Promise.resolve();
@@ -262,12 +445,41 @@ let queue: Promise<void> = Promise.resolve();
 // when the translation session is busy; a short pause is enough to recover.
 const TRANSLATE_RETRY_DELAYS_MS = [200, 600, 1800] as const;
 
+// No in-call retries. Used on iOS for a language we have never successfully
+// translated into, because there every attempt against missing assets
+// re-presents Apple's download sheet. The transient "session busy" case the
+// ladder exists for still recovers: a single failure is below
+// TRANSLATION_FAILURE_THRESHOLD, so the next request gets a clean second try.
+const NO_RETRY_DELAYS_MS = [] as const;
+
+function retryDelaysFor(targetLangCode: string): readonly number[] {
+    if (Platform.OS === 'ios' && !verifiedLanguages.has(targetLangCode)) {
+        return NO_RETRY_DELAYS_MS;
+    }
+    return TRANSLATE_RETRY_DELAYS_MS;
+}
+
 /** Translate a single text string. Returns null on failure. */
 export function translateText(
     text: string,
     targetLangCode: string,
 ): Promise<string | null> {
     const promise = queue.then(async () => {
+        // Checked HERE, at the head of the queue — NOT when translateText was
+        // called. A language switch fires every mounted <TranslatableDynamic>
+        // in one effect flush, so all N calls are already queued before the
+        // first failure lands; a call-time check would let every one of them
+        // reach the native module and present its own sheet.
+        if (blockedLanguages.has(targetLangCode)) return null;
+
+        // A language the OS cannot translate into will never succeed, and a
+        // doomed attempt still costs the user a sheet before it fails.
+        if (!canTranslateIntoLanguage(targetLangCode)) {
+            blockLanguage(targetLangCode, 'unsupported-target-language', true);
+            return null;
+        }
+
+        const retryDelays = retryDelaysFor(targetLangCode);
         // Android's Kotlin bridge treats the literal string 'auto' as a
         // signal to run its own silent language-ID step first — no user-
         // facing UI. iOS has no equivalent: passing 'auto' isn't a real
@@ -281,7 +493,7 @@ export function translateText(
         // and lets a wrong assumption fail quietly through the retry/catch/
         // log path below instead of surfacing OS UI.
         const sourceLangCode = Platform.OS === 'android' ? 'auto' : 'en';
-        for (let attempt = 0; attempt <= TRANSLATE_RETRY_DELAYS_MS.length; attempt++) {
+        for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
             try {
                 const result = await onTranslateTask({
                     input: text,
@@ -302,6 +514,11 @@ export function translateText(
                         targetLangCode,
                         attempt,
                     });
+                    // Counts as a failure: the caller gets nothing back, so
+                    // repeating it for the next 40 strings helps no one.
+                    recordTranslationFailure(targetLangCode, 'translator returned no text');
+                } else {
+                    recordTranslationSuccess(targetLangCode);
                 }
                 return translated;
             } catch (err) {
@@ -312,9 +529,9 @@ export function translateText(
                     attempt,
                     error: err instanceof Error ? err.message : String(err),
                 });
-                if (attempt < TRANSLATE_RETRY_DELAYS_MS.length) {
+                if (attempt < retryDelays.length) {
                     await new Promise<void>((resolve) =>
-                        setTimeout(resolve, TRANSLATE_RETRY_DELAYS_MS[attempt]),
+                        setTimeout(resolve, retryDelays[attempt]),
                     );
                 } else {
                     logger.error('[TranslationService] Translation failed', err as Error, {
@@ -322,6 +539,10 @@ export function translateText(
                         sourceLangCode,
                         targetLangCode,
                     });
+                    recordTranslationFailure(
+                        targetLangCode,
+                        err instanceof Error ? err.message : String(err),
+                    );
                     return null;
                 }
             }
