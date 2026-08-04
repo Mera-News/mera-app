@@ -24,7 +24,21 @@ import { Linking, TouchableOpacity, View } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function NotSubscribedScreen() {
+export interface NotSubscribedScreenProps {
+    /**
+     * `'lapsed'` — the user HAD a plan and it ended. Softened: no auto-presented
+     * purchase sheet, its own copy, and an explicit way out.
+     *
+     * `undefined` — the default, and deliberately unchanged from what it always
+     * was, including the auto-present on mount. This is also the mode the
+     * first-open push reuses: that is the primary conversion moment and is
+     * meant to be the more assertive of the two.
+     */
+    readonly reason?: 'lapsed';
+}
+
+export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps = {}) {
+    const isLapsed = reason === 'lapsed';
     const { data: session, isPending: isSessionPending } = authClient.useSession();
     const router = useRouter();
     const { t } = useTranslation();
@@ -96,12 +110,24 @@ export default function NotSubscribedScreen() {
     }, [pollUntilSubscribed, t]);
 
     // Auto-present the paywall once when the gate is reached.
+    //
+    // Skipped for `lapsed`: this user just lost something, and opening a
+    // purchase sheet over the explanation is the aggressive-funnel move the
+    // tone direction rejects. They read first and tap "View plans" if they want
+    // it. Every other entry point keeps the original behaviour.
     useEffect(() => {
+        if (isLapsed) return;
         if (!presentedRef.current && userId && isRevenueCatConfigured()) {
             presentedRef.current = true;
             void presentPaywall();
         }
-    }, [userId, presentPaywall]);
+    }, [isLapsed, userId, presentPaywall]);
+
+    // Drop into the app in companion mode. `replace`, not `push`: this screen
+    // must not sit on the back stack waiting to be swiped back into.
+    const handleContinueWithoutPlan = useCallback(() => {
+        router.replace('/logged-in/app_container/feed');
+    }, [router]);
 
     const handleRefresh = async () => {
         setBusy(true);
@@ -143,11 +169,11 @@ export default function NotSubscribedScreen() {
                           <MeraLogo size={150} />
                       </Box>
                       <Heading size="2xl" className="text-white text-center">
-                          {t('subscription.title')}
+                          {isLapsed ? t('companion.lapseTitle') : t('subscription.title')}
                       </Heading>
 
                       <Text size="lg" className="text-gray-300 text-center leading-relaxed">
-                          {t('subscription.description')}
+                          {isLapsed ? t('companion.lapseBody') : t('subscription.description')}
                       </Text>
 
                       {message ? (
@@ -180,6 +206,25 @@ export default function NotSubscribedScreen() {
                                       {busy ? t('common.checking') : t('account.refresh')}
                                   </ButtonText>
                               </Button>
+                              {/* The way out. This screen had NO exit at all,
+                                  which was defensible while the app was
+                                  unusable without a plan and is not now:
+                                  companion mode is a legitimate place to be,
+                                  and a dead end here would strand a user who
+                                  has chosen it. */}
+                              {isLapsed ? (
+                                  <Button
+                                      testID="not-subscribed-continue"
+                                      onPress={handleContinueWithoutPlan}
+                                      variant="link"
+                                      className="w-full"
+                                      size="lg"
+                                  >
+                                      <ButtonText className="text-gray-400">
+                                          {t('companion.continueWithoutPlan')}
+                                      </ButtonText>
+                                  </Button>
+                              ) : null}
                           </VStack>
                       </Box>
 

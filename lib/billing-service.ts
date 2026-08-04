@@ -17,8 +17,45 @@ const GET_USER_BILLING = gql`
   }
 `;
 
+// Self-scoped: no userId argument, the server resolves the caller from the
+// session. It stamps `lapseInterstitialShownAt`, which is what makes the
+// "shown once" latch survive a reinstall and re-arm on a LATER lapse — a local
+// boolean could do neither.
+const ACKNOWLEDGE_LAPSE_INTERSTITIAL = gql`
+  mutation AcknowledgeLapseInterstitial {
+    acknowledgeLapseInterstitial {
+      subscriptionTier
+      hasEverSubscribed
+      showLapseInterstitial
+    }
+  }
+`;
+
 interface UserBillingResponse {
     userBilling: UserBillingInfo;
+}
+
+interface AcknowledgeLapseResponse {
+    acknowledgeLapseInterstitial: UserBillingInfo;
+}
+
+/**
+ * Tell the server the lapse interstitial has been shown. Returns the updated
+ * snapshot, or null on any error — a failed ack is not worth surfacing: the
+ * worst case is the interstitial appearing once more on a later launch.
+ */
+export async function acknowledgeLapseInterstitial(): Promise<UserBillingInfo | null> {
+    try {
+        const { data } = await client.mutate<AcknowledgeLapseResponse>({
+            mutation: ACKNOWLEDGE_LAPSE_INTERSTITIAL,
+        });
+        return data?.acknowledgeLapseInterstitial ?? null;
+    } catch (error) {
+        logger.captureException(error, {
+            tags: { component: 'billing-service', method: 'acknowledgeLapseInterstitial' },
+        });
+        return null;
+    }
 }
 
 /**

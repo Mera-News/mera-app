@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
+import LapseInterstitialGate from '@/components/custom/subscription/LapseInterstitialGate';
 
 export default function LoggedInLayout() {
   const insets = useSafeAreaInsets();
@@ -194,6 +195,10 @@ export default function LoggedInLayout() {
       </View>
       <FloatingChatHost />
       <FeedbackWidgetModal />
+      {/* Renders nothing — a mounted effect. Lives here, once, so it watches
+          the whole logged-in tree instead of one screen, and so it survives the
+          tab switches a per-screen mount would miss. */}
+      <LapseInterstitialGate />
     </View>
   );
 }
