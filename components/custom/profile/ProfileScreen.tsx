@@ -3,6 +3,7 @@ import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import HubRow from '@/components/custom/profile-hub/HubRow';
+import { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -49,6 +50,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const { t } = useTranslation();
     const { userPersona, fetchUserPersona } = useUserStore();
     const factMutationVersion = useFloatingChatFactMutationVersion();
+    // ProfileScreen is only reached via the main tab navigator (after
+    // onboarding, a separate route) — no isOnboarding exemption needed here,
+    // unlike MeraProtocolSettingsScreen which is also mounted mid-onboarding.
+    const readOnly = useCompanionReadOnly();
 
     const [factCount, setFactCount] = useState<number | null>(null);
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
@@ -241,7 +246,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                             </Text>
                         </HStack>
 
-                        <FactsList />
+                        <FactsList readOnly={readOnly} />
                     </Box>
                 )}
 
