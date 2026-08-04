@@ -1,5 +1,6 @@
 import React from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Platform } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { Box } from '@/components/ui/box';
@@ -21,6 +22,13 @@ interface LanguageSwitchProgressProps {
  * Three things, and all three are load-bearing:
  *
  *  - a spinner, so the wait reads as work rather than as a frozen screen;
+ *  - on iOS, the one instruction that actually unblocks the wait: tap the
+ *    circled down-arrow beside each row in Apple's "Required Downloads" sheet.
+ *    Nothing downloads until they do, and the sheet gives no hint of that — so
+ *    without this line the spinner just spins forever. It sits directly under
+ *    the title BECAUSE Apple's sheet covers roughly the bottom half of the
+ *    screen: anything below the nudge is hidden exactly when it is needed.
+ *    Android has no such sheet, hence the platform gate;
  *  - copy that ASKS them to stay, and says plainly what leaving costs, because
  *    walking away mid-download is what produces the degraded experience;
  *  - a cancel button, because a nudge to stay with no visible way out is a
@@ -48,6 +56,20 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
                         {t('language.switchingTitle', { language })}
                     </Text>
                 </HStack>
+                {Platform.OS === 'ios' ? (
+                    <Text
+                        testID="language-switch-download-hint"
+                        className="text-typography-300 text-sm font-medium leading-5"
+                    >
+                        {t('language.downloadHintNowPrefix')}{' '}
+                        <MaterialCommunityIcons
+                            name="arrow-down-circle-outline"
+                            size={15}
+                            color="#a78bfa"
+                        />
+                        {' '}{t('language.downloadHintNowSuffix')}
+                    </Text>
+                ) : null}
                 <Text className="text-typography-400 text-sm leading-5">
                     {t('language.switchingNudge', { language })}
                 </Text>
