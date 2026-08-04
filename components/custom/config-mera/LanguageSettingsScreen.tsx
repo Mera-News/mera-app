@@ -5,7 +5,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { SUPPORTED_LANGUAGES, translateText } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
 import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
@@ -41,6 +41,10 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack 
         const wasRTL = RTL_CODES.has(appLanguage);
         const willBeRTL = RTL_CODES.has(code);
         await setAppLanguage(code);
+        // Ask the OS for the pack once, here, where the user just asked for
+        // this language — one deliberate gesture, one system sheet. The
+        // outcome is reported by the root <TranslationUnavailablePrompt>.
+        if (code !== 'en') void translateText('Hello', code);
         if (wasRTL !== willBeRTL) {
             Alert.alert(
                 t('language.restartRequired'),

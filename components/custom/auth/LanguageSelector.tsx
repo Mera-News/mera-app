@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Updates from 'expo-updates';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, FlatList, Keyboard, Modal, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Keyboard, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -57,7 +57,6 @@ const LanguageSelector: React.FC = () => {
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const setAppLanguage = useAppLanguageStore((s) => s.setAppLanguage);
     const [showPicker, setShowPicker] = useState(false);
-    const [packMissing, setPackMissing] = useState(false);
 
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
 
@@ -66,23 +65,19 @@ const LanguageSelector: React.FC = () => {
         setShowPicker(true);
     }, []);
 
-    // Probe pack availability. On iOS this surfaces the system sheet asking
-    // the user to download the en->target pack; on Android MLKit downloads
-    // the en->target model in the background. A null result means the pack
-    // isn't usable (user declined, no network, unsupported language).
+    // Probe pack availability at the one moment the user has actually asked
+    // for this language. On iOS this is where Apple's download sheet belongs:
+    // a single presentation, in response to a single deliberate gesture.
+    //
+    // The OUTCOME is not reported here. translateText's per-language breaker
+    // records it, and the single root-level <TranslationUnavailablePrompt>
+    // speaks for every surface — this screen used to keep its own
+    // `packMissing` banner, which died with the component and so left a user
+    // who switched language from Settings with no feedback at all.
     const probePack = useCallback((code: string) => {
-        if (code === 'en') {
-            setPackMissing(false);
-            return;
-        }
-        translateText('Hello', code).then((result) => {
-            setPackMissing(result === null);
-        });
+        if (code === 'en') return;
+        void translateText('Hello', code);
     }, []);
-
-    const handleRetry = useCallback(() => {
-        probePack(appLanguage);
-    }, [appLanguage, probePack]);
 
     const handleSelectLanguage = useCallback(
         async (code: string) => {
@@ -141,37 +136,6 @@ const LanguageSelector: React.FC = () => {
                     </HStack>
                 </Pressable>
             </HStack>
-
-            {packMissing && (
-                <Box className="mx-5 mt-4 px-4 py-3 rounded-lg bg-red-900/30 border border-red-800/50">
-                    <HStack space="sm" className="items-start">
-                        <MaterialIcons
-                            name="error-outline"
-                            size={18}
-                            color="#fca5a5"
-                            style={{ marginTop: 2 }}
-                        />
-                        <VStack space="xs" className="flex-1">
-                            <Text className="text-red-300 text-sm">
-                                {t('language.packMissingBanner')}
-                            </Text>
-                            {Platform.OS === 'ios' && (
-                                <Text className="text-red-200 text-sm">
-                                    {t('language.packMissingIosPath')}
-                                </Text>
-                            )}
-                            <Pressable
-                                onPress={handleRetry}
-                                className="self-start mt-1 px-3 py-1.5 rounded-md bg-red-800/50 border border-red-700"
-                            >
-                                <Text className="text-red-100 text-sm font-semibold">
-                                    {t('language.retry')}
-                                </Text>
-                            </Pressable>
-                        </VStack>
-                    </HStack>
-                </Box>
-            )}
 
             {/* Language Picker Modal */}
             <Modal

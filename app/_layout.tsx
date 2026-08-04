@@ -22,6 +22,7 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
+import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
@@ -344,6 +345,7 @@ export default Sentry.wrap(function RootLayout() {
             <NativeUpdateGate>
               <ToastInitializer />
               <OTAUpdatePrompt />
+              <TranslationUnavailablePrompt />
               <AppRoot />
             </NativeUpdateGate>
           </GluestackUIProvider>
