@@ -138,18 +138,32 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({ onBack,
     const renderItem: ListRenderItem<SavedItem> = useCallback(
         ({ item }) => (
             <Box className="relative">
+                {/* Both rows pass `flat`: it is the surface the Feed and
+                    Dashboard article cards render through (rounded-2xl, hairline
+                    border, drop shadow, full-bleed hero), and Saved is the same
+                    kind of list. Without it these were the app's ONLY cards still
+                    on ArticleCardBase's older `Card`-wrapped chrome — rounded-md,
+                    no shadow, and a hero inset by the Card's own p-4.
+
+                    It also makes DELETE_BUTTON_RESERVE correct. The reserve is
+                    quoted from the card's outer right edge and ArticleCardBase
+                    subtracts only the content VStack's px-4; the non-flat branch
+                    added a further 16px of Card padding, so this screen — the
+                    reserve's only caller — was under-reserving by 16px. */}
                 {item.origin === 'article' ? (
                     <ArticleStandaloneCard
                         article={item.article}
                         onPress={() => handleArticlePress(item.article._id)}
                         subjectExtras={{ surface: 'saved' }}
                         metaRowRightReserve={DELETE_BUTTON_RESERVE}
+                        flat
                     />
                 ) : (
                     <ArticleSuggestionCard
                         suggestion={item.suggestion}
                         onPress={(s) => handleSuggestionPress(s._id)}
                         metaRowRightReserve={DELETE_BUTTON_RESERVE}
+                        flat
                     />
                 )}
                 {/* Delete affordance. Kept clear of the Dashboard's right-edge
