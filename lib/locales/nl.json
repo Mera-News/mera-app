@@ -20,7 +20,8 @@
     "articles": "Artikelen",
     "loggingOut": "Uitloggen...",
     "never": "Nooit",
-    "saving": "Opslaan..."
+    "saving": "Opslaan...",
+    "offlineBanner": "Traag of geen verbinding met Mera. Weergeven van opgeslagen nieuws — we proberen het opnieuw."
   },
   "auth": {
     "reauthBanner": "Log opnieuw in om te synchroniseren",
@@ -198,7 +199,11 @@
     "statsRelevant_one": "{{formatted}} lijkt relevant,",
     "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
-    "statsRead_other": "en je hebt {{formatted}} gelezen."
+    "statsRead_other": "en je hebt {{formatted}} gelezen.",
+    "divider": {
+      "readLine": "Je hebt alles hieronder gelezen. Open een artikel om terug te kijken.",
+      "seenLine": "Je hebt alles hieronder gezien. Open een artikel om te lezen."
+    }
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -210,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "Door AI gegenereerde notitie",
-    "short": "Door AI gegenereerd"
+    "short": "Door AI gegenereerd",
+    "listNote": "Enkele verhaalkoppen hier zijn gegenereerd door AI"
   },
   "articleDetail": {
     "readArticle": "Artikel lezen",
@@ -733,7 +739,11 @@
     "never": "Nooit",
     "running": "{{count}} actief",
     "failed": "{{count}} mislukt",
-    "pending": "{{count}} in wachtrij"
+    "pending": "{{count}} in wachtrij",
+    "noteBody": "Dit scherm leest Mera's on-device database rechtstreeks — de gegevens die je feed opbouwen, hier weergegeven voor zichtbaarheid en debugging. Mera's servers slaan je feiten, je leesgeschiedenis of de suggesties die eruit ontstaan niet op.",
+    "noteExceptions": "Twee uitzonderingen: je accountprofiel (aanmelden, meldingen, taal) wordt gesynchroniseerd met je Mera-account, en wanneer cloud-AI is ingeschakeld, worden je feiten op dit apparaat versleuteld voordat ze voor scoring worden verzonden.",
+    "noteFooter": "Waarden hier zijn ruw en diagnostisch. Feedrijen wissen zichzelf na 48 uur; je kunt je feiten, feedcache en leesgeschiedenis verwijderen via Gegevens beheren.",
+    "noteTitle": "Je gegevens, op je apparaat"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} van {{total}} rijen · {{cols}} kolommen",
@@ -988,7 +998,8 @@
     "successTitle": "Herkalibreerd",
     "successBody": "Ik heb mijn rangschikking afgestemd op jouw smaak.",
     "noChangeBody": "Je rangschikking is al goed afgestemd: geen wijzigingen nodig.",
-    "failedBody": "Ik kon het herkalibreren nu niet voltooien. Ik probeer het later opnieuw."
+    "failedBody": "Ik kon het herkalibreren nu niet voltooien. Ik probeer het later opnieuw.",
+    "actionRecalibrate": "Relevantie scoren opnieuw afstellen"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Meer over: {{topic}}",
@@ -1070,7 +1081,8 @@
     "applyFailedTitle": "Kon opschoning niet toepassen",
     "applyFailedBody": "Probeer het later opnieuw.",
     "profileRow_one": "Persona-gezondheid · {{count}} suggestie",
-    "profileRow_other": "Persona-gezondheid · {{count}} suggesties"
+    "profileRow_other": "Persona-gezondheid · {{count}} suggesties",
+    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse. De oude onderwerpen kunnen worden teruggedraaid via het wijzigingslogboek."
   },
   "locations": {
     "title": "Jouw plaatsen",
@@ -1318,7 +1330,7 @@
     "pinChangedTitle": "PIN bijgewerkt",
     "pinChangedDescription": "Je PIN is gewijzigd.",
     "blurImagesTitle": "Afbeeldingen vervagen",
-    "blurImagesDescription": "Maak artikelafbeeldingen in de hele app zachter, zodat schokkende of verontrustende beelden niet scherp worden getoond."
+    "blurImagesDescription": "Verzwak artikelafbeeldingen in de app zodat grafische of verstorende beelden niet scherp worden weergegeven."
   },
   "display": {
     "title": "Weergave",

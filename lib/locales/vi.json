@@ -20,7 +20,8 @@
     "never": "Chưa bao giờ",
     "yes": "Có",
     "no": "Không",
-    "saving": "Đang lưu..."
+    "saving": "Đang lưu...",
+    "offlineBanner": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu — chúng tôi sẽ tiếp tục cố gắng."
   },
   "auth": {
     "reauthBanner": "Đăng nhập lại để đồng bộ",
@@ -193,7 +194,16 @@
     "statsPublished_other": "đăng {{formatted}} {{articleWord}} trong 24 giờ qua,",
     "statsAnalysed_other": "phân tích {{formatted}} cho bạn,",
     "statsRelevant_other": "{{formatted}} có vẻ phù hợp,",
-    "statsRead_other": "và bạn đã đọc {{formatted}}."
+    "statsRead_other": "và bạn đã đọc {{formatted}}.",
+    "divider": {
+      "readLine": "Bạn đã đọc tất cả những thứ bên dưới. Mở bất kỳ để xem lại.",
+      "seenLine": "Bạn đã xem tất cả những thứ bên dưới. Mở bất kỳ để đọc."
+    },
+    "statsAnalysed_one": "phân tích {{formatted}} cho bạn,",
+    "statsPublishedPending_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
+    "statsPublished_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
+    "statsRead_one": "và bạn đã đọc {{formatted}}.",
+    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -205,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "Ghi chú do AI tạo",
-    "short": "Do AI tạo"
+    "short": "Do AI tạo",
+    "listNote": "Một số tiêu đề câu chuyện ở đây được tạo bởi AI"
   },
   "articleDetail": {
     "readArticle": "Đọc bài viết",
@@ -728,7 +739,11 @@
     "never": "Chưa bao giờ",
     "running": "{{count}} đang chạy",
     "failed": "{{count}} thất bại",
-    "pending": "{{count}} đang chờ"
+    "pending": "{{count}} đang chờ",
+    "noteBody": "Màn hình này đọc cơ sở dữ liệu trên thiết bị của Mera trực tiếp — dữ liệu xây dựng bảng tin của bạn, được hiển thị ở đây để hiển thị và gỡ lỗi. Máy chủ Mera không lưu trữ các sự kiện của bạn, lịch sử đọc hoặc các gợi ý được xây dựng từ chúng.",
+    "noteExceptions": "Hai ngoại lệ: hồ sơ tài khoản của bạn (đăng nhập, thông báo, ngôn ngữ) được đồng bộ với tài khoản Mera của bạn, và khi bật AI đám mây, các sự kiện của bạn được mã hóa trên thiết bị này trước khi được gửi để chấm điểm.",
+    "noteFooter": "Các giá trị ở đây là thô và chẩn đoán. Các hàng bảng tin tự xóa sau 48 giờ; bạn có thể xóa sự kiện, bộ nhớ đệm bảng tin và lịch sử xem của bạn từ Quản lý dữ liệu.",
+    "noteTitle": "Dữ liệu của bạn, trên thiết bị của bạn"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} / {{total}} hàng · {{cols}} cột",
@@ -984,7 +999,8 @@
     "successTitle": "Đã hiệu chỉnh",
     "successBody": "Mình đã tinh chỉnh lại xếp hạng để khớp hơn với sở thích của bạn.",
     "noChangeBody": "Xếp hạng của bạn đã khá chuẩn rồi, không cần thay đổi gì.",
-    "failedBody": "Mình chưa thể hoàn tất việc hiệu chỉnh lúc này. Mình sẽ thử lại sau."
+    "failedBody": "Mình chưa thể hoàn tất việc hiệu chỉnh lúc này. Mình sẽ thử lại sau.",
+    "actionRecalibrate": "Tinh chỉnh lại điểm số liên quan"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Thêm về: {{topic}}",
@@ -1066,7 +1082,8 @@
     "applyFailedTitle": "Không thể áp dụng dọn dẹp",
     "applyFailedBody": "Vui lòng thử lại sau.",
     "profileRow_one": "Sức khỏe nhân cách · {{count}} gợi ý",
-    "profileRow_other": "Tình trạng hồ sơ · {{count}} đề xuất"
+    "profileRow_other": "Tình trạng hồ sơ · {{count}} đề xuất",
+    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này. Những cái cũ có thể đảo ngược từ nhật ký thay đổi."
   },
   "locations": {
     "title": "Địa điểm của bạn",
@@ -1314,7 +1331,7 @@
     "pinChangedTitle": "PIN được cập nhật",
     "pinChangedDescription": "PIN của bạn đã được thay đổi.",
     "blurImagesTitle": "Làm mờ ảnh",
-    "blurImagesDescription": "Làm mềm ảnh bài viết trên toàn ứng dụng để các hình ảnh đồ họa hoặc không phù hợp không được hiển thị rõ nét."
+    "blurImagesDescription": "Làm mềm hình ảnh bài viết trên toàn bộ ứng dụng để các hình ảnh đồ họa hoặc gây phiền nhiễu không được hiển thị rõ."
   },
   "display": {
     "title": "Hiển thị",

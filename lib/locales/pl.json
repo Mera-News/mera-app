@@ -20,7 +20,8 @@
     "never": "Nigdy",
     "yes": "Tak",
     "no": "Nie",
-    "saving": "Zapisywanie..."
+    "saving": "Zapisywanie...",
+    "offlineBanner": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości — będziemy dalej próbować."
   },
   "auth": {
     "reauthBanner": "Zaloguj się ponownie, aby zsynchronizować",
@@ -210,7 +211,11 @@
     "statsRead_one": "i przeczytałeś {{formatted}}.",
     "statsRead_few": "i przeczytałeś {{formatted}}.",
     "statsRead_many": "i przeczytałeś {{formatted}}.",
-    "statsRead_other": "i przeczytałeś {{formatted}}."
+    "statsRead_other": "i przeczytałeś {{formatted}}.",
+    "divider": {
+      "readLine": "Przeczytałeś wszystko poniżej. Otwórz jeden, aby przejrzeć.",
+      "seenLine": "Widziałeś wszystko poniżej. Otwórz jeden, aby przeczytać."
+    }
   },
   "relevance": {
     "emergency": "Pilne",
@@ -222,7 +227,8 @@
   },
   "aiDisclosure": {
     "caption": "Notatka wygenerowana przez AI",
-    "short": "Wygenerowane przez AI"
+    "short": "Wygenerowane przez AI",
+    "listNote": "Niektóre nagłówki historii tutaj są generowane przez AI"
   },
   "articleDetail": {
     "readArticle": "Czytaj artykuł",
@@ -745,7 +751,11 @@
     "never": "Nigdy",
     "running": "{{count}} uruchomione",
     "failed": "{{count}} nieudane",
-    "pending": "{{count}} oczekujące"
+    "pending": "{{count}} oczekujące",
+    "noteBody": "Ten ekran czyta bazę danych Mera na urządzeniu bezpośrednio — dane budujące Twój kanał, pokazane tutaj dla widoczności i debugowania. Serwery Mera nie przechowują Twoich danych, historii czytania ani sugestii z nich wynikających.",
+    "noteExceptions": "Dwa wyjątki: Twój profil konta (logowanie, powiadomienia, język) jest zsynchronizowany z kontem Mera i gdy AI w chmurze jest włączone, Twoje dane są szyfrowane na urządzeniu przed wysłaniem do oceny.",
+    "noteFooter": "Wartości tutaj są surowe i diagnostyczne. Wiersze kanału czyszczą się po 48 godzinach; możesz usunąć swoje dane, cache kanału i historię przeglądania z poziomu Zarządzaj danymi.",
+    "noteTitle": "Twoje dane, na Twoim urządzeniu"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} z {{total}} wierszy · {{cols}} kol.",
@@ -1004,7 +1014,8 @@
     "successTitle": "Skalibrowano ponownie",
     "successBody": "Dostosowałam ranking, aby lepiej pasował do Twojego gustu.",
     "noChangeBody": "Twój ranking jest już dobrze dostosowany: zmiany nie są potrzebne.",
-    "failedBody": "Nie udało mi się teraz zakończyć ponownej kalibracji. Spróbuję ponownie później."
+    "failedBody": "Nie udało mi się teraz zakończyć ponownej kalibracji. Spróbuję ponownie później.",
+    "actionRecalibrate": "Ponownie dostroić punktowanie trafności"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Więcej o: {{topic}}",
@@ -1090,7 +1101,8 @@
     "profileRow_one": "Stan persony · {{count}} sugestia",
     "profileRow_few": "Stan persony · {{count}} sugestie",
     "profileRow_many": "Stan persony · {{count}} sugestii",
-    "profileRow_other": "Stan persony · {{count}} sugestii"
+    "profileRow_other": "Stan persony · {{count}} sugestii",
+    "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego zainteresowania. Stare można cofnąć z dziennika zmian."
   },
   "locations": {
     "title": "Twoje miejsca",
@@ -1343,7 +1355,8 @@
     "newPinSubtitle": "Wybierz nowy 4-cyfrowy PIN",
     "pinChangedTitle": "PIN zaktualizowany",
     "pinChangedDescription": "Twój PIN został zmieniony.",
-    "blurImagesTitle": "Rozmyj zdjęcia"
+    "blurImagesTitle": "Rozmyj zdjęcia",
+    "blurImagesDescription": "Wymiękczaj obrazy artykułów w aplikacji, aby drastyczne lub niepokojące wizualizacje nie były wyświetlane ostro."
   },
   "display": {
     "title": "Wyświetlacz",

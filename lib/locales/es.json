@@ -20,7 +20,8 @@
     "never": "Nunca",
     "yes": "Sí",
     "no": "No",
-    "saving": "Guardando..."
+    "saving": "Guardando...",
+    "offlineBanner": "Conexión lenta o nula con Mera. Mostrando noticias guardadas — seguiremos intentando."
   },
   "auth": {
     "reauthBanner": "Inicia sesión de nuevo para sincronizar",
@@ -198,7 +199,11 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecen relevantes,",
     "statsRead_one": "y has leído {{formatted}}.",
-    "statsRead_other": "y has leído {{formatted}}."
+    "statsRead_other": "y has leído {{formatted}}.",
+    "divider": {
+      "readLine": "Has leído todo lo que hay abajo. Abre cualquiera para revisitar.",
+      "seenLine": "Has visto todo lo que hay abajo. Abre cualquiera para leer."
+    }
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -210,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "Nota generada por IA",
-    "short": "Generada por IA"
+    "short": "Generada por IA",
+    "listNote": "Algunos titulares de historias aquí están generados por IA"
   },
   "articleDetail": {
     "readArticle": "Leer artículo",
@@ -733,7 +739,11 @@
     "never": "Nunca",
     "running": "{{count}} en ejecución",
     "failed": "{{count}} fallidas",
-    "pending": "{{count}} pendientes"
+    "pending": "{{count}} pendientes",
+    "noteBody": "Esta pantalla lee la base de datos en el dispositivo de Mera directamente — los datos que construyen tu feed, mostrados aquí para visibilidad y depuración. Los servidores de Mera no almacenan tus hechos, tu historial de lectura, ni las sugerencias construidas a partir de ellos.",
+    "noteExceptions": "Dos excepciones: tu perfil de cuenta (inicio de sesión, notificaciones, idioma) se sincroniza con tu cuenta de Mera, y cuando la IA en la nube está activada, tus hechos se cifran en este dispositivo antes de enviarse para calificación.",
+    "noteFooter": "Los valores aquí son datos sin procesar y diagnósticos. Las filas del feed se limpian después de 48 horas; puedes eliminar tus hechos, caché de feed e historial de visualización desde Administrar datos.",
+    "noteTitle": "Tus datos, en tu dispositivo"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} de {{total}} filas · {{cols}} cols",
@@ -988,7 +998,8 @@
     "successTitle": "Recalibrado",
     "successBody": "Ajusté mi clasificación para que se adapte mejor a tu gusto.",
     "noChangeBody": "Tu clasificación ya se ve bien ajustada: no se necesitan cambios.",
-    "failedBody": "No pude terminar de recalibrar en este momento. Lo intentaré de nuevo más tarde."
+    "failedBody": "No pude terminar de recalibrar en este momento. Lo intentaré de nuevo más tarde.",
+    "actionRecalibrate": "Reajustar la puntuación de relevancia"
   },
   "feedbackTree": {
     "title": "Cuéntanos más",
@@ -1070,7 +1081,8 @@
     "applyFailedTitle": "No se pudo aplicar la limpieza",
     "applyFailedBody": "Por favor, inténtalo de nuevo más tarde.",
     "profileRow_one": "Salud del perfil · {{count}} sugerencia",
-    "profileRow_other": "Salud del perfil · {{count}} sugerencias"
+    "profileRow_other": "Salud del perfil · {{count}} sugerencias",
+    "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés. Los antiguos son reversibles desde el registro de cambios."
   },
   "locations": {
     "title": "Tus lugares",

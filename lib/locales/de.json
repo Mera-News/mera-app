@@ -20,7 +20,8 @@
     "articles": "Artikel",
     "loggingOut": "Wird abgemeldet...",
     "never": "Nie",
-    "saving": "Wird gespeichert..."
+    "saving": "Wird gespeichert...",
+    "offlineBanner": "Langsame oder keine Verbindung zu Mera. Zeige gespeicherte Nachrichten — wir versuchen es weiter."
   },
   "auth": {
     "reauthBanner": "Melden Sie sich erneut an, um zu synchronisieren",
@@ -198,7 +199,11 @@
     "statsRelevant_one": "{{formatted}} ist relevant,",
     "statsRelevant_other": "{{formatted}} sind relevant,",
     "statsRead_one": "und Sie haben {{formatted}} gelesen.",
-    "statsRead_other": "und Sie haben {{formatted}} gelesen."
+    "statsRead_other": "und Sie haben {{formatted}} gelesen.",
+    "divider": {
+      "readLine": "Sie haben alles darunter gelesen. Öffnen Sie eines zum Zurückblättern.",
+      "seenLine": "Sie haben alles darunter gesehen. Öffnen Sie eines zum Lesen."
+    }
   },
   "relevance": {
     "emergency": "Notfall",
@@ -210,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "KI-generierter Hinweis",
-    "short": "KI-generiert"
+    "short": "KI-generiert",
+    "listNote": "Einige hier aufgelistete Story-Überschriften sind KI-generiert"
   },
   "articleDetail": {
     "readArticle": "Artikel lesen",
@@ -733,7 +739,11 @@
     "never": "Nie",
     "running": "{{count}} läuft",
     "failed": "{{count}} fehlgeschlagen",
-    "pending": "{{count}} ausstehend"
+    "pending": "{{count}} ausstehend",
+    "noteBody": "Dieser Bildschirm liest Meras Datenbank auf dem Gerät direkt — die Daten, die Ihren Feed aufbauen, hier zur Sichtbarkeit und zum Debuggen angezeigt. Meras Server speichern Ihre Fakten, Ihre Lesehistorie oder die daraus erstellten Vorschläge nicht.",
+    "noteExceptions": "Zwei Ausnahmen: Ihr Kontoprofil (Anmeldung, Benachrichtigungen, Sprache) wird mit Ihrem Mera-Konto synchronisiert, und wenn Cloud-KI eingeschaltet ist, werden Ihre Fakten auf diesem Gerät verschlüsselt, bevor sie zur Bewertung gesendet werden.",
+    "noteFooter": "Werte hier sind ungefiltert und diagnostisch. Feed-Zeilen löschen sich nach 48 Stunden selbst; Sie können Ihre Fakten, Caches und Anzeigeverlauf aus \"Daten verwalten\" löschen.",
+    "noteTitle": "Ihre Daten, auf Ihrem Gerät"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} von {{total}} Zeilen · {{cols}} Spalten",
@@ -988,7 +998,8 @@
     "successTitle": "Neu kalibriert",
     "successBody": "Ich habe mein Ranking angepasst, damit es besser zu Ihrem Geschmack passt.",
     "noChangeBody": "Ihr Ranking ist bereits gut abgestimmt: keine Änderungen nötig.",
-    "failedBody": "Ich konnte die Kalibrierung gerade nicht abschließen. Ich versuche es später erneut."
+    "failedBody": "Ich konnte die Kalibrierung gerade nicht abschließen. Ich versuche es später erneut.",
+    "actionRecalibrate": "Relevanzwertung neu abstimmen"
   },
   "feedbackTree": {
     "title": "Mehr erzählen",
@@ -1070,7 +1081,8 @@
     "applyFailedTitle": "Bereinigung konnte nicht angewendet werden",
     "applyFailedBody": "Bitte versuchen Sie es später erneut.",
     "profileRow_one": "Persona-Gesundheit · {{count}} Vorschlag",
-    "profileRow_other": "Persona-Gesundheit · {{count}} Vorschläge"
+    "profileRow_other": "Persona-Gesundheit · {{count}} Vorschläge",
+    "effectIncoherentTopics": "Ersetzt diese Themen durch bessere für dieses Interesse. Die alten Themen können über das Änderungsprotokoll rückgängig gemacht werden."
   },
   "locations": {
     "title": "Ihre Orte",

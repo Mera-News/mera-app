@@ -20,7 +20,8 @@
     "yes": "예",
     "no": "아니요",
     "saving": "저장 중...",
-    "home": "홈"
+    "home": "홈",
+    "offlineBanner": "Mera 연결이 느리거나 없습니다. 저장된 뉴스를 표시하는 중입니다 — 계속 시도 중입니다."
   },
   "auth": {
     "reauthBanner": "동기화하려면 다시 로그인해 주세요",
@@ -193,7 +194,16 @@
     "statsPublished_other": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
     "statsAnalysed_other": "{{formatted}}개의 기사가 분석되었습니다.",
     "statsRelevant_other": "{{formatted}}개가 관련 있는 것으로 확인되었습니다.",
-    "statsRead_other": "당신은 {{formatted}}개를 읽었습니다."
+    "statsRead_other": "당신은 {{formatted}}개를 읽었습니다.",
+    "divider": {
+      "readLine": "아래의 모든 기사를 읽었습니다. 아무거나 열어서 다시 읽을 수 있습니다.",
+      "seenLine": "아래의 모든 스토리를 봤습니다. 아무거나 열어서 읽을 수 있습니다."
+    },
+    "statsAnalysed_one": "{{formatted}}개가 분석되었습니다,",
+    "statsPublishedPending_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
+    "statsPublished_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다,",
+    "statsRead_one": "당신은 {{formatted}}개를 읽었습니다.",
+    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,"
   },
   "relevance": {
     "emergency": "긴급",
@@ -205,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "AI 생성 메모",
-    "short": "AI 생성"
+    "short": "AI 생성",
+    "listNote": "일부 스토리 제목은 AI가 생성했습니다"
   },
   "articleDetail": {
     "readArticle": "기사 읽기",
@@ -728,7 +739,11 @@
     "never": "없음",
     "running": "{{count}}개 실행 중",
     "failed": "{{count}}개 실패",
-    "pending": "{{count}}개 대기 중"
+    "pending": "{{count}}개 대기 중",
+    "noteBody": "이 화면은 Mera의 기기 내 데이터베이스를 직접 읽습니다 — 피드를 구축하는 데이터가 가시성 및 디버깅 목적으로 여기 표시됩니다. Mera 서버는 사용자의 정보, 읽기 기록 또는 거기서 생성된 제안을 저장하지 않습니다.",
+    "noteExceptions": "2가지 예외가 있습니다: 계정 프로필(로그인, 알림, 언어)이 Mera 계정과 동기화되며, 클라우드 AI가 켜져 있을 때는 채점을 위해 전송되기 전에 이 기기에서 정보가 암호화됩니다.",
+    "noteFooter": "여기의 값은 원본이고 진단 용도입니다. 피드 행은 48시간 후 자동으로 삭제됩니다. 데이터 관리에서 정보, 피드 캐시 및 열람 기록을 삭제할 수 있습니다.",
+    "noteTitle": "당신의 데이터, 당신의 기기에"
   },
   "tableDetail": {
     "rowsOfCols": "{{total}}행 중 {{rows}}행 · {{cols}}열",
@@ -983,7 +998,8 @@
     "successTitle": "재조정 완료",
     "successBody": "회원님의 취향에 더 잘 맞도록 순위를 조정했습니다.",
     "noChangeBody": "순위가 이미 잘 조정되어 있습니다. 변경할 필요가 없습니다.",
-    "failedBody": "지금은 재조정을 완료하지 못했습니다. 나중에 다시 시도하겠습니다."
+    "failedBody": "지금은 재조정을 완료하지 못했습니다. 나중에 다시 시도하겠습니다.",
+    "actionRecalibrate": "관련성 점수 재조정"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "더 알아보기: {{topic}}",
@@ -1065,7 +1081,8 @@
     "applyFailedTitle": "정리를 적용하지 못했습니다",
     "applyFailedBody": "나중에 다시 시도해 주세요.",
     "profileRow_one": "페르소나 상태 · {{count}}개 제안",
-    "profileRow_other": "페르소나 상태 · 제안 {{count}}개"
+    "profileRow_other": "페르소나 상태 · 제안 {{count}}개",
+    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다. 이전 것들은 변경 로그에서 복원할 수 있습니다."
   },
   "locations": {
     "title": "내 장소",
@@ -1313,7 +1330,7 @@
     "pinChangedTitle": "PIN 업데이트됨",
     "pinChangedDescription": "PIN이 변경되었습니다.",
     "blurImagesTitle": "이미지 흐리기",
-    "blurImagesDescription": "앱 전체의 기사 이미지를 흐리게 처리하여 그래픽이나 불안감을 주는 이미지가 선명하게 표시되지 않도록 합니다."
+    "blurImagesDescription": "앱 전체의 기사 이미지를 부드럽게 하여 그래픽 또는 불쾌한 시각 자료가 선명하게 표시되지 않도록 합니다."
   },
   "display": {
     "title": "디스플레이",

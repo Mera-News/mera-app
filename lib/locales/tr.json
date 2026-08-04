@@ -20,7 +20,8 @@
     "never": "Hiçbir zaman",
     "yes": "Evet",
     "no": "Hayır",
-    "saving": "Kaydediliyor..."
+    "saving": "Kaydediliyor...",
+    "offlineBanner": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz — denemelere devam edeceğiz."
   },
   "auth": {
     "reauthBanner": "Senkronize etmek için yeniden giriş yap",
@@ -198,7 +199,11 @@
     "statsRelevant_one": "{{formatted}} uygun görünüyor,",
     "statsRelevant_other": "{{formatted}} uygun görünüyor,",
     "statsRead_one": "ve {{formatted}} okumuşsun.",
-    "statsRead_other": "ve {{formatted}} okumuşsun."
+    "statsRead_other": "ve {{formatted}} okumuşsun.",
+    "divider": {
+      "readLine": "Aşağıdakilerin hepsini okudun. Tekrar ziyaret etmek için herhangi birini aç.",
+      "seenLine": "Aşağıdakilerin hepsini gördün. Okumak için herhangi birini aç."
+    }
   },
   "relevance": {
     "emergency": "Acil",
@@ -210,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "AI tarafından oluşturulan not",
-    "short": "AI tarafından oluşturuldu"
+    "short": "AI tarafından oluşturuldu",
+    "listNote": "Bazı hikaye başlıkları burada yapay zeka tarafından oluşturulmuş"
   },
   "articleDetail": {
     "readArticle": "Makaleyi Oku",
@@ -733,7 +739,11 @@
     "never": "Hiçbir zaman",
     "running": "{{count}} çalışıyor",
     "failed": "{{count}} başarısız",
-    "pending": "{{count}} bekliyor"
+    "pending": "{{count}} bekliyor",
+    "noteBody": "Bu ekran Mera'nın cihazında kurulu olan veritabanını doğrudan okur — haber akışını oluşturan veriler burada görünürlük ve hata ayıklama için gösterilir. Mera'nın sunucuları senin gerçeklerinizi, okuma geçmişini veya bunlardan oluşturulan önerileri saklamaz.",
+    "noteExceptions": "İki istisna: hesap profilin (giriş, bildirimler, dil) Mera hesabınla senkronize edilir ve bulut AI açıkken gerçekleriniz puanlama için gönderilmeden önce bu cihazda şifrelenir.",
+    "noteFooter": "Buradaki değerler ham ve tanılayıcıdır. Akış satırları 48 saat sonra kendilerini temizler; gerçeklerinizi, akış önbelleğini ve görüntüleme geçmişini Verileri Yönet'ten silebilirsin.",
+    "noteTitle": "Verileriniz, Cihazınızda"
   },
   "tableDetail": {
     "rowsOfCols": "{{total}} satırdan {{rows}} · {{cols}} sütun",
@@ -990,7 +1000,8 @@
     "successTitle": "Yeniden kalibre edildi",
     "successBody": "Sıralamamı zevkine daha çok uyacak şekilde ayarladım.",
     "noChangeBody": "Sıralaman zaten iyi ayarlanmış görünüyor, değişiklik gerekmiyor.",
-    "failedBody": "Şu anda kalibrasyonu tamamlayamadım. Daha sonra tekrar deneyeceğim."
+    "failedBody": "Şu anda kalibrasyonu tamamlayamadım. Daha sonra tekrar deneyeceğim.",
+    "actionRecalibrate": "Alaka düzeyini yeniden hesapla"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Daha fazlası: {{topic}}",
@@ -1072,7 +1083,8 @@
     "applyFailedTitle": "Temizlik uygulanamadı",
     "applyFailedBody": "Lütfen daha sonra tekrar dene.",
     "profileRow_one": "Profil sağlığı · {{count}} öneri",
-    "profileRow_other": "Profil sağlığı · {{count}} öneri"
+    "profileRow_other": "Profil sağlığı · {{count}} öneri",
+    "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir. Eski olanlar değişiklik günlüğünden geri alınabilir."
   },
   "locations": {
     "title": "Yerlerin",
@@ -1320,7 +1332,7 @@
     "pinChangedTitle": "PIN güncellendi",
     "pinChangedDescription": "PIN'in değiştirildi.",
     "blurImagesTitle": "Resimleri Bulanıklaştır",
-    "blurImagesDescription": "Uygulamada makale resimlerini yumuşat, böylece grafik veya rahatsız edici görseller keskin görünmez."
+    "blurImagesDescription": "Uygulama genelinde makale görüntülerini yumuşat; böylece grafik veya rahatsız edici görseller keskinlikle gösterilmez."
   },
   "display": {
     "title": "Görünüm",

@@ -20,7 +20,8 @@
     "yes": "نعم",
     "no": "لا",
     "saving": "جارٍ الحفظ...",
-    "home": "الصفحة الرئيسية"
+    "home": "الصفحة الرئيسية",
+    "offlineBanner": "اتصال بطيء أو معدوم بـ Mera. جارٍ عرض الأخبار المحفوظة — سنحاول مجددًا."
   },
   "auth": {
     "reauthBanner": "سجّل الدخول مجددًا لمزامنة البيانات",
@@ -194,19 +195,19 @@
     "waitingForNextBatch_other": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
     "exploreCta": "تصفح الاستكشاف",
     "statsPublishedPending_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
-    "statsPublishedPending_one": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
+    "statsPublishedPending_one": "تم نشر {{formatted}} مقالة في آخر 24 ساعة.",
     "statsPublishedPending_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة.",
     "statsPublishedPending_few": "{{formatted}} مقالات نُشرت في آخر 24 ساعة.",
     "statsPublishedPending_many": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
     "statsPublishedPending_other": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
     "statsPublished_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
-    "statsPublished_one": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
+    "statsPublished_one": "تم نشر {{formatted}} مقالة في آخر 24 ساعة،",
     "statsPublished_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة،",
     "statsPublished_few": "{{formatted}} مقالات نُشرت في آخر 24 ساعة،",
     "statsPublished_many": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
     "statsPublished_other": "{{formatted}} مقالة نُشرت في آخر 24 ساعة،",
     "statsAnalysed_zero": "{{formatted}} تم تحليلها لك،",
-    "statsAnalysed_one": "{{formatted}} تم تحليلها لك،",
+    "statsAnalysed_one": "تم تحليل {{formatted}} لك،",
     "statsAnalysed_two": "{{formatted}} تم تحليلهما لك،",
     "statsAnalysed_few": "{{formatted}} تم تحليلها لك،",
     "statsAnalysed_many": "{{formatted}} تم تحليلها لك،",
@@ -218,11 +219,15 @@
     "statsRelevant_many": "{{formatted}} تبدو ذات صلة،",
     "statsRelevant_other": "{{formatted}} تبدو ذات صلة،",
     "statsRead_zero": "وقرأت {{formatted}}.",
-    "statsRead_one": "وقرأت {{formatted}}.",
+    "statsRead_one": "وقد قرأت {{formatted}}.",
     "statsRead_two": "وقرأت {{formatted}}.",
     "statsRead_few": "وقرأت {{formatted}}.",
     "statsRead_many": "وقرأت {{formatted}}.",
-    "statsRead_other": "وقرأت {{formatted}}."
+    "statsRead_other": "وقرأت {{formatted}}.",
+    "divider": {
+      "readLine": "لقد قرأت كل ما هو أدناه. افتح أي منها لإعادة المراجعة.",
+      "seenLine": "لقد رأيت كل ما هو أدناه. افتح أي منها للقراءة."
+    }
   },
   "relevance": {
     "emergency": "طارئ",
@@ -234,7 +239,8 @@
   },
   "aiDisclosure": {
     "caption": "ملاحظة مولّدة بالذكاء الاصطناعي",
-    "short": "مولّد بالذكاء الاصطناعي"
+    "short": "مولّد بالذكاء الاصطناعي",
+    "listNote": "بعض عناوين القصص هنا مولّدة بالذكاء الاصطناعي"
   },
   "articleDetail": {
     "readArticle": "قراءة المقال",
@@ -761,7 +767,11 @@
     "never": "أبدًا",
     "running": "{{count}} قيد التشغيل",
     "failed": "{{count}} فشلت",
-    "pending": "{{count}} معلّقة"
+    "pending": "{{count}} معلّقة",
+    "noteBody": "تقرأ هذه الشاشة قاعدة بيانات Mera الموجودة على الجهاز مباشرة — البيانات التي تبني خلاصتك، معروضة هنا من أجل الرؤية والتصحيح. لا تخزّن خوادم Mera حقائقك، أو سجل قراءتك، أو الاقتراحات المبنية عليها.",
+    "noteExceptions": "استثناآن: ملف حسابك الشخصي (تسجيل الدخول، الإشعارات، اللغة) يتم مزامنته مع حسابك على Mera، وعند تفعيل الذكاء الاصطناعي السحابي، يتم تشفير حقائقك على هذا الجهاز قبل إرسالها للتقييم.",
+    "noteFooter": "القيم هنا خام وتشخيصية. تُمسح صفوف الخلاصة نفسها بعد 48 ساعة؛ يمكنك حذف حقائقك، وذاكرة التخزين المؤقت للخلاصة، وسجل المشاهدة من إدارة البيانات.",
+    "noteTitle": "بياناتك، على جهازك"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} من {{total}} صف · {{cols}} عمود",
@@ -1030,7 +1040,8 @@
     "successTitle": "تمت إعادة المعايرة",
     "successBody": "ضبطت ترتيبي ليتطابق بشكل أفضل مع ذوقك.",
     "noChangeBody": "ترتيبك يبدو مضبوطًا جيدًا بالفعل: لا حاجة لأي تغييرات.",
-    "failedBody": "لم أتمكن من إنهاء إعادة المعايرة الآن. سأحاول مرة أخرى لاحقًا."
+    "failedBody": "لم أتمكن من إنهاء إعادة المعايرة الآن. سأحاول مرة أخرى لاحقًا.",
+    "actionRecalibrate": "إعادة ضبط درجات الصلة"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "المزيد عن: {{topic}}",
@@ -1120,7 +1131,8 @@
     "profileRow_two": "صحة الشخصية · {{count}} اقتراحان",
     "profileRow_few": "صحة الشخصية · {{count}} اقتراحات",
     "profileRow_many": "صحة الشخصية · {{count}} اقتراحًا",
-    "profileRow_other": "صحة الشخصية · {{count}} اقتراح"
+    "profileRow_other": "صحة الشخصية · {{count}} اقتراح",
+    "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام. الموضوعات القديمة يمكن التراجع عنها من سجل التغييرات."
   },
   "locations": {
     "title": "أماكنك",
@@ -1380,7 +1392,7 @@
     "pinChangedTitle": "تم تحديث رقم PIN",
     "pinChangedDescription": "تم تغيير رقم PIN الخاص بك.",
     "blurImagesTitle": "إخفاء الصور",
-    "blurImagesDescription": "خفّف الصور في المقالات على التطبيق حتى لا تظهر الصور الحادة أو المزعجة بوضوح."
+    "blurImagesDescription": "خفّف صور المقالات في التطبيق حتى لا تظهر الصور الحادة أو المزعجة بوضوح."
   },
   "display": {
     "title": "العرض",

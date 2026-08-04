@@ -20,7 +20,8 @@
     "yes": "是",
     "no": "否",
     "saving": "儲存中...",
-    "home": "首頁"
+    "home": "首頁",
+    "offlineBanner": "與Mera連線緩慢或無連線。正在顯示已儲存的新聞——我們會繼續嘗試。"
   },
   "auth": {
     "reauthBanner": "重新登入以同步",
@@ -193,7 +194,16 @@
     "statsPublished_other": "過去 24 小時內發佈了{{formatted}}篇文章。",
     "statsAnalysed_other": "{{formatted}}篇文章經過分析。",
     "statsRelevant_other": "{{formatted}}篇與您相關。",
-    "statsRead_other": "您已閱讀{{formatted}}篇。"
+    "statsRead_other": "您已閱讀{{formatted}}篇。",
+    "divider": {
+      "readLine": "您已閱讀下面的所有內容。開啟任意一個可再次查看。",
+      "seenLine": "您已查看下面的所有內容。開啟任意一個來閱讀。"
+    },
+    "statsAnalysed_one": "{{formatted}}篇文章經過分析,",
+    "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",
+    "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
+    "statsRead_one": "且您已閱讀{{formatted}}篇。",
+    "statsRelevant_one": "{{formatted}}篇與您相關,"
   },
   "relevance": {
     "emergency": "緊急",
@@ -205,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "由 AI 產生的說明",
-    "short": "由 AI 產生"
+    "short": "由 AI 產生",
+    "listNote": "這裡的一些故事標題是由人工智慧產生的"
   },
   "articleDetail": {
     "readArticle": "閱讀文章",
@@ -728,7 +739,11 @@
     "never": "從未",
     "running": "{{count}} 個執行中",
     "failed": "{{count}} 個失敗",
-    "pending": "{{count}} 個待處理"
+    "pending": "{{count}} 個待處理",
+    "noteBody": "此螢幕直接讀取Mera的裝置內資料庫——構建您的動態的資料,此處顯示用於可見性和偵錯。Mera的伺服器不儲存您的事實、閱讀歷史或從它們構建的建議。",
+    "noteExceptions": "兩個例外:您的帳戶資料(登入、通知、語言)與您的Mera帳戶同步,當雲端AI開啟時,您的事實在此裝置上加密後再傳送進行評分。",
+    "noteFooter": "此處的值是原始和診斷的。動態列在48小時後自動清除;您可以從管理資料中刪除您的事實、動態快取和瀏覽歷史。",
+    "noteTitle": "您的資料,在您的裝置上"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} / {{total}} 列 · {{cols}} 欄",
@@ -984,7 +999,8 @@
     "successTitle": "已重新校準",
     "successBody": "我調整了排序，讓它更符合你的口味。",
     "noChangeBody": "你的排序看起來已經很合適了——不需要變更。",
-    "failedBody": "我暫時無法完成重新校準，稍後會再試一次。"
+    "failedBody": "我暫時無法完成重新校準，稍後會再試一次。",
+    "actionRecalibrate": "重新調整相關性評分"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "更多內容：{{topic}}",
@@ -1066,7 +1082,8 @@
     "applyFailedTitle": "無法套用整理",
     "applyFailedBody": "請稍後再試。",
     "profileRow_one": "檔案健康度 · {{count}} 項建議",
-    "profileRow_other": "人物誌健康度 · {{count}} 項建議"
+    "profileRow_other": "人物誌健康度 · {{count}} 項建議",
+    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。舊的可以從更改日誌中復原。"
   },
   "locations": {
     "title": "你的地點",
@@ -1314,7 +1331,7 @@
     "pinChangedTitle": "PIN 已更新",
     "pinChangedDescription": "您的 PIN 已被變更。",
     "blurImagesTitle": "模糊處理圖像",
-    "blurImagesDescription": "在應用程式中對文章圖像進行柔和處理，以便圖形或令人不適的圖像不會清晰顯示。"
+    "blurImagesDescription": "在整個應用程式中柔化文章圖像,使圖形或令人不安的視覺效果不會顯示清晰。"
   },
   "display": {
     "title": "顯示",

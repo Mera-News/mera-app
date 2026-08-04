@@ -20,7 +20,8 @@
     "never": "Tidak pernah",
     "yes": "Ya",
     "no": "Tidak",
-    "saving": "Menyimpan..."
+    "saving": "Menyimpan...",
+    "offlineBanner": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan — kami akan terus mencoba."
   },
   "auth": {
     "reauthBanner": "Masuk lagi untuk sinkronisasi",
@@ -193,7 +194,16 @@
     "statsPublished_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
     "statsAnalysed_other": "{{formatted}} dianalisis untuk Anda,",
     "statsRelevant_other": "{{formatted}} terlihat relevan,",
-    "statsRead_other": "dan Anda telah membaca {{formatted}}."
+    "statsRead_other": "dan Anda telah membaca {{formatted}}.",
+    "divider": {
+      "readLine": "Anda sudah membaca semuanya di bawah. Buka apa saja untuk membaca ulang.",
+      "seenLine": "Anda sudah melihat semuanya di bawah. Buka apa saja untuk membaca."
+    },
+    "statsAnalysed_one": "{{formatted}} dianalisis untuk Anda,",
+    "statsPublishedPending_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
+    "statsPublished_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
+    "statsRead_one": "dan Anda telah membaca {{formatted}}.",
+    "statsRelevant_one": "{{formatted}} terlihat relevan,"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -205,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "Catatan yang dibuat oleh AI",
-    "short": "Dibuat oleh AI"
+    "short": "Dibuat oleh AI",
+    "listNote": "Beberapa judul cerita di sini dibuat oleh AI"
   },
   "articleDetail": {
     "readArticle": "Baca Artikel",
@@ -728,7 +739,11 @@
     "never": "Tidak pernah",
     "running": "{{count}} berjalan",
     "failed": "{{count}} gagal",
-    "pending": "{{count}} tertunda"
+    "pending": "{{count}} tertunda",
+    "noteBody": "Layar ini membaca database lokal Mera secara langsung — data yang membangun feed Anda, ditampilkan di sini untuk transparansi dan debugging. Server Mera tidak menyimpan fakta Anda, riwayat bacaan Anda, atau saran yang dibangun darinya.",
+    "noteExceptions": "Dua pengecualian : profil akun Anda (masuk, notifikasi, bahasa) disinkronkan dengan akun Mera Anda, dan ketika AI cloud diaktifkan, fakta Anda dienkripsi di perangkat ini sebelum dikirim untuk penilaian.",
+    "noteFooter": "Nilai di sini bersifat mentah dan diagnostik. Baris feed menghapus dirinya sendiri setelah 48 jam; Anda dapat menghapus fakta, cache feed, dan riwayat tampilan Anda dari Kelola Data.",
+    "noteTitle": "Data Anda, di perangkat Anda"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} dari {{total}} baris · {{cols}} kolom",
@@ -983,7 +998,8 @@
     "successTitle": "Dikalibrasi ulang",
     "successBody": "Saya menyesuaikan peringkat saya agar lebih sesuai dengan selera Anda.",
     "noChangeBody": "Peringkat Anda sudah terlihat tersetel dengan baik, tidak perlu perubahan.",
-    "failedBody": "Saya tidak dapat menyelesaikan kalibrasi ulang saat ini. Saya akan mencoba lagi nanti."
+    "failedBody": "Saya tidak dapat menyelesaikan kalibrasi ulang saat ini. Saya akan mencoba lagi nanti.",
+    "actionRecalibrate": "Sesuaikan ulang penilaian relevansi"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Lebih lanjut tentang: {{topic}}",
@@ -1065,7 +1081,8 @@
     "applyFailedTitle": "Tidak dapat menerapkan perapian",
     "applyFailedBody": "Silakan coba lagi nanti.",
     "profileRow_one": "Kesehatan persona · {{count}} saran",
-    "profileRow_other": "Kesehatan profil · {{count}} saran"
+    "profileRow_other": "Kesehatan profil · {{count}} saran",
+    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini. Topik lama dapat dikembalikan dari catatan perubahan."
   },
   "locations": {
     "title": "Tempat Anda",
@@ -1313,7 +1330,7 @@
     "pinChangedTitle": "PIN diperbarui",
     "pinChangedDescription": "PIN Anda telah diubah.",
     "blurImagesTitle": "Buram Gambar",
-    "blurImagesDescription": "Lembut kan gambar artikel di seluruh aplikasi sehingga visual grafis atau mengganggu tidak ditampilkan dengan tajam."
+    "blurImagesDescription": "Melembapkan gambar artikel di seluruh aplikasi sehingga visual grafis atau mengganggu tidak ditampilkan dengan tajam."
   },
   "display": {
     "title": "Tampilan",

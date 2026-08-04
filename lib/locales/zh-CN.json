@@ -20,7 +20,8 @@
     "yes": "是",
     "no": "否",
     "saving": "保存中...",
-    "home": "主页"
+    "home": "主页",
+    "offlineBanner": "与Mera连接缓慢或无连接。正在显示保存的新闻——我们会继续尝试。"
   },
   "auth": {
     "reauthBanner": "重新登录以同步",
@@ -193,7 +194,16 @@
     "statsPublished_other": "过去24小时内发布了{{formatted}}篇文章。",
     "statsAnalysed_other": "{{formatted}}篇文章经过分析。",
     "statsRelevant_other": "{{formatted}}篇与您相关。",
-    "statsRead_other": "您已读过{{formatted}}篇。"
+    "statsRead_other": "您已读过{{formatted}}篇。",
+    "divider": {
+      "readLine": "您已读完下面的所有内容。打开任意一个可再次查看。",
+      "seenLine": "您已查看下面的所有内容。打开任意一个来阅读。"
+    },
+    "statsAnalysed_one": "{{formatted}}篇文章经过分析,",
+    "statsPublishedPending_one": "过去24小时内发布了{{formatted}}篇文章。",
+    "statsPublished_one": "过去24小时内发布了{{formatted}}篇文章,",
+    "statsRead_one": "且您已阅读{{formatted}}篇。",
+    "statsRelevant_one": "{{formatted}}篇与您相关,"
   },
   "relevance": {
     "emergency": "紧急",
@@ -205,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "AI 生成的说明",
-    "short": "AI 生成"
+    "short": "AI 生成",
+    "listNote": "这里的一些故事标题是由人工智能生成的"
   },
   "articleDetail": {
     "readArticle": "阅读原文",
@@ -728,7 +739,11 @@
     "never": "从未",
     "running": "{{count}} 个运行中",
     "failed": "{{count}} 个失败",
-    "pending": "{{count}} 个待处理"
+    "pending": "{{count}} 个待处理",
+    "noteBody": "此屏幕直接读取Mera的设备内数据库——构建您的信息流的数据,此处显示用于可见性和调试。Mera的服务器不存储您的事实、阅读历史或从它们构建的建议。",
+    "noteExceptions": "两个例外:您的账户资料(登录、通知、语言)与您的Mera账户同步,当云AI打开时,您的事实在此设备上加密后再发送进行评分。",
+    "noteFooter": "此处的值是原始和诊断的。信息流行在48小时后自动清除;您可以从管理数据中删除您的事实、信息流缓存和浏览历史。",
+    "noteTitle": "您的数据,在您的设备上"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} / {{total}} 行 · {{cols}} 列",
@@ -984,7 +999,8 @@
     "successTitle": "已重新校准",
     "successBody": "我调整了排序，让它更符合你的口味。",
     "noChangeBody": "你的排序看起来已经很合适了——无需更改。",
-    "failedBody": "我暂时无法完成重新校准，稍后会再试一次。"
+    "failedBody": "我暂时无法完成重新校准，稍后会再试一次。",
+    "actionRecalibrate": "重新调整相关性评分"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "更多内容：{{topic}}",
@@ -1066,7 +1082,8 @@
     "applyFailedTitle": "无法应用整理",
     "applyFailedBody": "请稍后再试。",
     "profileRow_one": "资料健康度 · {{count}} 项建议",
-    "profileRow_other": "画像健康度 · {{count}} 项建议"
+    "profileRow_other": "画像健康度 · {{count}} 项建议",
+    "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。旧的可以从更改日志中恢复。"
   },
   "locations": {
     "title": "你的地点",
@@ -1314,7 +1331,7 @@
     "pinChangedTitle": "PIN 已更新",
     "pinChangedDescription": "您的 PIN 已被更改。",
     "blurImagesTitle": "模糊处理图像",
-    "blurImagesDescription": "在应用中对文章图像进行柔和处理，以便图形或令人不适的图像不会清晰显示。"
+    "blurImagesDescription": "在整个应用中软化文章图像,使图形或令人不安的视觉效果不会显示清晰。"
   },
   "display": {
     "title": "显示",

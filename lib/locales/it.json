@@ -20,7 +20,8 @@
     "never": "Mai",
     "yes": "Sì",
     "no": "No",
-    "saving": "Salvataggio..."
+    "saving": "Salvataggio...",
+    "offlineBanner": "Connessione lenta o assente a Mera. Mostrando notizie salvate — continueremo a tentare."
   },
   "auth": {
     "reauthBanner": "Accedi di nuovo per sincronizzare",
@@ -198,7 +199,11 @@
     "statsRelevant_one": "{{formatted}} sembra rilevante,",
     "statsRelevant_other": "{{formatted}} sembrano rilevanti,",
     "statsRead_one": "e hai letto {{formatted}}.",
-    "statsRead_other": "e hai letto {{formatted}}."
+    "statsRead_other": "e hai letto {{formatted}}.",
+    "divider": {
+      "readLine": "Hai letto tutto quello che c'è sotto. Apri uno per rileggere.",
+      "seenLine": "Hai visto tutto quello che c'è sotto. Apri uno per leggere."
+    }
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -210,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "Nota generata dall'IA",
-    "short": "Generata dall'IA"
+    "short": "Generata dall'IA",
+    "listNote": "Alcuni titoli di storie qui sono generati dall'IA"
   },
   "articleDetail": {
     "readArticle": "Leggi l'articolo",
@@ -733,7 +739,11 @@
     "never": "Mai",
     "running": "{{count}} in esecuzione",
     "failed": "{{count}} non riuscite",
-    "pending": "{{count}} in attesa"
+    "pending": "{{count}} in attesa",
+    "noteBody": "Questo schermo legge direttamente il database locale di Mera — i dati che costruiscono il tuo feed, mostrati qui per la visibilità e il debug. I server di Mera non memorizzano i tuoi fatti, la tua cronologia di lettura o i suggerimenti costruiti da essi.",
+    "noteExceptions": "Due eccezioni: il tuo profilo account (accesso, notifiche, lingua) è sincronizzato con il tuo account Mera, e quando l'IA cloud è attivata, i tuoi fatti vengono crittografati su questo dispositivo prima di essere inviati per la valutazione.",
+    "noteFooter": "I valori qui sono grezzi e diagnostici. Le righe del feed si cancellano dopo 48 ore; puoi eliminare i tuoi fatti, la cache del feed e la cronologia di visualizzazione da Gestisci dati.",
+    "noteTitle": "I tuoi dati, sul tuo dispositivo"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} di {{total}} righe · {{cols}} colonne",
@@ -988,7 +998,8 @@
     "successTitle": "Ricalibrato",
     "successBody": "Ho sintonizzato la mia classifica per combaciare meglio con i tuoi gusti.",
     "noChangeBody": "La tua classifica sembra già ben sintonizzata, nessuna modifica necessaria.",
-    "failedBody": "Non sono riuscito a completare la ricalibrazione ora. Riproverò più tardi."
+    "failedBody": "Non sono riuscito a completare la ricalibrazione ora. Riproverò più tardi.",
+    "actionRecalibrate": "Risintonizza la valutazione della rilevanza"
   },
   "feedbackTree": {
     "title": "Dicci di più",
@@ -1070,7 +1081,8 @@
     "applyFailedTitle": "Impossibile applicare la pulizia",
     "applyFailedBody": "Per favore riprova più tardi.",
     "profileRow_one": "Salute del profilo · {{count}} suggerimento",
-    "profileRow_other": "Salute del profilo · {{count}} suggerimenti"
+    "profileRow_other": "Salute del profilo · {{count}} suggerimenti",
+    "effectIncoherentTopics": "Sostituisce questi argomenti con argomenti migliori per questo interesse. I vecchi sono reversibili dal registro delle modifiche."
   },
   "locations": {
     "title": "I tuoi luoghi",
@@ -1318,7 +1330,7 @@
     "pinChangedTitle": "PIN aggiornato",
     "pinChangedDescription": "Il tuo PIN è stato cambiato.",
     "blurImagesTitle": "Sfoca immagini",
-    "blurImagesDescription": "Attenua le immagini degli articoli in tutta l'app affinché i contenuti grafici o disturbanti non vengano visualizzati nitidamente."
+    "blurImagesDescription": "Attenua le immagini degli articoli nell'app in modo che gli elementi visivi grafici o inquietanti non vengano visualizzati nitidamente."
   },
   "display": {
     "title": "Visualizzazione",

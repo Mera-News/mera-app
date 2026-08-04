@@ -20,7 +20,8 @@
     "never": "Jamais",
     "yes": "Oui",
     "no": "Non",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "offlineBanner": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées — nous continuons d'essayer."
   },
   "auth": {
     "reauthBanner": "Connectez-vous à nouveau pour synchroniser",
@@ -203,7 +204,11 @@
     "statsRelevant_other": "{{formatted}} semblent pertinents,",
     "statsRead_one": "et vous avez lu {{formatted}}.",
     "statsRead_many": "et vous avez lu {{formatted}}.",
-    "statsRead_other": "et vous avez lu {{formatted}}."
+    "statsRead_other": "et vous avez lu {{formatted}}.",
+    "divider": {
+      "readLine": "Vous avez tout lu ci-dessous. Ouvrez n'importe lequel pour revisiter.",
+      "seenLine": "Vous avez tout vu ci-dessous. Ouvrez n'importe lequel pour lire."
+    }
   },
   "relevance": {
     "emergency": "Urgence",
@@ -215,7 +220,8 @@
   },
   "aiDisclosure": {
     "caption": "Note générée par l'IA",
-    "short": "Générée par l'IA"
+    "short": "Générée par l'IA",
+    "listNote": "Certains titres de récits ici sont générés par l'IA"
   },
   "articleDetail": {
     "readArticle": "Lire l'article",
@@ -738,7 +744,11 @@
     "never": "Jamais",
     "running": "{{count}} en cours",
     "failed": "{{count}} échoué(s)",
-    "pending": "{{count}} en attente"
+    "pending": "{{count}} en attente",
+    "noteBody": "Cet écran lit directement la base de données sur l'appareil de Mera — les données qui construisent votre fil, affichées ici pour la transparence et le débogage. Les serveurs de Mera ne stockent pas vos faits, votre historique de lecture, ni les suggestions construites à partir de ceux-ci.",
+    "noteExceptions": "Deux exceptions : votre profil de compte (connexion, notifications, langue) est synchronisé avec votre compte Mera, et quand l'IA cloud est activée, vos faits sont chiffrés sur cet appareil avant d'être envoyés pour évaluation.",
+    "noteFooter": "Les valeurs ici sont brutes et diagnostiques. Les lignes du fil s'effacent après 48 heures ; vous pouvez supprimer vos faits, cache du fil et historique de consultation dans Gérer les données.",
+    "noteTitle": "Vos données, sur votre appareil"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} sur {{total}} lignes · {{cols}} colonnes",
@@ -993,7 +1003,8 @@
     "successTitle": "Recalibré",
     "successBody": "J'ai ajusté mon classement pour mieux correspondre à vos goûts.",
     "noChangeBody": "Votre classement semble déjà bien ajusté : aucun changement nécessaire.",
-    "failedBody": "Je n'ai pas pu terminer le recalibrage pour l'instant. Je réessaierai plus tard."
+    "failedBody": "Je n'ai pas pu terminer le recalibrage pour l'instant. Je réessaierai plus tard.",
+    "actionRecalibrate": "Réajuster l'évaluation de pertinence"
   },
   "feedbackTree": {
     "title": "Dites-nous en plus",
@@ -1075,7 +1086,8 @@
     "applyFailedTitle": "Impossible d'appliquer le nettoyage",
     "applyFailedBody": "Veuillez réessayer plus tard.",
     "profileRow_one": "Santé du profil · {{count}} suggestion",
-    "profileRow_other": "Santé du profil · {{count}} suggestions"
+    "profileRow_other": "Santé du profil · {{count}} suggestions",
+    "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour cet intérêt. Les anciens sont réversibles depuis l'historique des modifications."
   },
   "locations": {
     "title": "Vos lieux",
@@ -1323,7 +1335,7 @@
     "pinChangedTitle": "PIN mis à jour",
     "pinChangedDescription": "Votre PIN a été modifié.",
     "blurImagesTitle": "Flouter les images",
-    "blurImagesDescription": "Atténuez les images des articles dans toute l'application afin que les visuels choquants ou perturbants ne s'affichent pas nettement."
+    "blurImagesDescription": "Adoucir les images d'articles dans l'application afin que les visuels graphiques ou perturbateurs ne soient pas affichés nettement."
   },
   "display": {
     "title": "Affichage",

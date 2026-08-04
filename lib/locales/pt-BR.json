@@ -20,7 +20,8 @@
     "never": "Nunca",
     "yes": "Sim",
     "no": "Não",
-    "saving": "Salvando..."
+    "saving": "Salvando...",
+    "offlineBanner": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas — continuaremos tentando."
   },
   "auth": {
     "reauthBanner": "Faça login novamente para sincronizar",
@@ -198,7 +199,11 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecem relevantes,",
     "statsRead_one": "e você leu {{formatted}}.",
-    "statsRead_other": "e você leu {{formatted}}."
+    "statsRead_other": "e você leu {{formatted}}.",
+    "divider": {
+      "readLine": "Você leu tudo abaixo. Abra qualquer um para revisitar.",
+      "seenLine": "Você viu tudo abaixo. Abra qualquer um para ler."
+    }
   },
   "relevance": {
     "emergency": "Emergência",
@@ -210,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "Nota gerada por IA",
-    "short": "Gerada por IA"
+    "short": "Gerada por IA",
+    "listNote": "Alguns títulos de histórias aqui são gerados por IA"
   },
   "articleDetail": {
     "readArticle": "Ler Artigo",
@@ -733,7 +739,11 @@
     "never": "Nunca",
     "running": "{{count}} em execução",
     "failed": "{{count}} com falha",
-    "pending": "{{count}} pendente"
+    "pending": "{{count}} pendente",
+    "noteBody": "Esta tela lê o banco de dados no dispositivo do Mera diretamente — os dados que constroem seu feed, mostrados aqui para visibilidade e depuração. Os servidores do Mera não armazenam seus dados, histórico de leitura ou sugestões geradas a partir deles.",
+    "noteExceptions": "Duas exceções: seu perfil de conta (login, notificações, idioma) é sincronizado com sua conta Mera, e quando o AI em nuvem está ativado, seus dados são criptografados neste dispositivo antes de serem enviados para pontuação.",
+    "noteFooter": "Os valores aqui são brutos e de diagnóstico. Linhas de feed se limpam após 48 horas; você pode deletar seus dados, cache de feed e histórico de visualização em Gerenciar Dados.",
+    "noteTitle": "Seus dados, no seu dispositivo"
   },
   "tableDetail": {
     "rowsOfCols": "{{rows}} de {{total}} linhas · {{cols}} colunas",
@@ -988,7 +998,8 @@
     "successTitle": "Recalibrado",
     "successBody": "Ajustei minha classificação para corresponder melhor ao seu gosto.",
     "noChangeBody": "Sua classificação já está bem ajustada: nenhuma mudança necessária.",
-    "failedBody": "Não consegui terminar a recalibração agora. Vou tentar novamente mais tarde."
+    "failedBody": "Não consegui terminar a recalibração agora. Vou tentar novamente mais tarde.",
+    "actionRecalibrate": "Reajustar a pontuação de relevância"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "Mais sobre: {{topic}}",
@@ -1070,7 +1081,8 @@
     "applyFailedTitle": "Não foi possível aplicar a limpeza",
     "applyFailedBody": "Tente novamente mais tarde.",
     "profileRow_one": "Saúde do perfil · {{count}} sugestão",
-    "profileRow_other": "Saúde do perfil · {{count}} sugestões"
+    "profileRow_other": "Saúde do perfil · {{count}} sugestões",
+    "effectIncoherentTopics": "Substitui estes tópicos por melhores para este interesse. Os antigos podem ser revertidos do histórico de alterações."
   },
   "locations": {
     "title": "Seus lugares",
@@ -1318,7 +1330,7 @@
     "pinChangedTitle": "PIN atualizado",
     "pinChangedDescription": "Seu PIN foi alterado.",
     "blurImagesTitle": "Desfocar imagens",
-    "blurImagesDescription": "Suavize imagens de artigos em todo o app para que visuais gráficos ou perturbadores não sejam exibidos com nitidez."
+    "blurImagesDescription": "Suavizar imagens de artigos em todo o app para que visuais gráficos ou perturbadores não sejam exibidos nitidamente."
   },
   "display": {
     "title": "Exibição",

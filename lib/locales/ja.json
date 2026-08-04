@@ -20,7 +20,8 @@
     "yes": "はい",
     "no": "いいえ",
     "saving": "保存中...",
-    "home": "ホーム"
+    "home": "ホーム",
+    "offlineBanner": "Meraへの接続が遅い、または接続がありません。保存されたニュースを表示しています — 引き続きお試しします。"
   },
   "auth": {
     "reauthBanner": "再度サインインして同期してください",
@@ -193,7 +194,16 @@
     "statsPublished_other": "{{formatted}}件の記事が過去24時間に公開されました。",
     "statsAnalysed_other": "{{formatted}}件が分析されました。",
     "statsRelevant_other": "{{formatted}}件があなたに関連性があります。",
-    "statsRead_other": "そしてあなたは{{formatted}}件を読みました。"
+    "statsRead_other": "そしてあなたは{{formatted}}件を読みました。",
+    "divider": {
+      "readLine": "下の記事はすべて読みました。任意に開き直して読み直すことができます。",
+      "seenLine": "下のすべてのストーリーは既に見ました。任意に開いて読むことができます。"
+    },
+    "statsAnalysed_one": "{{formatted}}件が分析されました、",
+    "statsPublishedPending_one": "{{formatted}}件の記事が過去24時間に公開されました。",
+    "statsPublished_one": "{{formatted}}件の記事が過去24時間に公開されました、",
+    "statsRead_one": "そしてあなたは{{formatted}}件を読みました。",
+    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、"
   },
   "relevance": {
     "emergency": "緊急",
@@ -205,7 +215,8 @@
   },
   "aiDisclosure": {
     "caption": "AIが生成したメモ",
-    "short": "AI生成"
+    "short": "AI生成",
+    "listNote": "ここにあるいくつかのストーリー見出しはAIが生成したものです"
   },
   "articleDetail": {
     "readArticle": "記事を読む",
@@ -728,7 +739,11 @@
     "never": "なし",
     "running": "{{count}}件実行中",
     "failed": "{{count}}件失敗",
-    "pending": "{{count}}件保留中"
+    "pending": "{{count}}件保留中",
+    "noteBody": "このスクリーンはMeraのオンデバイスデータベースを直接読みます — フィードを構築するデータがここに表示されています。これは可視性とデバッグ用です。Meraサーバーはあなたの事実、読了履歴、またはそこから構築された提案を保存しません。",
+    "noteExceptions": "2つの例外があります：アカウントプロフィール（サインイン、通知、言語）がMeraアカウントと同期されます。また、クラウドAIがオンになっているとき、あなたの事実はスコアリングのために送信される前にこのデバイス上で暗号化されます。",
+    "noteFooter": "ここの値は生のデータと診断用です。フィード行は48時間後に自動削除されます。データ管理からあなたの事実、フィードキャッシュ、閲覧履歴を削除できます。",
+    "noteTitle": "あなたのデータ、あなたのデバイス上に"
   },
   "tableDetail": {
     "rowsOfCols": "{{total}}行中{{rows}}行 · {{cols}}列",
@@ -983,7 +998,8 @@
     "successTitle": "再調整しました",
     "successBody": "あなたの好みによりよく合うようにランキングを調整しました。",
     "noChangeBody": "ランキングはすでによく調整されています — 変更の必要はありません。",
-    "failedBody": "今回は再調整を完了できませんでした。後でもう一度お試しします。"
+    "failedBody": "今回は再調整を完了できませんでした。後でもう一度お試しします。",
+    "actionRecalibrate": "関連性スコアリングを再調整する"
   },
   "feedbackTree": {
     "moreAboutTopicNamed": "詳細：{{topic}}",
@@ -1065,7 +1081,8 @@
     "applyFailedTitle": "整理を適用できませんでした",
     "applyFailedBody": "後でもう一度お試しください。",
     "profileRow_one": "ペルソナの健康度・{{count}}件の提案",
-    "profileRow_other": "プロフィールの健全性 · {{count}}件の提案"
+    "profileRow_other": "プロフィールの健全性 · {{count}}件の提案",
+    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。古いものは変更ログから復元可能です。"
   },
   "locations": {
     "title": "あなたの場所",
@@ -1313,7 +1330,7 @@
     "pinChangedTitle": "PINが更新されました",
     "pinChangedDescription": "あなたのPINが変更されました。",
     "blurImagesTitle": "画像をぼかす",
-    "blurImagesDescription": "記事の画像をソフトにしてグラフィックまたは不安な画像が鮮明に表示されないようにします。"
+    "blurImagesDescription": "アプリ全体の記事画像をソフト化して、グラフィックまたは不穏なビジュアルが鮮明に表示されないようにします。"
   },
   "display": {
     "title": "表示",
