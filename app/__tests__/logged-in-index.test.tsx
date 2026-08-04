@@ -70,6 +70,10 @@ jest.mock('@/lib/stores/network-store', () => ({
 }));
 jest.mock('@/lib/stores/subscription-store', () => ({ useSubscriptionStore: { getState: () => ({ setCustomerInfo: jest.fn() }) } }));
 jest.mock('@/lib/revenuecat', () => ({ loginRevenueCat: jest.fn(async () => null) }));
+// Same reason as the mock above: the real module reaches apollo-client and, via
+// for-you-store, the WatermelonDB SQLite adapter — which needs native JSI and
+// cannot be constructed in this environment. Routing is what's under test here.
+jest.mock('@/lib/subscription/entitlement-sync', () => ({ syncEntitlement: jest.fn(async () => undefined) }));
 
 import LoggedInIndex from '../logged-in/index';
 
