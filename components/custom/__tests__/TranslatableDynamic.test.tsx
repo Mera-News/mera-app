@@ -44,6 +44,9 @@ jest.mock('@/lib/translation-service', () => ({
     // Not blocked by default — the breaker's own behaviour is covered in
     // lib/__tests__/translation-service.test.ts.
     useTranslationBlocked: jest.fn(() => null),
+    // Not suppressed by default — the gate and the breaker are both covered
+    // in lib/__tests__/translation-service.test.ts.
+    useTranslationSuppressed: jest.fn(() => false),
 }));
 
 jest.mock('@/lib/visibility-tick', () => ({

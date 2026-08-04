@@ -41,6 +41,10 @@ jest.mock('@/lib/translation-service', () => ({
         { code: 'pt', name: 'Portuguese', native: 'Português' },
     ],
     clearTranslationFailures: jest.fn(),
+    clearTranslationFailuresFor: jest.fn(),
+    // Hydration re-verifies the saved language with one probe. Resolved, not
+    // rejected — the store fires it and forgets it.
+    probeTranslationLanguage: jest.fn(() => Promise.resolve('success')),
 }));
 
 import { act, renderHook } from '@testing-library/react-native';

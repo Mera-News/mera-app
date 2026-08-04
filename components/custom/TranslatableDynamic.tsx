@@ -2,7 +2,7 @@ import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/language-codes';
-import { translateText, useTranslationBlocked } from '@/lib/translation-service';
+import { translateText, useTranslationSuppressed } from '@/lib/translation-service';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
@@ -162,19 +162,27 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const originalIsTargetLang =
         !!originalText && languagesMatch(originalLanguage, appLanguage);
 
-    // The OS translator has given up on this language (see the breaker in
-    // lib/translation-service). Fall back SILENTLY to the server-side English
-    // — `text` is already title_en / description_en, so there is nothing to
-    // fetch and nothing to translate. No banner, no alert, no interruption:
-    // the one prompt the user gets is minted once per language, elsewhere.
-    const translationBlocked = useTranslationBlocked(appLanguage) !== null;
+    // Nothing will be translated into this language right now — either the OS
+    // translator has given up on it (the breaker) or it has not been verified
+    // yet and the native-call gate is shut (see lib/translation-service).
+    //
+    // Fall back SILENTLY to the server-side English — `text` is already
+    // title_en / description_en, so there is nothing to fetch and nothing to
+    // translate. Note this is ENGLISH, never the source language: an article
+    // in a language the reader does not speak, left untranslated, is worse
+    // than the English we already hold. The source language renders only when
+    // it IS the reader's language (`originalIsTargetLang`) or they asked for
+    // it (`effectiveShowOriginal`). No banner, no alert, no interruption: the
+    // affordance for the failed state is the red translate icon on the article
+    // meta row, and one prompt minted per language elsewhere.
+    const translationSuppressed = useTranslationSuppressed(appLanguage);
 
     const needsTranslation =
         !effectiveShowOriginal
         && !!appLanguage
         && appLanguage !== 'en'
         && !originalIsTargetLang
-        && !translationBlocked;
+        && !translationSuppressed;
 
     // Per-key subscription (NOT the whole cache Map). The store mutates the
     // cache in place and bumps `cacheVersion`, so zustand re-runs this selector
@@ -243,15 +251,18 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         return unsubscribe;
     }, [needsTranslation, isOnScreen, checkVisibility]);
 
-    // When the breaker clears (a successful retry), let a node that had already
-    // fired-and-failed try once more. `firedRef` is keyed on (text, language),
-    // neither of which changed, so without this the handful of nodes that took
-    // the failure would stay English until the list recycled them.
-    const wasBlockedRef = useRef(translationBlocked);
+    // When suppression lifts — the gate opens because the language was just
+    // verified, or a retry cleared the breaker — let a node that had already
+    // fired-and-failed (or never fired at all) try once more. `firedRef` is
+    // keyed on (text, language), neither of which changed, so without this
+    // every node already on screen would stay English until the list recycled
+    // it. That matters most right after a successful language switch: the feed
+    // behind the picker is exactly the set of nodes that were gated.
+    const wasSuppressedRef = useRef(translationSuppressed);
     useEffect(() => {
-        if (wasBlockedRef.current && !translationBlocked) firedRef.current = null;
-        wasBlockedRef.current = translationBlocked;
-    }, [translationBlocked]);
+        if (wasSuppressedRef.current && !translationSuppressed) firedRef.current = null;
+        wasSuppressedRef.current = translationSuppressed;
+    }, [translationSuppressed]);
 
     // Fire the translation request once we're on screen and still need one.
     useEffect(() => {
