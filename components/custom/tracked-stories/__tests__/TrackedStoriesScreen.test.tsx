@@ -25,6 +25,53 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (k: string, o?: any) => (o?.count != null ? `${k}:${o.count}` : k) }),
 }));
 
+// The list is an `Animated.FlatList` (from reanimated), not RN's — a
+// `useAnimatedScrollHandler` worklet on a plain FlatList never reaches the UI
+// thread, which is what kept the Dashboard's collapsing header pinned on this
+// sub-tab. Reanimated's worklets runtime cannot initialise under Jest, so mock
+// the module. Same contract as the RN FlatList proxy below: the header renders
+// EVEN WHEN `data` is empty, because the AI-disclosure note gates on
+// `anyLlmHeadline`, not on emptiness.
+jest.mock('react-native-reanimated', () => {
+    const ReactLib = require('react');
+    const { View } = jest.requireActual('react-native');
+    const resolve = (C: any) =>
+        ReactLib.isValidElement(C) ? C : typeof C === 'function' ? ReactLib.createElement(C) : null;
+    const FlatListMock = ({
+        data,
+        renderItem,
+        keyExtractor,
+        ListEmptyComponent,
+        ListHeaderComponent,
+        ...rest
+    }: any) => {
+        const header = resolve(ListHeaderComponent);
+        if (!data || data.length === 0) {
+            return ReactLib.createElement(View, rest, header, resolve(ListEmptyComponent));
+        }
+        return ReactLib.createElement(
+            View,
+            rest,
+            header,
+            data.map((item: any, index: number) =>
+                ReactLib.createElement(
+                    View,
+                    { key: keyExtractor ? keyExtractor(item, index) : index },
+                    renderItem({ item, index }),
+                ),
+            ),
+        );
+    };
+    return {
+        __esModule: true,
+        default: { FlatList: FlatListMock, View },
+        useAnimatedScrollHandler: () => ({}),
+        useSharedValue: (initial: any) => ({ value: initial }),
+        useAnimatedStyle: () => ({}),
+        runOnJS: (fn: any) => fn,
+    };
+});
+
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('react-native-safe-area-context', () => ({

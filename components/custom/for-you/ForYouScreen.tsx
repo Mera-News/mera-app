@@ -475,25 +475,41 @@ const MeraNewsScreen: React.FC = () => {
                     />
                 </View>
 
-                {/* Stories (lazy-mounted on first visit) — header stays revealed,
-                    so pad the content below its measured height. */}
+                {/* Stories / Saved / History — each owns its own list, so each
+                    gets the SAME four legs the Feed panel above already has:
+                    `scrollHandler` on an `Animated.FlatList`, `scrollEventThrottle`,
+                    the header's height as the list's content `paddingTop`, and
+                    `progressViewOffset` wherever a RefreshControl exists.
+
+                    The wrapper Views used to carry `paddingTop: headerHeight`
+                    instead — which is exactly why the header stayed pinned here:
+                    padding a wrapper reserves the space statically, so there was
+                    nothing to scroll under and hiding the header would only have
+                    left a dead gap. The padding now lives inside each list's
+                    contentContainer, and each panel's own title scrolls with it.
+
+                    Child ORDER is untouched on purpose: react-native-screens finds
+                    a tab's scroll view by walking subviews[0], AbstractGradientBackdrop
+                    occupies that slot, and that is the measured reason these lists
+                    get no automatic content inset. Threading props is safe;
+                    reordering is not. */}
                 {storiesVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'stories' ? 'flex' : 'none' }} testID="dashboard-stories-content">
-                        <StoriesSlotPlaceholder />
+                    <View style={{ flex: 1, display: activeSubTab === 'stories' ? 'flex' : 'none' }} testID="dashboard-stories-content">
+                        <StoriesSlotPlaceholder scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
                 )}
 
                 {/* Saved (lazy-mounted on first visit) */}
                 {savedVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'saved' ? 'flex' : 'none' }} testID="dashboard-saved-content">
-                        <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} />
+                    <View style={{ flex: 1, display: activeSubTab === 'saved' ? 'flex' : 'none' }} testID="dashboard-saved-content">
+                        <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
                 )}
 
                 {/* History (lazy-mounted on first visit) */}
                 {historyVisited && (
-                    <View style={{ flex: 1, paddingTop: headerHeight, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
-                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} />
+                    <View style={{ flex: 1, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
+                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
                 )}
             </View>

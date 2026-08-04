@@ -28,7 +28,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem } from 'react-native';
+import { ListRenderItem } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TrackedStoriesScreenProps {
@@ -37,6 +38,17 @@ interface TrackedStoriesScreenProps {
     embedded?: boolean;
     /** Back handler for the non-embedded (route/deep-link) variant. */
     onBack?: () => void;
+    /** The host's collapsing-header scroll handler (Dashboard sub-tab use). The
+     *  list MUST be an `Animated.FlatList` for this to do anything — a
+     *  `useAnimatedScrollHandler` worklet attached to a plain RN `FlatList` never
+     *  reaches the UI thread, which is why this panel's header stayed pinned
+     *  while Overview's collapsed. Omitted on the standalone route. */
+    scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
+    /** Measured height of the host's collapsing header. Becomes the list's
+     *  content `paddingTop` so the rows scroll UNDER the header instead of the
+     *  host padding a wrapper View (which would leave a dead gap once the header
+     *  translates away). Defaults to 0 — standalone route is unchanged. */
+    headerHeight?: number;
 }
 
 /**
@@ -47,7 +59,12 @@ interface TrackedStoriesScreenProps {
  * Tapping opens the story timeline; long-press or the trash icon confirms
  * untracking. Rendered both embedded (For-You sub-tab) and as a standalone route.
  */
-const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = false, onBack }) => {
+const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
+    embedded = false,
+    onBack,
+    scrollHandler,
+    headerHeight = 0,
+}) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const [stories, setStories] = useState<TrackedStoryModel[]>([]);
@@ -296,24 +313,47 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({ embedded = 
                 </Box>
             )}
 
-            <VStack className="px-5 pb-2" style={{ paddingTop: embedded ? 8 : insets.top + 16 }}>
-                <Heading size="3xl" className={embedded ? 'text-white' : 'text-white ml-14'}>
-                    {t('trackedStories.title')}
-                </Heading>
-            </VStack>
-
-            <FlatList
+            {/* The title moved INSIDE the list (below) so it scrolls away with
+                the rows under the host's collapsing header. Left as a sibling it
+                would sit pinned beneath an absolute header — jammed under the
+                status bar once the header hid, and eating the space the collapse
+                is supposed to reclaim. The 12px spacer reproduces the
+                `paddingTop: 12` this list used to carry, so the standalone route
+                (headerHeight 0) keeps its exact sequence: title, 12px, banner,
+                rows. */}
+            <Animated.FlatList
+                testID="tracked-stories-list"
                 data={stories}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                ListHeaderComponent={ListHeader}
+                ListHeaderComponent={
+                    <>
+                        <VStack
+                            className="px-5 pb-2"
+                            style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
+                        >
+                            <Heading
+                                size="3xl"
+                                className={embedded ? 'text-white' : 'text-white ml-14'}
+                            >
+                                {t('trackedStories.title')}
+                            </Heading>
+                        </VStack>
+                        <Box style={{ height: 12 }} />
+                        {ListHeader}
+                    </>
+                }
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
-                    paddingTop: 12,
+                    paddingTop: headerHeight,
                     paddingBottom: insets.bottom + 40,
+                    // Retained: this is what lets ListEmpty's `flex-1` fill and
+                    // centre. Do not drop it when touching the padding above.
                     flexGrow: 1,
                 }}
                 showsVerticalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
             />
 
             <Modal isOpen={!!confirmTarget} onClose={() => setConfirmTarget(null)}>

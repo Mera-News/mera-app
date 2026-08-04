@@ -16,7 +16,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
+import { ListRenderItem, RefreshControl } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrillDownHeader from './DrillDownHeader';
 
@@ -34,9 +35,30 @@ interface Props {
      *  the initial fetch runs once, and the empty state renders outside the
      *  FlatList so pull-to-refresh can't recover either. Unset = always active. */
     active?: boolean;
+    /** The host's collapsing-header scroll handler (Dashboard sub-tab use). The
+     *  list MUST be an `Animated.FlatList` for this to do anything — a
+     *  `useAnimatedScrollHandler` worklet attached to a plain RN `FlatList` never
+     *  reaches the UI thread, which is why this panel's header stayed pinned
+     *  while Overview's collapsed. Omitted on the standalone route. */
+    scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
+    /** Measured height of the host's collapsing header. Becomes the list's
+     *  content `paddingTop` so the rows scroll UNDER the header instead of the
+     *  host padding a wrapper View (which would leave a dead gap once the header
+     *  translates away). Defaults to 0 — standalone route is unchanged.
+     *
+     *  The spinner and empty branches below get it as a plain `paddingTop`:
+     *  neither is a scrollable, so they cannot scroll under the header and would
+     *  otherwise render behind it. */
+    headerHeight?: number;
 }
 
-const VisitedPublicationsList: React.FC<Props> = ({ onBack, embedded = false, active = true }) => {
+const VisitedPublicationsList: React.FC<Props> = ({
+    onBack,
+    embedded = false,
+    active = true,
+    scrollHandler,
+    headerHeight = 0,
+}) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const [items, setItems] = useState<VisitedPublication[]>([]);
@@ -139,35 +161,61 @@ const VisitedPublicationsList: React.FC<Props> = ({ onBack, embedded = false, ac
                     onBack={onBack}
                 />
             )}
+            {/* These two branches render INSTEAD of the list, so there is no
+                scrollable in them and the host's header cannot collapse — it just
+                stays revealed, which is correct. They do need the header's height
+                as plain padding though, or they render behind it.
+
+                The "header hidden with nothing to scroll" trap is already closed
+                without extra wiring: `selectSubTab` reveals on every sub-tab
+                switch, and the only other route into these branches from a
+                scrolled state is a pull-to-refresh that returns zero rows — the
+                pull itself sits at offset 0, which use-collapsible-header's
+                `y <= 0` branch reveals on. */}
             {isLoading ? (
-                <Box className="flex-1 items-center justify-center">
+                <Box
+                    className="flex-1 items-center justify-center"
+                    style={{ paddingTop: headerHeight }}
+                >
                     <Spinner size="large" />
                 </Box>
             ) : items.length === 0 ? (
-                <VStack className="flex-1 items-center justify-center p-6" space="md">
+                <VStack
+                    className="flex-1 items-center justify-center p-6"
+                    space="md"
+                    style={{ paddingTop: headerHeight }}
+                >
                     <MaterialIcons name="visibility-off" size={48} color="#666666" />
                     <Text size="md" className="text-gray-400 text-center">
                         {t('publicationVisits.noArticlesYet')}
                     </Text>
                 </VStack>
             ) : (
-                <FlatList
+                <Animated.FlatList
+                    testID="visited-publications-list"
                     data={items}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
                     ListHeaderComponent={ListHeader}
                     contentContainerStyle={{
+                        paddingTop: headerHeight,
                         paddingBottom: embedded
                             ? insets.bottom + TAB_BAR_HEIGHT + 24
                             : 20,
                     }}
                     showsVerticalScrollIndicator={false}
+                    onScroll={scrollHandler}
+                    scrollEventThrottle={16}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
                             tintColor="#ffffff"
                             colors={['#ffffff']}
+                            // Without this the spinner drops from behind the
+                            // collapsing header — the same leg DashboardSectionsFeed
+                            // already carries. 0 standalone, so unchanged there.
+                            progressViewOffset={headerHeight}
                         />
                     }
                 />
