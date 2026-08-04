@@ -78,6 +78,7 @@ import {
   MIN_FACTS_FOR_SWEEP,
   SANITY_RACE_MS,
   HYGIENE_PENDING_PRESENTATION_CAP,
+  addSanityProposals,
 } from '../hygiene-service';
 import * as factService from '../fact-service';
 import * as topicService from '../topic-service';
@@ -607,5 +608,85 @@ describe('acceptProposal — incoherent_topics happy path (K-P5)', () => {
 
     expect(res).toEqual({ applied: false, ok: false });
     expect(await getPendingProposals()).toHaveLength(1);
+  });
+});
+
+describe('addSanityProposals — the backfill entry point (K-P5)', () => {
+  const subjects = [
+    'Follows Indian cricket', 'Lives in Amsterdam', 'Works in machine learning',
+    'Parents reside near Bhopal', 'Attends jazz festivals', 'Cycles competitively',
+    'Reads Nordic crime fiction', 'Invests in renewable energy', 'Cooks Sichuan food',
+    'Volunteers at an animal shelter', 'Studies Japanese', 'Collects vinyl records',
+    'Runs marathons', 'Plays chess online', 'Restores vintage cameras',
+  ];
+
+  function seedCorpus(n: number) {
+    const facts = Array.from({ length: n }, (_, i) => ({
+      id: `f${i}`,
+      statement: subjects[i % subjects.length],
+    }));
+    (factService.getFacts as jest.Mock).mockResolvedValue(facts);
+    (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(
+      facts.map((f, i) => ({
+        id: `t${i}`,
+        factId: f.id,
+        text: `bad topic ${i}`,
+        normalizedText: `bad topic ${i}`,
+        weight: 0.5,
+        status: 'active' as const,
+        lastSignalAtMs: Date.now(),
+      })),
+    );
+    return facts.map((f, i) => ({ factId: f.id, topicIds: [`t${i}`], fillTo: 3 }));
+  }
+
+  beforeEach(() => {
+    mockKv.clear();
+    jest.clearAllMocks();
+  });
+
+  it('a corpus-wide pass cannot surface a wall of proposals', async () => {
+    const added = await addSanityProposals(seedCorpus(15));
+
+    expect(added).toBe(15);
+    // The window stays short; the rest is parked and refills on each decision.
+    expect(await getPendingProposals()).toHaveLength(
+      HYGIENE_PENDING_PRESENTATION_CAP,
+    );
+    expect(await getPendingCount()).toBe(15);
+  });
+
+  it('is additive across chunks and never duplicates a fingerprint', async () => {
+    const verdicts = seedCorpus(6);
+
+    await addSanityProposals(verdicts.slice(0, 3));
+    await addSanityProposals(verdicts); // chunk overlaps the previous one
+
+    expect(await getPendingCount()).toBe(6);
+    const ids = (await getPendingProposals()).map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('respects the rejected-fingerprint memory', async () => {
+    const verdicts = seedCorpus(3);
+    await rejectProposal('incoherent_topics:f0');
+
+    await addSanityProposals(verdicts);
+
+    const ids = (await getPendingProposals()).map((p) => p.id);
+    expect(ids).not.toContain('incoherent_topics:f0');
+  });
+
+  it('is a no-op for empty verdicts', async () => {
+    expect(await addSanityProposals([])).toBe(0);
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
+  });
+
+  it('notifies only when asked', async () => {
+    await addSanityProposals(seedCorpus(2), { notify: false });
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
+
+    await addSanityProposals(seedCorpus(4), { notify: true });
+    expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
   });
 });

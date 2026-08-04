@@ -358,6 +358,68 @@ async function publishSanityOnly(
   return { ran: false, reason, proposalCount: proposals.length };
 }
 
+/**
+ * Merge sanity verdicts into the review queue WITHOUT running a full sweep.
+ *
+ * The one-time backfill calls this once per chunk as it walks the corpus, so it
+ * must be additive and idempotent: proposals already pending or already parked
+ * in the backlog are skipped by fingerprint, and the presentation cap still
+ * decides how many are visible. A corpus-wide pass therefore cannot surface a
+ * wall of cards — it fills the window, parks the rest, and the window refills as
+ * the user decides.
+ *
+ * Fires the notification only when asked (the backfill fires once, on its first
+ * non-empty chunk, rather than once per chunk).
+ */
+export async function addSanityProposals(
+  incoherentFacts: NonNullable<HygieneAnalyzeInput['incoherentFacts']>,
+  opts?: { notify?: boolean; now?: number },
+): Promise<number> {
+  if (incoherentFacts.length === 0) return 0;
+  const now = opts?.now ?? Date.now();
+
+  const [facts, topics, rejected, pending, backlog] = await Promise.all([
+    getFacts(),
+    getAllTopicSnapshots(),
+    readRejected(),
+    readPending(),
+    readBacklog(),
+  ]);
+
+  const fresh = analyzeHygiene({
+    facts: facts.map((f) => ({
+      id: f.id,
+      statement: f.statement,
+      weight: null,
+      createdAtMs: now,
+    })),
+    topics,
+    now,
+    rejectedFingerprints: rejected,
+    incoherentFacts,
+  }).filter((p) => p.kind === 'incoherent_topics');
+
+  const known = new Set([...pending, ...backlog].map((p) => p.id));
+  const added = fresh.filter((p) => !known.has(p.id));
+  if (added.length === 0) return 0;
+
+  await publishWithCap([...pending, ...backlog, ...added]);
+  notifyChange();
+
+  if (opts?.notify) {
+    void toastManager.showNotifiedToast({
+      type: 'hygiene',
+      source: 'hygiene',
+      title: 'hygiene.notificationTitle',
+      body: 'hygiene.notificationBody',
+      icon: 'cleaning-services',
+      context: { count: added.length },
+      actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
+    });
+  }
+  return added.length;
+}
+
 // ── Accept / Reject ──────────────────────────────────────────────────────────
 
 /**
