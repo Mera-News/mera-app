@@ -631,6 +631,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                 <ReadTranslateActions
                                     articleUrl={suggestion.article_url}
                                     sourceLanguage={sourceLanguage}
+                                    publicationName={suggestion.publication_name}
                                     onOpenUrl={handleArticleUrlPress}
                                 />
                             </VStack>
