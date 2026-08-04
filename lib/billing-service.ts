@@ -43,13 +43,25 @@ export async function fetchUserBilling(): Promise<UserBillingInfo | null> {
 }
 
 // A purchase is a discrete event, but the tier it produces only reaches our DB
-// once RevenueCat's webhook has been delivered and processed — a second or two
-// later. Fetching once the moment the paywall closes therefore usually reads
-// the *pre*-purchase tier, which is the "the phone UI takes a while to update"
-// complaint. These bound a short retry: five tries, two seconds apart, then it
-// stops. Never an open-ended poll.
-const PURCHASE_REFRESH_ATTEMPTS = 5;
-const PURCHASE_REFRESH_INTERVAL_MS = 2000;
+// once RevenueCat's webhook has been delivered and processed. Fetching once the
+// moment the paywall closes therefore usually reads the *pre*-purchase tier,
+// which is the "the phone UI takes a while to update" complaint.
+//
+// The old budget was 5 tries, 2s apart — ~9 seconds. That was optimistic:
+// `RevenueCatService.syncSubscriber()` makes its own outbound REST call BACK to
+// RevenueCat before it writes Mongo, on top of RevenueCat's own webhook
+// dispatch delay, so the round trip can structurally exceed 9s. Losing that
+// race is what made a real purchase sit on screen showing the old plan.
+//
+// TODO(tune): this budget is a reasoned placeholder — roughly 2.5× the old one,
+// with backoff so a fast webhook still resolves in ~2s. It is NOT measured. The
+// plan's QA step (a sandbox purchase in the simulator, timing the gap between
+// "purchase successful" and the `UserBilling` write landing in Mongo) produces
+// the real number; size these three constants from it once it exists.
+const PURCHASE_REFRESH_ATTEMPTS = 8;
+const PURCHASE_REFRESH_INTERVAL_MS = 1500;
+const PURCHASE_REFRESH_BACKOFF = 1.5;
+const PURCHASE_REFRESH_MAX_INTERVAL_MS = 4000;
 
 /** `null`, `undefined` and the server's `'none'` all mean "no paid tier". */
 function normalizeTier(tier: string | null | undefined): string {
@@ -59,39 +71,70 @@ function normalizeTier(tier: string | null | undefined): string {
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export interface RefreshBillingOptions {
-    /** Total fetches, including the first. Default 5. */
+    /** Total fetches, including the first. Default 8. */
     attempts?: number;
-    /** Gap between fetches. Default 2000ms. */
+    /** Gap before the SECOND fetch; grows by `backoffFactor`. Default 1500ms. */
     intervalMs?: number;
+    /** Multiplier applied to the gap after each attempt. Default 1.5. */
+    backoffFactor?: number;
+    /** Ceiling for the growing gap. Default 4000ms. */
+    maxIntervalMs?: number;
+}
+
+export interface BillingRefreshResult {
+    /** The freshest snapshot read, or null if every attempt failed. */
+    billing: UserBillingInfo | null;
+    /**
+     * True only when the server actually reported a tier DIFFERENT from
+     * `previousTier` — i.e. the webhook landed and this snapshot is the result
+     * of the purchase.
+     *
+     * False means "we gave up still seeing the old tier". Callers must NOT
+     * commit the snapshot to their plan display on false: it is stale by
+     * definition, and committing it is precisely the bug where a successful
+     * purchase kept showing the previous plan until the user happened to leave
+     * the tab and come back.
+     */
+    confirmed: boolean;
 }
 
 /**
- * Re-fetch billing after a completed purchase or restore, retrying until the
- * server-side tier differs from `previousTier` or the attempt budget runs out.
- * Returns the freshest snapshot it managed to read (null if every attempt
- * failed).
+ * Re-fetch billing after a completed purchase or restore, retrying with backoff
+ * until the server-side tier differs from `previousTier` or the attempt budget
+ * runs out.
  *
- * Exhausting the budget is a normal outcome, not an error: an App Store
- * *deferred* plan change (upgrade scheduled for the next renewal) leaves the
- * tier deliberately unchanged for the rest of the period, so this simply
- * returns the current — correct — snapshot.
+ * `confirmed: false` is genuinely ambiguous and callers must treat it as
+ * "unresolved", not "failed" — it covers both a webhook that is merely slow AND
+ * an App Store *deferred* plan change (an upgrade scheduled for the next
+ * renewal), where the tier is deliberately unchanged for the rest of the
+ * period and will never differ. Nothing client-side can tell those apart, which
+ * is why the right response is a bounded "activating…" state that eventually
+ * settles rather than a spinner that waits forever.
  */
 export async function refreshUserBillingAfterPurchase(
     previousTier: string | null | undefined,
     options: RefreshBillingOptions = {},
-): Promise<UserBillingInfo | null> {
+): Promise<BillingRefreshResult> {
     const attempts = options.attempts ?? PURCHASE_REFRESH_ATTEMPTS;
-    const intervalMs = options.intervalMs ?? PURCHASE_REFRESH_INTERVAL_MS;
+    const backoffFactor = options.backoffFactor ?? PURCHASE_REFRESH_BACKOFF;
+    const maxIntervalMs = options.maxIntervalMs ?? PURCHASE_REFRESH_MAX_INTERVAL_MS;
     const before = normalizeTier(previousTier);
 
+    let intervalMs = options.intervalMs ?? PURCHASE_REFRESH_INTERVAL_MS;
     let latest: UserBillingInfo | null = null;
+
     for (let attempt = 0; attempt < attempts; attempt++) {
         const billing = await fetchUserBilling();
         if (billing) {
             latest = billing;
-            if (normalizeTier(billing.subscriptionTier) !== before) return billing;
+            if (normalizeTier(billing.subscriptionTier) !== before) {
+                return { billing, confirmed: true };
+            }
         }
-        if (attempt < attempts - 1) await delay(intervalMs);
+        if (attempt < attempts - 1) {
+            await delay(intervalMs);
+            intervalMs = Math.min(intervalMs * backoffFactor, maxIntervalMs);
+        }
     }
-    return latest;
+    return { billing: latest, confirmed: false };
 }

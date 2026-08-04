@@ -431,8 +431,14 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             // rather than leaving the old plan on screen. The RevenueCat →
             // server webhook is async, so this retries briefly (bounded).
             if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
-                const fresh = await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
-                if (fresh) {
+                // `confirmed` guard, same as ProfileScreen: an unconfirmed
+                // result is the PRE-purchase tier, and committing it is what
+                // made a successful purchase keep showing the old plan. This
+                // screen is DEPRECATED with no live consumers, so it gets the
+                // correctness fix without the "activating…" affordance.
+                const { billing: fresh, confirmed } =
+                    await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
+                if (confirmed && fresh) {
                     setBilling(fresh);
                     // App-wide: lifts companion mode the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);

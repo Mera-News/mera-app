@@ -54,6 +54,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
+    // A purchase completed but the server has not confirmed the new tier yet.
+    // Mirrors NotSubscribedScreen's `activationDelayed` handling: an honest
+    // "still working on it" beats committing a snapshot we know is stale.
+    const [activationPending, setActivationPending] = useState(false);
 
     // Fact count (drives the empty-persona state) + persona (blocked banner).
     const refreshFactCount = useCallback(() => {
@@ -68,7 +72,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // Billing + on-device article count drive the daily-usage card. Both are
     // best-effort — the widget falls back to the local count when offline.
     const refreshBilling = useCallback(() => {
-        fetchUserBilling().then(setBilling).catch(() => { /* offline fallback */ });
+        fetchUserBilling()
+            .then((fresh) => {
+                setBilling(fresh);
+                // Mirror into the store too, so companion mode lifts app-wide
+                // and not just on this card. This focus-driven refresh is also
+                // the backstop that eventually heals a purchase whose webhook
+                // outlived every poll below.
+                useSubscriptionStore.getState().setServerBilling(fresh);
+            })
+            .catch(() => { /* offline fallback */ });
     }, []);
 
     useEffect(() => {
@@ -108,12 +121,44 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
             // rather than leaving the old plan on screen until the next focus.
             // The webhook is async, so this retries briefly (bounded).
             if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
-                const fresh = await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
-                if (fresh) {
+                const previousTier = billing?.subscriptionTier ?? null;
+                const { billing: fresh, confirmed } =
+                    await refreshUserBillingAfterPurchase(previousTier);
+
+                if (confirmed && fresh) {
                     setBilling(fresh);
                     // App-wide: lifts companion mode the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
+                    setActivationPending(false);
+                    return;
                 }
+
+                // UNRESOLVED — the poll gave up still reading the old tier.
+                // Committing this snapshot is the pre-existing bug: it says
+                // "purchase successful" and then shows the previous plan, with
+                // nothing guaranteed to correct it (the purchase flow STARTS on
+                // this tab, so there is no focus transition coming to trigger
+                // the focus-effect refresh).
+                //
+                // So: say we're still activating, and keep looking in the
+                // background on a longer, still-bounded budget.
+                setActivationPending(true);
+                void (async () => {
+                    const later = await refreshUserBillingAfterPurchase(previousTier, {
+                        attempts: 20,
+                        intervalMs: 5000,
+                        backoffFactor: 1,
+                    });
+                    if (later.billing) {
+                        setBilling(later.billing);
+                        useSubscriptionStore.getState().setServerBilling(later.billing);
+                    }
+                    // Cleared whether or not it resolved. A deferred App Store
+                    // plan change never changes the tier at all, so an
+                    // "activating…" line that waits for one would never go away
+                    // — a dead end is worse than settling on the truth we have.
+                    setActivationPending(false);
+                })();
             }
         } catch (error) {
             logger.captureException(error, {
@@ -166,6 +211,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     resetLabel={t('configPanel.resetsOn')}
                     onInfoPress={() => setShowArticleCountInfo(true)}
                 />
+
+                {/* The purchase went through but our server has not caught up.
+                    Shown INSTEAD of silently committing the old plan above —
+                    same copy NotSubscribedScreen already uses for the same
+                    situation, so the two paths read alike. Always clears. */}
+                {activationPending ? (
+                    <Text
+                        testID="profile-activation-pending"
+                        size="sm"
+                        className="text-primary-400 mx-4 -mt-3 mb-5"
+                    >
+                        {t('subscription.activationDelayed')}
+                    </Text>
+                ) : null}
 
                 {/* Mera chat invite — static comic speech bubble + logo, replaces
                     the former floating bubble. Taps open the persona chat. */}
