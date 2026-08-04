@@ -76,10 +76,11 @@ interface ReadTranslateActionsProps {
  * | other, device CAN translate | GREEN FILL     | green outline         |
  * | other, device CANNOT      | GREEN FILL       | white outline         |
  *
- * Gluestack's `action` variants have no green, so the fills/borders are set
- * through `style` (an RN inline style beats the variant's className) on a
- * neutral `action="secondary"` base — same reason the half width is an inline
- * style rather than a `w-1/2` class.
+ * Gluestack's `action` variants have no green, so every button is a neutral
+ * `variant="outline" action="secondary"` base whose fill/border/label colour is
+ * restated BOTH as a Tailwind class and as the matching inline style — see the
+ * note on `googleFillClass` for why one of the two is not enough. The half
+ * width is an inline style rather than a `w-1/2` class for the same reason.
  */
 const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     articleUrl,
@@ -111,6 +112,28 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
             ? GREEN_COLOR
             : VIEW_ORIGINAL_COLOR;
 
+    // Every colour is expressed TWICE — as a Tailwind class AND as the matching
+    // inline style. Gluestack's `buttonTextStyle` tva sets a label colour of its
+    // own per variant (`text-typography-800` on a solid secondary), and which of
+    // className/style wins the merge differs between the Pressable root and the
+    // Text; stating both means the outcome is the same colour either way.
+    // The class/hex pairs are Tailwind defaults (this config overrides no
+    // greens): green-500 = #22C55E, green-950 = #052E16.
+    const googleFillClass = googleFilled
+        ? 'bg-green-500 border-green-500'
+        : 'border-white';
+    const googleLabelClass = googleFilled ? 'text-green-950' : 'text-white';
+    const publisherFillClass = sameLanguage
+        ? 'bg-green-500 border-green-500'
+        : support.status === 'translatable'
+            ? 'border-green-500'
+            : 'border-white';
+    const publisherLabelClass = sameLanguage
+        ? 'text-green-950'
+        : support.status === 'translatable'
+            ? 'text-green-500'
+            : 'text-white';
+
     return (
         <VStack space="xs">
             <TranslationNotice
@@ -121,10 +144,10 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
 
             <Button
                 testID="detail-read-google-translate"
-                variant={googleFilled ? 'solid' : 'outline'}
+                variant="outline"
                 action="secondary"
                 size="sm"
-                className="rounded-full"
+                className={`rounded-full ${googleFillClass}`}
                 style={{
                     width: '50%',
                     alignSelf: 'center',
@@ -146,7 +169,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 <ButtonText
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                    className="ml-2"
+                    className={`ml-2 ${googleLabelClass}`}
                     style={{
                         flexShrink: 1,
                         color: googleFilled ? ON_GREEN_COLOR : VIEW_ORIGINAL_COLOR,
@@ -158,9 +181,9 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
 
             <Button
                 testID="detail-read-publisher"
-                variant={sameLanguage ? 'solid' : 'outline'}
+                variant="outline"
                 action="secondary"
-                className="rounded-full"
+                className={`rounded-full ${publisherFillClass}`}
                 style={{
                     borderWidth: 1,
                     backgroundColor: sameLanguage ? GREEN_COLOR : 'transparent',
@@ -180,7 +203,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 <ButtonText
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                    className="ml-2"
+                    className={`ml-2 ${publisherLabelClass}`}
                     style={{ flexShrink: 1, color: publisherColor }}
                 >
                     {publication

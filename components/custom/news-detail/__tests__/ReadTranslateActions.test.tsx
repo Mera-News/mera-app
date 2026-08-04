@@ -230,26 +230,32 @@ describe('ReadTranslateActions', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
             const { getByTestId } = renderActions({ sourceLanguage: 'en' });
 
-            const gt = styleOf(getByTestId(GT_BUTTON));
-            expect(gt.backgroundColor).toBe('transparent');
-            expect(gt.borderColor).toBe(WHITE);
+            const gt = getByTestId(GT_BUTTON);
+            expect(styleOf(gt).backgroundColor).toBe('transparent');
+            expect(styleOf(gt).borderColor).toBe(WHITE);
+            expect(gt.props.className).toContain('border-white');
+            expect(gt.props.className).not.toContain('bg-green-500');
 
-            const publisher = styleOf(getByTestId(PUBLISHER_BUTTON));
-            expect(publisher.backgroundColor).toBe(GREEN);
-            expect(publisher.borderColor).toBe(GREEN);
+            const publisher = getByTestId(PUBLISHER_BUTTON);
+            expect(styleOf(publisher).backgroundColor).toBe(GREEN);
+            expect(styleOf(publisher).borderColor).toBe(GREEN);
+            expect(publisher.props.className).toContain('bg-green-500');
         });
 
         it('translatable: GREEN-FILLED Google button, green-OUTLINE publisher button', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
             const { getByTestId } = renderActions();
 
-            const gt = styleOf(getByTestId(GT_BUTTON));
-            expect(gt.backgroundColor).toBe(GREEN);
-            expect(gt.borderColor).toBe(GREEN);
+            const gt = getByTestId(GT_BUTTON);
+            expect(styleOf(gt).backgroundColor).toBe(GREEN);
+            expect(styleOf(gt).borderColor).toBe(GREEN);
+            expect(gt.props.className).toContain('bg-green-500');
 
-            const publisher = styleOf(getByTestId(PUBLISHER_BUTTON));
-            expect(publisher.backgroundColor).toBe('transparent');
-            expect(publisher.borderColor).toBe(GREEN);
+            const publisher = getByTestId(PUBLISHER_BUTTON);
+            expect(styleOf(publisher).backgroundColor).toBe('transparent');
+            expect(styleOf(publisher).borderColor).toBe(GREEN);
+            expect(publisher.props.className).toContain('border-green-500');
+            expect(publisher.props.className).not.toContain('bg-green-500');
         });
 
         it('not-translatable: GREEN-FILLED Google button, plain WHITE publisher button', () => {
@@ -259,23 +265,48 @@ describe('ReadTranslateActions', () => {
             });
             const { getByTestId } = renderActions();
 
-            const gt = styleOf(getByTestId(GT_BUTTON));
-            expect(gt.backgroundColor).toBe(GREEN);
-            expect(gt.borderColor).toBe(GREEN);
+            const gt = getByTestId(GT_BUTTON);
+            expect(styleOf(gt).backgroundColor).toBe(GREEN);
+            expect(styleOf(gt).borderColor).toBe(GREEN);
+            expect(gt.props.className).toContain('bg-green-500');
 
-            const publisher = styleOf(getByTestId(PUBLISHER_BUTTON));
-            expect(publisher.backgroundColor).toBe('transparent');
-            expect(publisher.borderColor).toBe(WHITE);
+            const publisher = getByTestId(PUBLISHER_BUTTON);
+            expect(styleOf(publisher).backgroundColor).toBe('transparent');
+            expect(styleOf(publisher).borderColor).toBe(WHITE);
+            expect(publisher.props.className).toContain('border-white');
+            expect(publisher.props.className).not.toContain('bg-green-500');
         });
 
-        it('a filled button flips its label to near-black — white on #22C55E is unreadable', () => {
+        // Contrast rule: white on #22C55E is ~2.2:1, so a FILLED button's label
+        // and icon flip to near-black. Stated as class AND style, because which
+        // one gluestack's tva lets through differs between root and label.
+        it.each([
+            ['same-language', 'en', PUBLISHER_BUTTON, 'articleDetail.readOn::{"publication":"The Hindu"}'],
+            ['translatable', 'or', GT_BUTTON, 'articleDetail.readOnGoogleTranslate'],
+            ['not-translatable', 'or', GT_BUTTON, 'articleDetail.readOnGoogleTranslate'],
+        ])('%s: the filled button\'s label is near-black, not white', (status, lang, _button, label) => {
+            mockGetArticleTranslationSupport.mockReturnValue({
+                status,
+                reason: 'unsupported-language',
+            });
+            const { getByText } = renderActions({ sourceLanguage: lang });
+            const node = getByText(label as string);
+            expect(styleOf(node).color).toBe('#052E16');
+            expect(node.props.className).toContain('text-green-950');
+        });
+
+        it('an unfilled button keeps a light label', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
             const { getByText } = renderActions({ sourceLanguage: 'en' });
-            const publisherLabel = getByText('articleDetail.readOn::{"publication":"The Hindu"}');
-            expect(styleOf(publisherLabel).color).toBe('#052E16');
-
             const gtLabel = getByText('articleDetail.readOnGoogleTranslate');
             expect(styleOf(gtLabel).color).toBe(WHITE);
+            expect(gtLabel.props.className).toContain('text-white');
+
+            mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+            const { getByText: getTranslatable } = renderActions();
+            const publisherLabel = getTranslatable('articleDetail.readOn::{"publication":"The Hindu"}');
+            expect(styleOf(publisherLabel).color).toBe(GREEN);
+            expect(publisherLabel.props.className).toContain('text-green-500');
         });
     });
 
