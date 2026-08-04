@@ -28,11 +28,21 @@ import type { ViewToken } from 'react-native';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 
 /** Seconds a card must stay ≥75% on screen before it counts as VIEWED by dwell.
- *  "Viewed" is opened (tap) OR this much uninterrupted visibility — 3s is a
- *  deliberate read, not a brisk scroll-past. Both signals feed the same
- *  `feed-order-store` card state; only the sort order consumes it, nothing is
- *  ever removed for being viewed. */
-export const DWELL_READ_SECONDS = 3;
+ *  "Viewed" is opened (tap) OR this much uninterrupted visibility. Both signals
+ *  feed the same `feed-order-store` card state; only the sort order consumes it,
+ *  nothing is ever removed for being viewed.
+ *
+ *  Was 3s ("a deliberate read, not a brisk scroll-past"). Halved because the
+ *  tiers now make this consequential: a card marked seen sinks below the
+ *  caught-up divider, so too LONG a dwell leaves the unseen tier full of cards
+ *  the user has already scrolled past, and the boundary never climbs. 1.5s is
+ *  still a pause rather than a glance.
+ *
+ *  The ≥75% visibility rule is deliberately UNCHANGED and is what keeps the
+ *  shorter window honest — a card clipped at the viewport edge still does not
+ *  count, so the timer only runs while the card is properly on screen. Do not
+ *  lower both at once. */
+export const DWELL_READ_SECONDS = 1.5;
 
 /** {@link DWELL_READ_SECONDS} in ms — what the dwell timer actually compares. */
 export const SKIP_DWELL_MS = DWELL_READ_SECONDS * 1000;
