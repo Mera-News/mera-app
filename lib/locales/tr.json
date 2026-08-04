@@ -201,8 +201,10 @@
     "statsRead_one": "ve {{formatted}} okumuşsun.",
     "statsRead_other": "ve {{formatted}} okumuşsun.",
     "divider": {
-      "readLine": "Aşağıdakilerin hepsini okudun. Tekrar ziyaret etmek için herhangi birini aç.",
-      "seenLine": "Aşağıdakilerin hepsini gördün. Okumak için herhangi birini aç."
+      "readLine": "Açarak tekrar gör",
+      "seenLine": "Açarak oku",
+      "readTitle": "Zaten okundu",
+      "seenTitle": "Hepsi yeni"
     }
   },
   "relevance": {

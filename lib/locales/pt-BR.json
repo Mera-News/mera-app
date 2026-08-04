@@ -201,8 +201,10 @@
     "statsRead_one": "e você leu {{formatted}}.",
     "statsRead_other": "e você leu {{formatted}}.",
     "divider": {
-      "readLine": "Você leu tudo abaixo. Abra qualquer um para revisitar.",
-      "seenLine": "Você viu tudo abaixo. Abra qualquer um para ler."
+      "readLine": "Abra para revisitar.",
+      "seenLine": "Abra para ler.",
+      "readTitle": "Já lido.",
+      "seenTitle": "Só o novo até aqui."
     }
   },
   "relevance": {

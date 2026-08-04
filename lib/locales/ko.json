@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}}개가 관련 있는 것으로 확인되었습니다.",
     "statsRead_other": "당신은 {{formatted}}개를 읽었습니다.",
     "divider": {
-      "readLine": "아래의 모든 기사를 읽었습니다. 아무거나 열어서 다시 읽을 수 있습니다.",
-      "seenLine": "아래의 모든 스토리를 봤습니다. 아무거나 열어서 읽을 수 있습니다."
+      "readLine": "열어서 다시 읽기.",
+      "seenLine": "열어서 읽기.",
+      "readTitle": "이미 읽음.",
+      "seenTitle": "새로운 것은 여기까지."
     },
     "statsAnalysed_one": "{{formatted}}개가 분석되었습니다,",
     "statsPublishedPending_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",

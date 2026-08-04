@@ -201,8 +201,10 @@
     "statsRead_one": "y has leído {{formatted}}.",
     "statsRead_other": "y has leído {{formatted}}.",
     "divider": {
-      "readLine": "Has leído todo lo que hay abajo. Abre cualquiera para revisitar.",
-      "seenLine": "Has visto todo lo que hay abajo. Abre cualquiera para leer."
+      "readLine": "Abre cualquiera para revisitar.",
+      "seenLine": "Abre cualquiera para leer.",
+      "readTitle": "Ya leído.",
+      "seenTitle": "Todo es nuevo."
     }
   },
   "relevance": {

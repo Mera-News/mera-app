@@ -213,8 +213,10 @@
     "statsRead_many": "i przeczytałeś {{formatted}}.",
     "statsRead_other": "i przeczytałeś {{formatted}}.",
     "divider": {
-      "readLine": "Przeczytałeś wszystko poniżej. Otwórz jeden, aby przejrzeć.",
-      "seenLine": "Widziałeś wszystko poniżej. Otwórz jeden, aby przeczytać."
+      "readLine": "Otwórz, aby przejrzeć.",
+      "seenLine": "Otwórz, aby czytać.",
+      "readTitle": "Już przeczytane.",
+      "seenTitle": "To wszystkie nowe."
     }
   },
   "relevance": {

@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}}件があなたに関連性があります。",
     "statsRead_other": "そしてあなたは{{formatted}}件を読みました。",
     "divider": {
-      "readLine": "下の記事はすべて読みました。任意に開き直して読み直すことができます。",
-      "seenLine": "下のすべてのストーリーは既に見ました。任意に開いて読むことができます。"
+      "readLine": "開き直す。",
+      "seenLine": "開いて読む。",
+      "readTitle": "読み済み。",
+      "seenTitle": "新着はここまで。"
     },
     "statsAnalysed_one": "{{formatted}}件が分析されました、",
     "statsPublishedPending_one": "{{formatted}}件の記事が過去24時間に公開されました。",

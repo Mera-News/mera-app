@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}} có vẻ phù hợp,",
     "statsRead_other": "và bạn đã đọc {{formatted}}.",
     "divider": {
-      "readLine": "Bạn đã đọc tất cả những thứ bên dưới. Mở bất kỳ để xem lại.",
-      "seenLine": "Bạn đã xem tất cả những thứ bên dưới. Mở bất kỳ để đọc."
+      "readLine": "Mở để xem lại",
+      "seenLine": "Mở để đọc",
+      "readTitle": "Đã đọc rồi",
+      "seenTitle": "Toàn bộ mới"
     },
     "statsAnalysed_one": "phân tích {{formatted}} cho bạn,",
     "statsPublishedPending_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",

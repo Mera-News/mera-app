@@ -225,8 +225,10 @@
     "statsRead_many": "وقرأت {{formatted}}.",
     "statsRead_other": "وقرأت {{formatted}}.",
     "divider": {
-      "readLine": "لقد قرأت كل ما هو أدناه. افتح أي منها لإعادة المراجعة.",
-      "seenLine": "لقد رأيت كل ما هو أدناه. افتح أي منها للقراءة."
+      "readLine": "افتح أي منها للمراجعة.",
+      "seenLine": "افتح أي منها للقراءة.",
+      "readTitle": "تمت قراءته.",
+      "seenTitle": "كل هذا جديد."
     }
   },
   "relevance": {

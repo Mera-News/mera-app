@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}}篇与您相关。",
     "statsRead_other": "您已读过{{formatted}}篇。",
     "divider": {
-      "readLine": "您已读完下面的所有内容。打开任意一个可再次查看。",
-      "seenLine": "您已查看下面的所有内容。打开任意一个来阅读。"
+      "readLine": "打开重看",
+      "seenLine": "打开阅读",
+      "readTitle": "已阅读",
+      "seenTitle": "全是新的"
     },
     "statsAnalysed_one": "{{formatted}}篇文章经过分析,",
     "statsPublishedPending_one": "过去24小时内发布了{{formatted}}篇文章。",

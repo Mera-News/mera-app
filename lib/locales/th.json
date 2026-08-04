@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
     "statsRead_other": "และคุณได้อ่าน {{formatted}}.",
     "divider": {
-      "readLine": "คุณอ่านทุกอย่างด้านล่างแล้ว เปิดรายการใดรายการหนึ่งเพื่อดูอีกครั้ง",
-      "seenLine": "คุณเห็นทุกอย่างด้านล่างแล้ว เปิดรายการใดรายการหนึ่งเพื่ออ่าน"
+      "readLine": "เปิดเพื่อดูอีกครั้ง",
+      "seenLine": "เปิดเพื่ออ่าน",
+      "readTitle": "อ่านแล้ว",
+      "seenTitle": "ทั้งหมดใหม่เลย"
     },
     "statsAnalysed_one": "วิเคราะห์ {{formatted}} ให้คุณแล้ว,",
     "statsPublishedPending_one": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา",

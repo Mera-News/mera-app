@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}}篇與您相關。",
     "statsRead_other": "您已閱讀{{formatted}}篇。",
     "divider": {
-      "readLine": "您已閱讀下面的所有內容。開啟任意一個可再次查看。",
-      "seenLine": "您已查看下面的所有內容。開啟任意一個來閱讀。"
+      "readLine": "打開重看",
+      "seenLine": "打開閱讀",
+      "readTitle": "已閱讀",
+      "seenTitle": "全是新的"
     },
     "statsAnalysed_one": "{{formatted}}篇文章經過分析,",
     "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",

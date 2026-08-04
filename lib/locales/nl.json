@@ -201,8 +201,10 @@
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "divider": {
-      "readLine": "Je hebt alles hieronder gelezen. Open een artikel om terug te kijken.",
-      "seenLine": "Je hebt alles hieronder gezien. Open een artikel om te lezen."
+      "readLine": "Open om terug te kijken.",
+      "seenLine": "Open om te lezen.",
+      "readTitle": "Alles gelezen.",
+      "seenTitle": "Tot zover het nieuwe."
     }
   },
   "relevance": {

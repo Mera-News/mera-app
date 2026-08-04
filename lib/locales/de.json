@@ -201,8 +201,10 @@
     "statsRead_one": "und Sie haben {{formatted}} gelesen.",
     "statsRead_other": "und Sie haben {{formatted}} gelesen.",
     "divider": {
-      "readLine": "Sie haben alles darunter gelesen. Öffnen Sie eines zum Zurückblättern.",
-      "seenLine": "Sie haben alles darunter gesehen. Öffnen Sie eines zum Lesen."
+      "readLine": "Öffnen Sie eines zum Zurückblättern.",
+      "seenLine": "Öffnen Sie eines zum Lesen.",
+      "readTitle": "Bereits gelesen.",
+      "seenTitle": "Das ist alles Neue."
     }
   },
   "relevance": {

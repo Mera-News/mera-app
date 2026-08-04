@@ -196,8 +196,10 @@
     "statsRelevant_other": "{{formatted}} terlihat relevan,",
     "statsRead_other": "dan Anda telah membaca {{formatted}}.",
     "divider": {
-      "readLine": "Anda sudah membaca semuanya di bawah. Buka apa saja untuk membaca ulang.",
-      "seenLine": "Anda sudah melihat semuanya di bawah. Buka apa saja untuk membaca."
+      "readLine": "Buka apa saja untuk membaca ulang.",
+      "seenLine": "Buka apa saja untuk membaca.",
+      "readTitle": "Sudah dibaca.",
+      "seenTitle": "Itu semua baru."
     },
     "statsAnalysed_one": "{{formatted}} dianalisis untuk Anda,",
     "statsPublishedPending_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
