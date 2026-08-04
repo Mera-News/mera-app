@@ -196,22 +196,63 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                 <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
                             ) : null}
 
+                            {/* Everything here is what a reader must act on, and
+                                nothing here is about on-device translation — that
+                                all lives under Advanced now. */}
+                            <VStack space="sm">
+                                {/* Read BEFORE the picker opens. Once Apple's
+                                    "Required Downloads" sheet is up it covers the
+                                    lower half of the screen, so this is the last
+                                    calm moment to say what that sheet expects.
+                                    iOS-only, from inside the component. */}
+                                <LanguageDownloadHint />
+                                {/* NOT platform-gated, and not Advanced: Google
+                                    Translate is not on-device translation, it is the
+                                    path that works for everyone with nothing to
+                                    download. A reader who cannot or will not fetch a
+                                    language pack has to leave this section already
+                                    knowing they can still read every article. Named
+                                    exactly as the article-page button is labelled. */}
+                                <Text className="text-typography-400 text-xs leading-5">
+                                    {t('language.googleTranslateAlways')}
+                                </Text>
+                            </VStack>
+                        </VStack>
+
+                        <Box className="border-b border-gray-800" />
+
+                        {/* Advanced — on-device translation, and only that.
+                            Split out because it is genuinely optional: the section
+                            above already leaves the reader able to read anything.
+                            A plain heading rather than a disclosure, deliberately;
+                            content the reader may actually need should not sit
+                            behind an interaction they have to guess at. */}
+                        <VStack
+                            testID="language-advanced-section"
+                            space="md"
+                            style={{ paddingBottom: insets.bottom + 32 }}
+                        >
+                            <HStack space="md" className="items-center">
+                                <MaterialIcons name="tune" size={24} color="#f59e0b" />
+                                <VStack className="flex-1">
+                                    <Text className="text-white text-lg font-semibold">
+                                        {t('language.advanced')}
+                                    </Text>
+                                    <Text className="text-typography-500 text-sm mt-0.5">
+                                        {t('language.advancedDescription')}
+                                    </Text>
+                                </VStack>
+                            </HStack>
+
                             {Platform.OS === 'ios' && (
                                 <VStack space="sm">
-                                    {/* Read BEFORE the picker opens. Once Apple's
-                                        "Required Downloads" sheet is up it covers the
-                                        lower half of the screen, so this is the last
-                                        calm moment to say what that sheet expects. */}
-                                    <LanguageDownloadHint />
-                                    {/* On-device translation is the OPTIONAL path.
-                                        A reader who cannot or will not download a
-                                        pack must leave this screen knowing they can
-                                        still read everything — hence Google Translate
-                                        stated first, and named exactly as the button
-                                        on the article page is labelled. */}
-                                    <Text className="text-typography-400 text-xs leading-5">
-                                        {t('language.iosLanguageHint')}
+                                    <Text className="text-typography-400 text-sm leading-5">
+                                        {t('language.onDeviceTranslationHint')}
                                     </Text>
+                                    {/* The one surviving guide button. The screen used
+                                        to offer this same video twice; it belongs with
+                                        the sentence that tells the reader to check iOS
+                                        settings, which is what the video shows. */}
                                     <Pressable
                                         onPress={handleWatchGuide}
                                         className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
@@ -223,24 +264,14 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                     </Pressable>
                                 </VStack>
                             )}
-                        </VStack>
 
-                        <Box className="border-b border-gray-800" />
-
-                        {/* Language Packs */}
-                        <VStack space="md" style={{ paddingBottom: insets.bottom + 32 }}>
-                            <HStack space="md" className="items-center">
-                                <MaterialIcons name="cloud-download" size={24} color="#f59e0b" />
-                                <Text className="text-white text-lg font-semibold">
+                            <HStack space="sm" className="items-center mt-1">
+                                <MaterialIcons name="cloud-download" size={18} color="#f59e0b" />
+                                <Text className="text-typography-300 text-sm font-semibold">
                                     {t('language.languagePacks')}
                                 </Text>
                             </HStack>
 
-                            {/* The guide video used to be offered twice on this one
-                                screen. The copy above already links it, in the place
-                                where the reader is being told to check iOS settings —
-                                a second identical button here only made the screen
-                                look like it had two different videos. */}
                             <Box className="p-4 bg-gray-800 rounded-lg border border-gray-700">
                                 {Platform.OS === 'ios' ? (
                                     <VStack space="sm">
