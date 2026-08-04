@@ -444,7 +444,6 @@
     "title": "Language",
     "appLanguage": "App Language",
     "appLanguageDescription": "Used for the app interface and translating news content",
-    "languagePacks": "Language Packs",
     "languagePacksIos": "Translation models are managed by your device. You only need to download the model for your selected language; iOS handles the rest.",
     "languagePacksIosPath": "Settings → General → Language & Region → Translation Languages",
     "languagePacksAndroid": "Translation models (~30MB each) are downloaded automatically when you first translate to a new language.",

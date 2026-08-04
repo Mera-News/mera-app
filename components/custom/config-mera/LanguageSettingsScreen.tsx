@@ -265,53 +265,52 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                 </VStack>
                             )}
 
-                            <HStack space="sm" className="items-center mt-1">
-                                <MaterialIcons name="cloud-download" size={18} color="#f59e0b" />
-                                <Text className="text-typography-300 text-sm font-semibold">
-                                    {t('language.languagePacks')}
+                            {/* Language packs are PART of Advanced, not a section of
+                                their own. They had their own icon+heading and a
+                                bordered card, which is the screen's vocabulary for a
+                                top-level section — so Advanced read as two sections
+                                stacked rather than one. Heading and card are both gone;
+                                this is now plain prose continuing the sentence above
+                                it, with the settings shortcut as its only affordance.
+                                Do not re-wrap it in a Box: the chrome IS what made it
+                                look like a peer. */}
+                            {Platform.OS === 'ios' ? (
+                                <>
+                                    <Text className="text-typography-400 text-sm leading-5">
+                                        {t('language.languagePacksIos')}
+                                    </Text>
+                                    <Text className="text-typography-400 text-sm leading-5">
+                                        {t('language.managePacksPrefix')}{' '}
+                                        <Text className="text-white text-sm font-medium">
+                                            {t('language.languagePacksIosPath')}
+                                        </Text>
+                                        .
+                                    </Text>
+                                </>
+                            ) : (
+                                <Text className="text-typography-400 text-sm leading-5">
+                                    {t('language.languagePacksAndroid')}
                                 </Text>
-                            </HStack>
+                            )}
 
-                            <Box className="p-4 bg-gray-800 rounded-lg border border-gray-700">
-                                {Platform.OS === 'ios' ? (
-                                    <VStack space="sm">
-                                        <Text className="text-typography-400 text-sm leading-5">
-                                            {t('language.languagePacksIos')}
-                                        </Text>
-                                        <Text className="text-typography-400 text-sm leading-5">
-                                            {t('language.managePacksPrefix')}{' '}
-                                            <Text className="text-white text-sm font-medium">
-                                                {t('language.languagePacksIosPath')}
-                                            </Text>
-                                            .
-                                        </Text>
-                                        <Pressable
-                                            onPress={() => Linking.openURL('App-Prefs:General')}
-                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-gray-700 rounded-lg"
-                                        >
-                                            <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
-                                            <Text className="text-violet-400 text-sm font-medium">
-                                                {t('language.openLanguageSettings')}
-                                            </Text>
-                                        </Pressable>
-                                    </VStack>
-                                ) : (
-                                    <VStack space="sm">
-                                        <Text className="text-typography-400 text-sm leading-5">
-                                            {t('language.languagePacksAndroid')}
-                                        </Text>
-                                        <Pressable
-                                            onPress={() => Linking.sendIntent('android.settings.LOCALE_SETTINGS')}
-                                            className="flex-row items-center mt-2 py-2.5 px-3 bg-gray-700 rounded-lg"
-                                        >
-                                            <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
-                                            <Text className="text-violet-400 text-sm font-medium">
-                                                {t('language.openLanguageSettings')}
-                                            </Text>
-                                        </Pressable>
-                                    </VStack>
-                                )}
-                            </Box>
+                            {/* Kept as a button, not flattened to text: it is the one
+                                ACTION here, and it does exactly what the sentence above
+                                asks the reader to do. Without it the instruction is
+                                only followable via the video. */}
+                            <Pressable
+                                testID="language-open-os-settings"
+                                onPress={() =>
+                                    Platform.OS === 'ios'
+                                        ? Linking.openURL('App-Prefs:General')
+                                        : Linking.sendIntent('android.settings.LOCALE_SETTINGS')
+                                }
+                                className="flex-row items-center self-start py-2.5 px-3 bg-gray-800 rounded-lg border border-gray-700"
+                            >
+                                <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
+                                <Text className="text-violet-400 text-sm font-medium">
+                                    {t('language.openLanguageSettings')}
+                                </Text>
+                            </Pressable>
 
                         </VStack>
 
