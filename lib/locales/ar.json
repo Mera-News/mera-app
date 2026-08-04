@@ -252,13 +252,12 @@
     "failedToLoad": "فشل تحميل المقال",
     "articleNotFound": "المقال غير موجود",
     "offlineUnavailable": "أنت غير متصل بالإنترنت والمقالة لم تُحفظ لقراءتها دون اتصال",
-    "viewOriginal": "عرض المقال الأصلي",
-    "viewOriginalIn": "عرض المقال الأصلي بلغة {{language}}",
-    "viewAndTranslateOnDevice": "عرض المقال وترجمته على الجهاز",
     "share": "مشاركة",
     "shareVia": "تمت المشاركة عبر {{downloadUrl}}",
     "sourceCountryGlobal": "عالمي",
-    "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد."
+    "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد.",
+    "readOn": "اقرأ على {{publication}}",
+    "readOnGoogleTranslate": "اقرأ على Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -280,13 +279,11 @@
     "addedToLocations": "أُضيف إلى أماكنك"
   },
   "clusterDetail": {
-    "translatable": "هذا المقال مكتوب بلغة {{language}}. يمكن لجهازك ترجمته أثناء القراءة. إذا لم تعمل الترجمة، يمكنك فتح الموقع في ترجمة Google أدناه؛ فقط لاحظ أنك ستتصفحه عبر Google.",
-    "notTranslatable": "هذا المقال مكتوب بلغة {{language}}. جهازك لا يمكنه ترجمته. استخدم ترجمة Google أدناه لقراءته بلغتك.",
-    "notTranslatableOsOutdated": "هذا المقال مكتوب بلغة {{language}}. تتطلب الترجمة على الجهاز نظام iOS {{requiredVersion}}. أنت تستخدم iOS {{currentVersion}}. حدّث نظام iOS، أو استخدم ترجمة Google أدناه لقراءته بلغتك.",
+    "translatable": "هذا المقال مكتوب بلغة {{language}}: يمكن لجهازك ترجمته أثناء القراءة. إذا لم تعمل الترجمة، يمكنك فتح الموقع عبر Google Translate؛ فقط لاحظ أنك ستتصفحه عندئذٍ عبر Google.",
+    "notTranslatable": "هذا المقال مكتوب بلغة {{language}}. لا يمكن لجهازك ترجمته — استخدم Google Translate لقراءته بلغتك.",
+    "notTranslatableOsOutdated": "هذا المقال مكتوب بلغة {{language}}. تتطلب الترجمة على الجهاز إصدار iOS {{requiredVersion}}: أنت تستخدم iOS {{currentVersion}}. حدّث iOS، أو استخدم Google Translate لقراءته بلغتك.",
     "unknownLanguage": "لغة أخرى",
     "translationGuideLink": "أرني كيفية ترجمة المقال",
-    "viewInGoogleTranslate": "عرض في ترجمة Google",
-    "readViaGoogleTranslate": "اقرأ بلغتك (ترجمة Google)",
     "showOriginal": "عرض النص الأصلي",
     "showTranslation": "عرض الترجمة"
   },
@@ -351,7 +348,6 @@
     "title": "اللغة",
     "appLanguage": "لغة التطبيق",
     "appLanguageDescription": "تُستخدم لواجهة التطبيق وترجمة محتوى الأخبار",
-    "languagePacks": "حزم اللغات",
     "languagePacksIos": "يتم إدارة نماذج الترجمة بواسطة جهازك. تحتاج فقط إلى تنزيل النموذج للغة المحددة. يتولى iOS الباقي.",
     "languagePacksIosPath": "الإعدادات ← عام ← اللغة والمنطقة ← لغات الترجمة",
     "languagePacksAndroid": "يتم تنزيل نماذج الترجمة (~30MB لكل نموذج) تلقائيًا عند الترجمة لأول مرة إلى لغة جديدة.",
@@ -365,11 +361,28 @@
     "packMissingIosPath": "الإعدادات ← عام ← اللغة والمنطقة",
     "retry": "إعادة المحاولة",
     "watchGuide": "شاهد كيفية إضافة لغة إلى جهازك",
-    "iosLanguageHint": "لا يكفي اختيار هذه اللغة فقط. ستحتاج أيضًا إلى تحديد هذه اللغة في إعدادات لغة iOS.",
     "managePacksPrefix": "لإدارة اللغات المُنزلة، اذهب إلى",
     "translationUnavailableTapToRetry": "قد تكون حزمة اللغة {{language}} قيد التنزيل، أو قد يكون التنزيل قد فشل. عرض الإنجليزية الآن — اضغط لإعادة المحاولة.",
     "translationUnavailableTitle": "الترجمة غير متاحة",
-    "translationUnsupportedOnThisIos": "إصدار iOS الخاص بك لا يمكنه الترجمة إلى {{language}}. عرض الإنجليزية بدلاً من ذلك — تحديث iOS سيجعل ذلك ممكناً."
+    "translationUnsupportedOnThisIos": "إصدار iOS الخاص بك لا يمكنه الترجمة إلى {{language}}. عرض الإنجليزية بدلاً من ذلك — تحديث iOS سيجعل ذلك ممكناً.",
+    "advanced": "متقدم",
+    "advancedDescription": "الترجمة على الجهاز. اختياري — كل ما سبق يعمل بدونها.",
+    "downloadHintBeforePrefix": "بعد اختيار لغة، قد يطلب منك iOS تنزيلها. اضغط على",
+    "downloadHintBeforeSuffix": "بجانب كل لغة في تلك القائمة — لن يبدأ أي تنزيل حتى تفعل ذلك.",
+    "downloadHintNowPrefix": "اضغط على",
+    "downloadHintNowSuffix": "بجانب كل لغة في القائمة أدناه لبدء التنزيل.",
+    "googleTranslateAlways": "يمكنك قراءة أي مقال بأي لغة عبر \"اقرأ على Google Translate\" في صفحة المقال — وهذا يعمل دائمًا دون الحاجة لتنزيل أي شيء.",
+    "onDeviceTranslationHint": "إذا كنت تفضل أن يقوم جهازك بالترجمة، فتأكد من توفر لغتك في إعدادات iOS؛ يوضح لك الفيديو أدناه كيفية تفعيل ذلك.",
+    "switchDeviceUnsupportedBody": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى أي لغة، لذا يستخدم التطبيق الإنجليزية. مع {{language}} ستبقى المقالات دون ترجمة.",
+    "switchFailedBody": "تعذر تجهيز حزمة ترجمة {{language}}، لذا ما زلت تستخدم {{previous}}. قد تكون لا تزال قيد التنزيل — أعد المحاولة بعد قليل.",
+    "switchFailedTitle": "تعذر التبديل إلى {{language}}",
+    "switchTimedOutBody": "يستغرق تجهيز {{language}} وقتًا طويلاً، لذا ما زلت تستخدم {{previous}}. قد يكتمل التنزيل في الخلفية — أعد المحاولة قريبًا.",
+    "switchUnsupportedBody": "لا يمكن لهذا الإصدار من iOS الترجمة إلى {{language}}، لذا ما زلت تستخدم {{previous}}.",
+    "switchingCancel": "إيقاف تغيير اللغة",
+    "switchingNudge": "يقوم جهازك بتجهيز حزمة ترجمة {{language}}. يرجى إبقاء هذه الشاشة مفتوحة حتى ينتهي الأمر — إذا غادرت الآن، ستبقى المقالات الإخبارية بالإنجليزية.",
+    "switchingTitle": "جارٍ إعداد {{language}}…",
+    "translationFailedTooltip": "فشلت الترجمة، يرجى إعادة فتح التطبيق أو التحقق من إعداداتك",
+    "translationUnavailableOnThisDevice": "لا يمكن لهذا الجهاز ترجمة المقالات الإخبارية إلى {{language}}. سيتم عرضها بالإنجليزية بدلاً من ذلك."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1071,7 +1084,8 @@
     "paywallRelatedOption": "عرض التغطية ذات الصلة",
     "paywallRelatedDesc": "قد لا تكون هناك حاجز دفع في قصة مشابهة من منشور آخر — تحقق من المقالات ذات الصلة.",
     "paywallSubscribeDesc": "زرت {{publication}} {{visits}} مرات هذا الشهر — فكّر في الاشتراك للحصول على وصول كامل.",
-    "paywallBlockOption": "حظر {{publication}} بدلاً من ذلك"
+    "paywallBlockOption": "حظر {{publication}} بدلاً من ذلك",
+    "tooMuchOfThis": "أرى هذا كثيرًا جدًا"
   },
   "topicPlan": {
     "title": "الموضوعات التي سأتابعها",

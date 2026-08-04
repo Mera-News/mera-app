@@ -2,7 +2,7 @@
 // screens. ONE layout in every state: the translation notice, then a HALF-width
 // centred Google Translate button, then the full-width "Read on {publication}"
 // button. Only the colours change with getArticleTranslationSupport, and those
-// three states x two buttons are the regression net below — green (#22C55E)
+// three states x two buttons are the regression net below — green (#4ADE80)
 // always marks the route that gets the reader something readable.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
@@ -80,7 +80,10 @@ const ARTICLE_URL = 'https://publisher.example.com/story';
 const ARTICLE_URL_REF = 'https://publisher.example.com/story?utm_source=mera.news&utm_medium=referral';
 const GT_URL = 'https://translate.google.com/translate?sl=auto&tl=en&u=story';
 
-const GREEN = '#22C55E';
+const GREEN = '#4ADE80';
+// The FILL is the same green at 20%, not solid — a filled button is now a tint
+// plus a border, and that distinction is what these assertions protect.
+const GREEN_TINT = 'rgba(74, 222, 128, 0.2)';
 const WHITE = '#FFFFFF';
 
 const GT_BUTTON = 'detail-read-google-translate';
@@ -258,12 +261,12 @@ describe('ReadTranslateActions', () => {
             expect(styleOf(gt).backgroundColor).toBe('transparent');
             expect(styleOf(gt).borderColor).toBe(WHITE);
             expect(gt.props.className).toContain('border-white');
-            expect(gt.props.className).not.toContain('bg-green-500');
+            expect(gt.props.className).not.toContain('bg-green-400/20');
 
             const publisher = getByTestId(PUBLISHER_BUTTON);
-            expect(styleOf(publisher).backgroundColor).toBe(GREEN);
+            expect(styleOf(publisher).backgroundColor).toBe(GREEN_TINT);
             expect(styleOf(publisher).borderColor).toBe(GREEN);
-            expect(publisher.props.className).toContain('bg-green-500');
+            expect(publisher.props.className).toContain('bg-green-400/20');
         });
 
         it('translatable: GREEN-FILLED Google button, green-OUTLINE publisher button', () => {
@@ -271,15 +274,15 @@ describe('ReadTranslateActions', () => {
             const { getByTestId } = renderActions();
 
             const gt = getByTestId(GT_BUTTON);
-            expect(styleOf(gt).backgroundColor).toBe(GREEN);
+            expect(styleOf(gt).backgroundColor).toBe(GREEN_TINT);
             expect(styleOf(gt).borderColor).toBe(GREEN);
-            expect(gt.props.className).toContain('bg-green-500');
+            expect(gt.props.className).toContain('bg-green-400/20');
 
             const publisher = getByTestId(PUBLISHER_BUTTON);
             expect(styleOf(publisher).backgroundColor).toBe('transparent');
             expect(styleOf(publisher).borderColor).toBe(GREEN);
-            expect(publisher.props.className).toContain('border-green-500');
-            expect(publisher.props.className).not.toContain('bg-green-500');
+            expect(publisher.props.className).toContain('border-green-400');
+            expect(publisher.props.className).not.toContain('bg-green-400/20');
         });
 
         it('not-translatable: GREEN-FILLED Google button, plain WHITE publisher button', () => {
@@ -290,18 +293,22 @@ describe('ReadTranslateActions', () => {
             const { getByTestId } = renderActions();
 
             const gt = getByTestId(GT_BUTTON);
-            expect(styleOf(gt).backgroundColor).toBe(GREEN);
+            expect(styleOf(gt).backgroundColor).toBe(GREEN_TINT);
             expect(styleOf(gt).borderColor).toBe(GREEN);
-            expect(gt.props.className).toContain('bg-green-500');
+            expect(gt.props.className).toContain('bg-green-400/20');
 
             const publisher = getByTestId(PUBLISHER_BUTTON);
             expect(styleOf(publisher).backgroundColor).toBe('transparent');
             expect(styleOf(publisher).borderColor).toBe(WHITE);
             expect(publisher.props.className).toContain('border-white');
-            expect(publisher.props.className).not.toContain('bg-green-500');
+            expect(publisher.props.className).not.toContain('bg-green-400/20');
         });
 
-        // Contrast rule: white on #22C55E is ~2.2:1, so a FILLED button's label
+        // Contrast rule, RESTATED now the fill is translucent rather than solid.
+        // White on the old solid green was ~2.2:1, which is why a filled label
+        // used to flip to near-black. A 20% tint over a dark backdrop inverts
+        // that -- near-black would now be the unreadable one -- so a filled
+        // label is GREEN. What is pinned is that it is never white on a fill.
         // and icon flip to near-black. Stated as class AND style, because which
         // one gluestack's tva lets through differs between root and label.
         it.each([
@@ -315,8 +322,8 @@ describe('ReadTranslateActions', () => {
             });
             const { getByText } = renderActions({ sourceLanguage: lang });
             const node = getByText(label as string);
-            expect(styleOf(node).color).toBe('#052E16');
-            expect(node.props.className).toContain('text-green-950');
+            expect(styleOf(node).color).toBe(GREEN);
+            expect(node.props.className).toContain('text-green-400');
         });
 
         it('an unfilled button keeps a light label', () => {
@@ -330,7 +337,7 @@ describe('ReadTranslateActions', () => {
             const { getByText: getTranslatable } = renderActions();
             const publisherLabel = getTranslatable('articleDetail.readOn::{"publication":"The Hindu"}');
             expect(styleOf(publisherLabel).color).toBe(GREEN);
-            expect(publisherLabel.props.className).toContain('text-green-500');
+            expect(publisherLabel.props.className).toContain('text-green-400');
         });
     });
 

@@ -228,13 +228,12 @@
     "failedToLoad": "Caricamento dell'articolo non riuscito",
     "articleNotFound": "Articolo non trovato",
     "offlineUnavailable": "Sei offline e questo articolo non è salvato per la lettura offline",
-    "viewOriginal": "Visualizza l'articolo originale",
-    "viewOriginalIn": "Visualizza l'articolo originale in {{language}}",
-    "viewAndTranslateOnDevice": "Visualizza l'articolo e traducilo sul dispositivo",
     "share": "Condividi",
     "shareVia": "Condiviso tramite {{downloadUrl}}",
     "sourceCountryGlobal": "Mondiale",
-    "sourceCountryA11y": "Paese di origine: {{country}}. Tocca per mostrare il nome del paese."
+    "sourceCountryA11y": "Paese di origine: {{country}}. Tocca per mostrare il nome del paese.",
+    "readOn": "Leggi su {{publication}}",
+    "readOnGoogleTranslate": "Leggi su Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "Caricamento dei dettagli del gruppo non riuscito",
@@ -256,13 +255,11 @@
     "addedToLocations": "Aggiunto ai tuoi luoghi"
   },
   "clusterDetail": {
-    "translatable": "Questo articolo è in {{language}}: il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Traduttore qui sotto. Tieni presente che lo visualizzerai tramite Google.",
-    "notTranslatable": "Questo articolo è in {{language}}. Il tuo dispositivo non può tradurlo. Usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
-    "notTranslatableOsOutdated": "Questo articolo è in {{language}}. La traduzione sul dispositivo richiede iOS {{requiredVersion}}. Il tuo dispositivo utilizza iOS {{currentVersion}}. Aggiorna iOS, oppure usa Google Traduttore qui sotto per leggerlo nella tua lingua.",
+    "translatable": "Questo articolo è in {{language}}: il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Translate; tieni presente che in quel caso lo visiterai tramite Google.",
+    "notTranslatable": "Questo articolo è in {{language}}. Il tuo dispositivo non può tradurlo — usa Google Translate per leggerlo nella tua lingua.",
+    "notTranslatableOsOutdated": "Questo articolo è in {{language}}. La traduzione sul dispositivo richiede iOS {{requiredVersion}}: tu hai iOS {{currentVersion}}. Aggiorna iOS oppure usa Google Translate per leggerlo nella tua lingua.",
     "unknownLanguage": "un'altra lingua",
     "translationGuideLink": "Mostrami come tradurre l'articolo",
-    "viewInGoogleTranslate": "Visualizza in Google Traduttore",
-    "readViaGoogleTranslate": "Leggi nella tua lingua (Google Traduttore)",
     "showOriginal": "Mostra originale",
     "showTranslation": "Mostra traduzione"
   },
@@ -327,7 +324,6 @@
     "title": "Lingua",
     "appLanguage": "Lingua dell'app",
     "appLanguageDescription": "Usata per l'interfaccia dell'app e per tradurre i contenuti delle notizie",
-    "languagePacks": "Pacchetti lingua",
     "languagePacksIos": "I modelli di traduzione sono gestiti dal tuo dispositivo. Devi solo scaricare il modello per la lingua selezionata. iOS gestisce il resto.",
     "languagePacksIosPath": "Impostazioni → Generali → Lingua e Regione → Lingue di traduzione",
     "languagePacksAndroid": "I modelli di traduzione (~30MB ciascuno) vengono scaricati automaticamente quando traduci per la prima volta in una nuova lingua.",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "Impostazioni → Generali → Lingua e Regione",
     "retry": "Riprova",
     "watchGuide": "Guarda come aggiungere una lingua al tuo dispositivo",
-    "iosLanguageHint": "Selezionare solo questa lingua non basta: dovrai selezionarla anche nelle impostazioni della lingua di iOS.",
     "managePacksPrefix": "Per gestire le lingue scaricate, vai a",
     "translationUnavailableTapToRetry": "Il pacchetto linguistico {{language}} potrebbe essere ancora in download, o il download potrebbe non essere riuscito. Mostrando inglese per ora — tocca per riprovare.",
     "translationUnavailableTitle": "Traduzione non disponibile",
-    "translationUnsupportedOnThisIos": "La Sua versione di iOS non può tradurre in {{language}}. Mostrando inglese invece — aggiornare iOS lo renderà possibile."
+    "translationUnsupportedOnThisIos": "La Sua versione di iOS non può tradurre in {{language}}. Mostrando inglese invece — aggiornare iOS lo renderà possibile.",
+    "advanced": "Avanzate",
+    "advancedDescription": "Traduzione sul dispositivo. Facoltativa — tutto quanto sopra funziona anche senza.",
+    "downloadHintBeforePrefix": "Dopo aver scelto una lingua, iOS potrebbe chiederti di scaricarla. Tocca l'icona",
+    "downloadHintBeforeSuffix": "accanto a ogni lingua in quella scheda — non si scarica nulla finché non lo fai.",
+    "downloadHintNowPrefix": "Tocca l'icona",
+    "downloadHintNowSuffix": "accanto a ogni lingua nell'elenco qui sotto per avviare il download.",
+    "googleTranslateAlways": "Puoi leggere qualsiasi articolo in qualsiasi lingua con \"Leggi su Google Translate\" nella pagina dell'articolo — funziona sempre, senza bisogno di scaricare nulla.",
+    "onDeviceTranslationHint": "Se preferisci che sia il tuo dispositivo a tradurre, assicurati che la tua lingua sia disponibile nelle impostazioni iOS; il video qui sotto mostra come attivarla.",
+    "switchDeviceUnsupportedBody": "Questo dispositivo non può tradurre gli articoli di notizie in nessuna lingua, quindi l'app sta usando l'inglese. Con {{language}} gli articoli resterebbero non tradotti.",
+    "switchFailedBody": "Non è stato possibile preparare il pacchetto di traduzione per {{language}}, quindi stai ancora usando {{previous}}. Potrebbe essere ancora in fase di download — riprova tra poco.",
+    "switchFailedTitle": "Impossibile passare a {{language}}",
+    "switchTimedOutBody": "La preparazione di {{language}} sta richiedendo troppo tempo, quindi stai ancora usando {{previous}}. Il download potrebbe completarsi in background — riprova a breve.",
+    "switchUnsupportedBody": "Questa versione di iOS non può tradurre in {{language}}, quindi stai ancora usando {{previous}}.",
+    "switchingCancel": "Interrompi il cambio lingua",
+    "switchingNudge": "Il tuo dispositivo sta preparando il pacchetto di traduzione per {{language}}. Tieni aperta questa schermata finché non ha finito — se esci ora, gli articoli resteranno in inglese.",
+    "switchingTitle": "Configurazione di {{language}} in corso…",
+    "translationFailedTooltip": "Traduzione non riuscita: riapri l'app o controlla le impostazioni",
+    "translationUnavailableOnThisDevice": "Questo dispositivo non può tradurre gli articoli di notizie in {{language}}. Al loro posto viene mostrato l'inglese."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1029,7 +1042,8 @@
     "paywallRelatedOption": "Mostra copertura correlata",
     "paywallRelatedDesc": "Una storia simile da un'altra pubblicazione potrebbe non essere protetta da paywall – controlla gli articoli correlati.",
     "paywallSubscribeDesc": "Hai visitato {{publication}} {{visits}} volte questo mese – considera l'abbonamento per accesso completo.",
-    "paywallBlockOption": "Blocca {{publication}} invece"
+    "paywallBlockOption": "Blocca {{publication}} invece",
+    "tooMuchOfThis": "Lo vedo troppo spesso"
   },
   "topicPlan": {
     "title": "Argomenti che monitorerò",

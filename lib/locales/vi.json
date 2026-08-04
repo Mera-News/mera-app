@@ -228,13 +228,12 @@
     "failedToLoad": "Không thể tải bài viết",
     "articleNotFound": "Không tìm thấy bài viết",
     "offlineUnavailable": "Bạn đang ngoại tuyến và bài viết này chưa được lưu để đọc ngoại tuyến",
-    "viewOriginal": "Xem bài viết gốc",
-    "viewOriginalIn": "Xem bài viết gốc bằng {{language}}",
-    "viewAndTranslateOnDevice": "Xem bài viết & dịch trên thiết bị",
     "share": "Chia sẻ",
     "shareVia": "Chia sẻ qua {{downloadUrl}}",
     "sourceCountryGlobal": "Toàn cầu",
-    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia."
+    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia.",
+    "readOn": "Đọc trên {{publication}}",
+    "readOnGoogleTranslate": "Đọc trên Google Dịch"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -256,13 +255,11 @@
     "addedToLocations": "Đã thêm vào địa điểm của bạn"
   },
   "clusterDetail": {
-    "translatable": "Bài viết này bằng {{language}}: thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu bản dịch không hoạt động, bạn có thể mở trang web trong Google Dịch bên dưới, chỉ cần lưu ý rằng bạn sẽ duyệt web qua Google.",
-    "notTranslatable": "Bài viết này bằng {{language}}. Thiết bị của bạn không thể dịch bài viết này. Hãy dùng Google Dịch bên dưới để đọc bằng ngôn ngữ của bạn.",
-    "notTranslatableOsOutdated": "Bài viết này bằng {{language}}. Dịch trên thiết bị cần iOS {{requiredVersion}}, bạn đang dùng iOS {{currentVersion}}. Hãy cập nhật iOS, hoặc dùng Google Dịch bên dưới để đọc bằng ngôn ngữ của bạn.",
+    "translatable": "Bài viết này bằng {{language}}: thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu tính năng dịch không hoạt động, bạn có thể mở trang web bằng Google Dịch; chỉ cần lưu ý rằng bạn sẽ xem qua Google.",
+    "notTranslatable": "Bài viết này bằng {{language}}. Thiết bị của bạn không thể dịch bài viết này — hãy dùng Google Dịch để đọc bằng ngôn ngữ của bạn.",
+    "notTranslatableOsOutdated": "Bài viết này bằng {{language}}. Tính năng dịch trên thiết bị cần iOS {{requiredVersion}}: bạn đang dùng iOS {{currentVersion}}. Hãy cập nhật iOS, hoặc dùng Google Dịch để đọc bằng ngôn ngữ của bạn.",
     "unknownLanguage": "ngôn ngữ khác",
     "translationGuideLink": "Hướng dẫn tôi cách dịch bài viết",
-    "viewInGoogleTranslate": "Xem trong Google Dịch",
-    "readViaGoogleTranslate": "Đọc bằng ngôn ngữ của bạn (Google Dịch)",
     "showOriginal": "Hiển thị bản gốc",
     "showTranslation": "Hiển thị bản dịch"
   },
@@ -327,7 +324,6 @@
     "title": "Ngôn ngữ",
     "appLanguage": "Ngôn ngữ ứng dụng",
     "appLanguageDescription": "Dùng cho giao diện ứng dụng và dịch nội dung tin tức",
-    "languagePacks": "Gói ngôn ngữ",
     "languagePacksIos": "Mô hình dịch được quản lý bởi thiết bị của bạn. Bạn chỉ cần tải mô hình cho ngôn ngữ đã chọn: iOS sẽ xử lý phần còn lại.",
     "languagePacksIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng → Ngôn ngữ dịch",
     "languagePacksAndroid": "Mô hình dịch (~30MB mỗi gói) sẽ được tải tự động khi bạn dịch sang ngôn ngữ mới lần đầu.",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "Cài đặt → Cài đặt chung → Ngôn ngữ & Vùng",
     "retry": "Thử lại",
     "watchGuide": "Xem cách thêm ngôn ngữ vào thiết bị của bạn",
-    "iosLanguageHint": "Chỉ chọn ngôn ngữ này thôi là chưa đủ: bạn cũng cần chọn ngôn ngữ này trong cài đặt ngôn ngữ của iOS.",
     "managePacksPrefix": "Để quản lý các ngôn ngữ đã tải, hãy",
     "translationUnavailableTapToRetry": "Gói {{language}} có thể vẫn đang tải xuống hoặc việc tải xuống có thể đã thất bại. Hiển thị tiếng Anh — chạm để thử lại.",
     "translationUnavailableTitle": "Bản dịch không khả dụng",
-    "translationUnsupportedOnThisIos": "Phiên bản iOS của bạn không thể dịch sang {{language}}. Hiển thị tiếng Anh — cập nhật iOS sẽ bật tính năng này."
+    "translationUnsupportedOnThisIos": "Phiên bản iOS của bạn không thể dịch sang {{language}}. Hiển thị tiếng Anh — cập nhật iOS sẽ bật tính năng này.",
+    "advanced": "Nâng cao",
+    "advancedDescription": "Dịch trên thiết bị. Không bắt buộc — mọi thứ ở trên vẫn hoạt động mà không cần đến nó.",
+    "downloadHintBeforePrefix": "Sau khi bạn chọn một ngôn ngữ, iOS có thể sẽ yêu cầu bạn tải ngôn ngữ đó xuống. Hãy nhấn vào",
+    "downloadHintBeforeSuffix": "bên cạnh mỗi ngôn ngữ trong bảng đó — sẽ không có gì được tải xuống cho tới khi bạn làm vậy.",
+    "downloadHintNowPrefix": "Nhấn vào",
+    "downloadHintNowSuffix": "bên cạnh mỗi ngôn ngữ trong bảng bên dưới để bắt đầu tải xuống.",
+    "googleTranslateAlways": "Bạn có thể đọc bất kỳ bài viết nào bằng bất kỳ ngôn ngữ nào bằng cách nhấn \"Đọc trên Google Dịch\" trên trang bài viết — cách này luôn hoạt động và không cần tải gì cả.",
+    "onDeviceTranslationHint": "Nếu bạn muốn thiết bị tự dịch, hãy đảm bảo ngôn ngữ của bạn có sẵn trong cài đặt iOS; video bên dưới sẽ hướng dẫn cách bật tính năng này.",
+    "switchDeviceUnsupportedBody": "Thiết bị này không thể dịch bài viết tin tức sang bất kỳ ngôn ngữ nào, vì vậy ứng dụng đang dùng tiếng Anh. Nếu chọn {{language}}, các bài viết sẽ không được dịch.",
+    "switchFailedBody": "Không thể chuẩn bị gói dịch {{language}}, vì vậy bạn vẫn đang dùng {{previous}}. Gói này có thể vẫn đang tải xuống — hãy thử lại sau một lát.",
+    "switchFailedTitle": "Không thể chuyển sang {{language}}",
+    "switchTimedOutBody": "Việc chuẩn bị {{language}} đang mất quá nhiều thời gian, vì vậy bạn vẫn đang dùng {{previous}}. Quá trình tải xuống có thể vẫn đang hoàn tất ở chế độ nền — hãy thử lại sau ít phút.",
+    "switchUnsupportedBody": "Phiên bản iOS này không thể dịch sang {{language}}, vì vậy bạn vẫn đang dùng {{previous}}.",
+    "switchingCancel": "Dừng chuyển ngôn ngữ",
+    "switchingNudge": "Thiết bị của bạn đang chuẩn bị gói dịch {{language}}. Vui lòng giữ màn hình này mở cho đến khi hoàn tất — nếu bạn rời đi bây giờ, các bài viết tin tức sẽ vẫn hiển thị bằng tiếng Anh.",
+    "switchingTitle": "Đang thiết lập {{language}}…",
+    "translationFailedTooltip": "Dịch không thành công, vui lòng mở lại ứng dụng hoặc kiểm tra cài đặt của bạn",
+    "translationUnavailableOnThisDevice": "Thiết bị này không thể dịch bài viết tin tức sang {{language}}. Đang hiển thị bằng tiếng Anh thay thế."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1030,7 +1043,8 @@
     "paywallRelatedOption": "Hiển thị tin bao phủ liên quan",
     "paywallRelatedDesc": "Một câu chuyện tương tự từ một ấn phẩm khác có thể không có tường lửa thanh toán — hãy kiểm tra các bài viết liên quan.",
     "paywallSubscribeDesc": "Bạn đã truy cập {{publication}} {{visits}} lần tháng này — hãy cân nhắc đăng ký để có quyền truy cập đầy đủ.",
-    "paywallBlockOption": "Chặn {{publication}} thay vào đó"
+    "paywallBlockOption": "Chặn {{publication}} thay vào đó",
+    "tooMuchOfThis": "Tôi đang thấy quá nhiều nội dung kiểu này"
   },
   "topicPlan": {
     "title": "Chủ đề mình sẽ theo dõi",

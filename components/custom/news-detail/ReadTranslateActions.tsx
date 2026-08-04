@@ -13,11 +13,17 @@ import { useTranslation } from 'react-i18next';
 
 /** White — the neutral "just open the page as published" action. */
 const VIEW_ORIGINAL_COLOR = '#FFFFFF';
-/** The app's green — same token `CardActionBar` uses for a registered verdict. */
-const GREEN_COLOR = '#22C55E';
-/** Icon/label colour ON a green-filled button. White on #22C55E is ~2.2:1, so
- *  filled buttons flip to near-black instead. */
-const ON_GREEN_COLOR = '#052E16';
+/** A softer green than the app's `#22C55E`, on the user's ask for something
+ *  "Apple might use". `green-400` is lighter and less saturated, which on a dark
+ *  backdrop reads as a tint rather than a slab of colour. */
+const GREEN_COLOR = '#4ADE80';
+/** The FILL behind an emphasised button — the same green at 20%, not solid.
+ *  This is Apple's tinted-button idiom and the reason the label no longer needs
+ *  to flip to near-black: a 20% wash over a dark backdrop leaves the green text
+ *  well clear of contrast limits, where white on solid `#22C55E` was ~2.2:1.
+ *  MUST stay in lockstep with GREEN_COLOR and with the `bg-green-400/20` class
+ *  beside it. */
+const GREEN_TINT_FILL = 'rgba(74, 222, 128, 0.2)';
 
 /**
  * Title-case a publisher name WITHOUT destroying acronyms: only words that are
@@ -107,11 +113,9 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     // option when the device can translate on its own.
     const sameLanguage = support.status === 'same-language';
     const googleFilled = !sameLanguage;
-    const publisherColor = sameLanguage
-        ? ON_GREEN_COLOR
-        : support.status === 'translatable'
-            ? GREEN_COLOR
-            : VIEW_ORIGINAL_COLOR;
+    const publisherColor = sameLanguage || support.status === 'translatable'
+        ? GREEN_COLOR
+        : VIEW_ORIGINAL_COLOR;
 
     // Every colour is expressed TWICE — as a Tailwind class AND as the matching
     // inline style. Gluestack's `buttonTextStyle` tva sets a label colour of its
@@ -119,20 +123,25 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     // className/style wins the merge differs between the Pressable root and the
     // Text; stating both means the outcome is the same colour either way.
     // The class/hex pairs are Tailwind defaults (this config overrides no
-    // greens): green-500 = #22C55E, green-950 = #052E16.
+    // greens): green-400 = #4ADE80, and `/20` is the 20% tint above.
+    //
+    // Emphasis is now TINT vs OUTLINE rather than SOLID vs OUTLINE. The three
+    // states stay distinguishable — tinted+bordered, bordered, bordered-white —
+    // and the label is green in both green states instead of flipping to
+    // near-black on the filled one.
     const googleFillClass = googleFilled
-        ? 'bg-green-500 border-green-500'
+        ? 'bg-green-400/20 border-green-400'
         : 'border-white';
-    const googleLabelClass = googleFilled ? 'text-green-950' : 'text-white';
+    const googleLabelClass = googleFilled ? 'text-green-400' : 'text-white';
     const publisherFillClass = sameLanguage
-        ? 'bg-green-500 border-green-500'
+        ? 'bg-green-400/20 border-green-400'
         : support.status === 'translatable'
-            ? 'border-green-500'
+            ? 'border-green-400'
             : 'border-white';
     const publisherLabelClass = sameLanguage
-        ? 'text-green-950'
+        ? 'text-green-400'
         : support.status === 'translatable'
-            ? 'text-green-500'
+            ? 'text-green-400'
             : 'text-white';
 
     return (
@@ -157,7 +166,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     width: '75%',
                     alignSelf: 'center',
                     borderWidth: 1,
-                    backgroundColor: googleFilled ? GREEN_COLOR : 'transparent',
+                    backgroundColor: googleFilled ? GREEN_TINT_FILL : 'transparent',
                     borderColor: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
                 }}
                 onPress={() => openInAppBrowser(googleTranslateUrl)}
@@ -167,7 +176,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                         <MaterialIcons
                             name="g-translate"
                             size={16}
-                            color={googleFilled ? ON_GREEN_COLOR : VIEW_ORIGINAL_COLOR}
+                            color={googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR}
                         />
                     )}
                 />
@@ -177,7 +186,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     className={`ml-2 ${googleLabelClass}`}
                     style={{
                         flexShrink: 1,
-                        color: googleFilled ? ON_GREEN_COLOR : VIEW_ORIGINAL_COLOR,
+                        color: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
                     }}
                 >
                     {t('articleDetail.readOnGoogleTranslate')}
@@ -202,7 +211,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 className={`rounded-full ${publisherFillClass}`}
                 style={{
                     borderWidth: 1,
-                    backgroundColor: sameLanguage ? GREEN_COLOR : 'transparent',
+                    backgroundColor: sameLanguage ? GREEN_TINT_FILL : 'transparent',
                     borderColor: sameLanguage ? GREEN_COLOR : publisherColor,
                 }}
                 onPress={() => onOpenUrl(articleUrl)}

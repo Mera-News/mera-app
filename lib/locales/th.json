@@ -228,13 +228,12 @@
     "failedToLoad": "โหลดบทความไม่สำเร็จ",
     "articleNotFound": "ไม่พบบทความ",
     "offlineUnavailable": "คุณออฟไลน์และบทความนี้ไม่ได้บันทึกไว้สำหรับการอ่านออฟไลน์",
-    "viewOriginal": "ดูบทความต้นฉบับ",
-    "viewOriginalIn": "ดูบทความต้นฉบับในภาษา {{language}}",
-    "viewAndTranslateOnDevice": "ดูบทความและแปลบนอุปกรณ์",
     "share": "แชร์",
     "shareVia": "แชร์ผ่าน {{downloadUrl}}",
     "sourceCountryGlobal": "ทั่วโลก",
-    "sourceCountryA11y": "ประเทศต้นทาง: {{country}} แตะเพื่อแสดงชื่อประเทศ"
+    "sourceCountryA11y": "ประเทศต้นทาง: {{country}} แตะเพื่อแสดงชื่อประเทศ",
+    "readOn": "อ่านบน {{publication}}",
+    "readOnGoogleTranslate": "อ่านบน Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "โหลดรายละเอียดกลุ่มข่าวไม่สำเร็จ",
@@ -256,13 +255,11 @@
     "addedToLocations": "เพิ่มไปยังสถานที่ของคุณแล้ว"
   },
   "clusterDetail": {
-    "translatable": "บทความนี้อยู่ในภาษา {{language}} อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน หากการแปลไม่ทำงาน คุณสามารถเปิดเว็บไซต์ใน Google แปลภาษาด้านล่างได้; เพียงแต่โปรดทราบว่าคุณจะเรียกดูผ่าน Google",
-    "notTranslatable": "บทความนี้อยู่ในภาษา {{language}} อุปกรณ์ของคุณไม่สามารถแปลได้ ใช้ Google แปลภาษาด้านล่างเพื่ออ่านเป็นภาษาของคุณ",
-    "notTranslatableOsOutdated": "บทความนี้อยู่ในภาษา {{language}} การแปลบนอุปกรณ์ต้องใช้ iOS {{requiredVersion}} คุณกำลังใช้ iOS {{currentVersion}} โปรดอัปเดต iOS หรือใช้ Google แปลภาษาด้านล่างเพื่ออ่านเป็นภาษาของคุณ",
+    "translatable": "บทความนี้เป็นภาษา {{language}}: อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน หากการแปลไม่ทำงาน คุณสามารถเปิดเว็บไซต์ใน Google Translate ได้ เพียงแต่ควรทราบว่าคุณจะกำลังเข้าชมผ่าน Google",
+    "notTranslatable": "บทความนี้เป็นภาษา {{language}} อุปกรณ์ของคุณไม่สามารถแปลได้ — ใช้ Google Translate เพื่ออ่านเป็นภาษาของคุณ",
+    "notTranslatableOsOutdated": "บทความนี้เป็นภาษา {{language}} การแปลบนอุปกรณ์ต้องใช้ iOS {{requiredVersion}} แต่คุณใช้ iOS {{currentVersion}} อยู่ กรุณาอัปเดต iOS หรือใช้ Google Translate เพื่ออ่านเป็นภาษาของคุณ",
     "unknownLanguage": "ภาษาอื่น",
     "translationGuideLink": "แสดงวิธีแปลบทความ",
-    "viewInGoogleTranslate": "ดูใน Google แปลภาษา",
-    "readViaGoogleTranslate": "อ่านเป็นภาษาของคุณ (Google แปลภาษา)",
     "showOriginal": "แสดงต้นฉบับ",
     "showTranslation": "แสดงคำแปล"
   },
@@ -327,7 +324,6 @@
     "title": "ภาษา",
     "appLanguage": "ภาษาแอป",
     "appLanguageDescription": "ใช้สำหรับอินเทอร์เฟซแอปและการแปลเนื้อหาข่าว",
-    "languagePacks": "แพ็กภาษา",
     "languagePacksIos": "โมเดลการแปลจะถูกจัดการโดยอุปกรณ์ของคุณ คุณเพียงแค่ต้องดาวน์โหลดโมเดลสำหรับภาษาที่เลือก iOS จะจัดการส่วนที่เหลือ",
     "languagePacksIosPath": "การตั้งค่า → ทั่วไป → ภาษาและภูมิภาค → ภาษาการแปล",
     "languagePacksAndroid": "โมเดลการแปล (~30MB ต่อโมเดล) จะถูกดาวน์โหลดโดยอัตโนมัติเมื่อคุณแปลเป็นภาษาใหม่ครั้งแรก",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "การตั้งค่า → ทั่วไป → ภาษาและภูมิภาค",
     "retry": "ลองใหม่",
     "watchGuide": "ดูวิธีเพิ่มภาษาลงในอุปกรณ์ของคุณ",
-    "iosLanguageHint": "การเลือกภาษานี้เพียงอย่างเดียวไม่เพียงพอ คุณต้องเลือกภาษานี้ในการตั้งค่าภาษาของ iOS ด้วย",
     "managePacksPrefix": "เพื่อจัดการภาษาที่ดาวน์โหลด ไปที่",
     "translationUnavailableTapToRetry": "แพ็กเกจสำหรับ {{language}} อาจยังดาวน์โหลดอยู่ หรือการดาวน์โหลดอาจล้มเหลว แสดง English — แตะเพื่อลองใหม่",
     "translationUnavailableTitle": "การแปลภาษาไม่พร้อมใช้งาน",
-    "translationUnsupportedOnThisIos": "เวอร์ชัน iOS ของคุณไม่สามารถแปลเป็น {{language}} ได้ แสดง English — อัปเดต iOS จะเปิดใช้งานได้"
+    "translationUnsupportedOnThisIos": "เวอร์ชัน iOS ของคุณไม่สามารถแปลเป็น {{language}} ได้ แสดง English — อัปเดต iOS จะเปิดใช้งานได้",
+    "advanced": "ขั้นสูง",
+    "advancedDescription": "การแปลบนอุปกรณ์ ไม่บังคับ — ทุกอย่างด้านบนทำงานได้โดยไม่ต้องใช้ฟีเจอร์นี้",
+    "downloadHintBeforePrefix": "หลังจากที่คุณเลือกภาษา iOS อาจขอให้คุณดาวน์โหลดภาษานั้น แตะที่",
+    "downloadHintBeforeSuffix": "ที่อยู่ข้างแต่ละภาษาในหน้าต่างนั้น จะไม่มีการดาวน์โหลดใด ๆ จนกว่าคุณจะแตะ",
+    "downloadHintNowPrefix": "แตะที่",
+    "downloadHintNowSuffix": "ที่อยู่ข้างแต่ละภาษาในหน้าต่างด้านล่างเพื่อเริ่มดาวน์โหลด",
+    "googleTranslateAlways": "คุณสามารถอ่านบทความใดก็ได้ในภาษาใดก็ได้ด้วยตัวเลือก \"อ่านบน Google Translate\" ในหน้าบทความ ซึ่งใช้งานได้เสมอโดยไม่ต้องดาวน์โหลดอะไรเลย",
+    "onDeviceTranslationHint": "หากคุณต้องการให้อุปกรณ์เป็นผู้แปลแทน โปรดตรวจสอบว่าภาษาของคุณมีอยู่ในการตั้งค่า iOS วิดีโอด้านล่างนี้แสดงวิธีเปิดใช้งาน",
+    "switchDeviceUnsupportedBody": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็นภาษาใดได้เลย แอปจึงใช้ภาษาอังกฤษแทน หากเลือก {{language}} บทความจะไม่ถูกแปล",
+    "switchFailedBody": "ไม่สามารถเตรียมชุดข้อมูลแปลภาษา {{language}} ได้ คุณจึงยังคงใช้ {{previous}} อยู่ อาจกำลังดาวน์โหลดอยู่ — ลองใหม่อีกครั้งในอีกสักครู่",
+    "switchFailedTitle": "สลับไปใช้ {{language}} ไม่สำเร็จ",
+    "switchTimedOutBody": "การเตรียมภาษา {{language}} ใช้เวลานานเกินไป คุณจึงยังคงใช้ {{previous}} อยู่ การดาวน์โหลดอาจเสร็จสิ้นในเบื้องหลัง — ลองใหม่อีกครั้งในอีกสักครู่",
+    "switchUnsupportedBody": "iOS เวอร์ชันนี้ไม่สามารถแปลเป็น {{language}} ได้ คุณจึงยังคงใช้ {{previous}} อยู่",
+    "switchingCancel": "หยุดการสลับภาษา",
+    "switchingNudge": "อุปกรณ์ของคุณกำลังเตรียมชุดข้อมูลแปลภาษา {{language}} กรุณาเปิดหน้าจอนี้ค้างไว้จนกว่าจะเสร็จ หากออกตอนนี้ บทความข่าวจะยังคงเป็นภาษาอังกฤษต่อไป",
+    "switchingTitle": "กำลังตั้งค่า {{language}}…",
+    "translationFailedTooltip": "การแปลล้มเหลว กรุณาเปิดแอปใหม่หรือตรวจสอบการตั้งค่าของคุณ",
+    "translationUnavailableOnThisDevice": "อุปกรณ์นี้ไม่สามารถแปลบทความข่าวเป็น {{language}} ได้ จึงแสดงเป็นภาษาอังกฤษแทน"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1029,7 +1042,8 @@
     "paywallRelatedOption": "แสดงข่าวที่เกี่ยวข้อง",
     "paywallRelatedDesc": "เรื่องราวที่คล้ายกันจากสำนักพิมพ์อื่นอาจไม่มีเพย์วอลล์ — ลองดูบทความที่เกี่ยวข้อง",
     "paywallSubscribeDesc": "คุณไปที่ {{publication}} {{visits}} ครั้งในเดือนนี้ — ลองพิจารณาสมัครสมาชิกเพื่อเข้าถึงเต็มที่",
-    "paywallBlockOption": "บล็อก {{publication}} แทน"
+    "paywallBlockOption": "บล็อก {{publication}} แทน",
+    "tooMuchOfThis": "เห็นเนื้อหาแบบนี้บ่อยเกินไป"
   },
   "topicPlan": {
     "title": "หัวข้อที่ฉันจะติดตาม",

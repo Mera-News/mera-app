@@ -228,13 +228,12 @@
     "failedToLoad": "기사를 불러오지 못했습니다",
     "articleNotFound": "기사를 찾을 수 없습니다",
     "offlineUnavailable": "오프라인 상태입니다. 이 기사는 오프라인 읽기를 위해 저장되지 않았습니다",
-    "viewOriginal": "원본 기사 보기",
-    "viewOriginalIn": "{{language}}로 원본 기사 보기",
-    "viewAndTranslateOnDevice": "기사를 보고 기기에서 번역하기",
     "share": "공유",
     "shareVia": "{{downloadUrl}}를 통해 공유됨",
     "sourceCountryGlobal": "글로벌",
-    "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가 이름이 표시됩니다."
+    "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가 이름이 표시됩니다.",
+    "readOn": "{{publication}}에서 읽기",
+    "readOnGoogleTranslate": "구글 번역으로 읽기"
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -256,13 +255,11 @@
     "addedToLocations": "내 장소에 추가됨"
   },
   "clusterDetail": {
-    "translatable": "이 기사는 {{language}}로 작성되었습니다: 읽는 동안 기기에서 번역할 수 있습니다. 번역이 작동하지 않으면 아래의 Google 번역에서 사이트를 열 수 있습니다. 이 경우 Google을 통해 열람하게 된다는 점을 참고하세요.",
-    "notTranslatable": "이 기사는 {{language}}로 작성되었습니다. 기기에서 번역할 수 없습니다. 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
-    "notTranslatableOsOutdated": "이 기사는 {{language}}로 작성되었습니다. 기기 내 번역에는 iOS {{requiredVersion}}이 필요합니다. 현재 iOS {{currentVersion}}을 사용 중입니다. iOS를 업데이트하거나, 아래의 Google 번역을 사용하여 원하는 언어로 읽어보세요.",
+    "translatable": "이 기사는 {{language}}(으)로 작성되었어요. 읽는 동안 기기가 번역해 줄 수 있어요. 번역이 안 되면 구글 번역으로 사이트를 열 수 있어요. 이 경우 구글을 통해 열람하게 된다는 점만 참고하세요.",
+    "notTranslatable": "이 기사는 {{language}}(으)로 작성되었어요. 이 기기는 번역할 수 없으니 구글 번역을 이용해 내 언어로 읽어 보세요.",
+    "notTranslatableOsOutdated": "이 기사는 {{language}}(으)로 작성되었어요. 기기 내 번역에는 iOS {{requiredVersion}}이(가) 필요한데, 현재 iOS {{currentVersion}}을(를) 사용 중이에요. iOS를 업데이트하거나 구글 번역을 이용해 내 언어로 읽어 보세요.",
     "unknownLanguage": "다른 언어",
     "translationGuideLink": "기사 번역 방법 알아보기",
-    "viewInGoogleTranslate": "Google 번역에서 보기",
-    "readViaGoogleTranslate": "내 언어로 읽기 (Google 번역)",
     "showOriginal": "원문 보기",
     "showTranslation": "번역 보기"
   },
@@ -327,7 +324,6 @@
     "title": "언어",
     "appLanguage": "앱 언어",
     "appLanguageDescription": "앱 인터페이스 및 뉴스 콘텐츠 번역에 사용됩니다",
-    "languagePacks": "언어 팩",
     "languagePacksIos": "번역 모델은 기기에서 관리됩니다. 선택한 언어의 모델만 다운로드하면 되며, 나머지는 iOS가 처리합니다.",
     "languagePacksIosPath": "설정 → 일반 → 언어 및 지역 → 번역 언어",
     "languagePacksAndroid": "번역 모델(각 약 30MB)은 새 언어로 처음 번역할 때 자동으로 다운로드됩니다.",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "설정 → 일반 → 언어 및 지역",
     "retry": "재시도",
     "watchGuide": "기기에 언어를 추가하는 방법 보기",
-    "iosLanguageHint": "이 언어를 선택하는 것만으로는 충분하지 않습니다. iOS 언어 설정에서도 이 언어를 선택해야 합니다.",
     "managePacksPrefix": "다운로드한 언어를 관리하려면 다음으로 이동하세요",
     "translationUnavailableTapToRetry": "{{language}} 언어 팩이 아직 다운로드 중이거나 다운로드가 실패했을 수 있습니다. 현재 영어를 표시하고 있습니다 — 다시 시도하려면 탭하세요.",
     "translationUnavailableTitle": "번역을 사용할 수 없습니다",
-    "translationUnsupportedOnThisIos": "사용 중인 iOS 버전은 {{language}}(으)로 번역할 수 없습니다. 대신 영어를 표시하고 있습니다 — iOS를 업데이트하면 가능해집니다."
+    "translationUnsupportedOnThisIos": "사용 중인 iOS 버전은 {{language}}(으)로 번역할 수 없습니다. 대신 영어를 표시하고 있습니다 — iOS를 업데이트하면 가능해집니다.",
+    "advanced": "고급",
+    "advancedDescription": "기기 내 번역 기능이에요. 선택 사항이라 위 기능은 모두 이것 없이도 작동해요.",
+    "downloadHintBeforePrefix": "언어를 선택하면 iOS가 다운로드할지 물어볼 수 있어요. 그 목록에서 각 언어 옆에 있는",
+    "downloadHintBeforeSuffix": "아이콘을 누르세요 — 누르기 전까지는 아무것도 다운로드되지 않아요.",
+    "downloadHintNowPrefix": "아래 목록에서 각 언어 옆에 있는",
+    "downloadHintNowSuffix": "아이콘을 눌러 다운로드를 시작하세요.",
+    "googleTranslateAlways": "기사 페이지의 \"구글 번역으로 읽기\"를 이용하면 어떤 언어의 기사든 읽을 수 있어요 — 다운로드할 필요 없이 언제나 작동해요.",
+    "onDeviceTranslationHint": "기기가 직접 번역하길 원한다면 iOS 설정에서 해당 언어를 사용할 수 있는지 확인하세요. 아래 영상에서 활성화하는 방법을 보여드려요.",
+    "switchDeviceUnsupportedBody": "이 기기는 어떤 언어로도 뉴스 기사를 번역할 수 없어서 앱이 영어를 사용하고 있어요. {{language}}(으)로 설정하면 기사가 번역되지 않은 채로 남아요.",
+    "switchFailedBody": "{{language}} 번역 팩을 준비하지 못해서 계속 {{previous}}을(를) 사용하고 있어요. 아직 다운로드 중일 수 있으니 잠시 후 다시 시도해 주세요.",
+    "switchFailedTitle": "{{language}}(으)로 전환하지 못했어요",
+    "switchTimedOutBody": "{{language}} 준비가 너무 오래 걸려서 계속 {{previous}}을(를) 사용하고 있어요. 백그라운드에서 다운로드가 곧 끝날 수 있으니 잠시 후 다시 시도해 주세요.",
+    "switchUnsupportedBody": "이 iOS 버전은 {{language}}(으)로 번역할 수 없어서 계속 {{previous}}을(를) 사용하고 있어요.",
+    "switchingCancel": "언어 전환 중단",
+    "switchingNudge": "잠시만 기다려 주세요. 기기가 {{language}} 번역 팩을 준비하고 있어요. 완료될 때까지 이 화면을 벗어나지 마세요 — 지금 나가면 기사가 영어로만 보여요.",
+    "switchingTitle": "{{language}} 설정 중…",
+    "translationFailedTooltip": "번역에 실패했어요. 앱을 다시 열거나 설정을 확인해 주세요",
+    "translationUnavailableOnThisDevice": "이 기기는 뉴스 기사를 {{language}}(으)로 번역할 수 없어요. 대신 영어로 보여드려요."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1029,7 +1042,8 @@
     "paywallRelatedOption": "관련 보도 표시",
     "paywallRelatedDesc": "다른 출판사의 유사 기사가 있을 수 있으며 유료화가 아닐 수 있습니다 — 관련 기사를 확인해 보세요.",
     "paywallSubscribeDesc": "이번 달에 {{publication}}을(를) {{visits}}회 방문했습니다 — 전체 액세스를 위해 구독을 고려해 보세요.",
-    "paywallBlockOption": "대신 {{publication}} 차단"
+    "paywallBlockOption": "대신 {{publication}} 차단",
+    "tooMuchOfThis": "이 주제가 너무 자주 보여요"
   },
   "topicPlan": {
     "title": "추적할 토픽",

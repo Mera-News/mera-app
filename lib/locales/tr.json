@@ -228,13 +228,12 @@
     "failedToLoad": "Makale yüklenemedi",
     "articleNotFound": "Makale bulunamadı",
     "offlineUnavailable": "Çevrimdışısın ve bu makale çevrimdışı okuma için kaydedilmemiş",
-    "viewOriginal": "Orijinal makaleyi görüntüle",
-    "viewOriginalIn": "Orijinal makaleyi {{language}} dilinde görüntüle",
-    "viewAndTranslateOnDevice": "Makaleyi görüntüle ve cihazda çevir",
     "share": "Paylaş",
     "shareVia": "{{downloadUrl}} üzerinden paylaşıldı",
     "sourceCountryGlobal": "Dünya Geneli",
-    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun."
+    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun.",
+    "readOn": "{{publication}}'da Oku",
+    "readOnGoogleTranslate": "Google Translate'de Oku"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -256,13 +255,11 @@
     "addedToLocations": "Yerlerine eklendi"
   },
   "clusterDetail": {
-    "translatable": "Bu makale {{language}} dilinde: okurken cihazın çevirebilir. Çeviri çalışmazsa aşağıdaki Google Çeviri'de siteyi açabilirsin, sadece Google üzerinden gezindiğini unutma.",
-    "notTranslatable": "Bu makale {{language}} dilinde. Cihazın bunu çeviremiyor. Kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
-    "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor, sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle veya kendi dilinde okumak için aşağıdaki Google Çeviri'yi kullan.",
+    "translatable": "Bu makale {{language}} dilinde: okurken cihazın onu çevirebilir. Çeviri çalışmazsa siteyi Google Translate'de açabilirsin; ama o zaman siteyi Google üzerinden görüntülediğini unutma.",
+    "notTranslatable": "Bu makale {{language}} dilinde. Cihazın onu çeviremiyor — kendi dilinde okumak için Google Translate'i kullan.",
+    "notTranslatableOsOutdated": "Bu makale {{language}} dilinde. Cihaz üzerinde çeviri için iOS {{requiredVersion}} gerekiyor: sen iOS {{currentVersion}} kullanıyorsun. iOS'u güncelle ya da kendi dilinde okumak için Google Translate'i kullan.",
     "unknownLanguage": "başka bir dil",
     "translationGuideLink": "Makaleyi nasıl çevireceğimi göster",
-    "viewInGoogleTranslate": "Google Çeviri'de görüntüle",
-    "readViaGoogleTranslate": "Kendi dilinde oku (Google Çeviri)",
     "showOriginal": "Orijinali göster",
     "showTranslation": "Çeviriyi göster"
   },
@@ -327,7 +324,6 @@
     "title": "Dil",
     "appLanguage": "Uygulama Dili",
     "appLanguageDescription": "Uygulama arayüzü ve haber içeriğinin çevrilmesi için kullanılır",
-    "languagePacks": "Dil Paketleri",
     "languagePacksIos": "Çeviri modelleri cihazın tarafından yönetilir. Yalnızca seçtiğin dil için modeli indirmen yeterli: gerisini iOS halleder.",
     "languagePacksIosPath": "Ayarlar → Genel → Dil ve Bölge → Çeviri Dilleri",
     "languagePacksAndroid": "Çeviri modelleri (~30MB her biri) yeni bir dile ilk çeviriyi yaptığında otomatik olarak indirilir.",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "Ayarlar → Genel → Dil ve Bölge",
     "retry": "Tekrar Dene",
     "watchGuide": "Cihazınıza dil eklemeyi izleyin",
-    "iosLanguageHint": "Yalnızca bu dili seçmek yeterli değildir: bu dili iOS dil ayarlarında da seçmeniz gerekir.",
     "managePacksPrefix": "İndirilen dilleri yönetmek için git",
     "translationUnavailableTapToRetry": "{{language}} dil paketi hala indiriliyordur veya indirme başarısız olabilir. İngilizce gösteriliyor — tekrar denemek için dokunun.",
     "translationUnavailableTitle": "Çeviri kullanılamıyor",
-    "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviremiyor. İngilizce gösteriliyor — iOS'u güncellemek bunu etkinleştirecektir."
+    "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviremiyor. İngilizce gösteriliyor — iOS'u güncellemek bunu etkinleştirecektir.",
+    "advanced": "Gelişmiş",
+    "advancedDescription": "Cihaz üzerinde çeviri. İsteğe bağlı — yukarıdakilerin tümü onsuz da çalışır.",
+    "downloadHintBeforePrefix": "Bir dil seçtiğinde iOS onu indirmeni isteyebilir. O listede her dilin yanındaki",
+    "downloadHintBeforeSuffix": "simgesine dokun — sen dokunana kadar hiçbir şey inmez.",
+    "downloadHintNowPrefix": "İndirmeyi başlatmak için aşağıdaki listede her dilin yanındaki",
+    "downloadHintNowSuffix": "simgesine dokun.",
+    "googleTranslateAlways": "Herhangi bir makaleyi herhangi bir dilde okumak için makale sayfasındaki \"Google Translate'de Oku\" seçeneğini kullanabilirsin — bu her zaman çalışır, indirmen gereken hiçbir şey yok.",
+    "onDeviceTranslationHint": "Çeviriyi cihazının yapmasını istiyorsan dilinin iOS ayarlarında bulunduğundan emin ol; aşağıdaki video bunu nasıl açacağını gösteriyor.",
+    "switchDeviceUnsupportedBody": "Bu cihaz haber makalelerini hiçbir dile çeviremiyor, bu yüzden uygulama İngilizce kullanıyor. {{language}} makaleleri çevrilmeden bırakır.",
+    "switchFailedBody": "{{language}} çeviri paketi hazırlanamadı, bu yüzden hâlâ {{previous}} dilini kullanıyorsun. Hâlâ indiriliyor olabilir — birazdan tekrar dene.",
+    "switchFailedTitle": "{{language}} diline geçilemedi",
+    "switchTimedOutBody": "{{language}} dilinin hazırlanması çok uzun sürüyor, bu yüzden hâlâ {{previous}} dilini kullanıyorsun. İndirme arka planda tamamlanabilir — kısa süre sonra tekrar dene.",
+    "switchUnsupportedBody": "iOS'un bu sürümü {{language}} diline çeviri yapamıyor, bu yüzden hâlâ {{previous}} dilini kullanıyorsun.",
+    "switchingCancel": "Dil değiştirmeyi durdur",
+    "switchingNudge": "Cihazın {{language}} çeviri paketini hazırlıyor. Lütfen işlem bitene kadar bu ekranı açık tut — şimdi ayrılırsan haberler İngilizce kalmaya devam eder.",
+    "switchingTitle": "{{language}} dili ayarlanıyor…",
+    "translationFailedTooltip": "Çeviri başarısız oldu, lütfen uygulamayı yeniden aç ya da ayarlarını kontrol et.",
+    "translationUnavailableOnThisDevice": "Bu cihaz haber makalelerini {{language}} diline çeviremiyor. Bunun yerine İngilizce gösteriliyor."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1031,7 +1044,8 @@
     "paywallRelatedOption": "İlgili Haberleri Göster",
     "paywallRelatedDesc": "Başka bir yayından benzer bir haber ödeme duvarı arkasında olmayabilir — ilgili makaleleri kontrol et.",
     "paywallSubscribeDesc": "{{publication}}'i bu ay {{visits}} kez ziyaret ettin — tam erişim için abone olmayı düşün.",
-    "paywallBlockOption": "Bunun yerine {{publication}}'i Engelle"
+    "paywallBlockOption": "Bunun yerine {{publication}}'i Engelle",
+    "tooMuchOfThis": "Bunu çok sık görüyorum"
   },
   "topicPlan": {
     "title": "Takip edeceğim konular",

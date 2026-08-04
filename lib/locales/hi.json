@@ -228,13 +228,12 @@
     "failedToLoad": "लेख लोड करने में विफल",
     "articleNotFound": "लेख नहीं मिला",
     "offlineUnavailable": "आप ऑफ़लाइन हैं और यह लेख ऑफ़लाइन पढ़ने के लिए सहेजा नहीं गया है",
-    "viewOriginal": "मूल लेख देखें",
-    "viewOriginalIn": "{{language}} में मूल लेख देखें",
-    "viewAndTranslateOnDevice": "लेख देखें और डिवाइस पर अनुवाद करें",
     "share": "साझा करें",
     "shareVia": "{{downloadUrl}} के ज़रिए साझा किया गया",
     "sourceCountryGlobal": "वैश्विक",
-    "sourceCountryA11y": "स्रोत देश: {{country}}। देश का नाम दिखाने के लिए टैप करें।"
+    "sourceCountryA11y": "स्रोत देश: {{country}}। देश का नाम दिखाने के लिए टैप करें।",
+    "readOn": "{{publication}} पर पढ़ें",
+    "readOnGoogleTranslate": "Google Translate पर पढ़ें"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",
@@ -256,13 +255,11 @@
     "addedToLocations": "आपकी जगहों में जोड़ा गया"
   },
   "clusterDetail": {
-    "translatable": "यह लेख {{language}} में है: पढ़ते समय आपका डिवाइस इसे अनुवादित कर सकता है। अगर अनुवाद काम न करे, तो आप नीचे दी गई साइट को Google अनुवाद में खोल सकते हैं। बस ध्यान रखें कि आप इसे Google के ज़रिए ब्राउज़ कर रहे होंगे।",
-    "notTranslatable": "यह लेख {{language}} में है। आपका डिवाइस इसे अनुवादित नहीं कर सकता। इसे अपनी भाषा में पढ़ने के लिए नीचे Google अनुवाद का उपयोग करें।",
-    "notTranslatableOsOutdated": "यह लेख {{language}} में है। ऑन-डिवाइस अनुवाद के लिए iOS {{requiredVersion}} ज़रूरी है। आप iOS {{currentVersion}} पर हैं। iOS अपडेट करें, या इसे अपनी भाषा में पढ़ने के लिए नीचे Google अनुवाद का उपयोग करें।",
+    "translatable": "यह लेख {{language}} में है: आपका डिवाइस पढ़ते समय इसका अनुवाद कर सकता है। अगर अनुवाद काम न करे, तो आप साइट को Google Translate में खोल सकते हैं; बस ध्यान रखें कि तब आप उसे Google के ज़रिए ब्राउज़ कर रहे होंगे।",
+    "notTranslatable": "यह लेख {{language}} में है। आपका डिवाइस इसका अनुवाद नहीं कर सकता — अपनी भाषा में पढ़ने के लिए Google Translate का इस्तेमाल करें।",
+    "notTranslatableOsOutdated": "यह लेख {{language}} में है। डिवाइस पर अनुवाद के लिए iOS {{requiredVersion}} चाहिए: आप iOS {{currentVersion}} पर हैं। iOS अपडेट करें, या अपनी भाषा में पढ़ने के लिए Google Translate का इस्तेमाल करें।",
     "unknownLanguage": "कोई अन्य भाषा",
     "translationGuideLink": "मुझे लेख अनुवाद करने का तरीका बताएं",
-    "viewInGoogleTranslate": "Google अनुवाद में देखें",
-    "readViaGoogleTranslate": "अपनी भाषा में पढ़ें (Google अनुवाद)",
     "showOriginal": "मूल दिखाएं",
     "showTranslation": "अनुवाद दिखाएं"
   },
@@ -327,7 +324,6 @@
     "title": "भाषा",
     "appLanguage": "ऐप भाषा",
     "appLanguageDescription": "ऐप इंटरफ़ेस और समाचार सामग्री के अनुवाद के लिए उपयोग की जाती है",
-    "languagePacks": "भाषा पैक",
     "languagePacksIos": "अनुवाद मॉडल आपके डिवाइस द्वारा प्रबंधित किए जाते हैं। आपको केवल अपनी चयनित भाषा के लिए मॉडल डाउनलोड करना होगा। बाकी iOS संभाल लेगा।",
     "languagePacksIosPath": "सेटिंग्स → सामान्य → भाषा और क्षेत्र → अनुवाद भाषाएं",
     "languagePacksAndroid": "अनुवाद मॉडल (प्रत्येक ~30MB) जब आप पहली बार किसी नई भाषा में अनुवाद करते हैं तो स्वचालित रूप से डाउनलोड हो जाते हैं।",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "सेटिंग्स → सामान्य → भाषा और क्षेत्र",
     "retry": "पुनः प्रयास करें",
     "watchGuide": "अपने डिवाइस में भाषा जोड़ने का तरीका देखें",
-    "iosLanguageHint": "केवल यह भाषा चुनना पर्याप्त नहीं है। आपको iOS भाषा सेटिंग्स में भी इसे चुनना होगा।",
     "managePacksPrefix": "डाउनलोड की गई भाषाओं को प्रबंधित करने के लिए, यहाँ जाएं",
     "translationUnavailableTapToRetry": "{{language}} भाषा पैकेज अभी भी डाउनलोड हो रहा है, या डाउनलोड विफल हो सकता है। अभी अंग्रेजी दिखा रहे हैं — फिर से कोशिश करने के लिए टैप करें।",
     "translationUnavailableTitle": "अनुवाद उपलब्ध नहीं",
-    "translationUnsupportedOnThisIos": "आपका iOS संस्करण {{language}} में अनुवाद नहीं कर सकता। अभी अंग्रेजी दिखा रहे हैं — iOS अपडेट करने से यह संभव हो जाएगा।"
+    "translationUnsupportedOnThisIos": "आपका iOS संस्करण {{language}} में अनुवाद नहीं कर सकता। अभी अंग्रेजी दिखा रहे हैं — iOS अपडेट करने से यह संभव हो जाएगा।",
+    "advanced": "उन्नत",
+    "advancedDescription": "डिवाइस पर ही अनुवाद। यह ज़रूरी नहीं है — ऊपर की सभी चीज़ें इसके बिना भी काम करती हैं।",
+    "downloadHintBeforePrefix": "भाषा चुनने के बाद, iOS आपसे उसे डाउनलोड करने के लिए कह सकता है। उस शीट में हर भाषा के आगे बने",
+    "downloadHintBeforeSuffix": "आइकॉन पर टैप करें — जब तक आप टैप नहीं करेंगे, कुछ भी डाउनलोड नहीं होगा।",
+    "downloadHintNowPrefix": "नीचे दी गई शीट में हर भाषा के आगे बने",
+    "downloadHintNowSuffix": "आइकॉन पर टैप करें, ताकि डाउनलोड शुरू हो जाए।",
+    "googleTranslateAlways": "आप किसी भी लेख को किसी भी भाषा में लेख पेज पर मौजूद \"Google Translate पर पढ़ें\" से पढ़ सकते हैं — यह हमेशा काम करता है, और कुछ भी डाउनलोड करने की ज़रूरत नहीं।",
+    "onDeviceTranslationHint": "अगर आप चाहते हैं कि आपका डिवाइस खुद अनुवाद करे, तो पक्का करें कि आपकी भाषा आपकी iOS सेटिंग्स में उपलब्ध हो; नीचे दिया गया वीडियो बताता है कि इसे कैसे चालू करें।",
+    "switchDeviceUnsupportedBody": "यह डिवाइस समाचार लेखों का किसी भी भाषा में अनुवाद नहीं कर सकता, इसलिए ऐप अभी अंग्रेज़ी का इस्तेमाल कर रहा है। {{language}} चुनने पर लेख बिना अनुवाद के रह जाएंगे।",
+    "switchFailedBody": "{{language}} का अनुवाद पैक तैयार नहीं हो सका, इसलिए आप अभी भी {{previous}} का उपयोग कर रहे हैं। हो सकता है यह अभी भी डाउनलोड हो रहा हो — थोड़ी देर बाद फिर से कोशिश करें।",
+    "switchFailedTitle": "{{language}} में नहीं बदल सका",
+    "switchTimedOutBody": "{{language}} तैयार करने में बहुत ज़्यादा समय लग रहा है, इसलिए आप अभी भी {{previous}} का उपयोग कर रहे हैं। डाउनलोड बैकग्राउंड में पूरा हो सकता है — थोड़ी देर में फिर से कोशिश करें।",
+    "switchUnsupportedBody": "iOS का यह वर्शन {{language}} में अनुवाद नहीं कर सकता, इसलिए आप अभी भी {{previous}} का उपयोग कर रहे हैं।",
+    "switchingCancel": "भाषा बदलना रोकें",
+    "switchingNudge": "आपका डिवाइस {{language}} का अनुवाद पैक तैयार कर रहा है। कृपया इस स्क्रीन को तब तक खुला रखें जब तक यह पूरा न हो जाए — अभी बाहर गए, तो समाचार लेख अंग्रेज़ी में ही रह जाएंगे।",
+    "switchingTitle": "{{language}} सेट अप हो रहा है…",
+    "translationFailedTooltip": "अनुवाद नहीं हो सका, कृपया ऐप को फिर से खोलें या अपनी सेटिंग्स जांचें",
+    "translationUnavailableOnThisDevice": "यह डिवाइस समाचार लेखों का {{language}} में अनुवाद नहीं कर सकता। इसके बजाय अंग्रेज़ी दिखाई जा रही है।"
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1031,7 +1044,8 @@
     "paywallRelatedOption": "संबंधित कवरेज दिखाएं",
     "paywallRelatedDesc": "किसी अन्य प्रकाशन से एक समान कहानी पेवॉल के पीछे नहीं हो सकती — संबंधित लेखों को देखें।",
     "paywallSubscribeDesc": "आपने इस महीने {{publication}} को {{visits}} बार देखा है — पूर्ण पहुंच के लिए सदस्यता लेने पर विचार करें।",
-    "paywallBlockOption": "इसके बजाय {{publication}} को ब्लॉक करें"
+    "paywallBlockOption": "इसके बजाय {{publication}} को ब्लॉक करें",
+    "tooMuchOfThis": "मुझे यह बहुत ज़्यादा दिख रहा है"
   },
   "topicPlan": {
     "title": "जिन विषयों को मैं ट्रैक करूंगा",

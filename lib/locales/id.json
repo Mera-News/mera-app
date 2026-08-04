@@ -228,13 +228,12 @@
     "failedToLoad": "Gagal memuat artikel",
     "articleNotFound": "Artikel tidak ditemukan",
     "offlineUnavailable": "Anda sedang offline dan artikel ini tidak tersimpan untuk dibaca offline",
-    "viewOriginal": "Lihat artikel asli",
-    "viewOriginalIn": "Lihat artikel asli dalam bahasa {{language}}",
-    "viewAndTranslateOnDevice": "Lihat artikel & terjemahkan di perangkat",
     "share": "Bagikan",
     "shareVia": "Dibagikan melalui {{downloadUrl}}",
     "sourceCountryGlobal": "Global",
-    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara."
+    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara.",
+    "readOn": "Baca di {{publication}}",
+    "readOnGoogleTranslate": "Baca di Google Translate"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -256,13 +255,11 @@
     "addedToLocations": "Ditambahkan ke tempat Anda"
   },
   "clusterDetail": {
-    "translatable": "Artikel ini dalam bahasa {{language}}: perangkat Anda dapat menerjemahkannya saat Anda membaca. Jika terjemahan tidak berfungsi, Anda dapat membuka situs ini di Google Terjemahan di bawah. Perlu diketahui bahwa Anda akan menjelajahinya melalui Google.",
-    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Perangkat Anda tidak dapat menerjemahkannya. Gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
-    "notTranslatableOsOutdated": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat memerlukan iOS {{requiredVersion}}. Anda menggunakan iOS {{currentVersion}}. Perbarui iOS, atau gunakan Google Terjemahan di bawah untuk membacanya dalam bahasa Anda.",
+    "translatable": "Artikel ini dalam bahasa {{language}}: perangkatmu bisa menerjemahkannya saat kamu membaca. Jika terjemahan tidak berfungsi, kamu bisa membuka situsnya di Google Translate; perlu diketahui, kamu akan menjelajahinya melalui Google.",
+    "notTranslatable": "Artikel ini dalam bahasa {{language}}. Perangkatmu tidak bisa menerjemahkannya — gunakan Google Translate untuk membacanya dalam bahasamu.",
+    "notTranslatableOsOutdated": "Artikel ini dalam bahasa {{language}}. Terjemahan di perangkat memerlukan iOS {{requiredVersion}}: kamu menggunakan iOS {{currentVersion}}. Perbarui iOS, atau gunakan Google Translate untuk membacanya dalam bahasamu.",
     "unknownLanguage": "bahasa lain",
     "translationGuideLink": "Tunjukkan cara menerjemahkan artikel",
-    "viewInGoogleTranslate": "Lihat di Google Terjemahan",
-    "readViaGoogleTranslate": "Baca dalam bahasa Anda (Google Terjemahan)",
     "showOriginal": "Tampilkan asli",
     "showTranslation": "Tampilkan terjemahan"
   },
@@ -327,7 +324,6 @@
     "title": "Bahasa",
     "appLanguage": "Bahasa Aplikasi",
     "appLanguageDescription": "Digunakan untuk antarmuka aplikasi dan menerjemahkan konten berita",
-    "languagePacks": "Paket Bahasa",
     "languagePacksIos": "Model terjemahan dikelola oleh perangkat Anda. Anda hanya perlu mengunduh model untuk bahasa yang dipilih. iOS mengurus sisanya.",
     "languagePacksIosPath": "Pengaturan → Umum → Bahasa & Wilayah → Bahasa Terjemahan",
     "languagePacksAndroid": "Model terjemahan (~30MB masing-masing) diunduh secara otomatis saat Anda pertama kali menerjemahkan ke bahasa baru.",
@@ -341,11 +337,28 @@
     "packMissingIosPath": "Pengaturan → Umum → Bahasa & Wilayah",
     "retry": "Coba Lagi",
     "watchGuide": "Lihat cara menambahkan bahasa ke perangkat Anda",
-    "iosLanguageHint": "Hanya memilih bahasa ini saja tidak cukup. Anda juga perlu memilih bahasa ini di pengaturan bahasa iOS.",
     "managePacksPrefix": "Untuk mengelola bahasa yang diunduh, buka",
     "translationUnavailableTapToRetry": "Paket bahasa {{language}} mungkin masih diunduh, atau unduhan mungkin gagal. Menampilkan bahasa Inggris untuk saat ini — ketuk untuk mencoba lagi.",
     "translationUnavailableTitle": "Terjemahan tidak tersedia",
-    "translationUnsupportedOnThisIos": "Versi iOS Anda tidak dapat menerjemahkan ke {{language}}. Menampilkan bahasa Inggris sebagai gantinya — memperbarui iOS akan mengaktifkannya."
+    "translationUnsupportedOnThisIos": "Versi iOS Anda tidak dapat menerjemahkan ke {{language}}. Menampilkan bahasa Inggris sebagai gantinya — memperbarui iOS akan mengaktifkannya.",
+    "advanced": "Lanjutan",
+    "advancedDescription": "Terjemahan di perangkat. Opsional — semua fitur di atas tetap berfungsi tanpa ini.",
+    "downloadHintBeforePrefix": "Setelah kamu memilih bahasa, iOS mungkin akan meminta kamu mengunduhnya. Ketuk ikon",
+    "downloadHintBeforeSuffix": "di samping setiap bahasa pada lembar tersebut — tidak ada yang akan diunduh sampai kamu melakukannya.",
+    "downloadHintNowPrefix": "Ketuk ikon",
+    "downloadHintNowSuffix": "di samping setiap bahasa pada lembar di bawah untuk mulai mengunduh.",
+    "googleTranslateAlways": "Kamu bisa membaca artikel apa pun dalam bahasa apa pun dengan \"Baca di Google Translate\" di halaman artikel — ini selalu berfungsi, tanpa perlu mengunduh apa pun.",
+    "onDeviceTranslationHint": "Jika kamu lebih suka perangkatmu yang menerjemahkan, pastikan bahasamu tersedia di pengaturan iOS; video di bawah ini menunjukkan cara mengaktifkannya.",
+    "switchDeviceUnsupportedBody": "Perangkat ini tidak bisa menerjemahkan artikel berita ke bahasa apa pun, jadi aplikasi ini menggunakan bahasa Inggris. Dengan {{language}}, artikel akan tetap tidak diterjemahkan.",
+    "switchFailedBody": "Paket terjemahan {{language}} tidak berhasil disiapkan, jadi kamu masih menggunakan {{previous}}. Paket ini mungkin masih dalam proses unduhan — coba lagi sebentar lagi.",
+    "switchFailedTitle": "Tidak dapat beralih ke {{language}}",
+    "switchTimedOutBody": "Menyiapkan {{language}} memakan waktu terlalu lama, jadi kamu masih menggunakan {{previous}}. Unduhan mungkin selesai di latar belakang — coba lagi sebentar lagi.",
+    "switchUnsupportedBody": "Versi iOS ini tidak bisa menerjemahkan ke {{language}}, jadi kamu masih menggunakan {{previous}}.",
+    "switchingCancel": "Hentikan pergantian bahasa",
+    "switchingNudge": "Perangkatmu sedang menyiapkan paket terjemahan {{language}}. Tetap buka layar ini sampai selesai — jika kamu keluar sekarang, artikel berita akan tetap dalam bahasa Inggris.",
+    "switchingTitle": "Menyiapkan {{language}}…",
+    "translationFailedTooltip": "Terjemahan gagal, coba buka ulang aplikasi atau periksa pengaturanmu",
+    "translationUnavailableOnThisDevice": "Perangkat ini tidak bisa menerjemahkan artikel berita ke {{language}}. Sebagai gantinya, artikel ditampilkan dalam bahasa Inggris."
   },
   "meraProtocol": {
     "title": "Mera Protocol",
@@ -1029,7 +1042,8 @@
     "paywallRelatedOption": "Tampilkan Liputan Terkait",
     "paywallRelatedDesc": "Cerita serupa dari publikasi lain mungkin tidak dibayar — periksa artikel terkait.",
     "paywallSubscribeDesc": "Anda telah mengunjungi {{publication}} {{visits}} kali bulan ini — pertimbangkan untuk berlangganan akses penuh.",
-    "paywallBlockOption": "Blokir {{publication}} sebagai gantinya"
+    "paywallBlockOption": "Blokir {{publication}} sebagai gantinya",
+    "tooMuchOfThis": "Saya terlalu sering melihat ini"
   },
   "topicPlan": {
     "title": "Topik yang akan saya lacak",
