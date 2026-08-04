@@ -100,11 +100,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // The article is rendered from a LOCAL snapshot rather than the live query,
     // and which snapshot it came from — the two mean different things to the
     // reader, so they must not share one banner:
-    //   'saved' — offline, restored from a "save for later" row.
+    //   'saved' — offline, restored from a "save for later" row. Gets the
+    //              "showing cached content" banner.
     //   'visit'  — the server no longer has this article (48h TTL) but the
     //              reader has opened it before, so the visit log still holds a
     //              snapshot. Happens ONLINE, most often from the per-publication
-    //              history (30-day window). Saying "offline" here would lie.
+    //              history (30-day window). Gets NO banner — see the render.
     const [snapshotSource, setSnapshotSource] = useState<SnapshotSource | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     // Mirror the title variant the reader currently sees (original vs
@@ -531,20 +532,23 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 contentBottomInset={insets.bottom + 20}
                 aboveReason={
                     <>
-                        {snapshotSource && (
-                            // 'visit' happens ONLINE — the story aged past the
-                            // server's 48h window and is being rendered from
-                            // this device's read history. Calling that "offline"
-                            // would be a plain lie to the reader.
+                        {/* Only the 'saved' snapshot gets a banner. That one is
+                            the offline path, where "showing cached content" is
+                            true and the read button may not even work.
+                            'visit' is deliberately silent: it happens ONLINE,
+                            and the only thing missing is Mera's server copy —
+                            the publisher's page is right there and the
+                            read/translate block below opens it. Every warning
+                            string this app owns ("no longer available",
+                            "offline: showing cached") would contradict the
+                            working Read button a few lines further down. An
+                            honest 'visit' string — "Mera no longer has this
+                            story, you can still open it at the publisher" — is
+                            new copy, and new copy means the 20-locale wave. */}
+                        {snapshotSource === 'saved' && (
                             <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mb-2" space="sm">
                                 <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-                                <Text size="sm" className="text-warning-400">
-                                    {t(
-                                        snapshotSource === 'visit'
-                                            ? 'articleDetail.articleUnavailable'
-                                            : 'feed.offlineCached',
-                                    )}
-                                </Text>
+                                <Text size="sm" className="text-warning-400">{t('feed.offlineCached')}</Text>
                             </HStack>
                         )}
                         <PublicationVisitBadge
