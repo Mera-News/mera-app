@@ -74,4 +74,35 @@ export function applyLanguage(lang: string): void {
     }
 }
 
+/**
+ * Swap the UI strings and NOTHING else — deliberately not `applyLanguage`.
+ *
+ * Used while a language switch is still provisional: the user has picked a
+ * language but the OS has not finished preparing its translation pack, so the
+ * choice may still fail, time out, or be cancelled. The bundled UI strings need
+ * no download, so there is no reason to make the reader wait for them — that is
+ * the whole point, since the instruction they need ("tap the download icon") is
+ * useless in a language they cannot read.
+ *
+ * What it must NOT do, and why:
+ *
+ *  - `I18nManager.forceRTL` is a PERSISTED NATIVE FLAG that only takes effect
+ *    after a reload. Toggling it for a switch that may be reverted risks the
+ *    app being killed mid-probe with the flag saved and `app_language` not —
+ *    which is an RTL layout wrapped around LTR strings on next launch. RTL
+ *    therefore stays in `applyLanguage`, on the commit path only.
+ *  - It does not touch the store or the database. `appLanguage` remains the
+ *    language the user is actually on, which is what makes the revert trivial:
+ *    re-apply the store's value and the preview is undone.
+ *
+ * Resources are bundled statically, so this lands synchronously — verified,
+ * and relied upon by the failure alerts, which are built immediately after the
+ * revert and must come out in the language the user was returned to.
+ *
+ * See `lib/hooks/use-language-switch.ts` for the state machine that owns this.
+ */
+export function previewLanguage(lang: string): void {
+    i18n.changeLanguage(lang);
+}
+
 export default i18n;

@@ -44,7 +44,7 @@ jest.mock('@/lib/config/endpoints', () => ({
   DUMP_QUERIES_ENABLED: false,
 }));
 
-import i18n, { applyLanguage, APP_LANGUAGES } from '../index';
+import i18n, { applyLanguage, previewLanguage, APP_LANGUAGES } from '../index';
 
 describe('i18n initialisation', () => {
   it('i18n is initialised (isInitialized is true)', () => {
@@ -192,6 +192,45 @@ describe('applyLanguage', () => {
     mockI18nManagerState.isRTL = false;
     await applyLanguage('de');
     expect(mockForceRTLFn).not.toHaveBeenCalled();
+  });
+});
+
+// The provisional half of a language switch: strings only, no RTL, no
+// persistence. See lib/hooks/use-language-switch.ts.
+describe('previewLanguage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockI18nManagerState.isRTL = false;
+    i18n.changeLanguage('en');
+  });
+
+  afterEach(() => {
+    mockI18nManagerState.isRTL = false;
+    i18n.changeLanguage('en');
+  });
+
+  it('lands SYNCHRONOUSLY — no await, no tick', () => {
+    previewLanguage('de');
+
+    // Load-bearing, not incidental. The switch machine reverts the language
+    // and then immediately builds the failure alert; if this were async the
+    // alert would come out in the language the user just backed out of —
+    // precisely the bug the whole change exists to fix. Safe only because
+    // every locale is bundled statically in `resources`, with no async
+    // backend loader.
+    expect(i18n.language).toBe('de');
+  });
+
+  it('does NOT touch the RTL flag, even for Arabic', () => {
+    previewLanguage('ar');
+
+    // `forceRTL` is a PERSISTED native flag that needs a reload to take
+    // effect. Flipping it for a switch that may still fail, time out or be
+    // cancelled risks the app being killed with the flag saved and the
+    // language not — an RTL layout wrapped around LTR strings on next
+    // launch. RTL belongs to `applyLanguage`, on the commit path only.
+    expect(mockForceRTLFn).not.toHaveBeenCalled();
+    expect(i18n.language).toBe('ar');
   });
 });
 

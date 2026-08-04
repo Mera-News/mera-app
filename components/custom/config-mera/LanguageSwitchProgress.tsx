@@ -8,7 +8,8 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getNativeLanguageName } from '@/lib/translation-service';
+import { getNativeLanguageName, resolveUiLocale } from '@/lib/translation-service';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 
 interface LanguageSwitchProgressProps {
     /** Language being switched to. */
@@ -44,6 +45,19 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
     const { t } = useTranslation();
     const language = getNativeLanguageName(code) ?? code;
 
+    // The language the user is REALLY still on. The store does not move until
+    // the switch commits, so for the whole time this card is on screen it holds
+    // the previous language — see `use-language-switch.ts`, which relies on the
+    // same invariant to revert. (On the success path the store moves one tick
+    // before this card unmounts; that frame is not observable.)
+    //
+    // `?? 'en'` is unreachable — the store only ever holds a SUPPORTED_LANGUAGES
+    // code — but English is this app's documented floor, and it is the one
+    // bundle guaranteed to exist.
+    const previousLocale = resolveUiLocale(
+        useAppLanguageStore((s) => s.appLanguage),
+    ) ?? 'en';
+
     return (
         <Box
             testID="language-switch-progress"
@@ -78,8 +92,19 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
                     onPress={onCancel}
                     className="flex-row items-center justify-center mt-1 py-3 px-4 bg-gray-700 rounded-lg"
                 >
+                    {/* THE ONE STRING ON THIS CARD THAT IS NOT IN THE TARGET
+                        LANGUAGE, and it is deliberate. Everything else here
+                        describes the language you are moving TO, so it belongs
+                        in that language. This button is about the language you
+                        are moving FROM — it takes you back there — and it is
+                        the only exit while back navigation is locked. Someone
+                        who mistapped an unfamiliar language would otherwise
+                        find their sole escape written in the very language they
+                        cannot read, which turns the nudge into the trap this
+                        whole feature exists to remove. Do not "tidy" this into
+                        a bare t() call. */}
                     <Text className="text-white text-sm font-medium">
-                        {t('language.switchingCancel')}
+                        {t('language.switchingCancel', { lng: previousLocale })}
                     </Text>
                 </Pressable>
             </VStack>

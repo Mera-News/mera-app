@@ -6,10 +6,18 @@
 
 const mockProbe = jest.fn();
 const mockSetAppLanguage = jest.fn(() => Promise.resolve());
+const mockPreviewLanguage = jest.fn();
 let mockAppLanguage = 'en';
 
 jest.mock('@/lib/translation-service', () => ({
     probeTranslationLanguage: (...a: unknown[]) => mockProbe(...a),
+    // The real one: a code is a UI locale iff the app bundles strings for it.
+    // Every code the picker offers does; 'xx' stands in for one that doesn't.
+    resolveUiLocale: (code: string) => (code === 'xx' ? null : code),
+}));
+
+jest.mock('@/lib/i18n', () => ({
+    previewLanguage: (...a: unknown[]) => mockPreviewLanguage(...a),
 }));
 
 jest.mock('@/lib/stores/app-language-store', () => {
@@ -215,6 +223,143 @@ describe('useLanguageSwitch', () => {
 
         expect(result.current.busy).toBe(false);
         expect(mockProbe).not.toHaveBeenCalled();
+    });
+
+    // ── The UI language moves at SELECTION, and comes back on every loss ────
+    //
+    // The point of the whole arrangement: the progress card tells the user to
+    // tap a download icon, and that instruction is worthless in a language they
+    // cannot read. So the app switches immediately — which turns every losing
+    // ending into a real revert rather than the no-op it used to be.
+
+    it('previews the target language the moment it is picked, before any probe', () => {
+        const { result } = renderHook(() => useLanguageSwitch());
+
+        act(() => result.current.requestSwitch('de'));
+
+        // Before the picker has even finished dismissing, and long before the
+        // native call — the card must come up already in German.
+        expect(mockPreviewLanguage).toHaveBeenCalledWith('de');
+        expect(mockProbe).not.toHaveBeenCalled();
+    });
+
+    it('does NOT preview a language the app ships no strings for', () => {
+        const { result } = renderHook(() => useLanguageSwitch());
+
+        act(() => result.current.requestSwitch('xx'));
+
+        // i18next has `fallbackLng: 'en'`, so previewing a bundle-less code
+        // would silently drop the reader into English — worse than leaving
+        // them where they were.
+        expect(mockPreviewLanguage).not.toHaveBeenCalled();
+    });
+
+    it('puts the language back when the user backs out', () => {
+        mockAppLanguage = 'fr';
+        const { result } = renderHook(() => useLanguageSwitch());
+        deferredProbe();
+
+        act(() => result.current.requestSwitch('de'));
+        act(() => result.current.notifyPickerDismissed());
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('de');
+
+        act(() => result.current.cancel());
+
+        // Cancel is a REAL revert now, not a no-op: the UI is already in
+        // German and must be returned to French.
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('fr');
+    });
+
+    it('puts the language back when the probe fails', async () => {
+        mockAppLanguage = 'fr';
+        const { result } = renderHook(() => useLanguageSwitch());
+        mockProbe.mockResolvedValueOnce('failed');
+
+        act(() => result.current.requestSwitch('de'));
+        await act(async () => { result.current.notifyPickerDismissed(); });
+
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('fr');
+        expect(mockSetAppLanguage).not.toHaveBeenCalled();
+    });
+
+    it('puts the language back on timeout', async () => {
+        mockAppLanguage = 'fr';
+        const { result } = renderHook(() => useLanguageSwitch());
+        mockProbe.mockResolvedValueOnce('timeout');
+
+        act(() => result.current.requestSwitch('de'));
+        await act(async () => { result.current.notifyPickerDismissed(); });
+
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('fr');
+    });
+
+    it('leaves the committed language in place on success', async () => {
+        mockAppLanguage = 'fr';
+        const { result } = renderHook(() => useLanguageSwitch());
+        mockProbe.mockResolvedValueOnce('success');
+        // `setAppLanguage` is what moves the store; mirror that here so the
+        // teardown reads the committed value, exactly as it does in the app.
+        mockSetAppLanguage.mockImplementationOnce(() => {
+            mockAppLanguage = 'de';
+            return Promise.resolve();
+        });
+
+        act(() => result.current.requestSwitch('de'));
+        await act(async () => { result.current.notifyPickerDismissed(); });
+
+        // The same teardown runs, but the store has moved, so re-applying it
+        // is a no-op rather than a revert. No branching on the outcome.
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('de');
+    });
+
+    it('reverts to ENGLISH, not the previous language, when the device has no translator', async () => {
+        mockAppLanguage = 'fr';
+        const { result } = renderHook(() => useLanguageSwitch());
+        mockProbe.mockResolvedValueOnce('device-unsupported');
+        mockSetAppLanguage.mockImplementationOnce(() => {
+            mockAppLanguage = 'en';
+            return Promise.resolve();
+        });
+
+        act(() => result.current.requestSwitch('de'));
+        await act(async () => { result.current.notifyPickerDismissed(); });
+
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('en');
+    });
+
+    it('a probe that lands AFTER a cancel cannot re-apply the abandoned language', async () => {
+        mockAppLanguage = 'fr';
+        const { result } = renderHook(() => useLanguageSwitch());
+        const probe = deferredProbe();
+
+        act(() => result.current.requestSwitch('de'));
+        act(() => result.current.notifyPickerDismissed());
+        act(() => result.current.cancel());
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('fr');
+
+        // The user is already back on French. A late 'success' must not drag
+        // them into German behind their back — this is a NEW way for the
+        // orphaned-probe bug to show up, now that the language really moves.
+        await act(async () => { probe.resolve('success'); });
+
+        expect(mockSetAppLanguage).not.toHaveBeenCalled();
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('fr');
+    });
+
+    it('reverts when the screen is left mid-probe', () => {
+        mockAppLanguage = 'fr';
+        const { result, unmount } = renderHook(() => useLanguageSwitch());
+        deferredProbe();
+
+        act(() => result.current.requestSwitch('de'));
+        act(() => result.current.notifyPickerDismissed());
+
+        unmount();
+
+        // The UI language is global — walking away from the screen must not
+        // leave the whole app in a language that never committed. Unmount is a
+        // separate exit that never calls `finish()`.
+        expect(mockPreviewLanguage).toHaveBeenLastCalledWith('fr');
     });
 
     it('ignores a second request while one is already running', () => {

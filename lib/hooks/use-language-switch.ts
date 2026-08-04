@@ -4,8 +4,10 @@ import { BackHandler, Platform } from 'react-native';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import {
     probeTranslationLanguage,
+    resolveUiLocale,
     TranslationProbeOutcome,
 } from '@/lib/translation-service';
+import { previewLanguage } from '@/lib/i18n';
 import logger from '@/lib/logger';
 
 /**
@@ -37,8 +39,31 @@ import logger from '@/lib/logger';
  *
  *  3. The probe runs. The screen shows a spinner, copy asking the user to
  *     stay put while the pack downloads, and a cancel button.
- *  4. Success → commit. Anything else → the user stays on the language they
- *     were already using. Nothing was applied, so there is nothing to undo.
+ *  4. Success → commit. Anything else → the user goes back to the language
+ *     they were already using.
+ *
+ * THE UI LANGUAGE MOVES AT STEP 1, NOT STEP 4. The app's own strings are
+ * bundled and need no download, so making them wait on a translation pack got
+ * it exactly backwards: the instruction that unblocks the wait ("tap the
+ * download icon") was rendered in a language the person waiting may not read.
+ * So `requestSwitch` previews the target language immediately and the progress
+ * card comes up in it.
+ *
+ * That makes step 4 a REAL revert rather than a no-op, on all three losing
+ * endings — failure, timeout, and the user backing out. `finish()` owns it,
+ * being the one teardown every exit already goes through.
+ *
+ * The revert is trivial for one reason worth protecting: the preview touches
+ * i18next ONLY. The store's `appLanguage`, the database row, the RTL flag and
+ * the persona sync all stay put until commit. So the store still holds the
+ * language the user is really on for the whole probe, and undoing the preview
+ * is just re-applying it. Do not "simplify" this by moving the store update
+ * forward — the revert would then need to remember and restore four things
+ * instead of reading one.
+ *
+ * A probe that resolves LATE, after the user already backed out, cannot undo
+ * the revert: the generation check returns before it can commit or call
+ * `finish()` a second time.
  *
  * The user is NUDGED to wait, never trapped: `cancel()` is live from the
  * moment the spinner renders and does not wait on the native promise, because
@@ -98,6 +123,10 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     // may invoke an updater more than once, and this one must run exactly
     // once (twice would be two concurrent sheets, the original bug).
     const phaseRef = useRef<LanguageSwitchPhase>('idle');
+    // True between previewing a target language and undoing (or committing)
+    // that preview. Guards the revert so it only ever fires against a preview
+    // this hook actually made.
+    const previewActiveRef = useRef(false);
 
     // Latest callbacks, so the probe effect never depends on an unstable
     // inline identity.
@@ -113,17 +142,37 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
         }
     }, []);
 
+    /**
+     * Undo the preview by re-applying whatever the store says. Correct on every
+     * ending without branching on which one it was:
+     *
+     *  - failure / timeout / cancel: the store never moved, so this puts the
+     *    reader back where they started;
+     *  - success and the English fallback: `setAppLanguage` has already moved
+     *    the store to the language that won, so re-applying it is a no-op.
+     *
+     * That is the whole reason the preview deliberately leaves the store alone.
+     */
+    const revertPreview = useCallback(() => {
+        if (!previewActiveRef.current) return;
+        previewActiveRef.current = false;
+        previewLanguage(useAppLanguageStore.getState().appLanguage);
+    }, []);
+
     /** Single teardown for EVERY exit path — success, failure, timeout, cancel,
      *  unmount, and an exception mid-probe. A screen that cannot be left
      *  because one path forgot to re-enable navigation is the worst version of
-     *  this feature. */
+     *  this feature — and now also a reader stranded in a language they picked
+     *  by mistake, which is why the language revert lives here too rather than
+     *  on each individual ending. */
     const finish = useCallback(() => {
         generationRef.current += 1;
         clearFallbackTimer();
+        revertPreview();
         phaseRef.current = 'idle';
         setPhase('idle');
         setPendingCode(null);
-    }, [clearFallbackTimer]);
+    }, [clearFallbackTimer, revertPreview]);
 
     const runProbe = useCallback(
         async (code: string, generation: number) => {
@@ -189,6 +238,20 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
             const generation = generationRef.current;
             setPendingCode(code);
 
+            // Show the app in the language being adopted from this moment on,
+            // so the progress card — and above all its "tap the download icon"
+            // instruction — is readable by the person who chose it. Guarded by
+            // `resolveUiLocale` because i18next is configured with
+            // `fallbackLng: 'en'`: previewing a code with no bundle would
+            // silently drop the reader into English, which is worse than
+            // leaving them where they were. Every code the picker offers has a
+            // bundle, so this guard should never fire.
+            const uiLocale = resolveUiLocale(code);
+            if (uiLocale) {
+                previewActiveRef.current = true;
+                previewLanguage(uiLocale);
+            }
+
             // English needs no probe (it is the source language) and Android's
             // ML Kit presents no system UI at all, so neither has a dismissal
             // race to wait out. Commit straight away.
@@ -252,13 +315,19 @@ export function useLanguageSwitch(options: UseLanguageSwitchOptions = {}) {
     }, [busy, cancel]);
 
     // Unmount teardown. Bumps the generation so an in-flight probe cannot
-    // commit or set state on a dead screen.
+    // commit or set state on a dead screen — and undoes any preview still
+    // standing, because the UI language is global: leaving the screen mid-probe
+    // must not leave the whole app in a language that was never committed.
+    // This is a genuinely separate exit from `finish()`, which unmount never
+    // calls. Reading the store here is safe despite the empty deps: it is read
+    // through `getState()`, not a captured value.
     useEffect(
         () => () => {
             generationRef.current += 1;
             if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+            revertPreview();
         },
-        [],
+        [revertPreview],
     );
 
     return {
