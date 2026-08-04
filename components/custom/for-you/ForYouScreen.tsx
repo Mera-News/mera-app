@@ -89,7 +89,7 @@ const MeraNewsScreen: React.FC = () => {
     const { isLoading, errorMessage } = useFeedBootstrap();
     const handleSuggestionPress = useOpenSuggestion('sectioned');
     // Collapsing Dashboard header (hides on scroll-down, reveals on scroll-up).
-    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
+    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, resetScrollOrigin } =
         useCollapsibleHeader();
     // Live opened set — subscribed so the per-card read treatment updates as
     // stories are opened. (There is no green tick; `read` only suppresses the
@@ -198,7 +198,15 @@ const MeraNewsScreen: React.FC = () => {
         if (tab === 'history') setHistoryVisited(true);
         // Always reveal the header on a sub-tab switch.
         reveal();
-    }, [reveal]);
+        // ...and drop the scroll baseline. All four panels stay mounted behind
+        // display:'none' and keep their own offsets, but they SHARE one handler,
+        // so `lastY` holds whichever panel scrolled last. Without this the first
+        // scroll on the panel being switched TO reads the difference between two
+        // panels as travel — a spurious hide/reveal in whichever direction the
+        // offsets happen to differ. `reveal()` alone can't cover it: it clears
+        // the accumulators, not `lastY`.
+        resetScrollOrigin();
+    }, [reveal, resetScrollOrigin]);
 
     // Feed-status detail sheet (opened from the header status line + shimmer).
     const [statusSheetOpen, setStatusSheetOpen] = useState(false);

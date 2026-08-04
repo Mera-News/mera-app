@@ -180,6 +180,15 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     <Spinner size="large" />
                 </Box>
             ) : items.length === 0 ? (
+                // KNOWN GAP (pre-existing, deliberately not fixed here): this
+                // branch renders instead of the FlatList, so it carries no
+                // RefreshControl — a user whose history is empty cannot pull to
+                // refresh, and a visit recorded while this panel was mounted but
+                // hidden has no way to appear until a remount. The `active` prop
+                // above exists to paper over exactly this. The real fix is to
+                // render the list always and move both branches into
+                // `ListEmptyComponent`; that changes the standalone route's
+                // behaviour, so it wants its own wave.
                 <VStack
                     className="flex-1 items-center justify-center p-6"
                     space="md"
