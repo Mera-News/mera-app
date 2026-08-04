@@ -23,6 +23,7 @@ import {
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -69,6 +70,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     const insets = useSafeAreaInsets();
     const [stories, setStories] = useState<TrackedStoryModel[]>([]);
     const [confirmTarget, setConfirmTarget] = useState<TrackedStoryModel | null>(null);
+    // 'unknown' (cold start, no server/RC answer yet) must NOT read as locked —
+    // this screen stays fully functional either way, so the only thing this
+    // gates is which empty-state copy renders below.
+    const locked = useAiAccess() === 'locked';
 
     useEffect(() => {
         const sub = observeActive().subscribe({
@@ -262,7 +267,12 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 {t('trackedStories.emptyTitle')}
             </Text>
             <Text size="sm" className="text-typography-400 text-center mt-2">
-                {t('trackedStories.emptyBody')}
+                {/* Monetization wave: the default body sends the user to go
+                    track a story, which fails while locked — starting a NEW
+                    story needs an active plan. The companion copy explains that
+                    instead. Stories already tracked are unaffected; this is
+                    purely the zero-state message. */}
+                {locked ? t('companion.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
             </Text>
             {/* The empty body used to stop at "how" without saying "where". QA's
                 filed wording ("feed card → 👍 → the 'More like this' panel")
@@ -276,18 +286,30 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 filed description. CTA styling matches the other
                 icon+text+outline-button empty state (locations.tsx's "Add a
                 place" pattern) — the two components named in the task have no
-                CTA to match. */}
-            <Text size="xs" className="text-typography-500 text-center mt-4">
-                {t('trackedStories.emptyHint')}
-            </Text>
-            <Button
-                variant="outline"
-                className="rounded-full border-primary-500 mt-4"
-                onPress={goToFeed}
-                testID="tracked-stories-empty-cta"
-            >
-                <ButtonText className="text-primary-400">{t('trackedStories.emptyCta')}</ButtonText>
-            </Button>
+                CTA to match.
+
+                Locked: both the hint and the "go to feed" CTA below exist only
+                to walk the user through STARTING a new track, which the
+                companion body above just said needs a plan — showing them
+                would repeat a broken instruction. Suppressed rather than
+                relabeled; `CompanionModeCard`/`CompanionInlineNotice` already
+                own "See plans" messaging elsewhere and this empty state isn't
+                the place to duplicate it. */}
+            {!locked && (
+                <>
+                    <Text size="xs" className="text-typography-500 text-center mt-4">
+                        {t('trackedStories.emptyHint')}
+                    </Text>
+                    <Button
+                        variant="outline"
+                        className="rounded-full border-primary-500 mt-4"
+                        onPress={goToFeed}
+                        testID="tracked-stories-empty-cta"
+                    >
+                        <ButtonText className="text-primary-400">{t('trackedStories.emptyCta')}</ButtonText>
+                    </Button>
+                </>
+            )}
         </Box>
     );
 
