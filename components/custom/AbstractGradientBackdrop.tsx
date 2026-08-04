@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
+import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 
 /**
@@ -94,9 +95,45 @@ const PALETTE = [
   'rgb(110,190,160)', // sea green
 ] as const;
 
-/** How long each colour cross-fade takes, and therefore how often the single
- *  colour timer ticks. */
-const COLOR_STEP_MS = 10000;
+/**
+ * How often the single shared colour timer ticks, and therefore how often a
+ * cross-fade happens.
+ *
+ * ## Why 45s and not 10s — this is the measured hot path
+ *
+ * Nothing in this backdrop moves at rest: the drift was removed (see
+ * `BlobField`), so between fades the field is a single, already-rasterised
+ * static layer. The ONLY thing that costs anything is the cross-fade itself,
+ * and it costs far more than "one opacity animation" suggests:
+ *
+ *   • It mounts a SECOND full-screen `Svg`, forcing RNSVG to rasterise three
+ *     full-screen radial gradients from scratch.
+ *   • Animating that layer's opacity forces the compositor to re-blend two
+ *     full-screen layers every frame for the duration — and every Liquid Glass
+ *     view above the backdrop to RE-SAMPLE its blur against changing content.
+ *   • Both costs are paid by EVERY mounted instance, and there are ~75 mount
+ *     sites with all five tabs resident at once.
+ *
+ * Measured on the iPhone 17 Pro simulator, Feed idle, two 10-minute windows,
+ * animated vs. the static-frame mode which differs ONLY by the fade:
+ *
+ *   | process         | animated | static | drop |
+ *   |-----------------|---------:|-------:|-----:|
+ *   | mera            |    13.0% |   5.4% | −58% |
+ *   | SimRenderServer |     1.3% |   0.1% | −92% |
+ *   | backboardd      |     6.9% |   1.1% | −84% |
+ *   | TOTAL           |    21.2% |   6.6% | −69% |
+ *
+ * `backboardd` is the display server and `SimRenderServer` the renderer, so the
+ * cost is compositing, not JS. At the old 2500ms fade every 10000ms the app
+ * spent 25% OF ALL TIME in that state. 1200ms every 45000ms is a 2.7% duty
+ * cycle — the same effect, ~9× less of it.
+ *
+ * Raising this further is nearly free; the limit is aesthetic, not technical.
+ * Below ~20s the duty cycle climbs back into the range that showed up in the
+ * measurement above.
+ */
+export const COLOR_STEP_MS = 45000;
 /** Colours each blob visits before its cycle repeats. */
 const SEQUENCE_LENGTH = 5;
 
@@ -245,8 +282,79 @@ function armCover() {
 
 /** How long a colour change takes. Deliberately much shorter than
  *  `COLOR_STEP_MS`: the second gradient layer only exists for this long, so the
- *  app runs on a single backdrop layer the rest of the time. */
-const FADE_MS = 2500;
+ *  app runs on a single backdrop layer the rest of the time.
+ *
+ *  Shortened 2500 → 1200 alongside the `COLOR_STEP_MS` change. Both knobs move
+ *  the same number — the fraction of wall-clock time a second full-screen SVG
+ *  layer is mounted and being composited — and it is that fraction, not the
+ *  tick rate on its own, that the measurement in `COLOR_STEP_MS` is about.
+ *  1200ms is still well above the ~300ms at which a colour change reads as a
+ *  cut rather than a drift. */
+export const FADE_MS = 1200;
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * INSTRUMENTATION
+ *
+ * Counters, not timers: the question these answer is "how many full-screen SVG
+ * layers did we mount, and for how long", which is the cost driver identified
+ * in the `COLOR_STEP_MS` measurement. They are plain integer adds on paths that
+ * already do real work, so they stay compiled into release builds — the readout
+ * is what is `__DEV__`-gated, not the accounting.
+ *
+ * `coverMounts` vs `instances` is the specific number that shows whether the
+ * focus gate is working: before it, every mounted backdrop mounted a cover on
+ * every step, so `coverMounts` per step equalled `instances`. After it, exactly
+ * one instance — the focused one — should mount a cover, so the ratio should be
+ * 1 : N regardless of how many screens are resident.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+export const backdropMetrics = {
+  /** Colour-step advances since launch. */
+  steps: 0,
+  /** Cross-fade covers actually mounted (summed across instances). */
+  coverMounts: 0,
+  /** Covers currently mounted. Should peak at 1 once the focus gate lands. */
+  liveCovers: 0,
+  /**
+   * Highest `liveCovers` ever observed — the headline number for the gate.
+   *
+   * Expect 1 in the tab tree. **2 is legitimate, not a gate failure**:
+   * `ForceUpdateScreen` mounts a backdrop from outside the `<Stack>`, where
+   * `useIsFocusedSafe` returns `true` by design (there is no navigator to be
+   * blurred by), so it and the focused tab can both hold a cover. A number
+   * that tracks `instances` is the actual failure signature.
+   */
+  peakLiveCovers: 0,
+  /** Total wall-clock ms with at least one cover mounted, summed per cover. */
+  coverMsTotal: 0,
+  /** Backdrops currently mounted and subscribed to the shared engine. */
+  get instances() {
+    return mountCount;
+  },
+  reset() {
+    backdropMetrics.steps = 0;
+    backdropMetrics.coverMounts = 0;
+    backdropMetrics.liveCovers = 0;
+    backdropMetrics.peakLiveCovers = 0;
+    backdropMetrics.coverMsTotal = 0;
+  },
+};
+
+/** Named module functions for the same React Compiler reason `armCover` is one
+ *  — a component that mutates a module value inline is silently skipped by the
+ *  compiler. */
+function noteCoverMounted() {
+  backdropMetrics.coverMounts += 1;
+  backdropMetrics.liveCovers += 1;
+  if (backdropMetrics.liveCovers > backdropMetrics.peakLiveCovers) {
+    backdropMetrics.peakLiveCovers = backdropMetrics.liveCovers;
+  }
+}
+
+function noteCoverUnmounted(elapsedMs: number) {
+  backdropMetrics.liveCovers = Math.max(0, backdropMetrics.liveCovers - 1);
+  backdropMetrics.coverMsTotal += elapsedMs;
+}
 
 /** The shared colour-step counter. Lives outside React because every instance
  *  must observe the same value; `useSyncExternalStore` subscribes them. */
@@ -259,10 +367,28 @@ const stepStore = {
     return () => stepStore.listeners.delete(fn);
   },
   advance() {
+    // Logged BEFORE the increment so the line describes the interval that just
+    // ended, with its covers already mounted, faded and unmounted. Logging
+    // after `forEach` would report pre-mount state: the listeners only schedule
+    // React work, they do not flush it.
+    if (__DEV__) logBackdropMetrics();
     stepStore.value += 1;
+    backdropMetrics.steps += 1;
     stepStore.listeners.forEach((fn) => fn());
   },
 };
+
+/** One compact line per `COLOR_STEP_MS` — at 45s that is ~80 lines an hour,
+ *  cheap enough to leave on in dev and readable via `agent-device logs`. */
+function logBackdropMetrics() {
+  const m = backdropMetrics;
+  const duty = m.steps > 0 ? m.coverMsTotal / (m.steps * COLOR_STEP_MS) : 0;
+  console.log(
+    `[backdrop] step=${m.steps} instances=${m.instances} ` +
+      `covers=${m.coverMounts} live=${m.liveCovers} peak=${m.peakLiveCovers} ` +
+      `coverMs=${Math.round(m.coverMsTotal)} layerDuty=${(duty * 100).toFixed(1)}%`,
+  );
+}
 
 /** The app-wide colour sequences — one per blob, drawn once at module load.
  *  Every unseeded instance shares these, which is what makes the whole app one
@@ -414,7 +540,37 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // field.
   const isStatic = reduceMotion || staticGradient;
 
-  // One engine for the whole app — see THE SHARED ENGINE above.
+  /* ──────────────────────────────────────────────────────────────────────────
+   * ONLY THE FOCUSED INSTANCE CROSS-FADES
+   *
+   * The backdrop is mounted at ~75 sites and all five tabs stay resident (the
+   * Instagram model — see `use-is-focused-safe`), so a single colour step used
+   * to mount a second full-screen `Svg` on every one of them at once. Every
+   * cover but the focused screen's is composited behind an opaque navigation
+   * background where nobody can see it, and the measurement recorded on
+   * `COLOR_STEP_MS` shows that compositing full-screen layers is the entire
+   * cost of this component.
+   *
+   * `useAnimationsActive()` is `useIsFocusedSafe() && foregrounded` — the same
+   * predicate the four looping animations in 3da25ab use, reused rather than
+   * re-derived. "Safe" matters here specifically: this component is mounted by
+   * `ForceUpdateScreen`, which renders OUTSIDE the `<Stack>`, and a bare
+   * `useIsFocused()` there throws and white-screens the mandatory-update path.
+   *
+   * NOTE this gates the COVER, not the ENGINE. The shared step counter must
+   * keep advancing for every instance — gating the engine on focus would stop
+   * the clock for the whole app whenever the focused screen happened to be a
+   * static-mode one, and blurred instances would then wake to a stale step and
+   * fade through colours the user already passed.
+   * ────────────────────────────────────────────────────────────────────────── */
+  const animationsActive = useAnimationsActive();
+
+  /** Static mode and "nobody can see this instance" want the identical
+   *  behaviour: adopt the new colours instantly, mount no cover. */
+  const coverSuppressed = isStatic || !animationsActive;
+
+  // One engine for the whole app — see THE SHARED ENGINE above. Deliberately
+  // NOT gated on focus; see the note above.
   useSharedEngine(!isStatic && !ANDROID_DISABLED);
   const step = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
 
@@ -495,21 +651,23 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
 
   if (displayed.step !== step) {
     // See point 2 above: this must happen before the cover renders.
-    if (!isStatic) armCover();
-    setDisplayed({ step, fading: !isStatic });
-  } else if (displayed.fading && isStatic) {
-    // Static mode switched on mid-fade: drop the cover in this same render so
-    // no animation is left stranded on screen.
+    if (!coverSuppressed) armCover();
+    setDisplayed({ step, fading: !coverSuppressed });
+  } else if (displayed.fading && coverSuppressed) {
+    // Static mode switched on, or this screen was blurred, mid-fade: drop the
+    // cover in this same render so no animation is left stranded on screen.
     setDisplayed({ step, fading: false });
   }
 
-  const fading = displayed.fading && !isStatic;
+  const fading = displayed.fading && !coverSuppressed;
 
   useLayoutEffect(() => {
     if (!fading) return;
     // Already armed by the render pass; re-asserted so the animation always
     // starts from a known, fully-covering value.
     armCover();
+    noteCoverMounted();
+    const mountedAt = Date.now();
     outgoing.value = withTiming(0, { duration: FADE_MS, easing: Easing.inOut(Easing.ease) });
     // Unmounts the cover once it is fully transparent — the whole point of the
     // one-layer-at-rest design. Cleared on unmount and whenever a new step
@@ -518,7 +676,13 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
       () => setDisplayed((d) => (d.fading ? { ...d, fading: false } : d)),
       FADE_MS,
     );
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      // Runs on the fade completing (deps change), on a superseding step, and
+      // on unmount — every path by which this cover stops being rendered, so
+      // `liveCovers` cannot leak upward.
+      noteCoverUnmounted(Date.now() - mountedAt);
+    };
   }, [displayed.step, fading]);
 
   const outgoingStyle = useAnimatedStyle(() => ({ opacity: outgoing.value }));
