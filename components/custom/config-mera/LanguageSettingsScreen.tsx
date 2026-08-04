@@ -199,7 +199,13 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                         />
                                         {' '}{t('language.downloadHintBeforeSuffix')}
                                     </Text>
-                                    <Text className="text-typography-500 text-xs leading-5">
+                                    {/* On-device translation is the OPTIONAL path.
+                                        A reader who cannot or will not download a
+                                        pack must leave this screen knowing they can
+                                        still read everything — hence Google Translate
+                                        stated first, and named exactly as the button
+                                        on the article page is labelled. */}
+                                    <Text className="text-typography-400 text-xs leading-5">
                                         {t('language.iosLanguageHint')}
                                     </Text>
                                     <Pressable
@@ -226,16 +232,11 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                 </Text>
                             </HStack>
 
-                            <Pressable
-                                onPress={handleWatchGuide}
-                                className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
-                            >
-                                <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
-                                <Text className="text-violet-400 text-sm font-medium flex-1">
-                                    {t('language.watchGuide')}
-                                </Text>
-                            </Pressable>
-
+                            {/* The guide video used to be offered twice on this one
+                                screen. The copy above already links it, in the place
+                                where the reader is being told to check iOS settings —
+                                a second identical button here only made the screen
+                                look like it had two different videos. */}
                             <Box className="p-4 bg-gray-800 rounded-lg border border-gray-700">
                                 {Platform.OS === 'ios' ? (
                                     <VStack space="sm">
