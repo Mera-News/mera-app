@@ -4,6 +4,7 @@ import {
     useFloatingChatSuppressed,
     type ChatContext,
 } from '@/lib/stores/floating-chat-store';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -34,13 +35,19 @@ interface ScreenChatBubbleProps {
  * to linger. The bubble's internal ambient pulse and drag motion are untouched.
  *
  * Visibility is gated on the same store flags the old app-level host used:
- * hidden while the popover is expanded or while chat is suppressed.
+ * hidden while the popover is expanded or while chat is suppressed. Also
+ * hidden in companion mode ('locked') — this component is effectively dead
+ * today (FloatingChatHost/ScreenChatBubble callers were superseded), but the
+ * gate costs nothing and guards a future remount from offering chat to a
+ * user with no plan. 'unknown' (cold-start) is intentionally NOT gated —
+ * only a confirmed 'locked' hides the bubble.
  */
 const ScreenChatBubble: React.FC<ScreenChatBubbleProps> = ({ context, extraBottomOffset }) => {
     const isExpanded = useFloatingChatIsExpanded();
     const suppressed = useFloatingChatSuppressed();
+    const aiAccess = useAiAccess();
 
-    if (isExpanded || suppressed) return null;
+    if (isExpanded || suppressed || aiAccess === 'locked') return null;
 
     return (
         // absoluteFill + box-none: a full-screen passthrough layer so the

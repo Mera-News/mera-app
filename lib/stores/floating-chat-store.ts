@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getAiAccess } from './subscription-store';
 import type { StagedProposal } from '../llm/types';
 import type { TrackFeedbackSubject } from '../news-harness/core/types';
 
@@ -125,7 +126,13 @@ function contextDiffers(a: ChatContext, b: ChatContext): boolean {
 export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     ...initialState,
 
-    expand: (context) =>
+    expand: (context) => {
+        // Companion mode: chat must not open anywhere in the app. This is the
+        // single chokepoint every call site (article actions, track button,
+        // notifications, ...) funnels through, so gating here covers all of
+        // them without touching each call site. A silent no-op is correct —
+        // callers are fire-and-forget and never await/branch on this call.
+        if (getAiAccess() === 'locked') return;
         set((state) => {
             // Switching to a different context must start a fresh thread so a
             // stale persona chat never bleeds into an article-feedback session.
@@ -143,9 +150,12 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
                     ? { conversationId: null, pendingInitialMessage: null, proposal: null }
                     : {}),
             };
-        }),
+        });
+    },
 
-    openArticleFeedback: (context, initialMessage) =>
+    openArticleFeedback: (context, initialMessage) => {
+        // Same companion-mode chokepoint as `expand` above.
+        if (getAiAccess() === 'locked') return;
         set(() => ({
             context,
             pendingInitialMessage: initialMessage,
@@ -157,9 +167,14 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             // auto-send effect could consume the message into the OLD
             // conversation.
             conversationId: null,
-        })),
+        }));
+    },
 
-    openOptimisationPlan: () =>
+    openOptimisationPlan: () => {
+        // Same chokepoint: this opens the same chat popover as expand/
+        // openArticleFeedback (just pre-staged on the plan-card context), so a
+        // companion-mode user must not be able to reach it either.
+        if (getAiAccess() === 'locked') return;
         set(() => ({
             // Fresh thread showing only the plan card (no auto-send). Null id is
             // the "create a fresh conversation" signal MeraChatSession watches.
@@ -168,7 +183,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             pendingInitialMessage: null,
             proposal: null,
             conversationId: null,
-        })),
+        }));
+    },
 
     consumePendingInitialMessage: () => {
         const msg = get().pendingInitialMessage;
