@@ -994,7 +994,8 @@
     "paywallRelatedOption": "Show related coverage",
     "paywallRelatedDesc": "A similar story from another publication may not be paywalled — check the related articles.",
     "paywallSubscribeDesc": "You've visited {{publication}} {{visits}} times this month — consider subscribing for full access.",
-    "paywallBlockOption": "Block {{publication}} instead"
+    "paywallBlockOption": "Block {{publication}} instead",
+    "tooMuchOfThis": "I'm seeing too much of this"
   },
   "topicPlan": {
     "title": "Topics I'll track",

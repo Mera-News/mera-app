@@ -91,12 +91,60 @@ describe('path-mapped candidates', () => {
     expect(c[0].fingerprint).toBe('suppress:evt:earnings-call');
   });
 
-  it('dislike + too_many → title-keyword suppression (review)', () => {
+  // "I'm seeing too much of this" is a FREQUENCY complaint — the user still
+  // wants the subject, just less of it — so it lowers the topic weight rather
+  // than minting a filter that would remove the subject entirely. This path
+  // runs exactly when the tree's own downweight did NOT land (an unstamped row),
+  // so a suppression here was elimination arriving by the back door.
+  it('dislike + too_many → STRONG topic downweight (auto), never a suppression', () => {
     const c = run({
-      signals: [signal('r1', 'dislike', { title: 'Celebrity gossip roundup weekly', treePath: ['suggestion', 'too_many'] })],
+      signals: [
+        signal('r1', 'dislike', {
+          title: 'Celebrity gossip roundup weekly',
+          topics: [{ topicId: 't1', text: 'Celebrity news' }],
+          treePath: ['suggestion', 'too_many'],
+        }),
+      ],
     });
-    expect(c[0].kind).toBe('suppress');
-    expect(c[0].ops[0].suppressionKeywords?.length).toBeGreaterThan(0);
+    expect(c).toHaveLength(1);
+    expect(c[0].kind).toBe('topic_down');
+    // A downweight is a reversible nudge, not a removal, so it does not need the
+    // review bucket that REMOVAL_KINDS routes suppressions into.
+    expect(c[0].confidence).toBe('auto');
+    expect(c[0].ops[0]).toMatchObject({
+      action_type: ACTION_NAMES.SET_TOPIC_WEIGHT,
+      topicId: 't1',
+      delta: DIGEST_CONSTANTS.pathLowerStrong,
+    });
+    expect(c[0].ops[0].action_type).not.toBe(ACTION_NAMES.ADD_SUPPRESSION);
+  });
+
+  it('too_many is a STRONGER nudge than not_important — volume beats a one-story judgement', () => {
+    expect(DIGEST_CONSTANTS.pathLowerStrong).toBe(-0.3);
+    expect(DIGEST_CONSTANTS.pathLowerStrong).toBeLessThan(DIGEST_CONSTANTS.pathLowerMild);
+  });
+
+  // The digest mirrors the tree leaf-for-leaf (every pathLower*/pathBoost*
+  // constant names its leaf), so the two must agree on what a tap MEANS.
+  it('mirrors the shipped tree leaf: same action, same scope, same delta', () => {
+    const c = run({
+      signals: [
+        signal('r1', 'dislike', {
+          topics: [{ topicId: 't1', text: 'Celebrity news' }],
+          treePath: ['suggestion', 'too_many'],
+        }),
+      ],
+    });
+    // Mirrors BUNDLED_FEEDBACK_TREE's too_many leaf:
+    // { type: 'set_topic_weight', topics: 'matched', delta: -0.3 }
+    expect(c[0].ops[0].delta).toBe(-0.3);
+  });
+
+  it('too_many with no matched topic mints nothing — it never falls back to a filter', () => {
+    const c = run({
+      signals: [signal('r1', 'dislike', { title: 'Celebrity gossip roundup weekly', treePath: ['too_many'] })],
+    });
+    expect(c.every((x) => x.kind !== 'suppress')).toBe(true);
   });
 
   it('like + more_from_publication with a publication id → publication boost (auto)', () => {
@@ -234,8 +282,8 @@ describe('caps', () => {
 
 // D10 — the category / event-type suppressions the digest mints are STRUCTURED
 // (exact match on the article's own field), because the value is copied verbatim
-// off `signal.context`. The title-keyword one is not: a headline is not a
-// matchable field, so `too_many` stays a keyword filter.
+// off `signal.context`. Since `too_many` stopped minting a title-keyword filter,
+// those are the ONLY suppressions this digest mints — every one is structured.
 describe('structured suppression kinds (D9/D10)', () => {
   it('this_category → an exact category filter', () => {
     const c = run({
@@ -259,13 +307,28 @@ describe('structured suppression kinds (D9/D10)', () => {
     });
   });
 
-  it('too_many stays a KEYWORD filter (title tokens are not an article field)', () => {
+  it('every suppression the digest mints is structured — no keyword filters left', () => {
     const c = run({
-      signals: [signal('r1', 'dislike', { title: 'Crypto crashes again today', treePath: ['too_many'] })],
+      signals: [
+        signal('r1', 'dislike', { category: 'Entertainment', treePath: ['not_important_to_me', 'this_category'] }),
+        signal('r2', 'dislike', { eventType: 'earnings-call', treePath: ['not_important_to_me', 'this_kind_of_event'] }),
+        // The former keyword-filter caller. A headline is not a matchable
+        // article field, so no structured filter can be built from one — which
+        // is why this leaf downweights instead of filtering at all.
+        signal('r3', 'dislike', {
+          title: 'Crypto crashes again today',
+          topics: [{ topicId: 't1', text: 'Crypto' }],
+          treePath: ['too_many'],
+        }),
+      ],
     });
-    const op = c[0].ops[0] as { suppressionKind?: string; suppressionValue?: string };
-    expect(op.suppressionKind).toBeUndefined();
-    expect(op.suppressionValue).toBeUndefined();
+    const suppressions = c.filter((x) => x.kind === 'suppress');
+    expect(suppressions).toHaveLength(2);
+    for (const s of suppressions) {
+      const op = s.ops[0] as { suppressionKind?: string; suppressionValue?: string };
+      expect(op.suppressionKind).toBeDefined();
+      expect(op.suppressionValue).toBeDefined();
+    }
   });
 
   it('the cross-article cat:/evt: aggregates are structured too', () => {

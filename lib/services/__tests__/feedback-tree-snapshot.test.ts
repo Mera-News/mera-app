@@ -160,16 +160,56 @@ describe('bundled tree — the paywall branch is alive again', () => {
   });
 });
 
-describe('bundled tree — too_many is unaffected by the category gate', () => {
+// v4 — "I'm seeing too much of this". A FREQUENCY complaint: the user still
+// wants the subject, just less of it, so the leaf downweights the matched topics
+// instead of minting a filter. The old `add_suppression`/`from_context_title`
+// shape was doubly wrong — the wrong action family, AND inert: it produced a
+// keyword row with an EMPTY keyword list, and the empty-keyword fallback in
+// stage-scoring is hard-filter-only, so a soft (0.5) row never matched anything
+// (see scoring-engine/__tests__/suppression.test.ts, "never matches on a blank
+// keyword"). These assertions pin BOTH halves of the fix.
+describe('bundled tree — too_many downweights, it does not filter', () => {
   const node = findNode(BUNDLED_FEEDBACK_TREE.root, 'too_many');
+  const context: LocalFeedbackContext = {
+    articleTitle: 'Crypto crashes again',
+    matchedTopics: [
+      { topicId: 't1', text: 'crypto markets' },
+      { topicId: 't2', text: 'fintech' },
+    ],
+  };
 
-  it('still mints a keyword filter from the title', () => {
-    expect(resolveLeafActions(node!.leaf, { articleTitle: 'Crypto crashes again' })).toEqual([
-      {
-        action_type: 'add_suppression',
-        suppressionPattern: 'Crypto crashes again',
-        suppressionStrength: 0.5,
-      },
+  it('nudges every matched topic down, and mints no suppression', () => {
+    expect(resolveLeafActions(node!.leaf, context)).toEqual([
+      { action_type: 'set_topic_weight', topicId: 't1', delta: -0.3 },
+      { action_type: 'set_topic_weight', topicId: 't2', delta: -0.3 },
     ]);
+  });
+
+  it('is a STRONGER nudge than "not that important", and both are reversible nudges', () => {
+    const notImportant = findNode(BUNDLED_FEEDBACK_TREE.root, 'not_important');
+    // Same action + scope, different magnitude — a volume complaint is the
+    // strong step, a one-story importance judgement the mild one. Both go
+    // through mutationRailsService.nudgeTopic, which threads a changeLogId back
+    // so the Undo toast and un-voting revert them.
+    expect(notImportant!.leaf?.actions?.[0]).toMatchObject({
+      type: 'set_topic_weight',
+      topics: 'matched',
+      delta: -0.15,
+    });
+    expect(node!.leaf?.actions?.[0]).toMatchObject({ topics: 'matched', delta: -0.3 });
+  });
+
+  it('needs no visibleIf — isInertActionLeaf hides it when no topic can be nudged', () => {
+    expect(node!.visibleIf).toBeUndefined();
+    // No matched topic with a real id ⇒ nothing to nudge ⇒ the row is absent
+    // rather than present-and-inert (which is exactly what it used to be).
+    expect(isInertActionLeaf(node!, { articleTitle: 'Crypto crashes again' })).toBe(true);
+    expect(isInertActionLeaf(node!, context)).toBe(false);
+  });
+
+  it('keys its label in the ONLY tree namespace the locale files ship', () => {
+    // No locale file contains any `feedback.*` node key, so those labels render
+    // from labelDefault (English) everywhere; `feedbackTree.*` is translated.
+    expect(node!.labelKey).toBe('feedbackTree.tooMuchOfThis');
   });
 });

@@ -16,6 +16,26 @@
 // construction) and offers muting the publication only once the user has
 // actually kept hitting it. Both children carry a per-node `descKey`/`descDefault`
 // message. Kept verbatim in sync with the server's v3 feedback-tree-v1.ts.
+//
+// v4: rewires + relabels `too_many`. It asked a FREQUENCY question ("Too many
+// like this") and answered it with an `add_suppression` — the wrong action
+// family (a filter eliminates the subject; the user said they want less of it,
+// not none) and, as shipped, an inert one: `from_context_title` mints a row with
+// `pattern` = the article's whole headline and NO keywords, and the empty-keyword
+// fallback in stage-scoring is HARD-only, so a soft (0.5) row matches nothing,
+// ever (scoring-engine/suppression.ts::matchesKeywords returns false on an empty
+// keyword list). It now nudges the MATCHED TOPICS' weight instead, which is the
+// one lever in the persona model that genuinely means "less often, not never":
+// weight drives both the score and the per-topic retrieval limit
+// (scoring-engine/retrieval-profile.ts), so a lower weight literally asks the
+// server for fewer articles on that topic. -0.3 mirrors the magnitude pair the
+// like tree already establishes (`a_lot_more` 0.3 / `a_bit_more` 0.15): an
+// explicit volume complaint is the strong step, `not_important` (-0.15) the mild
+// one. Its labelKey also moves into the `feedbackTree.*` namespace — the ONLY
+// tree namespace any locale file actually ships (no locale has ever contained a
+// `feedback.*` node key, so every other node label renders from its English
+// `labelDefault` on all 20 locales). Kept verbatim in sync with the server's v4
+// feedback-tree-v1.ts.
 
 import type { FeedbackTree } from '../news-harness/feedback-tree/types';
 
@@ -37,7 +57,7 @@ import type { FeedbackTree } from '../news-harness/feedback-tree/types';
 export const APP_FEEDBACK_SCHEMA = 4;
 
 export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
-  version: 3,
+  version: 4,
   root: [
     {
       id: 'publication_website',
@@ -177,11 +197,22 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           leaf: { seenOnly: true },
         },
         {
+          // v4 — a FREQUENCY complaint, so it downweights rather than filters.
+          // Scoped to `matched` (not `from_selection`) to match its sibling
+          // `not_important`, and left UNGATED for the same reason: an
+          // action-declaring leaf whose actions resolve to nothing is already
+          // hidden by `isInertActionLeaf` (useFeedbackTreeEngine), so a
+          // `has_matched_topics` gate would be a second moving part for the
+          // identical effect. Deliberately NOT named after the topic: doing that
+          // means extending the `TOPIC_NAMED_NODE_ID` special-case, which lives
+          // in InlineFeedbackTree only — the modal overlay would show a
+          // different label for the same node (D17: presentations may differ,
+          // semantics must not).
           id: 'too_many',
-          labelKey: 'feedback.too_many',
-          labelDefault: 'Too many like this',
-          icon: 'filter-list',
-          leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_title', strength: 0.5 }] },
+          labelKey: 'feedbackTree.tooMuchOfThis',
+          labelDefault: "I'm seeing too much of this",
+          icon: 'trending-down',
+          leaf: { actions: [{ type: 'set_topic_weight', topics: 'matched', delta: -0.3 }] },
         },
       ],
     },
