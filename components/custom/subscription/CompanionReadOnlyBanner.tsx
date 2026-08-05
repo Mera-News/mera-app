@@ -2,13 +2,11 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import RevenueCatUI from 'react-native-purchases-ui';
 
 export type CompanionReadOnlySurface =
     | 'mera-protocol'
@@ -55,17 +53,7 @@ const CompanionReadOnlyBanner: React.FC<CompanionReadOnlyBannerProps> = ({
             onSeePlans();
             return;
         }
-        try {
-            const offering = await getOfferingSafe();
-            await RevenueCatUI.presentPaywall({
-                ...(offering ? { offering } : {}),
-                displayCloseButton: true,
-            });
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { component: 'CompanionReadOnlyBanner', method: 'seePlans' },
-            });
-        }
+        await presentCompanionPaywall('CompanionReadOnlyBanner');
     }, [onSeePlans]);
 
     if (!readOnly) return null;

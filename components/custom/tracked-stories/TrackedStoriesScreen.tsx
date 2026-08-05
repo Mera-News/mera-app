@@ -1,5 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
+import CompanionInlineNotice from '@/components/custom/subscription/CompanionInlineNotice';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -362,6 +363,29 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             </Heading>
                         </VStack>
                         <Box style={{ height: 12 }} />
+                        {/* Companion mode: the one sentence that explains why
+                            the track affordances elsewhere are refusing. It
+                            self-gates on `useAiAccess()` and renders null
+                            unless locked, so entitlement is deliberately NOT
+                            re-checked here — a second copy of that gate could
+                            only drift.
+                            `stories.length` is a different axis and does need
+                            a gate, for the same reason `anyLlmHeadline` above
+                            has one: RN renders `ListHeaderComponent` even when
+                            `data` is empty, alongside `ListEmptyComponent`. Un-
+                            gated, a locked user with nothing followed would get
+                            "the stories you already follow keep everything
+                            they've collected" — false about an empty list —
+                            stacked on top of the locked empty body that already
+                            says this better.
+                            The `px-5` wrapper matches the title and
+                            `ListHeader`; the notice carries only internal
+                            padding and would otherwise sit edge-to-edge. */}
+                        {stories.length > 0 && (
+                            <Box className="px-5 pb-2">
+                                <CompanionInlineNotice surface="stories-header" />
+                            </Box>
+                        )}
                         {ListHeader}
                     </>
                 }

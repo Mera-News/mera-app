@@ -42,13 +42,11 @@ import {
 import { Text } from '@/components/ui/text';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
-import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
 import { getAiAccess } from '@/lib/stores/subscription-store';
+import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import RevenueCatUI from 'react-native-purchases-ui';
 
 export interface UseTrackButton {
   /** Whether an active story already covers this subject (drives the button's
@@ -97,19 +95,7 @@ export function useTrackButton(
 
   const seePlans = useCallback(async () => {
     setLockedDialogOpen(false);
-    try {
-      const offering = await getOfferingSafe();
-      await RevenueCatUI.presentPaywall({
-        ...(offering ? { offering } : {}),
-        // Dismissible: this is an invitation, not a hard gate the user must
-        // clear to leave the screen.
-        displayCloseButton: true,
-      });
-    } catch (error) {
-      logger.captureException(error, {
-        tags: { component: 'useTrackButton', method: 'seePlans' },
-      });
-    }
+    await presentCompanionPaywall('useTrackButton');
   }, []);
 
   const goToStory = useCallback(() => {

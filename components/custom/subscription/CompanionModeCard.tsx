@@ -6,12 +6,10 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import RevenueCatUI from 'react-native-purchases-ui';
 
 /** Which list this card is pinned to. Diagnostics + testID only — copy is shared. */
 export type CompanionSurface = 'dashboard' | 'feed' | 'stories' | 'facts';
@@ -59,19 +57,7 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
             onSeePlans();
             return;
         }
-        try {
-            const offering = await getOfferingSafe();
-            await RevenueCatUI.presentPaywall({
-                ...(offering ? { offering } : {}),
-                // Dismissible: this is an invitation from inside a mode the user
-                // is entitled to stay in, not a gate they must clear.
-                displayCloseButton: true,
-            });
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { component: 'CompanionModeCard', method: 'seePlans' },
-            });
-        }
+        await presentCompanionPaywall('CompanionModeCard');
     }, [onSeePlans]);
 
     if (aiAccess !== 'locked') return null;

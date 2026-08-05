@@ -1337,7 +1337,6 @@
     "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "settingsRowNotice": "Mera is paused. Everything here stays yours to read.",
     "trackedStoriesEmptyBody": "Nothing followed yet. Following a story is part of Mera — and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Your saved articles, tracked stories, and reading history are yours, on this device, always. What pauses is the AI layer itself: your personalized feed, dashboard, new story tracking, and Mera chat.",
